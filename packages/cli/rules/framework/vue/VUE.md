@@ -15,6 +15,8 @@ These rules cover Vue 3 single-file components, reactivity, props and events, te
 
 ## Components
 
+<!-- level: all -->
+
 - Write components with `<script setup>`. Do not mix the Options API into a Composition API codebase.
 - One component has one job. Split a component when its template holds two unrelated regions.
 - Name a component with two words or more, in PascalCase, and name the file the same.
@@ -25,9 +27,15 @@ These rules cover Vue 3 single-file components, reactivity, props and events, te
 
 - Declare props and emits with types: `defineProps<Props>()` and `defineEmits<Emits>()`.
 - Never mutate a prop. Emit an event, or use `defineModel` for a two-way value.
-- A prop with no sensible default is required. An optional prop has a default.
-- Name an event for what happened, in the past tense or as a noun: `saved`, `update:modelValue`.
+- A prop is required when the component cannot operate without it. An optional prop can remain
+  undefined when absence has defined behavior; supply a default only when that matches the contract.
 - Do not pass a whole store or a whole parent object to a child that reads two fields.
+
+### Event naming
+
+<!-- level: all -->
+
+Name an event for what happened, in the past tense or as a noun: `saved`, `update:modelValue`.
 
 ## Reactivity
 
@@ -48,10 +56,12 @@ These rules cover Vue 3 single-file components, reactivity, props and events, te
 
 ## State and data
 
+<!-- level: all -->
+
 - Local state stays in the component. Shared state goes in a store, one store for each domain.
 - A store exposes actions that say what happened. Components do not assign to store state.
 - Fetch data in a composable or a store action, never inline in a template event.
-- A composable is named `useThing`, returns refs, and cleans up what it starts.
+- A composable is named `useThing` and returns reactive values when callers need reactivity.
 
 ## Accessibility and tests
 

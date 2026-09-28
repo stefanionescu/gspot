@@ -3,6 +3,7 @@ import type { Policy } from '#cli/types/policy/policy.ts';
 import { selectRuleFiles } from '#cli/agents/assemble.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import type { Repository } from '#cli/types/repository/repository.ts';
 import { AREA_BY_LAYER, CHECKS_INSTALLED, RULES_ALONE } from '#cli/constants/agents.ts';
 
 function guideGroups(files: RuleFile[]): [string, string[]][] {
@@ -34,15 +35,18 @@ function indexLines(rules: Policy['rules'], files: RuleFile[]): string[] {
 /**
  * The managed block text for a session.
  * @param rules the rule policy
- * @param manifests the selected configurations
+ * @param manifests the selected configurations.
+ * @param level the selected enforcement level.
+ * @param repository the source inventory for conditional guide selection.
  * @returns the block: a heading, the guide index when rules are installed, and the standing instructions
  */
 export function managedBlock(
     rules: Policy['rules'],
     manifests: Manifest[],
-    level: Policy['level'] = 'recommended',
+    level: Policy['level'],
+    repository: Repository,
 ): string {
-    const files = selectRuleFiles(rules, manifests);
+    const files = selectRuleFiles(rules, manifests, repository);
     const index = files.length > 0 ? indexLines(rules, files) : [];
     const hasChecks = manifests.some((manifest) => manifest.checks.length > 0);
     const closing = hasChecks ? CHECKS_INSTALLED : RULES_ALONE;

@@ -6,7 +6,7 @@ import { createFileTree, testdir } from 'testdirs';
 import { openSession } from '#cli/execution/session.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
 import { initCommand } from '#cli/commands/init/command.ts';
-import { miseTasks } from '#cli/generation/runner-tasks.ts';
+import { miseTasks } from '#cli/generation/runner/tasks.ts';
 import { parseProfile } from '#cli/policy/profiles/read.ts';
 import { uninstallCommand } from '#cli/commands/uninstall.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
@@ -71,16 +71,32 @@ test.each([undefined, 'yarn'])(
     },
 );
 
-test.each(['mise', 'npm'] as const)(
-    'init adopts existing %s task names, executes their replacements, and restores originals',
-    async (runner) => {
+test.each([
+    {
+        runner: 'mise' as const,
+        original:
+            '# Authored tasks\n[tasks]\nlint = "authored lint"\n[tasks.format]\ndescription = "Keep this description"\nrun = ["authored format", "authored verify"]\n',
+        path: 'mise.toml',
+        parse: parseToml,
+        retained: { tasks: { format: { description: 'Keep this description' } } },
+        argv: ['mise', 'run', '--skip-tools', 'lint', '--', '--json', 'a b'],
+        links: [['mise', 'link', `github:stefanionescu/gspot@${GSPOT_VERSION}`]],
+    },
+    {
+        runner: 'npm' as const,
+        original:
+            '{"private":true,"scripts":{"lint":"authored lint","format":"authored format","prepare":"authored setup","gspot:doctor":"authored doctor"}}\n',
+        path: 'package.json',
+        parse: JSON.parse,
+        retained: { scripts: { prepare: 'authored setup', 'gspot:doctor': 'authored doctor' } },
+        argv: ['npm', 'run', '--silent', 'lint', '--', '--json', 'a b'],
+        links: [],
+    },
+])(
+    'init adopts existing $runner task names, executes their replacements, and restores originals',
+    async ({ runner, original, path, parse, retained, argv, links }) => {
         await using directory = await testdir();
         await using launcher = await testdir();
-        const original =
-            runner === 'mise'
-                ? '# Authored tasks\n[tasks]\nlint = "authored lint"\n[tasks.format]\ndescription = "Keep this description"\nrun = ["authored format", "authored verify"]\n'
-                : '{"private":true,"scripts":{"lint":"authored lint","format":"authored format","prepare":"authored setup","gspot:doctor":"authored doctor"}}\n';
-        const path = runner === 'mise' ? 'mise.toml' : 'package.json';
         await createFileTree(directory.path, { [path]: original });
         await createFileTree(launcher.path, {
             'bin/gspot': `#!${process.execPath}\nconsole.log(JSON.stringify(process.argv.slice(2)));\n`,
@@ -107,19 +123,7 @@ test.each(['mise', 'npm'] as const)(
         const installed = readFileSync(join(directory.path, path), 'utf8');
         await applyAll(await openSession(directory.path));
         expect(readFileSync(join(directory.path, path), 'utf8')).toBe(installed);
-        // The authored tasks survive beside the generated ones: the npm scripts, or the mise description.
-        const scripts = (
-            JSON.parse(runner === 'npm' ? installed : '{"scripts":{}}') as { scripts: Record<string, string> }
-        ).scripts;
-        const authoredKept =
-            runner === 'npm'
-                ? scripts['prepare'] === 'authored setup' && scripts['gspot:doctor'] === 'authored doctor'
-                : installed.includes('Keep this description');
-        expect(authoredKept).toBe(true);
-        const argv =
-            runner === 'mise'
-                ? ['mise', 'run', '--skip-tools', 'lint', '--', '--json', 'a b']
-                : ['npm', 'run', '--silent', 'lint', '--', '--json', 'a b'];
+        expect(parse(installed)).toMatchObject(retained);
         const env = {
             ...environmentVariables(),
             PATH: `${join(launcher.path, 'bin')}${delimiter}${environmentVariables()['PATH'] ?? ''}`,
@@ -130,24 +134,12 @@ test.each(['mise', 'npm'] as const)(
             MISE_CACHE_DIR: join(launcher.path, 'cache'),
             MISE_OFFLINE: '1',
         };
-        const linked =
-            runner === 'mise'
-                ? Bun.spawnSync(['mise', 'link', `github:stefanionescu/gspot@${GSPOT_VERSION}`, launcher.path], {
-                      cwd: directory.path,
-                      env,
-                      stdout: 'pipe',
-                      stderr: 'pipe',
-                      timeout: 10_000,
-                  })
-                : undefined;
-        expect(linked?.exitCode ?? 0, linked?.stderr.toString()).toBe(0);
-        const executed = Bun.spawnSync(argv, {
-            cwd: directory.path,
-            env,
-            stdout: 'pipe',
-            stderr: 'pipe',
-            timeout: 10_000,
-        });
+        const options = { cwd: directory.path, env, stdout: 'pipe' as const, stderr: 'pipe' as const, timeout: 10_000 };
+        for (const link of links) {
+            const linked = Bun.spawnSync([...link, launcher.path], options);
+            expect(linked.exitCode, linked.stderr.toString()).toBe(0);
+        }
+        const executed = Bun.spawnSync([...argv], options);
         expect(executed.exitCode, executed.stdout.toString() + executed.stderr.toString()).toBe(0);
         expect(JSON.parse(executed.stdout.toString())).toStrictEqual(['check', '--json', 'a b']);
         const uninstalled = await uninstallCommand({ cwd: directory.path, yes: true, isDryRun: false });

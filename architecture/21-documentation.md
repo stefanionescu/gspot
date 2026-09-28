@@ -31,8 +31,8 @@ modules. Test moves update source links and executable examples in the same chan
 
 The project already has a custom Astro landing page, Starlight navigation and guides, shared
 light/dark tokens and a real finding/correction transcript. The implementation is
-visible in `docs/src/pages/index.astro`, `docs/src/styles/theme.css`, and `docs/astro.config.ts`.
-The content configuration currently uses Starlight's loader, and `docs/src/content/reference/loader.ts`
+visible in `docs/src/pages/index.astro`, `docs/src/theme.css`, and `docs/astro.config.ts`.
+The content configuration currently uses Starlight's loader, and `docs/src/content/reference/collection.ts`
 loads references into Astro content storage. The reference contract below governs
 that content loader. It does not require rebuilding the site shell.
 
@@ -41,21 +41,22 @@ that content loader. It does not require rebuilding the site shell.
 Use the inspected [Nx content-loader pattern](15-prior-art.md#nx-and-turborepo) for reference
 mechanics. Use the selected Turborepo visual direction: neutral surfaces, restrained typography, and
 understated blue links. Use Nx's task-focused documentation structure. These are design
-influences, not copied artwork or claims of those sites' accessibility. Verify gspot's
-rendered experience against the acceptance criteria below.
+influences, not copied artwork or claims of those sites' accessibility. Verify the rendered gspot
+experience against the acceptance criteria below.
 
 ## The README
 
 A reader needs purpose, release status, a visible result, and a next step in the opening screen.
 Use native GitHub Markdown, not a centered HTML marketing layout. Include the information needed for setup and routine use without a word-count target.
-Use a compact geometric lowercase g with a blue spot beside the lowercase Geist wordmark.
+
+Use the abstract Sweet spot symbol beside the lowercase Geist wordmark.
 Keep light, dark, and monochrome SVG variants, an SVG favicon, and an editable 1200 × 630 social card.
 Keep the title, purpose, and release status as selectable text. The first useful example
 follows the introduction. The compact logo does not replace the text title.
 
 Use this ordered content brief when rewriting the root README:
 
-1. Title `gspot`. Use the product description "CLI to lint and enforce rules for LLM generated codebases".
+1. Title `gspot`. Use the product description "CLI to lint and enforce rules for LLM generated codebases."
 1. State prerelease status and material platform limits before setup. Do not claim gspot
    detects whether a human or an agent wrote code.
 1. A compact, selectable example of one finding: path, check name, explanation, and `help:`.
@@ -74,8 +75,8 @@ Use this ordered content brief when rewriting the root README:
    inject a `prepare` script. Link the full command reference instead of listing every command.
 1. `## Choose your checks`: one runnable configuration example, one scoped exception with a
    reason, and links to configurations and profiles. Explain `recommended` versus `all`: banned names
-   and optional house-style checks belong to `all`. Trivial-function and trivial-file checks
-   remain enabled by default at both levels. Do not confuse a check name with a tool rule name.
+   and optional house-style checks belong to `all`, including trivial-function and trivial-file checks.
+   Distinguish check names from tool rule names.
 1. `## Adopt and remove`: summarize carryover, retained unsupported configuration, recovery
    copies, and uninstall conflicts. Link the complete recovery procedure. Explain that affected
    project-wide tools can report errors in unchanged files. Describe `git commit --no-verify`
@@ -153,6 +154,7 @@ facts with the generator's source definitions, not a second hand-written table.
 A description, usage string, option list, or JSON Schema dump alone is not a complete reference.
 Provide the behavioral explanations and examples above through the existing content loader and
 its owning definitions. Validate missing required content before replacing a generated entry.
+
 A successful build or large page count does not establish reader completeness. Keep authored
 recovery guides separate from reference facts; remove duplicated procedures and stale claims.
 Do not add a second documentation generator or a universal example-execution framework.
@@ -175,7 +177,7 @@ site layout and duplicate scripts.
 
 Use "Lint AI generated code." as the hero heading. Explain that gspot configures linters,
 runs checks, and generates agent instructions from one repository configuration. Follow it with
-**Get started** and **View commands**, linking to the existing installation and check
+**Get started** and **View commands**. Link these actions to the existing installation and check
 reference routes. Identify source-checkout setup explicitly. Do not present `--help` as an
 installation command.
 
@@ -198,7 +200,7 @@ The tool strip uses equal cells: six columns on desktop, three on tablets, and t
 Feature illustrations share 40:27 frames and centered content. Feature headings and links align
 across each row. Setup code surfaces stretch to equal heights with independent horizontal
 scrolling. Homepage components own their margins, rather than inheriting article spacing.
-The generated hero artwork remains centered on a plain surface labeled LINT and CODE.
+The generated hero artwork remains centered on a plain surface labeled `LINT` and `CODE`.
 
 ### The theme
 
@@ -214,16 +216,17 @@ actual contrast for prose, syntax highlighting, selection, hover, and focus stat
   the same choice on landing and manual pages, with no light flash before dark rendering.
 - Self-host Geist Sans and Geist Mono through exactly pinned Fontsource packages and retain
   their licenses. Set prose to 16 pixels with 28-pixel line height and a width near 68 characters.
-  Homepage headings use 56 pixels on desktop and 36 pixels on phones. Documentation titles
+- Homepage headings use 56 pixels on desktop and 36 pixels on phones. Documentation titles
   use 40 and 32 pixels respectively; section headings use 24 pixels with 32-pixel line height.
   Use Geist's variable weight 450 for headings.
 - Use the abstract Sweet spot mark in the header, README, favicon, and sharing metadata.
   Do not use a letter G, mascot, or explicit anatomy.
   Logo links have accessible names. Keep the icon legible at 16 pixels and retain monochrome use.
-  Provide static workflow and recovery diagrams with their information in adjacent prose.
+- Provide static workflow and recovery diagrams with their information in adjacent prose.
 - Limit the landing content to roughly 1,200 pixels. Use an 8-pixel spacing scale, thin panel
   borders, modest 8-pixel corners, and generous section spacing. Avoid nested card grids,
-  huge empty heroes, glass effects, scanlines, and glowing body text. Use cobalt and tangerine in the artwork and section markers.
+  huge empty heroes, glass effects, scanlines, and glowing body text.
+- Use cobalt and tangerine in the artwork and section markers.
 - Keep the introduction before the defect, correction, and optional transcript at every width. Use 20-pixel side padding on phones. Code can scroll within its panel;
   the page itself must not overflow horizontally. Do not shrink text to fit output.
 - Omit decorative terminal controls and shell prompts from copyable commands. Label commands and output
@@ -265,7 +268,7 @@ website backlog. Complete the remaining design and acceptance work in this order
    root content route.
    Keep the existing guide and reference routes.
 1. Put shared design tokens in
-   `docs/src/styles/theme.css`, registered with Starlight for both landing and documentation
+   `docs/src/theme.css`, registered with Starlight for both landing and documentation
    pages. Extract components only for shared behavior such as the reviewed transcript;
    do not introduce a theme package or general-purpose component framework.
 1. Review the rendered README on GitHub, the actual npm README payload, and landing, guide,
@@ -354,7 +357,8 @@ Commands come from the registered public Commander tree, including inherited glo
 usage, choices, defaults, implicit help, and nested commands. Exclude hidden/internal commands.
 Command definitions own effects, exits, and examples in their behavioral help. The CLI and
 reference loader consume that same text. Missing behavioral help fails reference generation.
-Settings cover the complete root, scope, integration, and configuration configuration contracts.
+
+Settings cover the complete root, scope, integration, and configuration contracts.
 Matching shared settings list every owner; conflicting definitions fail the build. Include
 plugin rules, public options, and both exported levels without duplicating manually maintained
 lists. Generated pages show the release version and link to the owning source definition.
@@ -412,7 +416,7 @@ Verify product promises with observable CLI and installed-package behavior. Desc
 
 ### Acceptance G-10
 
-Preserve the README, guide navigation, landing page, vector identity and visual acceptance in this owner. Demonstrations retain real reproduction inputs, output, version, and correction. Explain all five `explain` subjects and editor coexistence. Reuse ordinary command tests and inspect both themes, responsive layout, keyboard, script-free content, and loading budgets. A successful build alone does not establish usability.
+Preserve the README, guide navigation, landing page, vector identity, and visual acceptance in this owner. Demonstrations retain real reproduction inputs, output, version, and correction. Explain all five `explain` subjects and editor coexistence. Reuse ordinary command tests and inspect both themes, responsive layout, keyboard, script-free content, and loading budgets. A successful build alone does not establish usability.
 
 ### Acceptance S-19
 

@@ -41,7 +41,8 @@ When `git status` or the worktree shows changes you did not make, do not panic. 
 ## What is never committed
 
 - Secrets, credentials, `.env` files, local configuration.
-- Generated output that the build produces (`dist/`, `coverage/`, caches).
+- Build output (`dist/`, `coverage/`, caches), unless an explicit deployment or packaging
+  contract requires committed artifacts. Declare retained generated files through their owner.
 - Dependencies (`node_modules/`, virtual environments).
 - Binaries and media outside Git LFS.
 - Editor state (`.vscode/` beyond the managed block, `xcuserdata/`, `.idea/`).

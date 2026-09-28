@@ -4,24 +4,17 @@ import { parseSource } from '#cli/parsers/tree-sitter.ts';
 import type { EngineInput } from '#cli/types/checks/checks.ts';
 import type { SwiftFunction, SwiftSource } from '#cli/types/checks/swift.ts';
 
-function modifiersOf(node: Node): Node[] {
-    return node.namedChildren.filter((child) => child.type === 'modifiers').flatMap((child) => child.namedChildren);
-}
-
-function bodyOf(node: Node): Node[] {
-    const statements = (node.childForFieldName('body') ?? node).namedChildren.find(
-        (child) => child.type === 'statements',
-    );
-    return (statements?.namedChildren ?? []).filter((child) => !child.type.endsWith('comment'));
-}
-
 /**
  * The visibility word a declaration carries, or internal when it carries none.
  * @param node the declaration
  * @returns private, fileprivate, internal, public, package, or open
  */
 export function visibilityOf(node: Node): string {
-    const word = modifiersOf(node).find((modifier) => modifier.type === 'visibility_modifier')?.text ?? 'internal';
+    const word =
+        node.namedChildren
+            .filter((child) => child.type === 'modifiers')
+            .flatMap((child) => child.namedChildren)
+            .find((modifier) => modifier.type === 'visibility_modifier')?.text ?? 'internal';
     return word.replace(/\(set\)$/u, '').trim();
 }
 
@@ -50,7 +43,7 @@ export async function swiftSources(
 }
 
 /**
- * Every function a source declares, at the top level and inside types.
+ * Every function declared at the top level or inside a type.
  * @param source the parsed file
  * @returns the functions
  */
@@ -67,18 +60,21 @@ export function functionsOf(source: SwiftSource): SwiftFunction[] {
             'willset_clause',
             'didset_clause',
         ])
-        .flatMap((node) => {
+        .filter((node) => {
             if (node.type === 'computed_property' && !node.namedChildren.some((child) => child.type === 'statements'))
-                return [];
+                return false;
+            return node.type !== 'function_declaration' || node.childForFieldName('body') !== null;
+        })
+        .map((node) => {
             const name = node.childForFieldName('name');
-            if (node.type === 'function_declaration' && node.childForFieldName('body') === null) return [];
-            return [
-                {
-                    path: source.path,
-                    node,
-                    name: name?.text ?? node.type,
-                    body: bodyOf(node),
-                },
-            ];
+            const statements = (node.childForFieldName('body') ?? node).namedChildren.find(
+                (child) => child.type === 'statements',
+            );
+            return {
+                path: source.path,
+                node,
+                name: name?.text ?? node.type,
+                body: (statements?.namedChildren ?? []).filter((child) => !child.type.endsWith('comment')),
+            };
         });
 }

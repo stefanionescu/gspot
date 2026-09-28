@@ -1,15 +1,15 @@
 import { join } from 'node:path';
 import { mkdirSync } from 'node:fs';
-import { describe, expect, test } from 'bun:test';
+import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
+import type { FindingCase } from '#tests/types/cli.ts';
 // Planted repository for the structure configuration: each repository-shape check fires on its planted defect.
 import { reportSchema } from '#cli/execution/report.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';
 import { commitAll, git } from '#tests/support/cli/git.ts';
-import type { FindingCase } from '#tests/types/support/cli.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
-import { expectCorrected, runPlanted, script } from '#tests/support/cli/planted.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
+import { runPlanted, script } from '#tests/support/cli/planted.ts';
 import { STRUCTURE_INIT } from '#tests/constants/acceptance/source/configurations/init-arguments.ts';
 import { KILOBYTE, OVER_LIMIT_KB } from '#tests/constants/acceptance/source/configurations/configurations.ts';
 
@@ -63,76 +63,88 @@ const CASES: FindingCase[] = [
     },
 ];
 
-describe('the structure configuration', () => {
-    test.each(CASES)(
-        '$check reports $expected.rule in $expected.file and accepts the correction',
-        async (planted) => {
-            await using sandbox = await testdir();
-            await createFileTree(sandbox.path, {
-                'scripts/a.sh': CLEAN,
-                'scripts/b.sh': CLEAN,
-                'package.json': '{"private":true}\n',
-            });
-            commitAll(sandbox.path);
-            const environment = { PATH: toolsPath(['ast-grep', 'shellcheck', 'shfmt']) };
-            const initialized = await run(sandbox.path, [...STRUCTURE_INIT, '--hooks', 'gspot'], environment);
-            expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
-            const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
-            expect(selected.code, selected.stdout + selected.stderr).toBe(0);
-            const reasons = await run(sandbox.path, ['set', 'require_reasons', 'true'], environment);
-            expect(reasons.code, reasons.stdout + reasons.stderr).toBe(0);
-            {
-                const clean = await run(sandbox.path, ['check', '--only', planted.check, '--no-cache'], environment);
-                expect(clean.code, `${planted.check} on the clean repository: ${clean.stdout}`).toBe(0);
-                const outcome = await runPlanted(sandbox.path, planted, environment);
-                expect(outcome.code, `${planted.check}: ${outcome.stdout}`).toBe(1);
-                const report = reportSchema.parse(
-                    await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json(),
-                );
-                const result = report.checks.find((entry) => entry.check === planted.check);
-                expect(result?.status, outcome.stdout).toBe('fail');
-                const finding = result?.findings.find(
-                    (entry) => entry.file === planted.expected.file && entry.rule === planted.expected.rule,
-                );
-                expect(finding).toMatchObject({ check: planted.check, ...planted.expected });
-                await expectCorrected(sandbox.path, planted.check, environment);
-            }
-        },
-        PLANTED_TIMEOUT_MS * 2,
-    );
-
-    test(
-        'integrity/tracked-dependencies reports a dependency folder that git tracks',
-        async () => {
-            await using sandbox = await testdir();
-            await createFileTree(sandbox.path, { 'scripts/a.sh': CLEAN, 'scripts/b.sh': CLEAN });
-            commitAll(sandbox.path);
-            const environment = { PATH: toolsPath(['ast-grep', 'shellcheck', 'shfmt']) };
-            const initialized = await run(sandbox.path, [...STRUCTURE_INIT, '--no-hooks'], environment);
-            expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
-            const clean = await run(sandbox.path, ['check', '--only', 'integrity/tracked-dependencies'], environment);
-            expect(clean.code).toBe(0);
-            mkdirSync(join(sandbox.path, 'web', 'node_modules', 'left-pad'), { recursive: true });
-            await Bun.write(join(sandbox.path, 'web', 'node_modules', 'left-pad', 'index.js'), 'module.exports = 1;\n');
-            expect(git(sandbox.path, ['add', '-f', 'web/node_modules/left-pad/index.js']).code).toBe(0);
-            const check = await run(
+test.each(CASES)(
+    'the structure configuration > $check reports $expected.rule in $expected.file and accepts the correction',
+    async (planted) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'scripts/a.sh': CLEAN,
+            'scripts/b.sh': CLEAN,
+            'package.json': '{"private":true}\n',
+        });
+        commitAll(sandbox.path);
+        const environment = { PATH: toolsPath(['ast-grep', 'shellcheck', 'shfmt']) };
+        const initialized = await run(sandbox.path, [...STRUCTURE_INIT, '--hooks', 'gspot'], environment);
+        expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
+        const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
+        expect(selected.code, selected.stdout + selected.stderr).toBe(0);
+        const reasons = await run(sandbox.path, ['set', 'require_reasons', 'true'], environment);
+        expect(reasons.code, reasons.stdout + reasons.stderr).toBe(0);
+        {
+            const clean = await run(sandbox.path, ['check', '--only', planted.check, '--no-cache'], environment);
+            expect(clean.code, `${planted.check} on the clean repository: ${clean.stdout}`).toBe(0);
+            const outcome = await runPlanted(sandbox.path, planted, environment);
+            expect(outcome.code, `${planted.check}: ${outcome.stdout}`).toBe(1);
+            const report = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
+            const result = report.checks.find((entry) => entry.check === planted.check);
+            expect(result?.status, outcome.stdout).toBe('fail');
+            const finding = result?.findings.find(
+                (entry) => entry.file === planted.expected.file && entry.rule === planted.expected.rule,
+            );
+            expect(finding).toMatchObject({ check: planted.check, ...planted.expected });
+            const correctedCheck = await run(
                 sandbox.path,
-                ['check', '--only', 'integrity/tracked-dependencies', '--no-cache'],
+                ['check', '--only', planted.check, '--no-cache', '--json'],
                 environment,
             );
-            expect(check.code).toBe(1);
-            expect(
-                reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json()).checks,
-            ).toMatchObject([
-                {
-                    check: 'integrity/tracked-dependencies',
-                    status: 'fail',
-                    findings: [{ file: 'web/node_modules', rule: 'tracked-folder', line: 1 }],
-                },
+            expect(correctedCheck.code, correctedCheck.stdout + correctedCheck.stderr).toBe(0);
+            expect(reportSchema.parse(JSON.parse(correctedCheck.stdout)).checks).toMatchObject([
+                { check: planted.check, status: 'ok', findings: [] },
             ]);
-            expect(git(sandbox.path, ['rm', '--cached', 'web/node_modules/left-pad/index.js']).code).toBe(0);
-            await expectCorrected(sandbox.path, 'integrity/tracked-dependencies', environment);
-        },
-        PLANTED_TIMEOUT_MS,
-    );
-});
+        }
+    },
+    PLANTED_TIMEOUT_MS * 2,
+);
+
+test(
+    'the structure configuration > integrity/tracked-dependencies reports a dependency folder that git tracks',
+    async () => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, { 'scripts/a.sh': CLEAN, 'scripts/b.sh': CLEAN });
+        commitAll(sandbox.path);
+        const environment = { PATH: toolsPath(['ast-grep', 'shellcheck', 'shfmt']) };
+        const initialized = await run(sandbox.path, [...STRUCTURE_INIT, '--no-hooks'], environment);
+        expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
+        const clean = await run(sandbox.path, ['check', '--only', 'integrity/tracked-dependencies'], environment);
+        expect(clean.code).toBe(0);
+        mkdirSync(join(sandbox.path, 'web', 'node_modules', 'left-pad'), { recursive: true });
+        await Bun.write(join(sandbox.path, 'web', 'node_modules', 'left-pad', 'index.js'), 'module.exports = 1;\n');
+        expect(git(sandbox.path, ['add', '-f', 'web/node_modules/left-pad/index.js']).code).toBe(0);
+        const check = await run(
+            sandbox.path,
+            ['check', '--only', 'integrity/tracked-dependencies', '--no-cache'],
+            environment,
+        );
+        expect(check.code).toBe(1);
+        expect(
+            reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json()).checks,
+        ).toMatchObject([
+            {
+                check: 'integrity/tracked-dependencies',
+                status: 'fail',
+                findings: [{ file: 'web/node_modules', rule: 'tracked-folder', line: 1 }],
+            },
+        ]);
+        expect(git(sandbox.path, ['rm', '--cached', 'web/node_modules/left-pad/index.js']).code).toBe(0);
+        const correctedCheck = await run(
+            sandbox.path,
+            ['check', '--only', 'integrity/tracked-dependencies', '--no-cache', '--json'],
+            environment,
+        );
+        expect(correctedCheck.code, correctedCheck.stdout + correctedCheck.stderr).toBe(0);
+        expect(reportSchema.parse(JSON.parse(correctedCheck.stdout)).checks).toMatchObject([
+            { check: 'integrity/tracked-dependencies', status: 'ok', findings: [] },
+        ]);
+    },
+    PLANTED_TIMEOUT_MS,
+);

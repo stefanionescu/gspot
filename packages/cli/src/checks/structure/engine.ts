@@ -79,7 +79,7 @@ function contextFor(input: EngineInput): StructureContext {
  * @param spec the check
  * @returns the engine that runs the analysis
  */
-export function resolveStructure(spec: CheckSpec): Engine {
+export function structureEngine(spec: CheckSpec): Engine {
     const name = spec.analysis ?? '';
     const analysis: StructureAnalysis | undefined = COUNT_ANALYSES.has(name)
         ? async (context, scripts) => countFindings(name, context, await scripts())

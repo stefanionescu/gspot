@@ -5,11 +5,12 @@ import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
+import { initArgs } from '#tests/support/cli/init.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
 import { containing } from '#tests/support/expectations.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
 import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
 import { TYPESCRIPT_PACKAGE } from '#tests/support/cli/typescript.ts';
 import { installPrivateTools, toolsPath } from '#tests/support/cli/tools.ts';
 
@@ -28,21 +29,7 @@ test(
         symlinkSync(INSTALLED_MODULES, join(sandbox.path, 'node_modules'), 'dir');
         commitAll(sandbox.path);
         const environment = { PATH: toolsPath(['ast-grep', 'ec', 'typos']) };
-        const initialized = await run(
-            sandbox.path,
-            [
-                'init',
-                '--yes',
-                '--configurations',
-                'javascript',
-                '--no-runner',
-                '--no-ci',
-                '--no-hooks',
-                '--no-rules',
-                '--no-install',
-            ],
-            environment,
-        );
+        const initialized = await run(sandbox.path, initArgs(['javascript']), environment);
         expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
         await installPrivateTools(sandbox.path);
         const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);

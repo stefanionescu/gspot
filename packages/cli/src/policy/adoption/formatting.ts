@@ -2,18 +2,18 @@ import { parseBuffer } from 'editorconfig';
 import { basename, dirname } from 'node:path';
 import { compact } from '#cli/policy/normalize.ts';
 import { policySchema } from '#cli/policy/schema.ts';
-import { parseCarrySource } from '#cli/policy/adoption/source.ts';
 import { evaluateConfiguration } from '#cli/evaluation/configuration.ts';
+import { parseConfigurationSource } from '#cli/policy/adoption/source.ts';
 import type { ExistingTooling } from '#cli/types/repository/repository.ts';
 import { formatRequest, formatResponse } from '#cli/evaluation/protocol.ts';
-import type { CarriedConfiguration, CarriedFormatter, CarrySource } from '#cli/types/policy/adoption.ts';
+import type { AdoptionResult, AdoptedFormatting, ConfigurationSource } from '#cli/types/policy/adoption.ts';
 
-async function carryFormat(
+async function adoptFormatting(
     root: string,
-    configurations: { from: string; source?: CarrySource }[],
+    configurations: { from: string; source?: ConfigurationSource }[],
     ignorePaths: string[],
     nativeDefaults = false,
-): Promise<CarriedFormatter> {
+): Promise<AdoptedFormatting> {
     const base = configurations.find((entry) => !entry.from.includes('/'));
     const from = base?.from ?? '.prettierrc.json';
     const source = base === undefined ? { parsed: {} } : base.source;
@@ -21,7 +21,7 @@ async function carryFormat(
         root,
         from,
         nativeDefaults,
-        ...(ignorePaths.length === 0 ? {} : { ignorePaths }),
+        ignorePaths,
         ...(source === undefined ? {} : { source: source.parsed }),
         nested: configurations
             .filter((entry) => entry.from.includes('/'))
@@ -45,6 +45,38 @@ async function carryFormat(
     });
 }
 
+// Keep EditorConfig section order and directory ownership while validating representable properties.
+function adoptEditorconfig(
+    configs: ExistingTooling['configs'],
+    observed: AdoptionResult['observed'],
+): AdoptedFormatting['editorconfig'] {
+    const editorconfigs = configs.filter(({ tool }) => tool === 'ec');
+    if (editorconfigs.length === 0) return undefined;
+    const editorconfig = editorconfigs.find(({ path }) => !path.includes('/'));
+    const document = (path: string) => {
+        const source = observed.get(path);
+        if (source === undefined) throw new Error(`${path} was not observed in the repository.`);
+        const sections = parseBuffer(source.bytes);
+        return {
+            preamble: sections.find(([glob]) => glob === null)?.[1] ?? {},
+            sections: sections.filter(([glob]) => glob !== null).map(([glob, properties]) => ({ glob, properties })),
+        };
+    };
+    return policySchema.shape.tools
+        .unwrap()
+        .shape.editorconfig.unwrap()
+        .shape.adopted.unwrap()
+        .parse({
+            ...(editorconfig === undefined ? { preamble: {}, sections: [] } : document(editorconfig.path)),
+            directories: editorconfigs
+                .filter(({ path }) => path.includes('/'))
+                .map(({ path }) => ({
+                    basePath: dirname(path).replaceAll('\\', '/'),
+                    ...document(path),
+                })),
+        });
+}
+
 /**
  * Convert observed formatter and EditorConfig settings before proposing retirement.
  * @param root the repository root
@@ -54,43 +86,13 @@ async function carryFormat(
 export async function collectFormatting(
     root: string,
     configs: ExistingTooling['configs'],
-    lists: CarriedConfiguration,
+    lists: AdoptionResult,
 ): Promise<void> {
     const [first] = configs;
     if (first === undefined) return;
     try {
         const format = configs.filter(({ tool, carries }) => tool === 'prettier' && carries !== 'ignore-paths');
-        const editorconfigs = configs.filter(({ tool }) => tool === 'ec');
-        const editorconfig = editorconfigs.find(({ path }) => !path.includes('/'));
-        const document = (path: string) => {
-            const observed = lists.observed.get(path);
-            if (observed === undefined) throw new Error(`${path} was not observed in the repository.`);
-            const sections = parseBuffer(observed.bytes);
-            return {
-                preamble: sections.find(([glob]) => glob === null)?.[1] ?? {},
-                sections: sections
-                    .filter(([glob]) => glob !== null)
-                    .map(([glob, properties]) => ({ glob, properties })),
-            };
-        };
-        const adopted =
-            editorconfigs.length === 0
-                ? undefined
-                : policySchema.shape.tools
-                      .unwrap()
-                      .shape.editorconfig.unwrap()
-                      .shape.adopted.unwrap()
-                      .parse({
-                          ...(editorconfig === undefined
-                              ? { preamble: {}, sections: [] }
-                              : document(editorconfig.path)),
-                          directories: editorconfigs
-                              .filter(({ path }) => path.includes('/'))
-                              .map(({ path }) => ({
-                                  basePath: dirname(path).replaceAll('\\', '/'),
-                                  ...document(path),
-                              })),
-                      });
+        const adopted = adoptEditorconfig(configs, lists.observed);
         const folders = new Set(format.map(({ path }) => dirname(path)));
         if (folders.size !== format.length)
             throw new Error('Multiple Prettier configurations in one directory require explicit conversion.');
@@ -101,10 +103,10 @@ export async function collectFormatting(
                 from: input.path,
                 ...(/\.[cm]?[jt]s$/u.test(input.path) || /^package\./u.test(basename(input.path))
                     ? {}
-                    : { source: parseCarrySource(observed, input.tool, input.path) }),
+                    : { source: parseConfigurationSource(observed, input.tool, input.path) }),
             };
         });
-        lists.formatter = await carryFormat(
+        lists.formatter = await adoptFormatting(
             root,
             sources,
             configs

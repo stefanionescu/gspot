@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { stringify } from 'smol-toml';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
-import { emitAll } from '#cli/generation/render.ts';
+import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
 
 test.each([
@@ -26,10 +26,10 @@ test.each([
         }),
         ...Object.fromEntries(paths.map((path) => [`nested/${path}`, 'teh\n'])),
     });
-    const renderSession1 = await openSession(sandbox.path);
-    const outputs = emitAll(renderSession1.policyFiles.policy, renderSession1.repository, renderSession1.scopes, {
-        version: renderSession1.version,
-        packageManager: renderSession1.packageManager,
+    const session = await openSession(sandbox.path);
+    const outputs = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
+        version: session.version,
+        packageClient: session.packageClient,
     }).files.filter(({ path }) => path.endsWith('typos.toml'));
     for (const output of outputs) await Bun.write(join(sandbox.path, output.path), output.content);
     for (const path of paths) {

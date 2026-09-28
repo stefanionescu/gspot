@@ -28,7 +28,7 @@ function modulePath(path: string, directory: string): string | undefined {
     }
 }
 
-// Refuses a file tree-sitter could not parse in full, naming the first place it lost the thread.
+// Refuse incomplete tree-sitter parses and identify the first invalid location.
 function assertParsed(tree: NonNullable<Awaited<ReturnType<typeof parseSource>>>, path: string): void {
     if (!tree.rootNode.hasError) return;
     const location = (tree.rootNode.descendantsOfType('ERROR')[0] ?? tree.rootNode).startPosition;

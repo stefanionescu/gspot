@@ -32,7 +32,13 @@ function isKeyGroup(surface: ExposedSettings, key: string, value: unknown): valu
     return [...surface.specs.keys()].some((name) => name.startsWith(`${key}.`));
 }
 
-function toolKeys(policy: Partial<Policy>, surface: ExposedSettings): string[] {
+/**
+ * Every setting key a policy table writes, in dotted form.
+ * @param policy the root table or one scope table
+ * @param surface the selected manifest settings, including nested tool keys
+ * @returns the keys under limits, naming, tools, and format
+ */
+export function writtenKeys(policy: Partial<Policy>, surface: ExposedSettings): string[] {
     const keys: string[] = [];
     const pending = Object.entries(policy.tools ?? {}).flatMap(([tool, table]) =>
         Object.entries(table)
@@ -44,16 +50,6 @@ function toolKeys(policy: Partial<Policy>, surface: ExposedSettings): string[] {
             pending.push(...Object.entries(value).map(([slot, child]) => ({ key: `${key}.${slot}`, value: child })));
         else keys.push(key);
     }
-    return keys;
-}
-
-/**
- * Every setting key a policy table writes, in dotted form.
- * @param policy the root table or one scope table
- * @param surface the selected manifest settings, including nested tool keys
- * @returns the keys under limits, naming, tools and format
- */
-export function writtenKeys(policy: Partial<Policy>, surface: ExposedSettings): string[] {
     const format = Object.keys(policy.format ?? {}).map((key) => `format.${key}`);
-    return [...limitKeys(policy), ...namingKeys(policy), ...toolKeys(policy, surface), ...format];
+    return [...limitKeys(policy), ...namingKeys(policy), ...keys, ...format];
 }

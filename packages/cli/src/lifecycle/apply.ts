@@ -1,7 +1,7 @@
-import type { PublicationRequest } from '#cli/types/lifecycle/apply.ts';
 import type { GeneratedProposal } from '#cli/types/generation.ts';
+import type { PublicationRequest } from '#cli/types/lifecycle/apply.ts';
 import { isValePackageFile } from '#cli/repository/file-classification.ts';
-import { publicationSnapshot, readOwnership } from '#cli/lifecycle/ownership/owner.ts';
+import { publicationObservation, readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import { EXECUTABLE_FILE, OWNER_WRITABLE_FILE, READ_ONLY_FILE } from '#cli/constants/platform.ts';
 import type { ApplyReport, FileProposal, LifecycleOwner } from '#cli/types/lifecycle/lifecycle.ts';
 
@@ -33,19 +33,35 @@ function recordPreserved(report: ApplyReport, proposals: FileProposal[]): void {
     }
 }
 
-// Pruning restores only locally recorded outputs that no selected owner still needs.
-function pruningProposals(
-    owner: LifecycleOwner,
-    root: string,
-    expected: Set<string>,
-    retained: { prose: boolean; packages: boolean },
-): FileProposal[] {
+// Every proposal is prepared before the owner publishes the batch.
+/**
+ * Publish and prune generated files using recorded ownership and current snapshots.
+ * @param owner the lifecycle owner of the repository
+ * @param request generated outputs, pruning policy, and reviewed originals
+ */
+export function publishGenerated(owner: LifecycleOwner, request: PublicationRequest): void {
+    const { root, rendered, report, retained, takeover, regenerate } = request;
+    const configurations = configurationProposals(owner, rendered, takeover !== undefined);
+    const authorized = new Map([...(regenerate ?? []), ...(takeover ?? [])]);
+    const replacements = rendered.files.map((file) => {
+        const kind = file.kind === 'lock' || file.kind === 'hook' ? file.kind : 'config';
+        // A reviewed original (takeover) or a file a merge broke (regenerate) is replaced whatever its bytes are.
+        const observed = file.kind === 'lock' ? file.observed : authorized.get(file.path);
+        let mode = file.readOnly ? READ_ONLY_FILE : OWNER_WRITABLE_FILE;
+        if (file.executable === true) mode = EXECUTABLE_FILE;
+        const replacement = publicationObservation({ bytes: Buffer.from(file.content), mode }, owner.read(file.path));
+        return owner.proposeReplacement(file.path, replacement, kind, observed !== undefined, observed);
+    });
+    const blocks = rendered.blocks.map((block) => owner.proposeBlock(block.path, block.block, block.style));
+    const generated = [...replacements, ...blocks, ...configurations.map(({ proposal }) => proposal)];
+    const expected = new Set(['gspot.toml', '.gspot/version', '.gitignore', ...generated.map(({ path }) => path)]);
+    // Pruning restores only recorded outputs that no selected owner still needs.
     const recorded = new Set(
         readOwnership(root)
             .files.filter((entry) => ['hook', 'runtime', 'export'].includes(entry.kind))
             .map((entry) => entry.path),
     );
-    return owner
+    const pruning = owner
         .installedPaths()
         .filter(
             (path) =>
@@ -58,44 +74,6 @@ function pruningProposals(
                 ),
         )
         .map((path) => owner.proposeRestoration(path));
-}
-
-// Every proposal is prepared before the owner publishes the batch.
-/**
- * Publish and prune generated files using recorded ownership and current snapshots.
- * @param owner the lifecycle owner of the repository
- * @param request generated outputs, pruning policy, and reviewed originals
- */
-export function publishGenerated(owner: LifecycleOwner, request: PublicationRequest): void {
-    const { root, rendered, report, retained, takeover, regenerate = new Map() } = request;
-    const configurations = configurationProposals(owner, rendered, takeover !== undefined);
-    const replacements = rendered.files.map((file) => {
-        const kind = file.kind === 'lock' || file.kind === 'hook' ? file.kind : 'config';
-        // A reviewed original (takeover) or a file a merge broke (regenerate) is replaced whatever its bytes are.
-        const authorized = takeover?.get(file.path) ?? regenerate.get(file.path);
-        return owner.proposeReplacement(
-            file.path,
-            publicationSnapshot(
-                {
-                    bytes: Buffer.from(file.content),
-                    mode:
-                        file.executable === true
-                            ? EXECUTABLE_FILE
-                            : file.readOnly
-                              ? READ_ONLY_FILE
-                              : OWNER_WRITABLE_FILE,
-                },
-                owner.read(file.path),
-            ),
-            kind,
-            file.kind === 'lock' ? file.observed !== undefined : authorized !== undefined,
-            file.kind === 'lock' ? file.observed : authorized,
-        );
-    });
-    const blocks = rendered.blocks.map((block) => owner.proposeBlock(block.path, block.block, block.style));
-    const generated = [...replacements, ...blocks, ...configurations.map(({ proposal }) => proposal)];
-    const expected = new Set(['gspot.toml', '.gspot/version', '.gitignore', ...generated.map(({ path }) => path)]);
-    const pruning = pruningProposals(owner, root, expected, retained);
     const proposals = [...generated, ...pruning];
     const conflicts = proposals.filter((proposal) => proposal.status === 'preserved').map((proposal) => proposal.path);
     if (takeover !== undefined && conflicts.length > 0)

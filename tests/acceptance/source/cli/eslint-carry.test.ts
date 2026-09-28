@@ -4,8 +4,9 @@ import { ESLint, loadESLint } from 'eslint';
 import { createFileTree, testdir } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
 import type { ApplyPreviewJson } from '#cli/types/commands/apply.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
+import type { EslintAdoption } from '#tests/types/acceptance/source/cli.ts';
 import { chmodSync, existsSync, readFileSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
 
 import {
@@ -14,23 +15,87 @@ import {
     ESLINT_CARRY_SOURCE,
 } from '#tests/constants/acceptance/source/cli/cli.ts';
 
-test.each(['eslint.config.mjs', '.eslintrc.json', 'package.json'])(
-    'init carries resolved ESLint core and disabled rules from %s for every governed path',
-    async (path) => {
+async function expectAdoptedRules({ root, before }: EslintAdoption): Promise<void> {
+    const expected = before.flatMap(({ filePath, messages }) =>
+        messages
+            .filter(({ ruleId }) => ruleId === 'eqeqeq')
+            .map(({ severity, line, column }) => ({
+                file: relative(root, filePath),
+                severity,
+                line,
+                column,
+            })),
+    );
+    expect(expected).toStrictEqual([
+        { file: 'tests/[draft].js', severity: 2, line: 1, column: 41 },
+        { file: 'tests/café note.js', severity: 2, line: 1, column: 41 },
+        { file: 'server/source.js', severity: 1, line: 1, column: 41 },
+    ]);
+    const eslint = new ESLint({
+        cwd: root,
+        overrideConfigFile: join(root, '.gspot/config/eslint.config.mjs'),
+    });
+    const checked = await eslint.lintFiles(ESLINT_CARRY_FILES);
+    expect(
+        checked.flatMap(({ filePath, messages }) =>
+            messages
+                .filter(({ ruleId }) => ruleId === 'eqeqeq')
+                .map(({ severity, line, column }) => ({
+                    file: relative(root, filePath),
+                    severity,
+                    line,
+                    column,
+                })),
+        ),
+    ).toStrictEqual(expected);
+    for (const file of ESLINT_CARRY_FILES) writeFileSync(join(root, file), ESLINT_CARRY_SOURCE.replace('==', '==='));
+    const corrected = await eslint.lintFiles(ESLINT_CARRY_FILES);
+    expect(corrected.flatMap(({ messages }) => messages.filter(({ ruleId }) => ruleId === 'eqeqeq'))).toStrictEqual([]);
+    writeFileSync(join(root, 'tests/future.js'), ESLINT_CARRY_SOURCE);
+    const [future] = await eslint.lintFiles(['tests/future.js']);
+    expect(
+        future!.messages
+            .filter(({ ruleId }) => ruleId === 'eqeqeq')
+            .map(({ ruleId, severity }) => ({ ruleId, severity })),
+    ).toStrictEqual([{ ruleId: 'eqeqeq', severity: 2 }]);
+}
+
+async function expectRestoredConfiguration({ root, path, original }: EslintAdoption): Promise<void> {
+    // The package manifest keeps its authored text; a native configuration file is rewritten or removed.
+    const authored = join(root, path);
+    const kept = existsSync(authored) && readFileSync(authored, 'utf8') === original;
+    expect(kept).toBe(path === 'package.json');
+    expect(existsSync(join(root, '.gspot/reports/report.json'))).toBe(false);
+    const repeated = await run(root, ['apply', '--dry-run', '--json']);
+    expect(repeated.code, repeated.stdout + repeated.stderr).toBe(0);
+    expect((JSON.parse(repeated.stdout) as ApplyPreviewJson).drift).toStrictEqual([]);
+    const removed = await run(root, ['uninstall', '--yes']);
+    expect(removed.code, removed.stdout + removed.stderr).toBe(0);
+    expect(readFileSync(join(root, path), 'utf8')).toBe(original);
+    expect(statSync(join(root, path)).mode & 0o777).toBe(0o640);
+}
+
+test.each(
+    ['eslint.config.mjs', '.eslintrc.json', 'package.json'].flatMap((path) => [
+        { path, scenario: 'preserves effective rules and accepts corrected files', verify: expectAdoptedRules },
+        { path, scenario: 'restores authored bytes and modes after uninstall', verify: expectRestoredConfiguration },
+    ]),
+)(
+    'ESLint adoption from $path $scenario',
+    async ({ path, verify }) => {
         await using repository = await testdir();
-        const legacy = {
+        const eslintrc = {
             root: true,
             parserOptions: { ecmaVersion: 2022, sourceType: 'module' },
             rules: ESLINT_CARRY_CONFIG[0]!.rules,
             overrides: ESLINT_CARRY_CONFIG.slice(1),
         };
+        const authored = path === 'package.json' ? { private: true, type: 'module', eslintConfig: eslintrc } : eslintrc;
         const original =
             path === 'eslint.config.mjs'
                 ? `export default ${JSON.stringify(ESLINT_CARRY_CONFIG)};\n`
-                : JSON.stringify(
-                      path === 'package.json' ? { private: true, type: 'module', eslintConfig: legacy } : legacy,
-                  ) + '\n';
-        const Constructor = await loadESLint({ useFlatConfig: path === 'eslint.config.mjs' });
+                : JSON.stringify(authored) + '\n';
+        const eslintClass = await loadESLint({ useFlatConfig: path === 'eslint.config.mjs' });
         await createFileTree(repository.path, {
             'package.json': '{"private":true,"type":"module"}\n',
             [path]: original,
@@ -38,22 +103,7 @@ test.each(['eslint.config.mjs', '.eslintrc.json', 'package.json'])(
         });
         chmodSync(join(repository.path, path), 0o640);
         symlinkSync(join(import.meta.dir, '../../../../node_modules'), join(repository.path, 'node_modules'));
-        const before = await new Constructor({ cwd: repository.path }).lintFiles(ESLINT_CARRY_FILES);
-        const expected = before.flatMap(({ filePath, messages }) =>
-            messages
-                .filter(({ ruleId }) => ruleId === 'eqeqeq')
-                .map(({ severity, line, column }) => ({
-                    file: relative(repository.path, filePath),
-                    severity,
-                    line,
-                    column,
-                })),
-        );
-        expect(expected).toStrictEqual([
-            { file: 'tests/[draft].js', severity: 2, line: 1, column: 41 },
-            { file: 'tests/café note.js', severity: 2, line: 1, column: 41 },
-            { file: 'server/source.js', severity: 1, line: 1, column: 41 },
-        ]);
+        const before = await new eslintClass({ cwd: repository.path }).lintFiles(ESLINT_CARRY_FILES);
         const result = await run(repository.path, [
             'init',
             '--yes',
@@ -70,48 +120,7 @@ test.each(['eslint.config.mjs', '.eslintrc.json', 'package.json'])(
         expect((JSON.parse(result.stdout) as InitJson).plan!.remove.some((entry) => entry.path === path)).toBe(
             path !== 'package.json',
         );
-        const eslint = new ESLint({
-            cwd: repository.path,
-            overrideConfigFile: join(repository.path, '.gspot/config/eslint.config.mjs'),
-        });
-        const checked = await eslint.lintFiles(ESLINT_CARRY_FILES);
-        expect(
-            checked.flatMap(({ filePath, messages }) =>
-                messages
-                    .filter(({ ruleId }) => ruleId === 'eqeqeq')
-                    .map(({ severity, line, column }) => ({
-                        file: relative(repository.path, filePath),
-                        severity,
-                        line,
-                        column,
-                    })),
-            ),
-        ).toStrictEqual(expected);
-        for (const file of ESLINT_CARRY_FILES)
-            writeFileSync(join(repository.path, file), ESLINT_CARRY_SOURCE.replace('==', '==='));
-        const corrected = await eslint.lintFiles(ESLINT_CARRY_FILES);
-        expect(corrected.flatMap(({ messages }) => messages.filter(({ ruleId }) => ruleId === 'eqeqeq'))).toStrictEqual(
-            [],
-        );
-        writeFileSync(join(repository.path, 'tests/future.js'), ESLINT_CARRY_SOURCE);
-        const [future] = await eslint.lintFiles(['tests/future.js']);
-        expect(
-            future!.messages
-                .filter(({ ruleId }) => ruleId === 'eqeqeq')
-                .map(({ ruleId, severity }) => ({ ruleId, severity })),
-        ).toStrictEqual([{ ruleId: 'eqeqeq', severity: 2 }]);
-        // The package manifest keeps its authored text; a native configuration file is rewritten or removed.
-        const authored = join(repository.path, path);
-        const kept = existsSync(authored) && readFileSync(authored, 'utf8') === original;
-        expect(kept).toBe(path === 'package.json');
-        expect(existsSync(join(repository.path, '.gspot/reports/report.json'))).toBe(false);
-        const repeated = await run(repository.path, ['apply', '--dry-run', '--json']);
-        expect(repeated.code, repeated.stdout + repeated.stderr).toBe(0);
-        expect((JSON.parse(repeated.stdout) as ApplyPreviewJson).drift).toStrictEqual([]);
-        const removed = await run(repository.path, ['uninstall', '--yes']);
-        expect(removed.code, removed.stdout + removed.stderr).toBe(0);
-        expect(readFileSync(join(repository.path, path), 'utf8')).toBe(original);
-        expect(statSync(join(repository.path, path)).mode & 0o777).toBe(0o640);
+        await verify({ root: repository.path, path, original, before });
     },
     PLANTED_TIMEOUT_MS,
 );

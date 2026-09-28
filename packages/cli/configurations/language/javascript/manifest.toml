@@ -22,7 +22,7 @@ tags = ["shebang:node"]
 name = "eslint"
 rule_page = "https://eslint.org/docs/latest/rules/{rule}"
 crash_pattern = "^(?:Oops! Something went wrong|Error: Cannot find module|ERR_MODULE_NOT_FOUND|ConfigError:)"
-suppression = {marker = "\\beslint-disable(?:-next-line|-line)?\\b", reason = " -- (?<reason>\\S.*)"}
+suppression = {marker = "^(?:/\\*\\s*eslint-disable(?:-next-line|-line)?|//\\s*eslint-disable-(?:next-)?line)(?=\\s|$)", reason = " -- (?<reason>\\S.*)"}
 version = "9.39.5"
 npm = "eslint"
 floor = "9.38.0"
@@ -242,7 +242,7 @@ fix_order = "codemod"
 findings_exit_codes = [1]
 fix_findings_exit_codes = [1]
 claims = {extensions = [".js", ".jsx", ".mjs", ".cjs"], tags = ["shebang:node"]}
-coverage = ["style", "structure", "security"]
+coverage = ["syntax", "style", "structure", "security"]
 output = {format = "eslint-json"}
 summary = "Runs ESLint with the shipped rule set over every JavaScript file."
 why = "ESLint catches mistakes and slop the runtime accepts: unused code, unsafe patterns, functions that only forward."
@@ -378,8 +378,8 @@ why = "The configuration is put together from the blocks of many configurations,
 help = "Run gspot apply to write the configuration again. A rule the repository decided against is recorded with gspot ignore, which carries a reason."
 
 [rule_files]
-language = ["language/JAVASCRIPT.md", "language/naming/JAVASCRIPT.md"]
-runtime = ["runtime/node/NODE.md"]
+language = [{path = "language/JAVASCRIPT.md"}, {path = "language/naming/JAVASCRIPT.md"}]
+runtime = [{path = "runtime/node/NODE.md"}, {path = "runtime/bun/BUN.md", when = {filenames = ["bun.lock", "bun.lockb", "bunfig.toml"]}}]
 
 [required_rules]
 js = ["eqeqeq", "no-restricted-syntax", "max-lines", "sonarjs/cognitive-complexity", "gspot/private-before-public"]

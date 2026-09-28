@@ -4,6 +4,7 @@ import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
 import { Code } from '@astrojs/starlight/components';
 import Example from '../components/home/Example.astro';
 import Features from '../components/home/Features.astro';
+import ThemeSelect from '../components/starlight/ThemeSelect.astro';
 
 const workflow = [
     { title: 'Choose your checks', description: 'Choose configurations and settings in gspot.toml. Apply those choices to generate configuration for the selected tools.', image: '/brand/home/policy.svg', href: '/guides/customize/', link: 'Choose checks and exceptions' },
@@ -29,6 +30,7 @@ const repository = [
                 ['eslint', 'ESLint'], ['prettier', 'Prettier'], ['ruff', 'Ruff'],
                 ['stylelint', 'Stylelint'], ['shellcheck', 'ShellCheck'], ['semgrep', 'Semgrep'],
             ].map(([icon, name]) => <li><img src={`/tools/${icon}.${icon === 'shellcheck' ? 'png' : 'svg'}`} alt="" width="24" height="24" /><span>{name}</span></li>)}</ul>
+            <a class="tool-directory" href="/reference/configurations/">Also configure TypeScript, Python, Swift, React, Next.js, and more →</a>
         </section>
         <Features title="Configure tools and check code" description="Choose checks in gspot.toml, generate tool configuration, and run them against your code." features={workflow} />
         <section class="demonstration" aria-labelledby="finding">
@@ -47,20 +49,24 @@ const repository = [
             <p class="setup-note">For a new configuration, <code>gspot init</code> proposes configurations and integrations before applying them. Initialization runs no checks.</p>
         </section>
         <section class="closing" aria-label="Next steps"><h2>Start linting your code.</h2><nav><a class="pill primary" href="/guides/install/">Get started ↗</a><a class="pill" href="/reference/commands/check/">View commands</a></nav></section>
-        <footer class="home-footer"><span>gspot · Apache-2.0</span><a href="/guides/build/">Contribute</a></footer>
+        <footer class="home-footer">
+            <div class="footer-about"><a href="/" class="footer-brand">gspot</a></div>
+            <nav aria-label="Footer"><a href="/guides/overview/">Docs</a><a href="/guides/build/">Contribute</a><a href="https://github.com/stefanionescu/gspot">GitHub</a><a href="https://github.com/stefanionescu/gspot/blob/main/LICENSE.md">Apache-2.0</a></nav>
+            <div class="footer-theme"><ThemeSelect /></div>
+        </footer>
     </div>
 </StarlightPage>
 <style>
     .landing { max-width: 1200px; min-width: 0; }
     .landing > *, .landing :is(section, ul, li, nav, footer) { margin-block: 0; }
-    .tool-strip { border-block: 1px solid var(--sl-color-gray-5); padding-block: 24px; display: grid; gap: 24px; }
+    .tool-strip { border-top: 1px solid var(--sl-color-gray-5); padding-block: 24px; display: grid; gap: 24px; }
     .tool-strip p { font-size: 0.75rem; white-space: nowrap; color: var(--sl-color-gray-3); margin: 0; }
     .tool-strip ul { padding: 0; list-style: none; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 24px; margin: 0; }
     .tool-strip li { display: grid; grid-template-columns: 32px minmax(0, 1fr); justify-content: start; align-items: center; gap: 12px; min-width: 0; font-size: 0.9375rem; font-weight: 500; margin: 0; }
     .tool-strip img { width: 24px; height: 24px; object-fit: contain; justify-self: center; filter: invert(1); opacity: 0.8; }
     .tool-strip img[src$=".png"], .tool-strip img[src$="semgrep.svg"] { filter: none; }
     :global([data-theme='light']) .tool-strip img { width: 24px; height: 24px; object-fit: contain; justify-self: center; filter: none; }
-    .demonstration, .setup { padding-block: 72px; border-top: 1px solid var(--sl-color-gray-5); }
+    .demonstration, .setup { padding-block: var(--home-section-space); border-top: 1px solid var(--sl-color-gray-5); }
     h2 { font-size: clamp(1.75rem, 3vw, 2.5rem); font-weight: 500; margin: 0 0 12px; }
     .landing h2 { border: 0; padding: 0; }
     .demonstration > p { max-width: 72ch; margin-block: 20px 0; color: var(--sl-color-gray-2); }
@@ -79,10 +85,8 @@ const repository = [
     .setup-grid :global(.frame) { height: 100%; display: flex; flex-direction: column; }
     .setup-grid :global(pre) { flex: 1; overflow-x: auto; }
     .setup-grid p { margin: 0; }
-    .closing { border-top: 1px solid var(--sl-color-gray-5); display: flex; align-items: center; justify-content: space-between; gap: 24px; padding-block: 72px; }
+    .closing { border-top: 1px solid var(--sl-color-gray-5); display: flex; align-items: center; justify-content: space-between; gap: 24px; padding-block: var(--home-section-space); }
     .closing nav { display: flex; flex-wrap: wrap; gap: 12px; }
-    .home-footer { display: flex; flex-wrap: wrap; gap: 24px; padding-block: 24px; border-top: 1px solid var(--sl-color-gray-5); font-size: 0.75rem; color: var(--sl-color-gray-3); }
-    .home-footer span { margin-right: auto; }
-    @media (max-width: 49.99rem) { .tool-strip ul { grid-template-columns: repeat(3, minmax(0, 1fr)); }.section-heading, .closing { flex-direction: column; align-items: start; }.setup-grid { grid-template-columns: 1fr; }.demonstration, .setup { padding-block: 48px; } }
+    @media (max-width: 49.99rem) { .tool-strip ul { grid-template-columns: repeat(3, minmax(0, 1fr)); }.section-heading, .closing { flex-direction: column; align-items: start; }.setup-grid { grid-template-columns: 1fr; }.demonstration, .setup { padding-block: var(--home-section-space); } }
     @media (max-width: 39.99rem) { .tool-strip ul { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 </style>

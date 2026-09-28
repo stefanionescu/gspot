@@ -58,21 +58,6 @@ function repeatProblem(words: string[], rules: PathRule[], policy: EffectivePoli
     return repeated === undefined ? undefined : { rule: 'duplicate-words', message: `"${repeated}" repeats` };
 }
 
-function shapeProblems(
-    name: string,
-    limits: CategoryLimits,
-    rules: PathRule[],
-    policy: EffectivePolicy,
-): (NameProblem | undefined)[] {
-    const words = wordsOf(name.split('.', 1)[0] ?? name);
-    return [
-        digitProblem(name, rules, policy),
-        lengthProblem(name, limits),
-        wordsProblem(words, limits),
-        repeatProblem(words, rules, policy),
-    ];
-}
-
 function termProblems(identifier: Identifier, parts: string[], context: NamingContext): NameProblem[] {
     const { policy } = context;
     const problems: NameProblem[] = [];
@@ -112,10 +97,14 @@ export function nameProblems(identifier: Identifier, context: NamingContext): Na
     const limits = limitsUnderRules(policy, identifier, rules);
     const name = stripped(identifier.name, rules);
     const parts = splitParts(name);
+    const words = wordsOf(name.split('.', 1)[0] ?? name);
     const isFileName = identifier.category === 'files';
     const problems = [
         caseProblem(name, limits, isFileName),
-        ...shapeProblems(name, limits, rules, policy),
+        digitProblem(name, rules, policy),
+        lengthProblem(name, limits),
+        wordsProblem(words, limits),
+        repeatProblem(words, rules, policy),
         ...termProblems(identifier, parts, context),
         callbackProblem(identifier, parts, context.isReactFile),
     ];

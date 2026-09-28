@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawn } from 'node:child_process';
-import type { SpawnOutcome } from '#tests/types/support/cli.ts';
+import type { SpawnOutcome } from '#tests/types/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
 
 const root = fileURLToPath(new URL('../../..', import.meta.url));
 
@@ -34,16 +34,15 @@ export async function runProcess(
     argv: string[],
     options: { cwd: string; env?: Record<string, string | undefined>; timeoutMs?: number; stdin?: string },
 ): Promise<SpawnOutcome> {
-    const [executable, ...arguments_] = argv;
-    return await new Promise<SpawnOutcome>((resolve, reject) => {
-        const child = spawn(executable!, arguments_, {
+    const [executable, ...commandArguments] = argv;
+    return await new Promise<SpawnOutcome>((complete, reject) => {
+        const child = spawn(executable!, commandArguments, {
             cwd: options.cwd,
             env: { ...environmentVariables(), ...options.env },
             detached: process.platform !== 'win32',
             stdio: ['pipe', 'pipe', 'pipe'],
         });
-        let stdout = '';
-        let stderr = '';
+        const output = { stdout: '', stderr: '' };
         let bytes = 0;
         let failure: Error | undefined;
         const terminate = (reason: string): void => {
@@ -55,25 +54,21 @@ export async function runProcess(
                 if ((error as NodeJS.ErrnoException).code !== 'ESRCH') failure = error as Error;
             }
         };
-        const deadline = setTimeout(
-            () => {
-                terminate(`Command exceeded ${String(options.timeoutMs ?? PLANTED_TIMEOUT_MS * 2)} ms`);
-            },
-            options.timeoutMs ?? PLANTED_TIMEOUT_MS * 2,
-        );
+        const timeoutMs = options.timeoutMs ?? PLANTED_TIMEOUT_MS * 2;
+        const deadline = setTimeout(() => {
+            terminate(`Command exceeded ${String(timeoutMs)} ms`);
+        }, timeoutMs);
         for (const [name, stream] of [
             ['stdout', child.stdout],
             ['stderr', child.stderr],
         ] as const) {
-            stream.setEncoding('utf8');
-            stream.on('data', (chunk: string) => {
+            stream.setEncoding('utf8').on('data', (chunk: string) => {
                 bytes += Buffer.byteLength(chunk);
                 if (bytes > 32 * 1024 * 1024) {
                     terminate('Command output exceeded 32 MiB');
                     return;
                 }
-                if (name === 'stdout') stdout += chunk;
-                else stderr += chunk;
+                output[name] += chunk;
             });
         }
         child.once('error', (error) => {
@@ -84,13 +79,13 @@ export async function runProcess(
             if (failure !== undefined || code === null) {
                 reject(
                     new Error(
-                        `Could not complete ${argv.join(' ')} in ${options.cwd}: ${failure?.message ?? signal ?? 'no signal'}\n${stdout}\n${stderr}`,
+                        `Could not complete ${argv.join(' ')} in ${options.cwd}: ${failure?.message ?? signal ?? 'no signal'}\n${output.stdout}\n${output.stderr}`,
                         { cause: failure },
                     ),
                 );
                 return;
             }
-            resolve({ code, stdout, stderr });
+            complete({ code, ...output });
         });
         child.stdin.end(options.stdin);
     });

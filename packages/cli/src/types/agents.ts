@@ -4,6 +4,14 @@
 export type RuleFinding = { file: string; line: number; message: string };
 /** A rule file by its path relative to rules/. */
 export type RuleText = { path: string; text: string };
+/** A marked good example and the minimum level of its containing section. */
+export type RuleExample = {
+    file: string;
+    line: number;
+    language: string;
+    body: string;
+    level: 'recommended' | 'all';
+};
 /** The rule lint's result. */
 export type RulesLintReport = { findings: RuleFinding[]; files: number };
 export type RuleFile = { source: string; target: string; layer: string; configuration: string; title: string };

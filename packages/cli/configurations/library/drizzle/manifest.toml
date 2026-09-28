@@ -69,4 +69,4 @@ default = []
 summary = "Paths that may hold raw SQL templates, each with a reason."
 
 [rule_files]
-library = ["library/drizzle/DRIZZLE.md"]
+library = [{path = "library/drizzle/DRIZZLE.md"}]

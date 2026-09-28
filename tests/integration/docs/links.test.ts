@@ -9,7 +9,8 @@ import { validateSiteLinks } from '#docs/scripts/links.ts';
 test('built-site validation covers landing fragments, relative manual links, encoded paths, and assets', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'index.html': '<h1 id="finding">Finding</h1><a href="/guide/">Guide</a><img src="/assets/diagram.png">',
+        'index.html':
+            '<h1 id="finding">Finding</h1><a href="/guide/">Guide</a><img alt="Fixture diagram" src="/assets/diagram.png">',
         'guide/index.html': `<a href="/#finding">Finding</a><a href="../${encodeURIComponent('café.html')}#example">Example</a>`,
         'café.html': '<h1 id="example">Example</h1>',
         'assets/diagram.png': 'fixture',
@@ -22,7 +23,10 @@ test('built-site validation covers landing fragments, relative manual links, enc
     );
     writeFileSync(join(sandbox.path, 'index.html'), '<h1 id="finding">Finding</h1><a href="/absent/">Missing page</a>');
     expect(await rejection(validateSiteLinks(directory, 'https://gspot.dev'))).toMatch(/destination does not exist/u);
-    writeFileSync(join(sandbox.path, 'index.html'), '<h1 id="finding">Finding</h1><img src="/assets/missing.png">');
+    writeFileSync(
+        join(sandbox.path, 'index.html'),
+        '<h1 id="finding">Finding</h1><img alt="Fixture diagram" src="/assets/missing.png">',
+    );
     expect(await rejection(validateSiteLinks(directory, 'https://gspot.dev'))).toMatch(
         /missing.png: destination does not exist/u,
     );

@@ -3,13 +3,13 @@ import { extname, posix } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import { toolPin } from '#cli/tools/inspect.ts';
 import type { stylelintRequest } from '#cli/evaluation/protocol.ts';
-import { carriedTool, reasonFor } from '#cli/policy/adoption/results.ts';
 import { evaluateConfiguration } from '#cli/evaluation/configuration.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { parse as parseToml, stringify as stringifyToml } from 'smol-toml';
 import { stylelintResponse, stylelintSource } from '#cli/evaluation/protocol.ts';
-import type { CarriedConfiguration, CarrySource } from '#cli/types/policy/adoption.ts';
-import { observeConfiguration, parseCarrySource } from '#cli/policy/adoption/source.ts';
+import { adoptedScope, adoptedTool, reasonFor } from '#cli/policy/adoption/results.ts';
+import type { AdoptionResult, ConfigurationSource } from '#cli/types/policy/adoption.ts';
+import { observeConfiguration, parseConfigurationSource } from '#cli/policy/adoption/source.ts';
 
 /**
  * Resolve static inheritance from observed files, retaining every input for publication-time validation.
@@ -22,29 +22,29 @@ import { observeConfiguration, parseCarrySource } from '#cli/policy/adoption/sou
 function stylelintRules(
     root: string,
     path: string,
-    source: CarrySource,
-    lists: CarriedConfiguration,
+    source: ConfigurationSource,
+    lists: AdoptionResult,
 ): z.infer<typeof stylelintRequest>['rules'] {
     const visiting = new Set<string>();
-    const resolve = (path: string, source: CarrySource): z.infer<typeof stylelintRequest>['rules'] => {
+    const inheritedRules = (path: string, source: ConfigurationSource): z.infer<typeof stylelintRequest>['rules'] => {
         if (visiting.has(path)) throw new Error(`${path}: Stylelint configuration inheritance contains a cycle.`);
         visiting.add(path);
         const configuration = stylelintSource.parse(source.parsed);
         let rules: z.infer<typeof stylelintRequest>['rules'] = {};
         for (const parent of [configuration.extends ?? []].flat()) {
-            if ((!parent.startsWith('./') && !parent.startsWith('../')) || /[\\:]/u.test(parent))
+            if (!/^\.\.?\/[^\\:]*$/u.test(parent))
                 throw new Error(`${path}: inherited Stylelint configuration must use a repository-relative path.`);
             const target = posix.normalize(posix.join(posix.dirname(path), parent));
             if (!['.json', '.yaml', '.yml'].includes(extname(target)) && posix.basename(target) !== '.stylelintrc')
                 throw new Error(`${path}: inherited Stylelint configuration requires static JSON or YAML.`);
             const original = lists.observed.get(target) ?? observeConfiguration(root, target).original;
             lists.observed.set(target, original);
-            rules = { ...rules, ...resolve(target, parseCarrySource(original, 'stylelint', target)) };
+            rules = { ...rules, ...inheritedRules(target, parseConfigurationSource(original, 'stylelint', target)) };
         }
         visiting.delete(path);
         return { ...rules, ...configuration.rules };
     };
-    return resolve(path, source);
+    return inheritedRules(path, source);
 }
 
 /**
@@ -56,9 +56,9 @@ function stylelintRules(
  * @param check the check the carried ignores belong to
  */
 async function carryStylelint(
-    source: CarrySource,
+    source: ConfigurationSource,
     path: string,
-    lists: CarriedConfiguration,
+    lists: AdoptionResult,
     root: string,
     check?: string,
 ): Promise<void> {
@@ -77,14 +77,12 @@ async function carryStylelint(
     stylelintResponse.parse(
         await evaluateConfiguration({ root, tool: 'stylelint', operation: 'stylelint', version, rules }),
     );
-    const carried = carriedTool(lists, 'stylelint');
+    const carried = adoptedTool(lists, 'stylelint');
     const base = posix.dirname(path);
     if (base === '.') carried.settings['rules'] = enabled;
     else {
-        const scope = lists.scopes.get(base) ?? { configurations: [], tools: {} };
-        scope.configurations = [...new Set([...scope.configurations, 'css'])];
+        const scope = adoptedScope(lists, base, 'css');
         scope.tools['stylelint'] = { rules: enabled };
-        lists.scopes.set(base, scope);
     }
     const literalBase = base.replaceAll(/[?*[\]{}]/gu, String.raw`\$&`);
     const paths = base === '.' ? undefined : [`${literalBase}/**`];

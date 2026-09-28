@@ -100,30 +100,6 @@ export function exportsAtBottom(modules: PythonModule[]): StructureProblem[] {
 }
 
 /**
- * No module-level __getattr__: names that appear at import time hide from every reader and every tool.
- * @param modules every module of the run
- * @returns the problems
- */
-export function lazyExports(modules: PythonModule[]): StructureProblem[] {
-    return modules.flatMap((module) =>
-        module.statements
-            .filter(
-                (statement) =>
-                    (DEFINITIONS.has(statement.type) ? statement.childForFieldName('name')?.text : undefined) ===
-                    '__getattr__',
-            )
-            .map((statement) =>
-                at(
-                    module,
-                    statement,
-                    'no-lazy-exports',
-                    'A module __getattr__ makes names appear at run time. Import and list them.',
-                ),
-            ),
-    );
-}
-
-/**
  * A package shows at most a ceiling of names in __all__.
  * @param modules every module of the run
  * @param ceiling the most names a package may export

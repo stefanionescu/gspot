@@ -3,10 +3,6 @@ import { scopeImports } from '#cli/checks/structure/imports.ts';
 import type { ArchitectureElement } from '#cli/types/policy/policy.ts';
 import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 
-function finding(input: EngineInput, file: string, line: number, rule: string, text: string): Finding {
-    return { check: input.spec.name, file, line, rule, message: text, fixable: false };
-}
-
 /**
  * One finding for each value import that reaches into the server paths from outside them.
  * @param input the engine input
@@ -21,13 +17,12 @@ export async function trpcBoundaries(input: EngineInput): Promise<Finding[]> {
     return index.edges
         .filter((edge) => !isServer(local(edge.from)) && isServer(local(edge.to)))
         .map((edge) => ({
-            ...finding(
-                input,
-                edge.from,
-                edge.line,
-                'server-import',
-                `${edge.source} is server code. Import its types with import type.`,
-            ),
+            check: input.spec.name,
+            file: edge.from,
+            line: edge.line,
+            rule: 'server-import',
+            message: `${edge.source} is server code. Import its types with import type.`,
+            fixable: false,
             column: edge.column,
         }));
 }

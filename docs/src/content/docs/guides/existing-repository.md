@@ -20,6 +20,7 @@ accept the proposal. Keep unsupported configuration until you have converted its
 If the plan lists unread configuration, `gspot init` without `--dry-run` exits with status 2 before
 writing or installing anything. Fix the listed files and run `gspot init` again.
 Use `gspot init --dry-run` to inspect the proposal without changing files.
+
 Executable formatter and ESLint configurations are evaluated through the installed owning tool.
 The proposal identifies captured settings and retained behavior. Missing ESLint, unregistered
 executable behavior, and selectors that cannot be carried remain in the original configuration.
@@ -30,7 +31,7 @@ A tool evaluation failure is unread configuration and refuses initialization.
 Readable configurations of selected tools include `typos.toml`, `.shellcheckrc`,
 and `.markdownlint.jsonc`. Before replacing or removing a file, gspot saves its exact bytes
 and permissions in local recovery data under `.gspot/state/recovery/`. Keep that directory private
-and retain it until you no longer need the originals.
+and retain it while restoration remains necessary.
 
 ## Carry existing policy
 
@@ -62,9 +63,12 @@ stop adoption before any original is replaced.
 
 Markdown rule tables retain enabled rules, disabled rules, and options. Adoption preserves
 native defaults, including when the source omits `default`. An explicit native `default: false`
-keeps unspecified rules disabled. Directory-local configuration creates a policy scope with its own generated configuration
+keeps unspecified rules disabled.
+
+Directory-local configuration creates a policy scope with its own generated configuration
 and editor pointer. Descendant scopes inherit those rule choices. Static JSON and YAML parents
 use explicit `./` or `../` paths. Child values replace inherited values by rule name.
+
 Parent files remain intact and are checked for changes before publication. Overlapping
 configuration, package inheritance, and custom rules remain intact for explicit conversion.
 CLI checks and corrections use only selected files and generated configuration in a temporary
@@ -74,15 +78,20 @@ directory. Other native configuration files do not override that policy or execu
 
 Root and directory-local Stylelint rule tables retain enabled options, numeric limits, and disabled rules.
 Adoption validates rule names and options with the installed Stylelint version pinned by the
-CSS configuration. Install that version before adopting its configuration. Local JSON and YAML
+CSS configuration. Install that version before adopting its configuration.
+
+Local JSON and YAML
 inheritance uses explicit `./` or `../` paths and preserves parent order and child overrides.
 Inherited files remain intact and are
-checked for changes before publication. Directory-local configuration creates a policy scope.
+checked for changes before publication.
+
+Directory-local configuration creates a policy scope.
 Disabled rules keep that directory selector and apply to its generated editor configuration.
 Overlapping configurations, package-provided inheritance,
 executable configuration, and options that cannot be represented in TOML remain active for
 explicit conversion. Enabled settings are stored in `tools.stylelint.rules`.
 Disabled rules become `gspot ignore css/stylelint --rule` entries.
+
 Declared scopes can set their own `tools.stylelint.rules`. Each scope receives its own generated
 configuration and editor pointer, while the tools remain in the shared private installation.
 A scope inherits rules it does not override. An override replaces the entire option value for
@@ -94,15 +103,19 @@ Ruff disabled rules and supported per-file exclusions can be carried from `ruff.
 `.ruff.toml`, or `[tool.ruff]` in `pyproject.toml`. The project manifest remains intact.
 Both `ignore` and `extend-ignore` carry. Rules under `per-file-ignores` and
 `extend-per-file-ignores` combine for each selector and retain their configuration directory.
+
 Local `extend` chains carry supported exclusions and retain inherited files. A child
 `per-file-ignores` table replaces the inherited table; additive exclusions accumulate.
 Inherited selectors keep their declaring directory. If a wildcard selector cannot be restricted
 to the child directory without changing its meaning, adoption retains the configuration for
 explicit conversion. Missing parents, cycles, and unsupported inherited settings also stop
 adoption before any rules are carried.
+
 Nested configurations retain their directory base. A nested negated selector requires
-explicit conversion because moving it could exempt files outside that directory.
-Overlapping Ruff configurations also require explicit conversion. Nonoverlapping nested spelling
+explicit conversion because moving it risks exempting files outside that directory.
+Overlapping Ruff configurations also require explicit conversion.
+
+Nonoverlapping nested spelling
 configurations carry their locale, allowed words, and exclusions into a scope table. Native editor
 configuration preserves directory selectors, basename patterns, and ordered negations.
 Overlapping spelling configurations require explicit conversion because native child settings
@@ -116,15 +129,21 @@ processors retain their plugin names. Imported plugin, parser, and processor obj
 module registrations, including nested exported members. Adoption recognizes static imports,
 literal `require` calls, and top-level literal dynamic imports assigned to configuration values.
 CommonJS registrations use default exports so generated configuration also runs under Node.
+
 A registration names its `module`,
 `export`, and optional `members` path. The export `"*"` refers to the module namespace. Selector bases remain relative to the
 repository and apply to future files. Keep local executable modules in the repository. Exported
 profiles omit entries that depend on repository paths or local executable modules.
 
-Legacy ESLint configurations can extend other configurations. Adoption resolves inherited
+A global plugin registration selects the project instance when its metadata name and version
+match the managed plugin. The generated configuration retains its selected rules and options.
+Scoped registrations and different plugin versions retain the ESLint conflicting-plugin error.
+
+ESLint configurations in `.eslintrc` format can extend other configurations. Adoption resolves inherited
 rules, plugin environments, and extension processors through ESLint. Native override groups and
 ignore patterns are stored as `legacyCriteria` and `legacyIgnores` under `tools.eslint.adopted`.
-A root `.eslintignore` is captured and retired with the legacy configuration after conversion.
+A root `.eslintignore` is captured and retired with the `.eslintrc` configuration after conversion.
+
 Standalone ignore files, nested ignore files, and ignore files beside flat configuration require
 explicit conversion before adoption. Their selector bases remain relative to the repository.
 Nested configuration uses native file
@@ -164,5 +183,5 @@ Add tools without a configuration as [custom checks](/guides/custom-checks/).
 After accepting the proposal, initialization writes configuration and installs selected tools
 unless you pass `--no-install`. It runs no checks. Run `gspot check` to see findings.
 
-To reverse recorded changes, follow [uninstall and recovery](/guides/uninstall/).
+Reverse recorded changes with the [uninstall procedure](/guides/uninstall/).
 Keep local recovery data until restoration is complete.

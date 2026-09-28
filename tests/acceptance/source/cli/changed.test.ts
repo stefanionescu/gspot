@@ -80,9 +80,9 @@ test('changed selection resolves the remote default and refuses absent upstream 
     git(sandbox.path, 'update-ref', 'refs/remotes/origin/main', 'HEAD');
     git(sandbox.path, 'symbolic-ref', 'refs/remotes/origin/HEAD', 'refs/remotes/origin/main');
     await Bun.write(join(sandbox.path, 'api/source.txt'), 'changed');
-    const fallback = await run(sandbox.path, ['check', '--changed']);
-    expect(fallback.code, fallback.stdout + fallback.stderr).toBe(1);
-    expect(fallback.stdout).toContain('refs/remotes/origin/main');
+    const defaultRange = await run(sandbox.path, ['check', '--changed']);
+    expect(defaultRange.code, defaultRange.stdout + defaultRange.stderr).toBe(1);
+    expect(defaultRange.stdout).toContain('refs/remotes/origin/main');
     git(sandbox.path, 'branch', 'upstream');
     git(sandbox.path, 'branch', '--set-upstream-to=upstream');
     git(sandbox.path, 'update-ref', '-d', 'refs/heads/upstream');

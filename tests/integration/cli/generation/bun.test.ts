@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
-import { emitAll } from '#cli/generation/render.ts';
+import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { openLifecycleOwner } from '#cli/lifecycle/ownership/owner.ts';
 
@@ -15,10 +15,10 @@ test('Bun safeguards preserve stricter age and unrelated fields across apply and
         'bun.lock': '{"lockfileVersion":1,"workspaces":{},"packages":{}}',
         'bunfig.toml': original,
     });
-    const renderSession1 = await openSession(repository.path);
-    const generated = emitAll(renderSession1.policyFiles.policy, renderSession1.repository, renderSession1.scopes, {
-        version: renderSession1.version,
-        packageManager: renderSession1.packageManager,
+    const session = await openSession(repository.path);
+    const generated = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
+        version: session.version,
+        packageClient: session.packageClient,
     }).configurations.find((entry) => entry.path === 'bunfig.toml')!;
     const owner = openLifecycleOwner(repository.path);
     owner.applyProposal(owner.proposeConfiguration(generated.path, generated.format, generated.changes, true));
@@ -44,10 +44,10 @@ test('initialization carries root and scoped Bun safeguards into editable policy
     await using repository = await testdir();
     const rootBun =
         '[install]\nexact = true\nminimumReleaseAge = 1209600\n[install.security]\nscanner = "root-scanner"\n';
-    const scopedBun = '[install]\nminimumReleaseAge = 1814400\n[install.security]\nscanner = "scope-scanner"\n';
+    const scopeBun = '[install]\nminimumReleaseAge = 1814400\n[install.security]\nscanner = "scope-scanner"\n';
     await createFileTree(repository.path, {
         'bunfig.toml': rootBun,
-        'app/bunfig.toml': scopedBun,
+        'app/bunfig.toml': scopeBun,
         'bun.lock': '{"lockfileVersion":1,"workspaces":{},"packages":{}}',
         'app/bun.lock': '{"lockfileVersion":1,"workspaces":{},"packages":{}}',
     });
@@ -73,5 +73,5 @@ test('initialization carries root and scoped Bun safeguards into editable policy
         scope: [{ path: 'app', tools: { install: { min_release_age_days: 21, security_scanner: 'scope-scanner' } } }],
     });
     expect(readFileSync(join(repository.path, 'bunfig.toml'), 'utf8')).toBe(rootBun);
-    expect(readFileSync(join(repository.path, 'app/bunfig.toml'), 'utf8')).toBe(scopedBun);
+    expect(readFileSync(join(repository.path, 'app/bunfig.toml'), 'utf8')).toBe(scopeBun);
 });

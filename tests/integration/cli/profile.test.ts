@@ -5,9 +5,9 @@ import { createFileTree, testdir } from 'testdirs';
 import { exportCommand } from '#cli/commands/export.ts';
 import { describe, expect, spyOn, test } from 'bun:test';
 import { readProfile } from '#cli/policy/profiles/read.ts';
-import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import { applyCommand } from '#cli/commands/apply/command.ts';
 import { exportedProfile } from '#cli/policy/profiles/export.ts';
+import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import { failure, rejection } from '#tests/support/expectations.ts';
 import { chmodSync, readFileSync, statSync, symlinkSync } from 'node:fs';
 import { applyUninstall, planUninstall } from '#cli/commands/uninstall.ts';
@@ -27,22 +27,57 @@ describe('profile file paths', () => {
     });
 });
 
+test('a profile removed during reading retains the missing-profile diagnostic', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, { 'house.toml': 'version = 1\n' });
+    const read = spyOn(fs, 'readFileSync').mockImplementationOnce(() => {
+        throw Object.assign(new Error('The file disappeared.'), { code: 'ENOENT' });
+    });
+    try {
+        const observed = await readProfile('house.toml', sandbox.path).catch((error: unknown) => error);
+        expect(observed).toMatchObject({
+            name: 'ProfileError',
+            problems: ['There is no profile at house.toml.'],
+        });
+    } finally {
+        read.mockRestore();
+    }
+});
+
+test('a denied profile read preserves the filesystem error', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, { 'house.toml': 'version = 1\n' });
+    const denied = Object.assign(new Error('The file is unreadable.'), { code: 'EACCES' });
+    const read = spyOn(fs, 'readFileSync').mockImplementationOnce(() => {
+        throw denied;
+    });
+    try {
+        const observed = await readProfile('house.toml', sandbox.path).catch((error: unknown) => error);
+        expect(observed).toBe(denied);
+    } finally {
+        read.mockRestore();
+    }
+});
+
 test.each(['jest', 'vitest'])(
     'profiles retain %s coverage settings and omit repository support directories',
     async (configuration) => {
         await using directory = await testdir();
-        const reusable = { coverage_lines: 90, ...(configuration === 'jest' ? { global_package: 'bun:test' } : {}) };
+        const sharedSettings = {
+            coverage_lines: 90,
+            ...(configuration === 'jest' ? { global_package: 'bun:test' } : {}),
+        };
         const exported = exportedProfile(
             stringify({
                 version: 1,
                 configurations: [configuration],
-                tools: { [configuration]: { ...reusable, harness_directory: 'tests/fixtures' } },
+                tools: { [configuration]: { ...sharedSettings, harness_directory: 'tests/fixtures' } },
             }),
             'shared.profile.toml',
         );
         await createFileTree(directory.path, { 'shared.profile.toml': exported.text });
         const restored = await readProfile('shared.profile.toml', directory.path);
-        expect(restored.tables.tools?.[configuration]).toStrictEqual(reusable);
+        expect(restored.tables.tools?.[configuration]).toStrictEqual(sharedSettings);
         expect(exported.leftOut).toStrictEqual([`tools.${configuration}.harness_directory: names a repository path`]);
         await createFileTree(directory.path, {
             'invalid.profile.toml': stringify({
@@ -61,7 +96,7 @@ test.each(['jest', 'vitest'])(
 
 test('profile export omits local ESLint registrations and selector bases while preserving reusable processors', async () => {
     await using directory = await testdir();
-    const reusable = {
+    const sharedSettings = {
         name: 'package processor',
         processor: { module: 'eslint-plugin-example', export: 'default', members: ['processors', 'source'] },
     };
@@ -73,7 +108,7 @@ test('profile export omits local ESLint registrations and selector bases while p
                 adopted: [
                     { name: 'local selector', basePath: 'src', rules: { eqeqeq: 'error' } },
                     { name: 'local processor', processor: { module: './processing.mjs', export: 'default' } },
-                    reusable,
+                    sharedSettings,
                 ],
             },
         },
@@ -82,7 +117,7 @@ test('profile export omits local ESLint registrations and selector bases while p
     expect(exported.leftOut).toHaveLength(2);
     await createFileTree(directory.path, { 'shared.profile.toml': exported.text });
     const restored = await readProfile('shared.profile.toml', directory.path);
-    expect(restored.tables.tools?.eslint?.adopted).toStrictEqual([reusable]);
+    expect(restored.tables.tools?.eslint?.adopted).toStrictEqual([sharedSettings]);
     await createFileTree(directory.path, {
         'invalid.profile.toml': stringify({
             version: 1,

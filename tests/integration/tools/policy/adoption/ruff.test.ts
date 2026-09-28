@@ -3,7 +3,7 @@ import { realpathSync } from 'node:fs';
 import { expect, test } from 'bun:test';
 import { join, relative } from 'node:path';
 import { createFileTree, testdir } from 'testdirs';
-import { emitAll } from '#cli/generation/render.ts';
+import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { collectCarried } from '#cli/policy/adoption/collect.ts';
 import type { ExistingTooling } from '#cli/types/repository/repository.ts';
@@ -45,14 +45,12 @@ test('adopted Ruff basename and directory selectors retain their scope in pinned
     });
     const carried = await collectCarried(sandbox.path, tooling, new Set(['python']), paths);
     expect(carried.unread).toStrictEqual([]);
-    await Bun.write(
-        join(sandbox.path, 'gspot.toml'),
-        stringify({
-            version: 1,
-            configurations: ['python'],
-            ignore: [...carried.tools.values()].flatMap((tool) => tool.ignores),
-        }),
-    );
+    const policy = {
+        version: 1,
+        configurations: ['python'],
+        ignore: [...carried.tools.values()].flatMap((tool) => tool.ignores),
+    };
+    await Bun.write(join(sandbox.path, 'gspot.toml'), stringify(policy));
     const session = await openSession(sandbox.path);
     const version = Bun.spawnSync(['ruff', '--version'], { stdout: 'pipe', stderr: 'pipe' });
     expect(version.stdout.toString().trim()).toBe(
@@ -60,7 +58,7 @@ test('adopted Ruff basename and directory selectors retain their scope in pinned
     );
     const config = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
         version: session.version,
-        packageManager: session.packageManager,
+        packageClient: session.packageClient,
     }).files.find((file) => file.path === '.gspot/config/ruff.toml')!;
     await Bun.write(join(sandbox.path, config.path), config.content);
     const run = () =>
@@ -120,7 +118,7 @@ test('additive Ruff exclusions preserve native findings and combine rules for th
     const session = await openSession(sandbox.path);
     const config = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
         version: session.version,
-        packageManager: session.packageManager,
+        packageClient: session.packageClient,
     }).files.find((file) => file.path === '.gspot/config/ruff.toml')!;
     await Bun.write(join(sandbox.path, config.path), config.content);
     const after = run(config.path);
@@ -133,31 +131,28 @@ test('additive Ruff exclusions preserve native findings and combine rules for th
     expect(await Bun.file(join(sandbox.path, 'backend/ruff.toml')).text()).toBe(original);
 });
 
-test('Ruff inheritance retains native merges and each parent selector directory', async () => {
-    await using sandbox = await testdir();
-    const originals = {
+const INHERITED_FILES = {
+    configs: {
         'config/pyproject.toml':
             '[project]\nname = "shared"\n[tool.ruff.lint]\nignore = ["E701"]\n[tool.ruff.lint.per-file-ignores]\n"parent.py" = ["F401"]\n[tool.ruff.lint.extend-per-file-ignores]\n"../backend/tests/*.py" = ["F401"]\n"elsewhere/*.py" = ["F401"]\n',
         'config/base.toml':
             'extend = "pyproject.toml"\n[lint]\nignore = ["E702"]\n[lint.extend-per-file-ignores]\n"../backend/tests/*.py" = ["E401"]\n',
         'backend/ruff.toml':
             'extend = "../config/base.toml"\n[lint.per-file-ignores]\n"ignored.py" = ["F401"]\n[lint.extend-per-file-ignores]\n"tests/*.py" = ["I001"]\n',
-    };
-    const paths = [
-        'backend/elsewhere/kept.py',
-        'backend/parent.py',
-        'backend/ignored.py',
-        'backend/tests/example.py',
-        'backend/statements.py',
-    ];
-    await createFileTree(sandbox.path, {
-        ...originals,
+    },
+    sources: {
         'backend/elsewhere/kept.py': 'import os\n',
         'backend/parent.py': 'import os\n',
         'backend/ignored.py': 'import os\n',
         'backend/tests/example.py': 'import os, sys\n',
         'backend/statements.py': 'values = []\nif True: values.append(1); values.append(2)\n',
-    });
+    },
+};
+
+test('Ruff inheritance retains native merges and each parent selector directory', async () => {
+    await using sandbox = await testdir();
+    const paths = Object.keys(INHERITED_FILES.sources);
+    await createFileTree(sandbox.path, { ...INHERITED_FILES.configs, ...INHERITED_FILES.sources });
     const run = (config?: string) =>
         Bun.spawnSync(
             [
@@ -180,16 +175,16 @@ test('Ruff inheritance retains native merges and each parent selector directory'
         ['config/base.toml', 'config/pyproject.toml'],
     );
     expect([...carried.observed.keys()].toSorted((left, right) => left.localeCompare(right))).toStrictEqual(
-        Object.keys(originals).toSorted((left, right) => left.localeCompare(right)),
+        Object.keys(INHERITED_FILES.configs).toSorted((left, right) => left.localeCompare(right)),
     );
     await Bun.write(
         join(sandbox.path, 'gspot.toml'),
         stringify({ version: 1, configurations: ['python'], ignore: carried.tools.get('ruff')!.ignores }),
     );
-    const renderSession1 = await openSession(sandbox.path);
-    const config = emitAll(renderSession1.policyFiles.policy, renderSession1.repository, renderSession1.scopes, {
-        version: renderSession1.version,
-        packageManager: renderSession1.packageManager,
+    const session = await openSession(sandbox.path);
+    const config = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
+        version: session.version,
+        packageClient: session.packageClient,
     }).files.find((file) => file.path === '.gspot/config/ruff.toml')!;
     await Bun.write(join(sandbox.path, config.path), config.content);
     const after = run(config.path);
@@ -203,6 +198,6 @@ test('Ruff inheritance retains native merges and each parent selector directory'
     await Bun.write(join(sandbox.path, 'backend/elsewhere/kept.py'), 'pass\n');
     const corrected = run(config.path);
     expect(corrected.exitCode, corrected.stderr.toString()).toBe(0);
-    for (const [path, original] of Object.entries(originals))
+    for (const [path, original] of Object.entries(INHERITED_FILES.configs))
         expect(await Bun.file(join(sandbox.path, path)).text()).toBe(original);
 });

@@ -1,5 +1,5 @@
-import { fileBatches } from '#cli/execution/file-batches.ts';
-import { runToolCheck } from '#cli/execution/tool-runner.ts';
+import { runToolCheck } from '#cli/execution/tool/runner.ts';
+import { fileBatches } from '#cli/execution/files/batches.ts';
 import type { CheckResult } from '#cli/types/checks/checks.ts';
 import { pushBase } from '#cli/repository/revisions/selection.ts';
 import type { PlannedCheck, Session } from '#cli/types/execution/execution.ts';
@@ -38,16 +38,14 @@ export async function checkSecretHistory(session: Session, planned: PlannedCheck
         '-',
         '{root}',
     ];
-    const selections =
-        planned.commits === undefined
-            ? [`${await pushBase(session.root, session.cancelSignal)}..HEAD`]
-            : planned.commits.length === 0
-              ? []
-              : fileBatches(
-                    planned.commits,
-                    [...command, '--log-opts', '--no-walk --diff-merges=separate'],
-                    process.platform,
-                ).map((commits) => `--no-walk --diff-merges=separate ${commits.join(' ')} --`);
+    let selections: string[] = [];
+    if (planned.commits === undefined) selections = [`${await pushBase(session.root, session.cancelSignal)}..HEAD`];
+    else if (planned.commits.length > 0)
+        selections = fileBatches(
+            planned.commits,
+            [...command, '--log-opts', '--no-walk --diff-merges=separate'],
+            process.platform,
+        ).map((commits) => `--no-walk --diff-merges=separate ${commits.join(' ')} --`);
     for (const selection of selections) {
         const current = await runToolCheck(session, planned, [...command, '--log-opts', selection]);
         result.findings.push(...current.findings);

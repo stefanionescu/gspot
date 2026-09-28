@@ -1,8 +1,8 @@
 // The types of checks in this package.
 import type { z } from 'zod';
 import type { Node } from 'web-tree-sitter';
-import type { ToolContext } from '#cli/types/tools/tools.ts';
 import type { SqlFile } from '#cli/types/parsers/sql.ts';
+import type { ToolContext } from '#cli/types/tools/tools.ts';
 import type { configurationSchema } from '#cli/checks/licenses.ts';
 import type { DriftEntry } from '#cli/types/lifecycle/lifecycle.ts';
 import type { CheckSpec, Manifest } from '#cli/types/configurations.ts';
@@ -21,6 +21,8 @@ export type SqlAnalysis = {
     threshold: number;
     maximum: number;
 };
+export type LicensedPackage = { name: string; license: string };
+
 export type LicenseException = z.infer<typeof configurationSchema>['packages_allowed'][number];
 export type Translations = { directory?: string; base?: string };
 export type EngineInput = {
@@ -47,6 +49,13 @@ export type EngineInput = {
 };
 export type EngineOutcome = { findings: Finding[]; checkedFiles: string[] };
 export type Engine = (input: EngineInput) => Finding[] | EngineOutcome | Promise<Finding[] | EngineOutcome>;
+export type SuppressionForm = {
+    form: string;
+    marker: RegExp;
+    inlineMarker: RegExp;
+    reason: RegExp;
+    forbidden: boolean;
+};
 export type SuppressionComment = { file: string; line: number; form: string; reason?: string; forbidden: boolean };
 export type Finding = Defined<z.infer<typeof findingSchema>>;
 export type CheckResult = Defined<Omit<z.infer<typeof checkResultSchema>, 'findings'>> & {
@@ -54,3 +63,4 @@ export type CheckResult = Defined<Omit<z.infer<typeof checkResultSchema>, 'findi
 };
 export type Importer = { path: string; read: string[] };
 export type MarkupProblem = { node: Node; rule: string; text: string };
+export type MarkupAttribute = { name: string; value: string; element: string; node: Node };

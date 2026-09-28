@@ -256,5 +256,5 @@ default = []
 summary = "Links the crawl skips: a pattern and the reason."
 
 [rule_files]
-repository = ["repository/static-site/STATIC-SITE.md"]
-runtime = ["runtime/browser/BROWSER.md"]
+repository = [{path = "repository/static-site/STATIC-SITE.md"}]
+runtime = [{path = "runtime/browser/BROWSER.md"}]

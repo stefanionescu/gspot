@@ -17,9 +17,9 @@ tooltips, labels, errors, workflow notes, examples, and generated text.
 
 Identify the intended readers and their task. Write text that lets them:
 
-- get the information they need;
-- find that information;
-- understand that information; and
+- get the information they need.
+- find that information.
+- understand that information.
 - use that information.
 
 Use short, direct sentences, and familiar words. Explain technical terms when
@@ -46,6 +46,8 @@ Use a voice that is:
 
 ### Prefer active voice
 
+<!-- level: all -->
+
 Use active voice when the actor matters.
 
 Use:
@@ -71,6 +73,8 @@ The report is encrypted before storage.
 
 ### Speak directly to the reader
 
+<!-- level: all -->
+
 Use imperative verbs for instructions.
 
 Use:
@@ -88,6 +92,8 @@ The user should select the **Save** button.
 Use "you" when it makes a condition or result clearer.
 
 ### Describe the present state
+
+<!-- level: all -->
 
 Documentation describes current behavior. Do not narrate refactors, renamed
 variables, removed systems, or previous implementations.
@@ -109,6 +115,8 @@ The client now sends audio directly instead of routing it through the API.
 
 ### Avoid self-referential openings
 
+<!-- level: all -->
+
 Start with the subject, not the page.
 
 Use:
@@ -127,6 +135,8 @@ Use a brief scope sentence only when a reader needs it to distinguish this page
 from a nearby topic.
 
 ### Avoid marketing language
+
+<!-- level: all -->
 
 Documentation is not sales copy.
 
@@ -162,12 +172,16 @@ This powerful cache easily makes the application much faster.
 
 ### Do not use contractions
 
+<!-- level: all -->
+
 Write the full form in every document, comment, error message, and commit message. A negative
 must be unmistakable, and the prose checker cannot tell a tutorial from a reference.
 
 Use `Do not delete the primary key`, not `Don't delete the primary key`.
 
 ### Use precise modal verbs
+
+<!-- level: all -->
 
 Use direct imperatives for required actions.
 
@@ -192,6 +206,8 @@ Label recommendations and optional steps explicitly.
 
 ### Use American English by default
 
+<!-- level: all -->
+
 Use American English spelling, grammar, and punctuation unless the project has chosen
 another documented language standard.
 
@@ -203,6 +219,8 @@ Write for readers and translation systems that do not share the author's local
 context.
 
 ### Keep sentence structure direct
+
+<!-- level: all -->
 
 - Put the subject near the verb.
 - Keep one primary idea in each sentence.
@@ -225,6 +243,8 @@ Request a new one when it has expired.
 ```
 
 ### Do not write sausage sentences
+
+<!-- level: all -->
 
 A sausage sentence chains many independent claims, capabilities, modes, or
 operational concerns into one comma-separated sentence. The sentence can be
@@ -295,6 +315,8 @@ into a feature inventory.
 
 ### Avoid hidden subjects
 
+<!-- level: all -->
+
 Avoid opening with "there is" or "there are" when a concrete subject exists.
 
 Use:
@@ -310,6 +332,8 @@ There are two deployment modes that support private networking.
 ```
 
 ### Avoid noun stacks
+
+<!-- level: all -->
 
 Break strings of nouns with a preposition.
 
@@ -327,6 +351,8 @@ Project integration custom settings
 
 ### Prefer verbs over nominalizations
 
+<!-- level: all -->
+
 Use:
 
 ```text
@@ -340,6 +366,8 @@ After completion of workflow execution, perform a download of the report.
 ```
 
 ### Avoid culture-specific language
+
+<!-- level: all -->
 
 Do not use:
 
@@ -355,6 +383,8 @@ Use literal descriptions such as "stop the process," "remove the task," or
 
 ### Avoid ambiguous connectors
 
+<!-- level: all -->
+
 Use "because" for cause.
 Use "after" or "from" for time.
 Use "while" only for simultaneous actions.
@@ -362,6 +392,8 @@ Use "while" only for simultaneous actions.
 Do not rely on `since` when it can mean time or cause.
 
 ### Spell out abbreviations
+
+<!-- level: all -->
 
 Spell out an acronym or uncommon abbreviation on first use on each page, then
 put the abbreviation in parentheses.
@@ -391,6 +423,8 @@ API's
 ```
 
 ### Write numbers consistently
+
+<!-- level: all -->
 
 In prose, spell out zero through nine and use numerals for 10 and greater.
 Use numerals for:
@@ -429,6 +463,8 @@ Do not use ambiguous numeric dates such as `03/04/2026`.
 
 ### Write currency unambiguously
 
+<!-- level: all -->
+
 Name the currency when an amount can refer to more than one currency.
 
 On first use in a page, write the amount and currency name:
@@ -454,11 +490,15 @@ can interpret the symbol differently.
 
 ### Match official capitalization
 
+<!-- level: all -->
+
 Preserve the official capitalization of product names, organization names, acronyms, commands,
 APIs, user interface labels, standards, and third-party tools: `iOS`, `API`, `GitHub`, `npm`.
 Do not capitalize a feature as a proper name unless the project defines it as one.
 
 ### Keep names and terminology consistent
+
+<!-- level: all -->
 
 Use the full official product, organization, framework, and standard name on
 first use. Follow the capitalization used by the authoritative owner.
@@ -492,6 +532,8 @@ Ending a sentence with a preposition is acceptable when the alternative sounds u
 grammar preference.
 
 ### Use restrained punctuation
+
+<!-- level: all -->
 
 - End complete sentences with a period.
 - Use the serial comma in a list of three or more items.
@@ -633,6 +675,8 @@ Review for:
 Every retained claim needs the same evidence as human-written content.
 
 ### Do not promise future behavior
+
+<!-- level: all -->
 
 Do not state that an unshipped feature will arrive in a specific release unless
 an authorized product commitment exists and the documentation system has a

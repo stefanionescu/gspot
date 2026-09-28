@@ -16,6 +16,8 @@ Files (casing across languages, files and directories, boundaries and external n
 
 ## Authority and quality enforcement
 
+<!-- level: all -->
+
 Naming decisions must satisfy both this guide and the quality tooling.
 
 - Follow this file when choosing names for files, directories, classes, structs, protocols, type
@@ -34,21 +36,12 @@ Naming decisions must satisfy both this guide and the quality tooling.
 - Generated code may keep generator-owned names, but hand-written wrappers
   around generated code must follow this guide.
 
-Bad:
-
-```text
-Use this name because it passes a local manual interpretation of the rules,
-even though the naming quality check rejects it.
-```
-
-Good:
-
-```text
-Choose the clearest domain name, then run the affected quality checks and adjust
-the name if the current naming or banned-term policy rejects it.
-```
+Choose a domain name, then run the checks that apply to its scope. Fix a
+conflict between the guide and enforcement at its owner.
 
 ## General naming rules
+
+<!-- level: all -->
 
 Names are a design tool. A name lets a reader understand the concept,
 scope, role, and expected value without reading the implementation first.
@@ -74,173 +67,71 @@ Rules:
 - Preserve required external names at boundaries, but translate them into domain
   names before they move inward.
 
-Bad:
+| Avoid        | Prefer              | Meaning                           |
+| ------------ | ------------------- | --------------------------------- |
+| `string`     | `welcomeMessage`    | Greeting text.                    |
+| `array`      | `availableAccounts` | Accounts available for selection. |
+| `dict`       | `usersById`         | Users indexed by identifier.      |
+| `userString` | `displayName`       | Name shown to the reader.         |
+| `cfg`        | `appConfiguration`  | Application settings.             |
+| `tmp`        | `accountSummary`    | Summary of an account.            |
 
-```swift
-let string = "Welcome back"
-let array = accounts
-let dict = usersById
-let userString = user.name
-let cfg = AppConfiguration()
-let tmp = makeAccountSummary(account)
-```
-
-Good:
-
-```swift
-let welcomeMessage = "Welcome back"
-let availableAccounts = accounts
-let usersById = usersById
-let displayName = user.name
-let appConfiguration = AppConfiguration()
-let accountSummary = makeAccountSummary(account)
-```
-
-Bad:
-
-```ts
-const u = getUser();
-const s = getSubscription();
-const t = charge(u, s);
-const userArray = users;
-const customerData = getCustomer();
-```
-
-Good:
-
-```ts
-const user = getUser();
-const subscription = getSubscription();
-const transaction = charge(user, subscription);
-const users = getUsers();
-const customer = getCustomer();
-```
+| Avoid          | Prefer         | Meaning              |
+| -------------- | -------------- | -------------------- |
+| `u`            | `user`         | One user.            |
+| `s`            | `subscription` | One subscription.    |
+| `t`            | `transaction`  | Result of a charge.  |
+| `userArray`    | `users`        | Collection of users. |
+| `customerData` | `customer`     | One customer.        |
 
 ### Role instead of type
 
 Names explain what the value means in the domain.
 
-Bad:
+| Avoid       | Prefer            | Meaning                                |
+| ----------- | ----------------- | -------------------------------------- |
+| `urlString` | `avatarURLString` | Text representation of the avatar URL. |
+| `data`      | `requestBody`     | Encoded request payload.               |
+| `bool`      | `isEmailEmpty`    | Whether an email field is empty.       |
 
-```swift
-let urlString = profile.avatarURL.absoluteString
-let data = try JSONEncoder().encode(request)
-let bool = form.email.isEmpty
-```
-
-Good:
-
-```swift
-let avatarURLString = profile.avatarURL.absoluteString
-let requestBody = try JSONEncoder().encode(request)
-let isEmailEmpty = form.email.isEmpty
-```
-
-Bad:
-
-```ts
-const string = 'Welcome back';
-const number = attempts.length;
-const item = buildSessionSummary(session);
-const map = usersById;
-```
-
-Good:
-
-```ts
-const welcomeMessage = 'Welcome back';
-const attemptCount = attempts.length;
-const sessionSummary = buildSessionSummary(session);
-const usersById = usersById;
-```
+| Avoid    | Prefer           | Meaning                      |
+| -------- | ---------------- | ---------------------------- |
+| `string` | `welcomeMessage` | Greeting text.               |
+| `number` | `attemptCount`   | Number of attempts.          |
+| `item`   | `sessionSummary` | Summary of a session.        |
+| `map`    | `usersById`      | Users indexed by identifier. |
 
 ### Avoid redundant context
 
 Let the owner provide context. Add context only when the name is ambiguous outside the owner without it.
 
-Bad:
+| Avoid          | Prefer      | Meaning       |
+| -------------- | ----------- | ------------- |
+| `Car.carMake`  | `Car.make`  | Manufacturer. |
+| `Car.carModel` | `Car.model` | Model name.   |
+| `Car.carColor` | `Car.color` | Paint color.  |
 
-```ts
-type Car = {
-    carMake: string;
-    carModel: string;
-    carColor: string;
-};
-
-function printCar(car: Car): void {
-    console.log(`${car.carMake} ${car.carModel} (${car.carColor})`);
-}
-```
-
-Good:
-
-```ts
-type Car = {
-    make: string;
-    model: string;
-    color: string;
-};
-
-function print(car: Car): void {
-    console.log(`${car.make} ${car.model} (${car.color})`);
-}
-```
-
-Bad:
-
-```swift
-struct ProfileViewState {
-    var profileViewDisplayName: String
-    var profileViewAvatarURL: URL
-}
-```
-
-Good:
-
-```swift
-struct ProfileViewState {
-    var displayName: String
-    var avatarURL: URL
-}
-```
+| Avoid                                     | Prefer                         | Meaning                           |
+| ----------------------------------------- | ------------------------------ | --------------------------------- |
+| `ProfileViewState.profileViewDisplayName` | `ProfileViewState.displayName` | Name shown by the profile view.   |
+| `ProfileViewState.profileViewAvatarURL`   | `ProfileViewState.avatarURL`   | Avatar shown by the profile view. |
 
 ### Avoid type and shape duplication
 
 Do not repeat information already expressed by the type system or declaration.
 
-Bad:
+| Avoid                | Prefer         | Meaning                |
+| -------------------- | -------------- | ---------------------- |
+| `nameString`         | `name`         | A user name.           |
+| `roleArray`          | `roles`        | Assigned roles.        |
+| `userObject`         | `user`         | A user.                |
+| `settingsJsonObject` | `settingsJson` | Settings in JSON form. |
 
-```ts
-const nameString: string = user.name;
-const roleArray: Role[] = user.roles;
-const userObject: User = getUser();
-const settingsJsonObject: SettingsJson = parseSettingsJson(source);
-```
-
-Good:
-
-```ts
-const name = user.name;
-const roles = user.roles;
-const user = getUser();
-const settingsJson = parseSettingsJson(source);
-```
-
-Bad:
-
-```swift
-let messagesArray: [Message] = inbox.messages
-let userDictionary: [User.ID: User] = usersById
-let optionalAvatarURL: URL? = profile.avatarURL
-```
-
-Good:
-
-```swift
-let messages: [Message] = inbox.messages
-let usersById: [User.ID: User] = usersById
-let avatarURL: URL? = profile.avatarURL
-```
+| Avoid               | Prefer      | Meaning                      |
+| ------------------- | ----------- | ---------------------------- |
+| `messagesArray`     | `messages`  | Inbox messages.              |
+| `userDictionary`    | `usersById` | Users indexed by identifier. |
+| `optionalAvatarURL` | `avatarURL` | An optional avatar URL.      |
 
 ### Avoid vague and inflated words
 
@@ -248,31 +139,15 @@ Do not use vague words to avoid naming the real responsibility. Common bad
 patterns include names that describe generic assistance, movement, or quality
 instead of a concrete role.
 
-Bad:
-
-```text
-UserManager
-DataProcessor
-LoginHandler
-AppHelper
-CommonUtils
-CoreService
-ProfileStuff
-AdvancedPainter
-SmartLoader
-```
-
-Good:
-
-```text
-UserRepository
-ProfileImageClient
-LoginCoordinator
-SessionFactory
-DateRangeFormatter
-FileUploadClient
-ProfileSummaryView
-```
+| Avoid           | Prefer               | Meaning                             |
+| --------------- | -------------------- | ----------------------------------- |
+| `UserManager`   | `UserRepository`     | Persistence boundary for users.     |
+| `DataProcessor` | `ProfileImageClient` | External profile image API.         |
+| `LoginHandler`  | `LoginCoordinator`   | Owner of login navigation.          |
+| `AppHelper`     | `SessionFactory`     | Assembly of session dependencies.   |
+| `CommonUtils`   | `DateRangeFormatter` | Display formatting for date ranges. |
+| `CoreService`   | `FileUploadClient`   | External file upload API.           |
+| `ProfileStuff`  | `ProfileSummaryView` | Profile summary presentation.       |
 
 Allowed framework or domain terms must be precise:
 
@@ -287,6 +162,8 @@ Allowed framework or domain terms must be precise:
   exact exemption for that name. Prefer a more specific role.
 
 ## Vocabulary and role words
+
+<!-- level: all -->
 
 Choose suffixes and role words deterministically. A deterministic suffix tells a
 reader what kind of boundary or owner they are looking at.
@@ -312,69 +189,34 @@ Use these meanings consistently:
 Do not use a suffix just because the class needs a suffix. If the role is not
 real, rename the type to the concrete domain concept.
 
-Bad:
-
-```ts
-export class SessionManager {}
-export class SessionProcessor {}
-export class SessionHelper {}
-```
-
-Good:
-
-```ts
-export class SessionRepository {}
-export class SessionTokenVerifier {}
-export class SessionExpirationScheduler {}
-```
+| Avoid              | Prefer                       | Meaning                |
+| ------------------ | ---------------------------- | ---------------------- |
+| `SessionManager`   | `SessionRepository`          | Persistence boundary.  |
+| `SessionProcessor` | `SessionTokenVerifier`       | Token verification.    |
+| `SessionHelper`    | `SessionExpirationScheduler` | Expiration scheduling. |
 
 ### Service
 
 `Service` is a reserved suffix. Do not use it in app-owned names unless the
 current quality policy has an explicit exact exemption for that name.
 
-Bad:
+| Avoid            | Prefer              | Meaning                        |
+| ---------------- | ------------------- | ------------------------------ |
+| `ProfileService` | `ProfileRepository` | Domain access to profile data. |
 
-```swift
-final class ProfileService {
-    func getProfile(for userID: User.ID) async throws -> Profile { ... }
-}
-```
-
-Good:
-
-```swift
-protocol ProfileRepository {
-    func getProfile(for userID: User.ID) async throws -> Profile
-}
-```
-
-Better for app-owned capabilities:
-
-```swift
-struct NotificationAuthorizationClient {
-    func requestAuthorization() async throws -> NotificationAuthorizationStatus
-}
-```
+An external notification authorization boundary can use
+`NotificationAuthorizationClient`. Its `requestAuthorization` operation names
+the capability it requests.
 
 ### Manager
 
 Do not use `Manager` in app-owned names unless an external platform contract
 requires that exact name. Most `Manager` names hide a more specific role.
 
-Bad:
-
-```swift
-final class UploadManager { }
-final class LoginManager { }
-```
-
-Good:
-
-```swift
-final class FileUploadClient { }
-final class LoginCoordinator { }
-```
+| Avoid           | Prefer             | Meaning              |
+| --------------- | ------------------ | -------------------- |
+| `UploadManager` | `FileUploadClient` | External upload API. |
+| `LoginManager`  | `LoginCoordinator` | Login navigation.    |
 
 Apple's `FileManager` type name is an external platform name. Do not copy the
 suffix for local application owners.
@@ -384,25 +226,16 @@ suffix for local application owners.
 Do not create `Helper`, `Helpers`, `Utility`, `Utilities`, `Util`, `Utils`,
 `Common`, `Shared`, `Base`, or `Core` dumping grounds. Name the capability.
 
-Bad:
-
-```text
-Helpers.swift
-String+Helpers.swift
-common-utils.ts
-BaseViewModel.swift
-```
-
-Good:
-
-```text
-DateRangeFormatter.swift
-String+SearchQuery.swift
-email-address-validation.ts
-AuthenticatedProfileViewModel.swift
-```
+| Avoid                  | Prefer                                | Meaning                             |
+| ---------------------- | ------------------------------------- | ----------------------------------- |
+| `Helpers.swift`        | `DateRangeFormatter.swift`            | Date range display.                 |
+| `String+Helpers.swift` | `String+SearchQuery.swift`            | Search query operations.            |
+| `common-utils.ts`      | `email-address-validation.ts`         | Email address validation.           |
+| `BaseViewModel.swift`  | `AuthenticatedProfileViewModel.swift` | Authenticated profile presentation. |
 
 ## Functions and methods
+
+<!-- level: all -->
 
 Function and method names describe the action and the domain being acted
 on without repeating context already supplied by the owner.
@@ -486,130 +319,48 @@ Rules:
 - Preserve framework, standard-library, SDK, generated, and external contract
   names exactly.
 
-Bad:
+| Avoid                   | Prefer                 | Meaning                      |
+| ----------------------- | ---------------------- | ---------------------------- |
+| `readChatConfig`        | `getChatConfig`        | Retrieve configuration.      |
+| `findSession`           | `getSession`           | Retrieve one session.        |
+| `listPaginatedSessions` | `getPaginatedSessions` | Retrieve a page of sessions. |
+| `saveCall`              | `insertCall`           | Insert a new call.           |
 
-```ts
-const config = await readChatConfig();
-const session = await findSession(sessionId);
-const sessions = await listPaginatedSessions(cursor);
-```
+| Avoid        | Prefer                   | Meaning                        |
+| ------------ | ------------------------ | ------------------------------ |
+| `handleData` | `decodeAccountResponse`  | Decode account response bytes. |
+| `process`    | `validateEmailAddress`   | Validate an email address.     |
+| `didTap`     | `submitButtonTapped`     | React to the submit button.    |
+| `update`     | `updateDraftMessageText` | Replace draft message text.    |
 
-Good:
+Name a month increment `monthCount`, not `month`. Call an existing date
+library directly when a local function only forwards its arguments.
 
-```ts
-const config = await getChatConfig();
-const session = await getSession(sessionId);
-const sessions = await getPaginatedSessions(cursor);
-const call = await insertCall(sessionId, userId, providerCallId);
-```
-
-Bad:
-
-```swift
-func handleData(_ data: Data) { }
-func process(_ value: String) { }
-func didTap() { }
-func update(_ text: String) { }
-```
-
-Good:
-
-```swift
-func decodeAccountResponse(_ responsePayload: Data) throws -> [Account]
-func validateEmailAddress(_ emailAddress: String) -> EmailValidationResult
-func submitButtonTapped()
-func updateDraftMessageText(_ draftMessageText: String)
-```
-
-Bad:
-
-```ts
-function addToDate(date: Date, month: number): Date {
-    return dateFns.addMonths(date, month);
-}
-
-function createMenu(title: string, body: string, buttonText: string, cancellable: boolean) {
-    ...
-}
-```
-
-Good:
-
-```ts
-function addMonthToDate(date: Date, monthCount: number): Date {
-    return dateFns.addMonths(date, monthCount);
-}
-
-type MenuOptions = {
-    title: string;
-    body: string;
-    buttonText: string;
-    isCancellable: boolean;
-};
-
-function createMenu(options: MenuOptions) {
-    ...
-}
-```
+For a menu constructor with several text fields, group related inputs in
+`MenuOptions`. A named `isCancellable` field communicates more than a positional
+Boolean argument.
 
 ### One concept per function name
 
 If the function name needs `and`, `or`, `with`, `plus`, or a vague umbrella
 verb, the function may own too many concepts.
 
-Bad:
-
-```ts
-function validateAndSaveProfile(profile: Profile): Promise<void> {
-    ...
-}
-```
-
-Good:
-
-```ts
-function validateProfile(profile: Profile): ProfileValidationResult {
-    ...
-}
-
-async function saveProfile(profile: Profile): Promise<void> {
-    ...
-}
-```
+Keep validation in `validateProfile` and persistence updates in `updateProfile`
+when they have separate callers and contracts. Do not split a transactional
+domain operation into forwarding functions only to satisfy a naming pattern.
 
 ### Boundary names
 
 At boundaries, name the conversion explicitly.
 
-Bad:
+| Avoid     | Prefer               | Meaning                           |
+| --------- | -------------------- | --------------------------------- |
+| `data`    | `decodeUserResponse` | Decode response bytes.            |
+| `convert` | `mapUser`            | Map a storage record into a user. |
 
-```swift
-func data(_ response: URLResponse) -> User
-func convert(_ row: UserRow) -> User
-```
-
-Good:
-
-```swift
-func decodeUserResponse(_ responsePayload: Data) throws -> UserDTO
-func mapUserRecordToDomain(_ record: UserRecord) throws -> User
-```
-
-Bad:
-
-```ts
-function transform(input: unknown): SubmitOrderRequest {
-    ...
-}
-```
-
-Good:
-
-```ts
-function parseSubmitOrderRequest(input: unknown): SubmitOrderRequest {
-    ...
-}
-```
+| Avoid       | Prefer                    | Meaning                              |
+| ----------- | ------------------------- | ------------------------------------ |
+| `transform` | `parseSubmitOrderRequest` | Parse and validate an order request. |
 
 ### Boundary shape suffixes
 
@@ -629,39 +380,14 @@ Rules:
 - Use `row` or `dbRow` for a local variable only inside database boundary code
   where the value is still a database wire shape.
 
-Bad:
-
-```ts
-type AccountDeletionRequest = {
-    success: boolean;
-};
-
-function parseDeletionRequest(value: Json): AccountDeletionRequest {
-    ...
-}
-
-function mapUserRowToUserDomain(row: UserRow): User {
-    ...
-}
-```
-
-Good:
-
-```ts
-type AccountDeletionRequestRow = {
-    success: boolean;
-};
-
-function parseDeletionRequest(value: Json): AccountDeletionRequestRow {
-    ...
-}
-
-function mapUser(row: UserRow): User {
-    ...
-}
-```
+| Avoid                    | Prefer                      | Meaning                                   |
+| ------------------------ | --------------------------- | ----------------------------------------- |
+| `AccountDeletionRequest` | `AccountDeletionRequestRow` | A database row shape.                     |
+| `mapUserRowToUserDomain` | `mapUser`                   | Convert a user row into the domain shape. |
 
 ## Booleans and predicates
+
+<!-- level: all -->
 
 Boolean names use positive states. Stored values stay concise; predicates state
 the question they answer.
@@ -688,67 +414,17 @@ Rules:
 - Do not name booleans like nouns that read as non-boolean values.
 - Prefer the boolean name that matches the branch without double negation.
 
-Bad:
+| Avoid                    | Prefer                 | Meaning                         |
+| ------------------------ | ---------------------- | ------------------------------- |
+| `SearchPolicy.isEnabled` | `SearchPolicy.enabled` | Stored policy state.            |
+| `email`                  | `hasEmailAddress`      | Presence of an email address.   |
+| `notReady`               | `isReady`              | A positive readiness predicate. |
 
-```swift
-struct SearchPolicy {
-    let isEnabled: Bool
-}
+| Avoid            | Prefer        | Meaning                                      |
+| ---------------- | ------------- | -------------------------------------------- |
+| `textFile`       | `isTextFile`  | Whether a file meets the text-file contract. |
+| `isEmailNotUsed` | `isEmailUsed` | Whether an email address is already used.    |
 
-let email = user.email != nil
-let notReady = state != .ready
-```
-
-Good:
-
-```swift
-struct SearchPolicy {
-    let enabled: Bool
-}
-
-let isSubmitButtonDisabled = form.email.isEmpty
-let hasEmailAddress = user.email != nil
-let isReady = state == .ready
-```
-
-Bad:
-
-```ts
-function textFile(fileName: string): boolean {
-    return fileName.endsWith(".txt");
-}
-
-function isEmailNotUsed(email: string): boolean {
-    ...
-}
-```
-
-Good:
-
-```ts
-function isTextFile(fileName: string): boolean {
-    return fileName.endsWith(".txt");
-}
-
-function isEmailUsed(email: string): boolean {
-    ...
-}
-```
-
-Bad:
-
-```bash
-ready='false'
-if [[ "${ready}" != 'true' ]]; then
-  fail 'not ready'
-fi
-```
-
-Good:
-
-```bash
-is_ready='false'
-if [[ "${is_ready}" != 'true' ]]; then
-  fail 'not ready'
-fi
-```
+| Avoid   | Prefer     | Meaning                                 |
+| ------- | ---------- | --------------------------------------- |
+| `ready` | `is_ready` | A computed readiness predicate in Bash. |

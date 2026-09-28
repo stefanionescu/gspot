@@ -2,9 +2,9 @@ import { stringify } from 'smol-toml';
 import { patch } from '@decimalturn/toml-patch';
 import { policySchema } from '#cli/policy/schema.ts';
 import type { InitProposal } from '#cli/types/commands/init.ts';
+import type { AdoptionResult } from '#cli/types/policy/adoption.ts';
 import type { TomlTable } from '#cli/types/repository/repository.ts';
-import { policyIndent, wrapLongArrays } from '#cli/policy/toml-width.ts';
-import type { CarriedConfiguration } from '#cli/types/policy/adoption.ts';
+import { policyIndent, wrapLongArrays } from '#cli/policy/toml/width.ts';
 import { PROFILE_HEAD, SCHEMA_LINE } from '#cli/constants/commands/init.ts';
 
 const PREFACE = [
@@ -16,21 +16,16 @@ const PREFACE = [
     '',
 ].join('\n');
 
-function nonEmpty(table: Record<string, unknown[]>): TomlTable | undefined {
-    const kept = Object.entries(table).filter(([, list]) => list.length > 0);
-    return kept.length === 0 ? undefined : Object.fromEntries(kept);
-}
-
 function xcodeTable(xcode: InitProposal['xcode']): TomlTable | undefined {
     if (xcode === undefined) return undefined;
     return xcode.scheme === undefined ? { project: xcode.project } : { project: xcode.project, scheme: xcode.scheme };
 }
 
 function toolTables(
-    carried: CarriedConfiguration,
+    carried: AdoptionResult,
     commitScopes: string[] | undefined,
     xcode?: InitProposal['xcode'],
-): TomlTable {
+): Record<string, TomlTable | undefined> {
     const tables: Record<string, TomlTable | undefined> = Object.fromEntries(
         [...carried.tools]
             .filter(([, entry]) => Object.keys(entry.settings).length > 0)
@@ -38,8 +33,8 @@ function toolTables(
     );
     if (carried.formatter?.ignorePatterns !== undefined)
         tables['prettier'] = { ...tables['prettier'], ignore_patterns: carried.formatter.ignorePatterns };
-    const commits = nonEmpty({ scopes: commitScopes ?? [] });
-    if (commits !== undefined) tables['commitlint'] = { ...tables['commitlint'], ...commits };
+    if (commitScopes !== undefined && commitScopes.length > 0)
+        tables['commitlint'] = { ...tables['commitlint'], scopes: commitScopes };
     if (xcode?.scope === '') tables['xcode'] = xcodeTable(xcode);
     return Object.fromEntries(Object.entries(tables).filter(([, table]) => table !== undefined));
 }
@@ -76,19 +71,39 @@ function headTables(proposal: InitProposal): TomlTable {
     return document;
 }
 
-function ignoreTables(carried: CarriedConfiguration): TomlTable[] {
-    return [...carried.tools.values()]
-        .flatMap((tool) => tool.ignores)
-        .map((entry) => ({
-            check: entry.check,
-            ...(entry.rule === undefined ? {} : { rule: entry.rule }),
-            ...(entry.paths === undefined ? {} : { paths: entry.paths }),
-            reason: entry.reason,
-        }));
-}
-
 function asTable(value: unknown): TomlTable {
     return typeof value === 'object' && value !== null && !Array.isArray(value) ? (value as TomlTable) : {};
+}
+
+// Repository keys override each tool setting without dropping profile siblings.
+function mergeToolSettings(base: unknown, overrides: unknown): TomlTable {
+    const tools = { ...asTable(base) };
+    for (const [tool, settings] of Object.entries(asTable(overrides)))
+        tools[tool] = { ...asTable(tools[tool]), ...asTable(settings) };
+    return tools;
+}
+
+function applyFormatter(tools: Record<string, TomlTable | undefined>, formatter: InitProposal['formatter']): void {
+    if (formatter === undefined) return;
+    if (formatter.extra !== undefined) tools['prettier'] = { ...tools['prettier'], extra: formatter.extra };
+    if (formatter.nativeDefaults === true) tools['prettier'] = { ...tools['prettier'], native_defaults: true };
+    if (formatter.editorconfig !== undefined) tools['editorconfig'] = { adopted: formatter.editorconfig };
+}
+
+function applyDetectedTools(tools: Record<string, TomlTable | undefined>, detected: InitProposal['detected']): void {
+    for (const { key, value } of detected ?? []) {
+        const [table, first, second, ...more] = key.split('.');
+        if (table === 'tools' && first !== undefined && second !== undefined && more.length === 0)
+            tools[first] = { ...tools[first], [second]: value };
+    }
+}
+
+function applyDetectedArchitecture(document: TomlTable, detected: InitProposal['detected']): void {
+    for (const { key, value } of detected ?? []) {
+        const [table, first, second] = key.split('.');
+        if (table === 'architecture' && first !== undefined && second === undefined)
+            document['architecture'] = { ...asTable(document['architecture']), [first]: value };
+    }
 }
 
 // Repository settings override the same profile setting, without dropping other settings of that tool.
@@ -97,10 +112,7 @@ function mergeProfile(document: TomlTable, tables: TomlTable | undefined): void 
     for (const [key, value] of entries) {
         const existing = document[key];
         if (key === 'tools') {
-            const tools = { ...asTable(value) };
-            for (const [tool, settings] of Object.entries(asTable(existing)))
-                tools[tool] = { ...asTable(tools[tool]), ...asTable(settings) };
-            document[key] = tools;
+            document[key] = mergeToolSettings(value, existing);
             continue;
         }
         const isBothTables = Object.keys(asTable(existing)).length > 0 && Object.keys(asTable(value)).length > 0;
@@ -108,49 +120,8 @@ function mergeProfile(document: TomlTable, tables: TomlTable | undefined): void 
     }
 }
 
-// The settings of a scope are written the way gspot set writes them, as one inline table inside the scope.
-// The patcher refuses a document where one scope holds an inline tools table and another a sub-table.
-function bodyText(document: TomlTable): string {
-    const scopes = (document['scope'] as TomlTable[] | undefined) ?? [];
-    const bare = { ...document, scope: scopes.map(({ tools: _tools, ...rest }) => rest) };
-    const plain = stringify(scopes.length === 0 ? document : bare);
-    // Arrays take the layout the TOML formatter keeps, so the first format check of the policy passes.
-    const tight = plain.replaceAll(/= \[ (?<items>[^\n]*) \]$/gmu, '= [$<items>]');
-    const seed = tight.endsWith('\n') ? tight : `${tight}\n`;
-    const indent = policyIndent(document);
-    if (scopes.every((scope) => scope['tools'] === undefined)) return wrapLongArrays(seed, indent);
-    return wrapLongArrays(patch(seed, document, { inlineTableStart: 2, bracketSpacing: false }), indent);
-}
-
-/**
- * The gspot.toml text for a proposal.
- * @param proposal the proposal
- * @returns the TOML text with the schema line and the preface
- */
-export function proposeText(proposal: InitProposal): string {
-    const document = headTables(proposal);
-    const tools = toolTables(proposal.carried, proposal.commitScopes, proposal.xcode);
-    if (proposal.formatter?.extra !== undefined)
-        tools['prettier'] = { ...(tools['prettier'] as TomlTable), extra: proposal.formatter.extra };
-    if (proposal.formatter?.nativeDefaults === true)
-        tools['prettier'] = { ...(tools['prettier'] as TomlTable), native_defaults: true };
-    if (proposal.formatter?.editorconfig !== undefined)
-        tools['editorconfig'] = { adopted: proposal.formatter.editorconfig };
-    // What init read from the repository for the settings whose manifests say where to look (K-93).
-    for (const { key, value } of proposal.detected ?? []) {
-        const [table, first, second, ...more] = key.split('.');
-        if (table === 'tools' && first !== undefined && second !== undefined && more.length === 0)
-            tools[first] = { ...asTable(tools[first]), [second]: value };
-        else if (table === 'architecture' && first !== undefined && second === undefined)
-            document['architecture'] = { ...asTable(document['architecture']), [first]: value };
-    }
-    if (Object.keys(tools).length > 0) document['tools'] = tools;
-    mergeProfile(document, proposal.profileTables);
-    if ([...proposal.carried.tools.values()].some((tool) => tool.ignores.length > 0))
-        document['ignore'] = [
-            ...((document['ignore'] as TomlTable[] | undefined) ?? []),
-            ...ignoreTables(proposal.carried),
-        ];
+// Initialization selects enabled integrations; profile task names retain precedence.
+function applyIntegrations(document: TomlTable, proposal: InitProposal): void {
     if (proposal.hooks === 'none') delete document['hooks'];
     else document['hooks'] = { ...asTable(document['hooks']), tool: proposal.hooks };
     if (proposal.ci === 'none') delete document['ci'];
@@ -167,5 +138,48 @@ export function proposeText(proposal: InitProposal): string {
             ...(Object.keys(tasks).length === 0 ? {} : { tasks }),
         };
     }
+}
+
+// The settings of a scope are written the way gspot set writes them, as one inline table inside the scope.
+// The patcher refuses a document where one scope holds an inline tools table and another a sub-table.
+function bodyText(document: TomlTable): string {
+    const scopes = (document['scope'] as TomlTable[] | undefined) ?? [];
+    const bare = { ...document, scope: scopes.map(({ tools: _tools, ...rest }) => rest) };
+    const plain = stringify(scopes.length === 0 ? document : bare);
+    // Arrays take the layout the TOML formatter keeps, so the first format check of the policy passes.
+    const tight = plain.replaceAll(/= \[ (?<items>[^\n]*) \]$/gmu, '= [$<items>]');
+    const seed = tight.endsWith('\n') ? tight : `${tight}\n`;
+    const indent = policyIndent(document);
+    if (scopes.every((scope) => scope['tools'] === undefined)) return wrapLongArrays(seed, indent);
+    return wrapLongArrays(
+        patch(seed, document, { inlineTableStart: 2, bracketSpacing: false, trailingComma: false }),
+        indent,
+    );
+}
+
+/**
+ * The gspot.toml text for a proposal.
+ * @param proposal the proposal
+ * @returns the TOML text with the schema line and the preface
+ */
+export function proposeText(proposal: InitProposal): string {
+    const document = headTables(proposal);
+    const tools = toolTables(proposal.carried, proposal.commitScopes, proposal.xcode);
+    applyFormatter(tools, proposal.formatter);
+    applyDetectedTools(tools, proposal.detected);
+    applyDetectedArchitecture(document, proposal.detected);
+    if (Object.keys(tools).length > 0) document['tools'] = tools;
+    mergeProfile(document, proposal.profileTables);
+    const ignores = [...proposal.carried.tools.values()]
+        .flatMap((tool) => tool.ignores)
+        .map((entry) => ({
+            check: entry.check,
+            ...(entry.rule === undefined ? {} : { rule: entry.rule }),
+            ...(entry.paths === undefined ? {} : { paths: entry.paths }),
+            reason: entry.reason,
+        }));
+    if (ignores.length > 0)
+        document['ignore'] = [...((document['ignore'] as TomlTable[] | undefined) ?? []), ...ignores];
+    applyIntegrations(document, proposal);
     return `${PREFACE}${bodyText(document)}`;
 }

@@ -5,8 +5,7 @@ import { createFileTree, testdir } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { reportSchema } from '#cli/execution/report.ts';
-import { expectCorrected } from '#tests/support/cli/planted.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
 import { installAtLevel, toolsPath } from '#tests/support/cli/tools.ts';
 import { containing, textContaining } from '#tests/support/expectations.ts';
 import { DUPLICATION_INIT } from '#tests/constants/acceptance/source/configurations/init-arguments.ts';
@@ -57,7 +56,15 @@ describe('the duplication configuration', () => {
                 join(sandbox.path, 'scripts/second.sh'),
                 '#!/usr/bin/env bash\nprintf "Independent task\\n"\n',
             );
-            await expectCorrected(sandbox.path, 'duplication/jscpd', environment);
+            const correctedCheck = await run(
+                sandbox.path,
+                ['check', '--only', 'duplication/jscpd', '--no-cache', '--json'],
+                environment,
+            );
+            expect(correctedCheck.code, correctedCheck.stdout + correctedCheck.stderr).toBe(0);
+            expect(reportSchema.parse(JSON.parse(correctedCheck.stdout)).checks).toMatchObject([
+                { check: 'duplication/jscpd', status: 'ok', findings: [] },
+            ]);
         },
         PLANTED_TIMEOUT_MS * 2,
     );

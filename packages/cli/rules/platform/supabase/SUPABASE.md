@@ -97,10 +97,10 @@ rows that are easier to maintain as source data.
 - Set `entrypoint` explicitly and keep it relative to the Supabase config file.
 - Keep `verify_jwt = true` for user-authenticated functions.
 - If `verify_jwt = false`, the function must be one of:
-    - genuinely public and harmless
-    - protected by provider webhook signature verification
-    - protected by a service-to-service secret or API key check inside the listener
-    - invoked by cron with a Vault-backed bearer secret
+    - genuinely public and harmless.
+    - protected by provider webhook signature verification.
+    - protected by a service-to-service secret or API key check inside the listener.
+    - invoked by cron with a Vault-backed bearer secret.
 - A publishable or secret API key is not a user JWT. Do not send API keys as
   `Authorization: Bearer <key>`.
 - For authenticated user calls, forward the caller's `Authorization` header to
@@ -184,25 +184,25 @@ rows that are easier to maintain as source data.
 ## References
 
 - Supabase database migrations:
-  <https://supabase.com/docs/guides/deployment/database-migrations>
+  <https://supabase.com/docs/guides/deployment/database-migrations>.
 - Supabase CLI reference:
-  <https://supabase.com/docs/reference/cli/supabase-migration>
+  <https://supabase.com/docs/reference/cli/supabase-migration>.
 - Supabase Row Level Security:
-  <https://supabase.com/docs/guides/database/postgres/row-level-security>
+  <https://supabase.com/docs/guides/database/postgres/row-level-security>.
 - Supabase database functions:
-  <https://supabase.com/docs/guides/database/functions>
+  <https://supabase.com/docs/guides/database/functions>.
 - Supabase Edge Functions:
-  <https://supabase.com/docs/guides/functions>
+  <https://supabase.com/docs/guides/functions>.
 - Securing Supabase Edge Functions:
-  <https://supabase.com/docs/guides/functions/auth>
+  <https://supabase.com/docs/guides/functions/auth>.
 - Supabase Function Configuration:
-  <https://supabase.com/docs/guides/functions/function-configuration>
+  <https://supabase.com/docs/guides/functions/function-configuration>.
 - Supabase Storage access control:
-  <https://supabase.com/docs/guides/storage/security/access-control>
+  <https://supabase.com/docs/guides/storage/security/access-control>.
 - Supabase Storage schema:
-  <https://supabase.com/docs/guides/storage/schema/design>
+  <https://supabase.com/docs/guides/storage/schema/design>.
 - Scheduling Edge Functions:
-  <https://supabase.com/docs/guides/functions/schedule-functions>
+  <https://supabase.com/docs/guides/functions/schedule-functions>.
 
 ## Edge function names
 

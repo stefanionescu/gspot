@@ -13,11 +13,11 @@ project contracts apply at both levels.
 
 ## Tests
 
-- One test per user journey. A test that covers a screen's every control is several tests.
+- Give each test a coherent user journey with independent setup and observable assertions.
 - Query by role and accessible name (`getByRole('button', { name: 'Submit' })`), then by label,
   placeholder, or text. `data-testid` is the last resort and is named for the interaction surface.
-- No fixed waits (`waitForTimeout`). Wait for a locator, a response, a URL, or a network idle
-  state.
+- No fixed waits (`waitForTimeout`). Wait for the visible state, response, or URL that proves
+  the operation completed. Network inactivity alone does not establish readiness.
 - Every test starts from a known state it creates through the application's real setup (API or
   UI), not from shared seed data or another test's leftovers.
 - Assertions use the auto-retrying `expect(locator)` matchers. No manual polling loops.
@@ -26,17 +26,21 @@ project contracts apply at both levels.
 
 ## Test data and page objects
 
-- Shared setup lives under `tests/support/`. A page object exposes intents
-  (`submitOrder()`), not selectors.
-- Authentication state is created once per worker through shared storage-state setup, never by
-  logging in inside every test.
+- Keep reusable setup with its declared test-support owner. Introduce page objects only when
+  repeated interactions need an owner.
+- Reuse isolated authentication state for tests that do not exercise login. Login tests verify
+  the actual authentication journey. Keep account state isolated between concurrent workers.
 
 ## Configuration
 
-- One `playwright.config` per project. Projects are named for the browser and viewport
-  (`chromium-desktop`, `webkit-mobile`).
-- `retries` is `0` locally and at most `1` in CI; a retried pass is reported, not hidden.
-- Traces, screenshots, and videos are recorded on failure only and uploaded as artifacts.
-- `fullyParallel` is on; a test that cannot run in parallel is marked `serial` with a reason.
-- The web server is started by the configuration, on a port the test owns, with the built
-  application, not a dev server with hot reload.
+- Use the configuration files declared by the repository. Name projects so failures identify
+  their browser, viewport, or other relevant execution context.
+- Declare the retry policy in the project configuration. Report retried passes separately from
+  first-attempt passes.
+- Configure trace, screenshot, and video retention for the required diagnostics. Upload failure
+  artifacts, restrict access, and avoid capturing credentials or unrelated private data.
+- Enable parallel execution only when test accounts and mutable resources are isolated.
+  Document any scenario that requires serial execution.
+- Give each local server an explicit lifecycle and port owner. Test the production build for
+  release acceptance. A development server is appropriate only when development behavior is the
+  subject of the test. Shut down owned servers without stopping unrelated processes.

@@ -3,7 +3,7 @@
 export const JSCPD_TOOL = 'jscpd';
 export const TRAILING_PUNCTUATION = '.,;:';
 export const PATH_CHARS = /^[\w./-]+$/u;
-export const TOKEN_SEPARATORS = /[\s`'"()[\],;:!?<>|*]+/u;
+export const TOKEN_SEPARATORS = /[\s`'"()[\],;:!?<>|]+/u;
 export const RUN_TOKEN = /\b(?<runner>mise|bun|npm|pnpm|yarn) run (?<task>[\w:.-]+)/gu;
 export const FREE_TEXT_FENCES = new Set(['text', 'plaintext', 'console', 'diff']);
 export const FILE_EXTENSION = /\.[a-z0-9]+$/iu;

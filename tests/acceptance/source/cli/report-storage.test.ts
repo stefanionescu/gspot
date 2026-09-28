@@ -3,8 +3,8 @@ import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
+import type { SarifReport } from '#tests/types/cli.ts';
 import { ownershipSchema } from '#cli/lifecycle/journal.ts';
-import type { SarifReport } from '#tests/types/support/cli.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 
 import {
@@ -83,9 +83,13 @@ format = "lines"
         }
     });
 
-test.each(['directory', 'report', 'cache'])(
-    'runtime storage refuses a symbolic-link %s without changing outside bytes',
-    async (target) => {
+test.each([
+    { target: 'directory', code: 2, diagnostic: 'Unsafe lifecycle parent', expectedFinding: undefined },
+    { target: 'report', code: 1, diagnostic: 'Could not write', expectedFinding: 'Exact finding' },
+    { target: 'cache', code: 1, diagnostic: 'Could not write', expectedFinding: 'Exact finding' },
+])(
+    'runtime storage refuses a symbolic-link $target without changing outside bytes',
+    async ({ target, code, diagnostic, expectedFinding }) => {
         await using sandbox = await testdir();
         await using outside = await testdir();
         await createFileTree(sandbox.path, {
@@ -104,12 +108,12 @@ test.each(['directory', 'report', 'cache'])(
         const result = await run(sandbox.path, ['check', '--json', ...(target === 'cache' ? [] : ['--no-cache'])]);
         // A linked .gspot directory refuses the run; a linked report or cache is refused while the check still reports.
         const isDirectory = target === 'directory';
-        expect(result.code, result.stdout + result.stderr).toBe(isDirectory ? 2 : 1);
-        expect(result.stderr).toContain(isDirectory ? 'Unsafe lifecycle parent' : 'Could not write');
+        expect(result.code, result.stdout + result.stderr).toBe(code);
+        expect(result.stderr).toContain(diagnostic);
         const finding = isDirectory
             ? undefined
             : (JSON.parse(result.stdout) as RunReport).checks[0]?.findings[0]?.message;
-        expect(finding).toBe(isDirectory ? undefined : 'Exact finding');
+        expect(finding).toBe(expectedFinding);
         expect(readFileSync(join(outside.path, 'sentinel'), 'utf8')).toBe('authored outside\n');
         expect(readdirSync(outside.path)).toStrictEqual(['sentinel']);
     },

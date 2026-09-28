@@ -75,7 +75,7 @@ fix_order = "codemod"
 findings_exit_codes = [1]
 fix_findings_exit_codes = [1]
 claims = {extensions = [".ts", ".tsx", ".mts", ".cts"]}
-coverage = ["style", "structure", "security"]
+coverage = ["syntax", "style", "structure", "security"]
 output = {format = "eslint-json"}
 summary = "Runs ESLint with the shipped rule set over every TypeScript file."
 why = "ESLint catches mistakes and slop the compiler accepts: unused code, unsafe casts, functions that only forward."
@@ -108,7 +108,7 @@ summary = "The languages a component script block declares; empty means plain Ja
 ".cts" = ["format", "syntax", "style", "types", "structure", "naming", "prose", "spelling"]
 
 [rule_files]
-language = ["language/TYPESCRIPT.md", "language/naming/TYPESCRIPT.md"]
+language = [{path = "language/TYPESCRIPT.md"}, {path = "language/naming/TYPESCRIPT.md"}]
 
 [required_rules]
 ts = ["eqeqeq", "max-lines", "sonarjs/cognitive-complexity", "gspot/private-before-public", "@typescript-eslint/no-explicit-any", "@typescript-eslint/no-floating-promises"]

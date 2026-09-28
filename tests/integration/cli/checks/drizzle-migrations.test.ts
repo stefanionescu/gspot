@@ -1,12 +1,12 @@
 import { join } from 'node:path';
 import { expect, spyOn, test } from 'bun:test';
-import { planRun } from '#cli/execution/planning/plan.ts';
 import { createFileTree, testdir } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { reportSchema } from '#cli/execution/report.ts';
+import { planRun } from '#cli/execution/planning/plan.ts';
 import { drizzleMigrations } from '#cli/checks/drizzle.ts';
 import { rejection } from '#tests/support/expectations.ts';
 import { run as runCli } from '#tests/support/cli/command.ts';
@@ -123,14 +123,16 @@ test('the check command reports the missing migrations of the root and their cor
         ]);
         expect(report.skips).toStrictEqual([]);
         expect(
-            report.checks[0]!.findings.map(({ check, file, line, rule, message }) => ({
+            report.checks[0]!.findings.map(({ check, file, line, rule, message: text }) => ({
                 check,
                 file,
                 line,
                 rule,
-                message,
+                message: text,
             })),
-        ).toStrictEqual(found.map(({ check, file, line, rule, message }) => ({ check, file, line, rule, message })));
+        ).toStrictEqual(
+            found.map(({ check, file, line, rule, message: text }) => ({ check, file, line, rule, message: text })),
+        );
         writeFileSync(join(directory.path, 'schema.txt'), 'current');
         const corrected = await runCli(directory.path, args);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);

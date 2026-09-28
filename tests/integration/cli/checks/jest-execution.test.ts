@@ -7,109 +7,78 @@ import { jestCoverage } from '#cli/checks/jest/run.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { rejection } from '#tests/support/expectations.ts';
+import { writeJestReports } from '#tests/support/cli/jest.ts';
 
-const failures = [
-    'missing tests',
-    'malformed tests',
-    'inconsistent test count',
-    'no tests',
-    'runtime failure',
-    'missing coverage',
-    'malformed coverage',
-    'unknown status',
-    'outside test',
-    'unexpected exit',
-    'deadline',
-    'cancellation',
-];
+const VALID = {
+    tests: 'valid' as const,
+    testCount: 1,
+    runtimeFailures: 0,
+    status: 'passed',
+    coverage: 100,
+    isOutside: false,
+    code: 0,
+    isTimedOut: false,
+    isCanceled: false,
+};
 
-test.each(failures)(
-    'Jest adapter refuses %s, cleans isolated artifacts, and accepts a corrected report',
-    async (failure) => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\nconfigurations = ["jest"]\n',
-            'sample.js': 'const authored = true;\n',
-            'node_modules/.bin/jest': '#!/usr/bin/env node\n',
-        });
-        const session = await openSession(sandbox.path);
-        const spec = session.manifests.get('jest')!.checks[0]!;
-        const input = engineInput(session, {
-            scope: session.scopes.find((entry) => entry.scope.path === '')!,
-            spec: spec,
-            files: session.repository.files,
-        });
-        let broken = true;
-        const artifacts: string[] = [];
-        const process = spyOn(processes, 'run').mockImplementation(async (argv, options) => {
-            const source = options.cwd;
-            const output = argv[argv.indexOf('--outputFile') + 1]!;
-            const coverage = argv[argv.indexOf('--coverageDirectory') + 1]!;
-            artifacts.push(source, dirname(output));
-            await Bun.write(join(source, 'sample.js'), 'temporary test output');
-            if (!(broken && failure === 'missing tests')) {
-                await Bun.write(
-                    output,
-                    broken && failure === 'malformed tests'
-                        ? '{}'
-                        : JSON.stringify({
-                              success: true,
-                              numTotalTests: broken
-                                  ? ({ 'inconsistent test count': 2, 'no tests': 0 }[failure] ?? 1)
-                                  : 1,
-                              numRuntimeErrorTestSuites: broken && failure === 'runtime failure' ? 1 : 0,
-                              testResults: [
-                                  {
-                                      name: join(
-                                          broken && failure === 'outside test' ? sandbox.path : source,
-                                          'sample.js',
-                                      ),
-                                      assertionResults: [
-                                          {
-                                              fullName: 'checks the sample',
-                                              status: broken && failure === 'unknown status' ? 'unknown' : 'passed',
-                                              failureMessages: [],
-                                          },
-                                      ],
-                                  },
-                              ],
-                          }),
-                );
-            }
-            if (!(broken && failure === 'missing coverage'))
-                await Bun.write(
-                    join(coverage, 'coverage-summary.json'),
-                    JSON.stringify({
-                        total: Object.fromEntries(
-                            ['lines', 'branches', 'functions', 'statements'].map((name) => [
-                                name,
-                                { pct: broken && failure === 'malformed coverage' ? 'Unknown' : 100 },
-                            ]),
-                        ),
-                    }),
-                );
-            return {
-                code: broken && failure === 'unexpected exit' ? 2 : 0,
-                missing: false,
-                stdout: '',
-                stderr: '',
-                duration: 1,
-                ...(broken && failure === 'deadline' ? { isTimedOut: true } : {}),
-                ...(broken && failure === 'cancellation' ? { isCanceled: true } : {}),
-            };
-        });
-        try {
-            await rejection(jestCoverage(input));
-            expect(artifacts).toHaveLength(2);
-            expect(artifacts.every((path) => !existsSync(path))).toBe(true);
-            expect(readFileSync(join(sandbox.path, 'sample.js'), 'utf8')).toBe('const authored = true;\n');
-            broken = false;
-            expect(await jestCoverage(input)).toStrictEqual([]);
-            expect(artifacts).toHaveLength(4);
-            expect(artifacts.every((path) => !existsSync(path))).toBe(true);
-            expect(readFileSync(join(sandbox.path, 'sample.js'), 'utf8')).toBe('const authored = true;\n');
-        } finally {
-            process.mockRestore();
-        }
-    },
-);
+test.each([
+    { failure: 'missing tests', changes: { tests: 'missing' as const } },
+    { failure: 'malformed tests', changes: { tests: 'malformed' as const } },
+    { failure: 'inconsistent test count', changes: { testCount: 2 } },
+    { failure: 'no tests', changes: { testCount: 0 } },
+    { failure: 'runtime failure', changes: { runtimeFailures: 1 } },
+    { failure: 'missing coverage', changes: { coverage: undefined } },
+    { failure: 'malformed coverage', changes: { coverage: 'Unknown' } },
+    { failure: 'unknown status', changes: { status: 'unknown' } },
+    { failure: 'outside test', changes: { isOutside: true } },
+    { failure: 'unexpected exit', changes: { code: 2 } },
+    { failure: 'deadline', changes: { isTimedOut: true } },
+    { failure: 'cancellation', changes: { isCanceled: true } },
+])('Jest adapter refuses $failure, cleans isolated artifacts, and accepts a corrected report', async ({ changes }) => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': 'version = 1\nconfigurations = ["jest"]\n',
+        'sample.js': 'const authored = true;\n',
+        'node_modules/.bin/jest': '#!/usr/bin/env node\n',
+    });
+    const session = await openSession(sandbox.path);
+    const spec = session.manifests.get('jest')!.checks[0]!;
+    const input = engineInput(session, {
+        scope: session.scopes.find((entry) => entry.scope.path === '')!,
+        spec: spec,
+        files: session.repository.files,
+    });
+    let isBroken = true;
+    const artifacts: string[] = [];
+    const process = spyOn(processes, 'run').mockImplementation(async (argv, options) => {
+        const source = options.cwd;
+        const output = argv[argv.indexOf('--outputFile') + 1]!;
+        const coverage = argv[argv.indexOf('--coverageDirectory') + 1]!;
+        artifacts.push(source, dirname(output));
+        await Bun.write(join(source, 'sample.js'), 'temporary test output');
+        const scenario = { ...VALID, ...(isBroken ? changes : {}) };
+        await writeJestReports(scenario.isOutside ? sandbox.path : source, output, coverage, scenario);
+        return {
+            code: scenario.code,
+            missing: false,
+            stdout: '',
+            stderr: '',
+            duration: 1,
+            isTimedOut: scenario.isTimedOut,
+            isCanceled: scenario.isCanceled,
+        };
+    });
+    try {
+        await rejection(jestCoverage(input));
+        expect(artifacts).toHaveLength(2);
+        expect(artifacts.every((path) => !existsSync(path))).toBe(true);
+        expect(readFileSync(join(sandbox.path, 'sample.js'), 'utf8')).toBe('const authored = true;\n');
+        isBroken = false;
+        expect(await jestCoverage(input)).toStrictEqual([]);
+        expect(artifacts).toHaveLength(4);
+        expect(artifacts.every((path) => !existsSync(path))).toBe(true);
+        expect(readFileSync(join(sandbox.path, 'sample.js'), 'utf8')).toBe('const authored = true;\n');
+    } finally {
+        process.mockRestore();
+    }
+});

@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { parse, stringify } from 'yaml';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { runToolCommand } from '#cli/tools/command.ts';
-import { KEYS } from '#cli/constants/tools/packages.ts';
+import { YARN_CONNECTION_KEYS, YARN_ENVIRONMENT_SETTINGS } from '#cli/constants/tools/packages.ts';
 
 /**
  * Read Yarn-owned connection settings and give its isolated project environment references.
@@ -38,23 +38,25 @@ export async function yarnSettings(root: string, work: string, env: Record<strin
         const url = new URL(registry);
         if (url.protocol === 'http:') settings['unsafeHttpWhitelist'] = [url.hostname];
     }
-    const registries: Record<string, Record<string, unknown>> = {};
-    const scopes: Record<string, Record<string, unknown>> = {};
-    for (const [key, value] of Object.entries(env)) {
-        const scope = /^npm_config_@([^:]+):registry$/u.exec(key)?.[1];
-        if (scope !== undefined) scopes[scope] = { npmRegistryServer: reference(value, 'npmRegistryServer') };
-        const host = /^npm_config_(\/\/[^\s]+):_authToken$/u.exec(key)?.[1];
-        if (host !== undefined)
-            registries[host] = { npmAuthToken: reference(value, 'npmAuthToken'), npmAlwaysAuth: true };
-    }
-    if (Object.keys(registries).length > 0) settings['npmRegistries'] = registries;
-    if (Object.keys(scopes).length > 0) settings['npmScopes'] = scopes;
+    const environmentSettings = YARN_ENVIRONMENT_SETTINGS.flatMap((source) => {
+        const entries = Object.entries(env).flatMap(([key, value]) => {
+            const name = source.pattern.exec(key)?.[1];
+            return name === undefined
+                ? []
+                : [[name, { ...source.defaults, [source.field]: reference(value, source.field) }]];
+        });
+        return entries.length === 0 ? [] : [[source.setting, Object.fromEntries(entries)]];
+    });
+    Object.assign(settings, Object.fromEntries(environmentSettings));
     const listed = await runToolCommand(undefined, ['yarn', 'config', '--json', '--no-defaults'], { cwd: root, env });
     if (listed.code !== 0)
         throw new Error('Cannot read Yarn connection settings. Check the repository Yarn configuration.');
-    for (const line of listed.stdout.split('\n').filter((line) => line.trim() !== '')) {
-        const entry = z.object({ key: z.string() }).parse(JSON.parse(line));
-        if (!KEYS.has(entry.key)) continue;
+    const entries = listed.stdout
+        .split('\n')
+        .filter((line) => line.trim() !== '')
+        .map((line) => z.object({ key: z.string() }).parse(JSON.parse(line)))
+        .filter((entry) => YARN_CONNECTION_KEYS.has(entry.key));
+    for (const entry of entries) {
         const read = await runToolCommand(undefined, ['yarn', 'config', 'get', entry.key, '--json', '--no-redacted'], {
             cwd: root,
             env,

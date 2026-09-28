@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
-import { emitAll } from '#cli/generation/render.ts';
+import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { templateInputs } from '#cli/generation/templates.ts';
 import { mkdirSync, rmSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
@@ -19,7 +19,7 @@ test.each(['package.json', 'tsconfig.json'])(
         expect(() =>
             emitAll(session.policyFiles.policy, session.repository, session.scopes, {
                 version: session.version,
-                packageManager: session.packageManager,
+                packageClient: session.packageClient,
             }),
         ).toThrow(
             path === 'tsconfig.json'
@@ -60,7 +60,7 @@ test.each(['package.json', 'tsconfig.json'])(
         expect(() =>
             emitAll(session.policyFiles.policy, session.repository, session.scopes, {
                 version: session.version,
-                packageManager: session.packageManager,
+                packageClient: session.packageClient,
             }),
         ).toThrow(
             path === 'tsconfig.json'
@@ -236,7 +236,7 @@ test('generation preserves authored aliases and reports missing authored bases',
     expect(
         emitAll(session.policyFiles.policy, session.repository, session.scopes, {
             version: session.version,
-            packageManager: session.packageManager,
+            packageClient: session.packageClient,
         }).files.some((file) => file.path === '.gspot/config/tsconfig.check.json'),
     ).toBe(true);
     expect(await Bun.file(join(sandbox.path, '.gspot/config/tsconfig.check.json')).exists()).toBe(false);

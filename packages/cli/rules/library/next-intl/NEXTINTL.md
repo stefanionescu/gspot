@@ -27,8 +27,8 @@ hold for any framework are in the shared i18n rules; these add what the library 
 
 ## Server and client boundaries
 
-- Translate in Server Components with the async server API. Use the client hook only inside
-  Client Components that need interactive translation.
+- Use `getTranslations` in async Server Components. Non-async components can use
+  `useTranslations`; the library selects its server or client implementation from the render context.
 - Give a client provider only the messages its subtree needs, selected by namespace. Never pass
   the whole catalog to every client boundary.
 - Keep `now` and `timeZone` identical between the server render and the first browser render so
@@ -41,6 +41,10 @@ hold for any framework are in the shared i18n rules; these add what the library 
 - Keys are stable semantic paths under a feature namespace. ICU arguments, plurals, selects, and
   rich-text tags go through the library's rendering API, never string concatenation.
 - Rich-text tags map to trusted components declared at the call site.
-- A missing key throws in development and is reported in production through the library's
-  `onError` hook. The key name is never a silent fallback.
+- Handle missing messages through `onError` and choose the visible error text through
+  `getMessageFallback`. The default reports an error and returns a key-based fallback.
+  Configure client callbacks in a Client Component because functions cannot cross the server boundary.
 - Catalogs for every supported locale change in the same commit as the call site.
+
+See [request configuration](https://next-intl.dev/docs/usage/configuration) and
+[Server and Client Components](https://next-intl.dev/docs/environments/server-client-components).

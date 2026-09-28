@@ -18,50 +18,50 @@ command substitution, and pipelines. Script structure and options are in the Bas
 
 Rules:
 
-- Use `name() { ... }` consistently for new code.
-- Do not write `function name()`, `function name() { ... }`, or
-  `function name { ... }`.
-- Keep functions small and single-purpose.
 - Declare function-local variables with `local`.
 - Separate `local` declaration from command substitution assignment when the
   exit code matters.
 - Return status codes with `return`. Print data to STDOUT only when the function
   is designed as a value-producing command.
 - Do not make a function both print data and log progress to STDOUT.
-- Keep a function within the configured statement, branch, and nesting limits.
 - A function that coordinates enough flags, counters, mutable state, or status
   codes to resemble a state machine does not belong in Bash. Simplify the
   workflow or move the domain behavior to its existing application-code owner.
-- Do not use a non-zero status to represent an ordinary result such as
-  `unchanged`. Print or assign an explicit result and reserve non-zero statuses
-  for failures.
+- Preserve the command's documented status contract. Predicates can use status 1 for false;
+  distinguish that result from an execution error. Report other returned data explicitly.
 
 Good:
 
 ```bash
-# current_branch - Prints the current Git branch.
-# Outputs:
-#   Writes the branch name to stdout.
-current_branch() {
-  local branch
+# Reports each unreadable input and fails if any input is unreadable.
+report_unreadable_files() {
+  local path
+  local status=0
 
-  branch="$(git rev-parse --abbrev-ref HEAD)" || return 1
-  printf '%s\n' "${branch}"
+  for path in "$@"; do
+    if [[ -r ${path} ]]; then
+      continue
+    fi
+    printf 'error: input is unreadable: %s\n' "${path}" >&2
+    status=1
+  done
+  return "${status}"
 }
 ```
 
-Use `main` for every executable script that has functions:
+An executable can keep its entrypoint in `main` when that gives argument handling and workflow
+coordination a useful owner. Do not wrap an otherwise direct command only to create an entrypoint.
 
-```bash
-main() {
-  parse_args "$@"
-  run
-}
+Libraries must not start an executable workflow when sourced.
 
-main "$@"
-```
+### Function conventions
 
-Libraries must not call `main`.
+<!-- level: all -->
+
+Use `name() { ... }` for functions that run in the caller's shell. A subshell body, `name() ( ... )`,
+can provide deliberate isolation when the function must preserve the caller's state and traps.
+Keep functions focused and within the configured statement, branch, and nesting limits. Inline wrappers that only forward a command unless their signature
+or repeated configuration has a real caller contract.
 
 ## Variables and constants
 
@@ -69,16 +69,13 @@ Rules:
 
 - Quote variable expansions unless a specific shell mechanism requires unquoted
   expansion.
-- Prefer `${name}` over `$name` for normal variables.
-- Do not brace single-character positional or shell-special parameters unless it
-  avoids confusion.
 - Positional parameters above 9 must be braced. Use `${10}`, not `$10`.
 - Use `readonly` for constants immediately after assignment.
 - Use `export` only for variables that child processes need.
 - Do not overwrite important environment variables casually, especially `PATH`,
   `HOME`, `IFS`, `CDPATH`, `SHELL`, `PWD`, or `BASH_ENV`.
 - Do not export `CDPATH`.
-- A directory constant is computed with `CDPATH= cd -- <path> && pwd -P` and has a failure
+- A directory constant is computed with `CDPATH='' cd -- <path> && pwd -P` and has a failure
   path (`|| exit 1` in an entrypoint, `|| return 1` in a library).
 - Do not put spaces around `=`.
 - Use `$HOME`, not quoted `~`, inside paths.
@@ -88,14 +85,17 @@ Rules:
 Good:
 
 ```bash
-PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)" || exit 1
+script_parent="$(dirname -- "${BASH_SOURCE[0]}")" || exit 1
+PROJECT_ROOT="$(CDPATH='' cd -- "${script_parent}/.." && pwd -P)" || exit 1
 readonly PROJECT_ROOT
 export PROJECT_ROOT
 
-tool_home="${HOME%/}/.tool"
-export tool_home
+TOOL_HOME="${HOME%/}/.tool"
+export TOOL_HOME
 
+files=('first.sql' 'second.sql')
 unset -v 'files[0]'
+printf '%s\n' "${files[@]}"
 ```
 
 When assigning from commands:
@@ -119,6 +119,14 @@ export output="$(some_command)"
 The exit code is the `local` builtin's status, not reliably the command
 substitution status.
 
+### Variable spelling
+
+<!-- level: all -->
+
+Prefer `${name}` for named variables. Do not brace single-character positional or shell-special
+parameters unless needed to distinguish adjacent characters. Preserve required braces for
+positional parameters above nine and for parameter-expansion operations.
+
 ## Quoting and expansion
 
 Rules:
@@ -139,9 +147,9 @@ Rules:
 Good:
 
 ```bash
+source_file="${1:?Source file is required}"
+target_dir="${2:?Target directory is required}"
 cp -- "${source_file}" "${target_dir}/"
-printf '%s\n' "${message}"
-command --flag "${value}" "$@"
 ```
 
 Quoted command substitution:
@@ -170,15 +178,12 @@ Use arrays for command arguments.
 Good:
 
 ```bash
-declare -a quantize_args
-quantize_args=(
-  --model
-  "${model_name}"
-  --out
-  "${checkpoint_dir}"
-)
+archive_path="${1:?Archive path is required}"
+source_directory="${2:?Source directory is required}"
+declare -a archive_args
+archive_args=(-czf "${archive_path}" -C "${source_directory}" .)
 
-python -m src.quantization.vllm.quantize "${quantize_args[@]}"
+tar "${archive_args[@]}"
 ```
 
 Rules:
@@ -215,7 +220,7 @@ done < <(find . -type f -name '*.sql' -print0)
 
 ## Conditionals
 
-Use `[[ ... ]]` for Bash conditionals:
+Bash `[[ ... ]]` supports explicit string, pattern, and file tests:
 
 ```bash
 if [[ -f "${config_file}" ]]; then
@@ -225,7 +230,6 @@ fi
 
 Rules:
 
-- Prefer `[[ ... ]]` over `[ ... ]` in Bash scripts.
 - Do not use `test -a`, `test -o`, `[ ... -a ... ]`, `[ ... -o ... ]`, or
   grouping operators inside `[ ... ]`. Use `[[ ... ]]`, explicit `if`
   branches, or `case`.
@@ -275,6 +279,13 @@ else
 fi
 ```
 
+### Conditional conventions
+
+<!-- level: all -->
+
+Use `[[ ... ]]` for Bash conditionals. Keep numeric comparisons in arithmetic contexts after
+validating external numeric input.
+
 ## Arithmetic
 
 Rules:
@@ -290,9 +301,8 @@ Rules:
   and index are trusted.
 - Do not put untrusted strings into `(( ... ))`, `$(( ... ))`, `[[ value -gt n ]]`,
   array indices, or arithmetic `for` expressions.
-- Avoid associative arrays in arithmetic contexts. Project-default Bash 3.2 does
-  not support associative arrays, and newer Bash versions differ in expansion
-  behavior.
+- Avoid associative arrays in arithmetic contexts. Bash 3.2 does not support them,
+  and newer Bash versions differ in their expansion behavior.
 - Convert base-10 strings with care. `10#${value}` only works for unsigned
   numbers.
 - Call `date` one time when multiple fields must describe the same instant.
@@ -302,8 +312,10 @@ Rules:
 Good:
 
 ```bash
-if (( retry_count < max_retries )); then
-  (( retry_count += 1 ))
+retry_count=0
+max_retries=3
+if ((retry_count < max_retries)); then
+  ((retry_count += 1))
 fi
 ```
 
@@ -361,17 +373,21 @@ Rules:
 Good line reading:
 
 ```bash
-while IFS= read -r line; do
-  process_line "${line}"
-done < "${input_file}"
+input_file="${1:?Input file is required}"
+while IFS= read -r line || [[ -n ${line} ]]; do
+  printf '%s\n' "${line}"
+done <"${input_file}"
 ```
 
 Good command output loop:
 
 ```bash
-while IFS= read -r line; do
-  process_line "${line}"
-done < <(generate_lines)
+input_file="${1:?Input file is required}"
+line_count=0
+while IFS= read -r line || [[ -n ${line} ]]; do
+  line_count=$((line_count + 1))
+done <"${input_file}"
+printf '%s\n' "${line_count}"
 ```
 
 Unlike process substitution, a here-string containing command substitution collects all output
@@ -381,9 +397,14 @@ propagates the producer's failure to the loop; use a checked temporary file when
 Good filename loop:
 
 ```bash
+root_dir="$(CDPATH='' cd -- "${1:?Root directory is required}" && pwd -P)" || exit 1
+file_list="$(mktemp)" || exit 1
+trap 'rm -f -- "${file_list}"' EXIT
+find "${root_dir}" -type f -print0 >"${file_list}" || exit 1
+
 while IFS= LC_ALL=C read -r -d '' file; do
-  process_file "${file}"
-done < <(find "${root_dir}" -type f -print0)
+  printf 'file: %q\n' "${file}"
+done <"${file_list}"
 ```
 
 Counter loop:
@@ -461,8 +482,8 @@ Good:
 
 ```bash
 for file in ./*.sql; do
-  [[ -e "${file}" ]] || continue
-  lint_sql "${file}"
+  [[ -e ${file} ]] || continue
+  printf '%s\n' "${file}"
 done
 ```
 
@@ -508,7 +529,7 @@ fi
 When using `cd` in command substitution, clear `CDPATH`:
 
 ```bash
-repo_root="$(CDPATH= cd -- "${SCRIPT_DIR}/.." && pwd -P)" || return 1
+repo_root="$(CDPATH='' cd -- "${SCRIPT_DIR}/.." && pwd -P)" || return 1
 ```
 
 ## Command substitution
@@ -526,7 +547,8 @@ Rules:
 Good:
 
 ```bash
-commit_sha="$(git rev-parse HEAD)" || return 1
+commit_sha="$(git rev-parse HEAD)" || exit 1
+git show --no-patch --format=%s "${commit_sha}"
 ```
 
 If trailing newlines matter, avoid command substitution or deliberately preserve

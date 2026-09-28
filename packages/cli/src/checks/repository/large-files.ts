@@ -1,7 +1,6 @@
 import { pathMatcher } from '#cli/repository/paths.ts';
-import { isUnderLfs } from '#cli/repository/file-classification.ts';
-import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 import { KILOBYTE } from '#cli/constants/checks/repository.ts';
+import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 
 /**
  * One finding per tracked file over `limits.file_size_kb` that is neither under LFS nor declared.
@@ -16,7 +15,13 @@ export function largeFiles(input: EngineInput): Finding[] {
     return input.repositoryFiles
         .filter(
             (file) =>
-                file.size > limitKb * KILOBYTE && !isDeclared(file.path) && !isUnderLfs(input.attributes, file.path),
+                file.size > limitKb * KILOBYTE &&
+                !isDeclared(file.path) &&
+                !input.attributes.some(
+                    (rule) =>
+                        rule.matcher(file.path) &&
+                        rule.attributes.some((attribute) => attribute.startsWith('filter=lfs')),
+                ),
         )
         .map((file) => ({
             check: input.spec.name,

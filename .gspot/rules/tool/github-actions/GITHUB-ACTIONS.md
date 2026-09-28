@@ -13,14 +13,12 @@ project contracts apply at both levels.
 
 ## Workflow shape
 
-- One workflow per purpose (`ci.yml`, `release.yml`, `deploy.yml`). File names are kebab-case.
 - Every job has `timeout-minutes`. Every workflow that can run twice for one ref has a
   `concurrency` group with `cancel-in-progress` for pull requests.
 - Jobs run on a pinned runner image (`ubuntu-24.04`), not `ubuntu-latest`.
-- Steps that run project commands call the task runner (`mise run check`), not a
-  copy of the command. The workflow does not own logic the repository already has.
-- No `continue-on-error` without a reason comment. No `if: always()` on a step that publishes
-  results of a failed job.
+- No `continue-on-error` without a reason comment. Required failures must fail the job.
+- Upload diagnostics after failed checks with an explicit status condition. Deployments and
+  release publication require successful prerequisites.
 
 ## Actions
 
@@ -44,10 +42,8 @@ project contracts apply at both levels.
 
 ## Scripts
 
-- A `run:` block is short. Anything past a few lines is a script in the repository that follows
-  the shell rules and passes ShellCheck.
-- `run:` uses `shell: bash` and starts with `set -euo pipefail`. GitHub's explicit
-  Bash shell enables `-e` and `pipefail`, but does not enable `-u`.
+- Declare the shell required by the script. GitHub's explicit Bash shell enables `-e` and
+  `pipefail`, but does not enable `-u`. Enable required options and validate inputs explicitly.
 - Caches are keyed on the lockfile hash and the runtime version. Restore keys never match a
   different lockfile.
 
@@ -59,3 +55,12 @@ project contracts apply at both levels.
 
 See [GitHub's shell configuration](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idstepsshell)
 for the command each runner uses.
+
+## Workflow organization
+
+<!-- level: all -->
+
+- Give each workflow one purpose, such as checks, release publication, or deployment.
+  Use kebab-case file names.
+- Call existing task-runner commands instead of copying their implementation into a workflow.
+- Keep substantial script logic in its repository owner, with the checks its language requires.

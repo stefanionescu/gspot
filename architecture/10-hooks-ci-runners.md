@@ -322,7 +322,7 @@ that carries the line. Supported tracked task insertion must be reachable and pr
 
 Unsupported hook scripts stay intact with a setup error. Use the composition contract in [10-hooks-ci-runners.md](10-hooks-ci-runners.md), not textual append. Lines of the task that are no lint stay.
 
-`hooks.test.ts` plants a `.githooks/pre-commit` that runs `mise run lint`, and holds
+`hooks.test.ts` plants a `.githooks/pre-commit` that runs its fixture lint task, and holds
 the gspot line in the task and an unchanged `core.hooksPath`.
 
 ### Acceptance K-58
@@ -533,7 +533,7 @@ lines.
 With `--no-ci`, or where the CI files of another system are found, the plan ends with
 the lines to paste: install gspot at the pinned version, `gspot install`, and
 `gspot check`, with `.gspot/reports/report.*` kept as artifacts. The guide shows them in the syntax of the four systems, and
-`docs/samples` parses each command.
+Documentation example tests live under `tests/integration/docs/`.
 
 A planted `bitbucket-pipelines.yml` holds the three lines in the plan.
 
@@ -558,7 +558,7 @@ earlier run. A rejected message check preserves both report formats byte for byt
 
 ### Acceptance K-253
 
-The workflow follows the rule file, and the task names preserve the developer’s existing task definitions.
+The workflow follows the rule file, and the task names preserve the developer's existing task definitions.
 
 `RUNNERS` holds `ubuntu-24.04`, `macos-15`, and `windows-2025`. The job gains
 `timeout-minutes: 20` and a `concurrency` group on the ref. The task is `check` where the name is
@@ -581,4 +581,4 @@ format beside the JSON and the SARIF file ([10-hooks-ci-runners.md](10-hooks-ci-
 A planted install with `--ci gitlab`, whose file `glab ci lint` accepts in the
 `manual` job of CI.
 
-Staged snapshots copy every required dependency tree before validating links across them. Workspace links must resolve inside the complete snapshot. Fixer previews own their isolated copies separately from Git revision materialization. CI remains paused under the sole status record.
+Staged snapshots copy every required dependency tree before validating links across them. Workspace links must resolve inside the complete snapshot. Fixer previews own their isolated copies separately from Git revision materialization. The remaining-work record owns required local and remote CI evidence.

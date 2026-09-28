@@ -71,4 +71,4 @@ default = "nginx:stable-alpine"
 summary = "The image nginx -t runs in; name the one the deployment uses."
 
 [rule_files]
-tool = ["tool/nginx/NGINX.md"]
+tool = [{path = "tool/nginx/NGINX.md"}]

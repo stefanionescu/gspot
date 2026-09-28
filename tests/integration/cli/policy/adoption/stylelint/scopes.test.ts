@@ -3,13 +3,13 @@ import stylelint from 'stylelint';
 import { stringify } from 'smol-toml';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
-import { emitAll } from '#cli/generation/render.ts';
 import { readFileSync, symlinkSync } from 'node:fs';
+import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { STYLELINT_TOOLING } from '#tests/constants/cli.ts';
 import { proposeText } from '#cli/commands/init/propose.ts';
 import { collectCarried } from '#cli/policy/adoption/collect.ts';
 import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
-import { STYLELINT_TOOLING } from '#tests/constants/support/cli.ts';
 import type { ExistingTooling } from '#cli/types/repository/repository.ts';
 import { containing, textContaining } from '#tests/support/expectations.ts';
 
@@ -45,12 +45,19 @@ test.each([
         expect(scope.view.rulesOff('css/stylelint')).toStrictEqual(disabled ? ['block-no-empty'] : []);
 });
 
-test('nested Stylelint adoption preserves sibling rules and whole-scope allowances in native editor configurations', async () => {
+test.each([
+    { path: 'theme[1]/future.css', code: '#example { color: red; }', expected: ['color-named', 'selector-max-id'] },
+    { path: 'other/future.css', code: '#example { color: red; }', expected: [] },
+    { path: 'theme[1]/future.css', code: 'a {}', expected: [] },
+    { path: 'theme[1]/deep/future.css', code: 'a {}', expected: [] },
+    { path: 'other/future.css', code: 'a {}', expected: ['block-no-empty'] },
+    { path: 'future.css', code: 'a {}', expected: ['block-no-empty'] },
+    { path: 'theme[1]/corrected.css', code: '.example { color: #abc; }', expected: [] },
+])('nested Stylelint adoption preserves rules for $path with $code', async ({ path, code, expected }) => {
     await using sandbox = await testdir();
-    const original = '{"extends":"./base.json","rules":{"block-no-empty":null}}\n';
     await createFileTree(sandbox.path, {
         'package.json': '{"private":true}\n',
-        'theme[1]/.stylelintrc.json': original,
+        'theme[1]/.stylelintrc.json': '{"extends":"./base.json","rules":{"block-no-empty":null}}\n',
         'theme[1]/base.json': '{"rules":{"color-named":"never","selector-max-id":0}}\n',
         'other/.stylelintrc.json': '{"rules":{"color-named":"always-where-possible","selector-max-id":2}}\n',
         'theme[1]/sample.css': 'a {}\n',
@@ -76,15 +83,6 @@ test('nested Stylelint adoption preserves sibling rules and whole-scope allowanc
     ]);
     expect(carried.tools.get('stylelint')?.settings).toStrictEqual({});
     expect(carried.observed.has('theme[1]/base.json')).toBe(true);
-    const samples = [
-        { path: 'theme[1]/future.css', code: '#example { color: red; }', expected: ['color-named', 'selector-max-id'] },
-        { path: 'other/future.css', code: '#example { color: red; }', expected: [] },
-        { path: 'theme[1]/future.css', code: 'a {}', expected: [] },
-        { path: 'theme[1]/deep/future.css', code: 'a {}', expected: [] },
-        { path: 'other/future.css', code: 'a {}', expected: ['block-no-empty'] },
-        { path: 'future.css', code: 'a {}', expected: ['block-no-empty'] },
-        { path: 'theme[1]/corrected.css', code: '.example { color: #abc; }', expected: [] },
-    ];
     const baseline = await stylelint.lint({ code: 'a {}', codeFilename: join(sandbox.path, 'theme[1]/future.css') });
     expect(baseline.results.flatMap((result) => result.warnings)).toStrictEqual([]);
     await Bun.write(
@@ -102,17 +100,15 @@ test('nested Stylelint adoption preserves sibling rules and whole-scope allowanc
     const session = await openSession(sandbox.path);
     for (const file of emitAll(session.policyFiles.policy, session.repository, session.scopes, {
         version: session.version,
-        packageManager: session.packageManager,
+        packageClient: session.packageClient,
     }).files.filter((file) => file.kind === 'config' || file.path.endsWith('.stylelintrc.json')))
         await Bun.write(join(sandbox.path, file.path), file.content);
-    for (const { path, code, expected } of samples) {
-        const result = await stylelint.lint({ code, codeFilename: join(sandbox.path, path) });
-        const relevant = result.results
-            .flatMap((result) => result.warnings.map((warning) => warning.rule))
-            .filter((rule) => ['color-named', 'selector-max-id', 'block-no-empty'].includes(rule))
-            .toSorted((left, right) => left.localeCompare(right));
-        expect(relevant, path).toStrictEqual(expected);
-    }
+    const result = await stylelint.lint({ code, codeFilename: join(sandbox.path, path) });
+    const relevant = result.results
+        .flatMap((result) => result.warnings.map((warning) => warning.rule))
+        .filter((rule) => ['color-named', 'selector-max-id', 'block-no-empty'].includes(rule))
+        .toSorted((left, right) => left.localeCompare(right));
+    expect(relevant, path).toStrictEqual([...expected]);
     expect(readFileSync(join(sandbox.path, 'theme[1]/base.json'), 'utf8')).toBe(
         '{"rules":{"color-named":"never","selector-max-id":0}}\n',
     );

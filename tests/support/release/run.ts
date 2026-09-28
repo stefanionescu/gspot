@@ -1,0 +1,47 @@
+import { join } from 'node:path';
+import { run } from '#cli/platform/spawn.ts';
+import { root } from '#tests/support/release/packages.ts';
+import { publishRelease } from '#tests/support/release/published.ts';
+import { startRegistry, settleRegistry } from '#tests/support/registry/lifecycle.ts';
+
+const controller = new AbortController();
+const interrupt = () => {
+    process.exitCode = 130;
+    controller.abort();
+};
+const terminate = () => {
+    process.exitCode = 143;
+    controller.abort();
+};
+process.on('SIGINT', interrupt);
+process.on('SIGTERM', terminate);
+try {
+    const registry = await startRegistry(0, undefined, controller.signal);
+    let executionError: unknown;
+    try {
+        const release = await publishRelease(registry, controller.signal);
+        const args = process.argv.slice(2);
+        const executed = await run(
+            [process.execPath, 'test', '--timeout', '60000', ...(args.length === 0 ? ['./acceptance/release'] : args)],
+            {
+                cwd: join(root, 'tests'),
+                env: { GSPOT_RELEASE_FIXTURE: JSON.stringify(release) },
+                cancelSignal: controller.signal,
+                timeoutMs: 30 * 60_000,
+                onStdout: (chunk) => {
+                    process.stdout.write(chunk);
+                },
+                onStderr: (chunk) => {
+                    process.stderr.write(chunk);
+                },
+            },
+        );
+        process.exitCode ||= executed.code;
+    } catch (error) {
+        if (!controller.signal.aborted) executionError = error;
+    }
+    await settleRegistry(registry, executionError);
+} finally {
+    process.removeListener('SIGINT', interrupt);
+    process.removeListener('SIGTERM', terminate);
+}

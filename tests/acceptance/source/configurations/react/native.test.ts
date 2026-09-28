@@ -1,13 +1,13 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
-// Planted repository for the react-native configuration: an environment variable taken apart, an inline style, a list with no key, a token in AsyncStorage, a deep import, and text outside a text element.
+// React Native fixtures cover environment access, styling, and keyed lists. Additional cases check token storage, import boundaries, and text placement.
 import { run } from '#tests/support/cli/command.ts';
 import { reportSchema } from '#cli/execution/report.ts';
+import { runPlanted } from '#tests/support/cli/planted.ts';
 import { containing } from '#tests/support/expectations.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
 import { installSandbox } from '#tests/support/cli/sandbox.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
-import { expectCorrected, runPlanted } from '#tests/support/cli/planted.ts';
 import { LIBRARIES_CLEAN } from '#tests/constants/acceptance/source/configurations/configurations.ts';
 
 import {
@@ -91,7 +91,15 @@ describe('the react-native configuration', () => {
             expect(failed.checks).toMatchObject([{ check: 'typescript/eslint', status: 'fail' }]);
             expect(failed.checks[0]!.findings).toContainEqual(containing({ rule, file: path, line }));
             await Bun.write(join(sandbox.path, path), LIBRARIES_CLEAN);
-            await expectCorrected(sandbox.path, 'typescript/eslint', environment);
+            const correctedCheck = await run(
+                sandbox.path,
+                ['check', '--only', 'typescript/eslint', '--no-cache', '--json'],
+                environment,
+            );
+            expect(correctedCheck.code, correctedCheck.stdout + correctedCheck.stderr).toBe(0);
+            expect(reportSchema.parse(JSON.parse(correctedCheck.stdout)).checks).toMatchObject([
+                { check: 'typescript/eslint', status: 'ok', findings: [] },
+            ]);
             const required = await run(
                 sandbox.path,
                 ['check', '--only', 'integrity/required-rules', '--no-cache'],

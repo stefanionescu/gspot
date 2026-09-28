@@ -30,6 +30,14 @@ function embeddedIndex(): EmbeddedIndex | undefined {
     return state.embedded ?? undefined;
 }
 
+function embeddedAsset(path: string, missingDescription: string): string | undefined {
+    const index = embeddedIndex();
+    if (index === undefined) return undefined;
+    const file = index[path];
+    if (file === undefined) throw new Error(missingDescription);
+    return file;
+}
+
 function developmentRoot(): string {
     state.developmentRoot ??= findRepoRoot();
     return state.developmentRoot;
@@ -59,12 +67,8 @@ export function isEmbedded(): boolean {
  * @returns the text
  */
 export function readAsset(path: string): string {
-    const index = embeddedIndex();
-    if (index) {
-        const file = index[path];
-        if (file === undefined) throw new Error(`No embedded asset is at ${path}.`);
-        return readFileSync(file, 'utf8');
-    }
+    const embedded = embeddedAsset(path, `No embedded asset is at ${path}.`);
+    if (embedded !== undefined) return readFileSync(embedded, 'utf8');
     return readFileSync(join(developmentRoot(), path), 'utf8');
 }
 
@@ -75,12 +79,8 @@ export function readAsset(path: string): string {
  */
 export function grammarPath(name: string): string {
     if (!GRAMMAR_NAMES.includes(name)) throw new Error(`No grammar is called ${name}.`);
-    const index = embeddedIndex();
-    if (index !== undefined) {
-        const embedded = index[`grammars/${name}`];
-        if (embedded === undefined) throw new Error(`No embedded grammar is called ${name}.`);
-        return embedded;
-    }
+    const embedded = embeddedAsset(`grammars/${name}`, `No embedded grammar is called ${name}.`);
+    if (embedded !== undefined) return embedded;
     const root = developmentRoot();
     if (name === 'swift.wasm') {
         const path = join(root, 'packages', 'cli', '.build', name);

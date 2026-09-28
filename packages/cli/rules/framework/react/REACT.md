@@ -18,17 +18,23 @@ adds routing, server components, and caching on top of these.
 
 - A component renders props and state. Data fetching, business rules, and persistence live in
   hooks, server modules, or the query layer, never in the render body.
-- One component per file, named for what it renders. The file is kebab-case and exports one
-  PascalCase component.
 - Props have a type beside their component; a component never takes an untyped object.
+- No `dangerouslySetInnerHTML` outside one reviewed rendering adapter with a sanitizer.
+
+### Component conventions
+
+<!-- level: all -->
+
 - Compose downward: a component imports children and shared primitives, never its parent, its
   section, or its route.
 - Domain-neutral primitives (button, input, dialog, popover, tooltip) live in the shared UI owner
   and take values and callbacks. They never fetch or import a feature.
 - Keep a component small enough that its JSX reads as one screen region. Extract by visual
   responsibility, not by line count.
-- No `React.FC`; declare the props type on the parameter.
-- No `dangerouslySetInnerHTML` outside one reviewed rendering adapter with a sanitizer.
+
+- Keep one primary component per file and name it for what it renders.
+- Use kebab-case filenames and PascalCase component names.
+- Declare the props type on the parameter rather than using `React.FC`.
 
 ## Hooks
 
@@ -89,8 +95,8 @@ UI updates after hydration. Fix the mismatch instead of hiding warnings globally
 ## Forms and inputs
 
 - An input is controlled or uncontrolled, never both. Choose per form and keep it.
-- Validation runs through the form library's resolver and the shared schema; the component
-  renders field errors from the form state.
+- Validate input against the declared contract and expose its errors to the user. When a form
+  library is selected, use its supported validation and state APIs.
 - Submission goes through one owner that awaits the real save and reports pending state from it.
 
 ## Accessibility

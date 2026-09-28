@@ -1,7 +1,7 @@
 // Read a profile from a path, an https URL or github:owner/repo, validate it, and name every problem in one pass.
 import { resolve } from 'node:path';
+import { readFileSync } from 'node:fs';
 import { parse as parseToml } from 'smol-toml';
-import { readFileSync, statSync } from 'node:fs';
 import { nearMatches } from '#cli/policy/near.ts';
 import * as messages from '#cli/policy/messages.ts';
 import type { Profile } from '#cli/types/policy/profiles.ts';
@@ -27,9 +27,13 @@ async function profileText(source: string, cwd: string): Promise<string> {
     if (source.startsWith('https://')) return fetched(source);
     if (source.startsWith('http://')) throw new ProfileError(['A profile is fetched over https, not http.']);
     const path = resolve(cwd, source);
-    if (statSync(path, { throwIfNoEntry: false }) === undefined)
-        throw new ProfileError([`There is no profile at ${source}.`]);
-    return readFileSync(path, 'utf8');
+    try {
+        return readFileSync(path, 'utf8');
+    } catch (error) {
+        if (error instanceof Error && 'code' in error && error.code === 'ENOENT')
+            throw new ProfileError([`There is no profile at ${source}.`]);
+        throw error;
+    }
 }
 
 // A path belongs to one repository, so an entry that names one cannot travel.
@@ -42,18 +46,6 @@ function pathProblems(value: unknown, where: string): string[] {
         const below = where === '' ? key : `${where}.${key}`;
         return pathProblems(inner, below);
     });
-}
-
-function issueLine(issue: { path: PropertyKey[]; message: string }, source: string): string {
-    const where = issue.path.map(String).join('.');
-    return `${where === '' ? source : where}: ${issue.message}`;
-}
-
-function configurationProblems(configurations: string[]): string[] {
-    const known = configurationManifests().keys().toArray();
-    return configurations
-        .filter((id) => !known.includes(id))
-        .map((id) => messages.unknownConfiguration(id, nearMatches(id, known)));
 }
 
 /** Every problem a profile has, as one error with one line per problem. */
@@ -85,9 +77,17 @@ export function parseProfile(text: string, source: string): Profile {
         throw new ProfileError([messages.tomlSyntax(source, (error as Error).message)]);
     }
     const result = profileSchema.safeParse(raw);
-    const shape = result.success ? [] : result.error.issues.map((issue) => issueLine(issue, source));
+    const shape = result.success
+        ? []
+        : result.error.issues.map((issue) => {
+              const where = issue.path.map(String).join('.');
+              return `${where === '' ? source : where}: ${issue.message}`;
+          });
     const named = (raw as { configurations?: unknown }).configurations;
-    const configurations = configurationProblems(Array.isArray(named) ? named.map(String) : []);
+    const known = configurationManifests().keys().toArray();
+    const configurations = (Array.isArray(named) ? named.map(String) : [])
+        .filter((id) => !known.includes(id))
+        .map((id) => messages.unknownConfiguration(id, nearMatches(id, known)));
     const problems = [...shape, ...configurations, ...pathProblems(raw, '')];
     if (!result.success || problems.length > 0) throw new ProfileError(problems);
     return { source, digest: new Bun.CryptoHasher('sha256').update(text).digest('hex'), tables: result.data };

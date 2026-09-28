@@ -32,9 +32,14 @@ The React rules apply first. These add what a phone changes.
 
 ## Styles
 
+- Build layouts that adapt to the available screen size and font scale.
+
+### Style conventions
+
+<!-- level: all -->
+
 - Name styles in `StyleSheet.create` below the component. Do not write an object in a `style` prop.
 - Read colors, spacing, and type sizes from one theme module. Do not write a color literal in a component.
-- Build layout with flexbox. Do not position with absolute numbers measured on one phone.
 - Branch on `Platform.OS` in one place for one concern. A component full of platform checks is two components.
 
 ## Navigation and state

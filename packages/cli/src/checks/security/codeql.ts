@@ -1,22 +1,17 @@
 import { z } from 'zod';
+import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { toolPin } from '#cli/tools/inspect.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
-import { fileURLToPath, pathToFileURL } from 'node:url';
 import { readSource } from '#cli/repository/tracked.ts';
-import { codePoints } from '#cli/platform/code-points.ts';
-import { isAbsolute, join, relative, sep } from 'node:path';
 import { mutationTarget } from '#cli/platform/safe-paths.ts';
-import { scratchCopy } from '#cli/execution/file-workspace.ts';
-import { runCheckCommand } from '#cli/execution/tool-runner.ts';
+import { runCheckCommand } from '#cli/execution/tool/runner.ts';
+import { scratchCopy } from '#cli/execution/files/workspace.ts';
+import { sarifLog, placeOf } from '#cli/checks/security/sarif.ts';
 import type { AcceptedResult } from '#cli/types/checks/security.ts';
 import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 import { CODEQL_TOOL, DEFAULT_SUITE } from '#cli/constants/checks/security.ts';
-
-function isAccepted(accepted: AcceptedResult[], rule: string, file: string): boolean {
-    return accepted.some((entry) => entry.rule === rule && pathMatcher(entry.paths)(file));
-}
 
 async function spawned(input: EngineInput, argv: string[], cwd: string): Promise<string> {
     const result = await runCheckCommand(input, [CODEQL_TOOL, ...argv], { cwd });
@@ -65,126 +60,13 @@ async function scanned(
     }
 }
 
-const artifactLocation = z.object({
-    uri: z.string().optional(),
-    uriBaseId: z.string().optional(),
-    index: z.number().int().nonnegative().optional(),
-});
-const sarifResult = z.object({
-    ruleId: z.string().optional(),
-    message: z.object({ text: z.string().optional() }).optional(),
-    locations: z
-        .array(
-            z.object({
-                physicalLocation: z
-                    .object({
-                        artifactLocation: artifactLocation.optional(),
-                        region: z
-                            .object({
-                                startLine: z.number().int().positive().optional(),
-                                startColumn: z.number().int().positive().optional(),
-                                charOffset: z.number().int().min(-1).optional(),
-                            })
-                            .optional(),
-                    })
-                    .optional(),
-            }),
-        )
-        .optional(),
-});
-const sarifRun = z.object({
-    results: z.array(sarifResult),
-    artifacts: z.array(z.object({ location: artifactLocation.optional(), encoding: z.string().optional() })).optional(),
-    defaultEncoding: z.string().optional(),
-    columnKind: z.enum(['utf16CodeUnits', 'unicodeCodePoints']).optional(),
-    newlineSequences: z.array(z.string().min(1)).min(1).optional(),
-    originalUriBaseIds: z.record(z.string(), artifactLocation).optional(),
-    invocations: z
-        .array(
-            z.object({
-                executionSuccessful: z.boolean().optional(),
-                toolExecutionNotifications: z.array(z.object({ level: z.string().optional() })).optional(),
-            }),
-        )
-        .optional(),
-});
-const sarifLog = z.object({ version: z.literal('2.1.0'), runs: z.array(sarifRun).min(1) });
-
-function placeOf(
-    result: z.infer<typeof sarifResult>,
-    run: z.infer<typeof sarifRun>,
-    source: string,
-): { file: string; line: number; column?: number } {
-    const location = result.locations?.[0]?.physicalLocation;
-    let artifact = location?.artifactLocation;
-    if (artifact?.uri === undefined && artifact?.index !== undefined) {
-        artifact = run.artifacts?.[artifact.index]?.location;
-        if (artifact?.uri === undefined) throw new Error('CodeQL reported a missing artifact location.');
-    }
-    const root = pathToFileURL(`${source}${sep}`);
-    const baseOf = (id: string, seen = new Set<string>()): URL => {
-        if (seen.has(id)) throw new Error('CodeQL reported a cyclic source location.');
-        seen.add(id);
-        const base = run.originalUriBaseIds?.[id];
-        if (base === undefined) {
-            if (id === '%SRCROOT%') return root;
-            throw new Error(`CodeQL reported an unknown source location: ${id}.`);
-        }
-        return new URL(base.uri ?? '', base.uriBaseId === undefined ? root : baseOf(base.uriBaseId, seen));
-    };
-    let file = '';
-    if (artifact?.uri !== undefined) {
-        const uri = new URL(artifact.uri, artifact.uriBaseId === undefined ? root : baseOf(artifact.uriBaseId));
-        if (uri.protocol !== 'file:') throw new Error('CodeQL reported a source location that is not a file.');
-        file = relative(source, fileURLToPath(uri));
-        if (isAbsolute(file) || file === '..' || file.startsWith(`..${sep}`))
-            throw new Error('CodeQL reported a source location outside its selected source copy.');
-        file = file.split(sep).join('/');
-    }
-    const region = location?.region;
-    if (region?.charOffset !== undefined && region.charOffset >= 0 && region.startLine === undefined) {
-        if (file === '') throw new Error('CodeQL reported a character offset without a source file.');
-        const index = location?.artifactLocation?.index;
-        const encoding =
-            (index === undefined ? undefined : run.artifacts?.[index]?.encoding) ?? run.defaultEncoding ?? 'utf8';
-        const text = new TextDecoder(encoding, { fatal: true }).decode(readSource(source, file));
-        const characters = codePoints(text);
-        if (region.charOffset > characters.length)
-            throw new Error('CodeQL reported a character offset beyond the source file.');
-        const prefix = characters.slice(0, region.charOffset).join('');
-        const breaks = run.newlineSequences ?? ['\r\n', '\n'];
-        let line = 1;
-        let start = 0;
-        for (let cursor = 0; cursor < prefix.length; ) {
-            const newline = breaks.find((sequence) => prefix.startsWith(sequence, cursor));
-            if (newline === undefined) cursor += 1;
-            else {
-                cursor += newline.length;
-                line += 1;
-                start = cursor;
-            }
-        }
-        const tail = prefix.slice(start);
-        return {
-            file,
-            line,
-            column: (run.columnKind === 'unicodeCodePoints' ? codePoints(tail).length : tail.length) + 1,
-        };
-    }
-    return {
-        file,
-        line: region?.startLine ?? 1,
-        ...(region?.startColumn === undefined ? {} : { column: region.startColumn }),
-    };
-}
-
 /**
  * Validate a CodeQL report and apply accepted results to repository-relative source locations.
- * @param log the parsed SARIF log
- * @param check the check name the findings carry
- * @param accepted the results the policy accepts
- * @param source the copy of the repository the analysis ran in
- * @returns the findings the policy does not accept
+ * @param log the parsed SARIF log.
+ * @param check the check name the findings carry.
+ * @param accepted the results the policy accepts.
+ * @param source the copy of the repository the analysis ran in.
+ * @returns the findings the policy does not accept.
  */
 export function sarifFindings(log: unknown, check: string, accepted: AcceptedResult[], source: string): Finding[] {
     const parsed = sarifLog.parse(log);
@@ -201,12 +83,15 @@ export function sarifFindings(log: unknown, check: string, accepted: AcceptedRes
         return run.results
             .map((result) => ({
                 check,
-                ...placeOf(result, run, source),
+                ...placeOf(result.locations?.[0]?.physicalLocation, run, source),
                 rule: result.ruleId ?? CODEQL_TOOL,
                 message: result.message?.text ?? 'CodeQL reports a result here.',
                 fixable: false,
             }))
-            .filter((finding) => !isAccepted(accepted, finding.rule, finding.file));
+            .filter(
+                (finding) =>
+                    !accepted.some((entry) => entry.rule === finding.rule && pathMatcher(entry.paths)(finding.file)),
+            );
     });
 }
 

@@ -17,12 +17,12 @@ Rules for API tests:
 
 - Prefer component-style API tests for meaningful backend behavior: start the API surface, use real middleware and routes, mock only boundaries that leave the process.
 - Unit test pure domain functions when the behavior is algorithmic or has many input branches.
-- Use narrow in-process HTTP tests with the app factory and `supertest` when lifecycle, ports, and process startup are irrelevant.
+- Use the project's existing in-process HTTP test interface when lifecycle, ports, and process
+  startup are irrelevant. Do not add a second request library solely for this pattern.
 - Use a real HTTP client against a started server when startup, shutdown, readiness, middleware order, sockets, or container-like behavior matters.
 - Configure real HTTP clients so non-2xx responses do not throw. The test decides which status is acceptable.
 - Use e2e tests only when runtime lifecycle, provider connection behavior, or deployment wiring matters.
 - Real provider tests need explicit opt-in env vars and must not run as part of default suites.
-- Use nested `describe()` blocks when they make reports clearer: route, method, scenario, expectation.
 
 When an API behavior changes, consider the five backend outcomes:
 
@@ -204,16 +204,19 @@ Rules:
 - Use partial mocks sparingly and only when a full boundary replacement hides too much useful behavior.
 - Do not mock the candidate under test.
 
-Mock global fetch:
+Mock global fetch with a fresh response for each call. Restore stubbed globals after each test,
+or enable the documented `unstubGlobals` configuration option. See
+[Vitest's global-mocking documentation](https://vitest.dev/guide/mocking/globals).
 
 ```ts
 vi.stubGlobal(
     'fetch',
-    vi.fn().mockResolvedValue({
-        ok: true,
-        json: async () => ({ status: 'ready' }),
-    } as Response),
+    vi.fn<typeof fetch>().mockImplementation(() => Promise.resolve(Response.json({ status: 'ready' }))),
 );
+
+afterEach(() => {
+    vi.unstubAllGlobals();
+});
 ```
 
 Mock ordered provider calls:
@@ -251,16 +254,14 @@ vi.mock('@/platform/providers/client.js', async (importOriginal) => {
 Fake timers:
 
 ```ts
-beforeAll(() => {
-    vi.useFakeTimers();
-});
-
-afterAll(() => {
-    vi.useRealTimers();
-});
-
 beforeEach(() => {
+    vi.useFakeTimers();
     vi.clearAllMocks();
+});
+
+afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
 });
 ```
 
@@ -289,3 +290,11 @@ vi.mock('@/modules/orders/submit.js');
 vi.mocked(submitOrder).mockResolvedValue(success);
 expect(await submitOrder(input)).toBe(success);
 ```
+
+## Test organization
+
+<!-- level: all -->
+
+Use descriptive test names and group related cases when that makes reports easier to read.
+Keep shared setup under the project's declared test-support directory. Avoid deep `describe()`
+nesting that adds structure without separating distinct behavior.

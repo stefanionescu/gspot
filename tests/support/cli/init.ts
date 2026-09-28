@@ -1,5 +1,5 @@
-// The init command line a planted repository runs: named configurations, nothing installed, nothing generated beyond policy and configuration.
-import { QUIET_INIT } from '#tests/constants/support/cli.ts';
+// Initializes named configurations without installing tools. Generates only policy and configuration.
+import { QUIET_INIT } from '#tests/constants/cli.ts';
 
 /**
  * The init arguments that select the named configurations and leave the named recommendations out.

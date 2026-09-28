@@ -26,13 +26,18 @@ try {
         .description('Build the gspot executable for selected platforms')
         .version(packageManifest.version)
         .option('--target <targets...>', 'Bun compile targets', collectTargets, [])
+        .option('--all', 'Build every target in the release manifest')
         .option('--out <directory>', 'Directory for the executables', outputDirectory, join(root, 'dist'))
         .allowExcessArguments(false)
         .showHelpAfterError()
         .addHelpText('after', '\nExample: bun packages/cli/scripts/command.ts --target bun-linux-arm64 --out dist')
         .exitOverride()
         .parse();
-    const options = script.opts<{ target: string[]; out: string }>();
+    const options = script.opts<{ target: string[]; out: string; all?: boolean }>();
+    if (options.all === true) {
+        if (options.target.length > 0) throw new InvalidArgumentError('Choose --all or --target, not both.');
+        options.target.push(...releaseTargets.map((target) => target.target));
+    }
     const libc = process.platform === 'linux' ? familySync() : null;
     const current = releaseTargets.find(
         (target) => target.os === process.platform && target.cpu === process.arch && target.libc === libc,

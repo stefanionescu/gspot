@@ -67,11 +67,12 @@ Do not invent defensive logic for scenarios that are not part of the real contra
 
 ## Abstractions
 
+<!-- level: all -->
+
 Keep one implementation for each concept in its existing owner. Extract shared behavior only
 when real callers prove the same contract and the extraction removes complexity. Do not add
 forwarding wrappers, one-caller helpers, or abstractions for hypothetical reuse. Prefer local
-duplication when callers have different responsibilities. Remove abstractions that no longer
-justify their cost.
+duplication when callers have different responsibilities. Remove abstractions whose cost exceeds their benefit.
 
 ### Watch for boxing
 
@@ -114,6 +115,8 @@ justify their cost.
 
 ## Language discipline
 
+<!-- level: all -->
+
 Use direct, concrete language in code, comments, filenames, and documentation.
 
 - Describe optional conditions explicitly.
@@ -123,6 +126,8 @@ Use direct, concrete language in code, comments, filenames, and documentation.
 If code uses vague language, improve it when touching that code.
 
 ## No backward compatibility
+
+<!-- level: all -->
 
 Never introduce compatibility layers, wrapper functions, re-exports for renamed symbols, deprecated-but-kept code, or any other form of backward-compatible scaffolding.
 

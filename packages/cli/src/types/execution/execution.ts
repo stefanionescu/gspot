@@ -2,7 +2,7 @@
 import type { z } from 'zod';
 import type { ConfinedRoot } from '#cli/types/platform.ts';
 import type { CheckResult, Finding } from '#cli/types/checks/checks.ts';
-import type { packageManagerSchema } from '#cli/tools/packages/manager.ts';
+import type { packageToolSchema } from '#cli/tools/packages/identity.ts';
 import type { ToolContext, ToolInspection } from '#cli/types/tools/tools.ts';
 import type { pushReportSchema, reportSchema } from '#cli/execution/report.ts';
 import type { CheckSpec, Manifest, ToolPin } from '#cli/types/configurations.ts';
@@ -71,7 +71,7 @@ export type Session = ToolContext & {
     /** Persistent result storage for a disposable revision snapshot. */
     cacheRoot?: string;
     resources?: DisposableStack;
-    packageManager?: z.infer<typeof packageManagerSchema>;
+    packageClient?: z.infer<typeof packageToolSchema>;
     cancelSignal?: AbortSignal;
     version: string;
     policyFiles: PolicyFiles;

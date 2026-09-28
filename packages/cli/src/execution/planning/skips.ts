@@ -34,18 +34,6 @@ function ignoreSkip(check: PlannedCheck): Skip {
     return { source: 'ignore', note: `disabled by gspot.toml${reason}` };
 }
 
-// The skip a setting the check waits for imposes.
-function waitingSkip(check: PlannedCheck): Skip {
-    const setting = waitingSetting(check.scope, check.spec);
-    return setting === undefined ? undefined : { source: 'rules', note: `set ${setting} to turn this on` };
-}
-
-// The first declared rule that keeps the check from running here.
-function ruleSkip(check: PlannedCheck, hasGit: boolean): Skip {
-    const rule = RULE_SKIPS.find((candidate) => candidate.applies(check.spec, check, hasGit));
-    return rule === undefined ? undefined : { source: 'rules', note: rule.note(check.spec) };
-}
-
 // The skip the platform imposes: the check names other platforms, or its tool has no Windows build.
 function platformSkip(spec: CheckSpec, tool: ToolPin | undefined, platform: string): Skip {
     if (spec.platform && !(spec.platform as readonly string[]).includes(platform))
@@ -64,8 +52,12 @@ function platformSkip(spec: CheckSpec, tool: ToolPin | undefined, platform: stri
  * @returns the skip
  */
 export function skipFor(check: PlannedCheck, options: PlanOptions, platform: string, hasGit: boolean): Skip {
-    const declared = ignoreSkip(check) ?? waitingSkip(check) ?? ruleSkip(check, hasGit);
-    if (declared !== undefined) return declared;
+    const ignored = ignoreSkip(check);
+    if (ignored !== undefined) return ignored;
+    const setting = waitingSetting(check.scope, check.spec);
+    if (setting !== undefined) return { source: 'rules', note: `set ${setting} to turn this on` };
+    const rule = RULE_SKIPS.find((candidate) => candidate.applies(check.spec, check, hasGit));
+    if (rule !== undefined) return { source: 'rules', note: rule.note(check.spec) };
     const byPlatform = platformSkip(check.spec, check.tool, platform);
     if (byPlatform !== undefined) return byPlatform;
     return options.skips.includes(check.spec.name) ? { source: 'flag', note: 'skipped by --skip' } : undefined;

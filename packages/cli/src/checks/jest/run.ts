@@ -6,8 +6,8 @@ import { stripVTControlCharacters } from 'node:util';
 import type { ConfinedRoot } from '#cli/types/platform.ts';
 import { isAbsolute, join, relative, sep } from 'node:path';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import { scratchCopy } from '#cli/execution/file-workspace.ts';
-import { runCheckCommand } from '#cli/execution/tool-runner.ts';
+import { runCheckCommand } from '#cli/execution/tool/runner.ts';
+import { scratchCopy } from '#cli/execution/files/workspace.ts';
 import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 import type { JestRun, Suite, TestReport } from '#cli/types/checks/jest.ts';
 import { jestCoverageSettings, jestPercentage } from '#cli/checks/jest/schema.ts';
@@ -18,25 +18,7 @@ const coverageSchema = z.object({
     total: z.object({ lines: metric, branches: metric, functions: metric, statements: metric }),
 });
 
-// The Jest command: coverage on, one worker, machine-readable reports into the work folder.
-function jestArguments(work: string, thresholds: Record<string, number>): string[] {
-    return [
-        'jest',
-        '--coverage',
-        '--runInBand',
-        '--ci',
-        '--json',
-        '--testLocationInResults',
-        '--outputFile',
-        join(work, 'tests.json'),
-        '--coverageDirectory',
-        join(work, 'coverage'),
-        '--coverageReporters=json-summary',
-        `--coverageThreshold=${JSON.stringify({ global: thresholds })}`,
-    ];
-}
-
-// The test report Jest wrote, refused when it says the run could not execute its suites.
+// Read the Jest report and refuse a run that cannot execute its suites.
 function readTestReport(reports: ConfinedRoot, stderr: string): TestReport {
     const testFile = reports.read('tests.json');
     if (testFile === undefined)
@@ -57,24 +39,6 @@ function suitePath(source: string, suite: Suite): string {
     if (isAbsolute(file) || file === '..' || file.startsWith(`..${sep}`))
         throw new Error('Jest reported a test outside the selected source copy.');
     return file.split(sep).join('/');
-}
-
-// One finding per failed assertion of a suite.
-function suiteFindings(run: JestRun, suite: Suite): Finding[] {
-    const file = suitePath(run.source, suite);
-    return suite.assertionResults
-        .filter((assertion) => assertion.status === 'failed')
-        .map((assertion) => ({
-            check: run.input.spec.name,
-            file,
-            line: assertion.location?.line ?? 1,
-            ...(assertion.location === undefined || assertion.location === null
-                ? {}
-                : { column: assertion.location.column + 1 }),
-            rule: 'test-failure',
-            message: stripVTControlCharacters(assertion.failureMessages.join('\n')) || assertion.fullName,
-            fixable: false,
-        }));
 }
 
 // One finding per coverage dimension under its floor.
@@ -111,14 +75,43 @@ async function runJest(
 ): Promise<Finding[]> {
     const { input, source, work } = run;
     const thresholds = Object.fromEntries(dimensions.map((name) => [name, settings[`coverage_${name}`]]));
-    const result = await runCheckCommand(input, jestArguments(work, thresholds), { cwd: join(source, input.scope) });
+    const command = [
+        'jest',
+        '--coverage',
+        '--runInBand',
+        '--ci',
+        '--json',
+        '--testLocationInResults',
+        '--outputFile',
+        join(work, 'tests.json'),
+        '--coverageDirectory',
+        join(work, 'coverage'),
+        '--coverageReporters=json-summary',
+        `--coverageThreshold=${JSON.stringify({ global: thresholds })}`,
+    ];
+    const result = await runCheckCommand(input, command, { cwd: join(source, input.scope) });
     if (result.code !== 0 && result.code !== 1)
         throw new Error(
             `Jest could not run (exit ${String(result.code)}): ${stripVTControlCharacters(result.stderr).trim()}`,
         );
     const tested = readTestReport(reports, result.stderr);
     const findings = [
-        ...tested.testResults.flatMap((suite) => suiteFindings(run, suite)),
+        ...tested.testResults.flatMap((suite) => {
+            const file = suitePath(run.source, suite);
+            return suite.assertionResults
+                .filter((assertion) => assertion.status === 'failed')
+                .map((assertion) => ({
+                    check: run.input.spec.name,
+                    file,
+                    line: assertion.location?.line ?? 1,
+                    ...(assertion.location === undefined || assertion.location === null
+                        ? {}
+                        : { column: assertion.location.column + 1 }),
+                    rule: 'test-failure',
+                    message: stripVTControlCharacters(assertion.failureMessages.join('\n')) || assertion.fullName,
+                    fixable: false,
+                }));
+        }),
         ...coverageFindings(run, reports, settings),
     ];
     if ((result.code !== 0 || !tested.success) && findings.length === 0)
@@ -151,7 +144,7 @@ export const reportSchema = z.object({
 });
 
 /**
- * JestRun repository-owned Jest against disposable sources and retain test and coverage failures as findings.
+ * Run repository-owned Jest against disposable sources and retain test and coverage failures as findings.
  * @param input the engine input
  * @returns the findings
  */

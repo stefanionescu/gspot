@@ -66,8 +66,9 @@ require_command() {
 Good:
 
 ```bash
-declare -a cmd
-cmd=(python -m hf.push --model-dir "${model_dir}" --repo-id "${repo_id}")
+left_file="${1:?Left file is required}"
+right_file="${2:?Right file is required}"
+cmd=(diff -u -- "${left_file}" "${right_file}")
 "${cmd[@]}"
 ```
 
@@ -195,10 +196,12 @@ Rules:
 Good JSON:
 
 ```bash
-service_url="$(jq -r '.service.url // empty' "${config_file}")" || return 1
-[[ -n "${service_url}" ]] || {
-  printf 'error: service.url is required\n' >&2
-  return 1
+# get_service_url - Print a required nonempty service URL from JSON configuration.
+get_service_url() {
+  local config_file="${1:?Configuration file is required}"
+  local service_url
+  service_url="$(jq -er '.service.url | select(type == "string" and length > 0)' "${config_file}")" || return 1
+  printf '%s\n' "${service_url}"
 }
 ```
 
@@ -212,7 +215,7 @@ Case conversion:
 
 ```bash
 tr '[:upper:]' '[:lower:]'
-LC_COLLATE=C tr A-Z a-z
+LC_ALL=C tr '[:upper:]' '[:lower:]'
 ```
 
 ## Network commands
@@ -229,8 +232,8 @@ Rules:
   for the script's runtime. macOS does not provide GNU `timeout` by default.
 - Write downloads to explicit files.
 - Verify checksums or signatures for executable downloads.
-- Do not pipe network content into `bash` unless the source is pinned, trusted,
-  and there is no safer package manager or checksum-based flow.
+- Download executable content to an owned file and verify it before execution.
+  Do not pipe unverified network content into a shell.
 - Do not print response bodies that may contain secrets.
 - Use retries only for known retryable network, provider, or service failures,
   with bounded attempts, delay, and attempt-count logging.
@@ -264,20 +267,24 @@ ssh \
   systemctl is-active --quiet "${service_name}"
 ```
 
-Installer pattern:
+Good standalone installer with an independently obtained checksum:
 
 ```bash
-tmp_dir="$(mktemp -d)" || return 1
-trap 'rm -rf "${tmp_dir}"' RETURN
+#!/usr/bin/env bash
+installer_url="${1:?installer URL required}"
+expected_sha256="${2:?reviewed SHA-256 required}"
+tool_version="${3:?version required}"
+tmp_dir="$(mktemp -d)" || exit 1
+trap 'rm -rf -- "${tmp_dir}"' EXIT
 
 installer="${tmp_dir}/install.sh"
 curl --fail --show-error --silent --location \
   --connect-timeout 10 \
   --max-time 60 \
   --output "${installer}" \
-  "${installer_url}" || return 1
+  "${installer_url}" || exit 1
 
-printf '%s  %s\n' "${expected_sha256}" "${installer}" | shasum -a 256 -c - || return 1
+printf '%s  %s\n' "${expected_sha256}" "${installer}" | shasum -a 256 -c - || exit 1
 bash "${installer}" --version "${tool_version}"
 ```
 
@@ -350,34 +357,39 @@ Rules:
 - Cleanup must be limited to repository-owned paths and PIDs. Do not delete
   whole home cache roots, arbitrary dynamic cache roots, or shared `/tmp`
   families.
-- Before `rm -rf`, canonicalize or structurally validate the target against an
-  explicit owner root. Reject empty paths, `/`, the repository root itself,
-  `$HOME`, and any path outside the declared owner.
+- Validate cleanup paths supplied by input or persistent state against their explicit owner
+  root. Reject empty paths, `/`, the repository root, `$HOME`, and paths outside that owner.
+- A directory returned by a successful `mktemp -d` call belongs to the current invocation;
+  retain that exact path and do not expand cleanup to neighboring files.
 - Do not use `|| true` on destructive commands or required installation,
   publishing, quantization, engine-build, or runtime commands.
 
-Good:
+Good entrypoint cleanup:
 
 ```bash
-tmp_dir="$(mktemp -d)" || return 1
-trap 'rm -rf "${tmp_dir}"' EXIT
+tmp_dir="$(mktemp -d)" || exit 1
+trap 'rm -rf -- "${tmp_dir}"' EXIT
 ```
 
-Atomic structured replacement:
+Good standalone JSON replacement. The new file has the restrictive permissions supplied by
+`mktemp`; select any required deployment permissions explicitly before replacing the target.
 
 ```bash
-tmp_file="$(mktemp "${config_file}.XXXXXX")" || return 1
-trap 'rm -f "${tmp_file}"' RETURN
+#!/usr/bin/env bash
+config_file="${1:?configuration path required}"
+config_url="${2:?configuration URL required}"
+tmp_file="$(mktemp "${config_file}.XXXXXX")" || exit 1
+trap 'rm -f -- "${tmp_file}"' EXIT
 
 curl --fail --show-error --silent --location \
   --connect-timeout 10 \
   --max-time 60 \
   --output "${tmp_file}" \
-  "${config_url}" || return 1
+  "${config_url}" || exit 1
 
-jq empty "${tmp_file}" >/dev/null || return 1
-mv -- "${tmp_file}" "${config_file}" || return 1
-trap - RETURN
+jq empty "${tmp_file}" >/dev/null || exit 1
+mv -- "${tmp_file}" "${config_file}" || exit 1
+trap - EXIT
 ```
 
 Race-safe lock directory:
@@ -398,26 +410,30 @@ printf '%s\n' "$$" >"${lock_dir}/pid" || {
 trap 'rm -rf "${lock_dir}"' EXIT
 ```
 
-Function-scoped cleanup:
+Subshell-scoped cleanup preserves the caller's traps. Use it only when the work does not need
+to change the caller's shell variables or working directory:
 
 ```bash
-run_with_temp_dir() {
-  local tmp_dir
-  tmp_dir="$(mktemp -d)" || return 1
-  trap 'rm -rf "${tmp_dir}"' RETURN
+generate_in_temp_dir() (
+  tmp_dir="$(mktemp -d)" || exit 1
+  trap 'rm -rf -- "${tmp_dir}"' EXIT
 
   generate_files "${tmp_dir}"
-}
+)
 ```
 
-Destructive operations must validate the target:
+The caller supplies the approved owner directory. Delete only its direct `build` child,
+and refuse a symlink or the filesystem root:
 
 ```bash
 remove_build_dir() {
-  local build_dir="$1"
+  local owner_root build_dir
 
-  [[ -n "${build_dir}" ]] || return 1
-  [[ "${build_dir}" == */build ]] || return 1
+  [[ -n "$1" ]] || return 1
+  owner_root="$(cd -- "$1" && pwd -P)" || return 1
+  [[ "${owner_root}" != / ]] || return 1
+  build_dir="${owner_root}/build"
+  [[ -d "${build_dir}" && ! -L "${build_dir}" ]] || return 1
   rm -rf -- "${build_dir}"
 }
 ```
@@ -426,21 +442,21 @@ remove_build_dir() {
 
 Never:
 
-- use `eval` with dynamic input;
-- use `ERR` traps as a substitute for explicit status checks;
-- build shell commands from user input;
-- pass user input to `bash -c`;
-- parse untrusted arithmetic expressions with `(( ... ))`;
+- use `eval` with dynamic input.
+- use `ERR` traps as a substitute for explicit status checks.
+- build shell commands from user input.
+- pass user input to `bash -c`.
+- parse untrusted arithmetic expressions with `(( ... ))`.
 - use unsanitized values as variable names, associative array keys in arithmetic
   contexts, model variants, repository names, remote paths, or remote shell
-  fragments;
-- use unquoted variables in paths or arguments;
-- run destructive commands against unchecked variables;
-- parse `ls`;
-- use `find -exec sh -c '...'` with `{}` embedded in the script string;
-- use `xargs` without `-0` for filenames;
-- pipe unverified network data to an interpreter;
-- log secrets;
+  fragments.
+- use unquoted variables in paths or arguments.
+- run destructive commands against unchecked variables.
+- parse `ls`.
+- use `find -exec sh -c '...'` with `{}` embedded in the script string.
+- use `xargs` without `-0` for filenames.
+- pipe unverified network data to an interpreter.
+- log secrets.
 - keep debug tracing enabled around credentials.
 
 Safe `find -exec sh -c`:
@@ -463,13 +479,13 @@ into code.
 Rules:
 
 - Default to Bash 3.2-compatible syntax unless runtime support is checked.
-- Every file header declares the supported platform and minimum Bash version.
+- Match any declared platform and minimum Bash version to the syntax actually used.
 - The declared contract and syntax must agree. Bash 4+ features such as
   `mapfile`, `readarray`, associative arrays, and `${value,,}` require a
   checked Bash 4+ entry boundary; otherwise they are forbidden.
 - Account for macOS/BSD and GNU differences in `sed`, `date`, `readlink`,
   `mktemp`, `stat`, `xargs`, and `grep`.
-- Prefer project-provided wrappers for platform-specific behavior.
+- Keep platform-specific behavior with the existing operation that owns it.
 - Do not use `realpath` unless the target platform guarantees it.
 - Use `pwd -P` after `cd` for physical paths when symlinks matter.
 - Avoid `sed -i` unless platform-specific behavior is handled.
@@ -488,22 +504,16 @@ readonly SCRIPT_DIR
 When absolute path resolution must handle symlinks across platforms, prefer a
 small verified Bash helper or product-owned application code.
 
-## No Bash tests
+## Bash verification
 
-Rules:
+Use the repository's existing verification owner. Static checks include syntax validation,
+ShellCheck, and shfmt. Verify process status, quoting, signal handling, and owned cleanup when
+those behaviors change. Run destructive or provider-dependent journeys only in the explicitly
+selected disposable environment.
 
-- Do not create Bash test suites.
-- Do not add Bats, shunit2, ShellSpec, custom Bash harnesses, PATH mock wrappers,
-  or sample directories for Bash scripts.
-- Do not add test-only branches, test-only flags, or test-only dependency
-  injection to Bash scripts.
-- Do not create sample files only to exercise Bash behavior.
-- Do not move Bash orchestration into another scripting language only to make it
-  easier to test.
-- Bash verification is static review, ShellCheck, shfmt, and `bash -n`.
-- Runtime trial runs are allowed only when they are part of the requested
-  workflow or needed to verify a real publish/local command, not as a new test
-  suite.
+Keep test inputs and assertions in the existing test suite. Do not add test-only flags,
+branches, or command replacements to production scripts. Preserve the real command boundary
+and its failure behavior.
 
 ## Debugging Bash
 
@@ -600,7 +610,7 @@ When fixing or refactoring Bash:
 
 When a script is too complex:
 
-- keep the Bash wrapper thin;
-- move parsing or business logic into product-owned application code;
+- keep the Bash wrapper thin.
+- move parsing or business logic into product-owned application code.
 - keep command invocation and environment validation in Bash only if that is the
   simplest operational boundary.

@@ -28,16 +28,21 @@ name. One term list serves identifiers, file names, and prose.
 
 ### Slop in structure
 
-`limits.trivial_statements` defaults to 2 and accepts a positive integer. Increasing it tightens
-enforcement. Report every implemented function at or below the threshold, including methods,
-constructors, accessors, nested functions, anonymous functions, callbacks, and closures. Count
-nested executable statements; exclude comments, blank lines, type-only declarations, and nested
-function bodies. Inspect nested functions independently. Expression bodies count as one statement.
-No caller-count, physical-line, forwarding, visibility, decorator, framework, or entrypoint exemption
-applies. Both recommended and all enable trivial-function and trivial-file enforcement by default.
-These rules are mandatory default policy, not opt-in abstraction preferences. Keep them at the
-root and in every inherited scope, generated tool configuration, and standalone plugin level.
-Required external APIs use narrow, reasoned suppressions. Findings never delete code or justify filler statements.
+`limits.trivial_statements` accepts a positive integer. Increasing it tightens
+enforcement. Count nested executable statements, excluding comments, blank lines,
+type-only declarations, and nested function bodies. Inspect nested functions
+independently. Expression bodies count as one statement.
+
+The JavaScript and TypeScript rule reports short functions that add unnecessary
+indirection. Syntax, lexical references, and available type information identify
+required callbacks and signatures. These include accessors, overrides, decorated
+methods, type predicates, assertions, and constructor parameter properties.
+Export visibility and class decorators alone do not exempt functions.
+
+Trivial-function and trivial-file preferences belong to `all`. Apply the selected
+level consistently in inherited scopes, generated configurations, and standalone
+plugins. Required external APIs that analysis cannot identify need narrow,
+reasoned exceptions. Findings never justify filler statements.
 
 Use the existing ESLint, Tree-sitter, and PostgreSQL parsers for JavaScript/TypeScript, Python,
 Swift, Bash, and SQL/PL/pgSQL. Files containing only forwarding, aliases, re-exports, or trivial
@@ -91,11 +96,11 @@ SwiftLint, and SQL enforce it. Bash positional arguments are variadic, not decla
 | A hedge (`probably`, `should`, `may`, `if needed`)                             | Vale `gspot.modals`, `gspot.hedging`                                                                                                                   |
 | A marketing word (`robust`, `seamless`, `simply`)                              | Vale `gspot.marketing`                                                                                                                                 |
 | An idiom (`belt and suspenders`, `sanity check`)                               | Vale `gspot.idioms`                                                                                                                                    |
-| A path in prose that goes stale                                                | Vale `gspot.file-paths`, `gspot.locations`; `docs/stale-paths`                                                                                         |
+| A path in prose that goes stale                                                | Vale `gspot.file-paths`, `gspot.locations`; `integrity/stale-paths`                                                                                    |
 | A doc comment that restates the signature                                      | `jsdoc/no-types`, `jsdoc/require-description` with `descriptionStyle`; `python/placeholder-docstring` (a `Handle`, `Provide` or `Returns the` opening) |
 | A vague shell summary (`performs`, `handles`)                                  | `structure/doc-comment` vague-word list                                                                                                                |
 | Commented-out code                                                             | `sonarjs/no-commented-code`, Ruff `ERA001`                                                                                                             |
-| A doc heading that describes the tree (`Project structure`)                    | Vale `gspot.heading-names`, `docs/headings`                                                                                                            |
+| A doc heading that describes the tree (`Project structure`)                    | Vale `gspot.heading-names`, `integrity/docs-headings`                                                                                                  |
 | Decorative symbols and emoji                                                   | Vale `gspot.symbols`                                                                                                                                   |
 | Em dashes and typographic dashes                                               | Vale `gspot.dashes`, shell doc style                                                                                                                   |
 
@@ -141,7 +146,7 @@ so every kind gets a check.
 | Lockfile                | manifest and lockfile agree (`--frozen-lockfile --dry-run`, `uv lock --check`)                                                                      | `dependencies/lockfile-fresh`                             | commit when a manifest or lockfile is staged; push always |
 | Workspace versions      | one version per dependency across packages; paired packages aligned                                                                                 | `dependencies/syncpack`                                   | push                                                      |
 | Build reproducibility   | building twice gives identical output                                                                                                               | `static-site/build-reproducible`                          | push                                                      |
-| Documentation paths     | every path in Markdown, comments, and config lists exists                                                                                           | `docs/stale-paths`                                        | commit                                                    |
+| Documentation paths     | every path in Markdown, comments, and config lists exists                                                                                           | `integrity/stale-paths`                                   | commit                                                    |
 | Documentation links     | every relative link and anchor resolves; external links resolve at manual                                                                           | `docs/links`, `docs/links-external`                       | commit, manual                                            |
 | Allowlists and ignores  | every entry matches at least one tracked file                                                                                                       | `integrity/allowlists-match`                              | commit                                                    |
 | Rule files              | the installed rule files equal the assembled render                                                                                                 | `integrity/generated-drift`                               | push                                                      |

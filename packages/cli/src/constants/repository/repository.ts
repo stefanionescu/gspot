@@ -8,9 +8,8 @@ export const NOT_REPOSITORY_CODE = 128;
 export const BYTE_ORDER_MARK = '\uFEFF';
 export const KEY_QUOTES = ['"', '`'];
 export const VALUE_QUOTES = ['"""', '`'];
-export const LOCKFILE_V2 = 2;
-export const LOCKFILE_V3 = 3;
-export const LOCKFILE_VERSIONS = [LOCKFILE_V2, LOCKFILE_V3];
+// eslint-disable-next-line @typescript-eslint/no-magic-numbers -- reason: npm defines versions 2 and 3 for package tables.
+export const LOCKFILE_VERSIONS = [2, 3];
 export const LOCKFILES: Record<string, string> = {
     'bun.lock': 'bun',
     'bun.lockb': 'bun',

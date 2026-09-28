@@ -2,6 +2,7 @@ import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { cliSource } from '#tests/support/cli/process.ts';
+import { runProcess } from '#tests/support/cli/command.ts';
 import { ownershipSchema } from '#cli/lifecycle/journal.ts';
 import { readFileSync, statSync, writeFileSync } from 'node:fs';
 import { openLifecycleOwner, readOwnership } from '#cli/lifecycle/ownership/owner.ts';
@@ -57,7 +58,7 @@ try {
         stderr: 'pipe',
     });
     expect(child.exitCode, child.stdout.toString() + child.stderr.toString()).toBe(
-        point === 'success' || point === 'error' || point === 'restoration error' ? 0 : 73,
+        ['success', 'error', 'restoration error'].includes(point) ? 0 : 73,
     );
     if (point === 'error') {
         expect(readFileSync(destination)).toStrictEqual(original);
@@ -205,12 +206,7 @@ try {
     console.log(JSON.stringify({ code: error.code }));
 } finally { owner.close(); }
 `;
-        const child = Bun.spawn([process.execPath, '-e', program], { stdout: 'pipe', stderr: 'pipe' });
-        const [stdout, stderr, code] = await Promise.all([
-            new Response(child.stdout).text(),
-            new Response(child.stderr).text(),
-            child.exited,
-        ]);
+        const { stdout, stderr, code } = await runProcess([process.execPath, '-e', program], { cwd: directory.path });
         expect(code, stderr).toBe(0);
         expect(JSON.parse(stdout)).toStrictEqual({ code: 'ENOSPC' });
         for (const name of ['first.bin', 'second.bin']) {

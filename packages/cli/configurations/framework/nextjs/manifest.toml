@@ -145,7 +145,21 @@ structural_prefix = "^handle(?=[A-Z])"
 reason = "A handler starts with handle and then names the event."
 
 [rule_files]
-framework = ["framework/nextjs/NEXTJS.md"]
+framework = [{path = "framework/nextjs/NEXTJS.md"}]
 
 [required_rules]
 tsx = ["@next/next/no-html-link-for-pages", "@next/next/no-async-client-component"]
+
+
+[[rules_off]]
+tool = "eslint"
+rules = ["gspot/no-trivial-files", "gspot/no-export-only-files"]
+files = ["**/{page,layout,template,default,loading,error,not-found,global-error,route,middleware,proxy}.{js,jsx,ts,tsx}"]
+reason = "Next.js discovers route files by name, so each file can hold one export in its own folder."
+
+[[rules_off]]
+tool = "eslint"
+rules = ["gspot/no-reexports"]
+files = ["**/{page,layout,template,default,loading,error,not-found,global-error,route,middleware,proxy}.{js,jsx,ts,tsx}"]
+when = {setting = "structure.reexports", value = "index-only"}
+reason = "Next.js route files act as framework entry points when the project permits entry-point re-exports."

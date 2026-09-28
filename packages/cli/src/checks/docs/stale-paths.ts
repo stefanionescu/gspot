@@ -1,3 +1,4 @@
+import { posix } from 'node:path';
 import { globbySync } from 'globby';
 import { visit } from 'unist-util-visit';
 import { parse as parseToml } from 'smol-toml';
@@ -30,15 +31,16 @@ function knownPaths(input: EngineInput): Set<string> {
     }
     // A check id is written like a path, and a document that names supabase/config means the check, not a file.
     for (const manifest of input.manifests.values()) for (const check of manifest.checks) known.add(check.name);
+    for (const check of input.policyFiles.policy.checks) known.add(check.name);
     return known;
 }
 
 function miseTasks(input: EngineInput, file: string): string[] {
     try {
         const parsed = parseToml(readSource(input.root, file, input.observations).toString('utf8')) as {
-            tasks?: Record<string, unknown>;
+            tasks?: Record<string, { alias?: string | string[] }>;
         };
-        return Object.keys(parsed.tasks ?? {});
+        return Object.entries(parsed.tasks ?? {}).flatMap(([name, task]) => [name, ...[task.alias ?? []].flat()]);
     } catch (error) {
         if ((error as NodeJS.ErrnoException).code === 'ENOENT') return [];
         throw new Error(`Cannot read task definitions from ${file}.`, { cause: error });
@@ -55,15 +57,6 @@ function packageScripts(input: EngineInput): string[] {
         if ((error as NodeJS.ErrnoException).code === 'ENOENT') return [];
         throw new Error('Cannot read task definitions from package.json.', { cause: error });
     }
-}
-
-function tasksOf(input: EngineInput): Set<string> {
-    return new Set([
-        ...[...new Set([...MISE_FILES, ...globbySync('.mise/conf.d/*.toml', { cwd: input.root, dot: true })])].flatMap(
-            (file) => miseTasks(input, file),
-        ),
-        ...packageScripts(input),
-    ]);
 }
 
 function proseLines(text: string): ProseLine[] {
@@ -85,6 +78,11 @@ function pathTokens(line: string): string[] {
     return line
         .split(TOKEN_SEPARATORS)
         .map((token) => withoutTrailingPunctuation(token))
+        .map((token) => {
+            const marker = token.startsWith('**') ? '**' : '*';
+            if (token.startsWith(marker) && token.endsWith(marker)) return token.slice(marker.length, -marker.length);
+            return token;
+        })
         .filter(
             (token) =>
                 token.includes('/') && PATH_CHARS.test(token) && PATH_TOKEN_SKIPS.every((skip) => !skip.test(token)),
@@ -95,18 +93,21 @@ function pathTokens(line: string): string[] {
 function isPathClaim(token: string, index: PathIndex): boolean {
     const clean = token.replace(/^\.\//u, '').replace(/\/$/u, '');
     const first = clean.split('/', 1)[0] ?? '';
-    return index.known.has(first) || FILE_EXTENSION.test(clean);
+    return token.startsWith('./') || token.startsWith('../') || index.known.has(first) || FILE_EXTENSION.test(clean);
 }
 
-function isMissing(token: string, index: PathIndex): boolean {
+function isMissing(token: string, file: string, index: PathIndex): boolean {
     const clean = token.replace(/^\.\//u, '').replace(/\/$/u, '');
-    return isPathClaim(token, index) && !index.known.has(clean) && !index.isException(clean);
+    const relative = posix.normalize(posix.join(posix.dirname(file), clean));
+    if (index.isException(clean) || index.known.has(relative)) return false;
+    if (token.startsWith('./') || token.startsWith('../')) return true;
+    return isPathClaim(token, index) && !index.known.has(clean);
 }
 
 function lineFindings(input: EngineInput, file: string, prose: ProseLine, index: PathIndex): Finding[] {
     const { number, line } = prose;
     const paths = pathTokens(line)
-        .filter((token) => isMissing(token, index))
+        .filter((token) => isMissing(token, file, index))
         .map((token) => ({
             check: input.spec.name,
             file,
@@ -131,6 +132,22 @@ function lineFindings(input: EngineInput, file: string, prose: ProseLine, index:
 }
 
 /**
+ * Documentation references that can justify an exception for an untracked output or external path.
+ * @param input the repository inventory and source reader.
+ * @returns the distinct path tokens in tracked Markdown prose.
+ */
+export function referencedPaths(input: EngineInput): Set<string> {
+    const referenced = new Set<string>();
+    const files = input.files.filter((file) => file.nature === 'source' && file.path.endsWith('.md'));
+    for (const file of files) {
+        const prose = proseLines(readSource(input.root, file.path, input.observations).toString('utf8'));
+        for (const { line } of prose)
+            for (const token of pathTokens(line)) referenced.add(token.replace(/^\.\//u, '').replace(/\/$/u, ''));
+    }
+    return referenced;
+}
+
+/**
  * One finding per path token that names nothing tracked and per run invocation that names no task.
  * @param input the engine input
  * @returns the findings
@@ -138,7 +155,16 @@ function lineFindings(input: EngineInput, file: string, prose: ProseLine, index:
 export function stalePaths(input: EngineInput): Finding[] {
     const exceptions = (input.view.tool('docs')['paths_allowed'] as { patterns: string[] }[] | undefined) ?? [];
     const isException = pathMatcher(exceptions.flatMap((entry) => entry.patterns));
-    const index: PathIndex = { known: knownPaths(input), tasks: tasksOf(input), isException };
+    const index: PathIndex = {
+        known: knownPaths(input),
+        tasks: new Set([
+            ...[
+                ...new Set([...MISE_FILES, ...globbySync('.mise/conf.d/*.toml', { cwd: input.root, dot: true })]),
+            ].flatMap((file) => miseTasks(input, file)),
+            ...packageScripts(input),
+        ]),
+        isException,
+    };
     return input.files
         .filter((file) => file.nature === 'source' && file.path.endsWith('.md') && !isException(file.path))
         .flatMap((file) =>

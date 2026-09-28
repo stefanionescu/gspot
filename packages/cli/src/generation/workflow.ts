@@ -1,15 +1,17 @@
 import { stringify } from 'yaml';
 import { headerFor } from '#cli/generation/headers.ts';
+// eslint-disable-next-line gspot/no-cross-folder-imports, gspot/no-cross-project-imports -- reason: The npm launcher owns the shared release target contract.
+import releaseTargets from '../../../npm/targets.json' with { type: 'json' };
 import type { GeneratedFile, WorkflowShape } from '#cli/types/generation.ts';
 import { MISE_CONFIG_PATH, MISE_MIN_VERSION } from '#cli/constants/tools/tools.ts';
-import releaseTargets from '#cli/platform/release-targets.json' with { type: 'json' };
 import { CACHE, CHECKOUT, DOWNLOAD, MISE, RELEASES, RUNNERS, SARIF, UPLOAD } from '#cli/constants/generation.ts';
 
 const ASSET_CASES = releaseTargets
     .filter((target) => target.os !== 'win32')
     .map((target) => {
         const system = target.os === 'darwin' ? 'Darwin' : 'Linux';
-        const architecture = target.cpu === 'x64' ? 'x86_64' : target.os === 'darwin' ? 'arm64' : 'aarch64';
+        let architecture = 'x86_64';
+        if (target.cpu !== 'x64') architecture = target.os === 'darwin' ? 'arm64' : 'aarch64';
         return `    ${system}-${architecture}-${target.libc ?? 'none'}) asset=${target.binary} ;;`;
     });
 
@@ -60,16 +62,6 @@ function unixInstallCommands(version: string, directory: string): string[] {
     ];
 }
 
-function unixInstall(version: string): string[] {
-    return [
-        '      - name: Install gspot',
-        '        shell: bash',
-        '        run: |',
-        ...unixInstallCommands(version, '${RUNNER_TEMP}/gspot-bin').map((line) => `          ${line}`),
-        '          echo "${RUNNER_TEMP}/gspot-bin" >> "${GITHUB_PATH}"',
-    ];
-}
-
 function windowsInstall(version: string): string[] {
     const base = `${RELEASES}/v${version}`;
     const windows = releaseTargets.find((target) => target.os === 'win32');
@@ -99,7 +91,16 @@ function setupSteps(shape: WorkflowShape, platform: string): string[] {
             '          cache: false',
             '      - run: mise exec -- gspot install',
         ];
-    const install = platform === 'windows' ? windowsInstall(shape.version) : unixInstall(shape.version);
+    const install =
+        platform === 'windows'
+            ? windowsInstall(shape.version)
+            : [
+                  '      - name: Install gspot',
+                  '        shell: bash',
+                  '        run: |',
+                  ...unixInstallCommands(shape.version, '${RUNNER_TEMP}/gspot-bin').map((line) => `          ${line}`),
+                  '          echo "${RUNNER_TEMP}/gspot-bin" >> "${GITHUB_PATH}"',
+              ];
     return [...install, '      - run: gspot install', '      - run: gspot doctor'];
 }
 
@@ -179,44 +180,6 @@ function checkJob(shape: WorkflowShape, platform: string, stage: 'check' | 'manu
     ];
 }
 
-function scanJob(jobs: string[]): string[] {
-    return [
-        '  code-scanning:',
-        `    needs: [${jobs.join(', ')}]`,
-        "    if: always() && !cancelled() && github.event_name == 'push' && !github.event.repository.fork",
-        '    runs-on: ubuntu-24.04',
-        '    timeout-minutes: 10',
-        '    permissions:',
-        '      contents: read',
-        '      security-events: write',
-        '      actions: read',
-        '    steps:',
-        `      - uses: ${CHECKOUT} # v4.3.1`,
-        '        with:',
-        '          persist-credentials: false',
-        `      - uses: ${DOWNLOAD} # v4.3.0`,
-        '        with:',
-        '          pattern: gspot-*',
-        '          path: reports',
-        ...jobs.flatMap((job) => [
-            `      - name: Upload ${job} SARIF`,
-            `        if: always() && !cancelled() && hashFiles('reports/gspot-${job}/report.sarif') != ''`,
-            `        uses: ${SARIF} # v3.25.0`,
-            '        with:',
-            `          sarif_file: reports/gspot-${job}/report.sarif`,
-            `          category: gspot-${job}`,
-        ]),
-        '      - name: Report absent SARIF files',
-        '        if: always() && !cancelled()',
-        '        shell: bash',
-        '        run: |',
-        ...jobs.map(
-            (job) =>
-                `          if [[ ! -f "reports/gspot-${job}/report.sarif" ]]; then echo "::notice::No SARIF artifact from ${job}. Check its setup and check result."; fi`,
-        ),
-    ];
-}
-
 /**
  * Generate independent check and manual jobs with retained reports and restricted scanning permissions.
  * @param shape what the workflow covers: platforms, the Swift scope, and the runner
@@ -239,7 +202,43 @@ export function workflowFile(shape: WorkflowShape): GeneratedFile {
             ...checkJob(shape, platform, 'check'),
             ...checkJob(shape, platform, 'manual'),
         ]),
-        ...(shape.sarif === false ? [] : scanJob(jobs)),
+        ...(shape.sarif === false
+            ? []
+            : [
+                  '  code-scanning:',
+                  `    needs: [${jobs.join(', ')}]`,
+                  "    if: always() && !cancelled() && github.event_name == 'push' && !github.event.repository.fork",
+                  '    runs-on: ubuntu-24.04',
+                  '    timeout-minutes: 10',
+                  '    permissions:',
+                  '      contents: read',
+                  '      security-events: write',
+                  '      actions: read',
+                  '    steps:',
+                  `      - uses: ${CHECKOUT} # v4.3.1`,
+                  '        with:',
+                  '          persist-credentials: false',
+                  `      - uses: ${DOWNLOAD} # v4.3.0`,
+                  '        with:',
+                  '          pattern: gspot-*',
+                  '          path: reports',
+                  ...jobs.flatMap((job) => [
+                      `      - name: Upload ${job} SARIF`,
+                      `        if: always() && !cancelled() && hashFiles('reports/gspot-${job}/report.sarif') != ''`,
+                      `        uses: ${SARIF} # v3.25.0`,
+                      '        with:',
+                      `          sarif_file: reports/gspot-${job}/report.sarif`,
+                      `          category: gspot-${job}`,
+                  ]),
+                  '      - name: Report absent SARIF files',
+                  '        if: always() && !cancelled()',
+                  '        shell: bash',
+                  '        run: |',
+                  ...jobs.map(
+                      (job) =>
+                          `          if [[ ! -f "reports/gspot-${job}/report.sarif" ]]; then echo "::notice::No SARIF artifact from ${job}. Check its setup and check result."; fi`,
+                  ),
+              ]),
         '',
     ].join('\n');
     return { path: '.github/workflows/gspot.yml', content, readOnly: true, kind: 'workflow' };

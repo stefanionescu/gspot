@@ -503,4 +503,4 @@ default = []
 summary = "Which element may import which; an element imports only itself unless a row says otherwise."
 
 [rule_files]
-general = ["general/agent/WORKING.md"]
+general = [{path = "general/agent/WORKING.md"}]

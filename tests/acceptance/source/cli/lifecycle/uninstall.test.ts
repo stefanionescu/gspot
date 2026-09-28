@@ -2,7 +2,7 @@
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
-import { emitAll } from '#cli/generation/render.ts';
+import { emitAll } from '#cli/generation/outputs.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { initArgs } from '#tests/support/cli/init.ts';
 import { openSession } from '#cli/execution/session.ts';
@@ -98,7 +98,7 @@ test.each([false, true])(
         const session = await openSession(directory.path);
         const generated = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
             version: session.version,
-            packageManager: session.packageManager,
+            packageClient: session.packageClient,
         });
         const config = generated.files.find((file) => file.path === '.gspot/config/shellcheckrc')!;
         const instructions = generated.blocks.find((block) => block.path === 'AGENTS.md')!;
@@ -112,8 +112,11 @@ test.each([false, true])(
             const git = await spawn(['git', ...args], { cwd: directory.path });
             expect(git.code, git.stderr).toBe(0);
         }
-        const applied = applyFirst ? await run(directory.path, ['apply']) : undefined;
-        expect(applied?.code ?? 0, (applied?.stdout ?? '') + (applied?.stderr ?? '')).toBe(0);
+        const preparation = applyFirst ? [['apply']] : [];
+        for (const args of preparation) {
+            const applied = await run(directory.path, args);
+            expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+        }
         const removed = await run(directory.path, ['uninstall', '--yes']);
         expect(removed.code, removed.stdout + removed.stderr).toBe(0);
         for (const [path, content] of Object.entries(originals)) {

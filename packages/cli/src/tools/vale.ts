@@ -3,35 +3,57 @@ import { createHash } from 'node:crypto';
 import { run } from '#cli/platform/spawn.ts';
 import { toPosix } from '#cli/platform/paths.ts';
 import { locateTool } from '#cli/tools/inspect.ts';
+import type { ConfinedRoot } from '#cli/types/platform.ts';
 import { basename, dirname, join, relative } from 'node:path';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { PRIVATE_FILE, READ_ONLY_FILE } from '#cli/constants/platform.ts';
 import { isValePackageFile } from '#cli/repository/file-classification.ts';
-import { readOwnership, withLifecycleOwner } from '#cli/lifecycle/ownership/owner.ts';
 import { STYLES_DIRECTORY, VALE_CONFIG } from '#cli/constants/configurations.ts';
 import { mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { readOwnership, runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
+
+// Harper also installs dictionaries beside its styles.
+function packageDirectories(files: ConfinedRoot): string[] | undefined {
+    const source = files.read(VALE_CONFIG);
+    if (source === undefined) return undefined;
+    const configured = /^Packages = (.*)$/mu.exec(source.bytes.toString('utf8'))?.[1] ?? '';
+    const packages = configured
+        .split(',')
+        .map((name) => name.trim())
+        .filter((name) => name !== '')
+        .map((name) => basename(/^https?:\/\//u.test(name) ? new URL(name).pathname : name).replace(/\.zip$/u, ''));
+    if (packages.includes('Harper')) packages.push('config/dictionaries');
+    return packages;
+}
 
 /**
- * True when every upstream package is present under the styles directory.
+ * Check whether configured upstream styles are available for a prose check.
  * @param root the repository root
- * @param requireOwnership require matching recorded package bytes and modes for setup
- * @returns whether vale sync has run
+ * @returns whether every required directory exists
  */
-export function hasPackages(root: string, requireOwnership = false): boolean {
+export function hasPackages(root: string): boolean {
     const files = openConfinedRoot(root);
     try {
-        const source = files.read(VALE_CONFIG);
-        if (source === undefined) return false;
-        const configured = /^Packages = (.*)$/mu.exec(source.bytes.toString('utf8'))?.[1] ?? '';
-        const packages = configured
-            .split(',')
-            .map((name) => name.trim())
-            .filter((name) => name !== '')
-            .map((name) => basename(/^https?:\/\//u.test(name) ? new URL(name).pathname : name).replace(/\.zip$/u, ''));
-        // Harper requires the dictionaries installed beside its styles.
-        const needed = [...packages, ...(packages.includes('Harper') ? ['config/dictionaries'] : [])];
+        const needed = packageDirectories(files);
+        if (needed === undefined) return false;
+        return needed.every((name) => files.stat(`${STYLES_DIRECTORY}/${name}`)?.isDirectory() === true);
+    } finally {
+        files.close();
+    }
+}
+
+/**
+ * Verify installed styles against the lifecycle record before setup reuses them.
+ * @param root the repository root
+ * @returns whether every configured package has its recorded bytes and modes
+ */
+export function hasOwnedPackages(root: string): boolean {
+    const files = openConfinedRoot(root);
+    try {
+        const needed = packageDirectories(files);
+        if (needed === undefined) return false;
         if (!needed.every((name) => files.stat(`${STYLES_DIRECTORY}/${name}`)?.isDirectory() === true)) return false;
-        if (!requireOwnership || packages.length === 0) return true;
+        if (needed.length === 0) return true;
         const selected = (path: string) =>
             isValePackageFile(path) && needed.some((name) => path.startsWith(`${STYLES_DIRECTORY}/${name}/`));
         const recorded = new Map(
@@ -73,7 +95,7 @@ export function hasPackages(root: string, requireOwnership = false): boolean {
 export async function installPackages(root: string): Promise<string | undefined> {
     const binary = locateTool(root, 'vale');
     if (binary === undefined) return 'vale is not installed';
-    return withLifecycleOwner(root, async (owner) => {
+    return runOwnedLifecycle(root, async (owner) => {
         const work = mkdtempSync(join(tmpdir(), 'gspot-vale-'));
         try {
             const inputs = [

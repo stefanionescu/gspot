@@ -13,11 +13,11 @@ Execution cost, network access, platform support, and execution stages are separ
 from levels. Integrations determine tool installation, including dependencies needed
 by disabled rules.
 
-## Inventory Coverage
+## Inventory coverage
 
 The accepted inventory assigns all 210 manifest checks and 25 public custom ESLint
-rules. It also records 113 distinct tools and libraries. Of the manifest checks,
-144 belong to recommended and 66 belong only to all.
+rules. It also records 113 distinct tools and libraries. The manifest inventory assigns
+144 checks to recommended and 66 only to all.
 
 Rule-level rows expand ESLint presets and selectors, Ruff families, SwiftLint,
 SwiftFormat, SQLFluff, Stylelint, HTML Validate, Semgrep, Vale, and banned terms.
@@ -33,7 +33,7 @@ The inventory describes membership, not compatibility among every combination of
 integrations. External advisory packs can change their signatures independently
 of Gspot's selectable checks.
 
-## Implementation Constraints
+## Implementation constraints
 
 - Keep formatting and ordinary framework correctness in recommended.
 - Put vocabulary restrictions, mandatory layouts, and complexity ceilings in all.

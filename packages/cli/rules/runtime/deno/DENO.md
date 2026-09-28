@@ -15,7 +15,8 @@ Rules that hold because the code runs on Deno.
 
 ## Module resolution
 
-- Internal imports use explicit `.ts` extensions.
+- Relative imports use the real file extension, such as `.ts` or `.js`. Preserve aliases
+  resolved by the declared import map.
 - Remote imports are pinned. An unpinned remote import is a supply chain hole.
 
 ## Permissions and APIs

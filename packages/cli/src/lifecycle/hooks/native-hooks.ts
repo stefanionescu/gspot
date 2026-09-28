@@ -1,12 +1,14 @@
-// The hook gspot installs beside a native manager's copy: it runs the manager's own hook, reads what gspot
+// Installs a gspot hook beside the hook tool's copy and invokes that native hook.
+// Runs gspot when the native hook did not report a gspot result.
 import { join } from 'node:path';
 import { binaryPath } from '#cli/platform/assets.ts';
 import type { HookName } from '#cli/types/generation.ts';
+import { huskyLines } from '#cli/generation/hooks/husky.ts';
+import { lefthookCommand } from '#cli/generation/hooks/lefthook.ts';
 import { HOOK_FILES } from '#cli/constants/repository/repository.ts';
-// reported through it, and runs gspot itself when the manager did not.
-import { simpleGitHookFallback } from '#cli/generation/simple-git-hooks.ts';
-import type { HookManager, Preparation, PreparedHook } from '#cli/types/lifecycle/hooks.ts';
-import { hookPrefix, huskyLines, lefthookCommand, simpleGitHookCommand } from '#cli/generation/hooks.ts';
+import { simpleGitDirectHook } from '#cli/generation/hooks/simple-git-hooks.ts';
+import { hookPrefix, simpleGitHookCommand } from '#cli/generation/hooks/scripts.ts';
+import type { HookTool, Preparation, PreparedHook } from '#cli/types/lifecycle/hooks.ts';
 
 // The lines every gspot hook starts with: a work directory that is removed on exit, and signal exits.
 const WORK_LINES = (name: string): string[] => [
@@ -105,7 +107,7 @@ function simpleGitHook(preparation: Preparation, name: string, generated: string
             `exec ${invocation.replace('"$@"', simpleArguments(name))}${input}`,
         ].join('\n'),
     );
-    const fallback = simpleGitHookFallback(root, stage, policy.runner?.tool, binaryPath());
+    const directCommand = simpleGitDirectHook(root, stage, policy.runner?.tool, binaryPath());
     return [
         '#!/usr/bin/env bash',
         ...WORK_LINES('simple-hooks'),
@@ -116,7 +118,7 @@ function simpleGitHook(preparation: Preparation, name: string, generated: string
         String.raw`case "$gspot_native_status" in 126|127) printf "%s\n" "The hook integration is unavailable. Run gspot apply, then gspot install." >&2; exit 2 ;; esac`,
         'if [ "$gspot_native_status" -ne 0 ]; then exit "$gspot_native_status"; fi',
         'if [ -f "$GSPOT_SIMPLE_ENTERED" ]; then exit 0; fi',
-        `bash -c ${quoted(fallback)} "$0" "$@"${input}`,
+        `bash -c ${quoted(directCommand)} "$0" "$@"${input}`,
         '',
     ].join('\n');
 }
@@ -222,17 +224,17 @@ function lefthookHook(preparation: Preparation, name: string, generated: string)
  * @returns the manager's generated text and the text gspot installs
  */
 export function nativeHook(preparation: Preparation, name: string): PreparedHook {
-    const { manager, files, work } = preparation;
-    const hook = files.read(`${manager === 'husky' ? '.husky/_' : '.git/hooks'}/${name}`);
-    if (hook === undefined) throw new Error(`${manager} did not generate ${name}. Run gspot apply before installing.`);
+    const { hookTool, files, work } = preparation;
+    const hook = files.read(`${hookTool === 'husky' ? '.husky/_' : '.git/hooks'}/${name}`);
+    if (hook === undefined) throw new Error(`${hookTool} did not generate ${name}. Run gspot apply before installing.`);
     const generated = hook.bytes.toString('utf8');
-    const builders: Record<HookManager, () => string> = {
+    const builders: Record<HookTool, () => string> = {
         'pre-commit': () => preCommitHook(preparation, name, generated),
         'simple-git-hooks': () => simpleGitHook(preparation, name, generated),
         husky: () => huskyHook(preparation, name),
         lefthook: () => lefthookHook(preparation, name, generated),
     };
-    const installed = builders[manager]();
+    const installed = builders[hookTool]();
     if (installed.includes(work)) throw new Error(`Hook manager embedded a temporary path in ${name}.`);
     return { generated, installed };
 }

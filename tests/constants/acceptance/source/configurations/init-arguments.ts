@@ -1,4 +1,7 @@
-// The literal values acceptance/source/configurations/init-arguments reads: names, patterns, limits, and tables.
+// Initialization arguments for the configuration acceptance tests.
+import { initArgs } from '#tests/support/cli/init.ts';
+
+export const SWIFT_INIT = initArgs(['swift', 'naming'], ['spelling']);
 
 export const SUPABASE_INIT = [
     'init',

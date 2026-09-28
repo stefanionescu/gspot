@@ -96,12 +96,15 @@ export function normalizeLimits(raw: RawLimits | undefined): Limits {
     const limits: Limits = { root: {}, groups: {} };
     const entries = Object.entries(raw ?? {});
     for (const [key, value] of entries) {
-        if (isTable(value) && !('value' in value)) {
-            const group: Record<string, Reasoned<number>> = {};
-            for (const [inner, entry] of Object.entries(value))
-                if (entry !== undefined) group[inner] = toReasoned(entry);
-            limits.groups[key] = group;
-        } else limits.root[key] = toReasoned(value as number | { value: number; reason: string });
+        if (!isTable(value) || 'value' in value) {
+            limits.root[key] = toReasoned(value as number | { value: number; reason: string });
+            continue;
+        }
+        limits.groups[key] = Object.fromEntries(
+            Object.entries(value)
+                .filter(([, entry]) => entry !== undefined)
+                .map(([inner, entry]) => [inner, toReasoned(entry as number)]),
+        );
     }
     return limits;
 }
@@ -195,8 +198,7 @@ export function normalize(raw: RawPolicy): Policy {
         ],
         checks: (raw.check ?? []).map((entry) => compact({ ...entry, output: entry.output && compact(entry.output) })),
 
-        ...(raw.hooks === undefined ? {} : { hooks: raw.hooks }),
-        ...(raw.ci === undefined ? {} : { ci: raw.ci }),
+        ...compact({ hooks: raw.hooks, ci: raw.ci }),
         rules: defaulted<Policy['rules']>(raw.rules, { install: true, directory: '.gspot/rules', exclude: [] }),
         coverage: defaulted<Policy['coverage']>(raw.coverage, { strict: false }),
         ...(raw.runner === undefined
@@ -204,7 +206,7 @@ export function normalize(raw: RawPolicy): Policy {
             : {
                   runner: {
                       tool: raw.runner.tool,
-                      ...(raw.runner.tasks === undefined ? {} : { tasks: raw.runner.tasks }),
+                      ...compact({ tasks: raw.runner.tasks }),
                   },
               }),
         scopeTables,

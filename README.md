@@ -1,13 +1,15 @@
+# gspot
+
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/public/brand/readme/banner-dark.svg">
-  <source media="(prefers-color-scheme: light)" srcset="docs/public/brand/readme/banner-light.svg">
-  <img src="docs/public/brand/readme/banner.png" alt="gspot" width="1200">
+  <source media="(prefers-color-scheme: dark)" srcset="docs/public/brand/readme/banner/dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="docs/public/brand/readme/banner/light.svg">
+  <img src="docs/public/brand/readme/banner/light.svg" alt="gspot" width="1200">
 </picture>
 
-[![npm: unreleased](docs/public/brand/badges/badge-npm.svg)](docs/src/content/docs/guides/install.md)
-[![Documentation source](docs/public/brand/badges/badge-docs.svg)](docs/README.md)
-[![License: Apache-2.0](docs/public/brand/badges/badge-license.svg)](LICENSE.md)
-[![Coverage instructions](docs/public/brand/badges/badge-coverage.svg)](docs/src/content/docs/guides/testing.md)
+[![npm: unreleased](docs/public/brand/badges/npm.svg)](docs/src/content/docs/guides/install.md)
+[![Documentation source](docs/public/brand/badges/docs.svg)](docs/README.md)
+[![License: Apache-2.0](docs/public/brand/badges/license.svg)](LICENSE.md)
+[![Coverage instructions](docs/public/brand/badges/coverage.svg)](docs/src/content/docs/guides/testing.md)
 
 **Lint AI generated code.**
 
@@ -19,12 +21,12 @@ Edit `gspot.toml` to choose checks. See [edit and retain repository files](docs/
 published release or native verification on every target platform.
 
 <p>
-  <img src="docs/public/brand/readme/tool-eslint.svg" alt="ESLint" width="144" height="40">
-  <img src="docs/public/brand/readme/tool-prettier.svg" alt="Prettier" width="144" height="40">
-  <img src="docs/public/brand/readme/tool-ruff.svg" alt="Ruff" width="144" height="40">
-  <img src="docs/public/brand/readme/tool-stylelint.svg" alt="Stylelint" width="144" height="40">
-  <img src="docs/public/brand/readme/tool-shellcheck.svg" alt="ShellCheck" width="144" height="40">
-  <img src="docs/public/brand/readme/tool-semgrep.svg" alt="Semgrep" width="144" height="40">
+  <img src="docs/public/brand/readme/tools/eslint.svg" alt="ESLint" width="120">
+  <img src="docs/public/brand/readme/tools/prettier.svg" alt="Prettier" width="120">
+  <img src="docs/public/brand/readme/tools/ruff.svg" alt="Ruff" width="120">
+  <img src="docs/public/brand/readme/tools/stylelint.svg" alt="Stylelint" width="120">
+  <img src="docs/public/brand/readme/tools/shellcheck.svg" alt="ShellCheck" width="120">
+  <img src="docs/public/brand/readme/tools/semgrep.svg" alt="Semgrep" width="120">
 </p>
 
 See the [configuration reference](https://gspot.dev/reference/configurations/) for supported technologies.
@@ -102,7 +104,7 @@ The [customization guide](docs/src/content/docs/guides/customize.md) covers sett
 | `gspot doctor`          | Diagnose missing tools, configuration drift, and check coverage.        |
 
 An affected project check can report defects in unchanged files. Local hooks can be bypassed;
-[CI checks](docs/src/content/docs/guides/hooks-and-ci.md) run independently.
+[CI checks](docs/src/content/docs/guides/check-automation.md) run independently.
 For removal, preview `gspot uninstall --dry-run` and follow
 [restoration and recovery](docs/src/content/docs/guides/uninstall.md).
 If setup or a check cannot run, use the

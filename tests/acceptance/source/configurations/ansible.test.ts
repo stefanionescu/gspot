@@ -7,7 +7,7 @@ import { commitAll } from '#tests/support/cli/git.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import type { Finding } from '#cli/types/checks/checks.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
 import { installAtLevel, toolsPath } from '#tests/support/cli/tools.ts';
 import { containing, containingAll } from '#tests/support/expectations.ts';
 import { ANSIBLE_INIT } from '#tests/constants/acceptance/source/configurations/init-arguments.ts';
@@ -49,13 +49,13 @@ describe('the ansible configuration', () => {
                 rule: 'command-instead-of-module',
                 line: 5,
             });
-            const withCommand: Finding[] = containingAll([commandInsteadOfModule]);
+            const expectedFindings: Finding[] = containingAll([commandInsteadOfModule]);
             expect(outcome.code, outcome.stdout + outcome.stderr).toBe(isWindows ? 0 : 1);
             expect(report.checks).toMatchObject([{ check: 'ansible/lint', status: isWindows ? 'skipped' : 'fail' }]);
             expect(report.skips.some((skip) => skip.check === 'ansible/lint' && skip.source === 'platform')).toBe(
                 isWindows,
             );
-            expect(report.checks[0]?.findings).toStrictEqual(isWindows ? [] : withCommand);
+            expect(report.checks[0]?.findings).toStrictEqual(isWindows ? [] : expectedFindings);
             const corrected = await run(
                 sandbox.path,
                 ['check', '--only', 'ansible/lint', '--no-cache', '--json'],

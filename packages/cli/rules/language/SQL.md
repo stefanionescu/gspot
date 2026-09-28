@@ -18,15 +18,20 @@ project contracts apply at both levels.
   policies.
 - Prefer explicit column lists for every `INSERT` and every grant of write
   privileges.
-- Prefer `CREATE SCHEMA IF NOT EXISTS`, `CREATE TABLE IF NOT EXISTS`,
-  `CREATE INDEX IF NOT EXISTS`, and `CREATE OR REPLACE FUNCTION` where a
-  migration may replay locally.
+- Preserve applied migration history. Use idempotent DDL only when repeated execution is an
+  explicit contract and existing object definitions are verified. Do not hide schema drift
+  with `IF NOT EXISTS`.
 - Keep table constraints close to the table definition unless they must be added
   later for dependency reasons.
-- Put indexes in the `Indexes` section, not inline after unrelated objects.
-- Put grants and revokes in the `Grants` section so privilege changes are
-  auditable.
 - Use comments to explain business invariants, security boundaries, and
   non-obvious platform behavior. Do not comment obvious SQL syntax.
 - Do not leave placeholder comments, TODOs, fake examples, or unexplained
   suppressions in migrations.
+
+## Migration layout
+
+<!-- level: all -->
+
+When the project selects the documented migration layout, put indexes in its
+`Indexes` section and grants and revokes in its `Grants` section. The configured
+migration-documentation check owns the required sections.

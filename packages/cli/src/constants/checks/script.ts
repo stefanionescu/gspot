@@ -83,7 +83,7 @@ export const RUNTIME_HEADER = /^# Runtime: Bash (?<major>\d+)\.(?<minor>\d+)\+, 
 /** The start of a run_ssh block, and what closes a multi-line one. */
 export const RUN_SSH_START = /run_ssh\s+(?<quote>["'])/u;
 
-/** The safety rules, each a pattern and what to say. */
+/** Safety-rule patterns and their diagnostic text. */
 export const SAFETY_LINE_RULES: [RegExp, string, string][] = [
     [/\|\|\s*true(?:\s|$)/u, 'blanket-success', 'a command failure is discarded with || true'],
     [

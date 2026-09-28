@@ -1,11 +1,12 @@
 import { join } from 'node:path';
 import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
-// gspot set with a table for a value: the TOML form is read, text that reads as nothing is refused, and a quoted table in the policy is refused at load.
+// Table settings accept TOML input. Unparsable values and quoted policy tables are rejected.
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
+import { reportSchema } from '#cli/execution/report.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
 import { install, toolsPath } from '#tests/support/cli/tools.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
 import { TABLE, TYPED_TABLES_INIT } from '#tests/constants/acceptance/source/cli/cli.ts';
 
 describe('gspot set', () => {
@@ -34,11 +35,27 @@ describe('gspot set', () => {
             // A person can still type the quotes by hand, and the policy refuses that when it loads.
             await Bun.write(
                 join(sandbox.path, 'gspot.toml'),
-                `${policy}\n[tools.typos]\nexclude = ["{paths = [\\"a\\"], reason = \\"x\\"}"]\n`,
+                `${policy}\n[tools.typos]\nexclude = ['{paths = ["a"], reason = "x"}']\n`,
             );
-            const read = await run(sandbox.path, ['check', '--only', 'docs/readme-present'], environment);
-            expect(read.code).toBe(2);
-            expect(read.stdout + read.stderr).toContain('holds a table written inside quotes');
+            const args = ['check', '--only', 'docs/links', '--json'];
+            const read = await run(sandbox.path, args, environment);
+            expect(read.code, read.stdout + read.stderr).toBe(1);
+            expect(reportSchema.parse(JSON.parse(read.stdout)).checks).toMatchObject([
+                { check: 'docs/links', status: 'ok', findings: [] },
+                {
+                    check: 'integrity/policy',
+                    status: 'fail',
+                    findings: [
+                        { file: 'gspot.toml', message: expect.stringContaining('holds a table written inside quotes') },
+                    ],
+                },
+            ]);
+            await Bun.write(join(sandbox.path, 'gspot.toml'), policy);
+            const corrected = await run(sandbox.path, args, environment);
+            expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+            expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
+                { check: 'docs/links', status: 'ok', findings: [] },
+            ]);
         },
         PLANTED_TIMEOUT_MS * 3,
     );

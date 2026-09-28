@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
+import { RUNS } from '#tests/constants/cli.ts';
 import { createFileTree, testdir } from 'testdirs';
-import { RUNS } from '#tests/constants/support/cli.ts';
 import { privateToolInstallation } from '#cli/tools/pins.ts';
 import { locateTool, inspectTool } from '#cli/tools/inspect.ts';
 import { commandPin, libraryPin } from '#tests/support/cli/pins.ts';
@@ -58,8 +58,8 @@ test.each([
     const placement = privateToolInstallation(tool, runner);
     expect(placement?.kind).toBe(kind);
     // A private installation pins the version its installer names.
-    const pinned =
-        placement === undefined ? undefined : tool.installers[placement.kind === 'python' ? 'pypi' : 'npm']?.version;
+    const installer = placement?.kind === 'python' ? 'pypi' : 'npm';
+    const pinned = placement === undefined ? undefined : tool.installers[installer]?.version;
     expect(pinned).toBe(placement?.version);
 });
 

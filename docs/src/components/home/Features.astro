@@ -20,7 +20,7 @@ const { title, description, features } = Astro.props;
     </ul>
 </section>
 <style>
-    .feature-section { padding-block: 56px; margin: 0; }
+    .feature-section { padding-block: var(--home-section-space); margin: 0; border-top: 1px solid var(--sl-color-gray-5); }
     .feature-section h2 { margin: 0 0 8px; font-size: clamp(1.75rem, 3vw, 2.5rem); font-weight: 500; }
     .section-description { max-width: 64ch; font-size: 1.125rem; color: var(--sl-color-gray-2); margin: 0; }
     .features { margin: 32px 0 0; display: grid; list-style: none; padding: 0; gap: 32px 24px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -32,5 +32,5 @@ const { title, description, features } = Astro.props;
     .feature-copy p { margin: 8px 0 12px; font-size: 0.9375rem; color: var(--sl-color-gray-2); line-height: 1.7; }
     .feature-copy a { align-self: end; font-size: 0.875rem; }
     @media (min-width: 40.01rem) and (max-width: 60rem) { .features { grid-template-columns: repeat(4, minmax(0, 1fr)); }.features > li { grid-column: span 2; }.features > li:last-child:nth-child(odd) { grid-column: 2 / span 2; } }
-    @media (max-width: 40rem) { .features { grid-template-columns: 1fr; }.feature-section { padding-block: 32px; } }
+    @media (max-width: 40rem) { .features { grid-template-columns: 1fr; } }
 </style>

@@ -3,7 +3,7 @@ import { realpathSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { CONNECTION_KEYS } from '#cli/constants/tools/packages.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
-// eslint-disable-next-line gspot/no-index-imports -- the package defines flatten and shorthands in this file, and Vite reads the named exports only from the explicit path
+// eslint-disable-next-line gspot/no-index-imports -- reason: The package defines flatten and shorthands in this file, and Vite reads the named exports only from the explicit path.
 import { definitions, flatten, shorthands } from '@npmcli/config/lib/definitions/index.js';
 
 /**
@@ -32,23 +32,23 @@ export async function packageEnvironment(root: string): Promise<Record<string, s
     }
     const effective: Record<string, unknown> = {};
     for (const layer of config.list.toReversed()) Object.assign(effective, layer);
-    const env: Record<string, string> = {};
-    for (const [key, value] of Object.entries(effective)) {
-        if (
-            !CONNECTION_KEYS.has(key) &&
-            !/^@[^\s:=]+:registry$/u.test(key) &&
-            !/^\/\/[^\s]+:(?:_authToken|_auth|username|_password|certfile|keyfile)$/u.test(key)
-        )
-            continue;
-        if (value === undefined || value === null) continue;
-        let text = Array.isArray(value)
-            ? value.join('\n\n')
-            : typeof value === 'string'
-              ? value
-              : JSON.stringify(value);
-        if (key.endsWith(':certfile') || key.endsWith(':keyfile')) text = resolve(root, text);
-        env[`npm_config_${key}`] = text;
-    }
+    const env: Record<string, string> = Object.fromEntries(
+        Object.entries(effective)
+            .filter(
+                ([key]) =>
+                    CONNECTION_KEYS.has(key) ||
+                    /^@[^\s:=]+:registry$/u.test(key) ||
+                    /^\/\/[^\s]+:(?:_authToken|_auth|username|_password|certfile|keyfile)$/u.test(key),
+            )
+            .flatMap(([key, value]): [string, string][] => {
+                if (value === undefined || value === null) return [];
+                let text: string;
+                if (Array.isArray(value)) text = value.join('\n\n');
+                else text = typeof value === 'string' ? value : JSON.stringify(value);
+                if (key.endsWith(':certfile') || key.endsWith(':keyfile')) text = resolve(root, text);
+                return [[`npm_config_${key}`, text]];
+            }),
+    );
     if (inherited['GSPOT_REGISTRY'] !== undefined) env['npm_config_registry'] = inherited['GSPOT_REGISTRY'];
     const registry = env['npm_config_registry'];
     if (registry !== undefined) {

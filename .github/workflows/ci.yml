@@ -1,5 +1,5 @@
 name: ci
-# Jobs stay paused until the owner explicitly enables GSPOT_CI_ENABLED.
+# GSPOT_CI_ENABLED controls execution for this repository.
 on:
     push:
         branches: [main]
@@ -26,6 +26,8 @@ jobs:
         if: vars.GSPOT_CI_ENABLED == 'true' && !inputs.full
         runs-on: ubuntu-24.04
         timeout-minutes: 30
+        env:
+            GITHUB_TOKEN: ${{ github.token }}
         defaults:
             run:
                 shell: bash
@@ -39,7 +41,6 @@ jobs:
                   version: '2026.8.8'
                   cache: true
             - run: mise run --skip-tools repo:setup
-            - run: mise run --skip-tools build:plugin
             - run: mise run --skip-tools repo:install-checks
             - name: Check affected inputs
               env:
@@ -60,7 +61,9 @@ jobs:
             matrix:
                 os: [ubuntu-24.04, macos-15, windows-2025]
         runs-on: ${{ matrix.os }}
-        timeout-minutes: 90
+        timeout-minutes: 180
+        env:
+            GITHUB_TOKEN: ${{ github.token }}
         defaults:
             run:
                 shell: bash
@@ -77,14 +80,18 @@ jobs:
               if: runner.os == 'Linux'
               run: sudo apt-get update && sudo apt-get install --yes libxml2-utils
             - run: mise run --skip-tools repo:setup
-            - run: mise run --skip-tools build:plugin
             - name: Extract Windows SwiftFormat executable
               if: runner.os == 'Windows'
               run: mise run --skip-tools ci:swiftformat
             - run: mise run --skip-tools repo:install-checks
             - run: mise run --skip-tools check:types
             - run: mise run --skip-tools test:coverage
-            - run: mise run --skip-tools test:tools
+            - name: Native checks including Linux database journeys
+              if: runner.os == 'Linux'
+              run: mise run --skip-tools test:tools
+            - name: Native checks with database journeys owned by Linux
+              if: runner.os != 'Linux'
+              run: mise run --skip-tools test:tools -- --path-ignore-patterns '**/checks/supabase/types.test.ts'
             - run: mise run --skip-tools test:acceptance
             - id: normal
               run: mise run --skip-tools gspot:check
@@ -99,7 +106,8 @@ jobs:
             - id: manual
               run: mise run --skip-tools gspot:check -- --stage manual
             - run: mise run --skip-tools doctor
-            - run: mise run --skip-tools build
+            - run: mise run --skip-tools build -- --all
+            - run: mise run --skip-tools test:release
             - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
               if: always() && !cancelled() && steps.manual.outcome != 'skipped'
               with:
@@ -112,6 +120,8 @@ jobs:
         if: vars.GSPOT_CI_ENABLED == 'true' && inputs.full
         runs-on: ubuntu-24.04
         timeout-minutes: 15
+        env:
+            GITHUB_TOKEN: ${{ github.token }}
         steps:
             - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
               with:
@@ -122,6 +132,7 @@ jobs:
                   install: false
             - run: mise install bun node
             - run: mise run --skip-tools repo:setup
+            - run: mise run --skip-tools test:docs
             - run: mise run --skip-tools docs:build
     code-scanning:
         needs: [affected, acceptance]

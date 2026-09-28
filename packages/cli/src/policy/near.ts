@@ -10,7 +10,7 @@ function distance(a: string, b: string): number {
         let left = row + 1;
         let diagonal = 0;
         for (const [column, above] of previous.entries()) {
-            if (column > 0) left = Math.min(above + 1, left + 1, diagonal + (letter === right[column - 1] ? 0 : 1));
+            if (column > 0) left = Math.min(above + 1, left + 1, diagonal + Number(letter !== right[column - 1]));
             current.push(left);
             diagonal = above;
         }

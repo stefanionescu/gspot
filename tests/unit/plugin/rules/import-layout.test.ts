@@ -11,6 +11,12 @@ tester().run('import-layout', importLayout, {
     ],
     invalid: [
         {
+            code: "// The complete\n// file header.\nimport { bbb } from 'bbb';\nimport a from 'a';",
+            output: "// The complete\n// file header.\nimport a from 'a';\nimport { bbb } from 'bbb';",
+            errors: [{ messageId: 'layout' }],
+        },
+
+        {
             code: "import { ccc } from 'ccc';\nimport a from 'a';",
             output: "import a from 'a';\nimport { ccc } from 'ccc';",
             errors: [{ messageId: 'layout' }],

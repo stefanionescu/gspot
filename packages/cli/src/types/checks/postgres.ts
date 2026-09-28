@@ -1,7 +1,7 @@
 // The types of checks/postgres in this package.
 import type { SqlStatementView } from '#cli/types/parsers/sql.ts';
 
-/** One migration file, read and parsed. */
+/** One parsed migration file. */
 export type Migration = {
     path: string;
     name: string;

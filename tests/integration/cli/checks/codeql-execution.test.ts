@@ -9,8 +9,23 @@ import { openSession } from '#cli/execution/session.ts';
 import { rejection } from '#tests/support/expectations.ts';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 
+const JAVASCRIPT_LANGUAGES = JSON.stringify({
+    aliases: { 'javascript-typescript': 'javascript' },
+    extractors: { javascript: [{}] },
+});
+
 const policy = (value: string) =>
     `version = 1\nlevel = "all"\nconfigurations = ["security"]\n[tools.codeql]\nlanguages = [${JSON.stringify(value)}]\n`;
+
+// Aliases resolve to one native language and its exact query-pack version.
+function expectNativeCodeqlOptions(commands: string[][], packVersion: string): void {
+    const option = (command: string, prefix: string) =>
+        commands.filter((argv) => argv.includes(command)).map((argv) => argv.find((part) => part.startsWith(prefix)));
+    expect(option('create', '--language=')).toStrictEqual(['--language=javascript']);
+    expect(option('analyze', 'codeql/')).toStrictEqual([
+        `codeql/javascript-queries@${packVersion}:codeql-suites/javascript-security-extended.qls`,
+    ]);
+}
 
 test.each(['../outside', '/outside', 'C:outside', String.raw`..\outside`])(
     'CodeQL refuses output language %s before spawning and accepts a corrected language',
@@ -90,40 +105,24 @@ test('CodeQL adapter uses native language names and pinned packs once and maps i
         if (argv.includes('resolve'))
             return Promise.resolve({
                 ...base,
-                stdout: JSON.stringify({
-                    aliases: { 'javascript-typescript': 'javascript' },
-                    extractors: { javascript: [{}] },
-                }),
+                stdout: JAVASCRIPT_LANGUAGES,
             });
         const cwd = options.cwd;
         invoked.push({ argv, cwd });
         if (argv.includes('analyze')) {
             const output = argv.find((part) => part.startsWith('--output='))!;
+            const physicalLocation = {
+                artifactLocation: { uri: pathToFileURL(join(cwd, 'source file.ts')).href },
+                region: { startLine: 1, startColumn: 14 },
+            };
+            const result = {
+                ruleId: 'js/sql-injection',
+                message: { text: 'Planted injection' },
+                locations: [{ physicalLocation }],
+            };
             writeFileSync(
                 output.slice('--output='.length),
-                JSON.stringify({
-                    version: '2.1.0',
-                    runs: [
-                        {
-                            results: [
-                                {
-                                    ruleId: 'js/sql-injection',
-                                    message: { text: 'Planted injection' },
-                                    locations: [
-                                        {
-                                            physicalLocation: {
-                                                artifactLocation: {
-                                                    uri: pathToFileURL(join(cwd, 'source file.ts')).href,
-                                                },
-                                                region: { startLine: 1, startColumn: 14 },
-                                            },
-                                        },
-                                    ],
-                                },
-                            ],
-                        },
-                    ],
-                }),
+                JSON.stringify({ version: '2.1.0', runs: [{ results: [result] }] }),
             );
         } else if (!argv.includes('create')) throw new Error('Unexpected CodeQL command');
         return Promise.resolve({ ...base, stdout: '' });
@@ -137,14 +136,10 @@ test('CodeQL adapter uses native language names and pinned packs once and maps i
             }),
         );
         expect(invoked.map(({ cwd }) => cwd)).not.toContain(directory.path);
-        const option = (command: string, prefix: string) =>
-            invoked
-                .filter(({ argv }) => argv.includes(command))
-                .map(({ argv }) => argv.find((part) => part.startsWith(prefix)));
-        expect(option('create', '--language=')).toStrictEqual(['--language=javascript']);
-        expect(option('analyze', 'codeql/')).toStrictEqual([
-            `codeql/javascript-queries@${packVersion!}:codeql-suites/javascript-security-extended.qls`,
-        ]);
+        expectNativeCodeqlOptions(
+            invoked.map(({ argv }) => argv),
+            packVersion!,
+        );
         expect(findings).toMatchObject([
             { check: 'security/codeql', rule: 'js/sql-injection', file: 'source file.ts', line: 1, column: 14 },
         ]);

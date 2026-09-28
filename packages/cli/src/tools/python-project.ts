@@ -8,9 +8,9 @@ import { runToolCommand } from '#cli/tools/command.ts';
 import { MissingToolError } from '#cli/tools/inspect.ts';
 import type { GeneratedFile } from '#cli/types/generation.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import { withLifecycleOwner } from '#cli/lifecycle/ownership/owner.ts';
 import { MODE_BITS, PRIVATE_FILE } from '#cli/constants/platform.ts';
 import { publishInstalledFiles } from '#cli/tools/installed-files.ts';
+import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import { normalizedPythonPackage } from '#cli/repository/manifests.ts';
 import type { LifecycleOwner } from '#cli/types/lifecycle/lifecycle.ts';
 import { INDEX_SETTINGS, LOCK, SETUP, TOOL_PYTHON_PROJECT } from '#cli/constants/tools/tools.ts';
@@ -78,17 +78,17 @@ function matches(project: string, lock: string): boolean {
  * @param root the repository root
  * @param owner the lifecycle owner that reads the authored uv settings
  * @param work the directory the resolution runs in
- * @returns the uv arguments that carry the repository's index settings
+ * @returns index credentials that must remain absent from generated lock files
  */
-function pythonSettings(root: string, owner: LifecycleOwner, work: string): string[] {
+function writePythonSettings(root: string, owner: LifecycleOwner, work: string): string[] {
     const configuration = owner.read('uv.toml');
-    const project = configuration === undefined ? owner.read('pyproject.toml') : undefined;
-    const parsed = parse((configuration ?? project)?.bytes.toString('utf8') ?? '');
+    const source = configuration ?? owner.read('pyproject.toml');
+    const parsed = parse(source?.bytes.toString('utf8') ?? '');
     const table =
         configuration === undefined
-            ? (z
-                  .object({ tool: z.object({ uv: z.record(z.string(), z.unknown()).optional() }).optional() })
-                  .parse(parsed).tool?.uv ?? {})
+            ? z
+                  .object({ tool: z.object({ uv: z.record(z.string(), z.unknown()).default({}) }).default({ uv: {} }) })
+                  .parse(parsed).tool.uv
             : parsed;
     const location = (value: string): string =>
         /^[a-z][a-z0-9+.-]*:/iu.test(value) || isAbsolute(value) ? value : resolve(root, value);
@@ -106,15 +106,12 @@ function pythonSettings(root: string, owner: LifecycleOwner, work: string): stri
     if (Object.keys(selected).length > 0)
         writeFileSync(join(work, 'uv.toml'), stringify(selected), { mode: PRIVATE_FILE });
     return Object.entries(selected).flatMap(([key, value]) => {
-        const values =
-            key === 'index' && Array.isArray(value)
-                ? value.map((entry) => z.object({ url: z.string() }).parse(entry).url)
-                : typeof value === 'string'
-                  ? [value]
-                  : Array.isArray(value)
-                    ? value.filter((entry) => typeof entry === 'string')
-                    : [];
-        return values.flatMap((value) => {
+        const entries: unknown[] = Array.isArray(value) ? value : [value];
+        const settingEntries =
+            key === 'index'
+                ? entries.map((entry) => z.object({ url: z.string() }).parse(entry).url)
+                : entries.filter((entry) => typeof entry === 'string');
+        return settingEntries.flatMap((value) => {
             if (!/^https?:\/\//u.test(value)) return [];
             const url = new URL(value);
             return url.password === '' ? [] : [url.password, decodeURIComponent(url.password)];
@@ -123,7 +120,7 @@ function pythonSettings(root: string, owner: LifecycleOwner, work: string): stri
 }
 
 async function uv(root: string, owner: LifecycleOwner, work: string, args: string[], executable = 'uv'): Promise<void> {
-    const credentials = pythonSettings(root, owner, work);
+    const credentials = writePythonSettings(root, owner, work);
     const result = await runToolCommand(
         undefined,
         [executable, ...args, '--project', work, '--directory', work, '--no-python-downloads'],
@@ -134,13 +131,35 @@ async function uv(root: string, owner: LifecycleOwner, work: string, args: strin
     );
     if (result.missing) throw new MissingToolError(`Install uv, then run: gspot install. ${SETUP}`);
     if (result.code !== 0) {
-        const message = `uv ${args[0] ?? ''} failed (exit ${String(result.code)}). Check uv, Python, and index settings. ${SETUP}`;
-        if (args[0] === 'sync') throw new InstallationError(message);
-        throw new Error(message);
+        const text = `uv ${args[0] ?? ''} failed (exit ${String(result.code)}). Check uv, Python, and index settings. ${SETUP}`;
+        if (args[0] === 'sync') throw new InstallationError(text);
+        throw new Error(text);
     }
     const lock = readFileSync(join(work, 'uv.lock'), 'utf8');
     if (credentials.some((value) => lock.includes(value) || lock.includes(encodeURIComponent(value))))
         throw new Error('The uv lock includes repository index credentials. Existing files were preserved.');
+}
+
+// Detach the host interpreter link and verify the copied environment before publication.
+async function relocateInterpreter(work: string): Promise<void> {
+    // uv links the host interpreter. Copy its executable so the published environment has no external link.
+    const interpreter = join(work, '.venv', process.platform === 'win32' ? 'Scripts/python.exe' : 'bin/python');
+    const source = realpathSync(interpreter);
+    const mode = lstatSync(source).mode & MODE_BITS;
+    if (lstatSync(interpreter).isSymbolicLink()) {
+        unlinkSync(interpreter);
+        copyFileSync(source, interpreter);
+        chmodSync(interpreter, mode);
+    }
+    const observed = await runToolCommand(
+        undefined,
+        [interpreter, '-c', 'import sys, ssl; assert sys.prefix != sys.base_prefix'],
+        { cwd: work },
+    );
+    if (observed.code !== 0)
+        throw new Error(
+            'The Python interpreter cannot run from a copied environment. No installed files were published.',
+        );
 }
 
 /**
@@ -149,7 +168,7 @@ async function uv(root: string, owner: LifecycleOwner, work: string, args: strin
  * @param files the generated files, among them the Python project
  * @param owner the lifecycle owner that records the lock
  */
-export async function resolvePythonProject(root: string, files: GeneratedFile[], owner: LifecycleOwner): Promise<void> {
+export async function preparePythonProject(root: string, files: GeneratedFile[], owner: LifecycleOwner): Promise<void> {
     const project = files.find((file) => file.path === TOOL_PYTHON_PROJECT);
     if (project === undefined) return;
     projectSchema.parse(parse(project.content));
@@ -225,7 +244,7 @@ export function pythonInstallSteps(root: string): string[][] {
  * @returns the line that says what was installed, or '' without a Python project
  */
 export async function installPythonProject(root: string, executable = 'uv'): Promise<string> {
-    return withLifecycleOwner(root, async (owner) => {
+    return runOwnedLifecycle(root, async (owner) => {
         const project = owner.read(TOOL_PYTHON_PROJECT);
         if (project === undefined) return '';
         projectSchema.parse(parse(project.bytes.toString('utf8')));
@@ -243,24 +262,7 @@ export async function installPythonProject(root: string, executable = 'uv'): Pro
                 !readFileSync(join(work, 'uv.lock')).equals(lock.bytes)
             )
                 throw new Error(`The uv run changed locked inputs. ${SETUP}`);
-            // uv links the host interpreter. Copy its executable so the published environment has no external link.
-            const interpreter = join(work, '.venv', process.platform === 'win32' ? 'Scripts/python.exe' : 'bin/python');
-            const source = realpathSync(interpreter);
-            const mode = lstatSync(source).mode & MODE_BITS;
-            if (lstatSync(interpreter).isSymbolicLink()) {
-                unlinkSync(interpreter);
-                copyFileSync(source, interpreter);
-                chmodSync(interpreter, mode);
-            }
-            const observed = await runToolCommand(
-                undefined,
-                [interpreter, '-c', 'import sys, ssl; assert sys.prefix != sys.base_prefix'],
-                { cwd: work },
-            );
-            if (observed.code !== 0)
-                throw new Error(
-                    'The Python interpreter cannot run from a copied environment. No installed files were published.',
-                );
+            await relocateInterpreter(work);
             if (
                 !isDeepStrictEqual(owner.read(TOOL_PYTHON_PROJECT), project) ||
                 !isDeepStrictEqual(owner.read(LOCK), lock)

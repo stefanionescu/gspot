@@ -49,7 +49,7 @@ test.each(['outdated', 'timeout', 'canceled'] as const)(
             expect(outcome.report.checks).toHaveLength(1);
             expect(outcome.report.checks[0]!.status).toBe(failure === 'outdated' ? 'missing' : 'error');
             expect(outcome.report.checks[0]!.note).toContain(
-                failure === 'outdated' ? 'is below 24.0.0' : failure === 'timeout' ? 'ran past 1 seconds' : 'canceled',
+                { outdated: 'is below 24.0.0', timeout: 'ran past 1 seconds', canceled: 'canceled' }[failure],
             );
             expect(outcome.report.checks[0]!.findings).toStrictEqual([]);
             expect(existsSync(join(sandbox.path, 'deploy/started.txt'))).toBe(failure !== 'outdated');

@@ -23,4 +23,4 @@ selector = "JSXOpeningElement:has(JSXSpreadAttribute CallExpression[callee.name=
 message = "A registered field is uncontrolled. Drop the value attribute, or use a Controller."
 
 [rule_files]
-library = ["library/react-hook-form/REACTHOOKFORM.md"]
+library = [{path = "library/react-hook-form/REACTHOOKFORM.md"}]

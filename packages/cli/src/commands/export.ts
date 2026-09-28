@@ -10,7 +10,7 @@ import { printCommand } from '#cli/commands/print-result.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/constants/platform.ts';
 import { exportedProfile } from '#cli/policy/profiles/export.ts';
 import type { CommandResult } from '#cli/types/commands/commands.ts';
-import { readOwnership, withLifecycleOwner } from '#cli/lifecycle/ownership/owner.ts';
+import { readOwnership, runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 
 /**
  * Writes a profile from the policy of this repository.
@@ -26,7 +26,7 @@ export function exportCommand(cwd: string, file: string): CommandResult {
     const path = relative(root, resolve(cwd, file)).split(sep).join('/');
     mutationTarget(path);
     parseProfile(saved.text, file);
-    withLifecycleOwner(root, (owner) => {
+    runOwnedLifecycle(root, (owner) => {
         if (owner.read('gspot.toml')?.bytes.toString('utf8') !== policy.text)
             throw new Error('The policy changed while the profile was prepared. Retry the export.');
         const existing = readOwnership(root).files.find((entry) => entry.path === path);

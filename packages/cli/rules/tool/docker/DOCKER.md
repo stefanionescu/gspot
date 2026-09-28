@@ -11,575 +11,185 @@ order, API style, and complexity apply at `all` or when the project explicitly o
 them. Correctness, security, accessibility, type safety, routine formatting, and declared
 project contracts apply at both levels.
 
-## Core Docker philosophy
+## Image inputs
 
-Rules:
+Select a base image that supports the application's runtime, target architecture, native libraries,
+and certificate requirements. Use an explicit version tag or reviewed digest. Do not use `latest`
+or an unversioned image reference.
 
-- Docker images must be deterministic enough to debug and redeploy.
-- Runtime images must be small, boring, and production-only.
-- Build stages may contain compilers, package managers, and dev tooling; runtime stages never do.
-- Containers run one foreground service process.
-- Containers do not own durable application state.
-- Orchestrators restart and replicate processes; app code handles graceful startup/shutdown.
-- Docker is not a place to hide secrets, tests, source maps, local config, or dev convenience tools.
+Tags can change. Pin a reviewed digest when the build requires immutable image input, and keep
+an update process for security fixes. A digest does not keep an image patched automatically.
+See [Docker's build guidance](https://docs.docker.com/build/building/best-practices/).
 
-```text
-source files
-  -> build stage
-      -> install build tooling
-      -> install dependencies
-      -> compile
-      -> upload/inject build artifacts with BuildKit secrets
-  -> runtime stage
-      -> production dependencies only
-      -> compiled artifacts only
-      -> non-root user
-      -> exec-form process
-      -> health/readiness probes
-```
+Use a supported runtime release. For native modules, keep the build and runtime operating system,
+libc, and architecture compatible. Alpine, Debian, and distroless images have different runtime
+and operational requirements; no single variant fits every application.
 
-## Base image selection
+## Build and runtime stages
 
-Rules:
+Keep build-only compilers, test dependencies, and package caches out of the final application
+image. Preserve files the runtime actually needs. These can include interpreted source and declared
+debug artifacts. Keep private source maps out of publicly served assets.
 
-- Use explicit tags, never bare image names.
-- Prefer a literal Node major/minor/variant for service Dockerfiles.
-- Prefer Debian slim for production Node services.
-- Use digest pinning only when the team has a refresh process.
-- Full Debian/buildpack images are acceptable in build stages when native compilation or broad tooling is required.
-- Distroless or package-manager-free runtime images are advanced options; use only if debugging, CA certs, native libraries, and operations needs are understood.
+Use multi-stage builds when compilation or dependency preparation requires tools the runtime
+does not need. Copy only the resulting runtime inputs into the final stage. Never copy host
+`node_modules` into a Linux image.
 
-Bad:
-
-```dockerfile
-FROM node
-FROM node:latest
-FROM node:slim
-FROM alpine
-```
+This npm example assumes the project declares a `build` task that writes `dist/main.js`, commits
+its lockfile, and runs on Node.js 24. The version tag illustrates the stages; release builds that
+require immutable input pin the reviewed image digest.
 
 Good:
 
 ```dockerfile
-FROM node:<MAJOR>-bookworm-slim
-```
-
-Digest example:
-
-```dockerfile
-FROM node:<MAJOR.MINOR.PATCH>-bookworm-slim@sha256:<DIGEST>
-```
-
-## Node.js image variants
-
-Guidance:
-
-- `node:<version>` is broad and buildpack-based; useful for development or build stages, not default runtime.
-- `node:lts` is convenient but floating; avoid for production Dockerfiles unless pinned by digest.
-- `node:<version>-bookworm-slim` is the default recommendation for Node runtime images.
-- `node:alpine` is smaller but musl-based. It may require `gcompat`, may break native modules, and musl builds have different support/scanner characteristics.
-- `node:slim` without a version selects a floating line and is not deterministic enough.
-- Production apps use supported LTS releases.
-- Node Docker images differ by architecture; do not assume every variant exists on every architecture.
-- Do not rely on a package manager bundled in the base image for production services; install the pinned one.
-
-## Dockerfile structure
-
-Rules:
-
-- Use BuildKit syntax when using secrets or advanced mounts:
-    - `# syntax=docker/dockerfile:<VERSION>`
-- Keep instructions ordered from stable to volatile:
-    - base image
-    - OS packages
-    - package manager install
-    - dependency manifests
-    - dependency install
-    - source copy
-    - build
-    - runtime copy
-- Order the file: parser directives, `ARG` values `FROM` needs, `FROM`, identity labels and
-  non-secret build args, runtime `ENV`, system packages, runtime dependencies. Then source and
-  script copies, artifact download and validation, runtime user, workdir, exposed ports, healthcheck
-  and entrypoint.
-- Put related operations in the same layer when they form one installation transaction; split
-  unrelated operations when it improves cache reuse or review.
-- Keep the final image contract obvious: workdir, exposed ports, environment, healthcheck, and
-  entrypoint.
-- Pin packages when the repository already pins that package family or when the package affects
-  runtime compatibility. Use binary wheels for runtime dependencies.
-- Keep system package installation separate from artifact downloads.
-- Prefer `COPY` over `ADD`.
-- Do not use remote `ADD`.
-- If downloading binaries, pin versions and verify checksums/signatures.
-- Follow the Bash rules for shell behavior inside `RUN` blocks. Move complex
-  shell logic into reviewed scripts instead of expanding Dockerfile inline
-  commands.
-- Avoid full OS upgrades by default; use updated base images. Use targeted package upgrades only for documented vulnerability exceptions.
-- Always clean apt lists in the same layer:
-    - `rm -rf /var/lib/apt/lists/*`
-- Install OS packages with `--no-install-recommends`.
-- Do not install debug/convenience tools in runtime images.
-
-Bad:
-
-```dockerfile
-FROM node
-WORKDIR /usr/src/app
-COPY . .
-RUN npm install
-CMD "npm" "start"
-```
-
-Good Node/Bun skeleton:
-
-```dockerfile
-# syntax=docker/dockerfile:<VERSION>
-
-FROM node:<MAJOR>-bookworm-slim AS dependencies
-WORKDIR /app/api
-
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-    ca-certificates curl unzip \
-    && rm -rf /var/lib/apt/lists/*
-
-COPY scripts/install-bun.sh /tmp/install-bun.sh
-RUN /tmp/install-bun.sh "<BUN_VERSION>" && rm -f /tmp/install-bun.sh
-ENV PATH="/root/.bun/bin:$PATH"
-
-COPY package.json bun.lock ./
-RUN bun install --frozen-lockfile
-
-FROM dependencies AS build
-COPY tsconfig.build.json ./tsconfig.build.json
+FROM node:24-bookworm-slim AS build
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci
+COPY tsconfig.json ./
 COPY src ./src
-RUN bunx tsc -p tsconfig.build.json && bunx tsc-alias -p tsconfig.build.json
+RUN npm run build
 
-FROM dependencies AS production-dependencies
-RUN rm -rf node_modules && bun install --frozen-lockfile --production
+FROM node:24-bookworm-slim AS dependencies
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev
 
-FROM node:<MAJOR>-bookworm-slim AS runtime
-WORKDIR /app/api
+FROM node:24-bookworm-slim AS runtime
 ENV NODE_ENV=production
-
-COPY package.json ./package.json
-COPY --from=production-dependencies /app/api/node_modules ./node_modules
-COPY --from=build /app/api/dist ./dist
-
-RUN groupadd -r appuser && useradd -r -g appuser appuser && chown -R appuser:appuser /app
-USER appuser
-
-CMD ["node", "dist/src/main.js"]
-```
-
-## Multi-stage builds
-
-Rules:
-
-- Use at least build/runtime stages for compiled Node/TypeScript services.
-- Build stage may include compilers, source, source maps, and dev dependencies.
-- Runtime stage gets only runtime dependencies and compiled artifacts.
-- Build-time secrets must not cross into runtime stage.
-- Do not copy the whole build context into runtime.
-- Do not copy local `node_modules`.
-- Native modules must be built for the runtime OS/libc/architecture.
-- If build and runtime images differ, explicitly account for native module compatibility.
-
-## Package installation
-
-General rules:
-
-- Install dependencies from lockfiles when available.
-- For npm services: prefer `npm ci --omit=dev` or the approved npm production equivalent.
-- For Bun services: copy `bun.lock` with the manifest and use `bun install --frozen-lockfile`.
-  Add `--production` when installing runtime dependencies.
-- Use one package manager per service. Do not mix them in one image.
-- Do not install global npm dependencies. If a service truly needs global npm tools, put global prefix under the non-root user home and document why.
-- Do not rely on package-manager binaries in runtime unless the runtime actually invokes them.
-- Removing npm/yarn from runtime is allowed as a hardening step only if the service does not need them and the Dockerfile remains maintainable.
-
-## Bun and Node tooling
-
-API-specific rules:
-
-- Pin the Bun version in Dockerfiles and package metadata, and keep those values
-  in sync.
-- Install Bun in build stages. Include it in a runtime image only when the service executes Bun.
-- Do not replace Bun with npm examples from external docs.
-- `NODE_ENV=production` belongs in runtime images and compose runtime env.
-- Do not increase npm/Bun log verbosity in Dockerfiles unless debugging a requested build problem.
-
-## Build cache
-
-Rules:
-
-- Copy dependency manifests before source.
-- Do not place frequently changing labels, build numbers, timestamps, or generated files before dependency install.
-- `.dockerignore` excludes logs, coverage, build outputs, caches, and local config that invalidate the cache.
-- Install OS packages before copying source when those packages change rarely.
-- Cache optimization must not weaken secrets handling or deterministic installs.
-
-Good ordering example:
-
-```dockerfile
-COPY package.json bun.lock ./
-RUN bun install --frozen-lockfile --production
-
-COPY --from=build /app/api/dist ./dist
-```
-
-Bad ordering example:
-
-```dockerfile
-COPY . .
-RUN bun install --production
-```
-
-## `.dockerignore`
-
-Rules:
-
-- Use deny-by-default.
-- Include only files the Dockerfile copies.
-- Never include:
-    - `.env`
-    - `.npmrc`
-    - `.git`
-    - `node_modules`
-    - `dist`
-    - `coverage`
-    - test reports
-    - local cloud credentials
-    - editor files
-    - logs
-    - source maps unless explicitly needed in a non-runtime build step
-- `.dockerignore` protects both security and cache stability.
-- Every image stack has its own `.dockerignore`, reviewed with the Dockerfile that depends on it.
-  Do not hide source, generated dependency exports, or scripts the Dockerfile needs, and do not use
-  broad patterns that remove stack-owned scripts.
-
-Deny-by-default example:
-
-```text
-# Deny by default.
-*
-
-!.dockerignore
-!Dockerfile
-!package.json
-!bun.lock
-!scripts/
-!scripts/install-bun.sh
-!tsconfig.build.json
-!src/
-!src/**
-```
-
-## Secrets and BuildKit
-
-Rules:
-
-- Never pass secrets through `ARG`, `ENV`, committed config, `.env.example`, or Dockerfile literals.
-- Build args may be used for non-sensitive metadata only.
-- Use BuildKit secrets for Sentry auth, npm registry tokens, private registry config, and build-time provider credentials.
-- Mounted secrets must be read only inside the specific `RUN --mount=type=secret` instruction.
-- Do not echo secrets.
-- Do not leave `.npmrc` or token-bearing config in layers.
-- Validate required build secrets with generic error messages that do not print secret values.
-- Keep secret IDs descriptive but not secret-valued. Do not write secrets to intermediate files,
-  shell traces, image labels, or generated READMEs. Do not add secret defaults. Do not log full
-  environment dumps.
-
-Example:
-
-```dockerfile
-COPY scripts/upload-sourcemaps.sh /tmp/upload-sourcemaps.sh
-RUN --mount=type=secret,id=sentry_auth_token \
-    /tmp/upload-sourcemaps.sh /run/secrets/sentry_auth_token dist
-```
-
-Bad:
-
-```dockerfile
-ARG NPM_TOKEN
-RUN echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > .npmrc
-```
-
-## Entrypoints and health
-
-Rules:
-
-- Entrypoints validate configuration before starting the service and surface actionable failure
-  messages.
-- Health checks check the serving process or endpoint, not whether a shell started.
-- Warmup is explicit. Do not hide warmup failures behind a successful container start.
-- Signal handling allows graceful shutdown of the server process.
-- Log enough runtime state to diagnose the selected mode, paths, port, and hardware configuration
-  without printing secrets.
-- Do not start multiple long-lived processes unless the script owns process supervision.
-- Environment variables that configure the server are part of the runtime contract. Keep defaults in
-  the owning config modules; do not duplicate a default across Dockerfile, shell, and application
-  code unless it is part of the image contract.
-- Prefer explicit `ENV` declarations for values the image owns. Keep the README environment table in
-  sync with the Dockerfile.
-
-## Users and file ownership
-
-Rules:
-
-- Runtime containers must not run as root.
-- Use a stable app user.
-- Ensure runtime files are readable by the app user.
-- Prefer copying/chowning in a way that does not leave root-owned runtime state.
-- Do not depend on writable application source directories.
-- If using official `node` user, know it is uid 1000 and can be renamed/changed.
-- If creating `appuser`, keep it system-scoped and non-login.
-
-Examples:
-
-```dockerfile
-RUN groupadd -r appuser && useradd -r -g appuser appuser && chown -R appuser:appuser /app
-USER appuser
-```
-
-or:
-
-```dockerfile
-COPY --chown=node:node --from=build /build-stage/dist ./dist
+WORKDIR /app
+COPY --chown=node:node package.json ./
+COPY --from=dependencies --chown=node:node /app/node_modules ./node_modules
+COPY --from=build --chown=node:node /app/dist ./dist
 USER node
+CMD ["node", "dist/main.js"]
 ```
 
-## Process model and PID 1
+Use the package manager already declared by the project. For Bun, preserve its pinned version
+and run `bun install --frozen-lockfile`; include `--production` for runtime dependencies.
+Include a package-manager binary in the final image only when the runtime uses it.
 
-Rules:
+A statically linked executable can use a smaller runtime with no package manager or shell.
+This example requires an executable `server` built for the target platform. Include certificates,
+time-zone data, or other runtime files if the executable needs them.
 
-- Use exec-form `CMD`.
-- Do not use shell-form `CMD`.
-- Do not run package-script start commands, PM2, forever, nodemon, or shell wrapper scripts as production container commands.
-- Prefer direct app command:
-    - `CMD ["node", "dist/src/main.js"]`
-- Node as PID 1 has signal/reaping caveats. If the service spawns child processes or signal behavior is not verified, use Docker `--init`, Tini, or dumb-init.
-- If adding an init wrapper to the image, use `ENTRYPOINT` for the init wrapper and keep `CMD` for the app command.
-- Do not add an init wrapper to solve missing application shutdown logic; app shutdown must still be implemented.
-
-Bad:
+Good:
 
 ```dockerfile
-CMD "node dist/src/main.js"
-CMD ["npm", "start"]
-CMD ["pm2-runtime", "dist/src/main.js"]
+FROM scratch
+COPY server /server
+USER 65532:65532
+ENTRYPOINT ["/server"]
 ```
 
-Good with init wrapper:
+## Package installation and downloads
 
-```dockerfile
-ENTRYPOINT ["/usr/bin/dumb-init", "--"]
-CMD ["node", "dist/src/main.js"]
-```
+- Install application dependencies from the declared lockfile without updating it during the build.
+- Pin system package versions selected for the image. Keep repository metadata and installation
+  in the same transaction so cached metadata cannot select an unintended version.
+- With apt, use `--no-install-recommends` and remove `/var/lib/apt/lists/*` in the installation layer.
+- Refresh base images for operating-system fixes. Review targeted package upgrades as explicit
+  dependency changes instead of performing an unbounded distribution upgrade in every build.
+- Pin downloaded executable versions and verify their digest or signature before installation.
+- Keep credentials out of command arguments, shell traces, downloaded archives, and image history.
+- Remove installation-only files and caches in the layer that creates them.
 
-## Graceful shutdown
+### Dockerfile organization
 
-Rules:
+<!-- level: all -->
 
-- App code must handle `SIGTERM` and `SIGINT`.
-- Shutdown sequence:
-    - mark readiness false
-    - stop accepting new requests/work
-    - drain in-flight requests for a bounded time
-    - close DB/provider/tool/WebSocket resources
-    - clear runtime locks/timers where appropriate
-    - log result
-    - exit
-- Health/readiness probes must reflect that the service is stopping.
-- Keep Docker stop timeout, orchestrator grace period, server keep-alive, and app shutdown timeout aligned.
-- Shutdown must be idempotent.
+Put stable build inputs before frequently changing application source when that improves cache
+reuse. Keep related installation commands in one transaction. Prefer `COPY` for local files;
+use `ADD` only when its extraction or download semantics are required and reviewed.
 
-```text
-SIGTERM / SIGINT
-  -> readiness false
-  -> server stops accepting new connections
-  -> in-flight work drains
-  -> provider/db/tool resources close
-  -> final telemetry/log flush
-  -> process exits
-```
+Move substantial shell behavior into its existing script owner. Keep the final image's user,
+working directory, environment, and startup command easy to find. Do not add a wrapper script
+for a command that can be expressed directly.
 
-## Runtime environment
+## Build context and ignore files
 
-Rules:
+Include only the files the build needs. Review `.dockerignore` with every Dockerfile that uses
+its context. A deny-by-default context is useful when the allowed input set is small and stable.
 
-- Runtime config comes from env/secrets, not image rebuilds.
-- `NODE_ENV=production` must be set for production Node services.
-- Do not bake environment-specific secrets into images.
-- Do not put production secrets in compose examples.
-- Keep `.env.example` safe.
-- Expose only necessary ports.
-- Use health/readiness endpoints that are cheap and do not perform expensive provider checks.
+Exclude credentials, local dependency installations, unrelated logs, editor state, caches, and
+test reports. Keep `.git`, secret-bearing `.env` files, and registry authentication files out
+unless a specific, reviewed build contract requires a safe input from them.
 
-## Docker Compose
+Do not exclude `dist`, generated dependency exports, or build scripts merely because of their
+names. A build that copies verified prebuilt output needs that output in its context. Confirm
+that every `COPY` source remains available after ignore rules apply.
 
-Rules:
+## Build secrets
 
-- Compose owns local/deployment wiring, not application behavior.
-- Compose may set env, secrets, ports, restart policy, healthchecks, logging, cgroups, memory, and service dependencies.
-- Bind ports to localhost by default for local/private services.
-- Compose healthchecks hit lightweight liveness/readiness endpoints.
-- Compose `depends_on` is startup ordering, not readiness unless health conditions are explicitly used.
-- Do not mount source directories into production containers.
-- Do not mount `node_modules` from host into production containers.
-- Compose secrets come from environment or secret files ignored by git.
-- Restart policy lets Docker/orchestrator restart failed processes.
+Use BuildKit secret mounts for private registry authentication and other build credentials.
+Read the secret only inside the `RUN` instruction that requires it. Do not place secrets in
+`ARG`, `ENV`, labels, committed configuration, or copied authentication files.
 
-## Memory and resource limits
+Avoid printing secrets or copying them from a mount into an image layer. Removing a secret in
+a later layer does not remove it from earlier layers. Use generic missing-secret messages and
+keep identifiers descriptive without including their values.
 
-Rules:
+See [Docker's secret-mount reference](https://docs.docker.com/reference/dockerfile/#run---mounttypesecret).
 
-- Containers have memory limits in deployment/compose/orchestrator config.
-- Node/V8 memory limits are aligned with container limits when memory ceilings matter.
-- Leave headroom for non-V8 memory: native modules, buffers, TLS, compression, image/audio processing, Bun/package-manager work, and OS overhead.
-- Do not treat memory limits as app performance fixes; measure and profile first.
-- Avoid unbounded in-memory transforms in services.
+## Shell and process behavior
 
-Examples:
+Use the shell syntax actually selected for `RUN`. Do not assume the default shell is Bash.
+If a pipeline must propagate intermediate failures, use a shell with the required `pipefail`
+support or express the operations without a pipeline. Run ShellCheck on owned shell scripts.
 
-```yaml
-services:
-    api:
-        mem_limit: 512m
-```
+Use exec-form `CMD` or `ENTRYPOINT` for the application process. A required entrypoint script
+validates configuration and uses `exec` for its final handoff. A documented process supervisor
+must forward signals and reap its children. Do not use an init wrapper to conceal missing
+application shutdown behavior.
 
-Optional Node command form when needed:
+Keep foreground process ownership explicit. For services, handle termination by stopping new
+work, draining current work for a bounded time, releasing owned resources, and exiting.
+Align application shutdown limits with the orchestrator's grace period. Repeated shutdown
+signals must not corrupt cleanup.
 
-```dockerfile
-CMD ["node", "--max-old-space-size=384", "dist/src/main.js"]
-```
+## Runtime permissions and configuration
 
-## Security scanning
+Run the application as a non-root user unless the declared workload requires a reviewed,
+scoped privilege. Give that user access to the required runtime files without making the
+application source or unrelated directories writable.
 
-Rules:
+Use explicit volumes or external storage for durable state. Configure environment-specific
+values at runtime, and keep secrets out of images and example configuration. For production
+Node.js services, set `NODE_ENV=production` where the runtime expects it.
 
-- Every Dockerfile is linted before commit.
-- Trivy scans the final runtime image in CI, not only source dependencies.
-- Scanner findings require triage:
-    - base image vulnerability
-    - OS package vulnerability
-    - Node runtime vulnerability
-    - app dependency vulnerability
-    - false positive / unreachable tool
-- Prefer refreshed base images and dependency updates over ad hoc OS upgrades.
-- Treat Docker lint and security findings as real until proven otherwise, and fix them directly.
-  Keep a suppression narrow, naming the concrete false positive, or platform constraint. Never add a
-  scanner baseline to avoid a real finding.
-- Do not grant extra Linux capabilities by default, disable TLS verification, or download executable
-  code without pinning and validation. Do not use world-writable directories outside a scoped
-  runtime path. Do not add SSH keys, cloud credentials, local config files, or package-manager auth
-  files.
-- Docker READMEs document the current build and runtime contract: build args, environment variables,
-  image tags, exposed ports, and artifact paths. Examples run from the repository root. They hold no
-  real-looking secret values and no removed tools or history.
-- Do not churn dependencies broadly without user approval.
+Expose only required ports. Keep private local services bound to localhost. Do not add Linux
+capabilities, public debug ports, or disabled TLS verification to make a build or service work.
 
-## Image inspection
+## Health and resource limits
 
-Rules:
+Health and readiness checks inspect the service state, not whether a shell started. Keep probes
+bounded and inexpensive. Readiness must reflect startup and shutdown transitions. An optional
+warmup must not conceal a failed required initialization.
 
-- Inspect final images after Dockerfile changes.
-- Check:
-    - effective user is non-root
-    - command is exec form/direct
-    - no source maps in runtime
-    - no tests/coverage/dev artifacts
-    - no `.env`, `.npmrc`, or cloud credentials
-    - no local `node_modules`
-    - no package-manager caches
-    - no unexpected shell/debug tools
-    - expected env and labels only
-- Useful commands:
-    - `docker history <image>`
-    - `docker image inspect <image>`
-    - `docker run --rm <image> node --version`
-    - `docker run --rm <image> sh -lc 'id && find /app -maxdepth 3 -type f | sort | head'`
+Declare resource limits appropriate to the deployment. Leave room for native memory, buffers,
+and runtime overhead when setting language-specific heap limits. Measure memory behavior before
+changing limits; a larger limit does not correct an unbounded allocation.
 
-## Anti-patterns
+## Compose and deployment
 
-- `FROM node`
-- `FROM node:latest`
-- `FROM node:alpine` without documented tradeoff
-- `FROM node:slim` without a version
-- `COPY . .`
-- `RUN npm install` in production runtime
-- copying host `node_modules`
-- installing dev dependencies in runtime
-- running as root
-- `CMD "npm" "start"`
-- `CMD ["npm", "start"]`
-- shell-form `CMD`
-- PM2/forever/nodemon in container
-- build secrets as `ARG` or `ENV`
-- `.npmrc` copied into build context
-- source maps shipped in runtime
-- test files shipped in runtime
-- full OS upgrade as routine build step
-- remote `ADD`
-- unpinned binary downloads
-- package-manager caches in runtime image
-- public debug/maintenance ports
-- Compose production bind-mounting source directories
-- Dockerfile changes that silently change Node major version
+Compose declares service wiring, including ports, volumes, secrets, resource limits, health
+checks, restart policy, and dependencies. Keep application behavior in the application.
 
-## Docker `RUN` blocks
+`depends_on` provides ordering; use the required health condition when startup depends on another
+service being ready. Do not bind-mount development source or host dependencies into a production
+container. Preserve isolation between concurrent test environments and stop only owned services.
 
-Dockerfiles are not Bash scripts, but shell behavior inside `RUN` lines must
-follow this guide when Bash is used.
+## Verification
 
-Rules:
+Lint Dockerfiles and check Compose configuration with the selected project tools. Build and scan
+the final runtime image when changing its inputs. Classify findings by their actual owner: base
+image, operating-system package, runtime, or application dependency. Keep any verified false-positive
+exception narrow and reasoned.
 
-- Keep Docker `RUN` blocks short.
-- Prefer `COPY`ing a reviewed script for complex install/build behavior.
-- Use Bash as the Dockerfile `SHELL` only when Bash behavior is required.
-- Do not add `SHELL ["/bin/bash", "-o", "pipefail", "-c"]` just to make a
-  Dockerfile look stricter.
-- If a `RUN` pipeline matters, either use Bash with `pipefail` for that block or
-  avoid the pipeline.
-- Pin downloaded tool versions and verify checksums.
-- Clean package-manager caches in the same layer.
-- Do not leave installer scripts, secrets, package tokens, `.npmrc`, or local
-  credentials in image layers.
-- Do not use shell-form `CMD` or shell wrapper scripts as production container
-  commands unless the wrapper is the documented process owner.
+Inspect the image's user, command, required files, permissions, and exposed ports. Check that no
+credentials, build caches, or unrelated development artifacts remain. Exercise startup, readiness,
+and shutdown under the deployment's signal and resource contract.
 
-Good short `RUN`:
-
-```dockerfile
-RUN apt-get update \
-    && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-      ca-certificates \
-      curl \
-    && rm -rf /var/lib/apt/lists/*
-```
-
-For complex Docker install logic:
-
-```dockerfile
-COPY scripts/install_bootstrap.sh /tmp/install_bootstrap.sh
-RUN bash /tmp/install_bootstrap.sh && rm -f /tmp/install_bootstrap.sh
-```
-
-The copied script must pass ShellCheck and follow this guide.
-
-## Review checklist
-
-Before you run the checks of the repository, read the change against these questions:
-
-- Does the change touch the correct image stack?
-- Is shared behavior truly shared?
-- Are build inputs explicit and validated before network or Docker work?
-- Are dependency changes made in the owning manifest and lockfile?
-- Are native libraries compatible with the runtime OS and architecture?
-- Are secrets kept out of layers, logs, labels, and generated files?
-- Are downloaded artifacts pinned and verified?
-- Do runtime scripts follow Bash rules and use `exec` for final server handoff?
-- Do Python helpers follow Python rules and avoid `sys.path` patching?
-- Does each stack-local `.dockerignore` include necessary build inputs and exclude secrets?
-- Are Hadolint and security findings fixed directly instead of broadly ignored?
-- Do Docker docs describe the current build arguments, environment variables, ports, and paths?
+Keep image documentation consistent with the current build arguments, supported platforms,
+runtime environment, and artifact paths. Do not broaden dependency changes beyond the authorized
+build work.

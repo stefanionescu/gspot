@@ -148,7 +148,7 @@ case       = "PascalCase"
 ".ts" = ["format", "syntax", "style", "types"]
 
 [rule_files]
-language = ["language/TYPESCRIPT.md", "language/naming/TYPESCRIPT.md"]
+language = ["packages/cli/rules/language/TYPESCRIPT.md", "packages/cli/rules/language/naming/TYPESCRIPT.md"]
 ```
 
 A manifest holds every fact the CLI knows about its configuration. The code names no configuration, no
@@ -200,8 +200,8 @@ tool, and no check name outside `src/checks/`, and a unit test holds that.
   check at `commit`, `push`, or `manual`.
 - Every check carries `summary` (what it looks for, one sentence), `why` (what goes wrong
   without it) and `help` (what to do), written for a person who does not code. The loader refuses an empty one.
-- `explain`, the finding line and the generated page under `docs/rules/` print
-  them; nothing else describes a check.
+- `explain`, the finding line, and the generated rule reference print these fields.
+  `docs/src/content/reference/collection.ts` creates the reference pages from the check definitions.
 - `runs = "per-file-list"` receives the claimed file list as `{files}`. `runs = "per-scope"` runs once from the scope root and reports its own inputs. Its cache key and file count cover every
   tracked text file under the scope, child scopes included, because the tool reads the project
   rather than the claimed files.
@@ -214,8 +214,9 @@ tool, and no check name outside `src/checks/`, and a unit test holds that.
 - An analysis is not cached unless it takes `cached = true`, for one that reads only its files.
 - A check takes `needs_git`. With `true` it reads git and is skipped, with a note, in a folder
   that has no `.git`; with `false` it stands in for such a check and runs only there. A
-  configuration takes `needs_git = true` when every check of it reads git, and `init` leaves it
-  out of a folder with no `.git`.
+  configuration can also declare this requirement.
+- A configuration takes `needs_git = true` when every check reads Git. `init` leaves that
+  configuration out of a folder with no `.git`.
 - A check takes `env`, a table of environment values for its tool. Values expand scalar command
   placeholders such as `{config:name}` before execution.
 - A tool takes `version_command`, `rule_page`, `suppression`, `crash_pattern`, and
@@ -248,10 +249,10 @@ tool, and no check name outside `src/checks/`, and a unit test holds that.
   `env` overrides tool settings and supports command placeholders.
 - An installer name is a string, or a table with `name` and `version` for an installer that
   numbers by itself.
-- A config takes `pointer`, the small file at the conventional root path that sends a tool or an
-  editor to the generated file: `{ path, body }` with `{target}` for the relative path, `copy =
-true` for a copy, `merge` for keys set in a file the developer keeps, or `template` for a
-  rendered file. `directories` writes one pointer per matching folder.
+- A config takes `pointer`, a file at the conventional root path that directs a tool or editor
+  to generated configuration. Its `{ path, body }` form uses `{target}` for the relative path.
+- Pointer `copy = true` copies the generated file. `merge` sets keys in a developer-owned file.
+  `template` renders a file. `directories` writes one pointer per matching folder.
 - A setting takes `detect`, a table `init` fills from the repository. `dependency` turns it on,
   `dependencies` maps dependencies to values, `folders` takes the first folder that exists, and
   `folder_values` maps folders to values. The owning declaration of a shared setting carries the
@@ -292,13 +293,13 @@ stage   = "commit"
 engine  = "naming"
 
 [[checks]]
-name      = "docs/stale-paths"
+name      = "integrity/stale-paths"
 stage   = "commit"
 engine  = "builtin"
 ```
 
 A built-in check that is not structure, naming, or prose is one file under `src/checks/`, named
-after its name: `docs/stale-paths` is `checks/docs/stale-paths.ts`. The check name is the lookup key, and
+after its name: `integrity/stale-paths` is `packages/cli/src/checks/docs/stale-paths.ts`. The check name is the lookup key, and
 no manifest names an analysis. Each built-in check is listed in [05-engines.md](05-engines.md) with what it searched before
 being written.
 
@@ -407,13 +408,18 @@ These clauses specify required behavior. [Remaining work](22-remaining.md) owns 
 
 ### Acceptance K-301
 
-Banned terms run only at all; generate and service are allowed. Recommended includes defect checks and the mandatory trivial-function and trivial-file policy.
-Other naming, placement, and abstraction preferences belong to all.
+Banned terms run only at `all`; generate and service are allowed. Recommended
+includes correctness, security, accessibility, type safety, routine formatting,
+and declared project contracts. Naming, placement, abstraction, and complexity
+preferences belong to `all`.
 
-Use the naming policy with the corrected structural contract in [07-slop-drift.md](07-slop-drift.md). Trivial functions and trivial files run by default at recommended and all, including nested
-scopes and standalone plugins; required APIs need narrow, reasoned suppressions.
+Use the naming policy with the corrected structural contract in [07-slop-drift.md](07-slop-drift.md). Trivial-function and trivial-file preferences run at `all`, including nested
+scopes and standalone plugins. JavaScript and TypeScript preserve identifiable
+required callbacks and signatures. Other required APIs need narrow, reasoned exceptions.
 
-Fresh generated apps and established multi-package projects; valid service/generate names; public API wrappers and framework adapters. For every recommended finding, verify the defect or mandatory structural policy it reports.
+Test fresh generated apps and established multi-package projects. Include valid
+service/generate names, public API wrappers, and framework adapters. Verify that
+each recommended finding reports a defect or a declared contract violation.
 Review parser and scope false positives without weakening the statement threshold or adding
 blanket callback, framework, or entrypoint exemptions. Snapshot messages only after that review.
 
@@ -551,7 +557,7 @@ The JSON shape test holds the record without `root`.
 An unknown engine name is refused when the manifest is read.
 
 The manifest schema holds the engine names as an enum. Shared comment openers belong to
-`run/ignores.ts`.
+`packages/cli/src/execution/ignores.ts`.
 
 A manifest test repository with `engine = "nope"` fails to load.
 
@@ -561,7 +567,7 @@ A manifest test repository with `engine = "nope"` fails to load.
 under `.gspot/` with uv, as the Python toolchain contract specifies ([06-enforcement-ledger.md](06-enforcement-ledger.md), K-266).
 
 gspot pins itself in the mise file as `"github:stefanionescu/gspot"`, not through
-`ubi`, in `emit/runner-tasks.ts` and in installation diagnostics. Detection in
+`ubi`, in `packages/cli/src/generation/runner/tasks.ts` and in installation diagnostics. Detection in
 `existing-tooling.ts` still reads `uv.lock`, because the scope reader needs it.
 
 `init --runner uv` exits 2 and lists the five runners.
@@ -664,7 +670,7 @@ strict error.
 Each is `all`. The README check of `recommended` asks for one README at the root.
 
 `level = "all"` on `dependencies/manifest-policy`, `dependencies/install-policy`, the
-scope rule of `docs/readme-present`, the banned list of `docs/headings`,
+scope rule of `docs/readme-present`, the banned list of `integrity/docs-headings`,
 `structure/bash-script-header`, `structure/single-file-folder`, and `gspot/types-placement`.
 `dependencies/lockfile-fresh` and `dependencies/lockfile-hosts` stay `recommended`, because they
 find a defect.

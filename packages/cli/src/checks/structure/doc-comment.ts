@@ -36,11 +36,6 @@ function isMeaningful(name: string, summary: string): boolean {
     return words.some((word) => !nameWords.has(word));
 }
 
-function areSectionsInOrder(block: string[]): boolean {
-    const positions = DOC_SECTIONS.map((section) => block.indexOf(section)).filter((position) => position >= 0);
-    return positions.every((position, index) => index === 0 || position > (positions[index - 1] ?? -1));
-}
-
 function problem(entry: ScriptFunction, block: string[], style: string): { rule: string; message: string } | undefined {
     const first = block[0];
     if (first === undefined)
@@ -56,7 +51,8 @@ function problem(entry: ScriptFunction, block: string[], style: string): { rule:
         };
     if (!isMeaningful(entry.name, summary))
         return { rule: 'vague-summary', message: `The summary of ${entry.name} says nothing beyond its name.` };
-    if (!areSectionsInOrder(block))
+    const positions = DOC_SECTIONS.map((section) => block.indexOf(section)).filter((position) => position >= 0);
+    if (!positions.every((position, index) => index === 0 || position > (positions[index - 1] ?? -1)))
         return {
             rule: 'section-order',
             message: `The doc sections of ${entry.name} go Globals, Arguments, Outputs, Returns.`,

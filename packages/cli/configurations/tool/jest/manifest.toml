@@ -94,4 +94,4 @@ default = "@jest/globals"
 summary = "The module supplying test functions for ESLint, including bun:test for Bun tests."
 
 [rule_files]
-general = ["general/code/TESTING.md"]
+general = [{path = "general/code/TESTING.md"}]

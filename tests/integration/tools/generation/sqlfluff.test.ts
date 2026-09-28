@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
-import { emitAll } from '#cli/generation/render.ts';
+import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
 
 test('SQLFluff honors root and nested dialect settings over the database default', async () => {
@@ -15,7 +15,7 @@ test('SQLFluff honors root and nested dialect settings over the database default
     const session = await openSession(sandbox.path);
     const configs = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
         version: session.version,
-        packageManager: session.packageManager,
+        packageClient: session.packageClient,
     }).files.filter((file) => file.path.endsWith('sqlfluff.cfg'));
     expect(
         Object.fromEntries(configs.map(({ path, content }) => [path, /^dialect = (.+)$/mu.exec(content)?.[1]])),

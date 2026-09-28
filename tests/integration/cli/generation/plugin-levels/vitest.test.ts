@@ -2,7 +2,7 @@ import type { ESLint } from 'eslint';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { textContaining } from '#tests/support/expectations.ts';
-import { generatedEslint } from '#tests/support/cli/generated-eslint.ts';
+import { generatedEslint } from '#tests/support/cli/generated/eslint.ts';
 import { VITEST_FILES } from '#tests/constants/integration/cli/generation/plugin-levels.ts';
 
 async function ruleReports(eslint: ESLint, file: string, rule: string): Promise<{ message: string }[]> {
@@ -10,7 +10,7 @@ async function ruleReports(eslint: ESLint, file: string, rule: string): Promise<
     return results
         .flatMap((result) => result.messages)
         .filter(({ ruleId, fatal }) => ruleId === rule || fatal)
-        .map(({ message }) => ({ message }));
+        .map(({ message: text }) => ({ message: text }));
 }
 
 test('the Vitest harness folder places test support and closes it to runtime code', async () => {

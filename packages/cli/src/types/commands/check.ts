@@ -7,6 +7,7 @@ import type { ChangedSet, PushSelection, StagedSet } from '#cli/types/repository
 export type PushedRevision = PushSelection['revisions'][number];
 export type Checked = PushReport['revisions'][number];
 export type Selections = {
+    paths: string[];
     changed: ChangedSet | undefined;
     set: StagedSet | { staged: undefined; unstaged: number };
     stage: StageFilter;

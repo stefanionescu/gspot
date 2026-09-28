@@ -4,7 +4,7 @@ import { stringify } from 'smol-toml';
 import { expect, test } from 'bun:test';
 import { run } from '#cli/platform/spawn.ts';
 import { createFileTree, testdir } from 'testdirs';
-import { emitAll } from '#cli/generation/render.ts';
+import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { evaluateEslint } from '#cli/evaluation/eslint.ts';
 import { rejection } from '#tests/support/expectations.ts';
@@ -12,6 +12,17 @@ import { collectCarried } from '#cli/policy/adoption/collect.ts';
 import { mkdirSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
 
 const modules = join(import.meta.dir, '../../../../../node_modules');
+
+const INHERITED_CONSUMER = `
+                import { ESLint } from 'eslint';
+                const eslint = new ESLint({overrideConfigFile: '.gspot/config/eslint.config.mjs'});
+                const results = [];
+                for (const name of ['forbidden', 'allowed']) {
+                    const files = await eslint.lintText('export const ' + name + ' = 1;', {filePath: 'future.js'});
+                    results.push(files.flatMap(file => file.messages).filter(message => message.ruleId === 'inherited/sentinel'));
+                }
+                console.log(JSON.stringify(results));
+            `;
 
 test('adopted ESLint preserves plugins, custom rules, options, selectors, and ignores for future files', async () => {
     await using directory = await testdir();
@@ -32,10 +43,10 @@ test('adopted ESLint preserves plugins, custom rules, options, selectors, and ig
         join(directory.path, 'gspot.toml'),
         stringify({ version: 1, configurations: ['javascript'], tools: { eslint: carried } }),
     );
-    const renderSession1 = await openSession(directory.path);
-    const generated = emitAll(renderSession1.policyFiles.policy, renderSession1.repository, renderSession1.scopes, {
-        version: renderSession1.version,
-        packageManager: renderSession1.packageManager,
+    const session = await openSession(directory.path);
+    const generated = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
+        version: session.version,
+        packageClient: session.packageClient,
     }).files.find((file) => file.path === '.gspot/config/eslint.config.mjs')!;
     mkdirSync(join(directory.path, '.gspot/config'), { recursive: true });
     writeFileSync(join(directory.path, generated.path), generated.content);
@@ -112,11 +123,11 @@ test.each(['object', 'named'])(
     'ESLint adoption preserves a %s processor and selector base for future files',
     async (representation) => {
         await using directory = await testdir();
-        const processorName = representation === 'object' ? 'source.with.dots' : 'source';
+        const syntaxName = representation === 'object' ? 'source.with.dots' : 'source';
         await createFileTree(directory.path, {
             'package.json': '{"type":"module"}',
             'processing.mjs': `export default {
-                processors: { ${JSON.stringify(processorName)}: {
+                processors: { ${JSON.stringify(syntaxName)}: {
                     preprocess(text) { return [text.replaceAll('marker', 'forbidden')]; },
                     postprocess(messages) { return messages.flat(); }
                 } },
@@ -130,7 +141,7 @@ test.each(['object', 'named'])(
             'eslint.config.mjs': `import custom from './processing.mjs';
                 export default [{
                     basePath: 'src', files: ['**/*.js'], ignores: ['ignored/**'], plugins: { custom },
-                    processor: ${representation === 'object' ? `custom.processors[${JSON.stringify(processorName)}]` : JSON.stringify(`custom/${processorName}`)},
+                    processor: ${representation === 'object' ? `custom.processors[${JSON.stringify(syntaxName)}]` : JSON.stringify(`custom/${syntaxName}`)},
                     rules: { 'custom/sentinel': 'error' }
                 }];`,
             'src/current.js': 'export const marker = 1;\n',
@@ -140,17 +151,17 @@ test.each(['object', 'named'])(
         expect(carried.adopted[0]?.basePath).toBe('src');
         expect(carried.adopted[0]?.processor).toStrictEqual(
             representation === 'object'
-                ? { module: './processing.mjs', export: 'default', members: ['processors', processorName] }
-                : `custom/${processorName}`,
+                ? { module: './processing.mjs', export: 'default', members: ['processors', syntaxName] }
+                : `custom/${syntaxName}`,
         );
         writeFileSync(
             join(directory.path, 'gspot.toml'),
             stringify({ version: 1, configurations: ['javascript'], tools: { eslint: carried } }),
         );
-        const renderSession2 = await openSession(directory.path);
-        const generated = emitAll(renderSession2.policyFiles.policy, renderSession2.repository, renderSession2.scopes, {
-            version: renderSession2.version,
-            packageManager: renderSession2.packageManager,
+        const session = await openSession(directory.path);
+        const generated = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
+            version: session.version,
+            packageClient: session.packageClient,
         }).files.find((file) => file.path === '.gspot/config/eslint.config.mjs')!;
         mkdirSync(join(directory.path, '.gspot/config'), { recursive: true });
         writeFileSync(join(directory.path, generated.path), generated.content);
@@ -205,10 +216,10 @@ test.each([
             join(directory.path, 'gspot.toml'),
             stringify({ version: 1, configurations: ['javascript'], tools: { eslint: carried } }),
         );
-        const renderSession3 = await openSession(directory.path);
-        const generated = emitAll(renderSession3.policyFiles.policy, renderSession3.repository, renderSession3.scopes, {
-            version: renderSession3.version,
-            packageManager: renderSession3.packageManager,
+        const session = await openSession(directory.path);
+        const generated = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
+            version: session.version,
+            packageClient: session.packageClient,
         }).files.find((file) => file.path === '.gspot/config/eslint.config.mjs')!;
         mkdirSync(join(directory.path, '.gspot/config'), { recursive: true });
         writeFileSync(join(directory.path, generated.path), generated.content);
@@ -221,24 +232,10 @@ test.each([
         expect(
             corrected.flatMap((file) => file.messages).filter((finding) => finding.ruleId === 'inherited/sentinel'),
         ).toStrictEqual([]);
-        const native = await run(
-            [
-                'node',
-                '--input-type=module',
-                '-e',
-                `
-                import { ESLint } from 'eslint';
-                const eslint = new ESLint({overrideConfigFile: '.gspot/config/eslint.config.mjs'});
-                const results = [];
-                for (const name of ['forbidden', 'allowed']) {
-                    const files = await eslint.lintText('export const ' + name + ' = 1;', {filePath: 'future.js'});
-                    results.push(files.flatMap(file => file.messages).filter(message => message.ruleId === 'inherited/sentinel'));
-                }
-                console.log(JSON.stringify(results));
-            `,
-            ],
-            { cwd: directory.path, timeoutMs: 10_000 },
-        );
+        const native = await run(['node', '--input-type=module', '-e', INHERITED_CONSUMER], {
+            cwd: directory.path,
+            timeoutMs: 10_000,
+        });
         expect(native.stderr).toBe('');
         expect(native.code).toBe(0);
         const [nativeFailures, nativeCorrected] = JSON.parse(native.stdout);
@@ -269,10 +266,10 @@ test.each(['namespace', 'named export with dots'])(
             join(directory.path, 'gspot.toml'),
             stringify({ version: 1, configurations: ['javascript'], tools: { eslint: carried } }),
         );
-        const renderSession4 = await openSession(directory.path);
-        const generated = emitAll(renderSession4.policyFiles.policy, renderSession4.repository, renderSession4.scopes, {
-            version: renderSession4.version,
-            packageManager: renderSession4.packageManager,
+        const session = await openSession(directory.path);
+        const generated = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
+            version: session.version,
+            packageClient: session.packageClient,
         }).files.find((file) => file.path === '.gspot/config/eslint.config.mjs')!;
         mkdirSync(join(directory.path, '.gspot/config'), { recursive: true });
         writeFileSync(join(directory.path, generated.path), generated.content);

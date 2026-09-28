@@ -9,10 +9,59 @@ import { initCommand } from '#cli/commands/init/command.ts';
 import { applyCommand } from '#cli/commands/apply/command.ts';
 import { uninstallCommand } from '#cli/commands/uninstall.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
+import { PRETTIER_TOOLING } from '#tests/support/cli/tooling.ts';
+import { askInitQuestions } from '#cli/commands/init/questions.ts';
 import { containingAll, rejection } from '#tests/support/expectations.ts';
 import { existsSync, readFileSync, symlinkSync, unlinkSync } from 'node:fs';
 
 const { version: GSPOT_VERSION } = packageManifest;
+
+test.each([
+    [
+        'tracked GitLab before GitHub',
+        ['.gitlab-ci.yml', '.github/workflows/build.yml'],
+        '',
+        'git@github.com:example/repo.git',
+        'gitlab',
+    ],
+    [
+        'tracked GitHub before untracked GitLab',
+        ['.github/workflows/build.yml'],
+        '.gitlab-ci.yml',
+        'git@gitlab.com:example/repo.git',
+        'github',
+    ],
+    ['untracked GitLab before remote', [], '.gitlab-ci.yml', 'git@github.com:example/repo.git', 'gitlab'],
+    ['untracked GitHub before remote', [], '.github/workflows/build.yml', 'git@gitlab.com:example/repo.git', 'github'],
+    ['Bitbucket before GitHub remote', ['bitbucket-pipelines.yml'], '', 'git@github.com:example/repo.git', 'none'],
+    ['other tracked CI before remote', ['ci/build.yml'], '', 'git@github.com:example/repo.git', 'none'],
+    ['GitHub SSH remote', [], '', 'git@github.com:example/repo.git', 'github'],
+    ['GitLab HTTPS remote', [], '', 'https://gitlab.com/example/repo.git', 'gitlab'],
+    ['GitHub SSH URL', [], '', 'ssh://git@github.com/example/repo.git', 'github'],
+    ['unrecognized remote host', [], '', 'https://github.com.example.com/example/repo.git', 'none'],
+] as const)('initialization CI preference uses %s', async (_label, ci, path, remote, expected) => {
+    await using sandbox = await testdir();
+    if (path !== '') await createFileTree(sandbox.path, { [path]: '{}\n' });
+    expect(processes.runBlocking(['git', 'init'], { cwd: sandbox.path }).code).toBe(0);
+    expect(processes.runBlocking(['git', 'config', 'remote.origin.url', remote], { cwd: sandbox.path }).code).toBe(0);
+    const answers = await askInitQuestions(
+        sandbox.path,
+        {
+            cwd: sandbox.path,
+            yes: true,
+            isDryRun: true,
+            json: true,
+            install: false,
+            allowDirty: false,
+            hooks: 'none',
+            runner: 'none',
+            rules: 'no',
+        },
+        { ...PRETTIER_TOOLING, ci: [...ci] },
+        undefined,
+    );
+    expect(answers).toStrictEqual({ hooks: 'none', runner: 'none', isRules: false, ci: expected });
+});
 
 test('init plans scoped spelling settings and uninstall restores the original nested configuration', async () => {
     await using directory = await testdir();
@@ -65,8 +114,8 @@ test('init reports each submodule once without reading its contents', async () =
     execute(['init']);
     execute(['add', '.']);
     execute(['-c', 'user.name=Example', '-c', 'user.email=example@example.com', 'commit', '-qm', 'Source']);
-    const object = execute(['rev-parse', 'HEAD']);
-    execute(['update-index', '--add', '--cacheinfo', `160000,${object},external project`]);
+    const commitId = execute(['rev-parse', 'HEAD']);
+    execute(['update-index', '--add', '--cacheinfo', `160000,${commitId},external project`]);
     symlinkSync(outside.path, join(directory.path, 'external project'), 'dir');
     const result = await initCommand({
         cwd: directory.path,

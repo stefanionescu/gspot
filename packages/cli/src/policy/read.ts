@@ -54,11 +54,6 @@ function validatedRaw(text: string, path: string): RawPolicy {
     return result.data;
 }
 
-// A problem whose owner is a configurations list is settled by a root value, never by dropping the list.
-function isSettledElsewhere(problem: PolicyProblem): boolean {
-    return ownerOf(problem.path).at(-1) === 'configurations';
-}
-
 function semanticProblems(policy: Policy, root: string | undefined): PolicyProblem[] {
     return [...reasonProblems(policy), ...(root === undefined ? [] : pathProblems(root, policy))];
 }
@@ -116,6 +111,7 @@ function dropOwner(raw: RawPolicy, owner: PathSegment[]): void {
 
 /**
  * Parse TOML and retain the parser location in policy errors.
+ *
  * @param text the policy text
  * @param path the policy file, for the error
  * @returns the parsed table
@@ -147,6 +143,7 @@ export class PolicyError extends Error {
 
 /**
  * Parses and validates the text of a gspot.toml. Throws PolicyError with every problem found.
+ *
  * @param text the file's text
  * @param path the file's name, for messages
  * @param root the repository root, when scopes are to be checked against the file system
@@ -160,12 +157,13 @@ export function parsePolicyText(text: string, path: string, root?: string): Poli
 }
 
 /**
- * Reads the text of a gspot.toml the way check does: a wrong entry or key is a finding with its line, and the rest
- * of the config stands without it. A syntax error, an unknown key, or a wrong shape still throws PolicyError.
- * @param text the file's text
- * @param path the file's name, for messages
- * @param root the repository root, when scopes are to be checked against the file system
- * @returns the policy without the wrong entries, and one finding per wrong entry
+ * Reads policy for check execution. Invalid values become located findings and are excluded from the effective policy.
+ * Syntax errors, unknown keys, and invalid document shapes throw `PolicyError`.
+ *
+ * @param text the file's text.
+ * @param path the file's name, for messages.
+ * @param root the repository root, when scopes are to be checked against the file system.
+ * @returns the policy without the wrong entries, and one finding per wrong entry.
  */
 export function readPolicyText(
     text: string,
@@ -182,7 +180,9 @@ export function readPolicyText(
     ];
 
     if (found.length === 0) return { policy: complete, problems: [] };
-    if (found.some((problem) => isSettledElsewhere(problem))) throw new PolicyError(problemLines(text, path, found));
+    // A configurations list is settled by a root value, never by dropping the list.
+    if (found.some((problem) => ownerOf(problem.path).at(-1) === 'configurations'))
+        throw new PolicyError(problemLines(text, path, found));
     const locations = sourceLocations(text);
     const problems = found.map((problem) => ({ ...problem, ...policyPosition(locations, problem.path) }));
     const owners = new Map(found.map((problem) => [JSON.stringify(ownerOf(problem.path)), ownerOf(problem.path)]));

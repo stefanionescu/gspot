@@ -10,6 +10,26 @@ import { chmodSync, existsSync, readFileSync, statSync, unlinkSync, writeFileSyn
 
 const { version: GSPOT_VERSION } = packageManifest;
 
+// Both report formats identify index content and preserve literal source paths.
+async function expectIndexReport(
+    root: string,
+    args: string[],
+    report: ReturnType<typeof reportSchema.parse>,
+): Promise<void> {
+    expect(report.comparison?.content).toBe('index');
+    expect(report.checks[0]?.reproduce).toContain('--staged');
+    const text = await run(
+        root,
+        args.filter((argument) => argument !== '--json'),
+    );
+    expect(text.stdout).toContain('checked index;');
+    expect(text.stdout).not.toContain('checked working tree;');
+    expect(report.checks[0]?.findings.map((finding) => finding.file)).toStrictEqual([
+        'script with spaces.sh',
+        'script with spaces.sh',
+    ]);
+}
+
 test('an ignored folder includes descendants while a negated file remains enforced', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
@@ -68,18 +88,7 @@ test('staged checks use index bytes and policy on an unborn branch while preserv
     const failed = await run(directory.path, args);
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
     const failedReport = reportSchema.parse(JSON.parse(failed.stdout));
-    expect(failedReport.comparison?.content).toBe('index');
-    expect(failedReport.checks[0]?.reproduce).toContain('--staged');
-    const text = await run(
-        directory.path,
-        args.filter((argument) => argument !== '--json'),
-    );
-    expect(text.stdout).toContain('checked index;');
-    expect(text.stdout).not.toContain('checked working tree;');
-    expect(failedReport.checks[0]?.findings.map((finding) => finding.file)).toStrictEqual([
-        'script with spaces.sh',
-        'script with spaces.sh',
-    ]);
+    await expectIndexReport(directory.path, args, failedReport);
     expect(git(directory.path, ['ls-files', '--stage', '-z']).stdout).toBe(index);
     expect(readFileSync(join(directory.path, 'gspot.toml'), 'utf8')).toBe('invalid working policy');
     expect(readFileSync(join(directory.path, 'script with spaces.sh'), 'utf8')).toBe(

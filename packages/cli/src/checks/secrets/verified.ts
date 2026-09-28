@@ -4,17 +4,17 @@ import { tmpdir } from 'node:os';
 import { runBinary } from '#cli/platform/spawn.ts';
 import { runToolCommand } from '#cli/tools/command.ts';
 import { PRIVATE_FILE } from '#cli/constants/platform.ts';
-import { runToolCheck } from '#cli/execution/tool-runner.ts';
+import { runToolCheck } from '#cli/execution/tool/runner.ts';
 import type { CheckResult } from '#cli/types/checks/checks.ts';
 import type { SecretScan } from '#cli/types/checks/secrets.ts';
 import { SelectionError } from '#cli/configurations/select.ts';
-import { gitBlobs } from '#cli/repository/revisions/snapshot.ts';
+import { gitBlobs } from '#cli/repository/revisions/contents.ts';
 import { pushBase } from '#cli/repository/revisions/selection.ts';
 import { appendFileSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import type { PlannedCheck, Session } from '#cli/types/execution/execution.ts';
 import { CHANGE_LINE, COMMIT_METADATA, DIFF_TREE, GIT_TIMEOUT_MS } from '#cli/constants/checks/secrets.ts';
 
-// The commits under review: the ones the run supplies, or every commit since the push base.
+// The commits under review: the ones the run supplies, or every commit after the push base.
 async function selectedCommits(session: Session, planned: PlannedCheck): Promise<string[] | undefined> {
     if (planned.commits !== undefined) return planned.commits;
     const base = await pushBase(session.root, session.cancelSignal);
@@ -48,11 +48,11 @@ async function changeFields(session: Session, commit: string): Promise<string[]>
 function changedObjects(fields: string[]): Map<string, string> {
     const entries = new Map<string, string>();
     for (let position = 0; position < fields.length; position += 2) {
-        const object = CHANGE_LINE.exec(fields[position] ?? '')?.[2];
+        const blobId = CHANGE_LINE.exec(fields[position] ?? '')?.[2];
         const file = fields[position + 1];
-        if (object === undefined || file === undefined)
+        if (blobId === undefined || file === undefined)
             throw new SelectionError(['Git returned an unsupported history object.']);
-        entries.set(file, object);
+        entries.set(file, blobId);
     }
     return entries;
 }
@@ -66,25 +66,25 @@ function appendRecord(input: string, record: Record<string, unknown>): void {
 async function appendBlobs(scan: SecretScan, commit: string): Promise<void> {
     const entries = changedObjects(await changeFields(scan.session, commit));
     const blobs = await gitBlobs(scan.session.root, [...entries.values()], scan.session.cancelSignal);
-    for (const [file, object] of entries) {
-        const data = blobs.get(object);
-        if (data === undefined) throw new SelectionError(['A selected history blob is missing.']);
-        appendRecord(scan.input, { metadata: { commit, file }, data_b64: data.toString('base64') });
+    for (const [file, blobId] of entries) {
+        const blob = blobs.get(blobId);
+        if (blob === undefined) throw new SelectionError(['A selected history blob is missing.']);
+        appendRecord(scan.input, { metadata: { commit, file }, data_b64: blob.toString('base64') });
     }
 }
 
 // Appends a commit's author, committer, and message to the enumerator input.
 async function appendMetadata(scan: SecretScan, commit: string): Promise<void> {
     const { session, planned } = scan;
-    const message = await runToolCommand(
+    const commitResult = await runToolCommand(
         planned.scope.view,
         ['git', ...COMMIT_METADATA, commit, '--'],
         { cwd: session.root },
         session.cancelSignal,
     );
-    if (message.code !== 0)
+    if (commitResult.code !== 0)
         throw new SelectionError(['Cannot read selected commit metadata for verified secret scanning.']);
-    appendRecord(scan.input, { metadata: { commit, file: '' }, data: message.stdout });
+    appendRecord(scan.input, { metadata: { commit, file: '' }, data: commitResult.stdout });
 }
 
 // Writes the enumerator input for every commit, then runs TruffleHog over it.

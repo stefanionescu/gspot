@@ -20,10 +20,6 @@ function isInScope(relative: string, scope: string[], ignored: string[]): boolea
     return scope.length === 0 || scope.some((segment) => segments.slice(0, -1).includes(segment));
 }
 
-function isAllowed(directory: string, allow: string[]): boolean {
-    return isAnyGlobMatch(directory, allow) || isAnyGlobMatch(`${directory}/`, allow);
-}
-
 export const noPrefixCollisions = createRule<NoPrefixCollisionsOptions, 'collision'>({
     name: 'no-prefix-collisions',
     meta: {
@@ -34,7 +30,7 @@ export const noPrefixCollisions = createRule<NoPrefixCollisionsOptions, 'collisi
             example:
                 'Sibling files `asset-card.ts`, `asset-list.ts`, and `asset-row.ts` report a shared `asset` prefix at the default threshold. Move them into `asset/` as `card.ts`, `list.ts`, and `row.ts`, and update every import.',
             summary:
-                'Finds sibling files or folders that share a name prefix, like asset-card, asset-list and asset-row in one folder.',
+                'Finds sibling files or folders that share a name prefix, like asset-card, asset-list and asset-row in one folder. Alternate formats of one basename count as one owner.',
             why: 'Files that share a prefix are one concept split by suffix; they belong in a folder named after the prefix.',
             fix: 'Move the entries into a folder named after the shared prefix and drop the prefix from their names, or allow the set with a reason under structure.prefix_collision_allowed.',
         },
@@ -58,17 +54,14 @@ export const noPrefixCollisions = createRule<NoPrefixCollisionsOptions, 'collisi
         const relative = relativeToRoot(lintedRoot(context), file);
         const ignored = options.ignorePaths ?? DEFAULT_IGNORED;
         const prefix = prefixOf(stemOf(file));
-        if (
-            prefix === '' ||
-            !(
-                isInScope(relative, options.scope ?? [], ignored) &&
-                !isAllowed(posix.dirname(relative), options.allow ?? [])
-            )
-        )
-            return {};
+        const directory = posix.dirname(relative);
+        const allowed = options.allow ?? [];
+        const isAllowed = [directory, `${directory}/`].some((path) => isAnyGlobMatch(path, allowed));
+        const scope = options.scope ?? [];
         const threshold = options.threshold ?? DEFAULT_THRESHOLD;
         return {
             Program(node) {
+                if (prefix === '' || !isInScope(relative, scope, ignored) || isAllowed) return;
                 const peers = readDirectory(posix.dirname(file)).filter((entry) => {
                     if (entry.kind === 'dir')
                         return (
@@ -79,7 +72,11 @@ export const noPrefixCollisions = createRule<NoPrefixCollisionsOptions, 'collisi
                     const stem = stemOf(entry.name);
                     return stem !== 'index' && prefixOf(stem) === prefix;
                 });
-                if (peers.length < threshold) return;
+                if (
+                    new Set(peers.map((entry) => (entry.kind === 'dir' ? `${entry.name}/` : stemOf(entry.name)))).size <
+                    threshold
+                )
+                    return;
                 context.report({
                     node,
                     messageId: 'collision',

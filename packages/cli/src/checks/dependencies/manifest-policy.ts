@@ -12,25 +12,6 @@ import {
     NPM_MANIFEST,
 } from '#cli/constants/checks/dependencies.ts';
 
-function isManifest(path: string): boolean {
-    return path === NPM_MANIFEST || path.endsWith(`/${NPM_MANIFEST}`);
-}
-
-function rangeFindings(input: EngineInput, path: string, manifest: PackageManifest): Finding[] {
-    return DEPENDENCY_TABLES.flatMap((table) =>
-        Object.entries(manifest[table] ?? {})
-            .filter(([, version]) => !EXACT_VERSION.test(version) && !NON_REGISTRY_VERSION.test(version))
-            .map(([name, version]) => ({
-                check: input.spec.name,
-                file: path,
-                line: 1,
-                rule: 'version-range',
-                message: `${name} is "${version}" under ${table}; pin the exact version the lockfile holds.`,
-                fixable: false,
-            })),
-    );
-}
-
 function rootFindings(report: Reporter, root: PackageManifest | undefined): Finding[] {
     if (root === undefined) return [];
     const findings: Finding[] = [];
@@ -102,11 +83,24 @@ export function manifestPolicy(input: EngineInput): Finding[] {
     const isRangeAllowed = pathMatcher(allowed.flatMap((entry) => entry.paths));
     const manifests = new Map<string, PackageManifest>();
     for (const file of input.files) {
-        if (file.nature !== 'source' || !isManifest(file.path)) continue;
+        if (file.nature !== 'source') continue;
+        if (file.path !== NPM_MANIFEST && !file.path.endsWith(`/${NPM_MANIFEST}`)) continue;
         manifests.set(file.path, readPackageManifest(input.root, file.path));
     }
-    const ranges = [...manifests].flatMap(([path, manifest]) =>
-        isRangeAllowed(path) ? [] : rangeFindings(input, path, manifest),
-    );
+    const ranges = [...manifests].flatMap(([path, manifest]) => {
+        if (isRangeAllowed(path)) return [];
+        return DEPENDENCY_TABLES.flatMap((table) =>
+            Object.entries(manifest[table] ?? {})
+                .filter(([, version]) => !EXACT_VERSION.test(version) && !NON_REGISTRY_VERSION.test(version))
+                .map(([name, version]) => ({
+                    check: input.spec.name,
+                    file: path,
+                    line: 1,
+                    rule: 'version-range',
+                    message: `${name} is "${version}" under ${table}; pin the exact version the lockfile holds.`,
+                    fixable: false,
+                })),
+        );
+    });
     return [...ranges, ...installerFindings(input, manifests), ...lockfileFindings(input)];
 }

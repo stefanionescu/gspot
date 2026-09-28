@@ -3,7 +3,7 @@ import { expect, test } from 'bun:test';
 import { writeFileSync } from 'node:fs';
 import { parse, stringify } from 'smol-toml';
 import { createFileTree, testdir } from 'testdirs';
-import { emitAll } from '#cli/generation/render.ts';
+import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { initCommand } from '#cli/commands/init/command.ts';
 import { containingAll } from '#tests/support/expectations.ts';
@@ -20,10 +20,10 @@ test('typos output preserves quoted keys and paths without creating settings', a
             tools: { typos: { words: words.map((word) => ({ word, reason })), exclude: [{ paths, reason }] } },
         }),
     });
-    const renderSession1 = await openSession(sandbox.path);
-    const output = emitAll(renderSession1.policyFiles.policy, renderSession1.repository, renderSession1.scopes, {
-        version: renderSession1.version,
-        packageManager: renderSession1.packageManager,
+    const session = await openSession(sandbox.path);
+    const output = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
+        version: session.version,
+        packageClient: session.packageClient,
     });
     const target = output.files.find((file) => file.path === '.gspot/config/typos.toml');
     expect(target).toBeDefined();
@@ -36,6 +36,7 @@ test('typos output preserves quoted keys and paths without creating settings', a
     expect(parsed['type']).toStrictEqual({
         'gspot-policy': {
             'extend-glob': ['gspot.toml'],
+            'extend-identifiers': {},
             'extend-words': Object.fromEntries(words.map((word) => [word, word])),
         },
     });
@@ -73,10 +74,10 @@ test('profile spelling values use the same TOML emission path', async () => {
     const policy = proposal.json['policy'];
     if (typeof policy !== 'string') throw new Error('The initialization proposal has no policy text.');
     writeFileSync(join(sandbox.path, 'gspot.toml'), policy);
-    const renderSession2 = await openSession(sandbox.path);
-    const output = emitAll(renderSession2.policyFiles.policy, renderSession2.repository, renderSession2.scopes, {
-        version: renderSession2.version,
-        packageManager: renderSession2.packageManager,
+    const session = await openSession(sandbox.path);
+    const output = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
+        version: session.version,
+        packageClient: session.packageClient,
     });
     const target = output.files.find((file) => file.path === '.gspot/config/typos.toml');
     expect(target).toBeDefined();
@@ -105,10 +106,10 @@ test('TOML tool configurations round-trip dynamic strings and option keys', asyn
         }),
         'migrations/20260101_initial.sql': 'select 1;\n',
     });
-    const renderSession3 = await openSession(sandbox.path);
-    const output = emitAll(renderSession3.policyFiles.policy, renderSession3.repository, renderSession3.scopes, {
-        version: renderSession3.version,
-        packageManager: renderSession3.packageManager,
+    const session = await openSession(sandbox.path);
+    const output = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
+        version: session.version,
+        packageClient: session.packageClient,
     });
     const parsed = new Map(
         output.files.filter((file) => file.path.endsWith('.toml')).map((file) => [file.path, parse(file.content)]),
@@ -153,7 +154,7 @@ test('an OSV expiry cannot inject another TOML table', async () => {
     expect(() =>
         emitAll(session.policyFiles.policy, session.repository, session.scopes, {
             version: session.version,
-            packageManager: session.packageManager,
+            packageClient: session.packageClient,
         }),
     ).toThrow();
 });

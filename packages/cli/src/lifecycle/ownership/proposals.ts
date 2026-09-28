@@ -1,10 +1,10 @@
 // What the owner proposes for one file: a replacement, a managed block, a merged configuration, or a retirement.
 import { isDeepStrictEqual } from 'node:util';
-import type { FileSnapshot } from '#cli/types/platform.ts';
+import type { FileObservation } from '#cli/types/platform.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/constants/platform.ts';
 import { identity, matches } from '#cli/lifecycle/ownership/journal.ts';
 import { applyBlock, blockSpan } from '#cli/lifecycle/managed-blocks.ts';
-import { planConfiguration } from '#cli/lifecycle/configuration-plan.ts';
+import { planConfiguration } from '#cli/lifecycle/configuration/plan.ts';
 
 import type {
     ReplacementRequest,
@@ -21,11 +21,11 @@ import type {
 // Whether the current file must stay: an edited owned file without review, or an unowned file without takeover.
 function isPreservedReplacement(
     existing: OwnershipEntry | undefined,
-    current: FileSnapshot | undefined,
+    current: FileObservation | undefined,
     installed: ReturnType<typeof identity>,
     kind: OwnershipEntry['kind'],
     takeover: boolean,
-    expected: FileSnapshot | undefined,
+    expected: FileObservation | undefined,
 ): boolean {
     if (current === undefined) return false;
     if (existing === undefined) return !matches(current, installed) && !takeover;
@@ -35,11 +35,11 @@ function isPreservedReplacement(
 // The proposal that installs the next bytes, recording the original the entry already keeps.
 function changedReplacement(
     path: string,
-    current: FileSnapshot | undefined,
+    current: FileObservation | undefined,
     existing: OwnershipEntry | undefined,
-    next: FileSnapshot,
+    next: FileObservation,
     kind: OwnershipEntry['kind'],
-): FileProposal {
+): FileProposal & { entry: OwnershipEntry } {
     const installed = identity(next);
     const entry: OwnershipEntry = {
         path,
@@ -60,7 +60,7 @@ function changedReplacement(
 }
 
 // The text of a managed block's file, refused when the file is not UTF-8 text.
-function blockText(path: string, current: FileSnapshot | undefined): string {
+function blockText(path: string, current: FileObservation | undefined): string {
     const text = current?.bytes.toString('utf8') ?? '';
     if (current !== undefined && !Buffer.from(text).equals(current.bytes))
         throw new Error(`Managed block destination is not UTF-8 text: ${path}`);
@@ -91,50 +91,25 @@ function insertedBlock(text: string, span: BlockSpan | undefined, style: BlockSt
     return { nextText, block: { style, installed: prefix + applyBlock('', body, style), original, prefix } };
 }
 
-// The record of a file whose managed block was installed, keeping the original the record already holds.
-function blockEntry(
-    path: string,
-    next: FileSnapshot,
-    planned: PlannedBlock,
-    existing: OwnershipEntry | undefined,
-): OwnershipEntry {
-    return {
-        path,
-        kind: 'block',
-        installed: identity(next),
-        block: planned.block,
-        ...(existing?.original === undefined ? {} : { original: existing.original }),
-    };
-}
-
 // The proposal a planned block yields: unchanged when the bytes already stand, otherwise the new record.
 function blockProposal(
     path: string,
-    current: FileSnapshot | undefined,
+    current: FileObservation | undefined,
     existing: OwnershipEntry | undefined,
     planned: PlannedBlock,
-    text: string,
 ): FileProposal {
     const next = { bytes: Buffer.from(planned.nextText), mode: current?.mode ?? OWNER_WRITABLE_FILE };
     if (existing?.block !== undefined && matches(current, identity(next)))
         return { path, current, previous: existing, status: 'unchanged' };
-    const entry = blockEntry(path, next, planned, existing);
-    const status = planned.nextText === text ? 'unchanged' : 'changed';
-    return {
-        path,
-        current,
-        previous: existing,
-        next,
-        entry,
-        saveOriginal: existing === undefined && current !== undefined,
-        status,
-    };
+    const proposal = changedReplacement(path, current, existing, next, 'block');
+    proposal.entry.block = planned.block;
+    return proposal;
 }
 
 // The proposal that records a merged configuration file.
 function mergeProposal(
     path: string,
-    current: FileSnapshot | undefined,
+    current: FileObservation | undefined,
     existing: OwnershipEntry | undefined,
     plan: NonNullable<ReturnType<typeof planConfiguration>>,
 ): FileProposal {
@@ -150,7 +125,11 @@ function mergeProposal(
 }
 
 // The proposal that retires a file: its record loses the installed identity and keeps the original.
-function retirementProposal(path: string, current: FileSnapshot, existing: OwnershipEntry | undefined): FileProposal {
+function retirementProposal(
+    path: string,
+    current: FileObservation,
+    existing: OwnershipEntry | undefined,
+): FileProposal {
     const kind = existing?.kind ?? 'config';
     const entry: OwnershipEntry = {
         path,
@@ -158,11 +137,6 @@ function retirementProposal(path: string, current: FileSnapshot, existing: Owner
         ...(existing?.original === undefined ? {} : { original: existing.original }),
     };
     return { path, current, previous: existing, entry, saveOriginal: existing === undefined, status: 'changed' };
-}
-
-// Whether a record installed or saved a link.
-function involvesLink(existing: OwnershipEntry | undefined): boolean {
-    return existing?.installed?.isLink === true || existing?.original?.isLink === true;
 }
 
 /**
@@ -173,13 +147,13 @@ function involvesLink(existing: OwnershipEntry | undefined): boolean {
  * @param next the bytes proposed for it, when a replacement is proposed
  * @returns the snapshot, or undefined when the file does not exist
  */
-export function currentSnapshot(
+export function currentObservation(
     journal: Journal,
     path: string,
     existing: OwnershipEntry | undefined,
-    next?: FileSnapshot,
-): FileSnapshot | undefined {
-    const isLink = next?.isLink === true || involvesLink(existing);
+    next?: FileObservation,
+): FileObservation | undefined {
+    const isLink = [next, existing?.installed, existing?.original].some((observation) => observation?.isLink === true);
     return isLink ? journal.confined.readEntry(path) : journal.confined.read(path);
 }
 
@@ -193,11 +167,11 @@ export function proposeReplacement(journal: Journal, request: ReplacementRequest
     const { path, next, kind, takeover = false, expected, proposed } = request;
     const existing = journal.entryFor(path);
     journal.confined.validate(path, next, proposed);
-    const current = currentSnapshot(journal, path, existing, next);
+    const current = currentObservation(journal, path, existing, next);
     if (expected !== undefined && !isDeepStrictEqual(current, expected))
         throw new Error(`Configuration changed after takeover was planned: ${path}. Retry the command.`);
     const installed = identity(next);
-    // An edited owned file is preserved unless the caller reviewed those very bytes and authorizes the replacement.
+    // An edited owned file is preserved unless the caller reviewed those exact bytes and authorizes the replacement.
     if (isPreservedReplacement(existing, current, installed, kind, takeover, expected))
         return { path, current, previous: existing, status: 'preserved' };
     if (existing !== undefined && matches(current, installed))
@@ -222,11 +196,11 @@ export function proposeBlock(journal: Journal, path: string, body: string, style
     if (recorded !== undefined && current !== undefined) {
         const planned = updatedBlock(text, span, recorded, style, body);
         if (planned === undefined) return { path, current, previous: existing, status: 'preserved' };
-        return blockProposal(path, current, existing, planned, text);
+        return blockProposal(path, current, existing, planned);
     }
     if (existing !== undefined && current !== undefined && !matches(current, existing.installed))
         return { path, current, previous: existing, status: 'preserved' };
-    return blockProposal(path, current, existing, insertedBlock(text, span, style, body), text);
+    return blockProposal(path, current, existing, insertedBlock(text, span, style, body));
 }
 
 /**
@@ -270,7 +244,7 @@ export function proposeConfiguration(
  * @param expected the bytes the caller reviewed, which must still be the file's
  * @returns the proposal
  */
-export function proposeRetirement(journal: Journal, path: string, expected: FileSnapshot): FileProposal {
+export function proposeRetirement(journal: Journal, path: string, expected: FileObservation): FileProposal {
     const existing = journal.entryFor(path);
     const current = journal.confined.read(path);
     if (!isDeepStrictEqual(current, expected))

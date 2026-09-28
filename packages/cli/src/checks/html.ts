@@ -1,26 +1,58 @@
 import type { Node } from 'web-tree-sitter';
+import { decodeHTMLAttribute } from 'entities';
 import { pathMatcher } from '#cli/repository/paths.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
-import type { MarkupProblem, EngineInput, Finding } from '#cli/types/checks/checks.ts';
+import type { MarkupAttribute, MarkupProblem, EngineInput, Finding } from '#cli/types/checks/checks.ts';
 
 import {
     COPY_ATTRIBUTES,
+    ACTIVE_DOCUMENT_TYPES,
+    DOCUMENT_URL_ATTRIBUTES,
     INERT_SCRIPT_TYPES,
     LETTERS,
     PLACEHOLDER_MARKS,
     SHOWN_TEXT,
+    URL_ATTRIBUTES,
 } from '#cli/constants/checks/checks.ts';
 
-function attributes(element: Node): { name: string; value: string; node: Node }[] {
+function attributes(element: Node): MarkupAttribute[] {
     const tag = element.namedChildren.find((child) => child.type === 'start_tag' || child.type === 'self_closing_tag');
+    const name = tag?.namedChildren.find((child) => child.type === 'tag_name')?.text.toLowerCase() ?? '';
     return (tag?.namedChildren ?? [])
         .filter((child) => child.type === 'attribute')
         .map((node) => ({
             node,
+            element: name,
             name: node.namedChildren[0]?.text.toLowerCase() ?? '',
             value: (node.namedChildren[1]?.text ?? '').replaceAll(/^["']|["']$/gu, ''),
         }));
+}
+
+// Script and active-document contexts can execute data URLs. Image and text resources are inert.
+function isActiveResource(attribute: MarkupAttribute, url: URL, kind: string): boolean {
+    if (attribute.element === 'script') return !INERT_SCRIPT_TYPES.has(kind);
+    if (DOCUMENT_URL_ATTRIBUTES[attribute.element]?.includes(attribute.name) !== true) return false;
+    const mediaType = url.pathname.split(',', 1)[0]?.split(';', 1)[0]?.trim().toLowerCase() ?? '';
+    return ACTIVE_DOCUMENT_TYPES.has(mediaType);
+}
+
+// Decode HTML character references before URL parsing removes embedded tabs and newlines.
+function scriptScheme(attribute: MarkupAttribute, kind: string): string | undefined {
+    if (!URL_ATTRIBUTES.has(attribute.name)) return undefined;
+    const url = URL.parse(decodeHTMLAttribute(attribute.value), 'https://example.invalid');
+    switch (url?.protocol) {
+        case 'javascript:':
+        case 'vbscript:': {
+            return url.protocol;
+        }
+        case 'data:': {
+            return isActiveResource(attribute, url, kind) ? url.protocol : undefined;
+        }
+        default: {
+            return undefined;
+        }
+    }
 }
 
 function scriptProblems(root: Node): MarkupProblem[] {
@@ -39,8 +71,10 @@ function scriptProblems(root: Node): MarkupProblem[] {
                   },
               ];
     });
-    const handlers = root.descendantsOfType('element').flatMap((element) =>
-        attributes(element).flatMap((entry): MarkupProblem[] => {
+    const handlers = root.descendantsOfType(['element', 'script_element']).flatMap((element) => {
+        const held = attributes(element);
+        const kind = held.find((entry) => entry.name === 'type')?.value.toLowerCase() ?? '';
+        return held.flatMap((entry): MarkupProblem[] => {
             if (/^on[a-z]+$/u.test(entry.name))
                 return [
                     {
@@ -49,11 +83,18 @@ function scriptProblems(root: Node): MarkupProblem[] {
                         text: `The ${entry.name} attribute is inline script. Attach the handler from a script file.`,
                     },
                 ];
-            return entry.value.trim().toLowerCase().startsWith('javascript:')
-                ? [{ node: entry.node, rule: 'script-link', text: 'A javascript: link is inline script.' }]
-                : [];
-        }),
-    );
+            const scheme = scriptScheme(entry, kind);
+            return scheme === undefined
+                ? []
+                : [
+                      {
+                          node: entry.node,
+                          rule: 'script-link',
+                          text: `A ${scheme} URL embeds executable content. Use an external file.`,
+                      },
+                  ];
+        });
+    });
     return [...inline, ...handlers];
 }
 
@@ -74,13 +115,8 @@ function withoutMarks(text: string, open: string, close: string): string {
     return rest;
 }
 
-// The text with every placeholder cut out, whatever marks it uses.
-function withoutPlaceholders(text: string): string {
-    return PLACEHOLDER_MARKS.reduce((rest, [open, close]) => withoutMarks(rest, open, close), text);
-}
-
 function isLiteral(text: string): boolean {
-    return LETTERS.test(withoutPlaceholders(text));
+    return LETTERS.test(PLACEHOLDER_MARKS.reduce((rest, [open, close]) => withoutMarks(rest, open, close), text));
 }
 
 function copyProblems(root: Node): MarkupProblem[] {

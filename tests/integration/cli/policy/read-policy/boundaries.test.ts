@@ -106,8 +106,8 @@ test.each(["author's name", 'two words', '$(printf injected); *', 'line\nbreak']
     'suggested naming recovery preserves the argument %j through a shell',
     (name) => {
         const found = policyProblems(stringify({ version: 1, require_reasons: true, naming: { allowed: [{ name }] } }));
-        const message = found.find((problem) => problem.includes('gspot set naming.allowed'))!;
-        const command = message.slice(message.indexOf('gspot set naming.allowed')).replace(/`?\.?$/u, '');
+        const text = found.find((problem) => problem.includes('gspot set naming.allowed'))!;
+        const command = text.slice(text.indexOf('gspot set naming.allowed')).replace(/`?\.?$/u, '');
         const executed = Bun.spawnSync(['sh', '-c', String.raw`gspot() { printf "%s\0" "$@"; }; ` + command], {
             stdout: 'pipe',
             stderr: 'pipe',

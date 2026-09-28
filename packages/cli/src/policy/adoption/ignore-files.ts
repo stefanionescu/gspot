@@ -21,7 +21,7 @@ function reasonFrom(path: string, comment: string): string {
  * The entries of one ignore file: each run of lines under a comment is one entry with that comment as its reason.
  * @param text the contents already read from the ignore file
  * @param path the ignore file, relative to the root
- * @returns the entries, each with its globs and its reason
+ * @returns entries containing globs and reasons
  */
 export function ignoreFileEntries(text: string, path: string): { paths: string[]; reason: string }[] {
     const folder = path.includes('/') ? path.slice(0, path.lastIndexOf('/')) : '';

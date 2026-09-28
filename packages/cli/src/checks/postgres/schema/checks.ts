@@ -1,7 +1,7 @@
 import { nodesOf } from '#cli/parsers/sql/parser.ts';
 import { positionAt } from '#cli/parsers/sql/statements.ts';
 import type { Declared } from '#cli/types/checks/postgres.ts';
-// The checks that read the schema the migrations build: row security, grants, definer functions and foreign key indexes.
+// The checks that read the schema the migrations build: row security, grants, definer functions, and foreign key indexes.
 import { migrationsOf } from '#cli/checks/postgres/migrations.ts';
 import { DEFAULT_SCHEMA } from '#cli/constants/checks/postgres.ts';
 import { schemaFacts } from '#cli/checks/postgres/schema/facts.ts';
@@ -83,7 +83,7 @@ export async function rlsPresent(input: EngineInput): Promise<Finding[]> {
 }
 
 /**
- * One finding for each foreign key column that no index, primary key or unique key leads with.
+ * One finding for each foreign key column that no index, primary key, or unique key leads with.
  * @param input the engine input
  * @returns the findings
  */

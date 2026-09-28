@@ -2,14 +2,15 @@ import { symlinkSync } from 'node:fs';
 import { delimiter, join } from 'node:path';
 import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
+import type { FindingCase } from '#tests/types/cli.ts';
 import { reportSchema } from '#cli/execution/report.ts';
+import { runPlanted } from '#tests/support/cli/planted.ts';
 import { containing } from '#tests/support/expectations.ts';
-import type { FindingCase } from '#tests/types/support/cli.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
 // Planted repository for the library configurations: each ESLint addition fires on a small component, and the two file checks fire on theirs.
 import { installAtLevel, toolsPath } from '#tests/support/cli/tools.ts';
-import { expectCorrected, runPlanted } from '#tests/support/cli/planted.ts';
 import { CONFIGURATION_ARRIVAL_PACKAGE } from '#tests/constants/acceptance/source/cli/cli.ts';
 import { LIBRARIES_INIT } from '#tests/constants/acceptance/source/configurations/init-arguments.ts';
 import { LIBRARIES_CLEAN } from '#tests/constants/acceptance/source/configurations/configurations.ts';
@@ -113,7 +114,15 @@ describe('the library configurations', () => {
             } else {
                 await createFileTree(sandbox.path, { [planted.expected.file]: LIBRARIES_CLEAN });
             }
-            await expectCorrected(sandbox.path, planted.check, environment);
+            const correctedCheck = await run(
+                sandbox.path,
+                ['check', '--only', planted.check, '--no-cache', '--json'],
+                environment,
+            );
+            expect(correctedCheck.code, correctedCheck.stdout + correctedCheck.stderr).toBe(0);
+            expect(reportSchema.parse(JSON.parse(correctedCheck.stdout)).checks).toMatchObject([
+                { check: planted.check, status: 'ok', findings: [] },
+            ]);
         },
         PLANTED_TIMEOUT_MS * 8,
     );

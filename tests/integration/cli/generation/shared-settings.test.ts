@@ -1,7 +1,7 @@
 import { expect, test } from 'bun:test';
 import { parse as parseToml } from 'smol-toml';
 import { containingAll } from '#tests/support/expectations.ts';
-import { generatedFile } from '#tests/support/cli/generated-files.ts';
+import { generatedFile } from '#tests/support/cli/generated/files.ts';
 
 import {
     PYTHON,
@@ -44,8 +44,8 @@ test('knip starts from the policy entries and the entry files the selected confi
 
 test('Stylelint accepts the at-rules a selected framework declares and the ones the policy adds', async () => {
     expect(await stylelintAtRules('version = 1\nconfigurations = ["css"]\n')).toBe(true);
-    const withFramework = await stylelintAtRules('version = 1\nconfigurations = ["css", "nextjs"]\n');
-    expect(withFramework).toStrictEqual([true, { ignoreAtRules: TAILWIND_AT_RULES }]);
+    const frameworkRules = await stylelintAtRules('version = 1\nconfigurations = ["css", "nextjs"]\n');
+    expect(frameworkRules).toStrictEqual([true, { ignoreAtRules: TAILWIND_AT_RULES }]);
     const widened = await stylelintAtRules(
         'version = 1\nconfigurations = ["css"]\n[tools.stylelint]\nignore_at_rules = ["container"]\n',
     );

@@ -7,18 +7,18 @@ import { createRequire } from 'node:module';
 import { compact } from '#cli/policy/normalize.ts';
 import { basename, dirname, join } from 'node:path';
 import type { ConfinedRoot } from '#cli/types/platform.ts';
-import { prettierOptions } from '#cli/generation/format.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { CARRIED_REASON } from '#cli/constants/policy/policy.ts';
-import type { CarriedFormatter } from '#cli/types/policy/adoption.ts';
+import type { AdoptedFormatting } from '#cli/types/policy/adoption.ts';
 import type { prettierIgnoreRequest } from '#cli/evaluation/protocol.ts';
-import { literalGlob, relocatedOverrides } from '#cli/generation/relocated-overrides.ts';
+import { prettierOptions } from '#cli/generation/formatting/settings.ts';
+import { literalGlob, rebaseOverrides } from '#cli/generation/formatting/selectors.ts';
 import { MODELED_OPTIONS, MODULE_CONFIGURATION, PACKAGE_CONFIGURATION } from '#cli/constants/evaluation.ts';
 import { formatFields, formatRequest, prettierSettings, prettierSource } from '#cli/evaluation/protocol.ts';
 
 import type {
     Base,
-    Carried,
+    FormatterSettings,
     FormatRequest,
     NestedInput,
     Parsed,
@@ -54,14 +54,14 @@ async function projectPrettier(root: string): Promise<typeof bundledPrettier> {
         if ((error as NodeJS.ErrnoException).code === 'MODULE_NOT_FOUND') return bundledPrettier;
         throw error;
     }
-    const loaded = (await import(pathToFileURL(implementation).href)) as typeof bundledPrettier;
+    const prettier = (await import(pathToFileURL(implementation).href)) as typeof bundledPrettier;
     if (
-        typeof loaded.resolveConfig !== 'function' ||
-        typeof loaded.getSupportInfo !== 'function' ||
-        typeof loaded.getFileInfo !== 'function'
+        typeof prettier.resolveConfig !== 'function' ||
+        typeof prettier.getSupportInfo !== 'function' ||
+        typeof prettier.getFileInfo !== 'function'
     )
         throw new Error('The installed Prettier does not expose its configuration API. Repair that installation.');
-    return loaded;
+    return prettier;
 }
 
 // The ignore lines of every observed ignore file, each nested file's lines rebased onto its folder.
@@ -77,7 +77,7 @@ function ignoreLines(files: ConfinedRoot, ignorePaths: string[]): string[] {
 }
 
 // The settings a module or package configuration declares, loaded the way Prettier resolves them.
-async function loadedSource(
+async function evaluatedSource(
     prettier: typeof bundledPrettier,
     files: ConfinedRoot,
     root: string,
@@ -89,50 +89,36 @@ async function loadedSource(
     const configPath = await prettier.resolveConfigFile(join(root, dirname(from), 'gspot-import.js'));
     if (configPath !== join(root, from))
         throw new Error(`The active Prettier configuration differs from the observed ${from}.`);
-    let loaded: unknown;
+    let source: unknown;
     if (MODULE_CONFIGURATION.test(from))
-        loaded = ((await import(pathToFileURL(configPath).href)) as { default: unknown }).default;
+        source = ((await import(pathToFileURL(configPath).href)) as { default: unknown }).default;
     else if (PACKAGE_CONFIGURATION.test(basename(from)))
-        loaded = (parseYaml(configuration.bytes.toString('utf8')) as { prettier?: unknown }).prettier;
+        source = (parseYaml(configuration.bytes.toString('utf8')) as { prettier?: unknown }).prettier;
     else
         throw new Error(
             `Formatter conversion does not support ${from}. Convert it to JSON, YAML, TOML, or a module before adoption.`,
         );
-    return formatRequest.shape.source.unwrap().parse(loaded);
+    return formatRequest.shape.source.unwrap().parse(source);
 }
 
-// Prettier's own defaults for the supported settings, or none when the policy keeps Prettier's defaults native.
+// Explicit Prettier defaults, or none when the policy retains native defaults.
 async function nativeDefaults(prettier: typeof bundledPrettier, isNative: boolean): Promise<Record<string, unknown>> {
     if (isNative) return {};
     const supported = new Set(Object.keys(prettierSettings.shape));
-    const info = await prettier.getSupportInfo();
-    const entries = info.options
+    const optionDefinitions = await prettier.getSupportInfo();
+    const entries = optionDefinitions.options
         .filter((option) => option.name !== undefined && supported.has(option.name))
         .map((option): [string, unknown] => [option.name ?? '', option.default]);
     return Object.fromEntries(entries);
 }
 
 // A two-way setting as the policy spells it, or undefined when the source leaves it out.
-function choice<Value>(flag: boolean | undefined, whenTrue: Value, whenFalse: Value): Value | undefined {
+function choice<Value>(flag: boolean | undefined, enabled: Value, disabled: Value): Value | undefined {
     if (flag === undefined) return undefined;
-    return flag ? whenTrue : whenFalse;
+    return flag ? enabled : disabled;
 }
 
-// The policy fields the base settings settle.
-function policyFormat(base: Base, parsed: Parsed): CarriedFormatter['format'] {
-    const { indent, width, ending } = parsed;
-    return compact({
-        indent_width: indent.success ? indent.data : undefined,
-        print_width: width.success ? width.data : undefined,
-        trailing_comma: base.trailingComma,
-        line_ending: ending.success ? ending.data : undefined,
-        semicolons: base.semi,
-        indent_style: choice(base.useTabs, 'tab', 'space'),
-        quotes: choice(base.singleQuote, 'single', 'double'),
-    });
-}
-
-// The settings that stay Prettier's own under extra: unmodeled options, overrides, and values the policy cannot hold.
+// Native Prettier settings under extra: unmodeled options, overrides, and unsupported policy values.
 function extraSettings(base: Base, parsed: Parsed, overrides: PrettierOverride[]): Record<string, unknown> {
     const { tabWidth, printWidth, endOfLine } = base;
     const native = Object.fromEntries(Object.entries(base).filter(([key]) => !MODELED_OPTIONS.has(key)));
@@ -145,8 +131,8 @@ function extraSettings(base: Base, parsed: Parsed, overrides: PrettierOverride[]
     });
 }
 
-// The policy fields the source settles, and the settings that stay Prettier's own under extra.
-function carriedSettings(source: Source, defaults: Record<string, unknown>): Carried {
+// Policy fields derived from the source and native Prettier settings retained under extra.
+function formattingSettings(source: Source, defaults: Record<string, unknown>): FormatterSettings {
     const { overrides = [], ...raw } = source;
     const base = supportedOptions({ ...defaults, ...raw });
     const parsed: Parsed = {
@@ -154,7 +140,17 @@ function carriedSettings(source: Source, defaults: Record<string, unknown>): Car
         width: formatFields.print_width.safeParse(base.printWidth),
         ending: formatFields.line_ending.safeParse(base.endOfLine),
     };
-    return { format: policyFormat(base, parsed), extra: extraSettings(base, parsed, overrides) };
+    const { indent, width, ending } = parsed;
+    const format: AdoptedFormatting['format'] = compact({
+        indent_width: indent.success ? indent.data : undefined,
+        print_width: width.success ? width.data : undefined,
+        trailing_comma: base.trailingComma,
+        line_ending: ending.success ? ending.data : undefined,
+        semicolons: base.semi,
+        indent_style: choice(base.useTabs, 'tab', 'space'),
+        quotes: choice(base.singleQuote, 'single', 'double'),
+    });
+    return { format, extra: extraSettings(base, parsed, overrides) };
 }
 
 // The root configuration followed by each nested one, evaluated on its own.
@@ -177,14 +173,6 @@ function folderOf(input: NestedInput): string {
     return dirname(input.from).replaceAll('\\', '/');
 }
 
-// The globs of the nested folders a configuration's folder must leave to their own configuration.
-function childExclusions(inputs: NestedInput[], folder: string): string[] {
-    return inputs
-        .map((entry) => folderOf(entry))
-        .filter((child) => child !== folder && child !== '.' && (folder === '.' || child.startsWith(`${folder}/`)))
-        .map((child) => `${literalGlob(child)}/**/*`);
-}
-
 // The exclusions an override already names, as a list.
 function excludedOf(override: PrettierOverride): string[] {
     if (override.excludeFiles === undefined) return [];
@@ -194,7 +182,10 @@ function excludedOf(override: PrettierOverride): string[] {
 // The overrides one configuration contributes: its settings for its folder, then its own overrides relocated there.
 function overridesOf(input: NestedInput, inputs: NestedInput[]): PrettierOverride[] {
     const folder = folderOf(input);
-    const exclusions = childExclusions(inputs, folder);
+    const exclusions = inputs
+        .map((entry) => folderOf(entry))
+        .filter((child) => child !== folder && child !== '.' && (folder === '.' || child.startsWith(`${folder}/`)))
+        .map((child) => `${literalGlob(child)}/**/*`);
     const { overrides: childOverrides = [], ...carried } = input.settings.extra ?? {};
     const options = Object.fromEntries(Object.entries(carried).filter(([key]) => key !== 'reason'));
     const own: PrettierOverride = {
@@ -202,7 +193,7 @@ function overridesOf(input: NestedInput, inputs: NestedInput[]): PrettierOverrid
         excludeFiles: exclusions,
         options: supportedOptions({ ...prettierOptions(input.settings.format), ...options }),
     };
-    const relocated = relocatedOverrides(prettierSource.shape.overrides.unwrap().parse(childOverrides), folder, '');
+    const relocated = rebaseOverrides(prettierSource.shape.overrides.unwrap().parse(childOverrides), folder, '');
     return [
         own,
         ...relocated.map((override) => ({ ...override, excludeFiles: [...excludedOf(override), ...exclusions] })),
@@ -214,14 +205,14 @@ function overridesOf(input: NestedInput, inputs: NestedInput[]): PrettierOverrid
  * @param request the repository root, the formatter configuration to read, and its ignore files
  * @returns the carried formatter settings
  */
-export async function evaluateFormat(request: FormatRequest): Promise<CarriedFormatter> {
+export async function evaluateFormat(request: FormatRequest): Promise<AdoptedFormatting> {
     const { root, from, ignorePaths = [] } = request;
     const files = openConfinedRoot(root);
     try {
         const ignored = ignorePaths.length === 0 ? {} : { ignorePatterns: ignoreLines(files, ignorePaths) };
         const prettier = await projectPrettier(root);
-        const source = request.source ?? (await loadedSource(prettier, files, root, from));
-        const { format, extra } = carriedSettings(
+        const source = request.source ?? (await evaluatedSource(prettier, files, root, from));
+        const { format, extra } = formattingSettings(
             source,
             await nativeDefaults(prettier, request.nativeDefaults === true),
         );
@@ -247,11 +238,11 @@ export async function evaluateIgnoredPaths(request: z.infer<typeof prettierIgnor
         throw new Error(`The observed formatter ignore file is missing: ${request.ignorePath}. Retry adoption.`);
     const ignored: string[] = [];
     for (const path of request.paths) {
-        const info = await bundledPrettier.getFileInfo(join(request.root, path), {
+        const classification = await bundledPrettier.getFileInfo(join(request.root, path), {
             ignorePath: join(request.root, request.ignorePath),
             resolveConfig: false,
         });
-        if (info.ignored) ignored.push(path);
+        if (classification.ignored) ignored.push(path);
     }
     return ignored;
 }

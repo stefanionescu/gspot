@@ -6,8 +6,8 @@ import { gitOutput } from '#tests/support/cli/git.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { containing } from '#tests/support/expectations.ts';
-import { orphanSources, projectSymlinks } from '#cli/checks/xcode/project.ts';
 import { readFileSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
+import { orphanSources, projectSymlinks } from '#cli/checks/xcode/project/checks.ts';
 
 const sourceProject = (path: string): string => `{
     rootObject = P;

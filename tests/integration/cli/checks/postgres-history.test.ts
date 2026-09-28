@@ -77,10 +77,10 @@ test('nested scopes keep migration roots and parsed observations separate', asyn
         'apps/two': 'apps/two/schema/20240101_two.sql',
     };
     for (const selected of session.scopes) {
-        const scoped = engineInput(session, { scope: selected, spec, files: session.repository.files });
-        const migrations = await migrationsOf(scoped);
+        const scopeInput = engineInput(session, { scope: selected, spec, files: session.repository.files });
+        const migrations = await migrationsOf(scopeInput);
         expect(migrations.map((migration) => migration.path)).toStrictEqual([expected[selected.scope.path]!]);
-        expect(await migrationOrder(scoped)).toStrictEqual([]);
+        expect(await migrationOrder(scopeInput)).toStrictEqual([]);
     }
 });
 

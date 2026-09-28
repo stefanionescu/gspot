@@ -4,9 +4,12 @@ import { createRule, optionsSchema } from '#plugin/definition.ts';
 import type { NoClientEnvironmentOptions } from '#plugin/types/rules.ts';
 import { memberName, isGlobalEnvironmentHost } from '#plugin/environment.ts';
 
-function readName(node: TSESTree.MemberExpression): string | undefined {
+function isPublicRead(node: TSESTree.MemberExpression, prefixes: string[], allowed: Set<string>): boolean {
     const { parent } = node;
-    return parent.type === AST_NODE_TYPES.MemberExpression && parent.object === node ? memberName(parent) : undefined;
+    if (parent.type !== AST_NODE_TYPES.MemberExpression || parent.object !== node) return false;
+    const name = memberName(parent);
+    if (name === undefined) return false;
+    return allowed.has(name) || prefixes.some((prefix) => name.startsWith(prefix));
 }
 
 export const noClientEnvironment = createRule<NoClientEnvironmentOptions, 'private'>({
@@ -39,8 +42,6 @@ export const noClientEnvironment = createRule<NoClientEnvironmentOptions, 'priva
         const prefixes = options.publicPrefixes ?? ['NEXT_PUBLIC_'];
         const allowed = new Set(options.allowed ?? ['NODE_ENV']);
         const publicText = [...prefixes.map((prefix) => `${prefix}*`), ...allowed].join(', ');
-        const isPublic = (name: string): boolean =>
-            allowed.has(name) || prefixes.some((prefix) => name.startsWith(prefix));
         let isClient = options.clientModule === true;
         return {
             Program(node) {
@@ -78,8 +79,7 @@ export const noClientEnvironment = createRule<NoClientEnvironmentOptions, 'priva
                     memberName(node) !== 'env'
                 )
                     return;
-                const name = readName(node);
-                if (name !== undefined && isPublic(name)) return;
+                if (isPublicRead(node, prefixes, allowed)) return;
                 context.report({ node, messageId: 'private', data: { public: publicText } });
             },
         };

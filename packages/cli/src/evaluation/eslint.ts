@@ -6,8 +6,8 @@ import { mutationPath } from '#cli/platform/safe-paths.ts';
 import { ACTIVE_LEVELS } from '#cli/constants/evaluation.ts';
 import { dirname, join, relative, resolve } from 'node:path';
 import { eslintResponse } from '#cli/evaluation/protocol.ts';
+import { eslintrcEntries } from '#cli/evaluation/eslintrc.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import { legacyEntries } from '#cli/evaluation/eslint-legacy.ts';
 import type { EslintRegistration } from '#cli/types/policy/policy.ts';
 import type { Adoption, EslintRequest } from '#cli/types/evaluation.ts';
 import { importedModules, registerEslintModule } from '#cli/evaluation/eslint-modules.ts';
@@ -21,7 +21,7 @@ function isUnrepresentable(value: unknown): boolean {
 }
 
 // The configuration file ESLint reads for the repository, or the one the request names.
-async function activeConfigPath(request: EslintRequest, eslint: Eslint.ESLint): Promise<string> {
+async function configurationPath(request: EslintRequest, eslint: Eslint.ESLint): Promise<string> {
     if (request.from !== undefined) return join(request.root, request.from);
     const found = await eslint.findConfigFile();
     if (found === undefined) throw new Error('ESLint conversion could not find the active configuration.');
@@ -50,14 +50,14 @@ async function flatEntries(adoption: Adoption, text: string): Promise<unknown[]>
     const { request, configPath, references } = adoption;
     for (const name of importedModules(configPath, text))
         await registerEslintModule(request.root, configPath, name, references);
-    const loaded = (await import(pathToFileURL(configPath).href)) as { default: unknown };
-    const entries: unknown = loaded.default;
+    const namespace = (await import(pathToFileURL(configPath).href)) as { default: unknown };
+    const entries: unknown = namespace.default;
     if (!Array.isArray(entries)) throw new Error('ESLint conversion requires a flat configuration array.');
     return entries as unknown[];
 }
 
 // Replaces a processor value with the registration of the module that exported it.
-function resolveProcessor(adoption: Adoption, entry: Record<string, unknown>, index: number): void {
+function referenceTransform(adoption: Adoption, entry: Record<string, unknown>, index: number): void {
     if (entry['processor'] === undefined || typeof entry['processor'] === 'string') return;
     const reference = adoption.references.get(entry['processor']);
     if (reference === undefined)
@@ -88,7 +88,7 @@ function relativeBasePath(adoption: Adoption, entry: Record<string, unknown>, in
 }
 
 // Rewrites a base path relative to the repository root, checking that it names a directory.
-function resolveBasePath(adoption: Adoption, entry: Record<string, unknown>, index: number): void {
+function translateBasePath(adoption: Adoption, entry: Record<string, unknown>, index: number): void {
     const base = relativeBasePath(adoption, entry, index);
     if (base === undefined) return;
     if (base === '') {
@@ -100,7 +100,7 @@ function resolveBasePath(adoption: Adoption, entry: Record<string, unknown>, ind
 }
 
 // Replaces each plugin value with the registration of the module that exported it.
-function resolvePlugins(adoption: Adoption, entry: Record<string, unknown>): void {
+function translatePlugins(adoption: Adoption, entry: Record<string, unknown>): void {
     const plugins = entry['plugins'] as Record<string, unknown> | undefined;
     if (plugins === undefined) return;
     entry['plugins'] = Object.fromEntries(
@@ -116,7 +116,7 @@ function resolvePlugins(adoption: Adoption, entry: Record<string, unknown>): voi
 }
 
 // Replaces a parser value with the registration of the module that exported it.
-function resolveParser(adoption: Adoption, entry: Record<string, unknown>, index: number): void {
+function translateParser(adoption: Adoption, entry: Record<string, unknown>, index: number): void {
     const language = entry['languageOptions'] as Record<string, unknown> | undefined;
     if (language?.['parser'] === undefined) return;
     const reference = adoption.references.get(language['parser']);
@@ -127,10 +127,10 @@ function resolveParser(adoption: Adoption, entry: Record<string, unknown>, index
 
 // The entry as plain data, refused when it still carries a value TOML cannot hold.
 function serializable(entry: Record<string, unknown>, index: number): Record<string, unknown> {
-    const message = `ESLint configuration ${String(index)} contains data TOML cannot represent outside a registered plugin, parser, or processor.`;
-    if (!z.json().safeParse(entry).success) throw new Error(message);
+    const text = `ESLint configuration ${String(index)} contains data TOML cannot represent outside a registered plugin, parser, or processor.`;
+    if (!z.json().safeParse(entry).success) throw new Error(text);
     const serialized = JSON.stringify(entry, (_key, value: unknown) => {
-        if (isUnrepresentable(value)) throw new Error(message);
+        if (isUnrepresentable(value)) throw new Error(text);
         return value;
     });
     return JSON.parse(serialized) as Record<string, unknown>;
@@ -141,10 +141,10 @@ function adoptEntry(adoption: Adoption, raw: unknown, index: number): Record<str
     if (raw === null || typeof raw !== 'object' || Array.isArray(raw))
         throw new Error(`ESLint configuration ${String(index)} is not a flat configuration object.`);
     const entry = { ...raw } as Record<string, unknown>;
-    resolveProcessor(adoption, entry, index);
-    resolveBasePath(adoption, entry, index);
-    resolvePlugins(adoption, entry);
-    resolveParser(adoption, entry, index);
+    referenceTransform(adoption, entry, index);
+    translateBasePath(adoption, entry, index);
+    translatePlugins(adoption, entry);
+    translateParser(adoption, entry, index);
     return serializable(entry, index);
 }
 
@@ -158,19 +158,19 @@ export async function evaluateEslint(request: EslintRequest): Promise<z.infer<ty
         throw new Error('Legacy ESLint adoption requires a configuration path.');
     const require = createRequire(join(request.root, 'package.json'));
     const module = (await import(pathToFileURL(require.resolve('eslint')).href)) as typeof Eslint;
-    const Constructor = await module.loadESLint({ useFlatConfig: request.flat });
-    const eslint = new Constructor({
+    const eslintClass = await module.loadESLint({ useFlatConfig: request.flat });
+    const eslint = new eslintClass({
         cwd: request.root,
         ...(!request.flat || request.from === undefined
             ? {}
             : { overrideConfigFile: join(request.root, request.from) }),
     });
-    const configPath = await activeConfigPath(request, eslint as Eslint.ESLint);
+    const configPath = await configurationPath(request, eslint as Eslint.ESLint);
     const text = readConfiguration(request, configPath);
     const adoption: Adoption = { request, configPath, references: new Map<unknown, EslintRegistration>() };
     const entries = request.flat
         ? await flatEntries(adoption, text)
-        : await legacyEntries(
+        : await eslintrcEntries(
               request.root,
               configPath,
               adoption.references,
@@ -194,8 +194,8 @@ export async function evaluateRuleCoverage(
         throw new Error('The generated ESLint configuration is missing. Run: gspot apply');
     const require = createRequire(join(request.root, '.gspot/package.json'));
     const module = (await import(pathToFileURL(require.resolve('eslint')).href)) as typeof Eslint;
-    const Constructor = await module.loadESLint({ useFlatConfig: true });
-    const eslint = new Constructor({
+    const eslintClass = await module.loadESLint({ useFlatConfig: true });
+    const eslint = new eslintClass({
         cwd: request.root,
         overrideConfigFile: join(request.root, '.gspot/config/eslint.config.mjs'),
     });

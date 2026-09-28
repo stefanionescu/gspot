@@ -110,3 +110,53 @@ test('a tool names its rule page with the rule placeholder and its crash pattern
         parseManifest(toolPageDefinition('https://example.test/rules/{rule}', '(Fatal'), 'configurations/example'),
     ).toThrow('regular expression');
 });
+
+const suppressionDefinition = (inline: string) => `
+[configuration]
+name = "example"
+kind = "language"
+title = "Example"
+description = "A configuration for directive placement."
+[[tools]]
+name = "example"
+[tools.suppression]
+marker = "# file-disable"
+reason = "reason: (?<reason>.+)"
+${inline}
+`;
+
+test('tool suppression metadata validates an inline pattern without requiring it', () => {
+    expect(() => parseManifest(suppressionDefinition('inline_marker = "("'), 'configurations/example')).toThrow(
+        'regular expression',
+    );
+    const manifest = parseManifest(suppressionDefinition('inline_marker = "# line-disable"'), 'configurations/example');
+    expect(manifest.tools[0]?.suppression).toStrictEqual({
+        marker: '# file-disable',
+        inline_marker: '# line-disable',
+        reason: 'reason: (?<reason>.+)',
+    });
+    expect(parseManifest(suppressionDefinition(''), 'configurations/example').tools[0]?.suppression).toStrictEqual({
+        marker: '# file-disable',
+        reason: 'reason: (?<reason>.+)',
+    });
+});
+
+test('manifest rule exclusions require a reason and preserve selectors and conditions', () => {
+    const base =
+        '[configuration]\nname = "example"\nkind = "framework"\ntitle = "Example"\ndescription = "Framework integration for the example application."\n';
+    const declaration =
+        '[[rules_off]]\ntool = "eslint"\nrules = ["gspot/no-reexports"]\nfiles = ["**/page.tsx"]\nwhen = {setting = "structure.reexports", value = "index-only"}\n';
+    expect(() => parseManifest(base + declaration, 'configurations/example')).toThrow();
+    const manifest = parseManifest(
+        base + declaration + 'reason = "The framework discovers entry points by their file names."\n',
+        'configurations/example',
+    );
+    expect(manifest.rules_off).toMatchObject([
+        {
+            tool: 'eslint',
+            rules: ['gspot/no-reexports'],
+            files: ['**/page.tsx'],
+            when: { setting: 'structure.reexports', value: 'index-only' },
+        },
+    ]);
+});

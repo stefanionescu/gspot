@@ -13,7 +13,7 @@ RuleTester.itSkip = it.skip;
 RuleTester.describeSkip = describe.skip;
 
 /**
- * A tester for one rule, with the TypeScript parser and a fixed repository root.
+ * A rule tester using the TypeScript parser and a fixed repository root.
  * @param root the repository root the rules resolve paths against
  * @returns the tester
  */

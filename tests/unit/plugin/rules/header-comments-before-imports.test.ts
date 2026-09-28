@@ -3,6 +3,9 @@ import { headerCommentsBeforeImports } from '#plugin/rules/header-comments-befor
 
 tester().run('header-comments-before-imports', headerCommentsBeforeImports, {
     valid: [
+        "import { a } from './a';\n\n// Explains the complete\n// declaration below.\nexport const b = a;",
+        "import { a } from './a';\n// Explains the complete\n// import below.\nimport { c } from './c';\nexport const b = a + c;",
+
         "// The file header.\nimport { a } from './a';\n\nexport const b = a;",
         "import { a } from './a';\n\n// Explains b.\nexport const b = a;",
         "import { a } from './a'; // trailing\nexport const b = a;",
@@ -21,6 +24,12 @@ tester().run('header-comments-before-imports', headerCommentsBeforeImports, {
         },
     ],
     invalid: [
+        {
+            code: "import { a } from './a';\n\n// The complete\n// file header.\n\n\nexport const b = a;",
+            output: "// The complete\n// file header.\n\nimport { a } from './a';\n\nexport const b = a;",
+            errors: [{ messageId: 'headerFirst' }],
+        },
+
         {
             code: "import { a } from './a';\n\n// The file header.\n\n\nexport const b = a;",
             output: "// The file header.\n\nimport { a } from './a';\n\nexport const b = a;",

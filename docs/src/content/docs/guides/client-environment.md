@@ -43,7 +43,7 @@ See the [plugin reference](/reference/plugin/no-client-environment/) for options
 
 ## 2. Check the defect
 
-Save this module as `search.js`:
+Save the following code as `search.js`:
 
 ```javascript
 "use client";
@@ -81,13 +81,13 @@ Run the same check:
 bunx --no-install eslint search.js
 ```
 
-The command exits `0` with no diagnostic output. The module no longer reads private
+The command exits `0` with no diagnostic output. The corrected module reads no private
 configuration. In an application, implement `/api/search` on the server and keep the private
 configuration there. This example does not implement or test that route.
 
 ## Clean up and continue
 
 The example directory path is stored in `example_root`. After inspection, leave that directory
-and remove it when you no longer need its files. Your source checkout remains available.
+and remove it after finishing the example. Your source checkout remains available.
 
 For checks in an existing application, follow [adopt an existing repository](/guides/existing-repository/).

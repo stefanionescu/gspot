@@ -11,25 +11,30 @@ const reportSchema = z.record(
     z.object({ licenses: z.union([z.string(), z.array(z.string())]).optional() }),
 );
 
+// Resolve from an observed project directory only after its manifest passes confined access.
+function installedProject(root: string, from: string): string {
+    const files = openConfinedRoot(root);
+    try {
+        const path = dirname(from);
+        if (path !== '.') files.stat(path);
+        const manifest = path === '.' ? 'package.json' : `${path}/package.json`;
+        if (files.read(manifest) === undefined)
+            throw new Error('License adoption requires an installed project manifest.');
+        return join(root, path);
+    } finally {
+        files.close();
+    }
+}
+
 /**
  * Resolve excluded packages through the installed scanner before adopting version-bound exceptions.
- * @param request
+ * @param request the source project and package exclusions to resolve
+ * @returns the installed package identities and license expressions
  */
 export async function evaluateLicenses(
     request: z.infer<typeof licenseRequest>,
 ): Promise<z.infer<typeof licenseResponse>> {
-    const files = openConfinedRoot(request.root);
-    let start: string;
-    try {
-        const path = dirname(request.from);
-        if (path !== '.') files.stat(path);
-        start = join(request.root, path);
-        const manifest = path === '.' ? 'package.json' : `${path}/package.json`;
-        if (files.read(manifest) === undefined)
-            throw new Error('License adoption requires an installed project manifest.');
-    } finally {
-        files.close();
-    }
+    const start = installedProject(request.root, request.from);
     const require = createRequire(join(start, 'package.json'));
     const checker = (await import(
         pathToFileURL(require.resolve('license-checker-rseidelsohn')).href
@@ -39,8 +44,8 @@ export async function evaluateLicenses(
         const report = reportSchema.parse(
             await new Promise<unknown>((resolve, reject) => {
                 checker.init({ start, includePackages: exclusion, excludePrivatePackages: true }, (error, report) => {
-                    if (error !== null && error !== undefined) reject(error);
-                    else resolve(report);
+                    if (error === null) resolve(report);
+                    else reject(error);
                 });
             }),
         );

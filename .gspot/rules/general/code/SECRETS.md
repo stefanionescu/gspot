@@ -14,7 +14,8 @@ project contracts apply at both levels.
 ## Secrets in code and configuration
 
 - Never hardcode API keys, tokens, passwords, or secrets anywhere in the codebase.
-- Use environment variables for all secrets. Reference them through config modules, not directly in business logic.
+- Read secrets through the declared environment, protected file, platform binding, or secret store.
+  Keep access controls and logging restrictions at that boundary.
 - Never put real secrets in OpenAPI examples.
 - Never put real secrets in `.env.example`.
 - If package publishing is ever introduced, use an explicit package file allowlist; ignored files can still leak through packaging defaults.

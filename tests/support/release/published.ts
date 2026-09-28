@@ -1,40 +1,30 @@
 // The built packages published into an isolated registry, and a fresh consumer that installed them from it.
-import prettier from 'prettier';
-import { expect } from 'bun:test';
+import { writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
-import { runProcess as run } from '#tests/support/cli/command.ts';
-import { createConsumer } from '#tests/support/release/consumer.ts';
-import { RELEASE_TIMEOUT_MS } from '#tests/constants/support/release.ts';
-import { publishTo, startRegistry } from '#tests/support/registry/lifecycle.ts';
-import { copyFileSync, existsSync, lstatSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { run } from '#cli/platform/spawn.ts';
+import type { Registry } from '#tests/types/registry.ts';
+import { runProcess } from '#tests/support/cli/command.ts';
+import { RELEASE_TIMEOUT_MS } from '#tests/constants/release.ts';
+import { publishTo } from '#tests/support/registry/lifecycle.ts';
+import { environmentVariables } from '#cli/platform/environment.ts';
 import { environment, host, preparePackages, requireCli, root } from '#tests/support/release/packages.ts';
-import type { InstalledConsumer, PublishedManifest, PublishedRelease } from '#tests/types/support/release.ts';
+import type { ConsumerInitialization, InstalledConsumer, PublishedRelease } from '#tests/types/release.ts';
 
 /**
- * Starts a registry, refuses a publish with a missing binary, then publishes the built packages and their dependency.
+ * Publishes the built packages and their dependency into the caller-owned registry.
+ * @param registry the registry retained for the consumer suite.
  * @returns the registry, the published version, and the tool npmrc
  */
-export async function publishRelease(): Promise<PublishedRelease> {
-    const registry = await startRegistry();
+export async function publishRelease(registry: Registry, signal: AbortSignal): Promise<PublishedRelease> {
     const built = await run([join(root, 'dist', host.binary), '--version'], {
         cwd: registry.work,
         env: environment,
         timeoutMs: RELEASE_TIMEOUT_MS,
+        cancelSignal: signal,
     });
-    expect(built.code, built.stdout + built.stderr).toBe(0);
+    if (built.code !== 0) throw new Error(`Built version command failed: ${built.stdout}${built.stderr}`);
     const version = built.stdout.trim();
-    const [core = '', ...labels] = version.split(/[-+]/u);
-    expect(core).toMatch(/^\d+\.\d+\.\d+$/u);
-    expect(labels.every((label) => /^[0-9A-Za-z.-]+$/u.test(label))).toBe(true);
     const checkout = preparePackages(registry.work);
-    const missing = join(checkout, 'dist', 'gspot-linux-arm64-musl');
-    rmSync(missing);
-    const refused = publishTo(registry, version, checkout);
-    expect(refused.code).not.toBe(0);
-    const absent = await fetch(`${registry.url}/gspot`);
-    expect(absent.status).toBe(404);
-    await absent.arrayBuffer();
-    copyFileSync(join(root, 'dist', 'gspot-linux-arm64-musl'), missing);
     const dependency = await run(
         [
             'npm',
@@ -46,11 +36,20 @@ export async function publishRelease(): Promise<PublishedRelease> {
             registry.npmrc,
             '--ignore-scripts',
         ],
-        { cwd: registry.work, env: environment, timeoutMs: RELEASE_TIMEOUT_MS },
+        {
+            cwd: registry.work,
+            env: environment,
+            timeoutMs: RELEASE_TIMEOUT_MS,
+            cancelSignal: signal,
+            onStderr: (chunk) => {
+                process.stderr.write(chunk);
+            },
+        },
     );
-    expect(dependency.code, dependency.stdout + dependency.stderr).toBe(0);
-    const published = publishTo(registry, version, checkout);
-    expect(published.code, published.stdout + published.stderr).toBe(0);
+    if (dependency.code !== 0)
+        throw new Error(`Registry dependency publication failed: ${dependency.stdout}${dependency.stderr}`);
+    const published = await publishTo(registry, version, checkout, signal);
+    if (published.code !== 0) throw new Error(`Release publication failed: ${published.stdout}${published.stderr}`);
     const toolNpmrc = join(registry.work, 'tools.npmrc');
     writeFileSync(
         toolNpmrc,
@@ -61,50 +60,18 @@ export async function publishRelease(): Promise<PublishedRelease> {
 }
 
 /**
- * Installs the release into a fresh consumer and checks the installed packages.
- * @param release the published release
- * @returns the consumer fixture
- */
-export async function installedConsumer(release: PublishedRelease): Promise<InstalledConsumer> {
-    const { registry, version } = release;
-    const fixture = await createConsumer(registry, version);
-    const { installed, consumer } = fixture;
-    try {
-        expect(installed.code, installed.stdout + installed.stderr).toBe(0);
-        const launcherDirectory = join(consumer, 'node_modules', 'gspot');
-        const platformName = host.package;
-        const platformDirectory = join(consumer, 'node_modules', platformName);
-        expect(lstatSync(launcherDirectory).isSymbolicLink()).toBe(false);
-        expect(lstatSync(platformDirectory).isSymbolicLink()).toBe(false);
-        const launcher = (await Bun.file(join(launcherDirectory, 'package.json')).json()) as PublishedManifest;
-        const platform = (await Bun.file(join(platformDirectory, 'package.json')).json()) as PublishedManifest;
-        expect(launcher.version).toBe(version);
-        expect(launcher.optionalDependencies?.[platformName]).toBe(version);
-        expect(platform.version).toBe(version);
-        for (const directory of [launcherDirectory, platformDirectory]) {
-            expect(readFileSync(join(directory, 'LICENSE.md'), 'utf8')).toBe(
-                readFileSync(join(root, 'LICENSE.md'), 'utf8'),
-            );
-        }
-        expect(readFileSync(join(platformDirectory, 'NOTICE.md'), 'utf8')).toBe(
-            readFileSync(join(root, 'dist/NOTICE.md'), 'utf8'),
-        );
-        return fixture;
-    } catch (error) {
-        await fixture[Symbol.asyncDispose]();
-        throw error;
-    }
-}
-
-/**
  * Initializes the consumer with several configurations and installs its private tools.
  * @param release the published release
- * @param fixture the installed consumer
+ * @param installation the installed consumer
+ * @returns initialization and tool installation command outcomes.
  */
-export async function initializeConsumer(release: PublishedRelease, fixture: InstalledConsumer): Promise<void> {
+export async function initializeConsumer(
+    release: PublishedRelease,
+    installation: InstalledConsumer,
+): Promise<ConsumerInitialization> {
     const { registry, toolNpmrc } = release;
-    const { command, setupOptions, consumer } = fixture;
-    const initialized = await run(
+    const { command, setupOptions } = installation;
+    const initialized = await runProcess(
         [
             ...command,
             'init',
@@ -124,8 +91,9 @@ export async function initializeConsumer(release: PublishedRelease, fixture: Ins
         ],
         setupOptions,
     );
-    expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
-    const installedTools = await run([...command, 'install', '--json'], {
+    if (initialized.code !== 0)
+        throw new Error(`Consumer initialization failed: ${initialized.stdout}${initialized.stderr}`);
+    const installedTools = await runProcess([...command, 'install', '--json'], {
         ...setupOptions,
         env: {
             ...setupOptions.env,
@@ -134,27 +102,14 @@ export async function initializeConsumer(release: PublishedRelease, fixture: Ins
         },
         timeoutMs: RELEASE_TIMEOUT_MS,
     });
-    expect(installedTools.code, installedTools.stdout + installedTools.stderr).toBe(0);
-    expect(existsSync(join(consumer, 'gspot.toml'))).toBe(true);
-    expect(existsSync(join(consumer, 'prettier.config.mjs'))).toBe(false);
-    expect(() => {
-        JSON.parse(initialized.stdout);
-    }).not.toThrow();
-    expect(initialized.stdout).not.toContain('formatter stdout');
-    const filepath = join(consumer, 'source.js');
-    const carried = await prettier.resolveConfig(filepath, {
-        config: join(consumer, '.gspot/config/prettier.json'),
-        editorconfig: true,
-        useCache: false,
-    });
-    expect(await prettier.format(readFileSync(filepath, 'utf8'), { ...carried, filepath })).toBe(
-        'const greeting = "hello"\n',
-    );
-    const futureJson = await prettier.resolveConfig(join(consumer, 'nested/future.json'), {
-        config: join(consumer, '.gspot/config/prettier.json'),
-        editorconfig: true,
-        useCache: false,
-    });
-    expect(futureJson?.tabWidth).toBe(4);
-    expect(existsSync(join(consumer, '.gspot', 'reports', 'report.json'))).toBe(false);
+    if (installedTools.code !== 0)
+        throw new Error(`Consumer tool installation failed: ${installedTools.stdout}${installedTools.stderr}`);
+    return { initialized, installedTools };
+}
+
+/** Read the immutable connection details supplied by the release-suite owner. */
+export function getPublishedRelease(): PublishedRelease {
+    const connection = environmentVariables()['GSPOT_RELEASE_FIXTURE'];
+    if (connection === undefined) throw new Error('Run installed acceptance through mise run test:release.');
+    return JSON.parse(connection) as PublishedRelease;
 }

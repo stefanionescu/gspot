@@ -1,5 +1,5 @@
 import { z } from 'zod';
-// The zod schema of a profile: the policy schema without anything that names a path, with a name and a selection mode.
+// The profile schema retains path-independent policy and adds a profile name and selection mode.
 import { policySchema } from '#cli/policy/schema.ts';
 import { PATH_KEYS } from '#cli/constants/policy/profiles.ts';
 

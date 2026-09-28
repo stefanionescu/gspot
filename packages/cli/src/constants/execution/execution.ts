@@ -15,24 +15,25 @@ export const FIX_ORDER: FixOrder[] = ['codemod', 'imports', 'manifest', 'format'
 export const FIX_DIFF_CONTEXT = 3;
 export const RAN_STATUSES = new Set(['ok', 'cache', 'fail']);
 export const FILES_PLACEHOLDER = '{files}';
-export const CORE_KINDS = new Set(['format', 'syntax', 'style', 'types']);
+export const SOURCE_COVERAGE_KINDS = new Set(['format', 'syntax', 'style', 'types']);
 export const CACHE_FORMAT = 5;
 // Thirty days in milliseconds.
 export const RETENTION_MS = 2_592_000_000;
 export const CACHE_ENTRY = /^\.gspot\/cache\/[a-f0-9]{64}\.json$/u;
 export const FAILED_STATUSES = new Set(['fail', 'missing', 'error']);
 export const DOCKER = { name: 'docker', provider: 'host' as const, windows: true, installers: {} };
-// reason is what follows `--` in the rest of the comment.
+// Each pattern captures the check identifier. The reason follows `--` after the match.
 export const INLINE_IGNORE: Record<string, RegExp> = {
-    slash: /\/\/ ?gspot-ignore +([a-z0-9/-]+)/u,
-    hash: /# ?gspot-ignore +([a-z0-9/-]+)/u,
-    dash: /-- ?gspot-ignore +([a-z0-9/-]+)/u,
-    html: /<!-- ?gspot-ignore +([a-z0-9/-]+)/u,
+    slash: /^\/\/ ?gspot-ignore +([a-z0-9/-]+)/u,
+    hash: /^# ?gspot-ignore +([a-z0-9/-]+)/u,
+    dash: /^-- ?gspot-ignore +([a-z0-9/-]+)/u,
+    html: /^<!-- ?gspot-ignore +([a-z0-9/-]+)/u,
 };
 export const REASON_INTRODUCER = '--';
-export const HTML_COMMENT_CLOSE = '-->';
 export const COMMENT_STYLE_BY_EXTENSION: Record<string, keyof typeof INLINE_IGNORE> = {
     '.ts': 'slash',
+    '.mts': 'slash',
+    '.cts': 'slash',
     '.tsx': 'slash',
     '.js': 'slash',
     '.mjs': 'slash',
@@ -69,6 +70,12 @@ export const FILELESS_FORMATS = new Set(['lines', 'none']);
 export const TAIL_LINES = 20;
 export const TRUFFLEHOG_FINDINGS = 183;
 export const TYPOS_FINDINGS = 2;
+/** Native structured reporters reserve these nonzero exit codes for findings. */
+export const FINDING_EXIT_CODES = new Map<string | undefined, number[]>([
+    ['typos-json', [TYPOS_FINDINGS]],
+    ['markdownlint-json', [1]],
+]);
+
 export const SCRATCH_EXTRAS = ['gspot.toml', 'package.json', 'tsconfig.json', 'pyproject.toml'];
 export const SCRATCH_DIRECTORIES = ['node_modules', '.venv'];
 export const PLATFORM_NAMES: Record<string, string> = { darwin: 'macos', linux: 'linux', win32: 'windows' };

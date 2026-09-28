@@ -1,13 +1,9 @@
 import { z } from 'zod';
 import { asList, asRaw, asText } from '#cli/policy/adoption/source.ts';
 import { appendSetting, reasonFor } from '#cli/policy/adoption/results.ts';
-import type { CarriedConfiguration, CarrySource } from '#cli/types/policy/adoption.ts';
+import type { AdoptionResult, ConfigurationSource } from '#cli/types/policy/adoption.ts';
 
-function reviewBy(value: unknown): string | undefined {
-    return asText(value) ?? (value instanceof Date ? value.toISOString() : undefined);
-}
-
-function carryOsv(source: CarrySource, path: string, lists: CarriedConfiguration): void {
+function carryOsv(source: ConfigurationSource, path: string, lists: AdoptionResult): void {
     if (path.includes('/'))
         throw new Error(`${path}: directory-local advisory exceptions require explicit conversion.`);
     const parsed = source.parsed;
@@ -15,7 +11,8 @@ function carryOsv(source: CarrySource, path: string, lists: CarriedConfiguration
     for (const value of entries) {
         const entry = asRaw(value);
         if (!entry) continue;
-        const until = reviewBy(entry['ignoreUntil']);
+        const expiration = entry['ignoreUntil'];
+        const until = asText(expiration) ?? (expiration instanceof Date ? expiration.toISOString() : undefined);
         appendSetting(lists, 'osv', 'ignore', [
             {
                 id: String(entry['id']),

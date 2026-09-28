@@ -16,26 +16,6 @@ function uncheckedNote(file: TrackedFile): string | undefined {
     return undefined;
 }
 
-function checksFor(session: Session, file: TrackedFile): PathExplanation['checks'] {
-    return configuredChecks(session)
-        .filter((check) => claimedInputs(session, check).some((entry) => entry.path === file.path))
-        .map((check) => ({
-            check: check.check,
-            stage: check.spec.stage,
-            ...(check.manifest === undefined ? {} : { configuration: check.manifest.configuration.name }),
-        }));
-}
-
-function ignoresFor(session: Session, path: string): PathExplanation['ignores'] {
-    return session.policyFiles.policy.ignores
-        .filter((entry) => entry.paths === undefined || entry.paths.length === 0 || pathMatcher(entry.paths)(path))
-        .map((entry) => ({
-            check: entry.check,
-            ...(entry.rule === undefined ? {} : { rule: entry.rule }),
-            ...(entry.reason === undefined ? {} : { reason: entry.reason }),
-        }));
-}
-
 function ignoreLine(entry: PathExplanation['ignores'][number]): string {
     const rule = entry.rule === undefined ? '' : ` ${entry.rule}`;
     const reason = entry.reason === undefined ? '' : `  ${entry.reason}`;
@@ -74,8 +54,20 @@ function pathReport(session: Session, path: string): PathExplanation | { error: 
         nature: file.nature,
         tags: file.tags,
         configurations: owners.map((manifest) => manifest.configuration.name),
-        checks: checksFor(session, file),
-        ignores: ignoresFor(session, path),
+        checks: configuredChecks(session)
+            .filter((check) => claimedInputs(session, check).some((entry) => entry.path === file.path))
+            .map((check) => ({
+                check: check.check,
+                stage: check.spec.stage,
+                ...(check.manifest === undefined ? {} : { configuration: check.manifest.configuration.name }),
+            })),
+        ignores: session.policyFiles.policy.ignores
+            .filter((entry) => entry.paths === undefined || entry.paths.length === 0 || pathMatcher(entry.paths)(path))
+            .map((entry) => ({
+                check: entry.check,
+                ...(entry.rule === undefined ? {} : { rule: entry.rule }),
+                ...(entry.reason === undefined ? {} : { reason: entry.reason }),
+            })),
     };
     if (file.natureSource !== undefined) report.natureSource = file.natureSource;
     return annotated(report, file);

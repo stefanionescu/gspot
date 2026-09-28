@@ -28,8 +28,8 @@ for (const target of ['cache', 'report.json', 'report.sarif', 'report.codequalit
                 isDryRun: false,
             });
             expect(outcome.report.exitCode).toBe(status);
-            expect(outcome.report.checks[0]?.status).toBe(status === 0 ? 'ok' : 'fail');
-            expect(outcome.report.checks[0]?.findings).toHaveLength(status);
+            expect(outcome.report.checks[0]!.status).toBe(status === 0 ? 'ok' : 'fail');
+            expect(outcome.report.checks[0]!.findings).toHaveLength(status);
             const output = runText(outcome.report, { quiet: false, verbose: false });
             expect(output).toContain(status === 0 ? '1 check passed' : 'Retained finding');
             const diagnostics = stderr.mock.calls.map((call) => String(call[0])).join('');
@@ -104,7 +104,7 @@ test('a dry run does not create cache, report, or ownership files', async () => 
         isDryRun: true,
     });
     expect(outcome.report.exitCode).toBe(0);
-    expect(outcome.report.checks[0]?.status).toBe('ok');
+    expect(outcome.report.checks[0]!.status).toBe('ok');
     expect(fs.readdirSync(sandbox.path, { recursive: true })).toStrictEqual(before);
     expect(fs.readFileSync(join(sandbox.path, 'source.ts'), 'utf8')).toBe('export {};\n');
 });

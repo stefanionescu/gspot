@@ -146,4 +146,4 @@ default = 7
 summary = "The most words one SQL identifier may have."
 
 [rule_files]
-general = ["general/code/NAMING.md", "general/code/NAMING-FILES.md"]
+general = [{path = "general/code/NAMING.md"}, {path = "general/code/NAMING-FILES.md"}]

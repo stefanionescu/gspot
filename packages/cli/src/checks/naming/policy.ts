@@ -15,7 +15,6 @@ import type {
     ShippedLanguage,
     ShippedPolicy,
     ShippedRule,
-    Term,
 } from '#cli/types/checks/naming.ts';
 
 const state: { shipped: ShippedPolicy | undefined } = { shipped: undefined };
@@ -54,15 +53,6 @@ function writtenRule(rule: NamingRule, source: string): PathRule {
     return compileRule(shaped, source);
 }
 
-function groupTerms(shipped: ShippedPolicy, naming: NamingSettings): Term[] {
-    const removed = new Set(
-        naming.remove_groups.map((entry) => entry.group).filter((group) => shipped.groups[group]?.removable === true),
-    );
-    return Object.entries(shipped.groups)
-        .filter(([group]) => !removed.has(group))
-        .flatMap(([group, { terms }]) => compileTerms(terms, `${group} group`));
-}
-
 function reservedTerms(shipped: ShippedPolicy, naming: NamingSettings): Map<string, string[]> {
     const reserved = new Map<string, string[]>();
     for (const entry of shipped.reserved) reserved.set(entry.term.toLowerCase(), entry.allowedFor);
@@ -75,11 +65,6 @@ function numberSetting(surface: ExposedSettings, policy: Policy, scope: string, 
     return typeof found?.value === 'number' ? found.value : undefined;
 }
 
-function listSetting(surface: ExposedSettings, policy: Policy, scope: string, key: string): string[] | undefined {
-    const found = settingValue(surface, policy, key, scope);
-    return Array.isArray(found?.value) ? (found.value as string[]) : undefined;
-}
-
 function limitsReader(
     shipped: ShippedPolicy,
     surface: ExposedSettings,
@@ -90,14 +75,14 @@ function limitsReader(
         const table: ShippedLanguage | undefined = shipped.languages[language];
         const parent = CATEGORY_PARENTS[category] ?? category;
         const prefix = `naming.${language}`;
-        const ceiling = (slot: string, fallback: number | undefined): number =>
+        const ceiling = (slot: string, defaultLimit: number | undefined): number =>
             numberSetting(surface, policy, scope, `${prefix}.${parent}.${slot}`) ??
             numberSetting(surface, policy, scope, `${prefix}.${slot}`) ??
-            fallback ??
+            defaultLimit ??
             0;
+        const cases = settingValue(surface, policy, `${prefix}.${parent}.case`, scope)?.value;
         return {
-            caseNames:
-                listSetting(surface, policy, scope, `${prefix}.${parent}.case`) ?? shippedCase(table, category, parent),
+            caseNames: Array.isArray(cases) ? (cases as string[]) : shippedCase(table, category, parent),
             maxChars: ceiling('max_chars', table?.maxChars),
             maxWords: ceiling('max_words', table?.maxWords),
         };
@@ -111,7 +96,7 @@ function shippedCase(table: ShippedLanguage | undefined, category: string, paren
 
 /**
  * The shipped policy, read once.
- * @returns the parsed packages/cli/configurations/policy/naming/policy.json
+ * @returns the parsed bundled naming policy
  */
 export function shippedPolicy(): ShippedPolicy {
     state.shipped ??= JSON.parse(readAsset(POLICY_ASSET)) as ShippedPolicy;
@@ -119,7 +104,7 @@ export function shippedPolicy(): ShippedPolicy {
 }
 
 /**
- * The policy in force for a scope: the shipped lists with the repository's additions, exemptions and ceilings.
+ * The policy in force for a scope: the shipped lists with the repository's additions, exemptions, and ceilings.
  * @param surface the scope's settings surface
  * @param policy the repository policy
  * @param scope the scope path, '' for the root
@@ -144,7 +129,15 @@ export function effectivePolicy(
         contract_properties: tables.flatMap((table) => table?.contract_properties ?? []),
         rules: tables.flatMap((table) => table?.rules ?? []),
     };
-    const terms = [...groupTerms(shipped, naming), ...compileTerms(naming.banned_terms, 'naming.banned_terms')];
+    const removed = new Set(
+        naming.remove_groups.map((entry) => entry.group).filter((group) => shipped.groups[group]?.removable === true),
+    );
+    const terms = [
+        ...Object.entries(shipped.groups)
+            .filter(([group]) => !removed.has(group))
+            .flatMap(([group, { terms }]) => compileTerms(terms, `${group} group`)),
+        ...compileTerms(naming.banned_terms, 'naming.banned_terms'),
+    ];
     // The shipped rules first, then what the selected configurations know about their own files, then the repository's.
     const rules = [
         ...shipped.rules.map((rule, index) => compileRule(rule, `shipped rule ${String(index + 1)}`)),

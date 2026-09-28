@@ -1,15 +1,15 @@
 import { join } from 'node:path';
-import { describe, expect, test } from 'bun:test';
+import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { commitAll } from '#tests/support/cli/git.ts';
+import type { FindingCase } from '#tests/types/cli.ts';
 import { reportSchema } from '#cli/execution/report.ts';
-import type { FindingCase } from '#tests/types/support/cli.ts';
+import { runPlanted } from '#tests/support/cli/planted.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
 // Planted repository for the dependencies configuration: a version range, a second package manager, a public workspace root, a stale lockfile.
 import { run, runProcess } from '#tests/support/cli/command.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
 import { installAtLevel, toolsPath } from '#tests/support/cli/tools.ts';
 import { containing, textContaining } from '#tests/support/expectations.ts';
-import { expectCorrected, runPlanted } from '#tests/support/cli/planted.ts';
 import { INVALID } from '#tests/constants/acceptance/source/configurations/configurations.ts';
 import { DEPENDENCIES_INIT } from '#tests/constants/acceptance/source/configurations/init-arguments.ts';
 
@@ -82,99 +82,103 @@ const CASES: (FindingCase & { corrected: Record<string, string> })[] = [
     },
 ];
 
-describe('the dependencies configuration', () => {
-    test.each(INVALID)(
-        'invalid manifest $files refuses execution and accepts a valid manifest',
-        async (planted) => {
-            await using sandbox = await testdir();
-            await createFileTree(sandbox.path, { 'package.json': CLEAN });
-            commitAll(sandbox.path);
-            const environment = { PATH: toolsPath(['typos', 'ec']) };
-            await installAtLevel(sandbox.path, DEPENDENCIES_INIT, environment);
-            const outcome = await runPlanted(sandbox.path, planted, environment);
-            expect(outcome.code, outcome.stdout + outcome.stderr).toBe(2);
-            expect(outcome.stdout + outcome.stderr).toContain(planted.expected);
-            await expectCorrected(sandbox.path, planted.check, environment);
-        },
-        PLANTED_TIMEOUT_MS * 2,
-    );
+test.each(INVALID)(
+    'the dependencies configuration > invalid manifest $files refuses execution and accepts a valid manifest',
+    async (planted) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, { 'package.json': CLEAN });
+        commitAll(sandbox.path);
+        const environment = { PATH: toolsPath(['typos', 'ec']) };
+        await installAtLevel(sandbox.path, DEPENDENCIES_INIT, environment);
+        const outcome = await runPlanted(sandbox.path, planted, environment);
+        expect(outcome.code, outcome.stdout + outcome.stderr).toBe(2);
+        expect(outcome.stdout + outcome.stderr).toContain(planted.expected);
+        const correctedCheck = await run(
+            sandbox.path,
+            ['check', '--only', planted.check, '--no-cache', '--json'],
+            environment,
+        );
+        expect(correctedCheck.code, correctedCheck.stdout + correctedCheck.stderr).toBe(0);
+        expect(reportSchema.parse(JSON.parse(correctedCheck.stdout)).checks).toMatchObject([
+            { check: planted.check, status: 'ok', findings: [] },
+        ]);
+    },
+    PLANTED_TIMEOUT_MS * 2,
+);
 
-    test.each(CASES)(
-        '$check reports $expected.rule in $expected.file and accepts corrected metadata',
-        async (planted) => {
-            await using sandbox = await testdir();
-            await createFileTree(sandbox.path, { 'package.json': CLEAN });
-            commitAll(sandbox.path);
-            const environment = { PATH: toolsPath(['typos', 'ec']) };
-            await installAtLevel(sandbox.path, DEPENDENCIES_INIT, environment);
-            const outcome = await runPlanted(sandbox.path, planted, environment);
-            expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
-            const failed = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
-            expect(failed.checks).toMatchObject([{ check: planted.check, status: 'fail' }]);
-            expect(failed.checks[0]!.findings).toContainEqual(containing(planted.expected));
-            const corrected = await runPlanted(sandbox.path, { ...planted, files: planted.corrected }, environment);
-            expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-            const accepted = reportSchema.parse(
-                await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json(),
-            );
-            expect(accepted.checks).toMatchObject([{ check: planted.check, status: 'ok', findings: [] }]);
-        },
-        PLANTED_TIMEOUT_MS * 2,
-    );
+test.each(CASES)(
+    'the dependencies configuration > $check reports $expected.rule in $expected.file and accepts corrected metadata',
+    async (planted) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, { 'package.json': CLEAN });
+        commitAll(sandbox.path);
+        const environment = { PATH: toolsPath(['typos', 'ec']) };
+        await installAtLevel(sandbox.path, DEPENDENCIES_INIT, environment);
+        const outcome = await runPlanted(sandbox.path, planted, environment);
+        expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
+        const failed = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
+        expect(failed.checks).toMatchObject([{ check: planted.check, status: 'fail' }]);
+        expect(failed.checks[0]!.findings).toContainEqual(containing(planted.expected));
+        const corrected = await runPlanted(sandbox.path, { ...planted, files: planted.corrected }, environment);
+        expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+        const accepted = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
+        expect(accepted.checks).toMatchObject([{ check: planted.check, status: 'ok', findings: [] }]);
+    },
+    PLANTED_TIMEOUT_MS * 2,
+);
 
-    test(
-        'a stale Bun lock fails, regenerating it passes, and advisory checks wait for their stage',
-        async () => {
-            await using sandbox = await testdir();
-            await createFileTree(sandbox.path, { 'package.json': CLEAN });
-            commitAll(sandbox.path);
-            const environment = { PATH: toolsPath(['typos', 'ec']) };
-            await installAtLevel(sandbox.path, DEPENDENCIES_INIT, environment);
-            await createFileTree(sandbox.path, {
-                'package.json': JSON.stringify({
-                    ...JSON.parse(CLEAN),
-                    workspaces: ['packages/*'],
-                    dependencies: { 'local-fixture': 'workspace:*' },
-                }),
-                'packages/local/package.json': '{"name":"local-fixture","version":"1.0.0","private":true}\n',
-            });
-            await Bun.write(
-                join(sandbox.path, 'bun.lock'),
-                '{"lockfileVersion":1,"workspaces":{"":{"name":"planted"}},"packages":{}}\n',
-            );
-            const args = ['check', '--only', 'integrity/lockfile-fresh', '--no-cache', '--json'];
-            const stale = await run(sandbox.path, args, environment);
-            expect(stale.code, stale.stdout + stale.stderr).toBe(1);
-            expect(reportSchema.parse(JSON.parse(stale.stdout)).checks).toMatchObject([
-                {
-                    check: 'integrity/lockfile-fresh',
-                    status: 'fail',
-                    findings: [
-                        containing({
-                            file: 'bun.lock',
-                            rule: 'stale-lockfile',
-                            line: 1,
-                            message: textContaining('refuses this lockfile'),
-                        }),
-                    ],
-                },
-            ]);
-            const locked = await runProcess([process.execPath, 'install', '--lockfile-only', '--ignore-scripts'], {
-                cwd: sandbox.path,
-                env: environment,
-            });
-            expect(locked.code, locked.stdout + locked.stderr).toBe(0);
-            expect(await Bun.file(join(sandbox.path, 'bun.lock')).exists()).toBe(true);
-            const corrected = await run(sandbox.path, args, environment);
-            expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-            expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
-                { check: 'integrity/lockfile-fresh', status: 'ok', findings: [] },
-            ]);
-            const checked = await run(sandbox.path, ['check', '--stage', 'commit', '--json'], environment);
-            const ids = reportSchema.parse(JSON.parse(checked.stdout)).checks.map(({ check }) => check);
-            expect(ids).not.toContain('dependencies/osv');
-            expect(ids).not.toContain('dependencies/syncpack');
-        },
-        PLANTED_TIMEOUT_MS * 2,
-    );
-});
+test(
+    'the dependencies configuration > a stale Bun lock fails, regenerating it passes, and advisory checks wait for their stage',
+    async () => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, { 'package.json': CLEAN });
+        commitAll(sandbox.path);
+        const environment = { PATH: toolsPath(['typos', 'ec']) };
+        await installAtLevel(sandbox.path, DEPENDENCIES_INIT, environment);
+        await createFileTree(sandbox.path, {
+            'package.json': JSON.stringify({
+                ...JSON.parse(CLEAN),
+                workspaces: ['packages/*'],
+                dependencies: { 'local-fixture': 'workspace:*' },
+            }),
+            'packages/local/package.json': '{"name":"local-fixture","version":"1.0.0","private":true}\n',
+        });
+        await Bun.write(
+            join(sandbox.path, 'bun.lock'),
+            '{"lockfileVersion":1,"workspaces":{"":{"name":"planted"}},"packages":{}}\n',
+        );
+        const args = ['check', '--only', 'integrity/lockfile-fresh', '--no-cache', '--json'];
+        const stale = await run(sandbox.path, args, environment);
+        expect(stale.code, stale.stdout + stale.stderr).toBe(1);
+        expect(reportSchema.parse(JSON.parse(stale.stdout)).checks).toMatchObject([
+            {
+                check: 'integrity/lockfile-fresh',
+                status: 'fail',
+                findings: [
+                    containing({
+                        file: 'bun.lock',
+                        rule: 'stale-lockfile',
+                        line: 1,
+                        message: textContaining('refuses this lockfile'),
+                    }),
+                ],
+            },
+        ]);
+        const locked = await runProcess([process.execPath, 'install', '--lockfile-only', '--ignore-scripts'], {
+            cwd: sandbox.path,
+            env: environment,
+        });
+        expect(locked.code, locked.stdout + locked.stderr).toBe(0);
+        expect(await Bun.file(join(sandbox.path, 'bun.lock')).exists()).toBe(true);
+        const corrected = await run(sandbox.path, args, environment);
+        expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+        expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
+            { check: 'integrity/lockfile-fresh', status: 'ok', findings: [] },
+        ]);
+        const checked = await run(sandbox.path, ['check', '--stage', 'commit', '--json'], environment);
+        const ids = reportSchema.parse(JSON.parse(checked.stdout)).checks.map(({ check }) => check);
+        expect(ids).not.toContain('dependencies/osv');
+        expect(ids).not.toContain('dependencies/syncpack');
+    },
+    PLANTED_TIMEOUT_MS * 2,
+);

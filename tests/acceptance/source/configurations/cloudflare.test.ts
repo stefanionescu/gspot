@@ -1,14 +1,15 @@
 import { join } from 'node:path';
 import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
+import type { FindingCase } from '#tests/types/cli.ts';
 import { reportSchema } from '#cli/execution/report.ts';
+import { runPlanted } from '#tests/support/cli/planted.ts';
 import { containing } from '#tests/support/expectations.ts';
-import type { FindingCase } from '#tests/types/support/cli.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
 // Planted repository for the cloudflare configuration: a configuration with no date, a header under no path, and a redirect with a status Cloudflare does not know.
 import { installAtLevel, toolsPath } from '#tests/support/cli/tools.ts';
-import { expectCorrected, runPlanted } from '#tests/support/cli/planted.ts';
 import { WRANGLER } from '#tests/constants/acceptance/source/configurations/configurations.ts';
 import { CLOUDFLARE_INIT } from '#tests/constants/acceptance/source/configurations/init-arguments.ts';
 
@@ -54,7 +55,15 @@ describe('the cloudflare configuration', () => {
             expect(failedReport.checks[0]?.findings).toContainEqual(
                 containing({ check: planted.check, ...planted.expected }),
             );
-            await expectCorrected(sandbox.path, planted.check, environment);
+            const correctedCheck = await run(
+                sandbox.path,
+                ['check', '--only', planted.check, '--no-cache', '--json'],
+                environment,
+            );
+            expect(correctedCheck.code, correctedCheck.stdout + correctedCheck.stderr).toBe(0);
+            expect(reportSchema.parse(JSON.parse(correctedCheck.stdout)).checks).toMatchObject([
+                { check: planted.check, status: 'ok', findings: [] },
+            ]);
         },
         PLANTED_TIMEOUT_MS * 4,
     );

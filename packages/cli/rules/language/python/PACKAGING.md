@@ -76,15 +76,20 @@ Good editable install for development:
 python -m pip install --no-deps -e .
 ```
 
-Good hashed requirement:
+Generate hashes from the reviewed package artifacts through the lockfile tool.
+Each requirement must name its exact version and the accepted artifact hashes.
+Do not copy invented package names or checksum strings into an installation.
 
-```text
-example-package==1.2.3 \
-  --hash=sha256:1111111111111111111111111111111111111111111111111111111111111111 \
-  --hash=sha256:2222222222222222222222222222222222222222222222222222222222222222
-```
+## Import correctness
+
+- Respect the import-linter contracts the project declares.
+- Run entrypoints through the configured environment, installation, or module entrypoint.
+- Ensure packaged imports work outside the repository root. Do not depend on an accidental
+  current-directory import path.
 
 ## Packages and architecture
+
+<!-- level: all -->
 
 Rules:
 
@@ -102,6 +107,8 @@ Rules:
 - Keep lower-level packages independent of higher-level workflow packages.
 
 ## Source layout and import path
+
+<!-- level: all -->
 
 Rules:
 

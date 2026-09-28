@@ -15,18 +15,18 @@ test('shared parse handles retain grammar, source, and independent disposal boun
     const javascript = await parseSource('javascript', source, context);
     const corrected = await parseSource('javascript', 'const label = "ready";', context);
     try {
-        expect(first?.rootNode.hasError).toBe(false);
-        expect(javascript?.rootNode.hasError).toBe(true);
-        expect(corrected?.rootNode.hasError).toBe(false);
-        expect(sibling?.rootNode.text).toBe(source);
+        expect(first!.rootNode.hasError).toBe(false);
+        expect(javascript!.rootNode.hasError).toBe(true);
+        expect(corrected!.rootNode.hasError).toBe(false);
+        expect(sibling!.rootNode.text).toBe(source);
         resources.dispose();
-        expect(first?.rootNode.text).toBe(source);
-        expect(sibling?.rootNode.text).toBe(source);
+        expect(first!.rootNode.text).toBe(source);
+        expect(sibling!.rootNode.text).toBe(source);
         using refreshedResources = new DisposableStack();
         const refreshed = await parseSource('typescript', source, { observations, resources: refreshedResources });
         try {
-            expect(refreshed?.rootNode.hasError).toBe(false);
-            expect(refreshed?.rootNode.text).toBe(source);
+            expect(refreshed!.rootNode.hasError).toBe(false);
+            expect(refreshed!.rootNode.text).toBe(source);
         } finally {
             refreshed?.delete();
         }

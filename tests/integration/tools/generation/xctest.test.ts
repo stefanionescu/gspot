@@ -1,53 +1,19 @@
 import { join } from 'node:path';
 import { unlinkSync } from 'node:fs';
 import { expect, test } from 'bun:test';
-import { planRun } from '#cli/execution/planning/plan.ts';
 import { createFileTree, testdir } from 'testdirs';
-import { emitAll } from '#cli/generation/render.ts';
 import { run } from '#tests/support/cli/command.ts';
+import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { reportSchema } from '#cli/execution/report.ts';
+import { planRun } from '#cli/execution/planning/plan.ts';
 import { run as runProcess } from '#cli/platform/spawn.ts';
 import { containing, containingAll } from '#tests/support/expectations.ts';
 import { commandConfigurations } from '#cli/execution/command-expansion.ts';
 import { CORRECT, DEFECT } from '#tests/constants/integration/tools/generation.ts';
 
-test.each(['', 'ios', 'ios # app'])('Swift test overrides preserve source rules in scope %s', async (scope) => {
-    await using sandbox = await testdir();
-    const root = sandbox.path;
-    const prefix = scope === '' ? '' : `${scope}/`;
-    const scopeTable = scope === '' ? '' : `[[scope]]\npath = ${JSON.stringify(scope)}\nconfigurations = ["xctest"]\n`;
-    await createFileTree(root, {
-        'gspot.toml': `version = 1\nlevel = "all"\nconfigurations = ${scope === '' ? '["xctest"]' : '[]'}\n[rules]\ninstall = false\n${scopeTable}`,
-        [`${prefix}Sources/Value.swift`]: DEFECT,
-        [`${prefix}AppTests/Value.swift`]: DEFECT,
-        [`${prefix}AppTests/Deep/Value.swift`]: DEFECT,
-    });
-    const session = await openSession(root);
-    const outputs = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
-        version: session.version,
-        packageManager: session.packageManager,
-    }).files.filter(({ path }) => path.endsWith('swiftlint.yml'));
-    expect(outputs.map(({ path }) => path)).toContain(`${prefix}AppTests/.swiftlint.yml`);
-    for (const output of outputs) await Bun.write(join(root, output.path), output.content);
-    const planned = await planRun(session, { stage: 'commit', only: ['swift/swiftlint'], skips: [] });
-    expect(planned).toHaveLength(1);
-    expect(commandConfigurations(session, planned[0]!)).toContain(`${prefix}AppTests/.swiftlint.yml`);
-    const command = ['check', '--only', 'swift/swiftlint', '--no-cache', '--json'];
-    const broken = await run(root, command);
-    expect(broken.code, broken.stdout + broken.stderr).toBe(1);
-    const findings = reportSchema.parse(JSON.parse(broken.stdout)).checks.flatMap((check) => check.findings);
-    expect(findings).toStrictEqual(
-        containingAll([
-            containing({ file: `${prefix}Sources/Value.swift`, rule: 'force_unwrapping' }),
-            containing({ file: `${prefix}Sources/Value.swift`, rule: 'missing_docs' }),
-            containing({ file: `${prefix}Sources/Value.swift`, rule: 'no_magic_numbers' }),
-        ]),
-    );
-    expect(findings.every((finding) => finding.file === `${prefix}Sources/Value.swift`)).toBe(true);
-    await Bun.write(join(root, `${prefix}Sources/Value.swift`), CORRECT);
-    const corrected = await run(root, command);
-    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+// Configuration edits invalidate cached findings and missing inputs fail explicitly.
+async function expectConfigurationChanges(root: string, prefix: string, command: string[]): Promise<void> {
     const cachedCommand = command.filter((part) => part !== '--no-cache');
     const ran = await run(root, cachedCommand);
     expect(ran.code).toBe(0);
@@ -70,6 +36,45 @@ test.each(['', 'ios', 'ios # app'])('Swift test overrides preserve source rules 
     const missing = await run(root, command);
     expect(missing.code, missing.stdout + missing.stderr).toBe(2);
     expect(missing.stdout).toContain('Required configuration');
+}
+
+test.each(['', 'ios', 'ios # app'])('Swift test overrides preserve source rules in scope %s', async (scope) => {
+    await using sandbox = await testdir();
+    const root = sandbox.path;
+    const prefix = scope === '' ? '' : `${scope}/`;
+    const scopeTable = scope === '' ? '' : `[[scope]]\npath = ${JSON.stringify(scope)}\nconfigurations = ["xctest"]\n`;
+    await createFileTree(root, {
+        'gspot.toml': `version = 1\nlevel = "all"\nconfigurations = ${scope === '' ? '["xctest"]' : '[]'}\n[rules]\ninstall = false\n${scopeTable}`,
+        [`${prefix}Sources/Value.swift`]: DEFECT,
+        [`${prefix}AppTests/Value.swift`]: DEFECT,
+        [`${prefix}AppTests/Deep/Value.swift`]: DEFECT,
+    });
+    const session = await openSession(root);
+    const outputs = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
+        version: session.version,
+        packageClient: session.packageClient,
+    }).files.filter(({ path }) => path.endsWith('swiftlint.yml'));
+    expect(outputs.map(({ path }) => path)).toContain(`${prefix}AppTests/.swiftlint.yml`);
+    for (const output of outputs) await Bun.write(join(root, output.path), output.content);
+    const planned = await planRun(session, { stage: 'commit', only: ['swift/swiftlint'], skips: [] });
+    expect(planned).toHaveLength(1);
+    expect(commandConfigurations(session, planned[0]!)).toContain(`${prefix}AppTests/.swiftlint.yml`);
+    const command = ['check', '--only', 'swift/swiftlint', '--no-cache', '--json'];
+    const broken = await run(root, command);
+    expect(broken.code, broken.stdout + broken.stderr).toBe(1);
+    const findings = reportSchema.parse(JSON.parse(broken.stdout)).checks.flatMap((check) => check.findings);
+    expect(findings).toStrictEqual(
+        containingAll([
+            containing({ file: `${prefix}Sources/Value.swift`, rule: 'force_unwrapping' }),
+            containing({ file: `${prefix}Sources/Value.swift`, rule: 'missing_docs' }),
+            containing({ file: `${prefix}Sources/Value.swift`, rule: 'no_magic_numbers' }),
+        ]),
+    );
+    expect(findings.every((finding) => finding.file === `${prefix}Sources/Value.swift`)).toBe(true);
+    await Bun.write(join(root, `${prefix}Sources/Value.swift`), CORRECT);
+    const corrected = await run(root, command);
+    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+    await expectConfigurationChanges(root, prefix, command);
 });
 
 test.each(
@@ -80,10 +85,10 @@ test.each(
         'gspot.toml': `version = 1\nlevel = "${level}"\nconfigurations = []\n[[scope]]\npath = "${scope}"\nconfigurations = ["xctest"]\n`,
         [`${scope}/Value.swift`]: DEFECT,
     });
-    const renderSession1 = await openSession(sandbox.path);
-    const outputs = emitAll(renderSession1.policyFiles.policy, renderSession1.repository, renderSession1.scopes, {
-        version: renderSession1.version,
-        packageManager: renderSession1.packageManager,
+    const session = await openSession(sandbox.path);
+    const outputs = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
+        version: session.version,
+        packageClient: session.packageClient,
     }).files.filter(({ path }) => path.endsWith('swiftlint.yml'));
     expect(outputs.filter(({ path }) => path === `${scope}/.swiftlint.yml`)).toHaveLength(1);
     for (const output of outputs) await Bun.write(join(sandbox.path, output.path), output.content);

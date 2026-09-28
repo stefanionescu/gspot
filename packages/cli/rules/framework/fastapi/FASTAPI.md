@@ -20,12 +20,13 @@ The FastAPI rules span two files: this one (structure, routers, parameters, sche
 errors) and Runtime (forms and files, encoding, async, dependencies, security, streaming, background
 tasks, middleware, docs, tests).
 
+The executable examples are complete modules using FastAPI and Pydantic v2.
+Domain calls inside async handlers must be nonblocking.
+
 ## FastAPI source decisions
 
 Rules:
 
-- Keep FastAPI framework code organized by application boundaries: app creation,
-  routers, dependencies, schemas, security, middleware, and infrastructure.
 - Prefer `Annotated[..., Query(...)]`, `Annotated[..., Path(...)]`,
   `Annotated[..., Body(...)]`, `Annotated[..., Depends(...)]`,
   `Annotated[..., Header()]`, `Annotated[..., Cookie()]`, and similar metadata
@@ -35,8 +36,6 @@ Rules:
 - Return concrete Pydantic models, dataclasses, dictionaries, lists, or
   iterables that match the declared return type.
 - Use FastAPI and Starlette primitives directly when they own the HTTP behavior.
-- Keep business logic outside path operation functions. Path operations adapt
-  HTTP input to application calls and adapt application results to HTTP output.
 - Keep database, SDK, and service clients out of module-level import-time work.
 - Keep security-specific rules stricter than general examples. Documentation
   examples with fake secrets, fake hashes, fake users, or fake tokens are not
@@ -46,7 +45,14 @@ Rules:
 
 ## FastAPI application structure
 
+<!-- level: all -->
+
 Rules:
+
+- Keep FastAPI framework code organized by application boundaries: app creation,
+  routers, dependencies, schemas, security, middleware, and infrastructure.
+- Keep business logic outside path operation functions. Path operations adapt
+  HTTP input to application calls and adapt application results to HTTP output.
 
 - Split nontrivial FastAPI apps across multiple modules.
 - Use one main application module to create the `FastAPI` object and include
@@ -55,7 +61,7 @@ Rules:
 - Put shared dependencies in a dependencies module or a domain-owned dependency
   module.
 - Put internal-only routers or admin routers in clearly named internal packages.
-- Every importable package and subpackage has an `__init__.py`.
+- Use `__init__.py` for regular packages. Preserve intentional namespace packages.
 - Keep the main app module small. It wires routers, global dependencies,
   middleware, exception handlers, metadata, and startup configuration.
 - Configure the FastAPI entrypoint in project configuration when the deployment
@@ -80,34 +86,58 @@ src/
       admin.py
 ```
 
+The following complete module exposes a read-only catalog. The two catalog records are
+fixed demonstration data; application persistence belongs to its own boundary.
+
 Good main module:
 
 ```python
-from fastapi import Depends, FastAPI
+"""Expose a fixed catalog with validated identifiers and public responses."""
 
-from .dependencies import get_query_token, get_token_header
-from .internal import admin
-from .routers import items, users
+from typing import Annotated, ClassVar
 
-app = FastAPI(dependencies=[Depends(get_query_token)])
+from fastapi import APIRouter, FastAPI, HTTPException, Path, status
+from pydantic import BaseModel, ConfigDict
 
-app.include_router(users.router)
-app.include_router(items.router)
-app.include_router(
-    admin.router,
-    prefix="/admin",
-    tags=["admin"],
-    dependencies=[Depends(get_token_header)],
-)
+
+class Item(BaseModel):
+    """Public catalog item.
+
+    Attributes:
+        name: Display name of the item.
+
+    """
+
+    model_config: ClassVar[ConfigDict] = ConfigDict(frozen=True)
+    name: str
+
+
+CATALOG = (Item(name="Notebook"), Item(name="Pencil"))
+router = APIRouter(prefix="/items", tags=["items"])
+
+
+@router.get("/{item_id}")
+def get_item(item_id: Annotated[int, Path(ge=0)]) -> Item:
+    """Return one catalog item or a public not-found response."""
+    if item_id >= len(CATALOG):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
+    return CATALOG[item_id]
+
+
+app = FastAPI(openapi_url=None, docs_url=None, redoc_url=None)
+app.include_router(router)
 ```
+
+## Import correctness
+
+Run the application through its configured installation or module entrypoint. Imports must work
+without relying on the repository root as the current directory.
 
 ## FastAPI routers
 
 Rules:
 
 - Use `APIRouter` to group related path operations.
-- Name the router object `router` unless a local framework convention requires
-  a more specific name.
 - Import router modules when multiple modules expose a `router` object, so names
   do not collide.
 - Put shared router prefix, tags, dependencies, and default responses on the
@@ -123,39 +153,23 @@ Rules:
   only when the same API must intentionally be exposed under multiple route
   groups.
 
-Good router module:
+A router that owns `/items` declares that prefix once. Give it shared tags,
+dependencies, and response metadata at construction. Attach each route before
+including the router in the application.
 
-```python
-from fastapi import APIRouter, Depends, HTTPException
+Import router modules by domain, such as `items` and `users`, then include
+`items.router` and `users.router`. Avoid aliases that hide the owner.
 
-from ..dependencies import get_token_header
+### Router naming
 
-router = APIRouter(
-    prefix="/items",
-    tags=["items"],
-    dependencies=[Depends(get_token_header)],
-    responses={404: {"description": "Not found"}},
-)
+<!-- level: all -->
 
-@router.get("/")
-async def read_items() -> list[Item]:
-    return list_items()
-```
-
-Good router imports:
-
-```python
-from .routers import items, users
-
-app.include_router(items.router)
-app.include_router(users.router)
-```
+Name the router object `router` unless the project requires a more specific name.
 
 ## FastAPI path operations
 
 Rules:
 
-- Keep path operation functions thin.
 - Annotate path operation parameters and return values.
 - Use response models or return type annotations so FastAPI can validate,
   filter, document, and serialize responses.
@@ -165,22 +179,12 @@ Rules:
 - Use `status` constants when they make intent clearer.
 - Use `Annotated` for headers, cookies, dependencies, form fields, and other
   parameter metadata.
-- Do not use path operation functions as dumping grounds for database access,
-  authorization logic, external API calls, and response formatting.
 - Put repeated path operation policy at the router or app level.
 - Use relative OpenAPI security URLs such as `tokenUrl="token"` so deployments
   behind a proxy can keep working.
 
-Good:
-
-```python
-@router.get("/{item_id}")
-async def read_item(item_id: str) -> Item:
-    item = get_item(item_id)
-    if item is None:
-        raise HTTPException(status_code=404, detail="Item not found")
-    return item
-```
+The catalog route validates the identifier before indexing. A missing item
+raises a public 404 response; it does not expose an internal exception.
 
 ## FastAPI parameters and validation
 
@@ -188,8 +192,8 @@ Rules:
 
 - Use standard Python type annotations on path operation parameters so FastAPI
   can parse, validate, document, and serialize consistently.
-- Treat a missing default value as required.
-- Treat a default value, including `None`, as optional.
+- Query and body parameters without defaults are required, including nullable parameters.
+- Defaults make query and body parameters optional. Path parameters remain required.
 - When a parameter can be `None`, include `None` in the type annotation.
 - Use `Query`, `Path`, `Body`, `Header`, `Cookie`, and `Form` inside
   `Annotated` for framework metadata and validation.
@@ -216,46 +220,53 @@ Rules:
 - Set `model_config = {"extra": "forbid"}` on a query parameter model when
   unknown query parameters are invalid for that endpoint.
 
-Good validated parameters:
+`Annotated[int, Path(ge=1)]` requires a positive path identifier.
+`Annotated[str | None, Query(max_length=50)] = None` accepts an omitted query
+value and bounds a supplied one. Path and query constraints belong to the
+HTTP contract, not to an undeclared domain helper.
 
-```python
-@router.get("/items/{item_id}")
-async def read_item(
-    item_id: Annotated[int, Path(ge=1)],
-    q: Annotated[str | None, Query(max_length=50)] = None,
-) -> Item:
-    return get_item(item_id=item_id, query=q)
-```
+The following complete application returns its validated filter values. It requires
+FastAPI 0.115.0 or later for [query parameter models](https://fastapi.tiangolo.com/tutorial/query-param-models/).
 
 Good query parameter model:
 
 ```python
+"""Validate a filter preview without accessing a database."""
+
+from typing import Annotated, ClassVar
+
+from fastapi import FastAPI, Query
+from pydantic import BaseModel, ConfigDict, Field
+
+
 class FilterParams(BaseModel):
-    """Query parameters for item filtering."""
+    """Bounded pagination and tag filters.
 
-    model_config = {"extra": "forbid"}
+    Attributes:
+        limit: Maximum number of requested results.
+        offset: Number of results to omit before the page.
+        tags: Tags selected by the caller.
 
-    limit: int = Field(100, gt=0, le=100)
-    offset: int = Field(0, ge=0)
-    order_by: Literal["created_at", "updated_at"] = "created_at"
+    """
+
+    model_config: ClassVar[ConfigDict] = ConfigDict(extra="forbid")
+    limit: int = Field(default=100, gt=0, le=100)
+    offset: int = Field(default=0, ge=0)
     tags: list[str] = Field(default_factory=list)
 
-@router.get("/items/")
-async def read_items(filters: Annotated[FilterParams, Query()]) -> list[Item]:
-    return list_items(filters=filters)
+
+app = FastAPI(openapi_url=None, docs_url=None, redoc_url=None)
+
+
+@app.get("/filters")
+# gspot-ignore python/trivial-function -- FastAPI registers this required route callback.
+def get_filters(filters: Annotated[FilterParams, Query()]) -> FilterParams:
+    """Return the validated query values."""
+    return filters
 ```
 
-Good route order:
-
-```python
-@router.get("/users/me")
-async def read_current_user() -> User:
-    return get_current_user()
-
-@router.get("/users/{user_id}")
-async def read_user(user_id: str) -> User:
-    return get_user(user_id)
-```
+Declare `/users/me` before `/users/{user_id}` when the parameterized route
+can also accept `me`. This preserves the fixed route's intended behavior.
 
 ## FastAPI request and response schemas
 
@@ -265,8 +276,8 @@ Rules:
 - Use Pydantic models as boundary schemas. Keep business workflows and
   persistence behavior outside schema classes.
 - Declare required body fields without defaults.
-- Declare optional or nullable body fields with explicit defaults and `None`
-  annotations where applicable.
+- Declare omittable fields with defaults. A nullable annotation permits `None` but does not
+  by itself make a field optional in Pydantic v2.
 - Prefer `Field(default_factory=...)` for mutable defaults, even when Pydantic copies mutable defaults.
 - Use `Field` constraints on model attributes when the constraint belongs to the
   schema contract.
@@ -282,44 +293,24 @@ Rules:
 - Use `.model_dump()` for Pydantic v2 model-to-dict conversion.
 - Use `.model_dump(exclude_unset=True)` for partial-update input where omitted
   values must not overwrite stored values.
-- Use `.model_copy(update=...)` to create updated model values without mutating
-  the original model.
+- Use `.model_copy(update=...)` only with already validated updates. It does not validate
+  update values. Revalidate the complete result when cross-field constraints can change.
 - Use `jsonable_encoder()` when converting Pydantic models or datetimes to
   values that must be JSON-compatible for storage or transport.
 - Use `response_model` or a return type annotation when response filtering,
   validation, serialization, or documentation matters.
 
-Good schema defaults:
+A required `name: str` field has no default. Use `description: str | None = None`
+for an omitted or null description, and `Field(default_factory=list)` for an
+independent mutable list on each model instance.
 
-```python
-class ItemCreate(BaseModel):
-    """Request body for creating an item."""
+`Body(embed=True)` on an `item` parameter requires an `{"item": ...}` JSON
+envelope. Keep that envelope only when the public API contract declares it.
 
-    name: str
-    description: str | None = None
-    tags: list[str] = Field(default_factory=list)
-```
-
-Good body embedding when the API contract requires an envelope:
-
-```python
-@router.put("/items/{item_id}")
-async def update_item(
-    item_id: int,
-    item: Annotated[ItemCreate, Body(embed=True)],
-) -> Item:
-    return save_item(item_id=item_id, item=item)
-```
-
-Good partial update:
-
-```python
-@router.patch("/items/{item_id}")
-async def patch_item(item_id: str, item: ItemUpdate) -> Item:
-    stored_item = get_item(item_id)
-    update_data = item.model_dump(exclude_unset=True)
-    return stored_item.model_copy(update=update_data)
-```
+Use `model_dump(exclude_unset=True)` for supplied patch fields, merge with the
+stored values, and call the complete model's `model_validate` method. The
+[body update guidance](https://fastapi.tiangolo.com/tutorial/body-updates/)
+explains omitted-field handling. Revalidate cross-field constraints before persistence.
 
 ## FastAPI schema fields and examples
 
@@ -356,59 +347,15 @@ Rules:
 - Keep examples aligned with current schema fields. Remove examples when they
   become stale.
 
-Good model field metadata:
+Use `Field(examples=[...])` for field examples and numeric or string
+constraints for the actual accepted range. Examples describe valid values;
+they do not implement validation.
 
-```python
-class PromptRequest(BaseModel):
-    """Request body for a prompt."""
+Put whole-model examples under `ConfigDict(json_schema_extra={...})`. Each
+example must supply the required fields and satisfy the model bounds.
 
-    prompt: str = Field(examples=["Warm up the selected model."])
-    session_id: str | None = Field(default=None, max_length=128)
-    max_tokens: int = Field(gt=0, le=4096)
-    stop: list[str] = Field(default_factory=list)
-```
-
-Good model example:
-
-```python
-class PromptRequest(BaseModel):
-    """Request body for a prompt."""
-
-    prompt: str
-    max_tokens: int
-
-    model_config = {
-        "json_schema_extra": {
-            "examples": [
-                {
-                    "prompt": "Warm up the selected model.",
-                    "max_tokens": 128,
-                }
-            ],
-        },
-    }
-```
-
-Good OpenAPI examples:
-
-```python
-@router.put("/prompts/{session_id}")
-async def update_prompt(
-    session_id: str,
-    prompt: Annotated[
-        PromptRequest,
-        Body(
-            openapi_examples={
-                "normal": {
-                    "summary": "Valid prompt",
-                    "value": {"prompt": "Warm up the selected model.", "max_tokens": 128},
-                },
-            },
-        ),
-    ],
-) -> PromptRequest:
-    return save_prompt(session_id=session_id, prompt=prompt)
-```
+Use `Body(openapi_examples={...})` for named request examples with a summary
+and value. Keep the example envelope aligned with the declared body shape.
 
 ## FastAPI nested and special types
 
@@ -444,30 +391,12 @@ Rules:
 - Avoid deeply nested request bodies when the domain can be expressed as
   smaller endpoints or named resources.
 
-Good nested schema:
+For nested image metadata, declare a model with a `HttpUrl` field and reference
+it through `list[Image]`. Use a default factory for the containing list.
+A `set[str]` models unique tags only when order is not part of their contract.
 
-```python
-class Image(BaseModel):
-    """Image metadata."""
-
-    url: HttpUrl
-    name: str
-
-class ItemCreate(BaseModel):
-    """Request body for creating an item."""
-
-    name: str
-    tags: set[str] = Field(default_factory=set)
-    images: list[Image] = Field(default_factory=list)
-```
-
-Good arbitrary-key body:
-
-```python
-@router.post("/index-weights/")
-async def create_index_weights(weights: dict[int, float]) -> dict[int, float]:
-    return weights
-```
+An arbitrary-key body such as `dict[int, float]` still receives JSON string
+keys. Test both valid numeric keys and invalid keys at the HTTP boundary.
 
 ## FastAPI headers and cookies
 
@@ -478,7 +407,6 @@ Rules:
 - Do not rely on plain scalar parameters for headers or cookies. FastAPI treats
   plain non-path scalar parameters as query parameters.
 - Use `Annotated[..., Header()]` and `Annotated[..., Cookie()]` for new code.
-- Keep Python parameter and field names in snake_case.
 - Let `Header()` convert underscores to hyphens by default.
 - Set `Header(convert_underscores=False)` only when an external protocol
   requires underscores in header names and the deployment path supports them.
@@ -498,54 +426,20 @@ Rules:
   handling can prevent JavaScript-driven docs requests from sending the cookie
   value entered in the UI.
 
-Good header parameter:
+A parameter annotated with `Header()` reads from headers. By default,
+`user_agent` maps to the `User-Agent` header; an ordinary scalar parameter
+without that metadata reads from the query.
 
-```python
-@router.get("/items/")
-async def read_items(user_agent: Annotated[str | None, Header()] = None) -> list[Item]:
-    return list_items(user_agent=user_agent)
-```
+Use `Annotated[list[str] | None, Header()] = None` for an optional repeated
+header. Keep the absent-header behavior explicit and avoid logging its values.
 
-Good duplicate header:
+A cohesive header model can declare required `host` and optional
+`if_modified_since` fields. Reject extra headers only if the deployment
+contract permits that restriction; proxies and clients add standard headers.
 
-```python
-@router.get("/items/")
-async def read_items(x_token: Annotated[list[str] | None, Header()] = None) -> list[Item]:
-    return list_items(tokens=x_token or [])
-```
-
-Good header model:
-
-```python
-class CommonHeaders(BaseModel):
-    """Headers shared by item endpoints."""
-
-    model_config = {"extra": "forbid"}
-
-    host: str
-    save_data: bool
-    if_modified_since: str | None = None
-    x_tag: list[str] = Field(default_factory=list)
-
-@router.get("/items/")
-async def read_items(headers: Annotated[CommonHeaders, Header()]) -> list[Item]:
-    return list_items(headers=headers)
-```
-
-Good cookie model:
-
-```python
-class SessionCookies(BaseModel):
-    """Cookies required for session-aware endpoints."""
-
-    model_config = {"extra": "forbid"}
-
-    session_id: str
-
-@router.get("/items/")
-async def read_items(cookies: Annotated[SessionCookies, Cookie()]) -> list[Item]:
-    return list_items(session_id=cookies.session_id)
-```
+A cookie model can require `session_id` through `Cookie()`. The session
+value still needs validation by the authentication boundary before it conveys
+authority.
 
 ## FastAPI response models
 
@@ -586,39 +480,20 @@ Rules:
 - Treat response validation failures as server bugs. Fix the returned data or
   response schema rather than weakening validation.
 
-Good return type:
+The catalog route returns the declared public `Item` model. Its return type
+provides response validation and serialization without duplicating the
+`response_model` argument.
 
-```python
-@router.get("/items/{item_id}")
-async def read_item(item_id: str) -> ItemOut:
-    return get_item_out(item_id)
-```
+When the internal result differs from the public shape, declare a public
+`response_model`. Verify that the response excludes private fields. Avoid
+`Any` when the internal return type can be expressed accurately.
 
-Good response model for a different internal return shape:
+Return `FileResponse` for an owned report path. Authorize access and resolve
+the path at the file owner before exposing it through a download route.
 
-```python
-@router.post("/users/", response_model=UserOut)
-async def create_user(user: UserIn) -> Any:
-    return save_user(user)
-```
-
-Good direct response:
-
-```python
-@router.get("/download")
-async def download_report() -> Response:
-    return FileResponse(path=REPORT_PATH)
-```
-
-Good explicit response-model disable:
-
-```python
-@router.get("/portal", response_model=None)
-async def get_portal(teleport: bool = False) -> Response | dict[str, str]:
-    if teleport:
-        return RedirectResponse(url="/elsewhere")
-    return {"message": "Portal ready"}
-```
+When a route intentionally returns either a redirect response or an ordinary
+mapping, use `response_model=None` and document both outcomes. The redirect
+target must follow the application's allowed-destination contract.
 
 ## FastAPI status codes and errors
 
@@ -660,43 +535,17 @@ Rules:
 - Log validation and HTTP errors carefully. Do not log full authenticated
   request bodies or sensitive headers.
 
-Good created status:
+Use `status.HTTP_201_CREATED` only after a new resource exists. A request
+accepted for later processing needs the separate 202 contract.
 
-```python
-@router.post("/items/", status_code=status.HTTP_201_CREATED)
-async def create_item(item: ItemCreate) -> ItemOut:
-    return save_item(item)
-```
+A deletion with `status.HTTP_204_NO_CONTENT` returns no body. Complete the
+required deletion before reporting success.
 
-Good no-content status:
+The catalog example raises `HTTPException` with a sanitized 404 detail.
+Authorization and existence checks must not reveal private resources through
+inconsistent response details.
 
-```python
-@router.delete("/items/{item_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_item(item_id: str) -> None:
-    delete_existing_item(item_id)
-```
-
-Good API error:
-
-```python
-@router.get("/items/{item_id}")
-async def read_item(item_id: str) -> ItemOut:
-    item = find_item(item_id)
-    if item is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
-    return item
-```
-
-Good exception handler boundary:
-
-```python
-@app.exception_handler(StarletteHTTPException)
-async def http_exception_handler(
-    request: Request,
-    exc: StarletteHTTPException,
-) -> JSONResponse:
-    return JSONResponse(
-        status_code=exc.status_code,
-        content={"detail": "Request failed"},
-    )
-```
+Register an exception boundary for Starlette's `HTTPException` when it must
+cover both framework and application errors. Preserve required protocol
+headers while returning a sanitized error body. Do not stringify the original
+exception into the public response.

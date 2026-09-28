@@ -1,4 +1,4 @@
-# gspot documentation
+# gspot Documentation
 
 The manual uses Astro Starlight with four navigation sections: Get started, Guides, Reference,
 and Development. Authored guides teach workflows; references come from the
@@ -44,7 +44,9 @@ Guides, Reference, and Development.
 References describe accepted inputs, defaults, scope, effects, exits, and limitations. Change
 the owning CLI help, schema, manifest, or rule definition rather than maintaining a copied
 reference page. `src/content/reference/` renders those definitions and rejects duplicate
-identities. Every shipped check and plugin rule requires a nonempty Markdown `example` in its
+identities.
+
+Every shipped check and plugin rule requires a nonempty Markdown `example` in its
 metadata. Describe the defect, correction, and required context there, and exercise that behavior
 in the existing tests for its owner. Do not create a second example generator. Keep authored
 guidance out of schema dumps and internal module inventories.
@@ -60,7 +62,9 @@ in `../architecture/22-remaining.md`.
 Use complete policy examples when a reader needs a starting file. Label fragments and name
 their destination. State required tools and working directories. Pair diagnostic examples with
 a correction and the command that verifies it. Never invent successful output or imply a
-manual correction is automatic. The landing page uses the captured JavaScript defect and correction in
+manual correction is automatic.
+
+The landing page uses the captured JavaScript defect and correction in
 `src/components/home/client-environment.json`. The first-check guide points to the complete JavaScript walkthrough.
 
 Use short, direct headings and consistent terms: configuration, check, tool rule, finding, stage,
@@ -71,7 +75,7 @@ exit codes, paths, and failure conditions when they define the behavior.
 ## Fonts and shared styling
 
 The landing page and manual use self-hosted Geist Sans and Geist Mono from the pinned
-Fontsource packages. `src/styles/theme.css` imports their CSS; Astro bundles the font files.
+Fontsource packages. `src/theme.css` imports their CSS; Astro bundles the font files.
 The site build retains each package license under `licenses/` in the output. Keep those
 licenses with distributed site assets.
 
@@ -94,7 +98,7 @@ to Astro components. The [MIT notice](public/licenses/turborepo.txt) ships with 
 Starlight owns navigation, search, theme persistence, and code-copy behavior.
 
 The Sweet spot mark and dimensional hero were created with the built-in image generator.
-Their source images are `public/brand/identity/mark-generated.png` and `public/brand/home/hero.png`.
+Their source images are `public/brand/identity/mark/source.png` and `public/brand/home/hero.png`.
 The SVG variants and diagrams remain editable. Keep purpose, release status, and commands
 as selectable text beside artwork. `public/brand/` also holds README banners and local badges.
 
@@ -106,10 +110,12 @@ claim sponsorship. Retain the notices when distributing these assets.
 
 The flat mark used this prompt with the built-in image generator:
 
-> Use case: logo-brand. Create the finished original logo symbol for "gspot", a developer tool for repository rules. This is a professional identity asset for a polished developer website at the quality of Vercel / Turborepo. Design direction: "Sweet spot". One iconic compact abstract symbol, exactly two asymmetric rounded cobalt blue forms that frame a small vivid tangerine circle in their negative space. The shapes should feel intentional, confident, subtly cheeky and beautifully optically balanced, with excellent recognition at favicon sizes. Think precise sculpted curves, not random blobs or a generic chain link. Colors cobalt #2457FF and tangerine #FF7A1A. Flat solid vector-like shapes with crisp smooth edges. Transparent background, centered symbol occupying about 75% of the square canvas. No wordmark, no text, no letters, specifically no letter G, no mascot, no explicit anatomy. No mockup, no gradient, no shadow, no border, no presentation grid. Deliver a single production-ready logo mark.
+```text
+Use case: logo-brand. Create the finished original logo symbol for "gspot", a developer tool for repository rules. This is a professional identity asset for a polished developer website at the quality of Vercel / Turborepo. Design direction: "Sweet spot". One iconic compact abstract symbol, exactly two asymmetric rounded cobalt blue forms that frame a small vivid tangerine circle in their negative space. The shapes should feel intentional, confident, subtly cheeky and beautifully optically balanced, with excellent recognition at favicon sizes. Think precise sculpted curves, not random blobs or a generic chain link. Colors cobalt #2457FF and tangerine #FF7A1A. Flat solid vector-like shapes with crisp smooth edges. Transparent background, centered symbol occupying about 75% of the square canvas. No wordmark, no text, no letters, specifically no letter G, no mascot, no explicit anatomy. No mockup, no gradient, no shadow, no border, no presentation grid. Deliver a single production-ready logo mark.
+```
 
 The dimensional hero uses that generated mark as its visual reference, with cobalt enamel
 surfaces, a tangerine center, a slight perspective tilt, and a transparent background.
 The editable SVG mark is a vector interpretation of the generated silhouette.
 
-ShellCheck artwork comes from the [VS Code integration](https://github.com/vscode-shellcheck/vscode-shellcheck/blob/master/shellcheck.png) under its [MIT license](public/licenses/shellcheck.txt). The Semgrep symbol is extracted from the [upstream logo](https://github.com/semgrep/semgrep/blob/develop/semgrep.svg), with its [LGPL-2.1 license](public/licenses/semgrep.txt). Names and marks identify supported integrations and do not imply endorsement.
+ShellCheck artwork comes from the [VS Code integration](https://github.com/vscode-shellcheck/vscode-shellcheck/blob/master/shellcheck.png) under its [MIT license](public/licenses/shellcheck.txt). The Semgrep symbol is extracted from the [upstream logo](https://github.com/semgrep/semgrep/blob/develop/semgrep.svg), under the GNU Lesser General Public License (LGPL). Its [version 2.1 license](public/licenses/semgrep.txt) accompanies the asset. Names and marks identify supported integrations and do not imply endorsement.

@@ -1,9 +1,9 @@
 // The types of integration/cli/checks in this package.
 import type { Mock } from 'bun:test';
+import type { TestdirResult } from 'testdirs';
 import type { inspectTool } from '#cli/tools/inspect.ts';
 import type { CheckSpec } from '#cli/types/configurations.ts';
-import type { EngineInput } from '#cli/types/checks/checks.ts';
-import type { TestdirResult } from 'testdirs';
+import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 
 /** What the Cloudflare types test plants: the generated declaration, its developer edit, and the mocked inspection. */
 export type CloudflarePlanted = {
@@ -34,4 +34,32 @@ export type OpenapiPlanted = {
     mode: number;
     spec: CheckSpec;
     input: EngineInput;
+};
+
+/** A native site-tool report, its correction, and the finding the adapter must preserve. */
+export type SiteReportCase = {
+    name: string;
+    analyze: (input: EngineInput) => Promise<Finding[]>;
+    defect: (output: string) => Record<string, unknown> | Record<string, unknown>[];
+    corrected: Record<string, unknown> | Record<string, unknown>[];
+    status: number;
+    file: string;
+    rule: string;
+};
+
+/** Commands and disposable copies observed at the Next.js process boundary. */
+export type NextjsObserved = {
+    directories: string[];
+    inspections: string[][];
+    routesSeen: string[];
+    [Symbol.dispose]: () => void;
+};
+
+/** Native Jest inputs for valid, malformed, or absent report artifacts. */
+export type JestReportInputs = {
+    tests: 'valid' | 'malformed' | 'missing';
+    testCount: number;
+    runtimeFailures: number;
+    status: string;
+    coverage: number | string | undefined;
 };

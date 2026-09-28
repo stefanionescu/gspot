@@ -40,7 +40,7 @@ function moduleSource(path: string, text: string): string {
     }
 }
 
-function ruleData(value: unknown): z.infer<typeof eslintPreviewResponse>[number] {
+function ruleTable(value: unknown): z.infer<typeof eslintPreviewResponse>[number] {
     const entries = z.array(z.record(z.string(), z.unknown())).parse(value);
     const rules = new Map<string, unknown[]>();
     for (const entry of entries) {
@@ -84,8 +84,8 @@ export async function evaluateEslintPreview(
     });
     const results: z.infer<typeof eslintPreviewResponse> = [];
     for (const module of modules) {
-        const loaded = (await import(pathToFileURL(module).href)) as { default: unknown };
-        results.push(ruleData(loaded.default));
+        const namespace = (await import(pathToFileURL(module).href)) as { default: unknown };
+        results.push(ruleTable(namespace.default));
     }
     return results;
 }

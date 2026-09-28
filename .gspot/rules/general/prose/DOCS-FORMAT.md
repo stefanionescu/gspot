@@ -57,6 +57,8 @@ text. Use separate paragraphs.
 
 ### Markdown comments
 
+<!-- level: all -->
+
 Use HTML comments for author-only maintenance notes:
 
 ```html
@@ -131,6 +133,8 @@ structures.
 
 ### Titles and H1 headings
 
+<!-- level: all -->
+
 Every standalone page needs one clear title.
 
 For repository Markdown:
@@ -201,6 +205,8 @@ description: Route service traffic through private network endpoints.
 
 ### Navigation labels and short titles
 
+<!-- level: all -->
+
 When the publishing system uses separate navigation labels:
 
 - Keep the label shorter than the page title.
@@ -217,6 +223,8 @@ Configure notifications
 ```
 
 ### Introductions
+
+<!-- level: all -->
 
 The introduction orients the reader in one or two short paragraphs.
 
@@ -262,6 +270,8 @@ Choose the authentication method that matches the deployment environment.
 
 ### Contents sections
 
+<!-- level: all -->
+
 Long pages need a `## Contents` section with links to the sections readers use
 most.
 
@@ -292,6 +302,8 @@ sentence explaining how to choose among the sections.
 
 ### Section order
 
+<!-- level: all -->
+
 Use a predictable order for task-oriented pages:
 
 1. Context.
@@ -313,6 +325,8 @@ Use a predictable order for reference pages:
 1. Related topics.
 
 ### Paragraphs
+
+<!-- level: all -->
 
 Keep paragraphs focused. Two to four sentences is a useful default, not a hard
 limit.
@@ -358,6 +372,8 @@ Select **Settings** > **Access control**.
 
 ### Italics
 
+<!-- level: all -->
+
 Avoid italics for emphasis. Italics are harder to scan in many sans-serif
 interfaces and can reduce readability.
 
@@ -388,6 +404,8 @@ Do not use inline code for product names or general technical concepts.
 
 ### Quotation marks
 
+<!-- level: all -->
+
 Use straight quotation marks.
 
 Prefer code formatting for exact text that a reader enters or sees in a
@@ -411,6 +429,8 @@ Do not simulate definitions with a long series of bold labels.
 
 ### Blockquotes
 
+<!-- level: all -->
+
 Use blockquotes only for quoted source material.
 
 Do not use blockquotes as generic callout boxes. Use a supported alert or a
@@ -420,6 +440,8 @@ Keep quotations short, cite the source, and prefer paraphrasing when the exact
 wording is not important.
 
 ### Badges
+
+<!-- level: all -->
 
 Each badge adds noise and external maintenance. Include a badge only when its state matters to the
 typical README reader, the destination is useful, the badge remains accurate, and text elsewhere
@@ -450,6 +472,8 @@ Use a list when readers need to scan several parallel items.
 
 ### Introduce the list
 
+<!-- level: all -->
+
 Use a complete introductory sentence followed by a colon:
 
 ```markdown
@@ -465,6 +489,8 @@ named.
 
 ### Keep items parallel
 
+<!-- level: all -->
+
 Start all items in a list with the same grammatical form.
 
 Use:
@@ -476,6 +502,8 @@ Use:
 ```
 
 ### Capitalize and punctuate consistently
+
+<!-- level: all -->
 
 - Start every item with a capital letter.
 - End complete sentences with periods.
@@ -502,6 +530,8 @@ Order unordered items by:
 1. Alphabetical order when no other order adds meaning.
 
 ### Avoid sentence fragments that depend on the introduction
+
+<!-- level: all -->
 
 Use:
 
@@ -544,6 +574,8 @@ the list marker:
 If nesting becomes complex, create a heading instead.
 
 ### Do not use bold labels as miniature headings
+
+<!-- level: all -->
 
 When several items need definitions, prefer:
 
@@ -598,6 +630,8 @@ Before adding a column, ask whether:
 Do not put paragraphs, large code blocks, or nested lists in table cells.
 
 ### Use footnotes sparingly
+
+<!-- level: all -->
 
 Move information into the table or surrounding text first.
 

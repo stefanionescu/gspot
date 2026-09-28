@@ -4,9 +4,10 @@ import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
+import { initArgs } from '#tests/support/cli/init.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
 import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
 import type { ApplyPreviewJson } from '#cli/types/commands/apply.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
 import { chmodSync, readFileSync, statSync, symlinkSync } from 'node:fs';
 
 test(
@@ -29,17 +30,7 @@ test(
             const options = await prettier.resolveConfig(filepath, { editorconfig: true, useCache: false });
             expected.set(path, await prettier.format(source, { ...options, filepath }));
         }
-        const initialized = await run(sandbox.path, [
-            'init',
-            '--yes',
-            '--configurations',
-            'formatting',
-            '--no-runner',
-            '--no-ci',
-            '--no-hooks',
-            '--no-rules',
-            '--no-install',
-        ]);
+        const initialized = await run(sandbox.path, initArgs(['formatting']));
         expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
         for (const [path, source] of Object.entries(sources)) {
             const filepath = join(sandbox.path, path);
@@ -100,17 +91,7 @@ test.each([
         const previous = await prettier.resolveConfig(filepath, { editorconfig: true, useCache: false });
         const expected = await prettier.format(source, { ...previous, filepath });
         expect(expected).toBe('const greeting = "hello"\r\nif (greeting) {\r\n        console.log(greeting)\r\n}\r\n');
-        const result = await run(sandbox.path, [
-            'init',
-            '--yes',
-            '--configurations',
-            'formatting',
-            '--no-hooks',
-            '--no-runner',
-            '--no-ci',
-            '--no-rules',
-            '--no-install',
-        ]);
+        const result = await run(sandbox.path, initArgs(['formatting']));
         expect(result.code, result.stdout + result.stderr).toBe(0);
         const current = await prettier.resolveConfig(filepath, { editorconfig: true, useCache: false });
         expect(await prettier.format(source, { ...current, filepath })).toBe(expected);
@@ -149,17 +130,7 @@ test(
         expect(expected.get('source.js')).toBe(
             'const greeting = "hello"\nif (greeting) {\n  console.log(greeting)\n}\n',
         );
-        const result = await run(sandbox.path, [
-            'init',
-            '--yes',
-            '--configurations',
-            'formatting',
-            '--no-hooks',
-            '--no-runner',
-            '--no-ci',
-            '--no-rules',
-            '--no-install',
-        ]);
+        const result = await run(sandbox.path, initArgs(['formatting']));
         expect(result.code, result.stdout + result.stderr).toBe(0);
         for (const [file, text] of Object.entries(authored)) {
             const filepath = join(sandbox.path, file);

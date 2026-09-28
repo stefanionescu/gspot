@@ -13,13 +13,9 @@ const state: { isReady: Promise<void> | undefined; parsers: Map<GrammarName, Pro
     parsers: new Map(),
 };
 
-function ready(): Promise<void> {
-    state.isReady ??= Parser.init({ wasmBinary: readFileSync(grammarPath('web-tree-sitter.wasm')) });
-    return state.isReady;
-}
-
 async function build(name: GrammarName): Promise<Parser> {
-    await ready();
+    state.isReady ??= Parser.init({ wasmBinary: readFileSync(grammarPath('web-tree-sitter.wasm')) });
+    await state.isReady;
     const language = await Language.load(readFileSync(grammarPath(`${name}.wasm`)));
     const parser = new Parser();
     parser.setLanguage(language);
@@ -42,10 +38,10 @@ export function parserFor(name: GrammarName): Promise<Parser> {
 
 /**
  * Shares a run-owned parse while giving each reader its own disposable tree handle.
- * @param name the grammar that gives the source its meaning
- * @param text the exact source to parse
- * @param context execution observations and their existing resource owner, when running checks
- * @returns a caller-owned tree copy, or null when parsing cannot produce a tree
+ * @param name the grammar that gives the source its meaning.
+ * @param text the exact source to parse.
+ * @param context execution observations and their existing resource owner, when running checks.
+ * @returns a caller-owned tree copy, or null when parsing cannot produce a tree.
  */
 export async function parseSource(name: GrammarName, text: string, context?: ParseContext): Promise<Tree | null> {
     const parser = await parserFor(name);

@@ -25,11 +25,11 @@ run = "gspot doctor"
 [tasks."repo:setup"]
 description = "Install frozen dependencies, prepare the Swift parser, and synchronize Astro types."
 run = ["bun install --frozen-lockfile", "bun packages/cli/scripts/inputs.ts"]
-depends_post = ["docs:sync"]
+depends_post = ["docs:sync", "build:plugin"]
 
 [tasks."repo:install-checks"]
-description = "Install the locked repository check environment."
-run = "gspot install"
+description = "Install locked repository checks with the current workspace plugin."
+run = "bun tests/support/registry/install.ts"
 
 [tasks.build]
 description = "Build the host CLI, or targets supplied as arguments, with licenses and notices."
@@ -69,6 +69,15 @@ description = "Run native compatibility tests with the selected tools installed.
 dir = "{{config_root}}/tests"
 run = "bun test --timeout 60000 ./integration/tools"
 
+[tasks."rules:lint"]
+depends = ["prepare:grammar", "build:plugin"]
+description = "Validate guide structure and native Good examples at both levels."
+dir = "{{config_root}}/tests"
+run = [
+    "bun ../packages/cli/src/agents/lint.ts",
+    "bun test --timeout 60000 --test-name-pattern 'examples|Good fence' ./unit/cli/agents/examples.test.ts ./integration/tools/generation/bash.test.ts ./integration/tools/generation/docker.test.ts ./integration/tools/generation/fastapi.test.ts ./integration/tools/generation/ruff.test.ts ./integration/tools/generation/swift/docs.test.ts ./integration/tools/generation/typescript.test.ts",
+]
+
 [tasks."test:acceptance"]
 depends = ["prepare:grammar"]
 description = "Run behavioral acceptance tests with the local plugin in an isolated registry."
@@ -79,7 +88,7 @@ run = "bun support/acceptance.ts"
 depends = ["prepare:grammar", "build:plugin"]
 description = "Exercise built release artifacts and installed consumers through an isolated registry."
 dir = "{{config_root}}/tests"
-run = "bun test --timeout 60000 ./acceptance/release"
+run = "bun support/release/run.ts"
 
 [tasks."check:types"]
 description = "Check workspace and documentation TypeScript types."
@@ -176,7 +185,7 @@ run = "bun test --timeout 60000 ./integration/docs"
 [tasks."test:bash-example"]
 description = "Exercise the published Bash example and captured transcript with native tools."
 dir = "{{config_root}}/tests"
-run = "bun test --timeout 60000 ./integration/tools/docs/bash-example.test.ts"
+run = "bun test --timeout 60000 ./integration/tools/bash/example.test.ts"
 
 [tasks."docs:check-links"]
 description = "Validate local links and fragment targets in the built documentation site."

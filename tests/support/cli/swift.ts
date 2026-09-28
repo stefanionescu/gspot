@@ -1,6 +1,8 @@
 // The engine input of a Swift check in a planted repository, with its build folders removed after each test.
+import { join } from 'node:path';
 import { rmSync } from 'node:fs';
 import { buildFolder } from '#cli/platform/paths.ts';
+import { emitAll } from '#cli/generation/outputs.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import type { EngineInput } from '#cli/types/checks/checks.ts';
@@ -33,4 +35,17 @@ export function removeBuildFolders(root?: string): void {
     if (root !== undefined) folders.add(buildFolder(root));
     for (const folder of folders) rmSync(folder, { recursive: true, force: true });
     folders.clear();
+}
+
+/**
+ * Writes the native SwiftLint configuration of every selected scope in a planted repository.
+ * @param root the planted repository
+ */
+export async function writeSwiftlint(root: string): Promise<void> {
+    const session = await openSession(root);
+    for (const file of emitAll(session.policyFiles.policy, session.repository, session.scopes, {
+        version: session.version,
+        packageClient: session.packageClient,
+    }).files.filter(({ path }) => path.endsWith('swiftlint.yml')))
+        await Bun.write(join(root, file.path), file.content);
 }

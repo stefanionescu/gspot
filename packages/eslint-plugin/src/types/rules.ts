@@ -1,6 +1,13 @@
 // The types of rules in this package.
 import type { TSESTree } from '@typescript-eslint/utils';
 
+export type ContentCheck = (node: TSESTree.Node) => boolean;
+
+export type ImplementedFunction =
+    | TSESTree.FunctionDeclaration
+    | TSESTree.FunctionExpression
+    | TSESTree.ArrowFunctionExpression;
+
 export type HarnessBarrelImportsOptions = [{ barrels?: string[]; within?: string[] }];
 export type ImportPathStyleName = 'js' | 'ts' | 'extensionless';
 export type ImportPathStyleOptions = [{ style: ImportPathStyleName; internalPrefixes?: string[] }];
@@ -67,3 +74,5 @@ export type NoPrefixCollisionsOptions = [
 export type NoIndexImportsOptions = [{ allow?: string[]; patterns?: string[] }];
 export type CrossFolderImportsOptions = [{ scope?: string[]; aliases?: Record<string, string> }];
 export type NoReexportsOptions = [{ allowIndex?: boolean }];
+
+export type FunctionUsage = { required: boolean; calls: number };

@@ -35,7 +35,7 @@ export function commandArguments(source: string): string[] {
 }
 
 /**
- * A text flag, undefined when absent or empty.
+ * A text flag that returns undefined when absent or empty.
  * @param flags the parsed flags
  * @param name the camel-cased flag name
  * @returns the text
@@ -46,7 +46,7 @@ export function textFlag(flags: Record<string, unknown>, name: string): string |
 }
 
 /**
- * A list flag, undefined when absent or empty.
+ * A list flag that returns undefined when absent or empty.
  * @param flags the parsed flags
  * @param name the camel-cased flag name
  * @returns the items

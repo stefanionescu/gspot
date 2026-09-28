@@ -42,6 +42,8 @@ export default defineConfig({
             ],
             components: {
                 Header: './src/components/starlight/Header.astro',
+                Footer: './src/components/starlight/Footer.astro',
+                ThemeSelect: './src/components/starlight/ThemeSelect.astro',
                 Hero: './src/components/starlight/Hero.astro',
                 SiteTitle: './src/components/starlight/SiteTitle.astro',
                 Search: './src/components/starlight/Search.astro',
@@ -51,12 +53,13 @@ export default defineConfig({
             editLink: { baseUrl: `https://github.com/stefanionescu/gspot/edit/${sourceRevision}/docs/` },
             description:
                 'gspot configures linters, runs checks, and generates instructions for coding agents from one configuration file',
-            customCss: ['./src/styles/theme.css'],
+            customCss: ['./src/theme.css'],
             social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/stefanionescu/gspot' }],
             plugins: [starlightLlmsTxt()],
             sidebar: [
                 {
                     label: 'Get started',
+                    collapsed: true,
                     items: [
                         { label: 'Overview', slug: 'guides/overview' },
                         { label: 'Install', slug: 'guides/install' },
@@ -67,6 +70,7 @@ export default defineConfig({
                 },
                 {
                     label: 'Guides',
+                    collapsed: true,
                     items: [
                         { label: 'Read and resolve findings', slug: 'guides/you-got-a-finding' },
                         { label: 'Choose checks and exceptions', slug: 'guides/customize' },
@@ -86,6 +90,7 @@ export default defineConfig({
                 },
                 {
                     label: 'Reference',
+                    collapsed: true,
                     items: [
                         {
                             label: 'Commands',
@@ -113,6 +118,7 @@ export default defineConfig({
                 },
                 {
                     label: 'Development',
+                    collapsed: true,
                     items: [
                         { label: 'Build and contribute', slug: 'guides/build' },
                         { label: 'Check engines', slug: 'development/engines' },

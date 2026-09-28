@@ -4,7 +4,7 @@ import { run } from '#tests/support/cli/command.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { git, commitAll } from '#tests/support/cli/git.ts';
 import { symlink, readlink, unlink } from 'node:fs/promises';
-import { readProject } from '#cli/checks/xcode/project-reader.ts';
+import { readProject } from '#cli/checks/xcode/project/reader.ts';
 import { containing, textContaining } from '#tests/support/expectations.ts';
 import { PBXPROJ_PROJECT } from '#tests/constants/integration/cli/repository.ts';
 

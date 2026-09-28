@@ -5,19 +5,20 @@ import type { HookName } from '#cli/types/generation.ts';
 import type { Policy } from '#cli/types/policy/policy.ts';
 import { EXECUTE_BITS } from '#cli/constants/platform.ts';
 import { HOOK_ARTIFACTS } from '#cli/repository/hooks.ts';
-import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
+import { huskyLines } from '#cli/generation/hooks/husky.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { hookLocation } from '#cli/repository/hook-location.ts';
+import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import { HOOK_FILES } from '#cli/constants/repository/repository.ts';
 import type { Repository } from '#cli/types/repository/repository.ts';
 import type { Readiness, Status } from '#cli/types/lifecycle/hooks.ts';
-import { preCommitConfiguration } from '#cli/generation/pre-commit.ts';
 import type { OwnershipEntry } from '#cli/types/lifecycle/lifecycle.ts';
-import type { ConfinedRoot, FileSnapshot } from '#cli/types/platform.ts';
-import { hasConfiguration } from '#cli/lifecycle/configuration-document.ts';
-import { simpleGitHookFallback } from '#cli/generation/simple-git-hooks.ts';
-import { huskyLines, lefthookConfiguration } from '#cli/generation/hooks.ts';
+import { lefthookConfiguration } from '#cli/generation/hooks/lefthook.ts';
+import type { ConfinedRoot, FileObservation } from '#cli/types/platform.ts';
+import { hasConfiguration } from '#cli/lifecycle/configuration/document.ts';
+import { preCommitConfiguration } from '#cli/generation/hooks/pre-commit.ts';
 import { huskyReady, simpleGitHooksReady } from '#cli/lifecycle/hooks/state.ts';
+import { simpleGitDirectHook } from '#cli/generation/hooks/simple-git-hooks.ts';
 
 // Whether each native manager's integration is in place, by the tool that owns the hooks.
 const INTEGRATIONS: Record<string, Readiness> = {
@@ -39,7 +40,7 @@ function integrationStatus(policy: Policy, root: string): string | undefined {
 }
 
 // Whether a file is the one the journal installed, by mode and content.
-function isInstalled(current: FileSnapshot | undefined, installed: OwnershipEntry['installed']): boolean {
+function isInstalled(current: FileObservation | undefined, installed: OwnershipEntry['installed']): boolean {
     if (current?.mode !== installed?.mode || current === undefined) return false;
     return new Bun.CryptoHasher('sha256').update(current.bytes).digest('hex') === installed?.hash;
 }
@@ -49,8 +50,8 @@ function expectedCommand(status: Status, name: HookName): string | undefined {
     const fromHusky = status.husky?.get(name);
     if (fromHusky !== undefined) return fromHusky;
     if (status.policy.hooks?.tool !== 'simple-git-hooks') return undefined;
-    const fallback = simpleGitHookFallback(status.root, name, status.policy.runner?.tool, binaryPath());
-    return fallback.replaceAll("'", "'\"'\"'");
+    const directCommand = simpleGitDirectHook(status.root, name, status.policy.runner?.tool, binaryPath());
+    return directCommand.replaceAll("'", "'\"'\"'");
 }
 
 // The text that says an original sibling is missing or not executable, or undefined when it is sound or absent.
@@ -68,19 +69,19 @@ function requiredStatus(status: Status, files: ConfinedRoot, name: HookName, req
     const current = files.read(required);
     const installed = status.entries.find((entry) => entry.path === required)?.installed;
     const command = expectedCommand(status, name);
-    const isManagerCopy = required.endsWith('.gspot-manager');
+    const isNativeCopy = required.endsWith('.gspot-manager');
     const lacksCommand =
-        command !== undefined && isManagerCopy && current?.bytes.toString('utf8').includes(command) !== true;
+        command !== undefined && isNativeCopy && current?.bytes.toString('utf8').includes(command) !== true;
     if (isInstalled(current, installed) && !lacksCommand) return undefined;
     return `${status.location.absolute}: missing or edited ${basename(required)}; run gspot install`;
 }
 
-// The text that says one of gspot's stage hooks is not as installed, or undefined when all its files are.
+// The text that says one gspot stage hook is not as installed, or undefined when all its files are.
 function stageStatus(status: Status, files: ConfinedRoot, name: HookName): string | undefined {
     const path = posix.join(status.location.directory, name);
     const sibling = siblingStatus(status, files, name, `${path}.gspot-original`);
     if (sibling !== undefined) return sibling;
-    const required = status.hasManager ? [path, `${path}.gspot-manager`] : [path];
+    const required = status.hasNativeHooks ? [path, `${path}.gspot-manager`] : [path];
     return required.map((file) => requiredStatus(status, files, name, file)).find((text) => text !== undefined);
 }
 
@@ -97,10 +98,10 @@ function extraStatus(status: Status, files: ConfinedRoot): string | undefined {
 
 /**
  * Compare Git's executable hook files with their recorded installed identities.
- * @param options the policy and the repository the hooks belong to
- * @param options.policy the repository policy
- * @param options.repository the repository root and whether Git is present
- * @returns whether the hooks are ready, with the line that says so
+ * @param options the policy and the repository the hooks belong to.
+ * @param options.policy the repository policy.
+ * @param options.repository the repository root and whether Git is present.
+ * @returns whether the hooks are ready, with the line that says so.
  */
 export function hookStatus({
     policy,
@@ -128,7 +129,7 @@ export function hookStatus({
         root: repository.root,
         location,
         entries: readOwnership(location.root, location.stateDirectory).files,
-        hasManager: policy.hooks.tool in INTEGRATIONS,
+        hasNativeHooks: policy.hooks.tool in INTEGRATIONS,
         husky,
     };
     const files = openConfinedRoot(location.root);

@@ -41,3 +41,8 @@ export const KIND_ROWS: { label: string; kind: string }[] = [
     { label: 'tools', kind: 'tool' },
     { label: 'libraries', kind: 'library' },
 ];
+
+export const CI_SETUP = {
+    commands: ['npm install --global "gspot@$(cat .gspot/version)"', 'gspot install', 'gspot check'],
+    reports: 'Upload .gspot/reports/report.* as job artifacts after the check, including when it fails.',
+};

@@ -40,7 +40,11 @@ Import rules:
 - Place `@testable import` after regular imports when test files need it.
 - Remove unused imports instead of tolerating drift.
 
-File organization:
+### File organization
+
+<!-- level: all -->
+
+- Keep SwiftUI dynamic properties grouped by wrapper type.
 
 - Private declarations first, public last: every `private` and `fileprivate` top-level
   declaration precedes the first internal or public one, so a reader meets the helpers before
@@ -52,12 +56,11 @@ File organization:
 - Extensions have a logical organization. Do not scatter a type across
   many extension files without a clear reason.
 
-Formatting constructs:
+### Formatting constructs
 
 - Use one `let` or `var` declaration per statement except tuple destructuring.
 - Do not add multiple stored properties in one declaration except tuple
   destructuring where appropriate.
-- Keep SwiftUI dynamic properties grouped by wrapper type.
 - Omit redundant `break` in switch cases.
 - Omit redundant `return` when Swift's implicit return improves readability and
   local tooling accepts it.
@@ -75,24 +78,9 @@ Formatting constructs:
 
 ## Swift programming practices
 
-Rules:
-
 - Code compiles without warnings. Warnings are errors in the build settings.
 - Remove easy warnings. Do not normalize warning debt.
-- Prefer code that runs tests, removes meaningful duplication, expresses intent,
-  and minimizes unnecessary types and methods.
-- Remove duplication after the repeated concept is understood. Do not create a
-  speculative abstraction for a single call site.
-- Small functions are preferred, but line count is not the rule. Split functions
-  by responsibility, not arbitrary size.
 - Prefer `let`; use `var` only when mutation is required.
-- Use synthesized memberwise initializers for structs when they are sufficient
-  and public API is not needed.
-- Prefer value types for data without identity.
-- Use classes for identity, reference semantics, lifecycle, observable state, or
-  framework requirements.
-- Mark classes `final` by default unless subclassing is intended.
-- Prefer `static func` over `class func` unless overriding is intended.
 - Use `AnyObject` for class-constrained protocols.
 - Do not call literal protocol initializers directly, such as `integerLiteral:`.
 - Avoid explicit `.init(...)` when calling a concrete type initializer directly.
@@ -104,26 +92,13 @@ Rules:
 - Compare optional values to `nil` when only presence matters and the wrapped
   value is unused.
 - Use typed errors when there are multiple meaningful failure states.
-- Avoid `try!`, `as!`, and force unwraps in production.
+- Avoid unchecked `try!` and `as!` in production. A force unwrap requires a proven invariant.
+  The blanket force-unwrap prohibition applies at `all`.
 - A force unwrap/cast requires a nearby invariant comment unless in tests or a
   clearly safe literal-only programmer-error case.
-- Avoid implicitly unwrapped optionals except Apple lifecycle cases such as
-  `@IBOutlet`, Objective-C interop nullability gaps, and test data.
-- Use `private` over `fileprivate` unless same-file cross-type access is
-  required.
-- Avoid explicit `internal`.
-- Do not put explicit access control on an entire extension; mark members as
-  needed.
-- Nest types when the nested type only makes sense in the parent's context.
-- Use caseless enums for namespaces only when grouping truly related static
-  declarations.
 - Avoid global mutable state.
-- Read `ProcessInfo.processInfo.environment` and `Bundle.main.infoDictionary` in one
-  configuration owner. Nowhere else.
 - Prefer immutable `static let` or computed `static var` over stored mutable
   `static var`.
-- Prefer methods/properties over free functions unless the free function is
-  standard-library-like and symmetric.
 - Prefer `guard` for early exits and invalid preconditions.
 - Use `for ... where` when the whole loop body is guarded by one condition.
 - Prefer `for` loops over `forEach` when control flow uses `return`, `break`,
@@ -139,18 +114,53 @@ Rules:
   distributing it across the whole pattern when that avoids ambiguity.
 - Avoid `unowned` captures; prefer `[weak self]` with an early return after
   unwrapping, or capture the specific immutable values needed.
-- Do not use `print`, `debugPrint`, or `dump` for production logging; use the
-  project logging system.
 - Prefer `#fileID` in production diagnostics; use `#filePath` only in tests or
   developer tooling where the full path is useful.
+- Overload existing operators only when the meaning matches the standard
+  semantic meaning.
+
+### API and ownership conventions
+
+<!-- level: all -->
+
+- Prefer code that runs tests, removes meaningful duplication, expresses intent,
+  and minimizes unnecessary types and methods.
+- Remove duplication after the repeated concept is understood. Do not create a
+  speculative abstraction for a single call site.
+- At `all`, configured function-length and complexity limits apply. Split functions
+  by responsibility while preserving behavior and assertions.
+- Use synthesized memberwise initializers for structs when they are sufficient
+  and public API is not needed.
+- Prefer value types for data without identity.
+- Use classes for identity, reference semantics, lifecycle, observable state, or
+  framework requirements.
+- Mark classes `final` by default unless subclassing is intended.
+- Prefer `static func` over `class func` unless overriding is intended.
+- Avoid implicitly unwrapped optionals except Apple lifecycle cases such as
+  `@IBOutlet`, Objective-C interop nullability gaps, and test data.
+- Use `private` over `fileprivate` unless same-file cross-type access is
+  required.
+- Declare top-level access explicitly. Use `private`, `internal`, or `public`
+  according to the actual API contract.
+- Do not put explicit access control on an entire extension; mark members as
+  needed.
+- Nest types when the nested type only makes sense in the parent's context.
+- Use caseless enums for namespaces only when grouping truly related static
+  declarations.
+- Read `ProcessInfo.processInfo.environment` and `Bundle.main.infoDictionary` in one
+  configuration owner. Nowhere else.
+- Prefer methods/properties over free functions unless the free function is
+  standard-library-like and symmetric.
+- Do not use `print`, `debugPrint`, or `dump` for production logging; use the
+  project logging system.
 - Avoid `#imageLiteral` and `#colorLiteral`; use named assets or explicit
   constructors.
 - Avoid custom operators unless the operator is a standard notation in the
   problem domain.
-- Overload existing operators only when the meaning matches the standard
-  semantic meaning.
 
-Design rules:
+### Design conventions
+
+<!-- level: all -->
 
 - Avoid large `viewDidLoad`, `viewDidAppear`, app delegate, or scene delegate
   methods. Move setup into named private methods or composition objects when it
@@ -182,9 +192,6 @@ tableView.reloadData()
 
 ## Networking
 
-- A network client owns base URL, path construction, query items, method, headers, body
-  encoding, transport calls, response status validation, and response decoding. Views and view
-  models never construct a `URLRequest`, call `URLSession`, decode a DTO, or inspect a status code.
 - Build URLs with `URLComponents` or a typed endpoint value. Do not concatenate query strings.
   `URL(string:)!` in production needs a documented invariant.
 - Base URLs and credentials come from configuration injected at composition.
@@ -197,9 +204,17 @@ tableView.reloadData()
 - Clients expose typed errors that distinguish encoding, decoding, transport, invalid response,
   invalid status, and cancellation. Cancellation stays distinguishable when navigation supersedes
   a task.
-- Prefer Foundation `URLSession` with async/await over a third-party networking framework.
 - Tests inject the transport and cover request construction, status validation, decoding
   failure, cancellation, and mapping. They never hit a live service.
+
+### Networking ownership
+
+<!-- level: all -->
+
+- A network client owns base URL, path construction, query items, method, headers, body
+  encoding, transport calls, response status validation, and response decoding. Views and view
+  models never construct a `URLRequest`, call `URLSession`, decode a DTO, or inspect a status code.
+- Prefer Foundation `URLSession` with async/await over a third-party networking framework.
 
 ## Documentation comments
 
@@ -290,26 +305,26 @@ Rules:
 
 ## Declaration order
 
-Bad, public before private:
+<!-- level: all -->
 
-```swift
-func makeSession(for user: User) -> Session {
-    Session(id: makeSessionID(), user: user)
-}
-
-private func makeSessionID() -> Session.ID {
-    .init(UUID().uuidString)
-}
-```
+Put the private calculation before the function that exposes the comparison.
+Both calls share the same definition of a positive total.
 
 Good:
 
 ```swift
-private func makeSessionID() -> Session.ID {
-    .init(UUID().uuidString)
+private func positiveTotal(_ values: [Int]) -> Int {
+    var total = 0
+    for value in values where value > 0 {
+        total += value
+    }
+    return total
 }
 
-func makeSession(for user: User) -> Session {
-    Session(id: makeSessionID(), user: user)
+/// Compare the sums of positive values in two collections.
+public func comparePositiveTotals(_ left: [Int], _ right: [Int]) -> Int {
+    let leftTotal = positiveTotal(left)
+    let rightTotal = positiveTotal(right)
+    return leftTotal - rightTotal
 }
 ```

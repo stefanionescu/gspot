@@ -1,12 +1,12 @@
-import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { mkdirSync, symlinkSync } from 'node:fs';
 import { createFileTree, testdir } from 'testdirs';
-import { emitAll } from '#cli/generation/render.ts';
+import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { proposeText } from '#cli/commands/init/propose.ts';
 import { collectCarried } from '#cli/policy/adoption/collect.ts';
+import { configurationManifests } from '#cli/configurations/manifests.ts';
 import type { ExistingTooling } from '#cli/types/repository/repository.ts';
 
 const tooling: ExistingTooling = {
@@ -22,35 +22,46 @@ const tooling: ExistingTooling = {
 const scanner = join(import.meta.dir, '../../../../../node_modules/license-checker-rseidelsohn');
 const allowed = ['MIT', 'ISC'];
 
-test.each(['root', 'nested'])(
-    'license adoption at %s records native identities and refuses unresolved exclusions',
-    async (scope) => {
+const LICENSE_SCOPES = [
+    { scope: 'root', rootDirectory: 'project', path: '.license-checker.json' },
+    { scope: 'nested', rootDirectory: '', path: 'project/.license-checker.json' },
+];
+const LICENSE_CONFIGURATION =
+    JSON.stringify({ excludePackages: 'example-dependency;missing-dependency', onlyAllow: allowed.join(';') }) + '\n';
+
+const LICENSE_PROJECT_FILES = {
+    'project/.license-checker.json': LICENSE_CONFIGURATION,
+    'package.json': JSON.stringify({
+        private: true,
+        devDependencies: { 'license-checker-rseidelsohn': '5.0.1' },
+    }),
+    'project/package.json': JSON.stringify({
+        name: 'example-project',
+        version: '1.0.0',
+        private: true,
+        dependencies: { 'example-dependency': '1.2.3', 'missing-dependency': '2.0.0' },
+    }),
+    'project/node_modules/example-dependency/package.json': JSON.stringify({
+        name: 'example-dependency',
+        version: '1.2.3',
+        license: 'GPL-3.0-only',
+    }),
+};
+
+const EXPECTED_PACKAGES = [
+    { package: 'example-dependency@1.2.3', license: 'GPL-3.0-only', reason: expect.any(String) },
+    { package: 'missing-dependency@2.0.0', license: 'MPL-2.0', reason: expect.any(String) },
+];
+
+test.each(LICENSE_SCOPES)(
+    'license adoption at $scope records native identities and refuses unresolved exclusions',
+    async ({ scope, rootDirectory, path }) => {
         await using sandbox = await testdir();
         const project = join(sandbox.path, 'project');
-        const root = scope === 'root' ? project : sandbox.path;
-        const path = scope === 'root' ? '.license-checker.json' : 'project/.license-checker.json';
+        const root = join(sandbox.path, rootDirectory);
         const selected = { ...tooling, configs: tooling.configs.map((entry) => ({ ...entry, path })) };
-        const original =
-            JSON.stringify({ excludePackages: 'example-dependency;missing-dependency', onlyAllow: allowed.join(';') }) +
-            '\n';
-        await createFileTree(sandbox.path, {
-            'project/.license-checker.json': original,
-            'package.json': JSON.stringify({
-                private: true,
-                devDependencies: { 'license-checker-rseidelsohn': '5.0.1' },
-            }),
-            'project/package.json': JSON.stringify({
-                name: 'example-project',
-                version: '1.0.0',
-                private: true,
-                dependencies: { 'example-dependency': '1.2.3', 'missing-dependency': '2.0.0' },
-            }),
-            'project/node_modules/example-dependency/package.json': JSON.stringify({
-                name: 'example-dependency',
-                version: '1.2.3',
-                license: 'GPL-3.0-only',
-            }),
-        });
+        const original = LICENSE_CONFIGURATION;
+        await createFileTree(sandbox.path, LICENSE_PROJECT_FILES);
         mkdirSync(join(sandbox.path, 'node_modules'));
         symlinkSync(scanner, join(sandbox.path, 'node_modules/license-checker-rseidelsohn'));
         const installed = (await Bun.file(join(scanner, 'package.json')).json()) as { version: string };
@@ -73,37 +84,61 @@ test.each(['root', 'nested'])(
                 : carried.scopes.get('project')?.tools['licenses'],
         ).toStrictEqual({
             licenses_allowed: allowed,
-            packages_allowed: [
-                { package: 'example-dependency@1.2.3', license: 'GPL-3.0-only', reason: expect.any(String) },
-                { package: 'missing-dependency@2.0.0', license: 'MPL-2.0', reason: expect.any(String) },
-            ],
+            packages_allowed: EXPECTED_PACKAGES,
         });
-        if (scope === 'nested') {
-            expect(carried.tools.size).toBe(0);
-            expect(carried.scopes.get('project')?.configurations).toStrictEqual(['licenses']);
-            await Bun.write(
-                join(root, 'gspot.toml'),
-                proposeText({
-                    configurations: [],
-                    scopes: [{ path: 'sibling', configurations: ['licenses'] }],
-                    carried,
-                    hooks: 'none',
-                    ci: 'none',
-                    rules: false,
-                    runner: 'none',
-                }),
-            );
-            await Bun.write(join(root, 'sibling/package.json'), '{"private":true}');
-            const session = await openSession(root);
-            const emitted = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
-                version: session.version,
-                packageManager: session.packageManager,
-            }).files;
-            const projectConfig = emitted.find((file) => file.path === '.gspot/config/project/licenses.json')!;
-            const siblingConfig = emitted.find((file) => file.path === '.gspot/config/sibling/licenses.json')!;
-            expect(JSON.parse(projectConfig.content).packages_allowed).toHaveLength(2);
-            expect(JSON.parse(siblingConfig.content).packages_allowed).toStrictEqual([]);
-        }
+        expect(carried.tools.size).toBe(scope === 'nested' ? 0 : 1);
+        expect(carried.scopes.get('project')?.configurations).toStrictEqual(
+            scope === 'nested' ? ['licenses'] : undefined,
+        );
+    },
+);
+
+test.each(LICENSE_SCOPES)(
+    'license adoption at $scope confines generated allowances to the owning scopes',
+    async ({ scope, rootDirectory, path }) => {
+        await using sandbox = await testdir();
+        const project = join(sandbox.path, 'project');
+        const root = join(sandbox.path, rootDirectory);
+        const selected = { ...tooling, configs: tooling.configs.map((entry) => ({ ...entry, path })) };
+        const original = LICENSE_CONFIGURATION;
+        await createFileTree(sandbox.path, LICENSE_PROJECT_FILES);
+        mkdirSync(join(sandbox.path, 'node_modules'));
+        symlinkSync(scanner, join(sandbox.path, 'node_modules/license-checker-rseidelsohn'));
+        const installed = (await Bun.file(join(scanner, 'package.json')).json()) as { version: string };
+        expect(installed.version).toBe(configurationManifests().get('licenses')!.tools[0]!.version!);
+        await Bun.write(
+            join(project, 'node_modules/missing-dependency/package.json'),
+            JSON.stringify({ name: 'missing-dependency', version: '2.0.0', license: 'MPL-2.0' }),
+        );
+        const carried = await collectCarried(root, selected, new Set(['licenses']), []);
+        await Bun.write(
+            join(root, 'gspot.toml'),
+            proposeText({
+                configurations: scope === 'root' ? ['licenses'] : [],
+                scopes: [{ path: 'sibling', configurations: ['licenses'] }],
+                carried,
+                hooks: 'none',
+                ci: 'none',
+                rules: false,
+                runner: 'none',
+            }),
+        );
+        await Bun.write(join(root, 'sibling/package.json'), '{"private":true}');
+        const session = await openSession(root);
+        const emitted = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
+            version: session.version,
+            packageClient: session.packageClient,
+        }).files;
+        const configurationPath =
+            scope === 'nested' ? '.gspot/config/project/licenses.json' : '.gspot/config/licenses.json';
+        const projectConfig = emitted.find((file) => file.path === configurationPath)!;
+        const siblingConfig = emitted.find((file) => file.path === '.gspot/config/sibling/licenses.json')!;
+        expect(JSON.parse(projectConfig.content)).toMatchObject({
+            packages_allowed: EXPECTED_PACKAGES,
+        });
+        expect(JSON.parse(siblingConfig.content)).toMatchObject({
+            packages_allowed: scope === 'nested' ? [] : EXPECTED_PACKAGES,
+        });
         expect(carried.removed.map((entry) => entry.path)).toStrictEqual([path]);
         expect(await Bun.file(join(root, path)).text()).toBe(original);
     },

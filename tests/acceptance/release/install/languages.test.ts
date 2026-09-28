@@ -1,25 +1,70 @@
 // Installs built packages from an isolated registry: the pinned language tools report defects and accept corrections.
 import { join } from 'node:path';
+import { expect, test } from 'bun:test';
 import { writeFileSync } from 'node:fs';
-import { afterAll, expect, test } from 'bun:test';
+import { parseAlerts } from '#cli/checks/prose/vale.ts';
 import { reportSchema } from '#cli/execution/report.ts';
+import type { InstalledConsumer } from '#tests/types/release.ts';
+import { RELEASE_TIMEOUT_MS } from '#tests/constants/release.ts';
 import { runProcess as run } from '#tests/support/cli/command.ts';
-import { RELEASE_TIMEOUT_MS } from '#tests/constants/support/release.ts';
+import { createConsumer } from '#tests/support/release/consumer.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { installedConsumer, initializeConsumer, publishRelease } from '#tests/support/release/published.ts';
+import { initializeConsumer, getPublishedRelease } from '#tests/support/release/published.ts';
 
-// The release publishes once for this file, and its registry stops when the file's tests end.
-const release = await publishRelease();
-afterAll(async () => {
-    await release.registry.stop();
-});
+const release = getPublishedRelease();
+
+// The installed vocabulary reports case mismatches and accepts the canonical project terms.
+async function expectInstalledVocabulary(installation: InstalledConsumer): Promise<void> {
+    const { consumer, options } = installation;
+    writeFileSync(
+        join(consumer, 'vocabulary.ini'),
+        'StylesPath = .gspot/config/vale/styles\nVocab = gspot\nMinAlertLevel = suggestion\n\n[*]\nBasedOnStyles = Vale\nVale.Spelling = NO\nVale.Terms = YES\n',
+    );
+    writeFileSync(join(consumer, 'vocabulary.md'), 'typescript supports nebulakit.\n');
+    const termsCommand = ['vale', '--config', 'vocabulary.ini', '--output', 'JSON', '--no-exit', 'vocabulary.md'];
+    const terms = await run(termsCommand, options);
+    expect(terms.code, terms.stdout + terms.stderr).toBe(0);
+    const alerts = parseAlerts(terms.stdout);
+    expect(alerts.map(({ file, check, line, message: text }) => ({ file, check, line, text }))).toStrictEqual([
+        { file: 'vocabulary.md', check: 'Vale.Terms', line: 1, text: "Use 'TypeScript' instead of 'typescript'." },
+        { file: 'vocabulary.md', check: 'Vale.Terms', line: 1, text: "Use 'NebulaKit' instead of 'nebulakit'." },
+    ]);
+    writeFileSync(join(consumer, 'vocabulary.md'), 'TypeScript supports NebulaKit.\n');
+    const correctedTerms = await run(termsCommand, options);
+    expect(correctedTerms.code, correctedTerms.stdout + correctedTerms.stderr).toBe(0);
+    expect(JSON.parse(correctedTerms.stdout)).toStrictEqual({});
+}
+
+// SQL discovery and its embedded parser work after installation without checkout dependencies.
+async function expectInstalledSql(installation: InstalledConsumer): Promise<void> {
+    const { consumer, command, options, setupOptions } = installation;
+    writeFileSync(join(consumer, 'query.sql'), 'SELECT 1;\n');
+    const detected = await run([...command, 'list', '--json'], options);
+    expect(detected.code, detected.stdout + detected.stderr).toBe(0);
+    const available = JSON.parse(detected.stdout) as { detected: { name: string; command: string }[] };
+    expect(available.detected.find((configuration) => configuration.name === 'sql')?.command).toBe('gspot add sql');
+    const added = await run([...command, 'add', 'sql'], setupOptions);
+    expect(added.code, added.stdout + added.stderr).toBe(0);
+    const sql = await run([...command, 'check', 'query.sql', '--only', 'sql/syntax', '--no-cache', '--json'], options);
+    expect(sql.code, sql.stdout + sql.stderr).toBe(0);
+    const sqlReport = reportSchema.parse(JSON.parse(sql.stdout));
+    expect(sqlReport.skips).toStrictEqual([]);
+    expect(sqlReport.checks).toHaveLength(1);
+    expect(sqlReport.checks[0]).toMatchObject({
+        check: 'sql/syntax',
+        status: 'ok',
+        files: 1,
+        findings: [],
+    });
+}
 
 test(
     'installed prose and vocabulary reject defects and accept corrections',
     async () => {
-        await using fixture = await installedConsumer(release);
-        const { consumer, command, options } = fixture;
-        await initializeConsumer(release, fixture);
+        await using installation = await createConsumer(release.registry, release.version);
+        expect(installation.installed.code, installation.installed.stdout + installation.installed.stderr).toBe(0);
+        const { consumer, command, options } = installation;
+        await initializeConsumer(release, installation);
         const vocabulary = await run(
             [...command, 'set', 'prose.vocabulary', 'NebulaKit', '--reason', 'NebulaKit is the project name.'],
             options,
@@ -67,23 +112,7 @@ test(
             files: 1,
             findings: [],
         });
-        writeFileSync(
-            join(consumer, 'vocabulary.ini'),
-            'StylesPath = .gspot/config/vale/styles\nVocab = gspot\nMinAlertLevel = suggestion\n\n[*]\nBasedOnStyles = Vale\nVale.Spelling = NO\nVale.Terms = YES\n',
-        );
-        writeFileSync(join(consumer, 'vocabulary.md'), 'typescript supports nebulakit.\n');
-        const termsCommand = ['vale', '--config', 'vocabulary.ini', '--output', 'JSON', '--no-exit', 'vocabulary.md'];
-        const terms = await run(termsCommand, options);
-        expect(terms.code, terms.stdout + terms.stderr).toBe(0);
-        const alerts = JSON.parse(terms.stdout) as Record<string, { Check: string; Line: number; Message: string }[]>;
-        expect(alerts['vocabulary.md']?.map(({ Check, Line, Message }) => ({ Check, Line, Message }))).toStrictEqual([
-            { Check: 'Vale.Terms', Line: 1, Message: "Use 'TypeScript' instead of 'typescript'." },
-            { Check: 'Vale.Terms', Line: 1, Message: "Use 'NebulaKit' instead of 'nebulakit'." },
-        ]);
-        writeFileSync(join(consumer, 'vocabulary.md'), 'TypeScript supports NebulaKit.\n');
-        const correctedTerms = await run(termsCommand, options);
-        expect(correctedTerms.code, correctedTerms.stdout + correctedTerms.stderr).toBe(0);
-        expect(JSON.parse(correctedTerms.stdout)).toStrictEqual({});
+        await expectInstalledVocabulary(installation);
     },
     RELEASE_TIMEOUT_MS,
 );
@@ -91,16 +120,17 @@ test(
 test(
     'installed Python detects an undefined name and accepts its correction',
     async () => {
-        await using fixture = await installedConsumer(release);
-        const { consumer, command, options } = fixture;
-        await initializeConsumer(release, fixture);
+        await using installation = await createConsumer(release.registry, release.version);
+        expect(installation.installed.code, installation.installed.stdout + installation.installed.stderr).toBe(0);
+        const { consumer, command, options } = installation;
+        await initializeConsumer(release, installation);
         const ruffPin = configurationManifests()
             .get('python')!
             .tools.find((tool) => tool.name === 'ruff')!;
         const ruffVersion = await run(['ruff', '--version'], options);
         expect(ruffVersion.code, ruffVersion.stdout + ruffVersion.stderr).toBe(0);
         expect(ruffVersion.stdout).toContain(ruffPin.version!);
-        writeFileSync(join(consumer, 'entry.py'), 'print(missing_name)\n');
+        writeFileSync(join(consumer, 'entry.py'), 'answer = missing_name\n');
         const pythonCommand = [...command, 'check', 'entry.py', '--only', 'python/ruff', '--no-cache', '--json'];
         const undefinedName = await run(pythonCommand, options);
         expect(undefinedName.code, undefinedName.stdout + undefinedName.stderr).toBe(1);
@@ -116,13 +146,13 @@ test(
                     check: 'python/ruff',
                     file: 'entry.py',
                     line: 1,
-                    column: 7,
+                    column: 10,
                     rule: 'F821',
                     message: 'Undefined name `missing_name`',
                 },
             ],
         });
-        writeFileSync(join(consumer, 'entry.py'), 'print("example")\n');
+        writeFileSync(join(consumer, 'entry.py'), 'answer = "example"\n');
         const definedName = await run(pythonCommand, options);
         expect(definedName.code, definedName.stdout + definedName.stderr).toBe(0);
         const definedReport = reportSchema.parse(JSON.parse(definedName.stdout));
@@ -141,9 +171,10 @@ test(
 test(
     'installed ShellCheck reports exact quoting diagnostics and accepts correction',
     async () => {
-        await using fixture = await installedConsumer(release);
-        const { consumer, command, options } = fixture;
-        await initializeConsumer(release, fixture);
+        await using installation = await createConsumer(release.registry, release.version);
+        expect(installation.installed.code, installation.installed.stdout + installation.installed.stderr).toBe(0);
+        const { consumer, command, options } = installation;
+        await initializeConsumer(release, installation);
         const shellcheck = configurationManifests()
             .get('bash')!
             .tools.find((tool) => tool.name === 'shellcheck')!;
@@ -190,9 +221,10 @@ test(
 test(
     'installed Swift and SQL parsers execute without checkout dependencies',
     async () => {
-        await using fixture = await installedConsumer(release);
-        const { consumer, command, options, setupOptions } = fixture;
-        await initializeConsumer(release, fixture);
+        await using installation = await createConsumer(release.registry, release.version);
+        expect(installation.installed.code, installation.installed.stdout + installation.installed.stderr).toBe(0);
+        const { consumer, command, options } = installation;
+        await initializeConsumer(release, installation);
         const swiftLevel = await run([...command, 'set', 'level', 'all'], options);
         expect(swiftLevel.code, swiftLevel.stdout + swiftLevel.stderr).toBe(0);
         writeFileSync(join(consumer, 'Account.swift'), 'let utils = 1\n');
@@ -212,12 +244,12 @@ test(
         expect(swiftReport.checks).toHaveLength(1);
         expect(swiftReport.checks[0]).toMatchObject({ check: 'naming/identifiers', status: 'fail', files: 1 });
         expect(
-            swiftReport.checks[0]!.findings.map(({ rule, file, line, column, message }) => ({
+            swiftReport.checks[0]!.findings.map(({ rule, file, line, column, message: text }) => ({
                 rule,
                 file,
                 line,
                 column,
-                message,
+                message: text,
             })),
         ).toStrictEqual([
             {
@@ -240,27 +272,7 @@ test(
             files: 1,
             findings: [],
         });
-        writeFileSync(join(consumer, 'query.sql'), 'SELECT 1;\n');
-        const detected = await run([...command, 'list', '--json'], options);
-        expect(detected.code, detected.stdout + detected.stderr).toBe(0);
-        const available = JSON.parse(detected.stdout) as { detected: { name: string; command: string }[] };
-        expect(available.detected.find((configuration) => configuration.name === 'sql')?.command).toBe('gspot add sql');
-        const added = await run([...command, 'add', 'sql'], setupOptions);
-        expect(added.code, added.stdout + added.stderr).toBe(0);
-        const sql = await run(
-            [...command, 'check', 'query.sql', '--only', 'sql/syntax', '--no-cache', '--json'],
-            options,
-        );
-        expect(sql.code, sql.stdout + sql.stderr).toBe(0);
-        const sqlReport = reportSchema.parse(JSON.parse(sql.stdout));
-        expect(sqlReport.skips).toStrictEqual([]);
-        expect(sqlReport.checks).toHaveLength(1);
-        expect(sqlReport.checks[0]).toMatchObject({
-            check: 'sql/syntax',
-            status: 'ok',
-            files: 1,
-            findings: [],
-        });
+        await expectInstalledSql(installation);
     },
     RELEASE_TIMEOUT_MS,
 );

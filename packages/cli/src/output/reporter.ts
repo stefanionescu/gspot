@@ -111,15 +111,13 @@ function ignoreLines(report: RunReport, options: ReporterOptions, colors: Colors
     });
 }
 
-function skipLine(check: string, source: string, colors: Colors): string {
-    const shown = `(${source})`;
-    return `skipped    ${check}  ${colors.dim(shown)}`;
-}
-
 function tailLines(report: RunReport, options: ReporterOptions, colors: Colors): string[] {
     const lines = [
         ...ignoreLines(report, options, colors),
-        ...report.skips.map((skip) => skipLine(skip.check, skip.source, colors)),
+        ...report.skips.map((skip) => {
+            const source = colors.dim(`(${skip.source})`);
+            return `skipped    ${skip.check}  ${source}`;
+        }),
     ];
     if (report.coverage.unchecked > 0) lines.push(`unchecked  ${fileCount(report.coverage.unchecked)} (gspot doctor)`);
     for (const finding of report.coverage.findings) lines.push(...findingLines(finding, colors));
@@ -149,6 +147,24 @@ function summaryLine(report: RunReport, colors: Colors): string {
     return report.exitCode === 0 ? summary : colors.red(`${summary} (failed)`);
 }
 
+function hookFailureLines(report: RunReport): string[] {
+    const hook = HOOK_FILES.find((name) => name === environmentVariables()['GSPOT_HOOK']);
+    if (hook === undefined || report.exitCode === 0) return [];
+    const lines: string[] = [];
+    const reproduce = report.checks.find((check) => check.reproduce !== undefined)?.reproduce;
+    if (reproduce !== undefined) lines.push(`reproduce: ${reproduce}`);
+    lines.push(`Bypass this hook once: git ${hook === 'pre-push' ? 'push' : 'commit'} --no-verify`);
+    return lines;
+}
+
+function comparisonLine(comparison: RunReport['comparison'], quiet: boolean): string {
+    if (comparison === undefined || quiet) return '';
+    if (comparison.content === 'working-tree')
+        return `Working tree compared with the merge base of ${comparison.reference}.\n`;
+    const source = comparison.content === 'index' ? 'Staged index' : 'Committed tree';
+    return `${source} ${comparison.reference}.\n`;
+}
+
 /**
  * The run as text, the way 02-cli.md shows it.
  * @param report the run report
@@ -166,20 +182,8 @@ export function runText(report: RunReport, options: ReporterOptions): string {
     const isSeparated = tail.length > 0 && body.length > 0;
     const lines = [...body, ...(isSeparated ? [''] : []), ...tail];
     if (lines.length > 0) lines.push('');
-    lines.push(summaryLine(report, colors));
-    const hook = HOOK_FILES.find((name) => name === environmentVariables()['GSPOT_HOOK']);
-    if (hook !== undefined && report.exitCode !== 0) {
-        const reproduce = report.checks.find((check) => check.reproduce !== undefined)?.reproduce;
-        if (reproduce !== undefined) lines.push(`reproduce: ${reproduce}`);
-        lines.push(`Bypass this hook once: git ${hook === 'pre-push' ? 'push' : 'commit'} --no-verify`);
-    }
-    const comparison =
-        report.comparison === undefined || options.quiet
-            ? ''
-            : report.comparison.content === 'working-tree'
-              ? `Working tree compared with the merge base of ${report.comparison.reference}.\n`
-              : `${report.comparison.content === 'index' ? 'Staged index' : 'Committed tree'} ${report.comparison.reference}.\n`;
-    return `${comparison}${lines.join('\n')}\n`;
+    lines.push(summaryLine(report, colors), ...hookFailureLines(report));
+    return `${comparisonLine(report.comparison, options.quiet)}${lines.join('\n')}\n`;
 }
 
 /**

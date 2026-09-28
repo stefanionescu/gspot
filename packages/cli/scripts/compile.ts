@@ -4,8 +4,8 @@ import { prepareInput } from './inputs.ts';
 import { releaseTargets } from './targets.ts';
 import { dirname, join, relative } from 'node:path';
 import { grammarPath } from '#cli/platform/assets.ts';
-import { SWIFT_GRAMMAR } from '#cli/constants/platform.ts';
 import { grammarAssets, writeEntry } from './assets.ts';
+import { SWIFT_GRAMMAR } from '#cli/constants/platform.ts';
 import { binaryNotices, dependencyNotices } from './notices.ts';
 import { copyFileSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 
@@ -13,8 +13,34 @@ const here = fileURLToPath(new URL('..', import.meta.url));
 const root = join(here, '..', '..');
 const TARGETS = Object.fromEntries(releaseTargets.map((target) => [target.target, target.binary]));
 
+const editorconfig: Bun.BunPlugin = {
+    name: 'editorconfig-wasm',
+    setup(builder) {
+        builder.onLoad({ filter: /[\\/]@one-ini[\\/]wasm[\\/]one_ini\.js$/u }, (input) => {
+            const source = readFileSync(input.path, 'utf8');
+            const declaration = 'const wasmPath = `${__dirname}/one_ini_bg.wasm`;';
+            if (!source.includes(declaration))
+                throw new Error('The EditorConfig WASM loader changed. Update its build integration.');
+            const asset = join(dirname(input.path), 'one_ini_bg.wasm');
+            return {
+                contents: `import wasmPath from ${JSON.stringify(asset)} with { type: 'file' };\n${source.replace(declaration, '')}`,
+                loader: 'js',
+            };
+        });
+    },
+};
+
+function buildMetadata(
+    result: Bun.BuildOutput,
+    name: string,
+): { inputs: NonNullable<Bun.BuildOutput['metafile']>['inputs']; cwd: string } {
+    if (!result.success) throw new Error(result.logs.map((log) => log.message).join('\n'));
+    if (result.metafile === undefined) throw new Error(`The ${name} build wrote no metafile.`);
+    return { inputs: result.metafile.inputs, cwd: process.cwd() };
+}
+
 /**
- * Compiles the CLI for the selected targets, with its notices and embedded assets.
+ * Compiles the CLI and includes notices and embedded assets for each selected target.
  * @param targets the release targets to build
  * @param out the folder the binaries are written to
  */
@@ -32,9 +58,7 @@ export async function build(targets: string[], out: string): Promise<void> {
         naming: 'configuration-process.js',
         root: here,
     });
-    if (!evaluator.success) throw new Error(evaluator.logs.map((log) => log.message).join('\n'));
-    if (evaluator.metafile === undefined) throw new Error('The evaluator build wrote no metafile.');
-    const metadata = [{ inputs: evaluator.metafile.inputs, cwd: process.cwd() }];
+    const metadata = [buildMetadata(evaluator, 'evaluator')];
     const entry = writeEntry();
     mkdirSync(out, { recursive: true });
     for (const target of targets) {
@@ -49,28 +73,9 @@ export async function build(targets: string[], out: string): Promise<void> {
             compile: { target: target as Bun.Build.CompileTarget, outfile },
             minify: { syntax: true },
             metafile: true,
-            plugins: [
-                {
-                    name: 'editorconfig-wasm',
-                    setup(builder) {
-                        builder.onLoad({ filter: /[\\/]@one-ini[\\/]wasm[\\/]one_ini\.js$/u }, (input) => {
-                            const source = readFileSync(input.path, 'utf8');
-                            const declaration = 'const wasmPath = `${__dirname}/one_ini_bg.wasm`;';
-                            if (!source.includes(declaration))
-                                throw new Error('The EditorConfig WASM loader changed. Update its build integration.');
-                            const asset = join(dirname(input.path), 'one_ini_bg.wasm');
-                            return {
-                                contents: `import wasmPath from ${JSON.stringify(asset)} with { type: 'file' };\n${source.replace(declaration, '')}`,
-                                loader: 'js',
-                            };
-                        });
-                    },
-                },
-            ],
+            plugins: [editorconfig],
         });
-        if (!result.success) throw new Error(result.logs.map((log) => log.message).join('\n'));
-        if (result.metafile === undefined) throw new Error(`The ${target} build wrote no metafile.`);
-        metadata.push({ inputs: result.metafile.inputs, cwd: process.cwd() });
+        metadata.push(buildMetadata(result, target));
         if (process.platform === 'darwin' && target.startsWith('bun-darwin-')) {
             execaSync('codesign', ['--force', '--sign', '-', outfile], {
                 stdout: 'inherit',

@@ -1,40 +1,24 @@
 // Carrying a Ruff configuration into the policy: its ignored rules, per-file ignores, and inherited configuration.
 import { z } from 'zod';
 import { posix } from 'node:path';
-import { RUFF_PREVIEW_RULES } from '#cli/constants/checks/ruff-rules.ts';
 import { disabledFromList } from '#cli/policy/adoption/disabled.ts';
 import type { TomlTable } from '#cli/types/repository/repository.ts';
-import { carriedTool, reasonFor } from '#cli/policy/adoption/results.ts';
-import { ABSOLUTE_OR_ESCAPED, GLOB_MAGIC, UNSAFE_EXTEND } from '#cli/constants/policy/adoption.ts';
-import { asRaw, asStrings, observeConfiguration, parseCarrySource } from '#cli/policy/adoption/source.ts';
+import { RUFF_PREVIEW_RULES } from '#cli/constants/checks/ruff-rules.ts';
+import { adoptedScope, adoptedTool, reasonFor } from '#cli/policy/adoption/results.ts';
+import { UNSAFE_GLOB_CHARACTERS, GLOB_MAGIC, UNSAFE_EXTEND } from '#cli/constants/policy/adoption.ts';
+import { asRaw, asStrings, observeConfiguration, parseConfigurationSource } from '#cli/policy/adoption/source.ts';
 
 import type {
     Inheritance,
     PerFile,
     RuffLint,
-    CarriedConfiguration,
+    AdoptionResult,
     CarryPush,
-    CarrySource,
+    ConfigurationSource,
 } from '#cli/types/policy/adoption.ts';
 
-/** Experimental lint activation cannot be retained as an adopted project contract. */
-export class ExperimentalRuffError extends Error {}
-
-/** Reject preview activation before adoption records or generates configuration. */
-export function assertStableRuff(source: CarrySource, path: string): void {
-    const lint = asRaw(source.parsed['lint']) ?? source.parsed;
-    const format = asRaw(source.parsed['format']);
-    const selected = [...asStrings(lint['select']), ...asStrings(lint['extend-select'])];
-    if (
-        source.parsed['preview'] === true ||
-        lint['preview'] === true ||
-        format?.['preview'] === true ||
-        selected.some((code) => RUFF_PREVIEW_RULES.has(code))
-    )
-        throw new ExperimentalRuffError(`${path}: Ruff preview activation is unsupported at both levels.`);
-}
-
 const RUFF_LINT = z.strictObject({
+    pydocstyle: z.strictObject({ convention: z.enum(['google', 'numpy', 'pep257']) }).optional(),
     ignore: z.array(z.string()).optional(),
     'extend-ignore': z.array(z.string()).optional(),
     'per-file-ignores': z.record(z.string(), z.array(z.string())).optional(),
@@ -43,7 +27,7 @@ const RUFF_LINT = z.strictObject({
 
 // Refuses a per-file selector the policy cannot spell: absolute, escaped, climbing, or negated below the root.
 function assertConvertiblePerFile(glob: string, base: string, path: string): void {
-    const isUnsafe = glob.startsWith('/') || ABSOLUTE_OR_ESCAPED.test(glob) || glob.split('/').includes('..');
+    const isUnsafe = glob.startsWith('/') || UNSAFE_GLOB_CHARACTERS.test(glob) || glob.split('/').includes('..');
     if (isUnsafe || (base !== '.' && glob.startsWith('!')))
         throw new Error(`${path}: per-file selector ${JSON.stringify(glob)} requires explicit conversion.`);
 }
@@ -58,7 +42,7 @@ function perFilePattern(glob: string, base: string, path: string): string {
     return `${negative ? '!' : ''}${folder}${relative}`;
 }
 
-// Records the rules a Ruff lint table turns off, everywhere and per file.
+// Records globally disabled and per-file disabled rules from a Ruff lint table.
 function disabledRuff(parsed: TomlTable, push: CarryPush, path: string): void {
     const lint = asRaw(asRaw(asRaw(parsed['tool'])?.['ruff'])?.['lint']) ?? asRaw(parsed['lint']) ?? parsed;
     const base = posix.dirname(path);
@@ -90,7 +74,7 @@ function reachesBase(target: string, base: string): boolean {
 
 // The repository path an inherited per-file selector names, which must stay inside the repository.
 function inheritedTarget(owner: string, pattern: string): string {
-    if (pattern.startsWith('!') || pattern.startsWith('/') || ABSOLUTE_OR_ESCAPED.test(pattern))
+    if (pattern.startsWith('!') || pattern.startsWith('/') || UNSAFE_GLOB_CHARACTERS.test(pattern))
         throw new Error(
             `${owner}: inherited per-file selector ${JSON.stringify(pattern)} requires explicit conversion.`,
         );
@@ -112,21 +96,25 @@ function inheritedPattern(owner: string, pattern: string, base: string): string 
 }
 
 // The per-file table of a configuration as seen from the adopting one: own selectors kept, inherited ones rebased.
-function scopedPatterns(owner: string, path: string, base: string, table: PerFile | undefined): PerFile {
+function scopePatterns(owner: string, path: string, base: string, table: PerFile | undefined): PerFile {
     const result: PerFile = {};
     for (const [pattern, rules] of Object.entries(table ?? {})) {
         if (owner === path || !pattern.includes('/')) {
             result[pattern] = rules;
             continue;
         }
-        const scoped = inheritedPattern(owner, pattern, base);
-        if (scoped !== undefined) addRules(result, scoped, rules);
+        const scopePattern = inheritedPattern(owner, pattern, base);
+        if (scopePattern !== undefined) addRules(result, scopePattern, rules);
     }
     return result;
 }
 
 // The configuration a Ruff file extends, observed and parsed, with its table selected inside pyproject.toml.
-function extendedSource(inheritance: Inheritance, path: string, from: string): { target: string; source: CarrySource } {
+function extendedSource(
+    inheritance: Inheritance,
+    path: string,
+    from: string,
+): { target: string; source: ConfigurationSource } {
     if (from.startsWith('/') || UNSAFE_EXTEND.test(from))
         throw new Error(`${path}: inherited Ruff configuration must use a repository-relative path.`);
     const target = posix.normalize(posix.join(posix.dirname(path), from));
@@ -134,7 +122,7 @@ function extendedSource(inheritance: Inheritance, path: string, from: string): {
     inheritance.lists.observed.set(target, original);
     inheritance.inherited.add(target);
     const selector = posix.basename(target) === 'pyproject.toml' ? { table: 'tool.ruff' } : undefined;
-    return { target, source: parseCarrySource(original, 'ruff', target, selector) };
+    return { target, source: parseConfigurationSource(original, 'ruff', target, selector) };
 }
 
 // The per-file tables of a parent and a child merged, each rule once per pattern.
@@ -154,18 +142,18 @@ function perFileIgnores(
     base: string,
 ): PerFile {
     if (own === undefined) return parent['per-file-ignores'] ?? {};
-    return scopedPatterns(path, adopting, base, own);
+    return scopePatterns(path, adopting, base, own);
 }
 
 // The lint table the configuration extends, resolved, or an empty one when it extends nothing.
 function parentLint(inheritance: Inheritance, path: string, extend: string | undefined, adopting: string): RuffLint {
     if (extend === undefined) return {};
     const extended = extendedSource(inheritance, path, extend);
-    return resolveLint(inheritance, extended.target, extended.source, adopting);
+    return lintSettings(inheritance, extended.target, extended.source, adopting);
 }
 
 // The effective lint table of a configuration: its own settings over the ones it extends.
-function resolveLint(inheritance: Inheritance, path: string, source: CarrySource, adopting: string): RuffLint {
+function lintSettings(inheritance: Inheritance, path: string, source: ConfigurationSource, adopting: string): RuffLint {
     const { visiting, base } = inheritance;
     if (visiting.has(path)) throw new Error(`${path}: Ruff configuration inheritance contains a cycle.`);
     visiting.add(path);
@@ -175,25 +163,40 @@ function resolveLint(inheritance: Inheritance, path: string, source: CarrySource
     const parent = parentLint(inheritance, path, configuration.extend, adopting);
     visiting.delete(path);
     return {
+        pydocstyle: lint.pydocstyle ?? parent.pydocstyle,
         ignore: [...(parent.ignore ?? []), ...(lint.ignore ?? []), ...(lint['extend-ignore'] ?? [])],
         'per-file-ignores': perFileIgnores(parent, lint['per-file-ignores'], path, adopting, base),
         'extend-per-file-ignores': mergedPerFile([
             parent['extend-per-file-ignores'],
-            scopedPatterns(path, adopting, base, lint['extend-per-file-ignores']),
+            scopePatterns(path, adopting, base, lint['extend-per-file-ignores']),
         ]),
     };
 }
 
-function carryRuff(source: CarrySource, path: string, lists: CarriedConfiguration, root: string, check?: string): void {
+function carryRuff(
+    source: ConfigurationSource,
+    path: string,
+    lists: AdoptionResult,
+    root: string,
+    check?: string,
+): void {
     const base = posix.dirname(path);
     const inheritance: Inheritance = { root, lists, base, visiting: new Set(), inherited: new Set() };
-    const lint = resolveLint(inheritance, path, source, path);
+    const lint = lintSettings(inheritance, path, source, path);
+    if (lint.pydocstyle !== undefined) {
+        const settings = { docstring_convention: lint.pydocstyle.convention };
+        if (base === '.') Object.assign(adoptedTool(lists, 'ruff').settings, settings);
+        else {
+            const scope = adoptedScope(lists, base, 'python');
+            scope.tools['ruff'] = { ...scope.tools['ruff'], ...settings };
+        }
+    }
     if (check === undefined) throw new Error(`No complete ruff configuration importer is available for ${path}.`);
     disabledRuff(
         { lint },
         (rule, paths) => {
             const selected = paths ?? (base === '.' ? undefined : [`${base}/**`]);
-            carriedTool(lists, 'ruff').ignores.push({
+            adoptedTool(lists, 'ruff').ignores.push({
                 check,
                 rule,
                 reason: reasonFor(path),
@@ -207,6 +210,27 @@ function carryRuff(source: CarrySource, path: string, lists: CarriedConfiguratio
             path: parent,
             note: 'Inherited Ruff configuration retained; effective exclusions are represented in gspot configuration',
         });
+}
+
+/** Experimental lint activation cannot be retained as an adopted project contract. */
+export class ExperimentalRuffError extends Error {}
+
+/**
+ * Reject preview activation before adoption records or generates configuration.
+ * @param source the observed Ruff configuration.
+ * @param path the configuration path used in diagnostics.
+ */
+export function assertStableRuff(source: ConfigurationSource, path: string): void {
+    const lint = asRaw(source.parsed['lint']) ?? source.parsed;
+    const format = asRaw(source.parsed['format']);
+    const selected = [...asStrings(lint['select']), ...asStrings(lint['extend-select'])];
+    if (
+        source.parsed['preview'] === true ||
+        lint['preview'] === true ||
+        format?.['preview'] === true ||
+        selected.some((code) => RUFF_PREVIEW_RULES.has(code))
+    )
+        throw new ExperimentalRuffError(`${path}: Ruff preview activation is unsupported at both levels.`);
 }
 
 export const RUFF_SOURCE = z.union([

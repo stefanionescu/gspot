@@ -1,9 +1,9 @@
 // The durable ownership journal an owner works from: its records, its recovery of an interrupted mutation, and
+// the backups it takes before a file changes hands.
 import { createHash, randomUUID } from 'node:crypto';
 import { ownershipSchema } from '#cli/lifecycle/journal.ts';
 import { fileMode, mutationTarget } from '#cli/platform/safe-paths.ts';
-import type { ConfinedRoot, FileSnapshot } from '#cli/types/platform.ts';
-// the backups it takes before a file changes hands.
+import type { ConfinedRoot, FileObservation } from '#cli/types/platform.ts';
 import { PRIVATE_DIRECTORY, PRIVATE_FILE } from '#cli/constants/platform.ts';
 
 import type {
@@ -27,12 +27,6 @@ function restoreFromBackup(confined: ConfinedRoot, pending: PendingOwnership, ba
     );
 }
 
-// The file an interrupted mutation touched, read as a link when either side of the mutation was one.
-function currentOf(confined: ConfinedRoot, pending: PendingOwnership): FileSnapshot | undefined {
-    const isLink = pending.before?.isLink === true || pending.after?.isLink === true;
-    return isLink ? confined.readEntry(pending.path) : confined.read(pending.path);
-}
-
 // Settles one interrupted mutation: accepted when it completed, restored when the file vanished, refused when edited.
 function recoverPending(
     confined: ConfinedRoot,
@@ -40,7 +34,8 @@ function recoverPending(
     accept: (pending: PendingOwnership) => void,
     recovery: string,
 ): void {
-    const current = currentOf(confined, pending);
+    const isLink = [pending.before, pending.after].some((entry) => entry?.isLink === true);
+    const current = isLink ? confined.readEntry(pending.path) : confined.read(pending.path);
     if (matches(current, pending.after)) {
         accept(pending);
         return;
@@ -61,7 +56,7 @@ function normalizedKey(path: string): string {
 }
 
 // The recorded ownership state, or an empty one when nothing was recorded yet.
-function readState(recorded: FileSnapshot | undefined): OwnershipState {
+function readState(recorded: FileObservation | undefined): OwnershipState {
     if (recorded === undefined) return { version: 1, files: [] };
     return ownershipSchema.parse(JSON.parse(recorded.bytes.toString('utf8')));
 }
@@ -99,10 +94,10 @@ function backupWriter(confined: ConfinedRoot, recovery: string): Journal['backup
         }
         const destination = `${operation}/${randomUUID()}.original`;
         confined.write(destination, { bytes: file.bytes, mode: PRIVATE_FILE }, undefined);
-        const details = { path, backup: destination, ...identity(file) };
+        const backupRecord = { path, backup: destination, ...identity(file) };
         confined.write(
             `${destination}.json`,
-            { bytes: Buffer.from(`${JSON.stringify(details)}\n`), mode: PRIVATE_FILE },
+            { bytes: Buffer.from(`${JSON.stringify(backupRecord)}\n`), mode: PRIVATE_FILE },
             undefined,
         );
         return { backup: destination, ...identity(file) };
@@ -114,7 +109,7 @@ function backupWriter(confined: ConfinedRoot, recovery: string): Journal['backup
  * @param file the snapshot
  * @returns its hash, mode, and whether it is a link
  */
-export function identity(file: FileSnapshot): Identity {
+export function identity(file: FileObservation): Identity {
     return {
         hash: createHash('sha256').update(file.bytes).digest('hex'),
         mode: fileMode(file),
@@ -128,7 +123,7 @@ export function identity(file: FileSnapshot): Identity {
  * @param expected the recorded identity, or undefined when none was recorded
  * @returns whether they agree
  */
-export function matches(file: FileSnapshot | undefined, expected: Identity | undefined): boolean {
+export function matches(file: FileObservation | undefined, expected: Identity | undefined): boolean {
     if (file === undefined) return expected === undefined;
     if (expected === undefined) return false;
     const found = identity(file);

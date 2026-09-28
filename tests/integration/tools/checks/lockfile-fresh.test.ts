@@ -1,10 +1,10 @@
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
-import { planRun } from '#cli/execution/planning/plan.ts';
 import { createFileTree, testdir } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { planRun } from '#cli/execution/planning/plan.ts';
 import { existsSync, readFileSync, rmSync } from 'node:fs';
 import { containing } from '#tests/support/expectations.ts';
 import { lockfileFresh } from '#cli/checks/dependencies/lockfile/fresh.ts';
@@ -16,33 +16,31 @@ test.each([
     [process.execPath, 'bun.lock', 'all'],
     ['npm', 'package-lock.json', 'all'],
     ['yarn', 'yarn.lock', 'all'],
-] as const)('native %s validates %s at %s without changing repository inputs', async (manager, lockName, level) => {
+] as const)('native %s validates %s at %s without changing repository inputs', async (client, lockName, level) => {
     await using directory = await testdir();
-    const version = await processes.run([manager, '--version'], { cwd: directory.path });
+    const version = await processes.run([client, '--version'], { cwd: directory.path });
     expect(version.code, version.stdout + version.stderr).toBe(0);
-    const modernYarn = manager === 'yarn' && Number(version.stdout.trim().split('.', 1)[0]) >= 2;
+    const yarnBerry = client === 'yarn' && Number(version.stdout.trim().split('.', 1)[0]) >= 2;
     const manifest = JSON.stringify({ private: true, dependencies: { library: 'file:./library' } });
     await createFileTree(directory.path, {
         'gspot.toml': `version = 1\nlevel = "${level}"\nconfigurations = ["dependencies"]\n`,
         'package.json': manifest,
         'library/package.json': '{"name":"library","version":"1.0.0"}\n',
         'other/package.json': '{"name":"other","version":"1.0.0"}\n',
-        ...(modernYarn ? { '.yarnrc.yml': 'nodeLinker: node-modules\n' } : {}),
+        ...(yarnBerry ? { '.yarnrc.yml': 'nodeLinker: node-modules\n' } : {}),
     });
+    const yarnFlags = yarnBerry ? [] : ['--non-interactive'];
+    const lockFlag = client === 'npm' ? '--package-lock-only' : '--lockfile-only';
     const installed = await processes.run(
         [
-            manager,
+            client,
             'install',
-            ...(manager === 'yarn'
-                ? modernYarn
-                    ? []
-                    : ['--non-interactive']
-                : [manager === 'npm' ? '--package-lock-only' : '--lockfile-only']),
-            ...(modernYarn ? [] : ['--ignore-scripts']),
+            ...(client === 'yarn' ? yarnFlags : [lockFlag]),
+            ...(yarnBerry ? [] : ['--ignore-scripts']),
         ],
         {
             cwd: directory.path,
-            ...(modernYarn ? { env: { YARN_ENABLE_SCRIPTS: 'false', YARN_ENABLE_IMMUTABLE_INSTALLS: 'false' } } : {}),
+            ...(yarnBerry ? { env: { YARN_ENABLE_SCRIPTS: 'false', YARN_ENABLE_IMMUTABLE_INSTALLS: 'false' } } : {}),
         },
     );
     expect(installed.code, installed.stdout + installed.stderr).toBe(0);

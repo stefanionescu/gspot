@@ -3,14 +3,14 @@ import { join } from 'node:path';
 import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { commitAll } from '#tests/support/cli/git.ts';
+import type { FindingCase } from '#tests/types/cli.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import type { Finding } from '#cli/types/checks/checks.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
-import type { FindingCase } from '#tests/types/support/cli.ts';
-import { SWIFT_INIT } from '#tests/support/cli/swift-fixtures.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
 import { installAtLevel, toolsPath } from '#tests/support/cli/tools.ts';
 import { containing, containingAll } from '#tests/support/expectations.ts';
+import { SWIFT_INIT } from '#tests/constants/acceptance/source/configurations/init-arguments.ts';
 import { LIBRARY, SWIFT_PACKAGE } from '#tests/constants/acceptance/source/configurations/swift.ts';
 
 const BUILD_CASES: FindingCase[] = [
@@ -54,18 +54,17 @@ describe('the swift configuration over a package', () => {
             const failed = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
             // The Swift toolchain checks run on macOS alone; elsewhere they are skipped and the run passes.
             const isSkipped = process.platform !== 'darwin';
-            const withExpected: Finding[] = containingAll([containing(planted.expected)]);
+            const expectedFindings: Finding[] = containingAll([containing(planted.expected)]);
             expect(outcome.code, outcome.stdout + outcome.stderr).toBe(isSkipped ? 0 : 1);
             expect(failed.checks).toMatchObject([{ check: planted.check, status: isSkipped ? 'skipped' : 'fail' }]);
-            expect(failed.checks[0]!.findings).toStrictEqual(isSkipped ? [] : withExpected);
+            expect(failed.checks[0]!.findings).toStrictEqual(isSkipped ? [] : expectedFindings);
             const path = planted.expected.file;
             const text = planted.files[path]!;
-            const correctedText =
-                planted.check === 'swift/build'
-                    ? text.replace('"three"', '3')
-                    : planted.check === 'swift/swiftlint-analyze'
-                      ? text.replace('import Foundation\n\n', '')
-                      : text.slice(0, text.indexOf('private func'));
+            let correctedText: string;
+            if (planted.check === 'swift/build') correctedText = text.replace('"three"', '3');
+            else if (planted.check === 'swift/swiftlint-analyze')
+                correctedText = text.replace('import Foundation\n\n', '');
+            else correctedText = text.slice(0, text.indexOf('private func'));
             const corrected = await runPlanted(
                 sandbox.path,
                 { ...planted, files: { [path]: correctedText } },

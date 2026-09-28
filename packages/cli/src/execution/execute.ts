@@ -5,13 +5,13 @@ import { inspectTool } from '#cli/tools/inspect.ts';
 import { pruneCache } from '#cli/execution/cache.ts';
 import { applyFixers } from '#cli/execution/fixers.ts';
 import { readRepository } from '#cli/repository/tree.ts';
-import { resolveCheck } from '#cli/execution/engines.ts';
-import { jobsWanted } from '#cli/platform/environment.ts';
-import { isActive, planRun } from '#cli/execution/planning/plan.ts';
+import { checkExecution } from '#cli/execution/engines.ts';
 import { reproduceLine } from '#cli/execution/reproduce.ts';
 import { assembleReport } from '#cli/execution/run-report.ts';
 import type { CheckResult } from '#cli/types/checks/checks.ts';
 import type { IgnoreEntry } from '#cli/types/policy/policy.ts';
+import { environmentVariables } from '#cli/platform/environment.ts';
+import { isActive, planRun } from '#cli/execution/planning/plan.ts';
 import { applyIgnores, applyInlineIgnores } from '#cli/execution/ignores.ts';
 import type { SourceObservations } from '#cli/types/repository/repository.ts';
 import { DOCKER, FAILED_STATUSES, RAN_STATUSES } from '#cli/constants/execution/execution.ts';
@@ -32,7 +32,7 @@ import type {
 // The plan and, for each planned check, the function that runs it.
 async function planExecutables(session: Session, options: RunOptions): Promise<Executable[]> {
     const planned = await planRun(session, options);
-    return planned.map((check) => ({ check, run: resolveCheck(check.spec) }));
+    return planned.map((check) => ({ check, run: checkExecution(check.spec) }));
 }
 
 // Rereads the repository after fixers changed it, so the run that follows sees the corrected files.
@@ -85,23 +85,23 @@ function mergeUses(into: Map<string, IgnoreUse>, uses: IgnoreUse[]): void {
     }
 }
 
-// The command line that reruns a failed check alone, with the stage and staged flags it ran under.
+// The command that reruns one failed check with its original stage and staged flags.
 function reproduceFor(check: PlannedCheck, result: CheckResult, options: RunOptions): string {
-    const messageFile = options.messageFile === undefined ? {} : { messageFile: options.messageFile };
-    const line = reproduceLine(result.check, result.scope, { stage: check.spec.stage, ...messageFile });
+    const commitOptions = options.messageFile === undefined ? {} : { messageFile: options.messageFile };
+    const line = reproduceLine(result.check, result.scope, { stage: check.spec.stage, ...commitOptions });
     return options.comparison?.content === 'index' ? `${line} --staged` : line;
 }
 
 // Drops the findings the ignores cover and settles the status on what remains.
-function applyIgnoresTo(
+async function applyIgnoresTo(
     observations: SourceObservations,
     check: PlannedCheck,
     result: CheckResult,
     ignores: IgnoreEntry[],
     uses: Map<string, IgnoreUse>,
-): void {
+): Promise<void> {
     const countedFailure = check.spec.count_regex !== undefined && result.status === 'fail';
-    const inline = applyInlineIgnores(observations, result.findings);
+    const inline = await applyInlineIgnores(observations, result.findings);
     const ignored = applyIgnores(
         inline,
         ignores.filter((entry) => entry.check === check.check),
@@ -113,20 +113,23 @@ function applyIgnoresTo(
 }
 
 // Filters a result through the ignores and attaches the line that reproduces a failure.
-function filterResult(pass: Pass, check: PlannedCheck, result: CheckResult): void {
+async function filterResult(pass: Pass, check: PlannedCheck, result: CheckResult): Promise<void> {
     const { ignores } = pass.session.policyFiles.policy;
-    if (RAN_STATUSES.has(result.status)) applyIgnoresTo(pass.session.observations, check, result, ignores, pass.uses);
+    if (RAN_STATUSES.has(result.status))
+        await applyIgnoresTo(pass.session.observations, check, result, ignores, pass.uses);
     if (FAILED_STATUSES.has(result.status)) result.reproduce = reproduceFor(check, result, pass.options);
 }
 
 // Runs every active check under the job limit and reports each result as it settles.
 async function runChecks(pass: Pass, executables: Executable[]): Promise<CheckResult[]> {
-    const limiter = pLimit(jobsWanted() ?? Math.max(1, cpus().length));
+    const wanted = Number(environmentVariables()['GSPOT_JOBS'] ?? '');
+    const jobs = Number.isSafeInteger(wanted) && wanted > 0 ? wanted : Math.max(1, cpus().length);
+    const limiter = pLimit(jobs);
     const settled = await Promise.allSettled(
         executables.map((executable) =>
             limiter(async () => {
                 const result = await runOne(pass, executable);
-                filterResult(pass, executable.check, result);
+                await filterResult(pass, executable.check, result);
                 pass.options.onResult?.(result);
                 return result;
             }),
@@ -151,7 +154,7 @@ function runSession(opened: Session, options: RunOptions, resources: DisposableS
 }
 
 // The plan, replanned after fixers changed the repository so the run sees the corrected files.
-async function planWithFixes(
+async function planCorrections(
     session: Session,
     opened: Session,
     options: RunOptions,
@@ -175,7 +178,7 @@ function isPruneWorthy(options: RunOptions, report: RunReport): boolean {
 }
 
 /**
- * Runs the checks and returns the report. Writes .gspot/reports/report.json.
+ * Runs the checks and returns the report. Writes `.gspot/reports/report.json`.
  * @param opened the session
  * @param options stage, skips, fix and cache flags
  * @returns the report, the plan, and the fix report when --fix ran
@@ -184,7 +187,7 @@ export async function executeRun(opened: Session, options: RunOptions): Promise<
     using resources = new DisposableStack();
     const session = runSession(opened, options, resources);
     const started = new Date();
-    const { executables, fixes } = await planWithFixes(session, opened, options);
+    const { executables, fixes } = await planCorrections(session, opened, options);
     const planned = executables.map(({ check }) => check);
     const { ignores } = session.policyFiles.policy;
     const pass: Pass = {
@@ -196,7 +199,7 @@ export async function executeRun(opened: Session, options: RunOptions): Promise<
     };
     const active = executables.filter(({ check }) => isActive(check));
     const ran = await runChecks(pass, active);
-    const report = assembleReport({
+    const report = await assembleReport({
         session,
         options,
         started,

@@ -5,9 +5,8 @@ import { createFileTree, testdir } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { reportSchema } from '#cli/execution/report.ts';
-import { expectCorrected } from '#tests/support/cli/planted.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
 import { PINACT_STUB, TOOL_FAILURES_POLICY } from '#tests/constants/integration/cli/checks.ts';
 import { WORKFLOW_HEAD } from '#tests/constants/acceptance/source/configurations/configurations.ts';
 
@@ -43,7 +42,15 @@ process.exit(2);
             join(sandbox.path, 'bin/taplo'),
             '#!/usr/bin/env bun\nif (process.argv.includes("--version")) console.log("taplo 0.10.0");\n',
         );
-        await expectCorrected(sandbox.path, 'configs/toml-format', environment);
+        const corrected = await run(
+            sandbox.path,
+            ['check', '--only', 'configs/toml-format', '--no-cache', '--json'],
+            environment,
+        );
+        expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+        expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
+            { check: 'configs/toml-format', status: 'ok', findings: [] },
+        ]);
     },
     PLANTED_TIMEOUT_MS,
 );

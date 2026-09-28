@@ -62,6 +62,8 @@ Test builders belong in test code. A test setup API never becomes a second model
 
 ## Style
 
+<!-- level: all -->
+
 - In XCTest, prefer throwing test methods with `try XCTUnwrap`.
 - In Swift Testing, prefer `try #require`.
 - Avoid `try!`, force unwraps, and force casts, unless the test proves a programmer error invariant.

@@ -55,7 +55,7 @@ const scopeRules = (isAll ? scopes : []).map((scope) => {
     return { files: [`${scope.path}/**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}`], rules: imports };
 });
 const restricted = settings['tools.eslint.restricted_imports'] ?? [];
-const ignoredPaths = ['**/node_modules/**', '**/dist/**', '**/build/**', '**/coverage/**', '.gspot/**', ...policy.declarations.flatMap((entry) => entry.paths)];
+const ignoredPaths = ['**/node_modules/**', '.gspot/**', ...policy.declarations.flatMap((entry) => entry.paths)];
 %>
 const root = fileURLToPath(new URL('../..', import.meta.url));
 // The component files a selected framework adds to the code and type-checked file sets.
@@ -359,7 +359,7 @@ const boundaryConfigs = [
 
 const scopeRules = <%= json(scopeRules) %>;
 
-const policyRules = <%= json(eslintPolicy) %>.map(({ scope, includes, excludes, rules }) => {
+const policyRules = <%= json(eslintPolicy) %>.flatMap(({ scope, includes, excludes, rules }) => {
     const included = includes.map((source) => new RegExp(source, 's'));
     const excluded = excludes.map((source) => new RegExp(source, 's'));
     const matches = (file) => {
@@ -367,7 +367,11 @@ const policyRules = <%= json(eslintPolicy) %>.map(({ scope, includes, excludes, 
         return (scope === '' || path.startsWith(`${scope}/`)) && included.some((pattern) => pattern.test(path)) && !excluded.some((pattern) => pattern.test(path));
     };
     Object.defineProperty(matches, Symbol.for('gspot.eslint.scope'), { value: { scope, includes, excludes, flags: 's' } });
-    return { files: CODE.map((pattern) => [pattern, matches]), rules };
+    const entries = Object.entries(rules);
+    return [
+        { files: CODE.map((pattern) => [pattern, matches]), rules: Object.fromEntries(entries.filter(([name]) => !name.startsWith('package-json/'))) },
+        { files: [['**/package.json', matches]], rules: Object.fromEntries(entries.filter(([name]) => name.startsWith('package-json/'))) },
+    ];
 });
 
 const requireProject = createRequire(`${root}/package.json`);
@@ -467,7 +471,22 @@ const defaults = [
     { files: ['**/*.{js,mjs,cjs,jsx}'], rules: { 'max-params': ['error', <%= limitOf('function_parameters', 'javascript') %>], 'gspot/no-trivial-functions': ['error', { maxStatements: <%= limitOf('trivial_statements', 'javascript') %> }], 'gspot/no-trivial-files': ['error', { maxStatements: <%= limitOf('trivial_statements', 'javascript') %> }] } },
 ];
 const ruleLevels = <%~ json(eslintRuleLevels) %>;
-const selectedDefaults = defaults.map((entry) => entry.rules === undefined ? entry : {
+// A global project registration chooses the instance of the same named and versioned plugin.
+// Scoped registrations and different versions retain ESLint's conflicting-plugin diagnostic.
+const globalPlugins = Object.assign({}, ...adopted
+    .filter((entry) => !entry.files && !entry.ignores && entry.basePath === undefined)
+    .map((entry) => entry.plugins ?? {}));
+const registeredDefaults = defaults.map((entry) => {
+    if (entry.plugins === undefined) return entry;
+    const plugins = Object.fromEntries(Object.entries(entry.plugins).map(([name, plugin]) => {
+        const candidate = globalPlugins[name];
+        const matches = plugin.meta?.name && plugin.meta?.version &&
+            candidate?.meta?.name === plugin.meta.name && candidate.meta.version === plugin.meta.version;
+        return [name, matches ? candidate : plugin];
+    }));
+    return { ...entry, plugins };
+});
+const selectedDefaults = registeredDefaults.map((entry) => entry.rules === undefined ? entry : {
     ...entry,
     rules: Object.fromEntries(Object.entries(entry.rules).map(([name, value]) =>
         [name, !<%= isAll %> && ruleLevels[name] === 'all' ? 'off' : value])),

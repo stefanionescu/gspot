@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { join } from 'node:path';
 import { statSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { runCheckCommand } from '#cli/execution/tool-runner.ts';
+import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import { CHECK_LOCATION } from '#cli/constants/checks/supabase.ts';
 import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 import { functionFolders, supabaseFinding } from '#cli/checks/supabase/project.ts';
@@ -48,7 +48,7 @@ async function linted(input: EngineInput, folder: string): Promise<Finding[]> {
     return [...broken, ...found];
 }
 
-// The first error deno check printed, at the file and line it names.
+// The first error from `deno check` with its reported file and line.
 function firstError(input: EngineInput, folder: string, stderr: string): Finding {
     const said = Bun.stripANSI(stderr);
     const place = CHECK_LOCATION.exec(said)?.groups;

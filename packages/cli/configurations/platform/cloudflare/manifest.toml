@@ -84,4 +84,4 @@ why = "Stale binding types let code compile against a binding the configuration 
 help = "Run wrangler types and commit the file."
 
 [rule_files]
-runtime = ["runtime/workers/WORKERS.md"]
+runtime = [{path = "runtime/workers/WORKERS.md"}]

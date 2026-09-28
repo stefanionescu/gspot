@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { expect, spyOn, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { openSession } from '#cli/execution/session.ts';
-import { scratchCopy } from '#cli/execution/file-workspace.ts';
+import { scratchCopy } from '#cli/execution/files/workspace.ts';
 import { applyFixers, runFixer } from '#cli/execution/fixers.ts';
 import { rejection, textContaining } from '#tests/support/expectations.ts';
 import { CORRECTION_POLICY, plannedCorrection } from '#tests/support/cli/correction.ts';
@@ -60,29 +60,35 @@ test.each([false, true])(
         expect(readFileSync(join(sandbox.path, 'unowned.json'), 'utf8')).toBe('{}');
         expect(existsSync(readFileSync(trace, 'utf8'))).toBe(false);
         // A preview shows the correction as a diff instead of writing it.
-        const withCorrected = textContaining('+corrected');
-        expect(result.diffs).toStrictEqual(preview ? [withCorrected] : []);
+        const expectedDiff = textContaining('+corrected');
+        expect(result.diffs).toStrictEqual(preview ? [expectedDiff] : []);
     },
 );
 
 test('isolated correction refuses to overwrite source changed during execution and cleans up', async () => {
     await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'gspot.toml': CORRECTION_POLICY, 'source.txt': 'original' });
+    await createFileTree(sandbox.path, {
+        'gspot.toml': CORRECTION_POLICY.replace('paths = ["source.txt"]', 'paths = ["*.txt"]'),
+        'source.txt': 'original',
+        'z-last.txt': 'last original',
+    });
     const session = await openSession(sandbox.path);
     const trace = join(sandbox.path, 'workspace-path');
     const planned = await plannedCorrection(
         session,
         `
             await Bun.write(${JSON.stringify(trace)}, process.cwd());
-            await Bun.write(${JSON.stringify(join(sandbox.path, 'source.txt'))}, 'new working content');
+            await Bun.write(${JSON.stringify(join(sandbox.path, 'z-last.txt'))}, 'new working content');
             await Bun.write('source.txt', 'isolated correction');
+            await Bun.write('z-last.txt', 'last correction');
         `,
     );
     planned.spec.isolated_files = true;
     expect(await rejection(runFixer(session, planned, sandbox.path))).toContain(
-        'changed while its correction was running',
+        'z-last.txt changed while its correction was running',
     );
-    expect(readFileSync(join(sandbox.path, 'source.txt'), 'utf8')).toBe('new working content');
+    expect(readFileSync(join(sandbox.path, 'source.txt'), 'utf8')).toBe('original');
+    expect(readFileSync(join(sandbox.path, 'z-last.txt'), 'utf8')).toBe('new working content');
     expect(existsSync(readFileSync(trace, 'utf8'))).toBe(false);
     const corrected = await plannedCorrection(session, "await Bun.write('source.txt', 'corrected')");
     corrected.spec.isolated_files = true;

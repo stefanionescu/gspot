@@ -1,7 +1,7 @@
 // The paths a policy names that must exist in the repository: scope directories and adopted ESLint and EditorConfig
+// locations.
 import * as messages from '#cli/policy/messages.ts';
 import { policyLayers } from '#cli/policy/problems.ts';
-// locations.
 import type { ConfinedRoot } from '#cli/types/platform.ts';
 import { mutationPath } from '#cli/platform/safe-paths.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
@@ -26,15 +26,7 @@ function guarded(location: PathSegment[], read: () => PolicyProblem[]): PolicyPr
     }
 }
 
-// The problem of a scope path that is not a directory in the repository.
-function scopeProblems(files: ConfinedRoot, index: number, path: string): PolicyProblem[] {
-    const location: PathSegment[] = ['scope', index, 'path'];
-    return guarded(location, () =>
-        files.stat(path)?.isDirectory() === true ? [] : [{ path: location, message: messages.scopeMissing(path) }],
-    );
-}
-
-// The problems of scope paths declared twice, compared without regard to case or Unicode form.
+// Duplicate scope declarations after case and Unicode normalization.
 function duplicateScopeProblems(paths: string[]): PolicyProblem[] {
     const seen = new Set<string>();
     const problems: PolicyProblem[] = [];
@@ -58,29 +50,6 @@ function basePathProblem(files: ConfinedRoot, base: string, location: PathSegmen
     return [{ path: location, message: `${tool} basePath is not a directory: ${base}` }];
 }
 
-// The problems of the EditorConfig directories a layer adopted.
-function editorconfigProblems(files: ConfinedRoot, scope: Partial<Policy>, path: PathSegment[]): PolicyProblem[] {
-    const adopted = scope.tools?.['editorconfig']?.['adopted'] as EditorconfigAdoption | undefined;
-    return (adopted?.directories ?? []).flatMap((directory, index) => {
-        const location = [...path, 'tools', 'editorconfig', 'adopted', 'directories', index, 'basePath'];
-        return guarded(location, () => basePathProblem(files, directory.basePath, location, 'EditorConfig'));
-    });
-}
-
-// Every base path an adopted ESLint entry carries, with where each one sits in the policy.
-function eslintBasePaths(entry: EslintAdoption): Located<string | undefined>[] {
-    const ignores = (entry.legacyIgnores ?? []).flatMap((ignore, index) => [
-        { value: ignore.basePath, path: ['legacyIgnores', index, 'basePath'] },
-        { value: ignore.criteria?.basePath, path: ['legacyIgnores', index, 'criteria', 'basePath'] },
-    ]);
-    return [
-        { value: entry.basePath, path: ['basePath'] },
-        { value: entry.legacyCriteria?.basePath, path: ['legacyCriteria', 'basePath'] },
-        { value: entry.legacyScope?.basePath, path: ['legacyScope', 'basePath'] },
-        ...ignores,
-    ];
-}
-
 // Every executable module an adopted ESLint entry names: plugins, the parser, and an object processor.
 function eslintReferences(entry: EslintAdoption): Located<ModuleReference>[] {
     const plugins = Object.entries(entry.plugins ?? {}).map(([name, reference]) => ({
@@ -90,9 +59,9 @@ function eslintReferences(entry: EslintAdoption): Located<ModuleReference>[] {
     const parser = entry.languageOptions?.parser;
     const parserReference =
         parser === undefined ? [] : [{ value: parser, path: ['languageOptions', 'parser', 'module'] }];
-    const processor =
+    const transform =
         typeof entry.processor === 'object' ? [{ value: entry.processor, path: ['processor', 'module'] }] : [];
-    return [...plugins, ...parserReference, ...processor];
+    return [...plugins, ...parserReference, ...transform];
 }
 
 // The problem of a module reference that is missing from the repository or points outside it.
@@ -108,7 +77,17 @@ function referenceProblem(files: ConfinedRoot, reference: ModuleReference, locat
 
 // The problems of one adopted ESLint entry: its base paths and its executable modules.
 function eslintEntryProblems(files: ConfinedRoot, entry: EslintAdoption, location: PathSegment[]): PolicyProblem[] {
-    const bases = eslintBasePaths(entry).flatMap(({ value, path }) => {
+    const ignores = (entry.legacyIgnores ?? []).flatMap((ignore, index) => [
+        { value: ignore.basePath, path: ['legacyIgnores', index, 'basePath'] },
+        { value: ignore.criteria?.basePath, path: ['legacyIgnores', index, 'criteria', 'basePath'] },
+    ]);
+    const paths: Located<string | undefined>[] = [
+        { value: entry.basePath, path: ['basePath'] },
+        { value: entry.legacyCriteria?.basePath, path: ['legacyCriteria', 'basePath'] },
+        { value: entry.legacyScope?.basePath, path: ['legacyScope', 'basePath'] },
+        ...ignores,
+    ];
+    const bases = paths.flatMap(({ value, path }) => {
         if (value === undefined || value === '.') return [];
         const at = [...location, ...path];
         return guarded(at, () => basePathProblem(files, value, at, 'ESLint'));
@@ -118,14 +97,6 @@ function eslintEntryProblems(files: ConfinedRoot, entry: EslintAdoption, locatio
         return guarded(at, () => referenceProblem(files, value, at));
     });
     return [...bases, ...references];
-}
-
-// The problems of the ESLint configuration a layer adopted.
-function eslintProblems(files: ConfinedRoot, scope: Partial<Policy>, path: PathSegment[]): PolicyProblem[] {
-    const adopted = (scope.tools?.['eslint']?.['adopted'] ?? []) as EslintAdoption[];
-    return adopted.flatMap((entry, index) =>
-        eslintEntryProblems(files, entry, [...path, 'tools', 'eslint', 'adopted', index]),
-    );
 }
 
 /**
@@ -138,11 +109,28 @@ export function pathProblems(root: string, policy: Policy): PolicyProblem[] {
     const paths = policy.scopes.map((scope) => scope.path);
     const files = openConfinedRoot(root);
     try {
-        const missing = paths.flatMap((path, index) => scopeProblems(files, index, path));
-        const configuration = policyLayers(policy).flatMap(({ scope, path }) => [
-            ...editorconfigProblems(files, scope, path),
-            ...eslintProblems(files, scope, path),
-        ]);
+        const missing = paths.flatMap((path, index) => {
+            const location: PathSegment[] = ['scope', index, 'path'];
+            return guarded(location, () =>
+                files.stat(path)?.isDirectory() === true
+                    ? []
+                    : [{ path: location, message: messages.scopeMissing(path) }],
+            );
+        });
+        const configuration = policyLayers(policy).flatMap(({ table, path }) => {
+            const editorconfig = table.tools?.['editorconfig']?.['adopted'] as EditorconfigAdoption | undefined;
+            const eslint = (table.tools?.['eslint']?.['adopted'] ?? []) as EslintAdoption[];
+            const directories = (editorconfig?.directories ?? []).flatMap((directory, index) => {
+                const location = [...path, 'tools', 'editorconfig', 'adopted', 'directories', index, 'basePath'];
+                return guarded(location, () => basePathProblem(files, directory.basePath, location, 'EditorConfig'));
+            });
+            return [
+                ...directories,
+                ...eslint.flatMap((entry, index) =>
+                    eslintEntryProblems(files, entry, [...path, 'tools', 'eslint', 'adopted', index]),
+                ),
+            ];
+        });
         return [...missing, ...duplicateScopeProblems(paths), ...configuration];
     } finally {
         files.close();

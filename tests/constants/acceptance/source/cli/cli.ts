@@ -176,3 +176,38 @@ export const EDITORCONFIG =
 export const EXPECTED = 'const greeting = "hello"\nif (greeting) {\n        console.log(greeting)\n}\n';
 export const REASON = 'The report names the folders the move deleted, which is what it is for.';
 export const TABLE = `[{patterns = ["REPORT.md"], reason = "${REASON}"}]`;
+
+export const ESLINT_OVERRIDE_POLICY = `version = 1
+configurations = ["javascript"]
+[rules]
+install = false
+[tools.eslint.rules]
+eqeqeq = ["error", "smart"]
+[[tools.eslint.overrides]]
+paths = ["tests"]
+rules = {eqeqeq = ["error", "always"]}
+[[tools.eslint.overrides]]
+paths = ["tests/exempt.js"]
+rules = {eqeqeq = ["error", "smart"]}
+[[scope]]
+path = "apps/web"
+[scope.tools.eslint.rules]
+eqeqeq = ["warn", "always"]
+[[scope.tools.eslint.overrides]]
+paths = ["**/*", "!apps/web/exempt.js"]
+rules = {eqeqeq = ["error", "smart"]}
+[[scope]]
+path = "apps/web/admin"
+[[scope.tools.eslint.overrides]]
+paths = ["**/*"]
+rules = {eqeqeq = ["error", "always"]}
+`;
+
+export const PRETTIER_IGNORE_RULES =
+    '# Generated files except the authored entry\ngenerated/*\n!generated/authored.js\nspace\\ name.js\n';
+export const PRETTIER_FIX_ARGS = ['check', '--only', 'formatting/prettier', '--fix', '--no-cache', '--json', '--'];
+
+export const PRETTIER_NATIVE_FORMATS = {
+    'tests/[draft].js': "const greeting = 'hello'\nif (greeting) {\n        console.log(greeting)\n}\n",
+    'server/source.js': 'const greeting = "hello";\nif (greeting) {\n  console.log(greeting);\n}\n',
+};

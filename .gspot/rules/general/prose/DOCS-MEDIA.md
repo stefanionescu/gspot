@@ -36,6 +36,8 @@ styling, unless the uppercase letters are part of the actual label.
 
 ### Use consistent interaction verbs
 
+<!-- level: all -->
+
 - Select: Choose a button, tab, menu, checkbox, radio option, or dropdown value
   in general product documentation.
 - Click: Use when mouse interaction is relevant and the project style chooses
@@ -51,6 +53,8 @@ Choose one project convention for buttons and menus. Do not alternate between
 "click," "press," "hit," and "tap" without a device-specific reason.
 
 ### Write location before action
+
+<!-- level: all -->
 
 Use:
 
@@ -95,6 +99,8 @@ Select **Security**. If **Security** is not visible, expand the repository menu.
 Do not document every visual arrangement at every viewport size.
 
 ### Document fields efficiently
+
+<!-- level: all -->
 
 When field labels and help text are self-explanatory, use:
 
@@ -342,7 +348,7 @@ Alt text:
 
 - Express the image's purpose in the current context.
 - Include the most relevant state or relationship.
-- Be between 40 and 155 characters.
+- Stay concise while conveying the image's purpose.
 - Use sentence case.
 - End with punctuation.
 - Mention a visible highlight when the highlight matters.

@@ -23,10 +23,6 @@ function inspectPage(path: string, content: string): PageLinks {
     return { path, ids, links };
 }
 
-function routeFor(path: string): string {
-    return path.endsWith('/index.html') ? path.slice(0, -'index.html'.length) : path;
-}
-
 function targetProblem(
     link: string,
     page: PageLinks,
@@ -82,7 +78,10 @@ export async function validateSiteLinks(directory: URL, site: string): Promise<v
     const pages = new Map<string, PageLinks>();
     for (const path of files) {
         if (!path.endsWith('.html')) continue;
-        const page = inspectPage(routeFor(path), await readFile(join(root, path.slice(1)), 'utf8'));
+        const page = inspectPage(
+            path.endsWith('/index.html') ? path.slice(0, -'index.html'.length) : path,
+            await readFile(join(root, path.slice(1)), 'utf8'),
+        );
         pages.set(path, page);
         pages.set(page.path, page);
     }

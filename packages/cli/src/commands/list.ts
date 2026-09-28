@@ -13,30 +13,7 @@ import type { Session } from '#cli/types/execution/execution.ts';
 import type { CommandResult } from '#cli/types/commands/commands.ts';
 import { detectConfigurations } from '#cli/configurations/detect.ts';
 import { KEY_GAP, VALUE_WIDTH } from '#cli/constants/commands/commands.ts';
-
-import type {
-    Policy,
-    ScopeSelection,
-    ExtraRow,
-    SettingRow,
-    SettingsListing,
-    ToolTables,
-} from '#cli/types/policy/policy.ts';
-
-function rowsFor(policy: Policy, scopes: ScopeSelection[]): SettingRow[] {
-    return scopes.flatMap((selection) => {
-        const scope = selection.scope.path;
-        return listSettings(selection.surface, policy, scope)
-            .filter((entry) => scope === '' || !entry.source.startsWith('configuration'))
-            .map((entry) => ({
-                key: entry.key,
-                value: entry.value,
-                source: entry.source,
-                direction: entry.spec.direction,
-                scope,
-            }));
-    });
-}
+import type { Policy, ScopeSelection, ExtraRow, SettingsListing, ToolTables } from '#cli/types/policy/policy.ts';
 
 function extrasFor(scope: string, tools: ToolTables): ExtraRow[] {
     return Object.entries(tools).flatMap(([tool, table]) => {
@@ -130,7 +107,19 @@ export function settingRows(policy: Policy, scopes: ScopeSelection[]): SettingsL
     const fromScopes = Object.entries(policy.scopeTables).flatMap(([scope, table]) =>
         table.tools === undefined ? [] : extrasFor(scope, table.tools),
     );
-    return { rows: rowsFor(policy, scopes), extras: [...extrasFor('', policy.tools), ...fromScopes] };
+    const rows = scopes.flatMap((selection) => {
+        const scope = selection.scope.path;
+        return listSettings(selection.surface, policy, scope)
+            .filter((entry) => scope === '' || !entry.source.startsWith('configuration'))
+            .map((entry) => ({
+                key: entry.key,
+                value: entry.value,
+                source: entry.source,
+                direction: entry.spec.direction,
+                scope,
+            }));
+    });
+    return { rows, extras: [...extrasFor('', policy.tools), ...fromScopes] };
 }
 
 /**

@@ -1,8 +1,8 @@
 import { join } from 'node:path';
+import { RUNS } from '#tests/constants/cli.ts';
 import { expect, spyOn, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { inspectTool } from '#cli/tools/inspect.ts';
-import { RUNS } from '#tests/constants/support/cli.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { chmodSync, mkdirSync, symlinkSync } from 'node:fs';
 import { commandPin, libraryPin } from '#tests/support/cli/pins.ts';

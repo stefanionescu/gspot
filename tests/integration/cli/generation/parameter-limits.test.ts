@@ -2,7 +2,7 @@ import { ESLint } from 'eslint';
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
-import { emitAll } from '#cli/generation/render.ts';
+import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { mkdirSync, symlinkSync, writeFileSync } from 'node:fs';
 
@@ -29,10 +29,10 @@ for (const language of ['javascript', 'typescript']) {
             [`example.${extension}`]: source,
         });
         symlinkSync(modules, join(directory.path, 'node_modules'));
-        const renderSession1 = await openSession(directory.path);
-        const files = emitAll(renderSession1.policyFiles.policy, renderSession1.repository, renderSession1.scopes, {
-            version: renderSession1.version,
-            packageManager: renderSession1.packageManager,
+        const session = await openSession(directory.path);
+        const files = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
+            version: session.version,
+            packageClient: session.packageClient,
         }).files;
         const configName = '.gspot/config/eslint.config.mjs';
         const config = files.find(({ path }) => path === configName)!;

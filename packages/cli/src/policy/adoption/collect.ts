@@ -1,7 +1,6 @@
 import { z } from 'zod';
 import { dirname } from 'node:path';
 import { osvImporter } from '#cli/policy/adoption/osv.ts';
-import { ruffImporter, assertStableRuff, ExperimentalRuffError } from '#cli/policy/adoption/ruff.ts';
 import { typosImporter } from '#cli/policy/adoption/typos.ts';
 import { collectEslint } from '#cli/policy/adoption/eslint.ts';
 import { appendSetting } from '#cli/policy/adoption/results.ts';
@@ -12,11 +11,12 @@ import { collectFormatting } from '#cli/policy/adoption/formatting.ts';
 import { markdownImporter } from '#cli/policy/adoption/markdownlint.ts';
 import { ignoreFileEntries } from '#cli/policy/adoption/ignore-files.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { IGNORE_PATH_KEYS, SEPARATE_TOOLS } from '#cli/constants/policy/adoption.ts';
-import { observeConfiguration, parseCarrySource } from '#cli/policy/adoption/source.ts';
 import type { ExistingTooling } from '#cli/types/repository/repository.ts';
+import { IGNORE_PATH_KEYS, SEPARATE_TOOLS } from '#cli/constants/policy/adoption.ts';
 import { carryDisabled, carryPyright, valueOfKeyLine } from '#cli/policy/adoption/disabled.ts';
-import type { CarryRequest, Carrier, Owned, CarriedConfiguration, CarrySource } from '#cli/types/policy/adoption.ts';
+import { observeConfiguration, parseConfigurationSource } from '#cli/policy/adoption/source.ts';
+import { ruffImporter, assertStableRuff, ExperimentalRuffError } from '#cli/policy/adoption/ruff.ts';
+import type { CarryRequest, Carrier, Owned, AdoptionResult, ConfigurationSource } from '#cli/types/policy/adoption.ts';
 
 const strings = z.array(z.string());
 
@@ -27,7 +27,7 @@ const READER_CARRIERS: Record<string, Carrier | undefined> = {
     licenses: licensesImporter.carry,
 };
 // Refuses a ShellCheck configuration with any line other than a disable directive or a comment.
-function assertShellcheckSupported(source: CarrySource, path: string): void {
+function assertShellcheckSupported(source: ConfigurationSource, path: string): void {
     const unsupported = source.text.split('\n').find((line) => {
         const content = line.trim();
         return content !== '' && !content.startsWith('#') && valueOfKeyLine(line, 'disable') === undefined;
@@ -37,14 +37,14 @@ function assertShellcheckSupported(source: CarrySource, path: string): void {
 }
 
 // Refuses a configuration the tool's importer cannot carry in full.
-function assertSupported(source: CarrySource, tool: string, path: string): void {
+function assertSupported(source: ConfigurationSource, tool: string, path: string): void {
     if (tool === 'ruff') assertStableRuff(source, path);
     if (tool === 'shellcheck') assertShellcheckSupported(source, path);
     else assertImportable(source, tool, path);
 }
 
 // Refuses a configuration with settings the tool's importer does not carry.
-function assertImportable(source: CarrySource, tool: string, path: string): void {
+function assertImportable(source: ConfigurationSource, tool: string, path: string): void {
     const schema = nativeImporters[tool]?.schema;
     if (schema === undefined) throw new Error(`${path}: no complete ${tool} configuration importer is available.`);
     const parsed = schema.safeParse(source.parsed);
@@ -58,7 +58,7 @@ function assertImportable(source: CarrySource, tool: string, path: string): void
  * @param source the input already read and parsed
  * @param request the importer, destination lists, and configuration context
  */
-async function carryFrom(source: CarrySource, request: CarryRequest): Promise<void> {
+async function carryFrom(source: ConfigurationSource, request: CarryRequest): Promise<void> {
     const { tool, path, lists, root, reader, check } = request;
     if (reader === 'ignore-paths' && tool !== 'basedpyright') {
         const key = IGNORE_PATH_KEYS[tool];
@@ -83,7 +83,7 @@ function hasOverlap(entry: Owned, separate: Owned[]): boolean {
 }
 
 // Records each configuration that overlaps another of the same tool as unread.
-function noteOverlaps(owned: Owned[], lists: CarriedConfiguration): void {
+function noteOverlaps(owned: Owned[], lists: AdoptionResult): void {
     const separate = owned.filter(({ tool }) => SEPARATE_TOOLS.has(tool));
     for (const entry of separate)
         if (hasOverlap(entry, separate))
@@ -94,7 +94,7 @@ function noteOverlaps(owned: Owned[], lists: CarriedConfiguration): void {
 }
 
 // Captures every owned file before any executable configuration can change another tool's input.
-function observeOwned(root: string, owned: Owned[], lists: CarriedConfiguration): void {
+function observeOwned(root: string, owned: Owned[], lists: AdoptionResult): void {
     for (const path of new Set(owned.map(({ path }) => path))) {
         try {
             lists.observed.set(path, observeConfiguration(root, path).original);
@@ -112,7 +112,7 @@ function selectorOf(entry: Owned): { table?: string; key?: string } | undefined 
 }
 
 // Records what takeover does with a carried file: keeps a shared file for the developer, removes an owned one.
-function recordOutcome(entry: Owned, lists: CarriedConfiguration): void {
+function recordOutcome(entry: Owned, lists: AdoptionResult): void {
     const { tool, path, shared, table, key } = entry;
     if (shared === true)
         lists.retained.push({
@@ -123,12 +123,12 @@ function recordOutcome(entry: Owned, lists: CarriedConfiguration): void {
 }
 
 // Carries one owned file, then records whether takeover removes it or a shared file keeps it.
-async function carryOwned(root: string, entry: Owned, lists: CarriedConfiguration): Promise<void> {
+async function carryOwned(root: string, entry: Owned, lists: AdoptionResult): Promise<void> {
     const { tool, path, carries, check } = entry;
     try {
         const observed = lists.observed.get(path);
         if (observed === undefined) throw new Error(`${path} was not observed in the repository.`);
-        const source = parseCarrySource(observed, tool, path, selectorOf(entry));
+        const source = parseConfigurationSource(observed, tool, path, selectorOf(entry));
         await carryFrom(source, { tool, path, lists, root, reader: carries, check });
     } catch (error) {
         if (error instanceof ExperimentalRuffError) throw error;
@@ -136,15 +136,6 @@ async function carryOwned(root: string, entry: Owned, lists: CarriedConfiguratio
         return;
     }
     recordOutcome(entry, lists);
-}
-
-// Whether a formatter or ESLint importer reads the file, ahead of the per-tool carriers.
-function isCarriedElsewhere(entry: Owned): boolean {
-    return entry.tool === 'prettier' || entry.tool === 'ec' || entry.carries === 'eslint-config';
-}
-
-function sortedUnique(items: string[]): string[] {
-    return [...new Set(items)].toSorted((a, b) => a.localeCompare(b));
 }
 
 export const nativeImporters: Record<
@@ -185,19 +176,20 @@ export function isOwned(tool: string, selected: Set<string>): boolean {
 
 /**
  * Reads carried settings from each declared configuration of the selected tools. Deletes nothing.
- * @param root the repository root
- * @param tooling the configuration files, hooks and lint folders found
- * @param selected the ids of the selected configurations
- * @param paths the tracked source paths
- * @returns the lists to write into gspot.toml and the files takeover replaces
+ *
+ * @param root the repository root.
+ * @param tooling the configuration files, hooks, and lint folders found.
+ * @param selected the ids of the selected configurations.
+ * @param paths the tracked source paths.
+ * @returns the lists to write into gspot.toml and the files takeover replaces.
  */
 export async function collectCarried(
     root: string,
     tooling: ExistingTooling,
     selected: Set<string>,
     paths: string[],
-): Promise<CarriedConfiguration> {
-    const lists: CarriedConfiguration = {
+): Promise<AdoptionResult> {
+    const lists: AdoptionResult = {
         observed: new Map(),
         tools: new Map(),
         scopes: new Map(),
@@ -220,7 +212,9 @@ export async function collectCarried(
         paths,
         lists,
     );
-    for (const entry of owned) if (!isCarriedElsewhere(entry)) await carryOwned(root, entry, lists);
+    for (const entry of owned)
+        if (!(entry.tool === 'prettier' || entry.tool === 'ec' || entry.carries === 'eslint-config'))
+            await carryOwned(root, entry, lists);
     return lists;
 }
 
@@ -251,28 +245,4 @@ export function noLongerRuns(
         });
     }
     return list;
-}
-
-/**
- * Owned tools among the ones found, given the selection.
- * @param tooling the configuration files found
- * @param selected the ids of the selected configurations
- * @returns the tool names, sorted
- */
-export function ownedTools(tooling: ExistingTooling, selected: Set<string>): string[] {
-    return sortedUnique(
-        tooling.configs.filter((config) => isOwned(config.tool, selected)).map((config) => config.tool),
-    );
-}
-
-/**
- * Tools found for which no selected configuration exists.
- * @param tooling the configuration files found
- * @param selected the ids of the selected configurations
- * @returns the tool names, sorted
- */
-export function unownedTools(tooling: ExistingTooling, selected: Set<string>): string[] {
-    return sortedUnique(
-        tooling.configs.filter((config) => !isOwned(config.tool, selected)).map((config) => config.tool),
-    );
 }

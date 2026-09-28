@@ -54,12 +54,12 @@ test.each([
 
 test('a denied asset existence observation is an execution error and a genuinely missing image is a finding', async () => {
     await using sandbox = await testdir();
-    const catalog = 'App/Assets.xcassets/Logo.imageset/Contents.json';
+    const assetManifest = 'App/Assets.xcassets/Logo.imageset/Contents.json';
     const image = 'App/Assets.xcassets/Logo.imageset/logo.png';
     const content = '{"images":[{"filename":"logo.png"}]}\n';
     await createFileTree(sandbox.path, {
         'gspot.toml': 'version = 1\nconfigurations = ["xcode"]\n',
-        [catalog]: content,
+        [assetManifest]: content,
         [image]: new Uint8Array([0, 1, 2]),
         'App/Home.swift': 'let logo = Image("Logo")\n',
     });
@@ -90,10 +90,10 @@ test('a denied asset existence observation is an execution error and a genuinely
     fs.rmSync(target);
     const missing = await executeRun(session, options);
     expect(missing.report.exitCode).toBe(1);
-    expect(missing.report.checks[0]?.findings).toMatchObject([{ file: catalog, line: 1, rule: 'missing-image' }]);
+    expect(missing.report.checks[0]?.findings).toMatchObject([{ file: assetManifest, line: 1, rule: 'missing-image' }]);
     fs.writeFileSync(target, new Uint8Array([0, 1, 2]));
     const corrected = await executeRun(session, options);
     expect(corrected.report.exitCode).toBe(0);
-    expect(fs.readFileSync(join(sandbox.path, catalog), 'utf8')).toBe(content);
+    expect(fs.readFileSync(join(sandbox.path, assetManifest), 'utf8')).toBe(content);
     expect(fs.readFileSync(target)).toStrictEqual(Buffer.from([0, 1, 2]));
 });

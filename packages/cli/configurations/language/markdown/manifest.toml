@@ -57,14 +57,14 @@ file = ".markdownlint.yml"
 carries = "rules-table"
 
 [[configs]]
-template = "markdownlint.jsonc.tmpl"
+template = "configuration.jsonc.tmpl"
 target = ".gspot/config/markdownlint.jsonc"
 per_scope = true
 rules_path = [""]
 pointer = {path = ".markdownlint-cli2.jsonc", body = "{\n    \"config\": { \"extends\": \"{target}\" },\n    \"globs\": [\"**/*.md\", \"**/*.mdx\", \"!.gspot/**\", \"!**/node_modules/**\", \"!**/dist/**\", \"!**/build/**\", \"!**/coverage/**\"]\n}\n"}
 
 [[configs]]
-template = "markdownlint-cli2.mjs.tmpl"
+template = "runner.mjs.tmpl"
 target = ".gspot/config/markdownlint-cli2.mjs"
 per_scope = true
 
@@ -119,4 +119,4 @@ direction = "per-rule"
 summary = "Options per markdownlint rule, by rule id; turning a rule off is gspot ignore --rule."
 
 [rule_files]
-language = ["general/prose/DOCS-FORMAT.md"]
+language = [{path = "general/prose/DOCS-FORMAT.md"}]

@@ -7,8 +7,7 @@ import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { containing } from '#tests/support/expectations.ts';
-import { expectCorrected } from '#tests/support/cli/planted.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
 import { installAtLevel, toolsPath } from '#tests/support/cli/tools.ts';
 
 import {
@@ -64,7 +63,15 @@ describe('gspot add', () => {
                 }),
             );
             await Bun.write(join(sandbox.path, 'schema.ts'), LOOSE.replace('z.any()', 'z.string()'));
-            await expectCorrected(sandbox.path, 'typescript/eslint', environment);
+            const correctedCheck = await run(
+                sandbox.path,
+                ['check', '--only', 'typescript/eslint', '--no-cache', '--json'],
+                environment,
+            );
+            expect(correctedCheck.code, correctedCheck.stdout + correctedCheck.stderr).toBe(0);
+            expect(reportSchema.parse(JSON.parse(correctedCheck.stdout)).checks).toMatchObject([
+                { check: 'typescript/eslint', status: 'ok', findings: [] },
+            ]);
         },
         PLANTED_TIMEOUT_MS * 4,
     );

@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { parse } from 'smol-toml';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
-import { emitAll } from '#cli/generation/render.ts';
+import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
 
 test('Squawk uses the effective transaction setting for each scope and honors false under Supabase', async () => {
@@ -15,10 +15,10 @@ test('Squawk uses the effective transaction setting for each scope and honors fa
         'migration.sql': defect,
         'transactional/child/migration.sql': 'SELECT 1;\n',
     });
-    const renderSession4 = await openSession(sandbox.path);
-    const configs = emitAll(renderSession4.policyFiles.policy, renderSession4.repository, renderSession4.scopes, {
-        version: renderSession4.version,
-        packageManager: renderSession4.packageManager,
+    const session = await openSession(sandbox.path);
+    const configs = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
+        version: session.version,
+        packageClient: session.packageClient,
     }).files.filter(({ path }) => path.endsWith('/squawk.toml'));
     expect(
         Object.fromEntries(configs.map(({ path, content }) => [path, parse(content)['assume_in_transaction']])),

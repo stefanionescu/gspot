@@ -2,7 +2,7 @@ import { stringify } from 'smol-toml';
 import { expect, test } from 'bun:test';
 import { Ajv2020 } from 'ajv/dist/2020.js';
 import { policyJsonSchema } from '#cli/policy/json-schema.ts';
-import { parsePolicyText, assertPolicyComplete  } from '#cli/policy/read.ts';
+import { parsePolicyText, assertPolicyComplete } from '#cli/policy/read.ts';
 
 test.each([
     { configuration: 'docs', tool: 'docs', key: 'contents_threshold', bad: 'many', good: 6 },
@@ -24,7 +24,9 @@ test.each([
             const text = stringify(input);
             const path = 'gspot.toml';
             const policy = parsePolicyText(text, path);
-            expect(() => { assertPolicyComplete({ text, path, policy }); }).toThrow(/gspot.toml:\d+:/);
+            expect(() => {
+                assertPolicyComplete({ text, path, policy });
+            }).toThrow(/gspot.toml:\d+:/);
             expect(validate(input)).toBe(false);
             const correctedTools = { [tool]: { [key]: good } };
             const corrected = {
@@ -34,7 +36,9 @@ test.each([
             };
             const correctedText = stringify(corrected);
             const correctedPolicy = parsePolicyText(correctedText, path);
-            expect(() => { assertPolicyComplete({ text: correctedText, path, policy: correctedPolicy }); }).not.toThrow();
+            expect(() => {
+                assertPolicyComplete({ text: correctedText, path, policy: correctedPolicy });
+            }).not.toThrow();
             expect(validate(corrected)).toBe(true);
         }
     },
@@ -44,10 +48,14 @@ test('nested manifest settings preserve typed leaf values and reject unknown sib
     const source = 'version = 1\nconfigurations = ["bash"]\n[tools.bash.safety]\nowners = ["scripts/cleanup.sh"]\n';
     const path = 'gspot.toml';
     const policy = parsePolicyText(source, path);
-    expect(() => { assertPolicyComplete({ text: source, path, policy }); }).not.toThrow();
+    expect(() => {
+        assertPolicyComplete({ text: source, path, policy });
+    }).not.toThrow();
     const invalid = source + 'unknown = true\n';
     const invalidPolicy = parsePolicyText(invalid, path);
-    expect(() => { assertPolicyComplete({ text: invalid, path, policy: invalidPolicy }); }).toThrow('gspot.toml:5:');
+    expect(() => {
+        assertPolicyComplete({ text: invalid, path, policy: invalidPolicy });
+    }).toThrow('gspot.toml:5:');
     const validate = new Ajv2020({ strict: false }).compile(policyJsonSchema());
     expect(
         validate({
@@ -68,7 +76,9 @@ test.each([{ safety: [] }, { safety: 'owners' }, { safety: 1 }, { safety: { owne
         const text = stringify(input);
         const path = 'gspot.toml';
         const policy = parsePolicyText(text, path);
-        expect(() => { assertPolicyComplete({ text, path, policy }); }).toThrow(/gspot.toml:\d+:/);
+        expect(() => {
+            assertPolicyComplete({ text, path, policy });
+        }).toThrow(/gspot.toml:\d+:/);
         expect(new Ajv2020({ strict: false }).compile(policyJsonSchema())(input)).toBe(false);
     },
 );

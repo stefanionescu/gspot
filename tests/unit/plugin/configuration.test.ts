@@ -55,7 +55,12 @@ test.each(['recommended', 'all'] as const)(
         const findings = linter.verify('interface Order { total: number }', config, { filename });
         // The layout rules belong to the all level alone; the types file is placed where it is allowed at both.
         const shape = (list: typeof findings) =>
-            list.map(({ ruleId, messageId, line, column }) => ({ ruleId, messageId, line, column }));
+            list.map(({ ruleId, messageId: diagnosticId, line, column }) => ({
+                ruleId,
+                messageId: diagnosticId,
+                line,
+                column,
+            }));
         expect(shape(findings).filter((entry) => entry.ruleId !== 'gspot/no-trivial-files')).toStrictEqual(
             level === 'recommended'
                 ? []
@@ -88,7 +93,7 @@ test.each(['recommended', 'all'] as const)(
         expect(
             alias
                 .filter(({ ruleId }) => ruleId === 'gspot/no-exported-alias-constants')
-                .map(({ line, column, messageId }) => ({ line, column, messageId })),
+                .map(({ line, column, messageId: diagnosticId }) => ({ line, column, messageId: diagnosticId })),
         ).toStrictEqual(level === 'recommended' ? [] : [{ line: 2, column: 14, messageId: 'alias' }]);
         const defect = linter.verify("'use client';\nexport const value = process.env.SECRET;", config, {
             filename: join(sandbox.path, 'example.js'),

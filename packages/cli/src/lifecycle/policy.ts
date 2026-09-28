@@ -3,7 +3,7 @@ import { PolicyError } from '#cli/policy/read.ts';
 import { proposePolicy } from '#cli/policy/write.ts';
 import { fileMissing } from '#cli/policy/messages.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import { withLifecycleOwner } from '#cli/lifecycle/ownership/owner.ts';
+import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import type { PreparedPolicy } from '#cli/types/lifecycle/lifecycle.ts';
 import type { Mutation, WriteResult } from '#cli/types/policy/policy.ts';
 
@@ -30,7 +30,7 @@ export function preparePolicy(root: string, mutate: Mutation): PreparedPolicy {
  */
 export function writePolicy(root: string, proposal: PreparedPolicy): WriteResult {
     if (proposal.changed)
-        withLifecycleOwner(root, (owner) => {
+        runOwnedLifecycle(root, (owner) => {
             const previous = owner.read('gspot.toml');
             if (!isDeepStrictEqual(previous, proposal.original))
                 throw new Error('The policy file gspot.toml changed while the edit was prepared. Retry the command.');

@@ -42,17 +42,13 @@ export const testsDirectoryContents = createRule<TestsDirectoryContentsOptions, 
         const test = new RegExp(options.testPattern ?? DEFAULT_TEST, 'u');
         const name = posix.basename(relative);
         const harness = options.harnessDirectory ?? 'tests/support';
-        if (
-            relative.startsWith(`${harness}/`) ||
-            !(!test.test(name) && !name.endsWith('.d.ts') && CODE_EXTENSION.test(name)) ||
-            !(
-                isAnyGlobMatch(relative, options.testDirectories ?? []) &&
-                !isAnyGlobMatch(relative, options.excluded ?? [])
-            )
-        )
-            return {};
+        const directories = options.testDirectories ?? [];
+        const excluded = options.excluded ?? [];
         return {
             Program(node) {
+                if (relative.startsWith(`${harness}/`)) return;
+                if (!isAnyGlobMatch(relative, directories) || isAnyGlobMatch(relative, excluded)) return;
+                if (test.test(name) || name.endsWith('.d.ts') || !CODE_EXTENSION.test(name)) return;
                 const siblings = readDirectory(posix.dirname(file));
                 if (siblings.every((entry) => !(entry.kind === 'file' && test.test(entry.name)))) return;
                 context.report({

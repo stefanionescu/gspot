@@ -2,7 +2,7 @@ import { ESLint } from 'eslint';
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
-import { emitAll } from '#cli/generation/render.ts';
+import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { applyCommand } from '#cli/commands/apply/command.ts';
 import { readFileSync, symlinkSync, writeFileSync } from 'node:fs';
@@ -35,10 +35,10 @@ test('apply preview names a generated ESLint rule change using installed depende
         '.gspot/config/.keep': '',
     });
     symlinkSync(join(import.meta.dir, '../../../../node_modules'), join(directory.path, '.gspot/node_modules'), 'dir');
-    const renderSession1 = await openSession(directory.path);
-    const original = emitAll(renderSession1.policyFiles.policy, renderSession1.repository, renderSession1.scopes, {
-        version: renderSession1.version,
-        packageManager: renderSession1.packageManager,
+    const originalSession = await openSession(directory.path);
+    const original = emitAll(originalSession.policyFiles.policy, originalSession.repository, originalSession.scopes, {
+        version: originalSession.version,
+        packageClient: originalSession.packageClient,
     }).files.find((file) => file.path === '.gspot/config/eslint.config.mjs')!;
     writeFileSync(join(directory.path, original.path), original.content);
     const nativeBefore = (await new ESLint({
@@ -51,11 +51,16 @@ test('apply preview names a generated ESLint rule change using installed depende
     expect(preview.text).toContain('rules: changed no-console');
     expect(preview.text).not.toContain('Rule comparison failed');
     expect(readFileSync(join(directory.path, original.path), 'utf8')).toBe(original.content);
-    const renderSession2 = await openSession(directory.path);
-    const corrected = emitAll(renderSession2.policyFiles.policy, renderSession2.repository, renderSession2.scopes, {
-        version: renderSession2.version,
-        packageManager: renderSession2.packageManager,
-    }).files.find((file) => file.path === original.path)!;
+    const correctedSession = await openSession(directory.path);
+    const corrected = emitAll(
+        correctedSession.policyFiles.policy,
+        correctedSession.repository,
+        correctedSession.scopes,
+        {
+            version: correctedSession.version,
+            packageClient: correctedSession.packageClient,
+        },
+    ).files.find((file) => file.path === original.path)!;
     writeFileSync(join(directory.path, original.path), corrected.content);
     const nativeAfter = (await new ESLint({
         cwd: directory.path,
@@ -64,11 +69,11 @@ test('apply preview names a generated ESLint rule change using installed depende
     expect(nativeAfter.rules['no-console']?.[0]).toBe(2);
     const eslint = new ESLint({ cwd: directory.path, overrideConfigFile: join(directory.path, original.path) });
     const [allowed] = await eslint.lintText('console.log("message");\n', { filePath: 'tests/line\nbreak.js' });
-    expect(allowed!.messages.filter((message) => message.ruleId === 'no-console')).toStrictEqual([]);
+    expect(allowed!.messages.filter((diagnostic) => diagnostic.ruleId === 'no-console')).toStrictEqual([]);
     const [defect] = await eslint.lintText('console.log("message");\n', { filePath: 'src/line\nbreak.js' });
     expect(defect!.messages).toStrictEqual(containingAll([containing({ ruleId: 'no-console' })]));
     const [fixed] = await eslint.lintText('export const greeting = "message";\n', { filePath: 'src/line\nbreak.js' });
-    expect(fixed!.messages.filter((message) => message.ruleId === 'no-console')).toStrictEqual([]);
+    expect(fixed!.messages.filter((diagnostic) => diagnostic.ruleId === 'no-console')).toStrictEqual([]);
     const applied = await applyCommand({ cwd: directory.path, isDryRun: true });
     expect(applied.text).not.toContain('rules: changed no-console');
 });

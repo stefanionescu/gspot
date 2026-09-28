@@ -1,6 +1,6 @@
 import { homedir } from 'node:os';
 import { isAbsolute, join } from 'node:path';
-// The one place gspot reads the environment: every variable it honors has a function here.
+// Owns reads from the process environment and normalizes variables for tool execution.
 
 function isSet(name: string): boolean {
     const value = process.env[name];
@@ -13,23 +13,6 @@ function isSet(name: string): boolean {
  */
 export function isCi(): boolean {
     return isSet('CI');
-}
-
-/**
- * True when NO_COLOR asks for plain output.
- * @returns whether NO_COLOR is set
- */
-export function isColorRefused(): boolean {
-    return isSet('NO_COLOR');
-}
-
-/**
- * The parallelism GSPOT_JOBS asks for, when it names a positive integer.
- * @returns the count, or undefined
- */
-export function jobsWanted(): number | undefined {
-    const wanted = Number(process.env['GSPOT_JOBS'] ?? '');
-    return Number.isSafeInteger(wanted) && wanted > 0 ? wanted : undefined;
 }
 
 /**

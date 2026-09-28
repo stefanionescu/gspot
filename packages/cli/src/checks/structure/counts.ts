@@ -4,24 +4,25 @@ import { astGrepMatches } from '#cli/checks/structure/ast-grep.ts';
 import { OUTER_LEVELS, RULES } from '#cli/constants/checks/structure.ts';
 import type { AstGrepMatch, ScriptIndex, StructureContext } from '#cli/types/checks/structure.ts';
 
-function depthOf(match: AstGrepMatch, siblings: AstGrepMatch[]): number {
-    const containing = siblings.filter(
-        (other) =>
-            other !== match &&
-            other.range.start.line <= match.range.start.line &&
-            other.range.end.line >= match.range.end.line,
-    );
-    return containing.length + OUTER_LEVELS;
-}
-
 function scoreFor(matches: AstGrepMatch[], isDepth: boolean): number {
     if (!isDepth) return matches.length;
-    return matches.reduce((deepest, match) => Math.max(deepest, depthOf(match, matches)), matches.length === 0 ? 0 : 1);
+    return matches.reduce(
+        (deepest, match) => {
+            const containing = matches.filter(
+                (other) =>
+                    other !== match &&
+                    other.range.start.line <= match.range.start.line &&
+                    other.range.end.line >= match.range.end.line,
+            );
+            return Math.max(deepest, containing.length + OUTER_LEVELS);
+        },
+        matches.length === 0 ? 0 : 1,
+    );
 }
 
 /**
  * Runs one count rule over the scope's scripts and reports every function over its limit.
- * @param analysis the check's analysis name, which is also the rule file's stem
+ * @param analysis the check's analysis name
  * @param context the check context
  * @param index the shell index
  * @returns the findings; a missing ast-grep raises MissingToolError
@@ -36,7 +37,7 @@ export async function countFindings(
     if (rule === undefined || ceiling === undefined) return [];
     const matches = await astGrepMatches(
         context.input,
-        `packages/cli/configurations/language/bash/rules/${analysis}.yml`,
+        `packages/cli/configurations/language/bash/rules/${rule.asset}`,
         index.files.map((file) => file.path),
     );
     return index.files.flatMap((file) => {

@@ -10,11 +10,6 @@ function isConsecutive(parts: string[], termParts: string[]): boolean {
     return false;
 }
 
-function categoriesFor(allowedFor: string): string[] {
-    const found = Object.entries(RESERVED_USES).find(([use]) => allowedFor.endsWith(use));
-    return found?.[1] ?? [];
-}
-
 /**
  * Compiles a term list into parts.
  * @param terms the terms as written
@@ -48,7 +43,7 @@ export function bannedTerm(parts: string[], terms: Term[]): Term | undefined {
  */
 export function isReservedUseAllowed(allowedFor: string[], category: string): boolean {
     return allowedFor.some((use) => {
-        const categories = categoriesFor(use);
+        const categories = Object.entries(RESERVED_USES).find(([suffix]) => use.endsWith(suffix))?.[1] ?? [];
         return categories.includes('*') || categories.includes(category);
     });
 }

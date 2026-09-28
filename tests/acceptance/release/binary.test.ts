@@ -2,30 +2,33 @@
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { createRequire } from 'node:module';
+import type * as DetectLibc from 'detect-libc';
 import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { script } from '#tests/support/cli/planted.ts';
+import { reportSchema } from '#cli/execution/report.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';
 import { runProcess } from '#tests/support/cli/command.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
+import releaseTargets from '#npm-targets' with { type: 'json' };
 import packageManifest from '#cli-package' with { type: 'json' };
-// The explicit release suite requires a built binary under dist/.
 import { environmentVariables } from '#cli/platform/environment.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
-import releaseTargets from '#cli/platform/release-targets.json' with { type: 'json' };
 import { copyFileSync, cpSync, existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { BUILD_CHECKOUT_PATHS, EMBEDDED_PARSER_SOURCES, EMBEDDED_INIT_ARGS } from '#tests/constants/release.ts';
 
 const { version: GSPOT_VERSION } = packageManifest;
 
 const root = fileURLToPath(new URL('../../..', import.meta.url));
 const requireCli = createRequire(join(root, 'packages/cli/package.json'));
-const { familySync } = requireCli('detect-libc') as { familySync: () => string | null };
-const libc = process.platform === 'linux' ? familySync() : null;
+const { familySync: libcFamily } = requireCli('detect-libc') as typeof DetectLibc;
+const libc = process.platform === 'linux' ? libcFamily() : null;
 const host = releaseTargets.find(
     (target) => target.os === process.platform && target.cpu === process.arch && target.libc === libc,
 );
 if (host === undefined)
     throw new Error(`Unsupported release test host: ${process.platform} ${process.arch} ${String(libc)}.`);
+// The explicit release suite requires a built binary under dist/.
 const BINARY = join(root, 'dist', host.binary);
 
 async function binary(cwd: string, argv: string[]) {
@@ -36,6 +39,24 @@ async function binary(cwd: string, argv: string[]) {
         timeoutMs: PLANTED_TIMEOUT_MS,
     });
 }
+
+test.each([
+    ['source.toml', 'value = """\n# gspot-ignore structure/folder-names\n"""'],
+    ['source.rb', 'value = <<TEXT\n# gspot-ignore structure/folder-names\nTEXT'],
+])('the compiled binary distinguishes literal and active suppressions in %s', async (path, literal) => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': 'version = 1\nlevel = "all"\nrequire_reasons = true\nconfigurations = ["structure"]\n',
+        [path]: `${literal}\n# gspot-ignore structure/folder-names\nactual = 1\n`,
+    });
+    const checked = await binary(sandbox.path, ['check', '--only', 'integrity/suppressions', '--json']);
+    expect(checked.code, checked.stdout + checked.stderr).toBe(1);
+    const report = reportSchema.parse(JSON.parse(checked.stdout));
+    expect(report.checks.map(({ status }) => status)).toStrictEqual(['fail']);
+    expect(
+        report.checks.flatMap(({ findings }) => findings.map(({ file, line, rule }) => ({ file, line, rule }))),
+    ).toStrictEqual([{ file: path, line: 4, rule: 'gspot-ignore-no-reason' }]);
+});
 
 describe('the compiled binary', () => {
     test(
@@ -71,17 +92,7 @@ describe('the compiled binary', () => {
 test('host binary reads embedded assets after its isolated build checkout is removed', async () => {
     await using sandbox = await testdir();
     const checkout = join(sandbox.path, 'checkout');
-    for (const path of [
-        'packages/cli',
-        'packages/npm',
-        'package.json',
-        'bun.lock',
-        'bunfig.toml',
-        'tsconfig.json',
-        'LICENSE.md',
-        'docs/package.json',
-        'packages/eslint-plugin/package.json',
-    ]) {
+    for (const path of BUILD_CHECKOUT_PATHS) {
         const destination = join(checkout, path);
         mkdirSync(dirname(destination), { recursive: true });
         cpSync(join(root, path), destination, {
@@ -101,47 +112,21 @@ test('host binary reads embedded assets after its isolated build checkout is rem
     const consumer = join(sandbox.path, 'consumer');
     mkdirSync(consumer);
     writeFileSync(join(consumer, '.editorconfig'), 'root = true\n[*]\nindent_size = 2\n');
-    const initialized = await runProcess(
-        [
-            executable,
-            'init',
-            '--yes',
-            '--configurations',
-            'formatting',
-            '--no-runner',
-            '--no-ci',
-            '--no-hooks',
-            '--no-install',
-            '--json',
-        ],
-        {
-            cwd: consumer,
-            timeoutMs: 60_000,
-            env: { NODE_PATH: undefined, NODE_OPTIONS: undefined },
-        },
-    );
-    expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
-    expect(existsSync(join(consumer, 'gspot.toml'))).toBe(true);
-    expect(existsSync(checkout)).toBe(false);
-    const sources = {
-        'task.sh': 'shell_command=1\n',
-        'task.py': 'shell_command = 1\n',
-        'Task.swift': 'let shellCommand = 1\n',
-        'task.js': 'export const shellCommand = 1;\n',
-        'task.ts': 'export const shellCommand: number = 1;\n',
-        'task.tsx': 'export const shellCommand = <div />;\n',
-        'task.sql': 'CREATE TABLE shell_table (id integer);\n',
-    };
-    await createFileTree(consumer, {
-        ...sources,
-        'gspot.toml':
-            'version = 1\nlevel = "all"\nconfigurations = ["bash", "python", "swift", "javascript", "typescript", "sql", "naming"]\n',
-    });
-    const checked = await runProcess([executable, 'check', '--only', 'naming/identifiers', '--json'], {
+    const consumerOptions = {
         cwd: consumer,
         timeoutMs: 60_000,
         env: { NODE_PATH: undefined, NODE_OPTIONS: undefined },
+    };
+    const initialized = await runProcess([executable, ...EMBEDDED_INIT_ARGS], consumerOptions);
+    expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
+    expect(existsSync(join(consumer, 'gspot.toml'))).toBe(true);
+    expect(existsSync(checkout)).toBe(false);
+    await createFileTree(consumer, {
+        ...EMBEDDED_PARSER_SOURCES,
+        'gspot.toml':
+            'version = 1\nlevel = "all"\nconfigurations = ["bash", "python", "swift", "javascript", "typescript", "sql", "naming"]\n',
     });
+    const checked = await runProcess([executable, 'check', '--only', 'naming/identifiers', '--json'], consumerOptions);
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
     const report = JSON.parse(checked.stdout) as { checks: { status: string; findings: { file: string }[] }[] };
     expect(report.checks.map((check) => check.status)).toStrictEqual(['fail']);
@@ -149,5 +134,5 @@ test('host binary reads embedded assets after its isolated build checkout is rem
         [...new Set(report.checks.flatMap((check) => check.findings.map((finding) => finding.file)))].toSorted(
             (left, right) => left.localeCompare(right),
         ),
-    ).toStrictEqual(Object.keys(sources).toSorted((left, right) => left.localeCompare(right)));
+    ).toStrictEqual(Object.keys(EMBEDDED_PARSER_SOURCES).toSorted((left, right) => left.localeCompare(right)));
 }, 360_000);

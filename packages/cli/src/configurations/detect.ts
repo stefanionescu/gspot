@@ -15,10 +15,13 @@ const LANGUAGE_BY_FILENAME = new Map(
 
 function languageByExtension(): Map<string, string> {
     const map = new Map<string, string>();
-    for (const [name, value] of Object.entries(linguistLanguages)) {
+    // Markup covers authored stylesheet and template languages, such as Sass.
+    const authored = Object.entries(linguistLanguages).filter(([, value]) => {
         const entry = value as LinguistEntry;
-        // Markup covers the stylesheet and template languages, such as Sass, that a repository writes by hand.
-        if (entry.type !== 'programming' && entry.type !== 'markup') continue;
+        return entry.type === 'programming' || entry.type === 'markup';
+    });
+    for (const [name, value] of authored) {
+        const entry = value as LinguistEntry;
         const extensions = entry.extensions ?? [];
         for (const extension of extensions) {
             const normalized = extension.toLowerCase();
@@ -63,19 +66,15 @@ function isFileNamed(tree: TreeFacts, name: string): boolean {
     return tree.candidates.some((file) => matcher(baseName(file.path)) || matcher(file.path));
 }
 
-function extensionEvidence(manifest: Manifest, tree: TreeFacts): string | undefined {
-    const extensions = manifest.detect.extensions.filter((extension) => tree.extensionCounts.has(extension));
+function extensionEvidence(detect: Manifest['detect'], tree: TreeFacts): string | undefined {
+    const extensions = detect.extensions.filter((extension) => tree.extensionCounts.has(extension));
     if (extensions.length === 0) return undefined;
     const count = extensions.reduce((sum, extension) => sum + (tree.extensionCounts.get(extension) ?? 0), 0);
     return `${String(count)} ${extensions.join(', ')} file${count === 1 ? '' : 's'}`;
 }
 
-function extensionCount(manifest: Manifest, tree: TreeFacts): number {
-    return manifest.detect.extensions.reduce((sum, extension) => sum + (tree.extensionCounts.get(extension) ?? 0), 0);
-}
-
-function filenameEvidence(manifest: Manifest, tree: TreeFacts): string | undefined {
-    const filename = manifest.detect.filenames.find((name) => isFileNamed(tree, name));
+function filenameEvidence(detect: Manifest['detect'], tree: TreeFacts): string | undefined {
+    const filename = detect.filenames.find((name) => isFileNamed(tree, name));
     if (filename === undefined) return undefined;
     const matcher = pathMatcher([filename]);
     const found = tree.candidates.find(
@@ -85,63 +84,57 @@ function filenameEvidence(manifest: Manifest, tree: TreeFacts): string | undefin
 }
 
 // A project file names the project it marks, so the file is the evidence and its folder is a scope (K-48).
-function projectEvidence(manifest: Manifest, tree: TreeFacts): string | undefined {
-    for (const pattern of manifest.detect.project_files) {
+function projectEvidence(detect: Manifest['detect'], tree: TreeFacts): string | undefined {
+    for (const pattern of detect.project_files) {
         const found = tree.candidates.find((file) => projectFolder(file.path, pattern) !== undefined);
         if (found !== undefined) return found.path;
     }
     return undefined;
 }
 
-function dependencyEvidence(manifest: Manifest, tree: TreeFacts): string | undefined {
-    const dependency = manifest.detect.dependencies.find((name) => tree.dependencies.has(name));
+function dependencyEvidence(detect: Manifest['detect'], tree: TreeFacts): string | undefined {
+    const dependency = detect.dependencies.find((name) => tree.dependencies.has(name));
     return dependency === undefined ? undefined : `${dependency} in ${tree.dependencies.get(dependency) ?? ''}`;
 }
 
-function shebangEvidence(manifest: Manifest, tree: TreeFacts): string | undefined {
-    const shebang = manifest.detect.shebangs.find((name) => tree.shebangs.has(name));
+function shebangEvidence(detect: Manifest['detect'], tree: TreeFacts): string | undefined {
+    const shebang = detect.shebangs.find((name) => tree.shebangs.has(name));
     return shebang === undefined ? undefined : `${shebang} shebang`;
 }
 
-function pathEvidence(manifest: Manifest, tree: TreeFacts): string | undefined {
-    if (manifest.detect.paths.length === 0) return undefined;
-    const matcher = pathMatcher(manifest.detect.paths);
+function pathEvidence(detect: Manifest['detect'], tree: TreeFacts): string | undefined {
+    if (detect.paths.length === 0) return undefined;
+    const matcher = pathMatcher(detect.paths);
     return tree.candidates.find((file) => matcher(file.path))?.path;
 }
 
-function defaultEvidence(manifest: Manifest, tree: TreeFacts): string | undefined {
-    return manifest.configuration.default && tree.scope === '' ? 'every repository' : undefined;
+function tagEvidence(detect: Manifest['detect'], tree: TreeFacts): string | undefined {
+    return tree.candidates.find((file) => detect.tags.some((tag) => file.tags.includes(tag)))?.path;
 }
 
-function tagEvidence(manifest: Manifest, tree: TreeFacts): string | undefined {
-    return tree.candidates.find((file) => manifest.detect.tags.some((tag) => file.tags.includes(tag)))?.path;
-}
-
-const EVIDENCE = [
-    projectEvidence,
-    filenameEvidence,
-    dependencyEvidence,
-    shebangEvidence,
-    tagEvidence,
-    pathEvidence,
-    defaultEvidence,
-];
+const EVIDENCE = [projectEvidence, filenameEvidence, dependencyEvidence, shebangEvidence, tagEvidence, pathEvidence];
 
 function proposalFor(manifest: Manifest, tree: TreeFacts): ConfigurationEvidence | undefined {
     const { configuration } = manifest;
-    const byExtension = extensionEvidence(manifest, tree);
+    const byExtension = extensionEvidence(manifest.detect, tree);
     if (byExtension !== undefined)
         return {
             configuration: configuration.name,
             kind: configuration.kind,
             evidence: byExtension,
-            count: extensionCount(manifest, tree),
+            count: manifest.detect.extensions.reduce(
+                (sum, extension) => sum + (tree.extensionCounts.get(extension) ?? 0),
+                0,
+            ),
         };
     for (const source of EVIDENCE) {
-        const evidence = source(manifest, tree);
+        const evidence = source(manifest.detect, tree);
         if (evidence !== undefined) return { configuration: configuration.name, kind: configuration.kind, evidence };
     }
-    return undefined;
+    const evidence = configuration.default && tree.scope === '' ? 'every repository' : undefined;
+    return evidence === undefined
+        ? undefined
+        : { configuration: configuration.name, kind: configuration.kind, evidence };
 }
 
 /**
@@ -164,6 +157,29 @@ export function detectConfigurations(
         .map((manifest) => proposalFor(manifest, tree))
         .filter((proposal) => proposal !== undefined)
         .toArray();
+}
+
+/**
+ * Selects conditional declarations using the shared file and dependency evidence.
+ * @param conditions the detection conditions declared by selected manifests.
+ * @param files the repository source inventory.
+ * @param facts the package dependency observations.
+ * @returns the matching condition objects.
+ */
+export function detectConditions(
+    conditions: Manifest['detect'][],
+    files: TrackedFile[],
+    facts: ManifestFacts[],
+): Set<Manifest['detect']> {
+    const tree = treeFacts(files, facts, '');
+    const matched = new Set<Manifest['detect']>();
+    for (const condition of conditions)
+        if (
+            extensionEvidence(condition, tree) !== undefined ||
+            EVIDENCE.some((source) => source(condition, tree) !== undefined)
+        )
+            matched.add(condition);
+    return matched;
 }
 
 /**

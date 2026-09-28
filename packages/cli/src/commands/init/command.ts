@@ -15,7 +15,7 @@ import { askConfirmation } from '#cli/commands/prompts.ts';
 import { readProfile } from '#cli/policy/profiles/read.ts';
 import type { Profile } from '#cli/types/policy/profiles.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
-import { initPlanText } from '#cli/commands/init/plan-text.ts';
+import { initPlanText } from '#cli/commands/init/plan/text.ts';
 import { ALREADY_INSTALLED, UNREADABLE_EXIT } from '#cli/constants/commands/init.ts';
 import { directoryOf, listFlag, textEntry, textFlag } from '#cli/platform/arguments.ts';
 import type { InitOptions, InitPrepared, InitResult } from '#cli/types/commands/init.ts';
@@ -26,7 +26,7 @@ function ruleAnswer(install: boolean | undefined): 'yes' | 'no' | undefined {
     return install ? 'yes' : 'no';
 }
 
-// A profile answers the questions a flag did not: its configurations, hooks, workflow, runner and rule files.
+// A profile answers the questions a flag did not: its configurations, hooks, workflow, runner, and rule files.
 function profileAnswers(profile: Profile): Partial<InitOptions> {
     const { tables } = profile;
     const configurations = tables.configurations ?? [];
@@ -76,7 +76,7 @@ function optionsFrom(flags: Record<string, unknown>, global: Record<string, unkn
     };
 }
 
-// The result of an init that writes nothing: a preview, or a takeover whose configuration could not be read.
+// The result of an init that writes nothing: a preview or a takeover with unreadable configuration.
 function unwritten(root: string, options: InitOptions, prepared: InitPrepared): InitResult | undefined {
     const { plan, policyText } = prepared;
     if (options.isDryRun) {
@@ -94,7 +94,7 @@ function unwritten(root: string, options: InitOptions, prepared: InitPrepared): 
 /**
  * Runs init: detection, questions, plan, then writes and installs after acceptance.
  * @param options the init flags
- * @returns the text, the JSON report and the exit code
+ * @returns the text, the JSON report, and the exit code
  */
 export async function initCommand(options: InitOptions): Promise<InitResult> {
     const root = findRoot(options.cwd);

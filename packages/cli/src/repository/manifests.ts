@@ -53,6 +53,23 @@ function requirementName(spec: string): string {
     return normalizedPythonPackage(end === -1 ? trimmed : trimmed.slice(0, end));
 }
 
+function poetryDependencies(
+    poetry: NonNullable<ReturnType<typeof pythonManifestSchema.parse>['tool']>['poetry'],
+): DependencyMap {
+    const poetryGroups = [
+        poetry?.dependencies ?? {},
+        ...Object.values(poetry?.group ?? {}).map((entry) => entry.dependencies ?? {}),
+    ];
+    const poetryEntries = poetryGroups
+        .flatMap((group) => Object.entries(group))
+        .map(
+            ([name, value]) =>
+                [normalizedPythonPackage(name), typeof value === 'string' ? value : JSON.stringify(value)] as const,
+        )
+        .filter(([name]) => name !== 'python');
+    return Object.fromEntries(poetryEntries);
+}
+
 function pythonDependencies(parsed: ReturnType<typeof pythonManifestSchema.parse>): DependencyMap {
     const project = parsed.project ?? {};
     const groups = [
@@ -63,18 +80,11 @@ function pythonDependencies(parsed: ReturnType<typeof pythonManifestSchema.parse
             .filter((entry) => typeof entry === 'string'),
     ];
     const dependencies: DependencyMap = parsed.tool?.pytest === undefined ? {} : { pytest: 'tool.pytest' };
-    for (const spec of groups) dependencies[requirementName(spec)] = spec;
-    const poetry = parsed.tool?.poetry;
-    for (const group of [
-        poetry?.dependencies ?? {},
-        ...Object.values(poetry?.group ?? {}).map((entry) => entry.dependencies ?? {}),
-    ]) {
-        for (const [name, value] of Object.entries(group)) {
-            if (normalizedPythonPackage(name) === 'python') continue;
-            dependencies[normalizedPythonPackage(name)] = typeof value === 'string' ? value : JSON.stringify(value);
-        }
-    }
-    return dependencies;
+    return Object.assign(
+        dependencies,
+        Object.fromEntries(groups.map((spec) => [requirementName(spec), spec])),
+        poetryDependencies(parsed.tool?.poetry),
+    );
 }
 
 function pipfileFacts(root: string, path: string): ManifestFacts {

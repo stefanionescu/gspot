@@ -41,5 +41,5 @@ direction = "neutral"
 summary = "Where the message files live and which locale is the base: directory and base."
 
 [rule_files]
-shared = ["shared/i18n/I18N.md"]
-library = ["library/next-intl/NEXTINTL.md"]
+shared = [{path = "shared/i18n/I18N.md"}]
+library = [{path = "library/next-intl/NEXTINTL.md"}]

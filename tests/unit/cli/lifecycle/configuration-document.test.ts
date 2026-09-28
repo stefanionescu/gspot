@@ -1,5 +1,5 @@
 import { expect, test } from 'bun:test';
-import { configurationDocument } from '#cli/lifecycle/configuration-document.ts';
+import { configurationDocument } from '#cli/lifecycle/configuration/document.ts';
 
 test('YAML field reads preserve nested mappings, sequences, scalars, aliases, and missing keys', () => {
     const document = configurationDocument(

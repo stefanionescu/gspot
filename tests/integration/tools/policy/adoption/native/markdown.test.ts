@@ -2,13 +2,14 @@ import { join } from 'node:path';
 import { unlinkSync } from 'node:fs';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
-import { emitAll } from '#cli/generation/render.ts';
+import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { readRepository } from '#cli/repository/tree.ts';
 import { proposeText } from '#cli/commands/init/propose.ts';
 import { PRETTIER_TOOLING } from '#tests/support/cli/tooling.ts';
 import { collectCarried } from '#cli/policy/adoption/collect.ts';
 import { existingTooling } from '#cli/repository/existing-tooling.ts';
+import { writeAdoptedMarkdown } from '#tests/support/cli/markdown.ts';
 
 // Runs the pinned markdownlint over the planted sample with one configuration file.
 function native(root: string, config: string): Bun.SyncSubprocess<'pipe', 'pipe'> {
@@ -53,7 +54,7 @@ test('directory-local Markdown adoption preserves sibling rules and descendant e
     const session = await openSession(sandbox.path);
     const configurations = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
         version: session.version,
-        packageManager: session.packageManager,
+        packageClient: session.packageClient,
     }).files.filter((file) => file.kind === 'config' || file.path.endsWith('.markdownlint-cli2.jsonc'));
     for (const file of configurations) await Bun.write(join(sandbox.path, file.path), file.content);
     for (const { path } of carried.removed) unlinkSync(join(sandbox.path, path));
@@ -78,13 +79,26 @@ test('directory-local Markdown adoption preserves sibling rules and descendant e
     }
 });
 
-test.each([false, true])(
-    'Markdown adoption preserves native rules and corrections with inheritance=%s',
-    async (inherited) => {
+test.each([
+    {
+        inherited: false,
+        original: '{"default":false,"MD033":true,"MD009":true}\n',
+        expected: { removed: ['.markdownlint.jsonc'], retained: [], base: undefined, parent: undefined },
+    },
+    {
+        inherited: true,
+        original: '{"extends":"./config/parent.yaml","MD013":false,"MD033":true,"MD009":true}\n',
+        expected: {
+            removed: ['.markdownlint.jsonc'],
+            retained: ['config/base.jsonc', 'config/parent.yaml'],
+            base: true,
+            parent: true,
+        },
+    },
+])(
+    'Markdown adoption preserves native rules and corrections with inheritance=$inherited',
+    async ({ original, expected }) => {
         await using sandbox = await testdir();
-        const original = inherited
-            ? '{"extends":"./config/parent.yaml","MD013":false,"MD033":true,"MD009":true}\n'
-            : '{"default":false,"MD033":true,"MD009":true}\n';
         await createFileTree(sandbox.path, {
             '.markdownlint.jsonc': original,
             'config/parent.yaml': 'extends: ./base.jsonc\nMD013: {line_length: 3}\nMD033: false\n',
@@ -110,41 +124,8 @@ test.each([false, true])(
             retained: carried.retained.map(({ path }) => path).toSorted((left, right) => left.localeCompare(right)),
             base: carried.observed.get('config/base.jsonc')?.bytes.toString().includes('"default":false'),
             parent: carried.observed.get('config/parent.yaml')?.bytes.toString().includes('line_length: 3'),
-        }).toStrictEqual(
-            inherited
-                ? {
-                      removed: ['.markdownlint.jsonc'],
-                      retained: ['config/base.jsonc', 'config/parent.yaml'],
-                      base: true,
-                      parent: true,
-                  }
-                : {
-                      removed: carried.removed.map(({ path }) => path),
-                      retained: [],
-                      base: undefined,
-                      parent: undefined,
-                  },
-        );
-        await Bun.write(
-            join(sandbox.path, 'gspot.toml'),
-            proposeText({
-                configurations: ['markdown'],
-                scopes: [],
-                carried,
-                hooks: 'none',
-                ci: 'none',
-                rules: false,
-                runner: 'none',
-            }),
-        );
-        const renderSession1 = await openSession(sandbox.path);
-        const configuration = emitAll(
-            renderSession1.policyFiles.policy,
-            renderSession1.repository,
-            renderSession1.scopes,
-            { version: renderSession1.version, packageManager: renderSession1.packageManager },
-        ).files.find(({ path }) => path === '.gspot/config/markdownlint.jsonc')!;
-        await Bun.write(join(sandbox.path, 'generated.jsonc'), configuration.content);
+        }).toStrictEqual({ ...expected, removed: [...expected.removed], retained: [...expected.retained] });
+        await writeAdoptedMarkdown(sandbox.path, carried);
         // Remove discovery input so the generated file alone determines the native result.
         unlinkSync(join(sandbox.path, '.markdownlint.jsonc'));
         const after = native(sandbox.path, 'generated.jsonc');
@@ -188,24 +169,7 @@ test.each([{}, { default: true }])('Markdown adoption preserves native enabled d
         ['sample.md'],
     );
     expect(carried.unread).toStrictEqual([]);
-    await Bun.write(
-        join(sandbox.path, 'gspot.toml'),
-        proposeText({
-            configurations: ['markdown'],
-            scopes: [],
-            carried,
-            hooks: 'none',
-            ci: 'none',
-            rules: false,
-            runner: 'none',
-        }),
-    );
-    const renderSession2 = await openSession(sandbox.path);
-    const generated = emitAll(renderSession2.policyFiles.policy, renderSession2.repository, renderSession2.scopes, {
-        version: renderSession2.version,
-        packageManager: renderSession2.packageManager,
-    }).files.find(({ path }) => path === '.gspot/config/markdownlint.jsonc')!;
-    await Bun.write(join(sandbox.path, 'generated.jsonc'), generated.content);
+    await writeAdoptedMarkdown(sandbox.path, carried);
     unlinkSync(join(sandbox.path, '.markdownlint.jsonc'));
     const after = native(sandbox.path, 'generated.jsonc');
     expect(after.exitCode).toBe(1);

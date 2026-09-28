@@ -3,9 +3,10 @@ import { join } from 'node:path';
 import { stringify } from 'smol-toml';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
-import { emitAll } from '#cli/generation/render.ts';
+import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { evaluateFormat } from '#cli/evaluation/format.ts';
+import { PRETTIER_TOOLING } from '#tests/support/cli/tooling.ts';
 import { collectCarried } from '#cli/policy/adoption/collect.ts';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 
@@ -32,10 +33,10 @@ test('Prettier adoption preserves override selectors for new files', async () =>
             tools: { prettier: { extra: carried.extra } },
         }),
     );
-    const renderSession1 = await openSession(directory.path);
-    const generated = emitAll(renderSession1.policyFiles.policy, renderSession1.repository, renderSession1.scopes, {
-        version: renderSession1.version,
-        packageManager: renderSession1.packageManager,
+    const session = await openSession(directory.path);
+    const generated = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
+        version: session.version,
+        packageClient: session.packageClient,
     }).files.find((file) => file.path === '.gspot/config/prettier.json')!;
     mkdirSync(join(directory.path, '.gspot/config'), { recursive: true });
     writeFileSync(join(directory.path, generated.path), generated.content);
@@ -65,33 +66,25 @@ test('nested Prettier configurations reset parent options and preserve ordered f
     const carried = await collectCarried(
         directory.path,
         {
+            ...PRETTIER_TOOLING,
             configs: Object.keys(configs).map((path) => ({ tool: 'prettier', path, carries: 'rules-table' as const })),
-            hooks: [],
-            ci: [],
-            agentFiles: [],
-            rulesDirectories: [],
-            lintFolders: [],
-            lintOnlyManifests: [],
-            runner: 'none',
         },
         new Set(['formatting']),
         [],
     );
     expect(carried.unread).toStrictEqual([]);
     expect(carried.removed.map(({ path }) => path)).toStrictEqual(Object.keys(configs));
-    writeFileSync(
-        join(directory.path, 'gspot.toml'),
-        stringify({
-            version: 1,
-            configurations: ['formatting'],
-            format: carried.formatter?.format,
-            tools: { prettier: { extra: carried.formatter?.extra } },
-        }),
-    );
-    const renderSession2 = await openSession(directory.path);
-    const generated = emitAll(renderSession2.policyFiles.policy, renderSession2.repository, renderSession2.scopes, {
-        version: renderSession2.version,
-        packageManager: renderSession2.packageManager,
+    const policy = {
+        version: 1,
+        configurations: ['formatting'],
+        format: carried.formatter?.format,
+        tools: { prettier: { extra: carried.formatter?.extra } },
+    };
+    writeFileSync(join(directory.path, 'gspot.toml'), stringify(policy));
+    const session = await openSession(directory.path);
+    const generated = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
+        version: session.version,
+        packageClient: session.packageClient,
     }).files.find((file) => file.path === '.gspot/config/prettier.json')!;
     mkdirSync(join(directory.path, '.gspot/config'), { recursive: true });
     writeFileSync(join(directory.path, generated.path), generated.content);
@@ -151,10 +144,10 @@ test.each([
             tools: { prettier: { extra: carried.extra } },
         }),
     );
-    const renderSession3 = await openSession(directory.path);
-    const generated = emitAll(renderSession3.policyFiles.policy, renderSession3.repository, renderSession3.scopes, {
-        version: renderSession3.version,
-        packageManager: renderSession3.packageManager,
+    const session = await openSession(directory.path);
+    const generated = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
+        version: session.version,
+        packageClient: session.packageClient,
     }).files.find((file) => file.path === '.gspot/config/prettier.json')!;
     mkdirSync(join(directory.path, '.gspot/config'), { recursive: true });
     writeFileSync(join(directory.path, generated.path), generated.content);
@@ -200,17 +193,17 @@ test('Prettier adoption preserves ordered ignore negations for files created lat
             tools: { prettier: { ignore_patterns: carried.formatter!.ignorePatterns } },
         }),
     );
-    const renderSession4 = await openSession(directory.path);
-    const generated = emitAll(renderSession4.policyFiles.policy, renderSession4.repository, renderSession4.scopes, {
-        version: renderSession4.version,
-        packageManager: renderSession4.packageManager,
+    const session = await openSession(directory.path);
+    const generated = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
+        version: session.version,
+        packageClient: session.packageClient,
         takeover: carried.observed,
     }).files.find(({ path }) => path === '.prettierignore')!;
     writeFileSync(join(directory.path, '.prettierignore'), generated.content);
-    const info = await prettier.getFileInfo(join(directory.path, 'src/future.js'), {
+    const fileStatus = await prettier.getFileInfo(join(directory.path, 'src/future.js'), {
         ignorePath: join(directory.path, '.prettierignore'),
     });
-    expect(info.ignored).toBe(true);
+    expect(fileStatus.ignored).toBe(true);
     const kept = await prettier.getFileInfo(join(directory.path, 'src/keep.js'), {
         ignorePath: join(directory.path, '.prettierignore'),
     });

@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { rmSync } from 'node:fs';
 import { stripVTControlCharacters } from 'node:util';
-import { scratchCopy } from '#cli/execution/file-workspace.ts';
-import { runCheckCommand } from '#cli/execution/tool-runner.ts';
+import { runCheckCommand } from '#cli/execution/tool/runner.ts';
+import { scratchCopy } from '#cli/execution/files/workspace.ts';
 import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 import { CAUSE_MARKS, SHOWN_LINES, TSC_LINE } from '#cli/constants/checks/nextjs.ts';
 

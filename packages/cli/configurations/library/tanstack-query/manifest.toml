@@ -21,4 +21,4 @@ imports = "eslint.imports.js.tmpl"
 fragment = true
 
 [rule_files]
-library = ["library/tanstack-query/TANSTACKQUERY.md"]
+library = [{path = "library/tanstack-query/TANSTACKQUERY.md"}]

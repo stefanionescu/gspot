@@ -39,8 +39,8 @@ packages, `.gspot/state/`, `.gspot/cache/`, and `.gspot/reports/`.
 ## Retain recovery state
 
 `.gspot/state/` holds ownership records and original files needed for restoration.
-It is private local state. Keep it until you no longer need to restore adopted
-files. Do not delete the whole `.gspot/` directory as a cleanup step.
+It is private local state. Keep it while restoration of adopted
+files remains necessary. Do not delete the whole `.gspot/` directory as a cleanup step.
 
 Reports under `.gspot/reports/` and caches under `.gspot/cache/` do not contain
 restoration records. See [uninstall and recover](/guides/uninstall/) before removing

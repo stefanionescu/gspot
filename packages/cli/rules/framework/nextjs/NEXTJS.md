@@ -17,8 +17,8 @@ workers, telemetry, streaming).
 
 ## Next.js application rules
 
-Use App Router. Update affected routes and callers together; do not maintain a parallel Pages
-Router implementation or compatibility routes.
+Preserve the project's declared router. App Router guidance applies to App Router routes;
+Pages Router projects retain their supported routing contract.
 
 An **owner** is the module or component responsible for a behavior or state value. A **contract**
 defines the inputs, outputs, and behavior that callers rely on. A **boundary** is a point where code
@@ -41,7 +41,7 @@ responsible module and the required behavior when designing or reviewing such a 
 - Reuse the running server; start another only for an isolated test or when the user asks.
 
 - Virtualize a list only when it is long enough or open-ended enough that the browser cannot hold
-  it: an infinite feed, a message history. Virtua is the virtualizer for those.
+  it: an infinite feed or a message history. Use the project's selected virtualizer.
 - An ordinary list, a panel, a form, or a page of results renders its rows directly.
 
 ### Structure and routing
@@ -49,20 +49,12 @@ responsible module and the required behavior when designing or reviewing such a 
 - Next.js owns two path facts and no more: the router directory, `app/` or `pages/`, optionally
   under `src/`, and the reserved names inside it. Everything else about the layout is the
   project's own.
-- Wherever domain behavior, shared UI and integrations live, they live somewhere deliberate, and
-  the router directory holds routing rather than the application. A private folder, prefixed with
-  an underscore, is the framework's mechanism for keeping non-route files inside a route segment.
-- Use route files for routing and assembling the page. Keep a small page in `page.tsx` when that is
-  clear. Extract a component or module when it has its own UI, data, or domain responsibility.
 - Follow Next.js special filenames and exports. A `page` exposes UI; a `route` exposes an HTTP
   endpoint. Put them in different route segments.
 - Use `(group)` folders to organize routes without adding URL segments. Use `_private` folders to
   exclude their contents from routing. Check whether different groups resolve to the same URL.
   Preserve framework default exports and route folder names containing brackets, parentheses, or
   `@`.
-- Keep dependency direction clear: routes compose features; features consume shared infrastructure
-  and UI; shared modules do not import feature or route implementations. Cross-feature dependencies
-  must have a clear public contract and no cycle.
 
 - Separate browser-safe schemas/types from server implementations. Avoid barrels that mix server and
   client runtime exports.
@@ -77,6 +69,17 @@ responsible module and the required behavior when designing or reviewing such a 
   Multiple root layouts cause full page navigation between them.
 
 ### Assigning files to an owner
+
+<!-- level: all -->
+
+- Wherever domain behavior, shared UI and integrations live, they live somewhere deliberate, and
+  the router directory holds routing rather than the application. A private folder, prefixed with
+  an underscore, is the framework's mechanism for keeping non-route files inside a route segment.
+- Use route files for routing and assembling the page. Keep a small page in `page.tsx` when that is
+  clear. Extract a component or module when it has its own UI, data, or domain responsibility.
+- Keep dependency direction clear: routes compose features; features consume shared infrastructure
+  and UI; shared modules do not import feature or route implementations. Cross-feature dependencies
+  must have a clear public contract and no cycle.
 
 Before adding a file, decide which route, feature, shared control, or platform integration is
 responsible for it. Choose a directory that makes that responsibility clear. Move misplaced code
@@ -108,6 +111,8 @@ If both features need each other's internal code, extract the shared operation o
 modules until the cycle is gone. Keep one implementation of the shared behavior.
 
 ### Compose feature screens
+
+<!-- level: all -->
 
 Build feature screens in a consistent order: the route renders the feature layout; the layout
 arranges sections; each section renders feature components and shared controls. Use this structure

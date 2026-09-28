@@ -1,24 +1,8 @@
-import { join } from 'node:path';
 import { statSync } from 'node:fs';
+import { join, posix } from 'node:path';
 import { readSource } from '#cli/repository/tracked.ts';
 import { DOCKERIGNORE_ENTRIES } from '#cli/constants/checks/docker.ts';
 import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
-
-function isDockerfile(path: string): boolean {
-    const name = path.slice(path.lastIndexOf('/') + 1);
-    return name === 'Dockerfile' || name.startsWith('Dockerfile.') || name.endsWith('.dockerfile');
-}
-
-function folderOf(path: string): string {
-    return path.includes('/') ? path.slice(0, path.lastIndexOf('/')) : '';
-}
-
-function missingEntries(text: string): string[] {
-    const lines = new Set(text.split('\n').map((line) => line.trim().replaceAll(/^\/|\/$/gu, '')));
-    return DOCKERIGNORE_ENTRIES.filter((entry) =>
-        [entry, `**/${entry}`, `${entry}*`, `**/${entry}*`].every((form) => !lines.has(form)),
-    );
-}
 
 /**
  * One finding for each Dockerfile folder with no ignore file, or with one that lets a required entry through.
@@ -26,14 +10,21 @@ function missingEntries(text: string): string[] {
  * @returns the findings
  */
 export function dockerignore(input: EngineInput): Finding[] {
-    const dockerfiles = input.files.filter((file) => isDockerfile(file.path));
-    const folders = new Map(dockerfiles.map((file) => [folderOf(file.path), file.path]));
+    const dockerfiles = input.files.filter((file) => {
+        const name = posix.basename(file.path);
+        return name === 'Dockerfile' || name.startsWith('Dockerfile.') || name.endsWith('.dockerfile');
+    });
+    const folders = new Map(dockerfiles.map((file) => [posix.dirname(file.path), file.path]));
     const findings = folders.entries().flatMap(([folder, dockerfile]): Finding[] => {
-        const path = folder === '' ? '.dockerignore' : `${folder}/.dockerignore`;
+        const path = folder === '.' ? '.dockerignore' : `${folder}/.dockerignore`;
         const base = { check: input.spec.name, line: 1, fixable: false };
         if (statSync(join(input.root, path), { throwIfNoEntry: false }) === undefined)
             return [{ ...base, file: dockerfile, rule: 'missing', message: `No ${path} sits beside this Dockerfile.` }];
-        const missing = missingEntries(readSource(input.root, path, input.observations).toString('utf8'));
+        const text = readSource(input.root, path, input.observations).toString('utf8');
+        const lines = new Set(text.split('\n').map((line) => line.trim().replaceAll(/^\/|\/$/gu, '')));
+        const missing = DOCKERIGNORE_ENTRIES.filter((entry) =>
+            [entry, `**/${entry}`, `${entry}*`, `**/${entry}*`].every((form) => !lines.has(form)),
+        );
         if (missing.length === 0) return [];
         return [
             { ...base, file: path, rule: 'entries', message: `The ignore file lets through: ${missing.join(', ')}.` },

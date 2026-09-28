@@ -1,12 +1,13 @@
 import { globby } from 'globby';
 import { fileURLToPath } from 'node:url';
+import { guideSections } from '#cli/agents/sections.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { frontMatterFindings, layerOfPath } from '#cli/agents/metadata.ts';
+import { ESLINT_RULE_LEVELS } from '#cli/constants/checks/eslint-levels.ts';
 import type { RuleFinding, RuleText, RulesLintReport } from '#cli/types/agents.ts';
 
 import {
     EM_DASH,
-    INLINE_CODE,
     INLINE_CODE_SPANS,
     ITEM_END,
     LIST_ITEM,
@@ -40,7 +41,7 @@ function fenceFinding(file: string, line: number, language: string): RuleFinding
 }
 
 function boundaryFindings(file: string, line: string, number: number, layer: string): RuleFinding[] {
-    if (!boundaryLayers.has(layer) || INLINE_CODE.test(line)) return [];
+    if (!boundaryLayers.has(layer)) return [];
     return BOUNDARY_TERMS.filter((term) => term.test(line)).map((term) => ({
         file,
         line: number,
@@ -76,7 +77,7 @@ function proseLineFindings(file: string, line: string, number: number, layer: st
     ];
 }
 
-// A list item that stops at a comma, at "and", or without a full stop is a cut sentence. A parent that ends with a
+// A list item that stops at a comma, at the conjunction, or without a full stop is a cut sentence. A parent that ends with a
 // colon and continues in a nested list is whole (K-229).
 function cutItemFinding(file: string, item: { line: number; last: string; nested: boolean }): RuleFinding | undefined {
     const last = item.last.trim();
@@ -87,64 +88,66 @@ function cutItemFinding(file: string, item: { line: number; last: string; nested
     return undefined;
 }
 
-function listItemFindings(file: string, lines: string[]): RuleFinding[] {
+function listItemFindings(file: string, lines: { number: number; text: string }[]): RuleFinding[] {
     if (file.startsWith('templates/')) return [];
-    const findings: RuleFinding[] = [];
     let item: { line: number; indent: number; last: string; nested: boolean } | undefined;
-    let fence: string | undefined;
-    const close = (): void => {
+    const close = (): RuleFinding[] => {
         const finding = item === undefined ? undefined : cutItemFinding(file, item);
-        if (finding !== undefined) findings.push(finding);
         item = undefined;
+        return finding === undefined ? [] : [finding];
     };
-    for (const [index, line] of lines.entries()) {
-        const opening = fenceOpening(line);
-        if (fence !== undefined) {
-            if (line.trim() === fence) fence = undefined;
-            continue;
-        }
-        if (opening !== undefined) {
-            fence = opening.ticks;
-            close();
-            continue;
-        }
+    const findings = lines.flatMap(({ number, text: line }) => {
         const match = LIST_ITEM.exec(line);
         if (match !== null) {
             const indent = match[0].length - match[0].trimStart().length;
             if (item !== undefined && indent > item.indent) item.nested = true;
-            close();
-            item = { line: index + 1, indent, last: line, nested: false };
-            continue;
+            const previous = close();
+            item = { line: number, indent, last: line, nested: false };
+            return previous;
         }
-        if (item === undefined) continue;
-        if (line.trim() === '' || line.startsWith('#')) close();
-        else item.last = line;
-    }
-    close();
-    return findings;
+        if (item === undefined) return [];
+        if (line.trim() === '' || line.startsWith('#')) return close();
+        item.last = line;
+        return [];
+    });
+    return [...findings, ...close()];
 }
 
-function lineFindings(file: string, lines: string[]): RuleFinding[] {
-    const layer = file.startsWith('templates/') ? 'template' : layerOfPath(file);
-    const prose: RuleFinding[] = [];
+function ruleLines(
+    file: string,
+    source: string[],
+): { lines: { number: number; text: string }[]; fences: RuleFinding[] } {
     const fences: RuleFinding[] = [];
     let open: { ticks: string; line: number } | undefined;
-    for (const [index, line] of lines.entries()) {
+    const lines = source.flatMap((text, index) => {
         const number = index + 1;
         if (open !== undefined) {
-            if (line.trim() === open.ticks) open = undefined;
-            continue;
+            if (text.trim() === open.ticks) open = undefined;
+            return [];
         }
-        const opening = fenceOpening(line);
-        if (opening === undefined) prose.push(...proseLineFindings(file, line, number, layer));
-        else {
-            open = { ticks: opening.ticks, line: number };
-            const finding = fenceFinding(file, number, opening.language);
-            if (finding !== undefined) fences.push(finding);
-        }
-    }
+        const opening = fenceOpening(text);
+        if (opening === undefined) return [{ number, text }];
+        open = { ticks: opening.ticks, line: number };
+        const finding = fenceFinding(file, number, opening.language);
+        if (finding !== undefined) fences.push(finding);
+        return [{ number, text: '' }];
+    });
     if (open !== undefined) fences.push({ file, line: open.line, message: 'unclosed fenced block' });
-    return [...fences, ...prose];
+    return { lines, fences };
+}
+
+function levelFindings(file: RuleText, lines: { number: number; text: string }[]): RuleFinding[] {
+    const sections = guideSections(file.text).filter((section) => section.all);
+    const source = file.text.split('\n');
+    return lines.flatMap(({ number, text }) => {
+        const offset = source.slice(0, number - 1).reduce((length, line) => length + line.length + 1, 0);
+        if (sections.some((section) => offset >= section.start && offset < section.end)) return [];
+        return [...text.matchAll(INLINE_CODE_SPANS)].flatMap((match) => {
+            const name = match[0].slice(1, -1);
+            if (ESLINT_RULE_LEVELS[name] !== 'all') return [];
+            return [{ file: file.path, line: number, message: `rule '${name}' requires an all-level section` }];
+        });
+    });
 }
 
 function sizeFindings(file: string, lines: string[]): RuleFinding[] {
@@ -155,16 +158,6 @@ function sizeFindings(file: string, lines: string[]): RuleFinding[] {
             line: lines.length,
             message: `${String(lines.length)} lines exceeds the ${String(RULE_FILE_LINE_CEILING)}-line ceiling`,
         },
-    ];
-}
-
-function fileReport(file: RuleText): RuleFinding[] {
-    const lines = file.text.split('\n');
-    return [
-        ...frontMatterFindings(file.path, file.text),
-        ...sizeFindings(file.path, lines),
-        ...lineFindings(file.path, lines),
-        ...listItemFindings(file.path, lines),
     ];
 }
 
@@ -197,5 +190,18 @@ export function isRulePath(path: string): boolean {
  * @returns the findings and file count
  */
 export function lintRules(files: RuleText[]): RulesLintReport {
-    return { findings: files.flatMap((file) => fileReport(file)), files: files.length };
+    const findings = files.flatMap((file) => {
+        const lines = file.text.split('\n');
+        const scanned = ruleLines(file.path, lines);
+        const layer = file.path.startsWith('templates/') ? 'template' : layerOfPath(file.path);
+        return [
+            ...frontMatterFindings(file.path, file.text),
+            ...sizeFindings(file.path, lines),
+            ...scanned.fences,
+            ...levelFindings(file, scanned.lines),
+            ...scanned.lines.flatMap(({ number, text }) => proseLineFindings(file.path, text, number, layer)),
+            ...listItemFindings(file.path, scanned.lines),
+        ];
+    });
+    return { findings, files: files.length };
 }

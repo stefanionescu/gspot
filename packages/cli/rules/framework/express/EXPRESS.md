@@ -13,6 +13,8 @@ project contracts apply at both levels.
 
 ## HTTP handler rules
 
+<!-- level: all -->
+
 Routes adapt HTTP to domain calls. They do not own validation policy, database
 access, provider mechanics, prompts, caching, or business decisions.
 
@@ -69,6 +71,9 @@ Middleware rules:
 - Middleware cannot make feature decisions.
 - Middleware cannot call the database for product behavior except through auth or ownership helpers designed for that boundary.
 - Business permission checks belong in a module or ownership middleware, depending on whether the rule is transport-level or domain-level.
+
+## Asynchronous errors
+
 - In Express 4, forward rejected promises through the project's async handler or
   explicitly catch and pass errors to `next(error)`.
 - In Express 5, return the route or middleware promise so Express forwards rejections.
@@ -79,7 +84,7 @@ The example above uses an Express 4 async handler. See
 [Express error handling](https://expressjs.com/en/guide/error-handling/)
 for version-specific behavior.
 
-HTTP edge rules:
+## HTTP edge rules
 
 - Reject unsupported content types for body-bearing endpoints that only accept JSON.
 - Keep JSON body limits route-specific when payload sizes differ by feature.
@@ -102,6 +107,8 @@ app.use(express.json({ limit: DEFAULT_JSON_BODY_LIMIT }));
 ```
 
 ## Function shape and parameters
+
+<!-- level: all -->
 
 API functions expose domain inputs and API/module result contracts, not
 transport or provider mechanics.

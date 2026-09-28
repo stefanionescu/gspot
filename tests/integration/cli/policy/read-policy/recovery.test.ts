@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import { MINIMAL_POLICY } from '#tests/constants/cli.ts';
 import { textContaining } from '#tests/support/expectations.ts';
-import { MINIMAL_POLICY } from '#tests/constants/support/cli.ts';
 import { parsePolicyText, readPolicyText } from '#cli/policy/read.ts';
 import { GOOD_IGNORE } from '#tests/constants/integration/cli/policy/read-policy.ts';
 

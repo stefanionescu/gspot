@@ -14,7 +14,7 @@ function isFilenameClaimed(claims: Claims, base: string): boolean {
 }
 
 /**
- * True when the claims name this file, by extension, filename at any depth, tag or path glob.
+ * True when the claims name this file, by extension, filename at any depth, tag, or path glob.
  * @param claims the claims table
  * @param file the file
  * @returns whether the claims cover the file
@@ -27,7 +27,7 @@ export function isClaimed(claims: Claims, file: TrackedFile): boolean {
 }
 
 /**
- * The files a claims table names in a scope, honoring its natures and from_languages.
+ * The files selected by a scoped claims table and its `natures` and `from_languages` constraints.
  * @param claims the claims table
  * @param selected the selected manifests, for from_languages
  * @param files the tracked files

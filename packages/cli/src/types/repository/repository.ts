@@ -1,5 +1,6 @@
 // The types of repository in this package.
 import type { z } from 'zod';
+import type { Ignore } from 'ignore';
 import type { Policy } from '#cli/types/policy/policy.ts';
 import type { ToolPin } from '#cli/types/configurations.ts';
 import type { packageManifestSchema } from '#cli/repository/manifests.ts';
@@ -10,6 +11,7 @@ export type ScopeEntry = {
     configurations: string[];
     source: 'root' | 'gspot.toml' | 'workspace' | 'project';
 };
+export type PathIgnore = { base: string; matcher: Ignore };
 export type RawEntry = { path: string; size: number; executable: boolean; symlink: boolean };
 /** Source bytes observed during one run, confined to its original repository root. */
 export type SourceObservations = {

@@ -74,18 +74,14 @@ const created: FactReader = (facts, migration, statement) => {
     for (const node of inTable) constraint(facts, at, node);
 };
 
-// Forgets a constraint by name: its foreign key and the index a key constraint counted as.
-function dropConstraint(facts: SchemaState, table: string, name: string): void {
-    facts.constraints.get(table)?.delete(name);
-    facts.indexes = facts.indexes.filter((index) => index.table !== table || index.constraint !== name);
-}
-
-// What each ALTER TABLE command changes in the facts.
+// What each `ALTER TABLE` command changes in the facts.
 const ALTERATIONS: Record<string, (facts: SchemaState, at: Location, command: SqlNode) => void> = {
     AT_EnableRowSecurity: (facts, at) => facts.secured.add(at.table),
     AT_DisableRowSecurity: (facts, at) => facts.secured.delete(at.table),
     AT_DropConstraint: (facts, at, command) => {
-        dropConstraint(facts, at.table, textOf(command['name']));
+        const name = textOf(command['name']);
+        facts.constraints.get(at.table)?.delete(name);
+        facts.indexes = facts.indexes.filter((index) => index.table !== at.table || index.constraint !== name);
     },
     AT_AddConstraint: (facts, at, command) => {
         const node = (command['def'] as SqlNode | undefined)?.['Constraint'] as SqlNode | undefined;

@@ -16,7 +16,8 @@ project contracts apply at both levels.
 - An expected operational error (invalid input, missing resource, permission denied, provider timeout) becomes a typed result or a typed error the caller can branch on.
 - A programmer error (broken invariant, impossible state) is thrown, logged with its stack, and surfaces as a generic failure. It is never caught to keep going.
 - A startup failure fails fast before the process accepts work.
-- A fatal runtime error goes through the shutdown path so the supervisor restarts the process.
+- A fatal runtime error goes through the shutdown path. A supervised service then follows its
+  configured restart policy.
 
 ## Raising and catching
 
@@ -37,19 +38,17 @@ needed to correct a finding. Keep credentials and unrelated private data out of 
 
 **Keep out of public service responses:**
 
-- Schema names, table names, column names, or function names
-- Internal identifiers (row IDs, user IDs, session tokens)
-- Stack traces or file paths
-- Implementation details (trigger names, policy names, internal state like "deleted" flags)
+- Schema names, table names, column names, or function names.
+- Internal identifiers (row IDs, user IDs, session tokens).
+- Stack traces or file paths.
+- Implementation details (trigger names, policy names, internal state like "deleted" flags).
 
 **Always:**
 
-- Start error messages with an uppercase letter (sentence case)
-- Make messages actionable: tell the user what went wrong, not how the system works
-- Give safe, actionable context for configuration and infrastructure failures
-- Name the value that failed in `name=value` form when it helps debugging and is safe to show
-- Keep messages consistent in tone and casing across the repository
-- Keep messages easy to grep: stable text, values as arguments
+- Make messages actionable: tell the user what went wrong, not how the system works.
+- Explain configuration and infrastructure failures with safe context that supports correction.
+- Name the value that failed in `name=value` form when it helps debugging and is safe to show.
+- Keep messages easy to grep: stable text, values as arguments.
 
 Restricted diagnostic logs can retain stack traces and causes under the logging policy.
 Do not expose those logs as public error responses.
@@ -60,3 +59,10 @@ Do not expose those logs as public error responses.
 - Central error handling owns final formatting; feature code does not format transport errors.
 - Client-visible messages are generic and stable. Detail stays in server diagnostics.
 - Process-level last-resort handlers (unhandled rejection, uncaught exception) report, mark the process not ready, and exit. They never keep serving.
+
+## Message style
+
+<!-- level: all -->
+
+Use sentence case for error messages. Keep their tone and casing consistent across the repository.
+Preserve externally owned diagnostic text when callers depend on its exact form.

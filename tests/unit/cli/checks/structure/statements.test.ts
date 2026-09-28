@@ -12,12 +12,11 @@ for (const language of ['python', 'swift', 'bash'] as const) {
         const body = Array.from({ length: count }, () => (language === 'bash' ? 'echo value' : 'work()')).join(
             language === 'python' ? '\n    ' : '; ',
         );
-        const source =
-            language === 'python'
-                ? `def example():\n    """Contract."""\n    ${body}\n`
-                : language === 'swift'
-                  ? `func example() { /* comment */ ${body} }`
-                  : `example() { # comment\n${body}\n}`;
+        const source = {
+            python: `def example():\n    """Contract."""\n    ${body}\n`,
+            swift: `func example() { /* comment */ ${body} }`,
+            bash: `example() { # comment\n${body}\n}`,
+        }[language];
         const parser = await parserFor(language);
         const tree = parser.parse(source)!;
         try {
@@ -105,10 +104,10 @@ test.each([
     ['bash', 'source ./other.sh\nwrapper() { original; }', 'owner() { one; two; three; }'],
 ] as const)(
     '%s trivial files distinguish wrappers from substantial implementations',
-    async (language, wrapper, owner) => {
+    async (language, declaration, owner) => {
         const parser = await parserFor(language);
         for (const [source, expected] of [
-            [wrapper, true],
+            [declaration, true],
             [owner, false],
         ] as const) {
             const tree = parser.parse(source)!;

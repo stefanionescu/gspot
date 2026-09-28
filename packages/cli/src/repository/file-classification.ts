@@ -5,14 +5,6 @@ import type { FileDeclaration } from '#cli/types/policy/policy.ts';
 import type { Attribute, NatureVerdict } from '#cli/types/repository/repository.ts';
 
 import {
-    BANNER_BYTES,
-    ENV_FILE_PATTERNS,
-    ENV_TEMPLATE_NAMES,
-    BINARY_ATTRIBUTES,
-    GENERATED_ATTRIBUTES,
-    VENDORED_ATTRIBUTES,
-} from '#cli/constants/repository/repository.ts';
-import {
     GENERATED_BANNERS,
     INSTALLED_PREFIXES,
     LICENSE_FILE,
@@ -20,6 +12,14 @@ import {
     VALE_STYLES_PREFIX,
     VENDORED_DIRECTORIES,
 } from '#cli/constants/repository/patterns.ts';
+import {
+    BANNER_BYTES,
+    ENV_FILE_PATTERNS,
+    ENV_TEMPLATE_NAMES,
+    BINARY_ATTRIBUTES,
+    GENERATED_ATTRIBUTES,
+    VENDORED_ATTRIBUTES,
+} from '#cli/constants/repository/repository.ts';
 
 const matchesEnvironmentFile = pathMatcher(ENV_FILE_PATTERNS.map((pattern) => `**/${pattern}`));
 
@@ -30,10 +30,6 @@ function attributeRule(line: string): Attribute | undefined {
     if (pattern === '') return undefined;
     const bare = pattern.startsWith('/') ? pattern.slice(1) : pattern;
     return { matcher: pathMatcher([pattern.includes('/') ? bare : `**/${pattern}`]), attributes };
-}
-
-function attributesFor(rules: Attribute[], path: string): string[] {
-    return rules.filter((rule) => rule.matcher(path)).flatMap((rule) => rule.attributes);
 }
 
 function declaredNature(path: string, declarations: FileDeclaration[]): NatureVerdict | undefined {
@@ -61,33 +57,11 @@ function attributeNature(attributes: string[]): NatureVerdict | undefined {
     return isBinary ? { nature: 'binary', source: '.gitattributes' } : undefined;
 }
 
-function hasBanner(prefix: Buffer): boolean {
-    const start = prefix.subarray(0, BANNER_BYTES).toString('utf8');
-    return GENERATED_BANNERS.some((banner) => banner.test(start));
-}
-
 function managedNature(path: string): NatureVerdict | undefined {
     if (LICENSE_FILE.test(path.slice(path.lastIndexOf('/') + 1))) return { nature: 'vendored', source: 'license' };
     if (INSTALLED_PREFIXES.some((prefix) => path.startsWith(prefix))) return { nature: 'generated', source: 'gspot' };
     if (isValePackageFile(path)) return { nature: 'vendored', source: 'gspot' };
     return undefined;
-}
-
-function isUnderVendoredDirectory(path: string): boolean {
-    return path
-        .split('/')
-        .slice(0, -1)
-        .some((segment) => VENDORED_DIRECTORIES.includes(segment));
-}
-
-/**
- * Whether git stores the file through LFS, by its attributes.
- * @param attributes the captured attribute rules
- * @param path the file, relative to the root
- * @returns true under an lfs filter
- */
-export function isUnderLfs(attributes: Attribute[], path: string): boolean {
-    return attributesFor(attributes, path).some((attribute) => attribute.startsWith('filter=lfs'));
 }
 
 /**
@@ -101,12 +75,12 @@ export function isValePackageFile(path: string): boolean {
 
 /**
  * Classify from declarations, attributes, binary content, managed paths, banners, then vendored directories.
- * @param path the file, relative to the root
- * @param declarations the generated and vendored declarations
- * @param isBinary whether the content sniff found binary bytes
- * @param prefix the captured first bytes
- * @param attributes the captured attribute rules
- * @returns the nature and where it came from
+ * @param path the file, relative to the root.
+ * @param declarations the generated and vendored declarations.
+ * @param isBinary whether the content sniff found binary bytes.
+ * @param prefix the captured first bytes.
+ * @param attributes the captured attribute rules.
+ * @returns the nature and where it came from.
  */
 export function natureOf(
     path: string,
@@ -115,13 +89,21 @@ export function natureOf(
     prefix: Buffer,
     attributes: Attribute[],
 ): NatureVerdict {
-    const declared = declaredNature(path, declarations) ?? attributeNature(attributesFor(attributes, path));
+    const matched = attributes.filter((rule) => rule.matcher(path)).flatMap((rule) => rule.attributes);
+    const declared = declaredNature(path, declarations) ?? attributeNature(matched);
     if (declared) return declared;
     if (isBinary) return { nature: 'binary', source: 'content' };
     const managed = managedNature(path);
     if (managed) return managed;
-    if (hasBanner(prefix)) return { nature: 'generated', source: 'banner' };
-    if (isUnderVendoredDirectory(path)) return { nature: 'vendored', source: 'directory' };
+    const start = prefix.subarray(0, BANNER_BYTES).toString('utf8');
+    if (GENERATED_BANNERS.some((banner) => banner.test(start))) return { nature: 'generated', source: 'banner' };
+    if (
+        path
+            .split('/')
+            .slice(0, -1)
+            .some((segment) => VENDORED_DIRECTORIES.includes(segment))
+    )
+        return { nature: 'vendored', source: 'directory' };
     return { nature: 'source', source: 'default' };
 }
 
@@ -144,7 +126,11 @@ export function readAttributes(root: string): Attribute[] {
 
 // What is in the tree: files, natures, tags, scopes, and the tooling init finds.
 
-/** Identify environment files that contain machine values rather than templates. */
+/**
+ * Identify environment files that contain machine values rather than templates.
+ * @param path the repository-relative path.
+ * @returns whether the file contains environment values.
+ */
 export function isEnvironmentFile(path: string): boolean {
     return matchesEnvironmentFile(path) && !ENV_TEMPLATE_NAMES.includes(path.slice(path.lastIndexOf('/') + 1));
 }

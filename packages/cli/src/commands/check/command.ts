@@ -86,7 +86,7 @@ async function pushOptions(options: CheckOptions, paths: string[], signal: Abort
 }
 
 // Runs check, or reports the cancellation when the signal fired before every selected content was checked.
-async function runOrCancel(
+async function checkedCommand(
     options: CheckOptions,
     paths: string[],
     isPush: boolean,
@@ -120,7 +120,7 @@ async function runCheck(
     process.on('SIGINT', cancel);
     process.on('SIGTERM', cancel);
     try {
-        await printCommand(() => runOrCancel(options, paths, flags['push'] === true, controller.signal), global);
+        await printCommand(() => checkedCommand(options, paths, flags['push'] === true, controller.signal), global);
     } finally {
         process.removeListener('SIGINT', cancel);
         process.removeListener('SIGTERM', cancel);

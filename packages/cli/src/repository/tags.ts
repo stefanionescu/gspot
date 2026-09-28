@@ -12,17 +12,6 @@ function sniff(buffer: Buffer): { isBinary: boolean; firstLine: string } {
     return { isBinary: false, firstLine: newline === -1 ? text : text.slice(0, newline) };
 }
 
-function flagTags(entry: RawEntry, base: string, extension: string): string[] {
-    const flags: [boolean, string][] = [
-        [entry.symlink, 'symlink'],
-        [LOCKFILE_NAMES.includes(base), 'lockfile'],
-        [base.startsWith('Dockerfile') || extension === '.dockerfile', 'dockerfile'],
-        [base.startsWith('.env'), 'dotenv'],
-        [entry.executable, 'executable'],
-    ];
-    return flags.filter(([isSet]) => isSet).map(([, tag]) => tag);
-}
-
 function shebangTags(firstLine: string): { shebang: string | undefined; tags: string[] } {
     if (!firstLine.startsWith('#!')) return { shebang: undefined, tags: [] };
     const shebang = shebangInterpreter(firstLine);
@@ -52,10 +41,17 @@ function textTags(tags: Set<string>, firstLine: string): Tagged {
 export function tagEntry(entry: RawEntry, prefix: Buffer): Tagged {
     const extension = extensionOf(entry.path);
     const base = baseName(entry.path);
+    const flags: [boolean, string][] = [
+        [entry.symlink, 'symlink'],
+        [LOCKFILE_NAMES.includes(base), 'lockfile'],
+        [base.startsWith('Dockerfile') || extension === '.dockerfile', 'dockerfile'],
+        [base.startsWith('.env'), 'dotenv'],
+        [entry.executable, 'executable'],
+    ];
     const tags = new Set<string>([
         ...(EXTENSION_TAGS[extension] ?? []),
         ...(FILENAME_TAGS[base] ?? []),
-        ...flagTags(entry, base, extension),
+        ...flags.filter(([isSet]) => isSet).map(([, tag]) => tag),
     ]);
     if (BINARY_EXTENSIONS.includes(extension)) return { tags: ['binary', ...tags], binary: true };
     const sniffed = sniff(prefix);

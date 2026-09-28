@@ -20,6 +20,7 @@ Do not include credentials from configuration or environment variables.
 TOML syntax and schema errors name the file, line, and column. Correct the named value or
 table, then rerun the command. For a missing required value, the location identifies its
 nearest authored table. Syntax diagnostics do not print neighboring configuration lines.
+
 Missing scopes, invalid adopted tool paths, missing reasons, and disabled-rule errors also
 identify their policy declarations.
 Unknown configurations and unsupported settings name their source entries. A refused loosening
@@ -102,6 +103,6 @@ preserved.
 
 ## A Windows path is refused
 
-Managed paths reject drive-relative paths, UNC paths, reserved device names, and linked
-output directories. Use repository-relative paths with forward slashes in `gspot.toml`.
+Managed paths reject drive-relative paths, reserved device names, and linked output directories.
+Universal Naming Convention (UNC) paths are also rejected. Use repository-relative paths with forward slashes in `gspot.toml`.
 Run `gspot apply` after correcting the policy.

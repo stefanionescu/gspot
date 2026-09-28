@@ -38,17 +38,7 @@ test('repository CI checks the committed change, preserves reports on invalid ba
     });
     const commit = () => {
         expect(git(sandbox.path, ['add', '-A']).code).toBe(0);
-        expect(
-            git(sandbox.path, [
-                '-c',
-                'user.name=Example',
-                '-c',
-                'user.email=example@example.com',
-                'commit',
-                '-qm',
-                'Fixture',
-            ]).code,
-        ).toBe(0);
+        expect(git(sandbox.path, ['commit', '-qm', 'Fixture']).code).toBe(0);
         return git(sandbox.path, ['rev-parse', 'HEAD']).stdout.trim();
     };
     expect(git(sandbox.path, ['init', '-q']).code).toBe(0);

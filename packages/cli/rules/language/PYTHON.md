@@ -36,50 +36,21 @@ Rules:
 - Use built-in language features directly when they express the operation
   clearly.
 
-Good Python is easy to scan:
-
-```python
-"""Yield request text from chat messages."""
-
-from __future__ import annotations
-
-from collections.abc import Iterable
-from dataclasses import dataclass
-
-@dataclass(frozen=True, slots=True)
-class PromptMessage:
-    """One request message."""
-
-    content: str
-
-def iter_message_text(messages: Iterable[PromptMessage]) -> Iterable[str]:
-    """Yield text content from request messages."""
-    for message in messages:
-        yield message.content
-
-__all__ = [
-    "PromptMessage",
-    "iter_message_text",
-]
-```
+Keep each module focused on a real input, output, or state owner. The
+configuration and command examples below include every import, type, and
+operation they use.
 
 ## Runtime, encoding, and files
 
 Rules:
 
 - Use the syntax of the project's declared Python version. The version is stated once, in the
-  runtime pin, and never repeated in prose.
+  runtime pin. State version requirements in examples when their syntax depends on them.
 - Store source files as UTF-8.
 - Do not add an encoding declaration unless a tool or runtime requires it.
 - Use LF line endings.
-- Keep identifiers ASCII-only.
-- Use English words for identifiers, comments, and docstrings unless an external
-  identifier must keep another language or spelling.
-- Use non-ASCII characters sparingly in string data.
 - Do not use byte-order marks.
-- Python filenames must use `.py`.
-- Python filenames must be snake_case, except `__init__.py` and `__main__.py`.
-- Python filenames must not contain dashes.
+- Use `.py` for Python source and `.pyi` for type stubs.
 - Keep modules importable by pydoc, tests, linting tools, and type checkers.
 
 Good:
@@ -90,13 +61,19 @@ modeling.py
 __main__.py
 ```
 
+### File and identifier conventions
+
+<!-- level: all -->
+
+Use snake_case filenames and ASCII identifiers, preserving names required by external contracts.
+Keep comments and docstrings in the project's declared language. Unicode string data follows the
+application's text requirements; do not restrict valid user content to ASCII.
+
 ## Environment and configuration
 
 Rules:
 
 - Treat environment variables as external text input.
-- Read environment variables in one configuration owner module. `os.environ` and `os.getenv`
-  appear nowhere else.
 - Parse and validate environment-derived values once before passing them inward.
 - Store secrets in environment variables or a secret manager, never in source
   code, docs examples, tests, or checked-in config.
@@ -111,19 +88,62 @@ Rules:
 Good:
 
 ```python
+"""Parse positive item limits before starting application work."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+
+
 @dataclass(frozen=True)
 class AppConfig:
-    """Runtime configuration loaded from the environment."""
+    """Validated application settings.
+
+    Attributes:
+        max_items: Positive maximum number of items to process.
+
+    """
 
     max_items: int
 
-def load_config(environ: Mapping[str, str]) -> AppConfig:
-    """Load runtime configuration from environment variables."""
-    raw_max_items = environ.get("MAX_ITEMS", "100")
-    return AppConfig(max_items=int(raw_max_items))
+
+def get_config(environ: Mapping[str, str]) -> AppConfig:
+    """Parse an item limit, using 100 when the setting is absent.
+
+    Args:
+        environ: Environment values supplied by the application boundary.
+
+    Returns:
+        Settings containing a positive item limit.
+
+    Raises:
+        ValueError: The supplied limit is not an integer greater than zero.
+
+    """
+    max_items = int(environ.get("MAX_ITEMS", "100"))
+    if max_items < 1:
+        message = "MAX_ITEMS must be greater than zero"
+        raise ValueError(message)
+    return AppConfig(max_items=max_items)
+
+
+__all__ = ["AppConfig", "get_config"]
 ```
 
+### Environment ownership
+
+<!-- level: all -->
+
+Read `os.environ` and `os.getenv` in the configuration owner, and pass validated values inward.
+Keep framework-owned entrypoints and other declared boundaries consistent with their contracts.
+
 ## Module structure
+
+<!-- level: all -->
 
 Order module contents this way:
 
@@ -157,33 +177,19 @@ Rules:
 - The order is fixed so a reader meets the helpers before the code that uses them, the same order
   the TypeScript and Bash rules require.
 
-Good:
-
-```python
-"""Configuration constants for runtime settings."""
-
-from __future__ import annotations
-
-from pathlib import Path
-
-MODELS_DIR = Path("/models")
-DEFAULT_ENGINE = "trt"
-
-def _model_dir_name(name: str) -> str:
-    return name.strip().lower()
-
-def resolve_model_dir(name: str) -> Path:
-    """Return the model directory for a model name."""
-    return MODELS_DIR / _model_dir_name(name)
-
-__all__ = [
-    "DEFAULT_ENGINE",
-    "MODELS_DIR",
-    "resolve_model_dir",
-]
-```
+The configuration example places its module docstring and imports first,
+then its dataclass and public function. Its explicit `__all__` is last.
+A helper belongs before the public API only when it owns real behavior;
+do not add a forwarding function to illustrate declaration order.
 
 ## Imports
+
+Imports must resolve in the declared project environment. Do not rely on the main script directory
+being present on `sys.path`. Avoid import cycles and remove unused imports.
+
+### Import conventions
+
+<!-- level: all -->
 
 Rules:
 
@@ -210,53 +216,26 @@ Rules:
 - Avoid circular imports by moving shared data or contracts into a lower-level
   owner.
 
-Good:
+Keep standard-library imports before third-party imports, and put the
+project's own imports in their configured section. Import only symbols the
+module actually uses. Do not copy an illustrative block of unused imports.
 
-```python
-from __future__ import annotations
-
-import logging
-from collections.abc import Iterable, Sequence
-from pathlib import Path
-
-import torch
-from transformers import AutoTokenizer
-
-from src.config.model.selection import MODEL
-from src.runtime.config import ModelSettings
-
-from .runtime import RuntimeConfig
-```
-
-Direct symbol imports are acceptable for public classes, functions, constants,
-and typing symbols when they make the call site clearer:
-
-```python
-from pathlib import Path
-from typing import Literal
-from dataclasses import dataclass
-from src.runtime.config import ModelSettings
-```
-
-Use module imports when the module prefix makes ownership clearer:
-
-```python
-import random
-import logging
-
-logger = logging.getLogger(__name__)
-rng = random.Random(seed)  # noqa: S311
-```
+Direct symbol imports keep public types and functions readable at the call
+site. A module import is useful when its prefix identifies ownership. For
+example, `logging.getLogger(__name__)` identifies the logging API without
+creating an unrelated alias.
 
 Use aliases only when:
 
-- two imported modules have the same final name;
-- an imported module conflicts with a local top-level name;
-- the original module name is inconveniently long;
-- the alias is a standard abbreviation, such as `np` for NumPy;
+- two imported modules have the same final name.
+- an imported module conflicts with a local top-level name.
+- the original module name is inconveniently long.
+- the alias is a standard abbreviation, such as `np` for NumPy.
 - the alias disambiguates a generic module name.
 
 ## Public and internal interfaces
+
+<!-- level: all -->
 
 Rules:
 
@@ -275,22 +254,9 @@ Rules:
 - A module-level function, class, constant or type alias that is not in `__all__` starts with
   one underscore, and every underscored definition comes before the first public one.
 
-Good:
-
-```python
-_DEFAULT_TIMEOUT_SECONDS = 30
-
-def _normalize_quantization(value: str) -> str:
-    return value.strip().lower()
-
-def build_model_settings(model: str, quantization: str) -> ModelSettings:
-    """Build model settings for one runtime."""
-    return ModelSettings(model=model, quantization=_normalize_quantization(quantization))
-
-__all__ = [
-    "build_model_settings",
-]
-```
+Use `_DEFAULT_TIMEOUT_SECONDS` for a private timeout constant and list only
+the public operation in `__all__`. A private name is not a substitute for
+removing a helper that only forwards a call.
 
 ## Formatting
 
@@ -332,21 +298,26 @@ Rules:
 - Use inline comments sparingly.
 - Keep comments up to date when code changes.
 
-Good:
+A comment can explain a non-obvious format constraint or resource lifetime.
+Do not repeat an assignment in prose or introduce domain behavior solely to
+create a comment example.
 
-```python
-# Longformer uses the first token for global attention in classification.
-global_attention_mask[:, 0] = 1
-```
+When a native linter requires a suppression for an unavoidable external
+contract, keep it narrow and include the reason on or immediately above the
+directive. A deterministic random generator can require a security-rule
+exception for simulation; it must never produce security tokens.
 
-When suppressing a linter warning, keep the suppression narrow and explain it
-when the symbolic name is not enough:
+### Docstring validation
 
-```python
-rng = random.Random(seed)  # noqa: S311
-```
+Existing docstrings must match their function signatures and actual behavior at both levels.
+Keep the project's declared convention. An explicit pydoclint style wins; otherwise a
+Google or NumPy convention from Ruff carries into pydoclint. Without either setting,
+the native pydoclint default applies. Google-style examples below illustrate that selected
+convention; use NumPy section syntax when the project selects NumPy.
 
 ### Docstrings
+
+<!-- level: all -->
 
 Rules:
 
@@ -363,36 +334,18 @@ Rules:
   exceptions when they are part of the interface.
 - Do not document exceptions raised only when callers violate the documented
   contract.
-- Summary lines are imperative: `Return the total token budget.`, not `Returns the total token budget.`
+- Summary lines are imperative: `Return the total token budget.`, not `Returns the total token budget.`.
 
-Good one-line docstring:
+A one-line summary such as "Return a new list containing the supplied labels."
+describes the caller-visible result. Do not add a named function for a
+one-expression calculation solely to demonstrate a docstring.
 
-```python
-def build_token_budget(prompt_tokens: int, output_tokens: int) -> int:
-    """Return the total token budget."""
-    return prompt_tokens + output_tokens
-```
-
-Good multiline docstring:
-
-```python
-def fetch_rows(keys: Sequence[str]) -> Mapping[str, tuple[str, ...]]:
-    """Fetch rows for the requested keys.
-
-    Retrieves one row for each key that exists in the backing table.
-
-    Args:
-        keys: Keys to fetch.
-
-    Returns:
-        A mapping from key to row values.
-
-    Raises:
-        OSError: The backing table could not be read.
-    """
-```
+The `get_config` example includes a complete Google-style multiline
+docstring. Its sections describe the actual accepted input and result.
 
 ### Module docstrings
+
+<!-- level: all -->
 
 Rules:
 
@@ -403,13 +356,12 @@ Rules:
 - Do not write a test module docstring that only repeats the file name or module
   name.
 
-Good:
-
-```python
-"""Runtime settings assembly for the inference server."""
-```
+Use a module summary such as "Parse positive item limits before starting
+application work." It states the purpose without repeating the filename.
 
 ### Function and method docstrings
+
+<!-- level: all -->
 
 Rules:
 
@@ -417,34 +369,21 @@ Rules:
 - Nontrivial private helpers require docstrings.
 - Functions with non-obvious logic require docstrings.
 - Functions that mutate an argument must say so.
-- Generator functions use `Yields:` instead of `Returns:`.
+- Document yielded values in the selected convention's yields section.
 - `Returns:` may be omitted when the one-line summary already fully describes
   the returned value.
 - Do not document `None` returns unless it clarifies control flow.
-- Use `Args:`, `Returns:`, `Yields:`, and `Raises:` sections when needed.
+- In Google style, use `Args:`, `Returns:`, `Yields:`, and `Raises:` sections when needed.
+- In NumPy style, use the corresponding underlined section headings.
 - Keep section indentation consistent within a file.
 
-Good:
-
-```python
-def build_engine_settings(
-    inference_engine: str | None,
-    trt_engine_dir: str,
-    default_max_batched_tokens: int,
-) -> EngineSettings:
-    """Build inference engine settings from validated inputs.
-
-    Args:
-        inference_engine: Runtime backend name.
-        trt_engine_dir: TensorRT engine directory.
-        default_max_batched_tokens: vLLM token batch limit.
-
-    Returns:
-        Resolved engine settings.
-    """
-```
+The `get_config` example documents its input mapping, returned settings, and
+invalid-input exception. Each section matches its implementation. Do not
+document a return value or error that the function does not produce.
 
 ### Class docstrings
+
+<!-- level: all -->
 
 Rules:
 
@@ -457,32 +396,17 @@ Rules:
   exception, not the raising site.
 - Do not write `Class that...` as the summary.
 
-Good:
+The `AppConfig` class documents `max_items` under `Attributes`. Public
+attributes belong in the class contract; properties have their own
+attribute-style documentation.
 
-```python
-@dataclass
-class RuntimePrompt:
-    """Single runtime prompt example.
-
-    Attributes:
-        prompt: Normalized prompt text.
-        expected_status: Expected response status.
-        group: Group identifier for related prompts.
-    """
-
-    prompt: str
-    expected_status: str
-    group: str
-```
-
-Good exception docstring:
-
-```python
-class MissingModelError(Exception):
-    """The requested model artifact is unavailable."""
-```
+A `MissingArtifactError` docstring can state "The requested artifact is
+unavailable." Keep the exception with the behavior that raises it and do not
+repeat the class name as its entire documentation.
 
 ### Property docstrings
+
+<!-- level: all -->
 
 Rules:
 
@@ -491,16 +415,12 @@ Rules:
 - Do not write `Returns...` for a property unless the surrounding file already
   uses that style.
 
-Good:
-
-```python
-@property
-def num_labels(self) -> int:
-    """The number of supported runtime labels."""
-    return len(self.labels)
-```
+A computed `num_labels` property can use "The number of supported labels."
+Its implementation must preserve the documented cost and side effects.
 
 ### Override docstrings
+
+<!-- level: all -->
 
 Rules:
 
@@ -511,63 +431,48 @@ Rules:
 - Use `typing.override` when available in the target runtime. Use
   `typing_extensions.override` when needed.
 
-Good:
+Use `@override` for a real override that preserves or deliberately refines a
+base contract. Do not add a method that only calls `super` to demonstrate
+inherited documentation; the inherited method already provides that behavior.
 
-```python
-from typing_extensions import override
+### Deferred work
 
-class Child(Parent):
-    @override
-    def build(self) -> Result:
-        return super().build()
-```
+<!-- level: all -->
 
-### `TODO` comments
+Track unfinished work in the issue tracker. Do not leave `TODO`, `FIXME`, `XXX`, or `HACK`
+placeholders in source. A comment can link to an issue that explains an existing constraint,
+but it must describe the current behavior and reason.
 
-Rules:
-
-- Use `TODO` comments only for temporary, tracked work.
-- A `TODO` is `TODO(<issue-url-or-YYYY-MM-DD>): <sentence>`. The owner is an issue link or an
-  expiry date, never a person, or team.
-- Do not add TODOs for vague future improvements.
-- An expired date or a closed issue makes the `TODO` a finding.
-
-Good:
-
-```python
-# TODO(https://example.com/issues/123): Remove this branch when all exports use JSONL.
-```
+A comment can explain that a required CSV input follows an upstream
+exporter's contract, with a link to the issue that documents the constraint.
+It must describe current behavior rather than promise a future change.
 
 ## Constants, globals, and mutable state
 
 Rules:
 
 - Module constants are allowed and encouraged.
-- Constants use uppercase names with underscores.
-- Internal constants use one leading underscore.
 - Avoid mutable global state.
 - Do not use lazy singleton state.
-- Do not create module-level `STATE`, `_STATE`, `INSTANCE`, `_INSTANCE`, or
-  `_instance` holders.
 - Do not expose mutable globals directly as public API.
 - If mutable global state is genuinely required, keep it internal and document
   the design reason.
 - Do not mutate module globals as a hidden side effect of ordinary function
   calls.
 
-Good:
+Use a named constant for a meaningful repeated value, such as
+`DEFAULT_BATCH_SIZE`. Keep mutable runtime state with its behavioral owner
+and pass it explicitly to operations that need it.
 
-```python
-DEFAULT_MODEL_NAME = "answerdotai/ModernBERT-base"
-_MAX_RETRIES = 3
-```
+Pass validated configuration into the client or operation that consumes it.
+Do not wrap a constructor only to rename the same construction call.
 
-Prefer passing state explicitly:
+### Constant conventions
 
-```python
-def build_client(config: ClientConfig) -> Client:
-    return Client(config)
-```
+<!-- level: all -->
+
+Use uppercase names with underscores for constants and one leading underscore for private
+constants. Name retained module state for the concept it owns.
 
 ## Main programs and Top-Level code
 
@@ -588,32 +493,43 @@ Rules:
 Good:
 
 ```python
+"""Count nonempty lines from a pipeline."""
+
+import sys
+
+
 def main() -> int:
-    """Run the command."""
-    ...
+    """Count nonempty input lines from standard input."""
+    count = sum(1 for line in sys.stdin if line.strip())
+    _ = sys.stdout.write(f"{count}\n")
     return 0
+
 
 if __name__ == "__main__":
     raise SystemExit(main())
 ```
 
+Never execute untrusted input as Python code or use dynamic execution to avoid input validation.
+
 ## Power features
+
+<!-- level: all -->
 
 Avoid power features unless the project already has a clear local pattern and
 the feature is necessary.
 
 Avoid:
 
-- custom metaclasses;
-- bytecode manipulation;
-- dynamic inheritance;
-- object reparenting;
-- import hooks and import hacks;
-- runtime monkeypatching;
-- reflection-heavy designs;
-- modifying interpreter internals;
-- `__del__` cleanup logic;
-- manual descriptor implementations;
+- custom metaclasses.
+- bytecode manipulation.
+- dynamic inheritance.
+- object reparenting.
+- import hooks and import hacks.
+- runtime monkeypatching.
+- reflection-heavy designs.
+- modifying interpreter internals.
+- `__del__` cleanup logic.
+- manual descriptor implementations.
 - dynamic code generation.
 
 Allowed standard-library uses include `dataclasses`, `enum`, and `abc` when they
@@ -653,15 +569,13 @@ Rules:
 - Do not test that mocks return the values assigned inside the test.
 - Cover meaningful edge cases, failure paths, and state transitions.
 
-Good:
-
-```python
-def test_parse_prompt_rejects_unexpected_entry() -> None:
-    with pytest.raises(TypeError, match="Unexpected prompt entry"):
-        parse_prompt(value=object())
-```
+Test `get_config` with absent, valid, nonnumeric, and nonpositive limits.
+Assert the accepted settings or the documented `ValueError`, rather than
+testing that a mock returns its configured value.
 
 ## Review checklist
+
+<!-- level: all -->
 
 Before running the requested checks, review the changed code:
 
@@ -682,11 +596,13 @@ Before running the requested checks, review the changed code:
 - Do comments explain non-obvious behavior without repeating the code?
 - Are package boundaries respected without `sys.path` mutation?
 
-For FastAPI applications, also review the FastAPI and Runtime guides. Check request and
+Review the FastAPI and Runtime guides when working on FastAPI applications. Check request and
 response schemas, authorization, blocking I/O, resource lifetimes, and actual HTTP outcomes.
 Report which requested checks ran and any verification that remains unavailable.
 
 ## Source decisions
+
+<!-- level: all -->
 
 These rules adapt PEP 8, PEP 257, and the Google Python Style Guide into one standard. Where they
 disagree, the decision is:
@@ -702,7 +618,7 @@ disagree, the decision is:
 | Imports                  | Absolute imports across packages; explicit relative sibling imports inside a package when that is the local pattern; direct imports of public symbols and of typing and `collections.abc` names.                                                            |
 | `__all__`                | At the bottom of the module, overriding PEP 8's dunder placement for `__all__` only. Other dunders such as `__version__` sit after the module docstring and future imports.                                                                                 |
 | License boilerplate      | None unless the project defines the exact text.                                                                                                                                                                                                             |
-| Function and file length | The configured limits; barrel `__init__.py` files are exempt from the file limit.                                                                                                                                                                           |
+| Function and file length | The configured limits apply to authored modules, including package initializers.                                                                                                                                                                            |
 | Typing                   | Every function annotated; modern union syntax, built-in generics, `type` statements or `TypeAlias` for real aliases, `Annotated` for metadata, `object` for any value, protocols for structural interfaces; abstract input types and concrete return types. |
 | Logging                  | `logging.getLogger(__name__)` in modules; entrypoints configure handlers; libraries add only `NullHandler`.                                                                                                                                                 |
 | Project layout           | Importable code under `src/`; no `sys.path` patches.                                                                                                                                                                                                        |

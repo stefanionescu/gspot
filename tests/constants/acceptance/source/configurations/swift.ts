@@ -1,5 +1,5 @@
 // The literal values acceptance/source/configurations/swift reads: names, patterns, limits, and tables.
-import type { FindingCase } from '#tests/types/support/cli.ts';
+import type { FindingCase } from '#tests/types/cli.ts';
 
 export const SWIFT_PACKAGE =
     '// swift-tools-version:5.9\nimport PackageDescription\n\nlet package = Package(\n    name: "App",\n    products: [.library(name: "App", targets: ["App"])],\n    targets: [.target(name: "App")]\n)\n';

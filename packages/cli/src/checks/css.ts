@@ -6,6 +6,15 @@ import { readSource } from '#cli/repository/tracked.ts';
 import { CODE_SUFFIX, MODULE_SUFFIX } from '#cli/constants/checks/checks.ts';
 import type { Importer, EngineInput, Finding } from '#cli/types/checks/checks.ts';
 
+// CSS module objects use default or namespace bindings. Type-only and named imports do not carry the object.
+function moduleBinding(statement: ts.ImportDeclaration): ts.Identifier | undefined {
+    const clause = statement.importClause;
+    if (clause === undefined || clause.phaseModifier === ts.SyntaxKind.TypeKeyword) return undefined;
+    if (clause.name !== undefined) return clause.name;
+    const bindings = clause.namedBindings;
+    return bindings !== undefined && ts.isNamespaceImport(bindings) ? bindings.name : undefined;
+}
+
 // Bind identifiers without reading dependencies or sources outside the selected inventory.
 function moduleImporters(code: { path: string; text: string }[], sheets: Set<string>): Map<string, Importer[]> {
     const sources = new Map(
@@ -27,30 +36,36 @@ function moduleImporters(code: { path: string; text: string }[], sheets: Set<str
     const program = ts.createProgram([...sources.keys()], options, host);
     const checker = program.getTypeChecker();
     const importers = new Map<string, Importer[]>();
-    for (const [path, source] of sources) {
-        for (const statement of source.statements) {
-            if (!ts.isImportDeclaration(statement) || !ts.isStringLiteral(statement.moduleSpecifier)) continue;
-            const specifier = statement.moduleSpecifier.text;
-            if (!specifier.startsWith('.')) continue;
-            const sheet = posix.normalize(posix.join(posix.dirname(path), specifier));
-            if (!sheets.has(sheet)) continue;
-            const clause = statement.importClause;
-            if (clause === undefined || clause.phaseModifier === ts.SyntaxKind.TypeKeyword) continue;
-            const binding =
-                clause.name ??
-                (clause.namedBindings !== undefined && ts.isNamespaceImport(clause.namedBindings)
-                    ? clause.namedBindings.name
-                    : undefined);
-            if (binding === undefined) continue;
-            const symbol = checker.getSymbolAtLocation(binding);
-            if (symbol === undefined) continue;
+    for (const [path, source] of sources)
+        for (const [sheet, importer] of sourceImporters(path, source, checker, sheets)) {
             const entries = importers.get(sheet) ?? [];
-            const importer: Importer = { path, read: [...bindingReads(checker, symbol, source)] };
             entries.push(importer);
             importers.set(sheet, entries);
         }
-    }
     return importers;
+}
+
+// Resolve one source file against the selected stylesheets before grouping its lexical binding reads.
+function sourceImporters(
+    path: string,
+    source: ts.SourceFile,
+    checker: ts.TypeChecker,
+    sheets: Set<string>,
+): [string, Importer][] {
+    return source.statements
+        .filter((node) => ts.isImportDeclaration(node))
+        .flatMap((statement): [string, Importer][] => {
+            if (!ts.isStringLiteral(statement.moduleSpecifier)) return [];
+            const specifier = statement.moduleSpecifier.text;
+            if (!specifier.startsWith('.')) return [];
+            const sheet = posix.normalize(posix.join(posix.dirname(path), specifier));
+            if (!sheets.has(sheet)) return [];
+            const binding = moduleBinding(statement);
+            if (binding === undefined) return [];
+            const symbol = checker.getSymbolAtLocation(binding);
+            if (symbol === undefined) return [];
+            return [[sheet, { path, read: [...bindingReads(checker, symbol, source)] }]];
+        });
 }
 
 // The properties read through one imported binding, including where lexical shadowing hides the name.

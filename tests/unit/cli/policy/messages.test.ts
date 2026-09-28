@@ -32,8 +32,8 @@ const cases = {
     quotedTable: () => messages.quotedTable('naming.allowed', '{name = "example"}'),
 } satisfies Record<keyof typeof messages, () => string>;
 
-test.each(Object.entries(cases))('%s uses configuration vocabulary', (_name, render) => {
-    expect(render()).not.toMatch(INTERNAL_WORDS);
+test.each(Object.entries(cases))('%s uses configuration vocabulary', (_name, describe) => {
+    expect(describe()).not.toMatch(INTERNAL_WORDS);
 });
 
 test('an unknown setting names the setting the reader wrote and where to see every one', () => {

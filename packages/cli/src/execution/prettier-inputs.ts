@@ -7,17 +7,10 @@ import type { PlannedCheck, Session } from '#cli/types/execution/execution.ts';
 /**
  * Resolve native ignore patterns before either the checker or its fixer receives file arguments.
  * @param session the open session
- * @param check the planned Prettier check
+ * @param check the active native Prettier check with selected files
  * @returns the check with the ignored files left out
  */
 export async function prettierInputs(session: Session, check: PlannedCheck): Promise<PlannedCheck> {
-    if (
-        check.manifest?.configuration.name !== 'formatting' ||
-        check.check !== 'formatting/prettier' ||
-        check.skip !== undefined ||
-        check.files.length === 0
-    )
-        return check;
     const ignorePath = '.prettierignore';
     const confined = openConfinedRoot(session.root);
     try {

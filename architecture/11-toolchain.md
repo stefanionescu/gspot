@@ -243,7 +243,7 @@ That release test.
 
 ### Acceptance K-263
 
-Use the standard filesystem boundary and verify the installed binary, unit/plugin and behavioral journeys on Windows. Include checkout paths with spaces and Unicode, LF generated output, command shims, cancellation, and process-tree cleanup. Windows execution is deferred while CI is paused; unsupported-platform refusal is not completed native support.
+Use the standard filesystem boundary and verify the installed binary, unit/plugin and behavioral journeys on Windows. Include checkout paths with spaces and Unicode, LF generated output, command shims, cancellation, and process-tree cleanup. Native Windows execution is required in CI; unsupported-platform refusal is not completed native support.
 
 ### Acceptance K-164
 
@@ -253,10 +253,13 @@ K-305 validates all script arguments before any writes or registry operations. B
 with `npm pack --dry-run` before it publishes the first, and each package includes
 the project license from distribution output. Platform packages also include `NOTICE.md` for bundled
 inputs. The launcher and external-dependency plugin do not inherit unrelated CLI notices.
+
 The build command is `bun packages/cli/scripts/command.ts`; publication uses
 `bun packages/cli/scripts/publish.ts`. Both consume shared validation in the authored build target
 owner. Generated input and notice caches live in `packages/cli/.build/`, and root `dist/` holds
-release payloads. The CLI build reads actual bundler inputs and embedded grammar sources. Its notice assembler
+release payloads.
+
+The CLI build reads actual bundler inputs and embedded grammar sources. Its notice assembler
 lives in `packages/cli/scripts/notices.ts`. It reads installed license files and fetches missing
 supplemental notices from pinned upstream sources. Downloaded and cached bytes must match
 recorded SHA-256 values. Include the Bun runtime and upstream Swift parser provenance. A dependency-tree

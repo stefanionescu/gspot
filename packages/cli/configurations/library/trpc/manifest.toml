@@ -40,4 +40,4 @@ default = ["**/server/**"]
 summary = "Server file globs used when architecture.elements has no server element. An explicit server element owns the boundary."
 
 [rule_files]
-library = ["library/trpc/TRPC.md"]
+library = [{path = "library/trpc/TRPC.md"}]

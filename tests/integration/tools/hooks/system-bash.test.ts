@@ -2,9 +2,9 @@ import { join } from 'node:path';
 import { chmodSync } from 'node:fs';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
-import { hookBody } from '#cli/generation/hooks.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';
 import { commitAll, git } from '#tests/support/cli/git.ts';
+import { hookBody, hookCommand } from '#cli/generation/hooks/scripts.ts';
 import { SYSTEM_BASH } from '#tests/constants/integration/tools/hooks.ts';
 
 if (process.platform !== 'win32')
@@ -21,7 +21,7 @@ if (process.platform !== 'win32')
         };
         for (const name of ['pre-commit', 'pre-push', 'commit-msg'] as const) {
             const path = join(sandbox.path, name);
-            await Bun.write(path, hookBody(name, 'none', '/bin/echo'));
+            await Bun.write(path, hookBody(name, false, [hookCommand(name, 'none', '/bin/echo')]));
             chmodSync(path, 0o755);
             const result = Bun.spawnSync([SYSTEM_BASH, path, ...argumentsByHook[name]], {
                 cwd: sandbox.path,

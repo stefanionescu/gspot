@@ -1,8 +1,8 @@
 // The types of commands/init in this package.
-import type { FileSnapshot } from '#cli/types/platform.ts';
 import type { Profile } from '#cli/types/policy/profiles.ts';
-import type { Policy, RawPolicy, RunnerTaskNames } from '#cli/types/policy/policy.ts';
-import type { CarriedConfiguration, CarriedFormatter } from '#cli/types/policy/adoption.ts';
+import type { FileObservation } from '#cli/types/platform.ts';
+import type { Policy, RawPolicy } from '#cli/types/policy/policy.ts';
+import type { AdoptionResult, AdoptedFormatting } from '#cli/types/policy/adoption.ts';
 
 import type {
     ConfigurationEvidence as Proposal,
@@ -26,7 +26,7 @@ export type Planning = {
     selection: InitSelection;
     everySelected: Manifest[];
     answers: InitAnswers;
-    carried: CarriedConfiguration;
+    carried: AdoptionResult;
 };
 export type DetectionSummary = {
     files: TrackedFile[];
@@ -87,7 +87,7 @@ export type InitAnswers = {
     ci: NonNullable<Policy['ci']>['provider'] | 'none';
     isRules: boolean;
     runner: NonNullable<Policy['runner']>['tool'] | 'none';
-    formatter?: CarriedFormatter;
+    formatter?: AdoptedFormatting;
 };
 /** Everything init computes before it asks to continue. */
 export type InitPrepared = {
@@ -95,21 +95,7 @@ export type InitPrepared = {
     policyText: string;
     runner: InitAnswers['runner'];
     removed: { path: string }[];
-    observed: Map<string, FileSnapshot>;
-};
-/** The inputs to the init plan. */
-export type InitPlanInputs = {
-    profile?: TakeoverPlan['profile'];
-    root: string;
-    tooling: ExistingTooling;
-    everySelected: Manifest[];
-    how: Map<string, ConfigurationReason>;
-    answers: InitAnswers;
-    runnerTasks?: RunnerTaskNames;
-    carried: CarriedConfiguration;
-    policyLines: number;
-    /** Instruction destinations resolved from the final proposed policy. */
-    agents: string[];
+    observed: Map<string, FileObservation>;
 };
 /** What init selection reads. */
 export type InitContext = {
@@ -133,13 +119,13 @@ export type InitProposal = {
     profileTables?: TomlTable;
     configurations: string[];
     scopes: { path: string; configurations: string[] }[];
-    carried: CarriedConfiguration;
+    carried: AdoptionResult;
     hooks: NonNullable<RawPolicy['hooks']>['tool'] | 'none';
     ci: NonNullable<RawPolicy['ci']>['provider'] | 'none';
     rules: boolean;
     runner: NonNullable<RawPolicy['runner']>['tool'] | 'none';
     runnerTasks?: NonNullable<RawPolicy['runner']>['tasks'];
-    formatter?: CarriedFormatter;
+    formatter?: AdoptedFormatting;
     /** The Xcode project and scheme init found, for the tools.xcode table. */
     xcode?: { scope: string; project: string; scheme?: string };
     /** The settings init filled from the repository through their detect tables. */
@@ -150,6 +136,7 @@ export type Written = { lines: string[]; installNote: string; exitCode: number }
 export type Installed = { installNote: string; exitCode: number };
 export type InstallSettings = { min_release_age_days?: number; security_scanner?: string };
 export type TakeoverPlan = {
+    ci?: { commands: string[]; reports: string };
     profile?: { name: string; digest: string; selection: string; detected: string[] };
     configurations: { configuration: string; how: ConfigurationReason; checks: number }[];
     write: { path: string; note: string }[];

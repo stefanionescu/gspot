@@ -52,9 +52,11 @@ effects as well as successful results.
 - Do not assert only that collaborators were called. Assert the outcome and the externally visible side effects.
 - Do not commit `.only`, `.skip` placeholders, or `test.todo` entries.
 - Cover expected errors and unknown internal errors when the change touches error handling.
-- Bash has no test suites. Bash verification is ShellCheck, shfmt, `bash -n`, and review.
+- Verify Bash with ShellCheck, shfmt, and `bash -n`. Exercise behavior through the existing repository test owner when the contract requires it.
 
 ## Placement and names
+
+<!-- level: all -->
 
 - Tests live under `tests/` or beside the unit they test. The directory is `tests/`, never `__tests__`, `test/`, or `spec/`.
 - Support code (builders, fakes, servers, database helpers) lives under `tests/support/`. No `mocks/`, `helpers/`, or `utils/` directory exists.

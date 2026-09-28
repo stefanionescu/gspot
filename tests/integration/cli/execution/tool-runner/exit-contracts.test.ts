@@ -1,12 +1,12 @@
 import { join } from 'node:path';
 import { stringify } from 'smol-toml';
 import { expect, test } from 'bun:test';
-import { planRun } from '#cli/execution/planning/plan.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { openSession } from '#cli/execution/session.ts';
-import { resolveCheck } from '#cli/execution/engines.ts';
+import { planRun } from '#cli/execution/planning/plan.ts';
+import { checkExecution } from '#cli/execution/engines.ts';
 import { containing } from '#tests/support/expectations.ts';
-import { runToolCheck } from '#cli/execution/tool-runner.ts';
+import { runToolCheck } from '#cli/execution/tool/runner.ts';
 import { chmodSync, existsSync, statSync, writeFileSync } from 'node:fs';
 
 test.each(['{file}', '{files}'])(
@@ -55,7 +55,7 @@ test.each(['{file}', '{files}'])(
     },
 );
 
-test.each([0, 1, 3])(
+test.each([0, 1, 3] as const)(
     'Actionlint removes its prepared project after adapter exit %i without changing source permissions',
     async (code) => {
         await using sandbox = await testdir();
@@ -73,8 +73,8 @@ test.each([0, 1, 3])(
         const plans = await planRun(session, { stage: 'commit', skips: [], only: ['configs/actions'] });
         const planned = plans[0]!;
         planned.tool = { ...planned.tool!, name: executable };
-        const result = await resolveCheck(planned.spec)(session, planned);
-        expect(result.status, JSON.stringify(result)).toBe(code === 0 ? 'ok' : code === 1 ? 'fail' : 'error');
+        const result = await checkExecution(planned.spec)(session, planned);
+        expect(result.status, JSON.stringify(result)).toBe(({ 0: 'ok', 1: 'fail', 3: 'error' } as const)[code]);
         const workspace = await Bun.file(record).text();
         expect(workspace).not.toBe(sandbox.path);
         expect(existsSync(workspace)).toBe(false);

@@ -156,4 +156,4 @@ default = []
 summary = "URL patterns lychee skips, each with a reason."
 
 [rule_files]
-general = ["general/prose/DOCS.md", "general/prose/DOCS-FORMAT.md", "general/prose/DOCS-CONTENT.md", "general/prose/DOCS-MEDIA.md", "general/prose/DOCS-SURFACES.md", "general/prose/DOCS-REVIEW.md", "general/prose/WRITING.md", "general/code/COMMENTS.md"]
+general = [{path = "general/prose/DOCS.md"}, {path = "general/prose/DOCS-FORMAT.md"}, {path = "general/prose/DOCS-CONTENT.md"}, {path = "general/prose/DOCS-MEDIA.md"}, {path = "general/prose/DOCS-SURFACES.md"}, {path = "general/prose/DOCS-REVIEW.md"}, {path = "general/prose/WRITING.md"}, {path = "general/code/COMMENTS.md"}]

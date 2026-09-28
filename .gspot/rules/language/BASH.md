@@ -18,6 +18,8 @@ and portability. Operations covers ownership, deployment, publishing, and CI.
 
 ## Core Bash philosophy
 
+<!-- level: all -->
+
 Rules:
 
 - Bash is glue code. Use it to orchestrate commands, not to build complex
@@ -26,14 +28,12 @@ Rules:
   failure behavior.
 - Treat every path, argument, environment value, command output, and user input
   as unsafe until quoted, validated, or parsed by a structured tool.
-- A script that quantizes models, builds engines, starts runtime services,
-  publishes artifacts, deletes artifacts, uploads models, or changes secrets
-  must be readable enough to audit line by line.
+- A script that builds, deploys, deletes, or publishes artifacts must make its
+  inputs, effects, and failure behavior explicit.
 - ShellCheck warnings are design feedback. Fix them unless there is a documented
   reason not to.
 - `set -euo pipefail` is not a substitute for checking dangerous commands.
-- Do not hide quantization, engine-build, publishing, runtime, or artifact
-  behavior in package scripts or CI YAML. Move non-trivial orchestration into a
+- Do not hide deployment or artifact lifecycle behavior in package scripts or CI YAML. Move non-trivial orchestration into a
   reviewed Bash script.
 - When writing shell orchestration, write Bash. Do not create another scripting
   language file as an escape hatch for shell work.
@@ -46,22 +46,19 @@ Good Bash:
 ```bash
 #!/usr/bin/env bash
 #
-# Validate the configured model before starting the runtime.
+# Count lines in a caller-selected readable file.
+# Runtime: Bash 3.2+, macOS and Linux.
 
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)" || exit 1
-readonly SCRIPT_DIR
-
-# fail - Prints a fatal error and exits.
-fail() {
-  printf 'error: %s\n' "$*" >&2
-  exit 1
-}
-
+# main - Validate the input and print its line count.
 main() {
-  [[ -n "${MODEL:-}" ]] || fail 'MODEL is required'
-  python -m src.scripts.validate
+  local input_file="${1:-}"
+  if [[ ! -f ${input_file} || ! -r ${input_file} ]]; then
+    printf 'error: a readable input file is required\n' >&2
+    return 1
+  fi
+  wc -l <"${input_file}"
 }
 
 main "$@"
@@ -69,24 +66,26 @@ main "$@"
 
 ## When to use Bash
 
+<!-- level: all -->
+
 Use Bash when the script mostly:
 
-- calls other command-line tools;
-- wires together install, lint, quantization, engine-build, runtime, publish,
-  or cleanup steps;
-- validates environment and then dispatches to project commands;
+- calls other command-line tools.
+- wires together installation, lint, build, runtime, publication,
+  or cleanup steps.
+- validates environment and then dispatches to project commands.
 - performs simple file movement, process checks, or retry loops.
 
 Do not use Bash for:
 
-- complex business logic;
-- complex text parsing;
+- complex business logic.
+- complex text parsing.
 - JSON, YAML, XML, or HTML transformations beyond simple extraction with a
-  dedicated parser;
-- large mutable data structures;
-- long-lived daemons;
-- high-performance work;
-- security-sensitive parsing of untrusted input;
+  dedicated parser.
+- large mutable data structures.
+- long-lived daemons.
+- high-performance work.
+- security-sensitive parsing of untrusted input.
 - behavior that needs typed contracts.
 
 Do not create non-Bash scripts as an escape hatch. A workflow that needs nested maps, large arrays,
@@ -99,9 +98,6 @@ Executable scripts:
 
 - Must start with a Bash shebang.
 - Must be executable and directly invoked.
-- Must own a `main` function and finish with `main "$@"`, except for
-  externally defined hook and task entrypoints whose manager owns the
-  invocation contract.
 - Must not be sourced by another repository script.
 
 Libraries:
@@ -117,12 +113,19 @@ Libraries:
   loading. Other libraries may only declare readonly owner constants, source
   direct dependencies, and define functions.
 
+### Entrypoint conventions
+
+<!-- level: all -->
+
+Executable scripts own a `main` function and finish with `main "$@"`, except for externally
+defined hook and task entrypoints whose manager owns invocation.
+
 Every file declares its runtime contract in the header:
 
 ```bash
 #!/usr/bin/env bash
 #
-# Start the configured inference server.
+# Start the configured application server.
 # Runtime: Bash 3.2+, Linux.
 ```
 
@@ -194,16 +197,16 @@ that option with an earlier declared minimum.
 
 Bash 3.2 lacks these features:
 
-- associative arrays;
-- `readarray` and `mapfile`;
-- `globstar`;
-- namerefs with `declare -n`;
-- `${var@Q}` and other newer parameter transformations;
-- `coproc`;
-- `BASH_XTRACEFD`;
-- `wait -n`;
-- `local -n`;
-- `shopt -s lastpipe`;
+- associative arrays.
+- `readarray` and `mapfile`.
+- `globstar`.
+- namerefs with `declare -n`.
+- `${var@Q}` and other newer parameter transformations.
+- `coproc`.
+- `BASH_XTRACEFD`.
+- `wait -n`.
+- `local -n`.
+- `shopt -s lastpipe`.
 - process-substitution behavior that has not been verified on the target OS.
 
 If a script requires a newer Bash:
@@ -252,15 +255,17 @@ Forbidden forms:
 Good:
 
 ```bash
-run() {
-  if [[ "${mode}" == 'publish' || "${mode}" == 'cleanup' ]]; then
-    count=$(( count + 1 ))
-    command >"${log_file}" 2>&1
-  fi
+# capture_output - Write both command streams to the caller-selected log file.
+capture_output() {
+  local log_file="${1:?Log file is required}"
+  shift
+  "$@" >"${log_file}" 2>&1
 }
 ```
 
 ## Script structure
+
+<!-- level: all -->
 
 Order files like this:
 
@@ -274,44 +279,24 @@ Order files like this:
 7. `main`.
 8. `main "$@"` as the last non-comment line for executable scripts.
 
-Example:
+Example for an installed Python package:
 
 ```bash
 #!/usr/bin/env bash
 #
-# Run one runtime pipeline step from the repository root.
+# Run one model pipeline step.
 
 set -euo pipefail
-
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)" || exit 1
-readonly SCRIPT_DIR
-
-REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)" || exit 1
-readonly REPO_ROOT
-
-source "${SCRIPT_DIR}/lib/log.sh"
-
-# require_model_dir - Validates that the model directory exists.
-# Arguments:
-#   Model directory path.
-# Returns:
-#   0 when the directory exists, non-zero otherwise.
-require_model_dir() {
-  local model_dir="$1"
-
-  [[ -d "${model_dir}" ]]
-}
 
 main() {
   local model_dir="${1:-}"
 
-  require_model_dir "${model_dir}" || {
+  if [[ ! -d "${model_dir}" ]]; then
     printf 'error: model directory is required\n' >&2
     return 1
-  }
+  fi
 
-  PYTHONPATH="${REPO_ROOT}/src:${REPO_ROOT}" python -m tests.cli \
-    --model-path "${model_dir}"
+  python -m model_runtime.cli --model-path "${model_dir}"
 }
 
 main "$@"
@@ -322,6 +307,9 @@ Rules:
 - Every `_`-prefixed function is defined above the first function without the prefix. A
   function sourced by another file has no prefix; a function used only in its own file has one.
   `main` is exempt.
+
+## Source execution
+
 - Do not put executable program flow between function definitions.
 - Do not mutate global state while loading a library unless that mutation is the
   documented purpose of the library.
@@ -450,20 +438,8 @@ after the first match can create false failures under `pipefail`.
 STDOUT is for script output that another command may consume. STDERR is for
 status, warnings, prompts, and errors.
 
-Use helpers:
-
-```bash
-# log - Prints an informational message to stderr.
-log() {
-  printf '%s\n' "$*" >&2
-}
-
-# fail - Prints a fatal error and exits.
-fail() {
-  printf 'error: %s\n' "$*" >&2
-  exit 1
-}
-```
+Write diagnostics with `printf` at the operation that owns the failure.
+Return or exit with the intended status; printing an error does not make a command fail.
 
 Rules:
 
@@ -485,7 +461,9 @@ Rules:
 Good:
 
 ```bash
-printf 'Running %s for %s\n' "${step_name}" "${model_variant}" >&2
+step_name="${1:?Step name is required}"
+target_name="${2:?Target name is required}"
+printf 'Running %s for %s\n' "${step_name}" "${target_name}" >&2
 ```
 
 Structured diagnostic:
@@ -538,19 +516,23 @@ EOF
 Good with expansion:
 
 ```bash
+step_name="${1:?Step name is required}"
+target_name="${2:?Target name is required}"
 cat <<EOF
-Running ${step_name} for ${model_variant}.
+Running ${step_name} for ${target_name}.
 EOF
 ```
 
 ## Comments and documentation
+
+<!-- level: all -->
 
 Every Bash file starts with a short file header after the shebang:
 
 ```bash
 #!/usr/bin/env bash
 #
-# Run runtime warmup for a configured model.
+# Prepare the configured application runtime.
 ```
 
 Every function requires a one-line header:
@@ -655,6 +637,8 @@ generate_results \
 ```
 
 ## Review checklist
+
+<!-- level: all -->
 
 Before you run the checks of the repository, read the change against these questions:
 

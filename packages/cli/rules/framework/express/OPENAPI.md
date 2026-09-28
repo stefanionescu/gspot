@@ -11,127 +11,53 @@ order, API style, and complexity apply at `all` or when the project explicitly o
 them. Correctness, security, accessibility, type safety, routine formatting, and declared
 project contracts apply at both levels.
 
-## Contracts, Zod, and OpenAPI
+## Public contracts
 
-Endpoint contracts are the public runtime boundary. They read like the
-API surface, not like a database row, or provider payload.
+When the project publishes OpenAPI, its document describes the runtime API.
+Express does not supply schema validation or OpenAPI generation itself.
 
-```ts
-export const FeatureBodySchema = z
-    .object({
-        resourceId: z.uuid().meta({
-            description: 'Resource identifier owned by the caller.',
-            example: '018f38a0-0000-7000-8000-000000000123',
-        }),
-        message: z.string().min(1).max(MAX_MESSAGE_LENGTH),
-    })
-    .strict()
-    .openapi('FeatureRequest');
+- Keep required fields, types, accepted media types, status codes, and security requirements
+  consistent between the document and the implementation.
+- Validate route parameters, query parameters, and request bodies before using their values.
+  Coercion follows the declared contract; it does not make arbitrary input valid.
+- Preserve the chosen schema library and generation owner. Do not add Zod or an OpenAPI adapter
+  solely because the application uses Express.
+- Keep request and response examples valid against their schemas.
+- Document error responses and nullable or optional values precisely.
+- Do not publish internal fields or secret examples.
 
-export const featureContract = {
-    operationId: 'featureAction',
-    method: 'post',
-    path: API_ROUTE_FEATURE,
-    request: {
-        body: FeatureBodySchema,
-    },
-} as const;
+This OpenAPI 3.1 fragment describes a query limit. Its bounds and default must also hold
+when the server handles the request:
+
+```yaml
+parameters:
+  - name: limit
+    in: query
+    required: false
+    schema:
+      type: integer
+      minimum: 1
+      maximum: 100
+      default: 50
 ```
 
-Query parameters arrive as strings. Use coercion in the contract, not ad hoc
-parsing in the listener.
+## Contract tests
 
-```ts
-export const ListItemsQuerySchema = z
-    .object({
-        resourceId: z.uuid(),
-        limit: z.coerce.number().int().min(1).max(100).default(50),
-        before_id: z.uuid().optional(),
-    })
-    .strict();
-```
+- Validate representative success and error responses against the published schemas.
+- Exercise invalid body, query, and route values through HTTP and assert their declared errors.
+- Verify authentication and authorization requirements for protected operations.
+- Test the public response. Assert its status and content type.
+- Keep generated schemas and their inputs synchronized through the existing generator.
 
-URL parameters get their own schema when the route has path parameters.
+An assertion that checks only selected response fields does not prove that the whole response
+satisfies its schema. Use the project's schema validator for that claim.
 
-```ts
-export const ResourceParamsSchema = z
-    .object({
-        resourceId: z.uuid(),
-    })
-    .strict();
-```
+## Contract organization
 
-Zod v4 rules:
+<!-- level: all -->
 
-- Use `z.email()` for email strings.
-- Use `z.uuid()` for UUIDs, or domain ID helpers from the project's shared identifier types when
-  they express the domain.
-- Use `z.guid()` only for GUID-shaped values an older system issued.
-- Use `z.coerce.number()` for query params that arrive as strings.
-- Use `z.preprocess()` for environment parsing.
-- Use `.strict()` on request bodies.
-- Use `.superRefine()` for cross-field validation.
-- Use `.meta()` for OpenAPI descriptions and examples.
-- Prefer Zod built-ins and vetted validators over custom regex.
-- Keep custom regex bounded, simple, anchored when appropriate, and away from large user-controlled strings.
-- Prefer contract-local schemas. Move a schema to the project's type roots or `openapi/common.ts` only when multiple endpoints genuinely share the same public shape.
-
-Unions are appropriate when the endpoint deliberately accepts distinct public
-request shapes.
-
-```ts
-export const orderRequestSchema = z
-    .union([newOrderSchema, existingDraftOrderSchema])
-    .openapi('OrderRequest', {
-        description: 'Provide either draftOrderId or accountId plus itemIds.',
-    });
-```
-
-Use cross-field validation when individual field schemas cannot express the
-contract.
-
-```ts
-function validateOrderSource(value: unknown, ctx: z.RefinementCtx): void {
-    const request = value as { draftOrderId?: string; accountId?: string; itemIds?: string[] };
-
-    const hasExisting = Boolean(request.draftOrderId);
-    const hasNew = Boolean(request.accountId && request.itemIds?.length);
-
-    if (hasExisting === hasNew) {
-        ctx.addIssue({
-            code: 'custom',
-            message: 'Provide either draftOrderId or accountId with itemIds',
-        });
-    }
-}
-```
-
-## OpenAPI and contract testing
-
-OpenAPI is generated from endpoint-local contracts. Tests catch drift
-between contract, middleware, implementation, and actual response envelopes.
-
-Rules:
-
-- Test representative success responses against the generated OpenAPI schema for public endpoints touched by the change.
-- Test representative error responses against the documented error envelope.
-- Test rejected invalid body, query, and params values at the HTTP boundary.
-- Keep contract tests focused on public shape, not private module structure.
-- Do not maintain separate hand-written Swagger test data.
-
-```ts
-const response = await request(app)
-    .post(API_ROUTE_ORDERS)
-    .set(authHeader(userId))
-    .send(validOrderBody)
-    .expect(200);
-
-expect(response.body).toMatchObject({
-    status: 'ok',
-    data: expect.objectContaining({
-        order: expect.objectContaining({
-            id: expect.any(String),
-        }),
-    }),
-});
-```
+- Keep endpoint-specific schemas with their endpoint owner.
+- Share a schema only when multiple endpoints have the same public contract.
+- Keep one source for each public contract. Avoid independently maintained copies in test data.
+- Use API-facing names instead of leaking provider or database names unless that is the declared
+  public interface.

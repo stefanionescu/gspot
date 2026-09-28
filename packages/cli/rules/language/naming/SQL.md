@@ -16,6 +16,8 @@ through migrations and contract-aware code changes.
 
 ## SQL case rules
 
+<!-- level: all -->
+
 Rules:
 
 - SQL schemas, tables, columns, functions, function parameters, indexes,
@@ -30,31 +32,17 @@ Rules:
 - Do not use quoted sentence-style identifiers for local policy names.
 - Do not use pluralization or prefixes inconsistently inside one schema.
 
-Bad:
+| Avoid                        | Prefer                           | Meaning                            |
+| ---------------------------- | -------------------------------- | ---------------------------------- |
+| `public.OrderItems`          | `public.order_items`             | An order-item table.               |
+| `users_can_view_order_items` | `users_can_view_own_order_items` | A policy restricted to owned rows. |
 
-```sql
-CREATE TABLE public.OrderItems (
-    user_id uuid NOT NULL,
-    created_at timestamptz NOT NULL
-);
-
-CREATE POLICY "users_can_view_order_items" ON public.OrderItems
-    FOR SELECT TO authenticated USING (true);
-```
-
-Good:
-
-```sql
-CREATE TABLE public.order_items (
-    user_id uuid NOT NULL,
-    created_at timestamptz NOT NULL
-);
-
-CREATE POLICY users_can_view_own_order_items ON public.order_items
-    FOR SELECT TO authenticated USING (user_id = (SELECT auth.uid()));
-```
+The policy name must describe its actual predicate. A name that says "own"
+does not establish ownership checks or enable Row Level Security.
 
 ## Migration filenames
+
+<!-- level: all -->
 
 Rules:
 
@@ -77,23 +65,15 @@ filenames only; function names follow the SQL Functions rules below.
 - `update_*` for durable data updates.
 - `delete_*` only for intentional durable data removals.
 
-Bad:
-
-```text
-20260101120000_add_stuff.sql
-20260101120000_CreateUsers.sql
-20260101120000_fix.sql
-```
-
-Good:
-
-```text
-20260101120000_create_order_items.sql
-20260101121500_alter_accounts_add_avatar_path.sql
-20260101123000_insert_default_notification_options.sql
-```
+| Avoid                            | Prefer                                                   | Meaning                  |
+| -------------------------------- | -------------------------------------------------------- | ------------------------ |
+| `20260101120000_add_stuff.sql`   | `20260101120000_create_order_items.sql`                  | Create order items.      |
+| `20260101121500_CreateUsers.sql` | `20260101121500_alter_accounts_add_avatar_path.sql`      | Alter an account shape.  |
+| `20260101123000_fix.sql`         | `20260101123000_insert_default_notification_options.sql` | Insert durable defaults. |
 
 ## SQL tables and columns
+
+<!-- level: all -->
 
 Rules:
 
@@ -106,30 +86,16 @@ Rules:
   prefix.
 - Avoid generic columns that hide meaning.
 
-Bad:
-
-```sql
-CREATE TABLE public.data (
-    id uuid PRIMARY KEY,
-    payload jsonb NOT NULL,
-    flag boolean NOT NULL,
-    date timestamptz NOT NULL
-);
-```
-
-Good:
-
-```sql
-CREATE TABLE public.message_delivery_attempts (
-    id uuid PRIMARY KEY,
-    message_id uuid NOT NULL REFERENCES public.messages (id),
-    provider_response jsonb NOT NULL,
-    retryable boolean NOT NULL,
-    attempted_at timestamptz NOT NULL
-);
-```
+| Avoid     | Prefer                      | Meaning                   |
+| --------- | --------------------------- | ------------------------- |
+| `data`    | `message_delivery_attempts` | Delivery attempt table.   |
+| `payload` | `provider_response`         | Response payload column.  |
+| `flag`    | `retryable`                 | Retry eligibility column. |
+| `date`    | `attempted_at`              | Attempt timestamp column. |
 
 ## SQL functions and parameters
+
+<!-- level: all -->
 
 Rules:
 
@@ -148,33 +114,14 @@ Rules:
   clear.
 - Do not name functions like arbitrary script tasks.
 
-Bad:
-
-```sql
-CREATE FUNCTION public.run(id uuid)
-RETURNS void
-LANGUAGE plpgsql
-AS $$
-BEGIN
-    ...
-END;
-$$;
-```
-
-Good:
-
-```sql
-CREATE FUNCTION public.archive_expired_orders(target_user_id uuid)
-RETURNS void
-LANGUAGE plpgsql
-AS $$
-BEGIN
-    ...
-END;
-$$;
-```
+Use `archive_expired_orders` for a transactional operation that archives
+expired orders. Name its user argument `target_user_id` when `user_id` is
+already a column in the affected tables. A generic `run` name hides the
+operation, and an unqualified `id` can obscure column ownership.
 
 ## Indexes, constraints, triggers, and policies
+
+<!-- level: all -->
 
 Rules:
 
@@ -185,36 +132,16 @@ Rules:
 - Keep names stable because they appear in migrations, errors, grants, and
   database inspection output.
 
-Bad:
-
-```sql
-CREATE INDEX idx1 ON public.messages (user_id);
-ALTER TABLE public.messages ADD CONSTRAINT check_status CHECK (status <> '');
-CREATE TRIGGER trigger1 BEFORE UPDATE ON public.messages EXECUTE FUNCTION public.update_updated_at();
-CREATE POLICY select_policy ON public.messages FOR SELECT USING (true);
-```
-
-Good:
-
-```sql
-CREATE INDEX messages_user_id_created_at_idx ON public.messages (user_id, created_at);
-
-ALTER TABLE public.messages
-    ADD CONSTRAINT messages_status_not_empty_check CHECK (status <> '');
-
-CREATE TRIGGER messages_set_updated_at
-    BEFORE UPDATE ON public.messages
-    FOR EACH ROW
-    EXECUTE FUNCTION public.set_updated_at();
-
-CREATE POLICY users_can_view_own_messages
-    ON public.messages
-    FOR SELECT
-    TO authenticated
-    USING (user_id = auth.uid());
-```
+| Avoid           | Prefer                            | Meaning                              |
+| --------------- | --------------------------------- | ------------------------------------ |
+| `idx1`          | `messages_user_id_created_at_idx` | Index on user and creation time.     |
+| `check_status`  | `messages_status_not_empty_check` | Nonempty status constraint.          |
+| `trigger1`      | `messages_set_updated_at`         | Update timestamp trigger.            |
+| `select_policy` | `users_can_view_own_messages`     | Policy restricted to owned messages. |
 
 ## Storage names
+
+<!-- level: all -->
 
 Rules:
 
@@ -225,18 +152,8 @@ Rules:
   object keys.
 - Do not use display text as storage identity.
 
-Bad:
-
-```text
-Profile Pictures
-avatars/john@example.com/avatar image.png
-uploads/latest
-```
-
-Good:
-
-```text
-avatar_images
-avatars/user_01hxx8j2r6/profile.png
-reports/report_01hxx8j2r6/export.pdf
-```
+| Avoid                                       | Prefer                                 | Meaning                              |
+| ------------------------------------------- | -------------------------------------- | ------------------------------------ |
+| `Profile Pictures`                          | `avatar_images`                        | A bucket.                            |
+| `avatars/john@example.com/avatar image.png` | `avatars/user_01hxx8j2r6/profile.png`  | Object key without personal content. |
+| `uploads/latest`                            | `reports/report_01hxx8j2r6/export.pdf` | A key tied to a specific report.     |

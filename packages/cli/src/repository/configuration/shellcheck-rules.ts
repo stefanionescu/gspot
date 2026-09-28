@@ -6,7 +6,7 @@ function isRuleKey(key: string): key is keyof Rules {
     return key === 'enable' || key === 'disable';
 }
 
-// Where a quoted value ends, refusing an unterminated or empty quote.
+// Finds the end of a quoted value. Refuses unterminated or empty quotes.
 function quotedEnd(text: string, quote: string, lineNumber: number): number {
     const end = text.indexOf(quote, 1);
     if (end === -1) throw new Error(`Unterminated ShellCheck quote on line ${String(lineNumber)}.`);
@@ -42,18 +42,14 @@ function isDisableEntry(entry: string): boolean {
     return codes.length <= 2 && codes.every((code) => RULE_CODE.test(code));
 }
 
-// A disable entry with every code in ShellCheck's canonical SC form.
-function canonicalCodes(entry: string): string {
-    return entry.replaceAll(/(?:SC)?(\d+)/gu, (_, code: string) => `SC${String(Number(code))}`);
-}
-
 // The entries of a rule list, checked against the form the key accepts.
 function ruleEntries(key: keyof Rules, value: string, lineNumber: number): string[] {
     const entries = value === '' ? [] : value.split(',');
-    const isValid = key === 'enable' ? (entry: string) => RULE_NAME.test(entry) : isDisableEntry;
-    if (!entries.every((entry) => isValid(entry)))
+    if (!entries.every((entry) => (key === 'enable' ? RULE_NAME.test(entry) : isDisableEntry(entry))))
         throw new Error(`Invalid ShellCheck ${key} list on line ${String(lineNumber)}.`);
-    return key === 'disable' ? entries.map((entry) => canonicalCodes(entry)) : entries;
+    return key === 'disable'
+        ? entries.map((entry) => entry.replaceAll(/(?:SC)?(\d+)/gu, (_, code: string) => `SC${String(Number(code))}`))
+        : entries;
 }
 
 /**

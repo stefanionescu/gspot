@@ -5,11 +5,11 @@ import { createFileTree, testdir } from 'testdirs';
 // Planted repository for the xcode configuration: a project with a source in no target, a catalog with a hole, and a plist that opens the network.
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
+import type { FindingCase } from '#tests/types/cli.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import type { Finding } from '#cli/types/checks/checks.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
-import type { FindingCase } from '#tests/types/support/cli.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
 import { containing, containingAll } from '#tests/support/expectations.ts';
 import { install, installAtLevel, toolsPath } from '#tests/support/cli/tools.ts';
 import { XCODE_INIT } from '#tests/constants/acceptance/source/configurations/init-arguments.ts';
@@ -21,23 +21,27 @@ const STRINGS_FILE = (german: string): string =>
     `{\n    "sourceLanguage": "en",\n    "strings": {\n        "hello": { "localizations": { "de": {}, "en": {} } },\n        "bye": { "localizations": { ${german}"en": {} } }\n    },\n    "version": "1.0"\n}\n`;
 const ENTITLED = plist('    <key>com.apple.developer.healthkit</key>\n    <true/>\n');
 
-const CASES: FindingCase[] = [
+const CASES: (FindingCase & { corrected: Record<string, string> })[] = [
     {
+        corrected: {},
         check: 'xcode/plist',
         files: { 'App/Info.plist': '<plist><dict><key>broken</dict></plist>\n' },
         expected: { file: 'App/Info.plist' },
     },
     {
+        corrected: {},
         check: 'xcode/xcconfig',
         files: { 'App/Base.xcconfig': 'SWIFT_VERSION = 5.9\nthis line means nothing\n' },
         expected: { file: 'App/Base.xcconfig', rule: 'xcconfig-line', line: 2 },
     },
     {
+        corrected: {},
         check: 'xcode/xcstrings',
         files: { 'App/Localizable.xcstrings': STRINGS_FILE('') },
         expected: { file: 'App/Localizable.xcstrings', rule: 'missing-translation', line: 1 },
     },
     {
+        corrected: {},
         check: 'xcode/asset-catalogs',
         files: {},
         removed: ['App/Assets.xcassets/Logo.imageset/logo.png'],
@@ -47,6 +51,10 @@ const CASES: FindingCase[] = [
         check: 'xcode/asset-catalogs',
         files: { 'App/Assets.xcassets/Unused.colorset/Contents.json': '{\n    "colors": []\n}\n' },
         expected: { file: 'App/Assets.xcassets/Unused.colorset/Contents.json', rule: 'orphan-asset', line: 1 },
+        corrected: {
+            'App/Assets.xcassets/Unused.colorset/Contents.json': '{\n    "colors": []\n}\n',
+            'App/Home.swift': HOME + '\nlet accent = Color("Unused")\n',
+        },
     },
     {
         check: 'xcode/test-plan',
@@ -54,13 +62,27 @@ const CASES: FindingCase[] = [
             'App.xcodeproj/project.pbxproj': XCODE_PROJECT.replace('name = AppTests;', () => 'name = OtherTests;'),
         },
         expected: { file: 'App.xcodeproj/project.pbxproj', rule: 'target-plan', line: 1 },
+        corrected: {
+            'App.xcodeproj/project.pbxproj': XCODE_PROJECT.replace('name = AppTests;', 'name = OtherTests;'),
+            'App.xctestplan': PLAN.replace('AppTests', 'OtherTests'),
+        },
     },
     {
         check: 'xcode/orphan-sources',
         files: { 'App/Extra.swift': 'let extra = 1\n' },
         expected: { file: 'App/Extra.swift', rule: 'no-target', line: 1 },
+        corrected: {
+            'App/Extra.swift': 'let extra = 1\n',
+            'App.xcodeproj/project.pbxproj': XCODE_PROJECT.replace('children = (A1,);', 'children = (A1, A2,);')
+                .replace('files = (B1,);', 'files = (B1, B2,);')
+                .replace(
+                    'objects = {',
+                    'objects = {\nA2 = {isa = PBXFileReference; path = Extra.swift; sourceTree = "<group>"; };\nB2 = {isa = PBXBuildFile; fileRef = A2; };',
+                ),
+        },
     },
     {
+        corrected: {},
         check: 'xcode/orphan-sources',
         files: {},
         removed: ['App/Home.swift'],
@@ -71,6 +93,9 @@ const CASES: FindingCase[] = [
         files: { 'App/App.entitlements': ENTITLED },
         policyEdit: ['[tools.xcode]\n', '[tools.xcode]\nentitlements_allowed = ["aps-environment"]\n'],
         expected: { file: 'App/App.entitlements', rule: 'entitlement', line: 5 },
+        corrected: {
+            'App/App.entitlements': plist('    <key>aps-environment</key>\n    <string>development</string>\n'),
+        },
     },
     {
         check: 'xcode/ats',
@@ -80,6 +105,11 @@ const CASES: FindingCase[] = [
             ),
         },
         expected: { file: 'App/Info.plist', rule: 'arbitrary-loads', line: 7 },
+        corrected: {
+            'App/Info.plist': plist(
+                '    <key>NSAppTransportSecurity</key>\n    <dict>\n        <key>NSAllowsArbitraryLoads</key>\n        <false/>\n    </dict>\n',
+            ),
+        },
     },
 ];
 
@@ -122,38 +152,15 @@ describe('the xcode configuration', () => {
             const failed = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
             // The plist check needs the macOS plutil, so it is skipped elsewhere and the run passes.
             const isSkipped = planted.check === 'xcode/plist' && process.platform !== 'darwin';
-            const withExpected: Finding[] = containingAll([containing(planted.expected)]);
+            const expectedFindings: Finding[] = containingAll([containing(planted.expected)]);
             expect(outcome.code, outcome.stdout + outcome.stderr).toBe(isSkipped ? 0 : 1);
             expect(failed.checks).toMatchObject([{ check: planted.check, status: isSkipped ? 'skipped' : 'fail' }]);
-            expect(failed.checks[0]!.findings).toStrictEqual(isSkipped ? [] : withExpected);
-            const files: Record<string, string> = {};
-            if (planted.expected.rule === 'orphan-asset') {
-                Object.assign(files, planted.files);
-                files['App/Home.swift'] = HOME + '\nlet accent = Color("Unused")\n';
-            }
-            if (planted.expected.rule === 'no-target') {
-                Object.assign(files, planted.files);
-                files['App.xcodeproj/project.pbxproj'] = XCODE_PROJECT.replace(
-                    'children = (A1,);',
-                    'children = (A1, A2,);',
-                )
-                    .replace('files = (B1,);', 'files = (B1, B2,);')
-                    .replace(
-                        'objects = {',
-                        'objects = {\nA2 = {isa = PBXFileReference; path = Extra.swift; sourceTree = "<group>"; };\nB2 = {isa = PBXBuildFile; fileRef = A2; };',
-                    );
-            }
-            if (planted.expected.rule === 'target-plan') {
-                Object.assign(files, planted.files);
-                files['App.xctestplan'] = PLAN.replace('AppTests', 'OtherTests');
-            }
-            if (planted.expected.rule === 'entitlement')
-                files['App/App.entitlements'] = plist(
-                    '    <key>aps-environment</key>\n    <string>development</string>\n',
-                );
-            if (planted.expected.rule === 'arbitrary-loads')
-                files['App/Info.plist'] = planted.files['App/Info.plist']!.replace('<true/>', '<false/>');
-            const corrected = await runPlanted(sandbox.path, { ...planted, files, removed: [] }, environment);
+            expect(failed.checks[0]!.findings).toStrictEqual(isSkipped ? [] : expectedFindings);
+            const corrected = await runPlanted(
+                sandbox.path,
+                { ...planted, files: planted.corrected, removed: [] },
+                environment,
+            );
             expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
             const accepted = reportSchema.parse(
                 await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json(),

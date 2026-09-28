@@ -6,9 +6,9 @@ import { DECLARATIONS } from '#plugin/constants/rules.ts';
 function nameOf(statement: TSESTree.Statement): string {
     const declaration = statement.type === AST_NODE_TYPES.ExportNamedDeclaration ? statement.declaration : statement;
     if (!declaration) return 'this export';
-    if ('id' in declaration && declaration.id?.type === AST_NODE_TYPES.Identifier) return declaration.id.name;
-    const first = declaration.type === AST_NODE_TYPES.VariableDeclaration ? declaration.declarations[0] : undefined;
-    return first?.id.type === AST_NODE_TYPES.Identifier ? first.id.name : 'this declaration';
+    const named = declaration.type === AST_NODE_TYPES.VariableDeclaration ? declaration.declarations[0] : declaration;
+    if ('id' in named && named.id?.type === AST_NODE_TYPES.Identifier) return named.id.name;
+    return 'this declaration';
 }
 
 function isExport(statement: TSESTree.Statement): boolean {
@@ -16,8 +16,9 @@ function isExport(statement: TSESTree.Statement): boolean {
     return statement.type === AST_NODE_TYPES.ExportNamedDeclaration && statement.declaration !== null;
 }
 
-function isRequireDeclaration(statement: TSESTree.Statement): boolean {
-    return (
+function isPrivateDeclaration(statement: TSESTree.Statement): boolean {
+    if (!DECLARATIONS.has(statement.type) || (statement as { declare?: boolean }).declare === true) return false;
+    return !(
         statement.type === AST_NODE_TYPES.VariableDeclaration &&
         statement.declarations.every(
             (declarator) =>
@@ -26,11 +27,6 @@ function isRequireDeclaration(statement: TSESTree.Statement): boolean {
                 declarator.init.callee.name === 'require',
         )
     );
-}
-
-function isPrivateDeclaration(statement: TSESTree.Statement): boolean {
-    if (!DECLARATIONS.has(statement.type) || (statement as { declare?: boolean }).declare === true) return false;
-    return !isRequireDeclaration(statement);
 }
 
 export const privateBeforePublic = createRule<[], 'order'>({

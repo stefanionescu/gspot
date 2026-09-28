@@ -64,14 +64,9 @@ function repositoryCandidates(root: string, directories: string[], names: string
 // The executables of the name on PATH and among mise's shims.
 function hostCandidates(name: string, names: string[]): string[] {
     const onPath = Bun.which(name);
-    const shims = join(miseRoot(), 'shims');
-    const found = names.map((file) => join(shims, file)).filter((path) => existsOnDisk(path));
+    const launcherDirectory = join(miseRoot(), 'shims');
+    const found = names.map((file) => join(launcherDirectory, file)).filter((path) => existsOnDisk(path));
     return onPath === null ? found : [onPath, ...found];
-}
-
-// The real folder an executable lives in, read through the confined root when the path is managed.
-function executableFolder(files: ConfinedRoot | undefined, root: string, path: string): string {
-    return dirname(files === undefined ? realpathSync(path) : files.source(localPath(root, path)));
 }
 
 // The parsed package.json at a path, or undefined when there is none or it lies outside the managed tree.
@@ -95,11 +90,11 @@ function versionAbove(files: ConfinedRoot | undefined, root: string, start: stri
 
 /**
  * Every executable of the name, in the order gspot prefers them.
- * @param root the repository root
- * @param roots the folders whose bin directories are searched, for a host tool
- * @param name the executable name
- * @param privateKind the private installation the tool belongs to, which restricts the search to it
- * @returns the paths that exist
+ * @param root the repository root.
+ * @param roots the folders whose bin directories are searched, for a host tool.
+ * @param name the executable name.
+ * @param privateKind the private installation the tool belongs to, which restricts the search to it.
+ * @returns the paths that exist.
  */
 export function locateCandidates(root: string, roots: string[], name: string, privateKind?: PrivateKind): string[] {
     const names = IS_WINDOWS ? [`${name}.cmd`, `${name}.exe`, name] : [name];
@@ -110,16 +105,21 @@ export function locateCandidates(root: string, roots: string[], name: string, pr
 
 /**
  * The version a package.json above the real file of an npm tool holds, for the package the pin names.
- * @param root the repository root
- * @param path the executable
- * @param name the package name, or undefined when the tool is not an npm package
- * @returns the declared version, or undefined when no package.json above the file names the package
+ * @param root the repository root.
+ * @param path the executable.
+ * @param name the package name, or undefined when the tool is not an npm package.
+ * @returns the declared version, or undefined when no package.json above the file names the package.
  */
 export function packageVersion(root: string, path: string, name: string | undefined): string | undefined {
     if (name === undefined) return undefined;
     const files = localPath(root, path).startsWith(MANAGED_PREFIX) ? openConfinedRoot(root) : undefined;
     try {
-        return versionAbove(files, root, executableFolder(files, root, path), name);
+        return versionAbove(
+            files,
+            root,
+            dirname(files === undefined ? realpathSync(path) : files.source(localPath(root, path))),
+            name,
+        );
     } finally {
         files?.close();
     }

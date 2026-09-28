@@ -4,12 +4,12 @@ import { createFileTree, testdir } from 'testdirs';
 // Planted repository for the docker configuration: a careless Dockerfile, a missing ignore file, and a container that runs as root.
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
+import type { FindingCase } from '#tests/types/cli.ts';
 import { reportSchema } from '#cli/execution/report.ts';
-import type { FindingCase } from '#tests/types/support/cli.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
+import { runPlanted } from '#tests/support/cli/planted.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
 import { installAtLevel, toolsPath } from '#tests/support/cli/tools.ts';
 import { containing, textContaining } from '#tests/support/expectations.ts';
-import { expectCorrected, runPlanted } from '#tests/support/cli/planted.ts';
 import { DOCKER_INIT } from '#tests/constants/acceptance/source/configurations/init-arguments.ts';
 import { CARELESS, DOCKER_CLEAN, IGNORES } from '#tests/constants/acceptance/source/configurations/configurations.ts';
 
@@ -65,7 +65,15 @@ describe('the docker configuration', () => {
                     'worker/Dockerfile': DOCKER_CLEAN,
                     'worker/.dockerignore': IGNORES,
                 });
-            await expectCorrected(sandbox.path, planted.check, environment);
+            const correctedCheck = await run(
+                sandbox.path,
+                ['check', '--only', planted.check, '--no-cache', '--json'],
+                environment,
+            );
+            expect(correctedCheck.code, correctedCheck.stdout + correctedCheck.stderr).toBe(0);
+            expect(reportSchema.parse(JSON.parse(correctedCheck.stdout)).checks).toMatchObject([
+                { check: planted.check, status: 'ok', findings: [] },
+            ]);
             const checked = await run(sandbox.path, ['check', '--stage', 'push', '--json'], environment);
             const atPush = JSON.parse(checked.stdout) as {
                 checks: { check: string }[];

@@ -1,7 +1,8 @@
 import { scopeOf } from '#cli/repository/scopes.ts';
+import { roleFolders } from '#cli/policy/settings.ts';
 import { readSource } from '#cli/repository/tracked.ts';
+import { CASE_NAMES } from '#cli/checks/naming/cases.ts';
 import { isClaimed } from '#cli/configurations/claims.ts';
-import { isKnownCase } from '#cli/checks/naming/cases.ts';
 import type { CheckSpec } from '#cli/types/configurations.ts';
 import { identifiersOf } from '#cli/checks/naming/extract.ts';
 import { isInScope, pathMatcher } from '#cli/repository/paths.ts';
@@ -54,10 +55,16 @@ async function identifierFindings(input: EngineInput, policy: EffectivePolicy): 
 }
 
 function pathIdentifiers(input: EngineInput): Identifier[] {
+    const harnesses = new Set(
+        roleFolders(input.selection.selected, input.view.settings, 'harness').map((folder) =>
+            [input.scope, folder].filter(Boolean).join('/'),
+        ),
+    );
     const seen = new Set<string>();
     return sourceFiles(input).flatMap(({ file, language }) => {
         const all = [fileIdentifier(file.path, language), ...directoryIdentifiers(file.path, language)];
         return all.filter((identifier) => {
+            if (identifier.directory !== undefined && harnesses.has(identifier.directory)) return false;
             const key = JSON.stringify([identifier.directory ?? identifier.file, identifier.language, identifier.name]);
             if (seen.has(key)) return false;
             seen.add(key);
@@ -66,9 +73,7 @@ function pathIdentifiers(input: EngineInput): Identifier[] {
     });
 }
 
-// A declaration applies throughout its subtree, including children with another selected language.
-// Validate each authored layer once against the complete snapshot, not the changed-file partition.
-async function schemaFindings(input: EngineInput): Promise<Finding[]> {
+async function scopeIdentifiers(input: EngineInput): Promise<{ path: string; names: string[] }[]> {
     const policy = input.policyFiles.policy;
     const selections = new Map(
         input.scopeEntries.map((scope) => [
@@ -96,6 +101,13 @@ async function schemaFindings(input: EngineInput): Promise<Finding[]> {
             ),
         });
     }
+    return observed;
+}
+
+// Validate each authored layer once against the complete snapshot, including nested scopes.
+async function schemaFindings(input: EngineInput): Promise<Finding[]> {
+    const policy = input.policyFiles.policy;
+    const observed = await scopeIdentifiers(input);
     const removable = new Set(
         Object.entries(shippedPolicy().groups)
             .filter(([, group]) => group.removable)
@@ -118,7 +130,7 @@ async function schemaFindings(input: EngineInput): Promise<Finding[]> {
             .map((rule) => `A [[naming.rules]] entry matches no file: ${rule.paths.join(', ')}.`);
         const cases = naming.rules
             .flatMap((rule) => rule.case ?? [])
-            .filter((name) => !isKnownCase(name))
+            .filter((name) => !CASE_NAMES.includes(name))
             .map(
                 (name) =>
                     `A [[naming.rules]] entry names the case "${name}", which is not one of camel, pascal, pascal-plus, kebab, snake, upper-snake or snake-migration.`,
@@ -126,10 +138,10 @@ async function schemaFindings(input: EngineInput): Promise<Finding[]> {
         const groups = naming.remove_groups
             .filter((entry) => !removable.has(entry.group))
             .map((entry) => `naming.remove_groups names "${entry.group}", which is not a removable group.`);
-        return [...unused, ...dead, ...groups, ...cases].map((message) => ({
+        return [...unused, ...dead, ...groups, ...cases].map((text) => ({
             check: input.spec.name,
             file: 'gspot.toml',
-            message: scope === '' ? message : `${message} (scope ${scope})`,
+            message: scope === '' ? text : `${text} (scope ${scope})`,
             fixable: false,
         }));
     });
@@ -147,7 +159,7 @@ const ANALYSES: Record<string, (input: EngineInput, policy: EffectivePolicy) => 
  * @param spec the check
  * @returns the engine that runs the analysis
  */
-export function resolveNaming(spec: CheckSpec): Engine {
+export function namingEngine(spec: CheckSpec): Engine {
     const analysis = ANALYSES[spec.analysis ?? ''];
     if (analysis === undefined) throw new Error(`No naming analysis is called ${spec.analysis ?? ''}.`);
     return (input) => {

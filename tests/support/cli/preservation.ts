@@ -1,5 +1,5 @@
 import { dirname, join } from 'node:path';
-import type { OriginalFile, PlantedInput } from '#tests/types/support/cli.ts';
+import type { OriginalFile, PlantedInput } from '#tests/types/cli.ts';
 
 import {
     chmodSync,
@@ -125,11 +125,9 @@ export function treeContents(root: string): Record<string, string> {
             const path = String(entry);
             const full = join(root, path);
             const attributes = lstatSync(full);
-            const bytes = attributes.isSymbolicLink()
-                ? `symlink:${readlinkSync(full)}`
-                : attributes.isFile()
-                  ? `file:${readFileSync(full).toString('base64')}`
-                  : 'directory';
+            let bytes = 'directory';
+            if (attributes.isSymbolicLink()) bytes = `symlink:${readlinkSync(full)}`;
+            else if (attributes.isFile()) bytes = `file:${readFileSync(full).toString('base64')}`;
             return [path, `${String(attributes.mode)}:${bytes}`];
         }),
     );

@@ -68,4 +68,4 @@ default = []
 summary = "Paths the duplication check skips, each with a reason."
 
 [rule_files]
-agent = ["general/agent/WORKING.md"]
+agent = [{path = "general/agent/WORKING.md"}]

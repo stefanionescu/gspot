@@ -1,7 +1,7 @@
 import { statSync } from 'node:fs';
 import { join, posix } from 'node:path';
 import { readSource } from '#cli/repository/tracked.ts';
-import { runCheckCommand } from '#cli/execution/tool-runner.ts';
+import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import { supabaseFinding } from '#cli/checks/supabase/project.ts';
 import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 

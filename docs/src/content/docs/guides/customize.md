@@ -58,7 +58,7 @@ The check must be a known shipped check or a declared repository check. The exam
 named paths. A whole-check exception omits `--rule`. With `require_reasons = true`, missing
 reasons and unexplained weakening changes are refused.
 
-Remove the matching exception when it is no longer needed:
+Remove the matching exception after repairing its cause:
 
 ```bash
 gspot ignore typescript/eslint --rule no-console --paths "scripts/**" --remove

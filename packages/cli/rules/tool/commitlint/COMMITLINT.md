@@ -11,15 +11,19 @@ order, API style, and complexity apply at `all` or when the project explicitly o
 them. Correctness, security, accessibility, type safety, routine formatting, and declared
 project contracts apply at both levels.
 
-The format of every commit message in the repository.
+## Commit format
+
+<!-- level: all -->
+
+Follow the repository's declared commit-message policy.
 
 - Format: `<type>(<scope>): <subject>`, then a blank line, then the body, then footers.
-- Types: `feat`, `fix`, `refactor`, `perf`, `docs`, `test`, `build`, `ci`, `chore`. No other
-  type.
+- Use a type the repository allows. Common types include `feat`, `fix`, `refactor`, `perf`,
+  `docs`, `test`, `build`, `ci`, and `chore`.
 - The scope is required when the repository declares scopes and is one of them. It names the
   area changed, not the file.
-- The subject is an imperative sentence in sentence case, under 72 characters, with no trailing
-  period, no ticket number, and no emoji.
+- The subject is an imperative sentence with no trailing period, ticket number, or emoji.
+  Keep the complete header, including type and scope, within the configured length limit.
 - The body explains what changed and why, wrapped at 72 columns. It does not narrate the diff or
   list files.
 - Footers: `Refs: #123`, `Closes: #123`, `BREAKING CHANGE: <sentence>`. A breaking change also

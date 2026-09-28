@@ -5,7 +5,7 @@ import { readSource } from '#cli/repository/tracked.ts';
 import type { CloneReport } from '#cli/types/checks/docs.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { FULL_PERCENTAGE } from '#cli/constants/checks/jest.ts';
-import { runCheckCommand } from '#cli/execution/tool-runner.ts';
+import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import { mkdtempSync, rmSync, writeFileSync, statSync } from 'node:fs';
 import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 import { isAbsolute, join, relative, toNamespacedPath } from 'node:path';
@@ -31,13 +31,13 @@ export const cloneReportSchema = z.object({
 
 /**
  * The findings of a jscpd report: none while the duplicated share is at or under the ceiling, then one for each clone in a claimed file.
- * @param report the parsed report
- * @param shape the check id, the repository root, the ceiling out of 100, and the claimed paths
- * @param shape.check the check id
- * @param shape.root the repository root
- * @param shape.ceiling the largest duplicated share accepted, out of 100
- * @param shape.claimed the paths the check claims
- * @returns the findings
+ * @param report the parsed report.
+ * @param shape the check id, the repository root, the ceiling out of 100, and the claimed paths.
+ * @param shape.check the check id.
+ * @param shape.root the repository root.
+ * @param shape.ceiling the largest duplicated share accepted, out of 100.
+ * @param shape.claimed the paths the check claims.
+ * @returns the findings.
  */
 export function cloneFindings(
     report: CloneReport,

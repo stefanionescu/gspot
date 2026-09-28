@@ -18,3 +18,8 @@ export const CERTIFICATE_ARGUMENTS = [
     '1',
 ];
 export const LOCAL_NAMES = new Set(['localhost', 'unix']);
+
+export const HOST_PATTERNS = new Map([
+    ['proxy_pass', /^https?:\/\/([A-Za-z][\w.-]*)/u],
+    ['server', /^([A-Za-z][\w.-]*)/u],
+]);

@@ -40,13 +40,13 @@ github = {name = "github/codeql-cli-binaries", version = "v2.24.3"}
 query_packs = {actions = "0.6.21", cpp = "1.5.12", csharp = "1.6.3", go = "1.5.7", java = "1.10.8", javascript = "2.3.3", python = "1.7.8", ruby = "1.5.8", rust = "0.1.28", swift = "1.2.17"}
 
 [[configs]]
-template = "semgrep-node.yml.tmpl"
+template = "semgrep/node.yml.tmpl"
 target = ".gspot/config/semgrep/node.yml"
 rules_path = ["rules"]
 per_scope = true
 
 [[configs]]
-template = "semgrep-secrets.yml.tmpl"
+template = "semgrep/secrets.yml.tmpl"
 target = ".gspot/config/semgrep/secrets.yml"
 rules_path = ["rules"]
 per_scope = true
@@ -150,4 +150,4 @@ default = []
 summary = "Paths Semgrep never scans, each with a reason; they are written into .semgrepignore."
 
 [rule_files]
-code = ["general/code/SECURITY.md", "general/code/SECRETS.md"]
+code = [{path = "general/code/SECURITY.md"}, {path = "general/code/SECRETS.md"}]

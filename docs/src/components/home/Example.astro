@@ -6,13 +6,13 @@ import example from './client-environment.json';
     <section aria-labelledby="client-defect">
         <p class="label">Before</p>
         <h3 id="client-defect">Read a private variable</h3>
-        <Code code={example.broken.trimEnd()} lang="js" title="search.js" />
+        <Code code={example.broken.trimEnd()} lang="js" title="search.js" wrap />
         <p>ESLint reports this private environment read at line 2, column 25.</p>
     </section>
     <section aria-labelledby="client-correction">
         <p class="label">After</p>
         <h3 id="client-correction">Call an API route</h3>
-        <Code code={example.corrected.trimEnd()} lang="js" title="search.js" />
+        <Code code={example.corrected.trimEnd()} lang="js" title="search.js" wrap />
         <p>This rule reports no finding. Implement the route on the server, where private configuration belongs.</p>
     </section>
 </div>
@@ -33,5 +33,5 @@ import example from './client-environment.json';
     details { margin-block: 24px; }
     details > p { margin-block: 16px; }
     details :global(.expressive-code) { margin-block: 20px; }
-    @media (max-width: 49.99rem) { .comparison { grid-template-columns: minmax(0, 1fr); gap: 24px; }.comparison section { padding: 20px; } }
+    @media (max-width: 49.99rem) { .comparison { grid-template-columns: minmax(0, 1fr); gap: 24px; }.comparison section { padding: 16px; } }
 </style>

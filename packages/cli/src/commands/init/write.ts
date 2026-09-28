@@ -2,19 +2,19 @@
 import { isDeepStrictEqual } from 'node:util';
 import { colors } from '#cli/output/messages.ts';
 import { PolicyError } from '#cli/policy/read.ts';
-import { emitAll } from '#cli/generation/render.ts';
-import { installTools } from '#cli/tools/install.ts';
+import { emitAll } from '#cli/generation/outputs.ts';
 import { InstallationError } from '#cli/tools/pins.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { MissingToolError } from '#cli/tools/inspect.ts';
-import type { FileSnapshot } from '#cli/types/platform.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
 import packageManifest from '#package' with { type: 'json' };
 import { isGitRepository } from '#cli/repository/tracked.ts';
+import type { FileObservation } from '#cli/types/platform.ts';
+import { installTools } from '#cli/tools/install/execution.ts';
 import type { Session } from '#cli/types/execution/execution.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/constants/platform.ts';
-import { withLifecycleOwner } from '#cli/lifecycle/ownership/owner.ts';
 import { gitignoreBlock } from '#cli/configurations/manifests.ts';
+import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import { INCOMPLETE_INSTALL_EXIT } from '#cli/constants/commands/init.ts';
 import type { LifecycleOwner, TakeoverRemovalResult } from '#cli/types/lifecycle/lifecycle.ts';
 import type { Installed, Written, InitOptions, InitPrepared } from '#cli/types/commands/init.ts';
@@ -24,9 +24,9 @@ const { version: GSPOT_VERSION } = packageManifest;
 function retireReplaced(
     root: string,
     removed: { path: string }[],
-    observed: ReadonlyMap<string, FileSnapshot>,
+    observed: ReadonlyMap<string, FileObservation>,
 ): TakeoverRemovalResult {
-    return withLifecycleOwner(root, (owner) => {
+    return runOwnedLifecycle(root, (owner) => {
         const result: TakeoverRemovalResult = { removed: [], preserved: [] };
         const proposals = [];
         for (const entry of removed) {
@@ -47,18 +47,18 @@ function retireReplaced(
     });
 }
 
-// Refuses to write when a configuration the takeover read has changed since the plan was made.
-function assertObservedUnchanged(owner: LifecycleOwner, observed: ReadonlyMap<string, FileSnapshot>): void {
+// Refuses to write when a configuration the takeover read has changed after the plan was made.
+function assertObservedUnchanged(owner: LifecycleOwner, observed: ReadonlyMap<string, FileObservation>): void {
     for (const [path, original] of observed)
         if (!isDeepStrictEqual(owner.read(path), original))
             throw new PolicyError([`Configuration changed after takeover was planned: ${path}. Run gspot init again.`]);
 }
 
 // The paths every generated output lands on.
-function generatedPaths(session: Session, takeover: ReadonlyMap<string, FileSnapshot>): Set<string> {
+function generatedPaths(session: Session, takeover: ReadonlyMap<string, FileObservation>): Set<string> {
     const outputs = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
         version: session.version,
-        packageManager: session.packageManager,
+        packageClient: session.packageClient,
         takeover,
     });
     const every = [...outputs.files, ...outputs.blocks, ...outputs.merges, ...outputs.configurations];
@@ -92,7 +92,7 @@ async function installed(session: Session, install: boolean): Promise<Installed>
  * @returns the lines to print, the installation note, and the exit code
  */
 export async function write(root: string, options: InitOptions, prepared: InitPrepared): Promise<Written> {
-    return withLifecycleOwner(root, async (owner) => {
+    return runOwnedLifecycle(root, async (owner) => {
         assertObservedUnchanged(owner, prepared.observed);
         const removedPaths = new Set(prepared.removed.map((entry) => entry.path));
         const takeover = new Map([...prepared.observed].filter(([path]) => removedPaths.has(path)));

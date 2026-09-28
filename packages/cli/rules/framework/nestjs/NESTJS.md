@@ -13,51 +13,53 @@ project contracts apply at both levels.
 
 These rules cover NestJS modules, controllers, providers, validation, configuration, and tests.
 
-## Modules
+## Request handling
 
-- One module holds one feature: its controllers, its providers, and nothing of another feature.
-- A module exports the providers other modules may use, and nothing else. Do not export a repository.
-- Two modules never import each other. Move what both need into a third module.
-- Do not use `forwardRef`. It hides a cycle that the module layout must remove.
-- Mark a module `@Global()` only for what every feature needs: configuration, logging, and the like.
-- Register a provider in one module. A provider listed in two modules is two instances.
+- Return handler values through Nest response handling. If a route owns the native response,
+  complete it explicitly. Use `@Res({ passthrough: true })` to set native headers or cookies
+  while retaining Nest response handling.
+- Ordinary `@Res()` handling bypasses response mapping and serialization of returned values.
+  It does not disable every interceptor callback.
+- Return the documented HTTP status. Do not report a failed operation as a successful response.
+- Validate body, query, and route parameters before using them. Configure `ValidationPipe`
+  transformation and unknown-field handling for the declared input contract.
+- Do not expose password hashes, tokens, or internal fields in responses.
 
-## Controllers
+## Providers and lifecycle
 
-- A controller turns a request into one call on a service and turns the result into a response.
-- A controller holds no business rule, no query, and no call to another service over the network.
-- A controller never injects a repository, a data source, or a database client.
-- Return the value from a handler. Do not take the response object with `@Res()`, because that turns off interceptors, serialization, and the return value.
-- Give every route its status code, and every route that changes state a guard.
-- Version the routes of a public interface from the first release.
-
-## Providers
-
-- A service depends on interfaces it can name, injected through the constructor as `private readonly`.
-- Do not build a dependency with `new` inside a provider. Inject it, so a test can replace it.
-- Keep the default singleton scope. A request-scoped provider makes everything that injects it request-scoped.
-- Throw an exception from the framework set, or one of your own with a filter. Never return an error object with a 200 status.
-- A provider that opens a connection or a timer implements `OnModuleDestroy` and closes it.
-
-## Validation and data
-
-- Every body, query, and parameter arrives through a data transfer object with validation decorators.
-- Turn on the global `ValidationPipe` with `whitelist`, `forbidNonWhitelisted`, and `transform`.
-- A data transfer object is not an entity. Map between the two in the service.
-- Never return an entity that holds a password hash, a token, or an internal flag. Return a response object.
-- Parse an id with `ParseUUIDPipe` or `ParseIntPipe` at the parameter, not inside the handler.
+- Register each provider with its intended owner. Repeated registration can create distinct instances.
+- Request-scoped dependencies propagate request scope to their consumers. Check lifetime and
+  resource costs before selecting that scope.
+- Close connections and timers through the application lifecycle, such as `OnModuleDestroy`.
 
 ## Configuration and security
 
-- Read the environment once, through a validated configuration module. Providers inject that, never `process.env`.
-- The application fails to start when a required variable is absent or malformed.
-- Guards decide who may call a route, and they run before pipes. Do not check permissions inside a handler.
-- Set a rate limit, security headers, and a body size limit at the application, before the first route ships.
-- Turn off stack traces and detailed validation messages in production responses.
+- Fail startup when required configuration is absent or malformed.
+- Use guards for route authorization. Enforce additional permissions at each protected operation
+  when one request performs several operations or the service has non-HTTP callers.
+- Guards run before pipes. Do not assume guard inputs have passed DTO transformation or validation.
+- Set request-size limits, security headers, and rate limits for the exposed application.
+- Keep stack traces and sensitive validation details out of production responses.
+
+## Feature organization
+
+<!-- level: all -->
+
+- Give each feature one module and export only providers consumed by other features.
+- Remove module dependency cycles instead of using `forwardRef` to retain them.
+- Keep controllers responsible for request and response handling. Put business operations in
+  services and persistence in its declared owner.
+- Inject dependencies through constructors instead of constructing them inside consumers.
+- Read environment configuration through a validated configuration owner.
+- Define the versioning contract before publishing a public API.
+- Keep request DTOs distinct from persistence entities and map between them explicitly.
 
 ## Tests
 
-- Unit test a service with its dependencies replaced through `Test.createTestingModule` and `overrideProvider`.
-- Test a controller through HTTP with the real pipes, guards, and filters, so the test sees what a client sees.
-- Do not mock the class under test, and do not assert on private methods.
-- Close the application in `afterAll`, so a test run leaves no open handle.
+- Use `Test.createTestingModule` and `overrideProvider` to isolate service dependencies.
+- Exercise HTTP behavior with the real pipes, guards, and filters.
+- Do not mock the class under test or assert on private methods.
+- Close test applications in teardown.
+
+See Nest's [response handling](https://docs.nestjs.com/controllers) and
+[authorization guidance](https://docs.nestjs.com/security/authorization).

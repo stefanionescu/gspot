@@ -18,17 +18,21 @@ rules are in the Python file.
 
 Rules:
 
-- Keep functions focused on one responsibility.
-- Prefer plain functions and explicit data flow before classes.
-- Name functions by action and domain concept.
-- Do not use `process`, `handle`, `run`, `execute`, or `do_work` when a more
-  precise action exists.
-- Use `handle` only for callbacks, framework boundaries, event handlers, or
-  signal handlers.
-- Keep side effects explicit in the name or docstring.
 - Do not hide I/O in helpers that look like pure transformations.
 
+### Function names
+
+<!-- level: all -->
+
+Keep functions focused on one responsibility. Prefer plain functions and explicit data flow
+before classes. Make side effects clear in the name or docstring.
+
+Name functions for their action and domain concept. Use framework callback names where required.
+Prefer a specific operation over vague verbs when the caller can understand that operation.
+
 ### Function size
+
+<!-- level: all -->
 
 Rules:
 
@@ -41,15 +45,26 @@ Rules:
 Good extraction for a nonnegative message limit:
 
 ```python
-def _trim_history_messages(
-    messages: Sequence[HistoryMessage],
-    max_messages: int,
-) -> list[HistoryMessage]:
+"""Select recent message text under a validated nonnegative limit."""
+
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+
+def trim_history_messages(messages: Sequence[str], max_messages: int) -> list[str]:
+    """Return at most the requested number of recent messages."""
     if max_messages == 0:
         return []
     if len(messages) <= max_messages:
         return list(messages)
     return list(messages[-max_messages:])
+
+
+__all__ = ["trim_history_messages"]
 ```
 
 ### Default arguments
@@ -69,18 +84,29 @@ Rules:
 Good:
 
 ```python
+"""Create an independently mutable collection from optional label input."""
+
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+
 def collect_labels(labels: Sequence[str] | None = None) -> list[str]:
+    """Return a new list containing the supplied labels, or an empty list."""
     if labels is None:
         labels = []
     return list(labels)
+
+
+__all__ = ["collect_labels"]
 ```
 
-Good formatting:
-
-```python
-def resize(width: int = 0, height: int = 0) -> None:
-    ...
-```
+Write an annotated default as `width: int = 0`; the annotation and assignment
+have their normal spacing. Do not publish an empty function solely to
+demonstrate signature formatting.
 
 ### Return statements
 
@@ -92,16 +118,13 @@ Rules:
 - Do not mix `return` and `return value` in the same function.
 - Do not rely on implicit `None` when an explicit no-result path is meaningful.
 
-Good:
-
-```python
-def safe_sqrt(value: float) -> float | None:
-    if value < 0:
-        return None
-    return math.sqrt(value)
-```
+If a numeric operation accepts values outside its domain as ordinary input,
+declare the no-result case in its return type and return `None` explicitly.
+Use a specific exception instead when invalid input violates the API contract.
 
 ### Nested functions and classes
+
+<!-- level: all -->
 
 Rules:
 
@@ -112,26 +135,15 @@ Rules:
 - Prefer a module-level private helper when tests or reuse need direct access.
 - Avoid nested functions that make the outer function long or hard to scan.
 
-Good:
+A closure can capture an owned value when a caller needs a function value.
+Keep the captured state and lifetime explicit. Do not create a nested function
+only to turn a directly usable expression into a local call.
 
-```python
-def get_adder(summand: float) -> Callable[[float], float]:
-    """Return a function that adds a fixed summand."""
-
-    def add(value: float) -> float:
-        return summand + value
-
-    return add
-```
-
-Use a module helper instead:
-
-```python
-def _normalize_prompt(value: object) -> str:
-    return str(value).strip()
-```
+Inline a conversion at its caller when a named helper only forwards that conversion.
 
 ### Lambda functions
+
+<!-- level: all -->
 
 Rules:
 
@@ -142,16 +154,13 @@ Rules:
 - If a lambda spans multiple lines or becomes hard to read, use a named
   function.
 
-Good:
-
-```python
-def double(value: int) -> int:
-    return value * 2
-
-sorted_items = sorted(items, key=lambda item: item.name)
-```
+An inline sorting key such as `lambda item: item.name` expresses its callback
+contract at the consumer. A named function that only doubles a number adds
+indirection unless its function identity or shared calculation is required.
 
 ### Conditional expressions
+
+<!-- level: all -->
 
 Rules:
 
@@ -160,13 +169,13 @@ Rules:
   expression.
 - Use a full `if` statement when the expression becomes long or nested.
 
-Good:
-
-```python
-mode = "stream" if is_streaming else "batch"
-```
+For a binary presentation choice, `"stream" if is_streaming else "batch"`
+keeps the condition and both values together. Use branches when either path
+needs several operations.
 
 ### Comprehensions and generator expressions
+
+<!-- level: all -->
 
 Rules:
 
@@ -178,21 +187,13 @@ Rules:
   non-obvious transformations.
 - Generator expressions are preferred when a list is not needed.
 
-Good:
+`[user.name for user in users if user is not None]` expresses one filter and
+one transformation. Keep more involved validation and mutation in an ordinary
+loop so their ordering remains visible.
 
-```python
-names = [user.name for user in users if user is not None]
-```
-
-Good with a long expression:
-
-```python
-valid_examples = [
-    transform_example(example)
-    for example in examples
-    if is_valid_example(example)
-]
-```
+Wrap a long comprehension across lines at its expression, `for`, and `if`
+parts. Keep each part readable; wrapping does not justify nested iteration or
+a complex predicate.
 
 Use a loop:
 
@@ -209,26 +210,20 @@ for x in range(10):
 Rules:
 
 - Use generators when values can be produced lazily.
-- A generator docstring uses `Yields:`.
+- Describe yielded values using the configured docstring convention. The example uses Google style.
 - If a generator manages an expensive resource, make cleanup explicit.
 - Do not keep resource lifetime implicit in a partially consumed generator.
 
-Good:
-
-```python
-def iter_prompt_text(examples: Iterable[PromptExample]) -> Iterable[str]:
-    """Yield prompt text values.
-
-    Yields:
-        Prompt text values.
-    """
-    for example in examples:
-        yield example.prompt
-```
+Use a generator expression directly when a consumer only needs a lazy
+projection. A named generator is useful when it owns resource lifetime,
+validation, or repeated behavior. Document the yielded values and cleanup
+contract instead of adding a forwarding generator.
 
 ## Classes
 
 ### Class design
+
+<!-- level: all -->
 
 Rules:
 
@@ -250,12 +245,8 @@ Rules:
 - If a function coordinates work between multiple classes and no polymorphism is
   involved, keep it a function unless one class clearly owns the behavior.
 
-Good:
-
-```python
-class RuntimeBatch:
-    """Tokenized prompts prepared for inference."""
-```
+Use a data record such as `Batch` below when the value owns data. An empty
+class with only a domain name establishes no behavior or useful shape.
 
 ### Initialization and named constructors
 
@@ -277,21 +268,9 @@ Rules:
   initialized fields. Prefer a named constructor when deriving them requires I/O,
   external services, or complex parsing.
 
-Good:
-
-```python
-@dataclass
-class Point:
-    """Two-dimensional point."""
-
-    x: float
-    y: float
-
-    @classmethod
-    def from_row(cls, row: PointRow) -> Point:
-        """Build a point from a database row."""
-        return cls(x=row.x, y=row.y)
-```
+A named constructor such as `from_row` translates an external representation
+when the class owns that conversion. Do not add a constructor that merely
+forwards the same fields to an already sufficient initializer.
 
 ### Dataclasses
 
@@ -299,8 +278,8 @@ Rules:
 
 - Use dataclasses for plain data records.
 - Keep dataclass fields typed.
-- Document public fields in the class docstring `Attributes:` section when the
-  class is public.
+- At `all`, document public fields using the configured docstring convention.
+  Google style uses `Attributes:`; NumPy style uses an underlined `Attributes` heading.
 - Do not add methods to a dataclass unless they are part of the data contract.
 - Do not use a dataclass as a disguised mutable global configuration object.
 - Use `field(default_factory=...)` for mutable defaults.
@@ -313,30 +292,31 @@ Rules:
 - Do not introduce `attrs` solely to avoid writing a small dataclass or ordinary
   function.
 
-Good:
-
-```python
-@dataclass(frozen=True)
-class ModelVariant:
-    """Supported model variant.
-
-    Attributes:
-        name: Stable variant name.
-        base_model: Hugging Face base model identifier.
-    """
-
-    name: str
-    base_model: str
-```
+A frozen dataclass expresses a value that does not change after construction.
+Document its public fields and keep provider identifiers distinct from
+display names.
 
 Good mutable default:
 
 ```python
+"""Represent an independently owned batch of prompt text."""
+
+from dataclasses import dataclass, field
+
+
 @dataclass
 class Batch:
-    """Batch of prompts."""
+    """Prompt text owned by one processing batch.
 
-    prompts: list[PromptExample] = field(default_factory=list)
+    Attributes:
+        prompts: The text items assigned to this batch.
+
+    """
+
+    prompts: list[str] = field(default_factory=list)
+
+
+__all__ = ["Batch"]
 ```
 
 ### Properties
@@ -351,14 +331,9 @@ Rules:
   feature is necessary.
 - Avoid properties for computations subclasses may need to override and extend.
 
-Good:
-
-```python
-@property
-def num_examples(self) -> int:
-    """The number of examples."""
-    return len(self.examples)
-```
+A computed size property can describe "The number of examples." Keep the
+calculation cheap and free of side effects. Do not introduce a property merely
+to rename another stored attribute.
 
 ### Inheritance
 
@@ -393,37 +368,13 @@ Rules:
 - If a class is intended for subclassing, document the public API and subclass
   API separately when that distinction matters.
 
-Good specialization:
+Use specialization only when every instance of the subtype satisfies the
+base contract. Adding unrelated state or requiring callers to inspect the
+subtype is evidence that composition or a separate record is clearer.
 
-```python
-@dataclass
-class EmailAddress:
-    """Email address shared by all address types."""
-
-    id: UUID
-    address: str
-
-@dataclass
-class Mailbox(EmailAddress):
-    """Email address that stores mail."""
-
-    password_hash: str
-```
-
-Good wrapper:
-
-```python
-class TrackingRepository:
-    """Repository wrapper that records retrieved products."""
-
-    def __init__(self, repository: Repository) -> None:
-        self._repository = repository
-        self.seen: set[Product] = set()
-
-    def add_product(self, product: Product) -> None:
-        self._repository.add_product(product)
-        self.seen.add(product)
-```
+A tracking repository can delegate a real persistence operation and then
+record its outcome. Record successful completion only after the operation
+succeeds. A wrapper that adds no behavior belongs at its existing owner.
 
 ### Decorators
 
@@ -435,26 +386,20 @@ Rules:
 - Decorators run at definition time, which is import time. Do not let them depend
   on files, sockets, databases, network calls, or other unavailable resources.
 - Decorators preserve function metadata when wrapping functions.
-- Avoid `staticmethod`. Use a module-level function instead.
 - Use `classmethod` for named constructors or class-specific routines.
 - Use `@property` only under the property rules above.
 
-Good:
+Use `classmethod` for a named constructor that validates or converts an
+external representation. Do not add a constructor that only renames the
+ordinary initializer.
 
-```python
-class ModelConfig:
-    @classmethod
-    def from_name(cls, name: str) -> ModelConfig:
-        """Build a model config from a variant name."""
-        return cls(name=name)
-```
+### Method ownership
 
-Use a module function:
+<!-- level: all -->
 
-```python
-def normalize_model_name(name: str) -> str:
-    return name.strip().lower()
-```
+Keep stateless transformations as module functions only when they own substantive or
+shared behavior. Call native operations directly when a wrapper adds no contract.
+Do not introduce a class solely to contain static methods.
 
 ### Exceptions as classes
 
@@ -462,14 +407,14 @@ Rules:
 
 - Custom exceptions inherit from `Exception`.
 - Do not inherit directly from `BaseException`.
-- Exception class names use CapWords.
-- Error exception names end with `Error`.
-- Exception names never repeat the module name.
-- Exception docstrings describe the represented condition.
 
-Good:
+### Exception naming
 
-```python
-class InvalidVariantError(Exception):
-    """The requested model variant is not supported."""
-```
+<!-- level: all -->
+
+Exception class names use CapWords and end with `Error`. Do not repeat the module name.
+Describe the represented condition in the docstring.
+
+Use `InvalidVariantError` for an unsupported variant, with a docstring such
+as "The requested variant is not supported." Keep the exception beside the
+behavior that raises it instead of creating a one-declaration file.

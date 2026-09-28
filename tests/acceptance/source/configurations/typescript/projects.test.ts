@@ -4,11 +4,18 @@ import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
+import { initArgs } from '#tests/support/cli/init.ts';
+import { reportSchema } from '#cli/execution/report.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
 import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
 import { chmodSync, mkdirSync, readdirSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
-import { PROJECTS_POLICY, TSCONFIG_PROJECT } from '#tests/constants/acceptance/source/configurations/typescript.ts';
+
+import {
+    PROJECTS_POLICY,
+    TSCONFIG_PROJECT,
+    AUTHORED_TSCONFIG,
+} from '#tests/constants/acceptance/source/configurations/typescript.ts';
 
 for (const scope of ['', 'api/']) {
     test(
@@ -74,23 +81,14 @@ const project = (outDir: string): string =>
     });
 
 test.each(['', 'apps/web'])(
-    'Vite initialization in %s preserves authored compiler settings while each level checks its diagnostic flags',
+    'Vite initialization in %s preserves authored compiler settings while both levels enforce type safety',
     async (scope) => {
         await using sandbox = await testdir();
         const prefix = scope === '' ? '' : `${scope}/`;
-        const authored = `{
-    // The application owns its build and module settings.
-    "compilerOptions": {
-        "strict": false,
-        "target": "ES2020",
-        "module": "ESNext",
-        "moduleResolution": "Bundler",
-        "types": [],
-        "incremental": true,
-        "tsBuildInfoFile": ${JSON.stringify(join(sandbox.path, scope, 'build/cache.tsbuildinfo'))}
-    },
-    "include": ["src"],
-}\n`;
+        const authored = AUTHORED_TSCONFIG.replace(
+            '%BUILD_INFO%',
+            JSON.stringify(join(sandbox.path, scope, 'build/cache.tsbuildinfo')),
+        );
         await createFileTree(sandbox.path, {
             'package.json':
                 '{"name":"preserved-vite","private":true,"type":"module","devDependencies":{"vite":"8.3.0"}}',
@@ -104,16 +102,8 @@ test.each(['', 'apps/web'])(
         symlinkSync('../typescript/bin/tsc', join(sandbox.path, 'node_modules/.bin/tsc'));
         chmodSync(join(sandbox.path, scope, 'tsconfig.json'), 0o640);
         const initialized = await run(sandbox.path, [
-            'init',
-            '--yes',
-            '--configurations',
-            scope === '' ? 'typescript' : 'javascript',
+            ...initArgs([scope === '' ? 'typescript' : 'javascript']),
             ...(scope === '' ? [] : ['--scope', `${scope}=typescript`]),
-            '--no-runner',
-            '--no-ci',
-            '--no-hooks',
-            '--no-rules',
-            '--no-install',
         ]);
         expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
         expect(await Bun.file(join(sandbox.path, scope, 'tsconfig.json')).text()).toBe(authored);
@@ -128,16 +118,16 @@ test.each(['', 'apps/web'])(
             join(sandbox.path, scope, 'src/main.ts'),
             'export function echo(value: string) { return value; }\nexport const first: number = [1][0];\n',
         );
-        const recommended = await run(sandbox.path, ['check', '--only', 'typescript/tsc', '--no-cache', '--json']);
-        expect(recommended.code, recommended.stdout + recommended.stderr).toBe(0);
-        const selected = await run(sandbox.path, ['set', 'level', 'all']);
-        expect(selected.code, selected.stdout + selected.stderr).toBe(0);
-        const strict = await run(sandbox.path, ['check', '--only', 'typescript/tsc', '--no-cache', '--json']);
-        expect(strict.code, strict.stdout + strict.stderr).toBe(1);
-        const strictReport = JSON.parse(strict.stdout) as RunReport;
-        expect(strictReport.checks.flatMap((check) => check.findings)).toMatchObject([
-            { check: 'typescript/tsc', file: `${prefix}src/main.ts`, rule: 'TS2322', line: 2, column: 14 },
-        ]);
+        for (const level of ['recommended', 'all']) {
+            const selected = await run(sandbox.path, ['set', 'level', level]);
+            expect(selected.code, selected.stdout + selected.stderr).toBe(0);
+            const checked = await run(sandbox.path, ['check', '--only', 'typescript/tsc', '--no-cache', '--json']);
+            expect(checked.code, checked.stdout + checked.stderr).toBe(1);
+            const report = reportSchema.parse(JSON.parse(checked.stdout));
+            expect(report.checks.flatMap((check) => check.findings)).toMatchObject([
+                { check: 'typescript/tsc', file: `${prefix}src/main.ts`, rule: 'TS2322', line: 2, column: 14 },
+            ]);
+        }
         writeFileSync(
             join(sandbox.path, scope, 'src/main.ts'),
             'export function echo(value: string) { return value; }\nexport const first: number = [1][0] ?? 0;\n',

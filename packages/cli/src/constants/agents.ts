@@ -2,7 +2,6 @@
 
 export const RULE_LINK =
     /\]\((?:\.\.\/)*(?:general|language|runtime|framework|library|tool|platform|database|shared|repository)\/[^)]+\.md\)/u;
-export const INLINE_CODE = /`[^`]*`/u;
 export const INLINE_CODE_SPANS = /`[^`]*`/gu;
 export const EM_DASH = '—';
 export const LIST_ITEM = /^\s*(?:[-*]|\d+\.)\s+/u;
@@ -49,10 +48,11 @@ export const RULE_LAYERS = [
     'repository',
     'template',
 ];
-/** The layers that name no repository, product, layout path or deployment target. */
+/** The layers that name no repository, product, layout path, or deployment target. */
 export const BOUNDARY_LAYERS = ['agent', 'code', 'prose', 'language'];
-/** Words a boundary layer must not carry outside inline code. */
+/** Repository-specific paths and names do not belong in general or language guides. */
 export const BOUNDARY_TERMS = [
+    /\bquality\//u,
     /\bsrc\/app\b/u,
     /\bsrc\/modules\b/u,
     /\bplatform\/(?:db|providers)\b/u,

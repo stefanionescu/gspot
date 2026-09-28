@@ -3,8 +3,8 @@ import { rmSync } from 'node:fs';
 import { parse as parseToml } from 'smol-toml';
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { readSource } from '#cli/repository/tracked.ts';
-import { scratchCopy } from '#cli/execution/file-workspace.ts';
-import { runCheckCommand } from '#cli/execution/tool-runner.ts';
+import { runCheckCommand } from '#cli/execution/tool/runner.ts';
+import { scratchCopy } from '#cli/execution/files/workspace.ts';
 import { parse as parseJsonc, type ParseError } from 'jsonc-parser';
 import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 
@@ -35,13 +35,6 @@ function lines(input: EngineInput, path: string): { text: string; number: number
         .split('\n')
         .map((text, index) => ({ text, number: index + 1 }))
         .filter((line) => line.text.trim() !== '' && !line.text.trimStart().startsWith('#'));
-}
-
-function blockProblem(line: { text: string; number: number }): { number: number; text: string }[] {
-    const isPath = line.text.startsWith('/') || line.text.startsWith('https://');
-    return isPath
-        ? []
-        : [{ number: line.number, text: 'A block starts with a path that begins with a slash, or a full address.' }];
 }
 
 function headerProblem(line: { text: string; number: number }, hasPath: boolean): { number: number; text: string }[] {
@@ -93,7 +86,15 @@ export function headerProblems(entries: { text: string; number: number }[]): { n
     return entries.flatMap((line) => {
         if (/^\s/u.test(line.text)) return headerProblem(line, hasPath);
         hasPath = true;
-        return blockProblem(line);
+        const isPath = line.text.startsWith('/') || line.text.startsWith('https://');
+        return isPath
+            ? []
+            : [
+                  {
+                      number: line.number,
+                      text: 'A block starts with a path that begins with a slash, or a full address.',
+                  },
+              ];
     });
 }
 

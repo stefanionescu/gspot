@@ -15,7 +15,9 @@ TypeScript naming follows the project rules here. Google TypeScript guidance is
 a strong default for many language choices. The rules below deliberately override some of it, and
 say so where they do.
 
-Project decisions:
+## Project decisions
+
+<!-- level: all -->
 
 - Use `kebab-case` filenames for TypeScript source files.
 - Use `type` aliases for object shapes by default.
@@ -29,6 +31,8 @@ Project decisions:
   quality-rule task.
 
 ## TypeScript case rules
+
+<!-- level: all -->
 
 Rules:
 
@@ -51,35 +55,18 @@ Rules:
   `parseHttpUrl`, not `parseHTTPURL`, but `XMLHttpRequest` remains a platform
   name.
 
-Bad:
-
-```ts
-interface IUserRepository {}
-type user_profile = {};
-const DAYS_IN_WEEK = 7;
-const daysInMonth = 30;
-const DEFAULT_CLIENT = createClient();
-function restore_database() {}
-const URLValue = 'https://example.com';
-```
-
-Good:
-
-```ts
-type UserProfile = {};
-type UserRepository = {
-    getUser(userId: UserId): Promise<User>;
-};
-
-const DAYS_IN_WEEK = 7;
-const DAYS_IN_MONTH = 30;
-const defaultClient = createClient();
-
-function restoreDatabase() {}
-const urlValue = 'https://example.com';
-```
+| Avoid              | Prefer            | Meaning                          |
+| ------------------ | ----------------- | -------------------------------- |
+| `IUserRepository`  | `UserRepository`  | A user persistence contract.     |
+| `user_profile`     | `UserProfile`     | A user shape.                    |
+| `daysInMonth`      | `DAYS_IN_MONTH`   | A module-level literal constant. |
+| `DEFAULT_CLIENT`   | `defaultClient`   | A constructed client.            |
+| `restore_database` | `restoreDatabase` | A restoration operation.         |
+| `URLValue`         | `urlValue`        | A local URL string.              |
 
 ## TypeScript files and modules
+
+<!-- level: all -->
 
 Rules:
 
@@ -102,49 +89,19 @@ Rules:
 - `handle` starts a name only for a React event prop or a framework callback
   (`handleSubmit`, `handleKeyDown`). Never `Handler` as a type suffix.
 
-Bad:
+| Avoid                      | Prefer                        | Meaning                     |
+| -------------------------- | ----------------------------- | --------------------------- |
+| `UserService.ts`           | `user-repository.ts`          | User persistence.           |
+| `userHelpers.ts`           | `email-address-validation.ts` | Email validation.           |
+| `utils.ts`                 | `session-token-verifier.ts`   | Session token verification. |
+| `ReportReaderContainer.ts` | `report-reader.ts`            | Report reading.             |
 
-```text
-UserService.ts
-userHelpers.ts
-utils.ts
-samples.ts
-ReportReaderContainer.ts
-```
-
-Good:
-
-```text
-user-repository.ts
-email-address-validation.ts
-session-token-verifier.ts
-report-reader.ts
-submit-order-route.ts
-```
-
-Bad:
-
-```ts
-export default class Container {
-    static FOO = 1;
-
-    static bar() {
-        return 1;
-    }
-}
-```
-
-Good:
-
-```ts
-export const FOO = 1;
-
-export function bar(): number {
-    return 1;
-}
-```
+Export meaningful module declarations directly. A retry limit belongs in
+`MAX_RETRY_COUNT`, not in a static container class or behind a constant getter.
 
 ## TypeScript variables
+
+<!-- level: all -->
 
 Rules:
 
@@ -155,47 +112,19 @@ Rules:
 - Use named constants for meaningful repeated numbers or strings.
 - Do not add context already present in the type or owner.
 
-Bad:
+For a range comparison, name the value `value` and the bounds `minimum` and
+`maximum`. Use a type that supports the comparison, such as `number`; an
+unconstrained generic does not establish ordering semantics.
 
-```ts
-function between<T>(a1: T, a2: T, a3: T): boolean {
-    return a2 <= a1 && a1 <= a3;
-}
+When iterating a map of users, destructure its entries as `[userId, user]`
+instead of naming each pair `keyValue`.
 
-declare const users: Map<string, User>;
-for (const keyValue of users) {
-    ...
-}
-```
-
-Good:
-
-```ts
-function between<T>(value: T, left: T, right: T): boolean {
-    return left <= value && value <= right;
-}
-
-declare const users: Map<string, User>;
-for (const [userId, user] of users) {
-    ...
-}
-```
-
-Bad:
-
-```ts
-setTimeout(restart, 86_400_000);
-```
-
-Good:
-
-```ts
-const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
-
-setTimeout(restart, MILLISECONDS_PER_DAY);
-```
+Name a reused daily timer duration `MILLISECONDS_PER_DAY` and define it as
+`86_400_000`. The name explains both the interval and its unit.
 
 ## TypeScript functions
+
+<!-- level: all -->
 
 Rules:
 
@@ -210,54 +139,18 @@ Rules:
   is necessary. Normally the return type communicates async.
 - Name functions by domain work, not implementation mechanics.
 
-Bad:
+A function that creates an owned temporary file has a different lifecycle
+contract from one that writes a caller-selected path. Name and implement those
+operations at their owners. Do not create a Boolean mode or a one-call wrapper
+that obscures path ownership.
 
-```ts
-function createFile(name: string, temp: boolean) {
-    if (temp) {
-        fs.create(`./temp/${name}`);
-    } else {
-        fs.create(name);
-    }
-}
-```
-
-Good:
-
-```ts
-function createTempFile(name: string) {
-    createFile(`./temp/${name}`);
-}
-
-function createFile(name: string) {
-    fs.create(name);
-}
-```
-
-Bad:
-
-```ts
-function createMenu(title: string, body: string, buttonText: string, cancellable: boolean) {
-    ...
-}
-```
-
-Good:
-
-```ts
-type MenuOptions = {
-    title: string;
-    body: string;
-    buttonText: string;
-    isCancellable: boolean;
-};
-
-function createMenu(options: MenuOptions) {
-    ...
-}
-```
+Group a menu constructor's related text fields in `MenuOptions`. A named
+`isCancellable` field makes the control explicit. Keep independent behaviors
+in their existing owners instead of adding flags to a shared function.
 
 ## TypeScript types
+
+<!-- level: all -->
 
 Rules:
 
@@ -273,39 +166,17 @@ Rules:
 - Name index keys meaningfully if an index signature is needed.
 - Prefer `Map` when key/value behavior is the point.
 
-Bad:
+Name a coffee response union `CoffeeResponse`; put `| undefined` on an
+operation that can return no response. Name a user index `UsersById` and its
+index key `userId`.
 
-```ts
-type CoffeeResponse = Latte | Americano | undefined;
-
-type Users = {
-    [key: string]: User;
-};
-
-function nicestElement<T>(): T {
-    ...
-}
-```
-
-Good:
-
-```ts
-type CoffeeResponse = Latte | Americano;
-
-function getCoffeeResponse(): CoffeeResponse | undefined {
-    ...
-}
-
-type UsersById = {
-    [userId: string]: User;
-};
-
-function nicestElement<T>(items: readonly T[]): T {
-    ...
-}
-```
+A function that selects a collection element ties its generic to the input
+collection. Its return contract must account for an empty collection unless
+the input type or validation proves that an element exists.
 
 ## TypeScript runtime boundaries
+
+<!-- level: all -->
 
 Rules:
 
@@ -315,32 +186,9 @@ Rules:
   the runtime contract still uses the external name.
 - Use explicit conversion names for DTO-to-domain mapping.
 
-Bad:
+Parse and validate an HTTP body before calling it `submitOrderRequest`.
+A type assertion does not establish that the body satisfies the request contract.
 
-```ts
-const request = req.body as SubmitOrderRequest;
-```
-
-Good:
-
-```ts
-const submitOrderRequest = parseSubmitOrderRequest(req.body);
-```
-
-Bad:
-
-```ts
-type ProviderResponse = {
-    providerOperationId: string;
-    providerStatus: string;
-};
-```
-
-Good:
-
-```ts
-type ProviderSubmitOrderResponse = {
-    providerOperationId: string;
-    providerStatus: string;
-};
-```
+Use `ProviderSubmitOrderResponse` for the provider's response to an order
+submission. Preserve its external fields, such as `providerOperationId` and
+`providerStatus`, until the boundary converts them into domain values.

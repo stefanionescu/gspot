@@ -8,6 +8,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { openSession } from '#cli/execution/session.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
 import { parseProfile } from '#cli/policy/profiles/read.ts';
+import { runnerTaskPlan } from '#cli/generation/runner/plan.ts';
 import { exportedProfile } from '#cli/policy/profiles/export.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import type { PackageScripts } from '#tests/types/integration/cli/generation.ts';
@@ -75,4 +76,37 @@ test('duplicate pins include only parsed tool keys', async () => {
     expect(pinnedTwice(directory.path, manifests)).toStrictEqual([]);
     writeFileSync(join(directory.path, 'mise.toml'), '[tools\n');
     expect(() => pinnedTwice(directory.path, manifests)).toThrow();
+});
+
+test('mise task objects without run remain authored until their names are accepted', async () => {
+    await using directory = await testdir();
+    const original = '[tasks."gspot:check"]\ndescription = "Authored task"\n';
+    await createFileTree(directory.path, { 'mise.toml': original });
+    const retained = runnerTaskPlan(directory.path, 'mise');
+    expect(retained.notes).toStrictEqual([
+        'Retained mise.toml task gspot:check: this name was not accepted in runner.tasks.',
+    ]);
+    expect(retained.configuration).toBeUndefined();
+    expect(retained.tasks.map(({ name }) => name)).not.toContain('gspot:check');
+    const accepted = runnerTaskPlan(directory.path, 'mise', { check: 'gspot:check' });
+    expect(accepted.notes).toStrictEqual([]);
+    expect(accepted.configuration).toStrictEqual({
+        path: 'mise.toml',
+        format: 'toml',
+        changes: [{ path: ['tasks', 'gspot:check', 'run'], value: 'gspot check' }],
+    });
+    expect(readFileSync(join(directory.path, 'mise.toml'), 'utf8')).toBe(original);
+});
+
+test.each(['npm', 'pnpm', 'yarn', 'bun'])('the %s plan protects hooks attached to authored scripts', async (runner) => {
+    await using directory = await testdir();
+    const original = '{"scripts":{"lint":"authored lint"}}\n';
+    await createFileTree(directory.path, { 'package.json': original });
+    expect(() => runnerTaskPlan(directory.path, runner, { check: 'prelint' })).toThrow(
+        'Runner task prelint is a package lifecycle script and cannot be replaced.',
+    );
+    expect(() => runnerTaskPlan(directory.path, runner, { check: 'postlint' })).toThrow(
+        'Runner task postlint is a package lifecycle script and cannot be replaced.',
+    );
+    expect(readFileSync(join(directory.path, 'package.json'), 'utf8')).toBe(original);
 });

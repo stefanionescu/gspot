@@ -22,11 +22,13 @@ model or data boundaries.
 
 ### Annotation scope
 
+<!-- level: all -->
+
 Rules:
 
 - Annotate every parameter and every return value of every function and method, including
-  private helpers and `__init__` (`-> None`). The type checker runs in strict mode and reports
-  an unannotated function.
+  private helpers and `__init__` (`-> None`). The generated type-checker configuration
+  selects annotation requirements for this enforcement level.
 - Do not annotate `self` or `cls` unless needed for precise typing.
 - Use `Any` only when the type is genuinely unconstrained or cannot be
   expressed clearly.
@@ -37,16 +39,29 @@ Rules:
 Good:
 
 ```python
-def build_examples(source: Literal["warmup", "test"] = "warmup") -> list[PromptExample]:
-    """Build examples for a data source."""
+"""Group labeled records while preserving their key types."""
+
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Hashable, Iterable
+
+
+def group_records[Key: Hashable](records: Iterable[tuple[Key, str]]) -> dict[Key, list[str]]:
+    """Group record values under their original keys."""
+    grouped: dict[Key, list[str]] = {}
+    for key, value in records:
+        grouped.setdefault(key, []).append(value)
+    return grouped
 ```
 
-Private helpers are annotated too:
+The `group_records` example requires Python 3.12 or later for its type parameter syntax.
+The `Key` parameter connects input keys to output keys; `Hashable` establishes
+the dictionary-key requirement.
 
-```python
-def _token_count(value: int) -> int:
-    return int(value)
-```
+Private helpers follow the same annotation requirements as public functions.
 
 ### Annotated metadata
 
@@ -64,12 +79,9 @@ Rules:
 - Prefer `Annotated` over older framework styles that replace the Python
   default value with a metadata object.
 
-Good:
-
-```python
-def read_items(q: Annotated[str | None, Query(max_length=50)] = None) -> list[Item]:
-    return find_items(query=q)
-```
+For a FastAPI query field, `Annotated[str | None, Query(max_length=50)]`
+attaches a length constraint to the type. Import `Annotated` and `Query` from
+their owners and put an optional default on the endpoint parameter.
 
 ### Using any and object
 
@@ -86,19 +98,9 @@ Rules:
 - Prefer a protocol, type variable, overload, or small value object over `Any`
   when that models the contract clearly.
 
-Good:
-
-```python
-def format_for_display(value: object) -> str:
-    """Format any object for display."""
-    if isinstance(value, int):
-        return f"{value:02}"
-    return str(value)
-
-def call_callback(callback: Callable[[int], object]) -> None:
-    """Call a callback and ignore its return value."""
-    callback(42)
-```
+An object formatter accepts `object` when it only calls `str` or narrows
+known types. A callback whose result is discarded can have an `object`
+return type. Neither case requires `Any`.
 
 ### Input and return types
 
@@ -120,18 +122,8 @@ Rules:
   float inputs.
 - Use `None`, not `Literal[None]`.
 
-Good:
-
-```python
-def map_lengths(values: Iterable[str]) -> list[int]:
-    return [len(value) for value in values]
-
-def create_label_map() -> dict[str, int]:
-    return {"reject": 0, "accept": 1}
-
-def to_display_text(value: object) -> str:
-    return str(value)
-```
+The `group_records` module accepts `Iterable` and returns `dict`. It does not
+require callers to create a list merely to satisfy an input annotation.
 
 ### Typing imports
 
@@ -149,15 +141,9 @@ Rules:
 - Use `AnyStr` only when multiple string annotations must all be the same text
   or binary type.
 
-Good:
-
-```python
-from collections.abc import Iterable, Mapping, Sequence
-from typing import Any, Literal, TypeAlias
-
-def transform(rows: Sequence[tuple[str, int]]) -> Mapping[str, int]:
-    ...
-```
+Import `Iterable`, `Mapping`, and `Sequence` from `collections.abc`. Keep
+annotation-only imports under `TYPE_CHECKING` when the runtime does not inspect
+them. Frameworks that inspect annotations need those names available at runtime.
 
 ### None and optional values
 
@@ -169,14 +155,9 @@ Rules:
 - Use `is None` and `is not None` for None checks.
 - When a parameter is nullable and has a default, annotate it as nullable.
 
-Good:
-
-```python
-def read_examples(path: Path | None = None) -> list[PromptExample]:
-    if path is None:
-        path = DEFAULT_DATA_PATH
-    ...
-```
+For an optional filesystem input, use `Path | None = None`. Handle the
+`None` branch before calling path methods. A default path belongs to the
+configuration owner, not to an undeclared example variable.
 
 ### Generic types
 
@@ -187,21 +168,12 @@ Rules:
   type is intentionally unconstrained and made explicit with `Any`.
 - Prefer `TypeVar` when a relationship between input and output types matters.
 
-Good:
+Annotate an employee identifier sequence as `Sequence[int]` when identifiers
+are integers. If several key types are supported, connect the input and return
+types with one bounded type parameter.
 
-```python
-def get_names(employee_ids: Sequence[int]) -> Mapping[int, str]:
-    ...
-```
-
-Good when the key type must be preserved:
-
-```python
-_T = TypeVar("_T")
-
-def get_names(employee_ids: Sequence[_T]) -> Mapping[_T, str]:
-    ...
-```
+The `Key` parameter in `group_records` preserves the caller's key type.
+Do not replace the return key type with an unrelated `str` annotation.
 
 ### Type aliases
 
@@ -216,18 +188,14 @@ Rules:
 - Do not use `TypeAlias` for ordinary value, module, class, function, constant,
   or path aliases.
 
-Good:
-
-```python
-from typing import TypeAlias
-
-_LossAndGradient: TypeAlias = tuple[torch.Tensor, torch.Tensor]
-MetricMap: TypeAlias = Mapping[str, float]
-Path = pathlib.Path
-ERROR_EXISTS = errno.EEXIST
-```
+A repeated mapping of metric names to numeric values can use the alias
+`MetricMap` for `Mapping[str, float]`. An assignment of `pathlib.Path` to
+`Path` is a class alias, and `errno.EEXIST` is an error-code value; neither
+is a new typing contract.
 
 ### Type variables
+
+<!-- level: all -->
 
 Rules:
 
@@ -237,17 +205,10 @@ Rules:
 - Use `_co` and `_contra` suffixes for covariant and contravariant variables.
 - Do not use public single-letter `T` or `P` for type variables.
 
-Good:
-
-```python
-from collections.abc import Callable
-from typing import ParamSpec, TypeVar
-
-_P = ParamSpec("_P")
-_T = TypeVar("_T")
-AddableType = TypeVar("AddableType", int, float, str)
-AnyFunction = TypeVar("AnyFunction", bound=Callable)
-```
+Use `ParamSpec` when forwarding a callable's parameters, and bind a callable
+type to the signature the consumer needs. A bare `Callable` hides argument
+and return types. Use a descriptive bound parameter such as `Key` when it
+is part of a public generic contract.
 
 ### Forward references
 
@@ -265,24 +226,39 @@ Rules:
 Good:
 
 ```python
+"""Represent an acyclic parent chain."""
+
 from __future__ import annotations
 
+from dataclasses import dataclass
+
+
+@dataclass(frozen=True)
 class Node:
-    def __init__(self, parent: Node | None = None) -> None:
-        self.parent = parent
+    """One node whose parent chain is acyclic.
+
+    Attributes:
+        name: Display name of this node.
+        parent: Parent node, or None for a root.
+
+    """
+
+    name: str
+    parent: Node | None = None
+
+    def lineage(self) -> list[str]:
+        """Return names from this node toward the root."""
+        names: list[str] = []
+        current: Node | None = self
+        while current is not None:
+            names.append(current.name)
+            current = current.parent
+        return names
 ```
 
-Acceptable when avoiding a runtime import strictly for typing:
-
-```python
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from external_package import ExternalType
-
-def build(value: "ExternalType") -> str:
-    ...
-```
+A `TYPE_CHECKING` import with future annotations avoids a runtime import only
+when the runtime does not need the imported symbol. Do not use that pattern
+for validators or frameworks that evaluate those annotations.
 
 ### Protocols and interfaces
 
@@ -305,21 +281,30 @@ Rules:
 Good:
 
 ```python
+"""Consume records through the reader contract needed by the caller."""
+
+from typing import Protocol
+
+
 class Reader(Protocol):
+    """A source of one text document."""
+
+    # gspot-ignore python/trivial-function -- Reader.read defines the required protocol signature.
     def read(self) -> str:
+        """Return the document text."""
         ...
 
-def print_reader(reader: Reader) -> None:
-    print(reader.read())
+
+def unique_records(reader: Reader) -> list[str]:
+    """Read sorted unique records, omitting blank lines."""
+    records = {line.strip() for line in reader.read().splitlines()}
+    records.discard("")
+    return sorted(records)
 ```
 
-Good implementation:
-
-```python
-class FileReader:
-    def read(self) -> str:
-        return "contents"
-```
+The standard-library `io.StringIO` already satisfies `Reader`: it provides
+`read() -> str`. Do not invent a constant-returning class merely to illustrate
+protocol conformance.
 
 ### Variable annotations
 
@@ -330,12 +315,9 @@ Rules:
 - Do not use a space before the colon.
 - If assigning a value, use one space around `=`.
 
-Good:
-
-```python
-examples: list[PromptExample] = []
-label_by_name: dict[str, int] = {}
-```
+An empty collection needs an annotation when its element type cannot be
+inferred. The `names: list[str]` declaration in `Node.lineage` states that
+contract without adding a redundant annotation to every intermediate value.
 
 ### Ignoring type errors
 
@@ -347,8 +329,6 @@ Rules:
 - Do not keep unused ignores.
 - Prefer refactoring or a clearer annotation over suppressing a type error.
 
-Good:
-
-```python
-value = untyped_api()  # type: ignore[no-any-return]
-```
+If an external typing defect requires an ignore, name the actual checker
+diagnostic and explain the external constraint. Keep a neighboring valid
+diagnostic enabled and remove the ignore once its cause is corrected.

@@ -10,8 +10,9 @@ mise install
 mise run repo:setup
 ```
 
-`repo:setup` installs the frozen dependencies, prepares the pinned Swift parser, and generates the
-Astro content types the documentation build reads.
+`repo:setup` installs the frozen dependencies and prepares the pinned Swift parser. It also builds
+the workspace ESLint plugin and generates the Astro content types the documentation build reads.
+After editing the plugin, run `mise run build:plugin` before running repository checks.
 
 ## Verification
 
@@ -27,11 +28,12 @@ the shell's `PATH`.
 | `mise run test`            | The unit and integration tests, without native tools or the network.          |
 | `mise run test:tools`      | Native compatibility: the pinned tools run over generated configuration.      |
 | `mise run test:acceptance` | Behavioral acceptance from a planted repository through an isolated registry. |
-| `mise run build`           | The host binary, with licenses and notices.                                   |
+| `mise run build -- --all`  | All seven binaries, with licenses and notices.                                |
 | `mise run test:release`    | The built binary and the installed packages through an isolated registry.     |
 | `mise run gspot:check`     | This repository's own checks, run from source.                                |
 
-The acceptance runner stops after 30 minutes, so pass it a list of files or folders:
+The full source acceptance suite has a 90-minute overall deadline. Individual test deadlines
+and performance limits remain separate. To run a focused subset, pass files or folders:
 
 ```sh
 mise run test:acceptance -- acceptance/source/configurations/css.test.ts acceptance/source/cli/hooks
@@ -56,6 +58,6 @@ pre-commit hook and reads the staged index alone.
 
 ## Reading CI results
 
-Remote CI is paused until the first release. When it runs, every job executes one of the tasks above
-against the pushed commit and uploads `.gspot/reports/report.json` and the SARIF report as
-artifacts. A red job names the task; run that task locally with the same arguments to reproduce it.
+The `GSPOT_CI_ENABLED` repository variable controls CI execution. Dispatch the `ci` workflow
+with `full = true` against the task branch for platform acceptance. Its check jobs upload
+`.gspot/reports/report.json` and SARIF artifacts for the selected commit. A red job names the task; run that task locally with the same arguments to reproduce it.

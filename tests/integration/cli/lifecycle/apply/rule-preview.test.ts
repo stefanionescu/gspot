@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
-import { emitAll } from '#cli/generation/render.ts';
 import { run } from '#tests/support/cli/command.ts';
+import { emitAll } from '#cli/generation/outputs.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { openSession } from '#cli/execution/session.ts';
 import { applyCommand } from '#cli/commands/apply/command.ts';
@@ -35,10 +35,10 @@ test('apply preview names a SwiftLint rule addition and leaves existing configur
         'gspot.toml': `${policy}\n[[ignore]]\ncheck = "swift/swiftlint"\nrule = "empty_count"\nreason = "The fixture verifies enabling a previously ignored rule."\n`,
         'Example.swift': 'let example = 1\n',
     });
-    const renderSession1 = await openSession(sandbox.path);
-    const original = emitAll(renderSession1.policyFiles.policy, renderSession1.repository, renderSession1.scopes, {
-        version: renderSession1.version,
-        packageManager: renderSession1.packageManager,
+    const originalSession = await openSession(sandbox.path);
+    const original = emitAll(originalSession.policyFiles.policy, originalSession.repository, originalSession.scopes, {
+        version: originalSession.version,
+        packageClient: originalSession.packageClient,
     }).files.find((file) => file.path === '.gspot/config/swiftlint.yml')!;
     await createFileTree(sandbox.path, { [original.path]: original.content });
     writeFileSync(join(sandbox.path, 'gspot.toml'), policy);
@@ -56,11 +56,16 @@ test('apply preview names a SwiftLint rule addition and leaves existing configur
         ]),
     });
     expect(readFileSync(join(sandbox.path, original.path), 'utf8')).toBe(original.content);
-    const renderSession2 = await openSession(sandbox.path);
-    const corrected = emitAll(renderSession2.policyFiles.policy, renderSession2.repository, renderSession2.scopes, {
-        version: renderSession2.version,
-        packageManager: renderSession2.packageManager,
-    }).files.find((file) => file.path === original.path)!;
+    const correctedSession = await openSession(sandbox.path);
+    const corrected = emitAll(
+        correctedSession.policyFiles.policy,
+        correctedSession.repository,
+        correctedSession.scopes,
+        {
+            version: correctedSession.version,
+            packageClient: correctedSession.packageClient,
+        },
+    ).files.find((file) => file.path === original.path)!;
     writeFileSync(join(sandbox.path, original.path), corrected.content);
     const applied = await applyCommand({ cwd: sandbox.path, isDryRun: true });
     expect(applied.text).not.toContain('opt_in_rules: added empty_count');
@@ -98,21 +103,31 @@ test.each([
         await createFileTree(sandbox.path, {
             'gspot.toml': `${policy}\n[[ignore]]\ncheck = "${configuration}/${tool}"\nrule = "${rule}"\nreason = "The fixture verifies a removed suppression."\n`,
         });
-        const renderSession3 = await openSession(sandbox.path);
-        const original = emitAll(renderSession3.policyFiles.policy, renderSession3.repository, renderSession3.scopes, {
-            version: renderSession3.version,
-            packageManager: renderSession3.packageManager,
-        }).files.find((file) => file.path === `.gspot/config/${target}`)!;
+        const originalSession = await openSession(sandbox.path);
+        const original = emitAll(
+            originalSession.policyFiles.policy,
+            originalSession.repository,
+            originalSession.scopes,
+            {
+                version: originalSession.version,
+                packageClient: originalSession.packageClient,
+            },
+        ).files.find((file) => file.path === `.gspot/config/${target}`)!;
         await createFileTree(sandbox.path, { [original.path]: original.content });
         writeFileSync(join(sandbox.path, 'gspot.toml'), policy);
         const preview = await applyCommand({ cwd: sandbox.path, isDryRun: true });
         expect(preview.text).toContain(`${collection}: removed ${rule}`);
         expect(readFileSync(join(sandbox.path, original.path), 'utf8')).toBe(original.content);
-        const renderSession4 = await openSession(sandbox.path);
-        const corrected = emitAll(renderSession4.policyFiles.policy, renderSession4.repository, renderSession4.scopes, {
-            version: renderSession4.version,
-            packageManager: renderSession4.packageManager,
-        }).files.find((file) => file.path === original.path)!;
+        const correctedSession = await openSession(sandbox.path);
+        const corrected = emitAll(
+            correctedSession.policyFiles.policy,
+            correctedSession.repository,
+            correctedSession.scopes,
+            {
+                version: correctedSession.version,
+                packageClient: correctedSession.packageClient,
+            },
+        ).files.find((file) => file.path === original.path)!;
         writeFileSync(join(sandbox.path, original.path), corrected.content);
         const applied = await applyCommand({ cwd: sandbox.path, isDryRun: true });
         expect(applied.text).not.toContain(`${collection}: removed ${rule}`);
@@ -123,10 +138,10 @@ test('apply preview names added Vale styles when prose moves from recommended to
     await using sandbox = await testdir();
     const policy = 'version = 1\nconfigurations = ["prose"]\n[rules]\ninstall = false\n';
     await createFileTree(sandbox.path, { 'gspot.toml': policy });
-    const renderSession5 = await openSession(sandbox.path);
-    const original = emitAll(renderSession5.policyFiles.policy, renderSession5.repository, renderSession5.scopes, {
-        version: renderSession5.version,
-        packageManager: renderSession5.packageManager,
+    const originalSession = await openSession(sandbox.path);
+    const original = emitAll(originalSession.policyFiles.policy, originalSession.repository, originalSession.scopes, {
+        version: originalSession.version,
+        packageClient: originalSession.packageClient,
     }).files.find((file) => file.path === '.gspot/config/vale.ini')!;
     await createFileTree(sandbox.path, { [original.path]: original.content });
     writeFileSync(join(sandbox.path, 'gspot.toml'), `level = "all"\n${policy}`);
@@ -145,11 +160,16 @@ test('apply preview names added Vale styles when prose moves from recommended to
         ]),
     });
     expect(readFileSync(join(sandbox.path, original.path), 'utf8')).toBe(original.content);
-    const renderSession6 = await openSession(sandbox.path);
-    const corrected = emitAll(renderSession6.policyFiles.policy, renderSession6.repository, renderSession6.scopes, {
-        version: renderSession6.version,
-        packageManager: renderSession6.packageManager,
-    }).files.find((file) => file.path === original.path)!;
+    const correctedSession = await openSession(sandbox.path);
+    const corrected = emitAll(
+        correctedSession.policyFiles.policy,
+        correctedSession.repository,
+        correctedSession.scopes,
+        {
+            version: correctedSession.version,
+            packageClient: correctedSession.packageClient,
+        },
+    ).files.find((file) => file.path === original.path)!;
     writeFileSync(join(sandbox.path, original.path), corrected.content);
     const applied = await applyCommand({ cwd: sandbox.path, isDryRun: true });
     expect(applied.text).not.toContain('*.BasedOnStyles: added');
@@ -167,21 +187,31 @@ test.each([
         await createFileTree(sandbox.path, {
             'gspot.toml': `${policy}\n[[ignore]]\ncheck = "${configuration}/${check}"\nrule = "${rule}"\nreason = "The fixture verifies enabling a previously disabled rule."\n`,
         });
-        const renderSession7 = await openSession(sandbox.path);
-        const original = emitAll(renderSession7.policyFiles.policy, renderSession7.repository, renderSession7.scopes, {
-            version: renderSession7.version,
-            packageManager: renderSession7.packageManager,
-        }).files.find((file) => file.path === `.gspot/config/${target}`)!;
+        const originalSession = await openSession(sandbox.path);
+        const original = emitAll(
+            originalSession.policyFiles.policy,
+            originalSession.repository,
+            originalSession.scopes,
+            {
+                version: originalSession.version,
+                packageClient: originalSession.packageClient,
+            },
+        ).files.find((file) => file.path === `.gspot/config/${target}`)!;
         await createFileTree(sandbox.path, { [original.path]: original.content });
         writeFileSync(join(sandbox.path, 'gspot.toml'), policy);
         const preview = await applyCommand({ cwd: sandbox.path, isDryRun: true });
         expect(preview.text).toContain(`rules: changed ${rule}`);
         expect(readFileSync(join(sandbox.path, original.path), 'utf8')).toBe(original.content);
-        const renderSession8 = await openSession(sandbox.path);
-        const corrected = emitAll(renderSession8.policyFiles.policy, renderSession8.repository, renderSession8.scopes, {
-            version: renderSession8.version,
-            packageManager: renderSession8.packageManager,
-        }).files.find((file) => file.path === original.path)!;
+        const correctedSession = await openSession(sandbox.path);
+        const corrected = emitAll(
+            correctedSession.policyFiles.policy,
+            correctedSession.repository,
+            correctedSession.scopes,
+            {
+                version: correctedSession.version,
+                packageClient: correctedSession.packageClient,
+            },
+        ).files.find((file) => file.path === original.path)!;
         writeFileSync(join(sandbox.path, original.path), corrected.content);
         const applied = await applyCommand({ cwd: sandbox.path, isDryRun: true });
         expect(applied.text).not.toContain(`rules: changed ${rule}`);
@@ -193,10 +223,10 @@ test('apply preview names a missing Semgrep rule by ID and clears it after corre
     await createFileTree(sandbox.path, {
         'gspot.toml': 'version = 1\nlevel = "all"\nconfigurations = ["security"]\n[rules]\ninstall = false\n',
     });
-    const renderSession9 = await openSession(sandbox.path);
-    const original = emitAll(renderSession9.policyFiles.policy, renderSession9.repository, renderSession9.scopes, {
-        version: renderSession9.version,
-        packageManager: renderSession9.packageManager,
+    const session = await openSession(sandbox.path);
+    const original = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
+        version: session.version,
+        packageClient: session.packageClient,
     }).files.find((file) => file.path === '.gspot/config/semgrep/node.yml')!;
     const parsed = Bun.YAML.parse(original.content) as { rules: { id: string }[] };
     const removed = parsed.rules.shift()!;

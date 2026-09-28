@@ -39,7 +39,7 @@ export function waitingSetting(scope: ScopeSelection, spec: CheckSpec): string |
 /**
  * Normalize a repository command into the check definition used by planning and explanations.
  * @param entry the check the policy declares
- * @returns the check as a manifest would declare it
+ * @returns the check in manifest form
  */
 export function repositoryCheckSpec(entry: RepositoryCheck): CheckSpec {
     const { paths, ...definition } = entry;

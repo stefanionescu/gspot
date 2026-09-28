@@ -1,4 +1,4 @@
-# @gspot/eslint-plugin
+# gspot ESLint Plugin
 
 ESLint rules that detect private environment reads in client code, duplicate barrel exports,
 and trivial files and functions in JavaScript and TypeScript. Additional rules check import
@@ -27,6 +27,7 @@ export default [gspot.configs.recommended];
 Use `gspot.configs.all` in place of `recommended` to include import, layout, and ordering
 checks. It includes every recommended rule. Neither configuration enables
 `require-server-only`, `max-barrel-reexports`, or `no-reexports-outside-index`.
+
 Select server files and alternative re-export policies explicitly. `require-server-only`
 is classified as recommended but needs an explicit file target. Trivial-file and
 trivial-function restrictions belong to `all`. Both presets select stable rules only.

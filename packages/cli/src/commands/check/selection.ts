@@ -7,8 +7,8 @@ import type { ChangedSet } from '#cli/types/repository/revisions.ts';
 import type { CommandResult } from '#cli/types/commands/commands.ts';
 import { INVALID_INPUT_EXIT } from '#cli/constants/commands/check.ts';
 import { changedFiles } from '#cli/repository/revisions/selection.ts';
-import type { Session, StageFilter } from '#cli/types/execution/execution.ts';
 import { isEnvironmentFile } from '#cli/repository/file-classification.ts';
+import type { Session, StageFilter } from '#cli/types/execution/execution.ts';
 
 function isReadable(path: string): boolean {
     try {
@@ -60,10 +60,10 @@ export function refusalFor(
 }
 
 /**
- * The repository files the positional paths select, among the tracked files and the changed ones.
+ * Selects tracked and changed repository files through positional paths.
  * @param session the open session
  * @param options the parsed flags
- * @param changed the staged or changed paths, which may name files no longer in the tree
+ * @param changed the staged or changed paths, which can name deleted files
  * @returns the selected paths, or none when no path was given
  */
 export function selectedPaths(session: Session, options: CheckOptions, changed: string[]): string[] {

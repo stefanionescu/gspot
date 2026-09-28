@@ -13,7 +13,14 @@ project contracts apply at both levels.
 
 Rules for a repository whose product is generated HTML served from a CDN or an edge platform.
 
+## Runtime isolation
+
+Browser code must not import privileged server implementations, build code, or quality tooling.
+Keep request-specific state isolated between edge requests.
+
 ## Source roots
+
+<!-- level: all -->
 
 - Source roots are named for what they own. Content holds authored bodies; templates hold page-owned
   markup and route metadata; assets hold source media; site configuration holds data only.
@@ -29,8 +36,6 @@ Rules for a repository whose product is generated HTML served from a CDN or an e
 
 ## Build
 
-- The build is deterministic: the same inputs produce byte-identical output. Two consecutive
-  builds diff clean.
 - Asset names are content-hashed where the pipeline expects hashes; templates reference assets
   through placeholders the build resolves, never hard-coded hashed names.
 - Public paths are normalized before writing output. Every internal link and asset reference
@@ -40,24 +45,35 @@ Rules for a repository whose product is generated HTML served from a CDN or an e
 - Analytics and third-party configuration is generated into one shared asset, not inlined per
   template, and reads its keys from the configuration owner.
 
+### Reproducible output
+
+<!-- level: all -->
+
+The same build inputs produce byte-identical output. Two consecutive builds diff clean.
+
 ## Templates and browser assets
 
 Templates and root HTML files stay declarative.
 
-- Do not add executable inline scripts to templates.
 - JSON-LD is allowed with `<script type="application/ld+json">` because it is data, not
   executable app logic.
-- Do not use `document.write`, inline event handler attributes, or `javascript:` URLs.
-- Put browser behavior in separate script files.
+- Do not use `document.write` or executable script URLs.
 - Prefer safe DOM mutation: `textContent`, attributes, class changes, and created nodes.
 - Avoid `innerHTML`, `outerHTML`, and `insertAdjacentHTML` unless a reviewed static, trusted
   markup path is the real contract.
-- Keep visible copy in content, configuration, or page-owned metadata; do not hide user copy in
-  build-script template literals.
 - Browser scripts check that required elements exist before binding behavior and do not
   swallow programming errors.
 
+### Template organization
+
+<!-- level: all -->
+
+- Keep executable scripts and event handlers in separate script files.
+- Keep visible copy in content, configuration, or page-owned metadata.
+
 ## Routes and pages
+
+<!-- level: all -->
 
 - Public routes use lowercase kebab-case path segments. Directory routes end with `index.html`
   in generated output.

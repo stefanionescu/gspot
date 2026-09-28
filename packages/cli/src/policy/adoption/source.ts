@@ -3,11 +3,11 @@ import { parse as parseYaml } from 'yaml';
 import { extname, posix } from 'node:path';
 import { parse as parseToml } from 'smol-toml';
 import { parseJsonc } from '#cli/repository/jsonc.ts';
-import type { FileSnapshot } from '#cli/types/platform.ts';
+import type { FileObservation } from '#cli/types/platform.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import type { CarrySource } from '#cli/types/policy/adoption.ts';
-import { sqlfluffConfiguration } from '#cli/repository/configuration/sqlfluff.ts';
 import type { TomlTable } from '#cli/types/repository/repository.ts';
+import type { ConfigurationSource } from '#cli/types/policy/adoption.ts';
+import { sqlfluffConfiguration } from '#cli/repository/configuration/sqlfluff.ts';
 import { configurationSection } from '#cli/repository/configuration/configuration-section.ts';
 
 const STRUCTURED_PARSERS: Record<string, (text: string) => unknown> = {
@@ -19,13 +19,20 @@ const STRUCTURED_PARSERS: Record<string, (text: string) => unknown> = {
     '.json5': (text) => JSON5.parse(text),
 };
 
-function parseSource(tool: string, path: string, text: string): unknown {
-    if (tool === 'sqlfluff' && posix.basename(path) !== '.sqlfluffignore')
+const NATIVE_PARSERS: Record<string, (text: string, path: string) => unknown> = {
+    sqlfluff: (text, path) => {
+        if (posix.basename(path) === '.sqlfluffignore') return {};
         return Object.fromEntries(
-            [...sqlfluffConfiguration(text)].map(([section, values]) => [section, Object.fromEntries(values)]),
+            [...sqlfluffConfiguration(text)].map(([section, input]) => [section, Object.fromEntries(input)]),
         );
+    },
     // EditorConfig is resolved through Prettier and retained, never retired as a parsed settings table.
-    if (tool === 'ec') return {};
+    ec: () => ({}),
+};
+
+function parseSource(tool: string, path: string, text: string): unknown {
+    const native = NATIVE_PARSERS[tool];
+    if (native !== undefined) return native(text, path);
     if (tool === 'eslint' || /\.[cm]?[jt]s$/u.test(path))
         throw new Error('This configuration requires tool-specific evaluation.');
     if (tool === 'basedpyright') return parseJsonc(text);
@@ -41,7 +48,7 @@ function parseSource(tool: string, path: string, text: string): unknown {
  * @param path the authored configuration file
  * @returns the file text with the snapshot of its bytes and mode
  */
-export function observeConfiguration(root: string, path: string): Omit<CarrySource, 'parsed'> {
+export function observeConfiguration(root: string, path: string): Omit<ConfigurationSource, 'parsed'> {
     const files = openConfinedRoot(root);
     try {
         const original = files.read(path);
@@ -56,30 +63,33 @@ export function observeConfiguration(root: string, path: string): Omit<CarrySour
 
 /**
  * Parse static settings from the same bytes used for mutation authorization.
- * @param original the snapshot of the authored file
- * @param tool the tool whose format the file is in
- * @param path the authored file's path
- * @param selector the section of a shared file that holds the tool's settings, when it is one
- * @param selector.table the table the settings live under
- * @param selector.key the key that holds them
- * @returns the text, the parsed settings table, and the snapshot
+ * @param original the snapshot of the authored file.
+ * @param tool the tool whose format the file is in.
+ * @param path the authored file's path.
+ * @param selector the section of a shared file that holds the tool's settings, when it is one.
+ * @param selector.table the table the settings live under.
+ * @param selector.key the key that holds them.
+ * @returns the text, the parsed settings table, and the snapshot.
  */
-export function parseCarrySource(
-    original: FileSnapshot,
+export function parseConfigurationSource(
+    original: FileObservation,
     tool: string,
     path: string,
     selector?: { table?: string; key?: string },
-): CarrySource {
+): ConfigurationSource {
     const text = original.bytes.toString('utf8');
-    const selected = selector === undefined ? undefined : configurationSection(text, path, selector);
-    if (selector !== undefined && selected === undefined)
-        throw new Error('The selected configuration section disappeared.');
-    const source = { original, text: selected?.text ?? text };
-    const parsed =
-        tool === 'sqlfluff' || selected === undefined ? parseSource(tool, path, source.text) : selected.parsed;
-    if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed))
-        throw new Error('Configuration must contain a settings table.');
-    return { ...source, parsed: parsed as TomlTable };
+    if (selector === undefined) {
+        const parsed = asRaw(parseSource(tool, path, text));
+        if (parsed === undefined) throw new Error('Configuration must contain a settings table.');
+        return { original, text, parsed };
+    }
+    const selected = configurationSection(text, path, selector);
+    if (selected === undefined) throw new Error('The selected configuration section disappeared.');
+    const source = { original, text: selected.text };
+    const parsed = tool === 'sqlfluff' ? parseSource(tool, path, source.text) : selected.parsed;
+    const table = asRaw(parsed);
+    if (table === undefined) throw new Error('Configuration must contain a settings table.');
+    return { ...source, parsed: table };
 }
 
 /**

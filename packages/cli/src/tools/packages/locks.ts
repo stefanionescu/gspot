@@ -55,23 +55,19 @@ const ROOT_DEPENDENCIES: Record<Exclude<LockName, 'yarn'>, (content: string) => 
     pnpm: pnpmDependencies,
 };
 
-// The name and version of a Bun lock package identity such as `name@1.2.3`.
-function bunIdentity(identity: string): { name: string; version: string } {
-    const separator = identity.lastIndexOf('@');
-    return { name: identity.slice(0, separator), version: identity.slice(separator + 1) };
-}
-
 // The registry a package resolves through: its scope's, or the default one.
 function registryFor(name: string, env: Record<string, string>): string | undefined {
     const scope = name.startsWith('@') ? name.split('/', 1)[0] : undefined;
-    const scoped = scope === undefined ? undefined : env[`npm_config_${scope}:registry`];
-    return scoped ?? env['npm_config_registry'];
+    const scopeRegistry = scope === undefined ? undefined : env[`npm_config_${scope}:registry`];
+    return scopeRegistry ?? env['npm_config_registry'];
 }
 
 // Whether a Bun lock entry resolved the standard tarball of a valid npm version through the configured registry.
 function isStandardTarball(entry: BunPackage, env: Record<string, string>): boolean {
     const [identity, resolved, , integrity] = entry;
-    const { name, version } = bunIdentity(identity);
+    const separator = identity.lastIndexOf('@');
+    const name = identity.slice(0, separator);
+    const version = identity.slice(separator + 1);
     if (semver.valid(version) === null || !INTEGRITY.test(integrity)) return false;
     const registry = registryFor(name, env);
     if (registry === undefined) return false;

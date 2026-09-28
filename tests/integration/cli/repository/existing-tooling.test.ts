@@ -3,8 +3,8 @@ import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { readRepository } from '#cli/repository/tree.ts';
-import { existingTooling } from '#cli/repository/existing-tooling.ts';
 import { readFileSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
+import { ciLintJobs, existingTooling } from '#cli/repository/existing-tooling.ts';
 
 test('hook discovery preserves path whitespace and refuses malformed Git configuration', async () => {
     const hooksPath = ' .custom hooks';
@@ -98,4 +98,85 @@ test('adoption discovers nested authored configuration without adopting managed 
     expect(discovered.configs.map((entry) => entry.path)).toStrictEqual(['src/.prettierrc.json']);
     expect(readFileSync(join(sandbox.path, '.gspot/package.json'), 'utf8')).toBe('unowned malformed output');
     expect(readFileSync(join(sandbox.path, 'vendor/.prettierrc.json'), 'utf8')).toBe('{"semi":true}');
+});
+
+test.each([
+    {
+        name: 'GitHub run steps',
+        path: '.github/workflows/check.yml',
+        document: {
+            jobs: {
+                quality: { steps: [{ uses: 'actions/checkout@v4' }, { run: 'bun run lint' }, null, 12] },
+                build: { steps: [{ run: 'bun run build' }] },
+            },
+        },
+        expected: ['quality'],
+    },
+    {
+        name: 'GitLab scalar and array scripts',
+        path: '.gitlab-ci.yml',
+        document: {
+            quality: { script: 'eslint src' },
+            analysis: { script: [null, 12, 'npm run gspot:check'] },
+            '.lint-template': { script: 'eslint src' },
+            build: { script: ['bun run build'] },
+        },
+        expected: ['quality', 'analysis'],
+    },
+    {
+        name: 'named inherited jobs',
+        path: '.gitlab/ci/check.yml',
+        document: {
+            'code-lint': { extends: '.base' },
+            unrelated: { extends: '.base' },
+            'lint-settings': { variables: {} },
+            'lint-invalid': [],
+        },
+        expected: ['code-lint'],
+    },
+    {
+        name: 'script precedence over steps',
+        path: '.github/workflows/check.yml',
+        document: {
+            jobs: {
+                build: { script: 'bun run build', steps: [{ run: 'eslint src' }] },
+                quality: { script: ['eslint src'], steps: [] },
+            },
+        },
+        expected: ['quality'],
+    },
+    { name: 'null document', path: '.gitlab-ci.yml', document: null, expected: [] },
+    { name: 'non-object jobs', path: '.github/workflows/check.yml', document: { jobs: 12 }, expected: [] },
+])('CI discovery recognizes $name', async ({ path, document, expected }) => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, { [path]: JSON.stringify(document) });
+    expect(ciLintJobs(sandbox.path, [path, 'missing.yml'])).toStrictEqual(expected.map((name) => `${path}: ${name}`));
+});
+
+test('CI discovery reports malformed YAML and accepts its correction', async () => {
+    await using sandbox = await testdir();
+    const path = '.gitlab-ci.yml';
+    await createFileTree(sandbox.path, { [path]: 'quality: [unterminated' });
+    expect(() => ciLintJobs(sandbox.path, [path])).toThrow();
+    writeFileSync(join(sandbox.path, path), 'quality:\n  script: eslint src\n');
+    expect(ciLintJobs(sandbox.path, [path])).toStrictEqual([`${path}: quality`]);
+});
+
+test.each(['null', '12', '"text"', '{}'])(
+    'hook discovery ignores package content %s without a hook declaration',
+    async (manifest) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, { 'package.json': manifest });
+        expect(existingTooling(sandbox.path, [], []).hooks).toStrictEqual([]);
+    },
+);
+
+test('hook discovery rejects malformed package JSON and accepts its correction', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, { 'package.json': '{' });
+    expect(() => existingTooling(sandbox.path, [], [])).toThrow(SyntaxError);
+    writeFileSync(join(sandbox.path, 'package.json'), '{"simple-git-hooks":{}}');
+    expect(existingTooling(sandbox.path, [], []).hooks).toStrictEqual([
+        { kind: 'simple-git-hooks', path: 'package.json', files: [] },
+    ]);
 });

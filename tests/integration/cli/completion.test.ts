@@ -19,16 +19,28 @@ async function candidates(words: string[]): Promise<string[]> {
         .filter((line) => line !== '' && !line.startsWith(':'));
 }
 
-// The flags a shell offers: the command's own, visible ones. A hidden flag such as the hook's --push is not offered.
-function longFlags(command: ReturnType<typeof buildProgram>): string[] {
-    return command.options
-        .filter((option) => !option.hidden)
-        .map((option) => option.long)
-        .filter((flag): flag is string => flag !== undefined);
-}
-
 const program = buildProgram();
 const commands = program.commands.filter((command) => command.name() !== 'complete');
+
+test('the command inventory preserves public commands and their help order', () => {
+    expect(program.commands.map((command) => command.name())).toStrictEqual([
+        'init',
+        'install',
+        'check',
+        'apply',
+        'ignore',
+        'add',
+        'remove',
+        'set',
+        'explain',
+        'doctor',
+        'list',
+        'uninstall',
+        'export',
+        'completion',
+        'complete',
+    ]);
+});
 
 test('completion offers every command of the program', async () => {
     const offered = await candidates(['']);
@@ -38,7 +50,10 @@ test('completion offers every command of the program', async () => {
 test.each(commands.map((command) => [command.name(), command] as const))(
     'completion offers every flag of %s',
     async (_name, command) => {
-        const flags = longFlags(command);
+        const flags = command.options
+            .filter((option) => !option.hidden)
+            .map((option) => option.long)
+            .filter((flag): flag is string => flag !== undefined);
         if (flags.length === 0) return;
         const offered = await candidates([command.name(), '--']);
         for (const flag of flags) expect(offered, `${command.name()} ${flag}`).toContain(flag);
@@ -46,13 +61,16 @@ test.each(commands.map((command) => [command.name(), command] as const))(
     COMPLETION_TIMEOUT_MS,
 );
 
-test.each(['bash', 'zsh', 'fish', 'powershell'])('the %s script asks the program for its candidates', async (shell) => {
-    const result = await run([process.execPath, CLI, 'completion', shell], {
-        cwd: fileURLToPath(new URL('../../..', import.meta.url)),
-        timeoutMs: COMPLETION_TIMEOUT_MS,
-    });
-    expect(result.code, result.stderr).toBe(0);
-    // Every script defers to the program for its candidates instead of listing them itself.
-    expect(result.stdout).toContain(shell === 'powershell' ? 'complete' : 'complete --');
-    expect(result.stdout).toContain('gspot');
-});
+test.each(['bash', 'zsh', 'fish', 'powershell'])(
+    'the %s script asks the program for its candidates',
+    async (interpreter) => {
+        const result = await run([process.execPath, CLI, 'completion', interpreter], {
+            cwd: fileURLToPath(new URL('../../..', import.meta.url)),
+            timeoutMs: COMPLETION_TIMEOUT_MS,
+        });
+        expect(result.code, result.stderr).toBe(0);
+        // Every script defers to the program for its candidates instead of listing them itself.
+        expect(result.stdout).toContain(interpreter === 'powershell' ? 'complete' : 'complete --');
+        expect(result.stdout).toContain('gspot');
+    },
+);

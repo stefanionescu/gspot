@@ -2,7 +2,7 @@ import { z } from 'zod';
 import type { TomlTable } from '#cli/types/repository/repository.ts';
 import { appendSetting, reasonFor } from '#cli/policy/adoption/results.ts';
 import { asList, asRaw, asStrings, asText } from '#cli/policy/adoption/source.ts';
-import type { CarriedConfiguration, CarrySource } from '#cli/types/policy/adoption.ts';
+import type { AdoptionResult, ConfigurationSource } from '#cli/types/policy/adoption.ts';
 
 // How an allowlist regex is applied travels with it: against the line, the match or the secret, and whether every part must hold.
 function targetKeys(entry: TomlTable): { regex_target?: string; condition?: string } {
@@ -14,7 +14,7 @@ function targetKeys(entry: TomlTable): { regex_target?: string; condition?: stri
     };
 }
 
-function carryGitleaks(source: CarrySource, path: string, lists: CarriedConfiguration): void {
+function carryGitleaks(source: ConfigurationSource, path: string, lists: AdoptionResult): void {
     if (path.includes('/')) throw new Error(`${path}: scoped secret allowlists require explicit conversion.`);
     const parsed = source.parsed;
     const single = asRaw(parsed['allowlist']);

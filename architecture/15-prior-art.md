@@ -64,7 +64,7 @@ Keep the result in the existing owning acceptance item, not a separate audit fra
 | Responsibility               | Candidate                                                                                        | Required evidence before adoption                                                                                                                                                                                                 |
 | ---------------------------- | ------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Temporary test directories   | [testdirs](https://github.com/luxass/testdirs)                                                   | Adopted as a direct development dependency used by product tests. Acquire the disposable directory before filling it. Do not maintain tests of its own API.                                                                       |
-| Temporary directory disposal | [Node filesystem APIs](https://nodejs.org/api/fs.html#fspromisesmkdtempdisposableprefix-options) | Prefer native operations where supported. `mkdtempDisposable` requires Node 24.4.0 or later, above the declared Node floor; the local Bun 1.3.11 inspection exposes no such function. Do not assume Bun implements a Node API.         |
+| Temporary directory disposal | [Node filesystem APIs](https://nodejs.org/api/fs.html#fspromisesmkdtempdisposableprefix-options) | Prefer native operations where supported. `mkdtempDisposable` requires Node 24.4.0 or later, above the declared Node floor; the local Bun 1.3.11 inspection exposes no such function. Do not assume Bun implements a Node API.    |
 | Process lifecycle            | [Execa](https://github.com/sindresorhus/execa)                                                   | Adopted for the shared process boundary after Bun and compiled-consumer execution. Preserve the process-failure regressions; Windows execution, process-tree termination, and command-session cancellation remain required gates. |
 | Atomic file replacement      | [write-file-atomic](https://github.com/npm/write-file-atomic)                                    | Replacement and cleanup failures, bytes and modes, concurrency, and supported-platform behavior. A single-file atomic writer does not establish path confinement, multi-file recovery, or ownership.                              |
 | Writer serialization         | [proper-lockfile](https://github.com/moxystudio/node-proper-lockfile)                            | Contention, interrupted writers, stale locks, lock compromise, and cleanup. Verify its behavior against the lifecycle transaction before adopting it.                                                                             |
@@ -121,6 +121,7 @@ Nx keeps schemas with their implementing features. For example, compare
 The documentation consumer is visible in `../nx/astro-docs/src/content.config.ts` and
 `../nx/astro-docs/src/plugins/plugin.loader.ts`: schema-derived content is rendered into store
 entries. `../nx/astro-docs/src/plugins/nx-reference-packages.loader.ts` handles reference packages.
+
 Adopt feature ownership and content-store rendering. Do not copy its network statistics,
 package taxonomy, or error-handling choices as gspot requirements. Gspot rejects duplicate
 identities and invalid required definitions before publication.
@@ -130,11 +131,11 @@ Turborepo separates its launcher in `../turborepo/packages/turbo/package.json` f
 `../turborepo/packages/turbo-releaser/src/config.ts`; `native.ts` consumes platform rows to stage
 npm metadata, binaries, and licenses. The launcher consumes installed native packages. Schema
 publication has a release consumer in `../turborepo/packages/turbo-releaser/src/stage.ts`.
-Adopt these boundaries and one platform definition feeding packaging. Keep gspot's own seven
-supported targets and its independent ESLint exports, rather than copying Turborepo's matrix.
+Adopt these boundaries and one platform definition feeding packaging. Keep the seven supported gspot
+targets and independent ESLint exports.
 
-Both projects distinguish repository maintenance tooling from shipped features. For gspot,
-keep Bun and native mise tasks. Keep runtime policy, configuration schemas, and embedded WASM
+Both projects distinguish repository maintenance tooling from shipped features. Gspot keeps
+Bun and native mise tasks. Keep runtime policy, configuration schemas, and embedded WASM
 with their consumers; stage generated copies in ignored build output. Package licenses and
 binary notices serve different consumers. Notice assembly stays with packaging, and plugin
 dependencies remain external. No Nx or Turborepo dependency, private package, or new task

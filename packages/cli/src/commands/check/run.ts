@@ -5,10 +5,10 @@ import { checkContent } from '#cli/commands/check/content.ts';
 import { refusalFor } from '#cli/commands/check/selection.ts';
 import { SelectionError } from '#cli/configurations/select.ts';
 import type { CheckOptions } from '#cli/types/commands/check.ts';
+import { useRevision } from '#cli/repository/revisions/contents.ts';
 import type { CommandResult } from '#cli/types/commands/commands.ts';
 import { stagedFiles } from '#cli/repository/revisions/selection.ts';
 import { findRoot, isGitRepository } from '#cli/repository/tracked.ts';
-import { withRevisionSnapshot } from '#cli/repository/revisions/snapshot.ts';
 // Checks an exact snapshot of the staged index, with the report published to the repository.
 async function checkStaged(root: string, options: CheckOptions, signal: AbortSignal): Promise<CommandResult> {
     if (options.fix)
@@ -19,12 +19,12 @@ async function checkStaged(root: string, options: CheckOptions, signal: AbortSig
     const set = await stagedFiles(root, signal);
     const refusal = refusalFor(options, options.stage ?? 'commit', set.staged);
     if (refusal !== undefined) return refusal;
-    return withRevisionSnapshot(
+    return useRevision(
         root,
         { kind: 'index' },
-        async (snapshot, tree) => {
+        async (revisionRoot, tree) => {
             const paths = options.paths.map((path) => relative(root, resolve(options.cwd, path)));
-            return checkContent(snapshot, { ...options, cwd: snapshot, paths }, signal, {
+            return checkContent(revisionRoot, { ...options, cwd: revisionRoot, paths }, signal, {
                 content: 'index',
                 cacheRoot: root,
                 reference: tree,

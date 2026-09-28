@@ -8,7 +8,7 @@ import { submodulePaths } from '#cli/repository/tracked.ts';
 import { doctorReport, doctorText } from '#cli/commands/doctor/report.ts';
 import { mkdirSync, readdirSync, symlinkSync, writeFileSync } from 'node:fs';
 import { pushedRevisions } from '#cli/repository/revisions/push-selection.ts';
-import { committedEntries, gitBlobs, gitEntries, withRevisionSnapshot } from '#cli/repository/revisions/snapshot.ts';
+import { committedEntries, gitBlobs, gitEntries, useRevision } from '#cli/repository/revisions/contents.ts';
 
 test.each(['index', 'commit'] as const)(
     'a %s snapshot retains gitlinks without reading submodule contents',
@@ -23,9 +23,9 @@ test.each(['index', 'commit'] as const)(
         gitOutput(sandbox.path, ['init']);
         gitOutput(sandbox.path, ['add', '.']);
         gitOutput(sandbox.path, ['commit', '-qm', 'Source']);
-        const object = gitOutput(sandbox.path, ['rev-parse', 'HEAD']);
+        const commitId = gitOutput(sandbox.path, ['rev-parse', 'HEAD']);
         const path = 'vendor/external project';
-        gitOutput(sandbox.path, ['update-index', '--add', '--cacheinfo', `160000,${object},${path}`]);
+        gitOutput(sandbox.path, ['update-index', '--add', '--cacheinfo', `160000,${commitId},${path}`]);
         gitOutput(sandbox.path, ['commit', '-qm', 'Gitlink']);
         mkdirSync(join(sandbox.path, 'vendor'));
         symlinkSync(outside.path, join(sandbox.path, path), 'dir');
@@ -36,8 +36,8 @@ test.each(['index', 'commit'] as const)(
         expect(report.submodules).toStrictEqual([path]);
         expect(doctorText(report).split(`submodule  ${path} (contents are not read)`)).toHaveLength(2);
         const expected = gitOutput(sandbox.path, ['write-tree']);
-        const source = kind === 'index' ? { kind } : { kind, object: gitOutput(sandbox.path, ['rev-parse', 'HEAD']) };
-        await withRevisionSnapshot(sandbox.path, source, async (snapshot, tree) => {
+        const source = kind === 'index' ? { kind } : { kind, hash: gitOutput(sandbox.path, ['rev-parse', 'HEAD']) };
+        await useRevision(sandbox.path, source, async (snapshot, tree) => {
             expect(tree).toBe(expected);
             expect(gitOutput(snapshot, ['write-tree'])).toBe(expected);
             expect(readdirSync(join(snapshot, path))).toStrictEqual([]);
@@ -64,7 +64,7 @@ test('nested policies retain repository context with policy-relative index and c
     await Bun.write(join(sandbox.path, 'outside.txt'), 'changed context');
     gitOutput(sandbox.path, ['add', '.']);
     gitOutput(sandbox.path, ['commit', '-m', 'Change']);
-    const object = gitOutput(sandbox.path, ['rev-parse', 'HEAD']);
+    const commitId = gitOutput(sandbox.path, ['rev-parse', 'HEAD']);
     await Bun.write(join(project, 'source.txt'), 'indexed');
     gitOutput(sandbox.path, ['add', '.']);
     await Bun.write(join(project, 'source.txt'), 'working');
@@ -72,8 +72,8 @@ test('nested policies retain repository context with policy-relative index and c
     expect(afterWrite.map((entry) => entry.path)).toStrictEqual(['source.txt']);
     const entries = await gitEntries(project, { kind: 'index' });
     expect(entries.map((entry) => entry.path)).toStrictEqual(['source.txt']);
-    for (const source of [{ kind: 'index' } as const, { kind: 'commit', object } as const]) {
-        await withRevisionSnapshot(project, source, async (snapshot, tree) => {
+    for (const source of [{ kind: 'index' } as const, { kind: 'commit', hash: commitId } as const]) {
+        await useRevision(project, source, async (snapshot, tree) => {
             expect(await Bun.file(join(snapshot, 'source.txt')).text()).toBe(
                 source.kind === 'index' ? 'indexed' : 'pushed',
             );
@@ -81,13 +81,13 @@ test('nested policies retain repository context with policy-relative index and c
             expect(gitOutput(snapshot, ['write-tree'])).toBe(tree);
         });
     }
-    const protocol = `refs/heads/main ${object} refs/heads/main ${base}\n`;
+    const protocol = `refs/heads/main ${commitId} refs/heads/main ${base}\n`;
     const updated = await pushedRevisions(project, protocol);
     expect(updated.revisions[0]?.paths).toStrictEqual(['source.txt']);
     gitOutput(sandbox.path, ['config', 'remote.example.fetch', '+refs/heads/*:refs/remotes/example/*']);
     gitOutput(sandbox.path, ['update-ref', 'refs/remotes/example/main', base]);
-    const newRef = `refs/heads/new ${object} refs/heads/new ${'0'.repeat(object.length)}\n`;
-    const created = await pushedRevisions(project, newRef, 'example');
+    const createdRef = `refs/heads/new ${commitId} refs/heads/new ${'0'.repeat(commitId.length)}\n`;
+    const created = await pushedRevisions(project, createdRef, 'example');
     expect(created.revisions[0]?.paths).toStrictEqual(['source.txt']);
     expect(await Bun.file(join(project, 'source.txt')).text()).toBe('working');
 });
@@ -104,10 +104,10 @@ test('unborn history is empty and committed blobs retain unusual filenames and b
     expect(entries.map((entry) => entry.path)).toStrictEqual([path]);
     const blobs = await gitBlobs(
         sandbox.path,
-        entries.map((entry) => entry.object),
+        entries.map((entry) => entry.hash),
     );
-    expect(blobs.get(entries[0]!.object)?.toString()).toBe('select 1;\n');
-    await withRevisionSnapshot(sandbox.path, { kind: 'index' }, async (snapshot) => {
+    expect(blobs.get(entries[0]!.hash)?.toString()).toBe('select 1;\n');
+    await useRevision(sandbox.path, { kind: 'index' }, async (snapshot) => {
         expect(await Bun.file(join(snapshot, path)).text()).toBe('select 1;\n');
     });
     writeFileSync(join(sandbox.path, '.git', 'index'), 'broken');

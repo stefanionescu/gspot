@@ -38,7 +38,7 @@ async function readMigrations(input: EngineInput, paths: string[]): Promise<Migr
 }
 
 /**
- * Every tracked migration in version order, read and parsed.
+ * Reads and parses every tracked migration in version order.
  * @param input the engine input
  * @returns the migrations, empty when the repository has no migrations folder
  */

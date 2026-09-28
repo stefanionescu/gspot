@@ -30,16 +30,25 @@ project contracts apply at both levels.
 - `target="_blank"` links carry `rel="noopener"`.
 - Boolean attributes are bare (`disabled`, not `disabled="true"`). Attribute values are quoted.
 
-## Scripts and styles
+## Script safety
 
-- No inline scripts, no inline event handler attributes (`onclick`), no `javascript:` URLs, no
-  inline `style` attributes. Behavior lives in script files; presentation in stylesheets.
-- `<script type="application/ld+json">` is data and is allowed.
-- Scripts are `defer` or `type="module"`; nothing blocks parsing.
-- `document.write`, `innerHTML` with untrusted content, and `insertAdjacentHTML` with untrusted
-  content are banned.
+- Do not put executable script URLs or active-document data URLs in links or embedded content.
+- Do not use `document.write` or pass untrusted content to HTML parsing sinks such as
+  `innerHTML` or `insertAdjacentHTML` without the project's sanitization boundary.
+- Use `defer` or `type="module"` for scripts that do not need to block parsing.
+
+### Script and style placement
+
+<!-- level: all -->
+
+- Keep executable scripts and event handlers in script files. Attach events without inline
+  handler attributes such as `onclick`.
+- Keep presentation in stylesheets rather than inline `style` attributes.
+- `<script type="application/ld+json">` is data and remains allowed inline.
 
 ## Templates and copy
+
+<!-- level: all -->
 
 - Visible copy lives in content or configuration, not in script string literals, or template
   logic.

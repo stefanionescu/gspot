@@ -291,4 +291,5 @@ summary = "The xcodebuild destination."
 ".swift" = ["format", "syntax", "style", "types", "structure", "naming", "prose", "spelling"]
 
 [rule_files]
-language = ["language/SWIFT.md", "language/naming/SWIFT.md"]
+language = [{path = "language/SWIFT.md"}, {path = "language/naming/SWIFT.md"}]
+framework = [{path = "framework/swiftui/SWIFTUI.md", when = {tags = ["swift-import:SwiftUI"]}}, {path = "framework/uikit/UIKIT.md", when = {tags = ["swift-import:UIKit"]}}]

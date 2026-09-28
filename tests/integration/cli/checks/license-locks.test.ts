@@ -1,9 +1,9 @@
 import { expect, test } from 'bun:test';
-import { planRun } from '#cli/execution/planning/plan.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { reportSchema } from '#cli/execution/report.ts';
+import { planRun } from '#cli/execution/planning/plan.ts';
 import { run as runCli } from '#tests/support/cli/command.ts';
 import { lockedPackages } from '#cli/repository/locked-packages.ts';
 import { allowlistsMatch } from '#cli/checks/repository/allowlists-match.ts';
@@ -137,10 +137,11 @@ test.each(['root', 'nested', 'combined'])(
         const root = repository.path;
         const exception =
             '\n[[tools.licenses.packages_allowed]]\npackage = "example@2.0.0"\nlicense = "BSD"\nreason = "Reviewed package metadata."\n';
+        const configurations = selection === 'combined' ? '"licenses", "structure"' : '"licenses"';
         const selected =
             selection === 'nested'
                 ? 'configurations = []\n[[scope]]\npath = "app"\nconfigurations = ["licenses"]\n'
-                : `configurations = ["licenses"${selection === 'combined' ? ', "structure"' : ''}]\n`;
+                : `configurations = [${configurations}]\n`;
         await createFileTree(root, {
             'gspot.toml':
                 'version = 1\n' +
@@ -166,11 +167,21 @@ test.each(['root', 'nested', 'combined'])(
             },
         ]);
         const path = `${root}/gspot.toml`;
-        await Bun.write(path, (await Bun.file(path).text()).replace('example@2.0.0', 'example@1.2.3'));
+        const policyText = await Bun.file(path).text();
+        await Bun.write(path, policyText.replace('example@2.0.0', 'example@1.2.3'));
         const corrected = await runCli(root, ['check', '--only', 'integrity/allowlists-match', '--no-cache', '--json']);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
             { check: 'integrity/allowlists-match', status: 'ok', findings: [] },
         ]);
+    },
+);
+
+test.each(['unknown.lock', 'toString', 'constructor', '__proto__'])(
+    'unsupported lock format %s retains the format error',
+    (filename) => {
+        expect(() => lockedPackages(filename, '{}')).toThrow(
+            'This lockfile format does not support package exception verification.',
+        );
     },
 );

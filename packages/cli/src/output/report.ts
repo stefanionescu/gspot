@@ -3,9 +3,9 @@ import type { Finding } from '#cli/types/checks/checks.ts';
 import packageManifest from '#package' with { type: 'json' };
 import { REPORT_DIRECTORY } from '#cli/constants/platform.ts';
 import { reportStorageFailure } from '#cli/output/messages.ts';
-// JSON, SARIF, and GitLab Code Quality reports.
-import { withLifecycleOwner } from '#cli/lifecycle/ownership/owner.ts';
 import { PACKAGE_JSON_INDENT } from '#cli/constants/generation.ts';
+// JSON, SARIF, and GitLab Code Quality reports.
+import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import type { PushReport, RunReport } from '#cli/types/execution/execution.ts';
 import { SarifBuilder, SarifResultBuilder, SarifRuleBuilder, SarifRunBuilder } from 'node-sarif-builder';
 
@@ -32,27 +32,30 @@ function codeQualityText(report: RunReport | PushReport): string {
         ...entry.coverage.findings,
     ]);
     const seen = new Set<string>();
-    const entries = findings.flatMap((finding) => {
-        const path = finding.file.replaceAll('\\', '/').replace(/^\.\//u, '');
-        if (path === '' || path.startsWith('/') || /^[a-zA-Z]:/u.test(path) || path.split('/').includes('..'))
-            return [];
-        const check = finding.rule === undefined ? finding.check : `${finding.check}:${finding.rule}`;
-        const line = Math.max(1, finding.line ?? 1);
-        const fingerprint = new Bun.CryptoHasher('sha256')
-            .update(JSON.stringify([check, path, line, finding.column ?? 1, finding.message]))
-            .digest('hex');
-        if (seen.has(fingerprint)) return [];
-        seen.add(fingerprint);
-        return [
-            {
-                description: finding.message,
-                check_name: check,
-                fingerprint,
-                severity: 'major',
-                location: { path, lines: { begin: line } },
-            },
-        ];
-    });
+    const entries = findings
+        .map((finding) => ({ finding, path: finding.file.replaceAll('\\', '/').replace(/^\.\//u, '') }))
+        .filter(
+            ({ path }) =>
+                path !== '' && !path.startsWith('/') && !/^[a-zA-Z]:/u.test(path) && !path.split('/').includes('..'),
+        )
+        .flatMap(({ finding, path }) => {
+            const check = finding.rule === undefined ? finding.check : `${finding.check}:${finding.rule}`;
+            const line = Math.max(1, finding.line ?? 1);
+            const fingerprint = new Bun.CryptoHasher('sha256')
+                .update(JSON.stringify([check, path, line, finding.column ?? 1, finding.message]))
+                .digest('hex');
+            if (seen.has(fingerprint)) return [];
+            seen.add(fingerprint);
+            return [
+                {
+                    description: finding.message,
+                    check_name: check,
+                    fingerprint,
+                    severity: 'major',
+                    location: { path, lines: { begin: line } },
+                },
+            ];
+        });
     return `${JSON.stringify(entries, null, PACKAGE_JSON_INDENT)}\n`;
 }
 
@@ -107,7 +110,7 @@ export function writeReport(root: string, report: RunReport | PushReport): void 
     const sarif = sarifText(report);
     const path = join(root, REPORT_DIRECTORY, 'report.json');
     try {
-        withLifecycleOwner(root, (owner) => {
+        runOwnedLifecycle(root, (owner) => {
             const proposals = (
                 [
                     [`${REPORT_DIRECTORY}/report.json`, json],

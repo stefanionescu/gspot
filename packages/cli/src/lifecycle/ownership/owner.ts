@@ -1,7 +1,7 @@
 import { realpathSync } from 'node:fs';
 import { AsyncLocalStorage } from 'node:async_hooks';
-import type { FileSnapshot } from '#cli/types/platform.ts';
 import { ownershipSchema } from '#cli/lifecycle/journal.ts';
+import type { FileObservation } from '#cli/types/platform.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { openJournal } from '#cli/lifecycle/ownership/journal.ts';
 import { fileMode, mutationTarget } from '#cli/platform/safe-paths.ts';
@@ -69,7 +69,10 @@ function lifecycleOwner(journal: Journal): LifecycleOwner {
  * @param current the file as it is now, or undefined when it does not exist
  * @returns the snapshot to publish
  */
-export function publicationSnapshot(proposed: FileSnapshot, current: FileSnapshot | undefined): FileSnapshot {
+export function publicationObservation(
+    proposed: FileObservation,
+    current: FileObservation | undefined,
+): FileObservation {
     const { bytes } = proposed;
     const mode = fileMode(proposed);
     const checkout =
@@ -99,12 +102,12 @@ export function openLifecycleOwner(root: string, stateDirectory = STATE_DIRECTOR
 
 /**
  * Reuse active mutation owners and serialize each repository or Git-resolved root.
- * @param root the root the owner confines its writes to
- * @param action the work to do with the owner open
- * @param stateDirectory the directory under the root that holds the journal and lock
- * @returns what the action returns
+ * @param root the root the owner confines its writes to.
+ * @param action the work to do with the owner open.
+ * @param stateDirectory the directory under the root that holds the journal and lock.
+ * @returns what the action returns.
  */
-export function withLifecycleOwner<Result>(
+export function runOwnedLifecycle<Result>(
     root: string,
     action: (owner: LifecycleOwner) => Result,
     stateDirectory = STATE_DIRECTORY,

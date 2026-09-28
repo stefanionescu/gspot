@@ -151,6 +151,8 @@ context when a reader needs it to run the snippet.
 
 ### Keep examples focused
 
+<!-- level: all -->
+
 One example teaches one primary idea.
 
 Do not combine:
@@ -246,6 +248,8 @@ Each step must contain an action.
 
 ### Keep one main action per step
 
+<!-- level: all -->
+
 A step can include a reason, location, action, and expected result, but it
 never contains several independent actions hidden in a paragraph.
 
@@ -265,6 +269,8 @@ select **Reset**.
 ```
 
 ### Mark optional and recommended steps
+
+<!-- level: all -->
 
 Start the step with a clear label:
 
@@ -362,6 +368,8 @@ Do not:
 
 ### Prefer inline Markdown links
 
+<!-- level: all -->
+
 Use:
 
 ```markdown
@@ -407,6 +415,8 @@ See the installation guide in the provider documentation.
 ```
 
 ### Avoid duplicate links
+
+<!-- level: all -->
 
 Do not link to the same destination repeatedly on one page.
 

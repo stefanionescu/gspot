@@ -16,13 +16,6 @@ import {
     SOURCE_STATEMENT,
 } from '#cli/constants/checks/script.ts';
 
-function hasBoundary(file: ScriptFile): boolean {
-    return file.lines.slice(0, BOUNDARY_HEADER_WINDOW).some((line) => {
-        const description = BOUNDARY_HEADER.exec(line)?.groups?.['description'];
-        return description !== undefined && description.split(/\s+/u).length >= BOUNDARY_MIN_WORDS;
-    });
-}
-
 function resolvedSource(owner: string, annotation: string): string {
     if (annotation.startsWith('/')) return annotation.slice(1);
     const directory = posix.dirname(owner);
@@ -73,7 +66,7 @@ function dependencyFindings(
 }
 
 /**
- * The boundary findings for scripts under [tools.bash] architecture_roots: the header, source annotations, barrels and implicit dependencies.
+ * The boundary findings for scripts under [tools.bash] architecture_roots: the header, source annotations, barrels, and implicit dependencies.
  * @param context the check context
  * @param scripts the shell index
  * @returns the findings
@@ -86,7 +79,11 @@ export const scriptBoundaries: Analysis = async (context, scripts) => {
     return index.files
         .filter((file) => isGoverned(file.path))
         .flatMap((file) => {
-            const findings = hasBoundary(file)
+            const hasBoundary = file.lines.slice(0, BOUNDARY_HEADER_WINDOW).some((line) => {
+                const description = BOUNDARY_HEADER.exec(line)?.groups?.['description'];
+                return description !== undefined && description.split(/\s+/u).length >= BOUNDARY_MIN_WORDS;
+            });
+            const findings = hasBoundary
                 ? []
                 : [
                       context.report(

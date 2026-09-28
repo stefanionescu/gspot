@@ -1,94 +1,38 @@
 // Installs built packages from an isolated registry: private tool installation preserves authored metadata and native wrappers run.
+import { expect, test } from 'bun:test';
 import { fileURLToPath } from 'node:url';
-import { afterAll, expect, test } from 'bun:test';
+import { dirname, join, relative } from 'node:path';
 import { reportSchema } from '#cli/execution/report.ts';
-import { delimiter, dirname, join, relative } from 'node:path';
+import { RELEASE_TIMEOUT_MS } from '#tests/constants/release.ts';
 import { environment } from '#tests/support/release/packages.ts';
 import { runProcess as run } from '#tests/support/cli/command.ts';
 import type { InstallJson } from '#cli/types/commands/commands.ts';
-import { RELEASE_TIMEOUT_MS } from '#tests/constants/support/release.ts';
-import { installedConsumer, publishRelease } from '#tests/support/release/published.ts';
-import { existsSync, mkdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
+import { createConsumer } from '#tests/support/release/consumer.ts';
+import { getPublishedRelease } from '#tests/support/release/published.ts';
+import { existsSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
+import { prepareFormatterConsumer, prepareNativeConsumer } from '#tests/support/release/tools.ts';
 
-// The release publishes once for this file, and its registry stops when the file's tests end.
-const release = await publishRelease();
-afterAll(async () => {
-    await release.registry.stop();
-});
+const release = getPublishedRelease();
 
+const formatterPackage = dirname(fileURLToPath(import.meta.resolve('prettier/package.json')));
+const publishedFormatter = await run(
+    ['npm', 'publish', formatterPackage, '--registry', release.registry.url, '--ignore-scripts'],
+    {
+        cwd: release.registry.work,
+        env: { ...environment, NPM_CONFIG_USERCONFIG: release.registry.npmrc },
+        timeoutMs: RELEASE_TIMEOUT_MS,
+    },
+);
+if (publishedFormatter.code !== 0)
+    throw new Error(`Formatter registry publication failed: ${publishedFormatter.stdout}${publishedFormatter.stderr}`);
 test(
-    'private installation preserves authored metadata when the host runner is outdated',
+    'private installation preserves authored and locked metadata while reporting an outdated host runner',
     async () => {
-        await using fixture = await installedConsumer(release);
+        await using fixture = await createConsumer(release.registry, release.version);
+        expect(fixture.installed.code, fixture.installed.stdout + fixture.installed.stderr).toBe(0);
         const { command } = fixture;
-        const formatterPackage = dirname(fileURLToPath(import.meta.resolve('prettier/package.json')));
-        const publishedFormatter = await run(
-            ['npm', 'publish', formatterPackage, '--registry', release.registry.url, '--ignore-scripts'],
-            {
-                cwd: release.registry.work,
-                env: { ...environment, NPM_CONFIG_USERCONFIG: release.registry.npmrc },
-                timeoutMs: RELEASE_TIMEOUT_MS,
-            },
-        );
-        expect(publishedFormatter.code, publishedFormatter.stdout + publishedFormatter.stderr).toBe(0);
-        const toolConsumer = join(fixture.workspace, 'tool-consumer');
-        const hostTools = join(fixture.workspace, 'host-tools');
-        mkdirSync(toolConsumer);
-        mkdirSync(hostTools);
-        writeFileSync(join(hostTools, 'mise'), '#!/bin/sh\nprintf "2026.5.15\\n"\n', { mode: 0o755 });
-        const bun = await run(['bun', '--version'], {
-            cwd: toolConsumer,
-            env: environment,
-            timeoutMs: RELEASE_TIMEOUT_MS,
-        });
-        expect(bun.code, bun.stdout + bun.stderr).toBe(0);
-        const authoredPackage = JSON.stringify({
-            private: true,
-            packageManager: `bun@${bun.stdout.trim()}`,
-            scripts: { test: 'authored-command' },
-        });
-        writeFileSync(join(toolConsumer, 'package.json'), authoredPackage);
-        writeFileSync(join(toolConsumer, '.npmrc'), `registry=${release.registry.url}\n`);
-        writeFileSync(join(toolConsumer, 'source.js'), 'export const greeting="hello";');
-        const toolOptions = {
-            cwd: toolConsumer,
-            timeoutMs: RELEASE_TIMEOUT_MS,
-            env: {
-                ...environment,
-                CI: '1',
-                NO_COLOR: '1',
-                PATH: `${hostTools}${delimiter}${environment['PATH'] ?? ''}`,
-                NPM_CONFIG_USERCONFIG: release.toolNpmrc,
-                HTTP_PROXY: undefined,
-                HTTPS_PROXY: undefined,
-                ALL_PROXY: undefined,
-                http_proxy: undefined,
-                https_proxy: undefined,
-                all_proxy: undefined,
-                NO_PROXY: '127.0.0.1,localhost',
-            },
-        };
-        const toolInit = await run(
-            [
-                ...command,
-                'init',
-                '--json',
-                '--yes',
-                '--configurations',
-                'formatting',
-                '--runner',
-                'mise',
-                '--no-ci',
-                '--no-hooks',
-                '--no-rules',
-                '--no-install',
-            ],
-            toolOptions,
-        );
-        expect(toolInit.code, toolInit.stdout + toolInit.stderr).toBe(0);
+        const { toolConsumer, toolOptions, authoredPackage } = await prepareFormatterConsumer(fixture, release);
         expect(existsSync(join(toolConsumer, '.gspot/reports/report.json'))).toBe(false);
-        const selectedFormatter = await run([...command, 'set', 'extra_checks', 'formatting/prettier'], toolOptions);
-        expect(selectedFormatter.code, selectedFormatter.stdout + selectedFormatter.stderr).toBe(0);
         const toolManifest = readFileSync(join(toolConsumer, '.gspot/package.json'));
         const toolLock = readFileSync(join(toolConsumer, '.gspot/bun.lock'));
         expect(toolLock.toString('utf8')).not.toContain(release.registry.url);
@@ -103,6 +47,20 @@ test(
         expect(readFileSync(join(toolConsumer, 'package.json'), 'utf8')).toBe(authoredPackage);
         expect(readFileSync(join(toolConsumer, '.gspot/package.json'))).toStrictEqual(toolManifest);
         expect(readFileSync(join(toolConsumer, '.gspot/bun.lock'))).toStrictEqual(toolLock);
+    },
+    RELEASE_TIMEOUT_MS,
+);
+
+test(
+    'privately installed formatters reject source, fix it, and accept the corrected bytes',
+    async () => {
+        await using fixture = await createConsumer(release.registry, release.version);
+        expect(fixture.installed.code, fixture.installed.stdout + fixture.installed.stderr).toBe(0);
+        const { command } = fixture;
+        const { toolConsumer, toolOptions, authoredPackage } = await prepareFormatterConsumer(fixture, release);
+        const installed = await run([...command, 'install', '--json'], toolOptions);
+        expect(installed.code, installed.stdout + installed.stderr).toBe(2);
+        expect((JSON.parse(installed.stdout) as InstallJson).error).toContain('installed locked npm tools');
         const formatterArgs = ['check', 'source.js', '--only', 'formatting/prettier', '--no-cache', '--json'];
         const invalidFormat = await run([...command, ...formatterArgs], toolOptions);
         expect(invalidFormat.code, invalidFormat.stdout + invalidFormat.stderr).toBe(1);
@@ -115,7 +73,7 @@ test(
             files: 1,
         });
         expect(
-            formatReport.checks[0]!.findings.map(({ check, file, message }) => ({ check, file, message })),
+            formatReport.checks[0]!.findings.map(({ check, file, message: text }) => ({ check, file, message: text })),
         ).toStrictEqual([
             {
                 check: 'formatting/prettier',
@@ -137,38 +95,12 @@ test(
 );
 
 test(
-    'installed native wrappers report and correct TOML and whitespace defects',
+    'installed TOML wrappers report formatting defects and correct the authored file',
     async () => {
-        await using fixture = await installedConsumer(release);
-        const { command, setupOptions } = fixture;
-        const authoredPackage = JSON.stringify({ private: true, scripts: { test: 'authored-command' } });
-        const wrapperConsumer = join(fixture.workspace, 'wrapper-consumer');
-        mkdirSync(wrapperConsumer);
-        writeFileSync(join(wrapperConsumer, 'package.json'), authoredPackage);
-        writeFileSync(join(wrapperConsumer, 'settings.toml'), 'a    =    1\n');
-        writeFileSync(join(wrapperConsumer, 'notes.json'), '"text"   ');
-        const wrapperOptions = { ...setupOptions, cwd: wrapperConsumer };
-        const wrapperInit = await run(
-            [
-                ...command,
-                'init',
-                '--yes',
-                '--configurations',
-                'configs',
-                '--no-runner',
-                '--no-ci',
-                '--no-hooks',
-                '--no-rules',
-                '--no-install',
-                '--json',
-            ],
-            wrapperOptions,
-        );
-        expect(wrapperInit.code, wrapperInit.stdout + wrapperInit.stderr).toBe(0);
-        const wrapperLevel = await run([...command, 'set', 'level', 'all', '--json'], wrapperOptions);
-        expect(wrapperLevel.code, wrapperLevel.stdout + wrapperLevel.stderr).toBe(0);
-        const wrapperInstall = await run([...command, 'install', '--json'], wrapperOptions);
-        expect(wrapperInstall.code, wrapperInstall.stdout + wrapperInstall.stderr).toBe(0);
+        await using fixture = await createConsumer(release.registry, release.version);
+        expect(fixture.installed.code, fixture.installed.stdout + fixture.installed.stderr).toBe(0);
+        const { command } = fixture;
+        const { nativeConsumer, nativeOptions, authoredPackage } = await prepareNativeConsumer(fixture);
         const tomlFormat = [
             ...command,
             'check',
@@ -178,7 +110,7 @@ test(
             '--no-cache',
             '--json',
         ];
-        const unformattedToml = await run(tomlFormat, wrapperOptions);
+        const unformattedToml = await run(tomlFormat, nativeOptions);
         expect(unformattedToml.code, unformattedToml.stdout + unformattedToml.stderr).toBe(1);
         const tomlReport = reportSchema.parse(JSON.parse(unformattedToml.stdout));
         expect(tomlReport.skips).toStrictEqual([]);
@@ -189,10 +121,10 @@ test(
             files: 1,
         });
         expect(
-            tomlReport.checks[0]!.findings.map(({ check, file, message, fixable }) => ({
+            tomlReport.checks[0]!.findings.map(({ check, file, message: text, fixable }) => ({
                 check,
                 file,
-                message,
+                message: text,
                 fixable,
             })),
         ).toStrictEqual([
@@ -204,31 +136,43 @@ test(
             },
         ]);
         expect(
-            relative(realpathSync(wrapperConsumer), tomlReport.checks[0]!.command![0]!).replaceAll('\\', '/'),
+            relative(realpathSync(nativeConsumer), tomlReport.checks[0]!.command![0]!).replaceAll('\\', '/'),
         ).toStartWith('.gspot/node_modules/');
-        const fixedToml = await run([...tomlFormat, '--fix'], wrapperOptions);
+        const fixedToml = await run([...tomlFormat, '--fix'], nativeOptions);
         expect(fixedToml.code, fixedToml.stdout + fixedToml.stderr).toBe(0);
-        expect(readFileSync(join(wrapperConsumer, 'settings.toml'), 'utf8')).toBe('a = 1\n');
-        const formattedToml = await run(tomlFormat, wrapperOptions);
+        expect(readFileSync(join(nativeConsumer, 'settings.toml'), 'utf8')).toBe('a = 1\n');
+        const formattedToml = await run(tomlFormat, nativeOptions);
         expect(formattedToml.code, formattedToml.stdout + formattedToml.stderr).toBe(0);
         expect(reportSchema.parse(JSON.parse(formattedToml.stdout)).checks).toMatchObject([
             { check: 'configs/toml-format', status: 'ok', files: 1, findings: [] },
         ]);
-        writeFileSync(join(wrapperConsumer, 'settings.toml'), 'a = [\n');
+        expect(readFileSync(join(nativeConsumer, 'package.json'), 'utf8')).toBe(authoredPackage);
+    },
+    RELEASE_TIMEOUT_MS,
+);
+
+test(
+    'installed TOML wrappers report exact syntax findings and accept corrected input',
+    async () => {
+        await using fixture = await createConsumer(release.registry, release.version);
+        expect(fixture.installed.code, fixture.installed.stdout + fixture.installed.stderr).toBe(0);
+        const { command } = fixture;
+        const { nativeConsumer, nativeOptions, authoredPackage } = await prepareNativeConsumer(fixture);
+        writeFileSync(join(nativeConsumer, 'settings.toml'), 'a = [\n');
         const tomlSyntax = [...command, 'check', 'settings.toml', '--only', 'configs/toml', '--no-cache', '--json'];
-        const invalidToml = await run(tomlSyntax, wrapperOptions);
+        const invalidToml = await run(tomlSyntax, nativeOptions);
         expect(invalidToml.code, invalidToml.stdout + invalidToml.stderr).toBe(1);
         const syntaxReport = reportSchema.parse(JSON.parse(invalidToml.stdout));
         expect(syntaxReport.skips).toStrictEqual([]);
         expect(syntaxReport.checks).toHaveLength(1);
         expect(syntaxReport.checks[0]).toMatchObject({ check: 'configs/toml', status: 'fail', files: 1 });
         expect(
-            syntaxReport.checks[0]!.findings.map(({ check, file, line, column, message, fixable }) => ({
+            syntaxReport.checks[0]!.findings.map(({ check, file, line, column, message: text, fixable }) => ({
                 check,
                 file,
                 line,
                 column,
-                message,
+                message: text,
                 fixable,
             })),
         ).toStrictEqual([
@@ -241,12 +185,24 @@ test(
                 fixable: false,
             },
         ]);
-        writeFileSync(join(wrapperConsumer, 'settings.toml'), 'a = 1\n');
-        const validToml = await run(tomlSyntax, wrapperOptions);
+        writeFileSync(join(nativeConsumer, 'settings.toml'), 'a = 1\n');
+        const validToml = await run(tomlSyntax, nativeOptions);
         expect(validToml.code, validToml.stdout + validToml.stderr).toBe(0);
         expect(reportSchema.parse(JSON.parse(validToml.stdout)).checks).toMatchObject([
             { check: 'configs/toml', status: 'ok', files: 1, findings: [] },
         ]);
+        expect(readFileSync(join(nativeConsumer, 'package.json'), 'utf8')).toBe(authoredPackage);
+    },
+    RELEASE_TIMEOUT_MS,
+);
+
+test(
+    'installed whitespace wrappers report exact findings and accept corrected input',
+    async () => {
+        await using fixture = await createConsumer(release.registry, release.version);
+        expect(fixture.installed.code, fixture.installed.stdout + fixture.installed.stderr).toBe(0);
+        const { command } = fixture;
+        const { nativeConsumer, nativeOptions, authoredPackage } = await prepareNativeConsumer(fixture);
         const whitespaceCommand = [
             ...command,
             'check',
@@ -256,7 +212,7 @@ test(
             '--no-cache',
             '--json',
         ];
-        const trailingWhitespace = await run(whitespaceCommand, wrapperOptions);
+        const trailingWhitespace = await run(whitespaceCommand, nativeOptions);
         expect(trailingWhitespace.code, trailingWhitespace.stdout + trailingWhitespace.stderr).toBe(1);
         const whitespaceReport = reportSchema.parse(JSON.parse(trailingWhitespace.stdout));
         expect(whitespaceReport.skips).toStrictEqual([]);
@@ -267,11 +223,11 @@ test(
             files: 1,
         });
         expect(
-            whitespaceReport.checks[0]!.findings.map(({ check, file, line, message, fixable }) => ({
+            whitespaceReport.checks[0]!.findings.map(({ check, file, line, message: text, fixable }) => ({
                 check,
                 file,
                 line,
-                message,
+                message: text,
                 fixable,
             })),
         ).toStrictEqual([
@@ -284,15 +240,15 @@ test(
             },
         ]);
         expect(
-            relative(realpathSync(wrapperConsumer), whitespaceReport.checks[0]!.command![0]!).replaceAll('\\', '/'),
+            relative(realpathSync(nativeConsumer), whitespaceReport.checks[0]!.command![0]!).replaceAll('\\', '/'),
         ).toStartWith('.gspot/node_modules/');
-        writeFileSync(join(wrapperConsumer, 'notes.json'), '"text"\n');
-        const cleanWhitespace = await run(whitespaceCommand, wrapperOptions);
+        writeFileSync(join(nativeConsumer, 'notes.json'), '"text"\n');
+        const cleanWhitespace = await run(whitespaceCommand, nativeOptions);
         expect(cleanWhitespace.code, cleanWhitespace.stdout + cleanWhitespace.stderr).toBe(0);
         expect(reportSchema.parse(JSON.parse(cleanWhitespace.stdout)).checks).toMatchObject([
             { check: 'formatting/editorconfig-checker', status: 'ok', files: 1, findings: [] },
         ]);
-        expect(readFileSync(join(wrapperConsumer, 'package.json'), 'utf8')).toBe(authoredPackage);
+        expect(readFileSync(join(nativeConsumer, 'package.json'), 'utf8')).toBe(authoredPackage);
     },
     RELEASE_TIMEOUT_MS,
 );

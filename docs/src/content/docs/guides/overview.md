@@ -10,7 +10,7 @@ It does not determine who wrote the code.
 ## Set up a repository
 
 Start with the [source installation prerequisites](/guides/install/). From your project root,
-`gspot init` proposes configurations and configuration. A configuration selects checks and the tools they need.
+`gspot init` proposes configurations for the detected languages and tools. Each configuration selects checks and their required tools.
 Review the proposed writes before accepting them. Initialization does not run checks.
 
 - For a disposable example, [run your first check](/guides/quick-start/).
@@ -20,7 +20,7 @@ Review the proposed writes before accepting them. Initialization does not run ch
 ## Check and correct
 
 From a configured repository root, run `gspot check`. Exit 0 means the executed checks passed,
-1 means findings remain, and 2 means a check could not complete. Read skipped-check messages:
+1 means findings remain, and 2 means a check cannot complete. Read skipped-check messages:
 a skip does not verify the affected files.
 
 A finding names its check and explains what to correct. Edit the affected file and rerun the

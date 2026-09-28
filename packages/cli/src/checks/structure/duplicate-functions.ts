@@ -3,7 +3,7 @@ import { DEFAULT_MIN_LINES } from '#cli/constants/checks/structure.ts';
 import type { ScriptFunction, StructureAnalysis as Analysis } from '#cli/types/checks/structure.ts';
 
 /**
- * One finding per group of functions whose normalized bodies match, at or above limits.bash.duplicate_min_lines.
+ * Reports matching normalized function bodies that meet `limits.bash.duplicate_min_lines`.
  * @param context the check context
  * @param scripts the shell index
  * @returns the findings

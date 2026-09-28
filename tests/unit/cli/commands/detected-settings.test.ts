@@ -1,4 +1,5 @@
 import { expect, test } from 'bun:test';
+import type { Detect } from '#cli/types/commands/init.ts';
 import { detectedSettings } from '#cli/commands/init/settings.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import type { ManifestFacts, TrackedFile } from '#cli/types/repository/repository.ts';
@@ -49,4 +50,33 @@ test('a dependency or a folder names the SQL dialect, and the first declaration 
     ]);
     expect(detectedSettings(sql, [facts({})], [file('supabase/config.toml')])).toMatchObject([{ value: 'postgres' }]);
     expect(detectedSettings(sql, [facts({ express: '5.0.0' })], [file('src/app.ts')])).toStrictEqual([]);
+});
+
+test.each([
+    { detect: { dependency: 'present', dependencies: { present: false } }, expected: [true] },
+    { detect: { dependencies: { present: false }, folders: ['src'] }, expected: [false] },
+    { detect: { dependencies: { present: undefined }, folders: ['src'] }, expected: [] },
+    { detect: { folders: ['src'], folder_values: { src: false } }, expected: ['src'] },
+    { detect: { folder_values: { src: false, other: true } }, expected: [false] },
+] satisfies { detect: Detect; expected: unknown[] }[])(
+    'setting detection preserves priority and values for %j',
+    ({ detect, expected }) => {
+        const manifest = manifests.get('nestjs')!;
+        const setting = manifest.settings.find((entry) => entry.name === 'tools.nestjs.swagger')!;
+        const selected = { ...manifest, settings: [{ ...setting, detect }] };
+        expect(detectedSettings([selected], [facts({ present: '1.0.0' })], [file('src/entry.ts')])).toStrictEqual(
+            expected.map((value) => ({ key: setting.name, value, configuration: 'nestjs' })),
+        );
+    },
+);
+
+test('an unmatched declaration leaves a later setting eligible while a matched false value claims it', () => {
+    const manifest = manifests.get('nestjs')!;
+    const setting = manifest.settings.find((entry) => entry.name === 'tools.nestjs.swagger')!;
+    const first = { ...manifest, settings: [{ ...setting, detect: { dependency: 'absent' } }] };
+    const second = { ...manifest, settings: [{ ...setting, detect: { dependencies: { present: false } } }] };
+    const third = { ...manifest, settings: [{ ...setting, detect: { dependency: 'present' } }] };
+    expect(detectedSettings([first, second, third], [facts({ present: '1.0.0' })], [])).toStrictEqual([
+        { key: setting.name, value: false, configuration: 'nestjs' },
+    ]);
 });

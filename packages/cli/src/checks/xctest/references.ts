@@ -1,4 +1,4 @@
-import { xcodeFinding } from '#cli/checks/xcode/project.ts';
+import { xcodeFinding } from '#cli/checks/xcode/project/checks.ts';
 import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 
 function escapePattern(text: string): string {

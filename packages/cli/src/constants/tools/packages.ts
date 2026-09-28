@@ -18,7 +18,7 @@ export const CONNECTION_KEYS = new Set([
     'key',
     'always-auth',
 ]);
-export const KEYS = new Set([
+export const YARN_CONNECTION_KEYS = new Set([
     'npmRegistryServer',
     'npmRegistries',
     'npmScopes',
@@ -40,3 +40,13 @@ export const INTEGRITY = /^sha(?:256|384|512)-[A-Za-z0-9+/]+={0,2}$/u;
 
 /** The lock file each package manager writes. */
 export const LOCKS = { npm: 'package-lock.json', bun: 'bun.lock', pnpm: 'pnpm-lock.yaml', yarn: 'yarn.lock' } as const;
+
+export const YARN_ENVIRONMENT_SETTINGS = [
+    { pattern: /^npm_config_@([^:]+):registry$/u, setting: 'npmScopes', field: 'npmRegistryServer', defaults: {} },
+    {
+        pattern: /^npm_config_(\/\/[^\s]+):_authToken$/u,
+        setting: 'npmRegistries',
+        field: 'npmAuthToken',
+        defaults: { npmAlwaysAuth: true },
+    },
+];

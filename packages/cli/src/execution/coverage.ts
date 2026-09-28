@@ -1,37 +1,11 @@
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { extensionOf } from '#cli/platform/paths.ts';
-import type { Manifest } from '#cli/types/configurations.ts';
-import type { ScopeSelection } from '#cli/types/policy/policy.ts';
-import { CORE_KINDS } from '#cli/constants/execution/execution.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
-import { claimedInputs, configuredChecks } from '#cli/execution/planning/plan.ts';
 // Unchecked and partial files: what no configuration claims, and what falls short of its required check kinds.
 import { claimants, claimedByClaims } from '#cli/configurations/claims.ts';
+import { SOURCE_COVERAGE_KINDS } from '#cli/constants/execution/execution.ts';
 import type { Session, CoverageReport } from '#cli/types/execution/execution.ts';
-
-function supportedSources(session: Session): Set<string> {
-    const manifests = [...session.manifests.values()];
-    return new Set(
-        manifests.flatMap((manifest) =>
-            manifest.checks.flatMap((check) =>
-                check.coverage.some((kind) => CORE_KINDS.has(kind))
-                    ? claimedByClaims(check.claims ?? manifest.claims, manifests, session.repository.files, '').map(
-                          (file) => file.path,
-                      )
-                    : [],
-            ),
-        ),
-    );
-}
-
-function selectionFor(session: Session, file: TrackedFile): ScopeSelection | undefined {
-    const scope = scopeOf(file.path, session.repository.scopes);
-    return session.scopes.find((entry) => entry.scope.path === scope.path) ?? session.scopes[0];
-}
-
-function requiredKinds(owners: Manifest[], extension: string): Set<string> {
-    return new Set(owners.flatMap((owner) => owner.coverage[extension] ?? []));
-}
+import { claimedInputs, configuredChecks } from '#cli/execution/planning/plan.ts';
 
 function endingCoverage(session: Session, provided: Map<string, Set<string>>): CoverageReport['endings'] {
     const groups = new Map<string, CoverageReport['endings'][number]>();
@@ -39,7 +13,7 @@ function endingCoverage(session: Session, provided: Map<string, Set<string>>): C
         if (file.nature !== 'source') continue;
         const ending = extensionOf(file.path);
         const scope = scopeOf(file.path, session.repository.scopes).path;
-        const kinds = [...CORE_KINDS].filter((kind) => provided.get(file.path)?.has(kind) === true);
+        const kinds = [...SOURCE_COVERAGE_KINDS].filter((kind) => provided.get(file.path)?.has(kind) === true);
         const key = JSON.stringify([scope, ending, kinds]);
         const group = groups.get(key) ?? { ending, scope, kinds, files: 0 };
         group.files += 1;
@@ -60,7 +34,8 @@ function coverSource(
     provided: Map<string, Set<string>>,
     supported: Set<string>,
 ): void {
-    const selection = selectionFor(session, file);
+    const scope = scopeOf(file.path, session.repository.scopes);
+    const selection = session.scopes.find((entry) => entry.scope.path === scope.path) ?? session.scopes[0];
     const owners = selection === undefined ? [] : claimants(file, selection.selected);
     const kinds = provided.get(file.path);
     if (kinds === undefined) {
@@ -73,7 +48,8 @@ function coverSource(
         return;
     }
     report.checked += 1;
-    const required = requiredKinds(owners, extensionOf(file.path));
+    const extension = extensionOf(file.path);
+    const required = new Set(owners.flatMap((owner) => owner.coverage[extension] ?? []));
     if (required.size === 0) return;
     const missing = required.difference(kinds).values().toArray();
     if (missing.length > 0) report.partial.push({ path: file.path, missing });
@@ -82,18 +58,27 @@ function coverSource(
 /**
  * The coverage report for a session.
  * @param session the session
- * @returns the unchecked files, the partially checked files and the checked count
+ * @returns the unchecked files, the partially checked files, and the checked count
  */
 export function coverageReport(session: Session): CoverageReport {
     const report: CoverageReport = { unchecked: [], partial: [], checked: 0, endings: [] };
-    const supported = supportedSources(session);
+    const manifests = [...session.manifests.values()];
+    const supported = new Set(
+        manifests.flatMap((manifest) =>
+            manifest.checks.flatMap((check) =>
+                check.coverage.some((kind) => SOURCE_COVERAGE_KINDS.has(kind))
+                    ? claimedByClaims(check.claims ?? manifest.claims, manifests, session.repository.files, '').map(
+                          (file) => file.path,
+                      )
+                    : [],
+            ),
+        ),
+    );
     const provided = new Map<string, Set<string>>();
     for (const check of configuredChecks(session)) {
-        for (const file of claimedInputs(session, check)) {
-            const kinds = provided.get(file.path) ?? new Set<string>();
-            for (const kind of check.spec.coverage) kinds.add(kind);
-            provided.set(file.path, kinds);
-        }
+        const coverage = new Set(check.spec.coverage);
+        for (const file of claimedInputs(session, check))
+            provided.set(file.path, (provided.get(file.path) ?? new Set<string>()).union(coverage));
     }
     for (const file of session.repository.files) {
         if (file.nature === 'source') coverSource(session, file, report, provided, supported);

@@ -30,5 +30,5 @@ export const MIGRATION_FOLDERS = ['supabase/migrations', 'db/migrations', 'migra
 export const MIGRATION_VERSION = /^(?<version>\d+)/u;
 export const KEY_KINDS = new Set(['CONSTR_PRIMARY', 'CONSTR_UNIQUE']);
 export const CONSTRAINT_SUFFIXES: Record<string, string> = { CONSTR_PRIMARY: 'pkey', CONSTR_UNIQUE: 'key' };
-// What the migrations declare, gathered across every file: tables, row security, policies, foreign keys and indexes.
+// What the migrations declare, gathered across every file: tables, row security, policies, foreign keys, and indexes.
 export const DEFAULT_SCHEMA = 'public';

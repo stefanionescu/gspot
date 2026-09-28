@@ -1,0 +1,74 @@
+import { join } from 'node:path';
+import { createFileTree } from 'testdirs';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { openSession } from '#cli/execution/session.ts';
+import { miseTasks } from '#cli/generation/runner/tasks.ts';
+import { everyManifest } from '#cli/configurations/select.ts';
+import { gitignoreBlock } from '#cli/configurations/manifests.ts';
+import { preparePythonProject } from '#cli/tools/python-project.ts';
+import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
+import { toolEnvironment } from '#cli/generation/tools/environment.ts';
+import { environmentVariables, setEnvironmentVariable } from '#cli/platform/environment.ts';
+
+/** Creates an authored Python project, generated lock, and isolated uv environment selectors. */
+export async function preparePythonInstallation(root: string, configuration: string, runner: string, url: string) {
+    const runnerTable = runner === 'none' ? '' : `[runner]\ntool = "${runner}"\n`;
+    await createFileTree(root, {
+        '.gitignore': `${gitignoreBlock()}\n.venv/\n`,
+        'gspot.toml': `version = 1\nlevel = "recommended"\nconfigurations = ["python"]\n${runnerTable}[rules]\ninstall = false\n`,
+        'pyproject.toml': '[project]\nname = "authored"\nversion = "1.0.0"\ndependencies = ["authored-dependency"]\n',
+        '.venv/authored.txt': 'keep the project environment',
+        'source.py': 'import os\n',
+    });
+    const session = await openSession(root);
+    // This native installation journey selects one shipped Python executable.
+    const scopes = session.scopes.map((scope) => ({
+        ...scope,
+        selected: scope.selected.map((manifest) => ({
+            ...manifest,
+            tools: manifest.tools.filter((tool) => tool.name === 'ruff'),
+        })),
+    }));
+    const proposals = toolEnvironment(everyManifest(scopes));
+    if (runner === 'mise') proposals.push(miseTasks(everyManifest(scopes), session.version, false));
+    const previous = environmentVariables()['UV_DEFAULT_INDEX'];
+    const redirected = ['UV_PROJECT', 'UV_WORKING_DIR', 'UV_PROJECT_ENVIRONMENT'];
+    const previousProjects = redirected.map((name) => [name, environmentVariables()[name]] as const);
+    const resources = new AsyncDisposableStack();
+    resources.defer(() => {
+        setEnvironmentVariable('UV_DEFAULT_INDEX', previous);
+        for (const [name, value] of previousProjects) setEnvironmentVariable(name, value);
+    });
+    try {
+        for (const name of redirected)
+            setEnvironmentVariable(name, name === 'UV_PROJECT_ENVIRONMENT' ? join(root, '.venv') : root);
+        setEnvironmentVariable('UV_DEFAULT_INDEX', undefined);
+        const index = `[[${configuration === 'pyproject.toml' ? 'tool.uv.' : ''}index]]\nname = "gspot-test"\nurl = "${url}"\ndefault = true\n`;
+        const authored = configuration === 'pyproject.toml' ? readFileSync(join(root, configuration), 'utf8') : '';
+        writeFileSync(join(root, configuration), authored + index);
+        const rootProject = readFileSync(join(root, 'pyproject.toml'));
+        const rootConfiguration = readFileSync(join(root, configuration));
+        await runOwnedLifecycle(root, async (owner) => {
+            await preparePythonProject(root, proposals, owner);
+            for (const file of proposals)
+                owner.replace(
+                    file.path,
+                    { bytes: Buffer.from(file.content), mode: 0o444 },
+                    file.kind === 'lock' ? 'lock' : 'config',
+                );
+        });
+        return {
+            root,
+            scopes,
+            proposals,
+            rootProject,
+            rootConfiguration,
+            async [Symbol.asyncDispose]() {
+                await resources.disposeAsync();
+            },
+        };
+    } catch (error) {
+        await resources.disposeAsync();
+        throw error;
+    }
+}

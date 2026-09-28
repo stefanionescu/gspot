@@ -1,7 +1,7 @@
 # gspot Architecture
 
-The [active CI bypass](22-remaining.md#active-ci-bypass) governs all implementation work.
-Skip CI on every commit and push until the user explicitly re-enables it.
+The [active CI requirements](22-remaining.md#ci-verification) govern implementation work.
+Use normal hooks and verify the task branch's exact commit through the full CI workflow.
 
 This folder specifies the product contract. It does not certify the current implementation.
 Use the [remaining-work record](22-remaining.md) for active constraints, implementation defects,
@@ -24,7 +24,7 @@ policy, and on a yes it:
 Every repository on the same gspot version runs the same rules. Upgrading gspot upgrades all three.
 
 The [remaining-work record](22-remaining.md) distinguishes current implementation,
-open requirements and deferred verification.
+open requirements, and deferred verification.
 
 ## Reading order
 

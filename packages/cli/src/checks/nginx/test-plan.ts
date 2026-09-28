@@ -1,16 +1,16 @@
 import { posix } from 'node:path';
-import { LOCAL_NAMES } from '#cli/constants/checks/nginx.ts';
 import { nginxDirectives } from '#cli/checks/nginx/directives.ts';
+import { HOST_PATTERNS, LOCAL_NAMES } from '#cli/constants/checks/nginx.ts';
 
 /**
  * The docker arguments that run nginx -t over one configuration file.
- * @param text the configuration
- * @param mounts the host paths: the configuration, the certificate and the key
- * @param mounts.configs the captured configuration files and container paths
- * @param mounts.certificate the throwaway certificate
- * @param mounts.key the throwaway key
- * @param image the nginx image
- * @returns the argv after docker
+ * @param text the configuration.
+ * @param mounts the host paths: the configuration, the certificate, and the key.
+ * @param mounts.configs the captured configuration files and container paths.
+ * @param mounts.certificate the throwaway certificate.
+ * @param mounts.key the throwaway key.
+ * @param image the nginx image.
+ * @returns the argv after docker.
  */
 export function nginxTestArguments(
     text: string,
@@ -21,26 +21,20 @@ export function nginxTestArguments(
     const hosts = new Set(
         directives.flatMap(([name, value]) => {
             if (value === undefined || value.includes('$')) return [];
-            const host = (
-                name === 'proxy_pass'
-                    ? /^https?:\/\/([A-Za-z][\w.-]*)/u
-                    : name === 'server'
-                      ? /^([A-Za-z][\w.-]*)/u
-                      : undefined
-            )?.exec(value)?.[1];
+            const host = HOST_PATTERNS.get(name)?.exec(value)?.[1];
             return host === undefined || LOCAL_NAMES.has(host) ? [] : [host];
         }),
     );
+    const certificates = new Map([
+        ['ssl_certificate_key', mounts.key],
+        ['ssl_certificate', mounts.certificate],
+        ['ssl_trusted_certificate', mounts.certificate],
+    ]);
     const volumes = [
         ...mounts.configs.map(({ source, target }) => `${source}:${target}:ro`),
         ...directives.flatMap(([name, path]) => {
             if (path === undefined || path.includes('$')) return [];
-            const source =
-                name === 'ssl_certificate_key'
-                    ? mounts.key
-                    : name === 'ssl_certificate' || name === 'ssl_trusted_certificate'
-                      ? mounts.certificate
-                      : undefined;
+            const source = certificates.get(name);
             return source === undefined ? [] : [`${source}:${posix.resolve('/etc/nginx', path)}:ro`];
         }),
     ];

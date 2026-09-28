@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { statSync } from 'node:fs';
 import { readSource } from '#cli/repository/tracked.ts';
-import { runCheckCommand } from '#cli/execution/tool-runner.ts';
+import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 
 import {

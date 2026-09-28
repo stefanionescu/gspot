@@ -17,12 +17,6 @@ function quotedEntry(line: string, quote: string): [string | undefined, string] 
     return [line.slice(1, keyEnd), rest.slice(1).trimStart()];
 }
 
-// The key and the value text of one Vale option line: the key plain or quoted, then = or :, then the rest.
-function valeEntry(line: string): [string | undefined, string] {
-    const quote = KEY_QUOTES.find((candidate) => line.startsWith(candidate));
-    return quote === undefined ? plainEntry(line) : quotedEntry(line, quote);
-}
-
 // A value without the matching quotes around it.
 function unquoted(value: string): string {
     const isDouble = value.startsWith('"') && value.endsWith('"');
@@ -56,17 +50,6 @@ function quotedValue(reader: Reader, start: string, quote: string): string {
     return value.slice(0, value.lastIndexOf(quote));
 }
 
-// The value of an option, read past the current line when it continues.
-function optionValue(reader: Reader, rest: string): string {
-    const quote = VALUE_QUOTES.find((candidate) => rest.startsWith(candidate));
-    return quote === undefined ? plainValue(reader, rest) : quotedValue(reader, rest, quote);
-}
-
-// Whether a line carries nothing: blank or a comment.
-function isSkipped(line: string): boolean {
-    return line === '' || line.startsWith('#') || line.startsWith(';');
-}
-
 // The section a header line opens, created when the file has not named it yet.
 function openSection(sections: Map<string, Section>, line: string, lineNumber: number): Section {
     const end = line.lastIndexOf(']');
@@ -79,19 +62,21 @@ function openSection(sections: Map<string, Section>, line: string, lineNumber: n
 
 // Records one option line in its section, keeping every distinct value in order.
 function readOption(reader: Reader, line: string, section: Section): void {
-    const [key, rest] = valeEntry(line);
+    const keyQuote = KEY_QUOTES.find((candidate) => line.startsWith(candidate));
+    const [key, rest] = keyQuote === undefined ? plainEntry(line) : quotedEntry(line, keyQuote);
     if (key === undefined || key === '') throw new Error(`Invalid Vale option on line ${String(reader.index + 1)}.`);
-    const value = optionValue(reader, rest);
-    const values = section.get(key) ?? [];
-    if (!values.includes(value)) values.push(value);
-    section.set(key, values);
+    const valueQuote = VALUE_QUOTES.find((candidate) => rest.startsWith(candidate));
+    const value = valueQuote === undefined ? plainValue(reader, rest) : quotedValue(reader, rest, valueQuote);
+    const assignments = section.get(key) ?? [];
+    if (!assignments.includes(value)) assignments.push(value);
+    section.set(key, assignments);
 }
 
 // What a section says: the last level of each rule, and the styles it is based on.
 function sectionSummary(entries: Section): { rules: Record<string, string | undefined>; BasedOnStyles: string[] } {
     const rules = [...entries]
         .filter(([key]) => key.includes('.'))
-        .map(([key, values]): [string, string | undefined] => [key, values.at(-1)]);
+        .map(([key, assignments]): [string, string | undefined] => [key, assignments.at(-1)]);
     const styles = (entries.get('BasedOnStyles') ?? []).flatMap((value) =>
         value
             .split(',')
@@ -116,7 +101,7 @@ export function valeRules(text: string): Record<string, unknown> {
     };
     for (; reader.index < reader.lines.length; reader.index += 1) {
         const line = (reader.lines[reader.index] ?? '').trim();
-        if (isSkipped(line)) continue;
+        if (line === '' || line.startsWith('#') || line.startsWith(';')) continue;
         if (line.startsWith('[')) section = openSection(sections, line, reader.index + 1);
         else readOption(reader, line, section);
     }

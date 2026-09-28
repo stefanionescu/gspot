@@ -3,7 +3,7 @@ import { gzipSync } from 'node:zlib';
 import { pathMatcher } from '#cli/repository/paths.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { mutationPath } from '#cli/platform/safe-paths.ts';
-import { runCheckCommand } from '#cli/execution/tool-runner.ts';
+import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import { isAbsolute, join, relative as relativePath } from 'node:path';
 import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 import type { SiteBuild, SizeLimit } from '#cli/types/checks/static-site.ts';
@@ -145,7 +145,7 @@ export async function deadSelectors(input: EngineInput): Promise<Finding[]> {
 }
 
 /**
- * The links between the built pages, their stylesheets and their fragments.
+ * The links between the built pages, their stylesheets, and their fragments.
  * @param input the engine input
  * @returns one finding for each broken link
  */

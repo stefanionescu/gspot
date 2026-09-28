@@ -1,5 +1,5 @@
 import { join } from 'node:path';
-import { runCheckCommand } from '#cli/execution/tool-runner.ts';
+import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 import { ANSIBLE_PROJECT_FILE, LINT_LINE } from '#cli/constants/checks/checks.ts';
 

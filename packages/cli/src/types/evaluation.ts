@@ -1,6 +1,6 @@
 // The types of evaluation in this package.
 import type { z } from 'zod';
-import type { CarriedFormatter } from '#cli/types/policy/adoption.ts';
+import type { AdoptedFormatting } from '#cli/types/policy/adoption.ts';
 import type { EslintAdoption, EslintRegistration } from '#cli/types/policy/policy.ts';
 
 import type {
@@ -23,8 +23,8 @@ export type LicenseChecker = {
 };
 export type FormatRequest = z.infer<typeof formatRequest>;
 export type Source = NonNullable<FormatRequest['source']>;
-export type Carried = { format: CarriedFormatter['format']; extra: Record<string, unknown> };
-export type NestedInput = { from: string; settings: CarriedFormatter };
+export type FormatterSettings = { format: AdoptedFormatting['format']; extra: Record<string, unknown> };
+export type NestedInput = { from: string; settings: AdoptedFormatting };
 export type Base = z.infer<typeof prettierSettings>;
 export type Parsed = {
     indent: ReturnType<typeof formatFields.indent_width.safeParse>;
@@ -34,49 +34,49 @@ export type Parsed = {
 export type Adoption = { request: EslintRequest; configPath: string; references: Map<unknown, EslintRegistration> };
 export type Ignores = NonNullable<EslintAdoption['legacyIgnores']>;
 export type Criteria = NonNullable<EslintAdoption['legacyCriteria']>;
-export type Plugins = NonNullable<LegacyEslintEntry['plugins']>;
-export type Legacy = {
-    api: LegacyEslintApi;
-    factory: InstanceType<LegacyEslintApi['Legacy']['ConfigArrayFactory']>;
-    compat: InstanceType<LegacyEslintApi['FlatCompat']>;
+export type Plugins = NonNullable<EslintrcEntry['plugins']>;
+export type EslintrcTranslation = {
+    api: EslintrcApi;
+    factory: InstanceType<EslintrcApi['Legacy']['ConfigArrayFactory']>;
+    compat: InstanceType<EslintrcApi['FlatCompat']>;
 };
 export type Translation = {
     root: string;
     configPath: string;
     references: Map<unknown, EslintRegistration>;
-    legacy: Legacy;
+    eslintrc: EslintrcTranslation;
 };
-export type LegacyEslintMatcher = {
+export type EslintrcMatcher = {
     pattern: string;
     negate: boolean;
     options: { matchBase?: boolean };
 };
-export type LegacyEslintCriteria = {
+export type EslintrcCriteria = {
     basePath: string;
-    patterns: { includes: LegacyEslintMatcher[] | null; excludes: LegacyEslintMatcher[] | null }[];
+    patterns: { includes: EslintrcMatcher[] | null; excludes: EslintrcMatcher[] | null }[];
 };
-export type LegacyEslintDependency = {
+export type EslintrcDependency = {
     id: string;
     filePath: string;
     definition: unknown;
     original?: unknown;
     error?: Error | null;
 };
-export type LegacyEslintEntry = {
+export type EslintrcEntry = {
     type: string;
     name: string;
-    criteria: LegacyEslintCriteria | null;
+    criteria: EslintrcCriteria | null;
     ignorePattern?: { basePath: string; patterns: string[]; loose: boolean };
-    parser?: LegacyEslintDependency;
-    plugins?: Record<string, LegacyEslintDependency>;
+    parser?: EslintrcDependency;
+    plugins?: Record<string, EslintrcDependency>;
     [key: string]: unknown;
 };
-export type LegacyEslintApi = {
+export type EslintrcApi = {
     Legacy: {
         ConfigArrayFactory: new (options: Record<string, unknown>) => {
-            loadFile(path: string): LegacyEslintEntry[];
-            loadInDirectory(path: string): LegacyEslintEntry[];
-            loadDefaultESLintIgnore(): LegacyEslintEntry[];
+            loadFile(path: string): EslintrcEntry[];
+            loadInDirectory(path: string): EslintrcEntry[];
+            loadDefaultESLintIgnore(): EslintrcEntry[];
         };
         IgnorePattern: { DefaultPatterns: string[] };
         naming: { normalizePackageName(name: string, prefix: string): string };

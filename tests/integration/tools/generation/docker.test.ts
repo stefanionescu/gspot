@@ -1,10 +1,11 @@
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
-import { emitAll } from '#cli/generation/render.ts';
+import { emitAll } from '#cli/generation/outputs.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { allRuleExamples } from '#cli/agents/examples.ts';
 
 test('Docker configuration scans isolate deepest scopes and retain scoped advisory exceptions', async () => {
     await using sandbox = await testdir();
@@ -23,7 +24,7 @@ test('Docker configuration scans isolate deepest scopes and retain scoped adviso
     const session = await openSession(sandbox.path);
     for (const file of emitAll(session.policyFiles.policy, session.repository, session.scopes, {
         version: session.version,
-        packageManager: session.packageManager,
+        packageClient: session.packageClient,
     }).files.filter((file) => file.kind === 'config'))
         await Bun.write(join(sandbox.path, file.path), file.content);
     const options = {
@@ -56,3 +57,43 @@ test('Docker configuration scans isolate deepest scopes and retain scoped adviso
     expect(await Bun.file(join(sandbox.path, 'untracked/Dockerfile')).text()).toBe(source);
     expect(await Bun.file(join(sandbox.path, 'gspot.toml')).text()).toBe(policy);
 });
+
+test.each(['recommended', 'all'] as const)(
+    'Docker guide examples pass %s while a floating image fails',
+    async (level) => {
+        await using sandbox = await testdir();
+        const examples = allRuleExamples().filter((example) => example.language === 'dockerfile');
+        expect(examples.length).toBeGreaterThan(0);
+        await createFileTree(sandbox.path, {
+            'gspot.toml': `version = 1\nlevel = "${level}"\nconfigurations = ["docker"]\n`,
+            ...Object.fromEntries(examples.map((example, index) => [`Dockerfile.${String(index)}`, example.body])),
+            'Dockerfile.rejected': 'FROM node:latest\nUSER node\nCMD ["node", "--version"]\n',
+        });
+        const session = await openSession(sandbox.path);
+        for (const file of emitAll(session.policyFiles.policy, session.repository, session.scopes, {
+            version: session.version,
+            packageClient: session.packageClient,
+        }).files.filter((file) => file.kind === 'config'))
+            await Bun.write(join(sandbox.path, file.path), file.content);
+        const options = {
+            stage: 'commit' as const,
+            only: ['docker/hadolint'],
+            skips: [],
+            fix: false,
+            isDryRun: false,
+            noCache: true,
+        };
+        const rejected = await executeRun(session, options);
+        expect(rejected.report.exitCode, JSON.stringify(rejected.report)).toBe(1);
+        expect(
+            rejected.report.checks.flatMap((check) => check.findings.map((finding) => [finding.file, finding.rule])),
+        ).toStrictEqual([['Dockerfile.rejected', 'DL3007']]);
+        await Bun.write(
+            join(sandbox.path, 'Dockerfile.rejected'),
+            'FROM node:24-bookworm-slim\nUSER node\nCMD ["node", "--version"]\n',
+        );
+        const corrected = await executeRun(await openSession(sandbox.path), options);
+        expect(corrected.report.exitCode, JSON.stringify(corrected.report)).toBe(0);
+        expect(corrected.report.checks[0]?.files).toBe(examples.length + 1);
+    },
+);

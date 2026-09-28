@@ -1,21 +1,15 @@
-// A decimal numeral with an optional sign, fraction, and exponent, and nothing else.
-function isNumeral(text: string): boolean {
-    const [mantissa = '', exponent, ...more] = text.toLowerCase().split('e');
-    return (
-        more.length === 0 &&
-        /^[+-]?[\d.]+$/u.test(mantissa) &&
-        /\d/u.test(mantissa) &&
-        (exponent === undefined || /^[+-]?\d+$/u.test(exponent)) &&
-        Number.isFinite(Number(text))
-    );
-}
-
 function value(text: string): unknown {
-    if (isNumeral(text)) return Number(text);
-    if (text.toLowerCase() === 'true') return true;
-    if (text.toLowerCase() === 'false') return false;
-    if (text.toLowerCase() === 'none') return null;
-    return text;
+    const [mantissa = '', ...exponents] = text.toLowerCase().split('e');
+    if (
+        exponents.length <= 1 &&
+        /^[+-]?[\d.]+$/u.test(mantissa) &&
+        exponents.every((exponent) => /^[+-]?\d+$/u.test(exponent)) &&
+        Number.isFinite(Number(text))
+    )
+        return Number(text);
+    const literals: Record<string, boolean | null> = { true: true, false: false, none: null };
+    const keyword = text.toLowerCase();
+    return Object.hasOwn(literals, keyword) ? literals[keyword] : text;
 }
 
 /**
@@ -24,39 +18,53 @@ function value(text: string): unknown {
  * @returns the keys and values of each section, by section name
  */
 export function sqlfluffConfiguration(text: string): Map<string, Map<string, string>> {
-    const sections = new Map<string, Map<string, string>>();
-    let section: Map<string, string> | undefined;
-    let key: string | undefined;
-    let indentation = 0;
-    for (const [index, original] of text.split(/\r?\n/u).entries()) {
-        const line = original.trim();
-        if (line.startsWith('#') || line.startsWith(';')) continue;
-        if (line === '') {
-            if (section !== undefined && key !== undefined) section.set(key, `${section.get(key) ?? ''}\n`);
-            continue;
+    const lines = text
+        .split(/\r?\n/u)
+        .map((original, index) => ({
+            number: index + 1,
+            text: original.trim(),
+            continuation: '',
+            indentation: original.length - original.trimStart().length,
+            heading: /^\[([^\]]+)\]/u.exec(original.trim())?.[1],
+        }))
+        .filter((line) => !/^[#;]/u.test(line.text));
+    // Join physical continuations before interpreting section names or option assignments.
+    const logical = lines.reduce<typeof lines>((joined, line) => {
+        const previous = joined.at(-1);
+        if (
+            previous !== undefined &&
+            previous.heading === undefined &&
+            (line.text === '' || line.indentation > previous.indentation)
+        ) {
+            previous.continuation += `\n${line.text}`;
+            return joined;
         }
-        const indent = original.length - original.trimStart().length;
-        if (section !== undefined && key !== undefined && indent > indentation) {
-            section.set(key, `${section.get(key) ?? ''}\n${line}`);
-            continue;
-        }
-        indentation = indent;
-        const heading = /^\[([^\]]+)\]/u.exec(line)?.[1];
-        if (heading !== undefined) {
-            if (sections.has(heading)) throw new Error(`Duplicate SQLFluff section on line ${String(index + 1)}.`);
-            section = new Map();
-            sections.set(heading, section);
-            key = undefined;
-            continue;
-        }
-        const separator = line.indexOf('=');
-        if (section === undefined || separator <= 0)
-            throw new Error(`Invalid SQLFluff configuration on line ${String(index + 1)}.`);
-        key = line.slice(0, separator).trimEnd();
-        if (section.has(key)) throw new Error(`Duplicate SQLFluff option on line ${String(index + 1)}.`);
-        section.set(key, line.slice(separator + 1).trimStart());
-    }
-    return sections;
+        if (line.text !== '') joined.push(line);
+        return joined;
+    }, []);
+    const parsed = logical.reduce<{
+        sections: Map<string, Map<string, string>>;
+        current: Map<string, string> | undefined;
+    }>(
+        (state, line) => {
+            if (line.heading !== undefined) {
+                if (state.sections.has(line.heading))
+                    throw new Error(`Duplicate SQLFluff section on line ${String(line.number)}.`);
+                const section = new Map<string, string>();
+                state.sections.set(line.heading, section);
+                return { sections: state.sections, current: section };
+            }
+            const separator = line.text.indexOf('=');
+            if (state.current === undefined || separator <= 0)
+                throw new Error(`Invalid SQLFluff configuration on line ${String(line.number)}.`);
+            const key = line.text.slice(0, separator).trimEnd();
+            if (state.current.has(key)) throw new Error(`Duplicate SQLFluff option on line ${String(line.number)}.`);
+            state.current.set(key, line.text.slice(separator + 1).trimStart() + line.continuation);
+            return state;
+        },
+        { sections: new Map(), current: undefined },
+    );
+    return parsed.sections;
 }
 
 /**
@@ -67,7 +75,7 @@ export function sqlfluffConfiguration(text: string): Map<string, Map<string, str
 export function sqlfluffRules(text: string): Record<string, unknown> {
     const sections = sqlfluffConfiguration(text);
     const defaults = sections.get('DEFAULT') ?? new Map<string, string>();
-    const core = new Map([...defaults, ...(sections.get('sqlfluff') ?? [])]);
+    const mainSection = new Map([...defaults, ...(sections.get('sqlfluff') ?? [])]);
     const options: Record<string, unknown> = Object.fromEntries([
         ...[...(sections.get('sqlfluff:rules') ?? [])].map(([option, setting]): [string, unknown] => [
             option,
@@ -88,7 +96,7 @@ export function sqlfluffRules(text: string): Record<string, unknown> {
     const lists = Object.fromEntries(
         ['rules', 'exclude_rules'].map((name) => [
             name,
-            (core.get(name) ?? '')
+            (mainSection.get(name) ?? '')
                 .split(',')
                 .map((entry) => entry.trim())
                 .filter(Boolean),

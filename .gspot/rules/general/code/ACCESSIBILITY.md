@@ -46,5 +46,7 @@ Accessibility is part of the feature contract, not a final pass.
 
 ## Identifiers for tests
 
+<!-- level: all -->
+
 - Stable `camelCase` accessibility identifiers (or `data-*` test hooks where the platform has no
   identifier) name the interaction surface, never localized copy, user content, IDs, or tokens.

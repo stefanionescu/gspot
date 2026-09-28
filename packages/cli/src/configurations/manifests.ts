@@ -2,17 +2,12 @@ import type { z } from 'zod';
 import { parse as parseToml } from 'smol-toml';
 import { compact } from '#cli/policy/normalize.ts';
 import { PRIVATE_PATHS } from '#cli/constants/platform.ts';
+import { INSTALLER_KEYS } from '#cli/configurations/tools.ts';
+import { manifestSchema } from '#cli/configurations/schema.ts';
 import { listAssets, readAsset } from '#cli/platform/assets.ts';
 import { OPTIONAL_TOOL_KEYS } from '#cli/constants/configurations.ts';
-import { INSTALLER_KEYS, manifestSchema } from '#cli/configurations/schema.ts';
 import type { Manifest, ToolPin, CheckSpec, RawCheck, RawTool } from '#cli/types/configurations.ts';
-
-import {
-    checkProblems,
-    configurationProblems,
-    ManifestError,
-    validateManifests,
-} from '#cli/configurations/manifest-problems.ts';
+import { manifestProblems, ManifestError, validateManifests } from '#cli/configurations/manifest-problems.ts';
 
 const state: { cache: Map<string, Manifest> | undefined } = { cache: undefined };
 
@@ -32,17 +27,6 @@ function installerPins(raw: RawTool): ToolPin['installers'] {
         if (typeof value === 'string' && raw.version !== undefined) installers[key].version = raw.version;
     }
     return installers;
-}
-
-function toTool(raw: RawTool): ToolPin {
-    const declared = OPTIONAL_TOOL_KEYS.filter((key) => raw[key] !== undefined).map((key) => [key, raw[key]] as const);
-    return {
-        name: raw.name,
-        kind: raw.kind,
-        windows: raw.windows,
-        installers: installerPins(raw),
-        ...(Object.fromEntries(declared) as Partial<ToolPin>),
-    };
 }
 
 function toCheck(raw: RawCheck): CheckSpec {
@@ -81,7 +65,6 @@ function registerManifest(manifests: Map<string, Manifest>, path: string): void 
     manifests.set(manifest.configuration.name, manifest);
 }
 
-/** A manifest that the schema or the design refuses. */
 /**
  * Parses one manifest text into a Manifest. Throws ManifestError.
  * @param text the manifest.toml text
@@ -98,8 +81,7 @@ export function parseManifest(text: string, dir: string): Manifest {
         ]);
     const raw = result.data;
     const problems = [
-        ...raw.checks.flatMap((check) => checkProblems(check)),
-        ...configurationProblems(raw),
+        ...manifestProblems(raw),
         ...raw.configs
             .filter((config) => config.imports !== undefined && !config.fragment)
             .map((config) => `config ${config.target} declares imports, which only a fragment renders.`),
@@ -115,7 +97,18 @@ export function parseManifest(text: string, dir: string): Manifest {
         untracked: raw.untracked,
         detect: raw.detect,
         claims: raw.claims,
-        tools: raw.tools.map((tool) => toTool(tool)),
+        tools: raw.tools.map((tool) => {
+            const declared = OPTIONAL_TOOL_KEYS.filter((key) => tool[key] !== undefined).map(
+                (key) => [key, tool[key]] as const,
+            );
+            return {
+                name: tool.name,
+                kind: tool.kind,
+                windows: tool.windows,
+                installers: installerPins(tool),
+                ...(Object.fromEntries(declared) as Partial<ToolPin>),
+            };
+        }),
         configs: raw.configs,
         checks: raw.checks.map((check) => toCheck(check)),
         settings: raw.settings.map((setting) => compact(setting)),
@@ -124,6 +117,7 @@ export function parseManifest(text: string, dir: string): Manifest {
         coverage: raw.coverage,
         rule_files: raw.rule_files,
         required_rules: raw.required_rules,
+        rules_off: raw.rules_off,
         dir,
     };
 }

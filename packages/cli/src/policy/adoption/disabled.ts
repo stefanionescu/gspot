@@ -1,15 +1,15 @@
 import { posix } from 'node:path';
 import type { TomlTable } from '#cli/types/repository/repository.ts';
-import { shellcheckRules } from '#cli/repository/configuration/shellcheck-rules.ts';
 import { asRaw, asStrings, asText } from '#cli/policy/adoption/source.ts';
-import { appendSetting, carriedTool, reasonFor } from '#cli/policy/adoption/results.ts';
-import type { CarriedConfiguration, CarryPush, CarrySource } from '#cli/types/policy/adoption.ts';
+import { shellcheckRules } from '#cli/repository/configuration/shellcheck-rules.ts';
+import { appendSetting, adoptedTool, reasonFor } from '#cli/policy/adoption/results.ts';
+import type { AdoptionResult, CarryPush, ConfigurationSource } from '#cli/types/policy/adoption.ts';
 
 function pushCodes(push: CarryPush, codes: string): void {
     for (const code of codes.split(',')) if (code.trim() !== '') push(code.trim());
 }
 
-const DISABLED_READERS: Record<string, (source: CarrySource, push: CarryPush, path: string) => void> = {
+const DISABLED_READERS: Record<string, (source: ConfigurationSource, push: CarryPush, path: string) => void> = {
     shellcheck: (source, push) => {
         for (const code of shellcheckRules(source.text).disable) push(code);
     },
@@ -61,10 +61,10 @@ export function disabledFromList(parsed: TomlTable, key: string, push: CarryPush
  * @param check the check the ignores belong to
  */
 export function carryDisabled(
-    source: CarrySource,
+    source: ConfigurationSource,
     tool: string,
     path: string,
-    lists: CarriedConfiguration,
+    lists: AdoptionResult,
     check: string | undefined,
 ): void {
     const reader = DISABLED_READERS[tool];
@@ -73,7 +73,7 @@ export function carryDisabled(
     const push: CarryPush = (rule, paths) => {
         const base = posix.dirname(path);
         const selected = paths ?? (base === '.' ? undefined : [`${base}/**`]);
-        carriedTool(lists, tool).ignores.push({
+        adoptedTool(lists, tool).ignores.push({
             check,
             rule,
             reason: reasonFor(path),
@@ -89,7 +89,7 @@ export function carryDisabled(
  * @param path the authored file's path
  * @param lists the carried configuration
  */
-export function carryPyright(source: CarrySource, path: string, lists: CarriedConfiguration): void {
+export function carryPyright(source: ConfigurationSource, path: string, lists: AdoptionResult): void {
     if (path.includes('/')) throw new Error(`Scoped Pyright configuration ${path} requires explicit conversion.`);
     const parsed = source.parsed;
     const kept = asStrings(parsed['exclude']);

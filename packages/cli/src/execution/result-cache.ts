@@ -2,10 +2,10 @@
 import { inspectTool } from '#cli/tools/inspect.ts';
 import { isAbsolute, join, relative, sep } from 'node:path';
 import type { CheckResult } from '#cli/types/checks/checks.ts';
-import { prepareCommand } from '#cli/execution/tool-runner.ts';
-import { readFileSync, realpathSync, statSync } from 'node:fs';
+import { prepareCommand } from '#cli/execution/tool/runner.ts';
 import { RAN_STATUSES } from '#cli/constants/execution/execution.ts';
 import { commandConfigurations } from '#cli/execution/command-expansion.ts';
+import { closeSync, fstatSync, openSync, readFileSync, realpathSync } from 'node:fs';
 import type { RunHashes, PlannedCheck, Session } from '#cli/types/execution/execution.ts';
 import { cacheInputs, cacheKey, fileHash, readCached, textHash, writeCached } from '#cli/execution/cache.ts';
 
@@ -20,13 +20,18 @@ function identityPath(session: Session, path: string): string {
 function toolIdentity(session: Session, path: string, hashes: RunHashes): string {
     const held = hashes.tools.get(path);
     if (held !== undefined) return held;
-    const identity = JSON.stringify({
-        path: identityPath(session, path),
-        mode: statSync(path).mode,
-        hash: new Bun.CryptoHasher('sha256').update(readFileSync(path)).digest('hex'),
-    });
-    hashes.tools.set(path, identity);
-    return identity;
+    const file = openSync(path, 'r');
+    try {
+        const identity = JSON.stringify({
+            path: identityPath(session, path),
+            mode: fstatSync(file).mode,
+            hash: new Bun.CryptoHasher('sha256').update(readFileSync(file)).digest('hex'),
+        });
+        hashes.tools.set(path, identity);
+        return identity;
+    } finally {
+        closeSync(file);
+    }
 }
 
 // The version fact of the tool a check runs, or the inspection that found none.
@@ -67,8 +72,8 @@ function declaredInputs(session: Session, planned: PlannedCheck): string[] | und
     return session.policyFiles.policy.checks.find((entry) => entry.name === planned.check)?.inputs;
 }
 
-// Whether a check reads only what its key records: a command unless its manifest says cached = false, an
-// analysis only when its manifest says cached = true, and never a check that needs a build, a daemon, or the network.
+// Commands cache unless their manifest opts out; analyses cache only when their manifest opts in.
+// Checks that need a build, daemon, or network never cache.
 function isCacheable(planned: PlannedCheck): boolean {
     const { spec } = planned;
     const isAnalysis = spec.engine !== undefined || spec.analysis !== undefined;

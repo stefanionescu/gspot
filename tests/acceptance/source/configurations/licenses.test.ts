@@ -1,48 +1,33 @@
-import { delimiter, join } from 'node:path';
+import { join } from 'node:path';
+import { expect, test } from 'bun:test';
 import { readFileSync, rmSync } from 'node:fs';
-import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
-import { commitAll } from '#tests/support/cli/git.ts';
 import { reportSchema } from '#cli/execution/report.ts';
-import { expectCorrected } from '#tests/support/cli/planted.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
 // Planted repository for the licenses configuration: a package under a license outside the list, and an exception that went stale.
 import { run, runProcess } from '#tests/support/cli/command.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
+import { installPrivateTools } from '#tests/support/cli/tools.ts';
+import { prepareLicenseProject } from '#tests/support/cli/licenses.ts';
 import { containingAll, textContaining } from '#tests/support/expectations.ts';
-import { ROOT } from '#tests/constants/acceptance/source/configurations/configurations.ts';
-import { installAtLevel, installPrivateTools, toolsPath } from '#tests/support/cli/tools.ts';
-import { LICENSES_INIT } from '#tests/constants/acceptance/source/configurations/init-arguments.ts';
 
-const NPM_BIN = join(import.meta.dir, '../../../../node_modules/.bin');
 function installed(name: string, license: string): string {
     return `{\n    "name": "${name}",\n    "version": "1.0.0",\n    "license": "${license}"\n}\n`;
 }
 
-describe('the licenses configuration', () => {
-    test(
-        'a license outside the list fails, an exception that names it passes, and one that names another fails',
-        async () => {
-            await using sandbox = await testdir();
-            await createFileTree(sandbox.path, {
-                'package.json': ROOT,
-                '.gitignore': 'node_modules/\n',
-                'node_modules/kind/package.json': installed('kind', 'MIT'),
-                'node_modules/choice/package.json': installed('choice', 'MIT OR (GPL-3.0-only AND GPL-2.0-only)'),
-                'node_modules/combined/package.json': installed('combined', 'MIT AND (Apache-2.0 OR GPL-3.0-only)'),
-            });
-            commitAll(sandbox.path);
-            const environment = { PATH: `${NPM_BIN}${delimiter}${toolsPath(['typos', 'ec'])}` };
-            await installAtLevel(sandbox.path, LICENSES_INIT, environment);
-            await expectCorrected(sandbox.path, 'licenses/packages', environment);
-            await Bun.write(
-                join(sandbox.path, 'node_modules/strict/package.json'),
-                installed('strict', 'GPL-3.0-only'),
-            );
-            const refused = await run(
-                sandbox.path,
-                ['check', '--only', 'licenses/packages', '--no-cache', '--json'],
-                environment,
-            );
+const LICENSE_CHECK = ['check', '--only', 'licenses/packages', '--no-cache', '--json'];
+test(
+    'package license expressions accept allowed alternatives and reject forbidden requirements',
+    async () => {
+        await using sandbox = await testdir();
+        const environment = await prepareLicenseProject(sandbox.path);
+        const baseline = await run(sandbox.path, LICENSE_CHECK, environment);
+        expect(baseline.code, baseline.stdout + baseline.stderr).toBe(0);
+        expect(reportSchema.parse(JSON.parse(baseline.stdout)).checks).toMatchObject([
+            { check: 'licenses/packages', status: 'ok', findings: [] },
+        ]);
+        for (const license of ['GPL-3.0-only', '(MIT OR Apache-2.0) AND GPL-3.0-only']) {
+            await Bun.write(join(sandbox.path, 'node_modules/strict/package.json'), installed('strict', license));
+            const refused = await run(sandbox.path, LICENSE_CHECK, environment);
             expect(refused.code, refused.stdout + refused.stderr).toBe(1);
             expect(reportSchema.parse(JSON.parse(refused.stdout)).checks).toMatchObject([
                 {
@@ -53,107 +38,106 @@ describe('the licenses configuration', () => {
                             file: 'package.json',
                             rule: 'license',
                             line: 1,
-                            message: textContaining('strict@1.0.0 reports GPL-3.0-only'),
+                            message: textContaining(`strict@1.0.0 reports ${license}`),
                         },
                     ],
                 },
             ]);
-            await Bun.write(
-                join(sandbox.path, 'node_modules/strict/package.json'),
-                installed('strict', '(MIT OR Apache-2.0) AND GPL-3.0-only'),
-            );
-            const mixed = await run(
-                sandbox.path,
-                ['check', '--only', 'licenses/packages', '--no-cache', '--json'],
-                environment,
-            );
-            expect(mixed.code, mixed.stdout + mixed.stderr).toBe(1);
-            expect(reportSchema.parse(JSON.parse(mixed.stdout)).checks).toMatchObject([
-                {
-                    check: 'licenses/packages',
-                    status: 'fail',
-                    findings: [
-                        {
-                            file: 'package.json',
-                            rule: 'license',
-                            line: 1,
-                            message: textContaining('strict@1.0.0 reports (MIT OR Apache-2.0) AND GPL-3.0-only'),
-                        },
-                    ],
-                },
-            ]);
-            await Bun.write(
-                join(sandbox.path, 'node_modules/strict/package.json'),
-                installed('strict', 'GPL-3.0-only'),
-            );
-            const policy = join(sandbox.path, 'gspot.toml');
-            const before = await Bun.file(policy).text();
-            const exception = (license: string): string =>
-                `${before}\n[[tools.licenses.packages_allowed]]\npackage = "strict@1.0.0"\nlicense = "${license}"\nreason = "Used at build time only, never shipped."\n`;
-            await Bun.write(policy, exception('GPL-3.0-only'));
-            const appliedGPL30only = await run(sandbox.path, ['apply'], environment);
-            expect(appliedGPL30only.code).toBe(0);
-            await expectCorrected(sandbox.path, 'licenses/packages', environment);
-            await Bun.write(policy, exception('LGPL-3.0-only'));
-            const appliedLGPL30only = await run(sandbox.path, ['apply'], environment);
-            expect(appliedLGPL30only.code).toBe(0);
-            const stale = await run(
-                sandbox.path,
-                ['check', '--only', 'licenses/packages', '--no-cache', '--json'],
-                environment,
-            );
-            expect(stale.code).toBe(1);
-            expect(reportSchema.parse(JSON.parse(stale.stdout)).checks).toMatchObject([
-                {
-                    check: 'licenses/packages',
-                    status: 'fail',
-                    findings: [
-                        {
-                            file: 'package.json',
-                            rule: 'license',
-                            line: 1,
-                            message: textContaining('the exception no longer holds'),
-                        },
-                    ],
-                },
-            ]);
-            await Bun.write(join(sandbox.path, 'node_modules/strict/package.json'), installed('strict', 'MIT'));
-            const changedToAllowed = await run(
-                sandbox.path,
-                ['check', '--only', 'licenses/packages', '--no-cache', '--json'],
-                environment,
-            );
-            expect(changedToAllowed.code, changedToAllowed.stdout + changedToAllowed.stderr).toBe(1);
-            expect(reportSchema.parse(JSON.parse(changedToAllowed.stdout)).checks).toMatchObject([
-                {
-                    check: 'licenses/packages',
-                    status: 'fail',
-                    findings: [
-                        {
-                            file: 'package.json',
-                            rule: 'license',
-                            line: 1,
-                            message: textContaining('strict@1.0.0 reports MIT'),
-                        },
-                    ],
-                },
-            ]);
-            await Bun.write(policy, exception('MIT'));
-            const appliedMIT = await run(sandbox.path, ['apply'], environment);
-            expect(appliedMIT.code).toBe(0);
-            await expectCorrected(sandbox.path, 'licenses/packages', environment);
-        },
-        PLANTED_TIMEOUT_MS * 2,
-    );
-});
+        }
+    },
+    PLANTED_TIMEOUT_MS * 2,
+);
+
+test(
+    'package allowances require the exact reported license and reject a mismatched exception',
+    async () => {
+        await using sandbox = await testdir();
+        const environment = await prepareLicenseProject(sandbox.path);
+        await Bun.write(join(sandbox.path, 'node_modules/strict/package.json'), installed('strict', 'GPL-3.0-only'));
+        const policy = join(sandbox.path, 'gspot.toml');
+        const before = await Bun.file(policy).text();
+        const exception = (license: string): string =>
+            `${before}\n[[tools.licenses.packages_allowed]]\npackage = "strict@1.0.0"\nlicense = "${license}"\nreason = "Used at build time only, never shipped."\n`;
+        await Bun.write(policy, exception('GPL-3.0-only'));
+        const appliedGpl = await run(sandbox.path, ['apply'], environment);
+        expect(appliedGpl.code).toBe(0);
+        const gplAllowance = await run(sandbox.path, LICENSE_CHECK, environment);
+        expect(gplAllowance.code, gplAllowance.stdout + gplAllowance.stderr).toBe(0);
+        expect(reportSchema.parse(JSON.parse(gplAllowance.stdout)).checks).toMatchObject([
+            { check: 'licenses/packages', status: 'ok', findings: [] },
+        ]);
+        await Bun.write(policy, exception('LGPL-3.0-only'));
+        const appliedLgpl = await run(sandbox.path, ['apply'], environment);
+        expect(appliedLgpl.code).toBe(0);
+        const stale = await run(sandbox.path, LICENSE_CHECK, environment);
+        expect(stale.code).toBe(1);
+        expect(reportSchema.parse(JSON.parse(stale.stdout)).checks).toMatchObject([
+            {
+                check: 'licenses/packages',
+                status: 'fail',
+                findings: [
+                    {
+                        file: 'package.json',
+                        rule: 'license',
+                        line: 1,
+                        message: textContaining('the exception no longer holds'),
+                    },
+                ],
+            },
+        ]);
+    },
+    PLANTED_TIMEOUT_MS * 2,
+);
+
+test(
+    'changed package metadata invalidates its allowance until the policy is corrected',
+    async () => {
+        await using sandbox = await testdir();
+        const environment = await prepareLicenseProject(sandbox.path);
+        await Bun.write(join(sandbox.path, 'node_modules/strict/package.json'), installed('strict', 'GPL-3.0-only'));
+        const policy = join(sandbox.path, 'gspot.toml');
+        const before = await Bun.file(policy).text();
+        const exception = (license: string): string =>
+            `${before}\n[[tools.licenses.packages_allowed]]\npackage = "strict@1.0.0"\nlicense = "${license}"\nreason = "Used at build time only, never shipped."\n`;
+        await Bun.write(policy, exception('LGPL-3.0-only'));
+        const applied = await run(sandbox.path, ['apply'], environment);
+        expect(applied.code).toBe(0);
+        await Bun.write(join(sandbox.path, 'node_modules/strict/package.json'), installed('strict', 'MIT'));
+        const changedToAllowed = await run(sandbox.path, LICENSE_CHECK, environment);
+        expect(changedToAllowed.code, changedToAllowed.stdout + changedToAllowed.stderr).toBe(1);
+        expect(reportSchema.parse(JSON.parse(changedToAllowed.stdout)).checks).toMatchObject([
+            {
+                check: 'licenses/packages',
+                status: 'fail',
+                findings: [
+                    {
+                        file: 'package.json',
+                        rule: 'license',
+                        line: 1,
+                        message: textContaining('strict@1.0.0 reports MIT'),
+                    },
+                ],
+            },
+        ]);
+        await Bun.write(policy, exception('MIT'));
+        const appliedMIT = await run(sandbox.path, ['apply'], environment);
+        expect(appliedMIT.code).toBe(0);
+        const correctedLicense = await run(sandbox.path, LICENSE_CHECK, environment);
+        expect(correctedLicense.code, correctedLicense.stdout + correctedLicense.stderr).toBe(0);
+        expect(reportSchema.parse(JSON.parse(correctedLicense.stdout)).checks).toMatchObject([
+            { check: 'licenses/packages', status: 'ok', findings: [] },
+        ]);
+    },
+    PLANTED_TIMEOUT_MS * 2,
+);
 
 test.each(['recommended', 'all'])(
-    'Python license CLI at %s scans the selected scope and distinguishes unavailable environments',
+    'Python license policy generation preserves identical scoped settings at %s',
     async (level) => {
         await using sandbox = await testdir();
         const root = sandbox.path;
         await createFileTree(root, {
-            'gspot.toml': `version = 1\nlevel = "${level}"\nconfigurations = []\n[rules]\ninstall = false\n[[scope]]\npath = "app"\nconfigurations = ["licenses"]\n`,
+            'gspot.toml': `version = 1\nlevel = "${level}"\nconfigurations = []\n[rules]\ninstall = false\n[[scope]]\npath = "app"\nconfigurations = ["licenses"]\n[scope.tools.licenses]\nlicenses_allowed = ["MIT"]\n`,
             'app/pyproject.toml':
                 '[project]\nname = "fixture"\nversion = "0.0.0"\n[tool.pip-licenses]\nignore-packages = ["licensed-example"]\n',
             'sibling/pyproject.toml': '[project]\nname = "uninstalled-sibling"\nversion = "0.0.0"\n',
@@ -169,8 +153,25 @@ test.each(['recommended', 'all'])(
         const reapplied = await run(root, ['apply']);
         expect(reapplied.code, reapplied.stdout + reapplied.stderr).toBe(0);
         expect(readFileSync(generatedPath)).toStrictEqual(generated);
+    },
+    PLANTED_TIMEOUT_MS,
+);
+
+test.each(['recommended', 'all'])(
+    'Python license CLI at %s scans the selected scope and distinguishes unavailable environments',
+    async (level) => {
+        await using sandbox = await testdir();
+        const root = sandbox.path;
+        await createFileTree(root, {
+            'gspot.toml': `version = 1\nlevel = "${level}"\nconfigurations = []\n[rules]\ninstall = false\n[[scope]]\npath = "app"\nconfigurations = ["licenses"]\n[scope.tools.licenses]\nlicenses_allowed = ["MIT"]\n`,
+            'app/pyproject.toml':
+                '[project]\nname = "fixture"\nversion = "0.0.0"\n[tool.pip-licenses]\nignore-packages = ["licensed-example"]\n',
+            'sibling/pyproject.toml': '[project]\nname = "uninstalled-sibling"\nversion = "0.0.0"\n',
+        });
+        const applied = await run(root, ['apply']);
+        expect(applied.code, applied.stdout + applied.stderr).toBe(0);
         await installPrivateTools(root);
-        const command = ['check', '--stage', 'push', '--only', 'licenses/packages', '--no-cache', '--json', '--json'];
+        const command = ['check', '--stage', 'push', '--only', 'licenses/packages', '--no-cache', '--json'];
         const unavailable = await run(root, command);
         expect(unavailable.code, unavailable.stdout + unavailable.stderr).toBe(2);
         const created = await runProcess(['uv', 'venv', 'app/.venv'], { cwd: root });

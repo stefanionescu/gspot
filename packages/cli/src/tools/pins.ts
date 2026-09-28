@@ -60,14 +60,14 @@ export function pythonPins(manifests: Manifest[]): string[] {
     });
 }
 
-/** An installer could not make the already validated, locked tools available. */
+/** Installation failure for validated, locked tools. */
 export class InstallationError extends Error {
     /**
      * Names the installation that failed.
-     * @param message what the installer reported
+     * @param text what the installer reported
      */
-    constructor(message: string) {
-        super(message);
+    constructor(text: string) {
+        super(text);
         this.name = 'InstallationError';
     }
 }

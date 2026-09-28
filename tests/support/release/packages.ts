@@ -1,21 +1,16 @@
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
+import type * as DetectLibc from 'detect-libc';
 import { cpSync, mkdirSync, symlinkSync } from 'node:fs';
+import releaseTargets from '#npm-targets' with { type: 'json' };
 import { environmentVariables } from '#cli/platform/environment.ts';
-import releaseTargets from '#cli/platform/release-targets.json' with { type: 'json' };
 import { delimiter, dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 
 // The C library of a Linux host, which selects its release target; other platforms have none.
 function hostLibc(): string | null {
     if (process.platform !== 'linux') return null;
-    const { familySync } = requireCli('detect-libc') as { familySync: () => string | null };
-    return familySync();
-}
-
-// Consumer processes cannot discover executables from the source checkout.
-function isOutsideCheckout(entry: string): boolean {
-    const path = relative(root, resolve(entry));
-    return path.startsWith(`..${sep}`) || path === '..' || isAbsolute(path);
+    const { familySync: libcFamily } = requireCli('detect-libc') as typeof DetectLibc;
+    return libcFamily();
 }
 
 const inherited = environmentVariables();
@@ -31,7 +26,10 @@ export const environment: Record<string, string | undefined> = {
     NODE_OPTIONS: undefined,
     PATH: (inherited['PATH'] ?? '')
         .split(delimiter)
-        .filter((entry) => isOutsideCheckout(entry))
+        .filter((entry) => {
+            const path = relative(root, resolve(entry));
+            return path.startsWith(`..${sep}`) || path === '..' || isAbsolute(path);
+        })
         .join(delimiter),
 };
 

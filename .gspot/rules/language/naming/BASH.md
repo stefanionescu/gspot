@@ -15,6 +15,8 @@ Bash naming follows Google shell guidance, with the overrides below for file ste
 
 ## Bash case rules
 
+<!-- level: all -->
+
 Rules:
 
 - Shell source file stems use `kebab-case` unless an existing tool or external
@@ -34,39 +36,19 @@ Rules:
   uses that convention.
 - Do not use the `function` keyword for new functions. Use `name() { ...; }`.
 
-Bad:
+| Avoid              | Prefer                     | Meaning            |
+| ------------------ | -------------------------- | ------------------ |
+| `DeployScript.sh`  | `deploy-api.sh`            | API deployment.    |
+| `deploy_script.sh` | `upload-storage-assets.sh` | Storage upload.    |
+| `helpers.sh`       | `database-branch`          | A command on PATH. |
 
-```text
-DeployScript.sh
-deploy_script.sh
-helpers.sh
-```
-
-Good:
-
-```text
-deploy-api.sh
-upload-storage-assets.sh
-database-branch
-```
-
-Bad:
-
-```bash
-function Deploy() {
-  local TMP="$1"
-}
-```
-
-Good:
-
-```bash
-deploy_api() {
-  local target_environment="$1"
-}
-```
+Name a deployment function `deploy_api` and its local target
+`target_environment`. The function must still validate allowed targets and
+propagate deployment failures; a clearer name does not establish those contracts.
 
 ## Bash variables
+
+<!-- level: all -->
 
 Rules:
 
@@ -80,31 +62,13 @@ Rules:
 - Separate `local`, `declare`, `readonly`, and `export` from command
   substitutions when the command status matters.
 
-Bad:
-
-```bash
-X=/tmp/a
-for i in "${things[@]}"; do
-  do_it "${i}"
-done
-
-local output="$(generate_report)"
-```
-
-Good:
-
-```bash
-readonly API_ROOT="${REPO_ROOT}/api"
-
-for migration_file in "${migration_files[@]}"; do
-  lint_migration "${migration_file}"
-done
-
-local report_output
-report_output="$(generate_report)" || return 1
-```
+Use `migration_file` when iterating migration paths and `report_output` for
+captured report text. Check the report command's exit status before printing
+the captured output. A loop variable such as `i` does not describe a file.
 
 ## Bash functions
+
+<!-- level: all -->
 
 Rules:
 
@@ -114,39 +78,13 @@ Rules:
 - Do not name scripts or functions after shell builtins or common commands.
 - Do not make function names so generic that logs and stack traces lose context.
 
-Bad:
-
-```bash
-test() {
-  ...
-}
-
-run() {
-  ...
-}
-
-process() {
-  ...
-}
-```
-
-Good:
-
-```bash
-current_branch() {
-  git branch --show-current
-}
-
-deploy_staging_database() {
-  ...
-}
-
-validate_project_ref() {
-  ...
-}
-```
+Name a project-reference validator `validate_project_ref`. Its validation
+criteria belong to the declared provider contract. Avoid `test`, which shadows
+a shell builtin, and generic names such as `run` or `process`.
 
 ## Bash environment names
+
+<!-- level: all -->
 
 Rules:
 
@@ -157,28 +95,14 @@ Rules:
 - Name required environment values by the external contract when the deployment
   platform owns the name.
 
-Bad:
-
-```bash
-export token="${TOKEN}"
-name="$1"
-printf '%s\n' "${!name}"
-```
-
-Good:
-
-```bash
-export DEPLOY_ACCESS_TOKEN="${DEPLOY_ACCESS_TOKEN}"
-
-env_name="$1"
-if [[ ! "${env_name}" =~ ^[A-Z_][A-Z0-9_]*$ ]]; then
-  printf 'error: invalid environment variable name\n' >&2
-  return 1
-fi
-printf '%s\n' "${!env_name}"
-```
+Preserve an external name such as `DEPLOY_ACCESS_TOKEN` and export it only
+for child processes that require it. A dynamic variable-name input can be
+named `env_name`. Validate it before indirect expansion and do not print
+credential values to demonstrate the operation.
 
 ## Files
+
+<!-- level: all -->
 
 - Bash files in one directory must not share the first filename component before
   `_` or `-`.

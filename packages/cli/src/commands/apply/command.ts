@@ -1,5 +1,5 @@
 import type { Command } from 'commander';
-import { emitAll } from '#cli/generation/render.ts';
+import { emitAll } from '#cli/generation/outputs.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
 import { computeDrift } from '#cli/lifecycle/drift.ts';
 import { openSession } from '#cli/execution/session.ts';
@@ -20,21 +20,16 @@ function driftText(drift: DriftEntry[]): string {
     const noun = drift.length === 1 ? 'file' : 'files';
     const lines = [`${String(drift.length)} generated ${noun} drifted:`, ''];
     for (const entry of drift) {
-        lines.push(`  ${entry.path}  ${entry.kind}`);
-        for (const rules of entry.rules ?? []) {
-            const at = rules.path === '' ? 'root' : rules.path;
-            if (rules.added.length > 0) lines.push(`    ${at}: added ${rules.added.join(', ')}`);
-            if (rules.removed.length > 0) lines.push(`    ${at}: removed ${rules.removed.join(', ')}`);
-            if (rules.changed.length > 0) lines.push(`    ${at}: changed ${rules.changed.join(', ')}`);
-        }
-        if (entry.ruleError !== undefined) lines.push(`    ${entry.ruleError}`);
-        if (entry.diff !== undefined && entry.diff !== '')
-            lines.push(
-                entry.diff
-                    .split('\n')
-                    .map((line) => `    ${line}`)
-                    .join('\n'),
-            );
+        const rules = (entry.rules ?? []).flatMap((rule) => {
+            const at = rule.path === '' ? 'root' : rule.path;
+            return (['added', 'removed', 'changed'] as const)
+                .filter((change) => rule[change].length > 0)
+                .map((change) => `    ${at}: ${change} ${rule[change].join(', ')}`);
+        });
+        const errors = entry.ruleError === undefined ? [] : [`    ${entry.ruleError}`];
+        const differences = (entry.diff ?? '').split('\n').map((line) => `    ${line}`);
+        lines.push(`  ${entry.path}  ${entry.kind}`, ...rules, ...errors);
+        if ((entry.diff ?? '') !== '') lines.push(...differences);
     }
     lines.push(
         '',
@@ -46,14 +41,9 @@ function driftText(drift: DriftEntry[]): string {
 async function previewApply(session: Session): Promise<CommandResult> {
     const proposal = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
         version: session.version,
-        packageManager: session.packageManager,
+        packageClient: session.packageClient,
     });
-    const drift = computeDrift(
-        session.root,
-        session.policyFiles.policy,
-        session.packageManager !== undefined,
-        proposal,
-    );
+    const drift = computeDrift(session.root, session.policyFiles.policy, session.packageClient !== undefined, proposal);
     await eslintRuleDiff(
         session.root,
         session.scopes.find((selection) => selection.scope.path === '')?.view,

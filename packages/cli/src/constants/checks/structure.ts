@@ -1,9 +1,14 @@
 // The literal values checks/structure reads: names, patterns, limits, and tables.
 
-export const RULES: Record<string, { limit: string; noun: string; isDepth: boolean }> = {
-    'bash-branches': { limit: 'function_branches', noun: 'branches', isDepth: false },
-    'bash-nesting': { limit: 'function_nesting', noun: 'levels of nesting', isDepth: true },
-    'bash-mutable-assignments': { limit: 'mutable_assignments', noun: 'assignments', isDepth: false },
+export const RULES: Record<string, { asset: string; limit: string; noun: string; isDepth: boolean }> = {
+    'bash-branches': { asset: 'branches.yml', limit: 'function_branches', noun: 'branches', isDepth: false },
+    'bash-nesting': { asset: 'nesting.yml', limit: 'function_nesting', noun: 'levels of nesting', isDepth: true },
+    'bash-mutable-assignments': {
+        asset: 'mutable-assignments.yml',
+        limit: 'mutable_assignments',
+        noun: 'assignments',
+        isDepth: false,
+    },
 };
 export const OUTER_LEVELS = 2;
 export const FUNCTIONS = new Set([
@@ -75,7 +80,7 @@ export const VAGUE_SUMMARY_WORDS = [
 ];
 /** The doc sections a function comment may carry, in the order they go. */
 export const BASH_DOC_SECTIONS = ['# Globals:', '# Arguments:', '# Outputs:', '# Returns:'];
-/** A positional parameter read, bare or braced. */
+/** A bare or braced positional parameter read. */
 export const POSITIONAL_PARAMETERS = [/(?:^|[^$])\$(?:[1-9]|[@*#])/u, /\$\{(?:[1-9]|[@*#])[:}]/u];
 /** Tokens that end the argument list of a call. */
 export const CALL_ENDINGS = ['&&', '||', '|', ';', ';;', 'then', 'do', 'fi', 'done', ')'];
@@ -108,8 +113,8 @@ export const STRUCTURE_HOOK_DIRECTORIES = ['.gspot/hooks', '.githooks', '.husky'
 export const HOOK_PREFIX = 'pre';
 /** Documentation extensions: the folder analyses judge code, and a collection of one page per topic is a layout, not a smell. */
 export const DOCUMENT_EXTENSIONS = ['.md', '.mdx'];
-/** Folders no analysis looks into. */
-export const IGNORED_FOLDERS = ['node_modules', 'dist', 'build', 'coverage', '.git'];
+/** Dependency installations and Git metadata do not contain authored project structure. */
+export const IGNORED_FOLDERS = ['node_modules', '.git'];
 export const QUOTES = new Set(["'", '"']);
 export const DECLARATION_WORDS = new Set(['readonly', 'export', 'declare', 'local']);
 export const DEFAULT_THRESHOLD = 2;

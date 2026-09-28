@@ -69,13 +69,14 @@ as passes. An interrupted or otherwise incomplete run is labeled `incomplete`.
 `.gspot/reports/report.sarif`. It writes located findings to `.gspot/reports/report.codequality.json` in
 [GitLab Code Quality format](https://docs.gitlab.com/ci/testing/code_quality/). Findings without
 file locations remain in JSON and SARIF. Repeated identical findings share a fingerprint.
+
 Check results refer to their check through
 `check`; `coverage` reports check coverage, not test coverage. Project-wide input files count
 only when the check claims them. The checked-file count uses paths confirmed by the analysis. For nginx, this includes the
 configuration files listed in a successful native configuration dump.
 
-`gspot doctor` reports the check kinds configured for each source file. It uses enabled
-checks and their file claims, including path exceptions and repository commands. The unchecked
+`gspot doctor` reports the check kinds configured for each source file. It uses enabled checks,
+their file claims, path exceptions, and repository commands. The unchecked
 count includes supported source files without an enabled check. `check` and `doctor` use the
 same calculation. Binary, generated, and vendored files do not enter this source coverage count.
 Tool installation problems appear separately in the doctor report.

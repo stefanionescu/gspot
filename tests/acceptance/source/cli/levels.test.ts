@@ -3,7 +3,47 @@ import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { reportSchema } from '#cli/execution/report.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
+
+// Recommended keeps syntax enforcement while leaving naming preferences inactive.
+async function expectRecommendedLevel(root: string, command: string[]): Promise<void> {
+    const recommended = await run(root, command);
+    expect(recommended.code, recommended.stdout + recommended.stderr).toBe(0);
+    const report = reportSchema.parse(JSON.parse(recommended.stdout));
+    expect(report.skips).toStrictEqual([]);
+    expect(report.checks.map(({ check, status }) => ({ check, status }))).toStrictEqual([
+        { check: 'bash/syntax', status: 'ok' },
+    ]);
+    await Bun.write(join(root, 'entry.sh'), 'if then\n');
+    const invalid = await run(root, command);
+    expect(invalid.code, invalid.stdout + invalid.stderr).toBe(1);
+    expect(reportSchema.parse(JSON.parse(invalid.stdout)).checks[0]).toMatchObject({
+        check: 'bash/syntax',
+        status: 'fail',
+        files: 1,
+    });
+    await Bun.write(join(root, 'entry.sh'), 'shell_command=example\n');
+}
+
+// A reasoned allowance suppresses one finding; removing it restores enforcement.
+async function expectNamingAllowance(root: string, command: string[]): Promise<void> {
+    const allowed = await run(root, [
+        'set',
+        'naming.allowed',
+        '{"name":"shell_command"}',
+        '--reason',
+        'External protocol fixes this name',
+    ]);
+    expect(allowed.code, allowed.stdout + allowed.stderr).toBe(0);
+    const accepted = await run(root, command);
+    expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
+    expect(reportSchema.parse(JSON.parse(accepted.stdout)).checks[1]?.findings).toStrictEqual([]);
+    const removed = await run(root, ['set', 'naming.allowed', 'shell_command', '--remove']);
+    expect(removed.code, removed.stdout + removed.stderr).toBe(0);
+    const restored = await run(root, command);
+    expect(restored.code, restored.stdout + restored.stderr).toBe(1);
+    expect(reportSchema.parse(JSON.parse(restored.stdout)).checks[1]?.findings[0]?.rule).toBe('banned-term');
+}
 
 test(
     'levels preserve defect checks and require an explicit opt-in for naming preferences',
@@ -14,22 +54,7 @@ test(
             'entry.sh': 'shell_command=example\n',
         });
         const command = ['check', '--only', 'bash/syntax', 'naming/identifiers', '--no-cache', '--json'];
-        const recommended = await run(sandbox.path, command);
-        expect(recommended.code, recommended.stdout + recommended.stderr).toBe(0);
-        const report = reportSchema.parse(JSON.parse(recommended.stdout));
-        expect(report.skips).toStrictEqual([]);
-        expect(report.checks.map(({ check, status }) => ({ check, status }))).toStrictEqual([
-            { check: 'bash/syntax', status: 'ok' },
-        ]);
-        await Bun.write(join(sandbox.path, 'entry.sh'), 'if then\n');
-        const invalid = await run(sandbox.path, command);
-        expect(invalid.code, invalid.stdout + invalid.stderr).toBe(1);
-        expect(reportSchema.parse(JSON.parse(invalid.stdout)).checks[0]).toMatchObject({
-            check: 'bash/syntax',
-            status: 'fail',
-            files: 1,
-        });
-        await Bun.write(join(sandbox.path, 'entry.sh'), 'shell_command=example\n');
+        await expectRecommendedLevel(sandbox.path, command);
         const all = await run(sandbox.path, ['set', 'level', 'all']);
         expect(all.code, all.stdout + all.stderr).toBe(0);
         const strict = await run(sandbox.path, command);
@@ -47,22 +72,7 @@ test(
             line: 1,
             rule: 'banned-term',
         });
-        const allowed = await run(sandbox.path, [
-            'set',
-            'naming.allowed',
-            '{"name":"shell_command"}',
-            '--reason',
-            'External protocol fixes this name',
-        ]);
-        expect(allowed.code, allowed.stdout + allowed.stderr).toBe(0);
-        const accepted = await run(sandbox.path, command);
-        expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
-        expect(reportSchema.parse(JSON.parse(accepted.stdout)).checks[1]?.findings).toStrictEqual([]);
-        const removed = await run(sandbox.path, ['set', 'naming.allowed', 'shell_command', '--remove']);
-        expect(removed.code, removed.stdout + removed.stderr).toBe(0);
-        const restored = await run(sandbox.path, command);
-        expect(restored.code, restored.stdout + restored.stderr).toBe(1);
-        expect(reportSchema.parse(JSON.parse(restored.stdout)).checks[1]?.findings[0]?.rule).toBe('banned-term');
+        await expectNamingAllowance(sandbox.path, command);
         const reset = await run(sandbox.path, ['set', 'level', '--default']);
         expect(reset.code, reset.stdout + reset.stderr).toBe(0);
         const extra = await run(sandbox.path, ['set', 'extra_checks', 'naming/identifiers']);
@@ -77,16 +87,19 @@ test(
             { check: 'bash/syntax', status: 'ok', findings: [] },
             { check: 'naming/identifiers', status: 'ok', findings: [] },
         ]);
-        const policyPath = join(sandbox.path, 'gspot.toml');
-        const before = await Bun.file(policyPath).text();
-        for (const args of [
-            ['level', 'strict'],
-            ['extra_checks', 'unknown/check'],
-        ]) {
-            const refused = await run(sandbox.path, ['set', ...args]);
-            expect(refused.code, refused.stdout + refused.stderr).toBe(2);
-            expect(await Bun.file(policyPath).text()).toBe(before);
-        }
     },
     PLANTED_TIMEOUT_MS,
 );
+
+test.each([
+    ['level', 'strict'],
+    ['extra_checks', 'unknown/check'],
+])('invalid %s value %s preserves the policy', async (key, value) => {
+    await using sandbox = await testdir();
+    const policyPath = join(sandbox.path, 'gspot.toml');
+    const policy = 'version = 1\nconfigurations = ["bash", "naming"]\nextra_checks = ["naming/identifiers"]\n';
+    await Bun.write(policyPath, policy);
+    const refused = await run(sandbox.path, ['set', key, value]);
+    expect(refused.code, refused.stdout + refused.stderr).toBe(2);
+    expect(await Bun.file(policyPath).text()).toBe(policy);
+});

@@ -1,12 +1,12 @@
 import * as fs from 'node:fs';
 import { join } from 'node:path';
-import { rejects } from 'node:assert/strict';
-import { executeRun } from '#cli/execution/execute.ts';
-import { openSession } from '#cli/execution/session.ts';
 import { writeFileSync } from 'node:fs';
+import { rejects } from 'node:assert/strict';
+import { expect, spyOn, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
-import { expect, spyOn, test } from 'bun:test';
+import { executeRun } from '#cli/execution/execute.ts';
+import { openSession } from '#cli/execution/session.ts';
 import { readRepository } from '#cli/repository/tree.ts';
 import { head, readSource, trackedEntries } from '#cli/repository/tracked.ts';
 
@@ -134,7 +134,7 @@ test('a non-Git walk preserves newline directories, nested negations, pruning, a
     fs.symlinkSync('../../outside', join(root, 'pruned', 'external'));
     fs.symlinkSync('source\nfiles', join(root, 'linked-directory'));
     const entries = trackedEntries(root);
-    expect(entries.map((entry) => entry.path).sort()).toStrictEqual([
+    expect(entries.map((entry) => entry.path).toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
         '.gitignore',
         'source\nfiles/.gitignore',
         'source\nfiles/code.ts',
@@ -172,9 +172,11 @@ if (process.platform !== 'win32')
         };
         const broken = await executeRun(await openSession(sandbox.path), options);
         expect(broken.report.exitCode).toBe(1);
-        expect([...new Set(broken.report.checks[0]!.findings.map((finding) => finding.file))].sort()).toStrictEqual(
-            paths,
-        );
+        expect(
+            [...new Set(broken.report.checks[0]!.findings.map((finding) => finding.file))].toSorted((left, right) =>
+                left.localeCompare(right),
+            ),
+        ).toStrictEqual(paths);
         for (const path of paths) writeFileSync(join(sandbox.path, path), 'printf "%s\\n" "Hello"\n');
         const corrected = await executeRun(await openSession(sandbox.path), options);
         expect(corrected.report.exitCode).toBe(0);

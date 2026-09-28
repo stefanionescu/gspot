@@ -5,7 +5,17 @@ import { reportSchema } from '#cli/execution/report.ts';
 import { parseProfile } from '#cli/policy/profiles/read.ts';
 import { run, runProcess } from '#tests/support/cli/command.ts';
 import { exportedProfile } from '#cli/policy/profiles/export.ts';
+import { ESLINT_OVERRIDE_POLICY } from '#tests/constants/acceptance/source/cli/cli.ts';
 import { existsSync, readFileSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
+
+const MODULES = join(import.meta.dir, '../../../../node_modules');
+const ESLINT_COMMAND = [
+    join(MODULES, '.bin/eslint'),
+    '--config',
+    '.gspot/config/eslint.config.mjs',
+    '--format',
+    'json',
+];
 
 test('a global ignore stops a repository check and its correction command until removed', async () => {
     await using directory = await testdir();
@@ -38,7 +48,6 @@ test('a global ignore stops a repository check and its correction command until 
 
 test('generated ESLint applies explicit ignores after enabled rule settings', async () => {
     await using directory = await testdir();
-    const modules = join(import.meta.dir, '../../../../node_modules');
     const policy =
         'version = 1\nconfigurations = ["javascript"]\n[rules]\ninstall = false\n[tools.eslint.rules]\n"no-console" = "error"\n';
     await createFileTree(directory.path, {
@@ -46,7 +55,7 @@ test('generated ESLint applies explicit ignores after enabled rule settings', as
         'package.json': '{"private":true,"type":"module"}\n',
         'source.js': 'console.log("example");\n',
     });
-    symlinkSync(modules, join(directory.path, 'node_modules'));
+    symlinkSync(MODULES, join(directory.path, 'node_modules'));
     for (const ignored of [false, true, false]) {
         writeFileSync(
             join(directory.path, 'gspot.toml'),
@@ -54,17 +63,7 @@ test('generated ESLint applies explicit ignores after enabled rule settings', as
         );
         const applied = await run(directory.path, ['apply']);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-        const lint = await runProcess(
-            [
-                join(modules, '.bin/eslint'),
-                '--config',
-                '.gspot/config/eslint.config.mjs',
-                '--format',
-                'json',
-                'source.js',
-            ],
-            { cwd: directory.path },
-        );
+        const lint = await runProcess([...ESLINT_COMMAND, 'source.js'], { cwd: directory.path });
         expect(lint.code, lint.stdout + lint.stderr).toBe(ignored ? 0 : 1);
         const findings = JSON.parse(lint.stdout) as {
             messages: { ruleId: string; line: number; column: number }[];
@@ -80,35 +79,9 @@ test('generated ESLint applies explicit ignores after enabled rule settings', as
 
 test('ESLint overrides preserve order, nested scope bounds, future files, and path-specific ignores', async () => {
     await using directory = await testdir();
-    const modules = join(import.meta.dir, '../../../../node_modules');
-    const policy = `version = 1
-configurations = ["javascript"]
-[rules]
-install = false
-[tools.eslint.rules]
-eqeqeq = ["error", "smart"]
-[[tools.eslint.overrides]]
-paths = ["tests"]
-rules = {eqeqeq = ["error", "always"]}
-[[tools.eslint.overrides]]
-paths = ["tests/exempt.js"]
-rules = {eqeqeq = ["error", "smart"]}
-[[scope]]
-path = "apps/web"
-[scope.tools.eslint.rules]
-eqeqeq = ["warn", "always"]
-[[scope.tools.eslint.overrides]]
-paths = ["**/*", "!apps/web/exempt.js"]
-rules = {eqeqeq = ["error", "smart"]}
-[[scope]]
-path = "apps/web/admin"
-[[scope.tools.eslint.overrides]]
-paths = ["**/*"]
-rules = {eqeqeq = ["error", "always"]}
-`;
     const source = 'export const matches = (value) => value == null;\n';
     await createFileTree(directory.path, {
-        'gspot.toml': policy,
+        'gspot.toml': ESLINT_OVERRIDE_POLICY,
         'package.json': '{"private":true,"type":"module"}\n',
         'source.js': source,
         'tests/unit.js': source,
@@ -117,31 +90,19 @@ rules = {eqeqeq = ["error", "always"]}
         'apps/web/exempt.js': source,
         'apps/web/admin/page.js': source,
     });
-    symlinkSync(modules, join(directory.path, 'node_modules'));
+    symlinkSync(MODULES, join(directory.path, 'node_modules'));
     const applied = await run(directory.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     writeFileSync(join(directory.path, 'tests/future.js'), source);
     for (const ignored of [false, true]) {
-        if (ignored)
-            writeFileSync(
-                join(directory.path, 'gspot.toml'),
-                policy + '\n[[ignore]]\ncheck = "javascript/eslint"\nrule = "eqeqeq"\npaths = ["tests"]\n',
-            );
-        const updated = ignored ? await run(directory.path, ['apply']) : undefined;
-        expect(updated?.code ?? 0, (updated?.stdout ?? '') + (updated?.stderr ?? '')).toBe(0);
-        const lint = await runProcess(
-            [
-                join(modules, '.bin/eslint'),
-                '--config',
-                '.gspot/config/eslint.config.mjs',
-                '--format',
-                'json',
-                'source.js',
-                'tests',
-                'apps',
-            ],
-            { cwd: directory.path },
+        writeFileSync(
+            join(directory.path, 'gspot.toml'),
+            ESLINT_OVERRIDE_POLICY +
+                (ignored ? '\n[[ignore]]\ncheck = "javascript/eslint"\nrule = "eqeqeq"\npaths = ["tests"]\n' : ''),
         );
+        const updated = await run(directory.path, ['apply']);
+        expect(updated.code, updated.stdout + updated.stderr).toBe(0);
+        const lint = await runProcess([...ESLINT_COMMAND, 'source.js', 'tests', 'apps'], { cwd: directory.path });
         expect(lint.code, lint.stdout + lint.stderr).toBe(1);
         const findings = JSON.parse(lint.stdout) as {
             filePath: string;
@@ -168,7 +129,10 @@ rules = {eqeqeq = ["error", "always"]}
                   ]),
         ]);
     }
-    const exported = exportedProfile(policy, 'project.profile.toml');
+});
+
+test('profile export preserves ESLint rules and omits repository-specific overrides', () => {
+    const exported = exportedProfile(ESLINT_OVERRIDE_POLICY, 'project.profile.toml');
     expect(exported.text).not.toContain('overrides');
     expect(parseProfile(exported.text, 'project.profile.toml').tables.tools?.eslint?.rules?.['eqeqeq']).toStrictEqual([
         'error',

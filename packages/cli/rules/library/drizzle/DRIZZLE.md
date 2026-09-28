@@ -20,7 +20,7 @@ and check your own platform's behavior. Nothing here requires Supabase.
 
 Read the manifest and lockfile before choosing a driver, schema API, or migration command. Record
 which PostgreSQL version and runtime the application uses. Keep Drizzle ORM, Drizzle Kit, and the
-driver on compatible, pinned versions. Install through the repository's Bun dependency setup and
+driver on compatible, pinned versions. Install through the repository's selected package manager and
 commit manifest and lockfile changes together.
 
 - Select a release deliberately. A documentation command containing `@rc` is not a reason to move an
@@ -79,23 +79,27 @@ role only the privileges needed for runtime operations.
 
 ## Organize database code
 
-Separate schema declarations, driver construction, domain operations, and migration execution. Place
-them in directories that describe their responsibility within the application.
+<!-- level: all -->
 
-- Keep a small schema together. Split a larger schema by domain or related tables when that makes
-  relationships easier to find. Configure Kit to discover every managed schema file, and export
-  every managed table, enum, sequence, view, and policy it needs.
+Separate schema declarations, driver construction, domain operations, and migration execution.
+Place them in directories that describe their responsibility within the application.
+Keep a small schema together. Split a larger schema by domain or related tables when that
+makes relationships easier to find. Put each domain query beside the behavior it serves.
+Name operations for their purpose rather than collecting unrelated work in global
+`insert`, `select`, `update`, and `delete` files.
+
+## Preserve schema and query contracts
+
+- Configure Kit to discover every managed schema file and export every managed table,
+  enum, sequence, view, and policy it needs.
 - Inspect discovery after moving files. A missed schema export can make generation propose a drop;
   an unintended export can make it propose creating a provider-owned object.
 - Keep schema modules free of connection creation, requests, environment loading, and migration
   execution. Kit needs to evaluate declarations without starting the application.
-- Put each domain query beside the behavior it serves. Name operations for their purpose rather than
-  collecting unrelated work in global `insert`, `select`, `update`, and `delete` files.
-- Pass a database or transaction handle to operations that participate in a larger transaction. Keep
-  the handle typed for the selected adapter and supported operations.
+- Pass a database or transaction handle to operations that participate in a larger transaction.
+  Keep the handle typed for the selected adapter and supported operations.
 - Infer stored-row and insert types with `$inferSelect` and `$inferInsert` where those types fit.
-  Keep them near their schema or consuming operation. Derive a projected result from the query when
-  it differs from the full table shape.
+  Derive a projected result from the query when it differs from the full table shape.
 - Define public request and response schemas separately from persistence types. An inferred insert
   type describes database inputs; it does not authorize a caller to set every available column.
 - Keep server runtime exports separate from shared input schemas and type-only imports. A UI

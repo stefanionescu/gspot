@@ -1,20 +1,21 @@
+import { expect, test } from 'bun:test';
 import { delimiter, join } from 'node:path';
-import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { commitAll } from '#tests/support/cli/git.ts';
+import type { FindingCase } from '#tests/types/cli.ts';
 // Planted repository for the css configuration: an unknown property, a class nobody reads, and a class the code reads that does not exist.
 import { reportSchema } from '#cli/execution/report.ts';
-import type { FindingCase } from '#tests/types/support/cli.ts';
+import { runPlanted } from '#tests/support/cli/planted.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
 import { run, runProcess } from '#tests/support/cli/command.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
 import { chmodSync, readFileSync, statSync, symlinkSync } from 'node:fs';
 import { containing, containingAll } from '#tests/support/expectations.ts';
-import { expectCorrected, runPlanted } from '#tests/support/cli/planted.ts';
+import { installAtLevel, installPrivateTools, toolsPath } from '#tests/support/cli/tools.ts';
 import { CSS_INIT } from '#tests/constants/acceptance/source/configurations/init-arguments.ts';
 import { CODE, SHEET } from '#tests/constants/acceptance/source/configurations/configurations.ts';
-import { install, installAtLevel, installPrivateTools, toolsPath } from '#tests/support/cli/tools.ts';
 
 const MODULES = join(import.meta.dir, '../../../../node_modules');
+const STYLELINT_MANIFEST = '{"name":"stylelint-adoption","private":true,"devDependencies":{"stylelint":"16.23.1"}}\n';
 // A property no browser knows, in two halves because the spelling fixer corrects it when it is whole.
 const UNKNOWN_PROPERTY = ['col', 'our'].join('');
 
@@ -78,33 +79,26 @@ test.each([
         const original = inherited
             ? '{"extends":"./styles/config.json","rules":{"selector-max-id":0}}\n'
             : '{"rules":{"color-named":"never","selector-max-id":0,"color-no-invalid-hex":null,"block-no-empty":null}}\n';
-        const manifest = '{"name":"stylelint-adoption","private":true,"devDependencies":{"stylelint":"16.23.1"}}\n';
         await createFileTree(sandbox.path, {
             '.gitignore': 'node_modules\n',
-            'package.json': manifest,
+            'package.json': STYLELINT_MANIFEST,
             [configuration]: original,
             [`${prefix}site.css`]: 'a {\n    color: #abc;\n}\n',
             ...(inherited ? { [`${prefix}styles/config.json`]: parent } : {}),
             [`${prefix}empty.css`]: 'a {}\n',
         });
         chmodSync(join(sandbox.path, configuration), 0o640);
-        const mode = statSync(join(sandbox.path, configuration)).mode;
         symlinkSync(MODULES, join(sandbox.path, 'node_modules'), 'dir');
         commitAll(sandbox.path);
         const environment = { PATH: toolsPath([]) };
-        await install(
+        await installAtLevel(
             sandbox.path,
             [...CSS_INIT.filter((argument) => argument !== '--no-runner'), '--runner', 'mise'],
             environment,
         );
-        const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
-        expect(selected.code, selected.stdout + selected.stderr).toBe(0);
         await Bun.write(join(sandbox.path, prefix, 'future.css'), '#example {\n    color: red;\n}\n');
-        const failed = await run(
-            sandbox.path,
-            ['check', '--only', 'css/stylelint', '--no-cache', '--json'],
-            environment,
-        );
+        const command = ['check', '--only', 'css/stylelint', '--no-cache', '--json'];
+        const failed = await run(sandbox.path, command, environment);
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
         const failedReport = reportSchema.parse(JSON.parse(failed.stdout));
         expect(failedReport.checks).toContainEqual(containing({ check: 'css/stylelint', scope, status: 'fail' }));
@@ -115,11 +109,7 @@ test.each([
             ]),
         );
         await Bun.write(join(sandbox.path, prefix, 'future.css'), 'a {\n    color: #abc;\n}\n');
-        const corrected = await run(
-            sandbox.path,
-            ['check', '--only', 'css/stylelint', '--no-cache', '--json'],
-            environment,
-        );
+        const corrected = await run(sandbox.path, command, environment);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toContainEqual(
             containing({ check: 'css/stylelint', status: 'ok', findings: [] }),
@@ -134,8 +124,8 @@ test.each([
         const removed = await run(sandbox.path, ['uninstall', '--yes'], environment);
         expect(removed.code, removed.stdout + removed.stderr).toBe(0);
         expect(readFileSync(join(sandbox.path, configuration), 'utf8')).toBe(original);
-        expect(statSync(join(sandbox.path, configuration)).mode).toBe(mode);
-        expect(readFileSync(join(sandbox.path, 'package.json'), 'utf8')).toBe(manifest);
+        expect(statSync(join(sandbox.path, configuration)).mode & 0o777).toBe(0o640);
+        expect(readFileSync(join(sandbox.path, 'package.json'), 'utf8')).toBe(STYLELINT_MANIFEST);
         // An inherited parent configuration is left as it was.
         expect(!inherited || readFileSync(join(sandbox.path, prefix, 'styles/config.json'), 'utf8') === parent).toBe(
             true,
@@ -172,58 +162,64 @@ const CASES: FindingCase[] = [
     },
 ];
 
-describe('the css configuration', () => {
-    test.each(CASES)(
-        '$check rejects $expected.rule in $expected.file and accepts corrected source',
-        async (planted) => {
-            await using sandbox = await testdir();
-            await createFileTree(sandbox.path, {
-                '.gitignore': 'node_modules\n',
-                'package.json':
-                    '{\n    "name": "planted",\n    "version": "1.0.0",\n    "private": true,\n    "type": "module"\n}\n',
-                'src/site.css': 'a {\n    color: red;\n}\n',
-                'src/card.module.css': SHEET,
-                'src/card.js': CODE,
-            });
-            symlinkSync(MODULES, join(sandbox.path, 'node_modules'));
-            commitAll(sandbox.path);
-            const environment = { PATH: `${join(MODULES, '.bin')}${delimiter}${toolsPath(['typos', 'ec'])}` };
-            await installAtLevel(sandbox.path, CSS_INIT, environment);
-            {
-                const clean = await run(
-                    sandbox.path,
-                    ['check', '--only', planted.check, '--no-cache', '--json'],
-                    environment,
-                );
-                expect(clean.code, `${planted.check}: ${clean.stdout}${clean.stderr}`).toBe(0);
-                const outcome = await runPlanted(sandbox.path, planted, environment);
-                expect(outcome.code, `${planted.check}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
-                const failedReport = reportSchema.parse(
-                    await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json(),
-                );
-                expect(failedReport.checks).toMatchObject([{ check: planted.check, status: 'fail' }]);
-                expect(failedReport.checks[0]?.findings).toContainEqual(
-                    containing({ check: planted.check, ...planted.expected }),
-                );
-                await expectCorrected(sandbox.path, planted.check, environment);
-            }
-            const selectors = await runPlanted(
+test.each(CASES)(
+    'the css configuration $check rejects $expected.rule in $expected.file and accepts corrected source',
+    async (planted) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            '.gitignore': 'node_modules\n',
+            'package.json':
+                '{\n    "name": "planted",\n    "version": "1.0.0",\n    "private": true,\n    "type": "module"\n}\n',
+            'src/site.css': 'a {\n    color: red;\n}\n',
+            'src/card.module.css': SHEET,
+            'src/card.js': CODE,
+        });
+        symlinkSync(MODULES, join(sandbox.path, 'node_modules'));
+        commitAll(sandbox.path);
+        const environment = { PATH: `${join(MODULES, '.bin')}${delimiter}${toolsPath(['typos', 'ec'])}` };
+        await installAtLevel(sandbox.path, CSS_INIT, environment);
+        {
+            const clean = await run(
                 sandbox.path,
-                {
-                    check: 'integrity/css-usage',
-                    files: {
-                        'src/card.module.css':
-                            '.card\\:active { content: ".unused"; }\n/* .fake {} */\n[data-name=".not-a-class"] .card-title { color: red; }\n',
-                        'src/card.js':
-                            "import styles from './card.module.css';\nexport const names = [styles['card:active'], styles.cardTitle];\n",
-                        // Sass is no CSS: a mixin the css checks would misread stays outside every claim (K-233).
-                        'src/theme.scss': '@mixin card { .unused { color: red; } }\n.panel { @include card; }\n',
-                    },
-                },
+                ['check', '--only', planted.check, '--no-cache', '--json'],
                 environment,
             );
-            expect(selectors.code, selectors.stdout + selectors.stderr).toBe(0);
-        },
-        PLANTED_TIMEOUT_MS * 4,
-    );
-});
+            expect(clean.code, `${planted.check}: ${clean.stdout}${clean.stderr}`).toBe(0);
+            const outcome = await runPlanted(sandbox.path, planted, environment);
+            expect(outcome.code, `${planted.check}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
+            const failedReport = reportSchema.parse(
+                await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json(),
+            );
+            expect(failedReport.checks).toMatchObject([{ check: planted.check, status: 'fail' }]);
+            expect(failedReport.checks[0]?.findings).toContainEqual(
+                containing({ check: planted.check, ...planted.expected }),
+            );
+            const correctedCheck = await run(
+                sandbox.path,
+                ['check', '--only', planted.check, '--no-cache', '--json'],
+                environment,
+            );
+            expect(correctedCheck.code, correctedCheck.stdout + correctedCheck.stderr).toBe(0);
+            expect(reportSchema.parse(JSON.parse(correctedCheck.stdout)).checks).toMatchObject([
+                { check: planted.check, status: 'ok', findings: [] },
+            ]);
+        }
+        const selectors = await runPlanted(
+            sandbox.path,
+            {
+                check: 'integrity/css-usage',
+                files: {
+                    'src/card.module.css':
+                        '.card\\:active { content: ".unused"; }\n/* .fake {} */\n[data-name=".not-a-class"] .card-title { color: red; }\n',
+                    'src/card.js':
+                        "import styles from './card.module.css';\nexport const names = [styles['card:active'], styles.cardTitle];\n",
+                    // Sass is outside CSS claims, so CSS checks do not parse its mixins (K-233).
+                    'src/theme.scss': '@mixin card { .unused { color: red; } }\n.panel { @include card; }\n',
+                },
+            },
+            environment,
+        );
+        expect(selectors.code, selectors.stdout + selectors.stderr).toBe(0);
+    },
+    PLANTED_TIMEOUT_MS * 4,
+);

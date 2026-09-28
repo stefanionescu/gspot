@@ -3,28 +3,17 @@ import type { Manifest } from '#cli/types/configurations.ts';
 import { parseManifest } from '#cli/configurations/manifests.ts';
 import type { ExistingTooling } from '#cli/types/repository/repository.ts';
 
-/**
- * A discovery result holding only the given configuration files.
- * @param configs the discovered configuration files
- * @returns the tooling
- */
-function discoveredTooling(configs: ExistingTooling['configs']): ExistingTooling {
-    return {
-        configs,
-        hooks: [],
-        ci: [],
-        agentFiles: [],
-        rulesDirectories: [],
-        lintFolders: [],
-        lintOnlyManifests: [],
-        runner: 'none',
-    };
-}
-
 /** One discovered root Prettier configuration. */
-export const PRETTIER_TOOLING = discoveredTooling([
-    { tool: 'prettier', path: '.prettierrc.json', carries: 'rules-table' },
-]);
+export const PRETTIER_TOOLING: ExistingTooling = {
+    configs: [{ tool: 'prettier', path: '.prettierrc.json', carries: 'rules-table' }],
+    hooks: [],
+    ci: [],
+    agentFiles: [],
+    rulesDirectories: [],
+    lintFolders: [],
+    lintOnlyManifests: [],
+    runner: 'none',
+};
 
 /**
  * A language manifest with a name and the configurations it requires, and nothing else.

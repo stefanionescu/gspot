@@ -36,6 +36,8 @@ the generated file. Keep migration timestamps chronological.
 
 ## Migration structure
 
+<!-- level: all -->
+
 Every hand-written SQL migration must include the migration header and section
 headings required by the SQL documentation tooling. Do not duplicate the
 tooling's exact accepted section-name list in these rules.
@@ -94,16 +96,16 @@ Trigger creation must have a descriptive comment within five lines above the
 - A table with RLS and no policy is intentionally inaccessible through anon or
   authenticated Data API calls.
 - Always pair table creation with:
-    - `ALTER TABLE <schema>.<table> ENABLE ROW LEVEL SECURITY;`
-    - explicit `REVOKE ALL` from broad roles
-    - explicit `GRANT` statements for only the roles and columns needed
-    - policies for user-facing access
+    - `ALTER TABLE <schema>.<table> ENABLE ROW LEVEL SECURITY;`.
+    - explicit `REVOKE ALL` from broad roles.
+    - explicit `GRANT` statements for only the roles and columns needed.
+    - policies for user-facing access.
 - Use `TO authenticated`, `TO anon`, and `TO service_role` deliberately. Do not
   omit `TO` unless every role truly belongs in the policy.
 - For ownership checks, wrap the identity function in a scalar subquery so the
   planner evaluates it once per statement rather than once per row.
 - `UPDATE` access needs both a `SELECT` policy and an `UPDATE` policy.
-- Use `USING` for row visibility and `WITH CHECK` for allowed new row state:
+- Use `USING` for row visibility and `WITH CHECK` for allowed new row state.
 
 | Operation   | Policy expression                                                               |
 | ----------- | ------------------------------------------------------------------------------- |
@@ -150,10 +152,10 @@ Trigger creation must have a descriptive comment within five lines above the
 ## Grants
 
 - Start from least privilege:
-    - `REVOKE ALL ON <object> FROM public;`
-    - `REVOKE ALL ON <object> FROM anon;`
-    - `REVOKE ALL ON <object> FROM authenticated;`
-    - `REVOKE ALL ON <object> FROM service_role;`
+    - `REVOKE ALL ON <object> FROM public;`.
+    - `REVOKE ALL ON <object> FROM anon;`.
+    - `REVOKE ALL ON <object> FROM authenticated;`.
+    - `REVOKE ALL ON <object> FROM service_role;`.
 - Grant schema usage only to roles that need to resolve objects in that schema.
 - Grant table write access by column list.
 - Grant `SELECT` only when the role has a real read path.

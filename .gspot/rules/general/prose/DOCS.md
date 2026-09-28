@@ -47,8 +47,6 @@ The following requirements never become optional:
 - Accuracy.
 - Security.
 - Accessibility.
-- Clear ownership.
-- Present-state descriptions.
 - Honest limitations.
 - Runnable or explicitly illustrative examples.
 
@@ -56,6 +54,8 @@ Do not copy a provider-specific shortcode, Liquid tag, HTML component, or
 front-matter field into a different project unless that project supports it.
 
 ## Core documentation standard
+
+<!-- level: all -->
 
 Good project documentation lets a reader answer these questions without
 inspecting implementation source:
@@ -184,6 +184,8 @@ The second example is inaccurate if most readers lack the required role.
 
 ## Organize the documentation set
 
+<!-- level: all -->
+
 Give each kind of information a clear owner.
 
 | Document                   | Primary purpose                                                                                             |
@@ -220,12 +222,12 @@ reaching useful content. A link moves the reader closer to the goal.
 
 Use standard repository filenames with their established capitalization:
 
-- `README.md`
-- `ADVANCED.md`
-- `CONTRIBUTING.md`
-- `SECURITY.md`
-- `CHANGELOG.md`
-- `LICENSE`
+- `README.md`.
+- `ADVANCED.md`.
+- `CONTRIBUTING.md`.
+- `SECURITY.md`.
+- `CHANGELOG.md`.
+- `LICENSE`.
 
 Do not create variants such as `ReadMe.md` or `advanced-guide.md` when the
 standard name already describes the document's role.
@@ -243,6 +245,8 @@ platform limits permit it. Do not add unrelated popular keywords to attract
 traffic.
 
 ## Split a README and an advanced guide deliberately
+
+<!-- level: all -->
 
 The default structure for a substantial project or subproject is:
 
@@ -405,6 +409,8 @@ the guide becomes small or stops serving a distinct audience.
 
 ## Use cognitive funneling
 
+<!-- level: all -->
+
 Order information from broad and widely relevant to narrow and specialized.
 This structure helps readers decide quickly whether to continue.
 
@@ -444,6 +450,8 @@ open with implementation internals, a complete option table, or a long project
 history before explaining the purpose.
 
 ## Choose the correct topic type
+
+<!-- level: all -->
 
 Different reader goals need different structures. Identify the topic type
 before writing.
@@ -559,6 +567,8 @@ Do not alternate between narrative, steps, and reference fields without clear
 headings.
 
 ## Plan documentation before writing
+
+<!-- level: all -->
 
 For non-trivial documentation work:
 

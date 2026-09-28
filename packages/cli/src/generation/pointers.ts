@@ -17,21 +17,11 @@ function parsePointer(text: string, pointerPath: string): Record<string, unknown
 
 function fillTarget(value: unknown, pointerPath: string, targetPath: string): unknown {
     if (typeof value !== 'string') return value;
-    const target = relativeTarget(pointerPath, targetPath);
+    const rel = toPosix(relative(dirname(pointerPath) === '.' ? '' : dirname(pointerPath), targetPath));
+    const target = rel.startsWith('./') || rel.startsWith('../') ? rel : `./${rel}`;
     return value.replaceAll(TARGET_PLACEHOLDER, (placeholder) =>
         placeholder === '{target_json}' ? JSON.stringify(target) : target,
     );
-}
-
-/**
- * The relative import path from a pointer to its target.
- * @param pointerPath the pointer's path
- * @param targetPath the generated file's path
- * @returns the path starting with ./ or ../
- */
-function relativeTarget(pointerPath: string, targetPath: string): string {
-    const rel = toPosix(relative(dirname(pointerPath) === '.' ? '' : dirname(pointerPath), targetPath));
-    return rel.startsWith('./') || rel.startsWith('../') ? rel : `./${rel}`;
 }
 
 /**
@@ -67,7 +57,7 @@ export function bodyPointer(
  * @param pointer the pointer spec
  * @param pointerPath the pointer's path
  * @param targetPath the generated file's path
- * @returns the path, the new text and the keys gspot owns
+ * @returns the path, the new text, and the keys gspot owns
  */
 export function mergePointer(
     root: string,

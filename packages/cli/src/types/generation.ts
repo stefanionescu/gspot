@@ -1,11 +1,11 @@
 // The types of generation in this package.
-import type { FileSnapshot } from '#cli/types/platform.ts';
-import type { ToolPackageManager } from '#cli/types/tools/packages.ts';
+import type { FileObservation } from '#cli/types/platform.ts';
+import type { PackageTool } from '#cli/types/tools/packages.ts';
 import type { HOOK_FILES } from '#cli/constants/repository/repository.ts';
 import type { ConfigurationFormat } from '#cli/types/lifecycle/lifecycle.ts';
 import type { PathExpressions, TrackedFile } from '#cli/types/repository/repository.ts';
 import type { ConfigurationTarget, FragmentSelector, Manifest } from '#cli/types/configurations.ts';
-import type { FormatSettings, MergedView, Policy, ScopeSelection } from '#cli/types/policy/policy.ts';
+import type { FormatSettings, MergedView, Policy, RunnerTask, ScopeSelection } from '#cli/types/policy/policy.ts';
 
 export type Fragment = { manifest: Manifest; config: ConfigurationTarget };
 export type WorkflowShape = {
@@ -32,7 +32,9 @@ export type TemplateInputs = {
     version: string;
     scope: string;
     scopes: { path: string; configurations: string[] }[];
-    configurationScopes: (configuration: string) => { path: string; settings: Record<string, unknown> }[];
+    configurationScopes: (
+        configuration: string,
+    ) => { path: string; settings: Record<string, unknown>; extra: MergedView['extra'] }[];
     /** The folders the selected settings with this role name, for the scope being rendered. */
     roleFolders: (role: string) => string[];
     /** The same per scope, shallowest first, for the scopes where a selected setting carries the role. */
@@ -70,7 +72,7 @@ export type GeneratedFile = {
     content: string;
     readOnly: boolean;
     executable?: boolean;
-    observed?: FileSnapshot;
+    observed?: FileObservation;
     kind: 'lock' | 'config' | 'pointer' | 'hook' | 'runner' | 'workflow' | 'rules' | 'managed-block';
     configuration?: string;
 };
@@ -87,23 +89,27 @@ export type GeneratedProposal = {
     merges: ConfigurationOutput[];
     configurations: ConfigurationOutput[];
 };
-export type FormatOverride = { files: string[]; excludeFiles: string[]; options: Record<string, unknown> };
+export type FormatOverride<Options = Record<string, unknown>> = {
+    files: string[];
+    excludeFiles: string[];
+    options: Options;
+};
 /** A Prettier plugin a selected manifest ships: its npm name, its entry file, and the overrides its files need. */
 export type PrettierPlugin = {
     name: string;
     entry: string;
     overrides: { files: string; options: Record<string, unknown> }[];
 };
-export type ScopedFormat = { scope: string; paths: string[]; format: Partial<FormatSettings> };
+export type ScopeFormat = { scope: string; paths: string[]; format: Partial<FormatSettings> };
 export type EditorconfigOverride = { path: string; options: Record<string, string | number | boolean> };
-export type Basename = { isNegated: boolean; basename: string };
-export type Group<Options> = {
+export type ExcludedBasename = { isNegated: boolean; basename: string };
+export type FormatSelectorGroup<Options> = {
     patterns: string[];
     excluded: string[];
     options: Options;
     hasSlash: boolean;
-    base: string;
-    fromConfig: (pattern: string) => string;
+    sourceDirectory: string;
+    fromGeneratedFile: (pattern: string) => string;
 };
 export type NativeOverride<Options> = {
     files: string | string[];
@@ -122,12 +128,11 @@ export type SelectorGroup = {
 };
 export type GenerationOptions = {
     version: string;
-    packageManager: ToolPackageManager | undefined;
-    takeover?: ReadonlyMap<string, FileSnapshot> | undefined;
+    packageClient: PackageTool | undefined;
+    takeover?: ReadonlyMap<string, FileObservation> | undefined;
 };
 export type JsonFormat = { width: number; indent: number };
 export type HookName = (typeof HOOK_FILES)[number];
-export type LefthookBlock = Record<string, { commands: Record<string, unknown> }>;
 export type Pointer = NonNullable<ConfigurationTarget['pointer']>;
 /** What emitting one manifest in one scope needs. */
 export type EmitContext = {
@@ -142,5 +147,7 @@ export type Retention = {
     root: string;
     policy: Policy;
     files: TrackedFile[];
-    takeover: ReadonlyMap<string, FileSnapshot> | undefined;
+    takeover: ReadonlyMap<string, FileObservation> | undefined;
 };
+
+export type RunnerPlan = { tasks: RunnerTask[]; configuration?: ConfigurationOutput; notes: string[] };

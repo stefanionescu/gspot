@@ -6,8 +6,8 @@ import { cacheHome } from '#cli/platform/environment.ts';
 import type { Pruning } from '#cli/types/checks/swift.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { lstatSync, mkdirSync, readdirSync, statSync } from 'node:fs';
-import type { ConfinedRoot, FileSnapshot } from '#cli/types/platform.ts';
 import { MODE_BITS, PRIVATE_DIRECTORY } from '#cli/constants/platform.ts';
+import type { ConfinedRoot, FileObservation } from '#cli/types/platform.ts';
 
 // Checks one folder of the compiler directory: a link is refused, and each folder inside is queued.
 function inspectFolder(folder: string, files: ConfinedRoot, directory: string, pending: string[]): void {
@@ -27,9 +27,9 @@ function assertNoLinks(folder: string, files: ConfinedRoot): void {
 }
 
 // The sources to build, each as the snapshot it must have under source/ in the compiler directory.
-function desiredSources(root: string, paths: string[]): Map<string, FileSnapshot> {
+function desiredSources(root: string, paths: string[]): Map<string, FileObservation> {
     const source = openConfinedRoot(root, 'native');
-    const desired = new Map<string, FileSnapshot>();
+    const desired = new Map<string, FileObservation>();
     try {
         for (const file of paths) {
             const mode = statSync(source.source(file)).mode & MODE_BITS;
@@ -41,17 +41,7 @@ function desiredSources(root: string, paths: string[]): Map<string, FileSnapshot
     return desired;
 }
 
-// Every folder a desired path sits in, including its ancestors.
-function wantedDirectories(desired: Map<string, FileSnapshot>): Set<string> {
-    return new Set(
-        [...desired.keys()].flatMap((path) => {
-            const parts = path.split('/');
-            return parts.slice(0, -1).map((_part, index) => parts.slice(0, index + 1).join('/'));
-        }),
-    );
-}
-
-// Removes a file or link the build no longer wants, when it is still there.
+// Removes an existing file or link absent from the build inputs.
 function removeStale(files: ConfinedRoot, path: string, isLink: boolean): void {
     const current = isLink ? files.readEntry(path) : files.read(path);
     if (current !== undefined) files.remove(path, current);
@@ -73,8 +63,18 @@ function pruneEntry(pruning: Pruning, path: string, directories: string[], empty
 }
 
 // Removes every entry under source/ the build does not want, then the folders left empty, deepest first.
-function pruneSources(folder: string, files: ConfinedRoot, desired: Map<string, FileSnapshot>): void {
-    const pruning: Pruning = { folder, files, desired, wanted: wantedDirectories(desired) };
+function pruneSources(folder: string, files: ConfinedRoot, desired: Map<string, FileObservation>): void {
+    const pruning: Pruning = {
+        folder,
+        files,
+        desired,
+        wanted: new Set(
+            [...desired.keys()].flatMap((path) => {
+                const parts = path.split('/');
+                return parts.slice(0, -1).map((_part, index) => parts.slice(0, index + 1).join('/'));
+            }),
+        ),
+    };
     const directories = ['source'];
     const empty: string[] = [];
     for (let directory = directories.pop(); directory !== undefined; directory = directories.pop())

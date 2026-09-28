@@ -57,7 +57,7 @@ per_scope = true
 rules_path = ["ignored"]
 
 [[configs]]
-template = "trivy.yaml.tmpl"
+template = "trivy/configuration.yaml.tmpl"
 target = ".gspot/config/trivy.yaml"
 per_scope = true
 
@@ -67,7 +67,7 @@ target = ".gspot/config/trivyignore"
 per_scope = true
 
 [[configs]]
-template = "trivy-findings.tpl.tmpl"
+template = "trivy/findings.tpl.tmpl"
 target = ".gspot/config/trivy-findings.tpl"
 per_scope = true
 header = false
@@ -178,4 +178,4 @@ default = "10m"
 summary = "How long one Trivy scan may take."
 
 [rule_files]
-tool = ["tool/docker/DOCKER.md"]
+tool = [{path = "tool/docker/DOCKER.md"}]

@@ -29,11 +29,10 @@ export const singleFileFolder: Analysis = (context) => {
         if (isSkipped(directory, isAllowed)) return [];
         const entries = tree.get(directory) ?? [];
         if (entries.some((entry) => entry.kind === 'dir')) return [];
-        const code = entries.filter(
-            (entry) => !entry.name.endsWith('.d.ts') && extensions.some((extension) => entry.name.endsWith(extension)),
-        );
-        const [only] = code;
-        if (only === undefined || code.length !== 1) return [];
+        const siblings = entries.filter((entry) => !entry.name.endsWith('.d.ts'));
+        const [only] = siblings;
+        if (only === undefined || siblings.length !== 1) return [];
+        if (!extensions.some((extension) => only.name.endsWith(extension))) return [];
         return [
             context.report(
                 `${directory}/${only.name}`,

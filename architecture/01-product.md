@@ -55,7 +55,7 @@ evidence appears below; [remaining work](22-remaining.md) owns current dispositi
 | Nothing is hidden in the ignore file of a tool           | gspot hands every tool a file list, and `doctor` names a file or a kind of file no check reads                                                                    | the coverage tests of `doctor`                                            |
 | An upgrade is a diff                                     | generated configuration is tracked, and `apply --dry-run` lists every rule that changes, for every tool                                                           | the upgrade test repository                                               |
 | The rules an agent reads match the checks                | a rule file follows the level, names no tool of another configuration, and its good examples pass their linter                                                    | the rules lint                                                            |
-| gspot obeys its own rules                                | this repository runs gspot at the level `all` with no `[[ignore]]` entry                                                                                          | local candidate acceptance; remote evidence deferred while CI is paused   |
+| gspot obeys its own rules                                | this repository runs gspot at `all`; every retained exception has a narrow scope, a reason, and verification                                                      | local candidate acceptance and the exact commit's full CI results         |
 
 ## The developer's day
 
@@ -80,9 +80,8 @@ evidence appears below; [remaining work](22-remaining.md) owns current dispositi
 ## Principles
 
 - **Everything is an error.** No warning level. Two levels decide what runs: `recommended`
-  holds defect checks and mandatory trivial-function and trivial-file rules; `all` adds
-  the remaining house style. An old repository adopts gspot by checking the
-  files a change touches, and gspot records no old findings.
+  holds defect checks; `all` adds house style, including trivial-function and trivial-file
+  rules. An existing repository can check changed files without recording old findings.
 - **A maintained tool wins.** gspot writes original analysis only where no maintained tool
   expresses the rule, and the configuration names the tools it searched.
 - **Detect, never assume.** gspot learns the repository from its tracked files and manifests.

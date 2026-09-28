@@ -15,7 +15,7 @@ function pinsOf(tool: ToolPin): Pin[] {
 }
 
 const tools = [...configurationManifests().values()].flatMap((manifest) => manifest.tools);
-// gspot's own packages reach the registry with the first release (D-158), so they are not looked up before it.
+// The gspot packages reach the registry with the first release (D-158). Lookups wait until publication.
 const pins = tools
     .filter((tool) => tool.provider !== 'host')
     .flatMap((tool) => pinsOf(tool))

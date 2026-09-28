@@ -1,7 +1,7 @@
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { textContaining } from '#tests/support/expectations.ts';
-import { generatedEslint } from '#tests/support/cli/generated-eslint.ts';
+import { generatedEslint } from '#tests/support/cli/generated/eslint.ts';
 
 test.each([
     ['recommended', 'bun:test', 2],
@@ -21,11 +21,11 @@ test.each([
         `import { test, expect } from '${runtime}';\ntest('checks the value', () => { const value = 1; expect(${args.slice(0, count).join(', ')}).toBe(1); });\n`;
     const defect = await eslint.lintText(source(maximum + 1), { filePath: 'sample.test.js' });
     expect(
-        defect.flatMap((file) => file.messages).filter((message) => message.ruleId === 'jest/valid-expect'),
+        defect.flatMap((file) => file.messages).filter((diagnostic) => diagnostic.ruleId === 'jest/valid-expect'),
     ).toHaveLength(1);
     const corrected = await eslint.lintText(source(maximum), { filePath: 'sample.test.js' });
     expect(
-        corrected.flatMap((file) => file.messages).filter((message) => message.ruleId === 'jest/valid-expect'),
+        corrected.flatMap((file) => file.messages).filter((diagnostic) => diagnostic.ruleId === 'jest/valid-expect'),
     ).toStrictEqual([]);
 });
 
@@ -139,9 +139,9 @@ test.each(['js', 'jsx'])(
                 .flatMap((file) => file.messages)
                 .filter(({ ruleId }) => ruleId === 'gspot/tests-directory-contents'),
         ).toMatchObject([{ message: textContaining('app/tests/fixtures') }]);
-        const support = await eslint.lintFiles(['app/tests/fixtures/helpers.js']);
+        const harnessResults = await eslint.lintFiles(['app/tests/fixtures/helpers.js']);
         expect(
-            support
+            harnessResults
                 .flatMap((file) => file.messages)
                 .filter(({ ruleId, fatal }) => ruleId === 'gspot/tests-directory-contents' || fatal),
         ).toStrictEqual([]);

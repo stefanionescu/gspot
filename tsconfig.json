@@ -26,6 +26,8 @@
             "#docs/*": ["./docs/*"],
             "#scripts/*": ["./packages/cli/scripts/*"],
             "#cli-package": ["./packages/cli/package.json"],
+            "#npm-targets": ["./packages/npm/targets.json"],
+            "#workspace-package": ["./package.json"],
             "#plugin-package": ["./packages/eslint-plugin/package.json"]
         }
     },

@@ -1,11 +1,11 @@
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
-import { planRun } from '#cli/execution/planning/plan.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { applyFixers } from '#cli/execution/fixers.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { planRun } from '#cli/execution/planning/plan.ts';
 import { rejection } from '#tests/support/expectations.ts';
 import type { CheckSpec } from '#cli/types/configurations.ts';
 import { existsSync, mkdirSync, readFileSync } from 'node:fs';
@@ -53,18 +53,6 @@ function git(root: string, ...argv: string[]): void {
     expect(result.code, result.stderr).toBe(0);
 }
 
-// The staged selection of the sandbox, as the commit stage receives it.
-async function stagedRevision(root: string): Promise<{ staged: string[] }> {
-    const { staged } = await stagedFiles(root);
-    return { staged };
-}
-
-// The changed selection of the sandbox against HEAD, as the pull-request form receives it.
-async function changedRevision(root: string): Promise<{ changed: string[] }> {
-    const { paths } = await changedFiles(root, 'HEAD');
-    return { changed: paths };
-}
-
 function projectChecks(session: Session): void {
     const manifest = session.manifests.get('typescript')!;
     const spec: CheckSpec = {
@@ -109,7 +97,10 @@ test.each([
     mkdirSync(join(sandbox.path, 'api'), { recursive: true });
     const session = await openSession(sandbox.path);
     projectChecks(session);
-    const revision = selection === 'staged' ? await stagedRevision(sandbox.path) : await changedRevision(sandbox.path);
+    const revision =
+        selection === 'staged'
+            ? await stagedFiles(sandbox.path).then(({ staged }) => ({ staged }))
+            : await changedFiles(sandbox.path, 'HEAD').then(({ paths }) => ({ changed: paths }));
     const planned = await planRun(session, { ...options, ...revision });
     const api = planned.find((check) => check.scope.scope.path === 'api')!;
     expect(api.files).toStrictEqual([]);

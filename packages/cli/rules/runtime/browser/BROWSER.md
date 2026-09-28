@@ -16,7 +16,8 @@ Rules that hold because the code runs in a browser.
 ## Module resolution
 
 - A script loaded as a plain script from HTML has no module system. Do not use `import` in one.
-- A module script resolves by URL, so an internal import carries its real extension.
+- A module script resolves imports as URLs or through an import map. Relative imports
+  name the resource the server actually serves; preserve declared import-map aliases.
 
 ## Globals and APIs
 

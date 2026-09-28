@@ -13,12 +13,16 @@ project contracts apply at both levels.
 
 ## One logger
 
+<!-- level: all -->
+
 - One logger owner per process, configured at the entrypoint: level, format, redaction, transports.
 - Feature code obtains a logger from that owner. It never instantiates, configures, or adds transports.
 - Do not use `console.log`, `print`, or `debugPrint` for application logging. `print` is for a CLI's own stdout output.
 - Logs go to stdout or stderr. Files, databases, and third-party transports are wired at the owner, never in feature code.
 
 ## Levels
+
+<!-- level: all -->
 
 - `debug`: noisy diagnostic detail, off in production.
 - `info`: normal lifecycle events and status.
@@ -30,12 +34,18 @@ project contracts apply at both levels.
 ## Structure
 
 - The message string is stable, human-readable, and describes the event. Values go in structured fields, never interpolated into the message.
-- Event names and field keys are operational contracts in `lower_snake_case`. Renaming one is an observability change.
+- Preserve declared event names and field keys. Renaming an operational contract requires updating its consumers.
 - Include the request trace when one is available.
 - Use stable names for request IDs, correlation IDs, provider request IDs, operation IDs, resource IDs, and safe user IDs. Propagate them to provider calls when supported.
 - Put an error object in the field the logger serializes errors from, so stack and cause are kept.
 - Summarize: counts, IDs, statuses, provider names, durations. No large, deeply nested, or expensive-to-compute fields.
 - Do not compute expensive log arguments when the level is disabled.
+
+### Field naming
+
+<!-- level: all -->
+
+Use `lower_snake_case` for new event names and field keys unless an existing operational contract defines their spelling.
 
 ## Never log
 

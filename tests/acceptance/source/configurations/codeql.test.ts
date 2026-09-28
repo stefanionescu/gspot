@@ -5,7 +5,7 @@ import { createFileTree, testdir } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
 
 const python = {
     language: 'python',
@@ -28,7 +28,7 @@ const javascript = {
     column: 22,
 };
 
-test.each(['recommended', 'all'].flatMap((level) => [python, javascript].map((fixture) => ({ level, ...fixture }))))(
+test.each(['recommended', 'all'].flatMap((level) => [python, javascript].map((example) => ({ level, ...example }))))(
     'pinned CodeQL reports SQL injection for $language at $level and accepts a parameterized query without changing sources',
     async ({ level, language, file, unsafe, corrected, rule, line, column }) => {
         await using directory = await testdir();

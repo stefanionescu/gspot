@@ -38,7 +38,7 @@ test('a folder with no git scans its files for secrets, and a git repository sca
         note: textContaining('no git repository'),
     });
     commitAll(sandbox.path);
-    const withGit = await secretChecks(sandbox.path);
-    expect(withGit.find((check) => check.check === 'secrets/gitleaks-files')?.status).toBe('skipped');
-    expect(withGit.find((check) => check.check === 'secrets/gitleaks-staged')?.status).toBe('ok');
+    const isGitRepository = await secretChecks(sandbox.path);
+    expect(isGitRepository.find((check) => check.check === 'secrets/gitleaks-files')?.status).toBe('skipped');
+    expect(isGitRepository.find((check) => check.check === 'secrets/gitleaks-staged')?.status).toBe('ok');
 });

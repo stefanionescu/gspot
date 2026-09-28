@@ -1,5 +1,6 @@
 import { z } from 'zod';
-import definitions from '#cli/platform/release-targets.json' with { type: 'json' };
+// eslint-disable-next-line gspot/no-cross-folder-imports, gspot/no-cross-project-imports -- reason: The npm launcher owns the shared release target contract.
+import definitions from '../../npm/targets.json' with { type: 'json' };
 
 const targetSchema = z.object({
     os: z.enum(['darwin', 'linux', 'win32']),

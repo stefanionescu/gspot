@@ -10,14 +10,14 @@ export type Status = {
     root: string;
     location: HookLocation;
     entries: OwnershipEntry[];
-    hasManager: boolean;
+    hasNativeHooks: boolean;
     husky: Map<string, string> | undefined;
 };
 /** A native hook manager gspot integrates with. */
-export type HookManager = 'simple-git-hooks' | 'pre-commit' | 'lefthook' | 'husky';
+export type HookTool = 'simple-git-hooks' | 'pre-commit' | 'lefthook' | 'husky';
 /** The prepared Git directory a manager generated its hooks into, and what the generation needs. */
 export type Preparation = {
-    manager: HookManager;
+    hookTool: HookTool;
     policy: Policy;
     root: string;
     executable: string;
@@ -31,7 +31,7 @@ export type Installation = {
     owner: LifecycleOwner;
     location: HookLocation;
     policy: Policy;
-    manager: ReadonlyMap<string, PreparedHook> | undefined;
+    nativeHooks: ReadonlyMap<string, PreparedHook> | undefined;
     recorded: Set<string>;
     nativeMarker: string | undefined;
     directory: string;

@@ -32,9 +32,15 @@ project contracts apply at both levels.
 - Untrusted content reaches the DOM as text, or through one reviewed sanitizer with an allowlist.
   Never through `innerHTML`, `outerHTML`, `document.write`, `insertAdjacentHTML`, or
   `dangerouslySetInnerHTML` outside that adapter.
-- No inline scripts, inline event handlers, or `javascript:` URLs.
+- Reject executable script URLs and untrusted inline code.
 - Send security headers: HSTS, `X-Content-Type-Options: nosniff`, frame policy, referrer policy,
   and a Content Security Policy that the application's own scripts satisfy.
+
+### Script placement
+
+<!-- level: all -->
+
+Keep executable scripts and event handlers outside HTML templates. JSON-LD remains data.
 
 ## Redirects and outbound requests
 

@@ -2,39 +2,21 @@ import { statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { pinnedTwice } from '#cli/tools/mise.ts';
 import { head } from '#cli/repository/tracked.ts';
-import { emitAll } from '#cli/generation/render.ts';
+import { emitAll } from '#cli/generation/outputs.ts';
 import { hasHeader } from '#cli/generation/headers.ts';
 import { isOwned } from '#cli/policy/adoption/collect.ts';
-import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import { readManifests } from '#cli/repository/manifests.ts';
 import type { GeneratedFile } from '#cli/types/generation.ts';
 import { everyManifest } from '#cli/configurations/select.ts';
 import { hookLocation } from '#cli/repository/hook-location.ts';
 import type { Session } from '#cli/types/execution/execution.ts';
 import { MISE_CONFIG_PATH } from '#cli/constants/tools/tools.ts';
+import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import { detectConfigurations } from '#cli/configurations/detect.ts';
 import { CHANGE_HEAD_BYTES } from '#cli/constants/commands/doctor.ts';
 import type { ChangeReport, ChangeRow } from '#cli/types/commands/doctor.ts';
 import { ciLintJobs, existingTooling } from '#cli/repository/existing-tooling.ts';
 import type { ExistingTool, ExistingTooling } from '#cli/types/repository/repository.ts';
-
-function detectedNotSelected(
-    session: Session,
-    facts: ReturnType<typeof readManifests>,
-    selected: Set<string>,
-): ChangeReport['detectedNotSelected'] {
-    return detectConfigurations(session.repository.files, session.manifests, facts)
-        .filter((proposal) => !selected.has(proposal.configuration))
-        .filter((proposal) => {
-            const manifest = session.manifests.get(proposal.configuration);
-            return manifest?.configuration.default !== true && manifest?.configuration.kind !== 'policy';
-        })
-        .map((proposal) => ({
-            configuration: proposal.configuration,
-            evidence: proposal.evidence,
-            command: `gspot add ${proposal.configuration}`,
-        }));
-}
 
 function recommendedNotSelected(session: Session, selected: Set<string>): ChangeReport['recommendedNotSelected'] {
     const rows = new Map<string, ChangeReport['recommendedNotSelected'][number]>();
@@ -106,14 +88,6 @@ function hookRows(session: Session, tooling: ExistingTooling): ChangeRow[] {
     });
 }
 
-function workflowRows(session: Session, tooling: ExistingTooling, files: GeneratedFile[]): ChangeRow[] {
-    const generated = new Set(files.filter((file) => file.kind === 'workflow').map((file) => file.path));
-    return ciLintJobs(
-        session.root,
-        tooling.ci.filter((path) => !generated.has(path)),
-    ).map((path) => ({ path, note: 'an authored lint job', command: 'none; informational' }));
-}
-
 /**
  * The change report for a session.
  * @param session the session
@@ -125,10 +99,21 @@ export function changeReport(session: Session): ChangeReport {
     const tooling = existingTooling(session.root, session.repository.files, facts);
     const rendered = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
         version: session.version,
-        packageManager: session.packageManager,
+        packageClient: session.packageClient,
     });
+    const generated = new Set(rendered.files.filter((file) => file.kind === 'workflow').map((file) => file.path));
     return {
-        detectedNotSelected: detectedNotSelected(session, facts, selected),
+        detectedNotSelected: detectConfigurations(session.repository.files, session.manifests, facts)
+            .filter((proposal) => !selected.has(proposal.configuration))
+            .filter((proposal) => {
+                const manifest = session.manifests.get(proposal.configuration);
+                return manifest?.configuration.default !== true && manifest?.configuration.kind !== 'policy';
+            })
+            .map((proposal) => ({
+                configuration: proposal.configuration,
+                evidence: proposal.evidence,
+                command: `gspot add ${proposal.configuration}`,
+            })),
         recommendedNotSelected: recommendedNotSelected(session, selected),
         configurationNotOwned: [
             ...configurationNotOwned(session, tooling, selected, rendered.files),
@@ -143,7 +128,13 @@ export function changeReport(session: Session): ChangeReport {
                       },
                   ]),
         ],
-        changedOutsideGspot: [...hookRows(session, tooling), ...workflowRows(session, tooling, rendered.files)],
+        changedOutsideGspot: [
+            ...hookRows(session, tooling),
+            ...ciLintJobs(
+                session.root,
+                tooling.ci.filter((path) => !generated.has(path)),
+            ).map((path) => ({ path, note: 'an authored lint job', command: 'none; informational' })),
+        ],
         pinnedTwice: pinnedTwice(session.root, everyManifest(session.scopes)).map((pin) => ({
             tool: pin.tool,
             version: pin.version,

@@ -4,7 +4,7 @@ import type { Manifest } from '#cli/types/configurations.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { NO_CONFIGURATIONS } from '#cli/constants/commands/init.ts';
 import { detectConfigurations } from '#cli/configurations/detect.ts';
-import type { ScopeEntry, TrackedFile } from '#cli/types/repository/repository.ts';
+import type { ScopeEntry } from '#cli/types/repository/repository.ts';
 import { requireChain, selectConfigurations, SelectionError } from '#cli/configurations/select.ts';
 import type { ConfigurationReason, InitContext, InitInputs, InitSelection } from '#cli/types/commands/init.ts';
 
@@ -42,18 +42,12 @@ function initScopes(root: string, workspace: ScopeEntry[], scopeFlags: Map<strin
     return scopes;
 }
 
-function isRootCandidate(
-    context: InitContext,
-    configuration: string,
-    hasScopes: boolean,
-    without: Set<string>,
-): boolean {
+function getCandidate(context: InitContext, configuration: string, without: Set<string>): Manifest | undefined {
     const manifest = context.manifests.get(configuration);
-    if (!manifest || without.has(configuration)) return false;
-    const { kind, proposed } = manifest.configuration;
-    if (manifest.configuration.needs_git && !context.hasGit) return false;
-    if (hasScopes && kind !== 'policy' && kind !== 'language') return false;
-    return !proposed || context.options.yes;
+    if (!manifest || without.has(configuration)) return undefined;
+    if (manifest.configuration.needs_git && !context.hasGit) return undefined;
+    if (manifest.configuration.proposed && !context.options.yes) return undefined;
+    return manifest;
 }
 
 function rootSelection(context: InitContext, rootProposals: { configuration: string }[], hasScopes: boolean): string[] {
@@ -61,16 +55,14 @@ function rootSelection(context: InitContext, rootProposals: { configuration: str
     const named = context.options.configurations?.filter((id) => id !== NO_CONFIGURATIONS && !without.has(id));
     if (named && context.options.profile?.tables.selection !== 'detect') return named;
     const detected = rootProposals
-        .filter((proposal) => isRootCandidate(context, proposal.configuration, hasScopes, without))
+        .filter((proposal) => {
+            const manifest = getCandidate(context, proposal.configuration, without);
+            if (!manifest) return false;
+            const { kind } = manifest.configuration;
+            return !hasScopes || kind === 'policy' || kind === 'language';
+        })
         .map((proposal) => proposal.configuration);
     return [...new Set([...(named ?? []), ...detected])];
-}
-
-function isScopeCandidate(context: InitContext, configuration: string, without: Set<string>): boolean {
-    const manifest = context.manifests.get(configuration);
-    if (!manifest || without.has(configuration)) return false;
-    if (manifest.configuration.needs_git && !context.hasGit) return false;
-    return manifest.configuration.kind !== 'policy' && (!manifest.configuration.proposed || context.options.yes);
 }
 
 function scopeSelection(
@@ -83,22 +75,21 @@ function scopeSelection(
     const ids =
         flagged ??
         detectConfigurations(context.files, context.manifests, context.facts, scope.path)
-            .filter((proposal) => isScopeCandidate(context, proposal.configuration, without))
+            .filter((proposal) => {
+                const manifest = getCandidate(context, proposal.configuration, without);
+                return manifest !== undefined && manifest.configuration.kind !== 'policy';
+            })
             .map((proposal) => proposal.configuration);
     // A language stays out of a scope only while the root really keeps it: some source of it lies outside every scope.
     const atRoot = new Set(rootIds);
     return ids.filter((id) => !atRoot.has(id) || context.manifests.get(id)?.configuration.kind !== 'language');
 }
 
-function isOutsideEveryScope(file: TrackedFile, scopes: ScopeEntry[]): boolean {
-    return scopes.every((scope) => scope.path === '' || !file.path.startsWith(`${scope.path}/`));
-}
-
 function hasSourceOutsideScopes(context: InitContext, manifest: Manifest, scopes: ScopeEntry[]): boolean {
     return context.files.some(
         (file) =>
             file.nature === 'source' &&
-            isOutsideEveryScope(file, scopes) &&
+            scopes.every((scope) => scope.path === '' || !file.path.startsWith(`${scope.path}/`)) &&
             manifest.claims.extensions.some((extension) => file.path.endsWith(extension)),
     );
 }
@@ -116,23 +107,6 @@ function rootLanguagesKept(
     });
 }
 
-function unknownProblems(ids: string[], manifests: Map<string, Manifest>): string[] {
-    const known = manifests.keys().toArray();
-    return ids
-        .filter((id) => !manifests.has(id))
-        .map((id) => messages.unknownConfiguration(id, nearMatches(id, known)));
-}
-
-function withoutProblems(without: string[], named: string[], manifests: Map<string, Manifest>): string[] {
-    return without.flatMap((id) => {
-        const chain = named
-            .filter((start) => start !== id)
-            .map((start) => requireChain(id, start, manifests))
-            .find((found) => found !== undefined);
-        return chain ? [messages.withoutRequired(id, chain)] : [];
-    });
-}
-
 function assertKnown(
     options: InitInputs['options'],
     scopeFlags: Map<string, string[]>,
@@ -140,48 +114,47 @@ function assertKnown(
 ): void {
     const configurations = (options.configurations ?? []).filter((id) => id !== NO_CONFIGURATIONS);
     const without = options.without ?? [];
-    const unknown = unknownProblems(
-        [...configurations, ...without, ...scopeFlags.values().toArray().flat()],
-        manifests,
-    );
+    const known = manifests.keys().toArray();
+    const unknown = [...configurations, ...without, ...scopeFlags.values().toArray().flat()]
+        .filter((id) => !manifests.has(id))
+        .map((id) => messages.unknownConfiguration(id, nearMatches(id, known)));
     if (unknown.length > 0) throw new SelectionError(unknown);
 }
 
 function assertNoneRequired(options: InitInputs['options'], named: string[], manifests: Map<string, Manifest>): void {
-    const left = withoutProblems(options.without ?? [], named, manifests);
+    const left = (options.without ?? []).flatMap((id) => {
+        const chain = named
+            .filter((start) => start !== id)
+            .map((start) => requireChain(id, start, manifests))
+            .find((found) => found !== undefined);
+        return chain ? [messages.withoutRequired(id, chain)] : [];
+    });
     if (left.length > 0) throw new SelectionError(left);
 }
 
-// A manifest that lists nothing to detect is selected on recommendation alone.
-function hasDetection(manifest: Manifest | undefined): boolean {
-    return manifest !== undefined && Object.values(manifest.detect).some((list) => list.length > 0);
-}
-
-// The configurations a selection recommends, minus the ones the person left out and the ones whose detection found nothing; a recommendation recommends nothing further.
-function recommendedAdded(
-    ids: string[],
-    manifests: Map<string, Manifest>,
-    without: Set<string>,
-    detected: Set<string>,
-): string[] {
-    const recommended = ids.flatMap((id) => manifests.get(id)?.configuration.recommends ?? []);
-    return [
-        ...new Set([
-            ...ids,
-            ...recommended.filter((id) => !without.has(id) && (!hasDetection(manifests.get(id)) || detected.has(id))),
-        ]),
-    ];
-}
-
-// An exact list (a profile that says so, or the answer to the selection question) gains no recommendation.
+// Exact selections retain their list. Other selections gain one level of detected recommendations.
 function listedConfigurations(
     options: InitInputs['options'],
     ids: string[],
     manifests: Map<string, Manifest>,
     detected: Set<string>,
 ): string[] {
-    const isExact = options.profile?.tables.selection === 'exact' || options.isListExact === true;
-    return isExact ? ids : recommendedAdded(ids, manifests, new Set(options.without), detected);
+    if (options.profile?.tables.selection === 'exact' || options.isListExact === true) return ids;
+    const without = new Set(options.without);
+    const recommended = ids.flatMap((id) => manifests.get(id)?.configuration.recommends ?? []);
+    return [
+        ...new Set([
+            ...ids,
+            ...recommended.filter((id) => {
+                if (without.has(id)) return false;
+                const manifest = manifests.get(id);
+                // A recommendation without detection criteria does not require a source match.
+                const hasDetection =
+                    manifest !== undefined && Object.values(manifest.detect).some((list) => list.length > 0);
+                return !hasDetection || detected.has(id);
+            }),
+        ]),
+    ];
 }
 
 function reasonFor(
@@ -204,8 +177,8 @@ function closure(ids: Iterable<string>, manifests: Map<string, Manifest>): Set<s
 
 /**
  * Selects the configurations for init from detection, the --configurations, --without and --scopes flags, and the workspace scopes.
- * @param inputs the root, the tracked files, the manifests read from the repository, the workspace scopes, every configuration manifest and the init flags
- * @returns the scopes, the root and per-scope configuration ids, and the closure of everything selected
+ * @param inputs the root, the tracked files, the manifests read from the repository, the workspace scopes, every configuration manifest, and the init flags.
+ * @returns the scopes, the root and per-scope configuration ids, and the closure of everything selected.
  */
 export function selectForInit(inputs: InitInputs): InitSelection {
     const { root, repo, facts, workspace, manifests, options } = inputs;

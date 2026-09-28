@@ -1,5 +1,5 @@
 name: release
-# Automatic release triggers remain disabled during the CI pause.
+# Release publication requires an explicit workflow dispatch.
 on:
     workflow_dispatch:
 permissions:
@@ -30,7 +30,7 @@ jobs:
             - id: targets
               shell: bash
               run: |
-                  matrix="$(jq -c '{include: map(. + {runner: (if .os == "darwin" then "macos-15" else "ubuntu-24.04" end)})}' packages/cli/src/platform/release-targets.json)"
+                  matrix="$(jq -c '{include: map(. + {runner: (if .os == "darwin" then "macos-15" else "ubuntu-24.04" end)})}' packages/npm/targets.json)"
                   printf 'matrix=%s\n' "$matrix" >> "$GITHUB_OUTPUT"
     build:
         needs: targets

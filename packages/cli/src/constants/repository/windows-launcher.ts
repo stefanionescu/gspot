@@ -2,7 +2,7 @@ export const DIRECTORY_FLAG = 0x80_00_00_00;
 
 export const OFFSET_MASK = 0x7f_ff_ff_ff;
 
-// Offsets and sizes from the PE/COFF specification, in bytes.
+// Offsets and sizes from the Portable Executable (PE) and Common Object File Format (COFF) specification, in bytes.
 export const DOS_HEADER_SIZE = 64;
 
 export const PE_OFFSET_FIELD = 60;
@@ -19,9 +19,9 @@ export const PE32_MAGIC = 0x1_0b;
 
 export const PE32_PLUS_MAGIC = 0x2_0b;
 
-export const PE32_DATA_DIRECTORIES = 96;
+export const PE32_DIRECTORIES_OFFSET = 96;
 
-export const PE32_PLUS_DATA_DIRECTORIES = 112;
+export const PE32_PLUS_DIRECTORIES_OFFSET = 112;
 
 export const SIZE_OF_CODE_FIELD = 8;
 
@@ -53,7 +53,7 @@ export const SECTION_RAW_POINTER_FIELD = 20;
 
 export const SECTION_CHARACTERISTICS_FIELD = 36;
 
-export const READABLE_INITIALIZED_DATA = 0x40_00_00_40;
+export const READABLE_INITIALIZED_SECTION = 0x40_00_00_40;
 
 export const RESOURCE_TABLE_HEADER_SIZE = 16;
 
@@ -65,7 +65,7 @@ export const RESOURCE_ENTRY_SIZE = 8;
 
 export const RESOURCE_ENTRY_TARGET_FIELD = 4;
 
-export const RESOURCE_DATA_SIZE_FIELD = 4;
+export const RESOURCE_PAYLOAD_SIZE_FIELD = 4;
 
 export const RCDATA_TYPE = 10;
 

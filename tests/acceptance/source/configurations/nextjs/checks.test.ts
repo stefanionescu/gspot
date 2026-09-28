@@ -1,12 +1,12 @@
 // Planted repository for the nextjs and i18n configurations: a segment that serves two things, a build check turned off, versions apart, and message files with holes.
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
+import type { FindingCase } from '#tests/types/cli.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
 import { containing } from '#tests/support/expectations.ts';
-import type { FindingCase } from '#tests/types/support/cli.ts';
 import { installedNextProject, nextManifest } from '#tests/support/cli/nextjs.ts';
-import { NEXT_PAGE, NEXT_TRANSLATIONS, PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
+import { NEXT_PAGE, NEXT_TRANSLATIONS, PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
 
 const CASES: FindingCase[] = [
     {

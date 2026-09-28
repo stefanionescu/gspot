@@ -55,6 +55,7 @@ gspot set limits.function_lines 80 --scope api --reason "The parser is one state
 The command writes the scoped setting and applies policy. Root settings supply defaults;
 more specific scope settings override them. Keep scope paths relative to the policy root.
 PostgreSQL migration directories are also relative to their scope.
+
 The PostgreSQL configuration supplies the `postgres` SQLFluff dialect. Set `tools.sqlfluff.dialect`
 at the root or in a scope to select another dialect. Each scope receives its effective dialect
 in its generated SQLFluff configuration, including inherited scope values.
@@ -71,6 +72,11 @@ Spelling configuration and editor copies also follow scope settings. A scope can
 locale and append allowed words and excluded paths without changing sibling projects.
 Set `tools.typos.locale` to `en`, `en-us`, `en-gb`, `en-ca`, or `en-au`.
 The policy file also recognizes the scoped dictionary words it declares.
+
+Use `tools.typos.extra.type` with a reason for native filename-specific spelling options.
+Native file-type globs match basenames, so a directory path does not narrow that match.
+CLI configurations and editor copies retain these options. Other words and filenames remain checked.
+
 Paths in `tools.typos.exclude` remain relative to the policy root, including inside scope tables.
 Editor configuration translates those patterns to its directory. CLI checks and fixes use only
 the generated configuration, so an unowned nested typos file cannot add word allowances.
@@ -87,7 +93,7 @@ Supabase configuration checks read `supabase/config.toml` within each policy sco
 `tools.supabase.functions_directory`, `tools.supabase.admin_key_files`, and
 `tools.i18n.translations.directory` are relative to that scope. Locale messages, static-site
 headers, and asset references in a child scope do not satisfy checks in its parent scope.
-Project-wide checks receive the files owned by their scope, including configuration and binary resources.
+Project-wide checks receive their scope's source files, configuration, and binary resources.
 Coverage counts only the source kinds declared by each check.
 The dead-asset check includes binary files.
 

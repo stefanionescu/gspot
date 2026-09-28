@@ -2,10 +2,12 @@
 import type { Node, Tree } from 'web-tree-sitter';
 import type { EngineInput } from '#cli/types/checks/checks.ts';
 import type { StructureProblem } from '#cli/types/checks/structure.ts';
-import type { ConfinedRoot, FileSnapshot } from '#cli/types/platform.ts';
+import type { ConfinedRoot, FileObservation } from '#cli/types/platform.ts';
 
 /** One parsed Swift file of a run. */
 export type SwiftSource = { path: string; text: string; lines: string[]; tree: Tree };
+/** Source comments whose inline documentation positions need native findings restored. */
+export type InlineDocumentation = { source: SwiftSource; comments: Node[]; inline: Node[] };
 /** One Swift function with what the structure checks ask about it. */
 export type SwiftFunction = {
     path: string;
@@ -18,7 +20,12 @@ export type SwiftFunction = {
 export type ParsedSwift = { sources: SwiftSource[]; functions: SwiftFunction[] };
 /** One structure analysis over the parsed Swift files. */
 export type SwiftReader = (parsed: ParsedSwift, input: EngineInput) => StructureProblem[];
-export type Pruning = { folder: string; files: ConfinedRoot; desired: Map<string, FileSnapshot>; wanted: Set<string> };
+export type Pruning = {
+    folder: string;
+    files: ConfinedRoot;
+    desired: Map<string, FileObservation>;
+    wanted: Set<string>;
+};
 /** The build of one Swift scope. */
 export type SwiftBuildPlan = {
     /** The cache folder of this scope. */

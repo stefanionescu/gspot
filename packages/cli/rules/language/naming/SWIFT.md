@@ -16,6 +16,8 @@ where useful, and the local quality rules. Optimize for call-site clarity.
 
 ## Swift case rules
 
+<!-- level: all -->
+
 Rules:
 
 - Types, protocols, actors, enums, structs, classes, and generic type parameters
@@ -35,27 +37,17 @@ Rules:
 - Use Unicode identifiers only for legitimate domain notation understood by the
   team.
 
-Bad:
-
-```swift
-class HTTPLoginViewModel { }
-struct user_profile { }
-let MAX_RETRY_COUNT = 3
-let maybeAvatarURL: URL?
-let userId: User.ID
-```
-
-Good:
-
-```swift
-final class LoginViewModel { }
-struct UserProfile { }
-let maxRetryCount = 3
-let avatarURL: URL?
-let userID: User.ID
-```
+| Avoid                | Prefer           | Meaning                   |
+| -------------------- | ---------------- | ------------------------- |
+| `HTTPLoginViewModel` | `LoginViewModel` | Login presentation state. |
+| `user_profile`       | `UserProfile`    | A profile type.           |
+| `MAX_RETRY_COUNT`    | `maxRetryCount`  | A constant.               |
+| `maybeAvatarURL`     | `avatarURL`      | An optional URL.          |
+| `userId`             | `userID`         | A user identifier.        |
 
 ## Swift scoped names
+
+<!-- level: all -->
 
 Prefer language scoping over name prefixes when a relationship is structural.
 If a type is owned by another type and can be nested, nest it instead of
@@ -73,42 +65,16 @@ Rules:
 - Use an empty enum as a namespace only for tightly related constants or helper
   functions that are never instantiated.
 
-Bad:
-
-```swift
-private let _cachedProfile: Profile?
-
-enum ParseError: Error {
-    case invalidToken(String)
-}
-
-extension UIColor {
-    static let primaryColor: UIColor = .blue
-}
-
-let SecondsPerMinute = 60
-let kSecondsPerMinute = 60
-```
-
-Good:
-
-```swift
-private let cachedProfile: Profile?
-
-struct Parser {
-    enum Error: Swift.Error {
-        case invalidToken(String)
-    }
-}
-
-extension UIColor {
-    static let primary: UIColor = .blue
-}
-
-let secondsPerMinute = 60
-```
+| Avoid                  | Prefer             | Meaning                     |
+| ---------------------- | ------------------ | --------------------------- |
+| `_cachedProfile`       | `cachedProfile`    | A private stored value.     |
+| `ParseError`           | `Parser.Error`     | An error owned by a parser. |
+| `UIColor.primaryColor` | `UIColor.primary`  | A color owned by its type.  |
+| `kSecondsPerMinute`    | `secondsPerMinute` | A global constant.          |
 
 ## Swift files
+
+<!-- level: all -->
 
 Rules:
 
@@ -126,29 +92,15 @@ Rules:
   `Platform/Networking/`.
 - Test files are `<Type>Tests.swift` in the test target, grouped by the behavior they verify.
 
-Bad:
-
-```text
-Data.swift
-LoginStuff.swift
-String+Helpers.swift
-View+Utilities.swift
-Extensions.swift
-```
-
-Good:
-
-```text
-LoginView.swift
-LoginViewModel.swift
-LoginViewState.swift
-MessageTimestampFormatter.swift
-String+SearchQuery.swift
-UIViewController+ChildContainment.swift
-UserDefaults+SessionStorage.swift
-```
+| Avoid                  | Prefer                                    | Meaning                       |
+| ---------------------- | ----------------------------------------- | ----------------------------- |
+| `LoginStuff.swift`     | `LoginView.swift`                         | Login presentation.           |
+| `String+Helpers.swift` | `String+SearchQuery.swift`                | Search query operations.      |
+| `Extensions.swift`     | `UIViewController+ChildContainment.swift` | Child containment operations. |
 
 ## Suffixes that name a role
+
+<!-- level: all -->
 
 A type's suffix says what it owns. Which suffixes a project uses depends on the pattern it picked,
 and that list is the project's own. These framework role words have one meaning:
@@ -172,37 +124,20 @@ Two rules hold whatever the list is:
 - `Manager`, `Handler`, `Helper`, `Util` and `Data` are not roles. They name a position in an
   imagined architecture rather than a behavior, and the naming policy bans them.
 
-Bad:
+| Avoid          | Prefer            | Meaning                              |
+| -------------- | ----------------- | ------------------------------------ |
+| `LoginManager` | `LoginViewModel`  | Login presentation state and intent. |
+| `LoginScreen`  | `LoginView`       | A rendered login view.               |
+| `LoginData`    | `LoginViewState`  | Values that describe presentation.   |
+| `LoginHandler` | `LoginViewAction` | Typed login intent.                  |
 
-```swift
-final class LoginManager: ObservableObject { }
-final class LoginHandler: ObservableObject { }
-final class LoginData: ObservableObject { }
-struct LoginScreen: View { }
-```
-
-Good:
-
-```swift
-@MainActor
-final class LoginViewModel: ObservableObject { }
-
-struct LoginView: View { }
-
-struct LoginViewState {
-    var email: String
-    var password: String
-    var isSubmitButtonEnabled: Bool
-}
-
-enum LoginViewAction {
-    case emailChanged(String)
-    case passwordChanged(String)
-    case submitButtonTapped
-}
-```
+Keep observable UI state on the main actor. Use fields such as `email` and
+`isSubmitButtonEnabled` for presentation values, and cases such as
+`emailChanged` and `submitButtonTapped` for typed intent.
 
 ## Swift ViewModel methods
+
+<!-- level: all -->
 
 Use UI event names when a ViewModel method represents a direct UI event. Use
 domain verbs when the method does domain work.
@@ -223,27 +158,16 @@ Domain work examples:
 ```swift
 func enqueueFileUpload(_ file: PendingUploadFile)
 func refreshOrderHistory(for accountID: Account.ID) async
-func persistDraftReport(_ report: DraftReport) async throws
+func updateDraftReport(_ report: DraftReport) async throws
 func validateEmailAddress(_ emailAddress: String) -> EmailValidationResult
 ```
 
-Bad:
-
-```swift
-func handle(_ action: LoginAction)
-func process(_ text: String)
-func update(_ value: String)
-func didTap()
-```
-
-Good:
-
-```swift
-func submitButtonTapped()
-func passwordFieldChanged(to password: String)
-func updateDraftMessageText(_ draftMessageText: String)
-func validateLoginForm(_ form: LoginForm) -> LoginValidationResult
-```
+| Avoid     | Prefer                   | Meaning                 |
+| --------- | ------------------------ | ----------------------- |
+| `handle`  | `submitButtonTapped`     | A submit-button event.  |
+| `process` | `passwordFieldChanged`   | A password-field event. |
+| `update`  | `updateDraftMessageText` | Draft text replacement. |
+| `didTap`  | `validateLoginForm`      | Login form validation.  |
 
 UIKit target-action and notification handlers may use `handle...` when they are
 literal framework handlers:
@@ -259,6 +183,8 @@ func handleKeyboardDidShowNotification(_ notification: Notification) { }
 Do not use `handle` for normal ViewModel intent methods.
 
 ## Swift function and argument labels
+
+<!-- level: all -->
 
 Rules:
 
@@ -278,21 +204,11 @@ Rules:
 - Use Swift mutating/nonmutating pairs where applicable, such as
   `sort`/`sorted`, `append`/`appending`, and `formUnion`/`union`.
 
-Bad:
-
-```swift
-func addToDate(_ date: Date, _ value: Int) -> Date
-func make(_ profile: Profile) -> ProfileView
-func save(user: User)
-```
-
-Good:
-
-```swift
-func addMonthToDate(_ date: Date, monthCount: Int) -> Date
-func makeProfileView(for profile: Profile) -> ProfileView
-func saveUser(_ user: User)
-```
+| Avoid       | Prefer            | Meaning                                        |
+| ----------- | ----------------- | ---------------------------------------------- |
+| `addToDate` | `addMonthToDate`  | Date addition with a `monthCount` argument.    |
+| `make`      | `makeProfileView` | View construction with a `for` argument label. |
+| `save`      | `updateUser`      | Update an existing user.                       |
 
 Initializer example:
 
@@ -309,6 +225,8 @@ struct Person {
 ```
 
 ## Swift delegates
+
+<!-- level: all -->
 
 Delegate methods put the delegate owner first, following Apple API patterns.
 
@@ -330,28 +248,18 @@ Rules:
 - Do not omit the source object just because the delegate is currently owned by
   one caller.
 
-Bad:
+For a deletion event, use a method named `draftStore` whose first, unlabeled
+argument is the owning store and whose next label is `didDeleteDraft`.
+Use `draftStoreCanDeleteDraft` for a capability query. A section-count query
+can use `numberOfSections(in:)`; the preposition identifies the data source.
 
-```swift
-func didDeleteDraft()
-func didDeleteDraft(draft: Draft, store: DraftStore)
-func heightForMessage(_ message: Message) -> CGFloat
-```
-
-Good:
-
-```swift
-func draftStore(_ draftStore: DraftStore, didDeleteDraft draft: Draft)
-func draftStoreCanDeleteDraft(_ draftStore: DraftStore) -> Bool
-func messageListDataSource(_ dataSource: MessageListDataSource, didSelectMessage id: Message.ID)
-func numberOfSections(in dataSource: MessageListDataSource) -> Int
-func messageListDataSource(
-    _ dataSource: MessageListDataSource,
-    heightForMessageAt indexPath: IndexPath
-) -> CGFloat
-```
+A row-height query can use `messageListDataSource(_:heightForMessageAt:)`.
+The arguments identify the source and the index path, so the method does not
+rely on hidden caller state.
 
 ## Swift protocols
+
+<!-- level: all -->
 
 Rules:
 
@@ -365,41 +273,20 @@ Rules:
 - Avoid automatic `-able` names that do not describe a clear capability.
 - Do not create protocols for every ViewModel or use case just to make mocks.
 
-Bad:
+| Avoid                    | Prefer                | Meaning                          |
+| ------------------------ | --------------------- | -------------------------------- |
+| `IFooEventHandler`       | `ProgressReporting`   | A progress-reporting capability. |
+| `LoginViewModelProtocol` | `LoginCoordinating`   | Navigation coordination.         |
+| `DataLoadable`           | `ProfileRepository`   | Profile persistence.             |
+| `Colorable`              | `ThemeColorProviding` | Theme color access.              |
 
-```swift
-protocol IFooEventHandler { }
-protocol LoginViewModelProtocol { }
-protocol DataLoadable { }
-protocol Colorable { }
-protocol LoginManaging { }
-```
-
-Better:
-
-```swift
-protocol AccountLoading { }
-protocol ThemeColorProviding { }
-protocol LoginCoordinating { }
-protocol ProfileRepository { }
-protocol FileUploadClient { }
-```
-
-Good noun protocol:
-
-```swift
-protocol Collection { }
-```
-
-Good capability protocol:
-
-```swift
-protocol ProgressReporting {
-    var progress: Double { get }
-}
-```
+Use a noun when the protocol describes a domain role, such as
+`ProfileRepository`. Use a capability name such as `ProgressReporting` when
+it describes behavior. Do not declare an empty protocol to demonstrate a name.
 
 ## Swift repositories, clients, and coordinators
+
+<!-- level: all -->
 
 Rules:
 
@@ -414,48 +301,17 @@ Rules:
 - Route values must not hold ViewModels, SwiftUI views, repository
   implementations, SDK clients, database records, or DTOs.
 
-Bad:
+Use `ProfileRepository.getProfile` for domain access and `ProfileAPIClient`
+for external API mechanics. An implementation can identify its technology as
+`HTTPProfileRepository` when that distinguishes real implementations.
 
-```swift
-protocol DataRepository {
-    func fetchTable(_ name: String) async throws -> Data
-}
-
-final class ProfileCoordinator {
-    func present(_ string: String) { }
-}
-
-enum AppRoute {
-    case screen(AnyHashable)
-}
-```
-
-Good:
-
-```swift
-protocol ProfileRepository {
-    func getProfile(for userID: User.ID) async throws -> Profile
-}
-
-final class HTTPProfileRepository: ProfileRepository { }
-
-struct ProfileAPIClient {
-    func getProfileResponse(for userID: User.ID) async throws -> ProfileResponseDTO
-}
-
-@MainActor
-final class ProfileCoordinator {
-    func showEditProfile(userID: User.ID) { }
-    func dismissSheet() { }
-}
-
-enum ProfileDestination: Hashable {
-    case editProfile(User.ID)
-    case avatarPreview(ProfileAvatar.ID)
-}
-```
+`ProfileCoordinator.showEditProfile` names a navigation operation.
+`ProfileDestination` cases such as `editProfile` and `avatarPreview` carry
+stable domain identifiers. Keep views and repository instances outside route values.
 
 ## Swift presentation identifiers
+
+<!-- level: all -->
 
 Presentation identifiers are stable contracts for UI identity, diffable data
 sources, navigation, persistence, and tests. Name them for the thing they
@@ -471,30 +327,14 @@ Rules:
   `conversationID` when the surrounding scope contains multiple identifiers.
 - Keep accessibility identifiers separate from model identifiers.
 
-Bad:
-
-```swift
-struct MessageRow {
-    let dto: MessageDTO
-    let indexPath: IndexPath
-}
-
-let selectedID = indexPath
-```
-
-Good:
-
-```swift
-struct MessageRow: Identifiable {
-    let id: Message.ID
-    let authorDisplayName: String
-    let previewText: String
-}
-
-let selectedMessageID = row.id
-```
+A `MessageRow` can expose its stable message identifier as `id` because its
+type supplies the context. Use `selectedMessageID` for a selection outside
+that owner. Do not use an `IndexPath` as the identity of a message across list
+updates.
 
 ## Swift accessibility identifiers
+
+<!-- level: all -->
 
 Accessibility identifiers are stable UI test hooks, not localized user-facing
 copy.
@@ -506,16 +346,7 @@ Rules:
 - Do not include localized text.
 - Do not include user content, IDs, tokens, provider names, or database names.
 
-Bad:
-
-```swift
-.accessibilityIdentifier("Submit Button")
-.accessibilityIdentifier("john@example.com-profile-button")
-```
-
-Good:
-
-```swift
-.accessibilityIdentifier("submitButton")
-.accessibilityIdentifier("profileAvatarButton")
-```
+| Avoid                             | Prefer                | Meaning                               |
+| --------------------------------- | --------------------- | ------------------------------------- |
+| `Submit Button`                   | `submitButton`        | Submit control.                       |
+| `john@example.com-profile-button` | `profileAvatarButton` | Avatar control without personal data. |

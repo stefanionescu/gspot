@@ -49,6 +49,8 @@ const ALIASES = {
     "#docs/": "docs/",
     "#scripts/": "packages/cli/scripts/",
     "#cli-package": "packages/cli/package.json",
+    "#npm-targets": "packages/npm/targets.json",
+    "#workspace-package": "package.json",
     "#plugin-package": "packages/eslint-plugin/package.json"
 };
 
@@ -370,6 +372,8 @@ const importStyleOverrides = [
                         "#docs/",
                         "#scripts/",
                         "#cli-package",
+                        "#npm-targets",
+                        "#workspace-package",
                         "#plugin-package"
                     ]
                 }
@@ -402,6 +406,8 @@ const scopeRules = [
                         "#docs/": "docs/",
                         "#scripts/": "packages/cli/scripts/",
                         "#cli-package": "packages/cli/package.json",
+                        "#npm-targets": "packages/npm/targets.json",
+                        "#workspace-package": "package.json",
                         "#plugin-package": "packages/eslint-plugin/package.json"
                     }
                 }
@@ -441,6 +447,8 @@ const scopeRules = [
                         "#docs/": "docs/",
                         "#scripts/": "packages/cli/scripts/",
                         "#cli-package": "packages/cli/package.json",
+                        "#npm-targets": "packages/npm/targets.json",
+                        "#workspace-package": "package.json",
                         "#plugin-package": "packages/eslint-plugin/package.json"
                     },
                     "scope": "packages/cli"
@@ -513,6 +521,8 @@ const scopeRules = [
                         "#docs/": "docs/",
                         "#scripts/": "packages/cli/scripts/",
                         "#cli-package": "packages/cli/package.json",
+                        "#npm-targets": "packages/npm/targets.json",
+                        "#workspace-package": "package.json",
                         "#plugin-package": "packages/eslint-plugin/package.json"
                     }
                 }
@@ -551,6 +561,8 @@ const scopeRules = [
                         "#docs/": "docs/",
                         "#scripts/": "packages/cli/scripts/",
                         "#cli-package": "packages/cli/package.json",
+                        "#npm-targets": "packages/npm/targets.json",
+                        "#workspace-package": "package.json",
                         "#plugin-package": "packages/eslint-plugin/package.json"
                     },
                     "scope": "docs"
@@ -728,8 +740,19 @@ const policyRules = [
                 }
             ]
         }
+    },
+    {
+        "scope": "",
+        "includes": [
+            "^(?:packages\\/npm\\/package\\.json)$",
+            "^(?:packages\\/npm\\/package\\.json(?:\\/(?!\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)|$))$"
+        ],
+        "excludes": [],
+        "rules": {
+            "package-json/require-exports": "off"
+        }
     }
-].map(({ scope, includes, excludes, rules }) => {
+].flatMap(({ scope, includes, excludes, rules }) => {
     const included = includes.map((source) => new RegExp(source, 's'));
     const excluded = excludes.map((source) => new RegExp(source, 's'));
     const matches = (file) => {
@@ -737,11 +760,27 @@ const policyRules = [
         return (scope === '' || path.startsWith(`${scope}/`)) && included.some((pattern) => pattern.test(path)) && !excluded.some((pattern) => pattern.test(path));
     };
     Object.defineProperty(matches, Symbol.for('gspot.eslint.scope'), { value: { scope, includes, excludes, flags: 's' } });
-    return { files: CODE.map((pattern) => [pattern, matches]), rules };
+    const entries = Object.entries(rules);
+    return [
+        { files: CODE.map((pattern) => [pattern, matches]), rules: Object.fromEntries(entries.filter(([name]) => !name.startsWith('package-json/'))) },
+        { files: [['**/package.json', matches]], rules: Object.fromEntries(entries.filter(([name]) => name.startsWith('package-json/'))) },
+    ];
 });
 
 const requireProject = createRequire(`${root}/package.json`);
-const adopted = [];
+const adopted = [
+    {
+        "plugins": {
+            "gspot": {
+                "module": "@gspot/eslint-plugin",
+                "export": "default",
+                "members": [
+                    "default"
+                ]
+            }
+        }
+    }
+];
 async function loadRegistration(reference) {
     const resolved = requireProject.resolve(reference.module);
     const imported = await import(isBuiltin(resolved) ? resolved : pathToFileURL(resolved).href);
@@ -795,9 +834,6 @@ for (const entry of adopted) {
 const defaults = [
     { ignores: [
     "**/node_modules/**",
-    "**/dist/**",
-    "**/build/**",
-    "**/coverage/**",
     ".gspot/**"
 ] },
     { files: CODE, ...eslint.configs.recommended },
@@ -3136,7 +3172,22 @@ const ruleLevels = {
     "zod/prefer-top-level-string-formats": "recommended",
     "zod/require-brand-type-parameter": "recommended"
 };
-const selectedDefaults = defaults.map((entry) => entry.rules === undefined ? entry : {
+// A global project registration chooses the instance of the same named and versioned plugin.
+// Scoped registrations and different versions retain ESLint's conflicting-plugin diagnostic.
+const globalPlugins = Object.assign({}, ...adopted
+    .filter((entry) => !entry.files && !entry.ignores && entry.basePath === undefined)
+    .map((entry) => entry.plugins ?? {}));
+const registeredDefaults = defaults.map((entry) => {
+    if (entry.plugins === undefined) return entry;
+    const plugins = Object.fromEntries(Object.entries(entry.plugins).map(([name, plugin]) => {
+        const candidate = globalPlugins[name];
+        const matches = plugin.meta?.name && plugin.meta?.version &&
+            candidate?.meta?.name === plugin.meta.name && candidate.meta.version === plugin.meta.version;
+        return [name, matches ? candidate : plugin];
+    }));
+    return { ...entry, plugins };
+});
+const selectedDefaults = registeredDefaults.map((entry) => entry.rules === undefined ? entry : {
     ...entry,
     rules: Object.fromEntries(Object.entries(entry.rules).map(([name, value]) =>
         [name, !true && ruleLevels[name] === 'all' ? 'off' : value])),

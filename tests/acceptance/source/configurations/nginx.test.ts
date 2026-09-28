@@ -6,7 +6,7 @@ import { commitAll } from '#tests/support/cli/git.ts';
 // Planted repository for the nginx configuration: a proxy target the request chooses.
 import { reportSchema } from '#cli/execution/report.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
 import { installAtLevel, toolsPath } from '#tests/support/cli/tools.ts';
 import { containing, textContaining } from '#tests/support/expectations.ts';
 import { NGINX_INIT } from '#tests/constants/acceptance/source/configurations/init-arguments.ts';

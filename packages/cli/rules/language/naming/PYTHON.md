@@ -15,6 +15,8 @@ Python naming follows PEP 8, with the rules below.
 
 ## Python case rules
 
+<!-- level: all -->
+
 Rules:
 
 - Modules and packages use `snake_case`.
@@ -28,36 +30,20 @@ Rules:
   loop.
 - Preserve provider capitalization in external names such as `HF_TOKEN` and
   provider repository IDs.
-- Packages and directories are `snake_case`. Test files are `tests/test_<module>.py`, mirroring
-  the package path. Support code is under `tests/support/`.
+- Packages and directories are `snake_case`. Test files are `tests/test_<module>.py`, grouped
+  by the behavior they verify. Support code is under `tests/support/`.
 - `handle` starts a name only for a signal, event, or framework callback (`handle_sigterm`).
   Never `Handler` as a class suffix.
 
-Bad:
-
-```python
-class tool_dataset:
-    ...
-
-MAXLEN = 512
-
-def BuildExamples(data):
-    ...
-```
-
-Good:
-
-```python
-class RuntimeConfig:
-    ...
-
-MAX_LENGTH = 512
-
-def build_examples(source_items):
-    ...
-```
+| Avoid            | Prefer           | Meaning                            |
+| ---------------- | ---------------- | ---------------------------------- |
+| `runtime_config` | `RuntimeConfig`  | A configuration type.              |
+| `MAXLEN`         | `MAX_LENGTH`     | A maximum length constant.         |
+| `BuildExamples`  | `build_examples` | An example construction operation. |
 
 ## Python modules and imports
+
+<!-- level: all -->
 
 Rules:
 
@@ -69,19 +55,12 @@ Rules:
 - Do not create package-level re-export layers only to preserve old names.
 - Keep `__all__` names accurate and ordered according to local lint rules.
 
-Bad:
-
-```python
-from src.runtime.config import ModelSettings as Thing
-```
-
-Good:
-
-```python
-from src.runtime.config import ModelSettings
-```
+Import `ModelSettings` under its declared name. An alias such as `Thing`
+hides the contract and provides no collision information.
 
 ## Python types and dataclasses
+
+<!-- level: all -->
 
 Rules:
 
@@ -95,25 +74,14 @@ Rules:
 - Use `*_name` for display or provider names.
 - Use `*_key` for dictionary keys and supported variant keys.
 
-Bad:
-
-```python
-@dataclass
-class EvalExample:
-    eval_example_text: str
-    eval_example_result: str
-```
-
-Good:
-
-```python
-@dataclass
-class EvalExample:
-    text: str
-    prediction: str
-```
+| Avoid                             | Prefer                   | Meaning           |
+| --------------------------------- | ------------------------ | ----------------- |
+| `EvalExample.eval_example_text`   | `EvalExample.text`       | Input text.       |
+| `EvalExample.eval_example_result` | `EvalExample.prediction` | Predicted output. |
 
 ## Python boundary names
+
+<!-- level: all -->
 
 Rules:
 
@@ -125,25 +93,14 @@ Rules:
   business logic.
 - Name functions that cross boundaries for the operation they perform.
 
-Bad:
-
-```python
-def data(value):
-    ...
-
-token = os.environ["HF_TOKEN"]
-```
-
-Good:
-
-```python
-def build_readme(repo_id, base_model, variant_key):
-    ...
-
-token = read_token(cli_token)
-```
+Name a README construction operation `build_readme` and use `repo_id`,
+`base_model`, and `variant_key` for its domain inputs. A generic name such as
+`data` does not identify the operation. Keep token acquisition inside the
+provider boundary and name it according to the retrieval convention.
 
 ## Identifiers
+
+<!-- level: all -->
 
 - Packages and modules use short, lowercase names. Use underscores when they
   improve readability.
@@ -161,29 +118,9 @@ token = read_token(cli_token)
 - Use `self` for instance methods and `cls` for class methods.
 - If a parameter conflicts with a keyword, append one trailing underscore.
 
-Good:
-
-```python
-class TrainingConfig:
-    """Training configuration."""
-
-def build_examples(source_items: list[object]) -> list[PromptExample]:
-    """Build examples from raw items."""
-    ...
-
-MAX_EXAMPLES = 1000
-class_: str
-```
-
-Bad:
-
-```python
-class runtime_config:
-    ...
-
-def buildExamples(data):
-    ...
-
-maxExamples = 1000
-clss = "value"
-```
+| Avoid            | Prefer           | Meaning                                         |
+| ---------------- | ---------------- | ----------------------------------------------- |
+| `runtime_config` | `RuntimeConfig`  | A type.                                         |
+| `buildExamples`  | `build_examples` | A function.                                     |
+| `maxExamples`    | `MAX_EXAMPLES`   | A module-level constant.                        |
+| `clss`           | `class_`         | A parameter whose role collides with a keyword. |

@@ -5,8 +5,8 @@ import { expect, spyOn, test } from 'bun:test';
 import { parsePolicyText } from '#cli/policy/read.ts';
 import * as programDefinition from '#cli/commands/program.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
-import { referencePages } from '#docs/src/content/reference/loader.ts';
 import * as manifestDefinitions from '#cli/configurations/manifests.ts';
+import { referencePages } from '#docs/src/content/reference/collection.ts';
 
 test('command reference includes inherited options and nested usage while omitting hidden internals', () => {
     const program = programDefinition.buildProgram();
@@ -35,7 +35,7 @@ test('command reference includes inherited options and nested usage while omitti
             expect(nested.split(`| \`${flag}\` |`)).toHaveLength(2);
         }
         expect(pages.has('commands/account/internal.md')).toBe(false);
-        expect(pages.get('commands/check.md')?.body).not.toContain('--message-file');
+        expect(pages.get('commands/check.md')!.body).not.toContain('--message-file');
     } finally {
         build.mockRestore();
     }
@@ -106,19 +106,19 @@ test('command references render definition-owned effects, exits, and examples', 
     const build = spyOn(programDefinition, 'buildProgram').mockReturnValue(program);
     try {
         const pages = referencePages();
-        expect(pages.get('commands/sample.md')?.body).toContain('Reads the sample.');
-        expect(pages.get('commands/check.md')?.body).toContain('invalid reports');
-        expect(pages.get('commands/check.md')?.body).toContain('/packages/cli/src/commands/check/command.ts');
-        expect(pages.get('commands/completion.md')?.body).toContain('/packages/cli/src/commands/completion.ts');
-        expect(pages.get('commands/apply.md')?.body).toContain('without writing project files');
-        expect(pages.get('commands/doctor.md')?.body).toContain('1: a selected tool or hook');
+        expect(pages.get('commands/sample.md')!.body).toContain('Reads the sample.');
+        expect(pages.get('commands/check.md')!.body).toContain('invalid reports');
+        expect(pages.get('commands/check.md')!.body).toContain('/packages/cli/src/commands/check/command.ts');
+        expect(pages.get('commands/completion.md')!.body).toContain('/packages/cli/src/commands/completion.ts');
+        expect(pages.get('commands/apply.md')!.body).toContain('without writing project files');
+        expect(pages.get('commands/doctor.md')!.body).toContain('1: a selected tool or hook');
         const settings = pages.get('settings.md')!.body;
         const policy = /```toml\n([\s\S]*?)```/u.exec(settings)?.[1];
         expect(policy).toBeDefined();
         expect(
             parsePolicyText(policy!, 'reference settings').scopeTables['app']?.limits?.root['file_lines']?.value,
         ).toBe(100);
-        expect(pages.get('rules/bash/syntax.md')?.body).toContain('## Defect and correction');
+        expect(pages.get('rules/bash/syntax.md')!.body).toContain('## Defect and correction');
     } finally {
         build.mockRestore();
     }
@@ -144,12 +144,12 @@ test('check references invoke the reporting check and expose execution restricti
     expect(json).not.toContain('gspot ignore configs/json');
     expect(json).toContain('This entry does not execute a separate check.');
     expect(json).toContain('Scope: follows the reporting check.');
-    expect(pages.get('rules/bash/syntax.md')?.body).toContain('selected file lists under the applicable scope policy');
-    expect(pages.get('rules/nextjs/build.md')?.body).toContain('`tools.next.build_in_gate`; skipped until configured.');
-    expect(pages.get('rules/nextjs/build.md')?.body).toContain(
+    expect(pages.get('rules/bash/syntax.md')!.body).toContain('selected file lists under the applicable scope policy');
+    expect(pages.get('rules/nextjs/build.md')!.body).toContain('`tools.next.build_in_gate`; skipped until configured.');
+    expect(pages.get('rules/nextjs/build.md')!.body).toContain(
         'each selected scope, excluding files owned by child scopes',
     );
-    expect(pages.get('rules/xctest/coverage.md')?.body).toContain('Platform selection: macos');
+    expect(pages.get('rules/xctest/coverage.md')!.body).toContain('Platform selection: macos');
 });
 
 test('plugin references reject an empty example before publishing pages', () => {
@@ -162,7 +162,7 @@ test('plugin references reject an empty example before publishing pages', () => 
     } finally {
         docs.example = original;
     }
-    expect(referencePages().get('plugin/no-trivial-files.md')?.body).toContain(original);
+    expect(referencePages().get('plugin/no-trivial-files.md')!.body).toContain(original);
 });
 
 test('reference titles come from their definitions and exact rule identifiers remain searchable', () => {

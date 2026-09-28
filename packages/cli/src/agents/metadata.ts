@@ -44,10 +44,10 @@ export function parseFrontMatter(text: string): FrontMatter | undefined {
 }
 
 /**
- * What is wrong with a file's front matter: missing, an unknown layer, a configuration that is not an id, a layer that does not match the path, a title that is not the H1.
- * @param path the file relative to rules/
- * @param text the file text
- * @returns the findings
+ * Validates required front matter. Checks the layer and configuration identifiers, the layer path, and the title against the H1.
+ * @param path the file relative to rules/.
+ * @param text the file text.
+ * @returns the findings.
  */
 export function frontMatterFindings(path: string, text: string): RuleFinding[] {
     const matter = parseFrontMatter(text);

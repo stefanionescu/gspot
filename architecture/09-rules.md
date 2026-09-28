@@ -7,22 +7,22 @@ This document decides the agent rule files: their layers and how they are assemb
 The corpus is Markdown an agent reads before editing. It lives in `rules/`,
 arranged by layer:
 
-| Layer      | Directory                 | Files                                                                                                                                                                                                                                                                                  | Installed when                                |
-| ---------- | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
-| agent      | `general/agent/`          | `WORKING.md`, `PLANNING.md`, `TALKING.md`, `GIT.md`, `SUPPRESSIONS.md`                                                                                                                                                                                                                 | always                                        |
-| code       | `general/code/`           | `NAMING.md`, `NAMING-FILES.md`, `COMMENTS.md`, `ERRORS.md`, `LOGGING.md`, `TESTING.md`, `SECRETS.md`, `SECURITY.md`, `CONFIGURATION.md`, `DEPENDENCIES.md`, `GENERATED.md`, `ACCESSIBILITY.md`, `CLI.md`                                                                               | always                                        |
-| prose      | `general/prose/`          | `WRITING.md`, `DOCS.md`, `DOCS-FORMAT.md`, `DOCS-CONTENT.md`, `DOCS-MEDIA.md`, `DOCS-SURFACES.md`, `DOCS-REVIEW.md`                                                                                                                                                                    | always                                        |
-| language   | `language/`               | `TYPESCRIPT.md`, `JAVASCRIPT.md`, `PYTHON.md` with `python/TYPING.md`, `DESIGN.md`, `FLOW.md`, `PACKAGING.md`, `SWIFT.md`, `BASH.md` with `bash/LANGUAGE.md`, `SAFETY.md`, `OPERATIONS.md`, `SQL.md`, `HTML.md`, `CSS.md`, `YAML.md`, plus `naming/<LANGUAGE>.md` for each except YAML | the language configuration                    |
-| runtime    | `runtime/<name>/`         | `NODE.md`, `BUN.md`, `DENO.md`, `BROWSER.md`, `WORKERS.md`                                                                                                                                                                                                                             | detected runtime                              |
-| framework  | `framework/<name>/`       | `NEXTJS.md` with `SECURITY.md`, `REACT.md`, `EXPRESS.md` with `API.md` and `OPENAPI.md`, `FASTAPI.md` with `RUNTIME.md`, `SWIFTUI.md`, `UIKIT.md`                                                                                                                                      | the framework configuration                   |
-| library    | `library/<name>/`         | `ZOD.md`, `DRIZZLE.md`, `TRPC.md`, `TANSTACKQUERY.md`, `ZUSTAND.md`, `REACTHOOKFORM.md`, `NEXTINTL.md`                                                                                                                                                                                 | the library configuration                     |
-| tool       | `tool/<name>/`            | `DOCKER.md`, `NGINX.md`, `VITEST.md`, `PLAYWRIGHT.md`, `GITHUB-ACTIONS.md`, `XCODE.md`, `XCTEST.md`, `TAILWIND.md`, `COMMITLINT.md`, `TASKS.md`                                                                                                                                        | the tool configuration                        |
-| platform   | `platform/supabase/`      | `SUPABASE.md`                                                                                                                                                                                                                                                                          | the platform configuration                    |
-| database   | `database/postgres/`      | `POSTGRES.md`                                                                                                                                                                                                                                                                          | the database configuration                    |
-| shared     | `shared/`                 | `http/HTTP.md`, `i18n/I18N.md`                                                                                                                                                                                                                                                         | any configuration that lists the shared block |
-| repository | `repository/static-site/` | `STATIC-SITE.md`                                                                                                                                                                                                                                                                       | the repository configuration                  |
-| templates  | `templates/docs/`         | document templates                                                                                                                                                                                                                                                                     | offered once at init, never upgraded          |
-| project    | the repository's own      | whatever the team writes                                                                                                                                                                                                                                                               | never written by gspot                        |
+| Layer      | Directory                 | Files                                                                                                                                                                                                                                                                                                                                          | Installed when                                |
+| ---------- | ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
+| agent      | `general/agent/`          | `WORKING.md`, `PLANNING.md`, `TALKING.md`, `GIT.md`, `SUPPRESSIONS.md`                                                                                                                                                                                                                                                                         | always                                        |
+| code       | `general/code/`           | `NAMING.md`, `NAMING-FILES.md`, `COMMENTS.md`, `ERRORS.md`, `LOGGING.md`, `TESTING.md`, `SECRETS.md`, `SECURITY.md`, `CONFIGURATION.md`, `DEPENDENCIES.md`, `GENERATED.md`, `ACCESSIBILITY.md`, `CLI.md`                                                                                                                                       | always                                        |
+| prose      | `general/prose/`          | `WRITING.md`, `DOCS.md`, `DOCS-FORMAT.md`, `DOCS-CONTENT.md`, `DOCS-MEDIA.md`, `DOCS-SURFACES.md`, `DOCS-REVIEW.md`                                                                                                                                                                                                                            | always                                        |
+| language   | `language/`               | `TYPESCRIPT.md`, `JAVASCRIPT.md`, `PYTHON.md` with `packages/cli/rules/language/python/TYPING.md`, `DESIGN.md`, `FLOW.md`, `PACKAGING.md`, `SWIFT.md`, `BASH.md` with `packages/cli/rules/language/bash/LANGUAGE.md`, `SAFETY.md`, `OPERATIONS.md`, `SQL.md`, `HTML.md`, `CSS.md`, `YAML.md`, plus `naming/<LANGUAGE>.md` for each except YAML | the language configuration                    |
+| runtime    | `runtime/<name>/`         | `NODE.md`, `BUN.md`, `DENO.md`, `BROWSER.md`, `WORKERS.md`                                                                                                                                                                                                                                                                                     | detected runtime                              |
+| framework  | `framework/<name>/`       | `NEXTJS.md` with `SECURITY.md`, `REACT.md`, `EXPRESS.md` with `API.md` and `OPENAPI.md`, `FASTAPI.md` with `RUNTIME.md`, `SWIFTUI.md`, `UIKIT.md`                                                                                                                                                                                              | the framework configuration                   |
+| library    | `library/<name>/`         | `ZOD.md`, `DRIZZLE.md`, `TRPC.md`, `TANSTACKQUERY.md`, `ZUSTAND.md`, `REACTHOOKFORM.md`, `NEXTINTL.md`                                                                                                                                                                                                                                         | the library configuration                     |
+| tool       | `tool/<name>/`            | `DOCKER.md`, `NGINX.md`, `VITEST.md`, `PLAYWRIGHT.md`, `GITHUB-ACTIONS.md`, `XCODE.md`, `XCTEST.md`, `TAILWIND.md`, `COMMITLINT.md`, `TASKS.md`                                                                                                                                                                                                | the tool configuration                        |
+| platform   | `platform/supabase/`      | `SUPABASE.md`                                                                                                                                                                                                                                                                                                                                  | the platform configuration                    |
+| database   | `database/postgres/`      | `POSTGRES.md`                                                                                                                                                                                                                                                                                                                                  | the database configuration                    |
+| shared     | `shared/`                 | `packages/cli/rules/shared/http/HTTP.md`, `packages/cli/rules/shared/i18n/I18N.md`                                                                                                                                                                                                                                                             | any configuration that lists the shared block |
+| repository | `repository/static-site/` | `STATIC-SITE.md`                                                                                                                                                                                                                                                                                                                               | the repository configuration                  |
+| templates  | `templates/docs/`         | document templates                                                                                                                                                                                                                                                                                                                             | offered once at init, never upgraded          |
+| project    | the repository's own      | whatever the team writes                                                                                                                                                                                                                                                                                                                       | never written by gspot                        |
 
 Each configuration manifest names its files under `[rule_files]`. A source file has one owner; multiple configurations can select shared guidance without copying it.
 
@@ -96,7 +96,7 @@ inline code. What the gate enforces is the ledger's business ([06-enforcement-le
 ## Size
 
 No file exceeds 800 lines. A file that grows past the ceiling is split into siblings under the
-same configuration (`language/python/TYPING.md` beside `language/PYTHON.md`) only when distinct reader
+same configuration (`packages/cli/rules/language/python/TYPING.md` beside `packages/cli/rules/language/PYTHON.md`) only when distinct reader
 tasks justify the split. Remove repetition before splitting. Each guide states its own scope. Templates are project files and are
 not measured.
 
@@ -138,9 +138,9 @@ subagents, and adds: "These files are installed copies. Change `[rules]` in `gsp
 `gspot apply`, and never edit files under the rules directory."
 
 `[rules] exclude` leaves files out. An entry is a file path under the corpus
-(`general/code/ACCESSIBILITY.md`) or a layer folder (`library`). An entry that matches no corpus
-file fails the load with the near matches. `general/agent/WORKING.md` and
-`general/prose/WRITING.md` cannot be excluded while the block tells the reader to open them first.
+(`packages/cli/rules/general/code/ACCESSIBILITY.md`) or a layer folder (`library`). An entry that matches no corpus
+file fails the load with the near matches. `packages/cli/rules/general/agent/WORKING.md` and
+`packages/cli/rules/general/prose/WRITING.md` cannot be excluded while the block tells the reader to open them first.
 
 The block is written again on every `apply`, and text outside the markers is never read or moved.
 The block is a compact task index with one guide per entry, grouped where that helps selection.
@@ -148,8 +148,8 @@ The block is a compact task index with one guide per entry, grouped where that h
 ## The rules lint
 
 The rules lint belongs to this repository, not to the commands of the binary. It runs as
-the `[[check]]` entry `rules/lint` in the `gspot.toml` of this repository, at the commit stage,
-over `rules/**`. Its code sits in `packages/cli/src/agents/`. Prose is no part of it: `prose/vale`
+the `[[check]]` entry `rules/lint` in the `gspot.toml` of this repository, at the push stage,
+over `packages/cli/rules/**` and its implementation and test owners. Its code sits in `packages/cli/src/agents/`. Prose is no part of it: `prose/vale`
 reads the rule files like every other text.
 
 - Front matter holds `layer`, `configuration`, and `title`. The layer agrees with the path and the title
@@ -185,7 +185,7 @@ A section of a rule file carries the level of the checks it describes, and the
 assembler leaves out a section above the level of the repository.
 
 A heading line is followed by `<!-- level: all -->` where its rules are taste. The
-assembler drops such a section at `recommended`. Keep mandatory trivial-function and trivial-file guidance at both levels. Validate level
+assembler drops such a section at `recommended`. Trivial-function and trivial-file requirements apply at `all`, consistent with the accepted level inventory. Validate level
 selection against the policy owner without requiring check identifiers in rule prose. `REACT.md` names the file after its component.
 
 A unit test assembles `TYPESCRIPT.md` at both levels and compares the headings.
@@ -259,7 +259,7 @@ A rule file never asks for what a check of the same configuration refuses.
 Each of the nine is settled on the side of the decision or the check, and the rule
 file changes. `explicit_acl` moves to the level `all` (row 11), and the rule file says so.
 
-`src/agents/lint.ts` reads every rule name a rule file names, and fails where the template
+`packages/cli/src/agents/lint.ts` reads every rule name a rule file names, and fails where the template
 of its configuration turns that rule the other way.
 
 ### Acceptance K-261

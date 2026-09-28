@@ -21,4 +21,4 @@ imports = "eslint.imports.js.tmpl"
 fragment = true
 
 [rule_files]
-library = ["library/zod/ZOD.md"]
+library = [{path = "library/zod/ZOD.md"}]

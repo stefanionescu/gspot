@@ -4,12 +4,12 @@ import { createFileTree, testdir } from 'testdirs';
 // Planted repository for the xctest configuration: a skipped test with no reason, a sleep, a recording snapshot test, and references with no test.
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
+import type { FindingCase } from '#tests/types/cli.ts';
 import { reportSchema } from '#cli/execution/report.ts';
+import { runPlanted } from '#tests/support/cli/planted.ts';
 import { containing } from '#tests/support/expectations.ts';
-import type { FindingCase } from '#tests/types/support/cli.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
 import { installAtLevel, toolsPath } from '#tests/support/cli/tools.ts';
-import { expectCorrected, runPlanted } from '#tests/support/cli/planted.ts';
 import { XCTEST_INIT } from '#tests/constants/acceptance/source/configurations/init-arguments.ts';
 import { XCTEST_TESTS } from '#tests/constants/acceptance/source/configurations/configurations.ts';
 
@@ -64,7 +64,15 @@ describe('the xctest configuration', () => {
             expect(failed.checks).toMatchObject([{ check: planted.check, status: 'fail' }]);
             expect(failed.checks[0]!.findings).toContainEqual(containing(planted.expected));
             await createFileTree(sandbox.path, planted.correction);
-            await expectCorrected(sandbox.path, planted.check, environment);
+            const correctedCheck = await run(
+                sandbox.path,
+                ['check', '--only', planted.check, '--no-cache', '--json'],
+                environment,
+            );
+            expect(correctedCheck.code, correctedCheck.stdout + correctedCheck.stderr).toBe(0);
+            expect(reportSchema.parse(JSON.parse(correctedCheck.stdout)).checks).toMatchObject([
+                { check: planted.check, status: 'ok', findings: [] },
+            ]);
             const checked = await run(sandbox.path, ['check', '--stage', 'commit', '--json'], environment);
             const atCommit = JSON.parse(checked.stdout) as {
                 checks: { check: string }[];

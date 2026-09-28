@@ -1,5 +1,5 @@
+import type { FileObservation } from '#cli/types/platform.ts';
 import type { GeneratedProposal } from '#cli/types/generation.ts';
-import type { FileSnapshot } from '#cli/types/platform.ts';
 import type { ApplyReport } from '#cli/types/lifecycle/lifecycle.ts';
 
 export type PublicationRequest = {
@@ -7,6 +7,6 @@ export type PublicationRequest = {
     rendered: GeneratedProposal;
     report: ApplyReport;
     retained: { prose: boolean; packages: boolean };
-    takeover?: ReadonlyMap<string, FileSnapshot> | undefined;
-    regenerate?: ReadonlyMap<string, FileSnapshot>;
+    takeover?: ReadonlyMap<string, FileObservation> | undefined;
+    regenerate?: ReadonlyMap<string, FileObservation>;
 };

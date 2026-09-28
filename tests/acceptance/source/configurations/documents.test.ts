@@ -1,17 +1,16 @@
 // Public CLI journeys for document findings and tool failure recovery.
 import { join } from 'node:path';
+import { expect, test } from 'bun:test';
 import { fileURLToPath } from 'node:url';
-import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
-// Copy the installed Vale packages so the fixture has private offline styles.
+import type { FindingCase } from '#tests/types/cli.ts';
 import { reportSchema } from '#cli/execution/report.ts';
+import { runPlanted } from '#tests/support/cli/planted.ts';
 import { containing } from '#tests/support/expectations.ts';
-import type { FindingCase } from '#tests/types/support/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
 import { install, toolsPath } from '#tests/support/cli/tools.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
-import { expectCorrected, runPlanted } from '#tests/support/cli/planted.ts';
 import { cpSync, mkdirSync, readdirSync, rmSync, symlinkSync } from 'node:fs';
 
 import {
@@ -82,6 +81,7 @@ const CASES: FindingCase[] = [
     },
 ];
 
+// Copy the installed Vale packages so the fixture has private offline styles.
 function copyValePackages(target: string): void {
     const styles = join(target, '.gspot', 'config', 'vale', 'styles');
     mkdirSync(styles, { recursive: true });
@@ -135,69 +135,81 @@ async function installedDocuments() {
     }
 }
 
-describe('the markdown, docs and prose configurations', () => {
-    test.each(CASES)(
-        '$check reports its defect in $expected.file and accepts corrected documents',
-        async (planted) => {
-            const prepared = await installedDocuments();
-            await using sandbox = prepared.sandbox;
-            const environment = prepared.environment;
-            const outcome = await runPlanted(sandbox.path, planted, environment);
-            expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
-            const report = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
-            expect(report.checks).toMatchObject([{ check: planted.check, status: 'fail' }]);
-            expect(report.checks[0]?.findings).toContainEqual(
-                containing({ check: planted.check, ...planted.expected }),
-            );
-            const corrections: Record<string, string> = {
-                'markdown/fences': '# A page\n\n```json\n{ "open": true }\n```\n',
-                'docs/links': '# A page\n\nRead [the guide](guide.md) first.\n',
-                'integrity/stale-paths': '# A page\n\nRead `docs/guide.md`.\n',
-                'docs/readme-shape': README,
-            };
-            for (const path of Object.keys(planted.files))
-                await Bun.write(join(sandbox.path, path), corrections[planted.check] ?? GUIDE);
-            await expectCorrected(sandbox.path, planted.check, environment);
-        },
-        PLANTED_TIMEOUT_MS * 4,
-    );
+test.each(CASES)(
+    'the markdown, docs and prose configurations > $check reports its defect in $expected.file and accepts corrected documents',
+    async (planted) => {
+        const prepared = await installedDocuments();
+        await using sandbox = prepared.sandbox;
+        const environment = prepared.environment;
+        const outcome = await runPlanted(sandbox.path, planted, environment);
+        expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
+        const report = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
+        expect(report.checks).toMatchObject([{ check: planted.check, status: 'fail' }]);
+        expect(report.checks[0]?.findings).toContainEqual(containing({ check: planted.check, ...planted.expected }));
+        const corrections: Record<string, string> = {
+            'markdown/fences': '# A page\n\n```json\n{ "open": true }\n```\n',
+            'docs/links': '# A page\n\nRead [the guide](guide.md) first.\n',
+            'integrity/stale-paths': '# A page\n\nRead `docs/guide.md`.\n',
+            'docs/readme-shape': README,
+        };
+        for (const path of Object.keys(planted.files))
+            await Bun.write(join(sandbox.path, path), corrections[planted.check] ?? GUIDE);
+        const correctedCheck = await run(
+            sandbox.path,
+            ['check', '--only', planted.check, '--no-cache', '--json'],
+            environment,
+        );
+        expect(correctedCheck.code, correctedCheck.stdout + correctedCheck.stderr).toBe(0);
+        expect(reportSchema.parse(JSON.parse(correctedCheck.stdout)).checks).toMatchObject([
+            { check: planted.check, status: 'ok', findings: [] },
+        ]);
+    },
+    PLANTED_TIMEOUT_MS * 4,
+);
 
-    test(
-        'document selection excludes external links and recovers after missing Vale dictionaries',
-        async () => {
-            const prepared = await installedDocuments();
-            await using sandbox = prepared.sandbox;
-            const environment = prepared.environment;
-            // A check id is written like a path. A document that names one means the check, whatever folders exist.
-            const named = await runPlanted(
-                sandbox.path,
-                {
-                    check: 'integrity/stale-paths',
-                    files: { 'docs/checks.md': '# A page\n\nThe check `docs/links` reads every link.\n' },
-                },
-                environment,
-            );
-            expect(named.code, named.stdout).toBe(0);
-            for (const id of REPORTED_ELSEWHERE) {
-                const skipped = await run(sandbox.path, ['check', '--only', id], environment);
-                expect(skipped.stdout, id).toContain('its findings come from');
-            }
-            rmSync(join(sandbox.path, '.gspot', 'config', 'vale', 'styles', 'config', 'dictionaries'), {
-                recursive: true,
-            });
-            const broken = await run(sandbox.path, ['check', '--only', 'prose/vale', '--no-cache'], environment);
-            expect(broken.code, 'a Vale that cannot run is an error, never a pass').toBe(2);
-            expect(
-                reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json()).checks,
-            ).toMatchObject([{ check: 'prose/vale', status: 'error' }]);
-            copyValePackages(sandbox.path);
-            await expectCorrected(sandbox.path, 'prose/vale', environment);
-            const checked = await run(sandbox.path, ['check', '--stage', 'commit', '--json'], environment);
-            const record = JSON.parse(checked.stdout) as {
-                checks: { check: string }[];
-            };
-            expect(record.checks.map((check) => check.check)).not.toContain('docs/links-external');
-        },
-        PLANTED_TIMEOUT_MS * 4,
-    );
-});
+test(
+    'the markdown, docs and prose configurations > document selection excludes external links and recovers after missing Vale dictionaries',
+    async () => {
+        const prepared = await installedDocuments();
+        await using sandbox = prepared.sandbox;
+        const environment = prepared.environment;
+        // A check id is written like a path. A document that names one means the check, whatever folders exist.
+        const named = await runPlanted(
+            sandbox.path,
+            {
+                check: 'integrity/stale-paths',
+                files: { 'docs/checks.md': '# A page\n\nThe check `docs/links` reads every link.\n' },
+            },
+            environment,
+        );
+        expect(named.code, named.stdout).toBe(0);
+        for (const id of REPORTED_ELSEWHERE) {
+            const skipped = await run(sandbox.path, ['check', '--only', id], environment);
+            expect(skipped.stdout, id).toContain('its findings come from');
+        }
+        rmSync(join(sandbox.path, '.gspot', 'config', 'vale', 'styles', 'config', 'dictionaries'), {
+            recursive: true,
+        });
+        const broken = await run(sandbox.path, ['check', '--only', 'prose/vale', '--no-cache'], environment);
+        expect(broken.code, 'a Vale that cannot run is an error, never a pass').toBe(2);
+        expect(
+            reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json()).checks,
+        ).toMatchObject([{ check: 'prose/vale', status: 'error' }]);
+        copyValePackages(sandbox.path);
+        const correctedCheck = await run(
+            sandbox.path,
+            ['check', '--only', 'prose/vale', '--no-cache', '--json'],
+            environment,
+        );
+        expect(correctedCheck.code, correctedCheck.stdout + correctedCheck.stderr).toBe(0);
+        expect(reportSchema.parse(JSON.parse(correctedCheck.stdout)).checks).toMatchObject([
+            { check: 'prose/vale', status: 'ok', findings: [] },
+        ]);
+        const checked = await run(sandbox.path, ['check', '--stage', 'commit', '--json'], environment);
+        const record = JSON.parse(checked.stdout) as {
+            checks: { check: string }[];
+        };
+        expect(record.checks.map((check) => check.check)).not.toContain('docs/links-external');
+    },
+    PLANTED_TIMEOUT_MS * 4,
+);

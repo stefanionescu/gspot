@@ -1,63 +1,24 @@
+import { testdir } from 'testdirs';
 import { expect, test } from 'bun:test';
 import { join, relative } from 'node:path';
 import { run } from '#cli/platform/spawn.ts';
-import { createFileTree, testdir } from 'testdirs';
-import { openSession } from '#cli/execution/session.ts';
-import { hookReadiness } from '#tests/support/cli/hooks.ts';
-import { applyCommand } from '#cli/commands/apply/command.ts';
-import { environmentVariables } from '#cli/platform/environment.ts';
-import { installHookManager } from '#cli/lifecycle/hooks/managers.ts';
+import { installNativeHooks } from '#cli/lifecycle/hooks/managers.ts';
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml';
-import { PRE_COMMIT_POLICY } from '#tests/constants/integration/tools/hooks.ts';
-import { chmodSync, readFileSync, renameSync, unlinkSync, writeFileSync } from 'node:fs';
+import { readFileSync, renameSync, unlinkSync, writeFileSync } from 'node:fs';
+import { readHookStatus, preparePreCommit } from '#tests/support/cli/hooks/projects.ts';
 
 test.each(['', "apps/worker's tools"])(
-    'native pre-commit hooks run from policy directory %s and preserve Git inputs',
+    'native pre-commit remains idempotent, forwards staged arguments, and preserves failure codes in %s',
     async (directory) => {
         await using sandbox = await testdir();
         const root = join(sandbox.path, directory);
-        await createFileTree(root, {
-            'gspot.toml': PRE_COMMIT_POLICY,
-            '.gitignore': '.venv/\nbin/\npre-commit-cache/\nobserved\nfailed\n',
-            'source.txt': 'input',
-            'bin/gspot': `#!${process.execPath}\nconst {appendFileSync} = await import('node:fs'); appendFileSync('observed', JSON.stringify({args: process.argv.slice(2), input: await Bun.stdin.text()}) + '\\n'); process.exitCode = (await Bun.file('setup-failed').exists()) ? 2 : (await Bun.file('failed').exists()) ? 1 : 0;\n`,
-        });
-        chmodSync(join(root, 'bin/gspot'), 0o755);
-        for (const command of [
-            ['git', 'init', '-q', sandbox.path],
-            ['uv', 'venv', '.venv'],
-            ['uv', 'pip', 'install', '--python', '.venv/bin/python', 'pre-commit==4.5.1'],
-        ]) {
-            const result = await run(command, { cwd: root, timeoutMs: 60_000 });
-            expect(result.code, result.stderr).toBe(0);
-        }
-        const applied = await applyCommand({ cwd: root, isDryRun: false });
-        expect(applied.exitCode).toBe(0);
-        const ran = await run(['git', 'add', 'source.txt', 'gspot.toml', '.pre-commit-config.yaml', '.gitignore'], {
-            cwd: root,
-        });
-        expect(ran.code).toBe(0);
-        const committed = await run(
-            ['git', '-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.test', 'commit', '-qm', 'fixture'],
-            { cwd: root },
-        );
-        expect(committed.code).toBe(0);
-        const session = await openSession(root);
-        await installHookManager({
+        const { session, env } = await preparePreCommit(root, sandbox.path);
+        await installNativeHooks({
             policy: session.policyFiles.policy,
             repository: session.repository,
             tools: session,
         });
-        await installHookManager({
-            policy: session.policyFiles.policy,
-            repository: session.repository,
-            tools: session,
-        });
-        expect(await hookReadiness(root)).toBe(true);
-        const env = {
-            PATH: `${join(root, 'bin')}:${environmentVariables()['PATH'] ?? ''}`,
-            PRE_COMMIT_HOME: join(root, 'pre-commit-cache'),
-        };
+        expect(await readHookStatus(root)).toMatchObject({ ready: true });
         const checked = await run(['git', 'hook', 'run', 'pre-commit'], { cwd: root, env });
         expect(checked.code, checked.stdout + checked.stderr).toBe(0);
         expect(JSON.parse(readFileSync(join(root, 'observed'), 'utf8'))).toStrictEqual({
@@ -75,6 +36,15 @@ test.each(['', "apps/worker's tools"])(
         const setup = await run(['git', 'hook', 'run', 'pre-commit'], { cwd: root, env });
         expect(setup.code, setup.stdout + setup.stderr).toBe(2);
         unlinkSync(join(root, 'setup-failed'));
+    },
+    90_000,
+);
+test.each(['', "apps/worker's tools"])(
+    'native pre-commit rejects malformed, unstaged, and missing managed configuration in %s',
+    async (directory) => {
+        await using sandbox = await testdir();
+        const root = join(sandbox.path, directory);
+        const { env } = await preparePreCommit(root, sandbox.path);
         const configuration = readFileSync(join(root, '.pre-commit-config.yaml'));
         writeFileSync(join(root, '.pre-commit-config.yaml'), 'repos: [invalid yaml\n');
         const malformed = await run(['git', 'hook', 'run', 'pre-commit'], { cwd: root, env });
@@ -89,6 +59,19 @@ test.each(['', "apps/worker's tools"])(
         const skipped = await run(['git', 'hook', 'run', 'pre-commit'], { cwd: root, env });
         expect(skipped.code, skipped.stdout + skipped.stderr).toBe(2);
         expect(skipped.stderr).toContain('gspot apply');
+        writeFileSync(join(root, '.pre-commit-config.yaml'), configuration);
+        expect(await run(['git', 'add', '.pre-commit-config.yaml'], { cwd: root })).toMatchObject({ code: 0 });
+        expect(await run(['git', 'hook', 'run', 'pre-commit'], { cwd: root, env })).toMatchObject({ code: 0 });
+    },
+    90_000,
+);
+test.each(['', "apps/worker's tools"])(
+    'native pre-commit retains authored failures with both fail-fast settings in %s',
+    async (directory) => {
+        await using sandbox = await testdir();
+        const root = join(sandbox.path, directory);
+        const { env } = await preparePreCommit(root, sandbox.path);
+        const configuration = readFileSync(join(root, '.pre-commit-config.yaml'));
         const authored = parseYaml(configuration.toString('utf8')) as {
             repos: Record<string, unknown>[];
             fail_fast?: boolean;
@@ -118,6 +101,16 @@ test.each(['', "apps/worker's tools"])(
         writeFileSync(join(root, '.pre-commit-config.yaml'), configuration);
         const restaged = await run(['git', 'add', '.pre-commit-config.yaml'], { cwd: root });
         expect(restaged.code).toBe(0);
+        expect(await run(['git', 'hook', 'run', 'pre-commit'], { cwd: root, env })).toMatchObject({ code: 0 });
+    },
+    90_000,
+);
+test.each(['', "apps/worker's tools"])(
+    'native pre-commit refuses an unmerged index and accepts its reset in %s',
+    async (directory) => {
+        await using sandbox = await testdir();
+        const root = join(sandbox.path, directory);
+        const { env } = await preparePreCommit(root, sandbox.path);
         const hashed = await run(['git', 'hash-object', 'source.txt'], { cwd: root });
         expect(hashed.code, hashed.stderr).toBe(0);
         const blob = hashed.stdout.trim();
@@ -132,6 +125,16 @@ test.each(['', "apps/worker's tools"])(
         expect(conflict.stderr).toContain('Unmerged index entries');
         const reset = await run(['git', 'reset', '--', 'source.txt'], { cwd: root });
         expect(reset.code).toBe(0);
+        expect(await run(['git', 'hook', 'run', 'pre-commit'], { cwd: root, env })).toMatchObject({ code: 0 });
+    },
+    90_000,
+);
+test.each(['', "apps/worker's tools"])(
+    'native pre-commit reports missing executables and unusable caches in %s',
+    async (directory) => {
+        await using sandbox = await testdir();
+        const root = join(sandbox.path, directory);
+        const { env } = await preparePreCommit(root, sandbox.path);
         const executable = join(root, '.venv/bin/pre-commit');
         renameSync(executable, `${executable}.retained`);
         try {
@@ -147,7 +150,16 @@ test.each(['', "apps/worker's tools"])(
             env: { ...env, PRE_COMMIT_HOME: join(root, 'blocked-cache') },
         });
         expect(cache.code, cache.stdout + cache.stderr).toBe(2);
-
+        expect(await run(['git', 'hook', 'run', 'pre-commit'], { cwd: root, env })).toMatchObject({ code: 0 });
+    },
+    90_000,
+);
+test.each(['', "apps/worker's tools"])(
+    'native pre-commit forwards exact push input and message paths in %s',
+    async (directory) => {
+        await using sandbox = await testdir();
+        const root = join(sandbox.path, directory);
+        const { env } = await preparePreCommit(root, sandbox.path);
         writeFileSync(join(root, 'observed'), '');
         const revision = await run(['git', 'rev-parse', 'HEAD'], { cwd: root });
         const head = revision.stdout.trim();
@@ -175,11 +187,11 @@ test.each(['', "apps/worker's tools"])(
         });
         writeFileSync(join(root, 'observed'), '');
         writeFileSync(join(root, 'message with spaces'), 'test: fixture\n');
-        const message = await run(
+        const commitResult = await run(
             ['git', 'hook', 'run', 'commit-msg', '--', relative(sandbox.path, join(root, 'message with spaces'))],
             { cwd: root, env },
         );
-        expect(message.code, message.stdout + message.stderr).toBe(0);
+        expect(commitResult.code, commitResult.stdout + commitResult.stderr).toBe(0);
         expect(JSON.parse(readFileSync(join(root, 'observed'), 'utf8'))).toStrictEqual({
             args: ['check', '--stage', 'message', '--message-file', join(root, 'message with spaces')],
             input: '',

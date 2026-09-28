@@ -47,7 +47,7 @@ export type ExposedSettings = {
 export type WrittenValue = { value: unknown; reason?: string };
 /** One layer of policy that a key is resolved through: the root table or one scope table. */
 export type PolicyLayer = { table: Partial<Policy>; name: string };
-/** A written key matched to its spec, with the language and category the key names. */
+/** A written key matched to its specification and its declared language and category. */
 export type SpecMatch = { spec: SettingSpec; language?: string; category?: string };
 /** Where a resolved value stands after some layers were applied. */
 export type SettingState = { value: unknown; source: string; reason: string | undefined };

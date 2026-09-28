@@ -1,8 +1,7 @@
 # The gspot Repository
 
-Verification follows the [active CI bypass](22-remaining.md#active-ci-bypass). Local checks
-and hooks remain required; GitHub execution and CI-only acceptance are deferred until the
-user explicitly re-enables CI.
+Verification follows the [active CI requirements](22-remaining.md#ci-verification).
+Local checks, normal hooks, and full CI against the exact task-branch commit are required.
 
 This document decides the gspot repository: packages, folders, tests, and how gspot lints
 itself.
@@ -29,7 +28,9 @@ The CLI owns command behavior, planning, execution, and lifecycle operations. Co
 arguments and present results; output renders the statuses and findings computed by the runner.
 Generators return proposed files, managed blocks, and structured configuration edits. Lifecycle
 owns publication contracts, collisions, recorded ownership, recovery, and removal. Stateless
-configuration planning belongs to the configuration-document owner. The lifecycle owner retains
+configuration planning belongs to its document owner.
+
+The lifecycle owner retains
 writer locks, original-byte observations, stale-input checks, permissions, journal transitions,
 and recovery ordering. Package and Python lock resolution receive the proposed files they modify.
 A generated header or directory name does not authorize deletion.
@@ -45,10 +46,14 @@ abstraction. Repairs belong directly in the surviving owner. Report what was act
 and which behavior remains verified; architecture edits alone do not satisfy code cleanup.
 
 Group source by behavior and ownership. Extract a shared module only when it owns shared behavior
-or a shared contract. Every type alias lives under the `types/` folder of its package, and every
+or a shared contract.
+
+Every type alias lives under the `types/` folder of its package, and every
 literal constant under its `constants/` folder. Each holds one file per source folder and one per
 subfolder; a folder with both gets a folder-level file named after it. Schemas, function tables,
-and values computed at load stay beside the logic that owns them. Do not require a file per
+and values computed at load stay beside the logic that owns them.
+
+Do not require a file per
 type, constant, forwarding function, or check. Test locations follow the behavior they exercise;
 source/test directory symmetry is not required.
 
@@ -59,9 +64,12 @@ available at their specified levels. They are not blanket instructions to reorga
 
 Repository tooling stays separate from shipped runtime behavior. Keep Bun and mise. Do not
 introduce Nx, Turborepo, a task framework, or private workspace packages to copy their layouts.
+
 Retain schemas where editor, runtime, or documentation consumers need them. Retain WASM grammars,
 platform definitions, and provenance with their actual consumers. Stage generated distribution
-copies in ignored build output. Notice assembly belongs to packaging; plugin dependencies stay
+copies in ignored build output.
+
+Notice assembly belongs to packaging; plugin dependencies stay
 external. The launcher, plugin, and platform packages each carry the required license.
 
 Domain checks share parsers and preparation where useful and preserve language semantics.
@@ -77,26 +85,32 @@ harness behavior through real product journeys.
 
 The executable entry delegates to Commander composition. Command adapters parse flags and
 present command results. Execution planning, scheduling, cancellation, and diagnostic parsing
-remain separate from check implementations. Policy owns validation and mutation proposals. The `configurations` owner provides shipped check
+remain separate from check implementations.
+
+Policy owns validation and mutation proposals. The `configurations` owner provides shipped check
 definitions and selection. Output owns terminal and report formats.
 Naming and structure analyses retain their language-specific semantics beside their consumers.
 
-Next.js source checks and execution live in `checks/nextjs/source.ts` and `checks/nextjs/build.ts`.
-Jest execution and its shared validation schema live in `checks/jest/run.ts` and
-`checks/jest/schema.ts`. Hook names and hook metadata belong to `repository/hooks.ts`;
+Next.js source checks and execution live in `packages/cli/src/checks/nextjs/source.ts` and `packages/cli/src/checks/nextjs/build.ts`.
+Jest execution and its shared validation schema live in `packages/cli/src/checks/jest/run.ts` and
+`packages/cli/src/checks/jest/schema.ts`. Hook names and hook metadata belong to `packages/cli/src/repository/hooks.ts`;
 dependency directory names belong to repository file classification. Dependency checks share
 lockfile formats. Check constants live under `constants/checks/`, one file per check folder.
 
-Agent metadata and generated instructions belong to `agents/metadata.ts` and
-`agents/instructions.ts`. Shipped assets remain under `packages/cli/configurations/`; source definitions and selection belong
+Agent metadata and generated instructions belong to `packages/cli/src/agents/metadata.ts` and
+`packages/cli/src/agents/instructions.ts`. Shipped assets remain under `packages/cli/configurations/`; source definitions and selection belong
 to `packages/cli/src/configurations/`. Homepage components live under `docs/src/components/home/`; Starlight
 overrides live under `docs/src/components/starlight/`. Artwork is grouped by home, identity, README, badges,
 and diagrams under `docs/public/brand/`.
 
 Generation proposes configuration content. Lifecycle applies those proposals through recorded
-ownership, preserves local edits, and restores recovery copies. Apply registration, previews, and command orchestration belong to commands. Shared publication stays in lifecycle. Tool acquisition owns installation, version probes, installer hints,
+ownership, preserves local edits, and restores recovery copies. Apply registration, previews, and command orchestration belong to commands. Shared publication stays in lifecycle.
+
+Tool acquisition owns installation, version probes, installer hints,
 package-manager connection settings, locked npm and Python projects, and installed-file
-publication. It uses filesystem confinement and lifecycle ownership for repository writes. Hook adoption
+publication. It uses filesystem confinement and lifecycle ownership for repository writes.
+
+Hook adoption
 and restoration remain lifecycle operations. Vale checking belongs to checks, style rendering to generation, and package installation to tools.
 
 Shared SQL parsing and Tree-sitter loading belong to parsers. Grammar names belong to the asset boundary;
@@ -115,20 +129,28 @@ import the publication command. The plugin retains its independent build entry.
 
 Generated inputs, entries, evaluator bundles, and notice caches live in `packages/cli/.build/`.
 Release artifacts live in root `dist/`. Authored build modules participate in TypeScript, lint,
-and coverage inputs. Embedded asset identities are explicit where physical paths differ:
+and coverage inputs.
+
+Embedded asset identities are explicit where physical paths differ:
 the evaluator retains `packages/cli/scripts/configuration-process.js`; parser keys remain under
 `grammars/`. Keep evaluator embedding, EditorConfig WASM integration, and macOS signing.
+
 Swift preparation is independent of notices. Every downloaded or cached input must match its
 pinned SHA-256; atomic cache publication preserves failed-download behavior.
 
 Types and runtime validators live with their feature owners. Filesystem and process operations
 own their boundary contracts. Policy, manifest, profile, journal, and report schemas sit with their
 features. Evaluation request and response schemas form a shared protocol independent of the
-evaluators. Command and check-output validation remain shared boundaries used by both policy
-and configuration manifests. Publication shapes belong to lifecycle application. Generation normalizes merge stubs into
+evaluators.
+
+Command and check-output validation remain shared boundaries used by both policy
+and configuration manifests. Publication shapes belong to lifecycle application.
+
+Generation normalizes merge stubs into
 structured edits before publication and retains rendering decisions. Drift compares retained
-fields through the configuration-document owner. Tool command
-execution serves checking, installation, and detection without importing the check runner.
+fields through the configuration document owner.
+
+Tool command execution serves checking, installation, and detection without importing the check runner.
 
 Check input contracts belong to the check feature, independently of the runtime dispatcher.
 Parsers accept source observations and disposable resources without importing check inputs.
@@ -144,7 +166,7 @@ Doctor-specific diagnosis and reporting belong to `commands/doctor/`. Initializa
 questions, and selection belong to `commands/init/`. Shared coverage analysis belongs to execution,
 and its text rendering belongs to output. Direct imports include type and dynamic dependencies.
 
-Generation orchestration belongs to `generation/render.ts`. JavaScript preparation, headers,
+Generation orchestration belongs to `packages/cli/src/generation/outputs.ts`. JavaScript preparation, headers,
 and ESLint preparation stay with their respective generators. Hook operations receive policy,
 repository facts, and tool observations rather than the execution session. Lifecycle hooks,
 package-manager operations, revision materialization, and diagnostic parsing each form a local
@@ -160,7 +182,7 @@ ESLint adoption, preservation, and native selection suites separate their distin
 
 The CLI and independently usable ESLint plugin remain separate workspace packages.
 The plugin exports `configs.recommended`, `configs.all`, and its existing rules through
-[ESLint's conventional plugin shape](https://eslint.org/docs/latest/extend/plugins).
+[the conventional ESLint plugin shape](https://eslint.org/docs/latest/extend/plugins).
 Its types live under `src/types/` and its literal constants under `src/constants/`; rule logic stays with the rule.
 
 Keep all authored repository tasks, including source-checkout overrides and CI orchestration, in `.mise/conf.d/repo.toml` and generated integration in
@@ -174,32 +196,42 @@ Repository choices remain in TOML. The documentation schema endpoint generates
 [Taplo editor assistance](https://taplo.tamasfe.dev/configuration/using-schemas.html) directly from
 the runtime policy schema. The repository editor directive uses the public schema URL.
 
-Use [Bun's native test configuration](https://bun.sh/docs/test/configuration) in `tests/bunfig.toml`.
+Use [the native Bun test configuration](https://bun.sh/docs/test/configuration) in `tests/bunfig.toml`.
 Run test tasks from `tests/` with `--timeout 60000`; per-case deadlines remain explicit.
 The root TypeScript project includes every test under its strict workspace settings.
+
 All tests belong under the root `tests/`: unit CLI and plugin suites, integration CLI, docs,
 and repository suites, tool integration under `integration/tools`, source journeys under
-`acceptance/source`, and release consumers under `acceptance/release`. Support owns process, registry, and fixture lifetime; its types live under `tests/types/support/`.
+`acceptance/source`, and release consumers under `acceptance/release`. Support owns process, registry, and fixture lifetime; its types live under `tests/types/`.
+
 `mise run test` targets deterministic unit and integration execution using documented development
 prerequisites and installed workspace dependencies. Native tools, downloads, source acceptance,
-and installed release consumers require separate explicit tasks. The release task runs directly
+and installed release consumers require separate explicit tasks.
+
+The release task runs directly
 after its artifact prerequisites are built; no environment opt-in hides its tests. Do not add Vitest, Jest, or a custom coordinator for this
 repository. Framework configurations can still use their own test tools.
 
 Root configuration has explicit owners. `gspot.toml`, `mise.toml`, `package.json`,
 `bunfig.toml`, `tsconfig.json`, and the authored portions of `.gitignore` and `.gitattributes`
-are repository inputs. Bun owns `bun.lock`. Policy generation owns the native-discovery
+are repository inputs. Bun owns `bun.lock`.
+
+Policy generation owns the native-discovery
 files `.commitlintrc.json`, `.gitleaks.toml`, `.markdownlint-cli2.jsonc`, `.semgrepignore`,
 `.shellcheckrc`, `.taplo.toml`, `.yamllint.yml`, `osv-scanner.toml`, and `typos.toml`.
 Retained EditorConfig, Prettier, and ESLint entry points continue serving editors; ownership
 records, rather than generated-looking headers, govern replacement. Agent instructions and
-Git attributes retain their authored content outside managed blocks. The policy schema feeds the documentation endpoint at `/schema/gspot.schema.json`.
+Git attributes retain their authored content outside managed blocks.
+
+The policy schema feeds the documentation endpoint at `/schema/gspot.schema.json`.
 The documentation build validates its emitted JSON against the runtime schema. Native filenames remain stable.
 
 Generated tool configuration and bundled tool rules live under `.gspot/config/`, with scope paths
 mirrored below it. Agent guides remain under `.gspot/rules/`. Ownership journals, writer locks,
 and recovery backups live under `.gspot/state/`. Reports use `.gspot/reports/`; disposable caches
-use `.gspot/cache/`. Private dependency manifests, lockfiles, installed packages, and the Python
+use `.gspot/cache/`.
+
+Private dependency manifests, lockfiles, installed packages, and the Python
 environment remain at `.gspot/`'s root for native dependency resolution. Ignore rules use the same
 path definitions as storage. Only installed dependencies, downloaded styles, local state, reports,
 and caches are ignored.
@@ -397,11 +429,11 @@ cannot follow fails the gate the same way a long function does.
 The existing Astro/Starlight site renders validated reference definitions through content
 loaders and keeps authored task guides separate. Preserve released URLs, complete public
 settings, inherited options, plugin exports, search, source links, and `llms.txt`.
-[Documentation](21-documentation.md) owns the content-loader contract, the plain text site
+[Documentation source](21-documentation.md) owns the content-loader contract, the plain text site
 design, and release-aligned deployment and rollback. Guide length
 follows the task; no page quota, separate fixture system, or universal prose parser is required.
 
-Documentation content loading belongs in `docs/src/content/reference/loader.ts`. The executable checks
+Documentation content loading belongs in `docs/src/content/reference/collection.ts`. The executable checks
 for built links and release-aligned deployment belong in `docs/scripts/`. Plugin rule metadata
 and common option schemas belong in `packages/eslint-plugin/src/rules/` beside their consumers,
 with their literal constants under `packages/eslint-plugin/src/constants/`.
@@ -578,16 +610,20 @@ A template with a broken TOML line fails the check.
 
 The deterministic unit, plugin, and integration tests run at the push stage. Coverage measures in-process source execution without an arbitrary percentage quota.
 Subprocess and native execution provide separate behavioral evidence. Native and release suites
-retain explicit prerequisites. The
-work of a change follows the [active CI bypass](22-remaining.md#active-ci-bypass).
-While it is active, local verification permits continued implementation without a GitHub run.
+retain explicit prerequisites. A change follows the
+[active CI requirements](22-remaining.md#ci-verification); local results do not replace
+native-platform and remote CI evidence.
 
 The check runs `mise run test`. Use `mise run test:coverage` for measurement. Both tasks run
 from `tests/`, load `tests/bunfig.toml`, and pass `--timeout 60000` to Bun. Focused tasks are
-`test:unit` and `test:integration`. Candidate acceptance also runs `test:tools`,
+`test:unit` and `test:integration`.
+
+Candidate acceptance also runs `test:tools`,
 `test:acceptance`, and `test:release`; build release prerequisites first and run source acceptance
 before installed consumers. Native tools and downloads do not belong in routine documentation
-tests. The Jest configuration configures ESLint for `bun:test` through `globalPackage`; the repository
+tests.
+
+The Jest configuration configures ESLint for `bun:test` through `globalPackage`; the repository
 replaces native Jest coverage execution with its Bun tasks. Preserve `level = "all"` and
 `[coverage] strict = true`, which govern product checks rather than a test coverage percentage.
 

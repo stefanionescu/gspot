@@ -9,7 +9,7 @@ title: Suppressions
 A suppression turns a rule off for one place. Every one is counted and every one carries a reason.
 
 - Every suppression comment carries a reason on the same line or directly above it, in the form
-  `reason: <sentence>.`
+  `reason: <sentence>.`.
 - The reason says why the rule does not apply here, not what the rule is.
 - Scope a suppression to the narrowest thing that works: one rule, one line, one symbol. A
   file-wide suppression needs a reason that is true of the whole file.

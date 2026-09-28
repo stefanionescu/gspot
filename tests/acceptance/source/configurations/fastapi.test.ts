@@ -4,12 +4,12 @@ import { createFileTree, testdir } from 'testdirs';
 // Planted repositories for the pytest and fastapi configurations: coverage under the floor, a test name the prefix allows, a sleep inside an async route.
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
+import type { PlantedCase } from '#tests/types/cli.ts';
 import { reportSchema } from '#cli/execution/report.ts';
-import type { PlantedCase } from '#tests/types/support/cli.ts';
+import { runPlanted } from '#tests/support/cli/planted.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
 import { install, toolsPath } from '#tests/support/cli/tools.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
 import { containing, textContaining } from '#tests/support/expectations.ts';
-import { expectCorrected, runPlanted } from '#tests/support/cli/planted.ts';
 import { INIT_SELECTION_QUIET } from '#tests/constants/acceptance/source/cli/cli.ts';
 import { FASTAPI_TESTS, MATH } from '#tests/constants/acceptance/source/configurations/configurations.ts';
 
@@ -18,70 +18,68 @@ const PROJECT = (dependency: string): string =>
 const ROUTE = (body: string): string =>
     `"""The health route."""\n\nimport asyncio\nimport time\n\n\nasync def health() -> dict[str, str]:\n    """Say the service is up."""\n${body}    return {"status": "up"}\n\n\n__all__ = ["asyncio", "health", "time"]\n`;
 
-describe('the pytest configuration', () => {
-    test(
-        'coverage under the floor fails, and a test function keeps its prefix',
-        async () => {
-            await using sandbox = await testdir();
-            await createFileTree(sandbox.path, {
-                'pyproject.toml': PROJECT('pytest'),
-                'planted/__init__.py': '"""The package."""\n',
-                'planted/math.py': MATH,
-                'tests/__init__.py': '"""Arithmetic tests."""\n',
-                'tests/test_math.py': FASTAPI_TESTS,
-            });
-            commitAll(sandbox.path);
-            const environment = { PATH: toolsPath(['ruff', 'pytest', 'typos', 'ec']) };
-            await install(
-                sandbox.path,
-                [
-                    'init',
-                    '--yes',
-                    '--configurations',
-                    'python',
-                    'pytest',
-                    'naming',
-                    '--without',
-                    'spelling',
-                    'dependencies',
-                    ...INIT_SELECTION_QUIET,
-                ],
-                environment,
-            );
-            for (const id of ['pytest/coverage', 'naming/identifiers', 'python/ruff']) {
-                const clean = await run(sandbox.path, ['check', '--only', id, '--no-cache'], environment);
-                expect(clean.code, `${id}: ${clean.stdout}${clean.stderr}`).toBe(0);
-            }
-            const untested: PlantedCase = {
-                check: 'pytest/coverage',
-                files: {
-                    'tests/test_math.py': FASTAPI_TESTS.replace('    assert triple(2) == 6\n', () => '').replace(
-                        ', triple',
-                        () => '',
-                    ),
-                },
-                policy: '[tools.pytest]\ncoverage = 95\n',
-                expected: 'Required test coverage of 95%',
-            };
-            const outcome = await runPlanted(sandbox.path, untested, environment);
-            expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
-            expect(outcome.stdout).toContain(untested.expected);
-            const failed = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
-            expect(failed.checks).toMatchObject([{ check: 'pytest/coverage', status: 'fail' }]);
-            expect(failed.checks[0]!.findings).toContainEqual(
-                containing({
-                    message: textContaining('Required test coverage of 95%'),
-                }),
-            );
-            const corrected = await runPlanted(sandbox.path, { ...untested, files: {} }, environment);
-            expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-            expect(
-                reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json()).checks,
-            ).toMatchObject([{ check: 'pytest/coverage', status: 'ok', findings: [] }]);
-        },
-        PLANTED_TIMEOUT_MS * 5,
-    );
-});
+test(
+    'the pytest configuration > coverage under the floor fails, and a test function keeps its prefix',
+    async () => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'pyproject.toml': PROJECT('pytest'),
+            'planted/__init__.py': '"""The package."""\n',
+            'planted/math.py': MATH,
+            'tests/__init__.py': '"""Arithmetic tests."""\n',
+            'tests/test_math.py': FASTAPI_TESTS,
+        });
+        commitAll(sandbox.path);
+        const environment = { PATH: toolsPath(['ruff', 'pytest', 'typos', 'ec']) };
+        await install(
+            sandbox.path,
+            [
+                'init',
+                '--yes',
+                '--configurations',
+                'python',
+                'pytest',
+                'naming',
+                '--without',
+                'spelling',
+                'dependencies',
+                ...INIT_SELECTION_QUIET,
+            ],
+            environment,
+        );
+        for (const id of ['pytest/coverage', 'naming/identifiers', 'python/ruff']) {
+            const clean = await run(sandbox.path, ['check', '--only', id, '--no-cache'], environment);
+            expect(clean.code, `${id}: ${clean.stdout}${clean.stderr}`).toBe(0);
+        }
+        const untested: PlantedCase = {
+            check: 'pytest/coverage',
+            files: {
+                'tests/test_math.py': FASTAPI_TESTS.replace('    assert triple(2) == 6\n', () => '').replace(
+                    ', triple',
+                    () => '',
+                ),
+            },
+            policy: '[tools.pytest]\ncoverage = 95\n',
+            expected: 'Required test coverage of 95%',
+        };
+        const outcome = await runPlanted(sandbox.path, untested, environment);
+        expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
+        expect(outcome.stdout).toContain(untested.expected);
+        const failed = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
+        expect(failed.checks).toMatchObject([{ check: 'pytest/coverage', status: 'fail' }]);
+        expect(failed.checks[0]!.findings).toContainEqual(
+            containing({
+                message: textContaining('Required test coverage of 95%'),
+            }),
+        );
+        const corrected = await runPlanted(sandbox.path, { ...untested, files: {} }, environment);
+        expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+        expect(
+            reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json()).checks,
+        ).toMatchObject([{ check: 'pytest/coverage', status: 'ok', findings: [] }]);
+    },
+    PLANTED_TIMEOUT_MS * 5,
+);
 
 describe('the fastapi configuration', () => {
     test(
@@ -130,7 +128,15 @@ describe('the fastapi configuration', () => {
                     findings: [{ file: 'planted/health.py', line: 9, rule: 'blocking-call' }],
                 },
             ]);
-            await expectCorrected(sandbox.path, 'fastapi/no-blocking-io-in-async', environment);
+            const correctedCheck = await run(
+                sandbox.path,
+                ['check', '--only', 'fastapi/no-blocking-io-in-async', '--no-cache', '--json'],
+                environment,
+            );
+            expect(correctedCheck.code, correctedCheck.stdout + correctedCheck.stderr).toBe(0);
+            expect(reportSchema.parse(JSON.parse(correctedCheck.stdout)).checks).toMatchObject([
+                { check: 'fastapi/no-blocking-io-in-async', status: 'ok', findings: [] },
+            ]);
         },
         PLANTED_TIMEOUT_MS * 4,
     );

@@ -26,4 +26,4 @@ default = ["**/store.ts", "**/stores/*.ts", "**/store/*.ts", "**/*.store.ts"]
 summary = "The files that may create a store."
 
 [rule_files]
-library = ["library/zustand/ZUSTAND.md"]
+library = [{path = "library/zustand/ZUSTAND.md"}]

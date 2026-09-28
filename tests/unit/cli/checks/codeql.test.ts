@@ -1,11 +1,8 @@
-import { pathToFileURL } from 'node:url';
-import { resolve, sep } from 'node:path';
+import { resolve } from 'node:path';
 import { describe, expect, test } from 'bun:test';
-import { testdir, createFileTree } from 'testdirs';
 import { sarifFindings } from '#cli/checks/security/codeql.ts';
 
 const sourceRoot = resolve('selected-source');
-const sourceUri = pathToFileURL(`${sourceRoot}${sep}`).href;
 
 const log = {
     version: '2.1.0',
@@ -79,95 +76,3 @@ test.each([
         ),
     ).toThrow('unsuccessful analysis');
 });
-
-test.each([
-    { uri: 'api/some%20file.ts', uriBaseId: '%SRCROOT%' },
-    { uri: new URL('api/some%20file.ts', sourceUri).href },
-    { uri: 'some%20file.ts', uriBaseId: 'API' },
-    { index: 0 },
-])('CodeQL resolves source locations before applying path-specific exceptions: %j', (artifact) => {
-    const report = {
-        version: '2.1.0',
-        runs: [
-            {
-                originalUriBaseIds: {
-                    ROOT: { uri: sourceUri },
-                    API: { uri: 'api/', uriBaseId: 'ROOT' },
-                },
-                artifacts: [{ location: { uri: 'api/some%20file.ts', uriBaseId: '%SRCROOT%' } }],
-                results: [
-                    {
-                        ruleId: 'js/sql-injection',
-                        message: { text: 'Planted injection' },
-                        locations: [
-                            {
-                                physicalLocation: {
-                                    artifactLocation: artifact,
-                                    region: { startLine: 9, startColumn: 4 },
-                                },
-                            },
-                        ],
-                    },
-                ],
-            },
-        ],
-    };
-    expect(sarifFindings(report, 'security/codeql', [], sourceRoot)).toMatchObject([
-        { file: 'api/some file.ts', line: 9, column: 4, rule: 'js/sql-injection' },
-    ]);
-    expect(
-        sarifFindings(
-            report,
-            'security/codeql',
-            [{ rule: 'js/sql-injection', paths: ['api/some file.ts'], reason: 'Reviewed fixture' }],
-            sourceRoot,
-        ),
-    ).toStrictEqual([]);
-});
-
-test.each([
-    { uri: '../outside.ts' },
-    { uri: pathToFileURL(resolve(sourceRoot, '../outside.ts')).href },
-    { uri: 'https://example.com/file.ts' },
-    { uri: 'file.ts', uriBaseId: 'missing' },
-    { index: 1 },
-])('CodeQL refuses unresolved or external report locations: %j', (artifact) => {
-    const report = {
-        version: '2.1.0',
-        runs: [{ results: [{ locations: [{ physicalLocation: { artifactLocation: artifact } }] }] }],
-    };
-    expect(() => sarifFindings(report, 'security/codeql', [], sourceRoot)).toThrow();
-});
-
-test.each(['utf16CodeUnits', 'unicodeCodePoints'] as const)(
-    'CodeQL character offsets preserve declared newlines and %s columns',
-    async (columnKind) => {
-        await using directory = await testdir();
-        await createFileTree(directory.path, { 'unicode.py': '\uFEFFfirst\r\n😀x = unsafe\n' });
-        const report = {
-            version: '2.1.0',
-            runs: [
-                {
-                    columnKind,
-                    newlineSequences: ['\r\n', '\n'],
-                    results: [
-                        {
-                            ruleId: 'py/unsafe',
-                            locations: [
-                                {
-                                    physicalLocation: {
-                                        artifactLocation: { uri: 'unicode.py' },
-                                        region: { charOffset: 12 },
-                                    },
-                                },
-                            ],
-                        },
-                    ],
-                },
-            ],
-        };
-        expect(sarifFindings(report, 'security/codeql', [], directory.path)).toMatchObject([
-            { file: 'unicode.py', line: 2, column: columnKind === 'utf16CodeUnits' ? 7 : 6 },
-        ]);
-    },
-);

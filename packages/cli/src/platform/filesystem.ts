@@ -1,15 +1,15 @@
 // A reader and writer confined to one directory: every path is checked before each operation.
-import { isAbsolute, relative, sep } from 'node:path';
-import { sameSnapshot } from '#cli/platform/safe-paths.ts';
-import { acquireLock, writeSnapshot } from '#cli/platform/confined-writes.ts';
 // Concurrent hostile directory replacement is outside this contract.
-import type { Confinement, ConfinedRoot, FileSnapshot, PathFormat } from '#cli/types/platform.ts';
-import { confinementOf, readEntry, resolveParent, validateSnapshot } from '#cli/platform/confined-reads.ts';
+import { isAbsolute, relative, sep } from 'node:path';
+import { sameEntry } from '#cli/platform/safe-paths.ts';
+import { acquireLock, writeObservation } from '#cli/platform/confined/writes.ts';
+import type { Confinement, ConfinedRoot, FileObservation, PathFormat } from '#cli/types/platform.ts';
+import { confinementOf, readEntry, parentPath, validateObservation } from '#cli/platform/confined/reads.ts';
 import { chmodSync, lstatSync, mkdirSync, readdirSync, realpathSync, rmdirSync, type Stats, unlinkSync } from 'node:fs';
 
 // The real path of a confined entry, refusing one whose link chain leaves the root.
 function sourceOf(confinement: Confinement, path: string): string {
-    const target = realpathSync(resolveParent(confinement, path));
+    const target = realpathSync(parentPath(confinement, path));
     const local = relative(confinement.canonical, target);
     if (isAbsolute(local) || local === '..' || local.startsWith(`..${sep}`))
         throw new Error(`Source link leaves the repository: ${path}`);
@@ -19,7 +19,7 @@ function sourceOf(confinement: Confinement, path: string): string {
 // The sorted names in a confined directory, or none when it is absent.
 function listOf(confinement: Confinement, path: string | undefined): string[] {
     try {
-        const target = path === undefined ? confinement.canonical : resolveParent(confinement, path);
+        const target = path === undefined ? confinement.canonical : parentPath(confinement, path);
         if (!lstatSync(target).isDirectory()) throw new Error(`Unsafe lifecycle directory: ${path ?? '.'}`);
         return readdirSync(target).toSorted((left, right) => left.localeCompare(right));
     } catch (error) {
@@ -31,7 +31,7 @@ function listOf(confinement: Confinement, path: string | undefined): string[] {
 // The stat of a confined entry that is not a link, or undefined when it is absent.
 function statOf(confinement: Confinement, path: string): Stats | undefined {
     try {
-        const stat = lstatSync(resolveParent(confinement, path));
+        const stat = lstatSync(parentPath(confinement, path));
         if (stat.isSymbolicLink()) throw new Error(`Unsafe lifecycle destination: ${path}`);
         return stat;
     } catch (error) {
@@ -41,15 +41,15 @@ function statOf(confinement: Confinement, path: string): Stats | undefined {
 }
 
 // Removes a confined file after checking that it is still the one the caller last saw.
-function removeEntry(confinement: Confinement, path: string, expected: FileSnapshot): void {
-    if (!sameSnapshot(readEntry(confinement, path, expected.isLink === true), expected))
+function removeEntry(confinement: Confinement, path: string, expected: FileObservation): void {
+    if (!sameEntry(readEntry(confinement, path, expected.isLink === true), expected))
         throw new Error(`Lifecycle destination changed during removal: ${path}`);
-    unlinkSync(resolveParent(confinement, path));
+    unlinkSync(parentPath(confinement, path));
 }
 
 // Creates a confined directory with the mode, accepting one that already exists.
 function makeDirectory(confinement: Confinement, path: string, mode: number): void {
-    const target = resolveParent(confinement, path, true);
+    const target = parentPath(confinement, path, true);
     try {
         mkdirSync(target, { mode });
     } catch (error) {
@@ -63,7 +63,7 @@ function makeDirectory(confinement: Confinement, path: string, mode: number): vo
 function releaseLocks(confinement: Confinement): void {
     for (const [path, holder] of confinement.locks)
         if (readEntry(confinement, path, false)?.bytes.toString('utf8') === holder)
-            unlinkSync(resolveParent(confinement, path));
+            unlinkSync(parentPath(confinement, path));
     confinement.locks.clear();
 }
 
@@ -77,18 +77,18 @@ export function openConfinedRoot(root: string, pathFormat: PathFormat = 'portabl
     const confinement = confinementOf(realpathSync(root), pathFormat);
     return {
         rmdir: (path) => {
-            rmdirSync(resolveParent(confinement, path));
+            rmdirSync(parentPath(confinement, path));
         },
         source: (path) => sourceOf(confinement, path),
         list: (path) => listOf(confinement, path),
         stat: (path) => statOf(confinement, path),
         validate: (path, value, proposed) => {
-            validateSnapshot(confinement, path, value, proposed);
+            validateObservation(confinement, path, value, proposed);
         },
         read: (path) => readEntry(confinement, path, false),
         readEntry: (path) => readEntry(confinement, path, true),
         write: (path, value, expected) => {
-            writeSnapshot(confinement, path, value, expected);
+            writeObservation(confinement, path, value, expected);
         },
         remove: (path, expected) => {
             removeEntry(confinement, path, expected);

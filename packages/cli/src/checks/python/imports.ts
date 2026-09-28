@@ -1,14 +1,8 @@
 import type { Node } from 'web-tree-sitter';
+import { assignmentOf } from '#cli/checks/python/modules.ts';
 import type { PythonModule } from '#cli/types/checks/python.ts';
 import type { StructureProblem } from '#cli/types/checks/structure.ts';
 import { CLASS_CALL, SINGLETONS_ALLOWED } from '#cli/constants/checks/python.ts';
-
-function dottedName(path: string): string {
-    return path
-        .replace(/\.py$/u, '')
-        .replace(/\/__init__$/u, '')
-        .replaceAll('/', '.');
-}
 
 // The module a from-import starts at: an absolute name, or a relative one counted up from the current module.
 function sourceModule(source: Node, current: string): string {
@@ -56,18 +50,14 @@ function reached(start: string, graph: Map<string, string[]>): Map<string, strin
     return trails;
 }
 
-function assignmentOf(statement: Node): Node | undefined {
-    const first = statement.type === 'expression_statement' ? statement.namedChildren[0] : undefined;
-    return first?.type === 'assignment' ? first : undefined;
-}
-
 // A module variable that holds an object built from a class at import time, or undefined. A name in capitals is a constant.
 function builtAtImport(statement: Node): string | undefined {
     const assignment = assignmentOf(statement);
-    const name = assignment?.childForFieldName('left');
-    const built = assignment?.childForFieldName('right');
-    if (name?.type !== 'identifier' || !(built?.type === 'call' && CLASS_CALL.test(built.text))) return undefined;
-    return name.text === name.text.toUpperCase() ? undefined : name.text;
+    if (assignment === undefined) return undefined;
+    const name = assignment.childForFieldName('left');
+    if (name?.type !== 'identifier' || name.text === name.text.toUpperCase()) return undefined;
+    const built = assignment.childForFieldName('right');
+    return built?.type === 'call' && CLASS_CALL.test(built.text) ? name.text : undefined;
 }
 
 /**
@@ -76,7 +66,15 @@ function builtAtImport(statement: Node): string | undefined {
  * @returns the problems
  */
 export function importCycles(modules: PythonModule[]): StructureProblem[] {
-    const names = new Map(modules.map((module) => [dottedName(module.path), module]));
+    const names = new Map(
+        modules.map((module) => [
+            module.path
+                .replace(/\.py$/u, '')
+                .replace(/\/__init__$/u, '')
+                .replaceAll('/', '.'),
+            module,
+        ]),
+    );
     const known = new Set(names.keys());
     const graph = new Map(
         [...names].map(([name, module]): [string, string[]] => [

@@ -15,43 +15,84 @@ afterEach(() => {
 
 // A one-second tool limit, for the run whose fake xcodebuild sleeps past it.
 const SLOW_POLICY = XCTEST_EXECUTION_POLICY.replace('[tools.xcode]', '[limits]\ntool_seconds = 1\n[tools.xcode]');
-// The policy a failure starts from: no project, a one-second limit, or the plain one.
-function initialPolicy(failure: string): string {
-    if (failure === 'no-project')
-        return XCTEST_EXECUTION_POLICY.replace('project = "Example.xcodeproj"', 'project = ""');
-    return failure === 'timeout' ? SLOW_POLICY : XCTEST_EXECUTION_POLICY;
-}
-
 const script = (body: string): string => `#!${process.execPath}\n${body}\n`;
 
-test.each(['no-project', 'failed-test', 'timeout', 'malformed', 'invalid-number', 'under-floor'])(
-    'XCTest adapter preserves %s and accepts a corrected run',
-    async (failure) => {
+test.each([
+    {
+        failure: 'no-project',
+        policy: XCTEST_EXECUTION_POLICY.replace('project = "Example.xcodeproj"', 'project = ""'),
+        build: '',
+        coverage: 1,
+        code: 2,
+        status: 'error',
+        produced: false,
+    },
+    {
+        failure: 'failed-test',
+        policy: XCTEST_EXECUTION_POLICY,
+        build: 'process.exitCode = 65;',
+        coverage: 1,
+        code: 2,
+        status: 'error',
+        produced: false,
+    },
+    {
+        failure: 'timeout',
+        policy: SLOW_POLICY,
+        build: 'await Bun.sleep(10_000);',
+        coverage: 1,
+        code: 2,
+        status: 'error',
+        produced: false,
+    },
+    {
+        failure: 'malformed',
+        policy: XCTEST_EXECUTION_POLICY,
+        build: '',
+        coverage: undefined,
+        code: 2,
+        status: 'error',
+        produced: true,
+    },
+    {
+        failure: 'invalid-number',
+        policy: XCTEST_EXECUTION_POLICY,
+        build: '',
+        coverage: 4,
+        code: 2,
+        status: 'error',
+        produced: true,
+    },
+    {
+        failure: 'under-floor',
+        policy: XCTEST_EXECUTION_POLICY,
+        build: '',
+        coverage: 0.5,
+        code: 1,
+        status: 'fail',
+        produced: true,
+    },
+])(
+    'XCTest adapter preserves $failure and accepts a corrected run',
+    async ({ policy, build, coverage, code, status, produced }) => {
         await using sandbox = await testdir();
         caches.add(buildFolder(sandbox.path));
         await createFileTree(sandbox.path, {
-            'gspot.toml': initialPolicy(failure),
+            'gspot.toml': policy,
             'ExampleTests.swift': 'import XCTest\n',
             'Example.xcodeproj/project.pbxproj': '',
-            'node_modules/.bin/xcodebuild': script(
-                failure === 'failed-test'
-                    ? 'process.exitCode = 65;'
-                    : failure === 'timeout'
-                      ? 'await Bun.sleep(10_000);'
-                      : '',
-            ),
+            'node_modules/.bin/xcodebuild': script(build),
             'node_modules/.bin/xcrun': script(
-                `await Bun.write('viewed.txt', 'viewed'); console.log(${JSON.stringify(failure === 'malformed' ? '{}' : JSON.stringify({ targets: [{ name: 'Example', lineCoverage: failure === 'invalid-number' ? 4 : failure === 'under-floor' ? 0.5 : 1 }] }))});`,
+                `await Bun.write('viewed.txt', 'viewed'); console.log(${JSON.stringify(coverage === undefined ? '{}' : JSON.stringify({ targets: [{ name: 'Example', lineCoverage: coverage }] }))});`,
             ),
         });
         for (const tool of ['xcodebuild', 'xcrun']) chmodSync(join(sandbox.path, 'node_modules/.bin', tool), 0o755);
         const outcome = await executeRun(await openSession(sandbox.path), XCTEST_EXECUTION_OPTIONS);
-        expect(outcome.report.exitCode).toBe(failure === 'under-floor' ? 1 : 2);
-        expect(outcome.report.checks[0]!.status).toBe(failure === 'under-floor' ? 'fail' : 'error');
+        expect(outcome.report.exitCode).toBe(code);
+        expect(outcome.report.checks[0]!.status).toBe(status);
         expect(existsSync(join(sandbox.path, 'viewed.txt'))).toBe(false);
         const viewed = join(buildFolder(sandbox.path), 'swift/root/coverage/source/viewed.txt');
         // The coverage view is kept in the build folder whenever the run got as far as producing it.
-        const produced = !['no-project', 'failed-test', 'timeout'].includes(failure);
         expect(existsSync(viewed) ? readFileSync(viewed, 'utf8') : undefined).toBe(produced ? 'viewed' : undefined);
         writeFileSync(join(sandbox.path, 'gspot.toml'), XCTEST_EXECUTION_POLICY);
         writeFileSync(join(sandbox.path, 'node_modules/.bin/xcodebuild'), script(''));

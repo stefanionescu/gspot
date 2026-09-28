@@ -2,6 +2,14 @@
 
 export const PARSE_TIMEOUT_MS = 30_000;
 export const EDITABLE_FINDER = /^(?:__editable__.*_finder|_editable_impl_.+)\.py$/u;
+// Only these installed bootstrap forms have relocation owners. Other executable path files require a separate installation.
+export const PYTHON_PATH_BOOTSTRAPS = [
+    /^import _virtualenv$/u,
+    /^import _editable_impl_\w+$/u,
+    /^import (__editable__\w+_finder); \1\.install\(\)$/u,
+];
+export const DISTUTILS_BOOTSTRAP =
+    "import os; var = 'SETUPTOOLS_USE_DISTUTILS'; enabled = os.environ.get(var, 'local') == 'local'; enabled and __import__('_distutils_hack').add_shim();";
 // Parse installed loader metadata without importing it or processing site packages.
 export const PYTHON_EDITABLE_PATHS = `import ast, json, sys
 source = sys.stdin.read()
@@ -53,8 +61,8 @@ export const COPY_CONCURRENCY = 8;
 export const LOCKS = ['package-lock.json', 'bun.lock', 'pnpm-lock.yaml', 'yarn.lock', 'uv.lock', 'Package.resolved'];
 export const VALE_CONFIGURATION = '.gspot/config/vale.ini';
 export const CHANGED_PATHS = ['diff', '--relative', '--name-only', '--no-renames', '-z'];
-export const OBJECT_ID = /^(?:[a-f0-9]{40}|[a-f0-9]{64})$/u;
-export const ABSENT_OBJECT = /^0+$/u;
+export const GIT_HASH = /^(?:[a-f0-9]{40}|[a-f0-9]{64})$/u;
+export const ABSENT_HASH = /^0+$/u;
 export const DIFF_PATHS = ['diff', '--relative', '--no-ext-diff', '--name-only', '--no-renames', '-z'];
 export const LOG_PATHS = [
     'log',

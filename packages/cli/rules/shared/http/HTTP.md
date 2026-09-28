@@ -43,8 +43,11 @@ Rules that hold for any HTTP service, whatever framework serves it.
 
 ## Naming on the wire
 
+<!-- level: all -->
+
 - JSON bodies and query parameters: `camelCase`.
-- Headers: `X-Kebab-Case`.
+- Preserve existing protocol header names. Do not add an `X-` prefix to a new header merely
+  to mark it as application-specific. See [RFC 6648](https://www.rfc-editor.org/rfc/rfc6648).
 - URL path segments: kebab-case plural nouns (`/order-items/{orderItemId}`).
 - Environment variables: `UPPER_SNAKE_CASE`.
 - Log event names: `lower_snake_case`.

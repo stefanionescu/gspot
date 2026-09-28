@@ -1,4 +1,5 @@
 // File arguments, stages, and scope paths select the checks a run executes.
+import { stringify } from 'smol-toml';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
@@ -11,22 +12,16 @@ test('file and folder arguments intersect check lists and respect -C', async () 
         'process.argv.slice(1).forEach((path) => console.log(path)); process.exitCode = 1;',
         '{files}',
     ];
-    const entries = ['one', 'two', 'three']
-        .map(
-            (name) => `
-[[check]]
-name = "sandbox/${name}"
-command = ${JSON.stringify(command)}
-paths = ["src/**", "docs/**"]
-stage = "commit"
-[check.output]
-format = "lines"
-`,
-        )
-        .join('');
+    const entries = ['one', 'two', 'three'].map((name) => ({
+        name: `sandbox/${name}`,
+        command,
+        paths: ['src/**', 'docs/**'],
+        stage: 'commit',
+        output: { format: 'lines' },
+    }));
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': `version = 1\nconfigurations = []\n${entries}`,
+        'gspot.toml': stringify({ version: 1, configurations: [], check: entries }),
         'src/selected.ts': 'selected',
         'src/other.ts': 'other',
         'docs/guide.md': '# Guide\n',

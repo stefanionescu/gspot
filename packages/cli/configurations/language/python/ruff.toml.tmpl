@@ -19,6 +19,11 @@ explicit-preview-rules = true
 
 [lint.mccabe]
 max-complexity = <%= at('cyclomatic_complexity', 8) %>
+<% if (settings['tools.ruff.docstring_convention'] !== undefined) { -%>
+
+[lint.pydocstyle]
+<%~ toml({ convention: settings['tools.ruff.docstring_convention'] }).trimEnd() %>
+<% } -%>
 
 [lint.pep8-naming]
 extend-ignore-names = ["setUp", "setUpClass", "tearDown", "tearDownClass"]

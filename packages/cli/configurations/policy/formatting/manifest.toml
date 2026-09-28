@@ -142,7 +142,7 @@ command = ["prettier", "--check", "--config", "{config:prettier}", "--ignore-pat
 findings_exit_codes = [1]
 fix_command = ["prettier", "--write", "--config", "{config:prettier}", "--ignore-path", ".prettierignore", "--log-level", "warn", "{files}"]
 fix_order = "format"
-coverage = ["format"]
+coverage = ["format", "syntax"]
 output = {format = "regex", pattern = "^\\[warn\\] (?<file>[^\\s].*[^\\s.])$", message = "This file is not formatted the way Prettier formats it."}
 summary = "Checks that every file Prettier formats is already formatted that way."
 why = "Formatting by hand differs by editor; one formatter keeps diffs about the change and not the spacing."

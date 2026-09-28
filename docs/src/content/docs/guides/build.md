@@ -39,7 +39,9 @@ repositories retain their generated pinned executable.
 
 `mise.toml` owns development runtimes and repository settings. Authored tasks and the source-launcher PATH belong to
 `.mise/conf.d/repo.toml`; gspot owns the generated tool pins. Edit policy in `gspot.toml`
-and run `mise run apply` to regenerate managed configuration. Native tools discover
+and run `mise run apply` to regenerate managed configuration.
+
+Native tools discover
 `typos.toml` by filename; the spelling configuration owns its content. The editor schema is generated
 from the policy schema and copied into the published documentation during the site build.
 Do not edit managed outputs to resolve drift. Change their source and regenerate them.
@@ -87,7 +89,9 @@ Use `mise run test:coverage` to run the unit and integration suites with coverag
 Coverage measures in-process source execution. It excludes tests and support code,
 generated configuration, built distributions, fixtures, and vendored assets. Reports are
 written to `coverage/lcov.info`; subprocess and native execution provide separate evidence.
-There is no fixed coverage-percentage gate. Jest supplies lint rules for `bun:test`; its native
+Coverage has no fixed percentage gate.
+
+Jest supplies lint rules for `bun:test`; its native
 coverage command does not run Bun tests. Direct `bun test` discovers the broader test tree,
 including suites that require the acceptance runner or built release artifacts.
 
@@ -103,14 +107,10 @@ for example, reference, and link validation.
 ## Build every target
 
 ```shell
-mise run build -- --target \
-    bun-darwin-arm64 bun-darwin-x64-baseline \
-    bun-linux-x64-baseline bun-linux-arm64 \
-    bun-linux-x64-musl-baseline bun-linux-arm64-musl \
-    bun-windows-x64-baseline
+mise run build -- --all
 ```
 
-The target definitions in `packages/cli/src/platform/release-targets.json` own the compiler targets, binary
+The target definitions in `packages/npm/targets.json` own the compiler targets, binary
 names, npm identities, and libc selection. macOS builds run `codesign` when built on macOS.
 Use macOS for signed macOS artifacts. Building another target does not execute it.
 
@@ -176,12 +176,18 @@ to diagnose the environment. Run repository checks with `mise run gspot:check`; 
 `-- --stage manual` to include manual-stage checks. These checks are separate from the tests.
 
 The authored CI workflow owns repository automation. This checkout omits `[ci]` from
-`gspot.toml`, so apply does not generate a second workflow. Repository CI is paused behind
-`GSPOT_CI_ENABLED`; local test results do not imply a CI run.
+`gspot.toml`, so apply does not generate a second workflow. `GSPOT_CI_ENABLED` controls repository CI execution; local test results do not imply a CI run.
 
 When enabled, affected checks run for pull requests, merge queues, and main pushes.
 A full dispatch or release checkpoint runs the Linux, macOS, and Windows acceptance matrix,
-manual checks, and documentation build. The release workflow validates installed packages
+manual checks, and documentation build.
+
+The Linux job owns the two Docker-backed Supabase
+database journeys. The macOS and Windows jobs exclude that exact test file; their passing
+results do not establish native Docker database execution. The Linux result is required.
+Xcode journeys run on macOS. See [runner requirements](https://docs.github.com/en/actions/reference/runners/self-hosted-runners).
+
+The release workflow validates installed packages
 before publication. Local execution and cross-compilation do not establish native acceptance
 on other platforms.
 
@@ -210,7 +216,9 @@ artifact and `source.json`. Select **Run workflow** on the site workflow with it
 published tag as `release_tag`. Set `source_ref` to its recorded source commit if that build
 included a documentation correction. The workflow verifies that source again, rebuilds with its
 pinned runtime and frozen lock, and requests protected-environment approval before deployment.
-This exact-source route also works after artifact retention expires. Do not roll back DNS for
+This exact-source route also works after artifact retention expires.
+
+Do not roll back DNS for
 an ordinary content defect. Verify the resulting page and recorded revision after deployment.
 
 Verify the deployed version and a rollback before treating the release procedure as operational.

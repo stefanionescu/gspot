@@ -1,6 +1,7 @@
+import { compact } from '#cli/policy/normalize.ts';
 import { scopeAncestors } from '#cli/repository/scopes.ts';
-import type { SettingSpec } from '#cli/types/configurations.ts';
 import { LANGUAGE_GROUP_TABLES } from '#cli/constants/policy/policy.ts';
+import type { Manifest, SettingSpec } from '#cli/types/configurations.ts';
 
 import type {
     NamingLanguageTable,
@@ -148,7 +149,7 @@ function declarationsOf(policy: Partial<Policy>, nature: string): unknown {
 }
 
 // The keys that live at the top of the policy, read from their normalized fields.
-const TOP_LEVEL_VALUES: Record<string, (policy: Partial<Policy>) => unknown> = {
+const ROOT_SETTING_READERS: Record<string, (policy: Partial<Policy>) => unknown> = {
     generated: (policy) => declarationsOf(policy, 'generated'),
     vendored: (policy) => declarationsOf(policy, 'vendored'),
     require_reasons: (policy) => policy.requireReasons,
@@ -196,6 +197,7 @@ export function asRecord(value: unknown): Record<string, unknown> | undefined {
 
 /**
  * Matches a written key to the spec it belongs to: per-language and per-category variants map back to their base spec.
+ *
  * @param surface the surface of the selection
  * @param key the dotted key as written
  * @returns the spec with the language and category the key names, or undefined when nothing exposes it
@@ -216,7 +218,7 @@ export function specFor(surface: ExposedSettings, key: string): SpecMatch | unde
  */
 export function policyValue(policy: Partial<Policy>, key: string): WrittenValue | undefined {
     const [table, ...rest] = key.split('.');
-    const topLevel = TOP_LEVEL_VALUES[key];
+    const topLevel = ROOT_SETTING_READERS[key];
     if (topLevel !== undefined) return plainIfPresent(topLevel(policy));
     if (table === 'limits') return limitValue(policy, rest);
     if (table === 'naming') return namingValue(policy, rest);
@@ -226,11 +228,12 @@ export function policyValue(policy: Partial<Policy>, key: string): WrittenValue 
 
 /**
  * Resolves one key: configuration default, root table, scope table. Lists append and deduplicate; scalars replace.
- * @param surface the surface of the selection
- * @param policy the loaded policy
- * @param key the dotted key
- * @param scope the scope path whose table applies last, if any
- * @returns the value with where it came from, or undefined when nothing exposes the key
+ *
+ * @param surface the surface of the selection.
+ * @param policy the loaded policy.
+ * @param key the dotted key.
+ * @param scope the scope path whose table applies last, if any.
+ * @returns the value with where it came from, or undefined when nothing exposes the key.
  */
 export function settingValue(
     surface: ExposedSettings,
@@ -258,13 +261,13 @@ export function settingValue(
         spec,
         value,
         source,
-        ...(reason === undefined ? {} : { reason }),
-        ...(scope === undefined ? {} : { scope }),
+        ...compact({ reason, scope }),
     };
 }
 
 /**
- * Every setting the surface exposes, resolved, for list settings and the docs.
+ * Effective exposed settings for command output and documentation.
+ *
  * @param surface the surface of the selection
  * @param policy the loaded policy
  * @param scope the scope path whose table applies last, if any
@@ -276,4 +279,19 @@ export function listSettings(surface: ExposedSettings, policy: Policy, scope?: s
         .toArray()
         .toSorted((a, b) => a.localeCompare(b));
     return keys.map((key) => settingValue(surface, policy, key, scope)).filter((row) => row !== undefined);
+}
+
+/**
+ * Resolve the directories assigned to a configuration role within one scope.
+ * @param selected the selected configurations
+ * @param settings the effective settings
+ * @param role the declared directory role
+ * @returns the directories relative to the scope root
+ */
+export function roleFolders(selected: Manifest[], settings: Record<string, unknown>, role: string): string[] {
+    return selected
+        .flatMap((manifest) => manifest.settings)
+        .filter((spec) => spec.role === role)
+        .map((spec) => settings[spec.name])
+        .filter((value): value is string => typeof value === 'string' && value !== '');
 }

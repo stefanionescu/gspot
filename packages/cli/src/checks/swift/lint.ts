@@ -1,11 +1,13 @@
 import { join } from 'node:path';
 import type { Node } from 'web-tree-sitter';
 import { chmodSync, writeFileSync } from 'node:fs';
+import { compact } from '#cli/policy/normalize.ts';
 import { PRIVATE_FILE } from '#cli/constants/platform.ts';
 import { swiftSources } from '#cli/checks/swift/sources.ts';
-import { runToolCheck } from '#cli/execution/tool-runner.ts';
+import { runToolCheck } from '#cli/execution/tool/runner.ts';
 import type { CheckResult } from '#cli/types/checks/checks.ts';
-import { createFileWorkspace } from '#cli/execution/file-workspace.ts';
+import type { InlineDocumentation } from '#cli/types/checks/swift.ts';
+import { createFileWorkspace } from '#cli/execution/files/workspace.ts';
 import { commandConfigurations } from '#cli/execution/command-expansion.ts';
 import { DOC_RULE, SWIFTLINT_COMMAND } from '#cli/constants/checks/swift.ts';
 import type { PlannedCheck, Session } from '#cli/types/execution/execution.ts';
@@ -34,6 +36,29 @@ function commentSource(text: string, comments: Node[]): string {
     return parts.join('');
 }
 
+function restoreInlineFindings(result: CheckResult, checked: CheckResult, candidates: InlineDocumentation[]): void {
+    for (const { source, inline } of candidates) {
+        for (const comment of inline) {
+            const { row, column } = comment.startPosition;
+            const native = checked.findings.find(
+                (finding) => finding.file === source.path && finding.rule === DOC_RULE && finding.line === row + 1,
+            );
+            if (
+                native === undefined ||
+                result.findings.some(
+                    (finding) =>
+                        finding.file === source.path &&
+                        finding.rule === DOC_RULE &&
+                        finding.line === row + 1 &&
+                        finding.column === column + 1,
+                )
+            )
+                continue;
+            result.findings.push({ ...native, line: row + 1, column: column + 1 });
+        }
+    }
+}
+
 /**
  * Keep native configuration and suppression handling while inspecting inline documentation with the Swift grammar.
  * @param session the selected source inventory and tool observations
@@ -47,7 +72,7 @@ export async function checkSwiftlint(session: Session, planned: PlannedCheck): P
         return result;
     const sources = await swiftSources({ ...session, files: planned.files });
     try {
-        const candidates = sources.flatMap((source) => {
+        const candidates = sources.flatMap((source): InlineDocumentation[] => {
             const comments = source.tree.rootNode
                 .descendantsOfType(['comment', 'multiline_comment'])
                 .filter((node) => isSourceComment(node));
@@ -75,29 +100,10 @@ export async function checkSwiftlint(session: Session, planned: PlannedCheck): P
             return {
                 ...result,
                 status: checked.status,
-                ...(checked.note === undefined ? {} : { note: checked.note }),
+                ...compact({ note: checked.note }),
                 duration: performance.now() - started,
             };
-        for (const { source, inline } of candidates) {
-            for (const comment of inline) {
-                const { row, column } = comment.startPosition;
-                const native = checked.findings.find(
-                    (finding) => finding.file === source.path && finding.rule === DOC_RULE && finding.line === row + 1,
-                );
-                if (
-                    native === undefined ||
-                    result.findings.some(
-                        (finding) =>
-                            finding.file === source.path &&
-                            finding.rule === DOC_RULE &&
-                            finding.line === row + 1 &&
-                            finding.column === column + 1,
-                    )
-                )
-                    continue;
-                result.findings.push({ ...native, line: row + 1, column: column + 1 });
-            }
-        }
+        restoreInlineFindings(result, checked, candidates);
         if (result.findings.length > 0) result.status = 'fail';
         result.duration = performance.now() - started;
         return result;

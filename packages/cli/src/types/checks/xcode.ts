@@ -1,15 +1,15 @@
 // The types of checks/xcode in this package.
 import type { z } from 'zod';
-import type { projectSchema } from '#cli/checks/xcode/project-reader.ts';
+import type { projectSchema } from '#cli/checks/xcode/project/reader.ts';
 
 /** The part of an xccov report the coverage check reads. */
 export type XcodeCoverageReport = { targets?: { name: string; lineCoverage: number }[] };
 export type Plist = string | Plist[] | { [key: string]: Plist };
 export type Token = { text: string; quoted: boolean; at: number };
-export type ProjectObject = z.infer<typeof projectSchema>['objects'][string];
-export type ProjectRoot = ProjectObject & { mainGroup: string };
+export type ProjectEntry = z.infer<typeof projectSchema>['objects'][string];
+export type ProjectRoot = ProjectEntry & { mainGroup: string };
 export type XcodeProject = {
-    objects: Record<string, ProjectObject>;
+    objects: Record<string, ProjectEntry>;
     root: ProjectRoot;
     directory: string;
     parents: Map<string, string>;

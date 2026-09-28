@@ -1,25 +1,47 @@
 // Installs built packages from an isolated registry: syntax findings reach every report format and naming is opt-in.
 import { join } from 'node:path';
-import { afterAll, expect, test } from 'bun:test';
+import { expect, test } from 'bun:test';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { reportSchema } from '#cli/execution/report.ts';
+import type { InstalledConsumer } from '#tests/types/release.ts';
+import { RELEASE_TIMEOUT_MS } from '#tests/constants/release.ts';
 import { runProcess as run } from '#tests/support/cli/command.ts';
-import { RELEASE_TIMEOUT_MS } from '#tests/constants/support/release.ts';
-import type { CodeQualityReport, SarifReport } from '#tests/types/support/cli.ts';
-import { installedConsumer, initializeConsumer, publishRelease } from '#tests/support/release/published.ts';
+import { createConsumer } from '#tests/support/release/consumer.ts';
+import type { CodeQualityReport, SarifReport } from '#tests/types/cli.ts';
+import { initializeConsumer, getPublishedRelease } from '#tests/support/release/published.ts';
 
-// The release publishes once for this file, and its registry stops when the file's tests end.
-const release = await publishRelease();
-afterAll(async () => {
-    await release.registry.stop();
-});
+const release = getPublishedRelease();
+
+// Explicit naming selection runs in the installed consumer and preserves authored files.
+async function expectInstalledNaming(installation: InstalledConsumer): Promise<void> {
+    const { consumer, command, options } = installation;
+    const optIn = await run([...command, 'set', 'extra_checks', 'naming/identifiers'], options);
+    expect(optIn.code, optIn.stdout + optIn.stderr).toBe(0);
+    writeFileSync(join(consumer, 'broken.sh'), 'command=example\n');
+    const renamed = await run(
+        [...command, 'check', 'broken.sh', '--only', 'naming/identifiers', '--no-cache', '--json'],
+        options,
+    );
+    expect(renamed.code, renamed.stdout + renamed.stderr).toBe(0);
+    const acceptedName = reportSchema.parse(JSON.parse(renamed.stdout));
+    expect(acceptedName.skips).toStrictEqual([]);
+    expect(acceptedName.checks).toHaveLength(1);
+    expect(acceptedName.checks[0]).toMatchObject({
+        check: 'naming/identifiers',
+        status: 'ok',
+        files: 1,
+        findings: [],
+    });
+    expect(readFileSync(join(consumer, 'authored.txt'), 'utf8')).toBe('Preserve this authored file.\n');
+}
 
 test(
     'installed syntax diagnostics and naming accept corrected input',
     async () => {
-        await using fixture = await installedConsumer(release);
-        const { consumer, command, options } = fixture;
-        await initializeConsumer(release, fixture);
+        await using installation = await createConsumer(release.registry, release.version);
+        expect(installation.installed.code, installation.installed.stdout + installation.installed.stderr).toBe(0);
+        const { consumer, command, options } = installation;
+        await initializeConsumer(release, installation);
         const checked = await run([...command, 'check', '--only', 'bash/syntax', '--no-cache', '--json'], options);
         expect(checked.code, checked.stdout + checked.stderr).toBe(1);
         const report = reportSchema.parse(JSON.parse(checked.stdout));
@@ -40,11 +62,11 @@ test(
         expect(report.checks).toHaveLength(1);
         expect(report.checks[0]).toMatchObject({ check: 'bash/syntax', status: 'fail', files: 1 });
         expect(
-            report.checks[0]!.findings.map(({ check, file, line, message }) => ({
+            report.checks[0]!.findings.map(({ check, file, line, message: text }) => ({
                 check,
                 file,
                 line,
-                message,
+                message: text,
             })),
         ).toStrictEqual([
             {
@@ -66,24 +88,7 @@ test(
         expect(clean.skips).toStrictEqual([]);
         expect(clean.checks).toHaveLength(1);
         expect(clean.checks[0]).toMatchObject({ check: 'bash/syntax', status: 'ok', files: 1, findings: [] });
-        const optIn = await run([...command, 'set', 'extra_checks', 'naming/identifiers'], options);
-        expect(optIn.code, optIn.stdout + optIn.stderr).toBe(0);
-        writeFileSync(join(consumer, 'broken.sh'), 'command=example\n');
-        const renamed = await run(
-            [...command, 'check', 'broken.sh', '--only', 'naming/identifiers', '--no-cache', '--json'],
-            options,
-        );
-        expect(renamed.code, renamed.stdout + renamed.stderr).toBe(0);
-        const acceptedName = reportSchema.parse(JSON.parse(renamed.stdout));
-        expect(acceptedName.skips).toStrictEqual([]);
-        expect(acceptedName.checks).toHaveLength(1);
-        expect(acceptedName.checks[0]).toMatchObject({
-            check: 'naming/identifiers',
-            status: 'ok',
-            files: 1,
-            findings: [],
-        });
-        expect(readFileSync(join(consumer, 'authored.txt'), 'utf8')).toBe('Preserve this authored file.\n');
+        await expectInstalledNaming(installation);
     },
     RELEASE_TIMEOUT_MS,
 );

@@ -125,9 +125,9 @@ Sanitize the final HTML after transformations and before any HTML sink. See
 - Cover links, image sources, inline event attributes, embedded frames, SVG, and dangerous URL
   schemes. Do not rely on regex replacements, TypeScript assertions, or trusted-looking model output
   to make markup safe.
-- Restrict `dangerouslySetInnerHTML` to a reviewed rendering adapter. The shared configuration's
-  `react/no-danger` rule requires an explicit local suppression there, with a description naming the
-  sanitizer or the exact trusted static source. Keep sanitization tests beside that adapter.
+- Restrict `dangerouslySetInnerHTML` to a reviewed rendering adapter. Keep sanitization tests
+  beside that adapter. If lint rejects the required HTML sink, use a narrow local suppression
+  that names the sanitizer or exact trusted static source.
 - Apply the same policy to streaming partial messages and final persisted messages. If parsing is
   asynchronous, prevent an older parse from overwriting the latest text or a different message.
 - Initialize Tiptap in a Client Component with the installed version's supported SSR behavior,

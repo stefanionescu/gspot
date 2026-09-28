@@ -18,7 +18,8 @@ gspot check --stage push --only jest/coverage --no-cache
 ```
 
 The check runs Jest in a disposable source copy. It preserves working-tree sources and reports.
-Each coverage dimension defaults to 80 percent. To require full function coverage:
+The [configuration reference](/reference/configuration/) lists coverage defaults.
+To require full function coverage:
 
 ```bash
 gspot set tools.jest.coverage_functions 100

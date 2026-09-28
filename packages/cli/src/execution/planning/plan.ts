@@ -26,6 +26,7 @@ function isStageWanted(filter: StageFilter, stage: Stage): boolean {
 }
 
 function toolFor(spec: CheckSpec, manifest: Manifest | undefined, session: Session): ToolPin | undefined {
+    if (spec.engine !== undefined) return undefined;
     const name = spec.tool ?? spec.command?.[0];
     if (name === undefined) return undefined;
     const own = manifest?.tools.find((tool) => tool.name === name);
@@ -41,18 +42,15 @@ function manifestEntries(manifest: Manifest, seenRepoChecks: Set<string>): PlanE
     return fresh.map((spec) => ({ spec, manifest }));
 }
 
-// The checks a manifest references from another configuration.
-function referencedChecks(manifest: Manifest): PlanEntry[] {
-    const references = manifest.configuration.check_references ?? [];
-    return manifest.checks.filter((spec) => references.includes(spec.name)).map((spec) => ({ spec, manifest }));
-}
-
 // The checks any scope references from another configuration, once each, unless the root already plans them.
 function referencedEntries(session: Session, planned: PlanEntry[]): PlanEntry[] {
     const seen = new Set(planned.map((entry) => entry.spec.name));
     const referenced: PlanEntry[] = [];
     const candidates = session.scopes.flatMap((selected) =>
-        selected.selected.flatMap((manifest) => referencedChecks(manifest)),
+        selected.selected.flatMap((manifest) => {
+            const references = manifest.configuration.check_references ?? [];
+            return manifest.checks.filter((spec) => references.includes(spec.name)).map((spec) => ({ spec, manifest }));
+        }),
     );
     for (const entry of candidates) {
         if (seen.has(entry.spec.name)) continue;
@@ -81,19 +79,11 @@ function isWanted(spec: CheckSpec, options: PlanOptions): boolean {
     return (options.only !== undefined && options.stage === 'all') || isStageWanted(options.stage, spec.stage);
 }
 
-// The commit range and message file the run supplies, when it has them.
-function runInputs(options: PlanOptions): Pick<PlannedCheck, 'commits' | 'messageFile'> {
-    return {
-        ...(options.commits === undefined ? {} : { commits: options.commits }),
-        ...(options.messageFile === undefined ? {} : { messageFile: options.messageFile }),
-    };
-}
-
 function planOne(context: PlanContext, entry: PlanEntry, isWholeCheck: boolean): PlannedCheck {
     const { session, scope, options, platform } = context;
     const { spec, manifest } = entry;
     const rootScope = session.scopes[0] ?? scope;
-    const tool = spec.engine === undefined ? toolFor(spec, manifest, session) : undefined;
+    const tool = toolFor(spec, manifest, session);
     const check: PlannedCheck = {
         check: spec.name,
         scope: isWholeCheck ? rootScope : scope,
@@ -102,7 +92,8 @@ function planOne(context: PlanContext, entry: PlanEntry, isWholeCheck: boolean):
         projectWide: spec.runs !== 'per-file-list',
         ...(manifest === undefined ? {} : { manifest }),
         ...(tool === undefined ? {} : { tool }),
-        ...runInputs(options),
+        ...(options.commits === undefined ? {} : { commits: options.commits }),
+        ...(options.messageFile === undefined ? {} : { messageFile: options.messageFile }),
     };
     const skip = skipFor(check, options, platform, session.repository.hasGit);
     return restrictIgnoredPaths(skip === undefined ? check : { ...check, skip });
@@ -217,7 +208,18 @@ export async function planRun(session: Session, options: PlanOptions): Promise<P
     const planned = planScopes(session, options);
     const resolved = await Promise.all(
         planned.map(async (checks) =>
-            yielded(await Promise.all(checks.map((check) => prettierInputs(session, check)))),
+            yielded(
+                await Promise.all(
+                    checks.map(async (check) =>
+                        check.manifest?.configuration.name === 'formatting' &&
+                        check.check === 'formatting/prettier' &&
+                        check.skip === undefined &&
+                        check.files.length > 0
+                            ? prettierInputs(session, check)
+                            : check,
+                    ),
+                ),
+            ),
         ),
     );
     const checks = resolved.flat();

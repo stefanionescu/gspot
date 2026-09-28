@@ -5,81 +5,93 @@ import { policyJsonSchema } from '#cli/policy/json-schema.ts';
 import { failure, textContaining } from '#tests/support/expectations.ts';
 import { parsePolicyText, assertPolicyComplete } from '#cli/policy/read.ts';
 
-test.each([
-    {
-        configuration: 'static-site',
-        tool: 'site',
-        previous: 'sitemap_excluded',
-        current: 'sitemap_allowed',
-        value: ['404.html'],
-    },
-    {
-        configuration: 'express',
-        tool: 'express',
-        previous: 'route_glob',
-        current: 'route_files',
-        value: ['routes/*.ts'],
-    },
-    { configuration: 'express', tool: 'express', previous: 'test_glob', current: 'test_files', value: ['tests/*.ts'] },
-    { configuration: 'trpc', tool: 'trpc', previous: 'server_paths', current: 'server_files', value: ['server/**'] },
-    {
-        configuration: 'supabase',
-        tool: 'supabase',
-        previous: 'functions_dir',
-        current: 'functions_directory',
-        value: 'edge',
-    },
-    {
-        configuration: 'postgres',
-        tool: 'postgres',
-        previous: 'migrations_dir',
-        current: 'migrations_directory',
-        value: 'schema',
-    },
-    {
-        configuration: 'supabase',
-        tool: 'supabase',
-        previous: 'admin_key_paths',
-        current: 'admin_key_files',
-        value: ['server/**'],
-    },
-    {
-        configuration: 'xcode',
-        tool: 'xcode',
-        previous: 'allowed_entitlements',
-        current: 'entitlements_allowed',
-        value: ['aps-environment'],
-    },
-    {
-        configuration: 'html',
-        tool: 'html',
-        previous: 'copy_excluded',
-        current: 'copy_allowed',
-        value: [{ paths: ['fixtures/**'], reason: 'Localization is verified by the fixture producer.' }],
-    },
-])(
-    '$tool.$current follows the public vocabulary without retaining $previous as an alias',
-    ({ configuration, tool, previous, current, value }) => {
+test.each(
+    [
+        {
+            configuration: 'static-site',
+            tool: 'site',
+            previous: 'sitemap_excluded',
+            current: 'sitemap_allowed',
+            value: ['404.html'],
+        },
+        {
+            configuration: 'express',
+            tool: 'express',
+            previous: 'route_glob',
+            current: 'route_files',
+            value: ['routes/*.ts'],
+        },
+        {
+            configuration: 'express',
+            tool: 'express',
+            previous: 'test_glob',
+            current: 'test_files',
+            value: ['tests/*.ts'],
+        },
+        {
+            configuration: 'trpc',
+            tool: 'trpc',
+            previous: 'server_paths',
+            current: 'server_files',
+            value: ['server/**'],
+        },
+        {
+            configuration: 'supabase',
+            tool: 'supabase',
+            previous: 'functions_dir',
+            current: 'functions_directory',
+            value: 'edge',
+        },
+        {
+            configuration: 'postgres',
+            tool: 'postgres',
+            previous: 'migrations_dir',
+            current: 'migrations_directory',
+            value: 'schema',
+        },
+        {
+            configuration: 'supabase',
+            tool: 'supabase',
+            previous: 'admin_key_paths',
+            current: 'admin_key_files',
+            value: ['server/**'],
+        },
+        {
+            configuration: 'xcode',
+            tool: 'xcode',
+            previous: 'allowed_entitlements',
+            current: 'entitlements_allowed',
+            value: ['aps-environment'],
+        },
+        {
+            configuration: 'html',
+            tool: 'html',
+            previous: 'copy_excluded',
+            current: 'copy_allowed',
+            value: [{ paths: ['fixtures/**'], reason: 'Localization is verified by the fixture producer.' }],
+        },
+    ].flatMap((scenario) => [false, true].map((hasScope) => ({ ...scenario, hasScope }))),
+)(
+    '$tool.$current follows the public vocabulary without retaining $previous as an alias (scoped: $hasScope)',
+    ({ configuration, tool, previous, current, value, hasScope }) => {
         const validate = new Ajv2020({ strict: false }).compile(policyJsonSchema());
-        for (const scoped of [false, true]) {
-            for (const key of [previous, current]) {
-                const tools = { [tool]: { [key]: value } };
-                const input = {
-                    version: 1,
-                    configurations: [configuration],
-                    ...(scoped ? { scope: [{ path: 'app', tools }] } : { tools }),
-                };
-                const text = stringify(input);
-                const path = 'gspot.toml';
-                const policy = parsePolicyText(text, path);
-                // The retired key is refused by name; the current key is accepted.
-                const refused = failure(() => {
-                    assertPolicyComplete({ text, path, policy });
-                });
-                const namesPrevious = textContaining(previous);
-                expect(refused?.message).toStrictEqual(key === previous ? namesPrevious : undefined);
-                expect(validate(input)).toBe(key === current);
-            }
+        for (const key of [previous, current]) {
+            const tools = { [tool]: { [key]: value } };
+            const input = {
+                version: 1,
+                configurations: [configuration],
+                ...(hasScope ? { scope: [{ path: 'app', tools }] } : { tools }),
+            };
+            const text = stringify(input);
+            const path = 'gspot.toml';
+            const policy = parsePolicyText(text, path);
+            // The retired key is refused by name; the current key is accepted.
+            const refused = failure(() => {
+                assertPolicyComplete({ text, path, policy });
+            });
+            const namesPrevious = textContaining(previous);
+            expect(refused?.message).toStrictEqual(key === previous ? namesPrevious : undefined);
+            expect(validate(input)).toBe(key === current);
         }
     },
 );

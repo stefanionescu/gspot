@@ -4,7 +4,7 @@ import { delimiter, join } from 'node:path';
 import { createFileTree, testdir } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { reportSchema } from '#cli/execution/report.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
 import { containing, textContaining } from '#tests/support/expectations.ts';
 import { installPrivateTools, toolsPath } from '#tests/support/cli/tools.ts';
 
@@ -86,7 +86,7 @@ test.each(['recommended', 'all'])(
     async (level) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': `version = 1\nlevel = "${level}"\nconfigurations = ["jest"]\n`,
+            'gspot.toml': `version = 1\nlevel = "${level}"\nconfigurations = ["jest"]\n[tools.jest]\ncoverage_lines = 80\ncoverage_branches = 80\ncoverage_functions = 80\ncoverage_statements = 80\n`,
             'package.json': '{"name":"jest-acceptance","private":true,"devDependencies":{"jest":"30.2.0"}}\n',
             'math.cjs': source,
             'math.test.cjs': planted,

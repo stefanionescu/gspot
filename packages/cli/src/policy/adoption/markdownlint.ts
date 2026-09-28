@@ -1,11 +1,11 @@
 import { z } from 'zod';
 import { extname, posix } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
-import { carriedTool } from '#cli/policy/adoption/results.ts';
 import type { TomlTable } from '#cli/types/repository/repository.ts';
 import { parse as parseToml, stringify as stringifyToml } from 'smol-toml';
-import type { CarriedConfiguration, CarrySource } from '#cli/types/policy/adoption.ts';
-import { asRaw, observeConfiguration, parseCarrySource } from '#cli/policy/adoption/source.ts';
+import { adoptedScope, adoptedTool } from '#cli/policy/adoption/results.ts';
+import type { AdoptionResult, ConfigurationSource } from '#cli/types/policy/adoption.ts';
+import { asRaw, observeConfiguration, parseConfigurationSource } from '#cli/policy/adoption/source.ts';
 
 const MARKDOWN_SOURCE = z
     .object({ extends: z.string().min(1).optional() })
@@ -15,10 +15,10 @@ const MARKDOWN_SOURCE = z
         'Use Markdown rule names or a static inheritance path.',
     );
 
-function carryMarkdownlint(source: CarrySource, path: string, lists: CarriedConfiguration, root: string): void {
+function carryMarkdownlint(source: ConfigurationSource, path: string, lists: AdoptionResult, root: string): void {
     const visiting = new Set<string>();
     const inherited = new Set<string>();
-    const resolve = (path: string, input: TomlTable): TomlTable => {
+    const inheritedRules = (path: string, input: TomlTable): TomlTable => {
         if (visiting.has(path)) throw new Error(`${path}: Markdown configuration inheritance contains a cycle.`);
         visiting.add(path);
         const { extends: parent, ...rules } = MARKDOWN_SOURCE.parse(input);
@@ -32,22 +32,20 @@ function carryMarkdownlint(source: CarrySource, path: string, lists: CarriedConf
             const original = lists.observed.get(target) ?? observeConfiguration(root, target).original;
             lists.observed.set(target, original);
             inherited.add(target);
-            defaults = resolve(target, parseCarrySource(original, 'markdownlint-cli2', target).parsed);
+            defaults = inheritedRules(target, parseConfigurationSource(original, 'markdownlint-cli2', target).parsed);
         }
         visiting.delete(path);
         return { ...defaults, ...rules };
     };
-    const rules = { default: true, ...resolve(path, asRaw(source.parsed['config']) ?? source.parsed) };
+    const rules = { default: true, ...inheritedRules(path, asRaw(source.parsed['config']) ?? source.parsed) };
     const converted = parseToml(stringifyToml({ rules }));
     if (!isDeepStrictEqual(converted['rules'], rules))
         throw new Error(`${path}: Markdown rule options cannot be represented without loss in TOML.`);
     const base = posix.dirname(path);
-    if (base === '.') carriedTool(lists, 'markdownlint').settings['rules'] = rules;
+    if (base === '.') adoptedTool(lists, 'markdownlint').settings['rules'] = rules;
     else {
-        const scope = lists.scopes.get(base) ?? { configurations: [], tools: {} };
-        scope.configurations = [...new Set([...scope.configurations, 'markdown'])];
+        const scope = adoptedScope(lists, base, 'markdown');
         scope.tools['markdownlint'] = { rules };
-        lists.scopes.set(base, scope);
     }
     for (const parent of inherited)
         lists.retained.push({

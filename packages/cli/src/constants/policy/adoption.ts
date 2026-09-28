@@ -1,7 +1,7 @@
 // The literal values policy/adoption reads: names, patterns, limits, and tables.
 
 export const IGNORE_FILE_COMMENT = '#';
-export const ABSOLUTE_OR_ESCAPED = /[\\:]/u;
+export const UNSAFE_GLOB_CHARACTERS = /[\\:]/u;
 export const GLOB_MAGIC = /[*?{[!]/u;
 export const UNSAFE_EXTEND = /[\\:$~]/u;
 export const COMMENT_MARK = /^(?:#|\/\/)\s?/u;

@@ -9,9 +9,14 @@ export type PythonLauncher = {
     sitePackages: string;
     hosts: ReadonlySet<string>;
 };
-/** The snapshot the relocation writes, the roots it reads, and the cancellation it honours. */
-export type RelocationContext = { root: string; snapshot: string; selected: ConfinedRoot; cancelSignal?: AbortSignal };
-export type SnapshotSource = { kind: 'index' } | { kind: 'commit'; object: string };
+/** The snapshot the relocation writes, the roots it reads, and the cancellation it honors. */
+export type RelocationContext = {
+    root: string;
+    destination: string;
+    selected: ConfinedRoot;
+    cancelSignal?: AbortSignal;
+};
+export type RevisionSource = { kind: 'index' } | { kind: 'commit'; hash: string };
 export type PushRevision = {
     object: string;
     tree: string;
@@ -24,11 +29,11 @@ export type PushSelection = {
     revisions: PushRevision[];
     notApplicable: { ref: string; object: string; reason: 'deleted ref' | 'non-commit object' }[];
 };
-export type GitEntry = { mode: string; object: string; path: string };
+export type GitEntry = { mode: string; hash: string; path: string };
 export type Directory = { folder: string; dependency: string };
 export type ChangedSet = { reference: string; paths: string[] };
 export type StagedSet = { staged: string[]; unstaged: number };
-export type PushLine = { localRef: string; localObject: string; remoteRef: string; remoteObject: string };
+export type PushLine = { localRef: string; localHash: string; remoteRef: string; remoteHash: string };
 export type Comparison = { changed: string[] | undefined; excluded: string[] };
 export type PushContext = {
     root: string;
@@ -38,6 +43,23 @@ export type PushContext = {
     shallow: boolean;
     boundaries: Set<string>;
 };
-export type FetchMapping = { source: string; destination: string };
-export type FetchRules = { mappings: FetchMapping[]; excluded: string[] };
-export type ParsedMapping = { kind: 'skip' } | { kind: 'unusable' } | ({ kind: 'mapping' } & FetchMapping);
+export type RefMapping = { source: string; destination: string };
+export type RefRules = { mappings: RefMapping[]; excluded: string[] };
+export type ParsedMapping = { kind: 'skip' } | { kind: 'unusable' } | ({ kind: 'mapping' } & RefMapping);
+
+/** Validated executable headers and bounded reads for Windows launcher resources. */
+export type WindowsImage = {
+    bytes: Buffer;
+    coff: number;
+    optional: number;
+    directories: number;
+    sectionTable: number;
+    count: number;
+    sections: number[];
+    short: (offset: number) => number;
+    word: (offset: number) => number;
+    range: (offset: number, length: number) => number;
+    location: (rva: number, size: number) => number;
+};
+/** The resource descriptor and its validated payload range. */
+export type WindowsResource = { descriptor: number; offset: number; size: number };

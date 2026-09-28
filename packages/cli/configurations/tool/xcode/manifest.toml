@@ -17,6 +17,7 @@ natures = ["source"]
 [[tools]]
 name = "plutil"
 provider = "host"
+crash_pattern = "couldn['’]t be opened"
 
 [[checks]]
 name = "xcode/plist"
@@ -182,4 +183,4 @@ default = []
 summary = "The entitlements the app may hold; empty turns the check off."
 
 [rule_files]
-tool = ["tool/xcode/XCODE.md"]
+tool = [{path = "tool/xcode/XCODE.md"}]

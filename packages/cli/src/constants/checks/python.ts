@@ -22,3 +22,5 @@ export const BLOCKING_MODULES = ['requests.', 'urllib.request.'];
 export const DEFINITIONS = new Set(['function_definition', 'class_definition']);
 export const PACKAGE_FILE = '__init__.py';
 export const PLACEHOLDERS = new Set(['todo', 'docstring', 'tbd', 'fixme', 'description', 'summary']);
+
+export const DOCSTRING_COMMAND = ['pydoclint', '--allow-init-docstring', 'true', '--quiet', '{files}'];

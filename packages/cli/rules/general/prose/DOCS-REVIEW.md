@@ -41,6 +41,8 @@ Review from the reader's perspective, not only line by line.
 
 ### Structure review
 
+<!-- level: all -->
+
 - Does the page use the correct topic type?
 - Does information move from broad to specific?
 - Is the README useful without the advanced guide?
@@ -51,6 +53,8 @@ Review from the reader's perspective, not only line by line.
 - Is repeated content owned in one canonical place?
 
 ### Language review
+
+<!-- level: all -->
 
 - Is the voice direct, concise, and precise?
 - Does each sentence add information?
@@ -112,6 +116,8 @@ Review from the reader's perspective, not only line by line.
 
 ### README checklist
 
+<!-- level: all -->
+
 - [ ] The title names the project or component.
 - [ ] The title uses title case.
 - [ ] The first paragraph states the purpose in one sentence.
@@ -130,6 +136,8 @@ Review from the reader's perspective, not only line by line.
 - [ ] The README remains useful without `ADVANCED.md`.
 
 ### Advanced-guide checklist
+
+<!-- level: all -->
 
 - [ ] The guide serves a distinct specialist audience.
 - [ ] The opening states the assumed README baseline.

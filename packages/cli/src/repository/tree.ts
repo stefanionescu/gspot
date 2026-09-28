@@ -1,12 +1,33 @@
 // Builds the Repository record: the file set with natures and tags, and the scopes.
 import { tagEntry } from '#cli/repository/tags.ts';
-import { policyScopes } from '#cli/repository/scopes.ts';
-import { swiftTestTags } from '#cli/repository/swift-tests.ts';
+import { swiftSourceTags } from '#cli/repository/swift-source.ts';
 import type { FileDeclaration } from '#cli/types/policy/policy.ts';
 import { FILE_PREFIX_BYTES } from '#cli/constants/repository/repository.ts';
 import { natureOf, readAttributes } from '#cli/repository/file-classification.ts';
-import type { Repository, TrackedFile } from '#cli/types/repository/repository.ts';
 import { isGitRepository, trackedEntries, readPrefix, readSource } from '#cli/repository/tracked.ts';
+
+import type {
+    Repository,
+    TrackedFile,
+    ScopeEntry,
+    RawEntry,
+    Tagged,
+    NatureVerdict,
+} from '#cli/types/repository/repository.ts';
+
+function trackedFile(entry: RawEntry, prefix: Buffer, tagged: Tagged, verdict: NatureVerdict): TrackedFile {
+    const file: TrackedFile = {
+        path: entry.path,
+        prefix,
+        nature: verdict.nature,
+        natureSource: verdict.source,
+        tags: tagged.tags,
+        executable: entry.executable,
+        size: entry.size,
+    };
+    if (verdict.producedBy !== undefined) file.producedBy = verdict.producedBy;
+    return file;
+}
 
 /**
  * Reads the tree once: every tracked or about-to-be-tracked file with its nature and tags.
@@ -33,23 +54,30 @@ export async function readRepository(
         const verdict = runtimeFiles.has(entry.path)
             ? { nature: 'generated' as const, source: 'gspot', producedBy: 'gspot check' }
             : natureOf(entry.path, declarations, tagged.binary, prefix, attributes);
-        const file: TrackedFile = {
-            path: entry.path,
-            prefix,
-            nature: verdict.nature,
-            natureSource: verdict.source,
-            tags: tagged.tags,
-            executable: entry.executable,
-            size: entry.size,
-        };
-        if (verdict.producedBy !== undefined) file.producedBy = verdict.producedBy;
+        const file = trackedFile(entry, prefix, tagged, verdict);
         if (!entry.symlink && file.nature === 'source' && file.path.endsWith('.swift')) {
-            const tags = await swiftTestTags(readSource(root, file.path).toString('utf8'));
+            const tags = await swiftSourceTags(readSource(root, file.path).toString('utf8'));
             file.tags.push(
                 ...tags.filter((tag) => tag !== 'swift-test-target' || file.path.split('/').at(-1) === 'Package.swift'),
             );
         }
         files.push(file);
     }
-    return { root, attributes, hasGit: isGitRepository(root), files, scopes: policyScopes(scopeEntries) };
+    return {
+        root,
+        attributes,
+        hasGit: isGitRepository(root),
+        files,
+        scopes: [
+            { name: 'root', path: '', configurations: [], source: 'root' },
+            ...scopeEntries.map(
+                (entry): ScopeEntry => ({
+                    name: entry.path.slice(entry.path.lastIndexOf('/') + 1),
+                    path: entry.path,
+                    configurations: entry.configurations,
+                    source: 'gspot.toml',
+                }),
+            ),
+        ],
+    };
 }

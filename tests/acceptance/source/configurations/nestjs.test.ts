@@ -1,14 +1,14 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
-// Planted repository for the nestjs configuration: a small module that lints and type-checks as written, a controller that injects a repository, a circular import, a route parameter that names no segment, and a tsconfig with decorators off.
+// NestJS fixtures cover valid injection and modules. Defects cover circular imports, unmatched route parameters, and disabled decorators.
 import { run } from '#tests/support/cli/command.ts';
+import type { FindingCase } from '#tests/types/cli.ts';
 import { reportSchema } from '#cli/execution/report.ts';
+import { runPlanted } from '#tests/support/cli/planted.ts';
 import { containing } from '#tests/support/expectations.ts';
-import type { FindingCase } from '#tests/types/support/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
 import { installSandbox } from '#tests/support/cli/sandbox.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
-import { expectCorrected, runPlanted } from '#tests/support/cli/planted.ts';
 
 import {
     CONTROLLER,
@@ -38,7 +38,7 @@ const CASES: FindingCase[] = [
     {
         check: 'typescript/eslint',
         files: { 'src/greeting.controller.ts': REACHES_ROWS, 'src/greeting.repository.ts': REPOSITORY },
-        expected: { file: 'src/greeting.controller.ts', rule: 'no-restricted-syntax', line: 17 },
+        expected: { file: 'src/greeting.controller.ts', rule: 'no-restricted-syntax', line: 15 },
     },
     {
         check: 'typescript/eslint',
@@ -56,7 +56,7 @@ const CASES: FindingCase[] = [
         expected: {
             file: 'src/greeting.controller.ts',
             rule: '@darraghor/nestjs-typed/param-decorator-name-matches-route-param',
-            line: 23,
+            line: 20,
         },
     },
     {
@@ -94,7 +94,15 @@ describe('the nestjs configuration', () => {
             const failed = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
             expect(failed.checks).toMatchObject([{ check: planted.check, status: 'fail' }]);
             expect(failed.checks[0]!.findings).toContainEqual(containing(planted.expected));
-            await expectCorrected(sandbox.path, planted.check, environment);
+            const correctedCheck = await run(
+                sandbox.path,
+                ['check', '--only', planted.check, '--no-cache', '--json'],
+                environment,
+            );
+            expect(correctedCheck.code, correctedCheck.stdout + correctedCheck.stderr).toBe(0);
+            expect(reportSchema.parse(JSON.parse(correctedCheck.stdout)).checks).toMatchObject([
+                { check: planted.check, status: 'ok', findings: [] },
+            ]);
         },
         PLANTED_TIMEOUT_MS * 8,
     );

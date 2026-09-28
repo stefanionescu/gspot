@@ -5,11 +5,11 @@ import { pathToFileURL } from 'node:url';
 import { parse as parseYaml } from 'yaml';
 import { createFileTree, testdir } from 'testdirs';
 import { parse as parseJsonc } from 'jsonc-parser';
-import { emitAll } from '#cli/generation/render.ts';
 import { readFileSync, symlinkSync } from 'node:fs';
+import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { mergePointer } from '#cli/generation/pointers.ts';
-import { hasConfiguration } from '#cli/lifecycle/configuration-document.ts';
+import { hasConfiguration } from '#cli/lifecycle/configuration/document.ts';
 
 test('JSON option keys and YAML values keep their literal structure', async () => {
     const key = 'custom"key\\name\ncafé';
@@ -34,10 +34,10 @@ test('JSON option keys and YAML values keep their literal structure', async () =
             },
         }),
     });
-    const renderSession5 = await openSession(sandbox.path);
-    const output = emitAll(renderSession5.policyFiles.policy, renderSession5.repository, renderSession5.scopes, {
-        version: renderSession5.version,
-        packageManager: renderSession5.packageManager,
+    const session = await openSession(sandbox.path);
+    const output = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
+        version: session.version,
+        packageClient: session.packageClient,
     });
     for (const path of ['.gspot/config/prettier.json', '.gspot/config/knip.json', '.gspot/config/markdownlint.jsonc']) {
         const file = output.files.find((entry) => entry.path === path);
@@ -102,7 +102,9 @@ test.each(['{"extends":"./.gspot/tsconfig.json", invalid}', 'null', '[]'])(
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'tsconfig.json': content });
         const pointer = { path: 'tsconfig.json', merge: { extends: '{target}' } };
-        expect(() => mergePointer(sandbox.path, pointer, pointer.path, '.gspot/tsconfig.json')).toThrow('valid JSON object');
+        expect(() => mergePointer(sandbox.path, pointer, pointer.path, '.gspot/tsconfig.json')).toThrow(
+            'valid JSON object',
+        );
         expect(() => hasConfiguration(sandbox.path, { path: pointer.path, format: 'json', changes: [] })).toThrow(
             'valid JSON object',
         );

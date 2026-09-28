@@ -33,13 +33,10 @@ import {
     TOP_LEVEL_ASSIGNMENT,
 } from '#cli/constants/checks/script.ts';
 
-function shebangProblem(file: ScriptFile, report: ScriptReport): void {
+function headerProblems(file: ScriptFile, report: ScriptReport): void {
     if (!BASH_SHEBANGS.includes(file.lines[0] ?? ''))
         report(1, 'shebang', `The first line is not one of ${BASH_SHEBANGS.join(' or ')}.`);
-}
-
-function headerProblem(file: ScriptFile, report: ScriptReport): void {
-    const [, second = '', third = ''] = file.lines;
+    const [, second, third = ''] = file.lines;
     if (
         second !== '#' ||
         file.lines.length < HEADER_LINES ||
@@ -48,14 +45,10 @@ function headerProblem(file: ScriptFile, report: ScriptReport): void {
         report(2, 'header', 'Lines 2 and 3 are a bare "#" and then "# <what this script does>".');
 }
 
-function isPlatformNamed(runtime: RegExpExecArray | null, platforms: string): boolean {
-    const named = runtime?.groups?.['platforms'] ?? '';
-    return named === 'Linux' || named === platforms;
-}
-
 function runtimeVersion(file: ScriptFile, platforms: string, report: ScriptReport): string | undefined {
     const runtime = RUNTIME_HEADER.exec(file.lines[HEADER_LINES - 1] ?? '');
-    if (runtime === null || !isPlatformNamed(runtime, platforms)) {
+    const named = runtime?.groups?.['platforms'] ?? '';
+    if (runtime === null || (named !== 'Linux' && named !== platforms)) {
         report(HEADER_LINES, 'runtime-header', `Line 4 is "# Runtime: Bash N.N+, ${platforms}." (or "Linux").`);
         return undefined;
     }
@@ -124,46 +117,45 @@ function entryProblems(file: ScriptFile, code: CodeLine[], report: ScriptReport)
     if (last?.code !== MAIN_CALL) report(last?.number ?? 1, 'main-call', `An executable ends with ${MAIN_CALL}.`);
 }
 
-function isDeclarative(line: CodeLine, file: ScriptFile): boolean {
-    const { code } = line;
-    return (
-        SOURCE_STATEMENT.test(code) ||
-        code.startsWith(READONLY_WORD) ||
-        isDirectoryConstant(code) ||
-        functionAt(file.functions, line.number) !== undefined
-    );
+function topLevelProblem(line: CodeLine, file: ScriptFile, isConfigOwner: boolean): [string, string] | undefined {
+    if (functionAt(file.functions, line.number) !== undefined) return undefined;
+    if (EXIT_CALL.test(line.code)) return ['library-exit', 'A sourced library does not exit.'];
+    if (
+        isConfigOwner ||
+        SOURCE_STATEMENT.test(line.code) ||
+        line.code.startsWith(READONLY_WORD) ||
+        isDirectoryConstant(line.code)
+    )
+        return undefined;
+    return ['library-flow', 'A sourced library is declarative at the top level; this line runs when it is loaded.'];
 }
 
 function libraryLineProblem(line: CodeLine, file: ScriptFile, isConfigOwner: boolean): [string, string] | undefined {
     if (line.code.startsWith('set ')) return ['library-options', 'A sourced library does not change shell options.'];
     if (line.code === MAIN_CALL) return ['library-main', 'A sourced library does not call main.'];
-    const isTopLevel = functionAt(file.functions, line.number) === undefined;
-    if (isTopLevel && EXIT_CALL.test(line.code)) return ['library-exit', 'A sourced library does not exit.'];
-    if (isTopLevel && !isConfigOwner && !isDeclarative(line, file))
-        return ['library-flow', 'A sourced library is declarative at the top level; this line runs when it is loaded.'];
-    return undefined;
+    return topLevelProblem(line, file, isConfigOwner);
 }
 
-function libraryProblems(file: ScriptFile, code: CodeLine[], isConfigOwner: boolean, report: ScriptReport): void {
+function roleProblems(file: ScriptFile, code: CodeLine[], isConfigOwner: boolean, report: ScriptReport): void {
+    if (file.isExecutable) {
+        entryProblems(file, code, report);
+        return;
+    }
+    const last = code.at(-1);
+    if (last?.code === MAIN_CALL) {
+        report(
+            last.number,
+            'executable-bit',
+            'This script ends with main "$@" but has no executable bit; run git update-index --chmod=+x on it.',
+        );
+        return;
+    }
     if (file.functions.some((entry) => entry.name === 'main'))
         report(1, 'library-main', 'A sourced library defines no main.');
     for (const line of code) {
         const problem = libraryLineProblem(line, file, isConfigOwner);
         if (problem !== undefined) report(line.number, problem[0], problem[1]);
     }
-}
-
-function roleProblems(file: ScriptFile, code: CodeLine[], isConfigOwner: boolean, report: ScriptReport): void {
-    const last = code.at(-1);
-    if (file.isExecutable) {
-        entryProblems(file, code, report);
-    } else if (last?.code === MAIN_CALL)
-        report(
-            last.number,
-            'executable-bit',
-            'This script ends with main "$@" but has no executable bit; run git update-index --chmod=+x on it.',
-        );
-    else libraryProblems(file, code, isConfigOwner, report);
 }
 
 function cleanupProblems(code: CodeLine[], report: ScriptReport): void {
@@ -183,8 +175,7 @@ function fileProblems(
     const report: ScriptReport = (line, rule, text) => {
         findings.push(context.report(file.path, line, rule, text));
     };
-    shebangProblem(file, report);
-    headerProblem(file, report);
+    headerProblems(file, report);
     const version = runtimeVersion(file, platforms, report);
     versionProblems(file, version, report);
     const code = codeLines(file.lines).filter((line) => !line.code.startsWith('#!'));

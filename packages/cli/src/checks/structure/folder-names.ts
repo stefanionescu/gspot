@@ -1,3 +1,4 @@
+import { roleFolders } from '#cli/policy/settings.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
 import { directoryOf } from '#cli/checks/structure/directories.ts';
 import type { StructureAnalysis as Analysis } from '#cli/types/checks/structure.ts';
@@ -12,6 +13,12 @@ export const folderNames: Analysis = (context) => {
     const allowed = pathMatcher(
         context.input.policyFiles.policy.structure.folder_name_allowed.flatMap((entry) => entry.paths),
     );
+    const { input } = context;
+    const harnesses = new Set(
+        roleFolders(input.selection.selected, input.view.settings, 'harness').map((folder) =>
+            [input.scope, folder].filter(Boolean).join('/'),
+        ),
+    );
     const seen = new Set<string>();
     return context.files.flatMap((file) => {
         const segments = directoryOf(file.path)
@@ -21,6 +28,7 @@ export const folderNames: Analysis = (context) => {
             const folder = segments.slice(0, index + 1).join('/');
             if (
                 seen.has(folder) ||
+                harnesses.has(folder) ||
                 IGNORED_FOLDERS.includes(segment) ||
                 !BANNED_FOLDER_NAMES.includes(segment.toLowerCase())
             )

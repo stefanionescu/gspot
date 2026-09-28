@@ -2,7 +2,6 @@
 import type { DriftEntry } from '#cli/types/lifecycle/lifecycle.ts';
 
 export const KILOBYTE = 1024;
-export const FILE_SIZE_KB_DEFAULT = 1024;
 export const POLICY_FILE = 'gspot.toml';
 export const LANGUAGE_BY_EXTENSION: Record<string, string> = {
     '.ts': 'typescript',
@@ -49,7 +48,13 @@ export const CONFLICT_HELP = 'Run gspot apply to write the file again, then gspo
 export const MOVE_HELP =
     'Change policy in gspot.toml, then run gspot apply. Edited outputs are preserved; move them aside to regenerate.';
 export const STRAY_HELP = 'Delete the file, or add the configuration that renders it.';
+export const DRIFT_HELP: Record<DriftEntry['kind'], string> = {
+    changed: MOVE_HELP,
+    missing: MOVE_HELP,
+    stray: STRAY_HELP,
+    conflict: CONFLICT_HELP,
+};
 export const GSPOT_SUPPRESSION = {
-    marker: 'gspot-ignore +[a-z0-9-]+/[a-z0-9-]+',
+    marker: '^(?://|#|--|<!--) ?gspot-ignore +[a-z0-9-]+/[a-z0-9-]+',
     reason: String.raw` -- (?<reason>\S.*)`,
 };

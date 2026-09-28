@@ -6,8 +6,8 @@ import { SkippedCheckError } from '#cli/checks/result.ts';
 import { mutationTarget } from '#cli/platform/safe-paths.ts';
 import { commandArguments } from '#cli/platform/arguments.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import { scratchCopy } from '#cli/execution/file-workspace.ts';
-import { runCheckCommand } from '#cli/execution/tool-runner.ts';
+import { runCheckCommand } from '#cli/execution/tool/runner.ts';
+import { scratchCopy } from '#cli/execution/files/workspace.ts';
 import type { SiteBuild } from '#cli/types/checks/static-site.ts';
 import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 import { DEFAULT_BUILD, DEFAULT_BUILD_OUTPUT, SHOWN_DIFFERENCES } from '#cli/constants/checks/static-site.ts';
@@ -65,12 +65,12 @@ export function filesUnder(folder: string): string[] {
     const directories = [''];
     try {
         for (let directory = directories.pop(); directory !== undefined; directory = directories.pop()) {
-            for (const entry of files.list(directory === '' ? undefined : directory)) {
+            const entries = files.list(directory === '' ? undefined : directory).map((entry) => {
                 const path = directory === '' ? entry : `${directory}/${entry}`;
-                const stat = statSync(files.source(path));
-                if (stat.isDirectory()) directories.push(path);
-                else if (stat.isFile()) found.push(path);
-            }
+                return { path, stat: statSync(files.source(path)) };
+            });
+            directories.push(...entries.filter(({ stat }) => stat.isDirectory()).map(({ path }) => path));
+            found.push(...entries.filter(({ stat }) => stat.isFile()).map(({ path }) => path));
         }
         return found.toSorted((left, right) => left.localeCompare(right));
     } finally {
@@ -126,7 +126,7 @@ export async function siteBuilds(input: EngineInput): Promise<Finding[]> {
 /**
  * Builds a second time and compares the two outputs file by file.
  * @param input the engine input
- * @returns one finding for each file that differs, appears or disappears
+ * @returns one finding for each file that differs, appears, or disappears
  */
 export async function buildReproducible(input: EngineInput): Promise<Finding[]> {
     const first = await requireSiteBuild(input);

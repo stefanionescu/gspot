@@ -5,7 +5,7 @@ import { stringify } from 'smol-toml';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { mkdirSync, writeFileSync } from 'node:fs';
-import { emitAll } from '#cli/generation/render.ts';
+import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { evaluateFormat } from '#cli/evaluation/format.ts';
 import { collectCarried } from '#cli/policy/adoption/collect.ts';
@@ -34,7 +34,7 @@ test('nested Prettier ignore files convert with Git precedence for files created
     const session = await openSession(directory.path);
     const generated = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
         version: session.version,
-        packageManager: session.packageManager,
+        packageClient: session.packageClient,
         takeover: carried.observed,
     }).files.find(({ path }) => path === '.prettierignore')!;
     writeFileSync(join(directory.path, '.prettierignore'), generated.content);
@@ -53,8 +53,8 @@ test('nested Prettier ignore files convert with Git precedence for files created
     const ignorePath = join(directory.path, '.prettierignore');
     const observed = await Promise.all(
         Object.keys(expected).map(async (path) => {
-            const info = await prettier.getFileInfo(join(directory.path, path), { ignorePath });
-            return [path, info.ignored] as const;
+            const fileStatus = await prettier.getFileInfo(join(directory.path, path), { ignorePath });
+            return [path, fileStatus.ignored] as const;
         }),
     );
     expect(Object.fromEntries(observed)).toStrictEqual(expected);
@@ -79,7 +79,7 @@ test('negated override selectors of the root configuration keep their meaning in
     const session = await openSession(directory.path);
     const generated = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
         version: session.version,
-        packageManager: session.packageManager,
+        packageClient: session.packageClient,
     }).files.find(({ path }) => path === '.gspot/config/prettier.json')!;
     mkdirSync(join(directory.path, '.gspot/config'), { recursive: true });
     writeFileSync(join(directory.path, generated.path), generated.content);
@@ -120,7 +120,7 @@ test('negated override selectors of a nested configuration stay inside its folde
     const session = await openSession(directory.path);
     const generated = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
         version: session.version,
-        packageManager: session.packageManager,
+        packageClient: session.packageClient,
     }).files.find(({ path }) => path === '.gspot/config/prettier.json')!;
     mkdirSync(join(directory.path, '.gspot/config'), { recursive: true });
     writeFileSync(join(directory.path, generated.path), generated.content);

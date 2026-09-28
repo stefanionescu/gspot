@@ -121,5 +121,5 @@ default = "__Snapshots__/{file}/{test}.*"
 summary = "Snapshot paths relative to the test file directory, with {file} as its stem, {test} as the test name, and * as a wildcard."
 
 [rule_files]
-tool = ["tool/xctest/XCTEST.md"]
-general = ["general/code/TESTING.md"]
+tool = [{path = "tool/xctest/XCTEST.md"}]
+general = [{path = "general/code/TESTING.md"}]

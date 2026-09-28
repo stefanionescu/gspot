@@ -54,10 +54,13 @@ Languages:
 - `.gspot/rules/language/TYPESCRIPT.md`
 - `.gspot/rules/language/naming/TYPESCRIPT.md`
 - `.gspot/rules/language/YAML.md`
+- `.gspot/rules/language/CSS.md`
+- `.gspot/rules/language/naming/CSS.md`
 
 Runtimes:
 
 - `.gspot/rules/runtime/node/NODE.md`
+- `.gspot/rules/runtime/bun/BUN.md`
 
 Tools:
 

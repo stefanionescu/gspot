@@ -21,16 +21,18 @@ export async function eslintRuleDiff(
     proposal: GeneratedProposal,
     drift: DriftEntry[],
 ): Promise<void> {
+    const selected = proposal.files.flatMap((file) => {
+        if (!file.path.endsWith('/eslint.config.mjs') || file.rulesPath === undefined) return [];
+        const entry = drift.find((candidate) => candidate.path === file.path);
+        return entry === undefined ? [] : [{ file, entry, rulesPath: file.rulesPath }];
+    });
     const files = openConfinedRoot(root);
     try {
-        for (const file of proposal.files) {
-            if (!file.path.endsWith('/eslint.config.mjs') || file.rulesPath === undefined) continue;
-            const entry = drift.find((candidate) => candidate.path === file.path);
-            if (entry === undefined) continue;
+        for (const { file, entry, rulesPath } of selected) {
             try {
                 const current = files.read(file.path)?.bytes.toString('utf8');
-                const sources = current === undefined ? [file.content] : [current, file.content];
-                const values = eslintPreviewResponse.length(sources.length).parse(
+                const sources = [current, file.content].filter((source) => source !== undefined);
+                const resolvedRules = eslintPreviewResponse.length(sources.length).parse(
                     await evaluateConfiguration(
                         {
                             tool: 'eslint',
@@ -43,8 +45,8 @@ export async function eslintRuleDiff(
                         signal,
                     ),
                 );
-                entry.rules = compareRules(file.rulesPath, current === undefined ? {} : { rules: values[0] }, {
-                    rules: values.at(-1),
+                entry.rules = compareRules(rulesPath, current === undefined ? {} : { rules: resolvedRules[0] }, {
+                    rules: resolvedRules.at(-1),
                 });
                 delete entry.ruleError;
             } catch (error) {

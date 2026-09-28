@@ -102,17 +102,6 @@ function parseRegex(check: string, output: OutputFormat, text: string, help: str
     return findings.values().toArray();
 }
 
-function groupedFinding(
-    check: string,
-    file: string,
-    help: string,
-    line: string,
-    groups: Record<string, string | undefined>,
-): Finding {
-    const text = (groups['message'] ?? line).trim();
-    return positioned({ check, file, message: text, help, fixable: false }, groups);
-}
-
 function parseGrouped(check: string, output: OutputFormat, text: string, help: string): Finding[] {
     const filePattern = compiled(output.file_pattern, DEFAULT_FILE_PATTERN);
     const pattern = compiled(output.pattern, DEFAULT_GROUPED_PATTERN);
@@ -125,7 +114,10 @@ function parseGrouped(check: string, output: OutputFormat, text: string, help: s
             continue;
         }
         const groups = pattern.exec(line)?.groups;
-        if (groups) findings.push(groupedFinding(check, file, help, line, groups));
+        if (groups) {
+            const text = (groups['message'] ?? line).trim();
+            findings.push(positioned({ check, file, message: text, help, fixable: false }, groups));
+        }
     }
     return findings;
 }
@@ -153,15 +145,7 @@ function parseEslintJson(check: string, text: string, help: string, root: string
     });
 }
 
-function parseLines(check: string, text: string, help: string): Finding[] {
-    return text
-        .split('\n')
-        .map((line) => line.trim())
-        .filter((line) => line !== '')
-        .map((line) => ({ check, file: '', message: line, help, fixable: false }));
-}
-
-// The findings of a JSON report, or the error that says the report could not be read.
+// Findings from a JSON report, or an error for an unreadable report.
 function jsonFindings(parsing: Parsing, output: OutputFormat): Finding[] {
     try {
         return parseJson(parsing.spec.name, output, parsing.stdout, parsing.spec.help);
@@ -178,7 +162,12 @@ const FORMAT_READERS: Record<OutputFormat['format'], (parsing: Parsing, output: 
     'typos-json': ({ spec, stdout, root, cwd }) => typosFindings(spec.name, stdout, spec.help, root, cwd),
     'markdownlint-json': ({ spec, stdout, root, cwd }) => markdownlintFindings(spec.name, stdout, spec.help, root, cwd),
     'eslint-json': ({ spec, stdout, root }) => parseEslintJson(spec.name, stdout, spec.help, root),
-    lines: ({ spec, text }) => parseLines(spec.name, text, spec.help),
+    lines: ({ spec, text }) =>
+        text
+            .split('\n')
+            .map((line) => line.trim())
+            .filter((line) => line !== '')
+            .map((line) => ({ check: spec.name, file: '', message: line, help: spec.help, fixable: false })),
     regex: ({ spec, text }, output) => parseRegex(spec.name, output, text, spec.help),
     grouped: ({ spec, text }, output) => parseGrouped(spec.name, output, text, spec.help),
 };
@@ -207,12 +196,12 @@ function relativeTo(root: string, file: string): string {
 
 /**
  * The findings a tool's output holds, with every path relative to the root.
- * @param spec the check
- * @param stdout the tool's standard output
- * @param stderr the tool's standard error
- * @param root the repository root, to make absolute paths relative
- * @param cwd the tool working directory, for native relative source paths
- * @returns the findings
+ * @param spec the check.
+ * @param stdout the tool's standard output.
+ * @param stderr the tool's standard error.
+ * @param root the repository root, to make absolute paths relative.
+ * @param cwd the tool working directory, for native relative source paths.
+ * @returns the findings.
  */
 export function parseOutput(spec: CheckSpec, stdout: string, stderr: string, root: string, cwd = root): Finding[] {
     return parseRaw(spec, stdout, stderr, root, cwd).map((finding) => ({

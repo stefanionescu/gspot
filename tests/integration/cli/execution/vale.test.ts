@@ -1,13 +1,15 @@
 import { join } from 'node:path';
 import { expect, spyOn, test } from 'bun:test';
-import { planRun } from '#cli/execution/planning/plan.ts';
 import { createFileTree, testdir } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import * as inspections from '#cli/tools/inspect.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { valeFindings } from '#cli/checks/prose/vale.ts';
+import { planRun } from '#cli/execution/planning/plan.ts';
 import { runEngineCheck } from '#cli/execution/engines.ts';
 import { containing } from '#tests/support/expectations.ts';
+
+const DIAGNOSTIC = { Line: 1, Span: [3, 5], Check: 'gspot.Example', Message: 'Use a concrete example.' };
 
 for (const extension of ['md', 'sh']) {
     test.each(['outdated', 'deadline', 'cancellation'])(
@@ -51,16 +53,7 @@ for (const extension of ['md', 'sh']) {
                     expect(options.stdin).toBeUndefined();
                     return Promise.resolve({
                         code: 0,
-                        stdout: JSON.stringify({
-                            [join(directory.path, path)]: [
-                                {
-                                    Line: 1,
-                                    Span: [3, 5],
-                                    Check: 'gspot.Example',
-                                    Message: 'Use a concrete example.',
-                                },
-                            ],
-                        }),
+                        stdout: JSON.stringify({ [join(directory.path, path)]: [DIAGNOSTIC] }),
                         stderr: '',
                         missing: false,
                         duration: 1,

@@ -1,27 +1,6 @@
 import { FORMAT_PREFIX } from '#cli/constants/configurations.ts';
+import type { CheckSpec, Manifest } from '#cli/types/configurations.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
-import type { ListingRow, CheckSpec, Manifest } from '#cli/types/configurations.ts';
-
-/**
- * One manifest as a listing row.
- * @param manifest the manifest
- * @returns the row explain and the docs print
- */
-export function toRow(manifest: Manifest): ListingRow {
-    return {
-        name: manifest.configuration.name,
-        kind: manifest.configuration.kind,
-        title: manifest.configuration.title,
-        description: manifest.configuration.description,
-        requires: manifest.configuration.requires,
-        tools: manifest.tools.map((tool) => (tool.version === undefined ? tool.name : `${tool.name} ${tool.version}`)),
-        checks: manifest.checks.map((check) => ({ check: check.name, stage: check.stage })),
-        settings: manifest.settings.map((setting) => setting.name),
-        rules: Object.values(manifest.rule_files).flat(),
-        default: manifest.configuration.default,
-        proposed: manifest.configuration.proposed,
-    };
-}
 
 /**
  * Every check across every manifest, by id, with the configuration that ships it.
@@ -29,12 +8,15 @@ export function toRow(manifest: Manifest): ListingRow {
  */
 export function allChecks(): Map<string, { check: CheckSpec; configuration: Manifest }> {
     const checks = new Map<string, { check: CheckSpec; configuration: Manifest }>();
-    for (const manifest of configurationManifests().values())
-        for (const check of manifest.checks) {
-            if (manifest.configuration.check_references?.includes(check.name) === true) continue;
+    for (const manifest of configurationManifests().values()) {
+        const owned = manifest.checks.filter(
+            (check) => manifest.configuration.check_references?.includes(check.name) !== true,
+        );
+        for (const check of owned) {
             if (checks.has(check.name)) throw new Error(`Duplicate check identity: ${check.name}`);
             checks.set(check.name, { check, configuration: manifest });
         }
+    }
     return checks;
 }
 

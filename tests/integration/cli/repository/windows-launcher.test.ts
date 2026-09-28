@@ -3,12 +3,12 @@ import { expect, test } from 'bun:test';
 import { join, relative } from 'node:path';
 import { run } from '#cli/platform/spawn.ts';
 import { createFileTree, testdir } from 'testdirs';
-import { withRevisionSnapshot } from '#cli/repository/revisions/snapshot.ts';
-import { INTERPRETERS } from '#tests/constants/integration/cli/repository.ts';
-import { relocateWindowsLauncher } from '#cli/repository/revisions/windows-launcher.ts';
+import { useRevision } from '#cli/repository/revisions/contents.ts';
+import { relocateWindowsLauncher } from '#cli/repository/revisions/virtualenv/windows-launcher.ts';
+import { INTERPRETERS, WINDOWS_LAUNCHER_LAYOUTS } from '#tests/constants/integration/cli/repository.ts';
 
 function launcher(
-    is64: boolean,
+    isExtended: boolean,
     kind = 1,
     interpreter = String.raw`C:\working project\.venv\Scripts\python.exe`,
 ): Buffer<ArrayBuffer> {
@@ -16,29 +16,36 @@ function launcher(
     bytes.write('MZ');
     bytes.writeUInt32LE(128, 60);
     bytes.write('PE\0\0', 128);
-    bytes.writeUInt16LE(1, 134);
-    bytes.writeUInt16LE(is64 ? 240 : 224, 148);
     const optional = 152;
-    bytes.writeUInt16LE(is64 ? 0x2_0b : 0x1_0b, optional);
-    bytes.writeUInt32LE(4096, optional + 32);
-    bytes.writeUInt32LE(512, optional + 36);
-    bytes.writeUInt32LE(8192, optional + 56);
-    bytes.writeUInt32LE(512, optional + 60);
-    const directories = optional + (is64 ? 112 : 96);
-    bytes.writeUInt32LE(4096, directories + 16);
-    bytes.writeUInt32LE(2048, directories + 20);
-    const section = optional + (is64 ? 240 : 224);
+    const layout = isExtended ? WINDOWS_LAUNCHER_LAYOUTS.extended : WINDOWS_LAUNCHER_LAYOUTS.standard;
+    const directories = optional + layout.directories;
+    const section = optional + layout.size;
+    for (const [offset, value] of [
+        [134, 1],
+        [148, layout.size],
+        [optional, layout.magic],
+        [512 + 14, 1],
+        [512 + 24 + 12, 3],
+    ] as const)
+        bytes.writeUInt16LE(value, offset);
     bytes.write('.rsrc', section);
-    bytes.writeUInt32LE(2048, section + 8);
-    bytes.writeUInt32LE(4096, section + 12);
-    bytes.writeUInt32LE(2048, section + 16);
-    bytes.writeUInt32LE(512, section + 20);
-    bytes.writeUInt16LE(1, 512 + 14);
-    bytes.writeUInt32LE(10, 512 + 16);
-    bytes.writeUInt32LE(0x80_00_00_00 + 24, 512 + 20);
-    bytes.writeUInt16LE(3, 512 + 24 + 12);
+    for (const [offset, value] of [
+        [optional + 32, 4096],
+        [optional + 36, 512],
+        [optional + 56, 8192],
+        [optional + 60, 512],
+        [directories + 16, 4096],
+        [directories + 20, 2048],
+        [section + 8, 2048],
+        [section + 12, 4096],
+        [section + 16, 2048],
+        [section + 20, 512],
+        [512 + 16, 10],
+        [512 + 20, 0x80_00_00_00 + 24],
+    ] as const)
+        bytes.writeUInt32LE(value, offset);
     let nameOffset = 184;
-    let dataOffset = 512;
+    let payloadOffset = 512;
     const resources: [string, Buffer][] = [
         ['UV_PYTHON_PATH', Buffer.from(interpreter)],
         ['UV_SCRIPT_DATA', Buffer.from('PK\u0003\u0004embedded script\u0000\u00FF', 'latin1')],
@@ -52,22 +59,22 @@ function launcher(
         bytes.writeUInt32LE(0x80_00_00_00 + 64 + index * 24, 512 + 44 + index * 8);
         bytes.writeUInt16LE(1, 512 + 64 + index * 24 + 14);
         bytes.writeUInt32LE(136 + index * 16, 512 + 64 + index * 24 + 20);
-        bytes.writeUInt32LE(4096 + dataOffset, 512 + 136 + index * 16);
+        bytes.writeUInt32LE(4096 + payloadOffset, 512 + 136 + index * 16);
         bytes.writeUInt32LE(content.length, 512 + 140 + index * 16);
-        content.copy(bytes, 512 + dataOffset);
-        dataOffset += content.length;
+        content.copy(bytes, 512 + payloadOffset);
+        payloadOffset += content.length;
         nameOffset += 2 + encoded.length;
     }
     return bytes;
 }
 
-test.each([false, true])('uv launcher relocation preserves resource payloads in PE64=%s', (is64) => {
-    const original = launcher(is64);
+test.each([false, true])('uv launcher relocation preserves resource payloads in PE32+=%s', (isExtended) => {
+    const original = launcher(isExtended);
     const retained = Buffer.from(original);
     const relocated = relocateWindowsLauncher(original, INTERPRETERS, new Set())!;
     expect(original).toStrictEqual(retained);
     expect(relocated.readUInt16LE(134)).toBe(2);
-    const added = 152 + (is64 ? 240 : 224) + 40;
+    const added = 152 + (isExtended ? 240 : 224) + 40;
     const address = relocated.readUInt32LE(added + 12);
     const offset = relocated.readUInt32LE(added + 20);
     const size = relocated.readUInt32LE(added + 8);
@@ -124,7 +131,7 @@ test('revision snapshots relocate uv PE resources and retain the working launche
         const result = await run(command, { cwd: root });
         expect(result.code, result.stderr).toBe(0);
     }
-    await withRevisionSnapshot(root, { kind: 'index' }, (snapshot) => {
+    await useRevision(root, { kind: 'index' }, (snapshot) => {
         const bytes = readFileSync(join(snapshot, '.venv/Scripts/check.exe'));
         const section = 152 + 240 + 40;
         const offset = bytes.readUInt32LE(section + 20);

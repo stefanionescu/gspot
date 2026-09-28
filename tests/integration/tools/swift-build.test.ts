@@ -20,38 +20,39 @@ async function inputFor(root: string, check: string): Promise<EngineInput> {
     return sessionInput(root, check);
 }
 
-test('incremental Swift builds preserve compiler state and still detect a changed source', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nconfigurations = ["swift"]\n',
-        'Package.swift':
-            '// swift-tools-version: 6.0\nimport PackageDescription\nlet package = Package(name: "Example", targets: [.target(name: "Example")])\n',
-        'Sources/Example/Value.swift': 'public let value: Int = 1\n',
-    });
-    const first = await inputFor(sandbox.path, 'swift/build');
-    const start = performance.now();
-    expect(await swiftBuild(first)).toStrictEqual([]);
-    const initialMs = performance.now() - start;
-    const plan = swiftBuildPlan(first);
-    const files = [...new Bun.Glob('**/Value.swift.o').scanSync({ cwd: plan.folder })];
-    expect(files).toHaveLength(1);
-    const object = join(plan.folder, files[0]!);
-    const modified = statSync(object).mtimeMs;
-    const again = await inputFor(sandbox.path, 'swift/build');
-    const repeatedStart = performance.now();
-    expect(await swiftBuild(again)).toStrictEqual([]);
-    const repeatedMs = performance.now() - repeatedStart;
-    expect(statSync(object).mtimeMs).toBe(modified);
-    console.log(`Swift compile: initial ${initialMs.toFixed(0)} ms; unchanged ${repeatedMs.toFixed(0)} ms`);
-    writeFileSync(join(sandbox.path, 'Sources/Example/Value.swift'), 'public let value: Int = "wrong"\n');
-    expect(await swiftBuild(await inputFor(sandbox.path, 'swift/build'))).toMatchObject([
-        { file: 'Sources/Example/Value.swift', line: 1, rule: 'compiler' },
-    ]);
-    writeFileSync(join(sandbox.path, 'Sources/Example/Value.swift'), 'public let value: Int = 2\n');
-    expect(await swiftBuild(await inputFor(sandbox.path, 'swift/build'))).toStrictEqual([]);
-}, 120_000);
+// The manifest assigns compiler-backed Swift checks to macOS.
+if (process.platform === 'darwin') {
+    test('incremental Swift builds preserve compiler state and still detect a changed source', async () => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'gspot.toml': 'version = 1\nconfigurations = ["swift"]\n',
+            'Package.swift':
+                '// swift-tools-version: 6.0\nimport PackageDescription\nlet package = Package(name: "Example", targets: [.target(name: "Example")])\n',
+            'Sources/Example/Value.swift': 'public let value: Int = 1\n',
+        });
+        const first = await inputFor(sandbox.path, 'swift/build');
+        const start = performance.now();
+        expect(await swiftBuild(first)).toStrictEqual([]);
+        const initialMs = performance.now() - start;
+        const plan = swiftBuildPlan(first);
+        const files = [...new Bun.Glob('**/Value.swift.o').scanSync({ cwd: plan.folder })];
+        expect(files).toHaveLength(1);
+        const compiledFile = join(plan.folder, files[0]!);
+        const modified = statSync(compiledFile).mtimeMs;
+        const again = await inputFor(sandbox.path, 'swift/build');
+        const repeatedStart = performance.now();
+        expect(await swiftBuild(again)).toStrictEqual([]);
+        const repeatedMs = performance.now() - repeatedStart;
+        expect(statSync(compiledFile).mtimeMs).toBe(modified);
+        console.log(`Swift compile: initial ${initialMs.toFixed(0)} ms; unchanged ${repeatedMs.toFixed(0)} ms`);
+        writeFileSync(join(sandbox.path, 'Sources/Example/Value.swift'), 'public let value: Int = "wrong"\n');
+        expect(await swiftBuild(await inputFor(sandbox.path, 'swift/build'))).toMatchObject([
+            { file: 'Sources/Example/Value.swift', line: 1, rule: 'compiler' },
+        ]);
+        writeFileSync(join(sandbox.path, 'Sources/Example/Value.swift'), 'public let value: Int = 2\n');
+        expect(await swiftBuild(await inputFor(sandbox.path, 'swift/build'))).toStrictEqual([]);
+    }, 120_000);
 
-if (process.platform === 'darwin')
     test('Xcode reuses compiled objects and reports source errors without changing the project', async () => {
         await using sandbox = await testdir();
         const project = `// !$*UTF8*$!
@@ -104,3 +105,4 @@ if (process.platform === 'darwin')
         writeFileSync(join(sandbox.path, 'main.swift'), source);
         expect(await swiftBuild(await inputFor(sandbox.path, 'swift/build'))).toStrictEqual([]);
     }, 120_000);
+}

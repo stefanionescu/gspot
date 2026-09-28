@@ -1,6 +1,6 @@
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
-import { generatedEslint } from '#tests/support/cli/generated-eslint.ts';
+import { generatedEslint } from '#tests/support/cli/generated/eslint.ts';
 
 test.each([
     ['recommended', 'client.js'],
@@ -30,7 +30,7 @@ test.each([
         alias
             .flatMap((file) => file.messages)
             .filter(({ ruleId }) => ruleId === 'gspot/no-exported-alias-constants')
-            .map(({ line, column, messageId }) => ({ line, column, messageId })),
+            .map(({ line, column, messageId: diagnosticId }) => ({ line, column, messageId: diagnosticId })),
     ).toStrictEqual(level === 'recommended' ? [] : [{ line: 2, column: 14, messageId: 'alias' }]);
     const corrected = await eslint.lintText("'use client';\nexport const value = 'public';\n", {
         filePath,

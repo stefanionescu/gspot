@@ -1,35 +1,42 @@
 import { nearMatches } from '#cli/policy/near.ts';
 import type { RuleFile } from '#cli/types/agents.ts';
 import type { Policy } from '#cli/types/policy/policy.ts';
+import { selectedSections } from '#cli/agents/sections.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
+import { readManifests } from '#cli/repository/manifests.ts';
 import type { GeneratedFile } from '#cli/types/generation.ts';
 // Select the rule files for the selection and render them under [rules] directory, keeping the layer folders.
 import { listAssets, readAsset } from '#cli/platform/assets.ts';
+import { detectConditions } from '#cli/configurations/detect.ts';
+import type { Repository } from '#cli/types/repository/repository.ts';
 import { AGENT_LAYERS, FIRST_READ, RULES_PREFIX, TITLE } from '#cli/constants/agents.ts';
-
-function titleOf(text: string): string {
-    return TITLE.exec(text)?.groups?.['title'] ?? '';
-}
 
 // An entry is a file path under the rules folder, or a folder that holds a layer or a configuration's files.
 function isExcluded(source: string, exclude: string[]): boolean {
     return exclude.some((entry) => source === entry || source.startsWith(`${entry.replace(/\/$/u, '')}/`));
 }
 
-function agentLayerFiles(): { source: string; layer: string; configuration: string }[] {
-    return [...AGENT_LAYERS].flatMap((layer) =>
-        listAssets(`${RULES_PREFIX}${layer}/`).map((path) => ({
-            source: path.slice(RULES_PREFIX.length),
-            layer: layer.slice(layer.indexOf('/') + 1),
-            configuration: 'rules',
-        })),
+function declaredGuides(
+    manifests: Manifest[],
+    repository: Repository,
+): Pick<RuleFile, 'source' | 'layer' | 'configuration'>[] {
+    const conditions = manifests.flatMap((manifest) =>
+        Object.values(manifest.rule_files)
+            .flat()
+            .flatMap((entry) => (entry.when === undefined ? [] : [entry.when])),
     );
-}
-
-function manifestFiles(manifests: Manifest[]): { source: string; layer: string; configuration: string }[] {
+    const dependencies = manifests.some((manifest) =>
+        Object.values(manifest.rule_files)
+            .flat()
+            .some((entry) => entry.when !== undefined && entry.when.dependencies.length > 0),
+    );
+    const facts = dependencies ? readManifests(repository.root, repository.files) : [];
+    const matched = detectConditions(conditions, repository.files, facts);
     return manifests.flatMap((manifest) =>
         Object.entries(manifest.rule_files).flatMap(([layer, paths]) =>
-            paths.map((source) => ({ source, layer, configuration: manifest.configuration.name })),
+            paths
+                .filter((entry) => entry.when === undefined || matched.has(entry.when))
+                .map(({ path: source }) => ({ source, layer, configuration: manifest.configuration.name })),
         ),
     );
 }
@@ -38,37 +45,55 @@ function manifestFiles(manifests: Manifest[]): { source: string; layer: string; 
  * The rule files the selection installs, in layer order, deduplicated.
  * @param rules the rule policy
  * @param manifests the selected configurations
+ * @param repository the source inventory for conditional guide selection.
  * @returns the rule files with their targets and titles
  */
-export function selectRuleFiles(rules: Policy['rules'], manifests: Manifest[]): RuleFile[] {
+export function selectRuleFiles(rules: Policy['rules'], manifests: Manifest[], repository: Repository): RuleFile[] {
     const available = new Set(listAssets(RULES_PREFIX));
     const { exclude } = rules;
     const files = new Map<string, RuleFile>();
-    for (const { source, layer, configuration } of [...agentLayerFiles(), ...manifestFiles(manifests)]) {
+    for (const { source, layer, configuration } of [
+        ...[...AGENT_LAYERS].flatMap((layer) =>
+            listAssets(`${RULES_PREFIX}${layer}/`).map((path) => ({
+                source: path.slice(RULES_PREFIX.length),
+                layer: layer.slice(layer.indexOf('/') + 1),
+                configuration: 'rules',
+            })),
+        ),
+        ...declaredGuides(manifests, repository),
+    ]) {
         const path = `${RULES_PREFIX}${source}`;
-        if (!available.has(path) || files.has(source) || isExcluded(source, exclude)) continue;
+        if (!available.has(path)) throw new Error(`The selected rule guide does not exist: ${source}`);
+        if (files.has(source) || isExcluded(source, exclude)) continue;
         files.set(source, {
             source,
             target: `${rules.directory}/${source}`,
             layer,
             configuration,
-            title: titleOf(readAsset(path)),
+            title: TITLE.exec(readAsset(path))?.groups?.['title'] ?? '',
         });
     }
     return files.values().toArray();
 }
 
 /**
- * The rule files as generated files. Content is the rule text unchanged.
+ * The selected rule files with sections filtered to the enforcement level.
  * @param rules the rule policy
  * @param manifests the selected configurations
+ * @param level the selected enforcement level.
+ * @param repository the source inventory for conditional guide selection.
  * @returns the files to write under the rules directory
  */
-export function assembleRules(rules: Policy['rules'], manifests: Manifest[]): GeneratedFile[] {
+export function assembleRules(
+    rules: Policy['rules'],
+    manifests: Manifest[],
+    level: Policy['level'],
+    repository: Repository,
+): GeneratedFile[] {
     if (!rules.install) return [];
-    return selectRuleFiles(rules, manifests).map((file) => ({
+    return selectRuleFiles(rules, manifests, repository).map((file) => ({
         path: file.target,
-        content: readAsset(`${RULES_PREFIX}${file.source}`),
+        content: selectedSections(readAsset(`${RULES_PREFIX}${file.source}`), level),
         readOnly: true,
         kind: 'rules',
         configuration: file.configuration,

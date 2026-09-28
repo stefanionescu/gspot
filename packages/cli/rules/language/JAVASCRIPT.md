@@ -13,23 +13,23 @@ project contracts apply at both levels.
 
 ## Core JavaScript philosophy
 
-JavaScript makes its contract obvious. Build code turns config, content, and assets into deterministic output. Browser code adds small, progressive behavior to static HTML. Quality tooling checks the repo; it must not leak into production code.
+JavaScript code preserves the runtime, input, and output contracts of its owner.
+Keep development tooling out of production runtime imports.
 
-Prefer plain values, small functions, explicit module boundaries, and readable control flow. Avoid clever runtime indirection, implicit globals, hidden side-effects, and abstractions that obscure the source of generated HTML.
+Keep inputs and side effects explicit. Validate values that cross an external boundary.
 
 If enforcement differs from this document, fix the enforcement or update the rule explicitly. Do not use drift as a reason to ignore the standard.
 
 ## Runtime standard
 
-Server-side scripts run on the runtime and version the project declares. Browser code targets the browsers and build pipeline the project declares. Unbundled scripts loaded from static HTML must run without build-time transforms. Cloudflare middleware must stay compatible with the Workers runtime.
+Server-side scripts run on the runtime and version the project declares. Browser code targets the browsers and build pipeline the project declares. Unbundled scripts loaded from static HTML must run without build-time transforms.
 
 Rules:
 
 - Use APIs available in the declared runtime.
 - Do not rely on implicit globals. A file states its runtime, and only that runtime's globals are available.
-- Read `process.env` in one configuration owner module. Nowhere else.
 - Keep package versions exact; do not use range prefixes.
-- Do not add a build step that requires a runtime outside the project's declared tooling without updating `mise.toml`, package policy, and documentation.
+- Do not add a build step that requires a runtime outside the project's declared tooling without updating the declared runtime configuration, package policy, and documentation.
 
 ## Source files
 
@@ -53,18 +53,24 @@ Follow the owner boundary of the file you are editing.
 Rules:
 
 - Keep existing CommonJS modules CommonJS unless there is a scoped migration plan for the whole owner area.
+
+Production code must not import quality tooling. Browser scripts must not import server-only code, config modules, middleware, or quality tooling.
+
+### Module conventions
+
+<!-- level: all -->
+
+- Read `process.env` in one configuration owner module. Nowhere else.
 - Prefer named imports and named exports for module code.
 - Avoid mutable exports such as `export let`.
 - Avoid default exports in app modules.
 - Allow default exports for ecosystem-owned config files when the tool expects them.
 - Do not create container classes or exported objects only to simulate a namespace.
-- No re-exports in application source: no `export { x } from`, no `export * from`, no index
-  barrels. Import the module that declares the symbol.
-- Private declarations first, public last: every non-exported function, constant, and class
-  precedes the first `export`.
 - Keep JSDoc `@typedef` declarations beside their behavioral owner. Share them through type imports when another owner needs the contract.
 
-Production code must not import quality tooling. Browser scripts must not import server-only code, config modules, middleware, or quality tooling.
+- No re-exports in application source. Import the module that declares the symbol.
+  A library can explicitly select index-only re-exports.
+- Put private declarations before public declarations.
 
 ## Values, literals, and coercion
 
@@ -93,6 +99,8 @@ Rules:
 
 ## Functions and parameters
 
+<!-- level: all -->
+
 Make function contracts obvious from names, parameters, and call sites.
 
 Rules:
@@ -105,9 +113,11 @@ Rules:
 - Use early returns to keep error and missing-state handling readable.
 - Avoid pass-through functions that only rename another call.
 
-For public quality-tool functions, export the function directly and test or lint it through the owning runner rather than creating a wrapper module.
+Export a public function from its behavioral owner. Do not create a forwarding module solely to expose it.
 
 ## Classes
+
+<!-- level: all -->
 
 Use classes only when instance identity or encapsulated state is real.
 
@@ -192,5 +202,4 @@ Rules:
 
 - Do not edit generated files as the source of truth.
 - Keep generated asset names deterministic and content-hashed where the build pipeline expects hashes.
-- Keep generated analytics config in a shared asset, not inline in templates.
-- Keep JSON-LD generation explicit and escaped.
+- Encode generated data for its output context before embedding it in a document.

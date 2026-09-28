@@ -1,6 +1,7 @@
 import { z } from 'zod';
+import { toolSchema } from '#cli/configurations/tools.ts';
+import { SENTENCE_MIN } from '#cli/constants/configurations.ts';
 import { outputSchema } from '#cli/configurations/output-format.ts';
-import { MAX_EXIT_CODE, SENTENCE_MIN } from '#cli/constants/configurations.ts';
 import { commandSchema, findingExitCodesSchema } from '#cli/configurations/command-schema.ts';
 
 const stringList = z.array(z.string()).default([]);
@@ -12,103 +13,6 @@ const claimsSchema = z.strictObject({
     paths: stringList,
     from_languages: z.boolean().default(false),
     natures: z.array(z.enum(['source', 'generated', 'vendored', 'binary'])).default(['source']),
-});
-
-const installerDefinition = z.strictObject({ name: z.string(), version: z.string() });
-const installerSchema = z.union([z.string(), installerDefinition]);
-const npmInstallerSchema = z.union([
-    z.string(),
-    installerDefinition.extend({ version_exit_code: z.number().int().min(0).max(MAX_EXIT_CODE).optional() }),
-]);
-
-const installerFields = {
-    npm: npmInstallerSchema.optional(),
-    pypi: installerSchema.optional(),
-    mise: installerSchema.optional(),
-    brew: installerSchema.optional(),
-    apt: installerSchema.optional(),
-    cargo: installerSchema.optional(),
-    github: installerSchema.optional(),
-    winget: installerSchema.optional(),
-    scoop: installerSchema.optional(),
-};
-
-const suppressionPattern = z
-    .string()
-    .min(1)
-    .refine((value) => {
-        try {
-            new RegExp(value, 'u');
-            return true;
-        } catch {
-            return false;
-        }
-    }, 'Expected a valid Unicode regular expression.');
-
-const toolSchema = z.strictObject({
-    name: z.string(),
-    kind: z.enum(['binary', 'library']).default('binary'),
-    version: z.string().optional(),
-    floor: z.string().optional(),
-    provider: z.literal('host').optional(),
-    windows: z.boolean().default(true),
-    version_command: commandSchema.optional(),
-    version_exit_code: z.number().int().min(0).max(MAX_EXIT_CODE).optional(),
-    version_regex: z.string().optional(),
-    // Output that means the tool fell over rather than found something, for every check that runs it.
-    crash_pattern: suppressionPattern.optional(),
-    // Where the tool documents one rule; explain prints it with the rule name in place of {rule}.
-    rule_page: z.string().includes('{rule}', { message: 'A rule page names where {rule} goes.' }).optional(),
-    suppression: z
-        .strictObject({
-            marker: suppressionPattern,
-            reason: suppressionPattern,
-            forbidden: z.boolean().optional(),
-        })
-        .optional(),
-    env: z.record(z.string(), z.string()).optional(),
-    query_packs: z.record(z.string().regex(/^[a-z][a-z0-9-]*$/u), z.string().regex(/^\d+\.\d+\.\d+$/u)).optional(),
-    prettier: z
-        .strictObject({
-            entry: z.string().min(1),
-            overrides: z
-                .array(z.strictObject({ files: z.string().min(1), options: z.record(z.string(), z.unknown()) }))
-                .default([]),
-        })
-        .optional(),
-    takeover: z
-        .array(
-            z
-                .strictObject({
-                    file: z.string().min(1),
-                    table: z.string().min(1).optional(),
-                    key: z.string().min(1).optional(),
-                    shared: z.boolean().default(false),
-                    check: z.string().min(1).optional(),
-                    carries: z.enum([
-                        'ignore-paths',
-                        'rules-table',
-                        'words',
-                        'advisories',
-                        'licenses',
-                        'eslint-config',
-                    ]),
-                })
-                .superRefine((row, context) => {
-                    if (row.key !== undefined && row.table !== undefined)
-                        context.addIssue({
-                            code: 'custom',
-                            message: 'A takeover row selects either a key or a table.',
-                        });
-                    if ((row.key !== undefined || row.table !== undefined) && !row.shared)
-                        context.addIssue({
-                            code: 'custom',
-                            message: 'A selected key or table must preserve its shared file.',
-                        });
-                }),
-        )
-        .optional(),
-    ...installerFields,
 });
 
 const pointerSchema = z
@@ -227,6 +131,7 @@ const checkSchema = z.union(
                 'gitleaks-history',
                 'verified-secrets',
                 'swiftlint',
+                'pydoclint',
                 'actions',
             ]),
             command: absent,
@@ -250,8 +155,8 @@ const checkSchema = z.union(
     { error: 'Choose one command, tool analysis, engine, or reported_by owner without combining execution forms.' },
 );
 
-// How init fills a setting from the repository: a dependency that turns it on, dependencies that each name a value,
-// the first folder that exists, or folders that each name a value (K-93).
+// Detection selects a setting from dependency presence or the first existing folder.
+// Dependencies and folders can each map to explicit values (K-93).
 const settingDetectSchema = z.strictObject({
     dependency: z.string().min(1).optional(),
     dependencies: z.record(z.string().min(1), z.unknown()).optional(),
@@ -299,10 +204,29 @@ function isUntrackedPath(path: string): boolean {
     );
 }
 
+const detectionSchema = z
+    .strictObject({
+        extensions: stringList,
+        filenames: stringList,
+        dependencies: stringList,
+        shebangs: stringList,
+        tags: stringList,
+        paths: stringList,
+        // A file, or a folder such as *.xcodeproj, whose folder is a project: init proposes a scope there.
+        project_files: stringList,
+    })
+    .default({
+        extensions: [],
+        filenames: [],
+        dependencies: [],
+        shebangs: [],
+        tags: [],
+        paths: [],
+        project_files: [],
+    });
+
 export const manifestSchema = z.strictObject({
-    untracked: z
-        .array(z.string().refine((path) => isUntrackedPath(path), 'Untracked paths must stay inside .gspot.'))
-        .default([]),
+    untracked: z.array(z.string().refine(isUntrackedPath, 'Untracked paths must stay inside .gspot.')).default([]),
     configuration: z.strictObject({
         name: z.string().regex(/^[a-z0-9-]+$/),
         kind: z.enum(['language', 'framework', 'platform', 'tool', 'library', 'database', 'policy']),
@@ -316,26 +240,7 @@ export const manifestSchema = z.strictObject({
         needs_git: z.boolean().default(false),
         description: sentence,
     }),
-    detect: z
-        .strictObject({
-            extensions: stringList,
-            filenames: stringList,
-            dependencies: stringList,
-            shebangs: stringList,
-            tags: stringList,
-            paths: stringList,
-            // A file, or a folder such as *.xcodeproj, whose folder is a project: init proposes a scope there.
-            project_files: stringList,
-        })
-        .default({
-            extensions: [],
-            filenames: [],
-            dependencies: [],
-            shebangs: [],
-            tags: [],
-            paths: [],
-            project_files: [],
-        }),
+    detect: detectionSchema,
     claims: claimsSchema.default({
         extensions: [],
         filenames: [],
@@ -353,8 +258,29 @@ export const manifestSchema = z.strictObject({
     // Files a dead-code scan starts from, relative to the scope, for the code this configuration knows.
     entry_files: stringList,
     coverage: stringListTable.default({}),
-    rule_files: stringListTable.default({}),
+    rule_files: z
+        .record(
+            z.string(),
+            z.array(
+                z.strictObject({
+                    path: z.string().min(1),
+                    when: detectionSchema.unwrap().optional(),
+                }),
+            ),
+        )
+        .default({}),
     required_rules: stringListTable.default({}),
+    rules_off: z
+        .array(
+            z.strictObject({
+                tool: z.literal('eslint'),
+                rules: z.array(z.string().min(1)).min(1),
+                reason: sentence,
+                files: z.array(z.string().min(1)).min(1).optional(),
+                when: z
+                    .strictObject({ setting: z.string().min(1), value: z.union([z.string(), z.number(), z.boolean()]) })
+                    .optional(),
+            }),
+        )
+        .default([]),
 });
-
-export const INSTALLER_KEYS = Object.keys(installerFields) as (keyof typeof installerFields)[];

@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
-import { hasPackages } from '#cli/tools/vale.ts';
 import { createFileTree, testdir } from 'testdirs';
+import { hasOwnedPackages } from '#cli/tools/vale.ts';
 import { readFileSync, symlinkSync, unlinkSync } from 'node:fs';
 
 test.each(['configuration', 'package', 'nested directory'])(
@@ -25,7 +25,7 @@ test.each(['configuration', 'package', 'nested directory'])(
             await createFileTree(root, { '.gspot/config/vale/styles/LocalStyle/.keep': '' });
             symlinkSync('../../../../../outside', join(root, '.gspot/config/vale/styles/LocalStyle/nested'));
         }
-        expect(() => hasPackages(root, true)).toThrow(/lifecycle/iu);
+        expect(() => hasOwnedPackages(root)).toThrow(/lifecycle/iu);
         expect(readFileSync(join(directory.path, 'outside/terms.yml'), 'utf8')).toBe('external bytes\n');
         expect(readFileSync(join(directory.path, 'outside/vale.ini'), 'utf8')).toBe(config);
     },

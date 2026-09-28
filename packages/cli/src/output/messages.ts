@@ -3,8 +3,8 @@ import pc from 'picocolors';
 import { createConsola } from 'consola';
 import type { ConsolaInstance } from 'consola';
 import type { OutputOptions } from '#cli/types/output.ts';
-import { isCi, isColorRefused } from '#cli/platform/environment.ts';
-import { LEVELS, MESSAGE_JSON_INDENT } from '#cli/constants/output.ts';
+import { LEVELS, OUTPUT_JSON_INDENT } from '#cli/constants/output.ts';
+import { isCi, environmentVariables } from '#cli/platform/environment.ts';
 
 const state: { options: OutputOptions; instance: ConsolaInstance | undefined } = {
     options: { verbosity: 'normal', json: false, color: false },
@@ -27,13 +27,14 @@ export const colors = pc.createColors(false);
  * @returns whether to paint
  */
 export function isColorAllowed(isNoColor: boolean): boolean {
-    if (isNoColor || isColorRefused() || isCi()) return false;
+    const noColor = environmentVariables()['NO_COLOR'];
+    if (isNoColor || (noColor !== undefined && noColor !== '') || isCi()) return false;
     return process.stderr.isTTY && process.stdout.isTTY;
 }
 
 /**
  * Sets the output mode for the process.
- * @param next verbosity, JSON and color
+ * @param next verbosity, JSON, and color
  */
 export function configureOutput(next: OutputOptions): void {
     state.options = next;
@@ -93,5 +94,5 @@ export function print(text: string): void {
  * @param value the documented object of the command
  */
 export function printJson(value: unknown): void {
-    process.stdout.write(`${JSON.stringify(value, null, MESSAGE_JSON_INDENT)}\n`);
+    process.stdout.write(`${JSON.stringify(value, null, OUTPUT_JSON_INDENT)}\n`);
 }

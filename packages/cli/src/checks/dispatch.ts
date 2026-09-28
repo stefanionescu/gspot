@@ -52,9 +52,9 @@ import { buildReproducible, siteBuilds } from '#cli/checks/static-site/build.ts'
 import { migrationOrder, migrationsFrozen } from '#cli/checks/postgres/history.ts';
 import { trackedDependencies } from '#cli/checks/repository/tracked-dependencies.ts';
 import { swiftAnalyze, swiftBuild, swiftPeriphery } from '#cli/checks/swift/build.ts';
-import { orphanSources, projectSymlinks, testPlans } from '#cli/checks/xcode/project.ts';
 import { disabledTests, noSleep, recordingMode } from '#cli/checks/xctest/line-checks.ts';
 import { sqlBlockComments, sqlFileLength, sqlSyntax, sqlFunctions } from '#cli/checks/sql.ts';
+import { orphanSources, projectSymlinks, testPlans } from '#cli/checks/xcode/project/checks.ts';
 import { projectValid, migrationNames, storagePolicies } from '#cli/checks/supabase/config-checks.ts';
 import { dependencyAlignment, nextjsConfiguration, routeSegments } from '#cli/checks/nextjs/source.ts';
 import { dependencyOwnership, importLinter, typecheckMembership } from '#cli/checks/python/project.ts';
@@ -187,7 +187,7 @@ const checks: Record<string, Engine> = {
  * @param spec the check
  * @returns the engine that runs the analysis
  */
-export function resolveIntegrity(spec: CheckSpec): Engine {
+export function integrityEngine(spec: CheckSpec): Engine {
     const name = spec.analysis ?? spec.name.slice(spec.name.indexOf('/') + 1);
     const check = checks[name];
     if (!check) throw new Error(`No integrity analysis is called ${name}.`);

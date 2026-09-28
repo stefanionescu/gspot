@@ -7,10 +7,10 @@ import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { containing } from '#tests/support/expectations.ts';
-import { scratchCopy } from '#cli/execution/file-workspace.ts';
-import { claimedInputs, planRun } from '#cli/execution/planning/plan.ts';
+import { scratchCopy } from '#cli/execution/files/workspace.ts';
 import { engineInput, runEngineCheck } from '#cli/execution/engines.ts';
 import { scriptIndex } from '#cli/checks/structure/cross-file-index.ts';
+import { claimedInputs, planRun } from '#cli/execution/planning/plan.ts';
 
 test.each([
     {
@@ -88,14 +88,12 @@ test('engine inputs expose selected files and reserve the repository inventory f
         only: ['jest/coverage', 'integrity/stale-paths'],
     });
     const project = planned.find((entry) => entry.check === 'jest/coverage' && entry.scope.scope.path === 'apps/web')!;
-    const scoped = engineInput(session, project);
+    const scopeInput = engineInput(session, project);
     expect(claimedInputs(session, project).map((file) => file.path)).toStrictEqual(['apps/web/value.test.js']);
-    expect(scoped.scopeRoot).toBe(join(sandbox.path, 'apps/web'));
-    expect(scoped.files.map((file) => file.path).toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
-        'apps/web/fixture.bin',
-        'apps/web/jest.config.json',
-        'apps/web/value.test.js',
-    ]);
+    expect(scopeInput.scopeRoot).toBe(join(sandbox.path, 'apps/web'));
+    expect(
+        scopeInput.files.map((file) => file.path).toSorted((left, right) => left.localeCompare(right)),
+    ).toStrictEqual(['apps/web/fixture.bin', 'apps/web/jest.config.json', 'apps/web/value.test.js']);
     const leaked = await runEngineCheck(
         session,
         () => Promise.resolve({ findings: [], checkedFiles: ['unrelated/private.txt'] }),
@@ -109,8 +107,8 @@ test('engine inputs expose selected files and reserve the repository inventory f
     );
     expect(owned).toMatchObject({ status: 'ok', checkedFiles: ['apps/web/value.test.js'] });
     const scratch = scratchCopy(
-        scoped.root,
-        scoped.files.map((file) => file.path),
+        scopeInput.root,
+        scopeInput.files.map((file) => file.path),
         ['apps/web'],
     );
     try {

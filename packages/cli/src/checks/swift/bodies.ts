@@ -6,15 +6,6 @@ function problem(fn: SwiftFunction, rule: string, text: string): StructureProble
     return { file: fn.path, line: fn.node.startPosition.row + 1, rule, text };
 }
 
-function normalized(fn: SwiftFunction): string[] {
-    return fn.body.flatMap((statement) =>
-        statement.text
-            .split('\n')
-            .map((line) => line.trim().replaceAll(/\s+/gu, ' '))
-            .filter((line) => line !== '' && !line.startsWith('//')),
-    );
-}
-
 /**
  * Report every implemented function at or below the configured statement threshold.
  * @param functions the functions of a file
@@ -37,7 +28,7 @@ export function trivialFunctions(functions: SwiftFunction[], threshold: number):
 }
 
 /**
- * Groups of functions whose bodies match line for line, at or above a number of lines.
+ * Groups of matching function bodies that meet the minimum line count.
  * @param functions every function of the run
  * @param minimum the fewest body lines a repeated body holds
  * @returns one problem for each group
@@ -45,7 +36,12 @@ export function trivialFunctions(functions: SwiftFunction[], threshold: number):
 export function duplicateFunctions(functions: SwiftFunction[], minimum: number): StructureProblem[] {
     const groups = new Map<string, SwiftFunction[]>();
     for (const fn of functions) {
-        const lines = normalized(fn);
+        const lines = fn.body.flatMap((statement) =>
+            statement.text
+                .split('\n')
+                .map((line) => line.trim().replaceAll(/\s+/gu, ' '))
+                .filter((line) => line !== '' && !line.startsWith('//')),
+        );
         if (lines.length < minimum) continue;
         const key = lines.join('\n');
         groups.set(key, [...(groups.get(key) ?? []), fn]);

@@ -1,13 +1,13 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
-// Planted repository for the react configuration: a hook inside a condition, a list with no keys, markup set from a string, an image with no text, a file that exports more than components, an empty element left open, and a debugging call left in a test.
+// React fixtures cover hook order, keyed lists, unsafe markup, and image accessibility. Additional cases check export boundaries, element syntax, and test debugging calls.
 import { run } from '#tests/support/cli/command.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
 import { containing } from '#tests/support/expectations.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
 import { installSandbox } from '#tests/support/cli/sandbox.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
 import type { LintCase } from '#tests/types/acceptance/source/configurations/react.ts';
 
 import {

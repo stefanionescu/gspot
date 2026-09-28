@@ -4,7 +4,7 @@ export const SET_NEAR_LIMIT = 12;
 export const RULE_KEY_DEPTH = 3;
 export const INTEGER = /^-?\d+$/u;
 export const DECIMAL = /^-?\d+\.\d+$/u;
-// A value that opens with a bracket is meant as a list or a table, whether or not it closes.
+// An opening bracket identifies an intended list or table even without a closing bracket.
 export const STRUCTURED = /^[[{]/u;
 export const HELP_CODES = new Set(['commander.helpDisplayed', 'commander.version', 'commander.help']);
 export const KNOWN_ERRORS = new Set([

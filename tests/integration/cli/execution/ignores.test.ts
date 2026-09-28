@@ -4,7 +4,9 @@ import { createFileTree, testdir } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { reportSchema } from '#cli/execution/report.ts';
+import { rejection } from '#tests/support/expectations.ts';
 import { mkdirSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
+import { suppressionComments } from '#cli/checks/repository/suppressions.ts';
 import { applyInlineIgnores, inlineIgnores } from '#cli/execution/ignores.ts';
 
 test('inline gspot-ignore comments apply to the next line when alone and the same line otherwise', async () => {
@@ -12,7 +14,7 @@ test('inline gspot-ignore comments apply to the next line when alone and the sam
     await createFileTree(sandbox.path, {
         'a.sh': 'echo 1\n# gspot-ignore structure/call-through -- The public name is the stable one.\nx() { y; }\nz() { w; } # gspot-ignore structure/call-through\n',
     });
-    const inline = inlineIgnores({ root: sandbox.path, sources: new Map() }, 'a.sh');
+    const inline = await inlineIgnores({ root: sandbox.path, sources: new Map() }, 'a.sh');
     expect(inline).toStrictEqual([
         { line: 3, check: 'structure/call-through', reason: 'The public name is the stable one.' },
         { line: 4, check: 'structure/call-through' },
@@ -59,7 +61,7 @@ test('inline engine comments do not suppress external-tool findings', async () =
         'a.sh': '# gspot-ignore structure/custom -- Deliberate.\necho "$1"\n',
     });
     const finding = { check: 'structure/custom', file: 'a.sh', line: 2, message: 'External finding', fixable: false };
-    expect(applyInlineIgnores({ root: sandbox.path, sources: new Map() }, [finding])).toStrictEqual([finding]);
+    expect(await applyInlineIgnores({ root: sandbox.path, sources: new Map() }, [finding])).toStrictEqual([finding]);
 });
 
 test('missing finding paths have no inline ignores but failed reads remain errors', async () => {
@@ -72,9 +74,11 @@ test('missing finding paths have no inline ignores but failed reads remain error
         message: 'Required source is missing.',
         fixable: false,
     };
-    expect(applyInlineIgnores({ root: sandbox.path, sources: new Map() }, [finding])).toStrictEqual([finding]);
+    expect(await applyInlineIgnores({ root: sandbox.path, sources: new Map() }, [finding])).toStrictEqual([finding]);
     mkdirSync(join(sandbox.path, 'missing.ts'));
-    expect(() => applyInlineIgnores({ root: sandbox.path, sources: new Map() }, [finding])).toThrow();
+    expect(await rejection(applyInlineIgnores({ root: sandbox.path, sources: new Map() }, [finding]))).toContain(
+        'EISDIR',
+    );
 });
 
 test.each(['unused-functions', 'dead-parameters', 'trivial-function', 'doc-comment'])(
@@ -130,12 +134,53 @@ test.each(['source.sh', '../outside/source.sh'])(
             message: 'Finding',
             fixable: false,
         };
-        expect(() => applyInlineIgnores({ root: root, sources: new Map() }, [finding])).toThrow();
+        expect(await rejection(applyInlineIgnores({ root: root, sources: new Map() }, [finding]))).not.toBe('');
         expect(await Bun.file(join(sandbox.path, 'outside/source.sh')).text()).toBe(comment);
         unlinkSync(join(root, 'source.sh'));
         writeFileSync(join(root, 'source.sh'), comment);
         expect(
-            applyInlineIgnores({ root: root, sources: new Map() }, [{ ...finding, file: 'source.sh' }]),
+            await applyInlineIgnores({ root: root, sources: new Map() }, [{ ...finding, file: 'source.sh' }]),
         ).toStrictEqual([]);
+    },
+);
+
+test.each(['-->', '--!>'])(
+    'HTML suppression reasons exclude the %s terminator and still require a reason',
+    async (ending) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'gspot.toml':
+                'version = 1\nlevel = "all"\nrequire_reasons = true\nconfigurations = ["html", "structure"]\n',
+            'page.html': `<!-- html-validate-disable attr -- External validator owns this attribute. ${ending}\n<!-- html-validate-disable attr ${ending}\n`,
+        });
+        const session = await openSession(sandbox.path);
+        const comments = await suppressionComments(
+            session.root,
+            session.scopes,
+            session.observations,
+            session.repository.files,
+        );
+        expect(comments).toStrictEqual([
+            {
+                file: 'page.html',
+                line: 1,
+                form: 'html-validate',
+                forbidden: false,
+                reason: 'External validator owns this attribute.',
+            },
+            { file: 'page.html', line: 2, form: 'html-validate', forbidden: false },
+        ]);
+        const result = await executeRun(session, {
+            stage: 'commit',
+            skips: [],
+            fix: false,
+            isDryRun: false,
+            noCache: true,
+            only: ['integrity/suppressions'],
+        });
+        expect(result.report.exitCode).toBe(1);
+        expect(
+            result.report.checks.flatMap((check) => check.findings).map(({ file, line }) => ({ file, line })),
+        ).toStrictEqual([{ file: 'page.html', line: 2 }]);
     },
 );

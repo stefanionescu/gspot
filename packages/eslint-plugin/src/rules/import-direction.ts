@@ -1,11 +1,11 @@
 import { posix } from 'node:path';
 import { importFile } from '#plugin/imports.ts';
 import type { TSESTree } from '@typescript-eslint/utils';
-import { ASTUtils, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { CODE_EXTENSION } from '#plugin/constants/rules.ts';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
+import { ASTUtils, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { lintedFile, lintedRoot, isAnyGlobMatch, relativeToRoot, staticString } from '#plugin/files.ts';
 
-import { CODE_EXTENSION } from '#plugin/constants/rules.ts';
 import {
     CONFIG_ROLES,
     DEFAULT_CONTRACTS,
@@ -116,7 +116,7 @@ export const importDirection = createRule<ImportDirectionOptions, ImportDirectio
         const contracts = options.contracts ?? DEFAULT_CONTRACTS;
         const rootOfScope = scope === '' ? root : `${root}/${scope}`;
         const check = (node: TSESTree.Node, sourceNode: TSESTree.Node | null | undefined, typeOnly = false): void => {
-            const source = sourceNode === null || sourceNode === undefined ? undefined : staticString(sourceNode);
+            const source = staticString(sourceNode);
             const resolved =
                 source === undefined ? undefined : importFile(file, source, rootOfScope, options.aliases ?? {});
             if (source === undefined || resolved === undefined) return;

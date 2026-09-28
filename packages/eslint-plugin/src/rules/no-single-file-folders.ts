@@ -46,14 +46,13 @@ export const noSingleFileFolders = createRule<SingleFileFoldersOptions, 'lone'>(
             Program(node) {
                 const entries = readDirectory(posix.dirname(file));
                 if (entries.some((entry) => entry.kind === 'dir')) return;
-                const code = entries.filter(
-                    (entry) =>
-                        entry.kind === 'file' &&
-                        !entry.name.endsWith('.d.ts') &&
-                        extensions.some((extension) => entry.name.endsWith(extension)),
-                );
-                const [only] = code;
-                if (only !== undefined && code.length === 1)
+                const siblings = entries.filter((entry) => entry.kind === 'file' && !entry.name.endsWith('.d.ts'));
+                const [only] = siblings;
+                if (
+                    only !== undefined &&
+                    siblings.length === 1 &&
+                    extensions.some((extension) => only.name.endsWith(extension))
+                )
                     context.report({ node, messageId: 'lone', data: { name: only.name } });
             },
         };

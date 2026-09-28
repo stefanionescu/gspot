@@ -1,21 +1,21 @@
-// A value in brackets is a list or a table, written as JSON or the way gspot.toml writes it.
+// A bracketed list or table uses JSON or TOML syntax.
 
 import type { Command } from 'commander';
 import { parse as parseToml } from 'smol-toml';
 import { PolicyError } from '#cli/policy/read.ts';
 import * as messages from '#cli/policy/messages.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
-import { isLoosening } from '#cli/policy/loosening.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import type { SettingSpec } from '#cli/types/configurations.ts';
 import { settingValue, specFor } from '#cli/policy/settings.ts';
 import type { Session } from '#cli/types/execution/execution.ts';
 import { assertPinMatches } from '#cli/lifecycle/version-pin.ts';
-import type { Mutation, ScopeSelection } from '#cli/types/policy/policy.ts';
+import { commitPolicy, requireReason } from '#cli/commands/policy.ts';
+import { isLoosening, isReasonAccepted } from '#cli/policy/loosening.ts';
 import type { SetOptions, CommandResult } from '#cli/types/commands/commands.ts';
 import { directoryOf, quoteArgument, textEntry } from '#cli/platform/arguments.ts';
-import { commitPolicy, refuseBadReason, requireReason } from '#cli/commands/policy.ts';
+import type { Mutation, RawPolicy, ScopeSelection } from '#cli/types/policy/policy.ts';
 import { appendList, deleteKey, removeFromList, scopeHolder, setKey } from '#cli/policy/write.ts';
 import { DECIMAL, INTEGER, RULE_KEY_DEPTH, SET_NEAR_LIMIT, STRUCTURED } from '#cli/constants/commands/commands.ts';
 
@@ -59,10 +59,12 @@ function shaped(parsed: unknown[], isList: boolean): unknown {
     return Array.isArray(only) ? (only as unknown[]) : parsed;
 }
 
-// A list item that is a table carries its own reason; one sentence there is what a loosening list asks for.
-function hasOwnReasons(value: unknown): boolean {
-    const items = Array.isArray(value) ? (value as unknown[]) : [];
-    return items.length > 0 && items.every((item) => typeof (item as { reason?: unknown } | null)?.reason === 'string');
+function declarationPaths(key: string, value: unknown): value is string[] {
+    return (
+        (key === 'generated' || key === 'vendored') &&
+        Array.isArray(value) &&
+        value.every((item) => typeof item === 'string')
+    );
 }
 
 // The reason given on the command line goes into every table item that has none.
@@ -74,24 +76,26 @@ function reasonsFilled(value: unknown, reason: string | undefined): unknown {
 }
 
 function isReasonOwed(spec: SettingSpec, o: SetOptions, value: unknown, shipped: unknown): boolean {
-    if (spec.kind === 'list' && o.remove && spec.direction === 'loosening') return false;
-    if (spec.kind === 'list' && !o.remove && hasOwnReasons(value)) return false;
-    const isListEdit = spec.kind === 'list' && (o.remove || o.replace);
-    if (isListEdit) return spec.direction !== 'neutral';
-    return isLoosening(spec, value, shipped);
+    if (spec.kind !== 'list') return isLoosening(spec, value, shipped);
+    if (o.remove) return spec.direction !== 'loosening' && spec.direction !== 'neutral';
+    // A nonempty list of explained tables already carries the reasons for its entries.
+    const items: unknown[] = Array.isArray(value) ? value : [];
+    if (
+        items.length > 0 &&
+        items.every(
+            (item) => item !== null && typeof item === 'object' && 'reason' in item && typeof item.reason === 'string',
+        )
+    )
+        return false;
+    return o.replace ? spec.direction !== 'neutral' : isLoosening(spec, value, shipped);
 }
 
 function setMutation(o: SetOptions, isList: boolean, value: unknown): Mutation {
     const written = !isList && o.reason !== undefined ? { value, reason: o.reason } : value;
     return (raw) => {
         const holder = scopeHolder(raw, o.scope);
-        if (
-            (o.key === 'generated' || o.key === 'vendored') &&
-            o.remove &&
-            Array.isArray(value) &&
-            value.every((item) => typeof item === 'string')
-        ) {
-            const entries = (holder[o.key] ?? []) as { paths: string[]; reason?: string; produced_by?: string }[];
+        if (o.remove && declarationPaths(o.key, value)) {
+            const entries = (holder[o.key] ?? []) as NonNullable<RawPolicy['generated']>;
             holder[o.key] = entries
                 .map((entry) => ({ ...entry, paths: entry.paths.filter((path) => !value.includes(path)) }))
                 .filter((entry) => entry.paths.length > 0);
@@ -127,6 +131,31 @@ function selectionFor(session: Session, scope: string | undefined): ScopeSelecti
     return selection;
 }
 
+// Quote policy values and preserve the mutation flags in the missing-reason command hint.
+function setReasonCommand(options: SetOptions): string {
+    const command = ['gspot', 'set', quoteArgument(options.key), ...options.items.map((item) => quoteArgument(item))];
+    if (options.scope !== undefined) command.push('--scope', quoteArgument(options.scope));
+    if (options.replace) command.push('--replace');
+    if (options.remove) command.push('--remove');
+    command.push('--reason', '"..."');
+    return command.join(' ');
+}
+
+function validateSetReason(
+    session: Session,
+    selection: ScopeSelection,
+    o: SetOptions,
+    spec: SettingSpec,
+    value: unknown,
+): void {
+    if (!session.policyFiles.policy.requireReasons) return;
+    const shipped = selection.surface.defaults.get(spec.name)?.value;
+    const where = `gspot set ${o.key}`;
+    if (isReasonOwed(spec, o, value, shipped)) requireReason(o.reason, where, setReasonCommand(o));
+    else if (o.reason !== undefined && !isReasonAccepted(o.reason))
+        throw new PolicyError([messages.refusedReason(where, o.reason)]);
+}
+
 function writeValue(
     root: string,
     session: Session,
@@ -141,19 +170,11 @@ function writeValue(
         o.items.map((item) => parseValue(item)),
         isList,
     );
-    const isDeclaration = o.key === 'generated' || o.key === 'vendored';
-    const paths = isDeclaration && Array.isArray(parsed) && parsed.every((item) => typeof item === 'string');
-    const value = reasonsFilled(paths && !o.remove ? [{ paths: parsed }] : parsed, isList ? o.reason : undefined);
-    const shipped = selection.surface.defaults.get(spec.name)?.value;
-    const where = `gspot set ${o.key}`;
-    const scopeFlag = o.scope === undefined ? '' : ` --scope ${quoteArgument(o.scope)}`;
-    if (session.policyFiles.policy.requireReasons && isReasonOwed(spec, o, value, shipped))
-        requireReason(
-            o.reason,
-            where,
-            `gspot set ${quoteArgument(o.key)} ${o.items.map((item) => quoteArgument(item)).join(' ')}${scopeFlag}${o.replace ? ' --replace' : ''}${o.remove ? ' --remove' : ''} --reason "..."`,
-        );
-    else if (session.policyFiles.policy.requireReasons) refuseBadReason(o.reason, where);
+    const value = reasonsFilled(
+        declarationPaths(o.key, parsed) && !o.remove ? [{ paths: parsed }] : parsed,
+        isList ? o.reason : undefined,
+    );
+    validateSetReason(session, selection, o, spec, value);
     const shown = o.scope === undefined ? o.key : `scope.${o.scope}.${o.key}`;
     return commitPolicy(root, setMutation(o, isList, value), false, describeSet(session, selection, o, shown, value));
 }

@@ -35,13 +35,12 @@ export const DIRECTIVE_PREFIXES = [
 ];
 export const TS_DIRECTIVE = /^@?ts-(?:ignore|expect-error|nocheck|check)\b/u;
 export const BLANK = /^\s*$/u;
-export const BLANK_LINE = /\n\s*\n/u;
 export const LEADING_STAR = /^\s*\*?/u;
 export const WHITESPACE = /[\t\n\r ]/u;
 export const SPACES = /\s+/gu;
 
 // File discovery and import resolution.
-export const DEFAULT_IGNORED = ['node_modules', 'dist', 'build', 'coverage', '.git'];
+export const DEFAULT_IGNORED = ['node_modules', '.git'];
 export const DEFAULT_TEST = String.raw`\.(?:test|spec)\.[cm]?[jt]sx?$`;
 export const CODE_EXTENSION = /\.[cm]?[jt]sx?$/u;
 export const EXTENSIONS = ['.ts', '.tsx', '.mts', '.cts', '.js', '.jsx', '.mjs', '.cjs'];

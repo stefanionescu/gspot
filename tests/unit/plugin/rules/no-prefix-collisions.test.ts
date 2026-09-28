@@ -3,6 +3,12 @@ import { plantedRoot } from '#tests/support/plugin/planted.ts';
 import { noPrefixCollisions } from '#plugin/rules/no-prefix-collisions.ts';
 
 const root = await plantedRoot({
+    ...Object.fromEntries(
+        ['build', 'dist', 'coverage'].flatMap((directory) => [
+            [`${directory}/cards/asset-one.ts`, ''],
+            [`${directory}/cards/asset-two.ts`, ''],
+        ]),
+    ),
     'src/cards/asset-card.ts': '',
     'src/cards/asset-list.ts': '',
     'src/cards/asset-row.ts': '',
@@ -11,6 +17,13 @@ const root = await plantedRoot({
     'src/mixed/turn-flow/x.ts': '',
     'src/fine/a.ts': '',
     'src/fine/b.ts': '',
+    'src/paired/api.ts': '',
+    'src/paired/api.d.ts': '',
+    'src/paired/social.png': '',
+    'src/paired/social.svg': '',
+    'src/same/turn.ts': '',
+    'src/same/turn/first.ts': '',
+    'src/same/turn/second.ts': '',
     'src/fine/index.ts': '',
     'src/fine/index-page.ts': '',
     'tests/harness/start-call/api.ts': '',
@@ -21,6 +34,7 @@ tester(root).run('no-prefix-collisions', noPrefixCollisions, {
     valid: [
         { code: '', filename: `${root}/src/cards/other.ts` },
         { code: '', filename: `${root}/src/fine/a.ts` },
+        { code: '', filename: `${root}/src/paired/api.ts` },
         { code: '', filename: `${root}/src/fine/index-page.ts` },
         { code: '', filename: `${root}/src/cards/asset-card.ts`, options: [{ threshold: 4 }] },
         { code: '', filename: `${root}/src/cards/asset-card.ts`, options: [{ scope: ['tests'] }] },
@@ -31,6 +45,12 @@ tester(root).run('no-prefix-collisions', noPrefixCollisions, {
         },
     ],
     invalid: [
+        ...['build', 'dist', 'coverage'].map((directory) => ({
+            code: '',
+            filename: `${root}/${directory}/cards/asset-one.ts`,
+            errors: [{ messageId: 'collision' as const }],
+        })),
+        { code: '', filename: `${root}/src/same/turn.ts`, errors: [{ messageId: 'collision' }] },
         {
             code: '',
             filename: `${root}/src/cards/asset-card.ts`,

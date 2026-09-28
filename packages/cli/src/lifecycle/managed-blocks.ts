@@ -7,17 +7,19 @@ import {
     MANAGED_BLOCK_START,
 } from '#cli/constants/lifecycle/lifecycle.ts';
 
+const MARKERS: Record<BlockStyle, { start: string; end: string }> = {
+    markdown: { start: MANAGED_BLOCK_START, end: MANAGED_BLOCK_END },
+    hash: { start: HASH_BLOCK_START, end: HASH_BLOCK_END },
+};
+
 /**
- * Locate one complete block, refusing ambiguous or malformed markers.
+ * Locate one complete block. Refuse ambiguous or malformed markers.
  * @param text the file text
  * @param style the marker style of the file format
  * @returns the block's character range, or undefined when the file holds none
  */
 export function blockSpan(text: string, style: BlockStyle): BlockSpan | undefined {
-    const markersForStyle =
-        style === 'markdown'
-            ? { start: MANAGED_BLOCK_START, end: MANAGED_BLOCK_END }
-            : { start: HASH_BLOCK_START, end: HASH_BLOCK_END };
+    const markersForStyle = MARKERS[style];
     const start = text.indexOf(markersForStyle.start);
     const closing = text.indexOf(markersForStyle.end);
     if (start === -1 && closing === -1) return undefined;
@@ -29,9 +31,9 @@ export function blockSpan(text: string, style: BlockStyle): BlockSpan | undefine
     ) {
         throw new Error('Managed block markers are incomplete or repeated. Preserve the file and resolve its markers.');
     }
-    let end = closing + markersForStyle.end.length;
-    if (text[end] === '\r' && text[end + 1] === '\n') end += 2;
-    else if (text[end] === '\n') end += 1;
+    const end = closing + markersForStyle.end.length;
+    const newline = /^\r?\n/u.exec(text.slice(end));
+    if (newline !== null) return { start, end: end + newline[0].length };
     return { start, end };
 }
 
@@ -43,15 +45,14 @@ export function blockSpan(text: string, style: BlockStyle): BlockSpan | undefine
  * @returns the file text with the block in place
  */
 export function applyBlock(existing: string, block: string, style: BlockStyle): string {
-    const { start, end } =
-        style === 'markdown'
-            ? { start: MANAGED_BLOCK_START, end: MANAGED_BLOCK_END }
-            : { start: HASH_BLOCK_START, end: HASH_BLOCK_END };
+    const { start, end } = MARKERS[style];
     const gap = style === 'markdown' ? '\n\n' : '\n';
     const body = `${start}${gap}${block.trim()}${gap}${end}\n`;
     const span = blockSpan(existing, style);
     if (span !== undefined) return existing.slice(0, span.start) + body + existing.slice(span.end);
-    return existing + (existing === '' ? '' : existing.endsWith('\n') ? '\n' : '\n\n') + body;
+    if (existing === '') return body;
+    const separator = existing.endsWith('\n') ? '\n' : '\n\n';
+    return existing + separator + body;
 }
 
 /**
@@ -61,10 +62,7 @@ export function applyBlock(existing: string, block: string, style: BlockStyle): 
  * @returns the block body, trimmed
  */
 export function currentBlock(text: string, style: BlockStyle): string | undefined {
-    const { start, end } =
-        style === 'markdown'
-            ? { start: MANAGED_BLOCK_START, end: MANAGED_BLOCK_END }
-            : { start: HASH_BLOCK_START, end: HASH_BLOCK_END };
+    const { start, end } = MARKERS[style];
     const startIndex = text.indexOf(start);
     const endIndex = text.indexOf(end);
     if (startIndex === -1 || endIndex < startIndex) return undefined;

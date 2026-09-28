@@ -1,7 +1,6 @@
 import { join } from 'node:path';
 import { stringify } from 'smol-toml';
 import { expect, test } from 'bun:test';
-import { planRun } from '#cli/execution/planning/plan.ts';
 import { runText } from '#cli/output/reporter.ts';
 import { sarifText } from '#cli/output/report.ts';
 import { createFileTree, testdir } from 'testdirs';
@@ -9,10 +8,30 @@ import { settingRows } from '#cli/commands/list.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { planRun } from '#cli/execution/planning/plan.ts';
 import { runEngineCheck } from '#cli/execution/engines.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { coverageReport } from '#cli/execution/coverage.ts';
 import { explain } from '#cli/commands/explain/subjects.ts';
+
+test.each(['recommended', 'all'])('native parsers supply syntax coverage at %s', async (level) => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': `version = 1\nlevel = "${level}"\nconfigurations = ["typescript", "configs", "formatting"]\n`,
+        'source.ts': 'export const value = 1;\n',
+        'settings.json': '{"value":1}\n',
+    });
+    const session = await openSession(sandbox.path);
+    for (const ending of ['.ts', '.json']) {
+        expect(coverageReport(session).endings.find((entry) => entry.ending === ending)?.kinds).toContain('syntax');
+    }
+    for (const scope of session.scopes)
+        scope.selected = scope.selected.map((manifest) => ({
+            ...manifest,
+            checks: manifest.checks.filter((check) => check.name === 'formatting/editorconfig-checker'),
+        }));
+    expect(coverageReport(session).endings.some(({ kinds }) => kinds.includes('syntax'))).toBe(false);
+});
 
 test('a root project check does not supply a disabled child scope with coverage', async () => {
     await using sandbox = await testdir();
@@ -74,21 +93,13 @@ test('strict coverage fails uncovered supported sources and accepts enabled chec
     expect(
         JSON.parse(readFileSync(join(sandbox.path, '.gspot/reports/report.codequality.json'), 'utf8')),
     ).toMatchObject([{ check_name: 'coverage.strict', location: { path: 'source.sh' } }]);
-    writeFileSync(
-        join(sandbox.path, 'gspot.toml'),
-        stringify({
-            ...policy,
-            check: [
-                ...policy.check,
-                {
-                    name: 'project/syntax',
-                    command: ['bash', '-n', '{files}'],
-                    paths: ['source.sh'],
-                    stage: 'manual',
-                },
-            ],
-        }),
-    );
+    policy.check.push({
+        name: 'project/syntax',
+        command: ['bash', '-n', '{files}'],
+        paths: ['source.sh'],
+        stage: 'manual',
+    });
+    writeFileSync(join(sandbox.path, 'gspot.toml'), stringify(policy));
     const corrected = await executeRun(await openSession(sandbox.path), {
         ...options,
         stage: 'manual',
@@ -121,9 +132,9 @@ test('strict coverage keeps inability as exit two and leaves message-stage check
     const failed = await executeRun(session, { stage: 'all', skips: [], fix: false, isDryRun: true, noCache: true });
     expect(failed.report.exitCode).toBe(2);
     expect(failed.report.coverage.findings.map((entry) => entry.file)).toContain('gspot.toml');
-    const message = await executeRun(session, { stage: 'message', skips: [], fix: false, isDryRun: true });
-    expect(message.report.exitCode).toBe(0);
-    expect(message.report.coverage.findings).toStrictEqual([]);
+    const commitRun = await executeRun(session, { stage: 'message', skips: [], fix: false, isDryRun: true });
+    expect(commitRun.report.exitCode).toBe(0);
+    expect(commitRun.report.coverage.findings).toStrictEqual([]);
 });
 
 test('engine coverage rejects an unobserved path and accepts confirmed repository sources', async () => {

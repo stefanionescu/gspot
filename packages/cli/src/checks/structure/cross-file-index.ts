@@ -1,9 +1,9 @@
 import { readSource } from '#cli/repository/tracked.ts';
 import type { EngineInput } from '#cli/types/checks/checks.ts';
-import type { TrackedFile } from '#cli/types/repository/repository.ts';
-import { functionAt, scriptFunctions } from '#cli/checks/structure/parser.ts';
 import { IDENTIFIER } from '#cli/constants/checks/structure.ts';
+import type { TrackedFile } from '#cli/types/repository/repository.ts';
 import { TOP_LEVEL_ASSIGNMENT } from '#cli/constants/checks/script.ts';
+import { functionAt, scriptFunctions } from '#cli/checks/structure/parser.ts';
 import { withoutComment, withoutDeclaration } from '#cli/checks/structure/code-lines.ts';
 import type { ScriptFile, ScriptFunction, ScriptIndex } from '#cli/types/checks/structure.ts';
 
@@ -78,18 +78,4 @@ export function scriptIndex(input: EngineInput, files: TrackedFile[]): Promise<S
         perScope.set(key, index);
     }
     return index;
-}
-
-/**
- * The files other than the owner that reference a name.
- * @param index the index
- * @param name the function name
- * @param owner the owner's path
- * @returns the other paths, sorted
- */
-export function outsideCallers(index: ScriptIndex, name: string, owner: string): string[] {
-    return index.files
-        .filter((file) => file.path !== owner && (file.references.get(name)?.length ?? 0) > 0)
-        .map((file) => file.path)
-        .toSorted((a, b) => a.localeCompare(b));
 }

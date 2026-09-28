@@ -18,9 +18,9 @@ test('a selected framework adds its rules after the shipped ones and before the 
         'version = 1\nconfigurations = ["typescript", "express"]\n[[naming.rules]]\npaths = ["src/hooks/**"]\ncategories = ["functions"]\nstructural_prefix = "^use(?=[A-Z])"\nreason = "A hook starts with use."\n';
     const policy = parsePolicyText(text, 'gspot.toml');
     const effective = effectivePolicy(exposedSettings([]), policy, '', [express]);
-    const handler = rulesFor(effective, identifier('handleLogin', 'typescript', 'functions', 'src/routes/auth.ts'));
-    expect(handler.map((rule) => rule.source)).toStrictEqual(['the express configuration']);
-    expect(handler[0]!.structuralPrefix?.test('handleLogin')).toBe(true);
+    const callback = rulesFor(effective, identifier('handleLogin', 'typescript', 'functions', 'src/routes/auth.ts'));
+    expect(callback.map((rule) => rule.source)).toStrictEqual(['the express configuration']);
+    expect(callback[0]!.structuralPrefix?.test('handleLogin')).toBe(true);
     const hook = rulesFor(effective, identifier('useLogin', 'typescript', 'functions', 'src/hooks/login.ts'));
     expect(hook.map((rule) => rule.source)).toStrictEqual(['the express configuration', '[[naming.rules]] entry 1']);
     // The framework rule names its languages, so a Python function is outside it.

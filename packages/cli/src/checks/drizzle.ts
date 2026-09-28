@@ -3,21 +3,12 @@ import { globbySync } from 'globby';
 import { basename, dirname, join } from 'node:path';
 import { TABLE } from '#cli/constants/checks/checks.ts';
 import { readSource } from '#cli/repository/tracked.ts';
-import { scratchCopy } from '#cli/execution/file-workspace.ts';
-import { runCheckCommand } from '#cli/execution/tool-runner.ts';
+import { runCheckCommand } from '#cli/execution/tool/runner.ts';
+import { scratchCopy } from '#cli/execution/files/workspace.ts';
 import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 
 function finding(input: EngineInput, file: string, line: number, rule: string, text: string): Finding {
     return { check: input.spec.name, file, line, rule, message: text, fixable: false };
-}
-
-function sources(input: EngineInput): { path: string; text: string }[] {
-    return input.files
-        .filter((file) => file.nature === 'source' && /\.tsx?$/u.test(file.path))
-        .map((file) => ({
-            path: file.path,
-            text: readSource(input.root, file.path, input.observations).toString('utf8'),
-        }));
 }
 
 function generatedContents(cwd: string): Map<string, Buffer> {
@@ -29,19 +20,18 @@ function generatedContents(cwd: string): Map<string, Buffer> {
     return new Map(paths.map((path) => [path, readSource(cwd, path)]));
 }
 
-function hasDrizzleFile(input: EngineInput): boolean {
-    return input.files.some(
-        (file) => dirname(file.path) === (input.scope || '.') && basename(file.path).startsWith('drizzle.config.'),
-    );
-}
-
 /**
  * One finding for each table that references another and has no relations entry anywhere in the scope.
  * @param input the engine input
  * @returns the findings
  */
 export function drizzleRelations(input: EngineInput): Finding[] {
-    const files = sources(input);
+    const files = input.files
+        .filter((file) => file.nature === 'source' && /\.tsx?$/u.test(file.path))
+        .map((file) => ({
+            path: file.path,
+            text: readSource(input.root, file.path, input.observations).toString('utf8'),
+        }));
     const everything = files.map((file) => file.text).join('\n');
     return files.flatMap((file) =>
         file.text
@@ -74,7 +64,12 @@ export function drizzleRelations(input: EngineInput): Finding[] {
  * @returns the findings
  */
 export async function drizzleMigrations(input: EngineInput): Promise<Finding[]> {
-    if (!hasDrizzleFile(input)) return [];
+    if (
+        !input.files.some(
+            (file) => dirname(file.path) === (input.scope || '.') && basename(file.path).startsWith('drizzle.config.'),
+        )
+    )
+        return [];
     const scratch = scratchCopy(
         input.root,
         input.files.map((file) => file.path),

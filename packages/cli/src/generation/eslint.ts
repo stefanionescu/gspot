@@ -1,3 +1,4 @@
+import { policyValue } from '#cli/policy/settings.ts';
 import { pathExpressions } from '#cli/repository/paths.ts';
 import type { EslintSettings, Policy, ScopeSelection } from '#cli/types/policy/policy.ts';
 import type { EslintRuleBlock, ResolvedSelector, SelectorGroup } from '#cli/types/generation.ts';
@@ -54,7 +55,8 @@ export function eslintRuleBlocks(policy: Policy): EslintRuleBlock[] {
 
 /**
  * The per-scope rule blocks that carry the trivial-statement ceiling into the structural plugin rules.
- * @param scopes the resolved scopes, in any order
+ * @param scopes the resolved scopes, in any order.
+ * @param policy the policy selecting structural rules and scoped exceptions.
  * @returns one block per scope and language, shallowest scope first
  */
 export function structuralRuleBlocks(scopes: ScopeSelection[], policy: Policy): EslintRuleBlock[] {
@@ -78,6 +80,35 @@ export function structuralRuleBlocks(scopes: ScopeSelection[], policy: Policy): 
         }
     }
     return blocks;
+}
+
+/**
+ * Applies reasoned manifest exclusions after structural defaults and before authored policy.
+ * @param scopes the selected configurations and their owning scopes.
+ * @param policy the effective root policy.
+ * @returns scoped rule blocks that exclude every nested scope.
+ */
+export function manifestRuleBlocks(scopes: ScopeSelection[], policy: Policy): EslintRuleBlock[] {
+    return scopes.flatMap((selection) => {
+        const scope = selection.scope.path;
+        const children = scopes
+            .map((entry) => entry.scope.path)
+            .filter((path) => path !== scope && (scope === '' || path.startsWith(`${scope}/`)));
+        const excluded = children.map((path) => `!${path}/**`);
+        return selection.selected
+            .flatMap((manifest) => manifest.rules_off)
+            .filter(
+                ({ when: condition }) =>
+                    condition === undefined ||
+                    (selection.view.settings[condition.setting] ?? policyValue(policy, condition.setting)?.value) ===
+                        condition.value,
+            )
+            .map(({ files, rules }) => ({
+                scope,
+                ...pathExpressions([...(files ?? ['**/*']), ...excluded]),
+                rules: Object.fromEntries(rules.map((rule) => [rule, 'off'])),
+            }));
+    });
 }
 
 /**

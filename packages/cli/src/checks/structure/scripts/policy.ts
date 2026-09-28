@@ -19,8 +19,8 @@ import {
  */
 export const scriptPolicy: Analysis = async (context, scripts) => {
     const index = await scripts();
-    const findings = [];
-    for (const file of index.files) {
+    return index.files.flatMap((file) => {
+        const findings = [];
         const code = codeLines(file.lines).filter((line) => !line.code.startsWith('#!'));
         const inlineNode = code.find((line) => INLINE_NODE.test(line.code));
         if (inlineNode !== undefined)
@@ -63,6 +63,6 @@ export const scriptPolicy: Analysis = async (context, scripts) => {
                     'This script only forwards to another; call that one directly.',
                 ),
             );
-    }
-    return findings;
+        return findings;
+    });
 };

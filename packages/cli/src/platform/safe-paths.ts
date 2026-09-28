@@ -1,6 +1,6 @@
 // The path spellings and file snapshots the lifecycle accepts, and the metadata paths it keeps to itself.
 import { isDeepStrictEqual } from 'node:util';
-import type { FileSnapshot } from '#cli/types/platform.ts';
+import type { FileObservation } from '#cli/types/platform.ts';
 
 import {
     OWNER_WRITE_BIT,
@@ -8,14 +8,14 @@ import {
     WRITABLE_FILE,
     DEVICE_NAME,
     LIFECYCLE_PRIVATE_PATH,
-    TRAILING_DOT_OR_SPACE,
+    UNSAFE_PATH_END,
     UNSAFE_CHARACTERS,
 } from '#cli/constants/platform.ts';
 
 // Whether one segment of a portable path means something different on a supported operating system.
 function isUnsafeSegment(part: string): boolean {
     if (['', '.', '..'].includes(part)) return true;
-    if (UNSAFE_CHARACTERS.test(part) || TRAILING_DOT_OR_SPACE.test(part)) return true;
+    if (UNSAFE_CHARACTERS.test(part) || UNSAFE_PATH_END.test(part)) return true;
     return DEVICE_NAME.test(part);
 }
 
@@ -25,7 +25,7 @@ function isUnsafeSegment(part: string): boolean {
  * @param platform the platform whose permission model applies
  * @returns the mode the platform can represent
  */
-export function fileMode(file: Pick<FileSnapshot, 'mode' | 'isLink'>, platform = process.platform): number {
+export function fileMode(file: Pick<FileObservation, 'mode' | 'isLink'>, platform = process.platform): number {
     if (platform !== 'win32') return file.mode;
     if (file.isLink || (file.mode & OWNER_WRITE_BIT) !== 0) return WRITABLE_FILE;
     return READ_ONLY_FILE;
@@ -37,7 +37,7 @@ export function fileMode(file: Pick<FileSnapshot, 'mode' | 'isLink'>, platform =
  * @param expected the snapshot the caller expects there
  * @returns true when both are absent or both match
  */
-export function sameSnapshot(found: FileSnapshot | undefined, expected: FileSnapshot | undefined): boolean {
+export function sameEntry(found: FileObservation | undefined, expected: FileObservation | undefined): boolean {
     if (found === undefined || expected === undefined) return found === expected;
     const observed = { ...found, mode: fileMode(found) };
     const requested = { ...expected, mode: fileMode(expected) };

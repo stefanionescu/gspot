@@ -10,7 +10,7 @@ import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { reportStorageFailure } from '#cli/output/messages.ts';
 import type { CacheKeyInput } from '#cli/types/execution/execution.ts';
 import type { SourceObservations } from '#cli/types/repository/repository.ts';
-import { readOwnership, withLifecycleOwner } from '#cli/lifecycle/ownership/owner.ts';
+import { readOwnership, runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import { CACHE_ENTRY, CACHE_FORMAT, RETENTION_MS } from '#cli/constants/execution/execution.ts';
 
 /**
@@ -120,7 +120,7 @@ export function writeCached(root: string, key: string, result: CheckResult): voi
     const status = result.status === 'cache' ? 'ok' : result.status;
     const text = JSON.stringify({ ...result, status });
     try {
-        withLifecycleOwner(root, (owner) => {
+        runOwnedLifecycle(root, (owner) => {
             const status = owner.replace(
                 `${CACHE_DIRECTORY}/${key}.json`,
                 { bytes: Buffer.from(text), mode: 0o600 },
@@ -140,7 +140,7 @@ export function writeCached(root: string, key: string, result: CheckResult): voi
 export function pruneCache(root: string): void {
     const cutoff = Date.now() - RETENTION_MS;
     try {
-        withLifecycleOwner(root, (owner) => {
+        runOwnedLifecycle(root, (owner) => {
             const files = openConfinedRoot(root);
             const proposals = readOwnership(root)
                 .files.filter((entry) => entry.kind === 'runtime' && CACHE_ENTRY.test(entry.path))

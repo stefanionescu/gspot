@@ -7,7 +7,7 @@ import { reportSchema } from '#cli/execution/report.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { installSandbox } from '#tests/support/cli/sandbox.ts';
 import { FORMATTED } from '#tests/constants/acceptance/source/configurations/component-files.ts';
-import { COMPONENT_SOURCE, COMPONENT_TSCONFIG, PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
+import { COMPONENT_SOURCE, COMPONENT_TSCONFIG, PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
 
 const LOOSE = FORMATTED.replace('<p class=', () => '<p     class=');
 

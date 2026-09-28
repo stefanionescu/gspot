@@ -65,7 +65,14 @@ structural_prefix = "^handle(?=[A-Z])"
 reason = "A handler starts with handle and then names the event."
 
 [rule_files]
-framework = ["framework/nestjs/NESTJS.md"]
+framework = [{path = "framework/nestjs/NESTJS.md"}]
 
 [required_rules]
 ts = ["@typescript-eslint/no-extraneous-class", "no-restricted-syntax"]
+
+
+[[rules_off]]
+tool = "eslint"
+rules = ["class-methods-use-this"]
+files = ["**/*.{ts,tsx,mts,cts,vue,svelte}"]
+reason = "NestJS invokes decorated instance methods through dependency injection even when they do not access instance state."

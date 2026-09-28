@@ -198,4 +198,4 @@ default = ["Schema", "Tables", "Indexes", "Functions", "Triggers", "Extensions",
 summary = "The section names a documented migration may box."
 
 [rule_files]
-database = ["database/postgres/POSTGRES.md"]
+database = [{path = "database/postgres/POSTGRES.md"}]

@@ -584,7 +584,7 @@ the checks that fit any repository, each with its proposed set already marked.
 
 A manifest `kind` decides the group. A group with nothing found is not asked.
 
-Verify the proposed selections and accepted result, including empty groups and noninteractive
+Verify proposed selections and accepted results for empty groups and noninteractive
 initialization. Do not assert a fixed prompt-call count.
 
 ### Acceptance K-66
@@ -670,7 +670,7 @@ completion derive from the same command definitions.
 `ignore`, `set`, `add`, and `remove` mutate config and apply the resulting policy.
 
 Planning selects a check whose level is within the level of the repository, or whose name
-is in `extra_checks`. `emit/tool-packages.ts` and `tool-environment.ts` leave out a tool
+is in `extra_checks`. `packages/cli/src/generation/tools/packages.ts` and `tool-environment.ts` leave out a tool
 whose every check has an `[[ignore]]` with no rule and no paths.
 
 The `help:` line of a spelling finding prints `gspot set tools.typos.words <word>`. The profile

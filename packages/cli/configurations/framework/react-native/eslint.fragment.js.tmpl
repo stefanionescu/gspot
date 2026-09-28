@@ -16,8 +16,7 @@
             'react-native/split-platform-components': 'error',
 <% if (isAll) { %>            'react-native/no-inline-styles': 'error',
             'react-native/no-color-literals': 'error',
-<% } %>            // A native view tree holds no DOM element, and every jsx-a11y rule reads DOM elements.
-            ...Object.fromEntries(Object.keys(accessibility.rules).map((rule) => [`jsx-a11y/${rule}`, 'off'])),
+<% } %>
         },
     },
 <% } %>

@@ -1,14 +1,14 @@
-// One session per command: the policy, the manifests, the repository, the selection and the merged view per scope.
+// One session per command: the policy, the manifests, the repository, the selection, and the merged view per scope.
 import { npmPins } from '#cli/tools/pins.ts';
 import { mergeForScope } from '#cli/policy/merge.ts';
 import { readRepository } from '#cli/repository/tree.ts';
-import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import packageManifest from '#package' with { type: 'json' };
 import type { Manifest } from '#cli/types/configurations.ts';
+import { packageTool } from '#cli/tools/packages/identity.ts';
 import { selectForScope } from '#cli/configurations/select.ts';
 import type { Session } from '#cli/types/execution/execution.ts';
 import { exposedSettings } from '#cli/policy/setting-surface.ts';
-import { toolPackageManager } from '#cli/tools/packages/manager.ts';
+import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import type { ScopeEntry } from '#cli/types/repository/repository.ts';
 import { readPolicy, assertPolicyComplete } from '#cli/policy/read.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
@@ -55,14 +55,14 @@ export async function openSession(root: string, policyFiles: PolicyFiles = readP
                 runner,
             ),
         ).length > 0;
-    const packageManager = needsPackages
-        ? await toolPackageManager(
+    const packageClient = needsPackages
+        ? await packageTool(
               root,
               repo.files.filter((file) => file.nature === 'source').map((file) => file.path),
           )
         : undefined;
     return {
-        ...(packageManager === undefined ? {} : { packageManager }),
+        ...(packageClient === undefined ? {} : { packageClient }),
         root,
         version: GSPOT_VERSION,
         policyFiles,

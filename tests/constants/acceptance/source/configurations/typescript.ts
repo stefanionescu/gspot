@@ -43,3 +43,17 @@ export const RECEIPT = `// The receipt currency format.
 /** Formats the euro amounts on receipts. */
 export const receiptOptions: Intl.NumberFormatOptions = { style: 'currency', currency: 'EUR' };
 `;
+
+export const AUTHORED_TSCONFIG = `{
+    // The application owns its build and module settings.
+    "compilerOptions": {
+        "strict": false,
+        "target": "ES2020",
+        "module": "ESNext",
+        "moduleResolution": "Bundler",
+        "types": [],
+        "incremental": true,
+        "tsBuildInfoFile": %BUILD_INFO%
+    },
+    "include": ["src"],
+}\n`;

@@ -96,13 +96,41 @@ export const ownershipSchema = z
         installations: z.array(z.enum(['npm', 'python'])).optional(),
         pending: z
             .array(
-                z.strictObject({
-                    path: pathSchema,
-                    before: identitySchema.optional(),
-                    beforeBackup: originalSchema.optional(),
-                    after: identitySchema.optional(),
-                    entry: entrySchema.optional(),
-                }),
+                z
+                    .strictObject({
+                        path: pathSchema,
+                        before: identitySchema.optional(),
+                        beforeBackup: originalSchema.optional(),
+                        after: identitySchema.optional(),
+                        entry: entrySchema.optional(),
+                    })
+                    .superRefine((pending, context) => {
+                        if (
+                            pending.beforeBackup !== undefined &&
+                            !isDeepStrictEqual(
+                                {
+                                    hash: pending.beforeBackup.hash,
+                                    mode: pending.beforeBackup.mode,
+                                    ...(pending.beforeBackup.isLink ? { isLink: true } : {}),
+                                },
+                                pending.before,
+                            )
+                        )
+                            context.addIssue({
+                                code: 'custom',
+                                message: 'Interrupted backup has a different previous identity.',
+                            });
+                        if (pending.entry !== undefined && !isDeepStrictEqual(pending.entry.installed, pending.after))
+                            context.addIssue({
+                                code: 'custom',
+                                message: 'Interrupted ownership entry has a different installed identity.',
+                            });
+                        if (pending.entry !== undefined && pending.entry.path !== pending.path)
+                            context.addIssue({
+                                code: 'custom',
+                                message: 'Interrupted ownership entry has a different destination.',
+                            });
+                    }),
             )
             .min(1)
             .optional(),
@@ -117,31 +145,9 @@ export const ownershipSchema = z
         }
         const pendingPaths = new Set<string>();
         for (const pending of state.pending ?? []) {
-            if (
-                pending.beforeBackup !== undefined &&
-                !isDeepStrictEqual(
-                    {
-                        hash: pending.beforeBackup.hash,
-                        mode: pending.beforeBackup.mode,
-                        ...(pending.beforeBackup.isLink ? { isLink: true } : {}),
-                    },
-                    pending.before,
-                )
-            )
-                context.addIssue({ code: 'custom', message: 'Interrupted backup has a different previous identity.' });
             const key = pending.path.normalize('NFC').toLowerCase();
             if (pendingPaths.has(key))
                 context.addIssue({ code: 'custom', message: `Duplicate pending path: ${pending.path}` });
             pendingPaths.add(key);
-            if (pending.entry !== undefined && !isDeepStrictEqual(pending.entry.installed, pending.after))
-                context.addIssue({
-                    code: 'custom',
-                    message: 'Interrupted ownership entry has a different installed identity.',
-                });
-            if (pending.entry !== undefined && pending.entry.path !== pending.path)
-                context.addIssue({
-                    code: 'custom',
-                    message: 'Interrupted ownership entry has a different destination.',
-                });
         }
     });

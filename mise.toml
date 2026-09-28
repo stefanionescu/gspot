@@ -20,7 +20,7 @@ hadolint = "2.14.0"
 trivy = "0.69.3"
 ruff = "0.16.8"
 "pipx:pytest" = {version = "9.1.1", depends = ["uv"], uvx_args = "--with pytest-cov==7.1.0"}
-"pipx:sqlfluff" = "4.0.0"
+"pipx:sqlfluff" = "4.3.0"
 swiftlint = {version = "0.63.2", os = ["linux", "macos"]}
 swiftformat = {version = "0.61.1", no_app = true, rename_exe = "swiftformat"}
 periphery = {version = "3.6.0", os = ["macos"]}

@@ -1,0 +1,422 @@
+# Repository Lint Cleanup
+
+This record tracks the repository-wide cleanup on `fix/root-cause-lint-cleanup`.
+The acceptance status is incomplete. No failed or unavailable check counts as passing.
+
+## Baseline
+
+The current branch is `fix/root-cause-lint-cleanup`, at revision
+`d6403a02d83f3b609f7df876281d8e1d156a434b`. The resumed work preserves the inherited
+851-file change set. The real index contains only the rename from
+`statements.ts` to `packages/eslint-plugin/src/syntax.ts`. Starting patches and an index
+hash are recorded under `/tmp/gspot-lint-cleanup/resumption/`. The policy uses `level = "all"`.
+
+The full commit diagnostic in `guide-audit-commit.json` passes with no findings.
+Later guide and native-example changes are undergoing focused verification before the
+unchanged-candidate gate. All required commit tools execute.
+
+Implementation files pass the latest direct scan. Test cleanup preserves independent
+failure and correction journeys, exact process arguments, ownership bytes, and native
+execution. No rule threshold or blanket exemption changed.
+
+The latest deterministic coverage run passes 2,383 tests with 9,706 assertions across
+272 files. Aggregate coverage is 83.35% of functions and 84.74% of lines. Type checks
+pass. The run includes the source-registry and release-harness repairs. Later formatter edits
+pass 23 focused tests with 100 assertions.
+
+The full native-tool suite passes 385 tests and 2,614 assertions across 62 files in
+501 seconds. Complete acceptance and CI remain open.
+
+## Current implementation evidence
+
+The source-checkout install task builds and publishes the workspace plugin only into the
+existing isolated registry, runs immutable `gspot install`, and compares installed ESM,
+CommonJS, and declaration bytes against the build. The package metadata uses canonical repository URLs. The generated lock and isolated-registry
+installation are refreshed for that tarball; installed package metadata and all three build files
+match the workspace candidate. The lock contains no temporary registry address. Source acceptance shares this registry lifecycle, including cancellation and
+cleanup. CI supplies its read-only GitHub token for normal acquisitions and runs release
+consumer and documentation tests in the full workflow.
+
+The folder check counts Astro components and schemas as siblings while retaining lone-code
+and declaration-only violations. The pre-repair CLI and plugin cases fail as expected; the
+corrected cases pass. The heading rule accepts the ordinary word `edge` beside Microsoft
+Edge when a project vocabulary is active. Its native regression rejects a neighboring
+incorrectly capitalized heading. No numeric threshold or blanket exemption changes.
+
+Guide corrections distinguish required safety from all-only conventions. They remove
+application-specific Express helpers and dependencies. They preserve declared router and runtime
+contracts. NestJS response/authorization and Workers binding guidance are corrected. Generated
+recommended/all comparisons cover TypeScript, CSS, Swift, HTML, Python, Express, and NestJS.
+The source inventory's accepted level assignments remain unchanged.
+
+The release task owns one registry lifecycle for all installed-consumer test files. Each consumer
+remains disposable. Publication refusal and both termination signals remove the owned storage;
+16 focused tests pass with 230 assertions. The source-registry task shares the same cleanup
+operation. Publication is cancellable and teardown preserves independent execution failures.
+The release regression that refuses a missing target retains its separate registry because it
+must prove that no package was uploaded.
+
+The build command's `--all` option derives targets from the existing manifest. It builds all seven
+binaries, byte-identical to the explicit-target build before subsequent guide-only edits.
+CI uses that option before installed release acceptance. Linux owns Docker-backed database
+journeys; the exact test-file exclusion on the other hosts does not establish native database
+execution there. The Linux result remains required.
+
+The latest agent and documentation tests pass 28 cases with 1,741 assertions.
+The separate generated-level comparison passes with the earlier guide changes. The site build
+produces 324 pages and passes link and fragment validation. Current README artwork passes
+320-, 390-, 768-, and 1200-pixel render checks in both themes. Final light and dark 320-pixel
+screenshots show the original blue/orange mark aligned with the wordmark.
+
+- Long TOML table arrays expand into array-of-table blocks through the shared policy writer.
+  Initialization and policy edits preserve parsed values, comments, sibling ownership,
+  scoped tables, and repeated writes. The focused run passes 25 tests and 80 assertions.
+- Manifest-owned ESLint exclusions preserve Next.js conditions, framework selectors,
+  nested scopes, and React Native DOM exclusions. Explicit policy overrides remain last.
+- Ruff convention adoption feeds generated Ruff settings and pydoclint. Explicit pydoclint
+  style wins. Native Google, NumPy, explicit override, and native-default journeys pass
+  four cases with 20 assertions. Nested inheritance and child override also pass focused adoption tests.
+- Conditional Bun, Tailwind, Playwright, SwiftUI, and UIKit guides use the existing detection owner.
+  Markdown section filtering understands headings and code fences. The focused guide and
+  Python unit run passes 17 tests and 48 assertions. The section audit and native example gate are recorded below.
+- Initialization without a generated workflow prints installation, check, and report-artifact
+  guidance. Bitbucket detection and retained-provider cases have focused test coverage.
+- Unsupported executable Python path files are refused before snapshot execution. Supported
+  path declarations and Hatchling/setuptools loaders retain relocation. Ten native snapshot
+  cases pass with 186 assertions. They cover index and committed revisions.
+- Native plist tests reproduce mixed malformed/missing and malformed/inaccessible inputs.
+  Both plist checks reject those execution failures while retaining syntax findings and
+  corrected success. Two native tests pass.
+- A push build with tracked `dist` preserves its bytes and clean Git status. The combined
+  site/Python unit run passes 14 tests and 47 assertions.
+
+- The installed JavaScript, CommonJS, and declaration files match the built plugin candidate
+  after an isolated-registry installation. The complete deterministic suite includes plugin rules.
+- SQL and Bash refactors pass 35 native defect/correction scenarios with 230 assertions.
+  Process-error boundaries pass 51 focused tests, including the mixed plist scenarios.
+- Policy, schema, and lifecycle cleanup has focused passing runs. Final deterministic
+  coverage includes the source-registry repair.
+
+These focused results establish the repaired scenarios, not completion of the final gate.
+
+All ten failures from the first source acceptance diagnostic pass their focused corrections.
+The six NestJS cases remove an obsolete controller suppression and retain exact finding positions.
+Three static-site cases use the actual HTML line, normalized link path, and declared Node types.
+The quoted-table case now reaches semantic policy rejection through valid TOML, asserts exit 1,
+and proves that the selected recommended-level check also runs before and after correction.
+The complete source diagnostic finished within its corrected process deadline; its acquisition rerun is recorded below.
+
+The source suite reached its 30-minute process deadline before discovering every file. The
+harness now permits 90 minutes for the complete suite and reports an explicit timeout. CI's
+full-job budget is 180 minutes for its sequential lanes. Individual test deadlines and the
+60-second initialization, 30-second cold, and five-second warm limits are unchanged.
+The timeout/cleanup regression passes with publication refusal and path validation:
+eight tests and 17 assertions.
+
+Full push and manual diagnostics pass. Push executes the Bun test replacement for four
+owned Jest skips. Manual executes external links, registry Semgrep, CodeQL, and Bun coverage
+with no skips. Later source and guide edits require affected checks again before committing.
+
+The guide lint detects repository-specific paths even inside inline code. A regression proves
+both rejection and corrected acceptance. Named ESLint rules are checked against the same level
+inventory used by generated enforcement, including fenced-code and heading boundaries. These
+checks do not establish full semantic agreement with every native linter. Agent and command-runner
+regressions pass 28 tests and 146 assertions; workspace and documentation types pass.
+
+The Good-example extractor retains original code, source positions, and section levels. It
+automatically discovers all 50 marked blocks: 25 Bash, 14 Python, two Docker, one Swift,
+one TypeScript, one TOML, five text, and one diff. Native generation tests run the code
+against both generated levels; explanatory text and diffs are not executed. TOML is parsed.
+Each native language has a neighboring real violation and its correction.
+
+The push-stage
+`rules/lint` check invokes the existing native test owners through `mise run rules:lint`.
+The current gate passes 33 tests and 181 assertions. Later guide edits require a rerun.
+
+Python examples also pass the generated basedpyright configuration, pydoclint command,
+and all 11 structural analyses. Required FastAPI callbacks and the protocol signature carry
+four line-specific, reasoned suppressions. An unnecessary neighboring wrapper still fails.
+No threshold or enforcement rule was relaxed. Shell cleanup examples use owned EXIT traps
+rather than altering their caller's RETURN trap.
+
+FastAPI guide applications execute through the actual framework client. Two tests verify
+request validation, public responses, upload limits, JSON Lines, and server-sent events.
+Project locks are generated in disposable fixtures and execution uses `uv run --locked`.
+No application dependency is added to the repository tool installation.
+
+Naming examples use explicit name comparisons instead of undefined inputs, empty classes,
+nonexistent APIs, and forwarding functions. Stored Boolean names, external wire names, and
+persistence verbs agree with their owners. TypeScript, Swift, and Python examples include
+their imports and implementations. The level audit separated Python import conventions,
+Bash entrypoint and documentation conventions, and TypeScript non-null assertion policy
+from requirements that apply at both levels.
+
+The section audit separates naming, architecture, documentation coverage, declaration order,
+and API conventions from correctness and supported runtime contracts. Generation tests verify
+that the conventions disappear at recommended while neighboring correctness sections remain.
+Nineteen guide selection and lint tests pass with 93 assertions. The final candidate gate
+must rerun affected evidence after the latest source changes.
+
+The full source acceptance diagnostic completed with 556 passes and one acquisition failure:
+GitHub returned HTTP 500 while EditorConfig Checker downloaded its pinned release. That case
+passes through normal authenticated installation on rerun: one test and nine assertions.
+The contractual performance case passes with 5,000 files and ten staged inputs: initialization
+6.733 seconds, cold check 4.611 seconds, and warm check 4.317 seconds. The unchanged-candidate run remains required.
+
+## Website and README
+
+The mobile menu sits on the left with a 44-pixel target and a 22-pixel icon. Search remains
+on the right. The theme control uses a compact icon button in the footer or open sidebar.
+Its menu opens beside the trigger, supports Escape, and restores focus.
+
+The footer groups
+its navigation and presents the license as a link. Copy controls have a 44-pixel target,
+32-pixel painted button, and centered 16-pixel icon. Long commands and the client example
+wrap within narrow screens. Hero spacing, section dividers, and secondary actions are consistent.
+The hero includes an interactive defect/correction example. Design research covered Biome,
+Linear, Astro, and Vite.
+
+The README banner centers the wordmark and original blue/orange artwork in both themes.
+Each embedded image uses 560 pixels for its 280-pixel display slot. Resampling reduces each
+complete SVG to 365 KB while preserving its placement and colors. The light variant is the
+fallback. The local GitHub-style preview passes image-loading and overflow checks at
+320, 390, 768, and 1200 pixels in both themes. Final asset rendering remains part of the
+candidate documentation gate.
+
+Native Chrome verification passes at 200% zoom on the homepage and documentation. Navigation
+remains available with no horizontal clipping. The browser's reduced-motion setting reports
+`prefers-reduced-motion: reduce`; all nine homepage control transitions compute to zero seconds.
+Keyboard and both-theme checks pass. Browser preferences are restored after verification.
+These results describe local rendering, not a published site.
+
+## Tool restoration and fixture cleanup
+
+All 27 conflicting installed files matched their recorded hashes and modes before restoration.
+The files were moved aside, the lock was regenerated through the CLI, and installation completed
+normally. The installed plugin bytes match the workspace build. Temporary recovery copies are
+removed, and the generated lock contains no temporary registry address.
+
+Supabase test project IDs now fit within the native CLI's 40-character limit. Teardown runs
+on startup failure and ordinary disposal. Truncated IDs left 28 Gspot databases
+and networks behind; their ownership labels were inspected and each was stopped through the
+native command. Both database tests pass. Unrelated project resources were preserved.
+
+## Exception audit
+
+All 15 authored spelling exclusions are removed. Seven repository-wide spelling allowances
+are replaced with native filename rules. A duplicate case variant is also removed after a native probe. The four remaining global entries name external
+packages or the Apple device-identifier API. The policy records every retained filename and
+its exact excepted words, identifiers, or pattern under `tools.typos.extra.type`.
+
+The filename rules preserve deliberate defect fixtures, upstream rule labels, and quoted
+descriptions. Changing these inputs invalidates the tests or misrepresents the external contract.
+The substitution dictionary excludes only mapping keys. Its replacement text remains checked.
+The manifest exception matches only the complete published defect-example sentence.
+
+Native Typos file types match basenames, not directory paths. Same-basename test files therefore
+share their small token allowance. A directory-qualified native probe fails to match.
+Replacing the native parser is inappropriate for this constraint. Each entry can be removed
+when its fixture or external contract disappears. All 21 native exception probes preserve a
+nearby real misspelling at its exact location.
+
+A neighboring filename retains all three defects.
+
+Four Windows launcher constants retain the PE32 and PE32+ format names, including digits
+and the otherwise banned term `PLUS`.
+The [Microsoft PE contract](https://learn.microsoft.com/en-us/windows/win32/debug/pe-format)
+defines their magic values and directory offsets. The allowance names one file and four
+constants. Other identifiers in the same file remain checked. Remove it when those formats leave
+launcher support.
+
+Internal section, payload, and checksum names are repaired without exceptions.
+The SHA-256 algorithm name and generated checksum output remain unchanged.
+The adjacent unlisted format constant still reports digits in the effective-policy probe.
+
+Native filesystem overloads retain `withFileTypes` in two exact files. Generated workflow
+test types retain `with` and `when` as properties in one exact file. These are Node,
+GitHub Actions, and GitLab CI keys. Internal variables retain naming enforcement.
+Remove an allowance when its native contract leaves the implementation.
+
+Two exact import lines retain folder and project boundary exceptions. The npm launcher owns
+the release target JSON consumed by CLI compilation and CI workflow generation. Moving or
+duplicating the inventory separates it from a published consumer. Tests use named workspace
+aliases for the same inventory and the root package manifest. Remove the exceptions if this
+ownership or either CLI consumer changes. Native ESLint probes accept the two documented
+imports and report both boundary rules for an adjacent unrelated import.
+
+Standalone publishing tests copy the release scripts and npm inventory without the workspace
+TypeScript configuration. Those consumers require the relative import. The root alias alone
+does not provide a standalone runtime contract.
+
+The npm package-table validation domain retains literal lockfile versions `2` and `3`.
+A single-line numeric-literal exception replaces two redundant version constants. The [npm lockfile contract](https://docs.npmjs.com/files/package-lock.json/)
+defines these versions. Remove the exception when the supported package-table formats change
+or the numeric rule recognizes such validation domains. Other numeric expressions remain checked.
+
+Architecture documents participate in the path check. Exact references replace the blanket exclusion.
+These include 52 historical references, 11 prior-art paths, 23 generated or embedded paths, and 24 example paths. Each group records its owner and removal condition in policy.
+
+Missing-path and
+allowlist-consistency checks pass. Adjacent missing literal paths remain covered by the
+document-relative, wildcard, and custom-check regression tests. Obsolete task, Deno, CodeQL,
+and Python Semgrep claims are corrected rather than excepted.
+
+Executable directives retain specific contracts: macOS link modes, unpublished TOML
+node kinds, npm lock versions, standalone target imports, a required package entrypoint,
+and Bun matcher types. Other matches are planted defects or suppression-parser inputs.
+No executable skipped test or unfinished test marker is retained.
+
+The `axe-core@4.13.0` license exception accepts only `MPL-2.0`. The installed
+package declares that license and includes its full text. The required JSX
+accessibility plugin depends on this unmodified development package. It is absent
+from the CLI binary. Review the exception when the dependency version changes.
+
+The `node-no-configured-require` exception applies only to six named files under
+`packages/cli/src/evaluation/` in policy. These evaluators execute authored
+configuration and resolve installed APIs from the target repository. Static
+imports select the CLI dependency graph and cannot implement that contract.
+
+The file is the smallest supported policy scope. Other security rules remain
+active. Native tests verify findings in the excepted file and an adjacent file.
+Remove an exception when its evaluator stops loading selected executable modules.
+
+The TOML enum suppressions remain justified: `@decimalturn/toml-patch@3.0.5`
+declares `NodeType` internally but omits it from package exports. Literal
+discriminants provide narrowing without private imports or casts. Revisit these
+line-scoped exceptions when the dependency exports the enum.
+
+The Astro schema route retains its published URL through an exact directory
+exception. Its callback uses the framework APIRoute type. The obsolete npm
+single-file exception is removed. Exact language-test directories identify the
+configuration being tested, rather than the implementation language. Remove
+these exceptions if the route contract or test ownership changes. Neighboring
+invalid support folders remain covered by regression tests.
+
+Eight exact accessibility test files retain `gspot.alt-text` exceptions because their
+strings plant missing attributes. The Svelte parser test has a separate exception
+for an exact upstream diagnostic. These fixtures retain their assertions. Images
+used only for link or scope tests receive alt text, and those tests pass. Remove
+these exceptions when their deliberate defects or upstream diagnostic disappear.
+
+The package-installation test retains its exact-file `RedHat.MergeConflictMarkers`
+exception because it verifies generated-lockfile drift and recovery from conflict
+markers. Other prose rules remain active. A native regression verifies that an
+excepted fixture still reports other prose defects and an adjacent image still
+reports missing alt text.
+
+The source launcher retains one `Google.OxfordComma` exception. Its Bash runtime
+header requires a version followed by the exact two-platform spelling. A serial
+comma changes that parsed contract. Remove the exception if the header contract
+or upstream prose rule changes.
+
+Vale vocabulary retains official product capitalization for Nx, Turborepo, Husky,
+Lefthook, and EditorConfig Checker. A native neighboring heading with incorrect
+capitalization still reports. Remove vocabulary entries when the products leave
+the documentation.
+
+Two exact documentation-path allowances cover the CSS runner argument relative
+to its declared test working directory and the ignored runtime report uploaded by
+CI. Tracked-source lookup cannot resolve either contract. Remove these allowances
+if the invocation directory or report path changes. The published 404 filename
+exception is removable only when Starlight stops requiring that route convention.
+
+The UUID advisory remains scoped to `GHSA-w5hq-g745-h8pq`. The installed graph has
+`linkinator@6.1.4` depending on `gaxios@6.7.1`, which depends on `uuid@9.0.1`. Its only UUID call is `v4()`
+with no arguments. The [upstream advisory](https://github.com/advisories/GHSA-w5hq-g745-h8pq)
+affects caller-buffer writes in v3, v5, and v6; v4 is unaffected. Registry metadata
+confirms that releases through `6.3.0` retain gaxios 6. Reassess on lock changes and remove
+the exception when the affected dependency leaves the graph.
+
+Documentation path analysis recognizes document-relative references and mise aliases.
+Allowlist validation accepts untracked path allowances only when documentation
+actually references them. Regression tests retain missing paths, unused allowances,
+and source exclusions that match nothing. Both regressions fail before correction;
+15 focused tests pass afterward. Type checks pass.
+
+The blanket `docs/**` path exclusion is replaced with exact consumer-example and
+output paths, with reasons. The blanket `architecture/**` exclusion is removed.
+Qualified source paths repair 148 references. Exact allowances retain reviewed historical,
+external, and example paths. These changes increase checked documentation coverage;
+the path and allowance checks pass. The final full checks still verify these retained entries against the candidate.
+
+Type assertions preserve callback uses and direct invocations in the function rule.
+Seven regression cases expose false findings or missed immediately invoked functions
+before correction. Required instance methods are matched against implemented interfaces
+and base classes. Neighboring unrelated methods and static methods remain checked.
+Generated-policy tests cover both levels and retain precise locations for direct calls.
+
+Native naming exceptions identify exact ESLint API members, PostgreSQL AST tags,
+Node filesystem options, vulnerability database table names, and Vale settings. Internal type aliases
+and variables are renamed instead. The gitleaks exception follows the actual type
+owner; its former source-file allowance is removed. Bun 1.4.2 still defines
+`AsymmetricMatcher` as `any`, so the three typed comparison boundaries remain justified.
+
+CodeQL `js/file-system-race` exceptions cover nine exact fixture files. Agent and
+uninstall tests, Next.js and Swift isolation tests, and package-installation tests
+compare file bytes and modes across operations in owned temporary repositories.
+Storage report tests inspect owned obstructions. Resource-read and cache tests
+intentionally replace files, including the regression that reproduces the repaired
+production race.
+
+The acceptance preservation helper only reads and restores owned
+temporary fixture trees. No production file or other CodeQL rule is excluded.
+Each policy entry states its ownership constraint and removal condition.
+
+Native CodeQL verification uses two identical temporary race fixtures. An exact-path
+exception accepts one while the neighboring fixture still
+reports `js/file-system-race` at line two, column 66. The exception does not disable
+the query. Whole-repository verification after these entries remains pending.
+
+Four production CodeQL exceptions retain specific, tested contracts:
+
+- `packages/cli/src/generation/fragments.ts` uses complete JSON literals in standalone JavaScript.
+  Its output never enters an HTML script element. Generated parser and plugin tests
+  retain hostile-looking scope strings while detecting undefined references.
+- `packages/cli/src/checks/actions.ts` rewrites one leading self-repository marker. Native tests
+  preserve later dollar signs in filenames and still report expression errors.
+- `packages/cli/src/repository/revisions/refspecs.ts` validates both sides with Git before substituting
+  the single permitted wildcard. Three malformed-mapping cases reject multiple
+  wildcards, accept correction, and respect negative mappings.
+- `packages/cli/scripts/inputs.ts` verifies downloaded bytes against the pinned SHA-256 digest
+  before creating a cache file. Corrupt downloads and HTTP failures cannot populate
+  that cache. Four regression cases verify these boundaries.
+
+The policy names each exact file, rule, constraint, and removal condition. A native
+CodeQL probe detects all four excluded query families in a neighboring fixture while
+accepting only the explicitly named duplicate. Other rules remain enabled in both.
+The combined JavaScript-generation and grammar suite passes seven tests with
+65 assertions. Git mapping validation passes three cases with nine assertions.
+
+## Verification
+
+Bun 1.4.2 owns all accepted runtime evidence. Detailed reports and failed diagnostic history
+remain outside tracked source under `/tmp/gspot-lint-cleanup/resumption/`.
+
+| Required gate                 | Current evidence                                                                                  | Remaining verification                                                        |
+| ----------------------------- | ------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| Discovery                     | 452 files: 94 unit, 179 deterministic integration, 65 native, 105 source, and nine release.       | Complete.                                                                     |
+| Types and coverage            | Types pass. Coverage passes 2,388 tests with 9,741 assertions; 83.39% functions and 84.77% lines. | Affected guide rerun passes 19 tests with 93 assertions.                      |
+| Native tools                  | Earlier full suite passes. Swift native tests now honor declared host support.                    | Full candidate native suite is running.                                       |
+| Builds and packages           | Earlier seven-target builds pass; current installed plugin matches its build.                     | Rebuild CLI targets and verify candidate package journeys.                    |
+| Source and release acceptance | Focused repairs pass through isolated registries.                                                 | Run complete suites sequentially against the same candidate.                  |
+| Documentation                 | Focused generation and documentation tests pass; earlier 324-page build and links pass.           | Final build, schema, references, and README rendering.                        |
+| Performance                   | Earlier acquisition failures are superseded by working authentication.                            | Measure the contractual cold, warm, and initialization cases.                 |
+| Full checks and doctor        | Required tools execute; remaining diagnostic findings are repaired.                               | Run commit, push, manual, and doctor checks.                                  |
+| Lifecycle and staged index    | Native hook/clone journeys pass; real index matches the starting record.                          | Final disposable-index staged check and preservation comparison.              |
+| Remote CI                     | Authentication is available; source-plugin installation is repaired.                              | Commit with hooks, push the task branch, enable CI, and verify its exact SHA. |
+
+The complete deterministic suite covers policy serialization, generated configuration, ownership,
+immutable revisions, process errors, cache invalidation, reports, and plugin rules. Native and
+provider-dependent checks retain their separate gates. Ownership skips count as passing only
+when their named replacement passes. A repair invalidates the affected evidence.
+
+## Remaining work
+
+Complete the ordered candidate gate in
+[the backlog](22-remaining.md#candidate-gate). Keep accepted level assignments unchanged.
+Commit and push with normal hooks after required checks pass, enable `GSPOT_CI_ENABLED`, and
+dispatch full CI against the task branch. Verify Linux, macOS, Windows, and uploaded reports
+for the exact commit. No commit or push has been made yet.
+
+Public publication, deployment, merging into `main`, and changes to other repositories remain
+excluded. Unavailable native platforms or provider-dependent results remain outstanding.

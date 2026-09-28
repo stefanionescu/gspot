@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'bun:test';
+import { hasCase } from '#cli/checks/naming/cases.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
 import { compileTerms } from '#cli/checks/naming/match.ts';
 import { shippedPolicy } from '#cli/checks/naming/policy.ts';
@@ -131,3 +132,12 @@ test('the shipped terminology ban applies inside tests', () => {
         });
     }
 });
+
+test.each(['unknown', 'constructor', 'toString', '__proto__'])(
+    'unknown case %s never matches an identifier or invokes inherited object members',
+    (caseName) => {
+        expect(hasCase('bad_name', caseName)).toBe(false);
+        expect(hasCase('bad_name', 'camel')).toBe(false);
+        expect(hasCase('goodName', 'camel')).toBe(true);
+    },
+);

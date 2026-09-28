@@ -10,8 +10,8 @@ function isDocstring(statement: Node | undefined): boolean {
 
 // The value assigned to __all__ by a statement, or undefined when the statement assigns something else.
 function exportList(statement: Node): Node | undefined {
-    const assignment = statement.type === 'expression_statement' ? statement.namedChildren[0] : undefined;
-    if (assignment?.type !== 'assignment' || assignment.childForFieldName('left')?.text !== '__all__') return undefined;
+    const assignment = assignmentOf(statement);
+    if (assignment?.childForFieldName('left')?.text !== '__all__') return undefined;
     return assignment.childForFieldName('right') ?? undefined;
 }
 
@@ -46,15 +46,13 @@ export async function pythonModules(input: EngineInput): Promise<PythonModule[]>
 }
 
 /**
- * The statements of a function body without its docstring.
- * @param definition the function definition
- * @returns the statements
+ * Read an assignment from an expression statement.
+ * @param statement the module statement
+ * @returns the assignment, or undefined for other statements
  */
-export function bodyOf(definition: Node): Node[] {
-    const statements = (definition.childForFieldName('body')?.namedChildren ?? []).filter(
-        (child) => child.type !== 'comment',
-    );
-    return isDocstring(statements[0]) ? statements.slice(1) : statements;
+export function assignmentOf(statement: Node): Node | undefined {
+    const first = statement.type === 'expression_statement' ? statement.namedChildren[0] : undefined;
+    return first?.type === 'assignment' ? first : undefined;
 }
 
 /**
@@ -78,12 +76,17 @@ export function functionsOf(module: PythonModule): PythonFunction[] {
     return module.tree.rootNode
         .descendantsOfType(['function_definition', 'lambda'])
         .filter((node) => node.isNamed)
-        .map((node) => ({
-            path: module.path,
-            name: node.childForFieldName('name')?.text ?? '<anonymous>',
-            node,
-            body: bodyOf(node),
-        }));
+        .map((node) => {
+            const statements = (node.childForFieldName('body')?.namedChildren ?? []).filter(
+                (child) => child.type !== 'comment',
+            );
+            return {
+                path: module.path,
+                name: node.childForFieldName('name')?.text ?? '<anonymous>',
+                node,
+                body: isDocstring(statements[0]) ? statements.slice(1) : statements,
+            };
+        });
 }
 
 /**

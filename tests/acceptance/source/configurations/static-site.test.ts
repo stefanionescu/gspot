@@ -1,14 +1,15 @@
 import { join } from 'node:path';
+import { symlinkSync } from 'node:fs';
 import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 // Planted repository for the static-site configuration: a small site with a build script, broken one way for each check.
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
+import type { FindingCase } from '#tests/types/cli.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
 import { containing } from '#tests/support/expectations.ts';
-import type { FindingCase } from '#tests/types/support/cli.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
 import { installAtLevel, toolsPath } from '#tests/support/cli/tools.ts';
 import { STATIC_SITE_INIT } from '#tests/constants/acceptance/source/configurations/init-arguments.ts';
 import { BUILD, STATIC_SITE_HEADERS, SVG } from '#tests/constants/acceptance/source/configurations/configurations.ts';
@@ -24,7 +25,7 @@ const SITEMAP = (extra: string): string =>
 const FILES = {
     '.gitignore': 'node_modules\ndist\n',
     'package.json':
-        '{\n    "name": "planted",\n    "version": "1.0.0",\n    "private": true,\n    "type": "module",\n    "scripts": {\n        "build": "bun build.js"\n    }\n}\n',
+        '{\n    "name": "planted",\n    "version": "1.0.0",\n    "private": true,\n    "type": "module",\n    "devDependencies": {"@types/node": "22.18.6"},\n    "scripts": {\n        "build": "bun build.js"\n    }\n}\n',
     'build.js': BUILD,
     'index.html': HOME,
     'about.html': ABOUT,
@@ -49,7 +50,7 @@ const CASES: FindingCase[] = [
     {
         check: 'static-site/html-validate-built',
         files: { 'about.html': page('        <h1 class="title">About</h1>\n        <img src="/assets/logo.svg" />\n') },
-        expected: { file: 'dist/about.html', rule: 'wcag/h37', line: 11 },
+        expected: { file: 'dist/about.html', rule: 'wcag/h37', line: 10 },
     },
     {
         check: 'css/dead-selectors',
@@ -59,7 +60,7 @@ const CASES: FindingCase[] = [
     {
         check: 'static-site/links-internal',
         files: { 'about.html': page('        <h1 class="title">About</h1>\n        <a href="/gone.html">Gone</a>\n') },
-        expected: { file: './about.html', rule: 'broken-link', line: 1 },
+        expected: { file: 'about.html', rule: 'broken-link', line: 1 },
     },
     {
         check: 'static-site/size',
@@ -151,6 +152,7 @@ test(
     async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, FILES);
+        symlinkSync(join(import.meta.dir, '../../../../node_modules'), join(sandbox.path, 'node_modules'), 'dir');
         commitAll(sandbox.path);
         const environment = { PATH: toolsPath(['typos', 'ec', 'ast-grep']) };
         await installAtLevel(sandbox.path, STATIC_SITE_INIT, environment);

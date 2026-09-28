@@ -20,11 +20,6 @@ function configurationRolePaths(input: EngineInput): string[] {
     return listed.map((path) => (path.includes('*') ? path : `${path.replace(/\/$/u, '')}/**`));
 }
 
-function languageOf(file: TrackedFile): string | undefined {
-    const dot = file.path.lastIndexOf('.');
-    return dot === -1 ? undefined : LANGUAGE_BY_EXTENSION[file.path.slice(dot)];
-}
-
 function isValueImportOutside(node: Node): boolean {
     if (node.type !== 'import_statement' || node.text.startsWith('import type')) return false;
     const source = node.childForFieldName('source')?.text.slice(1, -1) ?? '';
@@ -103,7 +98,8 @@ export async function configurationPurity(input: EngineInput): Promise<Finding[]
     const isConfig = pathMatcher(configurationRolePaths(input));
     const findings: Finding[] = [];
     for (const file of input.files) {
-        const language = languageOf(file);
+        const dot = file.path.lastIndexOf('.');
+        const language = dot === -1 ? undefined : LANGUAGE_BY_EXTENSION[file.path.slice(dot)];
         if (language === undefined || file.nature !== 'source' || !isConfig(file.path)) continue;
         findings.push(...(await fileFindings(input, file, language)));
     }

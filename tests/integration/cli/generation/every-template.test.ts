@@ -1,13 +1,13 @@
 // Every template of every configuration renders at both levels into a file its reader parses (S-1).
 import ts from 'typescript';
-import { join } from 'node:path';
 import { symlinkSync } from 'node:fs';
 import { expect, test } from 'bun:test';
 import { fileURLToPath } from 'node:url';
+import { join, extname } from 'node:path';
 import { parse as parseYaml } from 'yaml';
 import { parse as parseToml } from 'smol-toml';
 import { createFileTree, testdir } from 'testdirs';
-import { emitAll } from '#cli/generation/render.ts';
+import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { parse as parseJsonc, type ParseError } from 'jsonc-parser';
 import type { Parser } from '#tests/types/integration/cli/generation.ts';
@@ -44,11 +44,6 @@ function parseModule(text: string, path: string): void {
     if (errors.length > 0) throw new Error(`${path}: ${errors.join('; ')}`);
 }
 
-function extensionOf(path: string): string {
-    const base = path.slice(path.lastIndexOf('/') + 1);
-    return base.includes('.') ? base.slice(base.lastIndexOf('.')) : '';
-}
-
 const configurations = [...configurationManifests().values()]
     .filter((manifest) => manifest.configs.some((config) => !config.fragment))
     .map((manifest) => manifest.configuration.name);
@@ -65,12 +60,12 @@ test.each(configurations.flatMap((name) => ['recommended', 'all'].map((level) =>
         const session = await openSession(sandbox.path);
         const output = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
             version: session.version,
-            packageManager: session.packageManager,
+            packageClient: session.packageClient,
         });
         const generated = output.files.filter((file) => file.kind === 'config' || file.kind === 'pointer');
         expect(generated.length).toBeGreaterThan(0);
         for (const file of generated) {
-            const parser = PARSERS[extensionOf(file.path)];
+            const parser = PARSERS[extname(file.path)];
             if (parser !== undefined) parser(file.content, file.path);
         }
     },

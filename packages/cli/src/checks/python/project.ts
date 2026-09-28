@@ -6,7 +6,7 @@ import { scopeOf } from '#cli/repository/scopes.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { SkippedCheckError } from '#cli/checks/result.ts';
-import { runCheckCommand } from '#cli/execution/tool-runner.ts';
+import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 
 import {
@@ -47,7 +47,7 @@ export async function importLinter(input: EngineInput): Promise<Finding[]> {
     });
     const said = [result.stderr, result.stdout].join('').trim().split('\n').at(-1) ?? '';
     if (result.code !== 0 && broken.length === 0) throw new Error(`The lint-imports command failed: ${said}`);
-    const at = { file: input.scope === '' ? PYTHON_MANIFEST : `${input.scope}/${PYTHON_MANIFEST}`, line: 1 };
+    const at = { file: manifest, line: 1 };
     return broken.map((name) =>
         finding(input, at, 'contract', `The import contract "${name}" is broken; lint-imports prints the chain.`),
     );

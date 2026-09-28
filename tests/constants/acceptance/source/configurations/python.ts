@@ -25,3 +25,6 @@ export const STRUCTURE_PROJECT =
 // The docstrings are Google style, and pydoclint reads that from the project, not from gspot (K-152).
 export const TOOLS_PROJECT =
     '[project]\nname = "planted"\nversion = "1.0.0"\nrequires-python = ">=3.12"\ndependencies = []\n\n[tool.pydoclint]\nstyle = "google"\n';
+
+export const NUMPY_DOCSTRING =
+    '"""Arithmetic the planted tests call."""\n\n\ndef double(value: int) -> int:\n    """Double a number.\n\n    Parameters\n    ----------\n    value : int\n        The number.\n\n    Returns\n    -------\n    int\n        Twice the number.\n    """\n    return value * 2\n';

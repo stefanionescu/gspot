@@ -23,8 +23,7 @@ test('agent instructions reach detected and configured consumers and uninstall r
     expect(selected.code, selected.stdout + selected.stderr).toBe(0);
     const applied = await run(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    const content = readFileSync(join(sandbox.path, 'AGENTS.md'), 'utf8');
-    const instructions = currentBlock(content, 'markdown');
+    const instructions = currentBlock(readFileSync(join(sandbox.path, 'AGENTS.md'), 'utf8'), 'markdown');
     expect(instructions).toContain('general/agent/WORKING.md');
     for (const path of ['GEMINI.md', '.github/copilot-instructions.md', '.cursor/rules/gspot.mdc', 'TEAM.md']) {
         expect(currentBlock(readFileSync(join(sandbox.path, path), 'utf8'), 'markdown')).toBe(instructions);

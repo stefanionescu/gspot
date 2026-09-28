@@ -1,78 +1,56 @@
-import { join } from 'node:path';
+import { testdir } from 'testdirs';
 import { expect, test } from 'bun:test';
+import { delimiter, join } from 'node:path';
 import { run } from '#cli/platform/spawn.ts';
-import { createFileTree, testdir } from 'testdirs';
 import { applyCommand } from '#cli/commands/apply/command.ts';
 import { uninstallCommand } from '#cli/commands/uninstall.ts';
-import { hookLocation } from '#cli/repository/hook-location.ts';
+import { textContaining } from '#tests/support/expectations.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
-import { SIMPLE_GIT_HOOKS_POLICY } from '#tests/constants/integration/tools/hooks.ts';
-import { hookReadiness, hookStatusText, installManager } from '#tests/support/cli/hooks.ts';
 import { chmodSync, existsSync, readFileSync, rmSync, unlinkSync, writeFileSync } from 'node:fs';
+import { readHookStatus, installHookTool, prepareSimpleGitHooks } from '#tests/support/cli/hooks/projects.ts';
 
 const captured = (root: string, name: string) =>
     existsSync(join(root, name)) ? readFileSync(join(root, name), 'utf8') : undefined;
 
 test.each(['', "apps/worker's tools"])(
-    'native simple-git-hooks preserves commands and restores policy directory %s',
+    'native simple-git-hooks detects missing, edited, and unexecutable manager files in %s',
     async (directory) => {
         await using sandbox = await testdir();
         const root = join(sandbox.path, directory);
-        await createFileTree(root, {
-            'gspot.toml': SIMPLE_GIT_HOOKS_POLICY,
-            'package.json':
-                JSON.stringify(
-                    {
-                        private: true,
-                        devDependencies: { 'simple-git-hooks': '2.13.1' },
-                        'simple-git-hooks': {
-                            'pre-push': `${JSON.stringify(process.execPath)} ${JSON.stringify(join(root, 'original.js'))} "$@"`,
-                        },
-                    },
-                    null,
-                    2,
-                ) + '\n',
-            'original.js':
-                'await Bun.write("package-input", await Bun.stdin.text()); await Bun.write("package-args", JSON.stringify(process.argv.slice(2)));',
-            'bin/gspot': `#!${process.execPath}\n(await import('node:fs')).appendFileSync('gspot-runs', 'x'); await Bun.write('gspot-input', await Bun.stdin.text()); await Bun.write('gspot-args', JSON.stringify(process.argv.slice(2))); process.exitCode = (await Bun.file('failed').exists()) ? 1 : 0;\n`,
-        });
-        chmodSync(join(root, 'bin/gspot'), 0o755);
-        const ran = await run(['git', 'init', '-q', sandbox.path], { cwd: root });
-        expect(ran.code).toBe(0);
-        const installed = await run(['npm', 'install', '--ignore-scripts', '--no-audit', '--no-fund'], {
-            cwd: root,
-            timeoutMs: 60_000,
-        });
-        expect(installed.code, installed.stderr).toBe(0);
-        const originalManifest = readFileSync(join(root, 'package.json'), 'utf8');
-        const location = hookLocation(root);
-        const originalHook = '#!/bin/sh\ncat > local-input\nprintf "%s\\n" "$@" > local-args\n';
-        writeFileSync(join(location.absolute, 'pre-push'), originalHook, { mode: 0o755 });
-        const applied = await applyCommand({ cwd: root, isDryRun: false });
-        expect(applied.exitCode).toBe(0);
+        const { location } = await prepareSimpleGitHooks(root, sandbox.path);
         const manifest = readFileSync(join(root, 'package.json'), 'utf8');
         const reapplied = await applyCommand({ cwd: root, isDryRun: false });
         expect(reapplied.exitCode).toBe(0);
         expect(readFileSync(join(root, 'package.json'), 'utf8')).toBe(manifest);
-        await installManager(root);
+        await installHookTool(root);
         const hook = readFileSync(join(location.absolute, 'pre-push'), 'utf8');
-        await installManager(root);
+        await installHookTool(root);
         expect(readFileSync(join(location.absolute, 'pre-push'), 'utf8')).toBe(hook);
-        expect(await hookReadiness(root)).toBe(true);
-        const managerPath = join(location.absolute, 'pre-push.gspot-manager');
-        const manager = readFileSync(managerPath);
-        unlinkSync(managerPath);
-        expect(await hookReadiness(root)).toBe(false);
-        expect(await hookStatusText(root)).toContain('pre-push.gspot-manager');
-        writeFileSync(managerPath, '#!/bin/sh\nexit 0\n', { mode: 0o755 });
-        expect(await hookReadiness(root)).toBe(false);
-        writeFileSync(managerPath, manager);
+        expect(await readHookStatus(root)).toMatchObject({ ready: true });
+        const nativePath = join(location.absolute, 'pre-push.gspot-manager');
+        const nativeScript = readFileSync(nativePath);
+        unlinkSync(nativePath);
+        expect(await readHookStatus(root)).toMatchObject({ ready: false });
+        expect(await readHookStatus(root)).toMatchObject({ text: textContaining('pre-push.gspot-manager') });
+        writeFileSync(nativePath, '#!/bin/sh\nexit 0\n', { mode: 0o755 });
+        expect(await readHookStatus(root)).toMatchObject({ ready: false });
+        writeFileSync(nativePath, nativeScript);
         // A manager file that lost its executable bit is not ready; Windows has no such bit to lose.
-        if (process.platform !== 'win32') chmodSync(managerPath, 0o644);
-        const unexecutable = await hookReadiness(root);
-        expect(unexecutable).toBe(process.platform === 'win32');
-        chmodSync(managerPath, 0o755);
-        expect(await hookReadiness(root)).toBe(true);
+        if (process.platform !== 'win32') chmodSync(nativePath, 0o644);
+        const unexecutable = await readHookStatus(root);
+        expect(unexecutable.ready).toBe(process.platform === 'win32');
+        chmodSync(nativePath, 0o755);
+        expect(await readHookStatus(root)).toMatchObject({ ready: true });
+    },
+    90_000,
+);
+test.each(['', "apps/worker's tools"])(
+    'native simple-git-hooks preserves push input, failures, and authored restoration in %s',
+    async (directory) => {
+        await using sandbox = await testdir();
+        const root = join(sandbox.path, directory);
+        const { originalManifest, originalHook, location } = await prepareSimpleGitHooks(root, sandbox.path);
+        await installHookTool(root);
         const input = 'refs/heads/main a refs/heads/main b\nrefs/heads/other c refs/heads/other d\n';
         writeFileSync(join(root, 'push-input'), input);
         const args = [
@@ -86,7 +64,7 @@ test.each(['', "apps/worker's tools"])(
             'origin',
             'remote with spaces',
         ];
-        const env = { PATH: `${join(root, 'bin')}:${environmentVariables()['PATH'] ?? ''}` };
+        const env = { PATH: `${join(root, 'bin')}${delimiter}${environmentVariables()['PATH'] ?? ''}` };
         const checked = await run(args, { cwd: root, env });
         expect(checked.code, checked.stderr).toBe(0);
         for (const path of ['local-input', 'package-input', 'gspot-input'])
@@ -105,8 +83,39 @@ test.each(['', "apps/worker's tools"])(
         writeFileSync(join(root, 'failed'), 'finding');
         const failed = await run(args, { cwd: root, env });
         expect(failed.code).toBe(1);
-        const skippedManager = await run(args, { cwd: root, env: { ...env, SKIP_SIMPLE_GIT_HOOKS: '1' } });
-        expect(skippedManager.code).toBe(1);
+        const skippedScript = await run(args, { cwd: root, env: { ...env, SKIP_SIMPLE_GIT_HOOKS: '1' } });
+        expect(skippedScript.code).toBe(1);
+        const uninstalled = await uninstallCommand({ cwd: root, yes: true, isDryRun: false });
+        expect(uninstalled.exitCode).toBe(0);
+        expect(readFileSync(join(root, 'package.json'), 'utf8')).toBe(originalManifest);
+        expect(readFileSync(join(location.absolute, 'pre-push'), 'utf8')).toBe(originalHook);
+        expect(existsSync(join(location.absolute, 'pre-push.gspot-manager'))).toBe(false);
+        expect(existsSync(join(root, '.gspot/integrations/simple-git-hooks/pre-push'))).toBe(false);
+    },
+    90_000,
+);
+test.each(['', "apps/worker's tools"])(
+    'native simple-git-hooks retains gspot enforcement and rc exit behavior in %s',
+    async (directory) => {
+        await using sandbox = await testdir();
+        const root = join(sandbox.path, directory);
+        await prepareSimpleGitHooks(root, sandbox.path);
+        await installHookTool(root);
+        const input = 'refs/heads/main a refs/heads/main b\nrefs/heads/other c refs/heads/other d\n';
+        writeFileSync(join(root, 'push-input'), input);
+        const args = [
+            'git',
+            'hook',
+            'run',
+            '--to-stdin',
+            join(root, 'push-input'),
+            'pre-push',
+            '--',
+            'origin',
+            'remote with spaces',
+        ];
+        const env = { PATH: `${join(root, 'bin')}${delimiter}${environmentVariables()['PATH'] ?? ''}` };
+        writeFileSync(join(root, 'failed'), 'finding');
         const rc = join(root, 'hook-init.sh');
         for (const [body, status, calls] of [
             ['exit 0\n', 1, 'x'],
@@ -127,12 +136,6 @@ test.each(['', "apps/worker's tools"])(
                 calls === '' ? undefined : JSON.stringify(['check', '--push', '--', 'origin', 'remote with spaces']),
             );
         }
-        const uninstalled = await uninstallCommand({ cwd: root, yes: true, isDryRun: false });
-        expect(uninstalled.exitCode).toBe(0);
-        expect(readFileSync(join(root, 'package.json'), 'utf8')).toBe(originalManifest);
-        expect(readFileSync(join(location.absolute, 'pre-push'), 'utf8')).toBe(originalHook);
-        expect(existsSync(join(location.absolute, 'pre-push.gspot-manager'))).toBe(false);
-        expect(existsSync(join(root, '.gspot/integrations/simple-git-hooks/pre-push'))).toBe(false);
     },
     90_000,
 );

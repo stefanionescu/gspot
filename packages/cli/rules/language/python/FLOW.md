@@ -15,365 +15,164 @@ Exceptions, assertions, comparisons, control flow, iteration, strings, logging, 
 
 ## Exceptions and error handling
 
-Rules:
+Raise specific exception types for failures the caller can handle. Preserve the cause when
+translating an exception at a boundary. Catch only the operation and exception types that
+boundary owns; do not suppress unrelated failures or catch an exception only to raise it again.
 
-- Use built-in exception classes when they fit the error.
-- Raise `ValueError` for invalid argument values.
-- Raise `TypeError` for invalid argument types when type validation is needed.
-- Keep `try` blocks as small as possible.
-- Catch specific exceptions.
-- Do not use bare `except:`.
-- Do not catch `Exception` unless re-raising or creating a deliberate isolation
-  boundary that records and suppresses failures.
-- Use `else` when code runs only if the `try` block succeeds.
-- Use `finally` for cleanup that must run regardless of success or failure.
-- Do not use `return`, `break`, or `continue` in a `finally` block when an
-  exception can be active.
-- Use `raise NewError(...) from error` when replacing an exception but preserving
-  the cause.
-- Use `raise NewError(...) from None` only when deliberately suppressing an
-  irrelevant implementation exception, and preserve relevant details in the new
-  message.
-- When catching operating-system errors, prefer Python's explicit OSError
-  subclass hierarchy over checking `errno` manually.
+Use explicit validation for external inputs and required preconditions. Avoid exceptions for
+ordinary branching when the value can be checked directly. Run required cleanup through a
+context manager or `finally`. Handle cancellation and other failures through that cleanup.
+
+Keep validation messages actionable without exposing credentials or unrelated private data.
+The following module accepts only bounded positive decimal integers and preserves the original
+conversion error.
 
 Good:
 
 ```python
-try:
-    value = collection[key]
-except KeyError:
-    return key_not_found(key)
-else:
-    return handle_value(value)
+"""Validate limits supplied by a command or environment variable."""
+
+MAX_BATCH_SIZE = 1000
+
+
+def parse_batch_limit(raw: str) -> int:
+    """Return a positive batch limit within the supported range."""
+    try:
+        value = int(raw)
+    except ValueError as error:
+        message = "Batch limit must be a decimal integer."
+        raise ValueError(message) from error
+    if not 1 <= value <= MAX_BATCH_SIZE:
+        message = f"Batch limit must be between 1 and {MAX_BATCH_SIZE}."
+        raise ValueError(message)
+    return value
 ```
 
-Good exception replacement:
+### Exception message conventions
 
-```python
-try:
-    raw_value = payload["label"]
-except KeyError as error:
-    raise ValueError("Missing required field: label") from error
-```
+<!-- level: all -->
+
+Assign constructed exception messages to a variable before raising. Keep the exception's public
+contract stable when changing its message.
+
+## Exception contracts
+
+Do not substitute a built-in exception for an external API's declared error type. Follow a
+library's public error contract when callers depend on it.
 
 ## Assertions
 
-Rules:
+Do not use `assert` for input validation, permissions, or required application preconditions.
+Python can remove assertions, so their removal must not change application behavior. Assertions
+are appropriate in tests that run with the supported test runner.
 
-- Do not use `assert` for application logic, input validation, permission
-  checks, or required preconditions.
-- Do not rely on `assert` to satisfy type checking or runtime correctness.
-- `assert` is acceptable in pytest tests.
-- `assert` is acceptable for non-critical internal consistency checks where
-  removing it does not change application behavior.
-- Use explicit `if` checks and raise exceptions for real validation.
+### Assertions outside tests
 
-Good:
+<!-- level: all -->
 
-```python
-def connect_to_port(minimum: int) -> int:
-    """Connect to the next available port."""
-    if minimum < 1024:
-        raise ValueError(f"Minimum port must be at least 1024: {minimum=}")
-    port = find_next_open_port(minimum)
-    if port is None:
-        raise ConnectionError(f"Could not connect on or above port: {minimum=}")
-    assert port >= minimum
-    return port
-```
+Keep assertions in test code. Use explicit error handling for production validation and failure
+reporting. Do not silence the assertion rule to keep required checks behind `assert`.
 
 ## Boolean logic and comparisons
 
-Rules:
+Compare singleton values with `is None`, `is not None`, `is True`, or `is False` when identity is
+the intended contract. Use truth-value testing only when all falsy values mean the same thing.
+An empty collection, zero, and a missing value are not interchangeable by default.
 
-- Compare to `None` with `is None` or `is not None`.
-- Do not compare booleans to `True` or `False`.
-- Use truthiness for sequences and containers.
-- When handling integers, compare to `0` when zero has domain meaning.
-- Do not write `if not value` when `None`, `0`, `False`, and empty containers
-  have different meanings.
-- Use `is not` instead of `not ... is`.
-- Use `isinstance()` for type checks.
-- Use `startswith()` and `endswith()` for prefix and suffix checks.
-- Do not compare types directly unless exact type identity is the real contract.
-- For rich ordering, implement all relevant comparison operations or use
-  `functools.total_ordering()`.
+Use `==` for value equality. Use membership tests for supported containers, and avoid chained
+comparisons whose repeated values have side effects. Keep evaluation order and short-circuit
+behavior intact when simplifying a condition.
 
-Good:
+### Control-flow conventions
 
-```python
-if value is not None:
-    ...
+<!-- level: all -->
 
-if not examples:
-    ...
-
-if count == 0:
-    ...
-
-if isinstance(obj, int):
-    ...
-
-if filename.endswith(".json"):
-    ...
-```
-
-NumPy arrays may reject implicit boolean evaluation. Use `.size` or another
-explicit property when checking array emptiness.
-
-## Control flow simplification
-
-Rules:
-
-- Reduce nesting when a condition can be merged without changing behavior.
-- Merge adjacent `if` statements when the inner condition has no intervening
-  work and no `else` branch that changes the result.
-- Prefer guard clauses when they remove a level of nesting and keep the main
-  path easy to scan.
-- Hoist repeated code out of conditional branches when it runs in every branch.
-- Hoist loop-invariant statements out of `for` and `while` loops when they do
-  not depend on the loop variable and have no required repeated side effect.
-- Do not combine conditions when separate conditions communicate distinct
-  domain decisions more clearly.
-- Do not hoist code when execution order, exceptions, logging, timing, database
-  calls, or mutation change.
-
-Good merged condition:
-
-```python
-if is_enabled and has_examples:
-    return build_examples()
-```
-
-Good hoisted branch code:
-
-```python
-if sold > DISCOUNT_AMOUNT:
-    total = sold * DISCOUNT_PRICE
-else:
-    total = sold * PRICE
-label = f"Total: {total}"
-```
-
-Good loop-invariant hoist:
-
-```python
-city = "London"
-for building in buildings:
-    addresses.append((building.street_address, city))
-```
+Prefer direct predicates and early exits when they reduce nesting. Use a conditional expression
+for a short two-way value assignment. Keep multi-step branches as statements. Avoid nested
+conditional expressions and redundant `else` blocks after an unconditional return or raise.
 
 ## Iteration and collections
 
-Rules:
+Iterate containers through their supported interfaces. Iterate a dictionary directly for keys,
+and use `.items()` when both the key and value are needed. Do not mutate a collection in a way
+that invalidates the current iteration.
 
-- Use default iterators and membership operators for containers that support
-  them.
-- Iterate dictionaries directly for keys.
-- Use `.items()` when both keys and values are needed.
-- Do not call `.keys()` only to iterate keys.
-- Do not call `.readlines()` only to iterate file lines.
-- Do not mutate a container while iterating over it.
-- Prefer clear loops over dense collection transformations.
-- Use `yield from iterable` instead of a loop that only yields every item from
-  another iterable.
-- Use `any()` and `all()` for simple existence or universal predicate checks.
-- Use `[]` for an empty list and `{}` for an empty dictionary.
-- Use `list()` or `dict()` when converting an iterable or mapping, not for empty
-  literals.
+Read file objects as iterators instead of loading all lines when the operation can stream them.
+Use `yield from` to delegate an iterator, and `any()` or `all()` for short-circuit predicate checks.
+Keep comprehensions limited to transformations whose order and side effects remain clear.
 
-Good:
+Create empty lists and dictionaries with literals. Use `list()` and `dict()` for conversions.
+Choose concrete return values or lazy iteration according to the caller's resource and reuse
+requirements, not solely to shorten the implementation.
 
-```python
-for key in values:
-    ...
+## Strings and output
 
-for key, value in values.items():
-    ...
+Use f-strings for ordinary value interpolation. Preserve formatting required by an external API,
+and keep logging arguments separate from the message when the logging API formats them lazily.
+Use efficient joining for a sequence of strings instead of repeatedly growing a large string.
 
-for line in file_obj:
-    ...
+Formatting is not validation or escaping. Use parameterized database queries, argument arrays
+for subprocesses, and the appropriate encoder for HTML, JSON, or another output format.
+Never evaluate external input as Python code.
 
-if item in values:
-    ...
-```
+## Logging
 
-Good delegated yield:
+Configure logging at the application entrypoint. Library code uses an owned logger and does not
+replace the application's handlers or global configuration. Log at the boundary that owns the
+outcome; do not repeat the same failure at every layer.
 
-```python
-def get_content(entry: Entry) -> Iterable[Block]:
-    yield from entry.get_blocks()
-```
+Use exception information when an operational diagnostic needs the traceback. Logging an error
+does not handle it by itself: return the declared failure, raise it to the owning caller, or take
+the documented recovery action. Do not keep a failed service running merely because the error
+was logged.
 
-Good predicate check:
+Keep credentials, tokens, and unrelated private payloads out of messages and structured fields.
+Separate public service responses from restricted diagnostics. Local tools can report the file,
+line, and safe input details needed to correct a failure.
 
-```python
-found = any(thing == expected for thing in things)
-all_valid = all(is_valid(thing) for thing in things)
-```
+### Message conventions
 
-Good empty containers:
+<!-- level: all -->
 
-```python
-items = []
-metadata = {}
-```
-
-## Strings, logging, and error messages
-
-### String formatting
-
-Rules:
-
-- Use f-strings, `%` formatting, or `.format()` for formatting.
-- Prefer f-strings for ordinary string interpolation.
-- Do not use `+` to format strings with values.
-- A single `a + b` concatenation is allowed when both values are already strings
-  and this is not formatting.
-- Do not accumulate strings with `+` or `+=` in a loop.
-- Accumulate parts in a list and `"".join(parts)`, or use `io.StringIO`.
-- Use implicit literal concatenation inside parentheses for long string
-  literals.
-
-Good:
-
-```python
-from html import escape
-
-message = f"name: {name}; score: {score}"
-
-rows = ["<table>"]
-for last_name, first_name in employees:
-    rows.append("<tr><td>%s, %s</td></tr>" % (escape(last_name), escape(first_name)))
-rows.append("</table>")
-employee_table = "".join(rows)
-```
-
-### Logging
-
-Rules:
-
-- Create loggers with `logging.getLogger(__name__)`.
-- Use module-level loggers. Logger names track the package and module
-  hierarchy through `__name__`.
-- Do not log through the root logger from application or library modules.
-- Use `print()` for ordinary CLI output intended for the user.
-- Use `logger.debug()` for detailed diagnostic information.
-- Use `logger.info()` for normal operational events and status.
-- Use `logger.warning()` when something unexpected happened but the software can
-  still continue as expected.
-- Use `warnings.warn()` in library code when client code must change to avoid
-  the issue.
-- Raise an exception to report an error that prevents the requested operation.
-- Use `logger.error()`, `logger.exception()`, or `logger.critical()` when an
-  error is deliberately suppressed at an isolation boundary and must be recorded.
-- Use `logger.exception()` only inside an exception handler.
-- Logging calls that accept pattern strings must use a string literal first
-  argument and pass values as later arguments.
-- Do not use f-strings in logging pattern calls.
-- Do not call logging once for the static text and once for the value.
-- Do not eagerly compute expensive logging arguments unless the log level is
-  enabled. Use `logger.isEnabledFor(...)` around expensive diagnostic work.
-- Configure handlers, formatters, and levels at the application entrypoint or
-  deployment boundary, not in importable library modules.
-- Call `logging.basicConfig()` before logger methods are called when an
-  entrypoint uses basic configuration.
-- If dictionary or file logging configuration is used, set
-  `disable_existing_loggers` deliberately.
-- Library modules must not add handlers other than `logging.NullHandler()` to
-  their own top-level logger.
-- Do not define custom logging levels unless there is a documented application
-  need.
-- Do not log secrets, tokens, passwords, PII, or full authenticated request
-  bodies.
-- Keep log messages precise and searchable.
-
-Good:
-
-```python
-logger.info("Warmup prompts: %d", num_prompts)
-logger.warning("Requested max_length=%d exceeds model limit; clamping to %d", requested, effective)
-```
-
-Good expensive debug logging:
-
-```python
-if logger.isEnabledFor(logging.DEBUG):
-    logger.debug(
-        "Tokenization details: %s",
-        build_expensive_tokenization_summary(batch),
-    )
-```
-
-Good exception logging:
-
-```python
-try:
-    upload_model(model_dir)
-except UploadError:
-    logger.exception("Model upload failed")
-    raise
-```
-
-### Error messages
-
-Rules:
-
-- Error messages must match the actual error condition.
-- Interpolated values must be clearly identifiable.
-- Prefer `name=value` formatting for values that aid debugging.
-- Keep messages easy to grep.
-- Start user-visible messages with an uppercase letter.
-- Do not leak schema names, table names, file paths, internal IDs, stack traces,
-  trigger names, policy names, secrets, or implementation details.
-- Use generic messages for configuration and infrastructure failures unless the
-  details are part of the public contract.
-
-Good:
-
-```python
-if not 0 <= probability <= 1:
-    raise ValueError(f"Not a probability: {probability=}")
-```
-
-Good logging around OS errors:
-
-```python
-try:
-    workdir.rmdir()
-except OSError as error:
-    logger.warning("Could not remove directory (reason: %r): %r", error, workdir)
-```
+Use sentence case and stable terminology in authored messages. Preserve externally owned
+diagnostic text when its exact form is part of the caller's contract.
 
 ## Files and stateful resources
 
-Rules:
+Use context managers for resources with an explicit lifetime. Close files and network resources
+on both success and failure. Declare text encoding when opening a text file. Use binary mode
+for bytes instead of relying on an implicit conversion.
 
-- Explicitly close files, sockets, database connections, mmap mappings, h5py
-  files, matplotlib figures, and similar stateful resources.
-- Prefer `with` statements for resources that support context management.
-- Use `contextlib.closing()` for closeable resources without context-manager
-  support.
-- Do not rely on finalizers or garbage collection for resource cleanup.
-- Keep resource scope as small as practical.
-- Do not return open resources from helpers unless resource ownership is part of
-  the documented contract.
-- Document resource lifetime when context-based management is infeasible.
+A generator can keep a resource open while suspended. Make that lifetime clear to callers,
+especially when they can stop consuming it early. This command reads the path supplied as its
+first argument and closes the input before printing the collected records.
 
 Good:
 
 ```python
-with path.open(encoding="utf-8") as file_obj:
-    for line in file_obj:
-        handle_line(line)
+"""Read normalized, nonempty records from a text file."""
+
+import sys
+from pathlib import Path
+
+
+def main() -> int:
+    """Read the first argument as a path and print its normalized records."""
+    path = Path(sys.argv[1])
+    with path.open(encoding="utf-8") as source:
+        records = [record for line in source if (record := line.strip())]
+    _ = sys.stdout.write("\n".join(records))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
 ```
 
-Good for closeable objects without context-manager support:
+For large inputs, provide an explicit streaming interface whose caller owns the open resource
+or uses a context manager. Do not materialize the full input merely to avoid documenting its
+lifetime.
 
-```python
-import contextlib
-
-with contextlib.closing(open_remote_resource(url)) as resource:
-    consume(resource)
-```
+Write replacements to an owned temporary file, validate them, and use the filesystem operation
+required by the durability contract. Keep replacement files on the appropriate filesystem when
+atomic rename is required. Clean up only paths and resources owned by the current operation.

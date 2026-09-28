@@ -1,14 +1,14 @@
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
-// Planted repositories: gspot init --yes then gspot check on each; asserts exit codes, check lines and finding counts.
+// Planted repositories: gspot init --yes then gspot check on each; asserts exit codes, check lines, and finding counts.
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { script } from '#tests/support/cli/planted.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { containing } from '#tests/support/expectations.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
 import { existsSync, readFileSync, symlinkSync } from 'node:fs';
-import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
 
 test(
     'init --yes writes the policy and check passes over a clean script',

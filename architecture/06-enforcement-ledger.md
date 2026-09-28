@@ -198,7 +198,7 @@ Source: `TI pyproject.toml`, `TI quality/python/`, `TI quality/repository/`.
 | every folder allowlist entry resolves                                                                                                                                                                                                                                                                                                           | `integrity/folder.py`                                          | `integrity/allowlists-match`                                                                                                                                                                               |
 | gitleaks baseline entries carry reviewed reasons                                                                                                                                                                                                                                                                                                | `integrity/gitleaks.py`                                        | `secrets/gitleaks-baseline`                                                                                                                                                                                |
 | naming: python categories and cases, visitor method exemptions                                                                                                                                                                                                                                                                                  | `repository/naming/`                                           | naming engine                                                                                                                                                                                              |
-| Semgrep: no `torch.jit.script`, no `torch.load`, no `LSTMCell`, no direct diskcache, no HF token literal, no obsolete markers                                                                                                                                                                                                                   | `config/security/semgrep/*.yml`                                | `security/semgrep` with `packages/cli/configurations/language/python/semgrep/python.yml`; the rules that name one project go to that project (K-248, K-218)                                                |
+| Semgrep: no `torch.jit.script`, no `torch.load`, no `LSTMCell`, no direct diskcache, no HF token literal, no obsolete markers                                                                                                                                                                                                                   | `config/security/semgrep/*.yml`                                | `security/semgrep` with project-owned rules selected through `tools.semgrep.rules`; project-specific prohibitions belong to that project (K-248, K-218)                                                    |
 | ambiguous folder names banned (`common`, `core`, `helper(s)`, `util(s)`, `support`, language names)                                                                                                                                                                                                                                             | `config/repository/folders.py`                                 | `structure/folder-names`                                                                                                                                                                                   |
 
 ## 6. Shell
@@ -349,7 +349,7 @@ Source: `SS quality/`.
 | frozen lockfile verify (`bun install --frozen-lockfile --dry-run`, `uv lock --check`)                                                                                                                                                                                   | all                                                  | `dependencies/lockfile-fresh`                                                                                                  |
 | production env guard, no `.env*` staged except templates                                                                                                                                                                                                                | all                                                  | `secrets/env-files`                                                                                                            |
 | git-lfs pre-push when installed                                                                                                                                                                                                                                         | LA, TI                                               | hook body                                                                                                                      |
-| stale paths: no text in the tree names a deleted folder                                                                                                                                                                                                                 | SA, LA `stale-paths.js`                              | `docs/stale-paths`                                                                                                             |
+| stale paths: no text in the tree names a deleted folder                                                                                                                                                                                                                 | SA, LA `stale-paths.js`                              | `integrity/stale-paths`                                                                                                        |
 | folder allowlists resolve                                                                                                                                                                                                                                               | SA, LA, TI                                           | `integrity/allowlists-match`                                                                                                   |
 | config purity: config files hold literals only                                                                                                                                                                                                                          | SA `integrity/architecture.js`, LA, TI               | `integrity/config-purity` (forward check only; the inverse check that forced scalars into config folders is not carried)       |
 | suppression census: `eslint-disable`, `@ts-expect-error`, `@ts-ignore`, `lint:justify`, `nosemgrep`, `shellcheck disable`, `swiftlint:disable`, `noqa`, `nosec`, `type: ignore` counted, each with a reason                                                             | SA `LINTING.md`, TI                                  | `integrity/suppressions`                                                                                                       |
@@ -420,9 +420,11 @@ Where two repositories pin different versions, the configuration takes the newer
 These clauses specify required behavior. [Remaining work](22-remaining.md) owns status and evidence.
 The configuration entries retain agreed enforcement, settings, and detection, including unimplemented
 capabilities. They are target contracts, not a generated inventory of the current manifests.
+
 The level owner in [configurations](04-configurations.md) governs every rule below: house-style, naming, layout,
 and optional abstraction preferences remain available at `all`. Trivial-function and trivial-file
-enforcement is mandatory at both levels, as defined in [slop in structure](07-slop-drift.md#slop-in-structure).
+enforcement belongs to `all`, as defined in [slop in structure](07-slop-drift.md#slop-in-structure).
+
 Stage selection follows [hooks and execution](10-hooks-ci-runners.md#stages): build, analyzer,
 coverage, daemon, and network prerequisites must use their specified push/manual boundaries.
 Tool versions come from validated manifests; historical comparison versions are not a second pin.
@@ -472,7 +474,7 @@ The build writes into a folder of the cache, and the tree is unchanged.
 The check copies the scope through `scratchCopy`, less the ignored files, and builds
 there. The command is the `build` script run through the package manager `nypm` detects. A
 command from a setting is parsed with shell quoting rules, by one function in
-`run/tool-runner.ts`.
+`packages/cli/src/execution/tool/runner.ts`.
 
 A planted site that tracks `dist` holds a clean `git status` after
 `gspot check --stage push`.
@@ -528,7 +530,7 @@ An Express planted handler named `handleLogin` holds none.
 
 The prefix of a file name is its first word, in any case style.
 
-`prefixOf` calls `splitName` of `naming/split.ts` and takes the first part. Peers are
+`prefixOf` calls `splitName` of `packages/cli/src/checks/naming/split.ts` and takes the first part. Peers are
 files whose nature is `source`.
 
 Unit tests for `user_card.py`, `UserCard.swift`, and `user-card.ts` beside a README.
@@ -692,8 +694,10 @@ A planted repository with two referenced projects and a type error holds the fin
 Each manifest declares the suppression comment of its tool, and the check reads every
 comment style.
 
-A tool in a manifest takes `suppression = { marker, reason }`. The check takes the
-comment styles from `run/ignores.ts` and the markers from the selected manifests.
+A tool in a manifest declares suppression `marker` and `reason` patterns. An optional
+`inline_marker` replaces `marker` for comments that share a line with source code. Without it,
+`marker` applies to both placements. The parser identifies source comments, and the selected
+manifests supply their directive patterns.
 
 Planted files in SQL, CSS, HTML, and Markdown, each with a bare suppression.
 
@@ -912,8 +916,8 @@ Settings:
 
 Rule files:
 
-`language/SWIFT.md`, `language/naming/SWIFT.md`; `framework/swiftui/SWIFTUI.md` and
-`framework/uikit/UIKIT.md` when the corresponding import appears in the sources.
+`packages/cli/rules/language/SWIFT.md`, `packages/cli/rules/language/naming/SWIFT.md`; `packages/cli/rules/framework/swiftui/SWIFTUI.md` and
+`packages/cli/rules/framework/uikit/UIKIT.md` when the corresponding import appears in the sources.
 
 Not covered here:
 
@@ -945,14 +949,14 @@ Generated configuration:
 
 Checks:
 
-| Id                      | Stage  | Command                                                                                                                                                                        |
-| ----------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `markdown/markdownlint` | commit | `markdownlint-cli2 --no-globs --config .gspot/config/markdownlint.jsonc {files}` (the pointer's globs are for editors; the check lints the file list alone); fix, order format |
-| `markdown/prettier`     | commit | through formatting                                                                                                                                                             |
-| `docs/links`            | commit | lychee offline with fragments, through docs                                                                                                                                    |
-| `docs/headings`         | commit | banned headings absent                                                                                                                                                         |
-| `markdown/fences`       | commit | every fenced block with a language tag parses; TypeScript, Python, Bash, SQL, TOML, JSON and YAML fences are extracted and handed to their language's syntax check             |
-| `prose/vale`            | commit | through prose                                                                                                                                                                  |
+| Id                        | Stage  | Command                                                                                                                                                                        |
+| ------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `markdown/markdownlint`   | commit | `markdownlint-cli2 --no-globs --config .gspot/config/markdownlint.jsonc {files}` (the pointer's globs are for editors; the check lints the file list alone); fix, order format |
+| `markdown/prettier`       | commit | through formatting                                                                                                                                                             |
+| `docs/links`              | commit | lychee offline with fragments, through docs                                                                                                                                    |
+| `integrity/docs-headings` | commit | banned headings absent                                                                                                                                                         |
+| `markdown/fences`         | commit | every fenced block with a language tag parses; TypeScript, Python, Bash, SQL, TOML, JSON and YAML fences are extracted and handed to their language's syntax check             |
+| `prose/vale`              | commit | through prose                                                                                                                                                                  |
 
 Settings:
 
@@ -960,7 +964,7 @@ Settings:
 
 Rule files:
 
-`general/prose/DOCS.md` and its siblings (installed by docs), `general/prose/WRITING.md`.
+`packages/cli/rules/general/prose/DOCS.md` and its siblings (installed by docs), `packages/cli/rules/general/prose/WRITING.md`.
 
 ### Configuration i18n
 
@@ -989,7 +993,7 @@ Settings:
 
 Rule files:
 
-`shared/i18n/I18N.md`; `library/next-intl/NEXTINTL.md` when `next-intl` is a dependency.
+`packages/cli/rules/shared/i18n/I18N.md`; `packages/cli/rules/library/next-intl/NEXTINTL.md` when `next-intl` is a dependency.
 
 ### Configuration react-native
 
@@ -1010,8 +1014,8 @@ eslint-plugin-expo 1.1.0.
 As a command: expo-doctor 1.20.4, where `expo` is a dependency.
 
 eslint-plugin-react-native-a11y is left out: its range ends at ESLint 8. eslint-config-expo
-is left out, because it brings its own copies of the React and TypeScript rules, which the react
-and typescript configurations own.
+is also excluded because it duplicates the React and TypeScript rules. The react and
+typescript configurations own those rules.
 
 Generated configuration:
 
@@ -1066,7 +1070,7 @@ None. A rule the repository decides against is `gspot ignore typescript/eslint -
 
 Rule files:
 
-`framework/react-native/REACT-NATIVE.md`.
+`packages/cli/rules/framework/react-native/REACT-NATIVE.md`.
 
 ### Configuration postgres
 
@@ -1114,7 +1118,7 @@ Settings:
 
 Rule files:
 
-`database/postgres/POSTGRES.md`.
+`packages/cli/rules/database/postgres/POSTGRES.md`.
 
 ### Configuration python
 
@@ -1186,8 +1190,8 @@ Settings:
 
 Rule files:
 
-`language/PYTHON.md`, `language/python/TYPING.md`, `language/python/DESIGN.md`, `language/python/FLOW.md`,
-`language/python/PACKAGING.md`, `language/naming/PYTHON.md`.
+`packages/cli/rules/language/PYTHON.md`, `packages/cli/rules/language/python/TYPING.md`, `packages/cli/rules/language/python/DESIGN.md`, `packages/cli/rules/language/python/FLOW.md`,
+`packages/cli/rules/language/python/PACKAGING.md`, `packages/cli/rules/language/naming/PYTHON.md`.
 
 Not covered here:
 
@@ -1242,9 +1246,9 @@ Every `[limits]` key in the ledger, at the root or under a language table (`limi
 
 Rule files:
 
-- `general/agent/WORKING.md` carries the intent each rule enforces.
-- `general/code/NAMING.md` "Files and Directories" states the folder, stem, and collision rules.
-- `general/code/CONFIGURATION.md` states the environment owner rule.
+- `packages/cli/rules/general/agent/WORKING.md` carries the intent each rule enforces.
+- `packages/cli/rules/general/code/NAMING.md` "Files and Directories" states the folder, stem, and collision rules.
+- `packages/cli/rules/general/code/CONFIGURATION.md` states the environment owner rule.
 - Each language file states its private-first, private-prefix, types, and re-export rules.
 
 ### Configuration svelte
@@ -1314,7 +1318,7 @@ None. A rule the repository decides against is `gspot ignore typescript/eslint -
 
 Rule files:
 
-`framework/svelte/SVELTE.md`.
+`packages/cli/rules/framework/svelte/SVELTE.md`.
 
 ### Configuration zustand
 
@@ -1341,7 +1345,7 @@ Settings:
 
 Rule files:
 
-`library/zustand/ZUSTAND.md`.
+`packages/cli/rules/library/zustand/ZUSTAND.md`.
 
 ### Configuration css
 
@@ -1386,7 +1390,7 @@ Settings:
 
 Rule files:
 
-`language/CSS.md`, `language/naming/CSS.md`; `tool/tailwind/TAILWIND.md` when Tailwind is a dependency.
+`packages/cli/rules/language/CSS.md`, `packages/cli/rules/language/naming/CSS.md`; `packages/cli/rules/tool/tailwind/TAILWIND.md` when Tailwind is a dependency.
 
 ### Configuration prose
 
@@ -1428,7 +1432,7 @@ Settings:
 
 Rule files:
 
-`general/prose/WRITING.md`, `general/code/COMMENTS.md`, `general/prose/DOCS.md` and its five siblings.
+`packages/cli/rules/general/prose/WRITING.md`, `packages/cli/rules/general/code/COMMENTS.md`, `packages/cli/rules/general/prose/DOCS.md` and its five siblings.
 
 Rollout:
 
@@ -1439,7 +1443,7 @@ disabled upstream rules and the reason for each is in the template.
 ### Configuration xctest
 
 Kind: tool. Requires: swift. macOS only. Every check here passes as a platform skip elsewhere.
-Covers XCTest, Swift Testing and snapshot tests.
+Covers XCTest, Swift Testing, and snapshot tests.
 
 Detects and claims:
 
@@ -1479,7 +1483,7 @@ Settings:
 
 Rule files:
 
-`tool/xctest/XCTEST.md`, `general/code/TESTING.md`.
+`packages/cli/rules/tool/xctest/XCTEST.md`, `packages/cli/rules/general/code/TESTING.md`.
 
 ### Configuration secrets
 
@@ -1518,7 +1522,7 @@ Settings:
 
 Rule files:
 
-`general/code/SECRETS.md`, `general/code/SECURITY.md`.
+`packages/cli/rules/general/code/SECRETS.md`, `packages/cli/rules/general/code/SECURITY.md`.
 
 ### Configuration pytest
 
@@ -1543,12 +1547,12 @@ with `testpaths` from claims and `addopts = "-q --strict-markers --strict-config
 
 Checks:
 
-| Id                           | Stage  | Command                                                                                          |
-| ---------------------------- | ------ | ------------------------------------------------------------------------------------------------ |
-| `python/ruff`                | commit | with `PT001` to `PT027` on                                                                       |
-| `pytest/coverage`            | push   | `pytest --cov --cov-fail-under=<threshold>`                                                      |
-| `structure/trivial-function` | commit | setup callbacks are reported by default; required external APIs use narrow reasoned suppressions |
-| `naming/identifiers`         | commit | `test_` is a structural prefix for test functions; test-data directories need descriptive names  |
+| Id                           | Stage  | Command                                                                                             |
+| ---------------------------- | ------ | --------------------------------------------------------------------------------------------------- |
+| `python/ruff`                | commit | with `PT001` to `PT027` on                                                                          |
+| `pytest/coverage`            | push   | `pytest --cov --cov-fail-under=<threshold>`                                                         |
+| `structure/trivial-function` | commit | at `all`, Python setup callbacks are checked; required external APIs use narrow reasoned exceptions |
+| `naming/identifiers`         | commit | `test_` is a structural prefix for test functions; test-data directories need descriptive names     |
 
 Settings:
 
@@ -1556,7 +1560,7 @@ Settings:
 
 Rule files:
 
-`general/code/TESTING.md`; the Tests section of `language/PYTHON.md`.
+`packages/cli/rules/general/code/TESTING.md`; the Tests section of `packages/cli/rules/language/PYTHON.md`.
 
 ### Configuration static-site
 
@@ -1601,7 +1605,7 @@ reason), `tools.linkinator.status_overrides`.
 
 Rule files:
 
-`repository/static-site/STATIC-SITE.md`, `runtime/browser/BROWSER.md`.
+`packages/cli/rules/repository/static-site/STATIC-SITE.md`, `packages/cli/rules/runtime/browser/BROWSER.md`.
 
 ### Configuration nginx
 
@@ -1636,7 +1640,7 @@ Settings:
 
 Rule files:
 
-`tool/nginx/NGINX.md`.
+`packages/cli/rules/tool/nginx/NGINX.md`.
 
 ### Configuration vue
 
@@ -1703,7 +1707,7 @@ None. A rule the repository decides against is `gspot ignore typescript/eslint -
 
 Rule files:
 
-`framework/vue/VUE.md`.
+`packages/cli/rules/framework/vue/VUE.md`.
 
 ### Configuration nextjs
 
@@ -1769,9 +1773,9 @@ Settings:
 
 Rule files:
 
-`framework/nextjs/NEXTJS.md`, `framework/nextjs/SECURITY.md`, `runtime/node/NODE.md`,
-`runtime/browser/BROWSER.md`; `runtime/workers/WORKERS.md` through cloudflare when `@opennextjs/cloudflare` is
-present; `library/next-intl/NEXTINTL.md` when `next-intl` is a dependency.
+`packages/cli/rules/framework/nextjs/NEXTJS.md`, `packages/cli/rules/framework/nextjs/SECURITY.md`, `packages/cli/rules/runtime/node/NODE.md`,
+`packages/cli/rules/runtime/browser/BROWSER.md`; `packages/cli/rules/runtime/workers/WORKERS.md` through cloudflare when `@opennextjs/cloudflare` is
+present; `packages/cli/rules/library/next-intl/NEXTINTL.md` when `next-intl` is a dependency.
 
 ### Configuration configs
 
@@ -1832,8 +1836,8 @@ variables, on top of `process.env` and `os.environ`).
 
 Rule files:
 
-`general/code/CONFIGURATION.md`, `language/YAML.md`, `tool/tasks/TASKS.md`;
-`tool/github-actions/GITHUB-ACTIONS.md` when `.github/workflows/` holds a workflow.
+`packages/cli/rules/general/code/CONFIGURATION.md`, `packages/cli/rules/language/YAML.md`, `packages/cli/rules/tool/tasks/TASKS.md`;
+`packages/cli/rules/tool/github-actions/GITHUB-ACTIONS.md` when `.github/workflows/` holds a workflow.
 
 Ansible playbooks have their own configuration, `ansible`, so a repository with no playbook installs no
 ansible-lint. It detects `ansible.cfg` and runs `ansible/lint` in every folder that holds one.
@@ -1887,7 +1891,7 @@ Settings:
 
 Rule files:
 
-`general/code/DEPENDENCIES.md`.
+`packages/cli/rules/general/code/DEPENDENCIES.md`.
 
 ### Configuration trpc
 
@@ -1918,7 +1922,7 @@ and reports value imports, re-exports, `require`, and literal dynamic imports.
 
 Rule files:
 
-`library/trpc/TRPC.md`, `shared/http/HTTP.md`.
+`packages/cli/rules/library/trpc/TRPC.md`, `packages/cli/rules/shared/http/HTTP.md`.
 
 ### Configuration express
 
@@ -1958,8 +1962,8 @@ Settings:
 
 Rule files:
 
-`framework/express/EXPRESS.md`, `framework/express/API.md`, `framework/express/OPENAPI.md`,
-`shared/http/HTTP.md`, `runtime/node/NODE.md`.
+`packages/cli/rules/framework/express/EXPRESS.md`, `packages/cli/rules/framework/express/API.md`, `packages/cli/rules/framework/express/OPENAPI.md`,
+`packages/cli/rules/shared/http/HTTP.md`, `packages/cli/rules/runtime/node/NODE.md`.
 
 ### Configuration sql
 
@@ -2020,7 +2024,7 @@ is `gspot ignore sql/sqlfluff --rule <code>`, rendered into `exclude_rules`).
 
 Rule files:
 
-`language/SQL.md`, `language/naming/SQL.md`.
+`packages/cli/rules/language/SQL.md`, `packages/cli/rules/language/naming/SQL.md`.
 
 Not covered here:
 
@@ -2123,8 +2127,8 @@ The rendered knip ignore list carries `.gspot/config/commitlint.config.cjs` when
 
 Rule files:
 
-`language/JAVASCRIPT.md`, `language/naming/JAVASCRIPT.md`, plus the runtime file detected:
-`runtime/node/NODE.md`, `runtime/bun/BUN.md`, `runtime/deno/DENO.md`, `runtime/browser/BROWSER.md`, `runtime/workers/WORKERS.md`.
+`packages/cli/rules/language/JAVASCRIPT.md`, `packages/cli/rules/language/naming/JAVASCRIPT.md`, plus the runtime file detected:
+`packages/cli/rules/runtime/node/NODE.md`, `packages/cli/rules/runtime/bun/BUN.md`, `packages/cli/rules/runtime/deno/DENO.md`, `packages/cli/rules/runtime/browser/BROWSER.md`, `packages/cli/rules/runtime/workers/WORKERS.md`.
 
 Not covered here:
 
@@ -2158,7 +2162,7 @@ Settings:
 
 Rule files:
 
-`library/zod/ZOD.md`.
+`packages/cli/rules/library/zod/ZOD.md`.
 
 ### Configuration xcode
 
@@ -2198,7 +2202,7 @@ the level `all`, and `gspot ignore` turns it off.
 
 Rule files:
 
-`tool/xcode/XCODE.md`.
+`packages/cli/rules/tool/xcode/XCODE.md`.
 
 ### Configuration commits
 
@@ -2244,7 +2248,7 @@ off is a `gspot ignore --rule`).
 
 Rule files:
 
-`general/agent/GIT.md`, `tool/commitlint/COMMITLINT.md`.
+`packages/cli/rules/general/agent/GIT.md`, `packages/cli/rules/tool/commitlint/COMMITLINT.md`.
 
 ### Configuration react-hook-form
 
@@ -2270,7 +2274,7 @@ None.
 
 Rule files:
 
-`library/react-hook-form/REACTHOOKFORM.md`.
+`packages/cli/rules/library/react-hook-form/REACTHOOKFORM.md`.
 
 ### Configuration supabase
 
@@ -2301,7 +2305,7 @@ Checks:
 | Id                               | Stage        | Command                                                                                                                                                                                                         |
 | -------------------------------- | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `supabase/config`                | commit       | `config.toml` validates against the CLI schema                                                                                                                                                                  |
-| `supabase/deno-lint`             | commit       | `deno lint --config .gspot/deno.json <function>` per function                                                                                                                                                   |
+| `supabase/deno-lint`             | commit       | `deno lint` per function, using that function's own `deno.json` when present                                                                                                                                    |
 | `supabase/deno-check`            | commit       | `deno check` per function entry                                                                                                                                                                                 |
 | `supabase/migration-names`       | commit       | naming engine `snake-migration`                                                                                                                                                                                 |
 | `supabase/types-fresh`           | push         | `supabase gen types` matches the declared file (`tools.supabase.types_file`)                                                                                                                                    |
@@ -2321,7 +2325,7 @@ Settings:
 
 Rule files:
 
-`platform/supabase/SUPABASE.md`, `database/postgres/POSTGRES.md`, `runtime/deno/DENO.md`.
+`packages/cli/rules/platform/supabase/SUPABASE.md`, `packages/cli/rules/database/postgres/POSTGRES.md`, `packages/cli/rules/runtime/deno/DENO.md`.
 Project-specific deployment conventions belong to the repository.
 
 ### Configuration drizzle
@@ -2352,7 +2356,7 @@ Settings:
 
 Rule files:
 
-`library/drizzle/DRIZZLE.md`.
+`packages/cli/rules/library/drizzle/DRIZZLE.md`.
 
 ### Configuration jest
 
@@ -2398,7 +2402,7 @@ Settings:
 
 Rule files:
 
-`general/code/TESTING.md`.
+`packages/cli/rules/general/code/TESTING.md`.
 
 ### Configuration react
 
@@ -2462,7 +2466,7 @@ None. A rule the repository decides against is `gspot ignore typescript/eslint -
 
 Rule files:
 
-`framework/react/REACT.md`.
+`packages/cli/rules/framework/react/REACT.md`.
 
 ### Configuration ansible
 
@@ -2550,7 +2554,7 @@ Settings:
 
 Rule files:
 
-`library/tanstack-query/TANSTACKQUERY.md`.
+`packages/cli/rules/library/tanstack-query/TANSTACKQUERY.md`.
 
 ### Configuration cloudflare
 
@@ -2591,7 +2595,7 @@ rule file states them.
 
 Rule files:
 
-`runtime/workers/WORKERS.md`. The configs configuration installs the GitHub Actions rule file.
+`packages/cli/rules/runtime/workers/WORKERS.md`. The configs configuration installs the GitHub Actions rule file.
 
 ### Configuration docs
 
@@ -2613,14 +2617,14 @@ excludes from `[tools.lychee] exclude` with reasons; a second profile for the on
 
 Checks:
 
-| Id                    | Stage           | Command                                                                                                                                                                                                                                                                                                                                                                 |
-| --------------------- | --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `docs/links`          | commit          | `lychee --config .gspot/config/lychee.toml --offline --include-fragments {files}`: every relative link resolves to a tracked file and every `#anchor` to a heading or an HTML id                                                                                                                                                                                        |
-| `docs/links-external` | manual, network | `lychee --no-offline` with the online profile                                                                                                                                                                                                                                                                                                                           |
-| `docs/headings`       | commit          | no heading from the banned list (`Table of contents`, `Project structure`, `Repository layout`, `Directory structure`, `File map`, `Codebase map`)                                                                                                                                                                                                                      |
-| `docs/stale-paths`    | commit          | every path-shaped token in Markdown and comments (a token counts when its first segment is a tracked top-level entry or it ends in a file extension) names a tracked file, and every `mise run <task>`, `bun run <script>` or `npm run <script>` names a task or script that exists, unless it is in a code fence tagged `text` or matches `[tools.docs] paths_allowed` |
-| `docs/readme-present` | commit          | every scope has a `README.md`; the root has a `LICENSE`                                                                                                                                                                                                                                                                                                                 |
-| `docs/readme-shape`   | commit          | every `README.md` has one H1 (fenced code does not count), an opening paragraph before the first H2, a Contents list when it has more than six H2 headings, and no banned heading; the root README and each scope's README also have a section whose heading contains `install`, `setup`, `start` or `requirements`; content beyond this shape stays in the rule files  |
+| Id                        | Stage           | Command                                                                                                                                                                                                                                                                                                                                                                 |
+| ------------------------- | --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `docs/links`              | commit          | `lychee --config .gspot/config/lychee.toml --offline --include-fragments {files}`: every relative link resolves to a tracked file and every `#anchor` to a heading or an HTML id                                                                                                                                                                                        |
+| `docs/links-external`     | manual, network | `lychee --no-offline` with the online profile                                                                                                                                                                                                                                                                                                                           |
+| `integrity/docs-headings` | commit          | no heading from the banned list (`Table of contents`, `Project structure`, `Repository layout`, `Directory structure`, `File map`, `Codebase map`)                                                                                                                                                                                                                      |
+| `integrity/stale-paths`   | commit          | every path-shaped token in Markdown and comments (a token counts when its first segment is a tracked top-level entry or it ends in a file extension) names a tracked file, and every `mise run <task>`, `bun run <script>` or `npm run <script>` names a task or script that exists, unless it is in a code fence tagged `text` or matches `[tools.docs] paths_allowed` |
+| `docs/readme-present`     | commit          | every scope has a `README.md`; the root has a `LICENSE`                                                                                                                                                                                                                                                                                                                 |
+| `docs/readme-shape`       | commit          | every `README.md` has one H1 (fenced code does not count), an opening paragraph before the first H2, a Contents list when it has more than six H2 headings, and no banned heading; the root README and each scope's README also have a section whose heading contains `install`, `setup`, `start` or `requirements`; content beyond this shape stays in the rule files  |
 
 Settings:
 
@@ -2628,14 +2632,14 @@ Settings:
 (url patterns, reason), `tools.docs.require_license` (default true).
 
 The shape check is the whole of README enforcement. What a README says is the rule file's job
-(`general/prose/DOCS-CONTENT.md`, `templates/docs/README.md` and `templates/docs/ADVANCED.md`,
+(`packages/cli/rules/general/prose/DOCS-CONTENT.md`, `packages/cli/rules/templates/docs/README.md` and `packages/cli/rules/templates/docs/ADVANCED.md`,
 which follow the short-README-plus-ADVANCED shape); gspot does not grade content.
 
 Rule files:
 
-`general/prose/DOCS.md`, `general/prose/DOCS-FORMAT.md`, `general/prose/DOCS-CONTENT.md`,
-`general/prose/DOCS-MEDIA.md`, `general/prose/DOCS-SURFACES.md`, `general/prose/DOCS-REVIEW.md`,
-`general/prose/WRITING.md`, `general/code/COMMENTS.md`; the templates under `templates/docs/`.
+`packages/cli/rules/general/prose/DOCS.md`, `packages/cli/rules/general/prose/DOCS-FORMAT.md`, `packages/cli/rules/general/prose/DOCS-CONTENT.md`,
+`packages/cli/rules/general/prose/DOCS-MEDIA.md`, `packages/cli/rules/general/prose/DOCS-SURFACES.md`, `packages/cli/rules/general/prose/DOCS-REVIEW.md`,
+`packages/cli/rules/general/prose/WRITING.md`, `packages/cli/rules/general/code/COMMENTS.md`; the templates under `templates/docs/`.
 
 ### Configuration docker
 
@@ -2678,7 +2682,7 @@ Settings:
 
 Rule files:
 
-`tool/docker/DOCKER.md`. Project-specific CUDA conventions belong to the repository.
+`packages/cli/rules/tool/docker/DOCKER.md`. Project-specific CUDA conventions belong to the repository.
 
 Not covered here:
 
@@ -2753,7 +2757,7 @@ Swagger rules off.
 
 Rule files:
 
-`framework/nestjs/NESTJS.md`.
+`packages/cli/rules/framework/nestjs/NESTJS.md`.
 
 ### Configuration formatting
 
@@ -2843,12 +2847,12 @@ Settings:
 
 Rule files:
 
-`framework/fastapi/FASTAPI.md`, `framework/fastapi/RUNTIME.md`, `shared/http/HTTP.md`.
+`packages/cli/rules/framework/fastapi/FASTAPI.md`, `packages/cli/rules/framework/fastapi/RUNTIME.md`, `packages/cli/rules/shared/http/HTTP.md`.
 
 ### Configuration naming
 
 Kind: policy. Requires: nothing. Recommended by every language configuration. Runs the naming engine over every language
-with the shipped policy in [../08-naming-policy.md](08-naming-policy.md).
+with the shipped policy in [08-naming-policy.md](08-naming-policy.md).
 
 Banned terms and reserved-word restrictions are level `all`. The shipped policy permits
 `generate` and `service`. Case, length, digit, ordering, and layout preferences also run at `all`. Only demonstrated external-contract defects qualify for recommended naming checks.
@@ -2881,11 +2885,11 @@ Settings:
 `[[naming.rules]]`; per language and per category: `naming.<language>.max_chars`,
 `naming.<language>.max_words`, `naming.<language>.<category>.case`, `.max_chars`, `.max_words`
 (`gspot set naming.python.parameters.max_words 3`). Defaults are the table in
-[../08-naming-policy.md](08-naming-policy.md).
+[08-naming-policy.md](08-naming-policy.md).
 
 Rule files:
 
-`general/code/NAMING.md`, `general/code/NAMING-FILES.md` and each language's `naming/<LANGUAGE>.md`.
+`packages/cli/rules/general/code/NAMING.md`, `packages/cli/rules/general/code/NAMING-FILES.md` and each language's `naming/<LANGUAGE>.md`.
 
 ### Configuration typescript
 
@@ -2957,7 +2961,7 @@ Settings:
 
 Rule files:
 
-`language/TYPESCRIPT.md`, `language/naming/TYPESCRIPT.md`.
+`packages/cli/rules/language/TYPESCRIPT.md`, `packages/cli/rules/language/naming/TYPESCRIPT.md`.
 
 Not covered here:
 
@@ -2979,7 +2983,7 @@ Detects and claims:
 Tools:
 
 ShellCheck, shfmt, and the host commands Bash, Zsh, and Bats. The development
-test repository uses Bats 1.14.0. Windows execution remains deferred during the CI pause.
+test repository uses Bats 1.14.0. Native Windows execution requires its own CI evidence.
 
 Generated configuration:
 
@@ -3025,8 +3029,8 @@ Settings:
 
 Rule files:
 
-`language/BASH.md`, `language/bash/LANGUAGE.md`, `language/bash/SAFETY.md`, `language/bash/OPERATIONS.md`,
-`language/naming/BASH.md`.
+`packages/cli/rules/language/BASH.md`, `packages/cli/rules/language/bash/LANGUAGE.md`, `packages/cli/rules/language/bash/SAFETY.md`, `packages/cli/rules/language/bash/OPERATIONS.md`,
+`packages/cli/rules/language/naming/BASH.md`.
 
 Not covered here:
 
@@ -3053,11 +3057,10 @@ ignore entries carried at init become Semgrep rule ignores.
 
 Generated configuration:
 
-| Target                         | Holds                                                                                                                                                                                                             |
-| ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `.gspot/config/semgrep/`       | one pack per selected configuration: `node.yml` (9 rules) and `secrets.yml` (1) from this configuration; `express.yml`, `supabase.yml` and `swift.yml` from theirs; `[tools.semgrep] rules` adds repository files |
-| `.semgrepignore`               | build output, dependencies, lockfiles, and the paths in `tools.semgrep.ignore`                                                                                                                                    |
-| `.gspot/codeql/<language>.yml` | query suites per language; false positives with reasons and paths that exist                                                                                                                                      |
+| Target                   | Holds                                                                                                                                                                                                             |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `.gspot/config/semgrep/` | one pack per selected configuration: `node.yml` (9 rules) and `secrets.yml` (1) from this configuration; `express.yml`, `supabase.yml` and `swift.yml` from theirs; `[tools.semgrep] rules` adds repository files |
+| `.semgrepignore`         | build output, dependencies, lockfiles, and the paths in `tools.semgrep.ignore`                                                                                                                                    |
 
 Checks:
 
@@ -3078,7 +3081,7 @@ Settings:
 
 Rule files:
 
-`general/code/SECURITY.md`, `general/code/SECRETS.md`; the security sections of each framework file.
+`packages/cli/rules/general/code/SECURITY.md`, `packages/cli/rules/general/code/SECRETS.md`; the security sections of each framework file.
 
 ### Configuration html
 
@@ -3121,7 +3124,7 @@ Settings:
 
 Rule files:
 
-`language/HTML.md`, `language/naming/HTML.md`, `repository/static-site/STATIC-SITE.md`.
+`packages/cli/rules/language/HTML.md`, `packages/cli/rules/language/naming/HTML.md`, `packages/cli/rules/repository/static-site/STATIC-SITE.md`.
 
 ### Configuration duplication
 
@@ -3151,7 +3154,7 @@ Settings:
 
 Rule files:
 
-`general/agent/WORKING.md` (the duplication section).
+`packages/cli/rules/general/agent/WORKING.md` (the duplication section).
 
 ### Configuration vitest
 
@@ -3204,5 +3207,5 @@ The command reads them through `{setting:<name>}` parts.
 
 Rule files:
 
-`tool/vitest/VITEST.md`, `general/code/TESTING.md`; `tool/playwright/PLAYWRIGHT.md` when Playwright is a
+`packages/cli/rules/tool/vitest/VITEST.md`, `packages/cli/rules/general/code/TESTING.md`; `packages/cli/rules/tool/playwright/PLAYWRIGHT.md` when Playwright is a
 dependency.

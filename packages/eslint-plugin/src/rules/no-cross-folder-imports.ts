@@ -13,14 +13,6 @@ function aliasFor(target: string, aliases: Record<string, string>): string | und
     return undefined;
 }
 
-// With no configured source roots, each repository top-level directory is a source root.
-function sourceRootFor(file: string, roots: string[]): string | undefined {
-    const candidates = roots.length === 0 ? [file.split('/', 1)[0] ?? ''] : roots.map((root) => posix.normalize(root));
-    return candidates
-        .filter((root) => root === '.' || file.startsWith(`${root}/`))
-        .toSorted((a, b) => b.length - a.length)[0];
-}
-
 function topFolder(file: string, root: string): string | undefined {
     const prefix = root === '.' ? '' : `${root}/`;
     if (!file.startsWith(prefix)) return undefined;
@@ -59,7 +51,12 @@ export const noCrossFolderImports = createRule<CrossFolderImportsOptions, 'cross
         if (file === undefined) return {};
         const root = lintedRoot(context);
         const relative = relativeToRoot(root, file);
-        const sourceRoot = sourceRootFor(relative, options.scope ?? []);
+        const roots = options.scope ?? [];
+        const candidates =
+            roots.length === 0 ? [relative.split('/', 1)[0] ?? ''] : roots.map((entry) => posix.normalize(entry));
+        const sourceRoot = candidates
+            .filter((entry) => entry === '.' || relative.startsWith(`${entry}/`))
+            .toSorted((left, right) => right.length - left.length)[0];
         if (sourceRoot === undefined) return {};
         const folder = topFolder(relative, sourceRoot);
         if (folder === undefined) return {};

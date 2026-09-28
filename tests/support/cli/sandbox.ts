@@ -2,10 +2,10 @@
 import { symlinkSync } from 'node:fs';
 import { createFileTree } from 'testdirs';
 import { delimiter, join } from 'node:path';
+import type { Sandbox } from '#tests/types/cli.ts';
 import { run } from '#tests/support/cli/command.ts';
+import { QUIET_INIT } from '#tests/constants/cli.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
-import type { Sandbox } from '#tests/types/support/cli.ts';
-import { QUIET_INIT } from '#tests/constants/support/cli.ts';
 import { install, toolsPath } from '#tests/support/cli/tools.ts';
 
 const MODULES = join(import.meta.dir, '../../../node_modules');

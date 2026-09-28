@@ -24,8 +24,8 @@ test('cache pruning removes only expired unchanged owned results', async () => {
     }
     writeFileSync(join(sandbox.path, edited), 'authored edit\n');
     writeFileSync(join(sandbox.path, authored), 'unowned\n');
-    const old = new Date(Date.now() - 31 * 24 * 60 * 60 * 1000);
-    for (const path of [expired, edited, authored]) utimesSync(join(sandbox.path, path), old, old);
+    const expiredAt = new Date(Date.now() - 31 * 24 * 60 * 60 * 1000);
+    for (const path of [expired, edited, authored]) utimesSync(join(sandbox.path, path), expiredAt, expiredAt);
     pruneCache(sandbox.path);
     expect(existsSync(join(sandbox.path, expired))).toBe(false);
     expect(existsSync(join(sandbox.path, recent))).toBe(true);
@@ -69,8 +69,8 @@ test('full cache-enabled runs retire old results while narrowed runs retain them
         duration: 0,
         findings: [],
     });
-    const old = new Date(Date.now() - 31 * 24 * 60 * 60 * 1000);
-    utimesSync(path, old, old);
+    const expiredAt = new Date(Date.now() - 31 * 24 * 60 * 60 * 1000);
+    utimesSync(path, expiredAt, expiredAt);
     const session = await openSession(sandbox.path);
     const options = { stage: 'all' as const, skips: [], fix: false, isDryRun: false };
     await executeRun(session, { ...options, paths: [] });

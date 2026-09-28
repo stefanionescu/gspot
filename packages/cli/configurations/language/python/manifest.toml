@@ -19,7 +19,7 @@ natures = ["source"]
 
 [[tools]]
 name = "ruff"
-suppression = {marker = "\\bnoqa\\b", reason = "#[^#]*# ?(?<reason>\\S.*)"}
+suppression = {inline_marker = "#\\s*[nN][oO][qQ][aA](?=\\s|:|$)", marker = "#\\s*(?:(?:ruff|flake8):\\s*)?[nN][oO][qQ][aA](?=\\s|:|$)", reason = "#[^#]*# ?(?<reason>\\S.*)"}
 version = "0.16.8"
 floor = "0.9.0"
 mise = "ruff"
@@ -179,13 +179,16 @@ title = "Pydoclint"
 example = "A function docstring describing parameter `name` when its signature accepts `path` reports a signature mismatch. Document `path` and its actual meaning, removing the obsolete parameter entry."
 level = "recommended"
 stage = "commit"
-command = ["pydoclint", "--allow-init-docstring", "true", "--quiet", "{files}"]
+analysis = "pydoclint"
+cwd = "scope"
+nested_config = "pyproject.toml"
+tool = "pydoclint"
 claims = {extensions = [".py"]}
 coverage = ["prose"]
 output = {format = "grouped", file_pattern = "^(?<file>\\S.*\\.py)$", pattern = "^\\s+(?<line>\\d+): (?<rule>DOC\\d+): (?<message>.*)$"}
 summary = "Checks that every docstring names the arguments, the return, and the exceptions its function really has."
 why = "A docstring that disagrees with the signature is worse than none, because people trust it."
-help = "Bring the docstring in line with the signature. Name the docstring style under [tool.pydoclint] in pyproject.toml; without it pydoclint reads NumPy style."
+help = "Bring the docstring in line with the signature. An explicit [tool.pydoclint] style wins. Otherwise, gspot carries a Google or NumPy convention from [tool.ruff.lint.pydocstyle], or keeps the native default."
 
 [[checks]]
 name = "python/deptry"
@@ -454,6 +457,12 @@ default = []
 summary = "Paths that may run pip install, such as an image that installs one build tool, each with a reason."
 
 [[settings]]
+name = "tools.ruff.docstring_convention"
+kind = "string"
+direction = "neutral"
+summary = "The Ruff pydocstyle convention carried from project configuration, also used by pydoclint when it has no explicit style."
+
+[[settings]]
 name = "tools.ruff.select"
 kind = "list"
 direction = "tightening"
@@ -493,7 +502,7 @@ summary = "Names vulture treats as used, such as functions a framework calls."
 ".pyi" = ["format", "syntax", "style", "types"]
 
 [rule_files]
-language = ["language/PYTHON.md", "language/python/TYPING.md", "language/python/DESIGN.md", "language/python/FLOW.md", "language/python/PACKAGING.md", "language/naming/PYTHON.md"]
+language = [{path = "language/PYTHON.md"}, {path = "language/python/TYPING.md"}, {path = "language/python/DESIGN.md"}, {path = "language/python/FLOW.md"}, {path = "language/python/PACKAGING.md"}, {path = "language/naming/PYTHON.md"}]
 
 [[settings]]
 name = "tools.vulture.min_confidence"

@@ -3,13 +3,13 @@ import JSON5 from 'json5';
 import picomatch from 'picomatch';
 // Scopes: from [[scope]] in gspot.toml, or from workspace declarations at init.
 import { globbySync } from 'globby';
+import { relative } from 'node:path';
 import { parse as parseYaml } from 'yaml';
-import { relative, join } from 'node:path';
 import type { Package } from '@manypkg/tools';
 import { toPosix } from '#cli/platform/paths.ts';
+import { readdirSync, type Dirent } from 'node:fs';
 import { mutationPath } from '#cli/platform/safe-paths.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
-import { readdirSync, statSync, type Dirent } from 'node:fs';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { packageManifestSchema } from '#cli/repository/manifests.ts';
 import { LernaTool, PnpmTool, RushTool, YarnTool } from '@manypkg/tools';
@@ -26,18 +26,18 @@ function workspaceEntry(path: string, source: ScopeEntry['source'] = 'workspace'
     };
 }
 
-function segmentMatches(pattern: string, segment: string): boolean {
-    return picomatch.scan(pattern).isGlob ? picomatch.isMatch(segment, pattern, { dot: true }) : pattern === segment;
-}
-
 // A folder that holds a project file of a selected language or platform is a scope, the root and lint-only packages aside.
 function projectScopes(files: TrackedFile[], facts: ManifestFacts[], manifests: Iterable<Manifest>): ScopeEntry[] {
     const patterns = [...manifests].flatMap((manifest) => manifest.detect.project_files);
     const lintOnly = new Set(facts.filter((fact) => isLintOnlyManifest(fact)).map((fact) => fact.path));
     const folders = new Set<string>();
-    for (const file of files) {
-        if (file.nature !== 'source' || lintOnly.has(file.path)) continue;
-        if (file.path.split('/').some((part) => part.toLowerCase() === '.gspot' || part === 'node_modules')) continue;
+    const sources = files.filter(
+        (file) =>
+            file.nature === 'source' &&
+            !lintOnly.has(file.path) &&
+            !file.path.split('/').some((part) => part.toLowerCase() === '.gspot' || part === 'node_modules'),
+    );
+    for (const file of sources) {
         for (const pattern of patterns) {
             const folder = projectFolder(file.path, pattern);
             if (folder !== undefined && folder !== '') folders.add(folder);
@@ -89,34 +89,43 @@ function workspacePackages(root: string): Package[] {
     const files = openConfinedRoot(root);
     try {
         const rootSource = files.read('package.json');
-        for (const { tool, path } of [
-            { tool: PnpmTool, path: 'pnpm-workspace.yaml' },
-            { tool: LernaTool, path: 'lerna.json' },
-            { tool: RushTool, path: 'rush.json' },
-        ]) {
+        const packagePatterns = z
+            .object({ packages: z.array(z.string()).optional() })
+            .transform((value) => value.packages ?? ['packages/*']);
+        const declarations = [
+            {
+                tool: PnpmTool,
+                path: 'pnpm-workspace.yaml',
+                parse: parseYaml,
+                schema: packagePatterns,
+            },
+            {
+                tool: LernaTool,
+                path: 'lerna.json',
+                parse: JSON.parse,
+                schema: packagePatterns,
+            },
+            {
+                tool: RushTool,
+                path: 'rush.json',
+                parse: JSON5.parse,
+                schema: z
+                    .object({ projects: z.array(z.object({ projectFolder: z.string() })) })
+                    .transform((value) => value.projects.map((project) => project.projectFolder)),
+            },
+        ];
+        for (const { tool, path, parse, schema } of declarations) {
             const source = files.read(path);
             if (source === undefined || !tool.isMonorepoRootSync(root)) continue;
-            const text = source.bytes.toString('utf8');
-            const data: unknown = path.endsWith('.yaml')
-                ? parseYaml(text)
-                : tool === RushTool
-                  ? JSON5.parse(text)
-                  : JSON.parse(text);
-            const patterns =
-                tool === RushTool
-                    ? z
-                          .object({ projects: z.array(z.object({ projectFolder: z.string() })) })
-                          .parse(data)
-                          .projects.map((project) => project.projectFolder)
-                    : (z.object({ packages: z.array(z.string()).optional() }).parse(data).packages ?? ['packages/*']);
+            const patterns = schema.parse(parse(source.bytes.toString('utf8')));
             inspectWorkspacePaths(root, patterns);
             return tool.getPackagesSync(root).packages;
         }
         if (rootSource === undefined) return [];
-        const manifest = packageManifestSchema.parse(JSON.parse(rootSource.bytes.toString('utf8')));
-        const workspaces = Array.isArray(manifest.workspaces)
-            ? manifest.workspaces
-            : (manifest.workspaces?.packages ?? []);
+        const { workspaces: declaration = [] } = packageManifestSchema.parse(
+            JSON.parse(rootSource.bytes.toString('utf8')),
+        );
+        const workspaces = Array.isArray(declaration) ? declaration : declaration.packages;
         if (workspaces.length === 0) return [];
         inspectWorkspacePaths(root, workspaces);
         return YarnTool.getPackagesSync(root).packages;
@@ -151,9 +160,9 @@ function memberScopes(root: string, members: string[]): ScopeEntry[] {
 
 /**
  * The folder a project file marks: the path before the segments the pattern names, when the file carries them.
- * @param path the tracked file, root-relative
- * @param pattern a project file name, a folder name such as `*.xcodeproj`, or a short path such as `supabase/config.toml`
- * @returns the project folder, '' for the root, or undefined when the file is no such project file
+ * @param path the tracked file, root-relative.
+ * @param pattern a project file name, a folder name such as `*.xcodeproj`, or a short path such as `supabase/config.toml`.
+ * @returns the project folder, '' for the root, or undefined when the file is no such project file.
  */
 export function projectFolder(path: string, pattern: string): string | undefined {
     const segments = path.split('/');
@@ -163,7 +172,10 @@ export function projectFolder(path: string, pattern: string): string | undefined
         if (
             wanted.every((part, index) => {
                 const segment = window[index];
-                return segment !== undefined && segmentMatches(part, segment);
+                return (
+                    segment !== undefined &&
+                    (picomatch.scan(part).isGlob ? picomatch.isMatch(segment, part, { dot: true }) : part === segment)
+                );
             })
         )
             return segments.slice(0, start).join('/');
@@ -235,25 +247,6 @@ export function proposedScopes(
 }
 
 /**
- * The scopes a policy declares, root first.
- * @param entries the [[scope]] entries
- * @returns the scope entries
- */
-export function policyScopes(entries: { path: string; configurations: string[] }[]): ScopeEntry[] {
-    return [
-        { name: 'root', path: '', configurations: [], source: 'root' },
-        ...entries.map(
-            (entry): ScopeEntry => ({
-                name: entry.path.slice(entry.path.lastIndexOf('/') + 1),
-                path: entry.path,
-                configurations: entry.configurations,
-                source: 'gspot.toml',
-            }),
-        ),
-    ];
-}
-
-/**
  * The scope a file belongs to: the deepest scope whose path contains it, else the root.
  * @param path the file path
  * @param scopes the scopes
@@ -284,14 +277,4 @@ export function scopeAncestors(
     return entries
         .filter((entry) => entry.path === path || path.startsWith(`${entry.path}/`))
         .toSorted((left, right) => left.path.length - right.path.length);
-}
-
-/**
- * Whether a scope is a package the package manager knows: a workspace flag names only a folder with a package.json.
- * @param root the repository root
- * @param scope the scope path
- * @returns true for a scope that holds a package.json
- */
-export function isWorkspace(root: string, scope: string): boolean {
-    return scope !== '' && statSync(join(root, scope, 'package.json'), { throwIfNoEntry: false }) !== undefined;
 }

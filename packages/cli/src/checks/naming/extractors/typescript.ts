@@ -7,11 +7,9 @@ import {
     NAME_NODES,
     PATTERN_FIELDS,
     PATTERN_LISTS,
-    SNAKE_SHAPE,
     TYPESCRIPT_FUNCTION_NODES,
     TYPESCRIPT_LABELS,
     TYPESCRIPT_PARAMETER_NODES,
-    TYPESCRIPT_UPPER_SHAPE,
 } from '#cli/constants/checks/naming.ts';
 
 function add(sink: ExtractSink, node: Node | null, category: string): void {
@@ -53,17 +51,8 @@ function addParameters(sink: ExtractSink, node: Node): void {
     addPattern(sink, node.childForFieldName('parameter'), 'parameters');
 }
 
-// A property signature written in snake_case or UPPER_SNAKE describes a shape another format fixes: TOML keys, a JSON API.
-function isContractSignature(node: Node): boolean {
-    const name = node.childForFieldName('name')?.text ?? '';
-    return (
-        node.type === 'property_signature' &&
-        (TYPESCRIPT_UPPER_SHAPE.test(name) || (SNAKE_SHAPE.test(name) && name.includes('_')))
-    );
-}
-
 // `const { existsSync } = require('node:fs')` and `const { default: X } = await import('x')` bind names another module
-// declared. Any other awaited value is a binding of this module, and its name is checked (K-137).
+// declared. Any other awaited value is a locally declared binding, and its name is checked (K-137).
 function isImportBinding(node: Node): boolean {
     const value = node.childForFieldName('value');
     if (value === null) return false;
@@ -82,7 +71,7 @@ function addNamed(sink: ExtractSink, root: Node): void {
                     !(
                         category === 'methods' &&
                         (node.childForFieldName('name')?.text === 'constructor' || node.parent?.type === 'object')
-                    ) && !isContractSignature(node),
+                    ),
             );
         for (const node of nodes) add(sink, node.childForFieldName('name'), category);
     }

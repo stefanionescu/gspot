@@ -57,10 +57,7 @@ function hooksFound(root: string, paths: Set<string>): ExistingTooling['hooks'] 
     const hooksPath = readGitSetting(root, 'core.hooksPath') ?? '';
     const location = hooksPath === '' ? undefined : hookLocation(root);
     const lefthook = ['lefthook.yml', '.lefthook.yml'].find((name) => paths.has(name));
-    const files = openConfinedRoot(root);
-    const manifest = files.read('package.json');
-    files.close();
-    const simple = manifest !== undefined && declaresSimpleGitHooks(JSON.parse(manifest.bytes.toString('utf8')));
+    const simple = hasPackageHooks(root);
     return [
         ...(location === undefined
             ? []
@@ -82,9 +79,57 @@ function runnerFound(paths: Set<string>): { runner: ExistingTooling['runner']; r
     return { runner: lock.runner, runnerFile: lock.runner === 'none' ? 'pyproject.toml' : 'package.json' };
 }
 
-// Whether a parsed package manifest carries a simple-git-hooks table.
-function declaresSimpleGitHooks(manifest: unknown): boolean {
-    return typeof manifest === 'object' && manifest !== null && Object.hasOwn(manifest, 'simple-git-hooks');
+function hasPackageHooks(root: string): boolean {
+    const files = openConfinedRoot(root);
+    try {
+        const source = files.read('package.json');
+        if (source === undefined) return false;
+        const manifest: unknown = JSON.parse(source.bytes.toString('utf8'));
+        return typeof manifest === 'object' && manifest !== null && Object.hasOwn(manifest, 'simple-git-hooks');
+    } finally {
+        files.close();
+    }
+}
+
+function hasConfigurationSection(
+    files: ConfinedRoot,
+    path: string,
+    takeover: NonNullable<ToolPin['takeover']>[number],
+): boolean {
+    if (takeover.table === undefined && takeover.key === undefined) return true;
+    const source = files.read(path);
+    if (source === undefined) return false;
+    return (
+        configurationSection(source.bytes.toString('utf8'), path, {
+            ...(takeover.table === undefined ? {} : { table: takeover.table }),
+            ...(takeover.key === undefined ? {} : { key: takeover.key }),
+        }) !== undefined
+    );
+}
+
+function jobCommands(job: object): string[] {
+    let commands: unknown = [];
+    if ('script' in job) commands = job.script;
+    else if ('steps' in job && Array.isArray(job.steps)) {
+        commands = job.steps.flatMap((step: unknown) =>
+            typeof step === 'object' && step !== null && 'run' in step ? [step.run] : [],
+        );
+    }
+    return (Array.isArray(commands) ? commands : [commands]).filter(
+        (command): command is string => typeof command === 'string',
+    );
+}
+
+function isLintJob(name: string, job: unknown): boolean {
+    if (typeof job !== 'object' || job === null || Array.isArray(job)) return false;
+    if (!('steps' in job) && !('script' in job) && !('extends' in job)) return false;
+    const commands = jobCommands(job);
+    return (
+        name
+            .toLowerCase()
+            .split(/[-_: ]/u)
+            .some((word) => LINT_WORDS.has(word)) || commands.some((command) => runsLint(command))
+    );
 }
 
 // The tool configurations one takeover row finds among the tracked files.
@@ -104,30 +149,16 @@ function takeoverTools(
         candidates.add(takeover.file);
     return [...candidates]
         .filter((candidate) => matches(candidate))
-        .flatMap((path): ExistingTool[] => {
-            if (takeover.table !== undefined || takeover.key !== undefined) {
-                const source = files.read(path);
-                if (
-                    source === undefined ||
-                    configurationSection(source.bytes.toString('utf8'), path, {
-                        ...(takeover.table === undefined ? {} : { table: takeover.table }),
-                        ...(takeover.key === undefined ? {} : { key: takeover.key }),
-                    }) === undefined
-                )
-                    return [];
-            }
-            return [
-                {
-                    tool,
-                    path,
-                    shared: takeover.shared,
-                    carries: takeover.carries,
-                    ...(takeover.check === undefined ? {} : { check: takeover.check }),
-                    ...(takeover.table === undefined ? {} : { table: takeover.table }),
-                    ...(takeover.key === undefined ? {} : { key: takeover.key }),
-                },
-            ];
-        });
+        .filter((path) => hasConfigurationSection(files, path, takeover))
+        .map((path) => ({
+            tool,
+            path,
+            shared: takeover.shared,
+            carries: takeover.carries,
+            ...(takeover.check === undefined ? {} : { check: takeover.check }),
+            ...(takeover.table === undefined ? {} : { table: takeover.table }),
+            ...(takeover.key === undefined ? {} : { key: takeover.key }),
+        }));
 }
 
 /**
@@ -135,7 +166,7 @@ function takeoverTools(
  * @param root the repository root
  * @param paths the tracked file paths
  * @param selected the selected configurations, when only their tools count
- * @returns the tool configurations found, with the file and section each lives in
+ * @returns tool configurations with their containing files and sections
  */
 export function declaredConfigurations(root: string, paths: Iterable<string>, selected?: string[]): ExistingTool[] {
     const inventory = new Set(
@@ -160,7 +191,7 @@ export function declaredConfigurations(root: string, paths: Iterable<string>, se
  * @param root the repository root
  * @param files the tracked files
  * @param facts the manifests read from the tree
- * @returns the configuration files, hooks, CI, agent files, lint folders and runner found
+ * @returns the configuration files, hooks, CI, agent files, lint folders, and runner found
  */
 export function existingTooling(root: string, files: TrackedFile[], facts: ManifestFacts[]): ExistingTooling {
     const paths = new Set(files.map((file) => file.path));
@@ -221,25 +252,7 @@ export function ciLintJobs(root: string, paths: string[]): string[] {
                 if (typeof jobs !== 'object' || jobs === null) return [];
                 return Object.entries(jobs as Record<string, unknown>).flatMap(([name, job]) => {
                     if (name.startsWith('.')) return [];
-                    if (typeof job !== 'object' || job === null || Array.isArray(job)) return [];
-                    if (!('steps' in job) && !('script' in job) && !('extends' in job)) return [];
-                    const commands =
-                        'script' in job
-                            ? job.script
-                            : 'steps' in job && Array.isArray(job.steps)
-                              ? job.steps.flatMap((step: unknown) =>
-                                    typeof step === 'object' && step !== null && 'run' in step ? [step.run] : [],
-                                )
-                              : [];
-                    const texts = (Array.isArray(commands) ? commands : [commands]).filter(
-                        (command): command is string => typeof command === 'string',
-                    );
-                    const lint =
-                        name
-                            .toLowerCase()
-                            .split(/[-_: ]/u)
-                            .some((word) => LINT_WORDS.has(word)) || texts.some((command) => runsLint(command));
-                    return lint ? [`${path}: ${name}`] : [];
+                    return isLintJob(name, job) ? [`${path}: ${name}`] : [];
                 });
             });
     } finally {

@@ -1,21 +1,17 @@
-import { parse } from '@typescript-eslint/typescript-estree';
 import { createRule } from '#plugin/definition.ts';
 import { dirname, join, resolve } from 'node:path';
+import { EXTENSIONS } from '#plugin/constants/rules.ts';
 import type { TSESTree } from '@typescript-eslint/utils';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { isIndexFile, lintedFile } from '#plugin/files.ts';
 import { existsSync, readFileSync, statSync } from 'node:fs';
-import { EXTENSIONS } from '#plugin/constants/rules.ts';
-
-function stemOf(path: string): string {
-    const extension = EXTENSIONS.find((candidate) => path.endsWith(candidate));
-    return extension === undefined ? path : path.slice(0, -extension.length);
-}
+import { parse } from '@typescript-eslint/typescript-estree';
 
 function moduleFile(importer: string, source: string): string | undefined {
     if (!source.startsWith('.')) return undefined;
     const base = resolve(dirname(importer), source);
-    const stem = stemOf(base);
+    const extension = EXTENSIONS.find((candidate) => base.endsWith(candidate));
+    const stem = extension === undefined ? base : base.slice(0, -extension.length);
     const candidates = [
         base,
         ...EXTENSIONS.map((extension) => `${stem}${extension}`),

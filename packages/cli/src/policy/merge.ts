@@ -27,25 +27,15 @@ function coversScope(paths: string[], scope: string): boolean {
     });
 }
 
-function groupedLimit(policy: Policy, scope: string, key: string, language: string): number | undefined {
-    const grouped = policyTables(policy, scope)
-        .toReversed()
-        .map(({ table }) => table.limits?.groups[language]?.[key])
-        .find((value) => value !== undefined);
-    return grouped?.value;
-}
-
-function languageLimit(layer: PolicyScopeLayer, key: string, language: string): number | undefined {
-    const name = `limits.${language}.${key}`;
-    return (
-        groupedLimit(layer.policy, layer.scope, key, language) ??
-        (layer.surface.defaults.get(name)?.value as number | undefined)
-    );
-}
-
 function limitOf(layer: PolicyScopeLayer, key: string, language?: string): number | undefined {
-    const perLanguage = language === undefined ? undefined : languageLimit(layer, key, language);
-    if (perLanguage !== undefined) return perLanguage;
+    if (language !== undefined) {
+        const grouped = policyTables(layer.policy, layer.scope)
+            .toReversed()
+            .map(({ table }) => table.limits?.groups[language]?.[key])
+            .find((value) => value !== undefined);
+        const perLanguage = grouped?.value ?? layer.surface.defaults.get(`limits.${language}.${key}`)?.value;
+        if (perLanguage !== undefined) return perLanguage as number;
+    }
     return settingValue(layer.surface, layer.policy, `limits.${key}`, layer.scope)?.value as number | undefined;
 }
 
@@ -82,13 +72,6 @@ function toolSlots(
         for (const [slot, value] of Object.entries(table))
             if (!RESERVED_SLOTS.has(slot) && merged[slot] === undefined) merged[slot] = value;
     return merged;
-}
-
-function extraOf(tables: Record<string, unknown>[]): Record<string, unknown> | undefined {
-    const found = tables
-        .map((table) => table['extra'])
-        .filter((value): value is Record<string, unknown> => typeof value === 'object' && value !== null);
-    return found.length === 0 ? undefined : (Object.assign({}, ...found) as Record<string, unknown>);
 }
 
 /**
@@ -131,6 +114,11 @@ export function mergeForScope(
                 )
                 .map((entry) => entry.rule)
                 .filter((rule) => rule !== undefined),
-        extra: (name) => extraOf(toolTables(policy, scope, name)),
+        extra: (name) => {
+            const found = toolTables(policy, scope, name)
+                .map((table) => table['extra'])
+                .filter((value): value is Record<string, unknown> => typeof value === 'object' && value !== null);
+            return found.length === 0 ? undefined : (Object.assign({}, ...found) as Record<string, unknown>);
+        },
     };
 }

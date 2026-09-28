@@ -2,18 +2,18 @@ import pLimit from 'p-limit';
 import { createHash } from 'node:crypto';
 import type { ConfinedRoot } from '#cli/types/platform.ts';
 import { constants, readFileSync, statSync } from 'node:fs';
-import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import { SelectionError } from '#cli/configurations/select.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import type { OwnershipEntry } from '#cli/types/lifecycle/lifecycle.ts';
 import { MODE_BITS, PRIVATE_DIRECTORY } from '#cli/constants/platform.ts';
 import { isValePackageFile } from '#cli/repository/file-classification.ts';
 import { chmod, cp, mkdir, readdir, realpath, stat } from 'node:fs/promises';
 import { basename, dirname, isAbsolute, join, posix, relative, sep } from 'node:path';
-import { pythonLauncher, relocateLaunchers } from '#cli/repository/revisions/python-launchers.ts';
 import { COPY_CONCURRENCY, LOCKS, VALE_CONFIGURATION } from '#cli/constants/repository/revisions.ts';
+import { pythonLauncher, relocateLaunchers } from '#cli/repository/revisions/virtualenv/launchers.ts';
 import type { Directory, PythonLauncher, RelocationContext } from '#cli/types/repository/revisions.ts';
-import { pathRelocator, relocateSitePackages } from '#cli/repository/revisions/python-site-packages.ts';
+import { pathRelocator, relocateSitePackages } from '#cli/repository/revisions/virtualenv/site-packages.ts';
 
 const MANIFESTS = new Set(['package.json', 'pyproject.toml', 'Package.swift', ...LOCKS]);
 // Refuses a copied link that leaves the snapshot, unless it is an interpreter link the environment declared.
@@ -52,14 +52,14 @@ async function validateCopiedLinks(
     }
 }
 
-function assertDependencyReady(snapshot: string, folder: string, dependency: string, pending: string[]): void {
+function assertDependencyReady(revisionRoot: string, folder: string, dependency: string, pending: string[]): void {
     if (basename(folder) === '.gspot' && pending.includes(dependency === 'node_modules' ? 'npm' : 'python'))
         throw new SelectionError([
             'Tool installation is incomplete. Run gspot install before checking staged content.',
         ]);
     if (
-        !LOCKS.some((lock) => statSync(join(snapshot, folder, lock), { throwIfNoEntry: false }) !== undefined) &&
-        !LOCKS.some((lock) => statSync(join(snapshot, lock), { throwIfNoEntry: false }) !== undefined)
+        !LOCKS.some((lock) => statSync(join(revisionRoot, folder, lock), { throwIfNoEntry: false }) !== undefined) &&
+        !LOCKS.some((lock) => statSync(join(revisionRoot, lock), { throwIfNoEntry: false }) !== undefined)
     )
         throw new SelectionError([
             'A revision dependency project has no lock to verify its installed environment. Prepare locked dependencies for this revision.',
@@ -155,27 +155,27 @@ async function copyDirectory(
     { folder, dependency }: Directory,
     interpreterLinks: Map<string, ReadonlySet<string>>,
 ): Promise<PythonLauncher | undefined> {
-    const { root, snapshot, cancelSignal } = context;
+    const { root, destination: revisionRoot, cancelSignal } = context;
     const pending =
         basename(folder) === '.gspot' ? (readOwnership(join(root, dirname(folder))).installations ?? []) : [];
-    assertDependencyReady(snapshot, folder, dependency, pending);
+    assertDependencyReady(revisionRoot, folder, dependency, pending);
     const source = join(root, folder, dependency);
-    await copyTree(source, join(snapshot, folder, dependency), cancelSignal);
+    await copyTree(source, join(revisionRoot, folder, dependency), cancelSignal);
     return dependency === '.venv' ? await pythonLauncher(context, folder, source, interpreterLinks) : undefined;
 }
 
 /**
  * Copy verified journal-owned Vale packages matching the selected configuration.
  * @param root the repository root
- * @param snapshot the snapshot directory the packages are copied into
+ * @param revisionRoot the snapshot directory the packages are copied into
  * @param paths the snapshot's files, among them the Vale configurations that name packages
  */
-export function copyProsePackages(root: string, snapshot: string, paths: string[]): void {
+export function copyProsePackages(root: string, revisionRoot: string, paths: string[]): void {
     const configs = paths.filter((path) => path === VALE_CONFIGURATION || path.endsWith(`/${VALE_CONFIGURATION}`));
     for (const config of configs) {
         const folder = dirname(dirname(dirname(config)));
         const installed = openConfinedRoot(join(root, folder));
-        const destination = openConfinedRoot(join(snapshot, folder));
+        const destination = openConfinedRoot(join(revisionRoot, folder));
         try {
             const packages = readOwnership(join(root, folder)).files.filter((entry) => isValePackageFile(entry.path));
             if (packages.length === 0) continue;
@@ -191,18 +191,18 @@ export function copyProsePackages(root: string, snapshot: string, paths: string[
 /**
  * Copy matching installed dependencies and relocate their revision-specific loader paths.
  * @param root the repository root
- * @param snapshot the snapshot directory the dependencies are copied into
+ * @param revisionRoot the snapshot directory the dependencies are copied into
  * @param paths the snapshot's files, among them the project manifests that own dependencies
  * @param cancelSignal cancellation for the copy
  */
 export async function copyDependencies(
     root: string,
-    snapshot: string,
+    revisionRoot: string,
     paths: string[],
     cancelSignal?: AbortSignal,
 ): Promise<void> {
     const installed = openConfinedRoot(root, 'native');
-    const selected = openConfinedRoot(snapshot, 'native');
+    const selected = openConfinedRoot(revisionRoot, 'native');
     try {
         const inputs = paths.filter((path) => MANIFESTS.has(basename(path)));
         const projects = inputs.filter((path) => ['package.json', 'pyproject.toml'].includes(basename(path)));
@@ -211,7 +211,7 @@ export async function copyDependencies(
         assertManifestsUnchanged(root, installed, selected, inputs);
         const context: RelocationContext = {
             root,
-            snapshot,
+            destination: revisionRoot,
             selected,
             ...(cancelSignal === undefined ? {} : { cancelSignal }),
         };
@@ -222,7 +222,12 @@ export async function copyDependencies(
             if (launcher !== undefined) launchers.push(launcher);
         }
         for (const { folder, dependency } of directories)
-            await validateCopiedLinks(snapshot, join(snapshot, folder, dependency), interpreterLinks, cancelSignal);
+            await validateCopiedLinks(
+                revisionRoot,
+                join(revisionRoot, folder, dependency),
+                interpreterLinks,
+                cancelSignal,
+            );
         const relocatePath = await pathRelocator(context);
         for (const launcher of launchers) await relocateLaunchers(context, launcher);
         for (const launcher of launchers) await relocateSitePackages(context, launcher, relocatePath);

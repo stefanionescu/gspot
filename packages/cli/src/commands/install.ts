@@ -1,17 +1,62 @@
 import type { Command } from 'commander';
-import { installTools } from '#cli/tools/install.ts';
+import { compact } from '#cli/policy/normalize.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { directoryOf } from '#cli/platform/arguments.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import { everyManifest } from '#cli/configurations/select.ts';
+import { installTools } from '#cli/tools/install/execution.ts';
 import { hookLocation } from '#cli/repository/hook-location.ts';
+import type { Session } from '#cli/types/execution/execution.ts';
 import { MISE_CONFIG_PATH } from '#cli/constants/tools/tools.ts';
 import { assertPinMatches } from '#cli/lifecycle/version-pin.ts';
 import { pythonInstallSteps } from '#cli/tools/python-project.ts';
 import { packageInstallSteps } from '#cli/tools/packages/project.ts';
-import { toolEnvironment } from '#cli/generation/tool-environment.ts';
+import { toolEnvironment } from '#cli/generation/tools/environment.ts';
 import type { CommandResult, InstallJson, InstallOptions } from '#cli/types/commands/commands.ts';
+
+function preparation(session: Session): { steps: string[][]; failures: string[]; hooks: string | undefined } {
+    const failures: string[] = [];
+    const projects = [
+        { selected: session.packageClient !== undefined, preview: packageInstallSteps },
+        { selected: toolEnvironment(everyManifest(session.scopes)).length > 0, preview: pythonInstallSteps },
+    ];
+    const steps = projects
+        .filter((entry) => entry.selected)
+        .flatMap((project) => {
+            try {
+                const commands = project.preview(session.root);
+                if (commands.length === 0) throw new Error('Run: gspot apply, then gspot install');
+                return commands;
+            } catch (error) {
+                failures.push(error instanceof Error ? error.message : 'Tool installation inputs are invalid.');
+                return [];
+            }
+        });
+    const runner = session.policyFiles.policy.runner?.tool;
+    if (runner === 'mise') steps.unshift(['mise', 'trust', MISE_CONFIG_PATH], ['mise', 'install']);
+    const hooks =
+        session.repository.hasGit &&
+        ['gspot', 'simple-git-hooks', 'pre-commit'].includes(session.policyFiles.policy.hooks?.tool ?? '')
+            ? hookLocation(session.root).absolute
+            : undefined;
+    return { steps, failures, hooks };
+}
+
+function previewInstallation(steps: string[][], failures: string[], hooks: string | undefined): CommandResult {
+    if (failures.length > 0) throw new Error([...new Set(failures)].join('\n'));
+    const lines = [
+        ...steps.map((step) => step.join(' ')),
+        ...(hooks === undefined
+            ? []
+            : [`install hook dispatchers in ${hooks}; retain original executables as siblings`]),
+    ];
+    return {
+        text: lines.length === 0 ? 'No managed tools or hooks to install.\n' : `${lines.join('\n')}\n`,
+        json: { isDryRun: true, steps, ...compact({ hooks }) } satisfies InstallJson,
+        exitCode: 0,
+    };
+}
 
 /**
  * Register immutable installation for a clone.
@@ -46,49 +91,12 @@ export async function installCommand(options: InstallOptions): Promise<CommandRe
     assertPinMatches(root);
     const session = await openSession(root);
     try {
-        const steps: string[][] = [];
-        const failures: string[] = [];
-        const projects = [
-            { selected: session.packageManager !== undefined, preview: packageInstallSteps },
-            { selected: toolEnvironment(everyManifest(session.scopes)).length > 0, preview: pythonInstallSteps },
-        ];
-        for (const project of projects) {
-            if (!project.selected) continue;
-            try {
-                const commands = project.preview(root);
-                if (commands.length === 0) throw new Error('Run: gspot apply, then gspot install');
-                steps.push(...commands);
-            } catch (error) {
-                failures.push(error instanceof Error ? error.message : 'Tool installation inputs are invalid.');
-            }
-        }
-        const runner = session.policyFiles.policy.runner?.tool;
-        if (runner === 'mise') steps.unshift(['mise', 'trust', MISE_CONFIG_PATH], ['mise', 'install']);
-        const hooks =
-            session.repository.hasGit &&
-            ['gspot', 'simple-git-hooks', 'pre-commit'].includes(session.policyFiles.policy.hooks?.tool ?? '')
-                ? hookLocation(root).absolute
-                : undefined;
-        if (options.isDryRun && failures.length > 0) throw new Error([...new Set(failures)].join('\n'));
-        if (options.isDryRun) {
-            const lines = [
-                ...steps.map((step) => step.join(' ')),
-                ...(hooks === undefined
-                    ? []
-                    : [`install hook dispatchers in ${hooks}; retain original executables as siblings`]),
-            ];
-            return {
-                text: lines.length === 0 ? 'No managed tools or hooks to install.\n' : `${lines.join('\n')}\n`,
-                json: { isDryRun: true, steps, ...(hooks === undefined ? {} : { hooks }) } satisfies InstallJson,
-                exitCode: 0,
-            };
-        }
-        let note = '';
-        try {
-            note = await installTools(session, true);
-        } catch (error) {
+        const { steps, failures, hooks } = preparation(session);
+        if (options.isDryRun) return previewInstallation(steps, failures, hooks);
+        const note = await installTools(session, true).catch((error: unknown) => {
             failures.push(error instanceof Error ? error.message : 'Tool installation failed.');
-        }
+            return '';
+        });
         if (failures.length > 0) throw new Error([note, ...new Set(failures)].filter(Boolean).join('\n'));
         return {
             text: `${note === '' ? 'No managed tools to install.' : note}\n`,
@@ -96,7 +104,7 @@ export async function installCommand(options: InstallOptions): Promise<CommandRe
             exitCode: 0,
         };
     } catch (error) {
-        const message = error instanceof Error ? error.message : 'Tool installation failed.';
-        return { text: `${message}\n`, json: { installed: false, error: message } satisfies InstallJson, exitCode: 2 };
+        const text = error instanceof Error ? error.message : 'Tool installation failed.';
+        return { text: `${text}\n`, json: { installed: false, error: text } satisfies InstallJson, exitCode: 2 };
     }
 }

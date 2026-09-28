@@ -1,33 +1,33 @@
 // Applying proposals: each batch is journaled before a byte moves, so an interruption can be recovered.
 import type { z } from 'zod';
 import { isDeepStrictEqual } from 'node:util';
-import type { FileSnapshot } from '#cli/types/platform.ts';
+import type { FileObservation } from '#cli/types/platform.ts';
 import type { originalSchema } from '#cli/lifecycle/journal.ts';
 import { identity, matches } from '#cli/lifecycle/ownership/journal.ts';
 import type { Outcome, PreparedWrite, FileProposal, Journal } from '#cli/types/lifecycle/lifecycle.ts';
 
 // The file as it is now, read as a link entry when either side of the proposal is a link.
-function foundSnapshot(
+function foundObservation(
     journal: Journal,
     path: string,
-    current: FileSnapshot | undefined,
-    next: FileSnapshot | undefined,
-): FileSnapshot | undefined {
+    current: FileObservation | undefined,
+    next: FileObservation | undefined,
+): FileObservation | undefined {
     const isLink = current?.isLink === true || next?.isLink === true;
     if (isLink) return journal.confined.readEntry(path);
     return journal.confined.read(path);
 }
 
-// Refuses a proposal whose file or record changed since it was made.
+// Refuses a proposal whose file or record changed after it was made.
 function assertProposalCurrent(
     journal: Journal,
     proposal: FileProposal,
-    proposed: ReadonlyMap<string, FileSnapshot | undefined>,
+    proposed: ReadonlyMap<string, FileObservation | undefined>,
 ): void {
     const { path, current, previous, next } = proposal;
     const existing = journal.entryFor(path);
     if (next !== undefined) journal.confined.validate(path, next, proposed);
-    const found = foundSnapshot(journal, path, current, next);
+    const found = foundObservation(journal, path, current, next);
     if (!isDeepStrictEqual(existing, previous) || !isDeepStrictEqual(found, current))
         throw new Error(`File changed after its proposal: ${path}`);
 }
@@ -36,7 +36,7 @@ function assertProposalCurrent(
 function assertProposalsCurrent(
     journal: Journal,
     proposals: FileProposal[],
-    proposed: ReadonlyMap<string, FileSnapshot | undefined>,
+    proposed: ReadonlyMap<string, FileObservation | undefined>,
 ): void {
     const destinations = new Set<string>();
     for (const proposal of proposals) {

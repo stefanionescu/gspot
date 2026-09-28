@@ -3,10 +3,10 @@ import stylelint from 'stylelint';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { rejection } from '#tests/support/expectations.ts';
+import { STYLELINT_TOOLING } from '#tests/constants/cli.ts';
 import { readFileSync, rmSync, symlinkSync } from 'node:fs';
 import { collectCarried } from '#cli/policy/adoption/collect.ts';
 import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
-import { STYLELINT_TOOLING } from '#tests/constants/support/cli.ts';
 
 test('Stylelint package lookups do not adopt a same-named local file', async () => {
     await using sandbox = await testdir();

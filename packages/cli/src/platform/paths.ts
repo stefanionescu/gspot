@@ -5,7 +5,7 @@ import { cacheHome } from '#cli/platform/environment.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/constants/platform.ts';
 
 /**
- * Forward slashes on every platform, for selectors, records and output.
+ * Forward slashes on every platform, for selectors, records, and output.
  * @param path a path in the platform's form
  * @returns the path with forward slashes
  */

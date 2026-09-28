@@ -2,7 +2,8 @@ import { join } from 'node:path';
 import { expect, spyOn, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
-import { emitAll } from '#cli/generation/render.ts';
+import { emitAll } from '#cli/generation/outputs.ts';
+import * as tools from '#cli/execution/tool/runner.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { licensesPackages } from '#cli/checks/licenses.ts';
@@ -14,7 +15,7 @@ async function input(root: string): Promise<EngineInput> {
     const session = await openSession(root);
     for (const file of emitAll(session.policyFiles.policy, session.repository, session.scopes, {
         version: session.version,
-        packageManager: session.packageManager,
+        packageClient: session.packageClient,
     }).files.filter(({ path }) => path.endsWith('/licenses.json')))
         await Bun.write(join(root, file.path), file.content);
     const selected = session.scopes[0]!;
@@ -39,9 +40,15 @@ test('license analysis refuses absent dependencies instead of reporting a succes
     );
 });
 
-test.each(['malformed JSON', 'missing version', 'missing license', 'empty report', 'scanner failure'])(
+test.each([
+    ['malformed JSON', '{', 0],
+    ['missing version', '[{"Name":"example","License":"MIT"}]', 0],
+    ['missing license', '[{"Name":"example","Version":"1.0.0"}]', 0],
+    ['empty report', '[]', 0],
+    ['scanner failure', '[]', 1],
+] as const)(
     'Python license scanning rejects %s and removes its temporary configuration directory',
-    async (failure) => {
+    async (_failure, stdout, code) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
             'gspot.toml': 'version = 1\nconfigurations = ["licenses"]\n[tools.licenses]\nlicenses_allowed = ["MIT"]\n',
@@ -55,16 +62,12 @@ test.each(['malformed JSON', 'missing version', 'missing license', 'empty report
         const directories: string[] = [];
         const spawn = spyOn(processes, 'run').mockImplementation((_argv, options) => {
             directories.push(options.cwd);
-            const report = { Name: 'example', Version: '1.0.0', License: 'MIT' };
-            const values = broken && failure === 'empty report' ? [] : [report];
-            if (broken && failure === 'missing version') Reflect.deleteProperty(report, 'Version');
-            if (broken && failure === 'missing license') Reflect.deleteProperty(report, 'License');
             return Promise.resolve({
-                code: broken && failure === 'scanner failure' ? 1 : 0,
+                code: broken ? code : 0,
                 missing: false,
                 stderr: 'fixture diagnostic',
                 duration: 1,
-                stdout: broken && failure === 'malformed JSON' ? '{' : JSON.stringify(values),
+                stdout: broken ? stdout : '[{"Name":"example","Version":"1.0.0","License":"MIT"}]',
             });
         });
         try {
@@ -125,3 +128,50 @@ test.each(['missing', 'malformed', 'stale', 'external link'])(
         }
     },
 );
+
+test('combined license scans preserve manifest order, license alternatives, and unknown licenses', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': 'version = 1\nconfigurations = ["licenses"]\n[tools.licenses]\nlicenses_allowed = ["MIT"]\n',
+        'package.json': '{"name":"example","private":true}',
+        'node_modules/installed': 'fixture',
+        'pyproject.toml': '[project]\nname = "fixture"\nversion = "0.0.0"\n',
+        '.venv/installed': 'fixture',
+    });
+    const selected = await input(sandbox.path);
+    const commands: string[][] = [];
+    const directories: string[] = [];
+    const spawn = spyOn(tools, 'runCheckCommand').mockImplementation((_input, command, options) => {
+        commands.push(command);
+        directories.push(options.cwd);
+        return Promise.resolve({
+            code: 0,
+            missing: false,
+            duration: 1,
+            stderr: '',
+            stdout: JSON.stringify(
+                command.includes('--start')
+                    ? { 'choice@1.0.0': { licenses: ['MIT', 'GPL-3.0-only'] }, 'unknown@1.0.0': {} }
+                    : [{ Name: 'python-package', Version: '2.0.0', License: 'GPL-3.0-only' }],
+            ),
+        });
+    });
+    try {
+        const findings = await licensesPackages(selected);
+        expect(findings.map(({ file, message: diagnostic }) => ({ file, message: diagnostic }))).toStrictEqual([
+            { file: 'package.json', message: 'unknown@1.0.0 reports UNKNOWN, which is not an allowed license.' },
+            {
+                file: 'pyproject.toml',
+                message: 'python-package@2.0.0 reports GPL-3.0-only, which is not an allowed license.',
+            },
+        ]);
+        expect(commands).toHaveLength(2);
+        expect(commands[0]).toContain('--start');
+        expect(commands[1]).toContain('--with-system');
+        expect(directories[0]).toBe(sandbox.path);
+        expect(directories[1]).not.toBe(sandbox.path);
+        expect(existsSync(directories[1]!)).toBe(false);
+    } finally {
+        spawn.mockRestore();
+    }
+});

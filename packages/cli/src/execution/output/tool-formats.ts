@@ -98,13 +98,13 @@ function typoFinding(
 ): Finding {
     const corrections = entry.corrections ?? [];
     const replacement = corrections.map((word) => `\`${word}\``).join(', ');
-    const message =
+    const text =
         corrections.length === 0 ? `\`${entry.typo}\` is not allowed` : `\`${entry.typo}\` should be ${replacement}`;
     return {
         check,
         file: path,
         help,
-        message: entry.line_num === undefined ? `Filename: ${message}` : message,
+        message: entry.line_num === undefined ? `Filename: ${text}` : text,
         fixable: entry.line_num !== undefined && corrections.length === 1,
         ...position,
     };

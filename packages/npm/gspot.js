@@ -10,7 +10,6 @@ const targets = require('./targets.json');
 
 const libc = process.platform === 'linux' ? familySync() : null;
 const target = targets.find(
-    // eslint-disable-next-line gspot/no-trivial-functions -- reason: Array.find requires a predicate for platform selection.
     (candidate) => candidate.os === process.platform && candidate.cpu === process.arch && candidate.libc === libc,
 );
 if (!target) {
@@ -43,10 +42,8 @@ const signals = ['SIGINT', 'SIGTERM', 'SIGHUP'];
  * @param {NodeJS.Signals} signal The process signal received by the launcher.
  * @returns Whether the signal was sent to the child process.
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Signal listeners need a stable callback identity for removal after child exit.
 const forward = (signal) => child.kill(signal);
 for (const signal of signals) process.on(signal, forward);
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The child process emits startup failures through an error listener.
 child.on('error', (error) => {
     process.stderr.write(`gspot could not start: ${error.message}\n`);
     process.exit(2);

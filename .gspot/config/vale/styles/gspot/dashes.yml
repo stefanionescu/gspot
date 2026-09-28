@@ -4,5 +4,5 @@ level: error
 nonword: true
 tokens:
     - '—'
-    - ' -- '
+    - '(?<!eslint-(?:disable|enable)(?:-next-line|-line)?(?:[ \t]+[@\w/-]+(?:[ \t]*,[ \t]*[@\w/-]+)*)?) -- '
     - '–'

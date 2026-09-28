@@ -2,10 +2,14 @@ import { fileURLToPath } from 'node:url';
 import { readPolicy } from '#cli/policy/read.ts';
 import { run } from '#tests/support/cli/command.ts';
 import { delimiter, dirname, join } from 'node:path';
+import { emitAll } from '#cli/generation/outputs.ts';
+import { openSession } from '#cli/execution/session.ts';
 import { inspectTool, toolPin } from '#cli/tools/inspect.ts';
 import { privateToolInstallation } from '#cli/tools/pins.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
+import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { installPythonProject, preparePythonProject } from '#cli/tools/python-project.ts';
 
 const root = fileURLToPath(new URL('../../..', import.meta.url));
 
@@ -72,4 +76,23 @@ export async function installAtLevel(
     const selected = await run(cwd, ['set', 'level', level], environment);
     if (selected.code !== 0)
         throw new Error(`The ${level} level was not selected: ${selected.stdout}${selected.stderr}`);
+}
+
+/**
+ * Generate selected Semgrep rules and install their locked Python environment in a sandbox.
+ * @param root the sandbox with its policy and planted sources
+ */
+export async function installSemgrep(root: string): Promise<void> {
+    const session = await openSession(root);
+    const outputs = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
+        version: session.version,
+        packageClient: session.packageClient,
+    }).files.filter(
+        ({ path }) => path.includes('/semgrep/') || path.endsWith('.semgrepignore') || path === '.gspot/pyproject.toml',
+    );
+    await runOwnedLifecycle(root, async (owner) => {
+        await preparePythonProject(root, outputs, owner);
+    });
+    for (const output of outputs) await Bun.write(join(root, output.path), output.content);
+    await installPythonProject(root);
 }

@@ -1,7 +1,6 @@
 import { statSync } from 'node:fs';
 import { join, posix } from 'node:path';
 import { toPlatform } from '#cli/platform/paths.ts';
-import { isWorkspace } from '#cli/repository/scopes.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import type { ConfigurationTarget } from '#cli/types/configurations.ts';
 import { configurationName, targetInScope } from '#cli/configurations/targets.ts';
@@ -34,21 +33,6 @@ function listArguments(planned: PlannedCheck, part: string): string[] | undefine
     const held = planned.scope.view.settings[groups['setting'] ?? ''] as string[] | string | undefined;
     const items = typeof held === 'string' ? [held].filter((item) => item !== '') : (held ?? []);
     return items.flatMap((item) => [groups['flag'] ?? '', toPlatform(item)]);
-}
-
-/**
- * Replaces every setting placeholder in a command part with the value the policy holds.
- * @param planned the check, whose scope holds the settings
- * @param part one part of the manifest command
- * @returns the part with the values in place; a setting with no value becomes an empty string
- */
-function settingsFilled(planned: PlannedCheck, part: string): string {
-    return part.replaceAll(SETTING_PLACEHOLDER, (_match, name: string) => {
-        const found = planned.scope.view.settings[name];
-        return typeof found === 'string' || typeof found === 'number' || typeof found === 'boolean'
-            ? String(found)
-            : '';
-    });
 }
 
 /**
@@ -85,18 +69,52 @@ function pointerPath(name: string, scope: string): string {
     return scope === '' ? name : `${scope}/${name}`;
 }
 
-function expandPart(session: Session, planned: PlannedCheck, part: string, sub: Substitutions): CommandPart[] {
-    const policyPart = listArguments(planned, part) ?? existingFileArguments(session.root, part);
-    return policyPart ?? plainPart(session, planned, part, sub);
-}
-
 function plainPart(session: Session, planned: PlannedCheck, part: string, sub: Substitutions): CommandPart[] {
     if (part === '{files}') return sub.files;
     if (part === '{file}') return [{ file: true }];
-    if (part.startsWith(WORKSPACE_PREFIX) && part.endsWith('}'))
-        return isWorkspace(session.root, sub.scope) ? [part.slice(WORKSPACE_PREFIX.length, -1), sub.scope] : [];
+    if (part.startsWith(WORKSPACE_PREFIX) && part.endsWith('}')) {
+        if (
+            sub.scope === '' ||
+            statSync(join(session.root, sub.scope, 'package.json'), { throwIfNoEntry: false }) === undefined
+        )
+            return [];
+        return [part.slice(WORKSPACE_PREFIX.length, -1), sub.scope];
+    }
     return [substituteValue(session, planned, part, sub)];
 }
+
+// Read only confined ancestor configurations between each input and its declared scope.
+function nestedConfigurations(session: Session, planned: PlannedCheck): string[] {
+    const nested = planned.spec.nested_config;
+    if (nested === undefined) return [];
+    const scope = planned.scope.scope.path;
+    const files = openConfinedRoot(session.root);
+    try {
+        const paths = [
+            scope === '' ? nested : `${scope}/${nested}`,
+            ...allConfigs(session, planned)
+                .filter((config) => !config.fragment && config.pointer?.path === nested)
+                .map((config) => targetInScope(scope, config)),
+        ];
+        const ancestors = planned.files.flatMap((file) => {
+            const found: string[] = [];
+            for (
+                let directory = posix.dirname(file.path);
+                directory !== '.' && directory !== scope;
+                directory = posix.dirname(directory)
+            )
+                found.push(`${directory}/${nested}`);
+            return found;
+        });
+        for (const path of ancestors) {
+            if (!paths.includes(path) && files.read(path) !== undefined) paths.push(path);
+        }
+        return paths;
+    } finally {
+        files.close();
+    }
+}
+
 /**
  * Configuration paths named by a check command or its environment.
  * @param session the open session
@@ -111,35 +129,9 @@ export function commandConfigurations(
 ): string[] {
     const parts = [...command, ...Object.values(planned.spec.env ?? {})];
     const scope = planned.scope.scope.path;
-    const implicit: string[] = [];
-    const nested = planned.spec.nested_config;
-    if (nested !== undefined) {
-        const files = openConfinedRoot(session.root);
-        try {
-            const required = [
-                scope === '' ? nested : `${scope}/${nested}`,
-                ...allConfigs(session, planned)
-                    .filter((config) => !config.fragment && config.pointer?.path === nested)
-                    .map((config) => targetInScope(scope, config)),
-            ];
-            implicit.push(...required);
-            for (const file of planned.files) {
-                for (
-                    let directory = posix.dirname(file.path);
-                    directory !== '.' && directory !== scope;
-                    directory = posix.dirname(directory)
-                ) {
-                    const path = `${directory}/${nested}`;
-                    if (!implicit.includes(path) && files.read(path) !== undefined) implicit.push(path);
-                }
-            }
-        } finally {
-            files.close();
-        }
-    }
     return [
         ...new Set([
-            ...implicit,
+            ...nestedConfigurations(session, planned),
             ...parts.flatMap((part) => {
                 const configured = [...part.matchAll(COMMAND_CONFIG_PLACEHOLDER)]
                     .map((match) => match.groups?.['name'])
@@ -164,7 +156,13 @@ export function commandConfigurations(
  * @returns the expanded value
  */
 export function substituteValue(session: Session, planned: PlannedCheck, part: string, sub: Substitutions): string {
-    return settingsFilled(planned, part)
+    return part
+        .replaceAll(SETTING_PLACEHOLDER, (_match, name: string) => {
+            const found = planned.scope.view.settings[name];
+            return typeof found === 'string' || typeof found === 'number' || typeof found === 'boolean'
+                ? String(found)
+                : '';
+        })
         .replaceAll(COMMAND_CONFIG_PLACEHOLDER, (_match, name: string) =>
             toPlatform(join(session.root, configurationPath(session, planned, name))),
         )
@@ -188,7 +186,10 @@ export function substitute(
     command: string[],
     sub: Substitutions,
 ): CommandPart[] {
-    return command.flatMap((part) => expandPart(session, planned, part, sub));
+    return command.flatMap((part) => {
+        const policyPart = listArguments(planned, part) ?? existingFileArguments(session.root, part);
+        return policyPart ?? plainPart(session, planned, part, sub);
+    });
 }
 /**
  * Replaces every file marker after variable-length arguments have expanded.

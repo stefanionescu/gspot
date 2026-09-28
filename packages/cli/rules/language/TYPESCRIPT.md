@@ -28,11 +28,11 @@ standard.
 
 TypeScript projects must use strict compiler settings:
 
-- `strict`
-- `noUncheckedIndexedAccess`
-- `exactOptionalPropertyTypes`
-- `noImplicitOverride`
-- `forceConsistentCasingInFileNames`
+- `strict`.
+- `noUncheckedIndexedAccess`.
+- `exactOptionalPropertyTypes`.
+- `noImplicitOverride`.
+- `forceConsistentCasingInFileNames`.
 
 How an internal import resolves is a fact about the runtime, not about TypeScript. See the
 `runtime/` rules for the runtime this code targets.
@@ -40,23 +40,21 @@ How an internal import resolves is a fact about the runtime, not about TypeScrip
 Local lint configuration owns exact TypeScript enforcement. Do not duplicate
 rule IDs or lint options here.
 
-The durable standards are these. Type-only imports and exports stay explicit. Object shapes use
-`type` aliases. External input is validated at runtime. `any` and unsafe assertions are avoided, and TypeScript enums are not
-introduced. Type declarations live where the project declares them.
+Validate external input at runtime and preserve type safety after validation. Apply the
+module, declaration, and API conventions selected by the project.
 
 When implementation or enforcement conflicts with this standard, call out the
 conflict or fix it in an explicit task. Do not weaken the rule to match drift.
 
 ## File classes
 
-Every TypeScript file is one of three classes, and the generated lint configuration treats them
-differently:
+Apply the lint configuration for the file's role and scope. Application source,
+scripts, tests, generated files, and shared tooling can have different requirements.
+Check the effective configuration for the specific path before assuming that a
+rule is enabled or disabled.
 
-- Application and service source: the strictest rule set, `no-console`, the boundaries matrix,
-  the import style supported by the declared runtime and compiler configuration.
-- Scripts and generators: `n/no-process-exit` off, JSDoc off, the same import style as their
-  runtime.
-- Shared tooling: follows the JavaScript ESLint configuration and the tooling file class.
+Keep diagnostics and process termination at executable boundaries. Preserve the
+import style supported by the declared runtime and compiler configuration.
 
 ## Source files
 
@@ -65,15 +63,10 @@ implementation. Do not put imports after statements.
 
 Rules:
 
-- Private declarations first, public last: every non-exported function, constant, and class
-  precedes the first `export`. A reader meets the helpers before the contract that uses them.
-- Read `process.env` in one configuration owner module. Nowhere else.
-
 - Use `const` by default.
 - Use `let` only for reassignment.
 - Never use `var`.
 - Keep side-effect imports rare and explicit.
-- Do not use triple-slash references.
 - Do not add file-level history comments, stale path references, or generated
   examples that are not part of the working code.
 
@@ -82,10 +75,17 @@ short explanation, document the purpose, not how it changed.
 
 ## Modules, imports, and exports
 
-Use ES module syntax everywhere.
+Use module syntax supported by the declared runtime and compiler.
 
-Rules:
+Follow the import extension policy of the runtime this code targets. It is stated once, in the
+`runtime/` rule file for that runtime, and not repeated per language.
 
+### Module conventions
+
+<!-- level: all -->
+
+- Read `process.env` in one configuration owner module. Nowhere else.
+- Do not use triple-slash references.
 - Use `import type` for symbols used only as types.
 - Use `export type` when re-exporting type-only symbols.
 - Prefer named imports and named exports for app code.
@@ -97,19 +97,23 @@ Rules:
   namespace.
 - Do not use `namespace`, `module`, or `import x = require(...)`.
 
-Follow the import extension policy of the runtime this code targets. It is stated once, in the
-`runtime/` rule file for that runtime, and not repeated per language.
-
 No re-exports in application source: no `export { x } from`, no `export * from`, no index
 barrels. Import the module that declares the symbol. A library scope may allow re-exports in
 index files only, as a recorded project choice.
 
 ## Type placement
 
+<!-- level: all -->
+
 Keep type aliases, interfaces, enum-replacement objects, and generic helper types beside their
 behavioral owner. Infer schema types from their authored schema. Use `import type` when an import
 has no runtime use. A shared contract belongs with its consumers, not in a mandatory top-level
 types directory. Do not split declarations into files merely to satisfy a placement convention.
+
+When a project configures a types directory, enum-replacement objects belong there beside their
+types. The placement check recognizes literal records whose member names match their string
+values, or whose values form an explicit `typeof Record[keyof typeof Record]` union. Other
+constant records, such as column widths and download metadata, remain runtime values.
 
 ## Values, literals, and coercion
 
@@ -118,8 +122,6 @@ Prefer explicit, unsurprising values.
 Rules:
 
 - Use `const` for values that do not change.
-- Prefer literal unions and `as const` objects over enums.
-- Do not use TypeScript enums.
 - Avoid implicit coercion for user input, environment values, and provider
   responses.
 - Use explicit parsing for strings, numbers, booleans, and dates that cross a
@@ -150,6 +152,8 @@ those values before use in production code.
 
 ## Functions and parameters
 
+<!-- level: all -->
+
 Use TypeScript annotations to make public function contracts explicit while
 letting local implementation details rely on clear inference.
 
@@ -166,13 +170,18 @@ optional to avoid fixing a caller contract.
 
 ## Classes
 
+Use `override` when overriding class members.
+
+### Class conventions
+
+<!-- level: all -->
+
 Use classes only when instance identity or encapsulated state is real.
 
 Rules:
 
 - Do not create static container classes for namespacing.
 - Prefer plain functions and objects for stateless behavior.
-- Use `override` when overriding class members.
 - Keep constructors simple.
 - Do not use decorators unless an approved framework or toolchain requires them.
 
@@ -185,17 +194,21 @@ Let TypeScript infer local details, but make public contracts explicit.
 
 Rules:
 
-- Avoid `any`. Use `unknown` plus narrowing for untrusted values.
+- Use `unknown` plus narrowing for untrusted values.
 - Do not assert to `any`.
 - Avoid double assertions.
 - Avoid broad `as` casts.
-- Avoid non-null assertions in production code.
 - Prefer runtime narrowing, typed helpers, or fixing the source type over casts.
 - Use discriminated unions for known variants.
 - Avoid type aliases that only rename another type without adding meaning.
 
-Use `type` aliases for object shapes. Do not require interfaces over types, even
-though Google prefers interfaces in some cases.
+### Type conventions
+
+<!-- level: all -->
+
+- Use `type` aliases for object shapes.
+- Avoid explicit `any` annotations.
+- Prefer literal unions and `as const` objects over enums. Do not introduce TypeScript enums.
 
 ## Null, undefined, and optional values
 
@@ -203,16 +216,22 @@ Be precise about absence.
 
 Rules:
 
-- Prefer optional properties and optional parameters over `| undefined`.
-- Do not create nullable aliases such as `type Foo = Bar | undefined`.
+- Distinguish an absent property from a present property whose value can be `undefined`.
+- Give a nullable alias a name only when that union describes an owned domain contract.
 - Add nullability at the usage boundary where absence is part of that specific
   contract.
 - Normalize external empty strings, missing fields, and null values at runtime
   boundaries.
-- Do not use non-null assertions to skip narrowing in production code.
 
 `exactOptionalPropertyTypes` is enabled, so `property?: T` is not the same
 contract as `property: T | undefined`. Pick the one that matches the real data.
+
+### Non-null assertion convention
+
+<!-- level: all -->
+
+Do not use non-null assertions in production code. Narrow the value where it arrives.
+Tests can use an assertion when their setup establishes the value.
 
 ## Runtime boundaries
 
@@ -220,12 +239,12 @@ TypeScript types do not validate runtime input.
 
 Use Zod or custom runtime validation for:
 
-- HTTP bodies, query strings, route params, and headers
-- environment variables
-- database rows and RPC results when the query boundary has not validated them
-- provider responses
-- file input and generated data sources
-- webhooks, cron payloads, and Edge Function requests
+- HTTP bodies, query strings, route params, and headers.
+- environment variables.
+- database rows and RPC results when the query boundary has not validated them.
+- provider responses.
+- file input and generated data sources.
+- webhooks, cron payloads, and Edge Function requests.
 
 After validation, pass typed values inward. Do not spread raw `unknown` or
 request-shaped values through domain code. Keep validation close to the boundary
@@ -261,8 +280,11 @@ Rules:
 - A `TODO` is `TODO(<issue-url-or-YYYY-MM-DD>): <sentence>`; the owner is an issue link or an
   expiry date, never a person.
 
-JSDoc lint rules must require documentation for exported functions, with type
-tags disabled because TypeScript owns types.
+### Documentation coverage
+
+<!-- level: all -->
+
+Require JSDoc for exported functions, with type tags disabled because TypeScript owns types.
 
 ## Tests and mocks
 
@@ -355,27 +377,53 @@ Rules:
 
 ## Declaration order
 
+<!-- level: all -->
+
 Bad, public before private:
 
 ```ts
-export function parseOrder(input: unknown): Order {
-    return normalizeOrder(orderSchema.parse(input));
+export function compareOrders(left: Order, right: Order): number {
+    const leftTotal = orderTotal(left.items);
+    const rightTotal = orderTotal(right.items);
+    return leftTotal - rightTotal;
 }
 
-function normalizeOrder(order: Order): Order {
-    return { ...order, items: order.items.filter(isActiveItem) };
+function orderTotal(items: OrderItem[]): number {
+    const active = items.filter(isActiveItem);
+    const amounts = active.map((item) => item.quantity * item.price);
+    return amounts.reduce((sum, amount) => sum + amount, 0);
 }
 ```
 
 Good:
 
 ```ts
-function normalizeOrder(order: Order): Order {
-    return { ...order, items: order.items.filter(isActiveItem) };
+type OrderItem = {
+    active: boolean;
+    quantity: number;
+    price: number;
+};
+
+type Order = {
+    items: OrderItem[];
+};
+
+function orderTotal(items: OrderItem[]): number {
+    const active = items.filter((item) => item.active);
+    const amounts = active.map((item) => item.quantity * item.price);
+    return amounts.reduce((sum, amount) => sum + amount, 0);
 }
 
-export function parseOrder(input: unknown): Order {
-    return normalizeOrder(orderSchema.parse(input));
+/**
+ * Compare orders by the total price of their active items.
+ * @param left the first order.
+ * @param right the second order.
+ * @returns the signed difference between their totals.
+ */
+export function compareOrders(left: Order, right: Order): number {
+    const leftTotal = orderTotal(left.items);
+    const rightTotal = orderTotal(right.items);
+    return leftTotal - rightTotal;
 }
 ```
 

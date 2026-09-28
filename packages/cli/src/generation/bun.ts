@@ -12,10 +12,15 @@ import { DEFAULT_RELEASE_AGE_DAYS, SECONDS_PER_DAY } from '#cli/constants/genera
 export function bunConfiguration(root: string, scopes: ScopeSelection[]): ConfigurationOutput[] {
     const files = openConfinedRoot(root);
     try {
-        return scopes.flatMap((selection) => {
-            if (!selection.selected.some((manifest) => manifest.configuration.name === 'dependencies')) return [];
-            const prefix = selection.scope.path === '' ? '' : `${selection.scope.path}/`;
-            if (!['bun.lock', 'bun.lockb'].some((name) => files.stat(`${prefix}${name}`) !== undefined)) return [];
+        const selected = scopes
+            .filter((selection) =>
+                selection.selected.some((manifest) => manifest.configuration.name === 'dependencies'),
+            )
+            .map((selection) => ({ selection, prefix: selection.scope.path === '' ? '' : `${selection.scope.path}/` }))
+            .filter(({ prefix }) =>
+                ['bun.lock', 'bun.lockb'].some((name) => files.stat(`${prefix}${name}`) !== undefined),
+            );
+        return selected.map(({ selection, prefix }) => {
             const path = `${prefix}bunfig.toml`;
             const source = files.read(path);
             const document =
@@ -33,7 +38,7 @@ export function bunConfiguration(root: string, scopes: ScopeSelection[]): Config
             const scanner = settings['security_scanner'];
             if (typeof scanner === 'string' && scanner !== '')
                 changes.push({ path: ['install', 'security', 'scanner'], value: scanner });
-            return [{ path, format: 'toml' as const, changes }];
+            return { path, format: 'toml' as const, changes };
         });
     } finally {
         files.close();

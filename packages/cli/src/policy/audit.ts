@@ -1,5 +1,6 @@
 import { nearMatches } from '#cli/policy/near.ts';
 import * as messages from '#cli/policy/messages.ts';
+import { policyLayers } from '#cli/policy/problems.ts';
 import { writtenKeys } from '#cli/policy/written-keys.ts';
 import { quoteArgument } from '#cli/platform/arguments.ts';
 import { settingValueSchemas } from '#cli/policy/schema.ts';
@@ -140,27 +141,7 @@ function extraProblems(surface: ExposedSettings, table: Partial<Policy>): Policy
     return problems;
 }
 
-// The first surface wins a key two surfaces share, so the root keeps its own default.
-function mergedSurface(surfaces: ExposedSettings[]): ExposedSettings {
-    const later = surfaces.toReversed();
-    return {
-        specs: new Map(later.flatMap((surface) => surface.specs.entries().toArray())),
-        defaults: new Map(later.flatMap((surface) => surface.defaults.entries().toArray())),
-        problems: surfaces[0]?.problems ?? [],
-    };
-}
-
-function tableProblems(
-    surface: ExposedSettings,
-    table: Partial<Policy>,
-    scope: string | undefined,
-    requireReasons: boolean,
-): PolicyProblem[] {
-    const keys = writtenKeys(table, surface).flatMap((key) => keyProblems(surface, table, scope, key, requireReasons));
-    return [...keys, ...extraProblems(surface, table)];
-}
-
-// The surface problems no written table settles, for the root selection and for each scope.
+// Unresolved surface problems in the root selection and each scope.
 function unwrittenSurfaceProblems(
     surface: ExposedSettings,
     policy: Policy,
@@ -177,29 +158,19 @@ function unwrittenSurfaceProblems(
     ];
     for (const { settings, scope, path } of surfaces) {
         const layers = policyTables(policy, scope);
-        for (const { key, message } of settings.problems)
-            if (!layers.some(({ table }) => policyValue(table, key) !== undefined)) problems.push({ path, message });
+        for (const { key, message: text } of settings.problems)
+            if (!layers.some(({ table }) => policyValue(table, key) !== undefined))
+                problems.push({ path, message: text });
     }
     return problems;
 }
 
-// The root table and each scope table that exists, with where each one sits in the document.
-function policyLayersOf(policy: Policy): { table: Partial<Policy>; scope?: string; path: PathSegment[] }[] {
-    return [
-        { table: policy, path: [] },
-        ...policy.scopes.flatMap((scope, index) => {
-            const table = policy.scopeTables[scope.path];
-            return table === undefined ? [] : [{ table, scope: scope.path, path: ['scope', index] as PathSegment[] }];
-        }),
-    ];
-}
-
 /**
  * Validates every written key against the surface and the loosening rule.
- * @param surface the surface of the selection
- * @param policy the loaded policy
- * @param scopeSurfaces the surface of each scope by its path; a scope table is read against its own
- * @returns the problems in plain English, empty when the policy is sound
+ * @param surface the surface of the selection.
+ * @param policy the loaded policy.
+ * @param scopeSurfaces the surface of each scope by its path; a scope table is read against its own.
+ * @returns the problems in plain English, empty when the policy is sound.
  */
 export function validateAgainstSurface(
     surface: ExposedSettings,
@@ -208,10 +179,20 @@ export function validateAgainstSurface(
 ): PolicyProblem[] {
     const problems = unwrittenSurfaceProblems(surface, policy, scopeSurfaces);
     // A root table feeds every scope, so it may hold a setting that only a configuration of some scope exposes.
-    const everywhere = mergedSurface([surface, ...scopeSurfaces.values()]);
-    for (const { table, scope, path } of policyLayersOf(policy)) {
+    const later = [surface, ...scopeSurfaces.values()].toReversed();
+    const everywhere: ExposedSettings = {
+        specs: new Map(later.flatMap((entry) => entry.specs.entries().toArray())),
+        defaults: new Map(later.flatMap((entry) => entry.defaults.entries().toArray())),
+        problems: surface.problems,
+    };
+    for (const { table, scope, path } of policyLayers(policy)) {
         const settings = scope === undefined ? everywhere : (scopeSurfaces.get(scope) ?? surface);
-        const found = tableProblems(settings, table, scope, policy.requireReasons);
+        const found = [
+            ...writtenKeys(table, settings).flatMap((key) =>
+                keyProblems(settings, table, scope, key, policy.requireReasons),
+            ),
+            ...extraProblems(settings, table),
+        ];
         problems.push(...found.map((problem) => ({ ...problem, path: [...path, ...problem.path] })));
     }
     for (const [index, { group }] of policy.naming.remove_groups.entries())

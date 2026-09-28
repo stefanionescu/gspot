@@ -1,15 +1,11 @@
 import { docstringOf } from '#cli/checks/python/modules.ts';
 import { PLACEHOLDERS } from '#cli/constants/checks/python.ts';
+import type { PythonFunction } from '#cli/types/checks/python.ts';
 import type { StructureProblem } from '#cli/types/checks/structure.ts';
 import { executableStatements } from '#cli/checks/structure/statements.ts';
-import type { PythonFunction, PythonModule } from '#cli/types/checks/python.ts';
 
 function problem(fn: PythonFunction, rule: string, text: string): StructureProblem {
     return { file: fn.path, line: fn.node.startPosition.row + 1, rule, text };
-}
-
-function codeLines(lines: string[], from: number, to: number): number {
-    return lines.slice(from, to).filter((line) => line.trim() !== '' && !line.trimStart().startsWith('#')).length;
 }
 
 /**
@@ -55,54 +51,5 @@ export function placeholderDocstrings(functions: PythonFunction[]): StructurePro
                 `The docstring of ${fn.name} says nothing the name does not. Say what the function does, or for whom.`,
             ),
         ];
-    });
-}
-
-/**
- * Functions with more code lines than the ceiling.
- * @param modules every module of the run
- * @param functions every function of the run
- * @param ceiling the most code lines a function may hold
- * @returns the problems
- */
-export function longFunctions(
-    modules: PythonModule[],
-    functions: PythonFunction[],
-    ceiling: number,
-): StructureProblem[] {
-    const lines = new Map(modules.map((module) => [module.path, module.lines]));
-    return functions.flatMap((fn) => {
-        const count = codeLines(lines.get(fn.path) ?? [], fn.node.startPosition.row, fn.node.endPosition.row + 1);
-        return count <= ceiling
-            ? []
-            : [
-                  problem(
-                      fn,
-                      'function-lines',
-                      `${fn.name} holds ${String(count)} code lines, over the ceiling of ${String(ceiling)}.`,
-                  ),
-              ];
-    });
-}
-
-/**
- * Modules with more code lines than the ceiling.
- * @param modules every module of the run
- * @param ceiling the most code lines a file may hold
- * @returns the problems
- */
-export function longModules(modules: PythonModule[], ceiling: number): StructureProblem[] {
-    return modules.flatMap((module) => {
-        const count = codeLines(module.lines, 0, module.lines.length);
-        return count <= ceiling
-            ? []
-            : [
-                  {
-                      file: module.path,
-                      line: 1,
-                      rule: 'file-lines',
-                      text: `${String(count)} code lines is over the ceiling of ${String(ceiling)}.`,
-                  },
-              ];
     });
 }

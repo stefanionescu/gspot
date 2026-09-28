@@ -33,7 +33,7 @@ configurations = []
 
 [[scope]]
 path = "docs"
-configurations = ["typescript"]
+configurations = ["typescript", "css"]
 
 [hooks]
 tool = "gspot"
@@ -51,41 +51,479 @@ tool = "mise"
 [tools]
 
 [tools.docs]
-paths_allowed = [
-    {patterns = ["packages/cli/rules/**"], reason = "The rule corpus is generic text installed into other repositories; it names nothing in this one."},
-    {patterns = ["architecture/**"], reason = "The architecture names files in other repositories and files that are not built yet."},
-    {patterns = ["docs/**"], reason = "The manual names files in the reader's repository and check ids written with a slash."},
-]
 
+
+[[tools.docs.paths_allowed]]
+patterns = [
+    "api/overrides/boundaries.js",
+    "api/overrides/naming.js",
+    "api/policy.js",
+    "config/duplication/python.json",
+    "config/eslint.js",
+    "config/lint/ecosystem.mjs",
+    "config/python/imports.json",
+    "config/python/limits.py",
+    "config/python/packages.json",
+    "config/repository/folders.py",
+    "config/shell.py",
+    "configurations/overrides/restrictions.js",
+    "eslint/api/index.js",
+    "eslint/architecture.mjs",
+    "eslint/supabase/index.js",
+    "functions/python.py",
+    "functions/shell.js",
+    "functions/sql.js",
+    "hooks/shell.mjs",
+    "imports/boundary.py",
+    "imports/cycles.py",
+    "imports/deferred.py",
+    "imports/exports.py",
+    "imports/graph.py",
+    "imports/layout.py",
+    "integrity/architecture.js",
+    "integrity/config.py",
+    "integrity/folder.py",
+    "integrity/gitleaks.py",
+    "integrity/policies.py",
+    "integrity/semgrep-suppressions.js",
+    "integrity/suppressions.py",
+    "integrity/typecheck.py",
+    "integrity/typescript.mjs",
+    "ios/.swiftlint.yml",
+    "naming/checks/shell.py",
+    "naming/extractors/sql.js",
+    "nginx/lint.js",
+    "package-json/scripts.js",
+    "python/rules/module_length.py",
+    "quality/naming/extractors/swift.js",
+    "repository/dependencies.py",
+    "rulesets/node.js",
+    "rulesets/regexp.js",
+    "rulesets/security.js",
+    "rulesets/sonar.js",
+    "rulesets/unicorn.js",
+    "security/semgrep/rules/supabase.yml",
+    "site/eslint/index.js",
+    "site/semgrep/hooks.yml",
+    "supabase/overrides/naming.js",
+    "supabase/policy.js",
+]
+reason = "The enforcement ledger attributes these exact historical source paths to its four named reference repositories. They are provenance, not files in gspot. Remove an entry when that source attribution is removed or replaced."
+
+[[tools.docs.paths_allowed]]
+patterns = [
+    "../nx/astro-docs/src/content.config.ts",
+    "../nx/astro-docs/src/plugins/nx-reference-packages.loader.ts",
+    "../nx/astro-docs/src/plugins/plugin.loader.ts",
+    "../nx/packages/jest/src/generators/configuration/schema.json",
+    "../turborepo/packages/eslint-plugin-turbo/package.json",
+    "../turborepo/packages/turbo-releaser/src/config.ts",
+    "../turborepo/packages/turbo-releaser/src/stage.ts",
+    "../turborepo/packages/turbo/package.json",
+    ".qlty/qlty.toml",
+    ".trunk/trunk.yaml",
+    "conf.d",
+]
+reason = "The prior-art record identifies these external tool configuration paths and files in the recorded Nx and Turborepo checkouts. Preserve the inspected paths until the corresponding comparison or pinned inspection is replaced."
+
+[[tools.docs.paths_allowed]]
+patterns = [
+    ".github/workflows/gspot.yml",
+    ".gspot/config/basedpyrightconfig.json",
+    ".gspot/config/hadolint.yaml",
+    ".gspot/config/html-validate-built.json",
+    ".gspot/config/html-validate-templates.json",
+    ".gspot/config/periphery.yml",
+    ".gspot/config/ruff.toml",
+    ".gspot/config/semgrep/workers.yml",
+    ".gspot/config/spectral.yaml",
+    ".gspot/config/sqlfluff.cfg",
+    ".gspot/config/squawk.toml",
+    ".gspot/config/stylelint.json",
+    ".gspot/config/swiftformat",
+    ".gspot/config/swiftlint.yml",
+    ".gspot/config/trivy.yaml",
+    ".gspot/node_modules",
+    ".gspot/node_modules/.bin",
+    ".gspot/rules/framework/nextjs/NEXTJS.md",
+    ".gspot/rules/framework/react/REACT.md",
+    ".gspot/rules/library/zod/ZOD.md",
+    "docs/dist",
+    "packages/cli/.build",
+    "packages/cli/scripts/configuration-process.js",
+]
+reason = "These documented paths are ignored build or installation outputs, exact embedded asset identities, or outputs of optional consumer configurations. Their source manifests and build owners define them. Remove an entry when its output contract or documentation is removed."
+
+[[tools.docs.paths_allowed]]
+patterns = [
+    "../../adoption/rules.mjs",
+    "../cart/b",
+    "../outside-rules",
+    "../run/private/router.js",
+    "../user/b",
+    "api/src/a.ts",
+    "api/src/routes/turn.ts",
+    "api/types/supabase.ts",
+    "features/cart/a.ts",
+    "functions/_middleware.js",
+    "functions/_worker.js",
+    "hooks/use-thing.ts",
+    "plugin.cjs",
+    "private/router.js",
+    "private/router.ts",
+    "processing.mjs",
+    "rules.mjs",
+    "src/app/api/checkout/route.ts",
+    "supabase/scripts/migrations.ts",
+    "supabase/seed.sql",
+    "turn",
+    "typecheck/trt.json",
+    "utils/common.ts",
+]
+reason = "Architecture examples and regression records use these exact consumer paths, deliberately invalid imports, and sandbox module names. They are not tracked checkout claims. Remove an entry when its example or regression record is removed."
+
+[[tools.docs.paths_allowed]]
+patterns = ["acceptance/source/configurations/css.test.ts"]
+reason = "The documented acceptance command resolves this argument from its declared tests working directory; the tracked target is tests/acceptance/source/configurations/css.test.ts."
+
+[[tools.docs.paths_allowed]]
+patterns = [".gspot/reports/report.json"]
+reason = "The check runner writes this ignored runtime report and the CI workflow uploads it. Runtime reports are not tracked repository inputs."
+
+[[tools.docs.paths_allowed]]
+patterns = ["packages/cli/rules/**"]
+reason = "The rule corpus is generic text installed into other repositories; it names nothing in this one."
+
+[[tools.docs.paths_allowed]]
+patterns = [".github/copilot-instructions.md", ".cursor", ".cursor/rules/gspot.mdc", ".husky", ".gitlab/ci/gspot.yml"]
+reason = "These documented integration destinations belong to consumer repositories. Their presence depends on the selected agent, hook, or CI integration."
+
+[[tools.docs.paths_allowed]]
+patterns = [
+    "packages/eslint-plugin/dist",
+    "coverage/lcov.info",
+    "packages/cli/.build/swift.wasm",
+    ".gspot/state",
+    ".gspot/state/recovery",
+    ".gspot/cache",
+    ".gspot/reports",
+    ".gspot/reports/report.sarif",
+    ".gspot/reports/report.codequality.json",
+    ".gspot/.venv",
+    ".gspot/config/semgrep/ios.yml",
+]
+reason = "These exact documented outputs are ignored build products, runtime state, or configuration generated only for selected consumer integrations. Source manifests and output tests own their paths."
+
+[[tools.docs.paths_allowed]]
+patterns = [
+    "gspot-darwin-arm64",
+    "scripts/check-notes.ts",
+    "notes/deploy.txt",
+    "bash",
+    "supabase/config.toml",
+    "src/app.ts",
+]
+reason = "The guides explicitly introduce these downloaded binaries, consumer project resources, and example files. They are not claims that this checkout tracks them."
+
+[[tools.docs.paths_allowed]]
+patterns = ["acceptance/source/configurations/vite.test.ts"]
+reason = "The acceptance runner resolves this documented argument from its tests working directory. The tracked file is tests/acceptance/source/configurations/vite.test.ts."
 [tools.lychee]
-exclude_paths = [
-    {paths = ["docs/src/content/docs/**"], reason = "The site links are root-relative and resolve once Starlight builds it; its build validates them."},
-]
 
+
+[[tools.lychee.exclude_paths]]
+paths = ["docs/src/content/docs/**"]
+reason = "The site links are root-relative and resolve once Starlight builds it; its build validates them."
 [tools.typos]
-words = [
-    {word = "udid", reason = "Apple's device identifier API name."},
-    {word = "certifi", reason = "The Python certificate package name."},
-    {word = "axe", reason = "The axe-core accessibility package name."},
-    {word = "Virtua", reason = "The Virtua list virtualisation library."},
-    {word = "virtua", reason = "The Virtua list virtualisation library."},
-    {word = "synchronise", reason = "British spellings the naming policy bans on purpose."},
-    {word = "synchronised", reason = "British spellings the naming policy bans on purpose."},
-    {word = "materialise", reason = "British spellings the naming policy bans on purpose."},
-    {word = "IFEs", reason = "The ESLint option name for immediately invoked functions."},
-    {word = "IIF", reason = "The word typos sees inside the ESLint option IIFEs."},
-    {word = "capitalisation", reason = "The sqlfluff rule group is spelled capitalisation in its own configuration keys."},
-    {word = "speling", reason = "A configuration name misspelled on purpose in the profile test."},
-]
-exclude = [
-    {paths = ["packages/cli/configurations/policy/prose/styles/gspot/us-english.yml"], reason = "A list of British spellings mapped to their US forms."},
-    {paths = ["tests/acceptance/source/cli/spelling.test.ts", "tests/integration/cli/lifecycle/init.test.ts", "tests/integration/tools/generation/spelling.test.ts", "tests/integration/cli/generation/selection.test.ts", "tests/integration/tools/policy/adoption/native/spelling.test.ts", "tests/integration/cli/policy/adoption/native/spelling.test.ts", "tests/integration/cli/profile.test.ts", "tests/integration/tools/profile.test.ts", "tests/integration/tools/execution/fixers.test.ts", "tests/integration/tools/execution/parse-output/native-tools.test.ts", "tests/integration/cli/execution/parse-output/declared-checks.test.ts", "tests/integration/cli/execution/parse-output/formats.test.ts"], reason = "These spelling and adoption fixtures retain deliberately misspelled words and British variants to verify findings, corrections, and preservation."},
-    {paths = ["tests/unit/cli/parsers/sql.test.ts"], reason = "The SQL parser fixtures retain an intentionally misspelled SELECT token to verify PostgreSQL syntax diagnostics."},
-    {paths = ["packages/cli/configurations/policy/spelling/manifest.toml"], reason = "The shipped spelling example pairs a deliberately misspelled word with its correction."},
-]
+
+exclude = []
+
+
+[[tools.typos.words]]
+word = "udid"
+reason = "Apple's device identifier API name."
+
+[[tools.typos.words]]
+word = "certifi"
+reason = "The Python certificate package name."
+
+[[tools.typos.words]]
+word = "axe"
+reason = "The axe-core accessibility package name."
+
+[[tools.typos.words]]
+word = "virtua"
+reason = "The Virtua list virtualization library. Native dictionary matching also accepts the capitalized name."
+[tools.typos.extra]
+reason = "These exact filename types preserve deliberate defect fixtures and external rule identifiers or quoted descriptions. Native Typos matches basenames rather than directory paths. Other words stay checked. Remove each allowance when its fixture, mapping, or upstream identifier is removed."
+
+[tools.typos.extra.type.06-enforcement-ledger-md]
+extend-glob = ["06-enforcement-ledger.md"]
+
+[tools.typos.extra.type.06-enforcement-ledger-md.extend-words]
+capitalisation = "capitalisation"
+
+[tools.typos.extra.type.08-naming-policy-md]
+extend-glob = ["08-naming-policy.md"]
+
+[tools.typos.extra.type.08-naming-policy-md.extend-words]
+materialise = "materialise"
+synchronise = "synchronise"
+
+[tools.typos.extra.type.declared-checks-test-ts]
+extend-glob = ["declared-checks.test.ts"]
+
+[tools.typos.extra.type.declared-checks-test-ts.extend-words]
+teh = "teh"
+
+[tools.typos.extra.type.fixers-test-ts]
+extend-glob = ["fixers.test.ts"]
+
+[tools.typos.extra.type.fixers-test-ts.extend-words]
+teh = "teh"
+wether = "wether"
+
+[tools.typos.extra.type.formats-test-ts]
+extend-glob = ["formats.test.ts"]
+
+[tools.typos.extra.type.formats-test-ts.extend-words]
+teh = "teh"
+
+[tools.typos.extra.type.ignores-test-ts]
+extend-glob = ["ignores.test.ts"]
+
+[tools.typos.extra.type.ignores-test-ts.extend-words]
+teh = "teh"
+
+[tools.typos.extra.type.init-test-ts]
+extend-glob = ["init.test.ts"]
+
+[tools.typos.extra.type.init-test-ts.extend-words]
+colour = "colour"
+teh = "teh"
+
+[tools.typos.extra.type.inventory-csv]
+extend-glob = ["inventory.csv"]
+
+[tools.typos.extra.type.inventory-csv.extend-words]
+ands = "ands"
+capitalisation = "capitalisation"
+labelled = "labelled"
+materialise = "materialise"
+synchronise = "synchronise"
+
+[tools.typos.extra.type.inventory-csv.extend-identifiers]
+IIFEs = "IIFEs"
+
+[tools.typos.extra.type.native-tools-test-ts]
+extend-glob = ["native-tools.test.ts"]
+
+[tools.typos.extra.type.native-tools-test-ts.extend-words]
+teh = "teh"
+
+[tools.typos.extra.type.policy-json]
+extend-glob = ["policy.json"]
+
+[tools.typos.extra.type.policy-json.extend-words]
+materialise = "materialise"
+synchronise = "synchronise"
+
+[tools.typos.extra.type.profile-test-ts]
+extend-glob = ["profile.test.ts"]
+
+[tools.typos.extra.type.profile-test-ts.extend-words]
+colour = "colour"
+speling = "speling"
+teh = "teh"
+wrod = "wrod"
+
+[tools.typos.extra.type.recovery-test-ts]
+extend-glob = ["recovery.test.ts"]
+
+[tools.typos.extra.type.recovery-test-ts.extend-words]
+colour = "colour"
+
+[tools.typos.extra.type.rule-diff-test-ts]
+extend-glob = ["rule-diff.test.ts"]
+
+[tools.typos.extra.type.rule-diff-test-ts.extend-words]
+capitalisation = "capitalisation"
+
+[tools.typos.extra.type.spelling-test-ts]
+extend-glob = ["spelling.test.ts", "spelling.ts"]
+
+[tools.typos.extra.type.spelling-test-ts.extend-words]
+colour = "colour"
+recieve = "recieve"
+teh = "teh"
+wether = "wether"
+
+[tools.typos.extra.type.spelling-test-ts.extend-identifiers]
+IIFEs = "IIFEs"
+
+[tools.typos.extra.type.sql-parser-test-ts]
+extend-glob = ["sql-parser.test.ts"]
+
+[tools.typos.extra.type.sql-parser-test-ts.extend-words]
+SELEC = "SELEC"
+
+[tools.typos.extra.type.sqlfluff-cfg-tmpl]
+extend-glob = ["sqlfluff.cfg.tmpl"]
+
+[tools.typos.extra.type.sqlfluff-cfg-tmpl.extend-words]
+capitalisation = "capitalisation"
+
+[tools.typos.extra.type.sqlfluff-test-ts]
+extend-glob = ["sqlfluff.test.ts"]
+
+[tools.typos.extra.type.sqlfluff-test-ts.extend-words]
+capitalisation = "capitalisation"
+
+[tools.typos.extra.type.native-csv]
+extend-glob = ["native.csv"]
+
+[tools.typos.extra.type.native-csv.extend-identifiers]
+valid_referers = "valid_referers"
+
+[tools.typos.extra.type.eslint-template]
+extend-glob = ["eslint.config.js.tmpl"]
+
+[tools.typos.extra.type.eslint-template.extend-identifiers]
+IIFEs = "IIFEs"
+
+[tools.typos.extra.type.english-substitutions]
+extend-glob = ["us-english.yml"]
+extend-ignore-re = ["(?m)^    [a-z]+:"]
+
+[tools.typos.extra.type.spelling-example]
+extend-glob = ["manifest.toml"]
+extend-ignore-re = ["The word `teh` in selected text reports a spelling finding[.]"]
+
 
 [[naming.rules]]
-paths = ["packages/cli/src/checks/security/gitleaks-baseline.ts"]
+paths = ["packages/cli/src/policy/adoption/gitleaks.ts"]
+categories = ["properties"]
+names = ["regex_target"]
+case = ["snake"]
+reason = "The public Gitleaks allowlist policy names its matching mode regex_target. Preserve this serialized key until that policy contract changes."
+
+[[naming.rules]]
+paths = ["packages/cli/src/types/commands/init.ts"]
+categories = ["properties"]
+names = ["min_release_age_days", "security_scanner"]
+case = ["snake"]
+reason = "Installer settings preserve these exact public TOML keys during initialization. Remove an allowance when its setting leaves the supported policy."
+
+[[naming.rules]]
+paths = ["packages/cli/src/types/configurations.ts"]
+categories = ["properties"]
+names = [
+    "check_references",
+    "crash_pattern",
+    "query_packs",
+    "rule_page",
+    "version_command",
+    "version_exit_code",
+    "version_regex",
+]
+case = ["snake"]
+reason = "Configuration manifests declare these exact tool and reference keys. The normalized types retain the manifest spelling. Remove an allowance when its manifest key is removed."
+
+[[naming.rules]]
+paths = ["packages/cli/src/types/policy/policy.ts"]
+categories = ["properties"]
+names = [
+    "allow_digits",
+    "allow_duplicate_words",
+    "allowed_for",
+    "banned_terms",
+    "constants_directory",
+    "contract_properties",
+    "edges_allowed",
+    "folder_name_allowed",
+    "max_chars",
+    "max_words",
+    "prefix_collision_allowed",
+    "remove_groups",
+    "single_file_folder_allowed",
+    "structural_prefix",
+    "types_directory",
+]
+case = ["snake"]
+reason = "These properties describe exact public policy keys in gspot.toml. Their spelling is part of the supported configuration contract. Remove an allowance when its key leaves that contract."
+
+[[naming.rules]]
+paths = ["tests/acceptance/source/cli/init/selection.test.ts"]
+categories = ["properties"]
+names = ["types_directory"]
+case = ["snake"]
+reason = "The initialization test inspects the public architecture.types_directory TOML key. Remove this allowance if that policy key changes."
+
+[[naming.rules]]
+paths = ["tests/acceptance/source/cli/report-storage.test.ts", "tests/types/cli.ts"]
+categories = ["properties"]
+names = ["check_name"]
+case = ["snake"]
+reason = "The Code Quality report format requires check_name. These test types inspect the serialized report. Remove this allowance if the report contract changes."
+
+[[naming.rules]]
+paths = ["tests/integration/cli/generation/format-width.test.ts"]
+categories = ["properties"]
+names = ["MD007"]
+case = ["upper-snake"]
+allow_digits = true
+reason = "Markdownlint names the unordered-list indentation rule MD007. The test reads that exact generated rule key. Remove this allowance if the native rule identifier changes."
+
+[[naming.rules]]
+paths = ["tests/integration/tools/generation/swift/security.test.ts"]
+categories = ["properties"]
+names = ["check_id"]
+case = ["snake"]
+reason = "Semgrep JSON results identify their rule with check_id. The test inspects the native report key. Remove this allowance if the native report contract changes."
+
+[[naming.rules]]
+paths = ["tests/integration/tools/hooks/pre-commit.test.ts", "tests/types/integration/cli/lifecycle/lifecycle.ts"]
+categories = ["properties"]
+names = ["fail_fast"]
+case = ["snake"]
+reason = "Pre-commit configures early failure with fail_fast. These test types preserve that native YAML key. Remove this allowance if the native option changes."
+
+[[naming.rules]]
+paths = ["tests/integration/tools/parameter-limits.test.ts"]
+categories = ["properties"]
+names = ["rule_id"]
+case = ["snake"]
+reason = "SwiftLint JSON diagnostics identify their rule with rule_id. The test reads that exact native field. Remove this allowance if the native report contract changes."
+
+[[naming.rules]]
+paths = ["tests/types/integration/cli/generation.ts"]
+categories = ["properties"]
+names = ["licenses_allowed", "packages_allowed"]
+case = ["snake"]
+reason = "The generated license-scanner configuration uses these exact policy keys. The tests inspect their serialized spelling. Remove an allowance when the corresponding scanner setting changes."
+
+[[naming.rules]]
+paths = ["packages/cli/src/types/repository/revisions.ts"]
+categories = ["properties"]
+names = ["object"]
+exclude = true
+reason = "The published pre-push JSON report names Git object identities with the key object. PushRevision and PushSelection preserve that serialized contract. Internal Git entry and revision-source keys use hash. Remove the allowance only if the report contract changes."
+
+[[naming.rules]]
+paths = ["tests/types/acceptance/source/cli.ts"]
+categories = ["properties"]
+names = ["with", "when"]
+exclude = true
+reason = "GitHub Actions names action inputs with, and GitLab CI names artifact retention when. These test types inspect those exact generated workflow keys. Remove an allowance if its workflow provider or field leaves the contract."
+
+[[naming.rules]]
+paths = ["packages/cli/src/constants/repository/windows-launcher.ts"]
+names = ["PE32_MAGIC", "PE32_PLUS_MAGIC", "PE32_DIRECTORIES_OFFSET", "PE32_PLUS_DIRECTORIES_OFFSET"]
+exclude = true
+reason = "The Microsoft Portable Executable specification names these formats PE32 and PE32+. The constants identify their magic values and directory offsets. Their exact format names require digits and the term PLUS. Only these four names are excepted. Remove this allowance if the launcher stops supporting those formats."
+
+[[naming.rules]]
+paths = ["packages/cli/src/types/checks/security.ts"]
 names = ["Fingerprint", "File", "RuleID", "Commit"]
 exclude = true
 reason = "gitleaks writes these keys in its report and its baseline, and the type names them as they are."
@@ -97,7 +535,7 @@ exclude = true
 reason = "package.json names the key packageManager, and the code reads it under that name."
 
 [[naming.rules]]
-paths = ["packages/cli/src/parsers/sql/types.ts"]
+paths = ["packages/cli/src/types/parsers/sql.ts"]
 names = [
     "lengthBytesUTF8",
     "stringToUTF8",
@@ -105,6 +543,8 @@ names = [
     "_malloc",
     "_free",
     "_wasm_parse_query_raw",
+    "_wasm_parse_plpgsql",
+    "_wasm_free_string",
     "_wasm_free_parse_result",
     "stmt_location",
     "stmt_len",
@@ -113,10 +553,62 @@ exclude = true
 reason = "Emscripten and libpg-query name these members, and the type spells them as the module exports them."
 
 [[naming.rules]]
-paths = ["packages/cli/src/checks/xcode/types.ts"]
+paths = ["packages/cli/src/types/checks/xcode.ts"]
 names = ["shouldTranslate"]
 exclude = true
 reason = "Xcode writes this key in a string file, and the type spells it as the file does."
+
+[[naming.rules]]
+paths = ["packages/cli/src/types/evaluation.ts"]
+names = [
+    "Legacy",
+    "ConfigArrayFactory",
+    "loadFile",
+    "loadInDirectory",
+    "loadDefaultESLintIgnore",
+    "IgnorePattern",
+    "DefaultPatterns",
+    "FlatCompat",
+    "config",
+]
+exclude = true
+reason = "These members are the exact @eslint/eslintrc API consumed by evaluation. Renaming them breaks native adoption. Internal translation types retain repository naming rules. Remove an allowance when its API member is no longer consumed."
+
+[[naming.rules]]
+paths = ["packages/cli/src/types/checks/checks.ts"]
+names = ["DefElem", "String", "List"]
+exclude = true
+reason = "libpg-query emits these exact PostgreSQL AST node tags. SQL option parsing consumes their original JSON shape. Remove an allowance when its node tag is no longer consumed."
+
+[[naming.rules]]
+paths = ["packages/cli/src/checks/sql.ts"]
+names = ["FunctionParameter"]
+exclude = true
+reason = "libpg-query emits this exact PostgreSQL AST node tag for function parameters. Renaming the property breaks argument counting. Remove the allowance when the parser contract changes."
+
+[[naming.rules]]
+paths = ["packages/cli/src/repository/scopes.ts", "packages/cli/src/execution/cache.ts"]
+names = ["withFileTypes"]
+exclude = true
+reason = "The filesystem implementation must accept Node readdir options through the globby filesystem contract. This exact option selects directory entries. Remove the allowance when the filesystem implementation is removed."
+
+[[naming.rules]]
+paths = ["tests/integration/cli/policy/adoption/advisory.test.ts"]
+names = ["IgnoredVulns"]
+exclude = true
+reason = "The test inspects the exact OSV Scanner TOML table after adoption to verify preservation. Remove the allowance when the upstream table changes."
+
+[[naming.rules]]
+paths = ["packages/cli/src/repository/configuration/vale-rules.ts"]
+names = ["BasedOnStyles"]
+exclude = true
+reason = "The Vale configuration reader preserves this exact native setting for adoption. Remove the allowance if the native setting changes."
+
+[[naming.rules]]
+paths = ["docs/src/content/docs/404.md"]
+names = ["404"]
+exclude = true
+reason = "Starlight uses this exact filename for the HTTP 404 route. Renaming it changes the framework route contract."
 
 [architecture]
 types_directory = "types"
@@ -124,6 +616,8 @@ constants_directory = "constants"
 roles = {env = "packages/cli/src/platform/environment.ts"}
 
 [tools.eslint]
+# Source checks use the workspace plugin built by build:plugin.
+adopted = [{plugins = {gspot = {module = "@gspot/eslint-plugin", export = "default", members = ["default"]}}}]
 import_style = {"**/*" = "ts"}
 script_files = [
     "packages/npm/**",
@@ -142,98 +636,338 @@ entry = [
     "**/publish.ts",
     "packages/cli/src/agents/lint.ts",
     "packages/npm/gspot.js",
-    "docs/src/content/reference/loader.ts",
+    "docs/src/content/reference/collection.ts",
     "docs/astro.config.ts",
     "docs/src/content.config.ts",
     "docs/src/route-metadata.ts",
 ]
-ignore_dependencies = [
-    {name = "@fontsource-variable/geist", reason = "The site imports this font from docs/src/styles/theme.css, outside the TypeScript import graph."},
-    {name = "@fontsource-variable/geist-mono", reason = "The site imports this font from docs/src/styles/theme.css, outside the TypeScript import graph."},
-    {name = "html-validate", reason = "Native site-output compatibility tests invoke its installed executable."},
-    {name = "linkinator", reason = "Native site-output compatibility tests invoke its installed executable."},
-    {name = "purgecss", reason = "Native site-output compatibility tests invoke its installed executable."},
-    {name = "eslint-plugin-expo", reason = "The ESLint configuration of the planted react-native test repository imports it."},
-    {name = "@nestjs/common", reason = "The planted nestjs test type-checks a test repository against it, which knip cannot see."},
-    {name = "@nestjs/core", reason = "The planted nestjs test type-checks a test repository against it, which knip cannot see."},
-    {name = "reflect-metadata", reason = "The planted nestjs test type-checks a test repository against it, which knip cannot see."},
-    {name = "rxjs", reason = "The planted nestjs test type-checks a test repository against it, which knip cannot see."},
-    {name = "eslint-plugin-vue", reason = "The planted components test lints a test repository with it, which knip cannot see."},
-    {name = "vue-eslint-parser", reason = "The planted components test lints a test repository with it, which knip cannot see."},
-    {name = "eslint-plugin-svelte", reason = "The planted components test lints a test repository with it, which knip cannot see."},
-    {name = "svelte-eslint-parser", reason = "The planted components test lints a test repository with it, which knip cannot see."},
-    {name = "svelte", reason = "The planted components test lints a test repository with it, which knip cannot see."},
-    {name = "@types/node", reason = "Next.js refuses to write its types in the planted test repository when the package is absent."},
-    {name = "next", reason = "The planted nextjs test runs the framework in a test repository, which knip cannot see."},
-    {name = "react", reason = "The planted nextjs test runs the framework in a test repository, which knip cannot see."},
-    {name = "react-dom", reason = "The planted nextjs test runs the framework in a test repository, which knip cannot see."},
-    {name = "@types/react", reason = "The planted nextjs test runs the framework in a test repository, which knip cannot see."},
-    {name = "@next/eslint-plugin-next", reason = "The ESLint configuration of the planted nextjs test repository imports it."},
-    {name = "eslint-plugin-react-hooks", reason = "The ESLint configuration of the planted nextjs test repository imports it."},
-    {name = "eslint-plugin-react", reason = "The ESLint configuration of the planted nextjs test repository imports it."},
-    {name = "eslint-plugin-jsx-a11y", reason = "The generated ESLint configuration of the framework-rules test imports it."},
-    {name = "eslint-plugin-react-refresh", reason = "The generated ESLint configuration of the framework-rules test imports it."},
-    {name = "eslint-plugin-testing-library", reason = "The generated ESLint configuration of the framework-rules test imports it."},
-    {name = "@react-native/eslint-plugin", reason = "The generated ESLint configuration of the framework-rules test imports it."},
-    {name = "eslint-plugin-react-native", reason = "The generated ESLint configuration of the framework-rules test imports it."},
-    {name = "eslint-plugin-i18next", reason = "The ESLint configuration of the planted nextjs test repository imports it."},
-    {name = "eslint-plugin-zod", reason = "The ESLint configuration of the planted libraries test repository imports it."},
-    {name = "@tanstack/eslint-plugin-query", reason = "The ESLint configuration of the planted libraries test repository imports it."},
-    {name = "eslint-plugin-drizzle", reason = "The ESLint configuration of the planted libraries test repository imports it."},
-    {name = "stylelint", reason = "The planted css test runs it in a test repository, which knip cannot see."},
-    {name = "stylelint-config-standard", reason = "The stylelint configuration of a planted test repository extends it."},
-    {name = "vitest", reason = "The planted vitest test runs it in a test repository, which knip cannot see."},
-    {name = "@vitest/coverage-v8", reason = "The planted vitest test needs the coverage provider in a test repository."},
-    {name = "@vitest/eslint-plugin", reason = "The ESLint configuration of a planted test repository imports it."},
-    {name = "tree-sitter-bash", reason = "The grammar WASM file is read from the package, not imported."},
-    {name = "tree-sitter-css", reason = "The grammar WASM file is read from the package, not imported."},
-    {name = "tree-sitter-html", reason = "The grammar WASM file is read from the package, not imported."},
-    {name = "tree-sitter-javascript", reason = "The grammar WASM file is read from the package, not imported."},
-    {name = "tree-sitter-python", reason = "The grammar WASM file is read from the package, not imported."},
-    {name = "tree-sitter-typescript", reason = "The grammar WASM file is read from the package, not imported."},
-]
 
+
+[[tools.knip.ignore_dependencies]]
+name = "@fontsource-variable/geist"
+reason = "The site imports this font from docs/src/theme.css, outside the TypeScript import graph."
+
+[[tools.knip.ignore_dependencies]]
+name = "@fontsource-variable/geist-mono"
+reason = "The site imports this font from docs/src/theme.css, outside the TypeScript import graph."
+
+[[tools.knip.ignore_dependencies]]
+name = "html-validate"
+reason = "Native site-output compatibility tests invoke its installed executable."
+
+[[tools.knip.ignore_dependencies]]
+name = "linkinator"
+reason = "Native site-output compatibility tests invoke its installed executable."
+
+[[tools.knip.ignore_dependencies]]
+name = "purgecss"
+reason = "Native site-output compatibility tests invoke its installed executable."
+
+[[tools.knip.ignore_dependencies]]
+name = "eslint-plugin-expo"
+reason = "The ESLint configuration of the planted react-native test repository imports it."
+
+[[tools.knip.ignore_dependencies]]
+name = "@nestjs/common"
+reason = "The planted nestjs test type-checks a test repository against it, which knip cannot see."
+
+[[tools.knip.ignore_dependencies]]
+name = "@nestjs/core"
+reason = "The planted nestjs test type-checks a test repository against it, which knip cannot see."
+
+[[tools.knip.ignore_dependencies]]
+name = "reflect-metadata"
+reason = "The planted nestjs test type-checks a test repository against it, which knip cannot see."
+
+[[tools.knip.ignore_dependencies]]
+name = "rxjs"
+reason = "The planted nestjs test type-checks a test repository against it, which knip cannot see."
+
+[[tools.knip.ignore_dependencies]]
+name = "eslint-plugin-vue"
+reason = "The planted components test lints a test repository with it, which knip cannot see."
+
+[[tools.knip.ignore_dependencies]]
+name = "vue-eslint-parser"
+reason = "The planted components test lints a test repository with it, which knip cannot see."
+
+[[tools.knip.ignore_dependencies]]
+name = "eslint-plugin-svelte"
+reason = "The planted components test lints a test repository with it, which knip cannot see."
+
+[[tools.knip.ignore_dependencies]]
+name = "svelte-eslint-parser"
+reason = "The planted components test lints a test repository with it, which knip cannot see."
+
+[[tools.knip.ignore_dependencies]]
+name = "svelte"
+reason = "The planted components test lints a test repository with it, which knip cannot see."
+
+[[tools.knip.ignore_dependencies]]
+name = "@types/node"
+reason = "Next.js refuses to write its types in the planted test repository when the package is absent."
+
+[[tools.knip.ignore_dependencies]]
+name = "next"
+reason = "The planted nextjs test runs the framework in a test repository, which knip cannot see."
+
+[[tools.knip.ignore_dependencies]]
+name = "react"
+reason = "The planted nextjs test runs the framework in a test repository, which knip cannot see."
+
+[[tools.knip.ignore_dependencies]]
+name = "react-dom"
+reason = "The planted nextjs test runs the framework in a test repository, which knip cannot see."
+
+[[tools.knip.ignore_dependencies]]
+name = "@types/react"
+reason = "The planted nextjs test runs the framework in a test repository, which knip cannot see."
+
+[[tools.knip.ignore_dependencies]]
+name = "@next/eslint-plugin-next"
+reason = "The ESLint configuration of the planted nextjs test repository imports it."
+
+[[tools.knip.ignore_dependencies]]
+name = "eslint-plugin-react-hooks"
+reason = "The ESLint configuration of the planted nextjs test repository imports it."
+
+[[tools.knip.ignore_dependencies]]
+name = "eslint-plugin-react"
+reason = "The ESLint configuration of the planted nextjs test repository imports it."
+
+[[tools.knip.ignore_dependencies]]
+name = "eslint-plugin-jsx-a11y"
+reason = "The generated ESLint configuration of the framework-rules test imports it."
+
+[[tools.knip.ignore_dependencies]]
+name = "eslint-plugin-react-refresh"
+reason = "The generated ESLint configuration of the framework-rules test imports it."
+
+[[tools.knip.ignore_dependencies]]
+name = "eslint-plugin-testing-library"
+reason = "The generated ESLint configuration of the framework-rules test imports it."
+
+[[tools.knip.ignore_dependencies]]
+name = "@react-native/eslint-plugin"
+reason = "The generated ESLint configuration of the framework-rules test imports it."
+
+[[tools.knip.ignore_dependencies]]
+name = "eslint-plugin-react-native"
+reason = "The generated ESLint configuration of the framework-rules test imports it."
+
+[[tools.knip.ignore_dependencies]]
+name = "eslint-plugin-i18next"
+reason = "The ESLint configuration of the planted nextjs test repository imports it."
+
+[[tools.knip.ignore_dependencies]]
+name = "eslint-plugin-zod"
+reason = "The ESLint configuration of the planted libraries test repository imports it."
+
+[[tools.knip.ignore_dependencies]]
+name = "@tanstack/eslint-plugin-query"
+reason = "The ESLint configuration of the planted libraries test repository imports it."
+
+[[tools.knip.ignore_dependencies]]
+name = "eslint-plugin-drizzle"
+reason = "The ESLint configuration of the planted libraries test repository imports it."
+
+[[tools.knip.ignore_dependencies]]
+name = "stylelint"
+reason = "The planted css test runs it in a test repository, which knip cannot see."
+
+[[tools.knip.ignore_dependencies]]
+name = "stylelint-config-standard"
+reason = "The stylelint configuration of a planted test repository extends it."
+
+[[tools.knip.ignore_dependencies]]
+name = "vitest"
+reason = "The planted vitest test runs it in a test repository, which knip cannot see."
+
+[[tools.knip.ignore_dependencies]]
+name = "@vitest/coverage-v8"
+reason = "The planted vitest test needs the coverage provider in a test repository."
+
+[[tools.knip.ignore_dependencies]]
+name = "@vitest/eslint-plugin"
+reason = "The ESLint configuration of a planted test repository imports it."
+
+[[tools.knip.ignore_dependencies]]
+name = "tree-sitter-bash"
+reason = "The grammar WASM file is read from the package, not imported."
+
+[[tools.knip.ignore_dependencies]]
+name = "tree-sitter-css"
+reason = "The grammar WASM file is read from the package, not imported."
+
+[[tools.knip.ignore_dependencies]]
+name = "tree-sitter-html"
+reason = "The grammar WASM file is read from the package, not imported."
+
+[[tools.knip.ignore_dependencies]]
+name = "tree-sitter-javascript"
+reason = "The grammar WASM file is read from the package, not imported."
+
+[[tools.knip.ignore_dependencies]]
+name = "tree-sitter-python"
+reason = "The grammar WASM file is read from the package, not imported."
+
+[[tools.knip.ignore_dependencies]]
+name = "tree-sitter-ruby"
+reason = "The suppression parser reads and embeds the package WASM grammar as an asset."
+
+[[tools.knip.ignore_dependencies]]
+name = "@tree-sitter-grammars/tree-sitter-toml"
+reason = "The suppression parser reads and embeds the package WASM grammar as an asset."
+
+[[tools.knip.ignore_dependencies]]
+name = "tree-sitter-typescript"
+reason = "The grammar WASM file is read from the package, not imported."
 [structure]
-folder_name_allowed = [
-    {paths = ["packages/cli/src/checks/python", "packages/cli/src/checks/swift", "packages/cli/src/checks/typescript"], reason = "Language names identify the implemented check and parser domains in the architecture ownership layout."},
-]
-single_file_folder_allowed = [
-    {paths = ["packages/npm"], reason = "The npm launcher package is one file by design: it runs the platform package that installed."},
-]
-prefix_collision_allowed = [
-    {paths = ["packages/eslint-plugin/src/rules/**", "tests/unit/plugin/rules/**"], reason = "ESLint rule ids are the file names, and the ids share their first word by convention."},
-    {paths = ["docs/src"], reason = "Astro fixes the name of the content configuration file beside the content folder."},
-]
+
 
 # The rule corpus is this repository's product; its lint is this repository's check and ships in no binary.
+
+[[structure.folder_name_allowed]]
+paths = [
+    "tests/acceptance/source/configurations/bash",
+    "tests/acceptance/source/configurations/python",
+    "tests/acceptance/source/configurations/swift",
+    "tests/acceptance/source/configurations/typescript",
+    "tests/integration/cli/checks/swift",
+    "tests/integration/tools/bash",
+    "tests/support/cli/python",
+    "tests/integration/tools/generation/swift",
+]
+reason = "Each directory owns tests of that named language configuration, parser, or tool integration; the files are TypeScript, not buckets grouped by implementation language."
+
+[[structure.folder_name_allowed]]
+paths = ["packages/cli/src/checks/python", "packages/cli/src/checks/swift", "packages/cli/src/checks/typescript"]
+reason = "Language names identify the implemented check and parser domains in the architecture ownership layout."
+
+[[structure.single_file_folder_allowed]]
+paths = ["docs/src/pages/schema"]
+reason = "Astro maps this directory to the published /schema/gspot.schema.json endpoint; moving the route changes the public schema URL."
+
+[[structure.prefix_collision_allowed]]
+paths = ["packages/eslint-plugin/src/rules/**", "tests/unit/plugin/rules/**"]
+reason = "ESLint rule ids are the file names, and the ids share their first word by convention."
+
+[[structure.prefix_collision_allowed]]
+paths = ["docs/src"]
+reason = "Astro fixes the name of the content configuration file beside the content folder."
 [[check]]
 name = "rules/lint"
-command = ["bun", "packages/cli/src/agents/lint.ts"]
-paths = ["packages/cli/rules/**", "packages/cli/src/agents/**"]
-stage = "commit"
-summary = "Lints rule files for front matter, links, size, layer boundaries, and fences."
+command = ["mise", "run", "rules:lint"]
+paths = ["packages/cli/rules/**", "packages/cli/src/agents/**", "packages/cli/configurations/**", "tests/integration/tools/generation/**", "tests/unit/cli/agents/**", ".mise/conf.d/repo.toml"]
+stage = "push"
+summary = "Validates guide structure and runs Good examples through their native linters."
 
 [tools.licenses]
-packages_allowed = [
-    {package = "@csstools/selector-specificity@5.0.0", license = "MIT-0", reason = "The CSS tooling dependency uses the MIT No Attribution license; its installed package retains the license text."},
-    {package = "@fontsource-variable/geist@5.3.0", license = "OFL-1.1", reason = "The documentation distributes this unmodified font and copies its license into the built site under licenses/geist.txt."},
-    {package = "@fontsource-variable/geist-mono@5.3.0", license = "OFL-1.1", reason = "The documentation distributes this unmodified font and copies its license into the built site under licenses/geist-mono.txt."},
-    {package = "eslint-plugin-sonarjs@4.2.0", license = "LGPL-3.0-only", reason = "A lint plugin that runs at development time and is linked dynamically; nothing of it ships in the binary."},
-    {package = "lightningcss@1.33.0", license = "MPL-2.0", reason = "A build dependency of the manual site; the license binds changes to its own files, and none are made."},
-    {package = "truncate-utf8-bytes@1.0.2", license = "WTFPL", reason = "A permissive license with no conditions; it arrives through a test tool and ships in nothing."},
-]
 
+
+[[tools.licenses.packages_allowed]]
+package = "axe-core@4.13.0"
+license = "MPL-2.0"
+reason = "The JSX accessibility lint plugin requires this unmodified development dependency. Its installed LICENSE identifies MPL-2.0; it is not included in the CLI binary."
+
+[[tools.licenses.packages_allowed]]
+package = "@csstools/selector-specificity@5.0.0"
+license = "MIT-0"
+reason = "The CSS tooling dependency uses the MIT No Attribution license; its installed package retains the license text."
+
+[[tools.licenses.packages_allowed]]
+package = "@fontsource-variable/geist@5.3.0"
+license = "OFL-1.1"
+reason = "The documentation distributes this unmodified font and copies its license into the built site under licenses/geist.txt."
+
+[[tools.licenses.packages_allowed]]
+package = "@fontsource-variable/geist-mono@5.3.0"
+license = "OFL-1.1"
+reason = "The documentation distributes this unmodified font and copies its license into the built site under licenses/geist-mono.txt."
+
+[[tools.licenses.packages_allowed]]
+package = "eslint-plugin-sonarjs@4.2.0"
+license = "LGPL-3.0-only"
+reason = "A lint plugin that runs at development time and is linked dynamically; nothing of it ships in the binary."
+
+[[tools.licenses.packages_allowed]]
+package = "lightningcss@1.33.0"
+license = "MPL-2.0"
+reason = "A build dependency of the manual site; the license binds changes to its own files, and none are made."
+
+[[tools.licenses.packages_allowed]]
+package = "truncate-utf8-bytes@1.0.2"
+license = "WTFPL"
+reason = "A permissive license with no conditions; it arrives through a test tool and ships in nothing."
 [tools.osv]
-ignore = [
-    {id = "GHSA-w5hq-g745-h8pq", reason = "uuid 9 arrives through gaxios under linkinator, a test tool. The flaw needs a caller that passes its own buffer, and gaxios passes none. Review when linkinator moves to uuid 11."},
-]
 
+
+[[tools.osv.ignore]]
+id = "GHSA-w5hq-g745-h8pq"
+reason = "uuid 9.0.1 is used only by gaxios 6.7.1 under linkinator. The advisory affects v3, v5, and v6 with caller buffers; installed gaxios calls only unaffected v4 with no arguments. Linkinator 6.x retains that dependency. Reassess this exact advisory when the lockfile changes, and remove the exception when the affected dependency leaves the graph."
 [tools.jest]
 global_package = "bun:test"
 
 [[ignore]]
 check = "jest/coverage"
 reason = "This repository runs Bun tests. tests/unit runs unit and integration tests at push; tests/coverage measures their coverage with Bun instead of invoking Jest."
+
+[[ignore]]
+check = "security/semgrep"
+rule = "node-no-configured-require"
+paths = [
+    "packages/cli/src/evaluation/eslintrc.ts",
+    "packages/cli/src/evaluation/eslint-modules.ts",
+    "packages/cli/src/evaluation/eslint-preview.ts",
+    "packages/cli/src/evaluation/eslint.ts",
+    "packages/cli/src/evaluation/format.ts",
+    "packages/cli/src/evaluation/stylelint.ts",
+]
+reason = "These configuration evaluators intentionally execute repository-selected modules and installed tool APIs in the configuration subprocess. Static imports select the CLI dependencies instead of the repository dependencies and cannot preserve executable configuration. Other security rules remain active for these exact files."
+
+[[ignore]]
+check = "prose/vale"
+rule = "gspot.alt-text"
+paths = [
+    "tests/acceptance/source/configurations/component-files/accessibility.test.ts",
+    "tests/acceptance/source/configurations/component-files/types.test.ts",
+    "tests/acceptance/source/configurations/html.test.ts",
+    "tests/acceptance/source/configurations/react/web.test.ts",
+    "tests/acceptance/source/configurations/static-site.test.ts",
+    "tests/integration/tools/checks/site-output.test.ts",
+    "tests/integration/tools/execution/suppressions.test.ts",
+]
+reason = "These exact tests plant images without alt attributes to verify accessibility findings. Vale raw matching reads the fixture strings as markup. Correcting those strings removes the tested defect; native checks assert the intended diagnostics. Remove a path when its missing-alt regression is retired."
+
+[[ignore]]
+check = "prose/vale"
+rule = "gspot.alt-text"
+paths = ["tests/unit/cli/checks/svelte.test.ts"]
+reason = "This parser test quotes the exact upstream Svelte diagnostic containing an img tag. Altering the diagnostic invalidates the parser fixture. Remove this exception if the upstream diagnostic changes."
+
+[[ignore]]
+check = "prose/vale"
+rule = "RedHat.MergeConflictMarkers"
+paths = ["tests/integration/tools/tools/packages/project.test.ts"]
+reason = "This test deliberately writes merge conflict markers into a generated lockfile to verify drift detection and recovery. Removing the markers removes the defect under test. Other prose rules remain active."
+
+[[ignore]]
+check = "prose/vale"
+rule = "gspot.alt-text"
+paths = ["tests/integration/tools/execution/vale.test.ts"]
+reason = "This native regression plants missing-alt markup to prove that a fixture exception preserves adjacent images and other prose diagnostics. Keep the invalid image strings until that regression is retired."
+
+[[ignore]]
+check = "prose/vale"
+rule = "Google.OxfordComma"
+paths = [".mise/gspot/gspot"]
+reason = "The required Bash runtime header is a version followed by two platforms, not a three-item list. The script runtime parser requires the exact macOS and Linux spelling. Remove this exception if that header contract changes or the upstream prose rule distinguishes this syntax."
+
+[[ignore]]
+check = "typescript/eslint"
+rule = "package-json/require-exports"
+paths = ["packages/npm/package.json"]
+reason = "The npm package exposes a command through bin and has no importable module API. An exports map would change existing package subpath resolution. Remove this exception if the launcher gains a module API."
 
 [[check]]
 name = "tests/unit"
@@ -280,3 +1014,75 @@ summary = "Measures unit and integration coverage with Bun without imposing a pe
 
 [check.output]
 format = "none"
+
+[prose]
+vocabulary = ["Nx", "Turborepo", "Husky", "Lefthook", "EditorConfig Checker"]
+
+[tools.codeql]
+languages = ["javascript-typescript", "actions"]
+
+
+[[tools.codeql.false_positives]]
+rule = "js/file-system-race"
+paths = ["tests/acceptance/source/cli/agents.test.ts"]
+reason = "The test owns its temporary repository and compares agent-file bytes and modes across apply and uninstall. No other process mutates these fixtures. Remove this exception if the test uses shared files."
+
+[[tools.codeql.false_positives]]
+rule = "js/file-system-race"
+paths = ["tests/acceptance/source/cli/lifecycle/uninstall.test.ts"]
+reason = "These owned temporary repositories verify preservation of unowned configuration bytes and modes across lifecycle commands. Separate observations are the assertion contract. Remove this exception if fixture ownership changes."
+
+[[tools.codeql.false_positives]]
+rule = "js/file-system-race"
+paths = ["tests/integration/cli/checks/nextjs-build.test.ts"]
+reason = "The test owns the temporary Next.js project and compares source bytes and modes after isolated builds. The subprocess boundary is controlled by the test. Remove this exception if the test uses shared files."
+
+[[tools.codeql.false_positives]]
+rule = "js/file-system-race"
+paths = ["tests/integration/cli/checks/swift/build/isolation.test.ts"]
+reason = "The test controls the build boundary and verifies that an owned temporary Swift project retains its original bytes and modes. Remove this exception if the fixture or build boundary is shared."
+
+[[tools.codeql.false_positives]]
+rule = "js/file-system-race"
+paths = ["tests/integration/cli/execution/storage/cache.test.ts"]
+reason = "The test deliberately replaces an owned temporary executable between metadata and content observations to reproduce a filesystem race. Keep the defective path observation as regression evidence. Remove this exception when that race fixture is removed."
+
+[[tools.codeql.false_positives]]
+rule = "js/file-system-race"
+paths = ["tests/integration/cli/execution/storage/reports.test.ts"]
+reason = "The test owns the temporary obstruction and checks whether it remains a file with its authored bytes or a directory. The check and read have no concurrent writer. Remove this exception if fixture ownership changes."
+
+[[tools.codeql.false_positives]]
+rule = "js/file-system-race"
+paths = ["tests/integration/cli/execution/storage/resource-reads.test.ts"]
+reason = "The test deliberately replaces owned temporary resources with directories and malformed bytes between executions. Separate assertions verify each transition. Remove this exception when these replacement fixtures are removed."
+
+[[tools.codeql.false_positives]]
+rule = "js/file-system-race"
+paths = ["tests/integration/tools/tools/packages/project.test.ts"]
+reason = "The installer tests own their temporary repositories and deliberately edit and inspect lockfile bytes and modes across lifecycle operations. These are preservation assertions, not permission checks on shared files. Remove this exception if fixture ownership changes."
+
+[[tools.codeql.false_positives]]
+rule = "js/file-system-race"
+paths = ["tests/support/cli/preservation.ts"]
+reason = "Only acceptance fixtures call these preservation helpers on their owned temporary trees. The helpers inspect and restore fixture bytes, modes, and links without concurrent writers. Remove this exception before accepting shared or external filesystem roots."
+
+[[tools.codeql.false_positives]]
+rule = "js/bad-code-sanitization"
+paths = ["packages/cli/src/generation/fragments.ts"]
+reason = "JSON.stringify emits complete literals into a standalone ESLint JavaScript module. The generated text is never embedded in an HTML script element, which is the query threat model. Parser and loaded-plugin regressions preserve hostile-looking scope strings and detect neighboring real defects. Remove this exception before adding an HTML embedding consumer."
+
+[[tools.codeql.false_positives]]
+rule = "js/incomplete-sanitization"
+paths = ["packages/cli/src/checks/actions.ts"]
+reason = "This replacement translates exactly one leading self-repository marker in a parsed YAML scalar. Later dollar signs are literal path characters and must remain unchanged. Native Actionlint tests verify that distinction and retain expression errors. Remove this exception when the pinned parser accepts the original syntax."
+
+[[tools.codeql.false_positives]]
+rule = "js/incomplete-sanitization"
+paths = ["packages/cli/src/repository/revisions/refspecs.ts"]
+reason = "Git check-ref-format --refspec-pattern validates every source and destination before substitution and permits at most one wildcard. Regression cases reject multiple source, destination, and exclusion wildcards before accepting corrected mappings. Remove this exception if validation moves or the Git refspec contract changes."
+
+[[tools.codeql.false_positives]]
+rule = "js/http-to-file-access"
+paths = ["packages/cli/scripts/inputs.ts"]
+reason = "The build downloader verifies every byte against the pinned SHA-256 digest before creating its cache file. CodeQL does not model the Bun.CryptoHasher guard. Corrupted downloads leave no cache, HTTP failures fail, and matching bytes are retained. Remove this exception if the checksum or trusted build-input contract changes, or the query models this guard."

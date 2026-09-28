@@ -1,6 +1,6 @@
 // What makes a manifest invalid: a check that contradicts itself, a configuration nothing reads, or references
-import semver from 'semver';
 // between manifests that do not hold.
+import semver from 'semver';
 import { configurationName } from '#cli/configurations/targets.ts';
 import { SETTING_PLACEHOLDER } from '#cli/constants/execution/execution.ts';
 import { MANIFEST_CONFIG_PLACEHOLDER } from '#cli/constants/configurations.ts';
@@ -91,12 +91,6 @@ function assertRequirementsExist(manifest: Manifest, manifests: Map<string, Mani
             ]);
 }
 
-// The checks a manifest declares itself, without the ones it references from another configuration.
-function ownedChecks(manifest: Manifest): Manifest['checks'] {
-    const references = manifest.configuration.check_references ?? [];
-    return manifest.checks.filter((check) => !references.includes(check.name));
-}
-
 // Records the manifest as the owner of a check name, refusing a name another manifest already owns.
 function claimOwner(owners: Map<string, string>, manifest: Manifest, check: Manifest['checks'][number]): void {
     const previous = owners.get(check.name);
@@ -108,8 +102,11 @@ function claimOwner(owners: Map<string, string>, manifest: Manifest, check: Mani
 // The configuration that owns each check name, refusing a name two manifests declare.
 function checkOwners(manifests: Map<string, Manifest>): Map<string, string> {
     const owners = new Map<string, string>();
-    for (const manifest of manifests.values())
-        for (const check of ownedChecks(manifest)) claimOwner(owners, manifest, check);
+    for (const manifest of manifests.values()) {
+        const references = manifest.configuration.check_references ?? [];
+        for (const check of manifest.checks.filter((entry) => !references.includes(entry.name)))
+            claimOwner(owners, manifest, check);
+    }
     return owners;
 }
 
@@ -191,18 +188,7 @@ function assertToolPin(manifest: Manifest, tool: Manifest['tools'][number]): voi
         ]);
 }
 
-// Refuses the tools nobody pins; a host tool needs no pin.
-function assertToolPins(manifest: Manifest): void {
-    for (const tool of manifest.tools) if (tool.provider !== 'host') assertToolPin(manifest, tool);
-}
-
-// Whether a setting's default is nothing: unset, empty, off, or an empty list.
-function isEmptyDefault(spec: Manifest['settings'][number]): boolean {
-    const value = spec.default;
-    return value === undefined || value === '' || value === false || (Array.isArray(value) && value.length === 0);
-}
-
-// The settings a check's commands read through {setting:...} placeholders.
+// The settings a check's commands read through `{setting:...}` placeholders.
 function settingsRead(check: Manifest['checks'][number]): string[] {
     const parts = [...(check.command ?? []), ...(check.fix_command ?? [])];
     const names = parts.flatMap((part) =>
@@ -217,18 +203,17 @@ function assertSettingWait(manifest: Manifest, check: Manifest['checks'][number]
         throw new ManifestError(manifest.configuration.name, [
             `check ${check.name} waits for ${check.waits_for}, which no configuration declares.`,
         ]);
-    for (const name of settingsRead(check)) {
+    const missing = settingsRead(check).filter((name) => {
+        if (name === check.waits_for) return false;
         const spec = settings.get(name);
-        if (spec !== undefined && isEmptyDefault(spec) && check.waits_for !== name)
-            throw new ManifestError(manifest.configuration.name, [
-                `check ${check.name} reads ${name}, whose default is empty, and must wait for it.`,
-            ]);
-    }
-}
-
-// Refuses every check that reads an empty setting without waiting for it.
-function assertSettingWaits(manifest: Manifest, settings: Settings): void {
-    for (const check of manifest.checks) assertSettingWait(manifest, check, settings);
+        if (spec === undefined) return false;
+        const value = spec.default;
+        return value === undefined || value === '' || value === false || (Array.isArray(value) && value.length === 0);
+    });
+    for (const name of missing)
+        throw new ManifestError(manifest.configuration.name, [
+            `check ${check.name} reads ${name}, whose default is empty, and must wait for it.`,
+        ]);
 }
 
 export class ManifestError extends Error {
@@ -244,24 +229,18 @@ export class ManifestError extends Error {
 }
 
 /**
- * The sentences that say how a check declaration contradicts itself.
- * @param check the raw check
- * @returns the problems, empty when the declaration holds
- */
-export function checkProblems(check: RawCheck): string[] {
-    return CHECK_RULES.filter((rule) => rule.applies(check)).map((rule) => rule.problem(check));
-}
-
-/**
- * The generated configurations of a manifest that no check reads and no pointer names.
+ * Contradictory check declarations and generated configurations with no reader or pointer.
  * @param raw the parsed manifest
  * @returns the problems, empty when every configuration is read
  */
-export function configurationProblems(raw: RawManifest): string[] {
+export function manifestProblems(raw: RawManifest): string[] {
+    const checks = raw.checks.flatMap((check) =>
+        CHECK_RULES.filter((rule) => rule.applies(check)).map((rule) => rule.problem(check)),
+    );
     const readers = configurationReaders(raw.checks);
     const hasEngineCheck = raw.checks.some((check) => check.engine !== undefined);
-    if (hasEngineCheck) return [];
-    return raw.configs
+    if (hasEngineCheck) return checks;
+    const configurations = raw.configs
         .filter((config) => !config.fragment && config.pointer === undefined)
         .filter((config) => {
             const name = configurationName(config.target);
@@ -274,6 +253,7 @@ export function configurationProblems(raw: RawManifest): string[] {
             (config) =>
                 `config ${config.target} has no check that reads it ({config:${configurationName(config.target)}}) and no pointer.`,
         );
+    return [...checks, ...configurations];
 }
 
 /**
@@ -286,8 +266,8 @@ export function validateManifests(manifests: Map<string, Manifest>): void {
     );
     for (const manifest of manifests.values()) {
         assertRequirementsExist(manifest, manifests);
-        assertToolPins(manifest);
-        assertSettingWaits(manifest, settings);
+        for (const tool of manifest.tools.filter((entry) => entry.provider !== 'host')) assertToolPin(manifest, tool);
+        for (const check of manifest.checks) assertSettingWait(manifest, check, settings);
     }
     const owners = checkOwners(manifests);
     const checks: Checks = new Map(
@@ -298,4 +278,4 @@ export function validateManifests(manifests: Map<string, Manifest>): void {
         assertTakeovers(manifest, checks);
         for (const check of manifest.checks) assertReporting(manifest, check, checks);
     }
-} // Refuses a tool nobody pins: no version on the tool or on every installer, and no floor the repository supplies.
+}

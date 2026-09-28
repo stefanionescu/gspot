@@ -1,5 +1,4 @@
 import { ENTRY_FUNCTIONS } from '#cli/constants/checks/structure.ts';
-import { outsideCallers } from '#cli/checks/structure/cross-file-index.ts';
 import type { StructureAnalysis as Analysis } from '#cli/types/checks/structure.ts';
 
 /**
@@ -10,32 +9,38 @@ import type { StructureAnalysis as Analysis } from '#cli/types/checks/structure.
  */
 export const privatePrefix: Analysis = async (context, scripts) => {
     const index = await scripts();
-    const findings = [];
-    for (const file of index.files)
-        for (const entry of file.functions) {
-            if (ENTRY_FUNCTIONS.includes(entry.name)) continue;
-            const callers = outsideCallers(index, entry.name, file.path);
+    return index.files.flatMap((file) =>
+        file.functions.flatMap((entry) => {
+            if (ENTRY_FUNCTIONS.includes(entry.name)) return [];
+            const callers = index.files
+                .filter(
+                    (candidate) =>
+                        candidate.path !== file.path && (candidate.references.get(entry.name)?.length ?? 0) > 0,
+                )
+                .map((candidate) => candidate.path)
+                .toSorted((a, b) => a.localeCompare(b));
             const isPrivate = entry.name.startsWith('_');
             if (isPrivate && callers.length > 0)
-                findings.push(
+                return [
                     context.report(
                         file.path,
                         entry.start,
                         'private-called-outside',
                         `${entry.name} is private but ${callers.join(', ')} calls it.`,
                     ),
-                );
+                ];
             if (!isPrivate && callers.length === 0)
-                findings.push(
+                return [
                     context.report(
                         file.path,
                         entry.start,
                         'file-local',
                         `${entry.name} is called from no other file; name it _${entry.name}.`,
                     ),
-                );
-        }
-    return findings;
+                ];
+            return [];
+        }),
+    );
 };
 
 /**
@@ -46,8 +51,8 @@ export const privatePrefix: Analysis = async (context, scripts) => {
  */
 export const privateBeforePublic: Analysis = async (context, scripts) => {
     const index = await scripts();
-    const findings = [];
-    for (const file of index.files) {
+    return index.files.flatMap((file) => {
+        const findings = [];
         let isPublicSeen = false;
         for (const entry of file.functions) {
             const isPrivate = entry.name.startsWith('_');
@@ -66,6 +71,6 @@ export const privateBeforePublic: Analysis = async (context, scripts) => {
         const last = file.functions.at(-1);
         if (main !== undefined && last !== undefined && last.name !== 'main')
             findings.push(context.report(file.path, main.start, 'main-not-last', 'main is not the last function.'));
-    }
-    return findings;
+        return findings;
+    });
 };

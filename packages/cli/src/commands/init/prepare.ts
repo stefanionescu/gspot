@@ -2,35 +2,25 @@
 import { print } from '#cli/output/messages.ts';
 import * as messages from '#cli/policy/messages.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
-import { agentFiles } from '#cli/agents/instructions.ts';
 import { readRepository } from '#cli/repository/tree.ts';
 import type { Policy } from '#cli/types/policy/policy.ts';
 import { proposedScopes } from '#cli/repository/scopes.ts';
 import { proposeText } from '#cli/commands/init/propose.ts';
-import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
-import type { Profile } from '#cli/types/policy/profiles.ts';
 import { readManifests } from '#cli/repository/manifests.ts';
 import { detectionText } from '#cli/commands/init/detection.ts';
 import { selectForInit } from '#cli/commands/init/selection.ts';
 import { unknownLanguages } from '#cli/configurations/detect.ts';
 import { detectedSettings } from '#cli/commands/init/settings.ts';
+import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
+import { proposedRunnerTasks } from '#cli/generation/runner/plan.ts';
 import { existingTooling } from '#cli/repository/existing-tooling.ts';
-import { buildInitPlan, buildProposal } from '#cli/commands/init/plan.ts';
+import { collectCarried, isOwned } from '#cli/policy/adoption/collect.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { proposedRunnerTasks } from '#cli/generation/runner-task-plan.ts';
+import { buildInitPlan, buildProposal } from '#cli/commands/init/plan/build.ts';
 import type { ExistingTooling, TomlTable } from '#cli/types/repository/repository.ts';
 import { askConfigurations, askInitQuestions } from '#cli/commands/init/questions.ts';
 import { assertPolicyComplete, parsePolicyText, PolicyError } from '#cli/policy/read.ts';
-import { collectCarried, ownedTools, unownedTools } from '#cli/policy/adoption/collect.ts';
-
-import type {
-    Planning,
-    InitInputs,
-    InitOptions,
-    InitPrepared,
-    InitSelection,
-    TakeoverPlan,
-} from '#cli/types/commands/init.ts';
+import type { Planning, InitInputs, InitOptions, InitPrepared, InitSelection } from '#cli/types/commands/init.ts';
 
 function assertCleanTree(root: string, options: InitOptions): void {
     if (options.allowDirty || options.isDryRun) return;
@@ -38,13 +28,6 @@ function assertCleanTree(root: string, options: InitOptions): void {
     if (status.code !== 0) throw new Error(`Git status failed (exit ${String(status.code)}): ${status.stderr.trim()}`);
     const changed = status.stdout.split('\n').filter((line) => line.trim() !== '');
     if (changed.length > 0) throw new PolicyError([messages.dirtyTree(changed.length)]);
-}
-
-function profileLine(profile: Profile, selection: InitSelection): NonNullable<TakeoverPlan['profile']> {
-    const detected = selection.rootProposals
-        .map((proposal) => proposal.configuration)
-        .filter((id) => !selection.selectedIds.has(id));
-    return { name: profile.tables.profile, digest: profile.digest, selection: profile.tables.selection, detected };
 }
 
 // Asks which configurations to keep, and selects again when the person changed the list.
@@ -63,14 +46,18 @@ async function chosenSelection(
 // Prints what init found, unless the caller reads JSON.
 function printDetection(inputs: Omit<InitInputs, 'options'>, detected: InitSelection, tooling: ExistingTooling): void {
     const { repo, manifests } = inputs;
+    const tools = [...new Set(tooling.configs.map((config) => config.tool))].toSorted((a, b) => a.localeCompare(b));
+    const owned: string[] = [];
+    const unowned: string[] = [];
+    for (const tool of tools) (isOwned(tool, detected.selectedIds) ? owned : unowned).push(tool);
     print(
         detectionText({
             files: repo.files,
             proposals: detected.rootProposals,
             scopes: detected.scopes,
             tooling,
-            owned: ownedTools(tooling, detected.selectedIds),
-            unowned: unownedTools(tooling, detected.selectedIds),
+            owned,
+            unowned,
             unknown: unknownLanguages(repo.files, manifests),
             manifests,
             hasGit: repo.hasGit,
@@ -88,23 +75,6 @@ function policyTextFor(
     const policy = parsePolicyText(policyText, 'gspot.toml', planning.root);
     assertPolicyComplete({ policy, text: policyText, path: 'gspot.toml' });
     return { policyText, policy };
-}
-
-// The plan init prints, built from the policy the proposal parsed to.
-function planFor(planning: Planning, policy: Policy, policyText: string): TakeoverPlan {
-    const { root, options, tooling, selection, everySelected, answers, carried } = planning;
-    return buildInitPlan({
-        root,
-        tooling,
-        everySelected,
-        how: selection.how,
-        ...(options.profile ? { profile: profileLine(options.profile, selection) } : {}),
-        answers,
-        ...(policy.runner?.tasks === undefined ? {} : { runnerTasks: policy.runner.tasks }),
-        carried,
-        agents: policy.rules.install ? agentFiles(root, policy.rules.agents) : [],
-        policyLines: policyText.split('\n').length,
-    });
 }
 
 /**
@@ -139,7 +109,7 @@ export async function prepare(root: string, options: InitOptions): Promise<InitP
     const proposal = { ...buildProposal(root, selection, answers, carried, settings), runnerTasks: tasks.names };
     const { policyText, policy } = policyTextFor(planning, proposal);
     return {
-        plan: planFor(planning, policy, policyText),
+        plan: buildInitPlan(planning, policy, policyText),
         policyText,
         runner: answers.runner,
         removed: carried.removed,

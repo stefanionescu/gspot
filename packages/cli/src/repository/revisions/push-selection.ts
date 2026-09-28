@@ -2,9 +2,9 @@
 import { resolve } from 'node:path';
 import { readFile } from 'node:fs/promises';
 import { SelectionError } from '#cli/configurations/select.ts';
-import { fetchedObjects } from '#cli/repository/revisions/fetch-mappings.ts';
+import { fetchedRevisions } from '#cli/repository/revisions/refspecs.ts';
 import { gitLines, gitPaths, gitValue, isShallow } from '#cli/repository/revisions/git-queries.ts';
-import { ABSENT_OBJECT, DIFF_PATHS, LOG_PATHS, OBJECT_ID } from '#cli/constants/repository/revisions.ts';
+import { ABSENT_HASH, DIFF_PATHS, LOG_PATHS, GIT_HASH } from '#cli/constants/repository/revisions.ts';
 
 import type {
     PushRevision,
@@ -15,29 +15,29 @@ import type {
 } from '#cli/types/repository/revisions.ts';
 
 // Whether a pre-push field pair holds two object ids of the same hash length.
-function isObjectPair(localObject: string | undefined, remoteObject: string | undefined): boolean {
-    if (localObject === undefined || remoteObject === undefined) return false;
-    if (!OBJECT_ID.test(localObject) || !OBJECT_ID.test(remoteObject)) return false;
-    return localObject.length === remoteObject.length;
+function isHashPair(localHash: string | undefined, remoteHash: string | undefined): boolean {
+    if (localHash === undefined || remoteHash === undefined) return false;
+    if (!GIT_HASH.test(localHash) || !GIT_HASH.test(remoteHash)) return false;
+    return localHash.length === remoteHash.length;
 }
 
 // One line of pre-push input: two refs and two objects of the same hash length.
 function parsePushLine(line: string): PushLine {
-    const [localRef, localObject, remoteRef, remoteObject, ...extra] = line.trim().split(/\s+/u);
+    const [localRef, localHash, remoteRef, remoteHash, ...extra] = line.trim().split(/\s+/u);
     const hasRefs = extra.length === 0 && localRef !== undefined && remoteRef !== undefined;
-    if (!hasRefs || localObject === undefined || remoteObject === undefined || !isObjectPair(localObject, remoteObject))
+    if (!hasRefs || localHash === undefined || remoteHash === undefined || !isHashPair(localHash, remoteHash))
         throw new SelectionError(['Invalid Git pre-push input. Supply every local and remote ref/object pair.']);
-    return { localRef, localObject, remoteRef, remoteObject };
+    return { localRef, localHash, remoteRef, remoteHash };
 }
 
 // The commit an object peels to, or undefined for an object that is not a commit, remembered per object.
-async function commitOf(context: PushContext, object: string): Promise<string | undefined> {
-    if (context.commits.has(object)) return context.commits.get(object);
+async function commitOf(context: PushContext, gitHash: string): Promise<string | undefined> {
+    if (context.commits.has(gitHash)) return context.commits.get(gitHash);
     const { root, cancelSignal } = context;
-    const peeled = await gitValue(root, ['rev-parse', '--verify', `${object}^{}`], cancelSignal);
+    const peeled = await gitValue(root, ['rev-parse', '--verify', `${gitHash}^{}`], cancelSignal);
     const type = await gitValue(root, ['cat-file', '-t', peeled], cancelSignal);
     const commit = type === 'commit' ? peeled : undefined;
-    context.commits.set(object, commit);
+    context.commits.set(gitHash, commit);
     return commit;
 }
 
@@ -51,7 +51,7 @@ async function shallowBoundaries(root: string, cancelSignal?: AbortSignal): Prom
 // The commits the fetched objects name, in the order the mappings listed them.
 async function fetchedCommits(context: PushContext, remote: string | undefined): Promise<string[]> {
     const fetched: string[] = [];
-    for (const stored of await fetchedObjects(context.root, remote, context.cancelSignal)) {
+    for (const stored of await fetchedRevisions(context.root, remote, context.cancelSignal)) {
         const commit = await commitOf(context, stored);
         if (commit !== undefined) fetched.push(commit);
     }
@@ -59,30 +59,30 @@ async function fetchedCommits(context: PushContext, remote: string | undefined):
 }
 
 // What a pushed commit is compared against: the remote's commit, or every fetched commit for a new ref.
-async function comparison(context: PushContext, object: string, remoteObject: string): Promise<Comparison> {
+async function comparison(context: PushContext, gitHash: string, remoteHash: string): Promise<Comparison> {
     const { root, cancelSignal, fetched, shallow } = context;
-    if (!ABSENT_OBJECT.test(remoteObject)) {
-        const previous = await commitOf(context, remoteObject);
+    if (!ABSENT_HASH.test(remoteHash)) {
+        const previous = await commitOf(context, remoteHash);
         if (previous === undefined) return { changed: undefined, excluded: [] };
-        const changed = await gitPaths(root, [...DIFF_PATHS, previous, object, '--'], cancelSignal);
+        const changed = await gitPaths(root, [...DIFF_PATHS, previous, gitHash, '--'], cancelSignal);
         return { changed, excluded: [previous] };
     }
     if (fetched.length === 0 || shallow) return { changed: undefined, excluded: [] };
     const excluded = [...new Set(fetched)];
-    const changed = await gitPaths(root, [...LOG_PATHS, object, '--not', ...excluded, '--'], cancelSignal);
+    const changed = await gitPaths(root, [...LOG_PATHS, gitHash, '--not', ...excluded, '--'], cancelSignal);
     return { changed, excluded };
 }
 
 // The revision a pushed commit forms: its history back to the comparison, its tree, and its changed paths.
-async function revisionOf(context: PushContext, line: PushLine, object: string): Promise<PushRevision> {
+async function revisionOf(context: PushContext, line: PushLine, gitHash: string): Promise<PushRevision> {
     const { root, cancelSignal, boundaries } = context;
-    const { changed, excluded } = await comparison(context, object, line.remoteObject);
+    const { changed, excluded } = await comparison(context, gitHash, line.remoteHash);
     const exclusion = excluded.length === 0 ? [] : ['--not', ...excluded];
-    const history = await gitLines(root, ['rev-list', object, ...exclusion, '--'], cancelSignal);
-    const tree = await gitValue(root, ['rev-parse', '--verify', `${object}^{tree}`], cancelSignal);
+    const history = await gitLines(root, ['rev-list', gitHash, ...exclusion, '--'], cancelSignal);
+    const tree = await gitValue(root, ['rev-parse', '--verify', `${gitHash}^{tree}`], cancelSignal);
     const selected = changed === undefined ? undefined : [...new Set(changed)].toSorted((a, b) => a.localeCompare(b));
     return {
-        object,
+        object: gitHash,
         tree,
         refs: [line.localRef],
         commits: history,
@@ -108,25 +108,25 @@ function recordRevision(result: PushSelection, revision: PushRevision): void {
 
 // Records what one pre-push line pushes: a deleted ref, a non-commit object, or a revision.
 async function selectLine(context: PushContext, result: PushSelection, line: PushLine): Promise<void> {
-    if (ABSENT_OBJECT.test(line.localObject)) {
-        result.notApplicable.push({ ref: line.remoteRef, object: line.localObject, reason: 'deleted ref' });
+    if (ABSENT_HASH.test(line.localHash)) {
+        result.notApplicable.push({ ref: line.remoteRef, object: line.localHash, reason: 'deleted ref' });
         return;
     }
-    const object = await commitOf(context, line.localObject);
-    if (object === undefined) {
-        result.notApplicable.push({ ref: line.localRef, object: line.localObject, reason: 'non-commit object' });
+    const gitHash = await commitOf(context, line.localHash);
+    if (gitHash === undefined) {
+        result.notApplicable.push({ ref: line.localRef, object: line.localHash, reason: 'non-commit object' });
         return;
     }
-    recordRevision(result, await revisionOf(context, line, object));
+    recordRevision(result, await revisionOf(context, line, gitHash));
 }
 
 /**
  * Resolve the exact objects supplied by Git's pre-push protocol before running source checks.
- * @param root the repository root
- * @param input the lines Git hands the pre-push hook on standard input
- * @param remote the remote name, when Git gave one
- * @param cancelSignal cancellation for the Git commands
- * @returns the pushed revisions with their commits, and the updates no check applies to
+ * @param root the repository root.
+ * @param input the lines Git hands the pre-push hook on standard input.
+ * @param remote the remote name, when Git gave one.
+ * @param cancelSignal cancellation for the Git commands.
+ * @returns the pushed revisions with their commits, and the updates no check applies to.
  */
 export async function pushedRevisions(
     root: string,

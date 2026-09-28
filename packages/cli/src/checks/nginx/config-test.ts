@@ -3,15 +3,33 @@ import { join, posix } from 'node:path';
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
-import { runCheckCommand } from '#cli/execution/tool-runner.ts';
+import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import { nginxDirectives } from '#cli/checks/nginx/directives.ts';
 import { nginxTestArguments } from '#cli/checks/nginx/test-plan.ts';
+import type { MountedConfiguration } from '#cli/types/checks/nginx.ts';
 import type { EngineInput, EngineOutcome, Finding } from '#cli/types/checks/checks.ts';
 import { CERTIFICATE_ARGUMENTS, DEFAULT_IMAGE, MAIN_FILE } from '#cli/constants/checks/nginx.ts';
 
-async function tested(input: EngineInput, path: string, work: string, image: string): Promise<EngineOutcome> {
+// Include paths are resolved against the main configuration directory, matching nginx prefix semantics.
+function includedConfigurations(
+    input: EngineInput,
+    text: string,
+    base: string,
+): Pick<MountedConfiguration, 'path' | 'target'>[] {
+    const included: Pick<MountedConfiguration, 'path' | 'target'>[] = [];
+    for (const [name, value] of nginxDirectives(text)) {
+        if (name !== 'include' || value === undefined || value.includes('$')) continue;
+        const target = posix.resolve('/etc/nginx', value);
+        const pattern = new Bun.Glob(posix.normalize(posix.join(base, posix.relative('/etc/nginx', target))));
+        for (const file of input.files.filter((candidate) => pattern.match(candidate.path)))
+            included.push({ path: file.path, target: posix.resolve('/etc/nginx', posix.relative(base, file.path)) });
+    }
+    return included;
+}
+
+function configurationCopies(input: EngineInput, path: string, work: string): Map<string, MountedConfiguration> {
     const directory = mkdtempSync(join(work, 'configuration-'));
-    const configurations = new Map<string, { path: string; source: string; target: string; text: string }>();
+    const configurations = new Map<string, MountedConfiguration>();
     const pending = [{ path, target: '/etc/nginx/nginx.conf' }];
     const base = posix.dirname(path);
     for (const entry of pending) {
@@ -21,14 +39,27 @@ async function tested(input: EngineInput, path: string, work: string, image: str
         writeFileSync(source, bytes);
         const text = bytes.toString('utf8');
         configurations.set(entry.target, { ...entry, source, text });
-        for (const [name, value] of nginxDirectives(text)) {
-            if (name !== 'include' || value === undefined || value.includes('$')) continue;
-            const target = posix.resolve('/etc/nginx', value);
-            const pattern = new Bun.Glob(posix.normalize(posix.join(base, posix.relative('/etc/nginx', target))));
-            for (const file of input.files.filter((candidate) => pattern.match(candidate.path)))
-                pending.push({ path: file.path, target: posix.resolve('/etc/nginx', posix.relative(base, file.path)) });
-        }
+        pending.push(...includedConfigurations(input, text, base));
     }
+    return configurations;
+}
+
+function configurationFailure(
+    check: string,
+    path: string,
+    configurations: Map<string, MountedConfiguration>,
+    said: string,
+): EngineOutcome {
+    const { file: target = '', line = '1' } = / in (?<file>\/[^\n]+):(?<line>\d+)\s*$/u.exec(said)?.groups ?? {};
+    const file = configurations.get(target)?.path ?? path;
+    return {
+        findings: [{ check, file, line: Number(line), rule: 'nginx-t', message: said, fixable: false }],
+        checkedFiles: configurations.has(target) ? [file] : [],
+    };
+}
+
+async function tested(input: EngineInput, path: string, work: string, image: string): Promise<EngineOutcome> {
+    const configurations = configurationCopies(input, path, work);
     const mounts = {
         configs: [...configurations.values()],
         certificate: join(work, 'certificate.pem'),
@@ -53,15 +84,7 @@ async function tested(input: EngineInput, path: string, work: string, image: str
     const said = result.stderr.split('\n').find((line) => line.includes('[emerg]'));
     if (result.code !== 1 || said === undefined)
         throw new Error(`The nginx run failed (exit ${String(result.code)}): ${result.stderr.trim()}`);
-    const location = / in (?<file>\/[^\n]+):(?<line>\d+)\s*$/u.exec(said)?.groups;
-    const file = configurations.get(location?.['file'] ?? '')?.path ?? path;
-    const line = location?.['line'];
-    return {
-        findings: [
-            { check: input.spec.name, file, line: Number(line ?? 1), rule: 'nginx-t', message: said, fixable: false },
-        ],
-        checkedFiles: configurations.has(location?.['file'] ?? '') ? [file] : [],
-    };
+    return configurationFailure(input.spec.name, path, configurations, said);
 }
 
 /**

@@ -1,11 +1,12 @@
 import { EXECUTE_BITS } from '#cli/constants/platform.ts';
 import type { ConfinedRoot } from '#cli/types/platform.ts';
-import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
+import { huskyLines } from '#cli/generation/hooks/husky.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import { blockSpan, currentBlock } from '#cli/lifecycle/managed-blocks.ts';
-import { hasConfiguration } from '#cli/lifecycle/configuration-document.ts';
+import { hasConfiguration } from '#cli/lifecycle/configuration/document.ts';
+import { simpleGitHookCommand, hookBody, hookCommand, hookPrefix } from '#cli/generation/hooks/scripts.ts';
 import { HOOK_FILES, SIMPLE_GIT_HOOKS_DIRECTORY as DIRECTORY } from '#cli/constants/repository/repository.ts';
-import { hookBody, hookCommand, hookPrefix, huskyLines, simpleGitHookCommand } from '#cli/generation/hooks.ts';
 
 /**
  * Refuse alternate native configuration before publishing or verifying package-owned commands.
@@ -46,10 +47,10 @@ export function huskyReady(root: string, runner: string | undefined, binaryPath?
 
 /**
  * Verify executable integration, including clones without local ownership records.
- * @param root the repository root
- * @param runner the task runner the policy names, or undefined
- * @param binary the pinned executable when no runner resolves gspot
- * @returns whether the package commands and the integration scripts are the current ones
+ * @param root the repository root.
+ * @param runner the task runner the policy names, or undefined.
+ * @param binary the pinned executable when no runner resolves gspot.
+ * @returns whether the package commands and the integration scripts are the current ones.
  */
 export function simpleGitHooksReady(root: string, runner: string | undefined, binary: string | undefined): boolean {
     const prefix = hookPrefix(root);
@@ -66,9 +67,7 @@ export function simpleGitHooksReady(root: string, runner: string | undefined, bi
             const path = `${DIRECTORY}/${name}`;
             const current = files.read(path);
             const original = files.read(`${path}.gspot-original`);
-            const expected = hookBody(name, runner, binary, original !== undefined, [
-                hookCommand(name, runner, binary, prefix),
-            ]);
+            const expected = hookBody(name, original !== undefined, [hookCommand(name, runner, binary, prefix)]);
             if (current?.bytes.equals(Buffer.from(expected)) !== true) return false;
             if (
                 process.platform !== 'win32' &&

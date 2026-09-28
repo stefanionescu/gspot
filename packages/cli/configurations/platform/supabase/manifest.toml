@@ -169,5 +169,5 @@ default = ["supabase/functions/**", "supabase/tests/**", "**/*.test.*", "**/*.sp
 summary = "Paths relative to the scope that may name the service role key."
 
 [rule_files]
-platform = ["platform/supabase/SUPABASE.md"]
-runtime = ["runtime/deno/DENO.md"]
+platform = [{path = "platform/supabase/SUPABASE.md"}]
+runtime = [{path = "runtime/deno/DENO.md"}]

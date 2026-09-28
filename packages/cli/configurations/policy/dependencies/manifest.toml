@@ -195,4 +195,4 @@ default = []
 summary = "Manifests that may hold version ranges, such as a library others install, each with a reason."
 
 [rule_files]
-code = ["general/code/DEPENDENCIES.md"]
+code = [{path = "general/code/DEPENDENCIES.md"}]

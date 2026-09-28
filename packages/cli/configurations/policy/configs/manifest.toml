@@ -91,6 +91,7 @@ github = {name = "dotenv-linter/dotenv-linter", version = "v4.0.0"}
 [[tools]]
 name = "plutil"
 provider = "host"
+crash_pattern = "couldn['’]t be opened"
 windows = false
 
 [[tools]]
@@ -346,6 +347,6 @@ summary = "The name of the function the code reads environment variables through
 ".xml" = ["syntax"]
 
 [rule_files]
-general = ["general/code/CONFIGURATION.md"]
-language = ["language/YAML.md"]
-tool = ["tool/tasks/TASKS.md", "tool/github-actions/GITHUB-ACTIONS.md"]
+general = [{path = "general/code/CONFIGURATION.md"}]
+language = [{path = "language/YAML.md"}]
+tool = [{path = "tool/tasks/TASKS.md"}, {path = "tool/github-actions/GITHUB-ACTIONS.md"}]

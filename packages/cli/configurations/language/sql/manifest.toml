@@ -17,7 +17,7 @@ natures = ["source"]
 name = "sqlfluff"
 crash_pattern = '^Traceback \(most recent call last\):$'
 suppression = {marker = "\\bnoqa\\b", reason = "--[^\\n]*?-- ?(?<reason>\\S.*)"}
-version = "4.0.0"
+version = "4.3.0"
 floor = "3.0.0"
 pypi = "sqlfluff"
 mise = "pipx:sqlfluff"
@@ -139,7 +139,7 @@ summary = "The most code lines a SQL file may have."
 ".psql" = ["format", "syntax", "style", "structure", "naming", "prose", "spelling"]
 
 [rule_files]
-language = ["language/SQL.md", "language/naming/SQL.md"]
+language = [{path = "language/SQL.md"}, {path = "language/naming/SQL.md"}]
 
 [[checks]]
 name = "sql/functions"

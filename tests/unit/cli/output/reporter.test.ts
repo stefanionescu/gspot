@@ -4,6 +4,7 @@ import { runText } from '#cli/output/reporter.ts';
 import { stripVTControlCharacters } from 'node:util';
 import { configureOutput } from '#cli/output/messages.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
+import { environmentVariables, setEnvironmentVariable } from '#cli/platform/environment.ts';
 
 const report: RunReport = {
     version: '0.1.0',
@@ -125,4 +126,46 @@ test('report colors follow the configured output mode without changing its text'
         configureOutput({ verbosity: 'normal', json: false, color: false });
     }
     expect(runText(report, { quiet: false, verbose: false })).toBe(plain);
+});
+
+test.each([
+    { content: 'working-tree', header: 'Working tree compared with the merge base of main.\n' },
+    { content: 'index', header: 'Staged index main.\n' },
+    { content: 'commit', header: 'Committed tree main.\n' },
+] satisfies { content: NonNullable<RunReport['comparison']>['content']; header: string }[])(
+    'the reporter identifies $content comparisons and hides the header in quiet mode',
+    ({ content, header }) => {
+        const compared: RunReport = { ...report, comparison: { content, reference: 'main' } };
+        expect(runText(compared, { quiet: false, verbose: false })).toBe(
+            header + runText(report, { quiet: false, verbose: false }),
+        );
+        expect(runText(compared, { quiet: true, verbose: false })).toBe(
+            runText(report, { quiet: true, verbose: false }),
+        );
+    },
+);
+
+test('the reporter names the source of a skipped check', () => {
+    const skipped: RunReport = { ...report, skips: [{ check: 'bash/shellcheck', source: 'rules' }] };
+    expect(runText(skipped, { quiet: false, verbose: false })).toContain('skipped    bash/shellcheck  (rules)\n');
+});
+
+test.each([
+    { hook: 'pre-commit', command: 'commit' },
+    { hook: 'commit-msg', command: 'commit' },
+    { hook: 'pre-push', command: 'push' },
+])('a failed $hook report prints its reproduction and hook command', ({ hook, command }) => {
+    const previous = environmentVariables()['GSPOT_HOOK'];
+    setEnvironmentVariable('GSPOT_HOOK', hook);
+    try {
+        expect(runText(report, { quiet: false, verbose: false })).toEndWith(
+            `reproduce: gspot check --only bash/shellcheck\nBypass this hook once: git ${command} --no-verify\n`,
+        );
+        expect(runText({ ...report, checks: [] }, { quiet: false, verbose: false })).toEndWith(
+            `Bypass this hook once: git ${command} --no-verify\n`,
+        );
+        expect(runText({ ...report, exitCode: 0 }, { quiet: false, verbose: false })).not.toContain('Bypass this hook');
+    } finally {
+        setEnvironmentVariable('GSPOT_HOOK', previous);
+    }
 });

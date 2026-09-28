@@ -52,12 +52,6 @@ function rulePage(check: CheckSpec, tool: string, rule: string): string | undefi
     return plugin?.rule_page?.replace('{rule}', rule.slice(slash + 1));
 }
 
-function isSelected(session: Session, configurationName: string): boolean {
-    return session.scopes.some((scope) =>
-        scope.selected.some((manifest) => manifest.configuration.name === configurationName),
-    );
-}
-
 // The tool a check runs: the declared tool, or the first word of its command.
 function toolOf(check: CheckSpec): string | undefined {
     return check.tool ?? check.command?.[0];
@@ -69,42 +63,11 @@ function checkFacts(check: CheckSpec, configuration: Found['configuration']): Fa
     const settings = (configuration?.settings ?? [])
         .filter((setting) => setting.name === check.limit || setting.name.startsWith(toolPrefix))
         .map((setting) => setting.name);
-    const rules = Object.values(configuration?.rule_files ?? {}).flat();
+    const rules = Object.values(configuration?.rule_files ?? {})
+        .flat()
+        .map((entry) => entry.path);
     const crashPattern = check.tool_errors ?? pinNamed(toolOf(check))?.crash_pattern;
     return { settings, rules, crashPattern };
-}
-
-// The lines that say what the check does and how to turn it off.
-function checkHeader(checkName: string, check: CheckSpec, owner: string): string[] {
-    return [
-        `${checkName}  (${owner}, ${check.stage} stage, ${check.level} level)`,
-        '',
-        `What it looks for: ${check.summary}`,
-        `Why it matters: ${check.why}`,
-        `What to do: ${check.help}`,
-        ...(check.waits_for === undefined ? [] : [`Required setting: ${check.waits_for}`]),
-        '',
-        `Turn it off for some paths: gspot ignore ${quoteArgument(checkName)} --paths "<glob>" --reason "..."`,
-        ...(check.command
-            ? [`Turn one of its rules off: gspot ignore ${quoteArgument(checkName)} --rule <rule> --reason "..."`]
-            : []),
-    ];
-}
-
-// The lines that state the check's declared facts, each only when the check declares it.
-function factLines(check: CheckSpec, facts: Facts): string[] {
-    const { settings, rules, crashPattern } = facts;
-    return [
-        ...(check.fix_findings_exit_codes === undefined
-            ? []
-            : [`Correction exit codes that mean findings remain: ${check.fix_findings_exit_codes.join(', ')}`]),
-        ...(crashPattern === undefined ? [] : [`Fatal tool diagnostic pattern: ${crashPattern}`]),
-        ...(check.isolated_files === true
-            ? ['Runs with selected files and declared configuration in an isolated directory.']
-            : []),
-        ...(settings.length === 0 ? [] : [`Settings that change it: ${settings.join(', ')} (gspot set <key> <value>)`]),
-        ...(rules.length === 0 ? [] : [`Rule files that state it: ${rules.join(', ')}`]),
-    ];
 }
 
 // The lines about this repository: a [[check]] entry's command and paths, or whether the configuration is selected.
@@ -121,35 +84,84 @@ function repositoryLines(
         );
     if (session && configuration !== undefined)
         lines.push(
-            isSelected(session, configuration.configuration.name)
+            session.scopes.some((scope) =>
+                scope.selected.some((manifest) => manifest.configuration.name === configuration.configuration.name),
+            )
                 ? 'Selected in this repository: yes'
                 : `Selected in this repository: no (gspot add ${configuration.configuration.name})`,
         );
     return lines;
 }
 
-// The explanation's data: what the text says, as fields.
-function checkData(checkName: string, found: Found, own: OwnCheck | undefined, facts: Facts): Record<string, unknown> {
+function checkText(
+    session: Session | undefined,
+    checkName: string,
+    found: Found,
+    own: OwnCheck | undefined,
+    facts: Facts,
+    owner: string,
+): string {
     const { check, configuration } = found;
-    return {
-        check: checkName,
-        ...(configuration === undefined
-            ? { command: own?.command, paths: own?.paths }
-            : { configuration: configuration.configuration.name }),
-        stage: check.stage,
-        level: check.level,
-        summary: check.summary,
-        why: check.why,
-        help: check.help,
-        waits_for: check.waits_for,
+    const { settings, rules, crashPattern } = facts;
+    const lines = [
+        `${checkName}  (${owner}, ${check.stage} stage, ${check.level} level)`,
+        '',
+        `What it looks for: ${check.summary}`,
+        `Why it matters: ${check.why}`,
+        `What to do: ${check.help}`,
+        ...(check.waits_for === undefined ? [] : [`Required setting: ${check.waits_for}`]),
+        '',
+        `Turn it off for some paths: gspot ignore ${quoteArgument(checkName)} --paths "<glob>" --reason "..."`,
+        ...(check.command
+            ? [`Turn one of its rules off: gspot ignore ${quoteArgument(checkName)} --rule <rule> --reason "..."`]
+            : []),
         ...(check.fix_findings_exit_codes === undefined
-            ? {}
-            : { fix_findings_exit_codes: check.fix_findings_exit_codes }),
-        ...(facts.crashPattern === undefined ? {} : { tool_errors: facts.crashPattern }),
-        ...(check.isolated_files === undefined ? {} : { isolated_files: check.isolated_files }),
-        ...(check.file_prefix === undefined ? {} : { file_prefix: check.file_prefix }),
-        settings: facts.settings,
-        rules: facts.rules,
+            ? []
+            : [`Correction exit codes that mean findings remain: ${check.fix_findings_exit_codes.join(', ')}`]),
+        ...(crashPattern === undefined ? [] : [`Fatal tool diagnostic pattern: ${crashPattern}`]),
+        ...(check.isolated_files === true
+            ? ['Runs with selected files and declared configuration in an isolated directory.']
+            : []),
+        ...(settings.length === 0 ? [] : [`Settings that change it: ${settings.join(', ')} (gspot set <key> <value>)`]),
+        ...(rules.length === 0 ? [] : [`Rule files that state it: ${rules.join(', ')}`]),
+        ...repositoryLines(session, own, configuration),
+    ];
+    return `${lines.join('\n')}\n`;
+}
+
+function buildCheckExplanation(
+    session: Session | undefined,
+    checkName: string,
+    found: Found,
+    own: OwnCheck | undefined,
+    owner: string,
+): Explanation {
+    const { check, configuration } = found;
+    const facts = checkFacts(check, configuration);
+    return {
+        kind: 'check',
+        subject: checkName,
+        text: checkText(session, checkName, found, own, facts, owner),
+        data: {
+            check: checkName,
+            ...(configuration === undefined
+                ? { command: own?.command, paths: own?.paths }
+                : { configuration: configuration.configuration.name }),
+            stage: check.stage,
+            level: check.level,
+            summary: check.summary,
+            why: check.why,
+            help: check.help,
+            waits_for: check.waits_for,
+            ...(check.fix_findings_exit_codes === undefined
+                ? {}
+                : { fix_findings_exit_codes: check.fix_findings_exit_codes }),
+            ...(facts.crashPattern === undefined ? {} : { tool_errors: facts.crashPattern }),
+            ...(check.isolated_files === undefined ? {} : { isolated_files: check.isolated_files }),
+            ...(check.file_prefix === undefined ? {} : { file_prefix: check.file_prefix }),
+            settings: facts.settings,
+            rules: facts.rules,
+        },
     };
 }
 
@@ -179,21 +191,11 @@ export function checkExplanation(session: Session | undefined, checkName: string
         allChecks().get(checkName) ??
         (own === undefined ? undefined : { check: repositoryCheckSpec(own), configuration: undefined });
     if (!found) return undefined;
-    const { check, configuration } = found;
-    const facts = checkFacts(check, configuration);
     const owner =
-        configuration === undefined ? 'repository command' : `${configuration.configuration.name} configuration`;
-    const lines = [
-        ...checkHeader(checkName, check, owner),
-        ...factLines(check, facts),
-        ...repositoryLines(session, own, configuration),
-    ];
-    return {
-        kind: 'check',
-        subject: checkName,
-        text: `${lines.join('\n')}\n`,
-        data: checkData(checkName, found, own, facts),
-    };
+        found.configuration === undefined
+            ? 'repository command'
+            : `${found.configuration.configuration.name} configuration`;
+    return buildCheckExplanation(session, checkName, found, own, owner);
 }
 
 /**

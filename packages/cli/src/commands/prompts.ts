@@ -68,12 +68,12 @@ export async function askConfirmation(
 
 /**
  * One choice from a list.
- * @param question the question
- * @param flag the flag that answers it without a terminal
- * @param choices the values with their labels
- * @param initial the choice --yes takes, and the initial value in the terminal
- * @param useDefaults whether --yes was given
- * @returns the chosen value
+ * @param question the question.
+ * @param flag the flag that answers it without a terminal.
+ * @param choices the values with their labels.
+ * @param initial the choice --yes takes, and the initial value in the terminal.
+ * @param useDefaults whether --yes was given.
+ * @returns the chosen value.
  */
 export async function askChoice<T extends string>(
     question: string,

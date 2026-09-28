@@ -1,15 +1,15 @@
 import { join } from 'node:path';
-import { describe, expect, test } from 'bun:test';
+import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
+import type { FindingCase } from '#tests/types/cli.ts';
 // The configs configuration: TOML that does not parse, YAML with a duplicated key, and an environment key read after init that no template names.
 import { reportSchema } from '#cli/execution/report.ts';
 import { commitAll, git } from '#tests/support/cli/git.ts';
-import type { FindingCase } from '#tests/types/support/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
 import { run, runProcess } from '#tests/support/cli/command.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
+import { runPlanted, script } from '#tests/support/cli/planted.ts';
 import { containing, textContaining } from '#tests/support/expectations.ts';
 import { install, installAtLevel, toolsPath } from '#tests/support/cli/tools.ts';
-import { expectCorrected, runPlanted, script } from '#tests/support/cli/planted.ts';
 import { CONFIGS_INIT } from '#tests/constants/acceptance/source/configurations/init-arguments.ts';
 import { WORKFLOW_HEAD } from '#tests/constants/acceptance/source/configurations/configurations.ts';
 
@@ -55,146 +55,156 @@ const CASES: (FindingCase & { corrected: Record<string, string> })[] = [
     },
 ];
 
-describe('the configs configuration', () => {
-    test(
-        'GitHub initialization writes a workflow accepted by actionlint',
-        async () => {
-            await using sandbox = await testdir();
-            await createFileTree(sandbox.path, { 'README.md': '# Workflow test\n' });
-            commitAll(sandbox.path);
-            const environment = { PATH: toolsPath(['actionlint']) };
-            await install(sandbox.path, [...CONFIGS_INIT, '--ci', 'github', '--no-hooks'], environment);
-            const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
-            expect(selected.code, selected.stdout + selected.stderr).toBe(0);
-            expect(await Bun.file(join(sandbox.path, '.github/workflows/gspot.yml')).exists()).toBe(true);
-            const result = await runProcess(['actionlint', '-no-color', '.github/workflows/gspot.yml'], {
-                cwd: sandbox.path,
-                env: environment,
-            });
-            expect(result.code, result.stderr + result.stdout).toBe(0);
-        },
-        PLANTED_TIMEOUT_MS,
-    );
+test(
+    'the configs configuration: GitHub initialization writes a workflow accepted by actionlint',
+    async () => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, { 'README.md': '# Workflow test\n' });
+        commitAll(sandbox.path);
+        const environment = { PATH: toolsPath(['actionlint']) };
+        await install(sandbox.path, [...CONFIGS_INIT, '--ci', 'github', '--no-hooks'], environment);
+        const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
+        expect(selected.code, selected.stdout + selected.stderr).toBe(0);
+        expect(await Bun.file(join(sandbox.path, '.github/workflows/gspot.yml')).exists()).toBe(true);
+        const result = await runProcess(['actionlint', '-no-color', '.github/workflows/gspot.yml'], {
+            cwd: sandbox.path,
+            env: environment,
+        });
+        expect(result.code, result.stderr + result.stdout).toBe(0);
+    },
+    PLANTED_TIMEOUT_MS,
+);
 
-    test.each(CASES)(
-        '$check reports the defect in $expected.file and accepts corrected configuration',
-        async (planted) => {
+test.each(CASES)(
+    'the configs configuration: $check reports the defect in $expected.file and accepts corrected configuration',
+    async (planted) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, { 'scripts/a.sh': script, 'settings/clean.toml': 'a = 1\n' });
+        commitAll(sandbox.path);
+        const environment = {
+            PATH: toolsPath(['taplo', 'yamllint', 'actionlint', 'zizmor', 'dotenv-linter', 'typos', 'ec']),
+        };
+        await install(sandbox.path, [...CONFIGS_INIT, '--no-hooks'], environment);
+        const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
+        expect(selected.code, selected.stdout + selected.stderr).toBe(0);
+        const outcome = await runPlanted(sandbox.path, planted, environment);
+        expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
+        const report = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
+        expect(report.checks).toMatchObject([{ check: planted.check, status: 'fail' }]);
+        expect(report.checks[0]?.findings).toContainEqual(containing({ check: planted.check, ...planted.expected }));
+        await createFileTree(sandbox.path, planted.corrected);
+        const correctedCheck = await run(
+            sandbox.path,
+            ['check', '--only', planted.check, '--no-cache', '--json'],
+            environment,
+        );
+        expect(correctedCheck.code, correctedCheck.stdout + correctedCheck.stderr).toBe(0);
+        expect(reportSchema.parse(JSON.parse(correctedCheck.stdout)).checks).toMatchObject([
+            { check: planted.check, status: 'ok', findings: [] },
+        ]);
+        const jsonCheck = await run(sandbox.path, ['check', '--only', 'configs/json'], environment);
+        expect(jsonCheck.stdout).toContain('its findings come from');
+        const checked = await run(sandbox.path, ['check', '--stage', 'commit', '--json'], environment);
+        const record = JSON.parse(checked.stdout) as {
+            checks: { check: string }[];
+        };
+        expect(record.checks.map((check) => check.check)).not.toContain('configs/schema');
+        expect(record.checks.map((check) => check.check)).toContain('configs/toml');
+    },
+    PLANTED_TIMEOUT_MS * 2,
+);
+
+if (process.platform === 'darwin')
+    test(
+        'the configs configuration: configs/plist reports a property list that does not parse',
+        async () => {
             await using sandbox = await testdir();
             await createFileTree(sandbox.path, { 'scripts/a.sh': script, 'settings/clean.toml': 'a = 1\n' });
             commitAll(sandbox.path);
-            const environment = {
-                PATH: toolsPath(['taplo', 'yamllint', 'actionlint', 'zizmor', 'dotenv-linter', 'typos', 'ec']),
-            };
+            const environment = { PATH: toolsPath(['taplo', 'typos', 'ec']) };
             await install(sandbox.path, [...CONFIGS_INIT, '--no-hooks'], environment);
-            const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
-            expect(selected.code, selected.stdout + selected.stderr).toBe(0);
-            const outcome = await runPlanted(sandbox.path, planted, environment);
-            expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
-            const report = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
-            expect(report.checks).toMatchObject([{ check: planted.check, status: 'fail' }]);
-            expect(report.checks[0]?.findings).toContainEqual(
-                containing({ check: planted.check, ...planted.expected }),
+            const outcome = await runPlanted(
+                sandbox.path,
+                {
+                    check: 'configs/plist',
+                    files: { 'app/Info.plist': '<plist><dict><key>A</key></plist>\n' },
+                },
+                environment,
             );
-            await createFileTree(sandbox.path, planted.corrected);
-            await expectCorrected(sandbox.path, planted.check, environment);
-            const jsonCheck = await run(sandbox.path, ['check', '--only', 'configs/json'], environment);
-            expect(jsonCheck.stdout).toContain('its findings come from');
-            const checked = await run(sandbox.path, ['check', '--stage', 'commit', '--json'], environment);
-            const record = JSON.parse(checked.stdout) as {
-                checks: { check: string }[];
-            };
-            expect(record.checks.map((check) => check.check)).not.toContain('configs/schema');
-            expect(record.checks.map((check) => check.check)).toContain('configs/toml');
-        },
-        PLANTED_TIMEOUT_MS * 2,
-    );
-
-    if (process.platform === 'darwin')
-        test(
-            'configs/plist reports a property list that does not parse',
-            async () => {
-                await using sandbox = await testdir();
-                await createFileTree(sandbox.path, { 'scripts/a.sh': script, 'settings/clean.toml': 'a = 1\n' });
-                commitAll(sandbox.path);
-                const environment = { PATH: toolsPath(['taplo', 'typos', 'ec']) };
-                await install(sandbox.path, [...CONFIGS_INIT, '--no-hooks'], environment);
-                const outcome = await runPlanted(
-                    sandbox.path,
-                    {
-                        check: 'configs/plist',
-                        files: { 'app/Info.plist': '<plist><dict><key>A</key></plist>\n' },
-                    },
-                    environment,
-                );
-                expect(outcome.code, outcome.stdout).toBe(1);
-                const failed = reportSchema.parse(
-                    await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json(),
-                );
-                expect(failed.checks).toMatchObject([{ check: 'configs/plist', status: 'fail' }]);
-                expect(failed.checks[0]!.findings).toContainEqual(containing({ file: 'app/Info.plist' }));
-                await Bun.write(
-                    join(sandbox.path, 'app/Info.plist'),
-                    '<?xml version="1.0"?><plist version="1.0"><dict><key>A</key><string>value</string></dict></plist>\n',
-                );
-                await expectCorrected(sandbox.path, 'configs/plist', environment);
-            },
-            PLANTED_TIMEOUT_MS,
-        );
-
-    test.each([
-        {
-            check: 'configs/toml',
-            path: 'settings.toml',
-            broken: 'a = 1\n[x\n',
-            corrected: 'a = 1\n',
-            expected: { file: 'settings.toml', line: 2 },
-        },
-        {
-            check: 'configs/yaml',
-            path: 'config.yaml',
-            broken: 'key: 1\nkey: 2\n',
-            corrected: '---\nkey: 1\n',
-            expected: { file: 'config.yaml', line: 2, rule: 'key-duplicates' },
-        },
-        {
-            check: 'configs/env-example',
-            path: '.env.example',
-            broken: 'PORT=3000\n',
-            corrected: 'PORT=3000\nHOST=localhost\n',
-            expected: { file: 'src/server.js', line: 1, rule: 'missing-key' },
-        },
-    ])(
-        '$check rejects its invalid input and accepts the corrected file',
-        async (scenario) => {
-            await using sandbox = await testdir();
-            await createFileTree(sandbox.path, {
-                'scripts/a.sh': script,
-                'settings.toml': 'a = 1\n',
-                '.env.example': 'PORT=3000\n',
-            });
-            commitAll(sandbox.path);
-            const environment = { PATH: toolsPath(['taplo', 'yamllint']) };
-            await installAtLevel(sandbox.path, CONFIGS_INIT, environment);
-            await createFileTree(sandbox.path, {
-                [scenario.path]: scenario.broken,
-                'src/server.js': 'const host = process.env.HOST;\nconsole.log(host, process.env.PORT);\n',
-            });
-            const command = ['check', '--only', scenario.check, '--no-cache', '--json'];
-            const failed = await run(sandbox.path, command, environment);
-            expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-            const report = reportSchema.parse(JSON.parse(failed.stdout));
-            expect(report.checks).toMatchObject([{ check: scenario.check, status: 'fail' }]);
-            expect(report.checks[0]!.findings).toContainEqual(containing(scenario.expected));
-            await Bun.write(join(sandbox.path, scenario.path), scenario.corrected);
-            const corrected = await run(sandbox.path, command, environment);
-            expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-            expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
-                { check: scenario.check, status: 'ok', findings: [] },
+            expect(outcome.code, outcome.stdout).toBe(1);
+            const failed = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
+            expect(failed.checks).toMatchObject([{ check: 'configs/plist', status: 'fail' }]);
+            expect(failed.checks[0]!.findings).toContainEqual(containing({ file: 'app/Info.plist' }));
+            await Bun.write(
+                join(sandbox.path, 'app/Info.plist'),
+                '<?xml version="1.0"?><plist version="1.0"><dict><key>A</key><string>value</string></dict></plist>\n',
+            );
+            const correctedCheck = await run(
+                sandbox.path,
+                ['check', '--only', 'configs/plist', '--no-cache', '--json'],
+                environment,
+            );
+            expect(correctedCheck.code, correctedCheck.stdout + correctedCheck.stderr).toBe(0);
+            expect(reportSchema.parse(JSON.parse(correctedCheck.stdout)).checks).toMatchObject([
+                { check: 'configs/plist', status: 'ok', findings: [] },
             ]);
         },
         PLANTED_TIMEOUT_MS,
     );
-});
+
+test.each([
+    {
+        check: 'configs/toml',
+        path: 'settings.toml',
+        broken: 'a = 1\n[x\n',
+        corrected: 'a = 1\n',
+        expected: { file: 'settings.toml', line: 2 },
+    },
+    {
+        check: 'configs/yaml',
+        path: 'config.yaml',
+        broken: 'key: 1\nkey: 2\n',
+        corrected: '---\nkey: 1\n',
+        expected: { file: 'config.yaml', line: 2, rule: 'key-duplicates' },
+    },
+    {
+        check: 'configs/env-example',
+        path: '.env.example',
+        broken: 'PORT=3000\n',
+        corrected: 'PORT=3000\nHOST=localhost\n',
+        expected: { file: 'src/server.js', line: 1, rule: 'missing-key' },
+    },
+])(
+    'the configs configuration: $check rejects its invalid input and accepts the corrected file',
+    async (scenario) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'scripts/a.sh': script,
+            'settings.toml': 'a = 1\n',
+            '.env.example': 'PORT=3000\n',
+        });
+        commitAll(sandbox.path);
+        const environment = { PATH: toolsPath(['taplo', 'yamllint']) };
+        await installAtLevel(sandbox.path, CONFIGS_INIT, environment);
+        await createFileTree(sandbox.path, {
+            [scenario.path]: scenario.broken,
+            'src/server.js': 'const host = process.env.HOST;\nconsole.log(host, process.env.PORT);\n',
+        });
+        const command = ['check', '--only', scenario.check, '--no-cache', '--json'];
+        const failed = await run(sandbox.path, command, environment);
+        expect(failed.code, failed.stdout + failed.stderr).toBe(1);
+        const report = reportSchema.parse(JSON.parse(failed.stdout));
+        expect(report.checks).toMatchObject([{ check: scenario.check, status: 'fail' }]);
+        expect(report.checks[0]!.findings).toContainEqual(containing(scenario.expected));
+        await Bun.write(join(sandbox.path, scenario.path), scenario.corrected);
+        const corrected = await run(sandbox.path, command, environment);
+        expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+        expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
+            { check: scenario.check, status: 'ok', findings: [] },
+        ]);
+    },
+    PLANTED_TIMEOUT_MS,
+);
 
 test(
     'Schema validation finds nested Unicode paths through the real tool',

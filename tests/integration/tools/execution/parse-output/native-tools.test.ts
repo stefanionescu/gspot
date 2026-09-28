@@ -2,11 +2,11 @@ import { join } from 'node:path';
 import { renameSync } from 'node:fs';
 import { expect, test } from 'bun:test';
 import { rejects } from 'node:assert/strict';
-import { planRun } from '#cli/execution/planning/plan.ts';
 import { createFileTree, testdir } from 'testdirs';
-import { emitAll } from '#cli/generation/render.ts';
+import { emitAll } from '#cli/generation/outputs.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { planRun } from '#cli/execution/planning/plan.ts';
 import { parseOutput } from '#cli/execution/output/parse.ts';
 import { generateKeyPairSync, randomUUID } from 'node:crypto';
 import { trivyImage } from '#cli/checks/docker/image-scan.ts';
@@ -78,7 +78,7 @@ test('native Markdown JSON preserves filename delimiters, positions, and fixabil
     const session = await openSession(sandbox.path);
     const configuration = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
         version: session.version,
-        packageManager: session.packageManager,
+        packageClient: session.packageClient,
     }).files.find(({ path }) => path === '.gspot/config/markdownlint-cli2.mjs')!;
     await Bun.write(join(sandbox.path, configuration.path), configuration.content);
     const plans = await planRun(session, { stage: 'all', only: ['markdown/markdownlint'], skips: [] });

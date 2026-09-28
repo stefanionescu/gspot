@@ -13,7 +13,8 @@ project contracts apply at both levels.
 
 ## tRPC and TanStack query
 
-- Use `@trpc/tanstack-react-query`. When replacing a classic integration, update providers,
+- For the TanStack-native integration described here, use `@trpc/tanstack-react-query`.
+  When replacing a classic integration, update providers,
   consumers, query keys, and hydration together and remove the classic client in the same change.
   Do not maintain both integrations or add a compatibility wrapper.
 
@@ -39,6 +40,8 @@ project contracts apply at both levels.
   secrets suitable client props.
 
 ## Organize feature server code
+
+<!-- level: all -->
 
 Keep a feature's server implementation beside the feature, wherever the project keeps features.
 Separate transport, reads, writes, validation, and transformation when

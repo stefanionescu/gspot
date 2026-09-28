@@ -1,9 +1,9 @@
 import { readSource } from '#cli/repository/tracked.ts';
-import type { SqlFile, SqlStatementView } from '#cli/types/parsers/sql.ts';
 import { parsePlpgsql, parseSql } from '#cli/parsers/sql/parser.ts';
 import { positionAt, sqlFile } from '#cli/parsers/sql/statements.ts';
-
+import type { SqlFile, SqlStatementView } from '#cli/types/parsers/sql.ts';
 import type { EngineInput, Finding, FunctionOption, SqlAnalysis, SqlSource } from '#cli/types/checks/checks.ts';
+
 import {
     BLOCK_COMMENT,
     LINE_COMMENT,
@@ -20,12 +20,6 @@ function sources(input: EngineInput): SqlSource[] {
             path: file.path,
             text: readSource(input.root, file.path, input.observations).toString('utf8'),
         }));
-}
-
-// The index of the first block comment outside a string and outside a line comment, or a negative number.
-function blockCommentAt(text: string): number {
-    const found = text.matchAll(SQL_TOKENS).find((match) => match[0] === BLOCK_COMMENT);
-    return found?.index ?? -1;
 }
 
 // Whether a PL/pgSQL node is one executable statement: a statement node other than a block, placed on a line.
@@ -53,22 +47,10 @@ function sqlStatements(value: unknown): number {
     return count;
 }
 
-// The declared input parameters of a function, leaving out its outputs and table columns.
-function inputParameters(statement: SqlStatementView): number {
-    const parameters = (statement.fields['parameters'] ?? []) as { FunctionParameter: { mode: string } }[];
-    return parameters.filter(({ FunctionParameter: parameter }) => !OUTPUT_PARAMETERS.has(parameter.mode)).length;
-}
-
-// The argument of a CREATE FUNCTION option, by name.
+// The argument of a `CREATE FUNCTION` option, by name.
 function functionOption(statement: SqlStatementView, name: string): FunctionOption['DefElem']['arg'] | undefined {
     const options = (statement.fields['options'] ?? []) as FunctionOption[];
-    return options.find(({ DefElem }) => DefElem.defname === name)?.DefElem.arg;
-}
-
-// The executable statements of a PL/pgSQL function, parsed from its definition text.
-async function plpgsqlStatements(parsed: SqlFile, statement: SqlStatementView, index: number): Promise<number> {
-    const end = parsed.statements[index + 1]?.start ?? parsed.source.length;
-    return proceduralStatements(await parsePlpgsql(parsed.source.slice(statement.start, end)));
+    return options.find(({ DefElem: option }) => option.defname === name)?.DefElem.arg;
 }
 
 // The executable statements of an SQL function: its standard body, or the string body parsed on its own.
@@ -87,24 +69,27 @@ async function bodyStatements(
     index: number,
 ): Promise<number | undefined> {
     const language = functionOption(statement, 'language')?.String?.sval;
-    if (language === 'plpgsql') return plpgsqlStatements(parsed, statement, index);
+    if (language === 'plpgsql') {
+        const end = parsed.statements[index + 1]?.start ?? parsed.source.length;
+        return proceduralStatements(await parsePlpgsql(parsed.source.slice(statement.start, end)));
+    }
     return language === 'sql' ? sqlBodyStatements(statement) : undefined;
 }
 
 // A finding at a statement of the source.
-function functionFinding(analysis: SqlAnalysis, statement: SqlStatementView, rule: string, message: string): Finding {
+function functionFinding(analysis: SqlAnalysis, statement: SqlStatementView, rule: string, text: string): Finding {
     const { input, source } = analysis;
     return {
         check: input.spec.name,
         file: source.path,
         ...positionAt(source.text, statement.start),
         rule,
-        message,
+        message: text,
         fixable: false,
     };
 }
 
-// The findings of one CREATE FUNCTION statement, and whether the function is trivial.
+// The findings of one `CREATE FUNCTION` statement, and whether the function is trivial.
 async function functionFindings(
     analysis: SqlAnalysis,
     statement: SqlStatementView,
@@ -112,7 +97,10 @@ async function functionFindings(
 ): Promise<{ findings: Finding[]; isTrivial: boolean }> {
     const { threshold, maximum, parsed } = analysis;
     const findings: Finding[] = [];
-    const count = inputParameters(statement);
+    const parameters = (statement.fields['parameters'] ?? []) as { FunctionParameter: { mode: string } }[];
+    const count = parameters.filter(
+        ({ FunctionParameter: parameter }) => !OUTPUT_PARAMETERS.has(parameter.mode),
+    ).length;
     if (count > maximum)
         findings.push(
             functionFinding(
@@ -192,13 +180,13 @@ export async function sqlSyntax(input: EngineInput): Promise<Finding[]> {
  */
 export function sqlBlockComments(input: EngineInput): Finding[] {
     return sources(input).flatMap((source): Finding[] => {
-        const found = blockCommentAt(source.text);
-        if (found === -1) return [];
+        const found = source.text.matchAll(SQL_TOKENS).find((match) => match[0] === BLOCK_COMMENT);
+        if (found === undefined) return [];
         return [
             {
                 check: input.spec.name,
                 file: source.path,
-                ...positionAt(source.text, found),
+                ...positionAt(source.text, found.index),
                 rule: 'block-comment',
                 message: 'A block comment; write line comments, which the prose checks read.',
                 fixable: false,

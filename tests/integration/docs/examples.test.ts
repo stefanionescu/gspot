@@ -31,7 +31,7 @@ describe('documented examples', () => {
 });
 
 test('the documented custom check reports its defect and accepts its correction', async () => {
-    const source = readFileSync(join(guides, 'custom-checks.md'), 'utf8');
+    const source = readFileSync(join(guides, 'project-checks.md'), 'utf8');
     const script = [...source.matchAll(/```typescript\n([\s\S]*?)```/gu)][0]?.[1];
     const policy = [...source.matchAll(/```toml\n([\s\S]*?)```/gu)][0]?.[1];
     const examples = [...source.matchAll(/```text\n([\s\S]*?)```/gu)].map((match) => match[1]!);

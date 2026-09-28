@@ -5,11 +5,14 @@ import { expect, spyOn, test } from 'bun:test';
 import * as cache from '#cli/execution/cache.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
+import * as inspections from '#cli/tools/inspect.ts';
 import { readCached } from '#cli/execution/cache.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { reportSchema } from '#cli/execution/report.ts';
+import { planRun } from '#cli/execution/planning/plan.ts';
 import { commitAll, git } from '#tests/support/cli/git.ts';
 import { storageSession } from '#tests/support/cli/storage.ts';
+import { cacheKeyFor, runHashes } from '#cli/execution/result-cache.ts';
 
 test.each(['{', '{"status":"ok","findings":[]}'])(
     'an edited cached result %s is preserved and the check runs again',
@@ -142,4 +145,60 @@ format = "none"
     expect(unchanged.code, unchanged.stdout + unchanged.stderr).toBe(0);
     expect(reportSchema.parse(JSON.parse(unchanged.stdout)).checks[0]?.status).toBe('cache');
     expect(fs.readFileSync(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(policy);
+});
+
+test('an executable replacement cannot combine old permissions with new cached bytes', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': 'version = 1\nconfigurations = []\n',
+        'source.ts': 'export {};\n',
+        checker: 'original executable',
+        replacement: 'replacement executable',
+    });
+    const executable = fs.realpathSync(join(sandbox.path, 'checker'));
+    const replacement = join(sandbox.path, 'replacement');
+    fs.chmodSync(executable, 0o700);
+    fs.chmodSync(replacement, 0o600);
+    const inode = fs.statSync(executable).ino;
+    const session = await storageSession(sandbox.path, 0);
+    const [planned] = await planRun(session, { stage: 'commit', skips: [] });
+    planned!.tool = { name: 'fixture-checker', windows: true, installers: {} };
+    const inspection = spyOn(inspections, 'inspectTool').mockReturnValue({
+        name: 'fixture-checker',
+        state: 'ok',
+        path: executable,
+    });
+    try {
+        const originalKey = cacheKeyFor(session, planned!, runHashes(session));
+        const stat = fs.statSync;
+        const fstat = fs.fstatSync;
+        let replaced = false;
+        const replace = (): void => {
+            if (replaced) return;
+            fs.renameSync(replacement, executable);
+            replaced = true;
+        };
+        const pathObservation = spyOn(fs, 'statSync').mockImplementation(((...args: Parameters<typeof fs.statSync>) => {
+            const observed = stat(...args);
+            if (args[0] === executable) replace();
+            return observed;
+        }) as typeof fs.statSync);
+        const descriptorObservation = spyOn(fs, 'fstatSync').mockImplementation(((
+            ...args: Parameters<typeof fs.fstatSync>
+        ) => {
+            const observed = fstat(...args);
+            if (observed.ino === inode) replace();
+            return observed;
+        }) as typeof fs.fstatSync);
+        try {
+            expect(cacheKeyFor(session, planned!, runHashes(session))).toBe(originalKey);
+            expect(fs.readFileSync(executable, 'utf8')).toBe('replacement executable');
+        } finally {
+            pathObservation.mockRestore();
+            descriptorObservation.mockRestore();
+        }
+        expect(cacheKeyFor(session, planned!, runHashes(session))).not.toBe(originalKey);
+    } finally {
+        inspection.mockRestore();
+    }
 });

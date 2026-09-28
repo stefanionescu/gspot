@@ -15,34 +15,16 @@ function proposalsOfKind(summary: DetectionSummary, kind: string): Proposal[] {
     );
 }
 
-function languageRow(summary: DetectionSummary): string | undefined {
-    const items = proposalsOfKind(summary, 'language').map(
-        (proposal) => `${proposal.configuration} ${proposal.evidence.split(' ', 1)[0] ?? ''}`,
-    );
-    return row('languages', items);
-}
-
-function kindRows(summary: DetectionSummary): (string | undefined)[] {
-    return KIND_ROWS.map(({ label, kind }) =>
-        row(
-            label,
-            proposalsOfKind(summary, kind).map((proposal) => `${proposal.configuration}  ${proposal.evidence}`),
-        ),
-    );
-}
-
 function scopesRow(summary: DetectionSummary): string | undefined {
     const paths = summary.scopes.filter((scope) => scope.path !== '').map((scope) => scope.path);
     if (summary.scopes.length <= 1) return row('scopes', paths);
     const sources = new Set(summary.scopes.filter((scope) => scope.path !== '').map((scope) => scope.source));
-    const note =
-        sources.has('project') && sources.has('workspace')
+    let note = 'from gspot.toml';
+    if (sources.has('project'))
+        note = sources.has('workspace')
             ? 'a project file or a workspace declaration in each'
-            : sources.has('project')
-              ? 'a project file in each'
-              : sources.has('workspace')
-                ? 'from workspace declarations'
-                : 'from gspot.toml';
+            : 'a project file in each';
+    else if (sources.has('workspace')) note = 'from workspace declarations';
     return row('scopes', [...paths, note]);
 }
 
@@ -61,13 +43,6 @@ function toolingRows(summary: DetectionSummary): (string | undefined)[] {
     ];
 }
 
-function unknownRows(summary: DetectionSummary): string[] {
-    return summary.unknown.map(
-        (entry) =>
-            `${'no configuration'.padEnd(DETECTION_LABEL_WIDTH)} ${entry.language}: ${String(entry.count)} files unchecked`,
-    );
-}
-
 function ownershipRows(summary: DetectionSummary): string[] {
     const lines: string[] = [];
     if (summary.owned.length > 0) lines.push(`already configured   ${summary.owned.join('  ')}`);
@@ -82,9 +57,20 @@ function ownershipRows(summary: DetectionSummary): string[] {
  * @returns the text, ending with a blank line when tooling was found
  */
 export function detectionText(summary: DetectionSummary): string {
-    const rows = [languageRow(summary), ...kindRows(summary), scopesRow(summary), ...toolingRows(summary)].filter(
-        (line) => line !== undefined,
+    const languages = proposalsOfKind(summary, 'language').map(
+        (proposal) => `${proposal.configuration} ${proposal.evidence.split(' ', 1)[0] ?? ''}`,
     );
+    const rows = [
+        row('languages', languages),
+        ...KIND_ROWS.map(({ label, kind }) =>
+            row(
+                label,
+                proposalsOfKind(summary, kind).map((proposal) => `${proposal.configuration}  ${proposal.evidence}`),
+            ),
+        ),
+        scopesRow(summary),
+        ...toolingRows(summary),
+    ].filter((line) => line !== undefined);
     return [
         `reading ${summary.files.length.toLocaleString('en-US')} tracked files`,
         ...(summary.hasGit
@@ -92,7 +78,10 @@ export function detectionText(summary: DetectionSummary): string {
             : ['no git repository: the hooks and the configurations that read git stay out until git init runs']),
         '',
         ...rows,
-        ...unknownRows(summary),
+        ...summary.unknown.map(
+            (entry) =>
+                `${'no configuration'.padEnd(DETECTION_LABEL_WIDTH)} ${entry.language}: ${String(entry.count)} files unchecked`,
+        ),
         '',
         ...ownershipRows(summary),
     ].join('\n');

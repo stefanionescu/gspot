@@ -1,12 +1,13 @@
 // The file set: what git tracks or is about to track, or a gitignore-honoring walk without git.
-import ignore, { type Ignore } from 'ignore';
+import ignore from 'ignore';
+import type { Dirent } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
 import type { SpawnResult } from '#cli/types/platform.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { LIFECYCLE_PRIVATE_PATH } from '#cli/constants/platform.ts';
-import type { RawEntry, SourceObservations } from '#cli/types/repository/repository.ts';
+import type { RawEntry, PathIgnore, SourceObservations } from '#cli/types/repository/repository.ts';
 import { lstatSync, statSync, openSync, readSync, closeSync, readFileSync, readdirSync } from 'node:fs';
 
 import {
@@ -31,13 +32,8 @@ function symlinkEntry(root: string, path: string): RawEntry | undefined {
 
 function entryFor(root: string, path: string): RawEntry | undefined {
     const full = join(root, path);
-    let stat;
-    try {
-        stat = lstatSync(full);
-    } catch (error) {
-        if (!(error instanceof Error && 'code' in error && error.code === 'ENOENT')) throw error;
-        return undefined;
-    }
+    const stat = lstatSync(full, { throwIfNoEntry: false });
+    if (stat === undefined) return undefined;
     if (stat.isSymbolicLink()) {
         if (DEPENDENCY_FOLDERS.includes(path.slice(path.lastIndexOf('/') + 1))) return undefined;
         // Inventory installed links without reading their dependency targets outside this root.
@@ -80,31 +76,47 @@ function isOutsideGit(
     );
 }
 
+function directoryContents(
+    root: string,
+    directory: string,
+    inherited: PathIgnore[],
+): { entries: Dirent[]; rules: PathIgnore[] } {
+    const entries = readdirSync(join(root, directory), { withFileTypes: true });
+    const rules = [...inherited];
+    if (entries.some((entry) => entry.name === '.gitignore' && entry.isFile())) {
+        rules.push({
+            base: directory,
+            matcher: ignore().add(readSource(root, `${directory}.gitignore`).toString('utf8')),
+        });
+    }
+    return { entries, rules };
+}
+
+function isIgnored(candidate: string, rules: PathIgnore[]): boolean {
+    let ignored = false;
+    for (const { base, matcher } of rules) {
+        const result = matcher.test(candidate.slice(base.length));
+        if (result.ignored) ignored = true;
+        else if (result.unignored) ignored = false;
+    }
+    return ignored;
+}
+
 function walkPaths(root: string): string[] {
     const paths: string[] = [];
-    const pending: { directory: string; rules: { base: string; matcher: Ignore }[] }[] = [{ directory: '', rules: [] }];
+    const pending: { directory: string; rules: PathIgnore[] }[] = [{ directory: '', rules: [] }];
     for (let next = pending.pop(); next !== undefined; next = pending.pop()) {
-        const { directory, rules } = next;
-        const entries = readdirSync(join(root, directory), { withFileTypes: true });
-        const localRules = [...rules];
-        if (entries.some((entry) => entry.name === '.gitignore' && entry.isFile())) {
-            localRules.push({
-                base: directory,
-                matcher: ignore().add(readSource(root, `${directory}.gitignore`).toString('utf8')),
-            });
-        }
-        for (const entry of entries) {
-            if (entry.name === '.git' || entry.isSymbolicLink()) continue;
+        const { directory } = next;
+        const { entries, rules } = directoryContents(root, directory, next.rules);
+        const retained = entries.filter((entry) => {
+            if (entry.name === '.git' || entry.isSymbolicLink()) return false;
             const path = `${directory}${entry.name}`;
             const candidate = entry.isDirectory() ? `${path}/` : path;
-            let ignored = false;
-            for (const { base, matcher } of localRules) {
-                const result = matcher.test(candidate.slice(base.length));
-                if (result.ignored) ignored = true;
-                else if (result.unignored) ignored = false;
-            }
-            if (ignored || LIFECYCLE_PRIVATE_PATH.test(path.normalize('NFC'))) continue;
-            if (entry.isDirectory()) pending.push({ directory: candidate, rules: localRules });
+            return !isIgnored(candidate, rules) && !LIFECYCLE_PRIVATE_PATH.test(path.normalize('NFC'));
+        });
+        for (const entry of retained) {
+            const path = `${directory}${entry.name}`;
+            if (entry.isDirectory()) pending.push({ directory: `${path}/`, rules });
             else if (entry.isFile()) paths.push(path);
         }
     }
@@ -195,7 +207,7 @@ export function submodulePaths(root: string): string[] {
  * Tracked and about-to-be-tracked files, root-relative posix, sorted. Falls back to a gitignore walk without git.
  * @param root the repository root
  * @param exclude the paths to leave out
- * @returns the entries with size, executable bit and symlink flag
+ * @returns the entries with size, executable bit, and symlink flag
  */
 export function trackedEntries(root: string, exclude: string[] = []): RawEntry[] {
     const paths = listedPaths(root);
@@ -246,7 +258,7 @@ export function readPrefix(root: string, path: string, bytes: number): Buffer {
 }
 
 /**
- * The first bytes of required file content as text, for shebang and banner checks.
+ * Required file prefixes decoded as text for shebang and banner checks.
  * @param root the repository root
  * @param path the file, relative to the root
  * @param bytes how many bytes to read

@@ -1,13 +1,14 @@
 import { z } from 'zod';
 import { parse } from 'yaml';
 import { posix } from 'node:path';
+import { compact } from '#cli/policy/normalize.ts';
 import type { ConfinedRoot } from '#cli/types/platform.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { PERIPHERY_FILE, PROJECT_SUFFIX, SCHEME_SUFFIX } from '#cli/constants/commands/init.ts';
 
 const peripherySchema = z.object({ schemes: z.array(z.string().min(1)).optional() });
 
-// The scheme a Periphery file already names wins: somebody chose it. Otherwise the first shared scheme by name.
+// The scheme a Periphery file already names wins: somebody chose it. Otherwise, select the first shared scheme by name.
 function schemeOf(files: ConfinedRoot, scope: string, project: string): string | undefined {
     const periphery = files.read(posix.join(scope, PERIPHERY_FILE));
     const named =
@@ -23,9 +24,9 @@ function schemeOf(files: ConfinedRoot, scope: string, project: string): string |
 
 /**
  * The Xcode project and scheme of the first scope that holds a project, as the tools.xcode table.
- * @param root the repository root
- * @param scopePaths the scope paths, with an empty string for the root
- * @returns the scope that holds the project, the project and the scheme, or undefined when no scope holds a project
+ * @param root the repository root.
+ * @param scopePaths the scope paths, with an empty string for the root.
+ * @returns the scope that holds the project, the project and the scheme, or undefined when no scope holds a project.
  */
 export function xcodeProposal(
     root: string,
@@ -39,7 +40,7 @@ export function xcodeProposal(
             if (files.stat(posix.join(scope, project))?.isDirectory() !== true)
                 throw new Error(`Xcode project is not a directory: ${posix.join(scope, project)}`);
             const scheme = schemeOf(files, scope, project);
-            return scheme === undefined ? { scope, project } : { scope, project, scheme };
+            return compact({ scope, project, scheme });
         }
         return undefined;
     } finally {

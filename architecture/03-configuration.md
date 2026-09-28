@@ -314,7 +314,7 @@ fail at load with both configurations named, and a root value settles it.
 gspot records no old findings, and installing it runs no check. `gspot check` reports
 what it finds today. An old repository adopts gspot through four things that need no record:
 
-- File-list checks run on changed files; affected whole-project checks keep all findings, including existing errors and errors in unchanged callers.
+- File-list checks run on changed files; affected whole-project checks keep all findings. Existing errors and errors in unchanged callers remain visible.
 - The level `recommended` holds defect checks. Banned-term checks run at `all`.
 - `gspot ignore` turns a check or a rule off. It works for the whole repository or for some paths.
 - `git commit --no-verify` passes a hook, and a failing run names it.
@@ -389,19 +389,25 @@ Load flat ESLint configuration through the repository's native ESLint API. Prese
 `files`, `ignores`, rule options and severities, language options, settings, plugins, and
 parsers in `tools.eslint.adopted`. Keep selectors as selectors so they govern future files.
 Repository-owned executable rules remain imported code registered by module and export.
-Never serialize an executable rule into TOML. Unsupported legacy configuration, processors,
+Never serialize an executable rule into TOML.
+
+Unsupported eslintrc configuration, processors,
 inline executable selectors, and unregistered implementations fail conversion and leave the
 original configuration intact. Validate effective configurations with ESLint before adoption.
 
-Use Prettier's native loader for executable root configurations and format parsers for static
+Use the native Prettier loader for executable root configurations and format parsers for static
 configuration. Shared base options belong in `[format]`; ordered native overrides belong in
 `tools.prettier.extra.overrides`, including `files`, `excludeFiles`, and options. Preserve native
 ignore lines, including negations, in `tools.prettier.ignore_patterns`. These selectors apply to
-future files without consulting the current filename inventory. A nested `.prettierignore`
+future files without consulting the current filename inventory.
+
+A nested `.prettierignore`
 converts with Git precedence: each line is rebased onto its folder and follows the lines of every
 ancestor file. A negated override selector keeps its negation when it moves. Below the root, a
 negated `files` selector becomes an entry of its own for the folder less that selector, because
-Prettier applies an entry when any one of its selectors matches. Shared format overrides emit
+Prettier applies an entry when any one of its selectors matches.
+
+Shared format overrides emit
 EditorConfig sections only when that syntax can represent their selectors; otherwise fail with
 the exact selector and direct the user to native tool configuration. Unsupported EditorConfig,
 nested formatter configuration, and JSON5 inputs currently fail conversion before replacement.
@@ -465,7 +471,7 @@ config, and its plugins stay, and takeover lists them for removal by hand.
 with its pinned version, and writes `.gspot/package.json` with the mark `_gspot`. `install-tools.ts`
 runs the install of the package manager the repository uses, with `.gspot/` as its folder,
 through `nypm`. The lockfile under `.gspot/` is tracked, and `.gspot/node_modules/` is in the
-managed `.gitignore` block. `tools/inspect.ts` looks under `.gspot/node_modules/.bin` first and never
+managed `.gitignore` block. `packages/cli/src/tools/inspect.ts` looks under `.gspot/node_modules/.bin` first and never
 under the `node_modules` of the root.
 
 The generated ESLint config sits in `.gspot/`, so its
@@ -592,7 +598,7 @@ The message unit tests, and a test that no message function returns one of the w
 
 One output schema, used by manifests and by `[[check]]`.
 
-`policy/schema.ts` imports the output schema of the manifest.
+`packages/cli/src/policy/schema.ts` imports the output schema of the manifest.
 
 A config test repository with `format = "json"` loads.
 
@@ -790,16 +796,17 @@ The `.vue` and `.svelte` endings carry their own language tag and the tag `sourc
 Two table rows. `.kt` and `.java` stay unknown, because no configuration reads them, and
 detection names their language through `linguist-languages`.
 
-A unit test of `repository/tags.ts` for both endings.
+A unit test of `packages/cli/src/repository/tags.ts` for both endings.
 
 ### Acceptance K-76
 
 One reader knows every task of a repository, and one check holds the gspot line of
 the hooks for every hook form.
 
-`readers/tasks.ts` returns the task names from mise tables, mise task files, and
-`package.json` scripts, for a scope. `task-policy` finds the hook through
-`emit/hook-managers.ts`, the same code that wrote the line, and fails when the line is gone.
+`packages/cli/src/checks/docs/stale-paths.ts` reads task names and aliases from mise
+tables and script names from `package.json`. The task-policy check uses
+`packages/cli/src/generation/runner/plan.ts`, the same owner as generation, to report
+missing or changed accepted task bodies.
 
 A planted README that names a file task holds no finding. A husky repository with the
 gspot line removed holds one.

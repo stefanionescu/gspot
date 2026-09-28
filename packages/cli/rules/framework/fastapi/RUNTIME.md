@@ -14,6 +14,9 @@ project contracts apply at both levels.
 Forms and files, JSON encoding, async work, dependencies, security, streaming, background tasks,
 middleware, documentation exposure, and tests. Structure and schema rules are in the FastAPI file.
 
+The executable examples are complete modules. Their dependency requirements
+appear before the code. Use nonblocking operations inside async handlers.
+
 ## FastAPI forms and files
 
 Rules:
@@ -60,50 +63,67 @@ Rules:
 - Do not log uploaded file contents, full filenames containing user data, or
   sensitive form fields.
 
-Good form fields:
+An OAuth2 password-flow endpoint accepts the protocol's `username` and
+`password` form fields. Use the security dependency that expresses that
+protocol, then pass the credentials to the authentication owner.
 
-```python
-@router.post("/login/")
-async def login(
-    username: Annotated[str, Form()],
-    password: Annotated[str, Form()],
-) -> Token:
-    return authenticate_form_user(username=username, password=password)
-```
+Use a Pydantic form model for a cohesive set of fields. Decide whether extra
+fields are invalid for that endpoint, and keep secrets out of model logging
+and public response models.
 
-Good form model:
-
-```python
-class LoginForm(BaseModel):
-    """Login form fields."""
-
-    model_config = {"extra": "forbid"}
-
-    username: str
-    password: str
-
-@router.post("/login/")
-async def login(data: Annotated[LoginForm, Form()]) -> Token:
-    return authenticate_form_user(username=data.username, password=data.password)
-```
+The following complete application counts a bounded upload without trusting its
+filename or content type. Declare `python-multipart` alongside FastAPI in the
+project dependencies. The request transport must also enforce its body-size
+limit before multipart parsing.
 
 Good upload:
 
 ```python
-@router.post("/images/")
-async def upload_image(
-    image: Annotated[UploadFile, File(description="Image file.")],
-) -> ImageUploadResult:
-    return await store_image(image)
+"""Count uploaded bytes while bounding consumption and closing the file."""
+
+from typing import Annotated
+
+from fastapi import FastAPI, File, HTTPException, UploadFile, status
+from pydantic import BaseModel
+
+MAX_UPLOAD_BYTES = 1024 * 1024
+CHUNK_BYTES = 64 * 1024
+
+
+class UploadSummary(BaseModel):
+    """Accepted upload size.
+
+    Attributes:
+        size: Number of bytes consumed from the uploaded file.
+
+    """
+
+    size: int
+
+
+app = FastAPI(openapi_url=None, docs_url=None, redoc_url=None)
+
+
+@app.post("/uploads")
+async def inspect_upload(upload: Annotated[UploadFile, File()]) -> UploadSummary:
+    """Return the size of an upload no larger than one MiB."""
+    size = 0
+    try:
+        while chunk := await upload.read(CHUNK_BYTES):
+            size += len(chunk)
+            if size > MAX_UPLOAD_BYTES:
+                raise HTTPException(
+                    status_code=status.HTTP_413_CONTENT_TOO_LARGE,
+                    detail="Upload exceeds one MiB",
+                )
+        return UploadSummary(size=size)
+    finally:
+        await upload.close()
 ```
 
-Good multiple uploads:
-
-```python
-@router.post("/images/batch")
-async def upload_images(files: Annotated[list[UploadFile], File()]) -> BatchUploadResult:
-    return await store_images(files)
-```
+Use `Annotated[list[UploadFile], File()]` for a repeated file field. Bound
+both the number of uploads and their total accepted size, and close every
+owned file on rejection as well as success.
 
 ## FastAPI JSON encoding and updates
 
@@ -128,8 +148,8 @@ Rules:
 - Partial-update schemas make every patchable field optional.
 - For partial updates, use `.model_dump(exclude_unset=True)` to distinguish
   omitted fields from fields explicitly set to defaults or `None`.
-- Use `.model_copy(update=...)` to produce an updated Pydantic model without
-  mutating the stored model instance.
+- Validate merged patch values against the complete stored model when cross-field constraints
+  can change. `.model_copy(update=...)` does not validate the update.
 - Convert the updated model with `jsonable_encoder()` before saving it to a
   JSON-only store.
 - Do not apply `model_dump()` without `exclude_unset=True` for partial updates.
@@ -137,34 +157,17 @@ Rules:
 - Do not use one schema for create, replace, patch, and read operations when
   those operations have different required fields or visibility rules.
 
-Good JSON-compatible storage:
+`jsonable_encoder(model)` produces JSON-compatible Python values. Pass that
+result to a JSON-only storage boundary; do not assume it is a serialized
+JSON string.
 
-```python
-def save_item(item_id: str, item: ItemOut) -> None:
-    item_store[item_id] = jsonable_encoder(item)
-```
+A full replacement validates the supplied replacement model, then stores the
+complete accepted value. Document whether omitted fields take defaults or
+make the request invalid.
 
-Good replacement:
-
-```python
-@router.put("/items/{item_id}", response_model=ItemOut)
-async def replace_item(item_id: str, item: ItemReplace) -> ItemOut:
-    encoded_item = jsonable_encoder(item)
-    item_store[item_id] = encoded_item
-    return ItemOut.model_validate(encoded_item)
-```
-
-Good partial update:
-
-```python
-@router.patch("/items/{item_id}", response_model=ItemOut)
-async def patch_item(item_id: str, item: ItemPatch) -> ItemOut:
-    stored_item = ItemOut.model_validate(item_store[item_id])
-    update_data = item.model_dump(exclude_unset=True)
-    updated_item = stored_item.model_copy(update=update_data)
-    item_store[item_id] = jsonable_encoder(updated_item)
-    return updated_item
-```
+A partial update extracts supplied fields with `exclude_unset=True`, merges
+them with stored values, then validates the complete result. Keep validation
+and persistence in the same owning operation when concurrent changes matter.
 
 ## FastAPI async and blocking work
 
@@ -188,21 +191,12 @@ Rules:
   asynchronous by only adding `async def`. Use a worker, process pool, task
   queue, or other explicit execution boundary.
 
-Good async path operation:
+Await an asynchronous client inside an `async def` endpoint. A function name
+or return annotation alone does not make the underlying I/O asynchronous.
 
-```python
-@router.get("/items/{item_id}")
-async def read_item(item_id: str) -> Item:
-    return await item_client.fetch_item(item_id)
-```
-
-Good blocking path operation:
-
-```python
-@router.get("/items/{item_id}")
-def read_item(item_id: str) -> Item:
-    return item_repository.fetch_item(item_id)
-```
+Put a blocking repository call in a normal `def` endpoint or dependency so
+FastAPI owns the thread offload. A normal helper called from `async def`
+still runs directly on the event-loop thread.
 
 ## FastAPI dependencies
 
@@ -232,50 +226,17 @@ Rules:
   force execution. Use decorator, router, or app dependencies instead.
 - Do not hide business workflows in dependencies.
 
-Good value dependency:
+Inject the verified current user through `Annotated[User, Depends(...)]`
+when the endpoint needs that value. Authentication must complete before the
+dependency returns a trusted user.
 
-```python
-async def get_current_user(
-    token: Annotated[str, Depends(oauth2_scheme)],
-) -> User:
-    return decode_user_token(token)
+Use `dependencies=[Depends(...)]` for required checks whose return values
+are unused. A custom token-header comparison is not a substitute for the
+application's declared authentication scheme.
 
-@router.get("/users/me")
-async def read_current_user(
-    current_user: Annotated[User, Depends(get_current_user)],
-) -> User:
-    return current_user
-```
-
-Good execution-only dependency:
-
-```python
-async def verify_token(x_token: Annotated[str, Header()]) -> None:
-    if x_token != EXPECTED_TOKEN:
-        raise HTTPException(status_code=400, detail="Invalid token header")
-
-@router.get("/items/", dependencies=[Depends(verify_token)])
-async def read_items() -> list[Item]:
-    return list_items()
-```
-
-Good class dependency:
-
-```python
-class CommonQueryParams:
-    """Common pagination and search parameters."""
-
-    def __init__(self, q: str | None = None, skip: int = 0, limit: int = 100):
-        self.q = q
-        self.skip = skip
-        self.limit = limit
-
-@router.get("/items/")
-async def read_items(
-    params: Annotated[CommonQueryParams, Depends()],
-) -> list[Item]:
-    return list_items(q=params.q, skip=params.skip, limit=params.limit)
-```
+A class dependency can own validated pagination values. Annotate its
+constructor and apply the same bounds as a query model; dependency injection
+does not establish validity by itself.
 
 ## FastAPI dependencies with yield
 
@@ -300,34 +261,16 @@ Rules:
 - A request-scoped dependency cannot depend on a function-scoped dependency if
   it needs that dependency during cleanup.
 
-Good:
+Acquire the request-scoped resource before the dependency's single `yield`.
+Close it in `finally` so cleanup runs after both success and failure.
 
-```python
-async def get_db() -> AsyncIterable[DBSession]:
-    db = DBSession()
-    try:
-        yield db
-    finally:
-        db.close()
-```
+If a yield dependency translates an owned exception, preserve its cause and
+raise the deliberate public error. Let unrelated failures propagate through
+the resource cleanup.
 
-Good exception handling:
-
-```python
-def get_username() -> Iterable[str]:
-    try:
-        yield "Rick"
-    except OwnerError as error:
-        raise HTTPException(status_code=400, detail="Owner error") from error
-```
-
-Good context manager usage:
-
-```python
-async def get_db() -> AsyncIterable[DBSession]:
-    with create_db_session() as db:
-        yield db
-```
+Use a resource's `with` or `async with` boundary around `yield` when that
+resource is already a context manager. Do not add a second context-manager
+decorator to the FastAPI dependency.
 
 ## FastAPI security
 
@@ -370,65 +313,20 @@ Rules:
 - Prefer integrated security dependencies over custom header checks for real
   authentication.
 
-Good security dependency:
+Configure the token verifier with an explicit algorithm allowlist and the
+application-owned signing key or key set. Require expiration and subject
+claims, validate their types, and verify issuer and audience when those claims
+identify the accepted source and recipient. Map verification failures to the
+same public 401 challenge before looking up an authorized user.
 
-```python
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+The verifier's library owns token decoding and claim checks. See
+[PyJWT claim validation](https://pyjwt.readthedocs.io/en/latest/usage.html)
+when the application uses PyJWT.
 
-async def get_current_user(
-    token: Annotated[str, Depends(oauth2_scheme)],
-) -> User:
-    credentials_error = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-    try:
-        payload = jwt.decode(
-            token,
-            SECRET_KEY,
-            algorithms=[ALGORITHM],
-            options={"require": ["exp", "sub"]},
-        )
-    except InvalidTokenError as error:
-        raise credentials_error from error
-
-    subject = payload.get("sub")
-    if subject is None:
-        raise credentials_error
-    user = get_user_by_subject(subject)
-    if user is None:
-        raise credentials_error
-    return user
-```
-
-This PyJWT fragment requires the application-owned signing configuration and user lookup.
-Configure issuer and audience validation when those claims identify the accepted token source
-and recipient. See [PyJWT claim validation](https://pyjwt.readthedocs.io/en/latest/usage.html).
-
-Good token response:
-
-```python
-class Token(BaseModel):
-    """OAuth2 bearer token response."""
-
-    access_token: str
-    token_type: str
-
-@router.post("/token")
-async def login_for_access_token(
-    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
-) -> Token:
-    user = authenticate_user(form_data.username, form_data.password)
-    if user is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    access_token = create_access_token(subject=user.username)
-    return Token(access_token=access_token, token_type="bearer")
-```
+A successful OAuth2 token response has `access_token` and
+`token_type="bearer"`. Keep credential verification and token issuance in their
+existing owners. Do not demonstrate authentication with a hardcoded accepted
+password, user, secret, or token.
 
 ## FastAPI streaming
 
@@ -454,41 +352,76 @@ Rules:
 - SSE can use methods other than GET when the protocol requires it.
 - Keep streamed item generation cancellable and resource-safe.
 
-Good JSON Lines stream:
+The following complete application streams two fixed records. FastAPI 0.134.0
+introduced native [JSON Lines](https://fastapi.tiangolo.com/tutorial/stream-json-lines/),
+and 0.135.0 introduced native [server-sent events](https://fastapi.tiangolo.com/tutorial/server-sent-events/).
+Use FastAPI 0.135.0 or later for both endpoints.
+
+Good streams:
 
 ```python
-@router.get("/items/stream")
-async def stream_items() -> AsyncIterable[Item]:
-    for item in iter_items():
-        yield item
+"""Stream public records as JSON Lines and server-sent events."""
+
+from collections.abc import Iterable
+from typing import ClassVar
+
+from fastapi import FastAPI
+from fastapi.sse import EventSourceResponse, ServerSentEvent
+from pydantic import BaseModel, ConfigDict
+
+
+class Item(BaseModel):
+    """One public inventory record.
+
+    Attributes:
+        name: Display name of the item.
+
+    """
+
+    model_config: ClassVar[ConfigDict] = ConfigDict(frozen=True)
+    name: str
+
+
+ITEMS = (Item(name="Notebook"), Item(name="Pencil"))
+app = FastAPI(openapi_url=None, docs_url=None, redoc_url=None)
+
+
+@app.get("/items")
+# gspot-ignore python/trivial-function -- FastAPI registers this required streaming callback.
+def stream_items() -> Iterable[Item]:
+    """Yield each public item as one JSON line.
+
+    Yields:
+        The next inventory record.
+
+    """
+    yield from ITEMS
+
+
+@app.get("/events", response_class=EventSourceResponse)
+# gspot-ignore python/trivial-function -- FastAPI registers this required event callback.
+def stream_events() -> Iterable[ServerSentEvent]:
+    """Yield named events with stable identifiers for the fixed inventory.
+
+    Yields:
+        The next event containing a public inventory record.
+
+    """
+    for index, item in enumerate(ITEMS):
+        yield ServerSentEvent(data=item, event="item", id=str(index))
 ```
 
-Good sync stream:
+A synchronous streaming operation returns `Iterable[T]`; an asynchronous
+operation returns `AsyncIterable[T]`. Choose the form that matches the
+underlying producer and its cancellation behavior.
 
-```python
-@router.get("/items/stream-sync")
-def stream_items_sync() -> Iterable[Item]:
-    yield from iter_items()
-```
+The event endpoint declares `EventSourceResponse` and yields
+`ServerSentEvent` values. Its identifiers are stable because the demonstration
+inventory is fixed. A changing inventory needs durable event identity and
+explicit replay behavior.
 
-Good SSE stream:
-
-```python
-@router.get("/items/events", response_class=EventSourceResponse)
-async def stream_item_events() -> AsyncIterable[ServerSentEvent]:
-    yield ServerSentEvent(comment="item updates")
-    for index, item in enumerate(iter_items()):
-        yield ServerSentEvent(data=item, event="item_update", id=str(index))
-```
-
-Good raw SSE data:
-
-```python
-@router.get("/logs/stream", response_class=EventSourceResponse)
-async def stream_logs() -> AsyncIterable[ServerSentEvent]:
-    for line in iter_log_lines():
-        yield ServerSentEvent(raw_data=line)
-```
+Use `raw_data` only when the event payload is already the intended text.
+Use `data` for JSON encoding. Never supply both fields on one event.
 
 ## FastAPI background tasks
 
@@ -509,17 +442,9 @@ Rules:
 - Background task failures happen after the response. Log and monitor them at
   the worker boundary.
 
-Good:
-
-```python
-@router.post("/warmup-events/{session_id}")
-async def record_warmup(
-    session_id: str,
-    background_tasks: BackgroundTasks,
-) -> dict[str, str]:
-    background_tasks.add_task(record_warmup_event, session_id)
-    return {"message": "Warmup event queued"}
-```
+Queue short follow-up work through `BackgroundTasks.add_task`. The response
+does not establish that the task succeeded. Required or durable work belongs
+to a boundary that can report or retain its completion state.
 
 ## FastAPI middleware
 
@@ -544,17 +469,10 @@ Rules:
 - Do not use middleware when a router dependency or path operation dependency is
   the narrower correct boundary.
 
-Good:
-
-```python
-@app.middleware("http")
-async def add_process_time_header(request: Request, call_next):
-    start_time = time.perf_counter()
-    response = await call_next(request)
-    process_time = time.perf_counter() - start_time
-    response.headers["X-Process-Time"] = str(process_time)
-    return response
-```
+Measure elapsed middleware time with `time.perf_counter`, await
+`call_next(request)`, then add the intentional response header. Annotate
+`call_next` with its asynchronous request-to-response contract. Expose the
+header through CORS only when browser clients need to read it.
 
 ## FastAPI metadata and docs
 
@@ -589,30 +507,9 @@ Rules:
 - Prefer configuring the FastAPI entrypoint in project configuration when the
   tool supports it.
 
-Good:
-
-```python
-tags_metadata = [
-    {
-        "name": "sessions",
-        "description": "Operations with inventory items.",
-    },
-    {
-        "name": "warmup",
-        "description": "Operations with model warmup.",
-    },
-]
-
-app = FastAPI(
-    title="Inventory API",
-    summary="Inventory service API.",
-    version="1.0.0",
-    openapi_tags=tags_metadata,
-    openapi_url="/openapi.json" if config.enable_api_docs else None,
-    docs_url="/docs" if config.enable_api_docs else None,
-    redoc_url="/redoc" if config.enable_api_docs else None,
-)
-```
+Pass the application's typed documentation setting into its construction
+boundary. Set `openapi_url`, `docs_url`, and `redoc_url` explicitly for the
+selected exposure. The complete examples keep all three disabled.
 
 Good project configuration:
 

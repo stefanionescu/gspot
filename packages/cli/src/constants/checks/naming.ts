@@ -96,7 +96,6 @@ export const SPLAT_NODES = new Set(['list_splat_pattern', 'dictionary_splat_patt
 export const IMPLICIT_PARAMETERS = new Set(['self', 'cls']);
 export const DUNDER = /^__\w+__$/u;
 export const PYTHON_UPPER_SHAPE = /^_?[A-Z][A-Z\d_]*$/u;
-export const TYPESCRIPT_UPPER_SHAPE = /^[A-Z][A-Z0-9_]*$/u;
 export const EXCEPTION_BASE = /(?:Error|Exception|Warning)\b/u;
 export const TYPE_NODES = ['class_declaration', 'protocol_declaration', 'typealias_declaration'];
 export const SWIFT_FUNCTION_NODES = ['function_declaration', 'protocol_function_declaration'];
@@ -128,4 +127,3 @@ export const PATTERN_FIELDS: Record<string, string> = {
     assignment_pattern: 'left',
 };
 export const PATTERN_LISTS = new Set(['rest_pattern', 'object_pattern', 'array_pattern']);
-export const SNAKE_SHAPE = /^[a-z][a-z0-9_]*$/u;

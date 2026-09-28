@@ -3,9 +3,9 @@ import { posix } from 'node:path';
 import { policySchema } from '#cli/policy/schema.ts';
 import { COMMENT_MARK } from '#cli/constants/policy/adoption.ts';
 import type { TomlTable } from '#cli/types/repository/repository.ts';
-import { carriedTool, reasonFor } from '#cli/policy/adoption/results.ts';
 import { asRaw, asStrings, asText } from '#cli/policy/adoption/source.ts';
-import type { CarriedConfiguration, CarrySource } from '#cli/types/policy/adoption.ts';
+import { adoptedScope, adoptedTool, reasonFor } from '#cli/policy/adoption/results.ts';
+import type { AdoptionResult, ConfigurationSource } from '#cli/types/policy/adoption.ts';
 
 const strings = z.array(z.string());
 
@@ -36,13 +36,13 @@ function carryTyposWords(lines: string[], words: TomlTable, path: string): { wor
     });
 }
 
-function carryTypos(source: CarrySource, path: string, lists: CarriedConfiguration): void {
+function carryTypos(source: ConfigurationSource, path: string, lists: AdoptionResult): void {
     const text = source.text;
     const parsed = source.parsed;
-    const defaults = asRaw(parsed['default']);
+    const defaults = asRaw(parsed['default']) ?? {};
     // typos with no locale accepts British and American spellings alike, and the repository was written under that.
-    const settings: TomlTable = { locale: asText(defaults?.['locale']) ?? 'en' };
-    const words = carryTyposWords(text.split('\n'), asRaw(defaults?.['extend-words']) ?? {}, path);
+    const settings: TomlTable = { locale: asText(defaults['locale']) ?? 'en' };
+    const words = carryTyposWords(text.split('\n'), asRaw(defaults['extend-words']) ?? {}, path);
     if (words.length > 0) settings['words'] = words;
     const excludes = asStrings(asRaw(parsed['files'])?.['extend-exclude']);
     const base = posix.dirname(path);
@@ -59,12 +59,10 @@ function carryTypos(source: CarrySource, path: string, lists: CarriedConfigurati
             return `${negated ? '!' : ''}${prefix}/${rooted ? '' : '**/'}${selector.replace(/^\//u, '')}${directory ? '/' : ''}`;
         });
     if (paths.length > 0) settings['exclude'] = [{ paths, reason: reasonFor(path) }];
-    if (base === '.') Object.assign(carriedTool(lists, 'typos').settings, settings);
+    if (base === '.') Object.assign(adoptedTool(lists, 'typos').settings, settings);
     else {
-        const scope = lists.scopes.get(base) ?? { configurations: [], tools: {} };
-        scope.configurations = [...new Set([...scope.configurations, 'spelling'])];
+        const scope = adoptedScope(lists, base, 'spelling');
         scope.tools['typos'] = settings;
-        lists.scopes.set(base, scope);
     }
 }
 

@@ -86,7 +86,7 @@ exceptions:
     - CUDA
     - Hugging Face
     - Vault
-    - Edge
+    - '[Ee]dge'
     - Deno
     - Compose
     - iOS

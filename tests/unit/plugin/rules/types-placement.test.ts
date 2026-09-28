@@ -3,6 +3,16 @@ import { typesPlacement } from '#plugin/rules/types-placement.ts';
 
 tester().run('types-placement', typesPlacement, {
     valid: [
+        ...[
+            'export const WIDTHS = { label: 9, path: 40 } as const;',
+            "export const LOCKS = { npm: 'package-lock.json', bun: 'bun.lock' } as const;",
+            "export const INPUT = { version: '1.0.0', url: 'https://example.com/input', digest: 'abc' } as const;",
+        ].map((code) => ({ code, filename: '/repo/src/constants.ts', options: [{ typesDirectory: 'types' }] })),
+        {
+            code: 'export const Mode = { off: 0, on: 1 } as const; export type Mode = (typeof Mode)[keyof typeof Mode];',
+            filename: '/repo/types/mode.ts',
+            options: [{ typesDirectory: 'types' }],
+        },
         { code: 'export type A = string;', filename: '/repo/types/a.ts' },
         { code: 'export type A = string;', filename: '/repo/api/types/a.ts' },
         { code: "import type { B } from './b';\nexport type A = B;", filename: '/repo/types/a.ts' },
@@ -20,8 +30,38 @@ tester().run('types-placement', typesPlacement, {
             options: [{ exempt: ['src/vendor/**'] }],
         },
         { code: 'export type A = string;', filename: '/repo/src/kinds/a.ts', options: [{ typesDirectory: 'kinds' }] },
-    ],
+    ].map((entry) => ({ ...entry, options: [{ typesDirectory: 'types', ...entry.options?.[0] }] })),
     invalid: [
+        {
+            code: 'export const Functions = { one: () => 1 } as const; export type Functions = (typeof Functions)[keyof typeof Functions];',
+            filename: '/repo/types/functions.ts',
+            options: [{ typesDirectory: 'types' }],
+            errors: [{ messageId: 'runtimeInside' }],
+        },
+        {
+            code: "export const width = 9, Mode = { on: 'on' } as const;",
+            filename: '/repo/src/mode.ts',
+            options: [{ typesDirectory: 'types' }],
+            errors: [{ messageId: 'enumOutside', data: { directory: 'types', name: 'Mode' } }],
+        },
+        {
+            code: 'export const WIDTHS = { label: 9, path: 40 } as const;',
+            filename: '/repo/types/constants.ts',
+            options: [{ typesDirectory: 'types' }],
+            errors: [{ messageId: 'runtimeInside', data: { directory: 'types', name: 'WIDTHS' } }],
+        },
+        {
+            code: "export const Mode = { on: 'on' } as const, width = 9;",
+            filename: '/repo/types/mode.ts',
+            options: [{ typesDirectory: 'types' }],
+            errors: [{ messageId: 'runtimeInside', data: { directory: 'types', name: 'width' } }],
+        },
+        {
+            code: 'export const Mode = { off: 0, on: 1 } as const; export type Mode = (typeof Mode)[keyof typeof Mode];',
+            filename: '/repo/src/mode.ts',
+            options: [{ typesDirectory: 'types' }],
+            errors: [{ messageId: 'enumOutside' }, { messageId: 'aliasOutside' }],
+        },
         {
             options: [{ typesDirectory: 'types' }],
             code: 'type A = string;',

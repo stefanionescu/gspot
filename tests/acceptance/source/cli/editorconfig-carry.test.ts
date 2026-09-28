@@ -3,7 +3,8 @@ import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
+import { initArgs } from '#tests/support/cli/init.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
 import { chmodSync, readFileSync, statSync, symlinkSync } from 'node:fs';
 
 import {
@@ -37,17 +38,7 @@ test.each([false, true])(
         expect(expected.get('src/[draft].js')).toContain('\n        console.log');
         expect(expected.get('tests/source.js')).toContain('\n    console.log');
         expect(expected.get('source.js')).toContain('\n  console.log');
-        const initialized = await run(repository.path, [
-            'init',
-            '--yes',
-            '--configurations',
-            'formatting',
-            '--no-runner',
-            '--no-ci',
-            '--no-hooks',
-            '--no-rules',
-            '--no-install',
-        ]);
+        const initialized = await run(repository.path, initArgs(['formatting']));
         expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
         const applied = await run(repository.path, ['apply']);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);

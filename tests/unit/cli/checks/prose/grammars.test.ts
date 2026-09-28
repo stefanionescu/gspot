@@ -8,13 +8,15 @@ function tracked(path: string, tags: string[] = ['text']): TrackedFile {
 }
 
 describe('prose routes', () => {
-    test('every language goes by its own extension; only an extensionless script reads through stdin as Python', () => {
+    test('known grammars read paths while module aliases and extensionless scripts use typed stdin', () => {
         expect(routeFor(tracked('a.md'))).toStrictEqual({ path: 'a.md', mode: 'path', extension: '.md' });
         expect(routeFor(tracked('a.tsx'))).toStrictEqual({ path: 'a.tsx', mode: 'path', extension: '.ts' });
         expect(routeFor(tracked('a.sh'))).toStrictEqual({ path: 'a.sh', mode: 'path', extension: '.sh' });
         expect(routeFor(tracked('a.sql'))).toStrictEqual({ path: 'a.sql', mode: 'path', extension: '.sql' });
         expect(routeFor(tracked('a.py'))).toStrictEqual({ path: 'a.py', mode: 'path', extension: '.py' });
         expect(routeFor(tracked('a.css'))).toStrictEqual({ path: 'a.css', mode: 'path', extension: '.css' });
+        expect(routeFor(tracked('a.mts'))).toStrictEqual({ path: 'a.mts', mode: 'stdin', extension: '.ts' });
+        expect(routeFor(tracked('a.cjs'))).toStrictEqual({ path: 'a.cjs', mode: 'stdin', extension: '.js' });
         expect(routeFor(tracked('hooks/pre-commit', ['shell', 'text']))).toStrictEqual({
             path: 'hooks/pre-commit',
             mode: 'stdin',
@@ -23,8 +25,15 @@ describe('prose routes', () => {
         expect(routeFor(tracked('a.png'))).toBeUndefined();
     });
 
-    test('a borrowed format maps each extension Vale does not know to one it does', () => {
+    test('native source comments use Markdown and unsupported languages borrow compatible comment grammars', () => {
         expect(PROSE_FORMATS).toStrictEqual([
+            ['ts', 'md'],
+            ['tsx', 'md'],
+            ['js', 'md'],
+            ['jsx', 'md'],
+            ['swift', 'md'],
+            ['py', 'md'],
+            ['css', 'md'],
             ['sh', 'py'],
             ['bash', 'py'],
             ['zsh', 'py'],

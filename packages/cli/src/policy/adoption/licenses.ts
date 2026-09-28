@@ -5,8 +5,8 @@ import { licenseResponse } from '#cli/evaluation/protocol.ts';
 import { asList, asStrings } from '#cli/policy/adoption/source.ts';
 import type { TomlTable } from '#cli/types/repository/repository.ts';
 import { evaluateConfiguration } from '#cli/evaluation/configuration.ts';
-import { appendSetting, reasonFor } from '#cli/policy/adoption/results.ts';
-import type { CarriedConfiguration, CarrySource } from '#cli/types/policy/adoption.ts';
+import type { AdoptionResult, ConfigurationSource } from '#cli/types/policy/adoption.ts';
+import { adoptedScope, appendSetting, reasonFor } from '#cli/policy/adoption/results.ts';
 
 const strings = z.array(z.string());
 
@@ -15,14 +15,8 @@ function namesOf(value: unknown): string[] {
     return items.map((item) => item.trim()).filter((item) => item !== '');
 }
 
-async function carryLicenses(
-    source: CarrySource,
-    path: string,
-    lists: CarriedConfiguration,
-    root: string,
-): Promise<void> {
-    const parsed = source.parsed;
-    const allowed = namesOf(parsed['onlyAllow']);
+// Compound expressions cannot become individual SPDX allowances without changing their meaning.
+function validateAllowances(allowed: string[], path: string): void {
     for (const license of allowed) {
         try {
             const parsed = parseLicense(license);
@@ -35,6 +29,17 @@ async function carryLicenses(
             );
         }
     }
+}
+
+async function carryLicenses(
+    source: ConfigurationSource,
+    path: string,
+    lists: AdoptionResult,
+    root: string,
+): Promise<void> {
+    const parsed = source.parsed;
+    const allowed = namesOf(parsed['onlyAllow']);
+    validateAllowances(allowed, path);
     const excluded = namesOf(parsed['excludePackages']);
     const settings: TomlTable = {};
     if (excluded.length > 0) {
@@ -54,10 +59,8 @@ async function carryLicenses(
     if (base === '.') {
         for (const [key, values] of Object.entries(settings)) appendSetting(lists, 'licenses', key, asList(values));
     } else {
-        const scope = lists.scopes.get(base) ?? { configurations: [], tools: {} };
-        scope.configurations = [...new Set([...scope.configurations, 'licenses'])];
+        const scope = adoptedScope(lists, base, 'licenses');
         scope.tools['licenses'] = settings;
-        lists.scopes.set(base, scope);
     }
 }
 

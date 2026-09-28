@@ -65,3 +65,13 @@ describe('rule lint', () => {
         expect(messages).toContain('unclosed fenced block');
     });
 });
+
+test('inline code cannot hide repository paths or names from boundary checks', () => {
+    const rejected = file('general/code/A.md', 'Use `quality/repository/naming` in `yap`.\n');
+    expect(lintRules([rejected]).findings.map((finding) => finding.message)).toStrictEqual([
+        String.raw`layer boundary: '\bquality\/' in a code file`,
+        String.raw`layer boundary: '\byap\b' in a code file`,
+    ]);
+    const corrected = file('general/code/A.md', 'Use the naming checks declared by the repository.\n');
+    expect(lintRules([corrected]).findings).toStrictEqual([]);
+});

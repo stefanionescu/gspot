@@ -20,6 +20,24 @@ import { isColorAllowed, configureOutput, fail } from '#cli/output/messages.ts';
 
 const { version: GSPOT_VERSION } = packageManifest;
 
+// Registration order is shared by help, command lookup, and completion.
+const COMMAND_REGISTRATIONS: ((program: Command) => void)[] = [
+    registerInit,
+    registerInstall,
+    registerCheck,
+    registerApply,
+    registerIgnore,
+    registerAdd,
+    registerRemove,
+    registerSet,
+    registerExplain,
+    registerDoctor,
+    registerList,
+    registerUninstall,
+    registerExport,
+    installCompletion,
+];
+
 function verbosityOf(options: Record<string, unknown>): OutputOptions['verbosity'] {
     if (options['quiet'] === true) return 'quiet';
     return options['verbose'] === true ? 'verbose' : 'normal';
@@ -57,20 +75,7 @@ export function buildProgram(): Command {
                 color: isColorAllowed(options['color'] === false),
             });
         });
-    registerInit(program);
-    registerInstall(program);
-    registerCheck(program);
-    registerApply(program);
-    registerIgnore(program);
-    registerAdd(program);
-    registerRemove(program);
-    registerSet(program);
-    registerExplain(program);
-    registerDoctor(program);
-    registerList(program);
-    registerUninstall(program);
-    registerExport(program);
-    installCompletion(program);
+    for (const register of COMMAND_REGISTRATIONS) register(program);
     return program;
 }
 

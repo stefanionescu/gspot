@@ -24,7 +24,7 @@ test('overlapping Markdown sources remain intact before any policy is carried', 
     expect(await Bun.file(join(sandbox.path, 'guide/.markdownlint.jsonc')).text()).toBe(original);
 });
 
-test.each(['cycle', 'escape', 'external link', 'unsupported parent'])(
+test.each(['cycle', 'escape', 'external link', 'unsupported parent'] as const)(
     'Markdown inheritance preserves inputs for %s and accepts a corrected parent',
     async (defect) => {
         await using sandbox = await testdir();
@@ -33,12 +33,12 @@ test.each(['cycle', 'escape', 'external link', 'unsupported parent'])(
         const validParent = '{"default":false,"MD009":true}\n';
         await createFileTree(sandbox.path, {
             '.markdownlint-cli2.jsonc': original,
-            'config/base.jsonc':
-                defect === 'cycle'
-                    ? '{"extends":"./base.jsonc"}\n'
-                    : defect === 'escape'
-                      ? '{"extends":"../../outside.json"}\n'
-                      : '{"customRules":["./custom.mjs"]}\n',
+            'config/base.jsonc': {
+                cycle: '{"extends":"./base.jsonc"}\n',
+                escape: '{"extends":"../../outside.json"}\n',
+                'external link': '{"customRules":["./custom.mjs"]}\n',
+                'unsupported parent': '{"customRules":["./custom.mjs"]}\n',
+            }[defect],
         });
         if (defect === 'external link') {
             await createFileTree(outside.path, { 'base.jsonc': validParent });

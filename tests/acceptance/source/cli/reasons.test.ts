@@ -5,7 +5,7 @@ import { createFileTree, testdir } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import type { Finding } from '#cli/types/checks/checks.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
 import { containing, containingAll, textContaining } from '#tests/support/expectations.ts';
 
 test.each([false, true])(
@@ -209,3 +209,39 @@ test.each([false, true])(
         );
     },
 );
+
+test.each([
+    { key: 'naming.banned_terms', flag: '', item: 'added', expected: ['original', 'added'], code: 0 },
+    { key: 'naming.banned_terms', flag: '--remove', item: 'original', expected: [], code: 2 },
+    { key: 'naming.banned_terms', flag: '--replace', item: 'added', expected: ['added'], code: 2 },
+    { key: 'tools.bash.architecture_roots', flag: '', item: 'added', expected: ['original', 'added'], code: 0 },
+    { key: 'tools.bash.architecture_roots', flag: '--remove', item: 'original', expected: [], code: 0 },
+    { key: 'tools.bash.architecture_roots', flag: '--replace', item: 'added', expected: ['added'], code: 0 },
+])('list edits preserve reason requirements for $key $flag', async ({ key, flag, item, expected, code }) => {
+    await using directory = await testdir();
+    const policy = [
+        'version = 1',
+        'require_reasons = true',
+        'configurations = ["bash", "naming"]',
+        '[rules]',
+        'install = false',
+        '[naming]',
+        'banned_terms = ["original"]',
+        '[tools.bash]',
+        'architecture_roots = ["original"]',
+    ].join('\n');
+    await createFileTree(directory.path, { 'gspot.toml': policy, 'entry.sh': 'echo example\n' });
+    const args = ['set', key, item, ...[flag].filter((value) => value !== '')];
+    const result = await run(directory.path, args);
+    expect(result.code, result.stdout + result.stderr).toBe(code);
+    expect(readFileSync(join(directory.path, 'gspot.toml'), 'utf8') === policy).toBe(code === 2);
+    const explained =
+        code === 2 ? await run(directory.path, [...args, '--reason', 'Repository requirements changed.']) : result;
+    expect(explained.code, explained.stdout + explained.stderr).toBe(0);
+    const parsed = Bun.TOML.parse(readFileSync(join(directory.path, 'gspot.toml'), 'utf8'));
+    const written = key.split('.').reduce<unknown>((value, part) => {
+        expect(value).toBeObject();
+        return (value as Record<string, unknown>)[part];
+    }, parsed);
+    expect(written).toStrictEqual(expected);
+});

@@ -3,7 +3,7 @@ import { testdir } from 'testdirs';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { environment } from '#tests/support/release/packages.ts';
 import { runProcess as run } from '#tests/support/cli/command.ts';
-import { RELEASE_TIMEOUT_MS } from '#tests/constants/support/release.ts';
+import { RELEASE_TIMEOUT_MS, OFFLINE_ENVIRONMENT } from '#tests/constants/release.ts';
 
 export async function createConsumer(registry: { url: string; npmrc: string }, version: string) {
     const workspace = await testdir();
@@ -44,14 +44,7 @@ export async function createConsumer(registry: { url: string; npmrc: string }, v
                 ...environment,
                 NO_COLOR: '1',
                 CI: '1',
-                HTTP_PROXY: 'http://127.0.0.1:1',
-                HTTPS_PROXY: 'http://127.0.0.1:1',
-                ALL_PROXY: 'http://127.0.0.1:1',
-                NO_PROXY: '',
-                http_proxy: undefined,
-                https_proxy: undefined,
-                all_proxy: undefined,
-                no_proxy: undefined,
+                ...OFFLINE_ENVIRONMENT,
             },
             timeoutMs: RELEASE_TIMEOUT_MS,
         };
@@ -65,9 +58,7 @@ export async function createConsumer(registry: { url: string; npmrc: string }, v
             editorconfig,
             formatter,
             workspace: workspace.path,
-            [Symbol.asyncDispose]: async () => {
-                await workspace[Symbol.asyncDispose]();
-            },
+            [Symbol.asyncDispose]: workspace[Symbol.asyncDispose].bind(workspace),
         };
     } catch (error) {
         await workspace[Symbol.asyncDispose]();

@@ -16,6 +16,8 @@ Script structure and options are in the Bash file; commands, processes, and secr
 
 ## Module ownership and visibility
 
+<!-- level: all -->
+
 Each file owns one cohesive responsibility. Directory structure supplies the family or domain
 name.
 
@@ -219,20 +221,20 @@ retry_retryable() {
 
 Use retries for:
 
-- retryable network pulls;
-- readiness polling;
-- `eventually consistent` provider APIs;
+- retryable network pulls.
+- readiness polling.
+- `eventually consistent` provider APIs.
 - remote service startup checks.
 
 Do not use retries to mask:
 
-- corrupt data;
-- invalid credentials;
-- failed migrations or failed artifact validation;
-- syntax errors;
-- missing files;
-- failed validation;
-- failing checks;
+- corrupt data.
+- invalid credentials.
+- failed migrations or failed artifact validation.
+- syntax errors.
+- missing files.
+- failed validation.
+- failing checks.
 - permission problems.
 
 ## CI scripts

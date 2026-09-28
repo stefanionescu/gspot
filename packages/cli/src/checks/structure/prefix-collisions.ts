@@ -71,7 +71,11 @@ export const prefixCollisions: Analysis = (context) => {
             const peerStem = stemOf(entry.name);
             return !INDEX_STEMS.has(peerStem) && prefixOf(peerStem) === prefix;
         });
-        if (peers.length < threshold) return [];
+        if (
+            new Set(peers.map((entry) => (entry.kind === 'dir' ? `${entry.name}/` : stemOf(entry.name)))).size <
+            threshold
+        )
+            return [];
         seen.add(key);
         const names = peers.map((entry) => (entry.kind === 'dir' ? `${entry.name}/` : entry.name)).join(', ');
         return [

@@ -1,16 +1,10 @@
 import { readSource } from '#cli/repository/tracked.ts';
 import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
-import { trackedEnding, xcodeFinding } from '#cli/checks/xcode/project.ts';
+import { trackedEnding, xcodeFinding } from '#cli/checks/xcode/project/checks.ts';
 import { ARBITRARY_LOADS, INCLUDE_LINE, PLIST_KEY, SETTING_NAME } from '#cli/constants/checks/xcode.ts';
 
-// A setting is a name, which may carry conditions in brackets, then an equals sign outside the brackets.
-function isSetting(line: string): boolean {
-    const sign = line.indexOf('=', line.lastIndexOf(']') + 1);
-    return sign > 0 && SETTING_NAME.test(line.slice(0, sign).trim());
-}
-
 /**
- * One finding for each xcconfig line that is no setting, no include and no comment.
+ * One finding for each xcconfig line that is no setting, no include, and no comment.
  * @param input the engine input
  * @returns the findings
  */
@@ -21,7 +15,10 @@ export function xcconfigLines(input: EngineInput): Finding[] {
             .split('\n')
             .flatMap((raw, index): Finding[] => {
                 const line = raw.trim();
-                const isFine = line === '' || line.startsWith('//') || isSetting(line) || INCLUDE_LINE.test(line);
+                // Conditions in brackets can contain equals signs before the assignment itself.
+                const sign = line.indexOf('=', line.lastIndexOf(']') + 1);
+                const isSetting = sign > 0 && SETTING_NAME.test(line.slice(0, sign).trim());
+                const isFine = line === '' || line.startsWith('//') || isSetting || INCLUDE_LINE.test(line);
                 return isFine
                     ? []
                     : [

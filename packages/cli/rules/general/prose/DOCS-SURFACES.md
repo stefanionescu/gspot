@@ -20,6 +20,8 @@ Different technical surfaces need additional contract details.
 
 ### Command-line interfaces
 
+<!-- level: all -->
+
 For each command, document:
 
 - Purpose.
@@ -44,6 +46,8 @@ in CLI reference documentation or the advanced guide when the surface is small
 and specialist.
 
 ### APIs
+
+<!-- level: all -->
 
 For each endpoint or operation, document:
 
@@ -77,6 +81,8 @@ log, or API contract.
 
 ### Libraries and modules
 
+<!-- level: all -->
+
 A library README includes:
 
 - One-line purpose.
@@ -106,6 +112,8 @@ Do not require readers to inspect source to learn routine public behavior.
 
 ### Configuration
 
+<!-- level: all -->
+
 For each configuration key, document:
 
 - Exact key.
@@ -131,6 +139,8 @@ State whether an empty string, missing key, and explicit `null` have different
 meanings.
 
 ### Environment variables
+
+<!-- level: all -->
 
 For each environment variable, document:
 
@@ -158,6 +168,8 @@ ignored.
 
 ### Architecture
 
+<!-- level: all -->
+
 Architecture documentation explains:
 
 - System boundaries.
@@ -183,6 +195,8 @@ tree.
 Use diagrams only when they make relationships clearer than prose.
 
 ### Contributor documentation
+
+<!-- level: all -->
 
 Contributor documentation includes:
 
@@ -242,6 +256,8 @@ Do not paste entire logs when a few relevant lines are enough.
 
 ### Audit event references
 
+<!-- level: all -->
+
 Audit events are historical records. Describe the completed event in past tense.
 Use passive voice when the actor varies or is separately captured.
 
@@ -257,6 +273,8 @@ Release documentation tells users what they need to know about a version.
 
 ### Feature notes
 
+<!-- level: all -->
+
 A feature note answers:
 
 - Who is affected?
@@ -269,6 +287,8 @@ Use present tense.
 Do not use "now" unless timing contrast is essential.
 
 ### Bug-fix notes
+
+<!-- level: all -->
 
 A bug-fix note answers:
 
@@ -287,6 +307,8 @@ job entered the queue.
 ```
 
 ### Change notes
+
+<!-- level: all -->
 
 A change note answers:
 
@@ -364,6 +386,8 @@ When published documentation or release notes contained a material error:
 Do not silently preserve false history.
 
 ### Datestamps
+
+<!-- level: all -->
 
 Use ISO dates for update markers:
 

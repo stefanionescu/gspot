@@ -7,32 +7,174 @@ extend-ignore-re = [ "\\b[0-9a-f]{7,40}\\b", "\\b[A-Za-z0-9+/]{40,}={0,2}\\b" ]
 udid = "udid"
 certifi = "certifi"
 axe = "axe"
-Virtua = "Virtua"
 virtua = "virtua"
-synchronise = "synchronise"
-synchronised = "synchronised"
-materialise = "materialise"
-IFEs = "IFEs"
-IIF = "IIF"
-capitalisation = "capitalisation"
-speling = "speling"
 
 [files]
-extend-exclude = [ "/**/*.lock", "/*.lock", "/**/bun.lockb", "/bun.lockb", "/**/package-lock.json", "/package-lock.json", "/**/pnpm-lock.yaml", "/pnpm-lock.yaml", "/**/yarn.lock", "/yarn.lock", "/**/Package.resolved", "/Package.resolved", "/**/*.pbxproj", "/*.pbxproj", "/**/*.xcstrings", "/*.xcstrings", "/**/*.svg", "/*.svg", "/**/*.min.js", "/*.min.js", "/**/*.min.css", "/*.min.css", "/configurations/policy/prose/styles/gspot/us-english.yml", "/configurations/policy/spelling/manifest.toml" ]
+extend-exclude = [ "/**/*.lock", "/*.lock", "/**/bun.lockb", "/bun.lockb", "/**/package-lock.json", "/package-lock.json", "/**/pnpm-lock.yaml", "/pnpm-lock.yaml", "/**/yarn.lock", "/yarn.lock", "/**/Package.resolved", "/Package.resolved", "/**/*.pbxproj", "/*.pbxproj", "/**/*.xcstrings", "/*.xcstrings", "/**/*.svg", "/*.svg", "/**/*.min.js", "/*.min.js", "/**/*.min.css", "/*.min.css" ]
+
+[type.06-enforcement-ledger-md]
+extend-glob = [ "06-enforcement-ledger.md" ]
+
+[type.06-enforcement-ledger-md.extend-words]
+capitalisation = "capitalisation"
+
+[type.08-naming-policy-md]
+extend-glob = [ "08-naming-policy.md" ]
+
+[type.08-naming-policy-md.extend-words]
+materialise = "materialise"
+synchronise = "synchronise"
+
+[type.declared-checks-test-ts]
+extend-glob = [ "declared-checks.test.ts" ]
+
+[type.declared-checks-test-ts.extend-words]
+teh = "teh"
+
+[type.fixers-test-ts]
+extend-glob = [ "fixers.test.ts" ]
+
+[type.fixers-test-ts.extend-words]
+teh = "teh"
+wether = "wether"
+
+[type.formats-test-ts]
+extend-glob = [ "formats.test.ts" ]
+
+[type.formats-test-ts.extend-words]
+teh = "teh"
+
+[type.ignores-test-ts]
+extend-glob = [ "ignores.test.ts" ]
+
+[type.ignores-test-ts.extend-words]
+teh = "teh"
+
+[type.init-test-ts]
+extend-glob = [ "init.test.ts" ]
+
+[type.init-test-ts.extend-words]
+colour = "colour"
+teh = "teh"
+
+[type.inventory-csv]
+extend-glob = [ "inventory.csv" ]
+
+[type.inventory-csv.extend-words]
+ands = "ands"
+capitalisation = "capitalisation"
+labelled = "labelled"
+materialise = "materialise"
+synchronise = "synchronise"
+
+[type.inventory-csv.extend-identifiers]
+IIFEs = "IIFEs"
+
+[type.native-tools-test-ts]
+extend-glob = [ "native-tools.test.ts" ]
+
+[type.native-tools-test-ts.extend-words]
+teh = "teh"
+
+[type.policy-json]
+extend-glob = [ "policy.json" ]
+
+[type.policy-json.extend-words]
+materialise = "materialise"
+synchronise = "synchronise"
+
+[type.profile-test-ts]
+extend-glob = [ "profile.test.ts" ]
+
+[type.profile-test-ts.extend-words]
+colour = "colour"
+speling = "speling"
+teh = "teh"
+wrod = "wrod"
+
+[type.recovery-test-ts]
+extend-glob = [ "recovery.test.ts" ]
+
+[type.recovery-test-ts.extend-words]
+colour = "colour"
+
+[type.rule-diff-test-ts]
+extend-glob = [ "rule-diff.test.ts" ]
+
+[type.rule-diff-test-ts.extend-words]
+capitalisation = "capitalisation"
+
+[type.spelling-test-ts]
+extend-glob = [ "spelling.test.ts", "spelling.ts" ]
+
+[type.spelling-test-ts.extend-words]
+colour = "colour"
+recieve = "recieve"
+teh = "teh"
+wether = "wether"
+
+[type.spelling-test-ts.extend-identifiers]
+IIFEs = "IIFEs"
+
+[type.sql-parser-test-ts]
+extend-glob = [ "sql-parser.test.ts" ]
+
+[type.sql-parser-test-ts.extend-words]
+SELEC = "SELEC"
+
+[type.sqlfluff-cfg-tmpl]
+extend-glob = [ "sqlfluff.cfg.tmpl" ]
+
+[type.sqlfluff-cfg-tmpl.extend-words]
+capitalisation = "capitalisation"
+
+[type.sqlfluff-test-ts]
+extend-glob = [ "sqlfluff.test.ts" ]
+
+[type.sqlfluff-test-ts.extend-words]
+capitalisation = "capitalisation"
+
+[type.native-csv]
+extend-glob = [ "native.csv" ]
+
+[type.native-csv.extend-identifiers]
+valid_referers = "valid_referers"
+
+[type.eslint-template]
+extend-glob = [ "eslint.config.js.tmpl" ]
+
+[type.eslint-template.extend-identifiers]
+IIFEs = "IIFEs"
+
+[type.english-substitutions]
+extend-glob = [ "us-english.yml" ]
+extend-ignore-re = [ "(?m)^    [a-z]+:" ]
+
+[type.spelling-example]
+extend-glob = [ "manifest.toml" ]
+extend-ignore-re = [ "The word `teh` in selected text reports a spelling finding[.]" ]
 
 [type.gspot-policy]
 extend-glob = [ "gspot.toml" ]
+
+[type.gspot-policy.extend-identifiers]
+IIFEs = "IIFEs"
+valid_referers = "valid_referers"
 
 [type.gspot-policy.extend-words]
 udid = "udid"
 certifi = "certifi"
 axe = "axe"
-Virtua = "Virtua"
 virtua = "virtua"
-synchronise = "synchronise"
-synchronised = "synchronised"
-materialise = "materialise"
-IFEs = "IFEs"
-IIF = "IIF"
 capitalisation = "capitalisation"
+materialise = "materialise"
+synchronise = "synchronise"
+teh = "teh"
+wether = "wether"
+colour = "colour"
+ands = "ands"
+labelled = "labelled"
 speling = "speling"
+wrod = "wrod"
+recieve = "recieve"
+SELEC = "SELEC"

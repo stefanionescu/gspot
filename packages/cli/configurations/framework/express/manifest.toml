@@ -113,6 +113,6 @@ structural_prefix = "^handle(?=[A-Z])"
 reason = "A handler starts with handle and then names the event."
 
 [rule_files]
-framework = ["framework/express/EXPRESS.md", "framework/express/API.md", "framework/express/OPENAPI.md"]
-shared = ["shared/http/HTTP.md"]
-runtime = ["runtime/node/NODE.md"]
+framework = [{path = "framework/express/EXPRESS.md"}, {path = "framework/express/API.md"}, {path = "framework/express/OPENAPI.md"}]
+shared = [{path = "shared/http/HTTP.md"}]
+runtime = [{path = "runtime/node/NODE.md"}]

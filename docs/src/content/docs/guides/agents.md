@@ -43,6 +43,6 @@ have not been edited.
 
 ## What the rule files say
 
-Each rule file states guidance for one topic, including applicable tools and checks. `general/agent/WORKING.md` says how
-to work in the repository; `general/prose/WRITING.md` says how to write; the language, framework
+Each rule file states guidance for one topic and names the applicable tools and checks. `.gspot/rules/general/agent/WORKING.md` says how
+to work in the repository; `.gspot/rules/general/prose/WRITING.md` says how to write; the language, framework,
 and tool files say what code looks like here.

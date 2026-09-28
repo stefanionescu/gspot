@@ -3,14 +3,38 @@ import { join, relative, dirname } from 'node:path';
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { PRIVATE_FILE } from '#cli/constants/platform.ts';
 import { getTsconfig } from '#cli/repository/tsconfig.ts';
-import { runToolCheck } from '#cli/execution/tool-runner.ts';
+import type { ConfinedRoot } from '#cli/types/platform.ts';
+import { runToolCheck } from '#cli/execution/tool/runner.ts';
 import type { CheckResult } from '#cli/types/checks/checks.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import { scratchCopy } from '#cli/execution/file-workspace.ts';
 import { targetInScope } from '#cli/configurations/targets.ts';
+import { scratchCopy } from '#cli/execution/files/workspace.ts';
 import { chmodSync, rmSync, readFileSync, writeFileSync } from 'node:fs';
 import { commandConfigurations } from '#cli/execution/command-expansion.ts';
 import type { PlannedCheck, Session } from '#cli/types/execution/execution.ts';
+
+// Both source reads and emitted paths must stay inside the disposable project tree.
+function validateOutputs(root: string, config: ts.ParsedCommandLine, files: ConfinedRoot): void {
+    for (const file of config.fileNames) {
+        files.source(relative(root, file).replaceAll('\\', '/'));
+        if (config.options.noEmit === true) continue;
+        for (const output of ts.getOutputFileNames(config, file, !ts.sys.useCaseSensitiveFileNames))
+            files.stat(relative(root, output).replaceAll('\\', '/'));
+    }
+    const metadata = ts.getTsBuildInfoEmitOutputFilePath(config.options);
+    if (metadata !== undefined) files.stat(relative(root, metadata).replaceAll('\\', '/'));
+}
+
+// Incremental checks write metadata only inside their disposable copy.
+function appendBuildMetadata(
+    command: string[],
+    config: ts.ParsedCommandLine | undefined,
+    scratch: string,
+    name: string,
+): void {
+    if (config?.options.incremental !== true && config?.options.composite !== true) return;
+    command.push('--tsBuildInfoFile', join(scratch, '.gspot', name));
+}
 
 function validateBuild(root: string, path: string, visited = new Set<string>()): void {
     if (visited.has(path)) return;
@@ -19,14 +43,7 @@ function validateBuild(root: string, path: string, visited = new Set<string>()):
     if (config === undefined) throw new Error(`Missing TypeScript project: ${path}`);
     const files = openConfinedRoot(root, 'native');
     try {
-        for (const file of config.fileNames) {
-            files.source(relative(root, file).replaceAll('\\', '/'));
-            if (config.options.noEmit === true) continue;
-            for (const output of ts.getOutputFileNames(config, file, !ts.sys.useCaseSensitiveFileNames))
-                files.stat(relative(root, output).replaceAll('\\', '/'));
-        }
-        const metadata = ts.getTsBuildInfoEmitOutputFilePath(config.options);
-        if (metadata !== undefined) files.stat(relative(root, metadata).replaceAll('\\', '/'));
+        validateOutputs(root, config, files);
         for (const reference of config.projectReferences ?? [])
             validateBuild(root, ts.resolveProjectReferencePath(reference), visited);
     } finally {
@@ -53,8 +70,7 @@ export async function checkTypescript(session: Session, planned: PlannedCheck): 
     );
     try {
         if (references) validateBuild(scratch, join(scratch, planned.scope.scope.path, 'tsconfig.json'));
-        else if (config?.options.incremental === true || config?.options.composite === true)
-            command.push('--tsBuildInfoFile', join(scratch, '.gspot', 'tsconfig.check.tsbuildinfo'));
+        else appendBuildMetadata(command, config, scratch, 'tsconfig.check.tsbuildinfo');
         const result = await runToolCheck(session, planned, command, scratch);
         if (result.command !== undefined)
             result.command = result.command.map((part) => part.replace(scratch, () => session.root));
@@ -86,7 +102,7 @@ export async function checkJavascript(session: Session, planned: PlannedCheck): 
         const generatedPath = join(scratch, target);
         const generated = getTsconfig(scratch, generatedPath);
         if (generated === undefined) throw new Error(`Missing JavaScript configuration: ${target}`);
-        const scopedFiles = generated.fileNames.filter(
+        const scopeFiles = generated.fileNames.filter(
             (path) => scopeOf(relative(scratch, path).replaceAll('\\', '/'), session.repository.scopes).path === scope,
         );
         const authored = JSON.parse(readFileSync(generatedPath, 'utf8')) as Record<string, unknown>;
@@ -96,7 +112,7 @@ export async function checkJavascript(session: Session, planned: PlannedCheck): 
             generatedPath,
             JSON.stringify({
                 ...authored,
-                files: scopedFiles.map((path) => relative(dirname(generatedPath), path).replaceAll('\\', '/')),
+                files: scopeFiles.map((path) => relative(dirname(generatedPath), path).replaceAll('\\', '/')),
                 include: [],
                 exclude: [],
             }),
@@ -104,8 +120,7 @@ export async function checkJavascript(session: Session, planned: PlannedCheck): 
         const roots = ts.getEffectiveTypeRoots(config?.options ?? {}, { getCurrentDirectory: () => directory });
         const command = ['tsc', '-p', '{config:jsconfig}', '--pretty', 'false'];
         if (roots !== undefined) command.push('--typeRoots', roots.join(','));
-        if (config?.options.incremental === true || config?.options.composite === true)
-            command.push('--tsBuildInfoFile', join(scratch, '.gspot', 'jsconfig.check.tsbuildinfo'));
+        appendBuildMetadata(command, config, scratch, 'jsconfig.check.tsbuildinfo');
         const result = await runToolCheck(session, planned, command, scratch);
         if (result.command !== undefined)
             result.command = result.command.map((part) => part.replaceAll(scratch, () => session.root));

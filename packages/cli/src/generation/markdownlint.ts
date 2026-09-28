@@ -2,7 +2,8 @@ import type { MergedView } from '#cli/types/policy/policy.ts';
 
 /**
  * Share effective Markdown rules between native editor and structured CLI configurations.
- * @param view the merged view of the scope
+ * @param view the merged view of the scope.
+ * @param isAll whether the all level enables document structure conventions.
  * @returns the markdownlint rules table
  */
 export function markdownlintRules(view: MergedView, isAll = false): Record<string, unknown> {

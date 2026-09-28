@@ -53,11 +53,6 @@ function withoutExcluded(files: TrackedFile[], spec: CheckSpec, scope: ScopeSele
     return files.filter((file) => !isExcluded(file.path));
 }
 
-// Whether the selection touches the policy or its generated files, which can change what any check finds.
-function isPolicyTouched(narrow: Set<string>): boolean {
-    return narrow.has('gspot.toml') || narrow.values().some((path) => path.startsWith('.gspot/'));
-}
-
 // The policy changed, so the check runs over everything it claims, with the check's own claims kept.
 function reclaimed(context: PlanContext, entry: PlanEntry): TrackedFile[] {
     const { scope, children } = context;
@@ -70,13 +65,15 @@ function narrowed(context: PlanContext, entry: PlanEntry, files: TrackedFile[]):
     const { narrow } = context;
     if (!narrow) return files;
     const inNarrowed = files.filter((file) => narrow.has(file.path));
-    const isTouched = isPolicyTouched(narrow);
-    if (entry.spec.runs !== 'per-file-list') return !isTouched && inNarrowed.length === 0 ? [] : files;
-    if (!isTouched || !entry.manifest || inNarrowed.length > 0) return inNarrowed;
+    const isTouched = narrow.has('gspot.toml') || narrow.values().some((path) => path.startsWith('.gspot/'));
+    if (inNarrowed.length > 0) return entry.spec.runs === 'per-file-list' ? inNarrowed : files;
+    if (!isTouched) return [];
+    if (entry.spec.runs !== 'per-file-list') return files;
+    if (entry.manifest === undefined) return [];
     return reclaimed(context, entry);
 }
 
-// Selected paths that are no longer in the tree but still trigger a project check.
+// Selected paths deleted from the tree but still trigger a project check.
 function missingTriggers(context: PlanContext, spec: CheckSpec, scopePath: string): string[] {
     if (spec.runs === 'per-file-list' || context.narrow === undefined) return [];
     const readable = new Set(context.session.repository.files.map((file) => file.path));

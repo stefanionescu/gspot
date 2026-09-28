@@ -26,7 +26,7 @@ export type StructureContext = {
     /** A `[tools.bash]` slot as written. */
     bashSetting: (slot: string) => unknown;
     /** A finding for this check. */
-    report: (file: string, line: number, rule: string, message: string) => Finding;
+    report: (file: string, line: number, rule: string, text: string) => Finding;
 };
 export type StructureProblem = { file: string; line: number; rule: string; text: string };
 /** One shell function: its name, its declaration line and closing line (one-based), and the lines between the braces. */
@@ -46,7 +46,7 @@ export type ScriptFile = {
 /** The shell scripts of one scope, with the function owners across them. */
 export type ScriptIndex = { files: ScriptFile[]; owners: Map<string, string> };
 /** How an analysis reports one problem in one file. */
-export type ScriptReport = (line: number, rule: string, message: string) => void;
+export type ScriptReport = (line: number, rule: string, text: string) => void;
 export type Edge = ImportIndex['edges'][number];
 export type EdgeSource = { input: EngineInput; path: string; owned: Set<string>; scanner: Bun.Transpiler };
 export type ImportIndex = {

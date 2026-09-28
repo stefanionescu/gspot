@@ -8,18 +8,8 @@ import { proposeHookRestorations } from '#cli/lifecycle/hooks/git.ts';
 import { findRoot, isGitRepository } from '#cli/repository/tracked.ts';
 import type { OwnershipState } from '#cli/types/lifecycle/lifecycle.ts';
 import { OWNERSHIP_FILE, STATE_DIRECTORY } from '#cli/constants/platform.ts';
-import { readOwnership, withLifecycleOwner } from '#cli/lifecycle/ownership/owner.ts';
+import { readOwnership, runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import type { CommandResult, UninstallOptions, UninstallPlan } from '#cli/types/commands/commands.ts';
-
-function planText(plan: UninstallPlan): string {
-    return [
-        'restore originals or remove unchanged installed files',
-        ...[...plan.remove, ...plan.blocks].map((path) => `  ${path}`),
-        ...(plan.hooks ? ['restore or remove unchanged dispatchers in the Git-resolved hooks directory'] : []),
-        'kept: gspot.toml, exported profiles, recovery data, ignore entries, unowned files, and subsequent edits',
-        '',
-    ].join('\n');
-}
 
 // Pending entries are candidates; the lifecycle owner confirms their state before mutation.
 function restorationCandidates(state: OwnershipState) {
@@ -59,13 +49,13 @@ export function planUninstall(root: string): UninstallPlan {
 }
 
 /**
- * Restore only unchanged or absent destinations, retaining recovery and subsequent edits.
+ * Restore unchanged or absent destinations. Preserve recovery records and subsequent edits.
  * @param root the repository being removed
  * @param plan the reviewed restoration and removal candidates
  * @returns paths preserved because they were edited or unowned
  */
 export function applyUninstall(root: string, plan: UninstallPlan): string[] {
-    return withLifecycleOwner(root, (owner) => {
+    return runOwnedLifecycle(root, (owner) => {
         const proposed = new Set([...plan.remove, ...plan.blocks]);
         const proposals = [...proposed].map((path) => owner.proposeRestoration(path));
         const preserved = proposals
@@ -77,7 +67,7 @@ export function applyUninstall(root: string, plan: UninstallPlan): string[] {
             return preserved;
         }
         const location = hookLocation(root);
-        return withLifecycleOwner(
+        return runOwnedLifecycle(
             location.root,
             (hooks) => {
                 const planned = proposeHookRestorations(hooks, location);
@@ -101,7 +91,13 @@ export function applyUninstall(root: string, plan: UninstallPlan): string[] {
 export async function uninstallCommand(options: UninstallOptions): Promise<CommandResult> {
     const root = findRoot(options.cwd, ['gspot.toml', OWNERSHIP_FILE]);
     const plan = planUninstall(root);
-    const text = planText(plan);
+    const text = [
+        'restore originals or remove unchanged installed files',
+        ...[...plan.remove, ...plan.blocks].map((path) => `  ${path}`),
+        ...(plan.hooks ? ['restore or remove unchanged dispatchers in the Git-resolved hooks directory'] : []),
+        'kept: gspot.toml, exported profiles, recovery data, ignore entries, unowned files, and subsequent edits',
+        '',
+    ].join('\n');
     if (options.isDryRun)
         return { text: `${text}--dry-run: nothing removed.\n`, json: { plan, isDryRun: true }, exitCode: 0 };
     process.stderr.write(text);

@@ -27,3 +27,8 @@ export const INTERPRETERS = new Map([
         String.raw`C:\selected revision\.venv\Scripts\python.exe`,
     ],
 ]);
+
+export const WINDOWS_LAUNCHER_LAYOUTS = {
+    extended: { size: 240, magic: 0x2_0b, directories: 112 },
+    standard: { size: 224, magic: 0x1_0b, directories: 96 },
+};

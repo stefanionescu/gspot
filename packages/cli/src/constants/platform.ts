@@ -22,7 +22,7 @@ export const EXECUTE_BITS = 0o111;
 export const OWNER_WRITE_BIT = 0o200;
 export const DEVICE_NAME = /^(?:con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/iu;
 export const UNSAFE_CHARACTERS = /[\\:<>"|?*\p{Cc}]/u;
-export const TRAILING_DOT_OR_SPACE = /[. ]$/u;
+export const UNSAFE_PATH_END = /[. ]$/u;
 /** Recovery and ownership metadata never enter repository checks or generated proposals. */
 export const LIFECYCLE_PRIVATE_PATH =
     /(?:^|\/)\.gspot\/(?:state(?:\/|$)|ownership\.json$|writer\.lock$|recovery(?:\/|$))/iu;
@@ -40,6 +40,8 @@ export const GRAMMAR_SOURCES: Record<string, string> = {
     'html.wasm': 'tree-sitter-html/tree-sitter-html.wasm',
     'javascript.wasm': 'tree-sitter-javascript/tree-sitter-javascript.wasm',
     'python.wasm': 'tree-sitter-python/tree-sitter-python.wasm',
+    'ruby.wasm': 'tree-sitter-ruby/tree-sitter-ruby.wasm',
+    'toml.wasm': '@tree-sitter-grammars/tree-sitter-toml/tree-sitter-toml.wasm',
     'tsx.wasm': 'tree-sitter-typescript/tree-sitter-tsx.wasm',
     'typescript.wasm': 'tree-sitter-typescript/tree-sitter-typescript.wasm',
     'web-tree-sitter.wasm': 'web-tree-sitter/web-tree-sitter.wasm',
@@ -68,5 +70,5 @@ export const PRIVATE_PATHS = [
 export const SWIFT_GRAMMAR = {
     version: '0.7.3',
     url: 'https://github.com/alex-pinkus/tree-sitter-swift/releases/download/0.7.3/tree-sitter-swift.wasm',
-    sha256: '0258a7ef17303a8079ffe0748b3583d59656b5c3e8653fca7b6451b3e6689eb2',
+    checksum: '0258a7ef17303a8079ffe0748b3583d59656b5c3e8653fca7b6451b3e6689eb2',
 } as const;

@@ -14,7 +14,7 @@ function renderedRule(stem: string, text: string, view: MergedView): string {
 }
 
 /**
- * Names of the bundled Vale styles, shared by configuration and asset generation.
+ * Bundled Vale style names shared by configuration and asset generation.
  * @returns the style names
  */
 export function styleNames(): string[] {

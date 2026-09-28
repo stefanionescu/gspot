@@ -4,10 +4,10 @@ import { symlinkSync } from 'node:fs';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { readRepository } from '#cli/repository/tree.ts';
-import { textContaining } from '#tests/support/expectations.ts';
 import { collectCarried } from '#cli/policy/adoption/collect.ts';
 import { existingTooling } from '#cli/repository/existing-tooling.ts';
 import type { ExistingTooling } from '#cli/types/repository/repository.ts';
+import { rejection, textContaining } from '#tests/support/expectations.ts';
 
 const tooling: ExistingTooling = {
     configs: [{ tool: 'ruff', check: 'python/ruff', path: 'backend/ruff.toml', carries: 'rules-table' as const }],
@@ -109,10 +109,32 @@ test.each(['preview = true\n', '[lint]\npreview = true\n', '[format]\npreview = 
     async (original) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'backend/ruff.toml': original });
-        await expect(collectCarried(sandbox.path, tooling, new Set(['python']), [])).rejects.toThrow(
+        expect(await rejection(collectCarried(sandbox.path, tooling, new Set(['python']), []))).toContain(
             'preview activation',
         );
         expect(await Bun.file(join(sandbox.path, 'backend/ruff.toml')).text()).toBe(original);
         expect(await Bun.file(join(sandbox.path, '.gspot/config/ruff.toml')).exists()).toBe(false);
     },
 );
+
+test.each([
+    ['inherited', '', 'google'],
+    ['overridden', '[lint.pydocstyle]\nconvention = "numpy"\n', 'numpy'],
+])('nested Ruff %s docstring conventions remain scoped after adoption', async (_, child, convention) => {
+    await using sandbox = await testdir();
+    const original = `extend = "../config/base.toml"\n${child}`;
+    await createFileTree(sandbox.path, {
+        'backend/ruff.toml': original,
+        'config/base.toml': '[lint.pydocstyle]\nconvention = "google"\n',
+        'backend/example.py': 'def example():\n    return 1\n',
+    });
+    const carried = await collectCarried(sandbox.path, tooling, new Set(['python']), ['backend/example.py']);
+    expect(carried.unread).toStrictEqual([]);
+    expect(carried.scopes.get('backend')).toStrictEqual({
+        configurations: ['python'],
+        tools: { ruff: { docstring_convention: convention } },
+    });
+    expect(carried.tools.get('ruff')?.settings).toBeUndefined();
+    expect(carried.retained).toContainEqual({ path: 'config/base.toml', note: expect.any(String) });
+    expect(await Bun.file(join(sandbox.path, 'backend/ruff.toml')).text()).toBe(original);
+});

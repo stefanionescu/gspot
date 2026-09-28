@@ -1,0 +1,137 @@
+import { describe, expect, test } from 'bun:test';
+import { parseSql } from '#cli/parsers/sql/parser.ts';
+import { rejection } from '#tests/support/expectations.ts';
+import { positionAt, sqlFile } from '#cli/parsers/sql/statements.ts';
+import { sqlIdentifiers } from '#cli/checks/naming/extractors/sql.ts';
+import type { SourceObservations } from '#cli/types/repository/repository.ts';
+
+describe('parseSql', () => {
+    test('a broken statement returns the error and where it points', async () => {
+        const parsed = await parseSql('SELECT 1;\nSELEC 2;');
+        expect(parsed.error?.text).toContain('syntax error');
+        expect(parsed.error?.offset).toBe(10);
+    });
+});
+
+test('SQL analyses share concurrent parses and refresh after source corrections', async () => {
+    const observations: SourceObservations = { root: '/repository', sources: new Map() };
+    const source = 'CREATE TABLE user_accounts (display_name text);';
+    const first = sqlFile(source, observations);
+    expect(sqlFile(source, observations)).toBe(first);
+    const [parsed, identifiers] = await Promise.all([first, sqlIdentifiers('accounts.sql', source, observations)]);
+    expect(parsed.error).toBeUndefined();
+    expect(
+        identifiers.map((identifier) => ({ name: identifier.name, line: identifier.line, column: identifier.column })),
+    ).toStrictEqual([
+        { name: 'user_accounts', line: 1, column: 14 },
+        { name: 'display_name', line: 1, column: 29 },
+    ]);
+    const broken = 'SELECT 1;\nSELEC 2;';
+    const failed = await sqlFile(broken, observations);
+    expect(failed.error).toStrictEqual({
+        text: 'syntax error at or near "SELEC"',
+        line: 2,
+        column: 1,
+    });
+    expect(await rejection(sqlIdentifiers('broken.sql', broken, observations))).toContain('SQL parse failed at 2:1');
+    const corrected = await sqlFile(broken.replace('SELEC 2', 'SELECT 2'), observations);
+    expect(corrected.error).toBeUndefined();
+    const refreshed = sqlFile(source, { root: observations.root, sources: new Map() });
+    expect(refreshed).not.toBe(first);
+    expect(await refreshed).toStrictEqual(parsed);
+});
+
+test('SQL statement positions skip nested comments and count Unicode prefixes correctly', async () => {
+    const text = [
+        '-- 前言',
+        '/* outer',
+        ' /* nested */',
+        '*/',
+        'DROP TABLE app.users;',
+        '-- Between statements.',
+        '/* next */',
+        ' SELECT 1;',
+    ].join('\n');
+    const parsed = await sqlFile(text);
+    expect(parsed.error).toBeUndefined();
+    expect(parsed.statements.map((statement) => statement.kind)).toStrictEqual(['DropStmt', 'SelectStmt']);
+    expect(parsed.statements.map((statement) => positionAt(text, statement.start))).toStrictEqual([
+        { line: 5, column: 1 },
+        { line: 8, column: 2 },
+    ]);
+});
+
+test('concurrent SQL parsing returns independent results in a fresh process', () => {
+    const script = `
+        import { parseSql } from ${JSON.stringify(Bun.resolveSync('#cli/parsers/sql/parser.ts', import.meta.dir))};
+        const parsed = await Promise.all(['SELECT 1', 'SELEC 2', 'SELECT 3'].map((sql) => parseSql(sql)));
+        console.log(JSON.stringify(parsed.map((result) => result.error ?? null)));
+    `;
+    const result = Bun.spawnSync([process.execPath, '-e', script], { timeout: 10_000 });
+    expect(result.exitCode, result.stderr.toString()).toBe(0);
+    expect(JSON.parse(result.stdout.toString())).toStrictEqual([
+        null,
+        { text: 'syntax error at or near "SELEC"', offset: 0 },
+        null,
+    ]);
+});
+
+test('psql commands and variables preserve diagnostic positions and PostgreSQL casts', async () => {
+    const text = [
+        String.raw`\set account '前言'`,
+        'SELECT :account::int, :\'label\', :"column" FROM :table;',
+        'SELECT 1+:value, account$tag$ FROM user_accounts;',
+        'SELEC 2;',
+    ].join('\n');
+    const broken = await sqlFile(text);
+    expect(broken.error).toStrictEqual({ text: 'syntax error at or near "SELEC"', line: 4, column: 1 });
+    const corrected = await sqlFile(text.replace('SELEC 2', 'SELECT 2'));
+    expect(corrected.error).toBeUndefined();
+    expect(corrected.statements.map((statement) => positionAt(text, statement.start))).toStrictEqual([
+        { line: 2, column: 1 },
+        { line: 3, column: 1 },
+        { line: 4, column: 1 },
+    ]);
+});
+
+test('psql tokens inside quoted SQL and nested comments retain their literal contents', async () => {
+    const text = [
+        "SELECT ':value', E'\\\\:value', $$:value$$, $body$\n\\set literal\n$body$;",
+        '/* :value /* :nested */ :value */',
+        '-- :value',
+        'SELECT 1::int;',
+    ].join('\n');
+    const parsed = await sqlFile(text);
+    expect(parsed.error).toBeUndefined();
+    expect(parsed.source).toBe(text);
+    expect(parsed.variables).toStrictEqual([]);
+    const unterminatedString = await sqlFile("SELECT ':unterminated;");
+    expect(unterminatedString.error?.text).toContain('unterminated');
+    const unclosedComment = await sqlFile('SELECT 1; /* :unclosed');
+    expect(unclosedComment.error?.text).toContain('unterminated');
+});
+
+test('SQL errors after Unicode point at the original token', async () => {
+    const text = "SELECT '前言😀', :value; SELEC 2;";
+    const parsed = await sqlFile(text);
+    expect(parsed.error).toStrictEqual({
+        text: 'syntax error at or near "SELEC"',
+        line: 1,
+        column: text.lastIndexOf('SELEC') + 1,
+    });
+    const corrected = await sqlFile(text.replace('SELEC 2', 'SELECT 2'));
+    expect(corrected.error).toBeUndefined();
+});
+
+test.each(["'", "E'", '"'])(
+    'an unterminated SQL %s value preserves client-shaped text for the native error',
+    async (opener) => {
+        const text = `SELECT ${opener}:value\n\\set literal\n-- :fixture`;
+        const parsed = await sqlFile(text);
+        expect(parsed.source).toBe(text);
+        expect(parsed.variables).toStrictEqual([]);
+        expect(parsed.error?.text).toContain('unterminated');
+        expect(parsed.error?.line).toBe(1);
+        expect(parsed.error?.column).toBe(8);
+    },
+);

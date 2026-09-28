@@ -494,4 +494,4 @@ summary = "The platforms the fourth header line of every script names."
 ".bash" = ["format", "syntax", "style", "structure", "naming", "prose", "spelling"]
 
 [rule_files]
-language = ["language/BASH.md", "language/bash/LANGUAGE.md", "language/bash/SAFETY.md", "language/bash/OPERATIONS.md", "language/naming/BASH.md"]
+language = [{path = "language/BASH.md"}, {path = "language/bash/LANGUAGE.md"}, {path = "language/bash/SAFETY.md"}, {path = "language/bash/OPERATIONS.md"}, {path = "language/naming/BASH.md"}]

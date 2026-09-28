@@ -1,14 +1,13 @@
+import { join } from 'node:path';
 import { expect, test } from 'bun:test';
-import { createHash } from 'node:crypto';
-import { delimiter, join } from 'node:path';
 import { git } from '#tests/support/cli/git.ts';
 import { createFileTree, testdir } from 'testdirs';
+import { run } from '#tests/support/cli/command.ts';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { pushReportSchema } from '#cli/execution/report.ts';
-import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
-import { environmentVariables } from '#cli/platform/environment.ts';
-import { gspot, run, runProcess } from '#tests/support/cli/command.ts';
 import type { Generated, Retention, Step } from '#tests/types/acceptance/source/cli.ts';
 import { CODEQUALITY_REPORT, RETENTION } from '#tests/constants/acceptance/source/cli/cli.ts';
+import { commitCiSource, prepareCiProject, createCiDownload, runCiJob } from '#tests/support/cli/ci.ts';
 
 function runsManual(steps: Step[]): boolean {
     return steps.some((step) => step.run?.includes('--stage manual') === true);
@@ -32,170 +31,102 @@ function retention(provider: 'gitlab' | 'github', generated: Generated): Retenti
 }
 
 test.each(['gitlab', 'github'] as const)(
-    'the generated %s job verifies its download, checks exact changed objects, retains reports, and accepts corrections',
+    'generated jobs check changed objects, retain reports, and accept corrected source in %s CI',
     async (provider) => {
         await using repository = await testdir();
         await using executables = await testdir();
-        const pipelinePath = provider === 'gitlab' ? '.gitlab-ci.yml' : '.github/workflows/application.yml';
-        const pipeline =
-            provider === 'gitlab'
-                ? 'stages: [test]\napplication:\n  script: echo authored-job\n'
-                : 'on: push\njobs:\n  application:\n    runs-on: ubuntu-24.04\n    steps:\n      - run: echo authored-job\n';
-        const policy = `version = 1
-configurations = []
-[rules]
-install = false
-[ci]
-provider = "${provider}"
-[[check]]
-name = "project/syntax"
-stage = "commit"
-paths = ["*.sh"]
-command = ${JSON.stringify([process.execPath, '-e', 'for (const path of process.argv.slice(1)) { const result = Bun.spawnSync(["/bin/bash", "-n", path]); if (result.exitCode !== 0) { console.log(path + ": syntax error"); process.exitCode = 1; } }', '{files}'])}
-[check.output]
-format = "lines"
-`;
-        await createFileTree(repository.path, {
-            'gspot.toml': policy,
-            [pipelinePath]: pipeline,
-            'changed.sh': 'echo valid\n',
-            'legacy.sh': 'if then\n',
-        });
-        for (const args of [
-            ['init', '-q'],
-            ['config', 'user.email', 'ci@example.com'],
-            ['config', 'user.name', 'CI acceptance'],
-        ]) {
-            const result = git(repository.path, args);
-            expect(result.code, result.stderr).toBe(0);
+        const { base, target, generated } = await prepareCiProject(repository.path, provider);
+        await using download = await createCiDownload(executables.path);
+        const execute = async (comparison: string) =>
+            await runCiJob(repository.path, generated, download.directory, comparison, provider);
+        const invalid = await execute(base);
+        expect(invalid.code, invalid.stdout + invalid.stderr).toBe(1);
+        const reportPath = join(repository.path, '.gspot/reports/report.json');
+        const failed = pushReportSchema.parse(JSON.parse(readFileSync(reportPath, 'utf8')));
+        expect(failed.revisions[0]!.object).toBe(target);
+        expect(failed.revisions[0]!.report.checks[0]!.status).toBe('fail');
+        expect(invalid.stdout).toContain('changed.sh');
+        expect(JSON.stringify(failed.revisions[0]!.report.checks[0]!.findings)).not.toContain('legacy.sh');
+        for (const path of [
+            '.gspot/reports/report.json',
+            '.gspot/reports/report.sarif',
+            '.gspot/reports/report.codequality.json',
+        ])
+            expect(readFileSync(join(repository.path, path)).length).toBeGreaterThan(0);
+        expect(retention(provider, generated)).toMatchObject(RETENTION[provider]);
+        writeFileSync(join(repository.path, 'changed.sh'), 'echo corrected\n');
+        const corrected = commitCiSource(repository.path, 'correct syntax');
+        const valid = await execute(base);
+        expect(valid.code, valid.stdout + valid.stderr).toBe(0);
+        expect(pushReportSchema.parse(JSON.parse(readFileSync(reportPath, 'utf8'))).revisions[0]!.object).toBe(
+            corrected,
+        );
+        const firstPush = await execute('0'.repeat(40));
+        expect(firstPush.code, firstPush.stdout + firstPush.stderr).toBe(1);
+        expect(firstPush.stdout).toContain('legacy.sh');
+    },
+    120_000,
+);
+
+test.each(['gitlab', 'github'] as const)(
+    'invalid comparisons and corrupted downloads preserve reports until correction in %s CI',
+    async (provider) => {
+        await using repository = await testdir();
+        await using executables = await testdir();
+        const { base, generated } = await prepareCiProject(repository.path, provider);
+        await using download = await createCiDownload(executables.path);
+        const execute = async (comparison: string) =>
+            await runCiJob(repository.path, generated, download.directory, comparison, provider);
+        const initial = await execute(base);
+        expect(initial.code).toBe(1);
+        const reportPath = join(repository.path, '.gspot/reports/report.json');
+        const held = readFileSync(reportPath);
+        const malformed = await execute('$(touch injected)');
+        expect(malformed.code, malformed.stdout + malformed.stderr).toBe(2);
+        expect(malformed.stderr).toContain('Invalid CI comparison object');
+        expect(readFileSync(reportPath)).toStrictEqual(held);
+        const missing = await execute('f'.repeat(40));
+        expect(missing.code).not.toBe(0);
+        expect(readFileSync(reportPath)).toStrictEqual(held);
+        download.corrupt = true;
+        const refused = await execute(base);
+        expect(refused.code).toBe(1);
+        expect(refused.stderr).toContain('checksum does not match');
+        expect(readFileSync(reportPath)).toStrictEqual(held);
+        download.corrupt = false;
+        writeFileSync(join(repository.path, 'changed.sh'), 'echo corrected\n');
+        commitCiSource(repository.path, 'correct syntax');
+        const corrected = await execute(base);
+        expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+    },
+    120_000,
+);
+
+test.each(['gitlab', 'github'] as const)(
+    'full-tree selection preserves authored jobs and rejects an invalid run setting in %s CI',
+    async (provider) => {
+        await using repository = await testdir();
+        await using executables = await testdir();
+        const { base, pipeline, pipelinePath, workflowPath } = await prepareCiProject(repository.path, provider);
+        await using download = await createCiDownload(executables.path);
+        const policyBefore = readFileSync(join(repository.path, 'gspot.toml'));
+        const invalidSetting = await run(repository.path, ['set', 'ci.run', 'unknown']);
+        expect(invalidSetting.code).toBe(2);
+        expect(readFileSync(join(repository.path, 'gspot.toml'))).toStrictEqual(policyBefore);
+        for (const args of [['set', 'ci.run', 'all'], ['set', 'ci.sarif', 'false'], ['apply']]) {
+            const changed = await run(repository.path, args);
+            expect(changed.code, changed.stdout + changed.stderr).toBe(0);
         }
-        const applied = await run(repository.path, ['apply']);
-        expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-        const commit = (message: string) => {
-            expect(git(repository.path, ['add', '-A']).code).toBe(0);
-            const committed = git(repository.path, ['commit', '-qm', message]);
-            expect(committed.code, committed.stderr).toBe(0);
-            return git(repository.path, ['rev-parse', 'HEAD']).stdout.trim();
-        };
-        const base = commit('base');
-        writeFileSync(join(repository.path, 'changed.sh'), 'if then\n');
-        const target = commit('invalid change');
-        const binary = `#!/usr/bin/env bun
-const child = Bun.spawnSync([process.execPath, ${JSON.stringify(gspot)}, ...process.argv.slice(2)], { stdin: 'inherit', stdout: 'inherit', stderr: 'inherit' });
-process.exit(child.exitCode);
-`;
-        const digest = createHash('sha256').update(binary).digest('hex');
-        let corrupt = false;
-        const server = Bun.serve({
-            hostname: '127.0.0.1',
-            port: 0,
-            fetch(request) {
-                const name = new URL(request.url).pathname.split('/').at(-1)!;
-                return new Response(
-                    name === 'checksums.txt'
-                        ? ['gspot-darwin-arm64', 'gspot-darwin-x64', 'gspot-linux-arm64', 'gspot-linux-x64']
-                              .map((asset) => `${corrupt ? '0'.repeat(64) : digest}  ${asset}\n`)
-                              .join('')
-                        : binary,
-                );
-            },
-        });
-        try {
-            const curl = Bun.which('curl');
-            expect(curl).not.toBeNull();
-            writeFileSync(
-                join(executables.path, 'curl'),
-                `#!/usr/bin/env bun
-    const args = process.argv.slice(2).map(value => value.startsWith('https://github.com/stefanionescu/gspot/releases/download/') ? ${JSON.stringify(`http://127.0.0.1:${String(server.port)}`)} + new URL(value).pathname : value);
-    process.exit(Bun.spawnSync([${JSON.stringify(curl)}, ...args], {stdin:'inherit',stdout:'inherit',stderr:'inherit'}).exitCode);
-    `,
-            );
-            chmodSync(join(executables.path, 'curl'), 0o755);
-            const workflowPath = provider === 'gitlab' ? '.gitlab/ci/gspot.yml' : '.github/workflows/gspot.yml';
-            const generated = Bun.YAML.parse(readFileSync(join(repository.path, workflowPath), 'utf8')) as Generated;
-            let script =
-                provider === 'gitlab'
-                    ? generated.gspot.script
-                    : generated.jobs['check-ubuntu']!.steps.flatMap((step) =>
-                          step.run === undefined ? [] : [step.run],
-                      );
-            const execute = (comparison: string) =>
-                runProcess(['/bin/bash', '-e', '-c', script.join('\n')], {
-                    cwd: repository.path,
-                    env: {
-                        PATH: `${executables.path}${delimiter}${environmentVariables()['PATH'] ?? ''}`,
-                        CI_COMMIT_BEFORE_SHA: comparison,
-                        CI_MERGE_REQUEST_DIFF_BASE_SHA: '',
-                        GSPOT_CI_BASE: comparison,
-                        RUNNER_TEMP: executables.path,
-                        GITHUB_PATH: join(executables.path, 'github-path'),
-                        NO_COLOR: '1',
-                    },
-                    timeoutMs: 30_000,
-                });
-            const invalid = await execute(base);
-            expect(invalid.code, invalid.stdout + invalid.stderr).toBe(1);
-            const reportPath = join(repository.path, '.gspot/reports/report.json');
-            const failed = pushReportSchema.parse(JSON.parse(readFileSync(reportPath, 'utf8')));
-            expect(failed.revisions[0]!.object).toBe(target);
-            expect(failed.revisions[0]!.report.checks[0]!.status).toBe('fail');
-            expect(invalid.stdout).toContain('changed.sh');
-            expect(JSON.stringify(failed.revisions[0]!.report.checks[0]!.findings)).not.toContain('legacy.sh');
-            for (const path of [
-                '.gspot/reports/report.json',
-                '.gspot/reports/report.sarif',
-                '.gspot/reports/report.codequality.json',
-            ])
-                expect(readFileSync(join(repository.path, path)).length).toBeGreaterThan(0);
-            expect(retention(provider, generated)).toMatchObject(RETENTION[provider]);
-            writeFileSync(join(repository.path, 'changed.sh'), 'echo corrected\n');
-            const corrected = commit('correct syntax');
-            const valid = await execute(base);
-            expect(valid.code, valid.stdout + valid.stderr).toBe(0);
-            expect(pushReportSchema.parse(JSON.parse(readFileSync(reportPath, 'utf8'))).revisions[0]!.object).toBe(
-                corrected,
-            );
-            const firstPush = await execute('0'.repeat(40));
-            expect(firstPush.code, firstPush.stdout + firstPush.stderr).toBe(1);
-            expect(firstPush.stdout).toContain('legacy.sh');
-            const held = readFileSync(reportPath);
-            const malformed = await execute('$(touch injected)');
-            expect(malformed.code, malformed.stdout + malformed.stderr).toBe(2);
-            expect(malformed.stderr).toContain('Invalid CI comparison object');
-            expect(readFileSync(reportPath)).toStrictEqual(held);
-            const missing = await execute('f'.repeat(40));
-            expect(missing.code).not.toBe(0);
-            expect(readFileSync(reportPath)).toStrictEqual(held);
-            corrupt = true;
-            const refused = await execute(base);
-            expect(refused.code).toBe(1);
-            expect(refused.stderr).toContain('checksum does not match');
-            expect(readFileSync(reportPath)).toStrictEqual(held);
-            corrupt = false;
-            const policyBefore = readFileSync(join(repository.path, 'gspot.toml'));
-            const invalidSetting = await run(repository.path, ['set', 'ci.run', 'unknown']);
-            expect(invalidSetting.code).toBe(2);
-            expect(readFileSync(join(repository.path, 'gspot.toml'))).toStrictEqual(policyBefore);
-            for (const args of [['set', 'ci.run', 'all'], ['set', 'ci.sarif', 'false'], ['apply']]) {
-                const changed = await run(repository.path, args);
-                expect(changed.code, changed.stdout + changed.stderr).toBe(0);
-            }
-            commit('check the full tree in CI');
-            const full = Bun.YAML.parse(readFileSync(join(repository.path, workflowPath), 'utf8')) as typeof generated;
-            // Code scanning is a separate job that ci.run = "all" does not add; GitLab has no jobs table at all.
-            expect(provider === 'github' && 'code-scanning' in full.jobs).toBe(false);
-            script =
-                provider === 'gitlab'
-                    ? full.gspot.script
-                    : full.jobs['check-ubuntu']!.steps.flatMap((step) => (step.run === undefined ? [] : [step.run]));
-            const all = await execute(base);
-            expect(all.code, all.stdout + all.stderr).toBe(1);
-            expect(all.stdout).toContain('legacy.sh');
-            expect(readFileSync(join(repository.path, pipelinePath), 'utf8')).toBe(pipeline);
-            expect(readFileSync(join(repository.path, 'changed.sh'), 'utf8')).toBe('echo corrected\n');
-        } finally {
-            await server.stop(true);
-        }
+        writeFileSync(join(repository.path, 'changed.sh'), 'echo corrected\n');
+        commitCiSource(repository.path, 'check the full tree in CI');
+        const full = Bun.YAML.parse(readFileSync(join(repository.path, workflowPath), 'utf8')) as Generated;
+        // Code scanning is a separate job that ci.run = "all" does not add; GitLab has no jobs table at all.
+        expect(provider === 'github' && 'code-scanning' in full.jobs).toBe(false);
+        const all = await runCiJob(repository.path, full, download.directory, base, provider);
+        expect(all.code, all.stdout + all.stderr).toBe(1);
+        expect(all.stdout).toContain('legacy.sh');
+        expect(readFileSync(join(repository.path, pipelinePath), 'utf8')).toBe(pipeline);
+        expect(readFileSync(join(repository.path, 'changed.sh'), 'utf8')).toBe('echo corrected\n');
     },
     120_000,
 );

@@ -6,3 +6,15 @@ export const PRE_COMMIT_POLICY =
     'version = 1\nconfigurations = []\n[rules]\ninstall = false\n[hooks]\ntool = "pre-commit"\n';
 export const VERSIONS = { lefthook: '2.0.13', husky: '9.1.7', 'simple-git-hooks': '2.13.1', 'pre-commit': '4.5.1' };
 export const SYSTEM_BASH = '/bin/bash';
+
+export const LEFTHOOK_PUSH_ARGS = [
+    'run',
+    'pre-push',
+    'origin',
+    'remote',
+    '--command',
+    'gspot',
+    '--force',
+    '--no-auto-install',
+    '--no-tty',
+];

@@ -5,7 +5,7 @@ import { scopeOf } from '#cli/repository/scopes.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { scopeFile } from '#cli/configurations/targets.ts';
-import { runCheckCommand } from '#cli/execution/tool-runner.ts';
+import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import { toolOutputDetail } from '#cli/execution/broken-tool.ts';
 import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 import { COMPOSE_FILES, FINDINGS_EXIT, SHOWN_FINDINGS } from '#cli/constants/checks/docker.ts';
@@ -34,6 +34,59 @@ const composeSchema = z.object({
     services: z.record(z.string(), z.object({ image: z.string().min(1).optional() })).optional(),
 });
 
+// Interpolated image names require Compose environment resolution and are not literal scan targets.
+function composeImages(input: EngineInput, path: string): Set<string> {
+    let document: z.infer<typeof composeSchema>;
+    try {
+        document = composeSchema.parse(
+            parse(readSource(input.root, path, input.observations).toString('utf8'), { merge: true }),
+        );
+    } catch (error) {
+        throw new Error(`Cannot read Compose service images in ${path}.`, { cause: error });
+    }
+    return new Set(
+        Object.values(document.services ?? {})
+            .map((service) => service.image)
+            .filter((image): image is string => image !== undefined && !image.includes('$')),
+    );
+}
+
+// Native exit status and parsed findings must agree before a scan can count as clean.
+async function scanImage(input: EngineInput, image: string): Promise<string[]> {
+    const result = await runCheckCommand(
+        input,
+        [
+            'trivy',
+            'image',
+            '--quiet',
+            '--config',
+            join(input.root, scopeFile(input.scope, 'trivy.yaml')),
+            '--exit-code',
+            String(FINDINGS_EXIT),
+            '--format',
+            'json',
+            '--scanners',
+            'vuln,secret',
+            image,
+        ],
+        { cwd: input.root },
+    );
+    if (result.code !== 0 && result.code !== FINDINGS_EXIT) {
+        const detail = toolOutputDetail(result, `exit ${String(result.code)}`);
+        throw new Error(`Trivy could not scan ${image}: ${detail}`);
+    }
+    const report = imageReportSchema.parse(JSON.parse(result.stdout));
+    const messages = (report.Results ?? []).flatMap((entry) => [
+        ...(entry.Vulnerabilities ?? []).map(
+            (vulnerability) => `${vulnerability.VulnerabilityID} (${vulnerability.PkgName})`,
+        ),
+        ...(entry.Secrets ?? []).map((secret) => `${secret.RuleID}: ${secret.Title}`),
+    ]);
+    if ((result.code === FINDINGS_EXIT) !== messages.length > 0)
+        throw new Error(`Trivy returned an inconsistent image report for ${image}.`);
+    return messages;
+}
+
 /**
  * Scan each literal service image once per Compose file.
  * @param input the engine input
@@ -44,51 +97,8 @@ export async function trivyImage(input: EngineInput): Promise<Finding[]> {
     const findings: Finding[] = [];
     for (const file of input.files) {
         if (!isCompose(file.path) || scopeOf(file.path, input.scopeEntries).path !== input.scope) continue;
-        let document: z.infer<typeof composeSchema>;
-        try {
-            document = composeSchema.parse(
-                parse(readSource(input.root, file.path, input.observations).toString('utf8'), { merge: true }),
-            );
-        } catch (error) {
-            throw new Error(`Cannot read Compose service images in ${file.path}.`, { cause: error });
-        }
-        const images = new Set(
-            Object.values(document.services ?? {})
-                .map((service) => service.image)
-                .filter((image): image is string => image !== undefined && !image.includes('$')),
-        );
-        for (const image of images) {
-            const result = await runCheckCommand(
-                input,
-                [
-                    'trivy',
-                    'image',
-                    '--quiet',
-                    '--config',
-                    join(input.root, scopeFile(input.scope, 'trivy.yaml')),
-                    '--exit-code',
-                    String(FINDINGS_EXIT),
-                    '--format',
-                    'json',
-                    '--scanners',
-                    'vuln,secret',
-                    image,
-                ],
-                { cwd: input.root },
-            );
-            if (result.code !== 0 && result.code !== FINDINGS_EXIT) {
-                const detail = toolOutputDetail(result, `exit ${String(result.code)}`);
-                throw new Error(`Trivy could not scan ${image}: ${detail}`);
-            }
-            const report = imageReportSchema.parse(JSON.parse(result.stdout));
-            const messages = (report.Results ?? []).flatMap((entry) => [
-                ...(entry.Vulnerabilities ?? []).map(
-                    (vulnerability) => `${vulnerability.VulnerabilityID} (${vulnerability.PkgName})`,
-                ),
-                ...(entry.Secrets ?? []).map((secret) => `${secret.RuleID}: ${secret.Title}`),
-            ]);
-            if ((result.code === FINDINGS_EXIT) !== messages.length > 0)
-                throw new Error(`Trivy returned an inconsistent image report for ${image}.`);
+        for (const image of composeImages(input, file.path)) {
+            const messages = await scanImage(input, image);
             if (messages.length === 0) continue;
             findings.push({
                 check: input.spec.name,

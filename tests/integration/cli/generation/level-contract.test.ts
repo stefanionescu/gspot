@@ -1,17 +1,17 @@
-import type { Linter } from 'eslint';
-import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import type { Linter } from 'eslint';
+import plugin from '#plugin/plugin.ts';
+import { readFileSync } from 'node:fs';
 import { expect, test } from 'bun:test';
 import { parse as parseToml } from 'smol-toml';
 import { createFileTree, testdir } from 'testdirs';
-import plugin from '#plugin/plugin.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { emitAll } from '#cli/generation/render.ts';
+import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { assertPolicyComplete, parsePolicyText } from '#cli/policy/read.ts';
+import { generatedFile } from '#tests/support/cli/generated/files.ts';
 import { RUFF_PREVIEW_RULES } from '#cli/constants/checks/ruff-rules.ts';
-import { generatedFile } from '#tests/support/cli/generated-files.ts';
-import { generatedEslint } from '#tests/support/cli/generated-eslint.ts';
+import { generatedEslint } from '#tests/support/cli/generated/eslint.ts';
+import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { assertPolicyComplete, parsePolicyText } from '#cli/policy/read.ts';
 
 const review = readFileSync(new URL('../../../../architecture/levels/inventory.csv', import.meta.url), 'utf8');
 
@@ -137,7 +137,7 @@ test('switching levels restores generated defaults and agent instructions', asyn
         const session = await openSession(sandbox.path);
         const output = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
             version: session.version,
-            packageManager: session.packageManager,
+            packageClient: session.packageClient,
         });
         const config = output.files.find((file) => file.path.endsWith('/eslint.config.mjs'))!;
         await Bun.write(join(sandbox.path, config.path), config.content);

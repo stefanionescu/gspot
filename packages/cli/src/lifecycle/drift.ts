@@ -1,17 +1,17 @@
 import { createTwoFilesPatch } from 'diff';
 import { ruleDiff } from '#cli/lifecycle/rule-diff.ts';
 import type { Policy } from '#cli/types/policy/policy.ts';
-import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import { CACHE_DIRECTORY } from '#cli/constants/platform.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { pythonLockDrift } from '#cli/tools/python-project.ts';
 import { currentBlock } from '#cli/lifecycle/managed-blocks.ts';
 import type { GeneratedProposal } from '#cli/types/generation.ts';
 import { packageLockDrift } from '#cli/tools/packages/project.ts';
+import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import type { DriftEntry } from '#cli/types/lifecycle/lifecycle.ts';
 // apply --dry-run: render in memory, read recorded generated files, compare bytes, print the diff.
 import { isValePackageFile } from '#cli/repository/file-classification.ts';
-import { hasConfiguration } from '#cli/lifecycle/configuration-document.ts';
+import { hasConfiguration } from '#cli/lifecycle/configuration/document.ts';
 import { CONFLICT_MARKERS, DRIFT_DIFF_CONTEXT, NEVER_STRAY } from '#cli/constants/lifecycle/lifecycle.ts';
 
 function isStrayCandidate(path: string, policy: Policy): boolean {
@@ -38,7 +38,7 @@ function fileDrift(root: string, rendered: GeneratedProposal): DriftEntry[] {
         }
         const disk = current.bytes.toString('utf8');
         // A merge left its markers in the file: no tool can read it, and regeneration is the one repair (K-274).
-        if (hasConflictMarkers(disk)) entries.push({ path: file.path, kind: 'conflict' });
+        if (CONFLICT_MARKERS.test(disk)) entries.push({ path: file.path, kind: 'conflict' });
         else if (disk !== file.content)
             entries.push({
                 path: file.path,
@@ -81,39 +81,26 @@ function otherDrift(root: string, rendered: GeneratedProposal): DriftEntry[] {
     return entries;
 }
 
-function knownPaths(rendered: GeneratedProposal): Set<string> {
-    return new Set([
-        ...rendered.files.map((file) => file.path),
-        ...rendered.blocks.map((block) => block.path),
-        ...rendered.merges.map((merge) => merge.path),
-        ...rendered.configurations.map((output) => output.path),
-    ]);
-}
-
-/**
- * Whether a text holds the markers a merge leaves behind, so no tool can read it.
- * @param text the file's text
- * @returns true when a marker line is present
- */
-export function hasConflictMarkers(text: string): boolean {
-    return CONFLICT_MARKERS.test(text);
-}
-
 /**
  * Every generated file that differs from its render, is missing, or is a stray gspot file. Blocks and merges count too.
  * @param root the repository root
  * @param policy the repository policy
- * @param hasPackageManager whether generated tools use a package manager
+ * @param hasPackageClient whether generated tools use a package manager
  * @param rendered the generated files as rendered now
  * @returns the drift entries in path order
  */
 export function computeDrift(
     root: string,
     policy: Policy,
-    hasPackageManager: boolean,
+    hasPackageClient: boolean,
     rendered: GeneratedProposal,
 ): DriftEntry[] {
-    const known = knownPaths(rendered);
+    const known = new Set([
+        ...rendered.files.map((file) => file.path),
+        ...rendered.blocks.map((block) => block.path),
+        ...rendered.merges.map((merge) => merge.path),
+        ...rendered.configurations.map((output) => output.path),
+    ]);
     const lock = packageLockDrift(root, rendered.files);
     if (lock !== undefined) known.add(lock.path);
     const python = pythonLockDrift(root, rendered.files);
@@ -121,12 +108,10 @@ export function computeDrift(
     const strays = readOwnership(root)
         .files.filter(
             (entry) =>
-                entry.kind !== 'runtime' &&
-                entry.kind !== 'hook' &&
-                entry.kind !== 'export' &&
+                !['runtime', 'hook', 'export'].includes(entry.kind) &&
                 !isValePackageFile(entry.path) &&
                 (entry.kind !== 'dependency' ||
-                    (entry.path.startsWith('.gspot/.venv/') ? python === undefined : !hasPackageManager)) &&
+                    (entry.path.startsWith('.gspot/.venv/') ? python === undefined : !hasPackageClient)) &&
                 entry.installed !== undefined &&
                 !known.has(entry.path) &&
                 isStrayCandidate(entry.path, policy),

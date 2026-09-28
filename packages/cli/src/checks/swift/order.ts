@@ -1,4 +1,3 @@
-import type { Node } from 'web-tree-sitter';
 import { pathMatcher } from '#cli/repository/paths.ts';
 import { visibilityOf } from '#cli/checks/swift/sources.ts';
 import type { SwiftSource } from '#cli/types/checks/swift.ts';
@@ -9,12 +8,6 @@ function readLines(source: SwiftSource): number[] {
     return source.lines.flatMap((line, index) =>
         line.includes(ENVIRONMENT_READ) && !line.trimStart().startsWith('//') ? [index + 1] : [],
     );
-}
-
-// An extension carries the name of the type it extends, which is not the name of the thing to move.
-function titleOf(node: Node): string {
-    const name = node.childForFieldName('name')?.text ?? 'This declaration';
-    return node.childForFieldName('declaration_kind')?.text === 'extension' ? `The extension of ${name}` : name;
 }
 
 /**
@@ -30,21 +23,29 @@ export function privateBeforePublic(sources: SwiftSource[]): StructureProblem[] 
         return declarations
             .slice(firstShared + 1)
             .filter((node) => FILE_LOCAL.has(visibilityOf(node)))
-            .map((node) => ({
-                file: source.path,
-                line: node.startPosition.row + 1,
-                rule: 'private-below-shared',
-                text: `${titleOf(node)} is ${visibilityOf(node)} and sits below a declaration other files see. File-local declarations come first.`,
-            }));
+            .map((node) => {
+                // An extension names the type it extends, so identify the extension itself in the finding.
+                const name = node.childForFieldName('name')?.text ?? 'This declaration';
+                const title =
+                    node.childForFieldName('declaration_kind')?.text === 'extension'
+                        ? `The extension of ${name}`
+                        : name;
+                return {
+                    file: source.path,
+                    line: node.startPosition.row + 1,
+                    rule: 'private-below-shared',
+                    text: `${title} is ${visibilityOf(node)} and sits below a declaration other files see. File-local declarations come first.`,
+                };
+            });
     });
 }
 
 /**
- * Reads of the process environment outside its owner. With no owner named in the policy, one file that reads it is the owner,
- * and reads in more than one file are all findings, because nobody said which file owns them.
- * @param sources every source of the run
- * @param owners the paths architecture.roles.env names
- * @returns the problems
+ * Reports process environment reads outside their declared owner. Without a declared owner, a single reading file owns the environment.
+ * Multiple reading files without a declared owner all produce findings.
+ * @param sources every source of the run.
+ * @param owners the paths architecture.roles.env names.
+ * @returns the problems.
  */
 export function environmentReads(sources: SwiftSource[], owners: string[]): StructureProblem[] {
     const isOwner = pathMatcher(owners);

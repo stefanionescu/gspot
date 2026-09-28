@@ -25,23 +25,23 @@ export const TOOL_DEADLINE = {
 } as const satisfies SettingSpec;
 /** Nonzero statuses documented by a checker or correction tool as source findings. */
 export const LAST_EXIT_CODE = 255;
-/** File extension to how Vale reads it: by path with its own grammar, or through stdin under a grammar with the same comment marker. */
-// Vale reads Markdown and the comments of the languages it knows by path. A language it does not know borrows the
-// format of one with the same comment style through the [formats] section, so it is read by path too (K-176).
+/** The Vale input mode, source grammar, and comment format for each file extension. */
+// Known source grammars parse Markdown inside comments. Module extensions without a native grammar use stdin
+// with the corresponding language extension. Other comment-compatible formats are mapped through [formats].
 export const PROSE_GRAMMARS: Record<string, { mode: 'path' | 'stdin'; extension: string; format?: string }> = {
     '.md': { mode: 'path', extension: '.md' },
     '.mdx': { mode: 'path', extension: '.md' },
-    '.ts': { mode: 'path', extension: '.ts' },
-    '.tsx': { mode: 'path', extension: '.ts' },
-    '.mts': { mode: 'path', extension: '.ts' },
-    '.cts': { mode: 'path', extension: '.ts' },
-    '.js': { mode: 'path', extension: '.js' },
-    '.mjs': { mode: 'path', extension: '.js' },
-    '.cjs': { mode: 'path', extension: '.js' },
-    '.jsx': { mode: 'path', extension: '.js' },
-    '.swift': { mode: 'path', extension: '.swift' },
-    '.py': { mode: 'path', extension: '.py' },
-    '.css': { mode: 'path', extension: '.css' },
+    '.ts': { mode: 'path', extension: '.ts', format: 'md' },
+    '.tsx': { mode: 'path', extension: '.ts', format: 'md' },
+    '.mts': { mode: 'stdin', extension: '.ts' },
+    '.cts': { mode: 'stdin', extension: '.ts' },
+    '.js': { mode: 'path', extension: '.js', format: 'md' },
+    '.mjs': { mode: 'stdin', extension: '.js' },
+    '.cjs': { mode: 'stdin', extension: '.js' },
+    '.jsx': { mode: 'path', extension: '.js', format: 'md' },
+    '.swift': { mode: 'path', extension: '.swift', format: 'md' },
+    '.py': { mode: 'path', extension: '.py', format: 'md' },
+    '.css': { mode: 'path', extension: '.css', format: 'md' },
     '.sh': { mode: 'path', extension: '.sh', format: 'py' },
     '.bash': { mode: 'path', extension: '.bash', format: 'py' },
     '.zsh': { mode: 'path', extension: '.zsh', format: 'py' },
@@ -49,17 +49,11 @@ export const PROSE_GRAMMARS: Record<string, { mode: 'path' | 'stdin'; extension:
     '.pgsql': { mode: 'path', extension: '.pgsql', format: 'lua' },
     '.psql': { mode: 'path', extension: '.psql', format: 'lua' },
 };
-/** What Vale never reads: URLs, tool directives and doc tags. The Markdown parser handles code spans and fences. */
+/** URLs and documentation-tag syntax are code. Tag descriptions and suppression reasons remain prose. */
 export const TOKEN_IGNORES = [
     String.raw`(https?://[^\s)]+)`,
-    String.raw`(eslint-disable[^\n]*)`,
-    String.raw`(@ts-expect-error[^\n]*)`,
-    String.raw`(@ts-ignore[^\n]*)`,
-    String.raw`(swiftlint:[^\n]*)`,
-    String.raw`(shellcheck [^\n]*)`,
-    String.raw`(nosemgrep[^\n]*)`,
-    String.raw`(MARK: -[^\n]*)`,
-    String.raw`(@(?:param|returns|throws|template|typedef|type|see|example|deprecated)\b[^\n]*)`,
+    String.raw`(@(?:param|template|typedef)\s+(?:\{[^}\n]*\}\s+)?(?:\[[^\]\n]*\]|\S+))`,
+    String.raw`(@(?:returns?|throws|type|see|example|deprecated)\b(?:\s+\{[^}\n]*\})?)`,
 ];
 /** Front matter is not prose. */
 export const BLOCK_IGNORES = [String.raw`(?s)^---\n.*?\n---\n`];
@@ -68,7 +62,7 @@ export const VALE_STDIN = 'stdin';
 /** The style directory under .gspot and the style Vale reads from it. */
 export const STYLES_DIRECTORY = '.gspot/config/vale/styles';
 export const GSPOT_STYLE = 'gspot';
-/** The three length rules the docs limits set, by rule file stem and the limits key. */
+/** Maps the three documentation length-rule filenames to their limit keys. */
 export const LENGTH_RULES: Record<string, string> = {
     'sentence-length': 'docs.sentence_words',
     'step-length': 'docs.list_item_words',

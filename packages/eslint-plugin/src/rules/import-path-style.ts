@@ -1,5 +1,6 @@
 import { staticString } from '#plugin/files.ts';
 import type { TSESTree } from '@typescript-eslint/utils';
+import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { DEFAULT_PREFIXES } from '#plugin/constants/rules.ts';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
 import type { ImportPathStyleName, ImportPathStyleOptions } from '#plugin/types/rules.ts';
@@ -43,21 +44,29 @@ export const importPathStyle = createRule<ImportPathStyleOptions, 'js' | 'ts' | 
     defaultOptions: [{ style: 'js', internalPrefixes: DEFAULT_PREFIXES }],
     create(context, [options]) {
         const prefixes = options.internalPrefixes ?? DEFAULT_PREFIXES;
-        const check = (node: TSESTree.Node | null | undefined): void => {
+        const check = (node: TSESTree.Node | null | undefined, attributes: TSESTree.ImportAttribute[] = []): void => {
             const source = staticString(node);
             if (!node || source === undefined) return;
+            if (
+                attributes.some((attribute) => {
+                    const key =
+                        attribute.key.type === AST_NODE_TYPES.Identifier ? attribute.key.name : attribute.key.value;
+                    return key === 'type' && attribute.value.value === 'json';
+                })
+            )
+                return;
             if (prefixes.every((prefix) => !source.startsWith(prefix)) || isCompliant(source, options.style)) return;
             context.report({ node, messageId: options.style, data: { source } });
         };
         return {
             ImportDeclaration: (node) => {
-                check(node.source);
+                check(node.source, node.attributes);
             },
             ExportAllDeclaration: (node) => {
-                check(node.source);
+                check(node.source, node.attributes);
             },
             ExportNamedDeclaration: (node) => {
-                check(node.source);
+                check(node.source, node.attributes);
             },
             ImportExpression: (node) => {
                 check(node.source);

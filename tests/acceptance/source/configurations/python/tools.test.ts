@@ -1,15 +1,15 @@
 import { join } from 'node:path';
-import { describe, expect, test } from 'bun:test';
+import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
+import type { FindingCase } from '#tests/types/cli.ts';
 // Planted repository for the python configuration: a lint finding, a layout finding, a type error, a stale docstring, a requirements file.
 import { reportSchema } from '#cli/execution/report.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
 import { containing } from '#tests/support/expectations.ts';
-import type { FindingCase } from '#tests/types/support/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
 import { install, installAtLevel, toolsPath } from '#tests/support/cli/tools.ts';
 
 import {
@@ -75,92 +75,87 @@ const CASES: FindingCase[] = [
     },
 ];
 
-describe('the python configuration', () => {
-    test.each(CASES)(
-        '$check reports its defect in $expected.file and accepts a correction',
-        async (planted) => {
-            await using sandbox = await testdir();
-            await createFileTree(sandbox.path, {
-                'pyproject.toml': TOOLS_PROJECT,
-                'planted/__init__.py': '"""The planted package."""\n',
-                [TOOLS_MODULE]: TOOLS_CLEAN,
-            });
-            commitAll(sandbox.path);
-            const environment = { PATH: toolsPath(['ruff', 'basedpyright', 'typos', 'ec']) };
-            await installAtLevel(sandbox.path, STRUCTURE_INIT, environment);
-            const outcome = await runPlanted(sandbox.path, planted, environment);
-            expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
-            const failed = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
-            expect(failed.checks).toMatchObject([{ check: planted.check, status: 'fail' }]);
-            expect(failed.checks[0]!.findings).toContainEqual(containing(planted.expected));
-            const files: Record<string, string> = { [TOOLS_MODULE]: TOOLS_CLEAN };
-            if (planted.check === 'python/vulture') files['planted/unused.py'] = '"""No unused imports."""\n';
-            if (planted.check === 'integrity/dependency-ownership') {
-                files['uv.lock'] = 'version = 1\n';
-                files['scripts/setup.sh'] =
-                    '#!/usr/bin/env bash\nprintf "Dependencies are owned by pyproject.toml\\n"\n';
-            }
-            if (planted.check === 'integrity/typecheck-membership')
-                files['planted/gone.py'] = '"""A file with a separate dependency set."""\n';
-            const corrected = await runPlanted(sandbox.path, { ...planted, files }, environment);
-            expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-            const accepted = reportSchema.parse(
-                await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json(),
-            );
-            expect(accepted.checks).toMatchObject([{ check: planted.check, status: 'ok', findings: [] }]);
-        },
-        PLANTED_TIMEOUT_MS * 6,
-    );
+test.each(CASES)(
+    'the python configuration > $check reports its defect in $expected.file and accepts a correction',
+    async (planted) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'pyproject.toml': TOOLS_PROJECT,
+            'planted/__init__.py': '"""The planted package."""\n',
+            [TOOLS_MODULE]: TOOLS_CLEAN,
+        });
+        commitAll(sandbox.path);
+        const environment = { PATH: toolsPath(['ruff', 'basedpyright', 'typos', 'ec']) };
+        await installAtLevel(sandbox.path, STRUCTURE_INIT, environment);
+        const outcome = await runPlanted(sandbox.path, planted, environment);
+        expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
+        const failed = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
+        expect(failed.checks).toMatchObject([{ check: planted.check, status: 'fail' }]);
+        expect(failed.checks[0]!.findings).toContainEqual(containing(planted.expected));
+        const files: Record<string, string> = { [TOOLS_MODULE]: TOOLS_CLEAN };
+        if (planted.check === 'python/vulture') files['planted/unused.py'] = '"""No unused imports."""\n';
+        if (planted.check === 'integrity/dependency-ownership') {
+            files['uv.lock'] = 'version = 1\n';
+            files['scripts/setup.sh'] = '#!/usr/bin/env bash\nprintf "Dependencies are owned by pyproject.toml\\n"\n';
+        }
+        if (planted.check === 'integrity/typecheck-membership')
+            files['planted/gone.py'] = '"""A file with a separate dependency set."""\n';
+        const corrected = await runPlanted(sandbox.path, { ...planted, files }, environment);
+        expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+        const accepted = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
+        expect(accepted.checks).toMatchObject([{ check: planted.check, status: 'ok', findings: [] }]);
+    },
+    PLANTED_TIMEOUT_MS * 6,
+);
 
-    test(
-        'init preserves unsupported Pyright settings and carries exclusions after correction',
-        async () => {
-            const typed = `${TOOLS_CLEAN}\n\nTOTAL: int = "three"\n`;
-            await using sandbox = await testdir();
-            await createFileTree(sandbox.path, {
-                'pyproject.toml': TOOLS_PROJECT,
-                'pyrightconfig.json':
-                    '{\n    "typeCheckingMode": "basic",\n    "exclude": [".venv", "planted/skipped.py"]\n}\n',
-                'planted/__init__.py': '"""The planted package."""\n',
-                'planted/skipped.py': '"""A file the old setup left out."""\n',
-                [TOOLS_MODULE]: typed,
-            });
-            commitAll(sandbox.path);
-            const environment = { PATH: toolsPath(['ruff', 'basedpyright', 'typos', 'ec']) };
-            const refusedInit = await run(sandbox.path, STRUCTURE_INIT, environment);
-            expect(refusedInit.code, refusedInit.stdout + refusedInit.stderr).toBe(2);
-            expect(refusedInit.stdout + refusedInit.stderr).toContain('typeCheckingMode');
-            expect(await Bun.file(`${sandbox.path}/pyrightconfig.json`).text()).toContain('"basic"');
-            expect(await Bun.file(`${sandbox.path}/gspot.toml`).exists()).toBe(false);
-            await Bun.write(`${sandbox.path}/pyrightconfig.json`, '{"exclude":[".venv","planted/skipped.py"]}\n');
-            await install(sandbox.path, [...STRUCTURE_INIT, '--allow-dirty'], environment);
-            const pointer = await Bun.file(`${sandbox.path}/pyrightconfig.json`).text();
-            expect(pointer).toContain('"extends": "./.gspot/config/basedpyrightconfig.json"');
-            expect(pointer).not.toContain('basic');
-            const policy = await Bun.file(`${sandbox.path}/gspot.toml`).text();
-            expect(policy).toContain('planted/skipped.py');
-            expect(policy).toContain('.venv');
-            const command = ['check', '--only', 'python/basedpyright', '--no-cache', '--json'];
-            const refused = await run(sandbox.path, command, environment);
-            expect(refused.code, refused.stdout + refused.stderr).toBe(1);
-            const report = JSON.parse(refused.stdout) as RunReport;
-            expect(report.checks.map((check) => [check.check, check.status])).toStrictEqual([
-                ['python/basedpyright', 'fail'],
-            ]);
-            expect(report.checks[0]?.findings).toContainEqual(
-                containing({
-                    file: TOOLS_MODULE,
-                    rule: 'reportAssignmentType',
-                }),
-            );
-            await Bun.write(`${sandbox.path}/${TOOLS_MODULE}`, `${TOOLS_CLEAN}\n\nTOTAL: int = 3\n`);
-            const corrected = await run(sandbox.path, command, environment);
-            expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-            const accepted = JSON.parse(corrected.stdout) as RunReport;
-            expect(accepted.checks.map((check) => [check.check, check.status])).toStrictEqual([
-                ['python/basedpyright', 'ok'],
-            ]);
-        },
-        PLANTED_TIMEOUT_MS * 4,
-    );
-});
+test(
+    'the python configuration > init preserves unsupported Pyright settings and carries exclusions after correction',
+    async () => {
+        const typed = `${TOOLS_CLEAN}\n\nTOTAL: int = "three"\n`;
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'pyproject.toml': TOOLS_PROJECT,
+            'pyrightconfig.json':
+                '{\n    "typeCheckingMode": "basic",\n    "exclude": [".venv", "planted/skipped.py"]\n}\n',
+            'planted/__init__.py': '"""The planted package."""\n',
+            'planted/skipped.py': '"""A file the old setup left out."""\n',
+            [TOOLS_MODULE]: typed,
+        });
+        commitAll(sandbox.path);
+        const environment = { PATH: toolsPath(['ruff', 'basedpyright', 'typos', 'ec']) };
+        const refusedInit = await run(sandbox.path, STRUCTURE_INIT, environment);
+        expect(refusedInit.code, refusedInit.stdout + refusedInit.stderr).toBe(2);
+        expect(refusedInit.stdout + refusedInit.stderr).toContain('typeCheckingMode');
+        expect(await Bun.file(`${sandbox.path}/pyrightconfig.json`).text()).toContain('"basic"');
+        expect(await Bun.file(`${sandbox.path}/gspot.toml`).exists()).toBe(false);
+        await Bun.write(`${sandbox.path}/pyrightconfig.json`, '{"exclude":[".venv","planted/skipped.py"]}\n');
+        await install(sandbox.path, [...STRUCTURE_INIT, '--allow-dirty'], environment);
+        const pointer = await Bun.file(`${sandbox.path}/pyrightconfig.json`).text();
+        expect(pointer).toContain('"extends": "./.gspot/config/basedpyrightconfig.json"');
+        expect(pointer).not.toContain('basic');
+        const policy = await Bun.file(`${sandbox.path}/gspot.toml`).text();
+        expect(policy).toContain('planted/skipped.py');
+        expect(policy).toContain('.venv');
+        const command = ['check', '--only', 'python/basedpyright', '--no-cache', '--json'];
+        const refused = await run(sandbox.path, command, environment);
+        expect(refused.code, refused.stdout + refused.stderr).toBe(1);
+        const report = JSON.parse(refused.stdout) as RunReport;
+        expect(report.checks.map((check) => [check.check, check.status])).toStrictEqual([
+            ['python/basedpyright', 'fail'],
+        ]);
+        expect(report.checks[0]?.findings).toContainEqual(
+            containing({
+                file: TOOLS_MODULE,
+                rule: 'reportAssignmentType',
+            }),
+        );
+        await Bun.write(`${sandbox.path}/${TOOLS_MODULE}`, `${TOOLS_CLEAN}\n\nTOTAL: int = 3\n`);
+        const corrected = await run(sandbox.path, command, environment);
+        expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+        const accepted = JSON.parse(corrected.stdout) as RunReport;
+        expect(accepted.checks.map((check) => [check.check, check.status])).toStrictEqual([
+            ['python/basedpyright', 'ok'],
+        ]);
+    },
+    PLANTED_TIMEOUT_MS * 4,
+);

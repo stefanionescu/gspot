@@ -9,9 +9,9 @@ import { parseJsonc } from '#cli/repository/jsonc.ts';
 import { script } from '#tests/support/cli/planted.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
 import { textContaining } from '#tests/support/expectations.ts';
 import { treeContents } from '#tests/support/cli/preservation.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
 import { chmodSync, existsSync, readFileSync, statSync } from 'node:fs';
 import { PLAN_INIT } from '#tests/constants/acceptance/source/cli/takeover.ts';
 

@@ -11,7 +11,7 @@ import { containing } from '#tests/support/expectations.ts';
 import { BASH_CASES } from '#tests/support/cli/bash-cases.ts';
 import { runPlanted, script } from '#tests/support/cli/planted.ts';
 import { installPrivateTools, toolsPath } from '#tests/support/cli/tools.ts';
-import { BASH_CASES_MAIN as MAIN, PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
+import { BASH_CASES_MAIN as MAIN, PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
 
 describe('the bash configuration', () => {
     test.each(BASH_CASES)(
