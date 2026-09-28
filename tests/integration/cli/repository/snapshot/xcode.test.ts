@@ -51,14 +51,14 @@ test('Xcode reports exact staged symlink targets before the first commit and cle
             message: 'A symlink to target.swift; Xcode and the checks each follow it their own way.',
         }),
     ]);
-    input.observations = { root: sandbox.path, sources: new Map() };
+    input.reads = { root: sandbox.path, sources: new Map() };
     expect(await projectSymlinks(input)).toStrictEqual([]);
     const index = readFileSync(join(sandbox.path, '.git', 'index'));
     writeFileSync(join(sandbox.path, '.git', 'index'), 'broken');
-    input.observations = { root: sandbox.path, sources: new Map() };
+    input.reads = { root: sandbox.path, sources: new Map() };
     await rejects(projectSymlinks(input), { message: /Cannot read the Git index/u });
     writeFileSync(join(sandbox.path, '.git', 'index'), index);
-    input.observations = { root: sandbox.path, sources: new Map() };
+    input.reads = { root: sandbox.path, sources: new Map() };
     expect(await projectSymlinks(input)).toStrictEqual([]);
     expect(readFileSync(join(sandbox.path, path), 'utf8')).toBe('let value = 1\n');
 });

@@ -6,9 +6,9 @@ import { parserFor, parseSource } from '#cli/parsers/tree-sitter.ts';
 import { codeLines, withoutComment } from '#cli/checks/structure/code-lines.ts';
 
 test('shared parse handles retain grammar, source, and independent disposal boundaries', async () => {
-    const observations = { root: '/repository', sources: new Map<string, Buffer>() };
+    const reads = { root: '/repository', sources: new Map<string, Buffer>() };
     const resources = new DisposableStack();
-    const context = { observations, resources };
+    const context = { reads, resources };
     const source = 'const label: string = "ready";';
     const first = await parseSource('typescript', source, context);
     const sibling = await parseSource('typescript', source, context);
@@ -23,7 +23,7 @@ test('shared parse handles retain grammar, source, and independent disposal boun
         expect(first!.rootNode.text).toBe(source);
         expect(sibling!.rootNode.text).toBe(source);
         using refreshedResources = new DisposableStack();
-        const refreshed = await parseSource('typescript', source, { observations, resources: refreshedResources });
+        const refreshed = await parseSource('typescript', source, { reads, resources: refreshedResources });
         try {
             expect(refreshed!.rootNode.hasError).toBe(false);
             expect(refreshed!.rootNode.text).toBe(source);
@@ -60,7 +60,7 @@ describe('shell parsing', () => {
 
 test('Bash and naming analysis reject missing trees and accept corrected parsing', async () => {
     using resources = new DisposableStack();
-    const context = { resources, observations: { root: '/repository', sources: new Map<string, Buffer>() } };
+    const context = { resources, reads: { root: '/repository', sources: new Map<string, Buffer>() } };
     const parser = await parserFor('bash');
     const parse = spyOn(parser, 'parse').mockReturnValue(null);
     try {

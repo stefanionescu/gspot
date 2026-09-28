@@ -156,7 +156,7 @@ test.each(['-->', '--!>'])(
         const comments = await suppressionComments(
             session.root,
             session.scopes,
-            session.observations,
+            session.reads,
             session.repository.files,
         );
         expect(comments).toStrictEqual([

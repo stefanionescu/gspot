@@ -45,8 +45,8 @@ function duplicateScopeProblems(paths: string[]): PolicyProblem[] {
 // The problem of a base path that exists and is not a directory, after registering it as a mutation target.
 function basePathProblem(files: Root, base: string, location: PathSegment[], tool: string): PolicyProblem[] {
     mutationPath(base);
-    const observed = files.stat(base);
-    if (observed === undefined || observed.isDirectory()) return [];
+    const read = files.stat(base);
+    if (read === undefined || read.isDirectory()) return [];
     return [{ path: location, message: `${tool} basePath is not a directory: ${base}` }];
 }
 

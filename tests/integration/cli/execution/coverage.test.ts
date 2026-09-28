@@ -137,7 +137,7 @@ test('strict coverage keeps inability as exit two and leaves message-stage check
     expect(commitRun.report.coverage.findings).toStrictEqual([]);
 });
 
-test('engine coverage rejects an unobserved path and accepts confirmed repository sources', async () => {
+test('engine coverage rejects an unread path and accepts confirmed repository sources', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': 'version = 1\nkits = ["bash"]\n',

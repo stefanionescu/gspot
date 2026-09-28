@@ -5,7 +5,7 @@ import type { Session } from '#cli/types/execution/execution.ts';
 
 export type ToolState = 'ok' | 'outdated' | 'newer' | 'missing' | 'host' | 'error';
 export type Inspected = { root: string; cwd: string; tool: ToolPin; path: string; hint: string };
-export type VersionObservation = { version: string } | { state: 'missing' | 'error'; note: string };
+export type VersionRead = { version: string } | { state: 'missing' | 'error'; note: string };
 export type ToolInspection = {
     name: string;
     state: ToolState;

@@ -241,7 +241,7 @@ Acceptance: `K-298`.
 
 Step 2.6. Verification and confirmed repairs.
 
-Verify common ownership routing, proposal publication, pruning, and interrupted recovery across init, apply, remove, and uninstall. Preserve unowned files, later edits, original bytes and modes, and fresh-clone files.
+Verify common ownership routing, plan publication, pruning, and interrupted recovery across init, apply, remove, and uninstall. Preserve unowned files, later edits, original bytes and modes, and fresh-clone files.
 
 Owner: `packages/cli/src/lifecycle/ownership/owner.ts`. Dependencies: bounds. Completion evidence: Init, apply, remove, uninstall, and interrupted batches preserve authored bytes and modes.
 
@@ -425,7 +425,7 @@ Acceptance: `K-36`, `K-193`, `K-41`, `K-120`, `K-59`, `K-217`, `K-239`, `K-269`,
 
 Step 5.3. Verification and confirmed repairs.
 
-Verify project and dependency detection, grouped configuration selection, detected defaults, and one read-only proposal. Initialize new and existing repositories without running checks; a missing tool differs from invalid configuration or failed lock resolution.
+Verify project and dependency detection, grouped configuration selection, detected defaults, and one read-only plan. Initialize new and existing repositories without running checks; a missing tool differs from invalid configuration or failed lock resolution.
 
 Owner: `commands/init/`. Dependencies: adoption and tools. Completion evidence: New/existing project journeys distinguish invalid configuration, unavailable tools, and failed lock resolution without running checks.
 
@@ -506,13 +506,13 @@ Hatchling/setuptools support. Complete staged/pushed acceptance remains in the f
 
 Acceptance: `K-70`, `K-293`, `K-294`, `K-295`, `K-271`, `K-272`.
 
-### Session observations and parsing
+### Session reads and parsing
 
 Step 6.2. Verification and confirmed repairs.
 
-Verify session-owned file, scope, parse, and Git observation reuse. Refresh after edits and between sessions. Preserve scoped SQL history, staged Xcode symlinks, unusual filenames, malformed-input failures, and language-specific parsing.
+Verify session-owned file, scope, parse, and Git read reuse. Refresh after edits and between sessions. Preserve scoped SQL history, staged Xcode symlinks, unusual filenames, malformed-input failures, and language-specific parsing.
 
-Owner: `packages/cli/src/execution/session.ts and parsers/`. Dependencies: repository observations. Completion evidence: Read/parse/Git reuse remains session-scoped and refreshes after edits; malformed input and unusual filenames remain visible.
+Owner: `packages/cli/src/execution/session.ts and parsers/`. Dependencies: repository reads. Completion evidence: Read/parse/Git reuse remains session-scoped and refreshes after edits; malformed input and unusual filenames remain visible.
 
 Acceptance: `K-138`, `K-148`, `K-176`, `K-24`, `K-139`, `K-171`, `K-190`, `K-162`.
 
@@ -522,7 +522,7 @@ Step 6.3. Verification and confirmed repairs.
 
 Verify routing tools and fixers through shared resolution, batching, deadlines, cancellation, and capture. Audit remaining failure-to-empty readers. The plugin directory reader already propagates read failures. Distinguish absent, skipped, failed, changed, and unchanged results.
 
-Owner: `packages/cli/src/platform/spawn.ts and execution/`. Dependencies: tool observations. Completion evidence: Native fatal, malformed, finding, corrected, cancellation, and deadline cases retain exact exits and cleanup.
+Owner: `packages/cli/src/platform/spawn.ts and execution/`. Dependencies: tool reads. Completion evidence: Native fatal, malformed, finding, corrected, cancellation, and deadline cases retain exact exits and cleanup.
 
 Native malformed/missing and malformed/inaccessible combinations reproduced a classification
 defect. Both plist manifests now declare the native input-error diagnostic. Focused native

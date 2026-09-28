@@ -37,7 +37,7 @@ function knownPaths(input: EngineInput): Set<string> {
 
 function miseTasks(input: EngineInput, file: string): string[] {
     try {
-        const parsed = parseToml(readSource(input.root, file, input.observations).toString('utf8')) as {
+        const parsed = parseToml(readSource(input.root, file, input.reads).toString('utf8')) as {
             tasks?: Record<string, { alias?: string | string[] }>;
         };
         return Object.entries(parsed.tasks ?? {}).flatMap(([name, task]) => [name, ...[task.alias ?? []].flat()]);
@@ -49,7 +49,7 @@ function miseTasks(input: EngineInput, file: string): string[] {
 
 function packageScripts(input: EngineInput): string[] {
     try {
-        const manifest = JSON.parse(readSource(input.root, 'package.json', input.observations).toString('utf8')) as {
+        const manifest = JSON.parse(readSource(input.root, 'package.json', input.reads).toString('utf8')) as {
             scripts?: Record<string, unknown>;
         };
         return Object.keys(manifest.scripts ?? {});
@@ -140,7 +140,7 @@ export function referencedPaths(input: EngineInput): Set<string> {
     const referenced = new Set<string>();
     const files = input.files.filter((file) => file.nature === 'source' && file.path.endsWith('.md'));
     for (const file of files) {
-        const prose = proseLines(readSource(input.root, file.path, input.observations).toString('utf8'));
+        const prose = proseLines(readSource(input.root, file.path, input.reads).toString('utf8'));
         for (const { line } of prose)
             for (const token of pathTokens(line)) referenced.add(token.replace(/^\.\//u, '').replace(/\/$/u, ''));
     }
@@ -168,7 +168,7 @@ export function stalePaths(input: EngineInput): Finding[] {
     return input.files
         .filter((file) => file.nature === 'source' && file.path.endsWith('.md') && !isException(file.path))
         .flatMap((file) =>
-            proseLines(readSource(input.root, file.path, input.observations).toString('utf8')).flatMap((prose) =>
+            proseLines(readSource(input.root, file.path, input.reads).toString('utf8')).flatMap((prose) =>
                 lineFindings(input, file.path, prose, index),
             ),
         );

@@ -67,9 +67,7 @@ export async function importLinter(input: EngineInput): Promise<Finding[]> {
     const manifest = input.scope === '' ? PYTHON_MANIFEST : `${input.scope}/${PYTHON_MANIFEST}`;
     if (statSync(join(input.root, manifest), { throwIfNoEntry: false }) === undefined)
         throw new SkippedCheckError('This scope has no pyproject.toml import contracts.');
-    const project = importConfiguration.parse(
-        parse(readSource(input.root, manifest, input.observations).toString('utf8')),
-    );
+    const project = importConfiguration.parse(parse(readSource(input.root, manifest, input.reads).toString('utf8')));
     if (project.tool?.importlinter === undefined)
         throw new SkippedCheckError('This scope has no tool.importlinter configuration.');
     const result = await runCheckCommand(input, ['lint-imports', '--no-cache'], {
@@ -117,7 +115,7 @@ export function dependencyOwnership(input: EngineInput): Finding[] {
     const installs = files
         .filter((file) => !isAllowed(file.path) && INSTALL_HOLDERS.some((ending) => file.path.endsWith(ending)))
         .flatMap((file) =>
-            readSource(input.root, file.path, input.observations)
+            readSource(input.root, file.path, input.reads)
                 .toString('utf8')
                 .split('\n')
                 .flatMap((text, index): Finding[] =>

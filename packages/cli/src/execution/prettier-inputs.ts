@@ -14,8 +14,8 @@ export async function prettierInputs(session: Session, check: PlannedCheck): Pro
     const ignorePath = '.prettierignore';
     const tree = openRoot(session.root);
     try {
-        const observed = tree.read(ignorePath);
-        if (observed === undefined) return check;
+        const read = tree.read(ignorePath);
+        if (read === undefined) return check;
         const ignored = new Set(
             ignoredPathsResponse.parse(
                 await runConfiguration(
@@ -31,7 +31,7 @@ export async function prettierInputs(session: Session, check: PlannedCheck): Pro
                 ),
             ),
         );
-        if (!isDeepStrictEqual(tree.read(ignorePath), observed))
+        if (!isDeepStrictEqual(tree.read(ignorePath), read))
             throw new Error('.prettierignore changed while check inputs were resolved. Run gspot check again.');
         const files = check.files.filter((file) => !ignored.has(file.path));
         return files.length === 0

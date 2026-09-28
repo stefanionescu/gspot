@@ -68,7 +68,7 @@ test.each(['outdated', 'timeout', 'canceled'] as const)(
 const versionCommand = (version: string): string =>
     `#!${process.execPath}\nif (process.argv.includes('--version')) console.log(${JSON.stringify(version)});\n`;
 
-test('an adapter observes a changed executable version on the next command instead of reusing its old success', async () => {
+test('an adapter reads a changed executable version on the next command instead of reusing its old success', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': 'version = 1\nlevel = "all"\nkits = ["ansible"]\n',
@@ -95,7 +95,7 @@ test('an adapter observes a changed executable version on the next command inste
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the complexity limit.
 const exitScript = (failed: boolean): string => `#!${process.execPath}\nprocess.exitCode = ${failed ? '1' : '0'};\n`;
 
-test('cached results observe executable replacement and permissions in a reused session', async () => {
+test('cached results read executable replacement and permissions in a reused session', async () => {
     await using sandbox = await testdir();
     const executable = join(sandbox.path, 'checker');
     await createFileTree(sandbox.path, {

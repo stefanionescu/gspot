@@ -23,7 +23,7 @@ export const CONFIGURATIONS = [
 export const NOTHING_CARRIED: AdoptionResult = {
     tools: new Map(),
     scopes: new Map(),
-    observed: new Map(),
+    read: new Map(),
     removed: [],
     unread: [],
     retained: [],

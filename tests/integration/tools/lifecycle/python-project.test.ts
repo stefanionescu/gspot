@@ -29,11 +29,11 @@ test.each(PYTHON_PROJECTS)(
         await using artifacts = await testdir();
         await using registry = await createPythonRegistry(artifacts.path);
         await using prepared = await preparePythonInstallation(repository.path, configuration, runner, registry.url);
-        const { proposals, rootProject, rootConfiguration } = prepared;
+        const { plans, rootProject, rootConfiguration } = prepared;
         const manifest = readFileSync(join(repository.path, '.gspot/pyproject.toml'));
         const lockPath = join(repository.path, '.gspot/uv.lock');
         const lock = readFileSync(lockPath);
-        expect(proposals[0]!.content).toContain(`ruff==${registry.pinned}`);
+        expect(plans[0]!.content).toContain(`ruff==${registry.pinned}`);
         expect(pythonInstallSteps(repository.path)).toStrictEqual([['uv', 'sync', '--locked', '--project', '.gspot']]);
         expect(lock.toString('utf8')).not.toContain('synthetic-uv-password');
         await createFileTree(artifacts.path, { 'bin/uv': '#!/bin/sh\nexit 87\n' });
@@ -184,7 +184,7 @@ test.each(PYTHON_PROJECTS)(
                     { bytes: Buffer.from(file.content), mode: 0o444 },
                     file.kind === 'lock' ? 'lock' : 'config',
                     file.kind === 'lock',
-                    file.observed,
+                    file.read,
                 );
         });
         expect(pythonLockDrift(repository.path, repaired)).toStrictEqual({ path: '.gspot/uv.lock' });

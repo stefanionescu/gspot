@@ -18,7 +18,7 @@ import {
 const text =
     '#:schema x\n\n# Comment on version.\nversion = 1\nkits = ["bash"]\n\n[hooks]\n# gspot writes the hooks.\ntool = "gspot"\n';
 
-test('writePolicy > policy edits retain invalid UTF-8 bytes and refuse a mode change after observation', async () => {
+test('writePolicy > policy edits retain invalid UTF-8 bytes and refuse a mode change after read', async () => {
     await using sandbox = await testdir();
     const path = join(sandbox.path, 'gspot.toml');
     const invalid = Buffer.concat([Buffer.from(text), Buffer.from([0xff])]);
@@ -217,13 +217,13 @@ test('writePolicy > a refused reason is caught before the file is written', asyn
     expect(readFileSync(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(required);
 });
 
-test('a prepared policy edit refuses stale bytes and accepts a fresh proposal', async () => {
+test('a prepared policy edit refuses stale bytes and accepts a fresh plan', async () => {
     await using sandbox = await testdir();
     const path = join(sandbox.path, 'gspot.toml');
     writeFileSync(path, text);
-    const proposal = preparePolicy(sandbox.path, setKey('coverage.strict', true));
+    const plan = preparePolicy(sandbox.path, setKey('coverage.strict', true));
     writeFileSync(path, `${text}\n# Concurrent edit.\n`);
-    expect(() => writePolicy(sandbox.path, proposal)).toThrow('changed while the edit was prepared');
+    expect(() => writePolicy(sandbox.path, plan)).toThrow('changed while the edit was prepared');
     expect(readFileSync(path, 'utf8')).toBe(`${text}\n# Concurrent edit.\n`);
     const corrected = preparePolicy(sandbox.path, setKey('coverage.strict', true));
     expect(writePolicy(sandbox.path, corrected).policy.coverage.strict).toBe(true);

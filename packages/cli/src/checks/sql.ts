@@ -19,7 +19,7 @@ function sources(input: EngineInput): SqlSource[] {
         .filter((file) => file.nature === 'source')
         .map((file) => ({
             path: file.path,
-            text: readSource(input.root, file.path, input.observations).toString('utf8'),
+            text: readSource(input.root, file.path, input.reads).toString('utf8'),
         }));
 }
 
@@ -159,7 +159,7 @@ export async function sqlSyntax(input: EngineInput): Promise<Finding[]> {
     if (!POSTGRES_DIALECTS.has(dialect)) return [];
     const findings: Finding[] = [];
     for (const source of sources(input)) {
-        const parsed = await sqlFile(source.text, input.observations);
+        const parsed = await sqlFile(source.text, input.reads);
         if (parsed.error === undefined) continue;
         const { text, line, column } = parsed.error;
         findings.push({
@@ -226,7 +226,7 @@ export async function sqlFunctions(input: EngineInput): Promise<Finding[]> {
     const threshold = input.view.limit('trivial_statements', 'sql') ?? DEFAULT_TRIVIAL_STATEMENTS;
     const maximum = input.view.limit('function_parameters', 'sql') ?? SHIPPED_PARAMETER_LIMIT;
     for (const source of sources(input)) {
-        const parsed = await sqlFile(source.text, input.observations);
+        const parsed = await sqlFile(source.text, input.reads);
         if (parsed.error !== undefined)
             throw new Error(`Cannot analyze SQL functions in ${source.path}: ${parsed.error.text}`);
         findings.push(...(await fileFunctionFindings({ input, source, parsed, threshold, maximum })));

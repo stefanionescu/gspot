@@ -18,7 +18,7 @@ function commit(root: string): void {
     git(root, '-c', 'user.name=Sandbox', '-c', 'user.email=sandbox@example.com', 'commit', '-qm', 'Sandbox');
 }
 
-test('Git change observation > reports an unborn index and its unstaged edits', async () => {
+test('Git change read > reports an unborn index and its unstaged edits', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'source.ts': 'export {};\n' });
     git(sandbox.path, 'init');
@@ -28,7 +28,7 @@ test('Git change observation > reports an unborn index and its unstaged edits', 
     expect(await stagedFiles(sandbox.path)).toStrictEqual({ staged: ['source.ts'], unstaged: 1 });
 });
 
-test('Git change observation > keeps deletion paths in staged and reference comparisons', async () => {
+test('Git change read > keeps deletion paths in staged and reference comparisons', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'source.ts': 'export {};\n' });
     commit(sandbox.path);
@@ -39,7 +39,7 @@ test('Git change observation > keeps deletion paths in staged and reference comp
     expect(changed.paths).toStrictEqual(['source.ts']);
 });
 
-test('Git change observation > keeps both paths of a rename across directories', async () => {
+test('Git change read > keeps both paths of a rename across directories', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'api/source.ts': 'export {};\n', 'web/kept.ts': 'export {};\n' });
     commit(sandbox.path);
@@ -50,7 +50,7 @@ test('Git change observation > keeps both paths of a rename across directories',
     expect(changed.paths).toStrictEqual(['api/source.ts', 'web/source.ts']);
 });
 
-test('Git change observation > reports corrupt or absent Git state instead of an empty staged set', async () => {
+test('Git change read > reports corrupt or absent Git state instead of an empty staged set', async () => {
     await using sandbox = await testdir();
     expect(await rejection(stagedFiles(sandbox.path))).toContain('Git diff failed');
     git(sandbox.path, 'init');
@@ -58,7 +58,7 @@ test('Git change observation > reports corrupt or absent Git state instead of an
     expect(await rejection(stagedFiles(sandbox.path))).toContain('Git diff failed');
 });
 
-test('Git change observation > rejects invalid reference observations without interpreting options', async () => {
+test('Git change read > rejects invalid reference reads without interpreting options', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'source.ts': 'export {};\n' });
     commit(sandbox.path);
@@ -68,7 +68,7 @@ test('Git change observation > rejects invalid reference observations without in
     expect(await rejection(changedFiles(sandbox.path, '--output=outside.txt'))).toContain('Git merge-base failed');
     expect(existsSync(join(sandbox.path, 'outside.txt'))).toBe(false);
 });
-test('Git change observation > push comparison distinguishes an absent upstream from a missing upstream object', async () => {
+test('Git change read > push comparison distinguishes an absent upstream from a missing upstream object', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'source.ts': 'export {};\n' });
     commit(sandbox.path);
@@ -83,7 +83,7 @@ test('Git change observation > push comparison distinguishes an absent upstream 
     expect(await rejection(pushBase(sandbox.path))).toContain('Git merge-base failed');
 });
 
-test('Git change observation > push comparison reports an unborn or corrupt HEAD instead of inventing a base', async () => {
+test('Git change read > push comparison reports an unborn or corrupt HEAD instead of inventing a base', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'source.ts': 'export {};\n' });
     git(sandbox.path, 'init');
@@ -93,7 +93,7 @@ test('Git change observation > push comparison reports an unborn or corrupt HEAD
     expect(await rejection(pushBase(sandbox.path))).toContain('Git rev-parse failed');
 });
 
-test('Git change observation > a new branch compares with the remote default without losing unpublished commits', async () => {
+test('Git change read > a new branch compares with the remote default without losing unpublished commits', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'source.ts': 'export {};\n' });
     commit(sandbox.path);

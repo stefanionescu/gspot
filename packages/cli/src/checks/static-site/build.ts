@@ -75,8 +75,8 @@ export function filesUnder(folder: string): string[] {
  */
 export function siteBuild(input: EngineInput): Promise<SiteBuild> {
     const key = join(input.root, input.scope);
-    const scopeBuilds = builds.get(input.observations) ?? new Map<string, Promise<SiteBuild>>();
-    builds.set(input.observations, scopeBuilds);
+    const scopeBuilds = builds.get(input.reads) ?? new Map<string, Promise<SiteBuild>>();
+    builds.set(input.reads, scopeBuilds);
     const running = scopeBuilds.get(key) ?? built(input);
     scopeBuilds.set(key, running);
     return running;

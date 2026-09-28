@@ -4,7 +4,7 @@ import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import type { EngineInput } from '#cli/types/checks/checks.ts';
 
-/** Construct a check input from validated policy and the observed fixture inventory. */
+/** Construct a check input from validated policy and the read fixture inventory. */
 export async function checkInput(
     root: string,
     check: string,

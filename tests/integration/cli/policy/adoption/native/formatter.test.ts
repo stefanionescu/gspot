@@ -6,7 +6,7 @@ import { collectKept } from '#cli/policy/adoption/collect.ts';
 import { PRETTIER_TOOLING } from '#tests/support/cli/tooling.ts';
 import { askInitQuestions } from '#cli/commands/init/questions.ts';
 
-test('formatter choices use the captured observation and a fresh failed observation is retained', async () => {
+test('formatter choices use the captured read and a fresh failed read is retained', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { '.prettierrc.json': '{"semi":false,"tabWidth":8}\n' });
     const kept = await collectKept(sandbox.path, PRETTIER_TOOLING, new Set(['formatting']), ['source.js']);

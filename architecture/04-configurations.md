@@ -639,7 +639,7 @@ in the root or in a scope. The commit scopes are what `tools.commitlint.scopes` 
 The two folder names are the `detect` table of the setting `types_directory` in the
 typescript manifest (K-93).
 
-The proposal snapshot of a repository with `src/types`.
+The plan snapshot of a repository with `src/types`.
 
 ### Acceptance K-255
 

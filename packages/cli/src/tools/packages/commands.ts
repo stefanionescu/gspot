@@ -13,7 +13,7 @@ import { acquisitionNote } from '#cli/tools/packages/acquisition.ts';
 import { packageEnvironment } from '#cli/tools/packages/environment.ts';
 import { portableBunLock, relativeYarnLock } from '#cli/tools/packages/locks.ts';
 import type { PackageTool, PackageExecution } from '#cli/types/tools/packages.ts';
-import { MissingToolError, toolVersionState, observeToolVersion } from '#cli/tools/inspect.ts';
+import { readVersion, MissingToolError, toolVersionState } from '#cli/tools/inspect.ts';
 import { LOCKS, CREDENTIAL_KEY, YARN_BERRY_MAJOR, NPM_SETTING_PREFIX } from '#cli/config/tools/packages.ts';
 
 // The resolve or install command of each manager that has one form, by whether the lock is frozen.
@@ -115,13 +115,13 @@ async function assertNativeVersion(work: string, executable: string, tool: ToolP
         cwd: work,
         ...(tool.env === undefined ? {} : { env: tool.env }),
     });
-    const observed = observeToolVersion(tool, result, npm?.version);
-    if (!('version' in observed)) throw new InstallationError(observed.note);
-    const want = tool.version ?? observed.version;
+    const read = readVersion(tool, result, npm?.version);
+    if (!('version' in read)) throw new InstallationError(read.note);
+    const want = tool.version ?? read.version;
     const floor = tool.floor ?? want;
-    if (toolVersionState(observed.version, want, floor) === 'outdated')
+    if (toolVersionState(read.version, want, floor) === 'outdated')
         throw new InstallationError(
-            `${tool.name} reported ${observed.version}, below ${floor}. No installed files were published.`,
+            `${tool.name} reported ${read.version}, below ${floor}. No installed files were published.`,
         );
 }
 

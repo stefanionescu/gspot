@@ -179,7 +179,7 @@ test('Ruff inheritance retains native merges and each parent selector directory'
         'config/base.toml',
         'config/pyproject.toml',
     ]);
-    expect([...kept.observed.keys()].toSorted((left, right) => left.localeCompare(right))).toStrictEqual(
+    expect([...kept.read.keys()].toSorted((left, right) => left.localeCompare(right))).toStrictEqual(
         Object.keys(INHERITED_FILES.configs).toSorted((left, right) => left.localeCompare(right)),
     );
     await Bun.write(

@@ -194,17 +194,17 @@ if (process.platform !== 'win32')
         });
         try {
             for (const execute of [run, runBinary]) {
-                let observed: unknown;
+                let read: unknown;
                 try {
                     await execute([process.execPath, '-e', "console.error('tool failed'); process.exitCode = 7"], {
                         cwd: sandbox.path,
                     });
                 } catch (error) {
-                    observed = error;
+                    read = error;
                 }
-                expect(observed).toBeInstanceOf(AggregateError);
-                expect(String((observed as AggregateError).errors[0])).toContain('exit code 7');
-                expect((observed as AggregateError).errors[1]).toBe(denied);
+                expect(read).toBeInstanceOf(AggregateError);
+                expect(String((read as AggregateError).errors[0])).toContain('exit code 7');
+                expect((read as AggregateError).errors[1]).toBe(denied);
             }
         } finally {
             signaling.mockRestore();

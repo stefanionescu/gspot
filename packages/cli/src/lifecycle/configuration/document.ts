@@ -128,7 +128,7 @@ export function configurationDocument(source: string, format: ConfigurationForma
 }
 
 /**
- * Inspect shared fields through the same parser used by lifecycle proposals.
+ * Inspect shared fields through the same parser used by lifecycle plans.
  * @param root the repository root.
  * @param output the shared configuration gspot installs keys into.
  * @param output.path the file path.

@@ -33,12 +33,12 @@ export function exportCommand(cwd: string, file: string): CommandResult {
         if (existing !== undefined && existing.kind !== 'export')
             throw new Error(`Profile export cannot replace managed ${path}. Choose another destination.`);
         const current = owner.read(path);
-        const proposal = owner.proposeReplacement(
+        const plan = owner.proposeReplacement(
             path,
             { bytes: Buffer.from(saved.text), mode: current?.mode ?? OWNER_WRITABLE_FILE },
             'export',
         );
-        owner.applyProposals([proposal]);
+        owner.applyPlans([plan]);
     });
     const lines = [`wrote ${file}`, ...saved.leftOut.map((entry) => `left out  ${entry}`)];
     return { text: `${lines.join('\n')}\n`, json: { file, leftOut: saved.leftOut }, exitCode: 0 };

@@ -12,7 +12,7 @@ test.each([
     '429 Too Many Requests',
     '503 Service Unavailable',
     'dial tcp: no such host',
-])('pin verification treats %s as an execution error and accepts a completed observation', async (failure) => {
+])('pin verification treats %s as an execution error and accepts a completed read', async (failure) => {
     await using sandbox = await testdir();
     const workflow = 'jobs:\n  check:\n    steps:\n      - uses: actions/checkout@v4\n';
     await createFileTree(sandbox.path, {

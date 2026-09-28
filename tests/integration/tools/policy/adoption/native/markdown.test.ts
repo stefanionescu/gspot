@@ -124,8 +124,8 @@ test.each([
         expect({
             removed: kept.removed.map(({ path }) => path),
             retained: kept.retained.map(({ path }) => path).toSorted((left, right) => left.localeCompare(right)),
-            base: kept.observed.get('config/base.jsonc')?.bytes.toString().includes('"default":false'),
-            parent: kept.observed.get('config/parent.yaml')?.bytes.toString().includes('line_length: 3'),
+            base: kept.read.get('config/base.jsonc')?.bytes.toString().includes('"default":false'),
+            parent: kept.read.get('config/parent.yaml')?.bytes.toString().includes('line_length: 3'),
         }).toStrictEqual({ ...expected, removed: [...expected.removed], retained: [...expected.retained] });
         await writeAdoptedMarkdown(sandbox.path, kept);
         // Remove discovery input so the generated file alone determines the native result.

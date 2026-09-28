@@ -50,18 +50,18 @@ function getCandidate(context: InitContext, configuration: string, without: Set<
     return manifest;
 }
 
-function rootSelection(context: InitContext, rootProposals: { configuration: string }[], hasScopes: boolean): string[] {
+function rootSelection(context: InitContext, rootPlans: { configuration: string }[], hasScopes: boolean): string[] {
     const without = new Set(context.options.without);
     const named = context.options.kits?.filter((id) => id !== NO_KITS && !without.has(id));
     if (named && context.options.profile?.tables.selection !== 'detect') return named;
-    const detected = rootProposals
-        .filter((proposal) => {
-            const manifest = getCandidate(context, proposal.configuration, without);
+    const detected = rootPlans
+        .filter((plan) => {
+            const manifest = getCandidate(context, plan.configuration, without);
             if (!manifest) return false;
             const { kind } = manifest.kit;
             return !hasScopes || kind === 'general' || kind === 'language';
         })
-        .map((proposal) => proposal.configuration);
+        .map((plan) => plan.configuration);
     return [...new Set([...(named ?? []), ...detected])];
 }
 
@@ -75,11 +75,11 @@ function scopeSelection(
     const ids =
         flagged ??
         detectKits(context.files, context.manifests, context.facts, scope.path)
-            .filter((proposal) => {
-                const manifest = getCandidate(context, proposal.configuration, without);
+            .filter((plan) => {
+                const manifest = getCandidate(context, plan.configuration, without);
                 return manifest !== undefined && manifest.kit.kind !== 'general';
             })
-            .map((proposal) => proposal.configuration);
+            .map((plan) => plan.configuration);
     // A language stays out of a scope only while the root really keeps it: some source of it lies outside every scope.
     const atRoot = new Set(rootIds);
     return ids.filter((id) => !atRoot.has(id) || context.manifests.get(id)?.kit.kind !== 'language');
@@ -184,23 +184,23 @@ export function selectForInit(inputs: InitInputs): InitSelection {
     assertKnown(options, scopeFlags, manifests);
     const scopes = initScopes(root, workspace, scopeFlags);
     const hasScopes = scopes.length > 1;
-    const rootProposals = detectKits(repo.files, manifests, facts);
-    const proposedRoot = rootSelection(context, rootProposals, hasScopes);
-    const scopeProposals = new Map<string, string[]>();
+    const rootPlans = detectKits(repo.files, manifests, facts);
+    const proposedRoot = rootSelection(context, rootPlans, hasScopes);
+    const scopePlans = new Map<string, string[]>();
     const heldAtRoot = proposedRoot.filter((id) => {
         const manifest = manifests.get(id);
         return manifest?.kit.kind !== 'language' || !hasScopes || hasSourceOutsideScopes(context, manifest, scopes);
     });
     for (const scope of scopes)
         if (scope.path !== '')
-            scopeProposals.set(scope.path, scopeSelection(context, scope, scopeFlags.get(scope.path), heldAtRoot));
-    const inScopes = new Set(scopeProposals.values().toArray().flat());
+            scopePlans.set(scope.path, scopeSelection(context, scope, scopeFlags.get(scope.path), heldAtRoot));
+    const inScopes = new Set(scopePlans.values().toArray().flat());
     const keptRoot = hasScopes ? rootLanguagesKept(context, proposedRoot, scopes, inScopes) : proposedRoot;
     const rootIds = listedKits(
         options,
         [...keptRoot, ...inScopes],
         manifests,
-        new Set(rootProposals.map((proposal) => proposal.configuration)),
+        new Set(rootPlans.map((plan) => plan.configuration)),
     ).filter((id) => !inScopes.has(id));
     assertNoneRequired(options, [...rootIds, ...inScopes], manifests);
     const selectedIds = closure([...rootIds, ...inScopes], manifests);
@@ -210,5 +210,5 @@ export function selectForInit(inputs: InitInputs): InitSelection {
         listed: new Set([...rootIds, ...inScopes]),
     };
     const how = new Map([...selectedIds].map((id) => [id, reasonFor(id, sets)]));
-    return { scopes, rootIds, scopeProposals, selectedIds, rootProposals, how };
+    return { scopes, rootIds, scopePlans, selectedIds, rootPlans, how };
 }

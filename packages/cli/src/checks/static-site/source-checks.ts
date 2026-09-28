@@ -6,7 +6,7 @@ import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
 import { TEXT_SUFFIX, ASSET_FOLDER, REQUIRED_HEADERS, REPORTED_SAVINGS_SHARE } from '#cli/config/checks/static-site.ts';
 // What svgo says about one file: it cannot read it, it makes it smaller, or nothing.
 async function svgFinding(input: EngineInput, path: string): Promise<Finding[]> {
-    const original = readSource(input.root, path, input.observations).toString('utf8');
+    const original = readSource(input.root, path, input.reads).toString('utf8');
     const result = await runCheckCommand(input, ['svgo', '--input', '-', '--output', '-'], {
         cwd: input.root,
         stdin: original,
@@ -39,7 +39,7 @@ export function deadAssets(input: EngineInput): Finding[] {
     const files = input.files;
     const texts = files
         .filter((file) => TEXT_SUFFIX.test(file.path))
-        .map((file) => readSource(input.root, file.path, input.observations).toString('utf8'));
+        .map((file) => readSource(input.root, file.path, input.reads).toString('utf8'));
     return files
         .filter((file) => ASSET_FOLDER.test(file.path) && !TEXT_SUFFIX.test(file.path))
         .filter((file) => {
@@ -80,7 +80,7 @@ export function webManifest(input: EngineInput): Finding[] {
         (file) => file.path.endsWith('.webmanifest') || file.path.endsWith('/manifest.json'),
     );
     return manifests.flatMap((file): Finding[] => {
-        const text = readSource(input.root, file.path, input.observations).toString('utf8');
+        const text = readSource(input.root, file.path, input.reads).toString('utf8');
         let parsed: { name?: unknown; icons?: { src?: string }[] };
         try {
             parsed = JSON.parse(text) as typeof parsed;
@@ -156,7 +156,7 @@ export function siteWideHeaders(text: string): Map<string, string> {
 export function securityHeaders(input: EngineInput): Finding[] {
     const files = input.files.filter((file) => file.path === '_headers' || file.path.endsWith('/_headers'));
     return files.flatMap((file) => {
-        const held = siteWideHeaders(readSource(input.root, file.path, input.observations).toString('utf8'));
+        const held = siteWideHeaders(readSource(input.root, file.path, input.reads).toString('utf8'));
         const hasFrameRule = /frame-ancestors/iu.test(held.get('content-security-policy') ?? '');
         return Object.entries(REQUIRED_HEADERS)
             .filter(

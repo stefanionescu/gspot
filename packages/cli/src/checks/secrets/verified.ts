@@ -32,14 +32,13 @@ async function selectedCommits(session: Session, planned: PlannedCheck): Promise
 
 // The NUL-separated fields of a commit's raw change list, which must be UTF-8 and complete.
 async function changeFields(session: Session, commit: string): Promise<string[]> {
-    const observed = await runBinary(['git', ...DIFF_TREE, commit, '--'], {
+    const read = await runBinary(['git', ...DIFF_TREE, commit, '--'], {
         cwd: session.root,
         timeoutMs: GIT_TIMEOUT_MS,
         ...(session.cancelSignal === undefined ? {} : { cancelSignal: session.cancelSignal }),
     });
-    if (observed.code !== 0)
-        throw new SelectionError(['Cannot read the changed objects for verified secret scanning.']);
-    const bytes = Buffer.from(observed.stdout);
+    if (read.code !== 0) throw new SelectionError(['Cannot read the changed objects for verified secret scanning.']);
+    const bytes = Buffer.from(read.stdout);
     const text = bytes.toString('utf8');
     if (!Buffer.from(text).equals(bytes)) throw new SelectionError(['History paths must be valid UTF-8.']);
     const fields = text.split('\0');

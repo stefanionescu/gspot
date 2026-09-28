@@ -67,7 +67,7 @@ test.each(['cycle', 'escape', 'external link', 'unsupported parent'] as const)(
             MD009: true,
             MD033: true,
         });
-        expect(corrected.observed.get('config/base.jsonc')?.bytes.toString()).toBe(validParent);
+        expect(corrected.read.get('config/base.jsonc')?.bytes.toString()).toBe(validParent);
     },
 );
 

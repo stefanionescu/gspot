@@ -2,9 +2,9 @@ import JSON5 from 'json5';
 import { parse as parseYaml } from 'yaml';
 import { posix, extname } from 'node:path';
 import { parse as parseToml } from 'smol-toml';
+import type { Read } from '#cli/types/platform.ts';
 import { parseJsonc } from '#cli/repository/jsonc.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
-import type { FileObservation } from '#cli/types/platform.ts';
 import type { TomlTable } from '#cli/types/repository/repository.ts';
 import type { ConfigurationSource } from '#cli/types/policy/adoption.ts';
 import { sqlfluffConfiguration } from '#cli/repository/configuration/sqlfluff.ts';
@@ -48,7 +48,7 @@ function parseSource(tool: string, path: string, text: string): unknown {
  * @param path the authored configuration file
  * @returns the file text with the snapshot of its bytes and mode
  */
-export function observeConfiguration(root: string, path: string): Omit<ConfigurationSource, 'parsed'> {
+export function readConfiguration(root: string, path: string): Omit<ConfigurationSource, 'parsed'> {
     const files = openRoot(root);
     try {
         const original = files.read(path);
@@ -72,7 +72,7 @@ export function observeConfiguration(root: string, path: string): Omit<Configura
  * @returns the text, the parsed settings table, and the snapshot.
  */
 export function parseConfigurationSource(
-    original: FileObservation,
+    original: Read,
     tool: string,
     path: string,
     selector?: { table?: string; key?: string },

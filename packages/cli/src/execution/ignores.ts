@@ -5,8 +5,8 @@ import { readSource } from '#cli/repository/tracked.ts';
 import type { Finding } from '#cli/types/checks/checks.ts';
 import type { IgnoreEntry } from '#cli/types/policy/policy.ts';
 import type { SourceComment } from '#cli/types/parsers/parsers.ts';
+import type { SourceReads } from '#cli/types/repository/repository.ts';
 import { commentText, sourceComments } from '#cli/parsers/comments.ts';
-import type { SourceObservations } from '#cli/types/repository/repository.ts';
 import type { IgnoreUse, InlineIgnore } from '#cli/types/execution/execution.ts';
 import { INLINE_IGNORE, REASON_INTRODUCER, COMMENT_STYLE_BY_EXTENSION } from '#cli/config/execution/execution.ts';
 
@@ -16,9 +16,9 @@ function isEntryMatch(entry: IgnoreEntry, finding: Finding): boolean {
     return entry.paths === undefined || entry.paths.length === 0 || pathMatcher(entry.paths)(finding.file);
 }
 
-function existingText(observations: SourceObservations, path: string): string {
+function existingText(reads: SourceReads, path: string): string {
     try {
-        return readSource(observations.root, path, observations).toString('utf8');
+        return readSource(reads.root, path, reads).toString('utf8');
     } catch (error) {
         if (error instanceof Error && 'code' in error && error.code === 'ENOENT') return '';
         throw error;
@@ -60,28 +60,28 @@ export function applyIgnores(findings: Finding[], entries: IgnoreEntry[]): { kep
 
 /**
  * Inline gspot-ignore comments in one file, with the line each applies to (the same line, or the next when the comment stands alone).
- * @param observations the source bytes shared by this execution
+ * @param reads the source bytes shared by this execution
  * @param path the file, relative to the root
  * @returns the ignores found
  */
-export async function inlineIgnores(observations: SourceObservations, path: string): Promise<InlineIgnore[]> {
+export async function inlineIgnores(reads: SourceReads, path: string): Promise<InlineIgnore[]> {
     const style = COMMENT_STYLE_BY_EXTENSION[extensionOf(path)];
     if (style === undefined) return [];
-    const comments = await sourceComments(path, existingText(observations, path));
+    const comments = await sourceComments(path, existingText(reads, path));
     return comments.map((comment) => inlineIgnoreOf(style, comment)).filter((entry) => entry !== undefined);
 }
 
 /**
  * Applies inline ignores to findings from the gspot engines. The suppression check owns reason validation.
- * @param observations the source bytes shared by this execution
+ * @param reads the source bytes shared by this execution
  * @param findings the findings before ignores
  * @returns the findings kept
  */
-export async function applyInlineIgnores(observations: SourceObservations, findings: Finding[]): Promise<Finding[]> {
+export async function applyInlineIgnores(reads: SourceReads, findings: Finding[]): Promise<Finding[]> {
     const byFile = new Map<string, InlineIgnore[]>();
     for (const finding of findings) {
         if (finding.engine === undefined || byFile.has(finding.file)) continue;
-        byFile.set(finding.file, await inlineIgnores(observations, finding.file));
+        byFile.set(finding.file, await inlineIgnores(reads, finding.file));
     }
     return findings.filter(
         (finding) =>

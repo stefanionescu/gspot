@@ -26,7 +26,7 @@ function named(input: EngineInput, name: string): string[] {
 }
 
 function lines(input: EngineInput, path: string): { text: string; number: number }[] {
-    return readSource(input.root, path, input.observations)
+    return readSource(input.root, path, input.reads)
         .toString('utf8')
         .split('\n')
         .map((text, index) => ({ text, number: index + 1 }))
@@ -45,7 +45,7 @@ function wranglerTable(
     input: EngineInput,
     path: string,
 ): { table: Record<string, unknown>; problem: string | undefined } {
-    const text = readSource(input.root, path, input.observations).toString('utf8');
+    const text = readSource(input.root, path, input.reads).toString('utf8');
     try {
         if (path.endsWith('.toml')) return { table: parseToml(text), problem: undefined };
         const errors: ParseError[] = [];
@@ -63,13 +63,13 @@ function wranglerTable(
 // Compares a copied types file with the output of wrangler in the same isolated directory.
 async function isTypesFileStale(input: EngineInput, path: string): Promise<boolean> {
     const folder = path.includes('/') ? path.slice(0, path.lastIndexOf('/')) : '';
-    const before = readSource(input.root, path, input.observations);
+    const before = readSource(input.root, path, input.reads);
     const result = await runCheckCommand(input, ['wrangler', 'types', TYPES_FILE], {
         cwd: join(input.root, folder),
     });
     if (result.code !== 0)
         throw new Error(`The wrangler types command failed: ${result.stderr.trim().split('\n').at(-1) ?? ''}`);
-    return !before.equals(readSource(input.root, path, input.observations));
+    return !before.equals(readSource(input.root, path, input.reads));
 }
 
 /**

@@ -1,10 +1,10 @@
 import type { Manifest } from '#cli/types/kits.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
+import { xcodePlan } from '#cli/commands/init/xcode.ts';
 import { agentFiles } from '#cli/agents/instructions.ts';
 import { npmPins, pythonPins } from '#cli/tools/pins.ts';
 import { misePins, pinnedTwice } from '#cli/tools/mise.ts';
 import { submodulePaths } from '#cli/repository/tracked.ts';
-import { xcodeProposal } from '#cli/commands/init/xcode.ts';
 import { MISE_CONFIG_PATH } from '#cli/config/tools/tools.ts';
 import { noLongerRuns } from '#cli/policy/adoption/collect.ts';
 import { runnerTaskPlan } from '#cli/generation/runner/plan.ts';
@@ -22,7 +22,7 @@ import type {
     InitSelection,
     DetectedSetting,
     InstallSettings,
-    InitProposal as Proposal,
+    InitPlan as Plan,
 } from '#cli/types/commands/init.ts';
 
 // How many values a carried setting holds: the entries of a list or table, or one scalar.
@@ -123,7 +123,7 @@ function carryInstallSettings(kept: AdoptionResult, path: string, settings: Inst
     kept.scopes.set(path, scope);
 }
 
-// Carries the install settings of every scope's bunfig.toml into the proposal.
+// Carries the install settings of every scope's bunfig.toml into the plan.
 function carryBunfigSettings(root: string, selection: InitSelection, kept: AdoptionResult): void {
     const files = openRoot(root);
     try {
@@ -144,10 +144,10 @@ function commitScopeNames(scopes: ScopeEntry[], selection: InitSelection): strin
     return [...scopes.map((scope) => scope.name), 'root', 'hooks', 'deps'];
 }
 
-// The Xcode project proposal, when the selection includes Xcode.
-function xcodeRow(root: string, selection: InitSelection): ReturnType<typeof xcodeProposal> | undefined {
+// The Xcode project plan, when the selection includes Xcode.
+function xcodeRow(root: string, selection: InitSelection): ReturnType<typeof xcodePlan> | undefined {
     if (!selection.selectedIds.has('xcode')) return undefined;
-    return xcodeProposal(
+    return xcodePlan(
         root,
         selection.scopes.map((scope) => scope.path),
     );
@@ -184,21 +184,21 @@ function retainedCiRows(ci: InitAnswers['ci'], ciFiles: string[], lintJobs: stri
 }
 
 /**
- * Builds the proposal gspot.toml is rendered from.
+ * Builds the plan gspot.toml is rendered from.
  * @param root the repository root
  * @param selection what init selected
  * @param answers the answers to the init questions
  * @param kept the lists kept from old configuration files
  * @param detected the settings init filled from the repository
- * @returns the proposal
+ * @returns the plan
  */
-export function buildProposal(
+export function plan(
     root: string,
     selection: InitSelection,
     answers: InitAnswers,
     kept: AdoptionResult,
     detected: DetectedSetting[] = [],
-): Proposal {
+): Plan {
     if (selection.selectedIds.has('dependencies')) carryBunfigSettings(root, selection, kept);
     const scopes: ScopeEntry[] = selection.scopes.filter((scope) => scope.path !== '');
     const commitScopes = commitScopeNames(scopes, selection);
@@ -207,7 +207,7 @@ export function buildProposal(
         kits: selection.rootIds,
         scopes: scopes.map((scope) => ({
             path: scope.path,
-            kits: selection.scopeProposals.get(scope.path) ?? [],
+            kits: selection.scopePlans.get(scope.path) ?? [],
         })),
         kept,
         hooks: answers.hooks,
@@ -223,7 +223,7 @@ export function buildProposal(
 
 /**
  * Builds the plan init prints before asking to continue.
- * @param planning the selected kit and adoption observations
+ * @param planning the selected kit and adoption reads
  * @param policy the validated proposed policy
  * @param policyText the proposed policy text
  * @returns the plan
@@ -237,8 +237,8 @@ export function buildInitPlan(planning: Planning, policy: Policy, policyText: st
                   name: options.profile.tables.profile,
                   digest: options.profile.digest,
                   selection: options.profile.tables.selection,
-                  detected: selection.rootProposals
-                      .map((proposal) => proposal.configuration)
+                  detected: selection.rootPlans
+                      .map((plan) => plan.configuration)
                       .filter((id) => !selection.selectedIds.has(id)),
               };
     const agents = policy.guides.install ? agentFiles(root, policy.guides.agents) : [];

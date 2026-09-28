@@ -1,11 +1,11 @@
 // The types of policy/adoption in this package.
 import type { z } from 'zod';
-import type { FileObservation } from '#cli/types/platform.ts';
+import type { Read } from '#cli/types/platform.ts';
 import type { RUFF_SOURCE } from '#cli/policy/adoption/ruff.ts';
 import type { Policy, RawPolicy } from '#cli/types/policy/policy.ts';
 import type { TomlTable, ExistingTool, ExistingTooling } from '#cli/types/repository/repository.ts';
 
-export type ConfigurationSource = { text: string; parsed: TomlTable; original: FileObservation };
+export type ConfigurationSource = { text: string; parsed: TomlTable; original: Read };
 export type RuffLint = Extract<z.infer<typeof RUFF_SOURCE>, { lint: unknown }>['lint'];
 export type PerFile = Record<string, string[]>;
 export type Inheritance = {
@@ -28,7 +28,7 @@ export type AdoptionResult = {
     tools: Map<string, { settings: TomlTable; ignores: AdoptedIgnore[] }>;
     scopes: Map<string, AdoptedScope>;
     formatter?: AdoptedFormatting;
-    observed: Map<string, FileObservation>;
+    read: Map<string, Read>;
     removed: { path: string; note: string }[];
     unread: { path: string; note: string }[];
     retained: { path: string; note: string }[];

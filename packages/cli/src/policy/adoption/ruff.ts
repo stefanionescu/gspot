@@ -6,7 +6,7 @@ import type { TomlTable } from '#cli/types/repository/repository.ts';
 import { RUFF_PREVIEW_RULES } from '#cli/config/checks/ruff-rules.ts';
 import { reasonFor, adoptedTool, adoptedScope } from '#cli/policy/adoption/results.ts';
 import { GLOB_MAGIC, UNSAFE_EXTEND, UNSAFE_GLOB_CHARACTERS } from '#cli/config/policy/adoption.ts';
-import { asRaw, asStrings, observeConfiguration, parseConfigurationSource } from '#cli/policy/adoption/source.ts';
+import { asRaw, asStrings, readConfiguration, parseConfigurationSource } from '#cli/policy/adoption/source.ts';
 
 import type {
     PerFile,
@@ -105,7 +105,7 @@ function scopePatterns(owner: string, path: string, base: string, table: PerFile
     return result;
 }
 
-// The configuration a Ruff file extends, observed and parsed, with its table selected inside pyproject.toml.
+// The configuration a Ruff file extends, read and parsed, with its table selected inside pyproject.toml.
 function extendedSource(
     inheritance: Inheritance,
     path: string,
@@ -114,8 +114,8 @@ function extendedSource(
     if (from.startsWith('/') || UNSAFE_EXTEND.test(from))
         throw new Error(`${path}: inherited Ruff configuration must use a repository-relative path.`);
     const target = posix.normalize(posix.join(posix.dirname(path), from));
-    const original = inheritance.lists.observed.get(target) ?? observeConfiguration(inheritance.root, target).original;
-    inheritance.lists.observed.set(target, original);
+    const original = inheritance.lists.read.get(target) ?? readConfiguration(inheritance.root, target).original;
+    inheritance.lists.read.set(target, original);
     inheritance.inherited.add(target);
     const selector = posix.basename(target) === 'pyproject.toml' ? { table: 'tool.ruff' } : undefined;
     return { target, source: parseConfigurationSource(original, 'ruff', target, selector) };
@@ -214,7 +214,7 @@ export class ExperimentalRuffError extends Error {}
 
 /**
  * Reject preview activation before adoption records or generates configuration.
- * @param source the observed Ruff configuration.
+ * @param source the read Ruff configuration.
  * @param path the configuration path used in diagnostics.
  */
 export function assertStableRuff(source: ConfigurationSource, path: string): void {

@@ -197,7 +197,7 @@ test('Prettier adoption preserves ordered ignore negations for files created lat
     const generated = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
         version: session.version,
         packageClient: session.packageClient,
-        replace: kept.observed,
+        replace: kept.read,
     }).files.find(({ path }) => path === '.prettierignore')!;
     writeFileSync(join(directory.path, '.prettierignore'), generated.content);
     const fileStatus = await prettier.getFileInfo(join(directory.path, 'src/future.js'), {

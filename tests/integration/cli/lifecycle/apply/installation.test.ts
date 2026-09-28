@@ -7,7 +7,7 @@ import { rejection } from '#tests/support/expectations.ts';
 import { initCommand } from '#cli/commands/init/command.ts';
 import { existsSync, symlinkSync, readFileSync } from 'node:fs';
 
-test('apply refuses a proposal whose policy changed after the session was read', async () => {
+test('apply refuses a plan whose policy changed after the session was read', async () => {
     await using sandbox = await testdir();
     const initial = 'version = 1\nkits = []\n[guides]\ninstall = false\n';
     await createFileTree(sandbox.path, { 'gspot.toml': initial });

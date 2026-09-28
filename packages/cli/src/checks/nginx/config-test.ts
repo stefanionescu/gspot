@@ -31,7 +31,7 @@ function configurationCopies(input: EngineInput, path: string, work: string): Ma
     for (const entry of pending) {
         if (configurations.has(entry.target)) continue;
         const source = join(directory, `${String(configurations.size)}.conf`);
-        const bytes = readSource(input.root, entry.path, input.observations);
+        const bytes = readSource(input.root, entry.path, input.reads);
         writeFileSync(source, bytes);
         const text = bytes.toString('utf8');
         configurations.set(entry.target, { ...entry, source, text });

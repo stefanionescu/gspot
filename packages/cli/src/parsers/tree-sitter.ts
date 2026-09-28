@@ -3,10 +3,10 @@ import { readFileSync } from 'node:fs';
 import { grammarPath } from '#cli/platform/assets.ts';
 import { Parser, Language, type Tree } from 'web-tree-sitter';
 import { DECLARATION_FILE } from '#cli/config/parsers/parsers.ts';
-import type { SourceObservations } from '#cli/types/repository/repository.ts';
+import type { SourceReads } from '#cli/types/repository/repository.ts';
 import type { GrammarName, ParseContext } from '#cli/types/parsers/parsers.ts';
 
-const observations = new WeakMap<SourceObservations, Map<string, Tree>>();
+const reads = new WeakMap<SourceReads, Map<string, Tree>>();
 
 const state: { isReady: Promise<void> | undefined; parsers: Map<GrammarName, Promise<Parser>> } = {
     isReady: undefined,
@@ -40,16 +40,16 @@ export function parserFor(name: GrammarName): Promise<Parser> {
  * Shares a run-owned parse while giving each reader its own disposable tree handle.
  * @param name the grammar that gives the source its meaning.
  * @param text the exact source to parse.
- * @param context execution observations and their existing resource owner, when running checks.
+ * @param context execution reads and their existing resource owner, when running checks.
  * @returns a caller-owned tree copy, or null when parsing cannot produce a tree.
  */
 export async function parseSource(name: GrammarName, text: string, context?: ParseContext): Promise<Tree | null> {
     const parser = await parserFor(name);
     if (context?.resources === undefined) return parser.parse(text);
-    let trees = observations.get(context.observations);
+    let trees = reads.get(context.reads);
     if (trees === undefined) {
         trees = new Map();
-        observations.set(context.observations, trees);
+        reads.set(context.reads, trees);
     }
     const key = JSON.stringify([name, text]);
     const held = trees.get(key);

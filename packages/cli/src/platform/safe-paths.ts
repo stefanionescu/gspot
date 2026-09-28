@@ -1,6 +1,6 @@
 // The path spellings and file snapshots the lifecycle accepts, and the metadata paths it keeps to itself.
 import { isDeepStrictEqual } from 'node:util';
-import type { FileObservation } from '#cli/types/platform.ts';
+import type { Read } from '#cli/types/platform.ts';
 
 import {
     DEVICE_NAME,
@@ -25,7 +25,7 @@ function isUnsafeSegment(part: string): boolean {
  * @param platform the platform whose permission model applies
  * @returns the mode the platform can represent
  */
-export function fileMode(file: Pick<FileObservation, 'mode' | 'isLink'>, platform = process.platform): number {
+export function fileMode(file: Pick<Read, 'mode' | 'isLink'>, platform = process.platform): number {
     if (platform !== 'win32') return file.mode;
     if (file.isLink || (file.mode & OWNER_WRITE_BIT) !== 0) return WRITABLE_FILE;
     return READ_ONLY_FILE;
@@ -37,11 +37,11 @@ export function fileMode(file: Pick<FileObservation, 'mode' | 'isLink'>, platfor
  * @param expected the snapshot the caller expects there
  * @returns true when both are absent or both match
  */
-export function sameEntry(found: FileObservation | undefined, expected: FileObservation | undefined): boolean {
+export function sameEntry(found: Read | undefined, expected: Read | undefined): boolean {
     if (found === undefined || expected === undefined) return found === expected;
-    const observed = { ...found, mode: fileMode(found) };
+    const read = { ...found, mode: fileMode(found) };
     const requested = { ...expected, mode: fileMode(expected) };
-    return isDeepStrictEqual(observed, requested);
+    return isDeepStrictEqual(read, requested);
 }
 
 /**
@@ -79,10 +79,10 @@ export function privateTarget(path: string): void {
 }
 
 /**
- * Public mutation proposals cannot target the owner's log, lock, or recovery files.
+ * Public mutation plans cannot target the owner's log, lock, or recovery files.
  * @param path the proposed path
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Public mutation proposals cannot target the owner's log, lock, or recovery files. 9 files make 11 calls; one owner keeps that behavior in one place.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Public mutation plans cannot target the owner's log, lock, or recovery files. 9 files make 11 calls; one owner keeps that behavior in one place.
 export function mutationTarget(path: string): void {
     mutationPath(path);
     privateTarget(path);

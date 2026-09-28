@@ -2,7 +2,7 @@
 import type { Root } from '#cli/types/platform.ts';
 import type { Policy } from '#cli/types/policy/policy.ts';
 import type { HookLocation } from '#cli/types/repository/repository.ts';
-import type { Owner, FileProposal, OwnershipEntry } from '#cli/types/lifecycle/lifecycle.ts';
+import type { Owner, Planned, OwnershipEntry } from '#cli/types/lifecycle/lifecycle.ts';
 
 export type Readiness = (root: string, runner: string | undefined, binary: string | undefined) => boolean;
 export type Status = {
@@ -36,4 +36,4 @@ export type Installation = {
     nativeMarker: string | undefined;
     directory: string;
 };
-export type Restorations = { proposals: FileProposal[]; preserved: string[] };
+export type Restorations = { plans: Planned[]; preserved: string[] };

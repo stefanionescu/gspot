@@ -130,7 +130,7 @@ export async function askKits(
  * @param root the repository root
  * @param options the init flags
  * @param tooling the configuration files, hooks and runner found
- * @param keptFormat the validated formatter choices captured during replace observation
+ * @param keptFormat the validated formatter choices captured during replace read
  * @returns the answers
  */
 export async function askInitQuestions(

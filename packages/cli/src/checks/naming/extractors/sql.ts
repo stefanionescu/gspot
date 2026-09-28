@@ -2,7 +2,7 @@ import { SQL_LABELS } from '#cli/config/checks/naming.ts';
 import type { Identifier } from '#cli/types/checks/naming.ts';
 import { sqlFile, positionAt } from '#cli/parsers/sql/statements.ts';
 import { textOf, nodesOf, partsOf } from '#cli/parsers/sql/parser.ts';
-import type { SourceObservations } from '#cli/types/repository/repository.ts';
+import type { SourceReads } from '#cli/types/repository/repository.ts';
 import type { SqlFile, SqlNode, SqlNamed, SqlStatementView } from '#cli/types/parsers/sql.ts';
 
 function addedColumns(fields: SqlNode): SqlNamed[] {
@@ -65,15 +65,11 @@ function identifiers(file: string, source: string, statement: SqlStatementView, 
  * The identifiers a valid SQL file declares. Parse failures stop the analysis.
  * @param file the file path
  * @param source the file text
- * @param observations optional execution observations shared by SQL checks
+ * @param reads optional execution reads shared by SQL checks
  * @returns the identifiers
  */
-export async function sqlIdentifiers(
-    file: string,
-    source: string,
-    observations?: SourceObservations,
-): Promise<Identifier[]> {
-    const parsed = await sqlFile(source, observations);
+export async function sqlIdentifiers(file: string, source: string, reads?: SourceReads): Promise<Identifier[]> {
+    const parsed = await sqlFile(source, reads);
     if (parsed.error !== undefined)
         throw new Error(
             `SQL parse failed at ${String(parsed.error.line)}:${String(parsed.error.column)}: ${parsed.error.text}`,

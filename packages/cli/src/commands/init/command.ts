@@ -126,12 +126,12 @@ export function registerInit(program: Command): void {
         .description('Read this repository, propose a policy, and write it after a yes')
         .addHelpText(
             'after',
-            '\nEffects:\nReads the repository and proposes gspot.toml, generated configuration, selected integrations, and private tool installation. Confirmation or --yes applies the proposal. --dry-run writes nothing. Existing authored configuration is adopted or retained according to ownership rules. Run from the repository you want to configure.\n\nExit codes:\n0: the request completed, including a preview or declined confirmation. 2: invalid input or inability to complete the request.\n\nExample:\ngspot init --yes --configurations bash',
+            '\nEffects:\nReads the repository and proposes gspot.toml, generated configuration, selected integrations, and private tool installation. Confirmation or --yes applies the plan. --dry-run writes nothing. Existing authored configuration is adopted or retained according to ownership rules. Run from the repository you want to configure.\n\nExit codes:\n0: the request completed, including a preview or declined confirmation. 2: invalid input or inability to complete the request.\n\nExample:\ngspot init --yes --configurations bash',
         )
-        .option('--yes', 'Take every proposal without asking')
+        .option('--yes', 'Take every plan without asking')
         .option('--from <profile>', 'Install from a profile: a path, an https URL or github:owner/repo')
         .option('--kits <kits...>', 'The root kits instead of the detected ones')
-        .option('--without <configurations...>', 'Configurations to leave out of the proposal')
+        .option('--without <configurations...>', 'Configurations to leave out of the plan')
         .option('--scope <path=configurations...>', 'Scopes and their comma-separated configurations')
         .option('--no-install', 'Skip the install step and print the command instead')
         .option('--allow-dirty', 'Run although the working tree has uncommitted changes')

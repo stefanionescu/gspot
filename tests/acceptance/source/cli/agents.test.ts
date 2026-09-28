@@ -83,9 +83,9 @@ test('init previews the same detected agent destinations without writing them', 
         '--no-install',
     ]);
     expect(preview.code, preview.stdout + preview.stderr).toBe(0);
-    const proposal = JSON.parse(preview.stdout) as { plan: ReplacePlan };
-    const paths = proposal.plan.write.map((entry) => entry.path);
-    expect(proposal.plan.change.map((entry) => entry.path)).toContain('.gitattributes');
+    const plan = JSON.parse(preview.stdout) as { plan: ReplacePlan };
+    const paths = plan.plan.write.map((entry) => entry.path);
+    expect(plan.plan.change.map((entry) => entry.path)).toContain('.gitattributes');
     expect(paths).toContain('AGENTS.md');
     expect(paths).toContain('GEMINI.md');
     expect(paths).toContain('.cursor/rules/gspot.mdc');

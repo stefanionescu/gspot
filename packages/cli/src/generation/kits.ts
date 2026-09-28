@@ -10,7 +10,7 @@ import type { TrackedFile } from '#cli/types/repository/repository.ts';
 import { bodyPointer, mergePointer } from '#cli/generation/pointers.ts';
 import { GENERATED_JSON_KEY, PACKAGE_JSON_INDENT } from '#cli/config/generation.ts';
 import type { ScopeSelection, EditorconfigAdoption } from '#cli/types/policy/policy.ts';
-import type { Pointer, EmitContext, GeneratedFile, GeneratedProposal } from '#cli/types/generation.ts';
+import type { Pointer, Generated, EmitContext, GeneratedFile } from '#cli/types/generation.ts';
 
 // A copied JSON pointer without the generated marker the body carries.
 function copyPointerContent(content: string, pointerPath: string): string {
@@ -80,12 +80,12 @@ function pointerFor(
     context: EmitContext,
     configuration: ConfigurationTarget,
     file: GeneratedFile,
-    proposal: GeneratedProposal,
+    plan: Generated,
 ): void {
     const { pointer } = configuration;
     if (!pointer) return;
     if (pointer.directories !== undefined) {
-        proposal.files.push(...directoryPointers(context, configuration, file.path));
+        plan.files.push(...directoryPointers(context, configuration, file.path));
         return;
     }
     const scope = configuration.per_scope ? context.selection.scope.path : '';
@@ -101,8 +101,8 @@ function pointerFor(
         ),
     );
     if (replaced) return;
-    if (pointer.merge) proposal.merges.push(mergePointer(context.root, pointer, pointerPath, file.path));
-    else proposal.files.push(pointerFile(context, configuration, pointer, file, pointerPath));
+    if (pointer.merge) plan.merges.push(mergePointer(context.root, pointer, pointerPath, file.path));
+    else plan.files.push(pointerFile(context, configuration, pointer, file, pointerPath));
 }
 
 // Scoped targets require their dependency in the same scope; repository-wide targets use the full selection.
@@ -146,7 +146,7 @@ function emitConfiguration(
     context: EmitContext,
     configuration: ConfigurationTarget,
     target: string,
-    proposal: GeneratedProposal,
+    plan: Generated,
 ): void {
     const { scopes, selection, manifest } = context;
     const inputs = { ...context.inputs, ...fragmentInputs(scopes, selection, configuration, context.inputs) };
@@ -159,27 +159,27 @@ function emitConfiguration(
         ...(configuration.rules_path === undefined ? {} : { rulesPath: configuration.rules_path }),
     };
     const templateContext = { ...context, inputs };
-    proposal.files.push(file, ...nestedEditorconfigs(templateContext, configuration, file));
-    pointerFor(templateContext, configuration, file, proposal);
+    plan.files.push(file, ...nestedEditorconfigs(templateContext, configuration, file));
+    pointerFor(templateContext, configuration, file, plan);
 }
 
 /**
  * Emits every kit file of the manifest in the scope, each target once across scopes.
  * @param context the scope, the manifest, and the template inputs
- * @param proposal the proposal the files are added to
+ * @param plan the plan the files are added to
  * @param seen the targets already emitted
  */
-export function emitConfigurations(context: EmitContext, proposal: GeneratedProposal, seen: Set<string>): void {
+export function emitConfigurations(context: EmitContext, plan: Generated, seen: Set<string>): void {
     const { scopes, selection, manifest } = context;
     for (const configuration of manifest.configs) {
         if (!isWanted(configuration, scopes, selection)) continue;
         const target = targetInScope(selection.scope.path, configuration);
         if (configuration.fragment) {
-            proposal.files.push(...directoryPointers(context, configuration, target));
+            plan.files.push(...directoryPointers(context, configuration, target));
             continue;
         }
         if (seen.has(target) || configuration.template === undefined) continue;
         seen.add(target);
-        emitConfiguration(context, configuration, target, proposal);
+        emitConfiguration(context, configuration, target, plan);
     }
 }

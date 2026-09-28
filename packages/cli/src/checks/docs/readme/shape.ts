@@ -65,7 +65,7 @@ export function readmeShape(input: EngineInput): Finding[] {
                 statSync(join(input.root, file.path), { throwIfNoEntry: false }) !== undefined,
         )
         .flatMap((file) => {
-            const nodes = fromMarkdown(readSource(input.root, file.path, input.observations).toString('utf8')).children;
+            const nodes = fromMarkdown(readSource(input.root, file.path, input.reads).toString('utf8')).children;
             const titles = nodes.filter((node) => node.type === 'heading' && node.depth === 1);
             const problems: ShapeProblem[] =
                 titles.length === 1

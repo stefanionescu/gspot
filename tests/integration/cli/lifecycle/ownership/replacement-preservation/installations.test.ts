@@ -22,14 +22,14 @@ test.each([false, true])(
                 { path: ['tasks', 'lint'], value: 'gspot check' },
                 { path: ['tasks', 'format', 'run'], value: 'gspot check --fix' },
             ];
-            expect(owner.applyProposal(owner.proposeConfiguration('mise.toml', 'toml', changes, true))).toBe('changed');
+            expect(owner.applyPlan(owner.proposeConfiguration('mise.toml', 'toml', changes, true))).toBe('changed');
             const installed = readFileSync(join(directory.path, 'mise.toml'), 'utf8');
             expect(installed).toContain('# Authored tasks');
             expect(installed).toContain('# Keep this description');
             expect(parseToml(installed)).toMatchObject({
                 tasks: { lint: 'gspot check', format: { description: 'Format the app', run: 'gspot check --fix' } },
             });
-            expect(owner.applyProposal(owner.proposeConfiguration('mise.toml', 'toml', changes))).toBe('unchanged');
+            expect(owner.applyPlan(owner.proposeConfiguration('mise.toml', 'toml', changes))).toBe('unchanged');
             if (edited)
                 writeFileSync(join(directory.path, 'mise.toml'), installed + '\n[env]\nAPP_MODE = "authored"\n');
             expect(owner.restore('mise.toml')).toBe('changed');

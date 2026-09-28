@@ -9,7 +9,7 @@ import { statSync, readdirSync, type Dirent } from 'node:fs';
 import type { CheckResult } from '#cli/types/checks/checks.ts';
 import { reportStorageFailure } from '#cli/output/messages.ts';
 import type { CacheKeyInput } from '#cli/types/execution/execution.ts';
-import type { SourceObservations } from '#cli/types/repository/repository.ts';
+import type { SourceReads } from '#cli/types/repository/repository.ts';
 import { readOwnership, runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import { CACHE_ENTRY, CACHE_FORMAT, RETENTION_MS } from '#cli/config/execution/execution.ts';
 /**
@@ -26,12 +26,12 @@ export function cacheKey(input: CacheKeyInput): string {
  * The content hash of a required file.
  * @param root the repository root
  * @param path the file, relative to the root
- * @param observations the source bytes observed during the run, when there are any
+ * @param reads the source bytes read during the run, when there are any
  * @returns the digest
  */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The content hash of a required file. 3 files make 3 calls; one owner keeps that behavior in one place.
-export function fileHash(root: string, path: string, observations?: SourceObservations): string {
-    return new Bun.CryptoHasher('sha256').update(readSource(root, path, observations)).digest('hex');
+export function fileHash(root: string, path: string, reads?: SourceReads): string {
+    return new Bun.CryptoHasher('sha256').update(readSource(root, path, reads)).digest('hex');
 }
 
 /**
@@ -138,15 +138,15 @@ export function pruneCache(root: string): void {
     try {
         runOwnedLifecycle(root, (owner) => {
             const files = openRoot(root);
-            const proposals = readOwnership(root)
+            const plans = readOwnership(root)
                 .files.filter((entry) => entry.kind === 'runtime' && CACHE_ENTRY.test(entry.path))
                 .filter((entry) => {
                     const status = files.stat(entry.path);
                     return status !== undefined && status.isFile() && status.mtimeMs < cutoff;
                 })
                 .map((entry) => owner.proposeRestoration(entry.path))
-                .filter((proposal) => proposal.status !== 'preserved');
-            owner.applyProposals(proposals);
+                .filter((plan) => plan.status !== 'preserved');
+            owner.applyPlans(plans);
         });
     } catch (error) {
         reportStorageFailure(join(root, CACHE_DIRECTORY), error);

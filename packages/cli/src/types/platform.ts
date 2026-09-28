@@ -1,7 +1,7 @@
 // The types of platform in this package.
 import type { Stats } from 'node:fs';
 
-export type FileObservation = { bytes: Buffer; mode: number; isLink?: true };
+export type Read = { bytes: Buffer; mode: number; isLink?: true };
 export type Staging = { bounds: Bounds; path: string; target: string; temporary: string };
 export type SpawnResult = {
     code: number;
@@ -31,7 +31,7 @@ export type ProcessTermination = {
 };
 export type BinarySpawnResult = Omit<SpawnResult, 'stdout'> & { stdout: Uint8Array };
 export type EmbeddedIndex = Record<string, string>;
-export type Proposed = ReadonlyMap<string, FileObservation | undefined>;
+export type Proposed = ReadonlyMap<string, Read | undefined>;
 export type PathFormat = 'portable' | 'native';
 export type Bounds = {
     canonical: string;
@@ -43,11 +43,11 @@ export type Root = {
     source(path: string): string;
     list(path?: string): string[];
     stat(path: string): Stats | undefined;
-    validate(path: string, value: FileObservation, proposed?: ReadonlyMap<string, FileObservation | undefined>): void;
-    readEntry(path: string): FileObservation | undefined;
-    read(path: string): FileObservation | undefined;
-    write(path: string, value: FileObservation, expected: FileObservation | undefined): void;
-    remove(path: string, expected: FileObservation): void;
+    validate(path: string, value: Read, proposed?: ReadonlyMap<string, Read | undefined>): void;
+    readEntry(path: string): Read | undefined;
+    read(path: string): Read | undefined;
+    write(path: string, value: Read, expected: Read | undefined): void;
+    remove(path: string, expected: Read): void;
     mkdir(path: string, mode: number): void;
     rmdir(path: string): void;
     lock(path: string): void;

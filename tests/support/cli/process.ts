@@ -2,9 +2,9 @@
 import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
-/** Observe a child PID disappearing, with bounded cleanup if supervision fails. */
+/** Read a child PID disappearing, with bounded cleanup if supervision fails. */
 export async function waitForExit(pid: number): Promise<void> {
-    if (!Number.isSafeInteger(pid) || pid <= 0) throw new Error(`Invalid observed child PID: ${String(pid)}.`);
+    if (!Number.isSafeInteger(pid) || pid <= 0) throw new Error(`Invalid read child PID: ${String(pid)}.`);
     const deadline = performance.now() + 3000;
     while (performance.now() < deadline) {
         try {

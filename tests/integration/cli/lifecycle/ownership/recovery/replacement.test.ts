@@ -202,7 +202,7 @@ mock.module(${JSON.stringify(boundary)}, () => ({
 const { openOwner } = await import(${JSON.stringify(implementation)});
 const owner = openOwner(${JSON.stringify(directory.path)});
 try {
-    owner.applyProposals(['first.bin', 'second.bin'].map(path => owner.proposeReplacement(path, { bytes: Buffer.from('installed'), mode: 0o444 }, 'config', true)));
+    owner.applyPlans(['first.bin', 'second.bin'].map(path => owner.proposeReplacement(path, { bytes: Buffer.from('installed'), mode: 0o444 }, 'config', true)));
 } catch (error) {
     console.log(JSON.stringify({ code: error.code }));
 } finally { owner.close(); }
@@ -217,12 +217,12 @@ try {
         expect(readOwnership(directory.path).files).toStrictEqual([]);
         const owner = openOwner(directory.path);
         try {
-            owner.applyProposals(
+            owner.applyPlans(
                 ['first.bin', 'second.bin'].map((path) =>
                     owner.proposeReplacement(path, { bytes: Buffer.from('installed'), mode: 0o444 }, 'config', true),
                 ),
             );
-            owner.applyProposals(['first.bin', 'second.bin'].map((path) => owner.proposeRestoration(path)));
+            owner.applyPlans(['first.bin', 'second.bin'].map((path) => owner.proposeRestoration(path)));
             for (const name of ['first.bin', 'second.bin']) {
                 expect(readFileSync(join(directory.path, name))).toStrictEqual(original);
                 expect(statSync(join(directory.path, name)).mode & 0o777).toBe(originalMode);

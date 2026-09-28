@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import { isDeepStrictEqual } from 'node:util';
 import { parse as parseToml } from 'smol-toml';
+import type { Read } from '#cli/types/platform.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
-import type { FileObservation } from '#cli/types/platform.ts';
 import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import type { RunnerTaskNames } from '#cli/types/policy/policy.ts';
 import type { Field, KeyPath } from '#cli/types/lifecycle/lifecycle.ts';
@@ -12,7 +12,7 @@ import type { RunnerPlan, ConfigurationOutput } from '#cli/types/generation.ts';
 function readRunnerTasks(
     root: string,
     runner: string,
-): { path: string; source?: FileObservation; tasks: Record<string, unknown> } {
+): { path: string; source?: Read; tasks: Record<string, unknown> } {
     const path = runner === 'mise' ? 'mise.toml' : 'package.json';
     const files = openRoot(root);
     let source;
@@ -125,17 +125,14 @@ function packageTaskPlan(root: string, names: RunnerTaskNames): RunnerPlan {
  * @param runner the task runner
  * @returns the task names found and the runner file as it was read
  */
-export function proposedRunnerTasks(
-    root: string,
-    runner: string,
-): { names: RunnerTaskNames; observed: Map<string, FileObservation> } {
-    if (!['mise', 'npm', 'pnpm', 'yarn', 'bun'].includes(runner)) return { names: {}, observed: new Map() };
+export function proposedRunnerTasks(root: string, runner: string): { names: RunnerTaskNames; read: Map<string, Read> } {
+    if (!['mise', 'npm', 'pnpm', 'yarn', 'bun'].includes(runner)) return { names: {}, read: new Map() };
     const { path, source, tasks } = readRunnerTasks(root, runner);
     const check = ['lint', 'check'].find((name) => Object.hasOwn(tasks, name));
     const fix = ['format', 'check:fix', 'fix'].find((name) => Object.hasOwn(tasks, name));
     return {
         names: { ...(check === undefined ? {} : { check }), ...(fix === undefined ? {} : { fix }) },
-        observed: new Map(source === undefined ? [] : [[path, source]]),
+        read: new Map(source === undefined ? [] : [[path, source]]),
     };
 }
 

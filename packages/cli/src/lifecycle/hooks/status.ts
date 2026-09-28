@@ -4,13 +4,13 @@ import { binaryPath } from '#cli/platform/assets.ts';
 import { EXECUTE_BITS } from '#cli/config/platform.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import type { HookName } from '#cli/types/generation.ts';
+import type { Read, Root } from '#cli/types/platform.ts';
 import type { Policy } from '#cli/types/policy/policy.ts';
 import { HOOK_ARTIFACTS } from '#cli/repository/hooks.ts';
 import { huskyLines } from '#cli/generation/hooks/husky.ts';
 import { hookLocation } from '#cli/repository/hook-location.ts';
 import { HOOK_FILES } from '#cli/config/repository/repository.ts';
 import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
-import type { Root, FileObservation } from '#cli/types/platform.ts';
 import type { Repository } from '#cli/types/repository/repository.ts';
 import type { Status, Readiness } from '#cli/types/lifecycle/hooks.ts';
 import type { OwnershipEntry } from '#cli/types/lifecycle/lifecycle.ts';
@@ -39,7 +39,7 @@ function integrationStatus(policy: Policy, root: string): string | undefined {
 }
 
 // Whether a file is the one the log installed, by mode and content.
-function isInstalled(current: FileObservation | undefined, installed: OwnershipEntry['installed']): boolean {
+function isInstalled(current: Read | undefined, installed: OwnershipEntry['installed']): boolean {
     if (current?.mode !== installed?.mode || current === undefined) return false;
     return new Bun.CryptoHasher('sha256').update(current.bytes).digest('hex') === installed?.hash;
 }

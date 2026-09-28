@@ -19,7 +19,7 @@ import type {
 // How often each suppression form appears in the checked sources.
 async function census(session: Session, files: TrackedFile[]): Promise<Record<string, number>> {
     const counts: Record<string, number> = {};
-    for (const entry of await suppressionComments(session.root, session.scopes, session.observations, files))
+    for (const entry of await suppressionComments(session.root, session.scopes, session.reads, files))
         counts[entry.form] = (counts[entry.form] ?? 0) + 1;
     return counts;
 }

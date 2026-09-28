@@ -10,7 +10,7 @@ import { PLIST_KEY, INCLUDE_LINE, SETTING_NAME, ARBITRARY_LOADS } from '#cli/con
  */
 export function xcconfigLines(input: EngineInput): Finding[] {
     return trackedEnding(input, ['.xcconfig']).flatMap((path) =>
-        readSource(input.root, path, input.observations)
+        readSource(input.root, path, input.reads)
             .toString('utf8')
             .split('\n')
             .flatMap((raw, index): Finding[] => {
@@ -41,7 +41,7 @@ export function xcconfigLines(input: EngineInput): Finding[] {
 export function entitlementsPolicy(input: EngineInput): Finding[] {
     const allowed = new Set(input.view.tool('xcode')['entitlements_allowed'] as string[] | undefined);
     return trackedEnding(input, ['.entitlements']).flatMap((path) => {
-        const text = readSource(input.root, path, input.observations).toString('utf8');
+        const text = readSource(input.root, path, input.reads).toString('utf8');
         return text
             .matchAll(PLIST_KEY)
             .filter((match) => !allowed.has(match.groups?.['name'] ?? ''))
@@ -65,7 +65,7 @@ export function entitlementsPolicy(input: EngineInput): Finding[] {
  */
 export function transportSecurity(input: EngineInput): Finding[] {
     return trackedEnding(input, ['.plist']).flatMap((path): Finding[] => {
-        const text = readSource(input.root, path, input.observations).toString('utf8');
+        const text = readSource(input.root, path, input.reads).toString('utf8');
         const found = ARBITRARY_LOADS.exec(text);
         if (found === null) return [];
         const line = text.slice(0, found.index).split('\n').length;

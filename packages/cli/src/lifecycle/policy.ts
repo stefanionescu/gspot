@@ -11,7 +11,7 @@ import type { Mutation, WriteResult } from '#cli/types/policy/policy.ts';
  * Capture the input bytes and mode before evaluating and validating a policy mutation.
  * @param root the repository root
  * @param mutate the change to apply to the policy text
- * @returns the validated proposal with the original file
+ * @returns the validated plan with the original file
  */
 export function preparePolicy(root: string, mutate: Mutation): PreparedPolicy {
     const original = openRoot(root).read('gspot.toml');
@@ -23,24 +23,24 @@ export function preparePolicy(root: string, mutate: Mutation): PreparedPolicy {
 }
 
 /**
- * Publish exactly the validated proposal while refusing changed input bytes or permissions.
+ * Publish exactly the validated plan while refusing changed input bytes or permissions.
  * @param root the repository root
- * @param proposal the prepared policy
+ * @param plan the prepared policy
  * @returns what was written
  */
-export function writePolicy(root: string, proposal: PreparedPolicy): WriteResult {
-    if (proposal.changed)
+export function writePolicy(root: string, plan: PreparedPolicy): WriteResult {
+    if (plan.changed)
         runOwnedLifecycle(root, (owner) => {
             const previous = owner.read('gspot.toml');
-            if (!isDeepStrictEqual(previous, proposal.original))
+            if (!isDeepStrictEqual(previous, plan.original))
                 throw new Error('The policy file gspot.toml changed while the edit was prepared. Retry the command.');
             const status = owner.replace(
                 'gspot.toml',
-                { bytes: Buffer.from(proposal.text), mode: proposal.original.mode },
+                { bytes: Buffer.from(plan.text), mode: plan.original.mode },
                 'policy',
                 true,
             );
             if (status === 'preserved') throw new Error('The policy edit could not preserve the current input.');
         });
-    return proposal;
+    return plan;
 }

@@ -107,7 +107,7 @@ export async function checkTypescript(session: Session, planned: PlannedCheck): 
 
 /**
  * Check JavaScript with the repository's ambient types instead of the private tool installation.
- * @param session the selected repository and tool observations
+ * @param session the selected repository and tool reads
  * @param planned the JavaScript compiler check
  * @returns compiler diagnostics with source paths and supervised execution status
  */

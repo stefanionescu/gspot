@@ -43,7 +43,7 @@ export function nextjsConfiguration(input: EngineInput): Finding[] {
     return paths(input)
         .filter((path) => CONFIG_FILE.test(path))
         .flatMap((path) => {
-            const text = readSource(input.root, path, input.observations).toString('utf8');
+            const text = readSource(input.root, path, input.reads).toString('utf8');
             const off = text.matchAll(SWITCHED_OFF).map((match) => ({
                 check: input.spec.name,
                 file: path,
@@ -74,7 +74,7 @@ export function nextjsConfiguration(input: EngineInput): Finding[] {
 export function dependencyAlignment(input: EngineInput): Finding[] {
     const manifests = paths(input).filter((path) => path === 'package.json' || path.endsWith('/package.json'));
     return manifests.flatMap((path) => {
-        const parsed = JSON.parse(readSource(input.root, path, input.observations).toString('utf8')) as {
+        const parsed = JSON.parse(readSource(input.root, path, input.reads).toString('utf8')) as {
             dependencies?: Record<string, string>;
             devDependencies?: Record<string, string>;
         };

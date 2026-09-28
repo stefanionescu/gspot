@@ -66,9 +66,9 @@ describe('claims', () => {
 
 describe('detection', () => {
     test('proposes a language from an extension and the defaults for every repository', () => {
-        const proposals = detectKits([file('a.sh')], manifests, []);
-        expect(proposals.find((proposal) => proposal.configuration === 'bash')?.evidence).toBe('1 .sh file');
-        expect(proposals.some((proposal) => proposal.configuration === 'spelling')).toBe(true);
+        const plans = detectKits([file('a.sh')], manifests, []);
+        expect(plans.find((plan) => plan.configuration === 'bash')?.evidence).toBe('1 .sh file');
+        expect(plans.some((plan) => plan.configuration === 'spelling')).toBe(true);
     });
 
     test('names a language gspot has no configuration for through Linguist', () => {
@@ -78,8 +78,8 @@ describe('detection', () => {
 
     test('Sass is a language without a configuration, and a stylesheet proposes css alone', () => {
         const files = [file('theme.scss'), file('site.css')];
-        const proposals = detectKits(files, manifests, []);
-        expect(proposals.find((proposal) => proposal.configuration === 'css')?.evidence).toBe('1 .css file');
+        const plans = detectKits(files, manifests, []);
+        expect(plans.find((plan) => plan.configuration === 'css')?.evidence).toBe('1 .css file');
         expect(unknownLanguages(files, manifests)).toStrictEqual([
             { language: 'SCSS', extensions: ['.scss'], count: 1 },
         ]);
@@ -87,8 +87,8 @@ describe('detection', () => {
 
     test('names unsupported source languages and disambiguates a module filename', () => {
         const module = file('go.mod');
-        const proposals = detectKits([module], manifests, []);
-        expect(proposals.filter((proposal) => proposal.kind === 'language')).toStrictEqual([]);
+        const plans = detectKits([module], manifests, []);
+        expect(plans.filter((plan) => plan.kind === 'language')).toStrictEqual([]);
         const unknown = unknownLanguages([module, file('main.go'), file('lib.rs'), file('app.rb')], manifests);
         expect(unknown).toStrictEqual([
             { language: 'Go Module', extensions: ['.mod'], count: 1 },

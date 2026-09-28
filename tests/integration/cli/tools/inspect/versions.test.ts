@@ -79,7 +79,7 @@ test('a manifest can declare its help command status without accepting other fai
     }
 });
 
-test('tool observations distinguish pins and refresh private libraries in the next session', async () => {
+test('tool reads distinguish pins and refresh private libraries in the next session', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': 'version = 1\nkits = []\n',
@@ -97,7 +97,7 @@ test('tool observations distinguish pins and refresh private libraries in the ne
     expect(inspectTool(next, libraryPin('example', '2.0.0')).state).toBe('outdated');
 });
 
-test('a command shares version observations and the next session inspections again', async () => {
+test('a command shares version reads and the next session inspections again', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': 'version = 1\nkits = []\n',
@@ -136,8 +136,8 @@ test.each([
         const tool = commandPin('wrapped', '0.10.0');
         tool.floor = '0.9.0';
         tool.installers['npm'] = { name: 'wrapper', version: '0.7.0', version_exit_code: 1 };
-        const observed = inspectTool({ root: sandbox.path, inspections: new Map() }, tool);
-        expect(observed.state).toBe(state);
-        expect(state === 'ok' ? observed.found : observed.note).toContain(text);
+        const read = inspectTool({ root: sandbox.path, inspections: new Map() }, tool);
+        expect(read.state).toBe(state);
+        expect(state === 'ok' ? read.found : read.note).toContain(text);
     },
 );

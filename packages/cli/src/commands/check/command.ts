@@ -145,7 +145,7 @@ export function registerCheck(program: Command): void {
         .description('Run checks over the selected files and folders and print findings')
         .addHelpText(
             'after',
-            '\nEffects:\nRuns the selected checks and writes managed reports and cache observations. --fix runs configured corrections and can change selected source files. --fix --dry-run previews corrections in a disposable copy. --staged checks index content; --changed checks working-tree content for paths changed from the comparison reference. A plain check uses the working tree.\n\nExit codes:\n0: executed checks passed; review skipped checks separately. 1: findings or failed corrections remain. 2: the run could not complete, including missing tools, invalid reports, or invalid input.\n\nExample:\ngspot check --staged',
+            '\nEffects:\nRuns the selected checks and writes managed reports and cache reads. --fix runs configured corrections and can change selected source files. --fix --dry-run previews corrections in a disposable copy. --staged checks index content; --changed checks working-tree content for paths changed from the comparison reference. A plain check uses the working tree.\n\nExit codes:\n0: executed checks passed; review skipped checks separately. 1: findings or failed corrections remain. 2: the run could not complete, including missing tools, invalid reports, or invalid input.\n\nExample:\ngspot check --staged',
         )
         .option('--only <checks...>', 'Run the named checks')
         .addOption(new Option('--push', 'Read Git pre-push object updates from stdin').hideHelp())

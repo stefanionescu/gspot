@@ -134,7 +134,7 @@ test(
     PLANTED_TIMEOUT_MS,
 );
 
-test('initialization flags control integrations and formatter keep in the proposal', async () => {
+test('initialization flags control integrations and formatter keep in the plan', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'source.js': 'export const port = 8080;\n',
@@ -155,16 +155,16 @@ test('initialization flags control integrations and formatter keep in the propos
     ];
     const kept = await run(sandbox.path, [...command, '--format', 'keep']);
     expect(kept.code, kept.stdout + kept.stderr).toBe(0);
-    const keptProposal = JSON.parse(kept.stdout) as { policy: string };
-    const keptPolicy = parsePolicyText(keptProposal.policy, 'gspot.toml');
+    const keptPlan = JSON.parse(kept.stdout) as { policy: string };
+    const keptPolicy = parsePolicyText(keptPlan.policy, 'gspot.toml');
     expect(keptPolicy).not.toHaveProperty('hooks');
     expect(keptPolicy).not.toHaveProperty('ci');
     expect(keptPolicy).not.toHaveProperty('runner');
     expect(keptPolicy.format.semicolons).toBe(false);
     const shipped = await run(sandbox.path, [...command, '--format', 'shipped']);
     expect(shipped.code, shipped.stdout + shipped.stderr).toBe(0);
-    const shippedProposal = JSON.parse(shipped.stdout) as { policy: string };
-    const shippedPolicy = parsePolicyText(shippedProposal.policy, 'gspot.toml');
+    const shippedPlan = JSON.parse(shipped.stdout) as { policy: string };
+    const shippedPolicy = parsePolicyText(shippedPlan.policy, 'gspot.toml');
     expect(shippedPolicy.format).toStrictEqual({});
     expect(existsSync(join(sandbox.path, 'gspot.toml'))).toBe(false);
     expect(await Bun.file(join(sandbox.path, '.prettierrc.json')).text()).toBe('{"semi":false,"tabWidth":8}\n');

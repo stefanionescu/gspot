@@ -4,10 +4,10 @@ This document decides the one file a person edits, the files gspot writes, and h
 merge.
 
 Configuration-document editing owns parsing and field edits for shared JSON, YAML, and TOML.
-The owner retains locking, observations, logs, writes, and recovery. Static
+The owner retains locking, reads, logs, writes, and recovery. Static
 configuration reading captures the bytes and permissions that authorize adoption; tool-specific
-keeping converts those observed settings without acquiring a separate mutation owner. Formatter
-and ESLint adoption own their conversion rules; replacement coordinates observations and retirement.
+keeping converts those read settings without acquiring a separate mutation owner. Formatter
+and ESLint adoption own their conversion rules; replacement coordinates reads and retirement.
 
 ## Ownership boundaries
 
@@ -16,7 +16,7 @@ operations for init, apply, remove, and uninstall. Names, headers, and current t
 cannot reconstruct permission to delete. All mutations use the validated path boundary. It checks symlink parents and supported
 platform forms. Never remove `.gspot/` recursively.
 
-Generation returns proposals; one application boundary owns collisions, replacement, pruning,
+Generation returns plans; one application boundary owns collisions, replacement, pruning,
 and recovery. Readers and renderers do not apply their own writes. Persistent exceptions use
 one policy model; temporary command selection and baselines remain separate concepts. Remove
 superseded schemas and readers only after their callers and behavioral contracts move.
@@ -371,7 +371,7 @@ under `.gspot/state/recovery/<operation>/`. Recovery directories and metadata ar
 If recovery cannot be written, refuse that replacement. A second operation never overwrites an
 earlier original. A fresh clone has no local ownership or original backups. Preserve its
 unrecorded files, including tracked files that match generated templates. Applying an identical
-proposal records the existing bytes and mode as the original, so later removal restores them.
+plan records the existing bytes and mode as the original, so later removal restores them.
 
 `apply`, `remove`, and uninstall delete only outputs with a local ownership record whose
 bytes and mode still match the recorded installed value. Names, marks, Git tracking, and
@@ -571,7 +571,7 @@ appends to the sub-table when it exists and creates it when not. `ignore-command
 to an entry with the same check, rule, and reason, and creates an entry only for a new reason.
 
 A unit test writes a scope setting into a document of each form and loads the result.
-The proposal snapshot holds no line over 120 characters.
+The plan snapshot holds no line over 120 characters.
 
 ### Acceptance K-88
 

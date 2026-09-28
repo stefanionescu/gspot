@@ -1,7 +1,7 @@
 // The types of checks/swift in this package.
 import type { Node, Tree } from 'web-tree-sitter';
+import type { Read, Root } from '#cli/types/platform.ts';
 import type { EngineInput } from '#cli/types/checks/checks.ts';
-import type { Root, FileObservation } from '#cli/types/platform.ts';
 import type { StructureProblem } from '#cli/types/checks/structure.ts';
 
 /** One parsed Swift file of a run. */
@@ -23,7 +23,7 @@ export type SwiftReader = (parsed: ParsedSwift, input: EngineInput) => Structure
 export type Pruning = {
     folder: string;
     files: Root;
-    desired: Map<string, FileObservation>;
+    desired: Map<string, Read>;
     wanted: Set<string>;
 };
 /** The build of one Swift scope. */
@@ -36,5 +36,5 @@ export type SwiftBuildPlan = {
     /** The analyzer clears this folder so its log includes every compiler call. */
     scratch?: string;
 };
-/** The observed build status and its compiler output. */
+/** The read build status and its compiler output. */
 export type SwiftBuildOutput = { code: number; output: string };

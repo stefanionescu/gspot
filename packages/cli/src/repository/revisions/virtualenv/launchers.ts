@@ -1,9 +1,9 @@
 // A copied virtual environment names working-tree interpreters in its launchers; these read its facts and move them.
 import { SelectionError } from '#cli/kits/select.ts';
 import { EXECUTE_BITS } from '#cli/config/platform.ts';
+import type { Read, Root } from '#cli/types/platform.ts';
 import { stat, readdir, realpath } from 'node:fs/promises';
 import { join, posix, basename, isAbsolute } from 'node:path';
-import type { Root, FileObservation } from '#cli/types/platform.ts';
 import type { PythonLauncher, RelocationContext } from '#cli/types/repository/revisions.ts';
 import { relocateWindowsLauncher } from '#cli/repository/revisions/virtualenv/windows-launcher.ts';
 
@@ -71,7 +71,7 @@ function relocateWindowsScript(
     context: RelocationContext,
     launcher: PythonLauncher,
     path: string,
-    current: FileObservation,
+    current: Read,
     sourcePaths: string[],
 ): void {
     const { selected, destination: revisionRoot } = context;
@@ -110,7 +110,7 @@ function relocateLauncherScript(
     context: RelocationContext,
     launcher: PythonLauncher,
     path: string,
-    current: FileObservation,
+    current: Read,
     sourcePaths: string[],
 ): void {
     const text = current.bytes.toString('utf8');

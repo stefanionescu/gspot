@@ -21,7 +21,7 @@ async function input(root: string): Promise<EngineInput> {
     });
 }
 
-describe('manifest policy observations', () => {
+describe('manifest policy reads', () => {
     test.each(['{', '[]', 'null', '{"dependencies":{"example":5}}', '{"packageManager":false}'])(
         'reports malformed manifest %s with its path',
         async (content) => {

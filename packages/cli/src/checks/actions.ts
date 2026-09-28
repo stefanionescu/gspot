@@ -70,7 +70,7 @@ export async function checkActions(session: Session, planned: PlannedCheck): Pro
     const replacements = new Map<string, string>();
     for (const file of session.repository.files) {
         if (!/\.ya?ml$/u.test(file.path)) continue;
-        const source = readSource(session.root, file.path, session.observations).toString('utf8');
+        const source = readSource(session.root, file.path, session.reads).toString('utf8');
         const prepared = actionlintSource(source);
         if (prepared !== source) replacements.set(file.path, prepared);
     }

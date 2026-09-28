@@ -68,7 +68,7 @@ function problemFor(input: EngineInput, parser: string, body: string): Promise<s
 
 async function fileFindings(input: EngineInput, path: string): Promise<Finding[]> {
     const findings: Finding[] = [];
-    const blocks = fencesOf(readSource(input.root, path, input.observations).toString('utf8'));
+    const blocks = fencesOf(readSource(input.root, path, input.reads).toString('utf8'));
     for (const fence of blocks) {
         const parser = FENCE_PARSERS[fence.language];
         if (parser === undefined || fence.body.trim() === '') continue;

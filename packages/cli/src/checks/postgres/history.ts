@@ -26,12 +26,12 @@ async function readCommittedText(input: EngineInput): Promise<Map<string, string
 }
 
 function committedText(input: EngineInput): Promise<Map<string, string>> {
-    let observed = history.get(input.observations);
-    if (observed === undefined) {
-        observed = readCommittedText(input);
-        history.set(input.observations, observed);
+    let read = history.get(input.reads);
+    if (read === undefined) {
+        read = readCommittedText(input);
+        history.set(input.reads, read);
     }
-    return observed;
+    return read;
 }
 
 /**

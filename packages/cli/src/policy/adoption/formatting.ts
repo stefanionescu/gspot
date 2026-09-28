@@ -48,14 +48,14 @@ async function adoptFormatting(
 // Keep EditorConfig section order and directory ownership while validating representable properties.
 function adoptEditorconfig(
     configs: ExistingTooling['configs'],
-    observed: AdoptionResult['observed'],
+    read: AdoptionResult['read'],
 ): AdoptedFormatting['editorconfig'] {
     const editorconfigs = configs.filter(({ tool }) => tool === 'ec');
     if (editorconfigs.length === 0) return undefined;
     const editorconfig = editorconfigs.find(({ path }) => !path.includes('/'));
     const document = (path: string) => {
-        const source = observed.get(path);
-        if (source === undefined) throw new Error(`${path} was not observed in the repository.`);
+        const source = read.get(path);
+        if (source === undefined) throw new Error(`${path} was not read in the repository.`);
         const sections = parseBuffer(source.bytes);
         return {
             preamble: sections.find(([glob]) => glob === null)?.[1] ?? {},
@@ -78,7 +78,7 @@ function adoptEditorconfig(
 }
 
 /**
- * Convert observed formatter and EditorConfig settings before proposing retirement.
+ * Convert read formatter and EditorConfig settings before proposing retirement.
  * @param root the repository root
  * @param configs the formatter and EditorConfig files found
  * @param lists the carried configuration the settings are added to
@@ -92,18 +92,18 @@ export async function collectFormatting(
     if (first === undefined) return;
     try {
         const format = configs.filter(({ tool, keeps }) => tool === 'prettier' && keeps !== 'ignore-paths');
-        const adopted = adoptEditorconfig(configs, lists.observed);
+        const adopted = adoptEditorconfig(configs, lists.read);
         const folders = new Set(format.map(({ path }) => dirname(path)));
         if (folders.size !== format.length)
             throw new Error('Multiple Prettier configurations in one directory require explicit conversion.');
         const sources = format.map((input) => {
-            const observed = lists.observed.get(input.path);
-            if (observed === undefined) throw new Error(`${input.path} was not observed in the repository.`);
+            const read = lists.read.get(input.path);
+            if (read === undefined) throw new Error(`${input.path} was not read in the repository.`);
             return {
                 from: input.path,
                 ...(/\.[cm]?[jt]s$/u.test(input.path) || /^package\./u.test(basename(input.path))
                     ? {}
-                    : { source: parseConfigurationSource(observed, input.tool, input.path) }),
+                    : { source: parseConfigurationSource(read, input.tool, input.path) }),
             };
         });
         lists.formatter = await adoptFormatting(

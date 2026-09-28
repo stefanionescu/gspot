@@ -61,12 +61,12 @@ test.each(['lefthook', 'simple-git-hooks', 'husky', 'pre-commit'] as const)(
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
         expect(failed.stdout + failed.stderr).toContain('forbidden source token');
         expect(readFileSync(join(clone.path, 'source.txt'), 'utf8')).toBe('corrected in working tree\n');
-        expect(readFileSync(join(clone.path, '.hook-observed'), 'utf8')).toBe('authored');
+        expect(readFileSync(join(clone.path, '.hook-read'), 'utf8')).toBe('authored');
         const staged = await run(['git', 'add', 'source.txt'], options);
         expect(staged.code).toBe(0);
         const corrected = await run(commit, options);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        expect(readFileSync(join(clone.path, '.hook-observed'), 'utf8')).toBe('authoredauthored');
+        expect(readFileSync(join(clone.path, '.hook-read'), 'utf8')).toBe('authoredauthored');
         const status = await run(['git', 'status', '--porcelain'], options);
         expect(status.code, status.stderr).toBe(0);
         expect(status.stdout).toBe('');

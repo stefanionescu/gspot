@@ -86,7 +86,7 @@ export type CreatePackageProjectResult = {
 export type PreparePythonInstallationResult = {
     root: string;
     scopes: Session['scopes'];
-    proposals: GeneratedFile[];
+    plans: GeneratedFile[];
     rootProject: NonSharedBuffer;
     rootConfiguration: NonSharedBuffer;
     [Symbol.asyncDispose](): Promise<void>;

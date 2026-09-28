@@ -40,12 +40,7 @@ test.each([
         'source.js': source,
     });
     const session = await openSession(sandbox.path);
-    const comments = await suppressionComments(
-        session.root,
-        session.scopes,
-        session.observations,
-        session.repository.files,
-    );
+    const comments = await suppressionComments(session.root, session.scopes, session.reads, session.repository.files);
     const eslint = new ESLint({ overrideConfigFile: true, overrideConfig: { rules: { 'no-console': 'error' } } });
     const native = await eslint.lintText(source, { filePath: 'source.js' });
     expect(native[0]!.suppressedMessages).toHaveLength(active ? 1 : 0);

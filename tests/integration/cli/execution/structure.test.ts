@@ -107,7 +107,7 @@ test.each([
     ['fastapi', 'py'],
     ['xcode', 'swift'],
     ['xctest', 'swift'],
-])('%s retains shared folder enforcement and observes corrections', async (configuration, extension) => {
+])('%s retains shared folder enforcement and reads corrections', async (configuration, extension) => {
     const language = { ts: 'typescript', tsx: 'typescript', swift: 'swift', py: 'python' }[extension] ?? 'javascript';
     const lone = `feature/only.${extension}`;
     const card = `cards/asset-card.${extension}`;

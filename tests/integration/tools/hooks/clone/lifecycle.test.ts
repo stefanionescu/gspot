@@ -38,7 +38,7 @@ test('cloned runner switches refuse edited originals and restore clean dispatch 
     expect(await run([process.execPath, main, 'apply'], options)).toMatchObject({ code: 0 });
     await using launcher = await testdir();
     await createFileTree(launcher.path, {
-        gspot: `#!${process.execPath}\nawait Bun.write('runner-observed', JSON.stringify(process.argv.slice(2)));\n`,
+        gspot: `#!${process.execPath}\nawait Bun.write('runner-read', JSON.stringify(process.argv.slice(2)));\n`,
     });
     chmodSync(join(launcher.path, 'gspot'), 0o755);
     const policy = readFileSync(join(clonePath, 'gspot.toml'));
@@ -64,10 +64,10 @@ test('cloned runner switches refuse edited originals and restore clean dispatch 
     });
     expect({
         status: dispatched.code,
-        args: JSON.parse(readFileSync(join(clonePath, 'runner-observed'), 'utf8')) as unknown,
+        args: JSON.parse(readFileSync(join(clonePath, 'runner-read'), 'utf8')) as unknown,
         original: readFileSync(originalPath),
     }).toStrictEqual({ status: 0, args: ['check', '--staged'], original });
-    unlinkSync(join(clonePath, 'runner-observed'));
+    unlinkSync(join(clonePath, 'runner-read'));
     writeFileSync(join(clonePath, 'gspot.toml'), policy);
     expect({
         applied: await run([process.execPath, main, 'apply'], options),

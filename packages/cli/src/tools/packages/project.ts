@@ -5,10 +5,10 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { isDeepStrictEqual } from 'node:util';
 import type { ToolPin } from '#cli/types/kits.ts';
+import type { Read } from '#cli/types/platform.ts';
 import { SETUP } from '#cli/config/tools/tools.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { lockMatches } from '#cli/tools/packages/locks.ts';
-import type { FileObservation } from '#cli/types/platform.ts';
 import type { GeneratedFile } from '#cli/types/generation.ts';
 import type { Owner } from '#cli/types/lifecycle/lifecycle.ts';
 import { writeInstalled } from '#cli/tools/installed-files.ts';
@@ -40,7 +40,7 @@ function projectOf(manifest: string): ToolProject {
 
 // Whether a recorded lock pins the project's dependencies.
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Four steps of apply and install ask whether the recorded lock is current; one owner keeps the comparison.
-function isCurrentLock(project: ToolProject, recorded: FileObservation | undefined): boolean {
+function isCurrentLock(project: ToolProject, recorded: Read | undefined): boolean {
     return (
         recorded !== undefined &&
         lockMatches(project.client.name, recorded.bytes.toString('utf8'), project.dependencies)
@@ -130,7 +130,7 @@ export async function preparePackageProject(root: string, files: GeneratedFile[]
         content,
         readOnly: true,
         kind: 'lock',
-        ...(original === undefined ? {} : { observed: original }),
+        ...(original === undefined ? {} : { read: original }),
     });
 }
 

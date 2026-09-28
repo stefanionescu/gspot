@@ -626,7 +626,7 @@ paraphrased:
 - Use the exact license text supplied by the source when full license text is required.
 - Keep the attribution close enough that readers can identify the adapted material.
 
-### Distinguish guarantees from observations
+### Distinguish guarantees from reads
 
 Use language that matches the contract.
 
@@ -640,7 +640,7 @@ This sentence is appropriate only when 30 seconds is a defined contract.
 In the current load test, the request completed within 30 seconds.
 ```
 
-This sentence describes an observation, not a guarantee.
+This sentence describes an read, not a guarantee.
 
 Do not convert a benchmark, one test run, or implementation detail into a
 general promise.
@@ -694,5 +694,5 @@ Avoid:
 Hardware-backed key support is coming in the next release.
 ```
 
-Describe current behavior first. Put proposals in issue trackers, roadmaps, or
+Describe current behavior first. Put plans in issue trackers, roadmaps, or
 approved future-content sections.

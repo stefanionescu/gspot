@@ -110,9 +110,9 @@ found, not proposed
 
 ### The questions
 
-Asked in a terminal, in three groups. Each has a flag, and `--yes` takes every proposal.
+Asked in a terminal, in three groups. Each has a flag, and `--yes` takes every plan.
 
-| Question                               | Proposal                                                    | Flag                      |
+| Question                               | Plan                                                        | Flag                      |
 | -------------------------------------- | ----------------------------------------------------------- | ------------------------- |
 | Projects found, in a monorepo          | all found; an unticked project goes into `exclude`          | `--scope`, `--without`    |
 | Languages and frameworks found         | all found                                                   | `--kits`, `--without`     |

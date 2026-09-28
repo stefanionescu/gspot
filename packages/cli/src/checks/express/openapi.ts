@@ -65,7 +65,7 @@ export async function openapiFresh(input: EngineInput): Promise<Finding[]> {
     const document = asText(input.view.tool('openapi')['document']) ?? '';
     const command = asText(input.view.tool('openapi')['produced_by']) ?? '';
     if (document === '' || command === '') return [];
-    const before = readSource(input.root, document, input.observations);
+    const before = readSource(input.root, document, input.reads);
     const scratch = await scratchCopy(
         input.root,
         [...input.files.map((file) => file.path), document],

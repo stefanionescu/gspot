@@ -34,8 +34,8 @@ test('a profile removed during reading retains the missing-profile diagnostic', 
         throw Object.assign(new Error('The file disappeared.'), { code: 'ENOENT' });
     });
     try {
-        const observed = await readProfile('house.toml', sandbox.path).catch((error: unknown) => error);
-        expect(observed).toMatchObject({
+        const read = await readProfile('house.toml', sandbox.path).catch((error: unknown) => error);
+        expect(read).toMatchObject({
             name: 'ProfileError',
             problems: ['There is no profile at house.toml.'],
         });
@@ -52,8 +52,8 @@ test('a denied profile read preserves the filesystem error', async () => {
         throw denied;
     });
     try {
-        const observed = await readProfile('house.toml', sandbox.path).catch((error: unknown) => error);
-        expect(observed).toBe(denied);
+        const read = await readProfile('house.toml', sandbox.path).catch((error: unknown) => error);
+        expect(read).toBe(denied);
     } finally {
         read.mockRestore();
     }

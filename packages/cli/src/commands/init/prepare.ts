@@ -16,8 +16,8 @@ import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import { proposedRunnerTasks } from '#cli/generation/runner/plan.ts';
 import { existingTooling } from '#cli/repository/existing-tooling.ts';
 import { isOwned, collectKept } from '#cli/policy/adoption/collect.ts';
+import { plan, buildInitPlan } from '#cli/commands/init/plan/build.ts';
 import { askKits, askInitQuestions } from '#cli/commands/init/questions.ts';
-import { buildInitPlan, buildProposal } from '#cli/commands/init/plan/build.ts';
 import type { TomlTable, ExistingTooling } from '#cli/types/repository/repository.ts';
 import { PolicyError, parsePolicyText, assertPolicyComplete } from '#cli/policy/read.ts';
 import type { Planning, InitInputs, InitOptions, InitPrepared, InitSelection } from '#cli/types/commands/init.ts';
@@ -53,7 +53,7 @@ function printDetection(inputs: Omit<InitInputs, 'options'>, detected: InitSelec
     print(
         detectionText({
             files: repo.files,
-            proposals: detected.rootProposals,
+            plans: detected.rootPlans,
             scopes: detected.scopes,
             tooling,
             owned,
@@ -65,13 +65,13 @@ function printDetection(inputs: Omit<InitInputs, 'options'>, detected: InitSelec
     );
 }
 
-// The policy text the proposal renders to, read back the way every later command reads it.
+// The policy text the plan renders to, read back the way every later command reads it.
 function policyTextFor(
     planning: Planning,
-    settingsProposal: Parameters<typeof proposeText>[0],
+    settingsPlan: Parameters<typeof proposeText>[0],
 ): { policyText: string; policy: Policy } {
     const profileTables = planning.options.profile?.tables as TomlTable | undefined;
-    const policyText = proposeText(profileTables ? { ...settingsProposal, profileTables } : settingsProposal);
+    const policyText = proposeText(profileTables ? { ...settingsPlan, profileTables } : settingsPlan);
     const policy = parsePolicyText(policyText, 'gspot.toml', planning.root);
     assertPolicyComplete({ policy, text: policyText, path: 'gspot.toml' });
     return { policyText, policy };
@@ -81,7 +81,7 @@ function policyTextFor(
  * Reads the repository, asks the questions, and builds the plan init shows before writing.
  * @param root the repository root
  * @param options the init options, with a profile's answers folded in
- * @returns the plan, the policy text, and what the replace observed
+ * @returns the plan, the policy text, and what the replace read
  */
 export async function prepare(root: string, options: InitOptions): Promise<InitPrepared> {
     const manifests = kitManifests();
@@ -106,13 +106,13 @@ export async function prepare(root: string, options: InitOptions): Promise<InitP
         .filter((manifest) => manifest !== undefined);
     const planning: Planning = { root, options, tooling, selection, everySelected, answers, kept };
     const settings = detectedSettings(everySelected, facts, repo.files);
-    const proposal = { ...buildProposal(root, selection, answers, kept, settings), runnerTasks: tasks.names };
-    const { policyText, policy } = policyTextFor(planning, proposal);
+    const proposed = { ...plan(root, selection, answers, kept, settings), runnerTasks: tasks.names };
+    const { policyText, policy } = policyTextFor(planning, proposed);
     return {
         plan: buildInitPlan(planning, policy, policyText),
         policyText,
         runner: answers.runner,
         removed: kept.removed,
-        observed: new Map([...kept.observed, ...tasks.observed]),
+        read: new Map([...kept.read, ...tasks.read]),
     };
 }

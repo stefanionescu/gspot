@@ -111,7 +111,7 @@ export function writeReport(root: string, report: RunReport | PushReport): void 
     const path = join(root, REPORT_DIRECTORY, 'report.json');
     try {
         runOwnedLifecycle(root, (owner) => {
-            const proposals = (
+            const plans = (
                 [
                     [`${REPORT_DIRECTORY}/report.json`, json],
                     [`${REPORT_DIRECTORY}/report.sarif`, sarif],
@@ -120,12 +120,12 @@ export function writeReport(root: string, report: RunReport | PushReport): void 
             ).map(([destination, content]) =>
                 owner.proposeReplacement(destination, { bytes: Buffer.from(content), mode: 0o600 }, 'runtime'),
             );
-            const conflict = proposals.find((proposal) => proposal.status === 'preserved');
+            const conflict = plans.find((plan) => plan.status === 'preserved');
             if (conflict !== undefined)
                 throw new Error(
                     `Preserved edited or unowned report ${conflict.path}. Move it aside to save a new report.`,
                 );
-            owner.applyProposals(proposals);
+            owner.applyPlans(plans);
         });
     } catch (error) {
         reportStorageFailure(path, error);

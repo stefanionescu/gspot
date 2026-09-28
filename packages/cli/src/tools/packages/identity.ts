@@ -36,7 +36,7 @@ export function parsePackageTool(value: string): z.infer<typeof packageToolSchem
 }
 
 /**
- * Observe the repository manager and retain the version recorded for its isolated tool project.
+ * Read the repository manager and retain the version recorded for its isolated tool project.
  * @param root the repository root
  * @param projectPaths the package manifests of the repository
  * @returns the package manager name and exact version

@@ -9,10 +9,10 @@ import { parse as parseToml, stringify as stringifyToml } from 'smol-toml';
 import { stylelintSource, stylelintResponse } from '#cli/native/protocol.ts';
 import { reasonFor, adoptedTool, adoptedScope } from '#cli/policy/adoption/results.ts';
 import type { AdoptionResult, ConfigurationSource } from '#cli/types/policy/adoption.ts';
-import { observeConfiguration, parseConfigurationSource } from '#cli/policy/adoption/source.ts';
+import { readConfiguration, parseConfigurationSource } from '#cli/policy/adoption/source.ts';
 
 /**
- * Resolve static inheritance from observed files, retaining every input for publication-time validation.
+ * Resolve static inheritance from read files, retaining every input for publication-time validation.
  * @param root the repository root
  * @param path the authored Stylelint file
  * @param source the file, read and parsed
@@ -37,8 +37,8 @@ function stylelintRules(
             const target = posix.normalize(posix.join(posix.dirname(path), parent));
             if (!['.json', '.yaml', '.yml'].includes(extname(target)) && posix.basename(target) !== '.stylelintrc')
                 throw new Error(`${path}: inherited Stylelint configuration requires static JSON or YAML.`);
-            const original = lists.observed.get(target) ?? observeConfiguration(root, target).original;
-            lists.observed.set(target, original);
+            const original = lists.read.get(target) ?? readConfiguration(root, target).original;
+            lists.read.set(target, original);
             rules = { ...rules, ...inheritedRules(target, parseConfigurationSource(original, 'stylelint', target)) };
         }
         visiting.delete(path);

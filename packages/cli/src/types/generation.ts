@@ -1,5 +1,5 @@
 // The types of generation in this package.
-import type { FileObservation } from '#cli/types/platform.ts';
+import type { Read } from '#cli/types/platform.ts';
 import type { PackageTool } from '#cli/types/tools/packages.ts';
 import type { HOOK_FILES } from '#cli/config/repository/repository.ts';
 import type { ConfigurationFormat } from '#cli/types/lifecycle/lifecycle.ts';
@@ -72,7 +72,7 @@ export type GeneratedFile = {
     content: string;
     readOnly: boolean;
     executable?: boolean;
-    observed?: FileObservation;
+    read?: Read;
     kind: 'lock' | 'config' | 'pointer' | 'hook' | 'runner' | 'workflow' | 'rules' | 'managed-block';
     configuration?: string;
 };
@@ -82,7 +82,7 @@ export type ConfigurationOutput = {
     format: ConfigurationFormat;
     changes: { path: (string | number)[]; value: unknown }[];
 };
-export type GeneratedProposal = {
+export type Generated = {
     notes: string[];
     files: GeneratedFile[];
     blocks: BlockOutput[];
@@ -129,7 +129,7 @@ export type SelectorGroup = {
 export type GenerationOptions = {
     version: string;
     packageClient: PackageTool | undefined;
-    replace?: ReadonlyMap<string, FileObservation> | undefined;
+    replace?: ReadonlyMap<string, Read> | undefined;
 };
 export type JsonFormat = { width: number; indent: number };
 export type HookName = (typeof HOOK_FILES)[number];
@@ -147,7 +147,7 @@ export type Retention = {
     root: string;
     policy: Policy;
     files: TrackedFile[];
-    replace: ReadonlyMap<string, FileObservation> | undefined;
+    replace: ReadonlyMap<string, Read> | undefined;
 };
 
 export type RunnerPlan = { tasks: RunnerTask[]; configuration?: ConfigurationOutput; notes: string[] };

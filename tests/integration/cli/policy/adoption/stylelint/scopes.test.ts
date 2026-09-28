@@ -82,7 +82,7 @@ test.each([
         'other/.stylelintrc.json',
     ]);
     expect(kept.tools.get('stylelint')?.settings).toStrictEqual({});
-    expect(kept.observed.has('theme[1]/base.json')).toBe(true);
+    expect(kept.read.has('theme[1]/base.json')).toBe(true);
     const baseline = await stylelint.lint({ code: 'a {}', codeFilename: join(sandbox.path, 'theme[1]/future.css') });
     expect(baseline.results.flatMap((result) => result.warnings)).toStrictEqual([]);
     await Bun.write(

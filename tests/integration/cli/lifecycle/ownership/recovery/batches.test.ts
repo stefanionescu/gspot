@@ -29,7 +29,7 @@ if(path==='middle.txt' && ${JSON.stringify(point)}==='after') process.exit(73);
 }}));
 const {openOwner}=await import(${JSON.stringify(implementation)});
 const owner=openOwner(process.cwd());
-owner.applyProposals(${JSON.stringify(paths)}.map(path=>owner.proposeReplacement(path,{bytes:Buffer.from('installed '+path+'\n'),mode:0o444},'config',true)));
+owner.applyPlans(${JSON.stringify(paths)}.map(path=>owner.proposeReplacement(path,{bytes:Buffer.from('installed '+path+'\n'),mode:0o444},'config',true)));
 owner.close();
 `;
         const child = Bun.spawn([process.execPath, '-e', program], {
@@ -49,7 +49,7 @@ owner.close();
             expect(owner.installedPaths().toSorted((left, right) => left.localeCompare(right))).toStrictEqual(
                 point === 'before' ? ['first.txt'] : ['first.txt', 'middle.txt'],
             );
-            owner.applyProposals(
+            owner.applyPlans(
                 paths.map((path) =>
                     owner.proposeReplacement(
                         path,
@@ -78,7 +78,7 @@ test.each(['before', 'after'] as const)(
         const paths = ['first.txt', 'middle.txt', 'last.txt'];
         const initial = openOwner(directory.path);
         try {
-            initial.applyProposals(
+            initial.applyPlans(
                 paths.map((path) =>
                     initial.proposeReplacement(path, { bytes: Buffer.from(path), mode: 0o644 }, 'config'),
                 ),
@@ -100,7 +100,7 @@ if(path==='middle.txt' && ${JSON.stringify(point)}==='after') process.exit(73);
 }}));
 const {openOwner}=await import(${JSON.stringify(implementation)});
 const owner=openOwner(process.cwd());
-owner.applyProposals(${JSON.stringify(paths)}.map(path=>owner.proposeRestoration(path)));
+owner.applyPlans(${JSON.stringify(paths)}.map(path=>owner.proposeRestoration(path)));
 owner.close();
 `;
         const child = Bun.spawn([process.execPath, '-e', program], {
@@ -117,7 +117,7 @@ owner.close();
                 point === 'before' ? ['last.txt', 'middle.txt'] : ['last.txt'],
             );
             expect(owner.read('last.txt')?.bytes.toString()).toBe('last.txt');
-            owner.applyProposals(owner.installedPaths().map((path) => owner.proposeRestoration(path)));
+            owner.applyPlans(owner.installedPaths().map((path) => owner.proposeRestoration(path)));
             for (const path of paths) expect(owner.read(path)).toBeUndefined();
             expect(owner.installedPaths()).toStrictEqual([]);
         } finally {

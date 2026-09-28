@@ -36,7 +36,7 @@ export async function prepareHookAdoption(
             devDependencies: hookTool === 'pre-commit' ? {} : { [hookTool]: VERSIONS[hookTool] },
         }),
         'source.txt': 'fixture\n',
-        'bin/gspot': `#!${process.execPath}\n(await import('node:fs')).appendFileSync('observed', 'x');\n`,
+        'bin/gspot': `#!${process.execPath}\n(await import('node:fs')).appendFileSync('read', 'x');\n`,
         'native-init.sh': 'true\n',
     });
     chmodSync(join(root, 'bin/gspot'), 0o755);

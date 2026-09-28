@@ -114,7 +114,7 @@ function tagEvidence(detect: Manifest['detect'], tree: TreeFacts): string | unde
 
 const EVIDENCE = [projectEvidence, filenameEvidence, dependencyEvidence, shebangEvidence, tagEvidence, pathEvidence];
 
-function proposalFor(manifest: Manifest, tree: TreeFacts): KitEvidence | undefined {
+function planFor(manifest: Manifest, tree: TreeFacts): KitEvidence | undefined {
     const { kit: configuration } = manifest;
     const byExtension = extensionEvidence(manifest.detect, tree);
     if (byExtension !== undefined)
@@ -143,7 +143,7 @@ function proposalFor(manifest: Manifest, tree: TreeFacts): KitEvidence | undefin
  * @param manifests every kit manifest
  * @param facts the package manifests read from the tree
  * @param scope the scope path, '' for the root
- * @returns one proposal per configuration with evidence
+ * @returns one plan per configuration with evidence
  */
 export function detectKits(
     files: TrackedFile[],
@@ -154,8 +154,8 @@ export function detectKits(
     const tree = treeFacts(files, facts, scope);
     return manifests
         .values()
-        .map((manifest) => proposalFor(manifest, tree))
-        .filter((proposal) => proposal !== undefined)
+        .map((manifest) => planFor(manifest, tree))
+        .filter((plan) => plan !== undefined)
         .toArray();
 }
 
@@ -163,7 +163,7 @@ export function detectKits(
  * Selects conditional declarations using the shared file and dependency evidence.
  * @param conditions the detection conditions declared by selected manifests.
  * @param files the repository source inventory.
- * @param facts the package dependency observations.
+ * @param facts the package dependency reads.
  * @returns the matching condition objects.
  */
 export function detectConditions(

@@ -13,22 +13,22 @@ const CLONE_HOOK_FILES = {
         'pyproject.toml':
             '[project]\nname = "hook-fixture"\nversion = "0.0.0"\nrequires-python = ">=3.11"\ndependencies = ["pre-commit==4.5.1"]\n',
         '.pre-commit-config.yaml':
-            "repos:\n  - repo: local\n    hooks:\n      - id: authored\n        name: authored\n        entry: sh -c 'printf authored >> .hook-observed'\n        language: system\n        stages: [pre-commit]\n        pass_filenames: false\n        always_run: true\n",
+            "repos:\n  - repo: local\n    hooks:\n      - id: authored\n        name: authored\n        entry: sh -c 'printf authored >> .hook-read'\n        language: system\n        stages: [pre-commit]\n        pass_filenames: false\n        always_run: true\n",
     },
     lefthook: {
         'package.json': JSON.stringify({ private: true, devDependencies: { lefthook: '2.0.13' } }) + '\n',
-        'lefthook.yml': 'pre-commit:\n  commands:\n    authored:\n      run: printf authored >> .hook-observed\n',
+        'lefthook.yml': 'pre-commit:\n  commands:\n    authored:\n      run: printf authored >> .hook-read\n',
     },
     husky: {
         'package.json': JSON.stringify({ private: true, devDependencies: { husky: '9.1.7' } }) + '\n',
-        '.husky/pre-commit': 'printf authored >> .hook-observed\nexit 0\n',
+        '.husky/pre-commit': 'printf authored >> .hook-read\nexit 0\n',
     },
     'simple-git-hooks': {
         'package.json':
             JSON.stringify({
                 private: true,
                 devDependencies: { 'simple-git-hooks': '2.13.1' },
-                'simple-git-hooks': { 'pre-commit': 'printf authored >> .hook-observed' },
+                'simple-git-hooks': { 'pre-commit': 'printf authored >> .hook-read' },
             }) + '\n',
     },
 };
@@ -57,7 +57,7 @@ export async function prepareHookClone(
 ): Promise<PrepareHookCloneResult> {
     const main = cliSource('main.ts');
     await createFileTree(repository, {
-        '.gitignore': 'node_modules/\n.venv/\npre-commit-cache/\n.hook-observed\n',
+        '.gitignore': 'node_modules/\n.venv/\npre-commit-cache/\n.hook-read\n',
         ...CLONE_HOOK_FILES[hookTool],
         'gspot.toml': CLONE_POLICY.replace('%HOOK_TOOL%', hookTool),
         'source.txt': 'allowed\n',

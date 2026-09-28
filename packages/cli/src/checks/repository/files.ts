@@ -69,11 +69,7 @@ function problemsOf(root: Node): { line: number; message: string }[] {
 async function fileFindings(input: EngineInput, file: TrackedFile, language: string): Promise<Finding[]> {
     const grammar = grammarFor(file.path, language);
     if (grammar === undefined) return [];
-    const tree = await parseSource(
-        grammar,
-        readSource(input.root, file.path, input.observations).toString('utf8'),
-        input,
-    );
+    const tree = await parseSource(grammar, readSource(input.root, file.path, input.reads).toString('utf8'), input);
     if (tree === null) throw new Error('The source parser returned no tree.');
     try {
         return problemsOf(tree.rootNode).map((problem) => ({

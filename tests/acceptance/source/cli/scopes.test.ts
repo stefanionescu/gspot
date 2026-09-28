@@ -123,8 +123,8 @@ test('init proposes workspace scopes without a lockfile and preserves files afte
     const command = ['init', '--yes', '--no-hooks', '--no-ci', '--no-runner', '--no-guides', '--no-install'];
     const proposed = await run(sandbox.path, [...command, '--dry-run', '--json']);
     expect(proposed.code, proposed.stdout + proposed.stderr).toBe(0);
-    const proposal = JSON.parse(proposed.stdout) as { policy: string };
-    const policy = parsePolicyText(proposal.policy, 'gspot.toml');
+    const plan = JSON.parse(proposed.stdout) as { policy: string };
+    const policy = parsePolicyText(plan.policy, 'gspot.toml');
     expect(policy.scopes.map((scope) => scope.path)).toStrictEqual(['packages/api']);
     writeFileSync(join(sandbox.path, 'pnpm-workspace.yaml'), 'packages: [');
     const before = treeContents(sandbox.path);

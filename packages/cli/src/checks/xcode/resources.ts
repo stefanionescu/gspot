@@ -8,7 +8,7 @@ import { xcodeFinding, trackedEnding } from '#cli/checks/xcode/project/checks.ts
 
 // The parsed JSON of a file, or the parse error under the key error.
 function parsed(input: EngineInput, path: string): { value: unknown; error: string | undefined } {
-    const text = readSource(input.root, path, input.observations).toString('utf8');
+    const text = readSource(input.root, path, input.reads).toString('utf8');
     try {
         return { value: JSON.parse(text) as unknown, error: undefined };
     } catch (error) {
@@ -63,7 +63,7 @@ function imageFindings(input: EngineInput, path: string): Finding[] {
 function orphanFindings(input: EngineInput, sets: string[]): Finding[] {
     if (input.policyFiles.policy.level !== 'all') return [];
     const swift = trackedEnding(input, ['.swift', '.storyboard', '.xib', '.plist']).map((path) =>
-        readSource(input.root, path, input.observations).toString('utf8'),
+        readSource(input.root, path, input.reads).toString('utf8'),
     );
     return sets
         .filter((path) => NAMED_SETS.some((ending) => path.endsWith(ending)))

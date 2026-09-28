@@ -26,7 +26,7 @@ export function drizzleRelations(input: EngineInput): Finding[] {
         .filter((file) => file.nature === 'source' && /\.tsx?$/u.test(file.path))
         .map((file) => ({
             path: file.path,
-            text: readSource(input.root, file.path, input.observations).toString('utf8'),
+            text: readSource(input.root, file.path, input.reads).toString('utf8'),
         }));
     const everything = files.map((file) => file.text).join('\n');
     return files.flatMap((file) =>

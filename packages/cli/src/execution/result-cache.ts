@@ -45,10 +45,10 @@ function toolVersionOf(session: Session, planned: PlannedCheck, hashes: RunHashe
 }
 
 // The hash of a repository file, read once per run.
-function observedHash(session: Session, path: string, hashes: RunHashes): string {
+function readHash(session: Session, path: string, hashes: RunHashes): string {
     const held = hashes.files.get(path);
     if (held !== undefined) return held;
-    const hash = fileHash(session.root, path, session.observations);
+    const hash = fileHash(session.root, path, session.reads);
     hashes.files.set(path, hash);
     return hash;
 }
@@ -57,7 +57,7 @@ function observedHash(session: Session, path: string, hashes: RunHashes): string
 function configurationHashes(session: Session, planned: PlannedCheck, hashes: RunHashes): string {
     const entries = commandConfigurations(session, planned).map((path) => {
         try {
-            return { path, hash: observedHash(session, path, hashes) };
+            return { path, hash: readHash(session, path, hashes) };
         } catch (error) {
             if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
             return { path, hash: 'missing' };
@@ -99,7 +99,7 @@ function portableResult(session: Session, result: CheckResult): CheckResult {
 }
 
 /**
- * The observations one execution pass shares between its cached checks.
+ * The reads one execution pass shares between its cached checks.
  * @param session the session whose policy text seeds the configuration hash
  * @returns empty file and tool tables under the policy hash
  */
@@ -113,7 +113,7 @@ export function runHashes(session: Session): RunHashes {
  * The cache key of a planned check, or undefined when its result must not be reused.
  * @param session the session
  * @param planned the check
- * @param hashes the observations shared by this pass
+ * @param hashes the reads shared by this pass
  * @returns the key
  */
 export function cacheKeyFor(session: Session, planned: PlannedCheck, hashes: RunHashes): string | undefined {
@@ -122,7 +122,7 @@ export function cacheKeyFor(session: Session, planned: PlannedCheck, hashes: Run
     if (!isCacheable(planned)) return undefined;
     const files = keyedPaths(session, planned, declared).map((path) => ({
         path,
-        hash: observedHash(session, path, hashes),
+        hash: readHash(session, path, hashes),
     }));
     return cacheKey({
         check: planned.check,

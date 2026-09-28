@@ -1,5 +1,5 @@
 // The types of parsers in this package.
-import type { SourceObservations } from '#cli/types/repository/repository.ts';
+import type { SourceReads } from '#cli/types/repository/repository.ts';
 
 export type GrammarName =
     | 'typescript'
@@ -12,6 +12,6 @@ export type GrammarName =
     | 'css'
     | 'ruby'
     | 'toml';
-export type ParseContext = { observations: SourceObservations; resources?: DisposableStack };
+export type ParseContext = { reads: SourceReads; resources?: DisposableStack };
 
 export type SourceComment = { line: number; text: string; standalone: boolean };

@@ -9,7 +9,7 @@ import type { SourceComment } from '#cli/types/parsers/parsers.ts';
 import { GSPOT_SUPPRESSION } from '#cli/config/checks/repository.ts';
 import { commentText, sourceComments } from '#cli/parsers/comments.ts';
 import { COMMENT_STYLE_BY_EXTENSION } from '#cli/config/execution/execution.ts';
-import type { TrackedFile, SourceObservations } from '#cli/types/repository/repository.ts';
+import type { SourceReads, TrackedFile } from '#cli/types/repository/repository.ts';
 import type { Finding, EngineInput, SuppressionForm, SuppressionComment } from '#cli/types/checks/checks.ts';
 
 // A preceding reason belongs only to the next line. Intervening source or comments break adjacency.
@@ -57,17 +57,17 @@ function suppressionForms(selection: ScopeSelection, file: TrackedFile): Suppres
 }
 
 /**
- * Observe comments once through the selected tool definitions for each file scope.
+ * Read comments once through the selected tool definitions for each file scope.
  * @param root the repository root
  * @param selections the resolved scopes
- * @param observations the source observations shared across checks
+ * @param reads the source reads shared across checks
  * @param files the tracked files
  * @returns every suppression comment with its tool, reason, and whether it is forbidden
  */
 export async function suppressionComments(
     root: string,
     selections: ScopeSelection[],
-    observations: SourceObservations,
+    reads: SourceReads,
     files: TrackedFile[],
 ): Promise<SuppressionComment[]> {
     const scopes = selections.map((selection) => selection.scope);
@@ -79,7 +79,7 @@ export async function suppressionComments(
         const selection = selections.find((candidate) => candidate.scope.path === scope.path);
         if (selection === undefined) throw new Error(`No selection covers the scope ${scope.path}.`);
         const forms = suppressionForms(selection, file);
-        const source = readSource(root, file.path, observations).toString('utf8');
+        const source = readSource(root, file.path, reads).toString('utf8');
         const comments = await sourceComments(file.path, source);
         found.push(
             ...comments.flatMap((comment, index) => {
@@ -107,7 +107,7 @@ export async function suppressionComments(
 
 /**
  * Report forbidden suppressions and missing or invalid required reasons.
- * @param input the engine input with the observed suppression comments
+ * @param input the engine input with the read suppression comments
  * @returns the findings
  */
 export function suppressions(input: EngineInput): Finding[] {

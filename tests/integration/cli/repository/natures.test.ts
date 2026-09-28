@@ -46,7 +46,7 @@ describe('natures', () => {
     });
 });
 
-test('each repository observation reads current attributes', async () => {
+test('each repository read reads current attributes', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'source.ts': 'export {};\n' });
     const before = await readRepository(sandbox.path, [], [], []);

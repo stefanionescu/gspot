@@ -3,7 +3,7 @@ import { parseSql } from '#cli/parsers/sql/parser.ts';
 import { rejection } from '#tests/support/expectations.ts';
 import { sqlFile, positionAt } from '#cli/parsers/sql/statements.ts';
 import { sqlIdentifiers } from '#cli/checks/naming/extractors/sql.ts';
-import type { SourceObservations } from '#cli/types/repository/repository.ts';
+import type { SourceReads } from '#cli/types/repository/repository.ts';
 
 describe('parseSql', () => {
     test('a broken statement returns the error and where it points', async () => {
@@ -14,11 +14,11 @@ describe('parseSql', () => {
 });
 
 test('SQL analyses share concurrent parses and refresh after source corrections', async () => {
-    const observations: SourceObservations = { root: '/repository', sources: new Map() };
+    const reads: SourceReads = { root: '/repository', sources: new Map() };
     const source = 'CREATE TABLE user_accounts (display_name text);';
-    const first = sqlFile(source, observations);
-    expect(sqlFile(source, observations)).toBe(first);
-    const [parsed, identifiers] = await Promise.all([first, sqlIdentifiers('accounts.sql', source, observations)]);
+    const first = sqlFile(source, reads);
+    expect(sqlFile(source, reads)).toBe(first);
+    const [parsed, identifiers] = await Promise.all([first, sqlIdentifiers('accounts.sql', source, reads)]);
     expect(parsed.error).toBeUndefined();
     expect(
         identifiers.map((identifier) => ({ name: identifier.name, line: identifier.line, column: identifier.column })),
@@ -27,16 +27,16 @@ test('SQL analyses share concurrent parses and refresh after source corrections'
         { name: 'display_name', line: 1, column: 29 },
     ]);
     const broken = 'SELECT 1;\nSELEC 2;';
-    const failed = await sqlFile(broken, observations);
+    const failed = await sqlFile(broken, reads);
     expect(failed.error).toStrictEqual({
         text: 'syntax error at or near "SELEC"',
         line: 2,
         column: 1,
     });
-    expect(await rejection(sqlIdentifiers('broken.sql', broken, observations))).toContain('SQL parse failed at 2:1');
-    const corrected = await sqlFile(broken.replace('SELEC 2', 'SELECT 2'), observations);
+    expect(await rejection(sqlIdentifiers('broken.sql', broken, reads))).toContain('SQL parse failed at 2:1');
+    const corrected = await sqlFile(broken.replace('SELEC 2', 'SELECT 2'), reads);
     expect(corrected.error).toBeUndefined();
-    const refreshed = sqlFile(source, { root: observations.root, sources: new Map() });
+    const refreshed = sqlFile(source, { root: reads.root, sources: new Map() });
     expect(refreshed).not.toBe(first);
     expect(await refreshed).toStrictEqual(parsed);
 });

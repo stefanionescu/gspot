@@ -136,34 +136,28 @@ if (process.platform !== 'win32') {
     });
 
     test.each(['bytes', 'mode', 'removed'])(
-        'lifecycle ownership: stale replace %s refuses replacement and retirement, then a fresh observation succeeds',
+        'lifecycle ownership: stale replace %s refuses replacement and retirement, then a fresh read succeeds',
         async (change) => {
             await using directory = await testdir();
             const path = join(directory.path, 'authored.json');
             writeFileSync(path, '{"semi":false}\n', { mode: 0o640 });
             const owner = openOwner(directory.path);
             try {
-                const observed = owner.read('authored.json')!;
+                const read = owner.read('authored.json')!;
                 if (change === 'bytes') writeFileSync(path, '{"semi":true}\n');
                 if (change === 'mode') chmodSync(path, 0o600);
                 if (change === 'removed') unlinkSync(path);
                 const edited = owner.read('authored.json');
                 expect(() =>
-                    owner.replace(
-                        'authored.json',
-                        { bytes: Buffer.from('{}\n'), mode: 0o444 },
-                        'config',
-                        true,
-                        observed,
-                    ),
+                    owner.replace('authored.json', { bytes: Buffer.from('{}\n'), mode: 0o444 }, 'config', true, read),
                 ).toThrow('changed after replace was planned');
-                expect(() => owner.proposeRetirement('authored.json', observed)).toThrow(
+                expect(() => owner.proposeRetirement('authored.json', read)).toThrow(
                     'changed after replace was planned',
                 );
                 expect(owner.read('authored.json')).toStrictEqual(edited);
                 if (change === 'removed') writeFileSync(path, '{"semi":true}\n', { mode: 0o600 });
                 const refreshed = owner.read('authored.json')!;
-                expect(owner.applyProposal(owner.proposeRetirement('authored.json', refreshed))).toBe('changed');
+                expect(owner.applyPlan(owner.proposeRetirement('authored.json', refreshed))).toBe('changed');
                 expect(owner.restore('authored.json')).toBe('changed');
                 expect(owner.read('authored.json')).toStrictEqual(refreshed);
             } finally {

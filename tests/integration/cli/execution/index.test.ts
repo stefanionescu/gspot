@@ -25,7 +25,7 @@ test('the index keeps deleted tracked paths, encoded names, and excludes untrack
 });
 
 test.each(['integrity/env-files', 'integrity/tracked-dependencies'])(
-    '%s reports a failed index observation instead of a clean verdict',
+    '%s reports a failed index read instead of a clean verdict',
     async (check) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {

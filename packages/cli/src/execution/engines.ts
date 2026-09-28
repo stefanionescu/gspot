@@ -50,7 +50,7 @@ const analyses = new Map<string, Executable['run']>([
     ['actions', checkActions],
 ]);
 
-// Prepare asynchronous repository observations before handing input to the selected engine.
+// Prepare asynchronous repository reads before handing input to the selected engine.
 async function executionInput(
     session: Session,
     planned: PlannedCheck,
@@ -61,7 +61,7 @@ async function executionInput(
         input.suppressions = await suppressionComments(
             session.root,
             session.scopes,
-            session.observations,
+            session.reads,
             planned.files.filter((file) => file.nature === 'source' && file.tags.includes('text')),
         );
     if (staged) input.staged = staged;
@@ -124,7 +124,7 @@ export function engineInput(session: Session, planned: Pick<PlannedCheck, 'scope
         scopeEntries: session.repository.scopes,
         attributes: session.repository.attributes,
         hasGit: session.repository.hasGit,
-        observations: session.observations,
+        reads: session.reads,
         ...(session.resources === undefined ? {} : { resources: session.resources }),
         ...(session.cancelSignal === undefined ? {} : { cancelSignal: session.cancelSignal }),
     };

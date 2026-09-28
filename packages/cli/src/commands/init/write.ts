@@ -2,6 +2,7 @@
 import { isDeepStrictEqual } from 'node:util';
 import { colors } from '#cli/output/messages.ts';
 import { PolicyError } from '#cli/policy/read.ts';
+import type { Read } from '#cli/types/platform.ts';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { InstallationError } from '#cli/tools/pins.ts';
 import { gitignoreBlock } from '#cli/kits/manifests.ts';
@@ -10,7 +11,6 @@ import { MissingToolError } from '#cli/tools/inspect.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
 import packageManifest from '#package' with { type: 'json' };
 import { isGitRepository } from '#cli/repository/tracked.ts';
-import type { FileObservation } from '#cli/types/platform.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/platform.ts';
 import { installTools } from '#cli/tools/install/execution.ts';
 import type { Session } from '#cli/types/execution/execution.ts';
@@ -24,38 +24,38 @@ const { version: GSPOT_VERSION } = packageManifest;
 function retireReplaced(
     root: string,
     removed: { path: string }[],
-    observed: ReadonlyMap<string, FileObservation>,
+    read: ReadonlyMap<string, Read>,
 ): ReplaceRemovalResult {
     return runOwnedLifecycle(root, (owner) => {
         const result: ReplaceRemovalResult = { removed: [], preserved: [] };
-        const proposals = [];
+        const plans = [];
         for (const entry of removed) {
             if (entry.path.endsWith('/')) {
                 result.preserved.push(entry.path);
                 continue;
             }
-            const expected = observed.get(entry.path);
-            if (expected === undefined) throw new Error(`No replace observation exists for ${entry.path}.`);
-            const proposal = owner.proposeRetirement(entry.path, expected);
-            proposals.push(proposal);
-            const status = proposal.status;
+            const expected = read.get(entry.path);
+            if (expected === undefined) throw new Error(`No replace read exists for ${entry.path}.`);
+            const plan = owner.proposeRetirement(entry.path, expected);
+            plans.push(plan);
+            const status = plan.status;
             if (status === 'changed') result.removed.push(entry.path);
             else if (status === 'preserved') result.preserved.push(entry.path);
         }
-        owner.applyProposals(proposals.filter((proposal) => proposal.status !== 'preserved'));
+        owner.applyPlans(plans.filter((plan) => plan.status !== 'preserved'));
         return result;
     });
 }
 
 // Refuses to write when a configuration the replace read has changed after the plan was made.
-function assertObservedUnchanged(owner: Owner, observed: ReadonlyMap<string, FileObservation>): void {
-    for (const [path, original] of observed)
+function assertReadUnchanged(owner: Owner, read: ReadonlyMap<string, Read>): void {
+    for (const [path, original] of read)
         if (!isDeepStrictEqual(owner.read(path), original))
             throw new PolicyError([`Configuration changed after replace was planned: ${path}. Run gspot init again.`]);
 }
 
 // The paths every generated output lands on.
-function generatedPaths(session: Session, replace: ReadonlyMap<string, FileObservation>): Set<string> {
+function generatedPaths(session: Session, replace: ReadonlyMap<string, Read>): Set<string> {
     const outputs = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
         version: session.version,
         packageClient: session.packageClient,
@@ -93,9 +93,9 @@ async function installed(session: Session, install: boolean): Promise<Installed>
  */
 export async function write(root: string, options: InitOptions, prepared: InitPrepared): Promise<Written> {
     return runOwnedLifecycle(root, async (owner) => {
-        assertObservedUnchanged(owner, prepared.observed);
+        assertReadUnchanged(owner, prepared.read);
         const removedPaths = new Set(prepared.removed.map((entry) => entry.path));
-        const replace = new Map([...prepared.observed].filter(([path]) => removedPaths.has(path)));
+        const replace = new Map([...prepared.read].filter(([path]) => removedPaths.has(path)));
         owner.replace(
             'gspot.toml',
             { bytes: Buffer.from(prepared.policyText), mode: OWNER_WRITABLE_FILE },
@@ -109,7 +109,7 @@ export async function write(root: string, options: InitOptions, prepared: InitPr
         const retired = retireReplaced(
             root,
             prepared.removed.filter((entry) => !generated.has(entry.path)),
-            prepared.observed,
+            prepared.read,
         );
         synced.notes.push(
             ...retired.preserved.map(

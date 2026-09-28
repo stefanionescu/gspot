@@ -39,22 +39,22 @@ function driftText(drift: DriftEntry[]): string {
 }
 
 async function previewApply(session: Session): Promise<CommandResult> {
-    const proposal = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
+    const plan = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
         version: session.version,
         packageClient: session.packageClient,
     });
-    const drift = computeDrift(session.root, session.policyFiles.policy, session.packageClient !== undefined, proposal);
+    const drift = computeDrift(session.root, session.policyFiles.policy, session.packageClient !== undefined, plan);
     await eslintRuleDiff(
         session.root,
         session.scopes.find((selection) => selection.scope.path === '')?.view,
         session.cancelSignal,
-        proposal,
+        plan,
         drift,
     );
-    const summary = drift.length === 0 ? 'every generated file matches its proposal\n' : driftText(drift);
-    const text = summary + proposal.notes.map((note) => `note     ${note}\n`).join('');
+    const summary = drift.length === 0 ? 'every generated file matches its plan\n' : driftText(drift);
+    const text = summary + plan.notes.map((note) => `note     ${note}\n`).join('');
     const pin = { from: pinnedVersion(session.root), to: GSPOT_VERSION };
-    const json: ApplyPreviewJson = { isDryRun: true, pin, drift, notes: proposal.notes };
+    const json: ApplyPreviewJson = { isDryRun: true, pin, drift, notes: plan.notes };
     return { text: `version ${pin.from ?? 'unpinned'} -> ${pin.to}\n${text}`, json, exitCode: 0 };
 }
 
@@ -81,7 +81,7 @@ export function registerApply(program: Command): void {
         .description('Generate configuration from gspot.toml')
         .addHelpText(
             'after',
-            '\nEffects:\nReads gspot.toml and regenerates owned configuration, rule copies, and selected integrations. Authored or edited files remain subject to ownership validation. --dry-run previews the proposal without writing project files. This command does not install newly selected tools.\n\nExit codes:\n0: configuration was applied, or the preview completed. 2: invalid input or inability to complete the request.\n\nExample:\ngspot apply --dry-run',
+            '\nEffects:\nReads gspot.toml and regenerates owned configuration, rule copies, and selected integrations. Authored or edited files remain subject to ownership validation. --dry-run previews the plan without writing project files. This command does not install newly selected tools.\n\nExit codes:\n0: configuration was applied, or the preview completed. 2: invalid input or inability to complete the request.\n\nExample:\ngspot apply --dry-run',
         )
         .option('--dry-run', 'Preview proposed changes without writing project files')
         .action(async (flags: Record<string, unknown>, command: Command) => {

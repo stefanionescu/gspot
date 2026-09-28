@@ -23,7 +23,7 @@ export function orphanSources(input: EngineInput): Finding[] {
     const projects = trackedEnding(input, [XCODE_PROJECT_FILE]).map((path) => ({
         path,
         ...readProject(
-            readSource(input.root, path, input.observations).toString('utf8'),
+            readSource(input.root, path, input.reads).toString('utf8'),
             posix.join(input.root, folderOf(path)),
         ),
     }));
@@ -72,13 +72,13 @@ export function orphanSources(input: EngineInput): Finding[] {
  */
 export function testPlans(input: EngineInput): Finding[] {
     const plans = trackedEnding(input, ['.xctestplan']).map(
-        (path) => JSON.parse(readSource(input.root, path, input.observations).toString('utf8')) as TestPlan,
+        (path) => JSON.parse(readSource(input.root, path, input.reads).toString('utf8')) as TestPlan,
     );
     const planned = new Set(plans.flatMap((plan) => (plan.testTargets ?? []).map((entry) => entry.target?.name ?? '')));
     const schemes = trackedEnding(input, ['.xcscheme'])
         .filter((path) => path.includes('/xcshareddata/'))
         .filter((path) => {
-            const text = readSource(input.root, path, input.observations).toString('utf8');
+            const text = readSource(input.root, path, input.reads).toString('utf8');
             return text.includes('<TestableReference') && !text.includes('<TestPlanReference');
         })
         .map((path) =>
@@ -90,7 +90,7 @@ export function testPlans(input: EngineInput): Finding[] {
             ),
         );
     const targets = trackedEnding(input, [XCODE_PROJECT_FILE]).flatMap((path) =>
-        projectTestTargets(readSource(input.root, path, input.observations).toString('utf8'))
+        projectTestTargets(readSource(input.root, path, input.reads).toString('utf8'))
             .filter((name) => !planned.has(name))
             .map((name) =>
                 xcodeFinding(
@@ -112,7 +112,7 @@ export function testPlans(input: EngineInput): Finding[] {
 export async function projectSymlinks(input: EngineInput): Promise<Finding[]> {
     const folders = trackedEnding(input, [XCODE_PROJECT_FILE]).map((projectFile) => folderOf(projectFile));
     if (folders.length === 0 || !input.hasGit) return [];
-    const entries = await gitEntries(input.root, { kind: 'index' }, input.cancelSignal, input.observations);
+    const entries = await gitEntries(input.root, { kind: 'index' }, input.cancelSignal, input.reads);
     const links = entries.filter(
         (entry) =>
             entry.mode === SYMLINK_MODE &&

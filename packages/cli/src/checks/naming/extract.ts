@@ -12,16 +12,16 @@ import { typescriptIdentifiers } from '#cli/checks/naming/extractors/typescript.
  * @param file the file path
  * @param text the file text
  * @param language the language kit the file belongs to
- * @param context optional execution observations and their resource owner
+ * @param context optional execution reads and their resource owner
  * @returns the identifiers
  */
 export async function identifiersOf(
     file: string,
     text: string,
     language: string,
-    context?: Pick<EngineInput, 'observations' | 'resources'>,
+    context?: Pick<EngineInput, 'reads' | 'resources'>,
 ): Promise<Identifier[]> {
-    if (language === 'sql') return sqlIdentifiers(file, text, context?.observations);
+    if (language === 'sql') return sqlIdentifiers(file, text, context?.reads);
     const grammar = grammarFor(file, language);
     if (grammar === undefined) return [];
     const tree = await parseSource(grammar, text, context);

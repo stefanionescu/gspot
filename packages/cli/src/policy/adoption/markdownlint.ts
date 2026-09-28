@@ -5,7 +5,7 @@ import type { TomlTable } from '#cli/types/repository/repository.ts';
 import { parse as parseToml, stringify as stringifyToml } from 'smol-toml';
 import { adoptedTool, adoptedScope } from '#cli/policy/adoption/results.ts';
 import type { AdoptionResult, ConfigurationSource } from '#cli/types/policy/adoption.ts';
-import { asRaw, observeConfiguration, parseConfigurationSource } from '#cli/policy/adoption/source.ts';
+import { asRaw, readConfiguration, parseConfigurationSource } from '#cli/policy/adoption/source.ts';
 
 const MARKDOWN_SOURCE = z
     .object({ extends: z.string().min(1).optional() })
@@ -29,8 +29,8 @@ function carryMarkdownlint(source: ConfigurationSource, path: string, lists: Ado
             const target = posix.normalize(posix.join(posix.dirname(path), parent));
             if (!['.json', '.jsonc', '.yaml', '.yml'].includes(extname(target)))
                 throw new Error(`${path}: inherited Markdown configuration requires static JSON or YAML.`);
-            const original = lists.observed.get(target) ?? observeConfiguration(root, target).original;
-            lists.observed.set(target, original);
+            const original = lists.read.get(target) ?? readConfiguration(root, target).original;
+            lists.read.set(target, original);
             inherited.add(target);
             defaults = inheritedRules(target, parseConfigurationSource(original, 'markdownlint-cli2', target).parsed);
         }

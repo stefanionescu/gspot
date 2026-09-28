@@ -81,7 +81,7 @@ test('nested EditorConfig adoption preserves root boundaries and unset for futur
     const generated = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
         version: session.version,
         packageClient: session.packageClient,
-        replace: kept.observed,
+        replace: kept.read,
     });
     const editors = generated.files.filter((file) => file.path.endsWith('.editorconfig'));
     expect(editors.map((file) => file.path).toSorted((left, right) => left.localeCompare(right))).toStrictEqual(
@@ -165,7 +165,7 @@ test.each(PRECEDENCE_CASES)(
         const generated = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
             version: session.version,
             packageClient: session.packageClient,
-            replace: kept.observed,
+            replace: kept.read,
         });
         for (const file of generated.files.filter(
             (file) => file.path.endsWith('.editorconfig') || file.path === '.gspot/config/prettier.json',

@@ -150,11 +150,7 @@ async function findings(
 ): Promise<Finding[]> {
     const found: Finding[] = [];
     for (const path of paths) {
-        const tree = await parseSource(
-            'html',
-            readSource(input.root, path, input.observations).toString('utf8'),
-            input,
-        );
+        const tree = await parseSource('html', readSource(input.root, path, input.reads).toString('utf8'), input);
         if (tree === null) throw new Error('The source parser returned no tree.');
         try {
             for (const problem of read(tree.rootNode))

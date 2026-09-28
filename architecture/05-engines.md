@@ -54,7 +54,7 @@ preparation, and diagnostic interpretation. Ansible, import-linter, Docker, and 
 builds use the same process contract. Delete their repeated process plumbing after migration.
 Do not add a forwarding layer in its place.
 
-A command session owns repository observations and justified caches. Share files, scopes,
+A command session owns repository reads and justified caches. Share files, scopes,
 metadata, and Git state within that session; the next command observes changed inputs.
 Required unreadable or malformed input is an error, not an empty collection.
 
@@ -369,14 +369,14 @@ Execute invalid and corrected inputs through the standalone plugin and generated
 CLI configurations. Assert check or rule, diagnostic, file, and location. Cover aliases,
 type-only imports, approved exemptions, valid code, and repeated runs after files change.
 Folder tests cover all four languages and framework source. Preserve process and parser fixes;
-do not restore stale global observations merely to restore a rule.
+do not restore stale global reads merely to restore a rule.
 
 K-188 remains open for import direction and harness imports. Their public rules and policies
 stay; any internal consolidation requires equivalent behavior on every shipped surface.
 
 ### Acceptance K-307
 
-Keep real boundary validation, but do not turn failed observation into valid empty input or a clean verdict.
+Keep real boundary validation, but do not turn failed read into valid empty input or a clean verdict.
 
 Use the existing structured process result to distinguish no Git repository from a failed Git operation. Fall back to a directory walk only after the no-Git case is established. Report permission, corruption, parse, and unexpected I/O errors with their path or command.
 
@@ -391,7 +391,7 @@ Definitions use `name`; references retain `check`, `configuration`, or `rule`. K
 ### Acceptance K-43
 
 Cache keys cover the actual configuration inputs of the selected check as well as source,
-tool, policy, and scope inputs. Share observation hashes within a run and refresh them after
+tool, policy, and scope inputs. Share read hashes within a run and refresh them after
 edits. Full-run pruning removes owned verdict entries older than 30 days. Tool build state uses
 the platform cache location.
 
@@ -401,7 +401,7 @@ The contract does not require a particular session field, hash helper, or module
 
 ### Acceptance K-53
 
-Initialization detects and proposes once, validates the accepted proposal, then applies it through the owner. It runs no checks and has no accidental second application. Verify read-only preview, unchanged authored files, final selection, and absence of check execution.
+Initialization detects and proposes once, validates the accepted plan, then applies it through the owner. It runs no checks and has no accidental second application. Verify read-only preview, unchanged authored files, final selection, and absence of check execution.
 
 ### Acceptance K-125
 
@@ -414,7 +414,7 @@ A unit test with a 50 MB file holds that opening a session reads under 1 MB.
 
 ### Acceptance K-138
 
-Share parsing of the same file and grammar within its scope and command session. Naming and structural analyses consume that shared observation while preserving language-specific semantics and source locations. A later session must observe changed content. Verify cross-analysis findings and corrected inputs without requiring a particular helper filename or parser-call count.
+Share parsing of the same file and grammar within its scope and command session. Naming and structural analyses consume that shared read while preserving language-specific semantics and source locations. A later session must observe changed content. Verify cross-analysis findings and corrected inputs without requiring a particular helper filename or parser-call count.
 
 ### Acceptance K-143
 
@@ -422,7 +422,7 @@ Retain incremental compiler state across command sessions. Manual Swift analysis
 
 ### Acceptance K-162
 
-Batch committed SQL observations and reuse them within a command session. Respect the deepest scope and configured migration root. Verify immutable migration findings, corrected input, unusual filenames, corrupt Git input, and refresh in a subsequent session. A fixed number of subprocess calls is not the contract.
+Batch committed SQL reads and reuse them within a command session. Respect the deepest scope and configured migration root. Verify immutable migration findings, corrected input, unusual filenames, corrupt Git input, and refresh in a subsequent session. A fixed number of subprocess calls is not the contract.
 
 ### Acceptance K-176
 
@@ -554,7 +554,7 @@ These replace manifest `[inspections]` and check `inspection` without changing t
 An engine can return a direct result or a promise. Execution awaits either form. A selected
 analysis must report inability when its parser cannot produce the required tree or statements.
 Release trees already created before a later source fails. Share parser initialization promises
-across concurrent calls. Serialize observation keys structurally so valid filenames cannot collide.
+across concurrent calls. Serialize read keys structurally so valid filenames cannot collide.
 
 Required structured reports must contain their declared arrays. Missing or malformed output and
 fatal adapter exits report inability. They cannot become fabricated findings or empty success. Counted custom-check

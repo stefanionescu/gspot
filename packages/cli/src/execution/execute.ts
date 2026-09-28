@@ -12,8 +12,8 @@ import { assembleReport } from '#cli/execution/run-report.ts';
 import type { CheckResult } from '#cli/types/checks/checks.ts';
 import type { IgnoreEntry } from '#cli/types/policy/policy.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
+import type { SourceReads } from '#cli/types/repository/repository.ts';
 import { applyIgnores, applyInlineIgnores } from '#cli/execution/ignores.ts';
-import type { SourceObservations } from '#cli/types/repository/repository.ts';
 import { runHashes, cacheKeyFor, storeResult, cachedResult } from '#cli/execution/result-cache.ts';
 import { DOCKER, RAN_STATUSES, FAILED_STATUSES, HISTORY_ANALYSES } from '#cli/config/execution/execution.ts';
 
@@ -40,7 +40,7 @@ async function refreshAfterFixes(session: Session, opened: Session): Promise<voi
     const { declarations, scopes, exclude } = session.policyFiles.policy;
     session.repository = await readRepository(session.root, declarations, scopes, exclude);
     opened.repository = session.repository;
-    session.observations = { root: session.root, sources: new Map() };
+    session.reads = { root: session.root, sources: new Map() };
     session.inspections.clear();
 }
 
@@ -94,14 +94,14 @@ function reproduceFor(check: PlannedCheck, result: CheckResult, options: RunOpti
 
 // Drops the findings the ignores cover and settles the status on what remains.
 async function applyIgnoresTo(
-    observations: SourceObservations,
+    reads: SourceReads,
     check: PlannedCheck,
     result: CheckResult,
     ignores: IgnoreEntry[],
     uses: Map<string, IgnoreUse>,
 ): Promise<void> {
     const countedFailure = check.spec.count_regex !== undefined && result.status === 'fail';
-    const inline = await applyInlineIgnores(observations, result.findings);
+    const inline = await applyInlineIgnores(reads, result.findings);
     const ignored = applyIgnores(
         inline,
         ignores.filter((entry) => entry.check === check.check),
@@ -115,8 +115,7 @@ async function applyIgnoresTo(
 // Filters a result through the ignores and attaches the line that reproduces a failure.
 async function filterResult(pass: Pass, check: PlannedCheck, result: CheckResult): Promise<void> {
     const { ignores } = pass.session.policyFiles.policy;
-    if (RAN_STATUSES.has(result.status))
-        await applyIgnoresTo(pass.session.observations, check, result, ignores, pass.uses);
+    if (RAN_STATUSES.has(result.status)) await applyIgnoresTo(pass.session.reads, check, result, ignores, pass.uses);
     if (FAILED_STATUSES.has(result.status)) result.reproduce = reproduceFor(check, result, pass.options);
 }
 
@@ -141,11 +140,11 @@ async function runChecks(pass: Pass, executables: Executable[]): Promise<CheckRe
     });
 }
 
-// The session of one run: fresh observations, a disposable stack for its resources, and the cancel signal.
+// The session of one run: fresh reads, a disposable stack for its resources, and the cancel signal.
 function runSession(opened: Session, options: RunOptions, resources: DisposableStack): Session {
     const session = {
         ...opened,
-        observations: { root: opened.root, sources: new Map<string, Buffer>() },
+        reads: { root: opened.root, sources: new Map<string, Buffer>() },
         resources,
         ...(options.cancelSignal === undefined ? {} : { cancelSignal: options.cancelSignal }),
     };

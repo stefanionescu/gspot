@@ -10,10 +10,7 @@ import { FROZEN_INSTALLS, STALE_LOCK_DIAGNOSTICS } from '#cli/config/checks/depe
 // Yarn metadata selects its immutable-installation protocol. Other filenames select their pinned client command.
 function frozenCommand(input: EngineInput, path: string): string[] | undefined {
     const filename = path.slice(path.lastIndexOf('/') + 1);
-    if (
-        filename === 'yarn.lock' &&
-        /^__metadata:/mu.test(readSource(input.root, path, input.observations).toString('utf8'))
-    )
+    if (filename === 'yarn.lock' && /^__metadata:/mu.test(readSource(input.root, path, input.reads).toString('utf8')))
         return ['yarn', 'install', '--immutable'];
     return FROZEN_INSTALLS[filename];
 }

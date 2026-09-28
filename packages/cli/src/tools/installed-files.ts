@@ -1,6 +1,6 @@
+import type { Read } from '#cli/types/platform.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { mutationTarget } from '#cli/platform/safe-paths.ts';
-import type { FileObservation } from '#cli/types/platform.ts';
 import type { Owner } from '#cli/types/lifecycle/lifecycle.ts';
 import { sep, join, posix, dirname, basename, relative } from 'node:path';
 import { MODE_BITS, NODE_MODULES_DIRECTORY, PYTHON_ENVIRONMENT_DIRECTORY } from '#cli/config/platform.ts';
@@ -27,7 +27,7 @@ function linkTarget(entry: string): string | undefined {
 }
 
 // Preserve file links at their original location and copy their bytes inside a directory alias.
-function installedFile(directory: string, local: string, target: string, source: string): FileObservation {
+function installedFile(directory: string, local: string, target: string, source: string): Read {
     if (local === target) {
         const entry = join(directory, local);
         const link = linkTarget(entry);
@@ -48,9 +48,9 @@ function installedFile(directory: string, local: string, target: string, source:
 function installationFiles(
     directory: string,
     kind: 'npm' | 'python',
-): { destination: string; outputs: { path: string; file: FileObservation }[] } {
+): { destination: string; outputs: { path: string; file: Read }[] } {
     const destination = kind === 'npm' ? NODE_MODULES_DIRECTORY : PYTHON_ENVIRONMENT_DIRECTORY;
-    const outputs: { path: string; file: FileObservation }[] = [];
+    const outputs: { path: string; file: Read }[] = [];
     const parent = openRoot(dirname(directory), 'native');
     try {
         if (parent.stat(basename(directory))?.isDirectory() !== true)
@@ -94,7 +94,7 @@ export function writeInstalled(owner: Owner, directory: string, kind: 'npm' | 'p
     const { destination, outputs } = installationFiles(directory, kind);
     owner.beginInstallation(kind);
     const proposed = new Map(outputs.map(({ path, file }) => [path, file]));
-    const proposals = outputs.map((output) =>
+    const plans = outputs.map((output) =>
         owner.proposeReplacement(output.path, output.file, 'dependency', false, undefined, proposed),
     );
     const wanted = new Set(outputs.map((output) => output.path));
@@ -107,10 +107,10 @@ export function writeInstalled(owner: Owner, directory: string, kind: 'npm' | 'p
                 !(kind === 'python' && path.includes('/__pycache__/')),
         )
         .map((path) => owner.proposeRestoration(path));
-    const writes = [...proposals, ...pruning];
-    const conflict = writes.find((proposal) => proposal.status === 'preserved');
+    const writes = [...plans, ...pruning];
+    const conflict = writes.find((plan) => plan.status === 'preserved');
     if (conflict !== undefined)
         throw new Error(`Preserved edited or unowned ${conflict.path}. Move it aside before installing.`);
-    owner.applyProposals(writes);
+    owner.applyPlans(writes);
     owner.finishInstallation(kind);
 }

@@ -1,7 +1,7 @@
 // The types of lifecycle in this package.
 import type { z } from 'zod';
+import type { Read, Root } from '#cli/types/platform.ts';
 import type { WriteResult } from '#cli/types/policy/policy.ts';
-import type { Root, FileObservation } from '#cli/types/platform.ts';
 import type { identitySchema, originalSchema, ownershipSchema, configurationFieldsSchema } from '#cli/lifecycle/log.ts';
 
 export type OwnedBlock = NonNullable<OwnershipEntry['block']>;
@@ -9,7 +9,7 @@ export type ConfigurationWriteRequest = {
     changes: { path: KeyPath; value: unknown }[];
     path: string;
     format: ConfigurationFormat;
-    current: FileObservation | undefined;
+    current: Read | undefined;
     existing: OwnershipEntry | undefined;
     matchesInstalled: boolean;
     replace: boolean;
@@ -28,19 +28,19 @@ export type KeyPath = (string | number)[];
 export type Field = z.infer<typeof configurationFieldsSchema>[number];
 export type ConfigurationOwnership = NonNullable<OwnershipEntry['configuration']>;
 export type KitPlan = {
-    next: FileObservation;
+    next: Read;
     configuration: ConfigurationOwnership;
     status: 'changed' | 'unchanged';
 };
 export type Outcome = 'changed' | 'unchanged' | 'preserved';
 export type PreparedWrite = {
     path: string;
-    current: FileObservation | undefined;
-    next: FileObservation | undefined;
+    current: Read | undefined;
+    next: Read | undefined;
     entry: OwnershipEntry | undefined;
     recovery: z.infer<typeof originalSchema> | undefined;
 };
-export type PreparedPolicy = WriteResult & { original: FileObservation };
+export type PreparedPolicy = WriteResult & { original: Read };
 export type DriftEntry = {
     path: string;
     kind: 'changed' | 'missing' | 'stray' | 'conflict';
@@ -48,7 +48,7 @@ export type DriftEntry = {
     rules?: { path: string; added: string[]; removed: string[]; changed: string[] }[];
     ruleError?: string;
 };
-export type Restoration = { next?: FileObservation };
+export type Restoration = { next?: Read };
 export type BlockStyle = 'markdown' | 'hash';
 export type BlockSpan = { start: number; end: number };
 export type PlannedBlock = { nextText: string; block: OwnedBlock };
@@ -62,17 +62,17 @@ export type Log = {
     files: Root;
     state: OwnershipState;
     save(): void;
-    backup(path: string, file: FileObservation): Original;
+    backup(path: string, file: Read): Original;
     entryFor(path: string): OwnershipEntry | undefined;
     finish(): void;
 };
 /** What one operation proposes for one file: the file now, its record, the outcome, and what to write. */
-export type FileProposal = {
+export type Planned = {
     path: string;
-    current: FileObservation | undefined;
+    current: Read | undefined;
     previous: OwnershipEntry | undefined;
     status: 'changed' | 'unchanged' | 'preserved';
-    next?: FileObservation;
+    next?: Read;
     entry?: OwnershipEntry;
     saveOriginal?: boolean;
 };
@@ -84,32 +84,26 @@ export type Owner = {
         format: ConfigurationFormat,
         changes: { path: (string | number)[]; value: unknown }[],
         replace?: boolean,
-    ): FileProposal;
+    ): Planned;
     proposeReplacement(
         path: string,
-        next: FileObservation,
+        next: Read,
         kind: OwnershipEntry['kind'],
         replace?: boolean,
-        expected?: FileObservation,
-        proposed?: ReadonlyMap<string, FileObservation | undefined>,
-    ): FileProposal;
-    proposeBlock(path: string, body: string, style: BlockStyle): FileProposal;
-    applyProposal(proposal: FileProposal): Outcome;
-    applyProposals(proposals: FileProposal[]): Outcome[];
+        expected?: Read,
+        proposed?: ReadonlyMap<string, Read | undefined>,
+    ): Planned;
+    proposeBlock(path: string, body: string, style: BlockStyle): Planned;
+    applyPlan(plan: Planned): Outcome;
+    applyPlans(plans: Planned[]): Outcome[];
     replaceBlock(path: string, body: string, style: BlockStyle): Outcome;
-    read(path: string): FileObservation | undefined;
+    read(path: string): Read | undefined;
     paths(): string[];
     installedPaths(): string[];
-    proposeRetirement(path: string, expected: FileObservation): FileProposal;
-    replace(
-        path: string,
-        next: FileObservation,
-        kind: OwnershipEntry['kind'],
-        replace?: boolean,
-        expected?: FileObservation,
-    ): Outcome;
-    proposeRestoration(path: string, original?: FileObservation): FileProposal;
-    restore(path: string, original?: FileObservation): 'changed' | 'preserved';
+    proposeRetirement(path: string, expected: Read): Planned;
+    replace(path: string, next: Read, kind: OwnershipEntry['kind'], replace?: boolean, expected?: Read): Outcome;
+    proposeRestoration(path: string, original?: Read): Planned;
+    restore(path: string, original?: Read): 'changed' | 'preserved';
     close(): void;
 };
 export type ConfigurationFormat = 'json' | 'yaml' | 'toml';
@@ -122,9 +116,9 @@ export type KitDocument = {
 
 export type ReplacementRequest = {
     path: string;
-    next: FileObservation;
+    next: Read;
     kind: OwnershipEntry['kind'];
     replace?: boolean | undefined;
-    expected?: FileObservation | undefined;
-    proposed?: ReadonlyMap<string, FileObservation | undefined> | undefined;
+    expected?: Read | undefined;
+    proposed?: ReadonlyMap<string, Read | undefined> | undefined;
 };

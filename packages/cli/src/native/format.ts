@@ -64,14 +64,13 @@ async function projectPrettier(root: string): Promise<typeof bundledPrettier> {
     return prettier;
 }
 
-// The ignore lines of every observed ignore file, each nested file's lines rebased onto its folder.
+// The ignore lines of every read ignore file, each nested file's lines rebased onto its folder.
 function ignoreLines(files: Root, ignorePaths: string[]): string[] {
     return ignorePaths.flatMap((path) => {
-        const observed = files.read(path);
-        if (observed === undefined)
-            throw new Error(`The observed formatter ignore file is missing: ${path}. Retry adoption.`);
+        const read = files.read(path);
+        if (read === undefined) throw new Error(`The read formatter ignore file is missing: ${path}. Retry adoption.`);
         const folder = dirname(path).replaceAll('\\', '/');
-        const lines = observed.bytes.toString('utf8').split(/\r?\n/u);
+        const lines = read.bytes.toString('utf8').split(/\r?\n/u);
         return folder === '.' ? lines : lines.map((line) => rebasedIgnoreLine(line, folder));
     });
 }
@@ -85,10 +84,10 @@ async function evaluatedSource(
 ): Promise<Source> {
     const configuration = files.read(from);
     if (configuration === undefined)
-        throw new Error(`The observed formatter configuration is missing: ${from}. Retry adoption.`);
+        throw new Error(`The read formatter configuration is missing: ${from}. Retry adoption.`);
     const configPath = await prettier.resolveConfigFile(join(root, dirname(from), 'gspot-import.js'));
     if (configPath !== join(root, from))
-        throw new Error(`The active Prettier configuration differs from the observed ${from}.`);
+        throw new Error(`The active Prettier configuration differs from the read ${from}.`);
     let source: unknown;
     if (MODULE_CONFIGURATION.test(from))
         source = ((await import(pathToFileURL(configPath).href)) as { default: unknown }).default;
@@ -236,7 +235,7 @@ export async function runFormat(request: FormatRequest): Promise<AdoptedFormatti
  */
 export async function runIgnoredPaths(request: z.infer<typeof prettierIgnoreRequest>): Promise<string[]> {
     if (openRoot(request.root).read(request.ignorePath) === undefined)
-        throw new Error(`The observed formatter ignore file is missing: ${request.ignorePath}. Retry adoption.`);
+        throw new Error(`The read formatter ignore file is missing: ${request.ignorePath}. Retry adoption.`);
     const ignored: string[] = [];
     for (const path of request.paths) {
         const classification = await bundledPrettier.getFileInfo(join(request.root, path), {

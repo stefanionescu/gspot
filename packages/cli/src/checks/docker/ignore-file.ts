@@ -20,7 +20,7 @@ export function dockerignore(input: EngineInput): Finding[] {
         const base = { check: input.spec.name, line: 1, fixable: false };
         if (statSync(join(input.root, path), { throwIfNoEntry: false }) === undefined)
             return [{ ...base, file: dockerfile, rule: 'missing', message: `No ${path} sits beside this Dockerfile.` }];
-        const text = readSource(input.root, path, input.observations).toString('utf8');
+        const text = readSource(input.root, path, input.reads).toString('utf8');
         const lines = new Set(text.split('\n').map((line) => line.trim().replaceAll(/^\/|\/$/gu, '')));
         const missing = DOCKERIGNORE_ENTRIES.filter((entry) =>
             [entry, `**/${entry}`, `${entry}*`, `**/${entry}*`].every((form) => !lines.has(form)),

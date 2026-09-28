@@ -123,11 +123,11 @@ test.each([0, 1])('a hook conflict preserves independent installer execution and
     expect(processes.runBlocking(['git', 'init', '--quiet'], { cwd: sandbox.path }).code).toBe(0);
     const location = hookLocation(sandbox.path);
     writeFileSync(join(location.absolute, 'pre-push.gspot-original'), 'authored sibling');
-    const observed: string[][] = [];
+    const read: string[][] = [];
     const run = processes.run;
     const installer = spyOn(processes, 'run').mockImplementation((command, options) => {
         if (command[0] !== 'mise') return run(command, options);
-        observed.push([...command]);
+        read.push([...command]);
         return Promise.resolve({
             code: command[1] === 'install' ? code : 0,
             missing: false,
@@ -145,7 +145,7 @@ test.each([0, 1])('a hook conflict preserves independent installer execution and
             result.text.indexOf('Hook sibling already exists') <
                 result.text.indexOf('installation command mise install failed'),
         ).toBe(code !== 0);
-        expect(observed).toContainEqual(['mise', 'install']);
+        expect(read).toContainEqual(['mise', 'install']);
         expect(readFileSync(join(location.absolute, 'pre-push.gspot-original'), 'utf8')).toBe('authored sibling');
         expect(existsSync(join(location.absolute, 'pre-commit'))).toBe(false);
     } finally {

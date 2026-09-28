@@ -14,7 +14,7 @@ import { ignoreFileEntries } from '#cli/policy/adoption/ignore-files.ts';
 import type { ExistingTooling } from '#cli/types/repository/repository.ts';
 import { SEPARATE_TOOLS, IGNORE_PATH_KEYS } from '#cli/config/policy/adoption.ts';
 import { keepPyright, keepDisabled, valueOfKeyLine } from '#cli/policy/adoption/disabled.ts';
-import { observeConfiguration, parseConfigurationSource } from '#cli/policy/adoption/source.ts';
+import { readConfiguration, parseConfigurationSource } from '#cli/policy/adoption/source.ts';
 import { ruffImporter, assertStableRuff, ExperimentalRuffError } from '#cli/policy/adoption/ruff.ts';
 import type { Kept, Owned, KeepRequest, AdoptionResult, ConfigurationSource } from '#cli/types/policy/adoption.ts';
 
@@ -94,10 +94,10 @@ function noteOverlaps(owned: Owned[], lists: AdoptionResult): void {
 }
 
 // Captures every owned file before any executable configuration can change another tool's input.
-function observeOwned(root: string, owned: Owned[], lists: AdoptionResult): void {
+function readOwned(root: string, owned: Owned[], lists: AdoptionResult): void {
     for (const path of new Set(owned.map(({ path }) => path))) {
         try {
-            lists.observed.set(path, observeConfiguration(root, path).original);
+            lists.read.set(path, readConfiguration(root, path).original);
         } catch (error) {
             lists.unread.push({ path, note: `not read and not deleted: ${(error as Error).message}` });
         }
@@ -126,9 +126,9 @@ function recordOutcome(entry: Owned, lists: AdoptionResult): void {
 async function carryOwned(root: string, entry: Owned, lists: AdoptionResult): Promise<void> {
     const { tool, path, keeps, check } = entry;
     try {
-        const observed = lists.observed.get(path);
-        if (observed === undefined) throw new Error(`${path} was not observed in the repository.`);
-        const source = parseConfigurationSource(observed, tool, path, selectorOf(entry));
+        const read = lists.read.get(path);
+        if (read === undefined) throw new Error(`${path} was not read in the repository.`);
+        const source = parseConfigurationSource(read, tool, path, selectorOf(entry));
         await carryFrom(source, { tool, path, lists, root, reader: keeps, check });
     } catch (error) {
         if (error instanceof ExperimentalRuffError) throw error;
@@ -190,7 +190,7 @@ export async function collectKept(
     paths: string[],
 ): Promise<AdoptionResult> {
     const lists: AdoptionResult = {
-        observed: new Map(),
+        read: new Map(),
         tools: new Map(),
         scopes: new Map(),
         removed: [],
@@ -199,7 +199,7 @@ export async function collectKept(
     };
     const owned = tooling.configs.filter(({ tool }) => isOwned(tool, selected));
     noteOverlaps(owned, lists);
-    observeOwned(root, owned, lists);
+    readOwned(root, owned, lists);
     if (lists.unread.length > 0) return lists;
     await collectFormatting(
         root,

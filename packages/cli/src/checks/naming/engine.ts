@@ -47,7 +47,7 @@ function findingsFor(input: EngineInput, policy: EffectivePolicy, identifiers: I
 async function identifierFindings(input: EngineInput, policy: EffectivePolicy): Promise<Finding[]> {
     const findings: Finding[] = [];
     for (const { file, language } of sourceFiles(input)) {
-        const text = readSource(input.root, file.path, input.observations).toString('utf8');
+        const text = readSource(input.root, file.path, input.reads).toString('utf8');
         const identifiers = await identifiersOf(file.path, text, language, input);
         findings.push(...findingsFor(input, policy, identifiers, file.path));
     }
@@ -81,7 +81,7 @@ async function scopeIdentifiers(input: EngineInput): Promise<{ path: string; nam
             languageKits(selectForScope(policy, scope.path, input.manifests)),
         ]),
     );
-    const observed: { path: string; names: string[] }[] = [];
+    const read: { path: string; names: string[] }[] = [];
     for (const file of input.files) {
         if (file.nature !== 'source') continue;
         const scope = scopeOf(file.path, input.scopeEntries);
@@ -90,24 +90,24 @@ async function scopeIdentifiers(input: EngineInput): Promise<{ path: string; nam
         const name = language.kit.name;
         const identifiers = await identifiersOf(
             file.path,
-            readSource(input.root, file.path, input.observations).toString('utf8'),
+            readSource(input.root, file.path, input.reads).toString('utf8'),
             name,
             input,
         );
-        observed.push({
+        read.push({
             path: file.path,
             names: [fileIdentifier(file.path, name), ...directoryIdentifiers(file.path, name), ...identifiers].map(
                 (identifier) => identifier.name,
             ),
         });
     }
-    return observed;
+    return read;
 }
 
 // Validate each authored layer once against the complete snapshot, including nested scopes.
 async function schemaFindings(input: EngineInput): Promise<Finding[]> {
     const policy = input.policyFiles.policy;
-    const observed = await scopeIdentifiers(input);
+    const read = await scopeIdentifiers(input);
     const removable = new Set(
         Object.entries(shippedPolicy().groups)
             .filter(([, group]) => group.removable)
@@ -120,7 +120,7 @@ async function schemaFindings(input: EngineInput): Promise<Finding[]> {
         ),
     ];
     return layers.flatMap(({ scope, naming }) => {
-        const files = observed.filter((file) => isInScope(file.path, scope));
+        const files = read.filter((file) => isInScope(file.path, scope));
         const names = new Set(files.flatMap((file) => file.names));
         const unused = naming.allowed
             .filter((entry) => !names.has(entry.name))

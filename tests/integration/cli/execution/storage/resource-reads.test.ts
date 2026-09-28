@@ -52,7 +52,7 @@ test.each([
     },
 );
 
-test('a denied asset existence observation is an execution error and a genuinely missing image is a finding', async () => {
+test('a denied asset existence read is an execution error and a genuinely missing image is a finding', async () => {
     await using sandbox = await testdir();
     const assetManifest = 'App/Assets.xcassets/Logo.imageset/Contents.json';
     const image = 'App/Assets.xcassets/Logo.imageset/logo.png';
@@ -74,7 +74,7 @@ test('a denied asset existence observation is an execution error and a genuinely
     };
     const target = join(sandbox.path, image);
     const original = fs.statSync;
-    const observation = spyOn(fs, 'statSync').mockImplementation(((...args: Parameters<typeof fs.statSync>) => {
+    const read = spyOn(fs, 'statSync').mockImplementation(((...args: Parameters<typeof fs.statSync>) => {
         if (args[0] === target) throw Object.assign(new Error(`EACCES: cannot inspect ${image}`), { code: 'EACCES' });
         return original(...args);
     }) as typeof fs.statSync);
@@ -85,7 +85,7 @@ test('a denied asset existence observation is an execution error and a genuinely
         expect(failed.report.checks[0]?.note).toContain(`EACCES: cannot inspect ${image}`);
         expect(failed.report.checks[0]?.findings).toStrictEqual([]);
     } finally {
-        observation.mockRestore();
+        read.mockRestore();
     }
     fs.rmSync(target);
     const missing = await executeRun(session, options);

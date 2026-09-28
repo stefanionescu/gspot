@@ -13,8 +13,8 @@ export type ScopeEntry = {
 };
 export type PathIgnore = { base: string; matcher: Ignore };
 export type RawEntry = { path: string; size: number; executable: boolean; symlink: boolean };
-/** Source bytes observed during one run, files to its original repository root. */
-export type SourceObservations = {
+/** Source bytes read during one run, files to its original repository root. */
+export type SourceReads = {
     root: string;
     sources: Map<string, Buffer>;
 };

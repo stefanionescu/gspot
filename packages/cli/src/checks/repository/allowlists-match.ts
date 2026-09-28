@@ -91,10 +91,7 @@ function licenseFindings(input: EngineInput): Finding[] {
         const packages = paths.map(({ path }) => {
             let names = locks.get(path);
             if (names === undefined) {
-                names = lockedPackages(
-                    basename(path),
-                    readSource(input.root, path, input.observations).toString('utf8'),
-                );
+                names = lockedPackages(basename(path), readSource(input.root, path, input.reads).toString('utf8'));
                 locks.set(path, names);
             }
             return { names, python: ['uv.lock', 'poetry.lock', 'pdm.lock'].includes(basename(path)) };

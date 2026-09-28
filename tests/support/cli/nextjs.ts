@@ -12,8 +12,8 @@ import { openSession } from '#cli/execution/session.ts';
 import type { EngineInput } from '#cli/types/checks/checks.ts';
 import { install, toolsPath } from '#tests/support/cli/tools.ts';
 import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
+import type { NextjsRead } from '#tests/types/integration/cli/checks.ts';
 import { NEXT_PAGE, NEXT_CONFIG, NEXT_LAYOUT } from '#tests/config/cli.ts';
-import type { NextjsObserved } from '#tests/types/integration/cli/checks.ts';
 import { chmodSync, mkdirSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
 
 /** init selecting nextjs without the recommendations the tests leave out. */
@@ -63,7 +63,7 @@ export async function installedNextProject(): Promise<{
  * @param root the sandbox root
  * @param scope the selected project path
  * @param check the Next.js check to plan
- * @returns the check input with repository observations
+ * @returns the check input with repository reads
  */
 export async function prepareNextjsBuild(root: string, scope: string, check: string): Promise<EngineInput> {
     const scopeTable = scope === '' ? '' : `[[scope]]\npath = "${scope}"\n`;
@@ -90,11 +90,11 @@ export async function prepareNextjsBuild(root: string, scope: string, check: str
 }
 
 /**
- * Observe native commands while simulating generated files and compiler diagnostics.
+ * Read native commands while simulating generated files and compiler diagnostics.
  * @param check the Next.js command whose diagnostic format to simulate
- * @returns observations and a disposer that restores the process boundaries
+ * @returns reads and a disposer that restores the process boundaries
  */
-export function observeNextjsCommands(check: string): NextjsObserved {
+export function readNextjsCommands(check: string): NextjsRead {
     const failureOutput = {
         stdout: check === 'nextjs/typecheck' ? 'src/page.ts(1,1): error TS2322: Type mismatch\n' : '',
         stderr: check === 'nextjs/build' ? 'Error: Page is invalid\n' : '',

@@ -43,10 +43,7 @@ export function localeFiles(input: EngineInput): Finding[] {
         .map((file) => file.path)
         .filter((path) => path.startsWith(`${directory}/`) && path.endsWith('.json'));
     const raw = new Map(
-        files.map((path) => [
-            path,
-            JSON.parse(readSource(input.root, path, input.observations).toString('utf8')) as unknown,
-        ]),
+        files.map((path) => [path, JSON.parse(readSource(input.root, path, input.reads).toString('utf8')) as unknown]),
     );
     const held = new Map([...raw].map(([path, value]) => [path, flat(value)]));
     const wanted =

@@ -17,7 +17,7 @@ describe('plugin file paths', () => {
     });
 });
 
-test('directory inspection propagates a missing path and observes files after correction', async () => {
+test('directory inspection propagates a missing path and reads files after correction', async () => {
     await using directory = await testdir();
     const path = join(directory.path, 'source');
     expect(() => readDirectory(path)).toThrow();

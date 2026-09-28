@@ -26,7 +26,7 @@ export async function pythonModules(input: EngineInput): Promise<PythonModule[]>
     try {
         for (const file of input.files) {
             if (file.nature !== 'source' || !file.path.endsWith('.py')) continue;
-            const text = readSource(input.root, file.path, input.observations).toString('utf8');
+            const text = readSource(input.root, file.path, input.reads).toString('utf8');
             const tree = await parseSource('python', text, input);
             if (tree === null) throw new Error('The Python parser returned no tree.');
             const statements = tree.rootNode.namedChildren.filter((child) => child.type !== 'comment');

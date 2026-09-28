@@ -40,7 +40,7 @@ test.each([
     );
 });
 
-test('tRPC architecture boundaries retain source locations, scope isolation, and failed observations', async () => {
+test('tRPC architecture boundaries retain source locations, scope isolation, and failed reads', async () => {
     await using sandbox = await testdir();
     const policy =
         'version = 1\nkits = ["trpc"]\n[architecture]\nelements = [{name = "server", paths = ["private/**"]}]\n[[scope]]\npath = "app"\n[[scope]]\npath = "app/child"\n';

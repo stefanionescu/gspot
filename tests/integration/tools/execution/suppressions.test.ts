@@ -50,12 +50,7 @@ test.each([
     const native = await stylelint.lint({ code: source, config: { rules: { 'color-no-invalid-hex': true } } });
     expect(native.results[0]!.warnings).toHaveLength(active ? 0 : 1);
     const session = await openSession(sandbox.path);
-    const comments = await suppressionComments(
-        session.root,
-        session.scopes,
-        session.observations,
-        session.repository.files,
-    );
+    const comments = await suppressionComments(session.root, session.scopes, session.reads, session.repository.files);
     expect(comments.map(({ line, form }) => ({ line, form }))).toStrictEqual(
         active ? [{ line: 1, form: 'stylelint' }] : [],
     );
@@ -84,12 +79,7 @@ test.each([
     expect(native.code, native.stderr).toBe(active ? 0 : 1);
     expect(JSON.parse(native.stdout)).toStrictEqual(active ? [] : [containing({ code: 'F401' })]);
     const session = await openSession(sandbox.path);
-    const comments = await suppressionComments(
-        session.root,
-        session.scopes,
-        session.observations,
-        session.repository.files,
-    );
+    const comments = await suppressionComments(session.root, session.scopes, session.reads, session.repository.files);
     expect(comments.map(({ line, form }) => ({ line, form }))).toStrictEqual(active ? [{ line: 1, form: 'ruff' }] : []);
 });
 
@@ -113,12 +103,7 @@ test.each([
     const findings = native.results.flatMap(({ messages }) => messages.filter(({ ruleId }) => ruleId === 'wcag/h37'));
     expect(findings).toHaveLength(active ? 0 : 1);
     const session = await openSession(sandbox.path);
-    const comments = await suppressionComments(
-        session.root,
-        session.scopes,
-        session.observations,
-        session.repository.files,
-    );
+    const comments = await suppressionComments(session.root, session.scopes, session.reads, session.repository.files);
     expect(comments.map(({ line, form }) => ({ line, form }))).toStrictEqual(
         active ? [{ line: 1, form: 'html-validate' }] : [],
     );
@@ -165,11 +150,6 @@ test.each([
     expect(native.code, native.stderr).toBe(suppressed ? 0 : 1);
     expect(JSON.parse(native.stdout)).toStrictEqual(suppressed ? [] : [containing({ code: 'F401' })]);
     const session = await openSession(sandbox.path);
-    const comments = await suppressionComments(
-        session.root,
-        session.scopes,
-        session.observations,
-        session.repository.files,
-    );
+    const comments = await suppressionComments(session.root, session.scopes, session.reads, session.repository.files);
     expect(comments.map(({ line, form }) => ({ line, form }))).toStrictEqual(directive ? [{ line, form: 'ruff' }] : []);
 });

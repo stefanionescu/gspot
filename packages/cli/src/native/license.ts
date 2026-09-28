@@ -11,7 +11,7 @@ const reportSchema = z.record(
     z.object({ licenses: z.union([z.string(), z.array(z.string())]).optional() }),
 );
 
-// Resolve from an observed project directory only after its manifest passes files access.
+// Resolve from an read project directory only after its manifest passes files access.
 function installedProject(root: string, from: string): string {
     const files = openRoot(root);
     try {

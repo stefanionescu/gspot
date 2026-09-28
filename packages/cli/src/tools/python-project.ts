@@ -155,12 +155,12 @@ async function relocateInterpreter(work: string): Promise<void> {
         copyFileSync(source, interpreter);
         chmodSync(interpreter, mode);
     }
-    const observed = await runToolCommand(
+    const read = await runToolCommand(
         undefined,
         [interpreter, '-c', 'import sys, ssl; assert sys.prefix != sys.base_prefix'],
         { cwd: work },
     );
-    if (observed.code !== 0)
+    if (read.code !== 0)
         throw new Error(
             'The Python interpreter cannot run from a copied environment. No installed files were written.',
         );
@@ -195,12 +195,12 @@ export async function preparePythonProject(root: string, files: GeneratedFile[],
         content,
         readOnly: true,
         kind: 'lock',
-        ...(original === undefined ? {} : { observed: original }),
+        ...(original === undefined ? {} : { read: original }),
     });
 }
 
 /**
- * Observe Python lock drift without resolving dependencies or creating ownership state.
+ * Read Python lock drift without resolving dependencies or creating ownership state.
  * @param root the repository root
  * @param generated the generated files, among them the Python project
  * @returns the lock path with what is wrong with it, or undefined when there is no Python project

@@ -23,7 +23,7 @@ function validateEslintSources(configs: ExistingTooling['configs']): boolean {
 }
 
 /**
- * Convert ESLint selectors and module registrations from observed configuration.
+ * Convert ESLint selectors and module registrations from read configuration.
  * @param root the repository root
  * @param configs the ESLint configuration files found
  * @param paths the tracked source paths

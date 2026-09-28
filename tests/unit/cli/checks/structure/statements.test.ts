@@ -120,7 +120,7 @@ test.each([
     },
 );
 
-test('Swift includes implicit getters, property observers, and subscript accessors', async () => {
+test('Swift includes implicit getters, property readers, and subscript accessors', async () => {
     const text =
         'struct A { var x:Int { 1 }; var y = 0 { willSet { save(newValue) } didSet { save(oldValue) } }; subscript(i:Int)->Int { get { 1 } set { save(newValue) } } }';
     const parser = await parserFor('swift');

@@ -3,9 +3,9 @@ import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { xcodePlan } from '#cli/commands/init/xcode.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { rejection } from '#tests/support/expectations.ts';
-import { xcodeProposal } from '#cli/commands/init/xcode.ts';
 import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import { astGrepMatches } from '#cli/checks/structure/ast-grep.ts';
 import { chmodSync, existsSync, unlinkSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
@@ -25,7 +25,7 @@ if (process.platform !== 'win32')
                 if (kind === 'project') symlinkSync('../outside', join(root, 'aaa.xcodeproj'));
                 if (kind === 'configuration') symlinkSync('../outside/periphery.yml', join(root, '.periphery.yml'));
                 if (kind === 'schemes') symlinkSync('../../outside', join(root, 'app.xcodeproj/xcshareddata'));
-                expect(() => xcodeProposal(root, [''])).toThrow(/(?:Unsafe lifecycle|Lifecycle destination)/u);
+                expect(() => xcodePlan(root, [''])).toThrow(/(?:Unsafe lifecycle|Lifecycle destination)/u);
                 expect(readFileSync(join(directory.path, 'outside/periphery.yml'), 'utf8')).toBe(
                     'schemes:\n  - Authored\n',
                 );
@@ -82,7 +82,7 @@ test.each([
         'app.xcodeproj/xcshareddata/xcschemes/Fallback.xcscheme': '',
         '.periphery.yml': configuration,
     });
-    expect(xcodeProposal(directory.path, [''])).toStrictEqual({
+    expect(xcodePlan(directory.path, [''])).toStrictEqual({
         scope: '',
         project: 'app.xcodeproj',
         scheme: 'Authored # scheme',
@@ -95,9 +95,9 @@ test('Xcode discovery rejects invalid scheme settings and accepts their correcti
         'app.xcodeproj/xcshareddata/xcschemes/Fallback.xcscheme': '',
         '.periphery.yml': 'schemes: [42]\n',
     });
-    expect(() => xcodeProposal(directory.path, [''])).toThrow();
+    expect(() => xcodePlan(directory.path, [''])).toThrow();
     writeFileSync(join(directory.path, '.periphery.yml'), 'schemes: []\n');
-    expect(xcodeProposal(directory.path, [''])).toStrictEqual({
+    expect(xcodePlan(directory.path, [''])).toStrictEqual({
         scope: '',
         project: 'app.xcodeproj',
         scheme: 'Fallback',

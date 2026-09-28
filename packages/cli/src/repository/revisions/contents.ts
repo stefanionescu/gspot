@@ -5,7 +5,7 @@ import { SelectionError } from '#cli/kits/select.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { run, runBinary } from '#cli/platform/spawn.ts';
 import { rmSync, mkdtempSync, realpathSync } from 'node:fs';
-import type { SourceObservations } from '#cli/types/repository/repository.ts';
+import type { SourceReads } from '#cli/types/repository/repository.ts';
 import type { GitEntry, RevisionSource } from '#cli/types/repository/revisions.ts';
 import { copyDependencies, copyProsePackages } from '#cli/repository/revisions/dependencies.ts';
 
@@ -20,7 +20,7 @@ import {
 // A frame ends its header line and its blob with a newline each.
 const FRAME_NEWLINES = 2;
 
-const entryObservations = new WeakMap<SourceObservations, Map<string, Promise<GitEntry[]>>>();
+const entryReads = new WeakMap<SourceReads, Map<string, Promise<GitEntry[]>>>();
 
 async function gitOutput(root: string, args: string[], cancelSignal?: AbortSignal, stdin?: string): Promise<string> {
     const result = await run(['git', ...args], {
@@ -113,14 +113,14 @@ function parseEntry(line: string, kind: RevisionSource['kind']): GitEntry {
 async function readEntries(root: string, source: RevisionSource, cancelSignal?: AbortSignal): Promise<GitEntry[]> {
     const command =
         source.kind === 'index' ? ['git', 'ls-files', '--stage', '-z'] : ['git', 'ls-tree', '-r', '-z', source.hash];
-    const observed = await runBinary(command, {
+    const read = await runBinary(command, {
         cwd: root,
         timeoutMs: 30_000,
         ...(cancelSignal === undefined ? {} : { cancelSignal }),
     });
-    if (observed.code !== 0)
+    if (read.code !== 0)
         throw new SelectionError(['Cannot read the Git index. Resolve Git errors before checking staged content.']);
-    const bytes = Buffer.from(observed.stdout);
+    const bytes = Buffer.from(read.stdout);
     const text = bytes.toString('utf8');
     if (!Buffer.from(text).equals(bytes)) throw new SelectionError(['Revision paths must be valid UTF-8.']);
     if (text !== '' && !text.endsWith('\0')) throw new SelectionError(['The Git entry stream is incomplete.']);
@@ -169,32 +169,32 @@ export async function gitBlobs(
 }
 
 /**
- * Share an immutable Git entry observation between checks in the same run.
+ * Share an immutable Git entry read between checks in the same run.
  * @param root repository directory
  * @param source index or full commit object to inspect
  * @param cancelSignal command cancellation
- * @param observations optional run-owned observations, absent during snapshot preparation
+ * @param reads optional run-owned reads, absent during snapshot preparation
  * @returns validated index or tree entries
  */
 export function gitEntries(
     root: string,
     source: RevisionSource,
     cancelSignal?: AbortSignal,
-    observations?: SourceObservations,
+    reads?: SourceReads,
 ): Promise<GitEntry[]> {
-    if (observations === undefined) return readEntries(root, source, cancelSignal);
-    let entries = entryObservations.get(observations);
+    if (reads === undefined) return readEntries(root, source, cancelSignal);
+    let entries = entryReads.get(reads);
     if (entries === undefined) {
         entries = new Map();
-        entryObservations.set(observations, entries);
+        entryReads.set(reads, entries);
     }
     const key = JSON.stringify([root, source]);
-    let observed = entries.get(key);
-    if (observed === undefined) {
-        observed = readEntries(root, source, cancelSignal);
-        entries.set(key, observed);
+    let read = entries.get(key);
+    if (read === undefined) {
+        read = readEntries(root, source, cancelSignal);
+        entries.set(key, read);
     }
-    return observed;
+    return read;
 }
 
 /**

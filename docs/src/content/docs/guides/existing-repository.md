@@ -14,14 +14,14 @@ gspot init --dry-run
 ```
 
 Review the proposed configurations, configuration changes, and integrations. Run `gspot init` to
-accept the proposal. Keep unsupported configuration until you have converted its behavior.
+accept the plan. Keep unsupported configuration until you have converted its behavior.
 
 If the plan lists unread configuration, `gspot init` without `--dry-run` exits with status 2 before
 writing or installing anything. Fix the listed files and run `gspot init` again.
-Use `gspot init --dry-run` to inspect the proposal without changing files.
+Use `gspot init --dry-run` to inspect the plan without changing files.
 
 Executable formatter and ESLint configurations are evaluated through the installed owning tool.
-The proposal identifies captured settings and retained behavior. Missing ESLint, unregistered
+The plan identifies captured settings and retained behavior. Missing ESLint, unregistered
 executable behavior, and selectors that cannot be carried remain in the original configuration.
 A tool evaluation failure is unread configuration and refuses initialization.
 
@@ -181,12 +181,12 @@ Local executable hooks remain in the chain. Installation preserves their argumen
 and failure status without changing `core.hooksPath`. Tracked hooks require integration through
 their hook manager. Configure [hooks and CI](/guides/hooks-and-ci/) before replacing that setup.
 
-The proposal identifies potentially redundant lint scripts and tool dependencies for review.
+The plan identifies potentially redundant lint scripts and tool dependencies for review.
 Add tools without a configuration as [custom checks](/guides/custom-checks/).
 
 ## Run the checks
 
-After accepting the proposal, initialization writes configuration and installs selected tools
+After accepting the plan, initialization writes configuration and installs selected tools
 unless you pass `--no-install`. It runs no checks. Run `gspot check` to see findings.
 
 Reverse recorded changes with the [uninstall procedure](/guides/uninstall/).

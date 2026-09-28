@@ -1,10 +1,10 @@
+import type { Read } from '#cli/types/platform.ts';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { assertNoProblems } from '#cli/policy/read.ts';
 import { writeGenerated } from '#cli/lifecycle/apply.ts';
 import { writePin } from '#cli/lifecycle/version-pin.ts';
-import type { FileObservation } from '#cli/types/platform.ts';
+import type { Generated } from '#cli/types/generation.ts';
 import type { Session } from '#cli/types/execution/execution.ts';
-import type { GeneratedProposal } from '#cli/types/generation.ts';
 import { preparePythonProject } from '#cli/tools/python-project.ts';
 import { CONFLICT_MARKERS } from '#cli/config/lifecycle/lifecycle.ts';
 import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
@@ -23,8 +23,8 @@ async function installProsePackages(session: Session, report: ApplyReport): Prom
 }
 
 // A generated file a merge left with conflict markers is no edit anyone keeps: apply writes it again (K-274).
-function conflictedOutputs(owner: Owner, rendered: GeneratedProposal): Map<string, FileObservation> {
-    const conflicted = new Map<string, FileObservation>();
+function conflictedOutputs(owner: Owner, rendered: Generated): Map<string, Read> {
+    const conflicted = new Map<string, Read>();
     for (const file of rendered.files) {
         const current = owner.read(file.path);
         if (current !== undefined && CONFLICT_MARKERS.test(current.bytes.toString('utf8')))
@@ -34,12 +34,12 @@ function conflictedOutputs(owner: Owner, rendered: GeneratedProposal): Map<strin
 }
 
 /**
- * Apply generated proposals through the repository's lifecycle owner.
- * @param session the configuration and repository observations
+ * Apply generated plans through the repository's lifecycle owner.
+ * @param session the configuration and repository reads
  * @param replace reviewed originals authorized for replacement
  * @returns generated changes and preserved files
  */
-export async function applyAll(session: Session, replace?: ReadonlyMap<string, FileObservation>): Promise<ApplyReport> {
+export async function applyAll(session: Session, replace?: ReadonlyMap<string, Read>): Promise<ApplyReport> {
     // Generation requires a valid policy. Refuse errors before writing proposed files.
     assertNoProblems(session.policyFiles);
     return runOwnedLifecycle(session.root, async (owner) => {

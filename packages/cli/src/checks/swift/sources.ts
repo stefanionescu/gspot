@@ -24,13 +24,13 @@ export function visibilityOf(node: Node): string {
  * @returns the sources
  */
 export async function swiftSources(
-    input: Pick<EngineInput, 'root' | 'files' | 'observations' | 'resources'>,
+    input: Pick<EngineInput, 'root' | 'files' | 'reads' | 'resources'>,
 ): Promise<SwiftSource[]> {
     const sources: SwiftSource[] = [];
     try {
         for (const file of input.files) {
             if (file.nature !== 'source' || !file.path.endsWith('.swift')) continue;
-            const text = readSource(input.root, file.path, input.observations).toString('utf8');
+            const text = readSource(input.root, file.path, input.reads).toString('utf8');
             const tree = await parseSource('swift', text, input);
             if (tree === null) throw new Error('The Swift parser returned no tree.');
             sources.push({ path: file.path, text, lines: text.split('\n'), tree });

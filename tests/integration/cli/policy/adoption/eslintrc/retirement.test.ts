@@ -127,7 +127,7 @@ test('legacy ESLint cannot change a captured ignore file before init publishes c
         '.eslintignore',
         '.eslintrc.cjs',
     ]);
-    expect(kept.observed.get('.eslintignore')?.bytes.toString()).toBe('changed/**\n');
+    expect(kept.read.get('.eslintignore')?.bytes.toString()).toBe('changed/**\n');
     writeFileSync(
         join(directory.path, 'gspot.toml'),
         stringify({
@@ -140,7 +140,7 @@ test('legacy ESLint cannot change a captured ignore file before init publishes c
     const generated = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
         version: session.version,
         packageClient: session.packageClient,
-        replace: kept.observed,
+        replace: kept.read,
     }).files.find((file) => file.path === '.gspot/config/eslint.config.mjs')!;
     mkdirSync(join(directory.path, '.gspot/config'), { recursive: true });
     writeFileSync(join(directory.path, generated.path), generated.content);

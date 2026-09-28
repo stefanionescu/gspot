@@ -28,7 +28,7 @@ function schemeOf(files: Root, scope: string, project: string): string | undefin
  * @param scopePaths the scope paths, with an empty string for the root.
  * @returns the scope that holds the project, the project and the scheme, or undefined when no scope holds a project.
  */
-export function xcodeProposal(
+export function xcodePlan(
     root: string,
     scopePaths: string[],
 ): { scope: string; project: string; scheme?: string } | undefined {

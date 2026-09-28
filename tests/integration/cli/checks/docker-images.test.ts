@@ -27,7 +27,7 @@ const VALID_REPORT = JSON.stringify({
 async function expectServiceImages(input: EngineInput, run: Mock<typeof tools.runCheckCommand>): Promise<void> {
     for (const source of sources) {
         writeFileSync(join(input.root, 'compose.yaml'), source);
-        input.observations = { root: input.root, sources: new Map() };
+        input.reads = { root: input.root, sources: new Map() };
         run.mockClear();
         expect(await trivyImage(input)).toStrictEqual([
             {
@@ -71,13 +71,13 @@ async function expectScanReports(input: EngineInput, run: Mock<typeof tools.runC
 async function expectUnreadableCompose(input: EngineInput, run: Mock<typeof tools.runCheckCommand>): Promise<void> {
     for (const invalid of ['services: [', 'services: {app: {image: 12}}', 'services: {app: null}']) {
         writeFileSync(join(input.root, 'compose.yaml'), invalid);
-        input.observations = { root: input.root, sources: new Map() };
+        input.reads = { root: input.root, sources: new Map() };
         run.mockClear();
         expect(await rejection(trivyImage(input))).toContain('Cannot read Compose service images in compose.yaml.');
         expect(run).not.toHaveBeenCalled();
     }
     writeFileSync(join(input.root, 'compose.yaml'), 'services: {app: {build: .}}\n');
-    input.observations = { root: input.root, sources: new Map() };
+    input.reads = { root: input.root, sources: new Map() };
     expect(await trivyImage(input)).toStrictEqual([]);
     expect(run).not.toHaveBeenCalled();
 }

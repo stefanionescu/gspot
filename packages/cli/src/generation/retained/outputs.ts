@@ -1,6 +1,6 @@
 // Generated files withdrawn where the repository keeps its own editor or ESLint configuration.
 import { posix } from 'node:path';
-import type { Retention, GeneratedProposal } from '#cli/types/generation.ts';
+import type { Generated, Retention } from '#cli/types/generation.ts';
 import type { Policy, EditorconfigAdoption } from '#cli/types/policy/policy.ts';
 import { retainedConfigurationPaths } from '#cli/generation/retained/configuration.ts';
 
@@ -19,7 +19,7 @@ function adoptedEditorconfigs(policy: Policy): Set<string> {
 }
 
 // Withdraws the formatting files that sit beside a retained Prettier or EditorConfig file.
-function retainFormatting(retention: Retention, out: GeneratedProposal): void {
+function retainFormatting(retention: Retention, out: Generated): void {
     if (!out.files.some((file) => file.configuration === 'formatting')) return;
     const retained = retainedPaths(retention, ['prettier', 'ec']);
     if (retained.length === 0) return;
@@ -41,9 +41,9 @@ function retainFormatting(retention: Retention, out: GeneratedProposal): void {
 /**
  * Withdraw generated files shadowed by retained authored configuration and record their paths.
  * @param retention the repository, its policy, and the replace originals
- * @param out the proposal
+ * @param out the plan
  */
-export function withdrawRetained(retention: Retention, out: GeneratedProposal): void {
+export function withdrawRetained(retention: Retention, out: Generated): void {
     retainFormatting(retention, out);
     if (!out.files.some((file) => file.path === '.gspot/config/eslint.config.mjs')) return;
     const retained = retainedPaths(retention, ['eslint']);

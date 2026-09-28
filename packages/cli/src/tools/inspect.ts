@@ -15,14 +15,7 @@ import { NODE_MODULES_DIRECTORY } from '#cli/config/platform.ts';
 import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import { NO_VERSION, VERSION_TIMEOUT_MS } from '#cli/config/tools/tools.ts';
 import { miseVersion, packageVersion, locateCandidates } from '#cli/tools/locate.ts';
-
-import type {
-    Inspected,
-    ToolContext,
-    PackageFacts,
-    ToolInspection,
-    VersionObservation,
-} from '#cli/types/tools/tools.ts';
+import type { Inspected, ToolContext, VersionRead, PackageFacts, ToolInspection } from '#cli/types/tools/tools.ts';
 
 function parsedVersion(text: string, tool: ToolPin): string | undefined {
     if (tool.version_regex === undefined) return semver.coerce(text)?.version;
@@ -35,7 +28,7 @@ function versionFailure(
     tool: ToolPin,
     text: string,
     expectedExit: number,
-): VersionObservation | undefined {
+): VersionRead | undefined {
     if (result.isTimedOut === true) return { state: 'error', note: `${tool.name} version inspection timed out.` };
     if (result.missing || text.includes(NO_VERSION)) return { state: 'missing', note: text };
     if (result.code !== expectedExit)
@@ -45,7 +38,7 @@ function versionFailure(
 
 // An npm tool is the version its package says. For example, `license-checker-rseidelsohn@5.0.1` prints `4.4.2`.
 // A shim that no configuration gives a version starts nothing, whatever mise keeps installed for other repositories.
-function readVersion(root: string, cwd: string, path: string, tool: ToolPin): VersionObservation {
+function versionOf(root: string, cwd: string, path: string, tool: ToolPin): VersionRead {
     const npm = tool.installers['npm'];
     const installedPackage = packageVersion(root, path, npm?.name);
     const result = runBlocking([path, ...(tool.version_command ?? ['--version'])], {
@@ -53,7 +46,7 @@ function readVersion(root: string, cwd: string, path: string, tool: ToolPin): Ve
         timeoutMs: VERSION_TIMEOUT_MS,
         env: { NO_COLOR: '1', ...tool.env },
     });
-    return observeToolVersion(tool, result, installedPackage, miseVersion(path, tool));
+    return readVersion(tool, result, installedPackage, miseVersion(path, tool));
 }
 
 // The inspection of a library whose private package.json declares a version.
@@ -91,19 +84,19 @@ function missingInspection(tool: ToolPin, hint: string): ToolInspection {
 function hostInspection(inspected: Inspected): ToolInspection {
     const { root, cwd, tool, path, hint } = inspected;
     if (tool.version_command === undefined) return { name: tool.name, state: 'host', path, hint };
-    const observed = readVersion(root, cwd, path, tool);
-    if ('state' in observed) return { name: tool.name, path, hint, ...observed };
-    return { name: tool.name, state: 'host', path, hint, found: observed.version };
+    const read = versionOf(root, cwd, path, tool);
+    if ('state' in read) return { name: tool.name, path, hint, ...read };
+    return { name: tool.name, state: 'host', path, hint, found: read.version };
 }
 
 // The inspection of a pinned tool: its printed version against the pin and the floor.
 function pinnedInspection(inspected: Inspected, want: string): ToolInspection {
     const { root, cwd, tool, path, hint } = inspected;
-    const observed = readVersion(root, cwd, path, tool);
-    if ('state' in observed) return { name: tool.name, path, hint, want, ...observed };
+    const read = versionOf(root, cwd, path, tool);
+    if ('state' in read) return { name: tool.name, path, hint, want, ...read };
     const floor = tool.floor ?? want;
-    const state = toolVersionState(observed.version, want, floor);
-    return { name: tool.name, state, path, want, found: observed.version, hint, floor };
+    const state = toolVersionState(read.version, want, floor);
+    return { name: tool.name, state, path, want, found: read.version, hint, floor };
 }
 
 function inspectUncached(root: string, cwd: string, tool: ToolPin, runner?: string): ToolInspection {
@@ -139,12 +132,12 @@ function expectedExitCode(tool: ToolPin, installedPackage: string | undefined): 
  * @param installedMiseVersion the version mise installed, when the tool is a mise tool.
  * @returns the version, or the state and note of a tool that gave none.
  */
-export function observeToolVersion(
+export function readVersion(
     tool: ToolPin,
     result: SpawnResult,
     installedPackage?: string,
     installedMiseVersion?: string,
-): VersionObservation {
+): VersionRead {
     const npm = tool.installers['npm'];
     const text = stripVTControlCharacters(`${result.stdout}\n${result.stderr}`).trim();
     const failure = versionFailure(result, tool, text, expectedExitCode(tool, installedPackage));
@@ -191,8 +184,8 @@ export function locateTool(root: string, name: string): string | undefined {
 }
 
 /**
- * Inspections one tool, sharing identical observations within its command session.
- * @param context the repository root and session observations
+ * Inspections one tool, sharing identical reads within its command session.
+ * @param context the repository root and session reads
  * @param tool the pin
  * @returns where the tool is, its version, and its state
  */

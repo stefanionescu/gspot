@@ -6,8 +6,8 @@ import type { Finding, CheckResult } from '#cli/types/checks/checks.ts';
 import type { packageToolSchema } from '#cli/tools/packages/identity.ts';
 import type { ToolContext, ToolInspection } from '#cli/types/tools/tools.ts';
 import type { reportSchema, pushReportSchema } from '#cli/execution/report.ts';
+import type { Repository, SourceReads, TrackedFile } from '#cli/types/repository/repository.ts';
 import type { Defined, IgnoreEntry, PolicyFiles, ScopeSelection } from '#cli/types/policy/policy.ts';
-import type { Repository, TrackedFile, SourceObservations } from '#cli/types/repository/repository.ts';
 
 /** What one tool run accumulates across its spawns. */
 export type ToolRunState = { root: string; cwd: string; findings: Finding[]; isFailed: boolean };
@@ -39,7 +39,7 @@ export type FixResult = { check: string; changed: string[] } & (
     | { status: 'failed'; note: string }
 );
 export type FixReport = { results: FixResult[]; changed: string[]; diffs: string[] };
-/** File observations shared by cached checks within one execution pass. */
+/** File reads shared by cached checks within one execution pass. */
 export type RunHashes = {
     policy: string;
     files: Map<string, string>;
@@ -67,7 +67,7 @@ export type CoverageReport = {
     checked: number;
 };
 export type Session = ToolContext & {
-    observations: SourceObservations;
+    reads: SourceReads;
     /** Persistent result storage for a disposable revision snapshot. */
     cacheRoot?: string;
     resources?: DisposableStack;

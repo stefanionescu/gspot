@@ -54,7 +54,7 @@ test('shared JSON updates preserve comments and later authored settings through 
     let owner = openOwner(directory.path);
     try {
         expect(
-            owner.applyProposal(
+            owner.applyPlan(
                 owner.proposeConfiguration(
                     'tsconfig.json',
                     'json',
@@ -67,7 +67,7 @@ test('shared JSON updates preserve comments and later authored settings through 
         const edited = installed.replace('"strict": false', '"strict": true');
         writeFileSync(join(directory.path, 'tsconfig.json'), edited);
         expect(
-            owner.applyProposal(
+            owner.applyPlan(
                 owner.proposeConfiguration('tsconfig.json', 'json', [
                     { path: ['extends'], value: './.gspot/second.json' },
                 ]),
@@ -93,7 +93,7 @@ test('leaving JSON keys restores their original values and preserves authored ch
     await createFileTree(directory.path, { 'package.json': original });
     const owner = openOwner(directory.path);
     try {
-        owner.applyProposal(
+        owner.applyPlan(
             owner.proposeConfiguration(
                 'package.json',
                 'json',
@@ -108,7 +108,7 @@ test('leaving JSON keys restores their original values and preserves authored ch
         const edited = owner.read('package.json')!.bytes.toString('utf8').replace('"private":true', '"private":false');
         writeFileSync(join(directory.path, 'package.json'), edited);
         expect(
-            owner.applyProposal(
+            owner.applyPlan(
                 owner.proposeConfiguration('package.json', 'json', [
                     { path: ['scripts', 'check'], value: 'gspot check' },
                 ]),
@@ -133,7 +133,7 @@ test('Lefthook YAML ownership preserves authored commands and comments through u
     const owner = openOwner(directory.path);
     try {
         expect(
-            owner.applyProposal(
+            owner.applyPlan(
                 owner.proposeConfiguration(
                     'lefthook.yml',
                     'yaml',
@@ -148,7 +148,7 @@ test('Lefthook YAML ownership preserves authored commands and comments through u
             .replace('echo original', 'echo authored-later');
         writeFileSync(join(directory.path, 'lefthook.yml'), edited);
         expect(
-            owner.applyProposal(
+            owner.applyPlan(
                 owner.proposeConfiguration('lefthook.yml', 'yaml', [
                     { path: ['pre-commit', 'commands', 'gspot'], value: { run: 'gspot check --staged --no-cache' } },
                 ]),
@@ -171,7 +171,7 @@ test('adopting identical authored configuration retains original recovery bytes 
     chmodSync(join(directory.path, 'package.json'), 0o640);
     const owner = openOwner(directory.path);
     try {
-        owner.applyProposals([
+        owner.applyPlans([
             owner.proposeConfiguration(
                 'package.json',
                 'json',
@@ -200,13 +200,13 @@ test('identical unrecorded blocks and configuration fields survive adoption, lat
     await createFileTree(directory.path, { 'AGENTS.md': instructions, 'package.json': configuration });
     const owner = openOwner(directory.path);
     try {
-        owner.applyProposals([
+        owner.applyPlans([
             owner.proposeBlock('AGENTS.md', 'existing instructions', 'markdown'),
             owner.proposeConfiguration('package.json', 'json', [{ path: ['scripts', 'check'], value: 'gspot check' }]),
         ]);
         writeFileSync(join(directory.path, 'AGENTS.md'), instructions + 'Later authored instructions.\n');
         writeFileSync(join(directory.path, 'package.json'), configuration.replace('true', 'false'));
-        owner.applyProposals(['AGENTS.md', 'package.json'].map((path) => owner.proposeRestoration(path)));
+        owner.applyPlans(['AGENTS.md', 'package.json'].map((path) => owner.proposeRestoration(path)));
         expect(readFileSync(join(directory.path, 'AGENTS.md'), 'utf8')).toBe(
             instructions + 'Later authored instructions.\n',
         );
@@ -236,22 +236,22 @@ test.each([
             { path: ['kept', 'owned'], value: true },
         ];
         try {
-            owner.applyProposal(owner.proposeConfiguration(path, format, fields, true));
+            owner.applyPlan(owner.proposeConfiguration(path, format, fields, true));
             const installed = owner.read(path)!.bytes.toString('utf8');
             const edited = installed.replace('4', '99');
             writeFileSync(join(directory.path, path), edited);
-            expect(owner.applyProposal(owner.proposeConfiguration(path, format, []))).toBe('preserved');
+            expect(owner.applyPlan(owner.proposeConfiguration(path, format, []))).toBe('preserved');
             expect(owner.read(path)!.bytes.toString('utf8')).toBe(edited);
             writeFileSync(join(directory.path, path), installed);
-            owner.applyProposal(owner.proposeConfiguration(path, format, [fields[1]!]));
+            owner.applyPlan(owner.proposeConfiguration(path, format, [fields[1]!]));
             expect(parse(owner.read(path)!.bytes.toString('utf8'))).toStrictEqual({
                 authored: true,
                 kept: {},
                 created: { nested: { second: 2 } },
             });
-            owner.applyProposal(owner.proposeConfiguration(path, format, []));
+            owner.applyPlan(owner.proposeConfiguration(path, format, []));
             expect(parse(owner.read(path)!.bytes.toString('utf8'))).toStrictEqual({ authored: true, kept: {} });
-            owner.applyProposal(owner.proposeConfiguration(path, format, fields, true));
+            owner.applyPlan(owner.proposeConfiguration(path, format, fields, true));
             writeFileSync(
                 join(directory.path, path),
                 owner.read(path)!.bytes.toString('utf8').replace('true', 'false'),

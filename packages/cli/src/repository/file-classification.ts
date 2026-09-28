@@ -109,7 +109,7 @@ export function natureOf(
 }
 
 /**
- * Reads attribute rules once for a repository observation.
+ * Reads attribute rules once for a repository read.
  * @param root the repository root
  * @returns the parsed rules, or none when the optional file is absent
  */

@@ -61,7 +61,7 @@ function restoreInlineFindings(result: CheckResult, checked: CheckResult, candid
 
 /**
  * Keep native configuration and suppression handling while inspecting inline documentation with the Swift grammar.
- * @param session the selected source inventory and tool observations
+ * @param session the selected source inventory and tool reads
  * @param planned the native check, scope, and selected files
  * @returns native findings with inline documentation positions restored
  */

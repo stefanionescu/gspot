@@ -2,8 +2,8 @@
 // the backups it takes before a file changes hands.
 import { createHash, randomUUID } from 'node:crypto';
 import { ownershipSchema } from '#cli/lifecycle/log.ts';
+import type { Read, Root } from '#cli/types/platform.ts';
 import { OUTPUT_JSON_INDENT } from '#cli/config/output.ts';
-import type { Root, FileObservation } from '#cli/types/platform.ts';
 import { fileMode, mutationTarget } from '#cli/platform/safe-paths.ts';
 import { PRIVATE_FILE, PRIVATE_DIRECTORY } from '#cli/config/platform.ts';
 
@@ -52,7 +52,7 @@ function recoverPending(
 }
 
 // The recorded ownership state, or an empty one when nothing was recorded yet.
-function readState(recorded: FileObservation | undefined): OwnershipState {
+function readState(recorded: Read | undefined): OwnershipState {
     if (recorded === undefined) return { version: 1, files: [] };
     return ownershipSchema.parse(JSON.parse(recorded.bytes.toString('utf8')));
 }
@@ -106,7 +106,7 @@ function backupWriter(files: Root, recovery: string): Log['backup'] {
  * @returns its hash, mode, and whether it is a link
  */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The identity a snapshot is recorded and compared by. 3 files make 9 calls; one owner keeps that behavior in one place.
-export function identity(file: FileObservation): Identity {
+export function identity(file: Read): Identity {
     return {
         hash: createHash('sha256').update(file.bytes).digest('hex'),
         mode: fileMode(file),
@@ -120,7 +120,7 @@ export function identity(file: FileObservation): Identity {
  * @param expected the recorded identity, or undefined when none was recorded
  * @returns whether they agree
  */
-export function matches(file: FileObservation | undefined, expected: Identity | undefined): boolean {
+export function matches(file: Read | undefined, expected: Identity | undefined): boolean {
     if (file === undefined) return expected === undefined;
     if (expected === undefined) return false;
     const found = identity(file);

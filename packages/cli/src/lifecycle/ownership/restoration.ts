@@ -1,16 +1,16 @@
 // Restoring a file the owner changed: merged fields go back, a managed block is removed, or the original returns.
 import { isDeepStrictEqual } from 'node:util';
+import type { Read } from '#cli/types/platform.ts';
 import { blockSpan } from '#cli/lifecycle/managed-blocks.ts';
-import type { FileObservation } from '#cli/types/platform.ts';
+import { currentRead } from '#cli/lifecycle/ownership/plans.ts';
 import { matches, identity } from '#cli/lifecycle/ownership/log.ts';
-import { currentObservation } from '#cli/lifecycle/ownership/proposals.ts';
 import { configurationDocument } from '#cli/lifecycle/configuration/document.ts';
 import { pruneConfigurationParents } from '#cli/lifecycle/configuration/plan.ts';
 
 import type {
     Log,
+    Planned,
     Restoration,
-    FileProposal,
     OwnershipEntry,
     ConfigurationOwnership,
 } from '#cli/types/lifecycle/lifecycle.ts';
@@ -18,8 +18,8 @@ import type {
 // The configuration record whose fields go back, when the file was edited or merged into an authored file.
 function fieldRestoration(
     existing: OwnershipEntry,
-    current: FileObservation | undefined,
-): { current: FileObservation; configuration: ConfigurationOwnership } | undefined {
+    current: Read | undefined,
+): { current: Read; configuration: ConfigurationOwnership } | undefined {
     const { configuration } = existing;
     if (current === undefined || configuration === undefined) return undefined;
     const applies =
@@ -30,10 +30,7 @@ function fieldRestoration(
 }
 
 // Puts the original values back into the merged fields, when the installed values are still in place.
-function restoreConfiguration(
-    current: FileObservation,
-    configuration: ConfigurationOwnership,
-): FileObservation | undefined {
+function restoreConfiguration(current: Read, configuration: ConfigurationOwnership): Read | undefined {
     const text = current.bytes.toString('utf8');
     if (!Buffer.from(text).equals(current.bytes)) return undefined;
     const document = configurationDocument(text, configuration.format);
@@ -47,7 +44,7 @@ function restoreConfiguration(
 
 // Puts back the text a managed block replaced, or undefined when the block was edited away.
 function restoreBlock(
-    current: FileObservation,
+    current: Read,
     block: NonNullable<OwnershipEntry['block']>,
     hasOriginal: boolean,
 ): Restoration | undefined {
@@ -62,11 +59,7 @@ function restoreBlock(
 }
 
 // The original bytes the log backed up when the file was first owned.
-function originalObservation(
-    log: Log,
-    path: string,
-    original: NonNullable<OwnershipEntry['original']>,
-): FileObservation {
+function originalRead(log: Log, path: string, original: NonNullable<OwnershipEntry['original']>): Read {
     const saved = log.files.read(original.backup);
     if (saved === undefined || identity(saved).hash !== original.hash)
         throw new Error(`Original recovery bytes are missing or changed for ${path}: ${original.backup}`);
@@ -78,11 +71,11 @@ function originalRestoration(
     log: Log,
     path: string,
     existing: OwnershipEntry,
-    current: FileObservation | undefined,
-    original: FileObservation | undefined,
+    current: Read | undefined,
+    original: Read | undefined,
 ): Restoration | undefined {
     if (current !== undefined && !matches(current, existing.installed)) return undefined;
-    const saved = existing.original === undefined ? undefined : originalObservation(log, path, existing.original);
+    const saved = existing.original === undefined ? undefined : originalRead(log, path, existing.original);
     const next = original ?? saved;
     return next === undefined ? {} : { next };
 }
@@ -92,8 +85,8 @@ function restorationFor(
     log: Log,
     path: string,
     existing: OwnershipEntry,
-    current: FileObservation | undefined,
-    original: FileObservation | undefined,
+    current: Read | undefined,
+    original: Read | undefined,
 ): Restoration | undefined {
     const fields = fieldRestoration(existing, current);
     if (fields !== undefined) {
@@ -110,11 +103,11 @@ function restorationFor(
  * @param log the open log
  * @param path the file
  * @param original bytes to restore instead of the recorded original
- * @returns the proposal
+ * @returns the plan
  */
-export function proposeRestoration(log: Log, path: string, original?: FileObservation): FileProposal {
+export function proposeRestoration(log: Log, path: string, original?: Read): Planned {
     const existing = log.entryFor(path);
-    const current = currentObservation(log, path, existing);
+    const current = currentRead(log, path, existing);
     const base = { path, current, previous: existing };
     if (existing === undefined) return { ...base, status: 'preserved' };
     const restoration = restorationFor(log, path, existing, current, original);

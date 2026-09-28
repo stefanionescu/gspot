@@ -2,7 +2,7 @@ import { stringify } from 'smol-toml';
 import { patch } from '@decimalturn/toml-patch';
 import { policySchema } from '#cli/policy/schema.ts';
 import { asRaw } from '#cli/policy/adoption/source.ts';
-import type { InitProposal } from '#cli/types/commands/init.ts';
+import type { InitPlan } from '#cli/types/commands/init.ts';
 import type { AdoptionResult } from '#cli/types/policy/adoption.ts';
 import type { TomlTable } from '#cli/types/repository/repository.ts';
 import { SCHEMA_LINE, PROFILE_HEAD } from '#cli/config/commands/init.ts';
@@ -17,7 +17,7 @@ const PREFACE = [
     '',
 ].join('\n');
 
-function xcodeTable(xcode: InitProposal['xcode']): TomlTable | undefined {
+function xcodeTable(xcode: InitPlan['xcode']): TomlTable | undefined {
     if (xcode === undefined) return undefined;
     return xcode.scheme === undefined ? { project: xcode.project } : { project: xcode.project, scheme: xcode.scheme };
 }
@@ -25,7 +25,7 @@ function xcodeTable(xcode: InitProposal['xcode']): TomlTable | undefined {
 function toolTables(
     kept: AdoptionResult,
     commitScopes: string[] | undefined,
-    xcode?: InitProposal['xcode'],
+    xcode?: InitPlan['xcode'],
 ): Record<string, TomlTable | undefined> {
     const tables: Record<string, TomlTable | undefined> = Object.fromEntries(
         [...kept.tools]
@@ -40,23 +40,23 @@ function toolTables(
     return Object.fromEntries(Object.entries(tables).filter(([, table]) => table !== undefined));
 }
 
-function headTables(proposal: InitProposal): TomlTable {
+function headTables(plan: InitPlan): TomlTable {
     const document: TomlTable = {
         version: 1,
         level: policySchema.shape.level.parse(undefined),
-        kits: proposal.kits,
+        kits: plan.kits,
     };
     const scopes = new Map<string, { path: string; kits: string[]; tools: TomlTable }>(
-        proposal.scopes.map((scope) => [
+        plan.scopes.map((scope) => [
             scope.path,
             {
                 path: scope.path,
                 kits: scope.kits,
-                tools: proposal.xcode?.scope === scope.path ? { xcode: xcodeTable(proposal.xcode) } : {},
+                tools: plan.xcode?.scope === scope.path ? { xcode: xcodeTable(plan.xcode) } : {},
             },
         ]),
     );
-    for (const [path, adopted] of proposal.kept.scopes) {
+    for (const [path, adopted] of plan.kept.scopes) {
         const scope = scopes.get(path) ?? { path, kits: [], tools: {} };
         scope.kits = [...new Set([...scope.kits, ...adopted.kits])];
         scope.tools = { ...scope.tools, ...adopted.tools };
@@ -67,8 +67,8 @@ function headTables(proposal: InitProposal): TomlTable {
             ...scope,
             ...(Object.keys(tools).length === 0 ? {} : { tools }),
         }));
-    if (proposal.formatter !== undefined && Object.keys(proposal.formatter.format).length > 0)
-        document['format'] = proposal.formatter.format;
+    if (plan.formatter !== undefined && Object.keys(plan.formatter.format).length > 0)
+        document['format'] = plan.formatter.format;
     return document;
 }
 
@@ -80,14 +80,14 @@ function mergeToolSettings(base: unknown, overrides: unknown): TomlTable {
     return tools;
 }
 
-function applyFormatter(tools: Record<string, TomlTable | undefined>, formatter: InitProposal['formatter']): void {
+function applyFormatter(tools: Record<string, TomlTable | undefined>, formatter: InitPlan['formatter']): void {
     if (formatter === undefined) return;
     if (formatter.extra !== undefined) tools['prettier'] = { ...tools['prettier'], extra: formatter.extra };
     if (formatter.nativeDefaults === true) tools['prettier'] = { ...tools['prettier'], native_defaults: true };
     if (formatter.editorconfig !== undefined) tools['editorconfig'] = { adopted: formatter.editorconfig };
 }
 
-function applyDetectedTools(tools: Record<string, TomlTable | undefined>, detected: InitProposal['detected']): void {
+function applyDetectedTools(tools: Record<string, TomlTable | undefined>, detected: InitPlan['detected']): void {
     for (const { key, value } of detected ?? []) {
         const [table, first, second, ...more] = key.split('.');
         if (table === 'tools' && first !== undefined && second !== undefined && more.length === 0)
@@ -95,7 +95,7 @@ function applyDetectedTools(tools: Record<string, TomlTable | undefined>, detect
     }
 }
 
-function applyDetectedArchitecture(document: TomlTable, detected: InitProposal['detected']): void {
+function applyDetectedArchitecture(document: TomlTable, detected: InitPlan['detected']): void {
     for (const { key, value } of detected ?? []) {
         const [table, first, second] = key.split('.');
         if (table === 'architecture' && first !== undefined && second === undefined)
@@ -119,20 +119,20 @@ function mergeProfile(document: TomlTable, tables: TomlTable | undefined): void 
 }
 
 // Initialization selects enabled integrations; profile task names retain precedence.
-function applyIntegrations(document: TomlTable, proposal: InitProposal): void {
-    if (proposal.hooks === 'none') delete document['hooks'];
-    else document['hooks'] = { ...asRaw(document['hooks']), tool: proposal.hooks };
-    if (proposal.ci === 'none') delete document['ci'];
-    else document['ci'] = { ...asRaw(document['ci']), provider: proposal.ci };
-    document['guides'] = { directory: '.gspot/guides', ...asRaw(document['guides']), install: proposal.rules };
+function applyIntegrations(document: TomlTable, plan: InitPlan): void {
+    if (plan.hooks === 'none') delete document['hooks'];
+    else document['hooks'] = { ...asRaw(document['hooks']), tool: plan.hooks };
+    if (plan.ci === 'none') delete document['ci'];
+    else document['ci'] = { ...asRaw(document['ci']), provider: plan.ci };
+    document['guides'] = { directory: '.gspot/guides', ...asRaw(document['guides']), install: plan.rules };
     document['coverage'] = { strict: false, ...asRaw(document['coverage']) };
-    if (proposal.runner === 'none') delete document['runner'];
+    if (plan.runner === 'none') delete document['runner'];
     else {
         const runner = asRaw(document['runner']) ?? {};
-        const tasks = { ...proposal.runnerTasks, ...asRaw(runner['tasks']) };
+        const tasks = { ...plan.runnerTasks, ...asRaw(runner['tasks']) };
         document['runner'] = {
             ...runner,
-            tool: proposal.runner,
+            tool: plan.runner,
             ...(Object.keys(tasks).length === 0 ? {} : { tasks }),
         };
     }
@@ -156,19 +156,19 @@ function bodyText(document: TomlTable): string {
 }
 
 /**
- * The gspot.toml text for a proposal.
- * @param proposal the proposal
+ * The gspot.toml text for a plan.
+ * @param plan the plan
  * @returns the TOML text with the schema line and the preface
  */
-export function proposeText(proposal: InitProposal): string {
-    const document = headTables(proposal);
-    const tools = toolTables(proposal.kept, proposal.commitScopes, proposal.xcode);
-    applyFormatter(tools, proposal.formatter);
-    applyDetectedTools(tools, proposal.detected);
-    applyDetectedArchitecture(document, proposal.detected);
+export function proposeText(plan: InitPlan): string {
+    const document = headTables(plan);
+    const tools = toolTables(plan.kept, plan.commitScopes, plan.xcode);
+    applyFormatter(tools, plan.formatter);
+    applyDetectedTools(tools, plan.detected);
+    applyDetectedArchitecture(document, plan.detected);
     if (Object.keys(tools).length > 0) document['tools'] = tools;
-    mergeProfile(document, proposal.profileTables);
-    const ignores = [...proposal.kept.tools.values()]
+    mergeProfile(document, plan.profileTables);
+    const ignores = [...plan.kept.tools.values()]
         .flatMap((tool) => tool.ignores)
         .map((entry) => ({
             check: entry.check,
@@ -178,6 +178,6 @@ export function proposeText(proposal: InitProposal): string {
         }));
     if (ignores.length > 0)
         document['ignore'] = [...((document['ignore'] as TomlTable[] | undefined) ?? []), ...ignores];
-    applyIntegrations(document, proposal);
+    applyIntegrations(document, plan);
     return `${PREFACE}${bodyText(document)}`;
 }

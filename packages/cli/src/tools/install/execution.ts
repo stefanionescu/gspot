@@ -30,9 +30,9 @@ const installations: InstallationStep[] = [
         failure: 'Native tool installation failed.',
         run: async (session) => {
             if (session.policyFiles.policy.runner?.tool !== 'mise') return '';
-            const observed = await runToolCommand(undefined, ['mise', '--version'], { cwd: session.root });
-            const version = semver.coerce(observed.stdout);
-            if (observed.code !== 0 || version === null || semver.lt(version, MISE_MIN_VERSION))
+            const read = await runToolCommand(undefined, ['mise', '--version'], { cwd: session.root });
+            const version = semver.coerce(read.stdout);
+            if (read.code !== 0 || version === null || semver.lt(version, MISE_MIN_VERSION))
                 throw new MissingToolError(`Install mise ${MISE_MIN_VERSION} or newer to load ${MISE_CONFIG_PATH}.`);
             return runInstall(session.root, [
                 ['mise', 'trust', MISE_CONFIG_PATH],

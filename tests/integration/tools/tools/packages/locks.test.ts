@@ -44,15 +44,15 @@ test.each(PACKAGE_PROJECTS)(
         expect(await rejection(installPackageProject(root, tools))).toContain('Run: gspot apply, then gspot install');
         expect(readFileSync(lockPath, 'utf8')).toBe(stale);
         expect(readFileSync(ownershipPath)).toStrictEqual(ownership);
-        const observed = await openSession(root);
+        const read = await openSession(root);
         expect(
             computeDrift(
-                observed.root,
-                observed.policyFiles.policy,
-                observed.packageClient !== undefined,
-                emitAll(observed.policyFiles.policy, observed.repository, observed.scopes, {
-                    version: observed.version,
-                    packageClient: observed.packageClient,
+                read.root,
+                read.policyFiles.policy,
+                read.packageClient !== undefined,
+                emitAll(read.policyFiles.policy, read.repository, read.scopes, {
+                    version: read.version,
+                    packageClient: read.packageClient,
                 }),
             ),
         ).toContainEqual({

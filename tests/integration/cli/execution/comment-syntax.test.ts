@@ -31,7 +31,7 @@ test.each(['js', 'ts', 'mts', 'cts', 'tsx'])(
         const comments = await suppressionComments(
             session.root,
             session.scopes,
-            session.observations,
+            session.reads,
             session.repository.files,
         );
         expect(comments.map(({ line, form, reason }) => ({ line, form, reason }))).toStrictEqual([
@@ -41,7 +41,7 @@ test.each(['js', 'ts', 'mts', 'cts', 'tsx'])(
             { line: 10, form: 'eslint', reason: undefined },
             { line: 12, form: 'gspot-ignore', reason: 'Required external interface.' },
         ]);
-        expect(await inlineIgnores(session.observations, path)).toStrictEqual([
+        expect(await inlineIgnores(session.reads, path)).toStrictEqual([
             { line: 13, check: 'structure/custom', reason: 'Required external interface.' },
         ]);
     },
@@ -61,12 +61,7 @@ test('JSX text and quoted attributes do not become directives, but an empty expr
         ].join('\n'),
     });
     const session = await openSession(sandbox.path);
-    const comments = await suppressionComments(
-        session.root,
-        session.scopes,
-        session.observations,
-        session.repository.files,
-    );
+    const comments = await suppressionComments(session.root, session.scopes, session.reads, session.repository.files);
     expect(comments.map(({ line, form }) => ({ line, form }))).toStrictEqual([
         { line: 3, form: 'eslint' },
         { line: 5, form: 'eslint' },

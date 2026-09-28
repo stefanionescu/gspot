@@ -31,7 +31,7 @@ owns publication contracts, collisions, recorded ownership, recovery, and remova
 configuration planning belongs to its document owner.
 
 The owner retains
-writer locks, original-byte observations, stale-input checks, permissions, log transitions,
+writer locks, original-byte reads, stale-input checks, permissions, log transitions,
 and recovery ordering. Package and Python lock resolution receive the proposed files they modify.
 A generated header or directory name does not authorize deletion.
 
@@ -87,7 +87,7 @@ The executable entry delegates to Commander composition. Command adapters parse 
 present command results. Execution planning, scheduling, cancellation, and diagnostic parsing
 remain separate from check implementations.
 
-Policy owns validation and mutation proposals. The `configurations` owner provides shipped check
+Policy owns validation and mutation plans. The `configurations` owner provides shipped check
 definitions and selection. Output owns terminal and report formats.
 Naming and structure analyses retain their language-specific semantics beside their consumers.
 
@@ -103,7 +103,7 @@ to `packages/cli/src/kits/`. Homepage components live under `docs/src/components
 overrides live under `docs/src/components/starlight/`. Artwork is grouped by home, identity, README, badges,
 and diagrams under `docs/public/brand/`.
 
-Generation proposes configuration content. Lifecycle applies those proposals through recorded
+Generation proposes configuration content. Lifecycle applies those plans through recorded
 ownership, preserves local edits, and restores recovery copies. Apply registration, previews, and command orchestration belong to commands. Shared publication stays in lifecycle.
 
 Tool acquisition owns installation, version probes, installer hints,
@@ -119,7 +119,7 @@ assembly and validation are distinct from executable checks. Their internal owne
 change the public rules configuration or the embedded rules asset paths. Repository discovery
 owns file classification. The suppression check owns its directive constant.
 
-Platform provides process execution, environment access, paths, and embedded assets. The launcher target manifest remains the single source for release platforms. Tool inspections own shared tool observations; doctor consumes those observations in its report.
+Platform provides process execution, environment access, paths, and embedded assets. The launcher target manifest remains the single source for release platforms. Tool inspections own shared tool reads; doctor consumes those reads in its report.
 
 The CLI build command is `bun packages/cli/scripts/command.ts`. Authored build modules live in
 `packages/cli/scripts/`: command parsing and orchestration, compilation, embedded assets, shared
@@ -153,13 +153,13 @@ fields through the configuration document owner.
 Tool command execution serves checking, installation, and detection without importing the check runner.
 
 Check input contracts belong to the check feature, independently of the runtime dispatcher.
-Parsers accept source observations and disposable resources without importing check inputs.
+Parsers accept source reads and disposable resources without importing check inputs.
 Repository discovery receives log-owned runtime paths from command composition. The source
-reader owns the byte observations used by parsers, suppression readers, and result caching.
+reader owns the byte reads used by parsers, suppression readers, and result caching.
 
 Foreign configuration readers belong to adoption. Lifecycle retires explicitly selected files
-against their observed bytes and permissions. Initialization owns its policy proposal and Xcode
-scheme discovery. Writing commands prepare a policy mutation once, then publish that proposal
+against their read bytes and permissions. Initialization owns its policy plan and Xcode
+scheme discovery. Writing commands prepare a policy mutation once, then publish that plan
 under the lifecycle lock before applying generated configuration.
 
 Doctor-specific diagnosis and reporting belong to `commands/doctor/`. Initialization planning,
@@ -168,7 +168,7 @@ and its text rendering belongs to output. Direct imports include type and dynami
 
 Generation orchestration belongs to `packages/cli/src/generation/outputs.ts`. JavaScript preparation, headers,
 and ESLint preparation stay with their respective generators. Hook operations receive policy,
-repository facts, and tool observations rather than the execution session. Lifecycle hooks,
+repository facts, and tool reads rather than the execution session. Lifecycle hooks,
 package-manager operations, revision materialization, and diagnostic parsing each form a local
 group. Pin selection remains separate from installation; prerequisite skips belong to results.
 

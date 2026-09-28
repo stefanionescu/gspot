@@ -47,8 +47,8 @@ export type SiteReportCase = {
     rule: string;
 };
 
-/** Commands and disposable copies observed at the Next.js process boundary. */
-export type NextjsObserved = {
+/** Commands and disposable copies read at the Next.js process boundary. */
+export type NextjsRead = {
     directories: string[];
     inspections: string[][];
     routesSeen: string[];

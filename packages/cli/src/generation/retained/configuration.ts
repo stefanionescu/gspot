@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { isDeepStrictEqual } from 'node:util';
+import type { Read } from '#cli/types/platform.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
-import type { FileObservation } from '#cli/types/platform.ts';
 import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import { declaredKits } from '#cli/repository/existing-tooling.ts';
 
@@ -17,7 +17,7 @@ export function retainedConfigurationPaths(
     root: string,
     sourcePaths: string[],
     tools: string[],
-    replace?: ReadonlyMap<string, FileObservation>,
+    replace?: ReadonlyMap<string, Read>,
 ): string[] {
     const ownership = new Map(readOwnership(root).files.map((entry) => [entry.path, entry]));
     const declarations = declaredKits(root, sourcePaths, tools);

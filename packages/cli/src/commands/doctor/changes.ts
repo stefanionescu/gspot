@@ -104,15 +104,15 @@ export function changeReport(session: Session): ChangeReport {
     const generated = new Set(rendered.files.filter((file) => file.kind === 'workflow').map((file) => file.path));
     return {
         detectedNotSelected: detectKits(session.repository.files, session.manifests, facts)
-            .filter((proposal) => !selected.has(proposal.configuration))
-            .filter((proposal) => {
-                const manifest = session.manifests.get(proposal.configuration);
+            .filter((plan) => !selected.has(plan.configuration))
+            .filter((plan) => {
+                const manifest = session.manifests.get(plan.configuration);
                 return manifest?.kit.default !== true && manifest?.kit.kind !== 'general';
             })
-            .map((proposal) => ({
-                configuration: proposal.configuration,
-                evidence: proposal.evidence,
-                command: `gspot add ${proposal.configuration}`,
+            .map((plan) => ({
+                configuration: plan.configuration,
+                evidence: plan.evidence,
+                command: `gspot add ${plan.configuration}`,
             })),
         recommendedNotSelected: recommendedNotSelected(session, selected),
         configurationNotOwned: [

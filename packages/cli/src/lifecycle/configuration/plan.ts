@@ -158,7 +158,7 @@ export function pruneConfigurationParents(
 
 /**
  * Plans the merge of owned keys into a shared configuration file the developer keeps.
- * @param request the destination, requested fields, and observed ownership
+ * @param request the destination, requested fields, and read ownership
  * @returns the next snapshot with its ownership, or undefined when the recorded format differs
  */
 export function planConfiguration(request: ConfigurationWriteRequest): KitPlan | undefined {

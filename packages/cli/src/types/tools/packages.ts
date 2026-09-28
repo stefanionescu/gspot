@@ -1,7 +1,7 @@
 // The types of tools/packages in this package.
 import type { z } from 'zod';
+import type { Read } from '#cli/types/platform.ts';
 import type { LOCKS } from '#cli/config/tools/packages.ts';
-import type { FileObservation } from '#cli/types/platform.ts';
 import type { packageToolSchema } from '#cli/tools/packages/identity.ts';
 
 export type ToolProject = {
@@ -10,7 +10,7 @@ export type ToolProject = {
     lock: (typeof LOCKS)[LockName];
     lockPath: string;
 };
-export type Inputs = { project: FileObservation; recorded: FileObservation; yarn: FileObservation | undefined };
+export type Inputs = { project: Read; recorded: Read; yarn: Read | undefined };
 export type PackageTool = z.infer<typeof packageToolSchema>;
 export type PackageExecution = {
     root: string;

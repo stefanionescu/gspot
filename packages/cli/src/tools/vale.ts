@@ -131,21 +131,21 @@ export async function installPackages(root: string): Promise<string | undefined>
                         return { path, content };
                     })
                     .filter((entry) => isValePackageFile(entry.path));
-                const proposals = outputs.map((output) => {
+                const plans = outputs.map((output) => {
                     const current = owner.read(output.path);
                     const mode = current?.bytes.equals(output.content.bytes) === true ? current.mode : READ_ONLY_FILE;
                     return owner.proposeReplacement(output.path, { bytes: output.content.bytes, mode }, 'config');
                 });
                 const retained = new Set(outputs.map((output) => output.path));
-                proposals.push(
+                plans.push(
                     ...owner
                         .installedPaths()
                         .filter((path) => isValePackageFile(path) && !retained.has(path))
                         .map((path) => owner.proposeRestoration(path)),
                 );
-                const conflict = proposals.find((proposal) => proposal.status === 'preserved');
+                const conflict = plans.find((plan) => plan.status === 'preserved');
                 if (conflict !== undefined) return `preserved edited or unowned ${conflict.path}`;
-                owner.applyProposals(proposals);
+                owner.applyPlans(plans);
                 return undefined;
             } finally {
                 staged.close();

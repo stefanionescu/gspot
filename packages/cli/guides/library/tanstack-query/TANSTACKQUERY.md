@@ -340,7 +340,7 @@ Place required cache updates in the shared mutation options or another operation
 every completion. Per-call `mutate` callbacks can be skipped after unmount, and consecutive calls
 replace the observer for those callbacks. Reserve them for optional view-specific behavior. Use
 `mutateAsync` when the caller needs an awaitable success or failure, and handle its rejection.
-`mutation.reset()` resets observed mutation state; it does not undo a committed write.
+`mutation.reset()` resets read mutation state; it does not undo a committed write.
 
 Expect mutations to finish out of submission order. Use a resource-specific `scope.id` when
 supported and when those writes need a client-side queue. Keep independent resources concurrent. The

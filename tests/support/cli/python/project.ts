@@ -42,8 +42,8 @@ export async function preparePythonInstallation(
             tools: manifest.tools.filter((tool) => tool.name === 'ruff'),
         })),
     }));
-    const proposals = toolEnvironment(everyManifest(scopes));
-    if (runner === 'mise') proposals.push(miseTasks(everyManifest(scopes), session.version, false));
+    const plans = toolEnvironment(everyManifest(scopes));
+    if (runner === 'mise') plans.push(miseTasks(everyManifest(scopes), session.version, false));
     const previous = ['UV_DEFAULT_INDEX', ...REDIRECTED].map((name) => [name, environmentVariables()[name]] as const);
     const resources = new AsyncDisposableStack();
     resources.defer(() => {
@@ -59,8 +59,8 @@ export async function preparePythonInstallation(
         const rootProject = readFileSync(join(root, 'pyproject.toml'));
         const rootConfiguration = readFileSync(join(root, configuration));
         await runOwnedLifecycle(root, async (owner) => {
-            await preparePythonProject(root, proposals, owner);
-            for (const file of proposals)
+            await preparePythonProject(root, plans, owner);
+            for (const file of plans)
                 owner.replace(
                     file.path,
                     { bytes: Buffer.from(file.content), mode: 0o444 },
@@ -70,7 +70,7 @@ export async function preparePythonInstallation(
         return {
             root,
             scopes,
-            proposals,
+            plans,
             rootProject,
             rootConfiguration,
             async [Symbol.asyncDispose]() {

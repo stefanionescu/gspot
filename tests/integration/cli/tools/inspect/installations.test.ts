@@ -24,9 +24,9 @@ if (process.platform !== 'win32')
             chmodSync(join(sandbox.path, path), RUNS);
         const env = { PATH: join(sandbox.path, 'unrelated') };
         const tool = { ...commandPin('teller', '3.8.1'), env };
-        const observed = inspectTool({ root: sandbox.path, inspections: new Map() }, tool);
-        expect(observed).toMatchObject({ state: 'ok', found: '3.8.1' });
-        const executed = await runToolCommand(undefined, [observed.path!], { cwd: sandbox.path, env });
+        const read = inspectTool({ root: sandbox.path, inspections: new Map() }, tool);
+        expect(read).toMatchObject({ state: 'ok', found: '3.8.1' });
+        const executed = await runToolCommand(undefined, [read.path!], { cwd: sandbox.path, env });
         expect(executed.code).toBe(0);
         expect(executed.stdout.trim()).toBe('3.8.1');
         expect(await Bun.file(join(sandbox.path, 'node_modules/.bin/teller')).text()).toBe(launcher);

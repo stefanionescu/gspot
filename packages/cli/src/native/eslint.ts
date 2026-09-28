@@ -28,17 +28,15 @@ async function configurationPath(request: EslintRequest, eslint: Eslint.ESLint):
     return found;
 }
 
-// The observed configuration's bytes, after every observed file is confirmed present.
+// The read configuration's bytes, after every read file is confirmed present.
 function readConfiguration(request: EslintRequest, configPath: string): string {
     const files = openRoot(request.root);
     try {
         for (const path of request.configs ?? []) {
-            if (files.read(path) === undefined)
-                throw new Error(`The observed ESLint configuration is missing: ${path}`);
+            if (files.read(path) === undefined) throw new Error(`The read ESLint configuration is missing: ${path}`);
         }
         const configuration = files.read(relative(request.root, configPath).replaceAll('\\', '/'));
-        if (configuration === undefined)
-            throw new Error('The observed ESLint configuration is missing. Retry adoption.');
+        if (configuration === undefined) throw new Error('The read ESLint configuration is missing. Retry adoption.');
         return configuration.bytes.toString('utf8');
     } finally {
         files.close();

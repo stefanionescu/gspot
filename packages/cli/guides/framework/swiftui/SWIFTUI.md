@@ -35,10 +35,10 @@ A project that wants a named pattern writes it down itself. The distribution doe
 
 - Keep view-local state in the view when its lifetime matches the view's identity.
   Use `@State`, `@FocusState`, `@GestureState`, and bindings according to their
-  ownership and observation contracts.
+  ownership and read contracts.
 - Keep view-owned state properties private. Inject values owned by a parent
   through the appropriate input or binding.
-- Preserve observation and actor isolation when state changes.
+- Preserve read and actor isolation when state changes.
 - Do not store derived state in `@State` when it can be computed from source state.
 - Avoid heavy computation in `body`; SwiftUI can evaluate it repeatedly.
 - Preserve cancellation and stale-result handling for lifecycle work started with

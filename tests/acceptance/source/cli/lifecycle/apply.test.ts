@@ -37,7 +37,7 @@ test('apply and uninstall preserve later edits and unowned content while restori
     expect(readFileSync(join(directory.path, '.gitignore'), 'utf8')).toContain('.gspot/state/');
 });
 
-test('a generated proposal cannot overwrite lifecycle recovery data', async () => {
+test('a generated plan cannot overwrite lifecycle recovery data', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
         'gspot.toml': 'version = 1\nkits = ["bash"]\n[guides]\ndirectory = ".gspot/state/recovery"\n',

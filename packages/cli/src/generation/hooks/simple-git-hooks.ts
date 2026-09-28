@@ -3,8 +3,8 @@ import { isDeepStrictEqual } from 'node:util';
 import type { Root } from '#cli/types/platform.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
+import type { HookName, Generated } from '#cli/types/generation.ts';
 import type { OwnershipEntry } from '#cli/types/lifecycle/lifecycle.ts';
-import type { HookName, GeneratedProposal } from '#cli/types/generation.ts';
 import { simpleGitHooksReady, requirePackageConfiguration } from '#cli/lifecycle/hooks/state.ts';
 import { HOOK_FILES, SIMPLE_GIT_HOOKS_DIRECTORY as DIRECTORY } from '#cli/config/repository/repository.ts';
 import { hookBody, hookPrefix, hookCommand, simpleGitHookCommand } from '#cli/generation/hooks/scripts.ts';
@@ -49,13 +49,13 @@ function retainedContent(
  * Preserve each authored command in a subprocess before running the gspot check.
  * @param root the repository root.
  * @param runner the task runner the policy names, or undefined.
- * @param out the generated proposal the integration scripts and package keys are added to.
+ * @param out the generated plan the integration scripts and package keys are added to.
  * @param binary the pinned executable when no runner resolves gspot.
  */
 export function simpleGitHookOutputs(
     root: string,
     runner: string | undefined,
-    out: GeneratedProposal,
+    out: Generated,
     binary: string | undefined,
 ): void {
     const prefix = hookPrefix(root);

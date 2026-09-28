@@ -7,7 +7,7 @@ import { openRoot } from '#cli/platform/filesystem.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
 import type { SpawnResult } from '#cli/types/platform.ts';
 import { LIFECYCLE_PRIVATE_PATH } from '#cli/config/platform.ts';
-import type { RawEntry, PathIgnore, SourceObservations } from '#cli/types/repository/repository.ts';
+import type { RawEntry, PathIgnore, SourceReads } from '#cli/types/repository/repository.ts';
 import { openSync, readSync, statSync, closeSync, lstatSync, readdirSync, readFileSync } from 'node:fs';
 
 import {
@@ -272,20 +272,20 @@ export function head(root: string, path: string, bytes = NATURE_HEAD_BYTES): str
 }
 
 /**
- * Read required content, reusing source bytes only within the observed repository.
+ * Read required content, reusing source bytes only within the read repository.
  * @param root the directory being read
  * @param path the source path relative to that directory
- * @param observations optional run-owned bytes; isolated generated output remains fresh
+ * @param reads optional run-owned bytes; isolated generated output remains fresh
  * @returns the file bytes
  */
-export function readSource(root: string, path: string, observations?: SourceObservations): Buffer {
-    const observed = observations?.root === root ? observations.sources : undefined;
-    const held = observed?.get(path);
+export function readSource(root: string, path: string, reads?: SourceReads): Buffer {
+    const read = reads?.root === root ? reads.sources : undefined;
+    const held = read?.get(path);
     if (held !== undefined) return held;
     const files = openRoot(root, 'native');
     try {
         const bytes = readFileSync(files.source(path));
-        observed?.set(path, bytes);
+        read?.set(path, bytes);
         return bytes;
     } finally {
         files.close();

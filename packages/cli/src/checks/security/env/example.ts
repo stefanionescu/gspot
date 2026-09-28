@@ -30,7 +30,7 @@ export function envExample(input: EngineInput): Finding[] {
     if (templates.length === 0) return [];
     const known = new Set(
         templates.flatMap((file) => {
-            const lines = readSource(input.root, file.path, input.observations).toString('utf8').split('\n');
+            const lines = readSource(input.root, file.path, input.reads).toString('utf8').split('\n');
             return lines.flatMap((line) => {
                 const key = ENV_KEY_LINE.exec(line.trim())?.[KEY_GROUP];
                 return key === undefined ? [] : [key];
@@ -42,7 +42,7 @@ export function envExample(input: EngineInput): Finding[] {
         (file) => file.nature === 'source' && ENV_READ_EXTENSIONS.some((extension) => file.path.endsWith(extension)),
     );
     return searched.flatMap((file) => {
-        const lines = readSource(input.root, file.path, input.observations).toString('utf8').split('\n');
+        const lines = readSource(input.root, file.path, input.reads).toString('utf8').split('\n');
         const seen = new Set<string>();
         return lines.flatMap((line, index) => {
             const findings: Finding[] = [];

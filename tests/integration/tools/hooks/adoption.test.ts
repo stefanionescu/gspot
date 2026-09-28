@@ -31,7 +31,7 @@ test.each(['lefthook', 'husky', 'simple-git-hooks', 'pre-commit'] as const)(
         await installHookTool(root);
         const checked = await run(['git', 'hook', 'run', 'pre-commit'], options);
         expect(checked.code, checked.stdout + checked.stderr).toBe(0);
-        expect(readFileSync(join(root, 'observed'), 'utf8')).toBe('x');
+        expect(readFileSync(join(root, 'read'), 'utf8')).toBe('x');
         expect(readFileSync(join(root, '.git/config'))).toStrictEqual(gitConfig);
     },
     90_000,
@@ -52,7 +52,7 @@ test('Lefthook adoption refuses an edited native helper then accepts restored by
     await installHookTool(root);
     const checked = await run(['git', 'hook', 'run', 'pre-commit'], options);
     expect(checked.code, checked.stdout + checked.stderr).toBe(0);
-    expect(readFileSync(join(root, 'observed'), 'utf8')).toBe('x');
+    expect(readFileSync(join(root, 'read'), 'utf8')).toBe('x');
 }, 90_000);
 
 test('Lefthook adoption refuses changed native init configuration then accepts regenerated launchers', async () => {
@@ -71,5 +71,5 @@ test('Lefthook adoption refuses changed native init configuration then accepts r
     await installHookTool(root);
     const checked = await run(['git', 'hook', 'run', 'pre-commit'], options);
     expect(checked.code, checked.stdout + checked.stderr).toBe(0);
-    expect(readFileSync(join(root, 'observed'), 'utf8')).toBe('x');
+    expect(readFileSync(join(root, 'read'), 'utf8')).toBe('x');
 }, 90_000);

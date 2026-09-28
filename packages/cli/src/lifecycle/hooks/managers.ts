@@ -3,6 +3,7 @@ import semver from 'semver';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { rmSync, mkdtempSync } from 'node:fs';
+import type { Read } from '#cli/types/platform.ts';
 import { inspectTool } from '#cli/tools/inspect.ts';
 import { binaryPath } from '#cli/platform/assets.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
@@ -10,7 +11,6 @@ import { runToolCommand } from '#cli/tools/command.ts';
 import type { Policy } from '#cli/types/policy/policy.ts';
 import { installHooks } from '#cli/lifecycle/hooks/git.ts';
 import type { ToolContext } from '#cli/types/tools/tools.ts';
-import type { FileObservation } from '#cli/types/platform.ts';
 import { hookPrefix } from '#cli/generation/hooks/scripts.ts';
 import { nativeHook } from '#cli/lifecycle/hooks/native-hooks.ts';
 import type { Repository } from '#cli/types/repository/repository.ts';
@@ -60,7 +60,7 @@ function hookExecutable(hookTool: HookTool, tools: ToolContext): string {
 }
 
 // Lefthook's configuration as its own dump resolves it, without the sources a temporary root cannot load again.
-async function dumpedLefthookConfiguration(root: string, executable: string, mode: number): Promise<FileObservation> {
+async function dumpedLefthookConfiguration(root: string, executable: string, mode: number): Promise<Read> {
     const dumped = await runToolCommand(undefined, [executable, 'dump', '--format', 'json'], { cwd: root });
     if (dumped.code !== 0)
         throw new Error('Cannot load Lefthook configuration. Correct it before running gspot install.');
@@ -83,10 +83,10 @@ async function hookConfiguration(
     root: string,
     configPath: string,
     executable: string,
-): Promise<FileObservation | undefined> {
+): Promise<Read | undefined> {
     if (hookTool === 'husky') return undefined;
     const source = openRoot(root);
-    let configuration: FileObservation | undefined;
+    let configuration: Read | undefined;
     try {
         configuration = source.read(configPath);
     } finally {
@@ -118,7 +118,7 @@ function preparationCommands(preparation: Preparation): string[][] {
 // The hooks the manager generated, each paired with the hook gspot installs for it.
 async function prepareHooks(
     preparation: Preparation,
-    configuration: FileObservation | undefined,
+    configuration: Read | undefined,
 ): Promise<Map<string, PreparedHook>> {
     const { hookTool, files, work } = preparation;
     const env = {

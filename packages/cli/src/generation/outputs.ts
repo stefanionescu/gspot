@@ -20,15 +20,15 @@ import { gitlabFile, workflowFile } from '#cli/generation/workflow.ts';
 import { toolEnvironment } from '#cli/generation/tools/environment.ts';
 import { withdrawRetained } from '#cli/generation/retained/outputs.ts';
 import { lefthookConfiguration } from '#cli/generation/hooks/lefthook.ts';
+import type { Generated, GenerationOptions } from '#cli/types/generation.ts';
 import { preCommitConfiguration } from '#cli/generation/hooks/pre-commit.ts';
 import { simpleGitHookOutputs } from '#cli/generation/hooks/simple-git-hooks.ts';
-import type { GeneratedProposal, GenerationOptions } from '#cli/types/generation.ts';
 import type { Policy, MergedView, ScopeSelection } from '#cli/types/policy/policy.ts';
 
 // Integrations for the selected hook tool. Native gspot hooks need no integration.
 const HOOK_OUTPUTS: Record<
     string,
-    (root: string, runner: string | undefined, out: GeneratedProposal, binary: string | undefined) => void
+    (root: string, runner: string | undefined, out: Generated, binary: string | undefined) => void
 > = {
     'pre-commit': (root, runner, out, binary) => out.configurations.push(preCommitConfiguration(root, runner, binary)),
     'simple-git-hooks': (root, runner, out, binary) => {
@@ -41,7 +41,7 @@ const HOOK_OUTPUTS: Record<
     lefthook: (root, runner, out, binary) => out.configurations.push(lefthookConfiguration(root, runner, binary)),
 };
 
-function hookOutputs(root: string, policy: Policy, out: GeneratedProposal, binary: string | undefined): void {
+function hookOutputs(root: string, policy: Policy, out: Generated, binary: string | undefined): void {
     const tool = policy.hooks?.tool;
     if (tool === undefined) return;
     HOOK_OUTPUTS[tool]?.(root, policy.runner?.tool, out, binary);
@@ -53,7 +53,7 @@ function runnerOutputs(
     manifests: Manifest[],
     version: string,
     hasPackageClient: boolean,
-    out: GeneratedProposal,
+    out: Generated,
 ): void {
     const runner = policy.runner?.tool;
     if (runner === undefined) return;
@@ -63,7 +63,7 @@ function runnerOutputs(
     if (plan.configuration !== undefined) out.configurations.push(plan.configuration);
 }
 
-function workflowOutput(policy: Policy, scopes: ScopeSelection[], version: string, out: GeneratedProposal): void {
+function workflowOutput(policy: Policy, scopes: ScopeSelection[], version: string, out: Generated): void {
     if (policy.ci === undefined) return;
     const swiftScope = scopes.find((selection) => selection.selected.some((manifest) => manifest.kit.name === 'swift'));
     out.files.push(
@@ -84,7 +84,7 @@ function rootView(scopes: ScopeSelection[]): MergedView {
     return root.view;
 }
 
-function blockOutputs(repository: Repository, policy: Policy, manifests: Manifest[], out: GeneratedProposal): void {
+function blockOutputs(repository: Repository, policy: Policy, manifests: Manifest[], out: Generated): void {
     const { root, hasGit } = repository;
     if (hasGit) out.blocks.push({ path: '.gitignore', block: gitignoreBlock(), style: 'hash' });
     out.blocks.push({
@@ -106,9 +106,9 @@ function blockOutputs(repository: Repository, policy: Policy, manifests: Manifes
     }
 }
 
-function combineConfigurations(proposal: GeneratedProposal): void {
-    const assembled = new Map<string, GeneratedProposal['configurations'][number]>();
-    for (const output of proposal.configurations) {
+function combineConfigurations(plan: Generated): void {
+    const assembled = new Map<string, Generated['configurations'][number]>();
+    for (const output of plan.configurations) {
         const previous = assembled.get(output.path);
         if (previous === undefined) assembled.set(output.path, { ...output, changes: [...output.changes] });
         else {
@@ -117,12 +117,12 @@ function combineConfigurations(proposal: GeneratedProposal): void {
             previous.changes.push(...output.changes);
         }
     }
-    proposal.configurations = [...assembled.values()];
+    plan.configurations = [...assembled.values()];
 }
 
-function validateProposal(proposal: GeneratedProposal): void {
+function validatePlan(plan: Generated): void {
     const paths = new Map<string, string>();
-    const outputs = [...proposal.files, ...proposal.blocks, ...proposal.merges, ...proposal.configurations];
+    const outputs = [...plan.files, ...plan.blocks, ...plan.merges, ...plan.configurations];
     for (const output of outputs) {
         mutationTarget(output.path);
         const key = output.path.normalize('NFC').toLowerCase();
@@ -133,7 +133,7 @@ function validateProposal(proposal: GeneratedProposal): void {
 }
 
 /**
- * Renders proposed files in memory while retaining observations at the caller's lifecycle lock boundary.
+ * Renders proposed files in memory while retaining reads at the caller's lifecycle lock boundary.
  * @param policy the repository policy
  * @param repository the repository with its tracked files
  * @param scopes every resolved scope
@@ -145,12 +145,12 @@ export function emitAll(
     repository: Repository,
     scopes: ScopeSelection[],
     options: GenerationOptions,
-): GeneratedProposal {
+): Generated {
     const { root, files } = repository;
     const { version, packageClient, replace } = options;
     const manifests = everyManifest(scopes);
     const binary = binaryPath();
-    const out: GeneratedProposal = { notes: [], files: [], blocks: [], merges: [], configurations: [] };
+    const out: Generated = { notes: [], files: [], blocks: [], merges: [], configurations: [] };
     const seen = new Set<string>();
     for (const selection of scopes) {
         const inputs = templateInputs(root, policy, files, scopes, selection, version);
@@ -169,6 +169,6 @@ export function emitAll(
     blockOutputs(repository, policy, manifests, out);
     out.files.sort((a, b) => a.path.localeCompare(b.path));
     combineConfigurations(out);
-    validateProposal(out);
+    validatePlan(out);
     return out;
 }

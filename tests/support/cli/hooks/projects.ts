@@ -85,7 +85,7 @@ export async function preparePreCommit(
         'gspot.toml': PRE_COMMIT_POLICY,
         '.gitignore': '.venv/\nbin/\npre-commit-cache/\nobserved\nfailed\n',
         'source.txt': 'input',
-        'bin/gspot': `#!${process.execPath}\nconst {appendFileSync} = await import('node:fs'); appendFileSync('observed', JSON.stringify({args: process.argv.slice(2), input: await Bun.stdin.text()}) + '\\n'); process.exitCode = (await Bun.file('setup-failed').exists()) ? 2 : (await Bun.file('failed').exists()) ? 1 : 0;\n`,
+        'bin/gspot': `#!${process.execPath}\nconst {appendFileSync} = await import('node:fs'); appendFileSync('read', JSON.stringify({args: process.argv.slice(2), input: await Bun.stdin.text()}) + '\\n'); process.exitCode = (await Bun.file('setup-failed').exists()) ? 2 : (await Bun.file('failed').exists()) ? 1 : 0;\n`,
     });
     chmodSync(join(root, 'bin/gspot'), 0o755);
     for (const command of [

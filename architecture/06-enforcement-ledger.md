@@ -842,7 +842,7 @@ are file natures: `Pods`, `DerivedData`, `build`, `.build` and `Generated` folde
 or generated, and `*.generated.swift` is generated.
 
 SwiftFormat options. `--indent`, `--maxwidth` and `--linebreaks` come from `[format]`.
-`--swiftversion` comes from `tools.swiftformat.swift_version`, and `init` reads the proposal from
+`--swiftversion` comes from `tools.swiftformat.swift_version`, and `init` reads the plan from
 `Package.swift` or the project's `SWIFT_VERSION`:
 
 ```text

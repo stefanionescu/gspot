@@ -68,7 +68,7 @@ test('a denied owned cache read reports its path and cause', async () => {
     }
 });
 
-test('checks share generated-file hashes within a run and observe edits in the next run', async () => {
+test('checks share generated-file hashes within a run and read edits in the next run', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': 'version = 1\nkits = []\n',
@@ -81,7 +81,7 @@ test('checks share generated-file hashes within a run and observe edits in the n
     const target = join(sandbox.path, '.gspot/shared.toml');
     const hash = cache.fileHash;
     let reads = 0;
-    const observation = spyOn(cache, 'fileHash').mockImplementation((root, path) => {
+    const read = spyOn(cache, 'fileHash').mockImplementation((root, path) => {
         if (path === '.gspot/shared.toml') reads += 1;
         return hash(root, path);
     });
@@ -97,7 +97,7 @@ test('checks share generated-file hashes within a run and observe edits in the n
         expect(changed.report.checks.map((check) => check.status)).toStrictEqual(['ok', 'ok']);
         expect(reads).toBe(3);
     } finally {
-        observation.mockRestore();
+        read.mockRestore();
     }
 });
 
@@ -178,24 +178,24 @@ test('an executable replacement cannot combine old permissions with new cached b
             fs.renameSync(replacement, executable);
             replaced = true;
         };
-        const pathObservation = spyOn(fs, 'statSync').mockImplementation(((...args: Parameters<typeof fs.statSync>) => {
-            const observed = stat(...args);
+        const pathRead = spyOn(fs, 'statSync').mockImplementation(((...args: Parameters<typeof fs.statSync>) => {
+            const read = stat(...args);
             if (args[0] === executable) replace();
-            return observed;
+            return read;
         }) as typeof fs.statSync);
-        const descriptorObservation = spyOn(fs, 'fstatSync').mockImplementation(((
+        const descriptorRead = spyOn(fs, 'fstatSync').mockImplementation(((
             ...args: Parameters<typeof fs.fstatSync>
         ) => {
-            const observed = fstat(...args);
-            if (observed.ino === inode) replace();
-            return observed;
+            const read = fstat(...args);
+            if (read.ino === inode) replace();
+            return read;
         }) as typeof fs.fstatSync);
         try {
             expect(cacheKeyFor(session, planned!, runHashes(session))).toBe(originalKey);
             expect(fs.readFileSync(executable, 'utf8')).toBe('replacement executable');
         } finally {
-            pathObservation.mockRestore();
-            descriptorObservation.mockRestore();
+            pathRead.mockRestore();
+            descriptorRead.mockRestore();
         }
         expect(cacheKeyFor(session, planned!, runHashes(session))).not.toBe(originalKey);
     } finally {

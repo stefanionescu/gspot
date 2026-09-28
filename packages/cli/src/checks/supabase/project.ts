@@ -13,14 +13,14 @@ const projectSchema = z.object({
 
 /**
  * The parsed project file, or the text of the error when it does not parse, or undefined when the repository has none.
- * @param input the scoped repository observation
+ * @param input the scoped repository read
  * @returns the config or the error
  */
 export function readProject(input: EngineInput): z.infer<typeof projectSchema> | string | undefined {
     const local = posix.join(input.scope, SUPABASE_CONFIG);
     const path = join(input.root, local);
     if (statSync(path, { throwIfNoEntry: false }) === undefined) return undefined;
-    const text = readSource(input.root, local, input.observations).toString('utf8');
+    const text = readSource(input.root, local, input.reads).toString('utf8');
     try {
         return projectSchema.parse(parse(text));
     } catch (error) {

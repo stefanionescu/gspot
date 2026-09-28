@@ -65,7 +65,7 @@ function nodeEdges(source: EdgeSource, node: Node): Edge[] {
 }
 
 async function importedEdges(input: EngineInput, path: string, owned: Set<string>): Promise<Edge[]> {
-    const text = readSource(input.root, path, input.observations).toString('utf8');
+    const text = readSource(input.root, path, input.reads).toString('utf8');
     const tree = await parseSource(path.endsWith('x') ? 'tsx' : 'typescript', text, input);
     if (tree === null) throw new Error(`Cannot parse imports in ${path}.`);
     try {
@@ -103,10 +103,10 @@ async function readImports(input: EngineInput, paths: string[]): Promise<ImportI
  * @returns source paths and the files importing each path
  */
 export async function scopeImports(input: EngineInput): Promise<ImportIndex> {
-    let scopes = cache.get(input.observations);
+    let scopes = cache.get(input.reads);
     if (scopes === undefined) {
         scopes = new Map();
-        cache.set(input.observations, scopes);
+        cache.set(input.reads, scopes);
     }
     const children = input.scopeEntries
         .map((entry) => entry.path)

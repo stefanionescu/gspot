@@ -144,12 +144,12 @@ export function cssModuleUsage(input: EngineInput): Finding[] {
     const paths = input.files.filter((file) => file.nature === 'source').map((file) => file.path);
     const code = paths
         .filter((path) => CODE_SUFFIX.test(path))
-        .map((path) => ({ path, text: readSource(input.root, path, input.observations).toString('utf8') }));
+        .map((path) => ({ path, text: readSource(input.root, path, input.reads).toString('utf8') }));
     const findings: Finding[] = [];
     const sheets = paths.filter((path) => MODULE_SUFFIX.test(path));
     const importers = moduleImporters(code, new Set(sheets));
     for (const sheet of sheets) {
-        const defined = definedClasses(readSource(input.root, sheet, input.observations).toString('utf8'), sheet);
+        const defined = definedClasses(readSource(input.root, sheet, input.reads).toString('utf8'), sheet);
         findings.push(...sheetFindings(input, sheet, defined, importers.get(sheet) ?? []));
     }
     return findings;

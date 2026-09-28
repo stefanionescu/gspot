@@ -68,11 +68,11 @@ function kitsResult(session: Session): CommandResult {
     }));
     const facts = readManifests(session.root, session.repository.files);
     const detected = detectKits(session.repository.files, session.manifests, facts)
-        .filter((proposal) => !names.has(proposal.configuration))
-        .map((proposal) => ({
-            name: proposal.configuration,
-            evidence: proposal.evidence,
-            command: `gspot add ${proposal.configuration}`,
+        .filter((plan) => !names.has(plan.configuration))
+        .map((plan) => ({
+            name: plan.configuration,
+            evidence: plan.evidence,
+            command: `gspot add ${plan.configuration}`,
         }));
     const detectedNames = new Set(detected.map((entry) => entry.name));
     const available = session.manifests

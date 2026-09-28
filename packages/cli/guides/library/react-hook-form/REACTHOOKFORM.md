@@ -177,7 +177,7 @@ subscriptions; avoid conditional reads that skip a needed subscription.
   current value with `getValues` as well as subscribing to subsequent changes.
 - Select field names and `exact` matching deliberately. Use `compute` on a supporting version for a
   derived display value; do not write that value back into the form during rendering.
-- Use `subscribe` for observation outside rendering. Return its unsubscribe function from the owning
+- Use `subscribe` for read outside rendering. Return its unsubscribe function from the owning
   Effect. Do not call `setValue` or `reset` from its callback to feed updates back into the same
   subscription.
 - Wait for `formState.isReady` before a child performs an initialization update that requires the
@@ -347,7 +347,7 @@ and guessing their registration needs from a `name` prop.
   reusable controlled field needs its own field state.
 - Check React Hook Form DevTools overhead before diagnosing provider performance. Measure the actual
   form before adding broad memoization or custom equality code.
-- Use `createFormControl` only when an explicit control owner or observation outside React is
+- Use `createFormControl` only when an explicit control owner or read outside React is
   needed. Keep that instance stable for its lifetime and scoped to the correct form or request.
 - With `createFormControl`, connect the returned `formControl` through `useForm({ formControl })`
   and pass its `control` to the consuming hooks. Use this explicit-control approach instead of

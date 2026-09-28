@@ -22,7 +22,7 @@ export async function typesFresh(input: EngineInput): Promise<Finding[]> {
     });
     if (result.code !== 0)
         throw new Error(`The supabase CLI wrote no types: ${result.stderr.trim().split('\n').at(-1) ?? ''}`);
-    const committed = readSource(input.root, path, input.observations).toString('utf8');
+    const committed = readSource(input.root, path, input.reads).toString('utf8');
     if (committed.trim() === result.stdout.trim()) return [];
     return [
         supabaseFinding(

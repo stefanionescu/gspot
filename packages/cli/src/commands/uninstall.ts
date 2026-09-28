@@ -58,13 +58,11 @@ export function planUninstall(root: string): UninstallPlan {
 export function applyUninstall(root: string, plan: UninstallPlan): string[] {
     return runOwnedLifecycle(root, (owner) => {
         const proposed = new Set([...plan.remove, ...plan.blocks]);
-        const proposals = [...proposed].map((path) => owner.proposeRestoration(path));
-        const preserved = proposals
-            .filter((proposal) => proposal.status === 'preserved')
-            .map((proposal) => proposal.path);
-        const restorations = proposals.filter((proposal) => proposal.status !== 'preserved');
+        const plans = [...proposed].map((path) => owner.proposeRestoration(path));
+        const preserved = plans.filter((plan) => plan.status === 'preserved').map((plan) => plan.path);
+        const restorations = plans.filter((plan) => plan.status !== 'preserved');
         if (!plan.hooks) {
-            owner.applyProposals(restorations);
+            owner.applyPlans(restorations);
             return preserved;
         }
         const location = hookLocation(root);
@@ -72,10 +70,10 @@ export function applyUninstall(root: string, plan: UninstallPlan): string[] {
             location.root,
             (hooks) => {
                 const planned = proposeHookRestorations(hooks, location);
-                if (hooks === owner) owner.applyProposals([...restorations, ...planned.proposals]);
+                if (hooks === owner) owner.applyPlans([...restorations, ...planned.plans]);
                 else {
-                    owner.applyProposals(restorations);
-                    hooks.applyProposals(planned.proposals);
+                    owner.applyPlans(restorations);
+                    hooks.applyPlans(planned.plans);
                 }
                 return [...preserved, ...planned.preserved.map((path) => relative(root, resolve(location.root, path)))];
             },

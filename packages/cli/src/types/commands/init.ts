@@ -1,9 +1,9 @@
 // The types of commands/init in this package.
+import type { Read } from '#cli/types/platform.ts';
 import type { Profile } from '#cli/types/policy/profiles.ts';
-import type { FileObservation } from '#cli/types/platform.ts';
 import type { Policy, RawPolicy } from '#cli/types/policy/policy.ts';
 import type { AdoptionResult, AdoptedFormatting } from '#cli/types/policy/adoption.ts';
-import type { Manifest, SettingSpec, UnknownLanguage, KitEvidence as Proposal } from '#cli/types/kits.ts';
+import type { Manifest, SettingSpec, UnknownLanguage, KitEvidence as Plan } from '#cli/types/kits.ts';
 
 import type {
     TomlTable,
@@ -25,7 +25,7 @@ export type Planning = {
 };
 export type DetectionSummary = {
     files: TrackedFile[];
-    proposals: Proposal[];
+    plans: Plan[];
     scopes: ScopeEntry[];
     tooling: ExistingTooling;
     owned: string[];
@@ -71,9 +71,9 @@ export type InitResult = { text: string; json: InitJson; exitCode: number };
 export type InitSelection = {
     scopes: ScopeEntry[];
     rootIds: string[];
-    scopeProposals: Map<string, string[]>;
+    scopePlans: Map<string, string[]>;
     selectedIds: Set<string>;
-    rootProposals: Proposal[];
+    rootPlans: Plan[];
     how: Map<string, KitReason>;
 };
 /** The answers init collects from flags or the terminal. */
@@ -90,7 +90,7 @@ export type InitPrepared = {
     policyText: string;
     runner: InitAnswers['runner'];
     removed: { path: string }[];
-    observed: Map<string, FileObservation>;
+    read: Map<string, Read>;
 };
 /** What init selection reads. */
 export type InitContext = {
@@ -110,7 +110,7 @@ export type InitInputs = {
     manifests: Map<string, Manifest>;
     options: InitOptions;
 };
-export type InitProposal = {
+export type InitPlan = {
     profileTables?: TomlTable;
     kits: string[];
     scopes: { path: string; kits: string[] }[];

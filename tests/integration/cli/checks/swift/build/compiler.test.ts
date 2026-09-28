@@ -79,7 +79,7 @@ test('a failed Swift build without source diagnostics returns execution exit 2 a
 });
 });
 
-test('a later Swift session observes a failed build after an earlier successful build', async () => {
+test('a later Swift session reads a failed build after an earlier successful build', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': 'version = 1\nkits = ["swift"]\n' });
     const first = await swiftInput(sandbox.path, 'swift/build');

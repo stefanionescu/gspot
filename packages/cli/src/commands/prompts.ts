@@ -31,9 +31,7 @@ export async function askConfirmation(
 ): Promise<boolean> {
     if (useDefaults) return defaultAnswer;
     if (!(process.stdin.isTTY && process.stdout.isTTY && !isCi()))
-        throw new PromptError(
-            `${question} There is no terminal to ask in. Pass ${flag}, or --yes to take every proposal.`,
-        );
+        throw new PromptError(`${question} There is no terminal to ask in. Pass ${flag}, or --yes to take every plan.`);
     const answer = await confirm({ message: question, initialValue: defaultAnswer });
     if (typeof answer !== 'boolean') throw new PromptError(`${question} Cancelled; nothing written.`);
     return answer;
@@ -57,9 +55,7 @@ export async function askChoice<T extends string>(
 ): Promise<T> {
     if (useDefaults) return initial;
     if (!(process.stdin.isTTY && process.stdout.isTTY && !isCi()))
-        throw new PromptError(
-            `${question} There is no terminal to ask in. Pass ${flag}, or --yes to take every proposal.`,
-        );
+        throw new PromptError(`${question} There is no terminal to ask in. Pass ${flag}, or --yes to take every plan.`);
     const options = choices.map((choice) => ({
         value: choice.value,
         label: choice.label,

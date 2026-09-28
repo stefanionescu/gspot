@@ -70,6 +70,6 @@ export async function openSession(root: string, policyFiles: PolicyFiles = readP
         repository: repo,
         scopes,
         inspections: new Map(),
-        observations: { root, sources: new Map() },
+        reads: { root, sources: new Map() },
     };
 }

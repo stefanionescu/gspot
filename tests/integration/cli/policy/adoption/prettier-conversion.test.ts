@@ -35,7 +35,7 @@ test('nested Prettier ignore files convert with Git precedence for files created
     const generated = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
         version: session.version,
         packageClient: session.packageClient,
-        replace: kept.observed,
+        replace: kept.read,
     }).files.find(({ path }) => path === '.prettierignore')!;
     writeFileSync(join(directory.path, '.prettierignore'), generated.content);
     const expected = {
@@ -51,13 +51,13 @@ test('nested Prettier ignore files convert with Git precedence for files created
         'packages/app/trace.log.js': false,
     };
     const ignorePath = join(directory.path, '.prettierignore');
-    const observed = await Promise.all(
+    const read = await Promise.all(
         Object.keys(expected).map(async (path) => {
             const fileStatus = await prettier.getFileInfo(join(directory.path, path), { ignorePath });
             return [path, fileStatus.ignored] as const;
         }),
     );
-    expect(Object.fromEntries(observed)).toStrictEqual(expected);
+    expect(Object.fromEntries(read)).toStrictEqual(expected);
 });
 
 test('negated override selectors of the root configuration keep their meaning in generated configuration', async () => {

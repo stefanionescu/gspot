@@ -36,7 +36,7 @@ function assignmentsOf(lines: string[], functions: ScriptFunction[]): Set<string
 }
 
 async function readScriptFile(input: EngineInput, file: TrackedFile): Promise<ScriptFile> {
-    const text = readSource(input.root, file.path, input.observations).toString('utf8');
+    const text = readSource(input.root, file.path, input.reads).toString('utf8');
     const lines = text.split('\n');
     const functions = await scriptFunctions(text, input);
     return {
@@ -66,10 +66,10 @@ async function build(input: EngineInput, files: TrackedFile[]): Promise<ScriptIn
  * @returns the index
  */
 export function scriptIndex(input: EngineInput, files: TrackedFile[]): Promise<ScriptIndex> {
-    let perScope = cache.get(input.observations);
+    let perScope = cache.get(input.reads);
     if (perScope === undefined) {
         perScope = new Map();
-        cache.set(input.observations, perScope);
+        cache.set(input.reads, perScope);
     }
     const key = JSON.stringify([input.scope, files.map((file) => file.path)]);
     let index = perScope.get(key);

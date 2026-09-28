@@ -3,9 +3,9 @@ import { randomUUID } from 'node:crypto';
 import { join, dirname } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import { sameEntry } from '#cli/platform/safe-paths.ts';
+import type { Read, Bounds, Staging } from '#cli/types/platform.ts';
 import { PRIVATE_FILE, OWNER_WRITE_BIT } from '#cli/config/platform.ts';
-import type { Bounds, Staging, FileObservation } from '#cli/types/platform.ts';
-import { readEntry, parentPath, validateObservation } from '#cli/platform/root/reads.ts';
+import { readEntry, parentPath, validateRead } from '#cli/platform/root/reads.ts';
 
 import {
     openSync,
@@ -22,7 +22,7 @@ import {
 
 // Writes the bytes and mode of a regular file to the staging path, which must not exist yet.
 // A staging file that cannot be completed is removed before the error leaves.
-function stageFile(temporary: string, value: FileObservation): void {
+function stageFile(temporary: string, value: Read): void {
     const file = openSync(temporary, 'wx', PRIVATE_FILE);
     try {
         writeFileSync(file, value.bytes);
@@ -37,7 +37,7 @@ function stageFile(temporary: string, value: FileObservation): void {
 }
 
 // Creates the link at the staging path with, on macOS, the mode the snapshot carries.
-function stageLink(temporary: string, link: string, value: FileObservation): void {
+function stageLink(temporary: string, link: string, value: Read): void {
     symlinkSync(link, temporary);
     if (process.platform !== 'darwin') return;
     try {
@@ -51,13 +51,13 @@ function stageLink(temporary: string, link: string, value: FileObservation): voi
 
 // Windows cannot rename over a read-only file. The owner logs its saved bytes before this removal,
 // so an interrupted replacement can restore the absent target.
-function mustUnlinkFirst(expected: FileObservation | undefined): boolean {
+function mustUnlinkFirst(expected: Read | undefined): boolean {
     if (process.platform !== 'win32' || expected === undefined || expected.isLink === true) return false;
     return (expected.mode & OWNER_WRITE_BIT) === 0;
 }
 
 // Moves the staged entry over the destination, after checking that the destination is still as expected.
-function commitStaged(staging: Staging, expected: FileObservation | undefined): void {
+function commitStaged(staging: Staging, expected: Read | undefined): void {
     const { bounds, path, target, temporary } = staging;
     if (!sameEntry(readEntry(bounds, path, expected?.isLink === true), expected))
         throw new Error(`Lifecycle destination changed during the operation: ${path}`);
@@ -75,16 +75,16 @@ function commitStaged(staging: Staging, expected: FileObservation | undefined): 
 }
 
 // Puts the expected file back after a replacement that removed it failed.
-function restoreRemoved(bounds: Bounds, path: string, expected: FileObservation, error: unknown): void {
+function restoreRemoved(bounds: Bounds, path: string, expected: Read, error: unknown): void {
     try {
-        if (readEntry(bounds, path, false) === undefined) writeObservation(bounds, path, expected, undefined);
+        if (readEntry(bounds, path, false) === undefined) afterWrite(bounds, path, expected, undefined);
     } catch (restorationError) {
         throw new AggregateError([error, restorationError], `Replacement and restoration failed: ${path}`);
     }
 }
 
 // Stages the snapshot beside its destination, returning whether a file now exists at the staging path.
-function stage(staging: Staging, value: FileObservation, link: string | undefined): void {
+function stage(staging: Staging, value: Read, link: string | undefined): void {
     if (link === undefined) stageFile(staging.temporary, value);
     else stageLink(staging.temporary, link, value);
 }
@@ -101,7 +101,7 @@ function claimLock(target: string, token: string): boolean {
 }
 
 // The process id a lock file records, refusing a lock that records none.
-function lockHolder(current: FileObservation | undefined, path: string): number {
+function lockHolder(current: Read | undefined, path: string): number {
     const pid = Number(current?.bytes.toString('utf8').split(':', 1)[0]);
     if (!Number.isSafeInteger(pid) || pid <= 0)
         throw new Error(`Incomplete lifecycle lock: ${path}. Remove it after checking that no writer is running.`);
@@ -126,13 +126,8 @@ function isAlive(pid: number): boolean {
  * @param value the snapshot to write
  * @param expected the snapshot the caller last saw there, or undefined for a new file
  */
-export function writeObservation(
-    bounds: Bounds,
-    path: string,
-    value: FileObservation,
-    expected: FileObservation | undefined,
-): void {
-    const link = validateObservation(bounds, path, value);
+export function afterWrite(bounds: Bounds, path: string, value: Read, expected: Read | undefined): void {
+    const link = validateRead(bounds, path, value);
     const target = parentPath(bounds, path, true);
     const staging: Staging = {
         bounds,

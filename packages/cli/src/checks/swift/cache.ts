@@ -3,9 +3,9 @@ import { join, relative } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { readSource } from '#cli/repository/tracked.ts';
+import type { Read, Root } from '#cli/types/platform.ts';
 import { cacheHome } from '#cli/platform/environment.ts';
 import type { Pruning } from '#cli/types/checks/swift.ts';
-import type { Root, FileObservation } from '#cli/types/platform.ts';
 import { statSync, lstatSync, mkdirSync, readdirSync } from 'node:fs';
 import { MODE_BITS, PRIVATE_DIRECTORY } from '#cli/config/platform.ts';
 
@@ -27,9 +27,9 @@ function assertNoLinks(folder: string, files: Root): void {
 }
 
 // The sources to build, each as the snapshot it must have under source/ in the compiler directory.
-function desiredSources(root: string, paths: string[]): Map<string, FileObservation> {
+function desiredSources(root: string, paths: string[]): Map<string, Read> {
     const source = openRoot(root, 'native');
-    const desired = new Map<string, FileObservation>();
+    const desired = new Map<string, Read>();
     try {
         for (const file of paths) {
             const mode = statSync(source.source(file)).mode & MODE_BITS;
@@ -63,7 +63,7 @@ function pruneEntry(pruning: Pruning, path: string, directories: string[], empty
 }
 
 // Removes every entry under source/ the build does not want, then the folders left empty, deepest first.
-function pruneSources(folder: string, files: Root, desired: Map<string, FileObservation>): void {
+function pruneSources(folder: string, files: Root, desired: Map<string, Read>): void {
     const pruning: Pruning = {
         folder,
         files,

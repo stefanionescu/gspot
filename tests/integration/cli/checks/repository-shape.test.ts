@@ -54,14 +54,14 @@ test('suppression validation ignores source text and valid reasons but reports m
     const spec = scope.selected
         .flatMap((manifest) => manifest.checks)
         .find((check) => check.name === 'integrity/suppressions')!;
-    const observation = engineInput(session, { scope, spec, files: session.repository.files });
-    observation.suppressions = await suppressionComments(
+    const read = engineInput(session, { scope, spec, files: session.repository.files });
+    read.suppressions = await suppressionComments(
         session.root,
         session.scopes,
-        session.observations,
+        session.reads,
         session.repository.files,
     );
-    const found = suppressions(observation);
+    const found = suppressions(read);
     expect(found.map((finding) => `${finding.file}:${String(finding.line)} ${finding.rule ?? ''}`)).toStrictEqual([
         'a.ts:2 eslint-no-reason',
         'b.sh:2 semgrep-no-reason',

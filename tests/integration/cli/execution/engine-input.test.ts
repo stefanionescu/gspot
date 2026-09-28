@@ -121,7 +121,7 @@ test('engine inputs expose selected files and reserve the repository inventory f
     }
 });
 
-test('shell observations distinguish filename lists containing newlines', async () => {
+test('shell reads distinguish filename lists containing newlines', async () => {
     await using sandbox = await testdir();
     const names = ['a.sh', 'b.sh\nc.sh', 'a.sh\nb.sh', 'c.sh'];
     await createFileTree(sandbox.path, {
@@ -216,23 +216,23 @@ test('engines share source bytes within a run and refresh reused sessions after 
     expect(await Bun.file(join(sandbox.path, path)).text()).toBe('select 2;\n');
 });
 
-test('source observations never cache isolated output or turn failed reads into success', async () => {
+test('source reads never cache isolated output or turn failed reads into success', async () => {
     await using sandbox = await testdir();
     await using scratch = await testdir();
     await createFileTree(sandbox.path, { 'source.txt': 'original' });
     await createFileTree(scratch.path, { 'source.txt': 'before generation' });
-    const observations = { root: sandbox.path, sources: new Map<string, Buffer>() };
-    expect(readSource(sandbox.path, 'source.txt', observations).toString()).toBe('original');
-    expect(readSource(scratch.path, 'source.txt', observations).toString()).toBe('before generation');
+    const reads = { root: sandbox.path, sources: new Map<string, Buffer>() };
+    expect(readSource(sandbox.path, 'source.txt', reads).toString()).toBe('original');
+    expect(readSource(scratch.path, 'source.txt', reads).toString()).toBe('before generation');
     await Bun.write(join(scratch.path, 'source.txt'), 'after generation');
-    expect(readSource(scratch.path, 'source.txt', observations).toString()).toBe('after generation');
-    expect(() => readSource(sandbox.path, 'missing.txt', observations)).toThrow();
+    expect(readSource(scratch.path, 'source.txt', reads).toString()).toBe('after generation');
+    expect(() => readSource(sandbox.path, 'missing.txt', reads)).toThrow();
     await Bun.write(join(sandbox.path, 'missing.txt'), 'recovered');
-    expect(readSource(sandbox.path, 'missing.txt', observations).toString()).toBe('recovered');
+    expect(readSource(sandbox.path, 'missing.txt', reads).toString()).toBe('recovered');
     expect(await Bun.file(join(sandbox.path, 'source.txt')).text()).toBe('original');
 });
 
-test('fix verification replaces observed source bytes and preserves unrelated authored files', async () => {
+test('fix verification replaces read source bytes and preserves unrelated authored files', async () => {
     await using sandbox = await testdir();
     const policy = `version = 1
 kits = ["sql"]

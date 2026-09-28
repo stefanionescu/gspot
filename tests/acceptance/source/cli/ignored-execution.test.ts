@@ -19,15 +19,15 @@ const ESLINT_COMMAND = [
 
 test('a global ignore stops a repository check and its correction command until removed', async () => {
     await using directory = await testdir();
-    const command = ['bash', '-c', 'printf executed > observed.txt; exit 1'];
+    const command = ['bash', '-c', 'printf executed > read.txt; exit 1'];
     const fix = ['bash', '-c', 'printf corrected > corrected.txt'];
     const policy = `version = 1\nkits = []\n[guides]\ninstall = false\n[[check]]\nname = "project/quality"\ncommand = ${JSON.stringify(command)}\nfix_command = ${JSON.stringify(fix)}\nfix_order = "codemod"\npaths = ["entry.sh"]\nstage = "commit"\n`;
     await createFileTree(directory.path, { 'gspot.toml': policy, 'entry.sh': 'echo example\n' });
     const args = ['check', '--only', 'project/quality', '--no-cache', '--json'];
     const before = await run(directory.path, args);
     expect(before.code, before.stdout + before.stderr).toBe(1);
-    expect(readFileSync(join(directory.path, 'observed.txt'), 'utf8')).toBe('executed');
-    unlinkSync(join(directory.path, 'observed.txt'));
+    expect(readFileSync(join(directory.path, 'read.txt'), 'utf8')).toBe('executed');
+    unlinkSync(join(directory.path, 'read.txt'));
     const ignored = await run(directory.path, ['ignore', 'project/quality']);
     expect(ignored.code, ignored.stdout + ignored.stderr).toBe(0);
     const skipped = await run(directory.path, [...args, '--fix']);
@@ -37,13 +37,13 @@ test('a global ignore stops a repository check and its correction command until 
     expect(report.skips).toStrictEqual([{ check: 'project/quality', source: 'ignore' }]);
     expect(report.coverage.checked).toBe(0);
     expect(report.ignores).toStrictEqual([{ check: 'project/quality', matched: 0 }]);
-    expect(existsSync(join(directory.path, 'observed.txt'))).toBe(false);
+    expect(existsSync(join(directory.path, 'read.txt'))).toBe(false);
     expect(existsSync(join(directory.path, 'corrected.txt'))).toBe(false);
     const removed = await run(directory.path, ['ignore', 'project/quality', '--remove']);
     expect(removed.code, removed.stdout + removed.stderr).toBe(0);
     const restored = await run(directory.path, args);
     expect(restored.code, restored.stdout + restored.stderr).toBe(1);
-    expect(readFileSync(join(directory.path, 'observed.txt'), 'utf8')).toBe('executed');
+    expect(readFileSync(join(directory.path, 'read.txt'), 'utf8')).toBe('executed');
 });
 
 test('generated ESLint applies explicit ignores after enabled rule settings', async () => {

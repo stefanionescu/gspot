@@ -16,7 +16,7 @@ export function docsHeadings(input: EngineInput): Finding[] {
     const findings: Finding[] = [];
     for (const file of input.files) {
         if (file.nature !== 'source' || !file.path.endsWith('.md')) continue;
-        const tree = fromMarkdown(readSource(input.root, file.path, input.observations).toString('utf8'));
+        const tree = fromMarkdown(readSource(input.root, file.path, input.reads).toString('utf8'));
         visit(tree, 'heading', (heading) => {
             const text = toString(heading).trim().toLowerCase();
             if (banned.has(text))

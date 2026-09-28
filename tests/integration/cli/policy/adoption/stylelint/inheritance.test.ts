@@ -63,7 +63,7 @@ test.each(['cycle', 'invalid options', 'external link'])(
         const corrected = await collectKept(sandbox.path, STYLELINT_TOOLING, new Set(['css']), []);
         expect(corrected.unread).toStrictEqual([]);
         expect(corrected.removed.map((entry) => entry.path)).toStrictEqual(['.stylelintrc.json']);
-        expect(corrected.observed.get('config/base.json')?.bytes).toStrictEqual(
+        expect(corrected.read.get('config/base.json')?.bytes).toStrictEqual(
             readFileSync(join(sandbox.path, 'config/base.json')),
         );
     },

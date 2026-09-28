@@ -1,9 +1,9 @@
 import { openRoot } from '#cli/platform/filesystem.ts';
+import type { Generated } from '#cli/types/generation.ts';
 import { compareRules } from '#cli/lifecycle/rule-diff.ts';
 import type { MergedView } from '#cli/types/policy/policy.ts';
 import { eslintPreviewResponse } from '#cli/native/protocol.ts';
 import { runConfiguration } from '#cli/native/configuration.ts';
-import type { GeneratedProposal } from '#cli/types/generation.ts';
 import type { DriftEntry } from '#cli/types/lifecycle/lifecycle.ts';
 
 /**
@@ -11,17 +11,17 @@ import type { DriftEntry } from '#cli/types/lifecycle/lifecycle.ts';
  * @param root the repository root
  * @param view the merged view whose ESLint settings the evaluation reads
  * @param signal cancellation for the evaluation
- * @param proposal the generated files
+ * @param plan the generated files
  * @param drift the drift entries the rule differences are added to
  */
 export async function eslintRuleDiff(
     root: string,
     view: MergedView | undefined,
     signal: AbortSignal | undefined,
-    proposal: GeneratedProposal,
+    plan: Generated,
     drift: DriftEntry[],
 ): Promise<void> {
-    const selected = proposal.files.flatMap((file) => {
+    const selected = plan.files.flatMap((file) => {
         if (!file.path.endsWith('/eslint.config.mjs') || file.rulesPath === undefined) return [];
         const entry = drift.find((candidate) => candidate.path === file.path);
         return entry === undefined ? [] : [{ file, entry, rulesPath: file.rulesPath }];

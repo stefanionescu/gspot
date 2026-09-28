@@ -21,7 +21,7 @@ test.each(['', "apps/worker's tools"])(
         expect(await readHookStatus(root)).toMatchObject({ ready: true });
         const checked = await run(['git', 'hook', 'run', 'pre-commit'], { cwd: root, env });
         expect(checked.code, checked.stdout + checked.stderr).toBe(0);
-        expect(JSON.parse(readFileSync(join(root, 'observed'), 'utf8'))).toStrictEqual({
+        expect(JSON.parse(readFileSync(join(root, 'read'), 'utf8'))).toStrictEqual({
             args: ['check', '--staged'],
             input: '',
         });
@@ -160,7 +160,7 @@ test.each(['', "apps/worker's tools"])(
         await using sandbox = await testdir();
         const root = join(sandbox.path, directory);
         const { env } = await preparePreCommit(root, sandbox.path);
-        writeFileSync(join(root, 'observed'), '');
+        writeFileSync(join(root, 'read'), '');
         const revision = await run(['git', 'rev-parse', 'HEAD'], { cwd: root });
         const head = revision.stdout.trim();
         const zeros = '0'.repeat(head.length);
@@ -181,18 +181,18 @@ test.each(['', "apps/worker's tools"])(
             { cwd: root, env },
         );
         expect(pushed.code, pushed.stdout + pushed.stderr).toBe(0);
-        expect(JSON.parse(readFileSync(join(root, 'observed'), 'utf8'))).toStrictEqual({
+        expect(JSON.parse(readFileSync(join(root, 'read'), 'utf8'))).toStrictEqual({
             args: ['check', '--push', '--', 'origin', 'remote with spaces'],
             input,
         });
-        writeFileSync(join(root, 'observed'), '');
+        writeFileSync(join(root, 'read'), '');
         writeFileSync(join(root, 'message with spaces'), 'test: fixture\n');
         const commitResult = await run(
             ['git', 'hook', 'run', 'commit-msg', '--', relative(sandbox.path, join(root, 'message with spaces'))],
             { cwd: root, env },
         );
         expect(commitResult.code, commitResult.stdout + commitResult.stderr).toBe(0);
-        expect(JSON.parse(readFileSync(join(root, 'observed'), 'utf8'))).toStrictEqual({
+        expect(JSON.parse(readFileSync(join(root, 'read'), 'utf8'))).toStrictEqual({
             args: ['check', '--stage', 'message', '--message-file', join(root, 'message with spaces')],
             input: '',
         });

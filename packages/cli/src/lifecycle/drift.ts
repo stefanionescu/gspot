@@ -2,11 +2,11 @@
 import { createTwoFilesPatch } from 'diff';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { ruleDiff } from '#cli/lifecycle/rule-diff.ts';
+import type { Generated } from '#cli/types/generation.ts';
 import type { Policy } from '#cli/types/policy/policy.ts';
 import { CACHE_DIRECTORY } from '#cli/config/platform.ts';
 import { pythonLockDrift } from '#cli/tools/python-project.ts';
 import { currentBlock } from '#cli/lifecycle/managed-blocks.ts';
-import type { GeneratedProposal } from '#cli/types/generation.ts';
 import { packageLockDrift } from '#cli/tools/packages/project.ts';
 import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import type { DriftEntry } from '#cli/types/lifecycle/lifecycle.ts';
@@ -28,7 +28,7 @@ function patch(path: string, before: string, after: string, beforeName: string):
     });
 }
 
-function fileDrift(root: string, rendered: GeneratedProposal): DriftEntry[] {
+function fileDrift(root: string, rendered: Generated): DriftEntry[] {
     const entries: DriftEntry[] = [];
     const files = openRoot(root);
     for (const file of rendered.files) {
@@ -51,7 +51,7 @@ function fileDrift(root: string, rendered: GeneratedProposal): DriftEntry[] {
     return entries;
 }
 
-function blockDrift(root: string, rendered: GeneratedProposal): DriftEntry[] {
+function blockDrift(root: string, rendered: Generated): DriftEntry[] {
     const entries: DriftEntry[] = [];
     const files = openRoot(root);
     for (const block of rendered.blocks) {
@@ -74,7 +74,7 @@ function presenceDrift(root: string, path: string): DriftEntry {
     return { path, kind: openRoot(root).read(path) === undefined ? 'missing' : 'changed' };
 }
 
-function otherDrift(root: string, rendered: GeneratedProposal): DriftEntry[] {
+function otherDrift(root: string, rendered: Generated): DriftEntry[] {
     const entries: DriftEntry[] = [];
     for (const merge of rendered.merges)
         if (!hasConfiguration(root, merge)) entries.push(presenceDrift(root, merge.path));
@@ -95,7 +95,7 @@ export function computeDrift(
     root: string,
     policy: Policy,
     hasPackageClient: boolean,
-    rendered: GeneratedProposal,
+    rendered: Generated,
 ): DriftEntry[] {
     const known = new Set([
         ...rendered.files.map((file) => file.path),

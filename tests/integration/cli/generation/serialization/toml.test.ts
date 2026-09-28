@@ -57,7 +57,7 @@ test('profile spelling values use the same TOML emission path', async () => {
             tools: { typos: { words: [{ word, reason: 'An upstream name with # and "quotes".' }] } },
         }),
     });
-    const proposal = await initCommand({
+    const plan = await initCommand({
         cwd: sandbox.path,
         from: 'house.profile.toml',
         yes: true,
@@ -70,9 +70,9 @@ test('profile spelling values use the same TOML emission path', async () => {
         runner: 'none',
         rules: 'no',
     });
-    expect(proposal.exitCode).toBe(0);
-    const policy = proposal.json['policy'];
-    if (typeof policy !== 'string') throw new Error('The initialization proposal has no policy text.');
+    expect(plan.exitCode).toBe(0);
+    const policy = plan.json['policy'];
+    if (typeof policy !== 'string') throw new Error('The initialization plan has no policy text.');
     writeFileSync(join(sandbox.path, 'gspot.toml'), policy);
     const session = await openSession(sandbox.path);
     const output = emitAll(session.policyFiles.policy, session.repository, session.scopes, {

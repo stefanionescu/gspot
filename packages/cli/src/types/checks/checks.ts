@@ -8,7 +8,7 @@ import type { configurationSchema } from '#cli/checks/licenses.ts';
 import type { DriftEntry } from '#cli/types/lifecycle/lifecycle.ts';
 import type { findingSchema, checkResultSchema } from '#cli/checks/result.ts';
 import type { Defined, MergedView, PolicyFiles, ScopeSelection } from '#cli/types/policy/policy.ts';
-import type { Repository, ScopeEntry, TrackedFile, SourceObservations } from '#cli/types/repository/repository.ts';
+import type { Repository, ScopeEntry, SourceReads, TrackedFile } from '#cli/types/repository/repository.ts';
 
 export type SqlSource = { path: string; text: string };
 export type FunctionOption = {
@@ -33,7 +33,7 @@ export type EngineInput = {
     scopeEntries: ScopeEntry[];
     attributes: Repository['attributes'];
     hasGit: boolean;
-    observations: SourceObservations;
+    reads: SourceReads;
     resources?: DisposableStack;
     cancelSignal?: AbortSignal;
     scopeRoot: string;

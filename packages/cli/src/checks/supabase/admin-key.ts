@@ -19,7 +19,7 @@ export function adminKey(input: EngineInput): Finding[] {
             CODE_EXTENSIONS.some((extension) => file.path.endsWith(extension)),
     );
     return files.flatMap((file) =>
-        readSource(input.root, file.path, input.observations)
+        readSource(input.root, file.path, input.reads)
             .toString('utf8')
             .split('\n')
             .flatMap((text, index): Finding[] => {

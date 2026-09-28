@@ -52,13 +52,13 @@ test('migration history reports changed committed SQL and an earlier new version
     git(sandbox.path, ['mv', 'migrations/20240101_early.sql', 'migrations/20240301_later.sql']);
     expect(await migrationsFrozen(await sessionInput(sandbox.path, 'postgres/migrations-frozen'))).toStrictEqual([]);
     expect(await migrationOrder(await sessionInput(sandbox.path, 'postgres/migration-order'))).toStrictEqual([]);
-    const observed = await sessionInput(sandbox.path, 'postgres/migrations-frozen');
+    const read = await sessionInput(sandbox.path, 'postgres/migrations-frozen');
     const branch = git(sandbox.path, ['symbolic-ref', 'HEAD']);
     writeFileSync(join(sandbox.path, '.git', branch), 'broken');
-    await rejects(migrationsFrozen(observed), { message: /Cannot read committed Git history/u });
+    await rejects(migrationsFrozen(read), { message: /Cannot read committed Git history/u });
 });
 
-test('nested scopes keep migration roots and parsed observations separate', async () => {
+test('nested scopes keep migration roots and parsed reads separate', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml':

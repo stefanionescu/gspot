@@ -75,11 +75,11 @@ async function ranBuild(input: EngineInput, plan: SwiftBuildPlan): Promise<Swift
     }
 }
 
-// Share the compiler log within a command; a later command must observe the current source.
+// Share the compiler log within a command; a later command must read the current source.
 function buildOutput(input: EngineInput, plan: SwiftBuildPlan): Promise<SwiftBuildOutput> {
-    const { observations } = input;
-    const scopes = builds.get(observations) ?? new Map<string, Promise<SwiftBuildOutput>>();
-    builds.set(observations, scopes);
+    const { reads } = input;
+    const scopes = builds.get(reads) ?? new Map<string, Promise<SwiftBuildOutput>>();
+    builds.set(reads, scopes);
     const running = scopes.get(plan.folder) ?? ranBuild(input, plan);
     scopes.set(plan.folder, running);
     return running;

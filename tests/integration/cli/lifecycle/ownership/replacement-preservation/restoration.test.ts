@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import type { Read } from '#cli/types/platform.ts';
 import { testdir, createFileTree } from 'testdirs';
-import type { FileObservation } from '#cli/types/platform.ts';
 import { openOwner } from '#cli/lifecycle/ownership/owner.ts';
 import type { Owner } from '#cli/types/lifecycle/lifecycle.ts';
 
@@ -19,7 +19,7 @@ import {
 } from 'node:fs';
 
 // Later user edits remain intact across replacement and restoration.
-function expectEditedLinkPreserved(owner: Owner, path: string, absolute: string, next: FileObservation): void {
+function expectEditedLinkPreserved(owner: Owner, path: string, absolute: string, next: Read): void {
     expect(owner.replace(path, next, 'config', true)).toBe('changed');
     unlinkSync(absolute);
     symlinkSync('../tool/original.sh', absolute);

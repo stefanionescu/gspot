@@ -45,10 +45,6 @@ export function banned(input: EngineInput): Finding[] {
                 file.nature === 'source' && (MARKDOWN.has(extensionOf(file.path)) || SQL.has(extensionOf(file.path))),
         )
         .flatMap((file) =>
-            lineFindings(
-                input,
-                file.path,
-                readSource(input.root, file.path, input.observations).toString('utf8').split('\n'),
-            ),
+            lineFindings(input, file.path, readSource(input.root, file.path, input.reads).toString('utf8').split('\n')),
         );
 }

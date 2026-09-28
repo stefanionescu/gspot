@@ -42,7 +42,7 @@ function composeImages(input: EngineInput, path: string): Set<string> {
     let document: z.infer<typeof composeSchema>;
     try {
         document = composeSchema.parse(
-            parse(readSource(input.root, path, input.observations).toString('utf8'), { merge: true }),
+            parse(readSource(input.root, path, input.reads).toString('utf8'), { merge: true }),
         );
     } catch (error) {
         throw new Error(`Cannot read Compose service images in ${path}.`, { cause: error });

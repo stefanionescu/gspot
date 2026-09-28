@@ -8,7 +8,7 @@ import { rejection } from '#tests/support/expectations.ts';
 import type { EngineInput } from '#cli/types/checks/checks.ts';
 import { nextjsBuild, nextjsTypes } from '#cli/checks/nextjs/build.ts';
 import { statSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
-import { prepareNextjsBuild, observeNextjsCommands } from '#tests/support/cli/nextjs.ts';
+import { prepareNextjsBuild, readNextjsCommands } from '#tests/support/cli/nextjs.ts';
 
 for (const scope of ['', 'apps/web'])
     for (const check of ['nextjs/typecheck', 'nextjs/build'])
@@ -19,8 +19,8 @@ for (const scope of ['', 'apps/web'])
             const config = join(directory.path, join(scope, 'tsconfig.json'));
             const original = readFileSync(config);
             const mode = statSync(config).mode;
-            using observed = observeNextjsCommands(check);
-            const { directories, inspections, routesSeen } = observed;
+            using read = readNextjsCommands(check);
+            const { directories, inspections, routesSeen } = read;
             const execute = check === 'nextjs/typecheck' ? nextjsTypes : nextjsBuild;
             const found = await execute(input);
             expect(found).toHaveLength(1);

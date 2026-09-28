@@ -6,12 +6,12 @@ import { executableStatements } from '#cli/checks/structure/statements.ts';
 /**
  * The functions a shell script declares, in order.
  * @param text the script text
- * @param context optional execution observations and their resource owner
+ * @param context optional execution reads and their resource owner
  * @returns the functions with one-based start and end lines and the lines between the braces
  */
 export async function scriptFunctions(
     text: string,
-    context?: Pick<EngineInput, 'observations' | 'resources'>,
+    context?: Pick<EngineInput, 'reads' | 'resources'>,
 ): Promise<ScriptFunction[]> {
     const tree = await parseSource('bash', text, context);
     if (tree === null) throw new Error('The source parser returned no tree.');

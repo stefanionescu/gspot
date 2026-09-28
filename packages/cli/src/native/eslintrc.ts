@@ -184,7 +184,7 @@ async function directoryEntries(
  * @param root the repository root.
  * @param configPath the configuration the repository's ESLint is resolved from.
  * @param references the module registrations, extended here.
- * @param configPaths every observed eslintrc configuration file.
+ * @param configPaths every read eslintrc configuration file.
  * @returns the entries, each carrying the scope and criteria the eslintrc files gave it.
  */
 export async function eslintrcEntries(

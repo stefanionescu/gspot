@@ -23,7 +23,7 @@ export async function pythonBlockingCalls(input: EngineInput): Promise<Finding[]
         if (file.nature !== 'source' || !file.path.endsWith('.py')) continue;
         const tree = await parseSource(
             'python',
-            readSource(input.root, file.path, input.observations).toString('utf8'),
+            readSource(input.root, file.path, input.reads).toString('utf8'),
             input,
         );
         if (tree === null) throw new Error('The source parser returned no tree.');

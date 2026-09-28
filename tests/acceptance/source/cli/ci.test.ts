@@ -178,9 +178,9 @@ test.each([
             '--no-install',
         ]);
         expect(result.code, result.stdout + result.stderr).toBe(0);
-        const proposal = JSON.parse(result.stdout) as { policy: string; plan: { retained: unknown; write: unknown } };
-        expect(/provider = "(\w+)"/u.exec(proposal.policy)?.[1] ?? 'none').toBe(provider);
-        expect(JSON.stringify(proposal.plan)).toContain(note);
+        const plan = JSON.parse(result.stdout) as { policy: string; plan: { retained: unknown; write: unknown } };
+        expect(/provider = "(\w+)"/u.exec(plan.policy)?.[1] ?? 'none').toBe(provider);
+        expect(JSON.stringify(plan.plan)).toContain(note);
         expect(readFileSync(join(repository.path, path), 'utf8')).toBe(content);
         expect(await Bun.file(join(repository.path, 'gspot.toml')).exists()).toBe(false);
     },

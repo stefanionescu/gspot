@@ -9,7 +9,7 @@ function problem(url: URL, hosts: Set<string>): string | undefined {
 }
 
 function fileFindings(input: EngineInput, path: string, hosts: Set<string>): Finding[] {
-    const lines = readSource(input.root, path, input.observations).toString('utf8').split('\n');
+    const lines = readSource(input.root, path, input.reads).toString('utf8').split('\n');
     return lines.flatMap((text, index) =>
         text
             .matchAll(LOCKFILE_URL)
