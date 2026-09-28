@@ -14,6 +14,8 @@ test('source acceptance stops its registry and removes storage when publication 
     await createFileTree(sandbox.path, {
         temp: {},
         'bin/npm': '#!/usr/bin/env bun\nconsole.error("Fixture publication refused.");\nprocess.exit(9);\n',
+        // Windows resolves npm to npm.cmd, which hands the arguments to the same script.
+        'bin/npm.cmd': `@"${process.execPath}" "%~dp0npm" %*\r\n`,
     });
     chmodSync(join(sandbox.path, 'bin/npm'), 0o755);
     const result = await run([process.execPath, join(ROOT, 'tests/support/acceptance.ts')], {

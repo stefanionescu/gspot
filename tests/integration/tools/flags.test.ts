@@ -5,7 +5,6 @@ import { readPolicy } from '#cli/policy/read.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { inspectTool } from '#cli/tools/inspect.ts';
 import { runProcess } from '#tests/support/cli/command.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
 import { privateToolInstallation } from '#cli/tools/pins.ts';
 import { test, expect, afterAll, beforeAll } from 'bun:test';
 import { toolPackages } from '#cli/generation/tools/packages.ts';
@@ -13,9 +12,9 @@ import type { ToolCommand } from '#tests/types/integration/tools.ts';
 import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import { toolEnvironment } from '#cli/generation/tools/environment.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { HELP_TIMEOUT_MS } from '#tests/constants/integration/tools/tools.ts';
 import { installPythonProject, preparePythonProject } from '#cli/tools/python-project.ts';
 import { installPackageProject, preparePackageProject } from '#cli/tools/packages/project.ts';
+import { HELP_TIMEOUT_MS, INSTALL_TIMEOUT_MS } from '#tests/constants/integration/tools/tools.ts';
 
 const root = fileURLToPath(new URL('../../..', import.meta.url));
 const manifests = [...configurationManifests().values()];
@@ -105,7 +104,7 @@ beforeAll(async () => {
         sandbox.path,
         distinct.map(({ tool }) => tool),
     );
-}, PLANTED_TIMEOUT_MS);
+}, INSTALL_TIMEOUT_MS);
 
 test('every pinned tool a manifest command names is defined in that manifest', () => {
     const declared = new Set(manifests.flatMap((manifest) => manifest.tools.map((tool) => tool.name)));

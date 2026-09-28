@@ -53,6 +53,8 @@ const argv = process.argv.slice(2);
 if (!argv.includes('${registry}')) throw new Error('Only the sandbox registry is allowed.');
 appendFileSync(join(import.meta.dir, '..', 'publisher.jsonl'), JSON.stringify(argv) + '\n');
 `,
+        // Windows resolves npm to npm.cmd, which hands the arguments to the same script.
+        'bin/npm.cmd': `@"${process.execPath}" "%~dp0npm" %*\r\n`,
     });
     for (const path of ['node_modules', 'packages/cli/node_modules'])
         symlinkSync(join(ROOT, path), join(cwd, path), 'dir');

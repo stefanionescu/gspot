@@ -103,7 +103,10 @@ describe('site build reproducibility', () => {
         expect(await buildReproducible(request)).toStrictEqual([]);
         expect(readFileSync(join(first.output, 'index.html'), 'utf8')).toBe(before);
         expect(readFileSync(join(sandbox.path, 'dist/index.html'), 'utf8')).toBe('edited output');
-        expect(statSync(join(sandbox.path, 'dist/index.html')).mode & 0o777).toBe(0o640);
+        // Windows keeps no POSIX mode bits, so the file stays at its default there.
+        expect(statSync(join(sandbox.path, 'dist/index.html')).mode & 0o777).toBe(
+            process.platform === 'win32' ? 0o666 : 0o640,
+        );
         resources.dispose();
         expect(existsSync(first.cwd)).toBe(false);
     });

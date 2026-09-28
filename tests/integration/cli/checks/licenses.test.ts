@@ -11,6 +11,12 @@ import { rejection } from '#tests/support/expectations.ts';
 import type { EngineInput } from '#cli/types/checks/checks.ts';
 import { chmodSync, existsSync, unlinkSync, symlinkSync, readFileSync } from 'node:fs';
 
+// The pinned scanner as the private environment holds it: a shell script on POSIX, a command file on Windows.
+const SCANNER =
+    process.platform === 'win32'
+        ? { path: '.gspot/.venv/Scripts/pip-licenses.cmd', body: '@echo pip-licenses 5.5.5\r\n' }
+        : { path: '.gspot/.venv/bin/pip-licenses', body: '#!/bin/sh\nprintf "pip-licenses 5.5.5\\n"\n' };
+
 async function input(root: string): Promise<EngineInput> {
     const session = await openSession(root);
     for (const file of emitAll(session.policyFiles.policy, session.repository, session.scopes, {
@@ -54,9 +60,9 @@ test.each([
             'gspot.toml': 'version = 1\nconfigurations = ["licenses"]\n[tools.licenses]\nlicenses_allowed = ["MIT"]\n',
             'pyproject.toml': '[project]\nname = "fixture"\nversion = "0.0.0"\n',
             '.venv/installed': 'fixture',
-            '.gspot/.venv/bin/pip-licenses': '#!/bin/sh\nprintf "pip-licenses 5.5.5\\n"\n',
+            [SCANNER.path]: SCANNER.body,
         });
-        chmodSync(join(sandbox.path, '.gspot/.venv/bin/pip-licenses'), 0o755);
+        chmodSync(join(sandbox.path, SCANNER.path), 0o755);
         const selected = await input(sandbox.path);
         let broken = true;
         const directories: string[] = [];
@@ -91,9 +97,9 @@ test.each(['missing', 'malformed', 'stale', 'external link'])(
             'gspot.toml': 'version = 1\nconfigurations = ["licenses"]\n[tools.licenses]\nlicenses_allowed = ["MIT"]\n',
             'pyproject.toml': '[project]\nname = "fixture"\nversion = "0.0.0"\n',
             '.venv/installed': 'fixture',
-            '.gspot/.venv/bin/pip-licenses': '#!/bin/sh\nprintf "pip-licenses 5.5.5\\n"\n',
+            [SCANNER.path]: SCANNER.body,
         });
-        chmodSync(join(sandbox.path, '.gspot/.venv/bin/pip-licenses'), 0o755);
+        chmodSync(join(sandbox.path, SCANNER.path), 0o755);
         const selected = await input(sandbox.path);
         const path = join(sandbox.path, '.gspot/config/licenses.json');
         const original = readFileSync(path);

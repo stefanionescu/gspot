@@ -54,7 +54,10 @@ test('a missing inherited configuration cannot be replaced by empty compiler opt
         'tsconfig.json': '{"extends":"./missing.json","compilerOptions":{"strict":true}}',
     });
     const input = await sessionInput(sandbox.path, 'integrity/tsconfig-options');
-    expect(() => tsconfigOptions(input)).toThrow(`Cannot read file '${join(sandbox.path, 'missing.json')}'`);
+    // TypeScript prints the inherited path with forward slashes on every platform.
+    expect(() => tsconfigOptions(input)).toThrow(
+        `Cannot read file '${join(sandbox.path, 'missing.json').replaceAll('\\', '/')}'`,
+    );
     fs.writeFileSync(join(sandbox.path, 'missing.json'), VALID);
     expect(tsconfigOptions(await sessionInput(sandbox.path, 'integrity/tsconfig-options'))).toStrictEqual([]);
 });

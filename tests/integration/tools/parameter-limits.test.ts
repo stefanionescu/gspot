@@ -49,7 +49,8 @@ const cases = [
     },
 ];
 
-for (const scenario of cases) {
+// SwiftLint ships no Windows build, which its tool pin records.
+for (const scenario of cases.filter((entry) => entry.language !== 'swift' || process.platform !== 'win32')) {
     test.each([7, 8])(`${scenario.language} counts declared parameters with maximum %i`, async (maximum) => {
         await using directory = await testdir();
         const { language, configName } = scenario;
