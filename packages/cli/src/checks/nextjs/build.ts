@@ -1,5 +1,5 @@
 import { join } from 'node:path';
-import { rmSync } from 'node:fs';
+import { rm } from 'node:fs/promises';
 import { stripVTControlCharacters } from 'node:util';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import { scratchCopy } from '#cli/execution/files/workspace.ts';
@@ -58,7 +58,7 @@ function typeFinding(input: EngineInput, line: string): Finding[] {
  * @returns one finding for each type error
  */
 export async function nextjsTypes(input: EngineInput): Promise<Finding[]> {
-    const scratch = scratchCopy(
+    const scratch = await scratchCopy(
         input.root,
         input.files.map((file) => file.path),
         input.scopeEntries.map((scope) => scope.path),
@@ -74,7 +74,7 @@ export async function nextjsTypes(input: EngineInput): Promise<Finding[]> {
         if (result.code !== 0 && found.length === 0) throw new Error(`The tsc command failed: ${lastLines(said)}`);
         return found;
     } finally {
-        rmSync(scratch, { recursive: true, force: true });
+        await rm(scratch, { recursive: true, force: true });
     }
 }
 
@@ -84,7 +84,7 @@ export async function nextjsTypes(input: EngineInput): Promise<Finding[]> {
  * @returns one finding for a build that fails
  */
 export async function nextjsBuild(input: EngineInput): Promise<Finding[]> {
-    const scratch = scratchCopy(
+    const scratch = await scratchCopy(
         input.root,
         input.files.map((file) => file.path),
         input.scopeEntries.map((scope) => scope.path),
@@ -108,6 +108,6 @@ export async function nextjsBuild(input: EngineInput): Promise<Finding[]> {
             },
         ];
     } finally {
-        rmSync(scratch, { recursive: true, force: true });
+        await rm(scratch, { recursive: true, force: true });
     }
 }

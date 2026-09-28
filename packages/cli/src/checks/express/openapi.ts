@@ -1,5 +1,5 @@
 import { join } from 'node:path';
-import { rmSync } from 'node:fs';
+import { rm } from 'node:fs/promises';
 import { readSource } from '#cli/repository/tracked.ts';
 import { commandArguments } from '#cli/platform/arguments.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
@@ -65,7 +65,7 @@ export async function openapiFresh(input: EngineInput): Promise<Finding[]> {
     const command = setting(input, 'openapi', 'produced_by');
     if (document === '' || command === '') return [];
     const before = readSource(input.root, document, input.observations);
-    const scratch = scratchCopy(
+    const scratch = await scratchCopy(
         input.root,
         [...input.files.map((file) => file.path), document],
         input.scopeEntries.map((scope) => scope.path),
@@ -87,6 +87,6 @@ export async function openapiFresh(input: EngineInput): Promise<Finding[]> {
             ),
         ];
     } finally {
-        rmSync(scratch, { recursive: true, force: true });
+        await rm(scratch, { recursive: true, force: true });
     }
 }

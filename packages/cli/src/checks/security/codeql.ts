@@ -1,7 +1,8 @@
 import { z } from 'zod';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync } from 'node:fs';
+import { rm } from 'node:fs/promises';
 import { toolPin } from '#cli/tools/inspect.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
 import { readSource } from '#cli/repository/tracked.ts';
@@ -32,7 +33,7 @@ async function scanned(
 ): Promise<Finding[]> {
     const database = join(work, language);
     const output = join(work, `${language}.sarif`);
-    const source = scratchCopy(
+    const source = await scratchCopy(
         input.root,
         input.files.map((file) => file.path),
         input.scopeEntries.map((scope) => scope.path),
@@ -56,7 +57,7 @@ async function scanned(
             source,
         );
     } finally {
-        rmSync(source, { recursive: true, force: true });
+        await rm(source, { recursive: true, force: true });
     }
 }
 
@@ -140,7 +141,7 @@ export async function codeql(input: EngineInput): Promise<Finding[]> {
             findings.push(...(await scanned(input, language, suite, work, accepted, version)));
         }
     } finally {
-        rmSync(work, { recursive: true, force: true });
+        await rm(work, { recursive: true, force: true });
     }
     return findings;
 }

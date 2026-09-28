@@ -1,5 +1,5 @@
-import { rmSync } from 'node:fs';
 import { globbySync } from 'globby';
+import { rm } from 'node:fs/promises';
 import { basename, dirname, join } from 'node:path';
 import { TABLE } from '#cli/constants/checks/checks.ts';
 import { readSource } from '#cli/repository/tracked.ts';
@@ -70,7 +70,7 @@ export async function drizzleMigrations(input: EngineInput): Promise<Finding[]> 
         )
     )
         return [];
-    const scratch = scratchCopy(
+    const scratch = await scratchCopy(
         input.root,
         input.files.map((file) => file.path),
         input.scopeEntries.map((scope) => scope.path),
@@ -101,6 +101,6 @@ export async function drizzleMigrations(input: EngineInput): Promise<Finding[]> 
             ),
         );
     } finally {
-        rmSync(scratch, { recursive: true, force: true });
+        await rm(scratch, { recursive: true, force: true });
     }
 }

@@ -1,4 +1,5 @@
 import ts from 'typescript';
+import { rm } from 'node:fs/promises';
 import { join, relative, dirname } from 'node:path';
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { PRIVATE_FILE } from '#cli/constants/platform.ts';
@@ -9,7 +10,7 @@ import type { CheckResult } from '#cli/types/checks/checks.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { targetInScope } from '#cli/configurations/targets.ts';
 import { scratchCopy } from '#cli/execution/files/workspace.ts';
-import { chmodSync, rmSync, readFileSync, writeFileSync } from 'node:fs';
+import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
 import { commandConfigurations } from '#cli/execution/command-expansion.ts';
 import type { PlannedCheck, Session } from '#cli/types/execution/execution.ts';
 
@@ -63,7 +64,7 @@ export async function checkTypescript(session: Session, planned: PlannedCheck): 
     const command = references
         ? ['tsc', '-b', '--pretty', 'false']
         : ['tsc', '--noEmit', '-p', '{config:tsconfig}', '--pretty', 'false'];
-    const scratch = scratchCopy(
+    const scratch = await scratchCopy(
         session.root,
         [...session.repository.files.map((file) => file.path), ...commandConfigurations(session, planned, command)],
         session.repository.scopes.map((scope) => scope.path),
@@ -76,7 +77,7 @@ export async function checkTypescript(session: Session, planned: PlannedCheck): 
             result.command = result.command.map((part) => part.replace(scratch, () => session.root));
         return result;
     } finally {
-        rmSync(scratch, { recursive: true, force: true });
+        await rm(scratch, { recursive: true, force: true });
     }
 }
 
@@ -91,7 +92,7 @@ export async function checkJavascript(session: Session, planned: PlannedCheck): 
     const jsconfig = planned.manifest?.configs.find((entry) => entry.target === '.gspot/config/jsconfig.json');
     if (jsconfig === undefined) throw new Error('The typescript configuration declares no jsconfig target.');
     const target = targetInScope(scope, jsconfig);
-    const scratch = scratchCopy(
+    const scratch = await scratchCopy(
         session.root,
         [...session.repository.files.map((file) => file.path), target],
         session.repository.scopes.map((entry) => entry.path),
@@ -126,6 +127,6 @@ export async function checkJavascript(session: Session, planned: PlannedCheck): 
             result.command = result.command.map((part) => part.replaceAll(scratch, () => session.root));
         return result;
     } finally {
-        rmSync(scratch, { recursive: true, force: true });
+        await rm(scratch, { recursive: true, force: true });
     }
 }

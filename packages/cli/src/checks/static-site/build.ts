@@ -23,7 +23,7 @@ async function built(input: EngineInput): Promise<SiteBuild> {
     const outputPath = text(input, 'output', DEFAULT_BUILD_OUTPUT);
     mutationTarget(outputPath);
     if (input.resources === undefined) throw new Error('Site builds require run-owned temporary resources.');
-    const scratch = scratchCopy(
+    const scratch = await scratchCopy(
         input.root,
         input.files.map((file) => file.path),
         input.scopeEntries.map((scope) => scope.path),

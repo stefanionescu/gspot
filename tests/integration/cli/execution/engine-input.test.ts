@@ -106,7 +106,7 @@ test('engine inputs expose selected files and reserve the repository inventory f
         project,
     );
     expect(owned).toMatchObject({ status: 'ok', checkedFiles: ['apps/web/value.test.js'] });
-    const scratch = scratchCopy(
+    const scratch = await scratchCopy(
         scopeInput.root,
         scopeInput.files.map((file) => file.path),
         ['apps/web'],

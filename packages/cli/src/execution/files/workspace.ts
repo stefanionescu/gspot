@@ -1,5 +1,6 @@
 // Temporary copies of selected files for commands that must not read the working tree.
 import { tmpdir } from 'node:os';
+import { cp, readdir, rm } from 'node:fs/promises';
 import { PERMISSION_BITS } from '#cli/constants/platform.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { dirname, isAbsolute, join, relative, sep } from 'node:path';
@@ -8,12 +9,10 @@ import { SCRATCH_DIRECTORIES, SCRATCH_EXTRAS } from '#cli/constants/execution/ex
 
 import {
     constants,
-    cpSync,
     type Dirent,
     mkdirSync,
     mkdtempSync,
     readFileSync,
-    readdirSync,
     realpathSync,
     rmSync,
     statSync,
@@ -30,7 +29,7 @@ function exists(path: string): boolean {
 }
 
 // Copies each selected file that exists, resolving it through the confined root.
-function copySelected(context: Scratch, paths: string[], dependencies: string[]): void {
+async function copySelected(context: Scratch, paths: string[], dependencies: string[]): Promise<void> {
     const copied = new Set(
         [...paths, ...SCRATCH_EXTRAS].filter(
             (path) => !dependencies.some((dir) => path === dir || path.startsWith(`${dir}/`)),
@@ -40,18 +39,18 @@ function copySelected(context: Scratch, paths: string[], dependencies: string[])
         if (!exists(join(context.root, path))) continue;
         const resolved = context.files.source(path);
         mkdirSync(dirname(join(context.scratch, path)), { recursive: true });
-        cpSync(resolved, join(context.scratch, path), { dereference: true });
+        await cp(resolved, join(context.scratch, path), { dereference: true });
     }
 }
 
 // Clones each installed dependency folder that exists, and queues it for link repair.
-function copyDependencies(context: Scratch, dependencies: string[]): void {
+async function copyDependencies(context: Scratch, dependencies: string[]): Promise<void> {
     for (const dir of dependencies) {
         if (!exists(join(context.root, dir))) continue;
         const source = realpathSync(join(context.root, dir));
         const target = join(context.scratch, dir);
         context.copies.set(source, target);
-        cpSync(source, target, CLONE_OPTIONS);
+        await cp(source, target, CLONE_OPTIONS);
         context.pending.push({ source, target });
     }
 }
@@ -66,7 +65,7 @@ function relocated(copies: Map<string, string>, source: string): string | undefi
 }
 
 // Repairs a directory link inside a copied tree: pointed at the copy of its target, or replaced by a clone of it.
-function relinkDirectory(context: Scratch, original: string, target: string): void {
+async function relinkDirectory(context: Scratch, original: string, target: string): Promise<void> {
     const destination = relocated(context.copies, original);
     unlinkSync(target);
     if (destination !== undefined && exists(destination)) {
@@ -74,12 +73,12 @@ function relinkDirectory(context: Scratch, original: string, target: string): vo
         return;
     }
     context.copies.set(original, target);
-    cpSync(original, target, CLONE_OPTIONS);
+    await cp(original, target, CLONE_OPTIONS);
     context.pending.push({ source: original, target });
 }
 
 // Handles one entry of a copied tree: folders are queued, file links deferred, directory links repaired now.
-function visitEntry(context: Scratch, directory: Copy, entry: Dirent): void {
+async function visitEntry(context: Scratch, directory: Copy, entry: Dirent): Promise<void> {
     const source = join(directory.source, entry.name);
     const target = join(directory.target, entry.name);
     if (entry.isDirectory()) {
@@ -89,17 +88,17 @@ function visitEntry(context: Scratch, directory: Copy, entry: Dirent): void {
     if (!entry.isSymbolicLink()) return;
     const original = realpathSync(source);
     if (statSync(original).isFile()) context.fileLinks.push({ source: original, target });
-    else relinkDirectory(context, original, target);
+    else await relinkDirectory(context, original, target);
 }
 
 // Repairs every file link once every tree is copied, so its target's copy is known to exist or not.
-function relinkFiles(context: Scratch): void {
+async function relinkFiles(context: Scratch): Promise<void> {
     for (const { source, target } of context.fileLinks) {
         const destination = relocated(context.copies, source);
         unlinkSync(target);
         if (destination !== undefined && exists(destination))
             symlinkSync(relative(dirname(target), destination), target, 'file');
-        else cpSync(source, target);
+        else await cp(source, target);
     }
 }
 
@@ -153,7 +152,7 @@ export function createFileWorkspace(
  * @param scopePaths the scopes whose installed dependencies the command needs
  * @returns the temporary directory, which the caller must remove
  */
-export function scratchCopy(root: string, paths: string[], scopePaths: string[]): string {
+export async function scratchCopy(root: string, paths: string[], scopePaths: string[]): Promise<string> {
     const scratch = realpathSync(mkdtempSync(join(tmpdir(), 'gspot-fix-')));
     const files = openConfinedRoot(root, 'native');
     const context: Scratch = {
@@ -168,15 +167,15 @@ export function scratchCopy(root: string, paths: string[], scopePaths: string[])
         const dependencies = [
             ...new Set(scopePaths.flatMap((scope) => SCRATCH_DIRECTORIES.map((name) => join(scope, name)))),
         ];
-        copySelected(context, paths, dependencies);
-        copyDependencies(context, dependencies);
+        await copySelected(context, paths, dependencies);
+        await copyDependencies(context, dependencies);
         for (let directory = context.pending.pop(); directory !== undefined; directory = context.pending.pop())
-            for (const entry of readdirSync(directory.source, { withFileTypes: true }))
-                visitEntry(context, directory, entry);
-        relinkFiles(context);
+            for (const entry of await readdir(directory.source, { withFileTypes: true }))
+                await visitEntry(context, directory, entry);
+        await relinkFiles(context);
         return scratch;
     } catch (error) {
-        rmSync(scratch, { recursive: true, force: true });
+        await rm(scratch, { recursive: true, force: true });
         throw error;
     } finally {
         files.close();

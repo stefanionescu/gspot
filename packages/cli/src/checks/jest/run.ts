@@ -1,7 +1,8 @@
 // Jest run over a disposable copy of the sources, with failed tests and coverage under its floors as findings.
 import { z } from 'zod';
 import { tmpdir } from 'node:os';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync } from 'node:fs';
+import { rm } from 'node:fs/promises';
 import { stripVTControlCharacters } from 'node:util';
 import type { ConfinedRoot } from '#cli/types/platform.ts';
 import { isAbsolute, join, relative, sep } from 'node:path';
@@ -154,7 +155,7 @@ export async function jestCoverage(input: EngineInput): Promise<Finding[]> {
     let source: string | undefined;
     const reports = openConfinedRoot(work);
     try {
-        source = scratchCopy(
+        source = await scratchCopy(
             input.root,
             input.files.map((file) => file.path),
             input.scopeEntries.map((scope) => scope.path),
@@ -162,7 +163,7 @@ export async function jestCoverage(input: EngineInput): Promise<Finding[]> {
         return await runJest({ input, source, work }, reports, settings);
     } finally {
         reports.close();
-        if (source !== undefined) rmSync(source, { recursive: true, force: true });
-        rmSync(work, { recursive: true, force: true });
+        if (source !== undefined) await rm(source, { recursive: true, force: true });
+        await rm(work, { recursive: true, force: true });
     }
 }

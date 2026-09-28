@@ -9,6 +9,47 @@ import { rejection, textContaining } from '#tests/support/expectations.ts';
 import { CORRECTION_POLICY, plannedCorrection } from '#tests/support/cli/correction.ts';
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 
+test('dependency copies let concurrent native process output drain', async () => {
+    await using repository = await testdir();
+    await createFileTree(
+        repository.path,
+        Object.fromEntries(
+            Array.from({ length: 2048 }, (_, index) => [`node_modules/example/file-${String(index)}.json`, '{}']),
+        ),
+    );
+    const producer = Bun.spawn(
+        [
+            process.execPath,
+            '-e',
+            'process.stdout.write("ready"); await Bun.stdin.text(); await Bun.write(Bun.stdout, Buffer.alloc(8 * 1024 * 1024, 97));',
+        ],
+        { stdin: 'pipe', stdout: 'pipe', stderr: 'pipe' },
+    );
+    const reader = producer.stdout.getReader();
+    const ready = await reader.read();
+    expect(new TextDecoder().decode(ready.value)).toBe('ready');
+    reader.releaseLock();
+    let drained = false;
+    const output = Array.fromAsync(producer.stdout).then((chunks) => {
+        drained = true;
+        return Buffer.concat(chunks);
+    });
+    const closed = producer.stdin.end();
+    const scratch = await scratchCopy(repository.path, [], ['']);
+    try {
+        expect(drained).toBe(true);
+        expect(await producer.exited).toBe(0);
+        expect(Buffer.from(await output).equals(Buffer.alloc(8 * 1024 * 1024, 97))).toBe(true);
+        expect(readdirSync(join(scratch, 'node_modules/example'))).toHaveLength(2048);
+    } finally {
+        producer.kill();
+        await closed;
+        await output;
+        await producer.exited;
+        rmSync(scratch, { recursive: true, force: true });
+    }
+});
+
 test.each([false, true].flatMap((preview) => [false, true].map((isolated) => ({ preview, isolated }))))(
     'corrections reject a replaced external source before execution (preview $preview, isolated $isolated)',
     async ({ preview, isolated }) => {
@@ -167,7 +208,7 @@ test('preview copies workspace dependencies and preserves executable links witho
     symlinkSync('../packages/core', join(repository.path, 'node_modules/core'));
     symlinkSync(external.path, join(repository.path, 'node_modules/external'));
     const session = await openSession(repository.path);
-    const scratch = scratchCopy(
+    const scratch = await scratchCopy(
         session.root,
         ['packages/core/value.js'],
         session.repository.scopes.map((scope) => scope.path),

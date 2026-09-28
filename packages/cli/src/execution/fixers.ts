@@ -1,12 +1,13 @@
+import { rm } from 'node:fs/promises';
 import { createTwoFilesPatch } from 'diff';
 import { toPlatform } from '#cli/platform/paths.ts';
 import type { ToolPin } from '#cli/types/configurations.ts';
 import { inspectTool, toolPin } from '#cli/tools/inspect.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { prepareCommand } from '#cli/execution/tool/runner.ts';
-import type { ConfinedRoot, SpawnResult } from '#cli/types/platform.ts';
 // Corrections run in order; dry runs use a scratch copy and return diffs.
-import { readFileSync, rmSync, unlinkSync, writeFileSync } from 'node:fs';
+import { readFileSync, unlinkSync, writeFileSync } from 'node:fs';
+import type { ConfinedRoot, SpawnResult } from '#cli/types/platform.ts';
 import { commandConfigurations } from '#cli/execution/command-expansion.ts';
 import { runToolCommand, toolDeadlineSeconds } from '#cli/tools/command.ts';
 import { executionFailure, hasToolError } from '#cli/execution/broken-tool.ts';
@@ -190,7 +191,7 @@ export async function applyFixers(session: Session, planned: PlannedCheck[], isD
         ...new Set(checks.flatMap((check) => [...check.files.map((file) => file.path), ...check.triggerPaths])),
     ].toSorted((a, b) => a.localeCompare(b));
     const scratch = isDryRun
-        ? scratchCopy(
+        ? await scratchCopy(
               session.root,
               [...paths, ...session.repository.files.map((file) => file.path)],
               session.repository.scopes.map((scope) => scope.path),
@@ -218,6 +219,6 @@ export async function applyFixers(session: Session, planned: PlannedCheck[], isD
             : [];
         return { results, changed, diffs };
     } finally {
-        if (scratch !== undefined) rmSync(scratch, { recursive: true, force: true });
+        if (scratch !== undefined) await rm(scratch, { recursive: true, force: true });
     }
 }
