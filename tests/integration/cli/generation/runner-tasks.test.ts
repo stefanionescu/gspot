@@ -4,11 +4,11 @@ import { fileURLToPath } from 'node:url';
 import { run } from '#cli/platform/spawn.ts';
 import { pinnedTwice } from '#cli/tools/mise.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { kitManifests } from '#cli/kits/manifests.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { openSession } from '#cli/execution/session.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
 import { parseProfile } from '#cli/policy/profiles/read.ts';
-import { configurationManifests } from '#cli/kits/manifests.ts';
 import { runnerTaskPlan } from '#cli/generation/runner/plan.ts';
 import { exportedProfile } from '#cli/policy/profiles/export.ts';
 import type { PackageScripts } from '#tests/types/integration/cli/generation.ts';
@@ -60,7 +60,7 @@ test('task mappings validate before mutation, round-trip profiles, and explain t
 
 test('duplicate pins include only parsed tool keys', async () => {
     await using directory = await testdir();
-    const manifests = [...configurationManifests().values()];
+    const manifests = [...kitManifests().values()];
     await createFileTree(directory.path, {
         'mise.toml': `[tools]\n'shellcheck' = { version = "0.11.0" }\n"ty\\u0070os" = "1.43.5"\n[env]\nruff = "not a pin"\n[tasks]\nactionlint = "echo not a pin"\n[tasks.check]\nrun = "echo vale = something"\n`,
     });

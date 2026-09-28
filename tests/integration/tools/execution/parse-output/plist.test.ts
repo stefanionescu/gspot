@@ -10,12 +10,12 @@ import { checkedFindings } from '#cli/execution/broken-tool.ts';
 import { ToolOutputError } from '#cli/execution/output/tool-formats.ts';
 
 describe.if(process.platform === 'darwin')('native property lists', () => {
-    test.each(['configs/plist', 'xcode/plist'])(
+    test.each(['files/plist', 'xcode/plist'])(
         '%s classifies mixed native parse and input failures as execution errors',
         async (check) => {
             await using sandbox = await testdir();
             await createFileTree(sandbox.path, {
-                'gspot.toml': 'version = 1\nkits = ["configs", "xcode"]\n',
+                'gspot.toml': 'version = 1\nkits = ["files", "xcode"]\n',
                 'bad.plist': '<plist><dict>',
                 'private.plist': '<plist><dict/></plist>\n',
             });

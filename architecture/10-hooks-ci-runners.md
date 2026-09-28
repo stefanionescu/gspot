@@ -253,7 +253,7 @@ repository without code scanning.
 
 The findings print to the log, and the JSON report is written
 beside them. A macOS job appears only where a Swift scope exists. Actions are pinned by commit,
-and `configs/actions-pins` asks GitHub that each pinned commit exists. Drift of generated
+and `files/actions-pins` asks GitHub that each pinned commit exists. Drift of generated
 files is the check `integrity/generated-drift` inside `gspot check`, so the job runs no `apply`.
 
 For GitLab, gspot writes `.gitlab/ci/gspot.yml` with one job, and the plan shows the line that

@@ -1,11 +1,11 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { detectKits } from '#cli/kits/detect.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { kitManifests } from '#cli/kits/manifests.ts';
 import { readRepository } from '#cli/repository/tree.ts';
-import { detectConfigurations } from '#cli/kits/detect.ts';
 import { workspaceScopes } from '#cli/repository/scopes.ts';
 import { readManifests } from '#cli/repository/manifests.ts';
-import { configurationManifests } from '#cli/kits/manifests.ts';
 import { rmSync, mkdirSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
 
 test('Python workspace detection uses captured manifest facts', async () => {
@@ -94,22 +94,18 @@ test.each([
         'fastapi',
         'friendly-bard',
     ]);
-    const manifests = configurationManifests();
-    const proposed = detectConfigurations(repository.files, manifests, facts, 'api');
+    const manifests = kitManifests();
+    const proposed = detectKits(repository.files, manifests, facts, 'api');
     expect(proposed.find((entry) => entry.configuration === 'fastapi')?.evidence).toBe(`fastapi in api/${path}`);
     expect(proposed.find((entry) => entry.configuration === 'python')?.evidence).toBe(`api/${path}`);
     expect(
-        detectConfigurations(repository.files, manifests, facts, 'other').some(
-            (entry) => entry.configuration === 'fastapi',
-        ),
+        detectKits(repository.files, manifests, facts, 'other').some((entry) => entry.configuration === 'fastapi'),
     ).toBe(false);
     expect(readFileSync(join(sandbox.path, 'api', path), 'utf8')).toBe(source);
     writeFileSync(join(sandbox.path, 'api', path), path.endsWith('.txt') ? '# dependencies removed\n' : '');
     const corrected = readManifests(sandbox.path, repository.files);
     expect(
-        detectConfigurations(repository.files, manifests, corrected, 'api').some(
-            (entry) => entry.configuration === 'fastapi',
-        ),
+        detectKits(repository.files, manifests, corrected, 'api').some((entry) => entry.configuration === 'fastapi'),
     ).toBe(false);
 });
 

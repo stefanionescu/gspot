@@ -1,9 +1,9 @@
 import { nearMatches } from '#cli/policy/near.ts';
 import { selectForScope } from '#cli/kits/select.ts';
+import { kitManifests } from '#cli/kits/manifests.ts';
 import { excludeProblems } from '#cli/agents/assemble.ts';
 import { validateAgainstSurface } from '#cli/policy/audit.ts';
 import { unknownConfiguration } from '#cli/policy/messages.ts';
-import { configurationManifests } from '#cli/kits/manifests.ts';
 import { exposedSettings } from '#cli/policy/setting-surface.ts';
 import { RUFF_PREVIEW_RULES } from '#cli/config/checks/ruff-rules.ts';
 import { asRecord, policyValue, policyTables } from '#cli/policy/settings.ts';
@@ -53,7 +53,7 @@ function ruffProblems(table: Partial<Policy>): PolicyProblem[] {
  * @returns one problem per unknown name
  */
 export function unknownConfigurationProblems(policy: Policy): PolicyProblem[] {
-    const manifests = configurationManifests();
+    const manifests = kitManifests();
     const declarations: { name: string; path: PathSegment[] }[] = [
         ...policy.kits.map((name, index) => ({ name, path: ['kits', index] })),
         ...policy.scopes.flatMap((scope, scopeIndex) =>
@@ -74,7 +74,7 @@ export function unknownConfigurationProblems(policy: Policy): PolicyProblem[] {
  * @returns the problems, each at the value that raised it
  */
 export function completenessProblems(policy: Policy): PolicyProblem[] {
-    const manifests = configurationManifests();
+    const manifests = kitManifests();
     const problems: PolicyProblem[] = [];
     for (const { table } of [
         ...policyTables(policy, undefined),

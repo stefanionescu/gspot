@@ -17,7 +17,7 @@ import { explain } from '#cli/commands/explain/subjects.ts';
 test.each(['recommended', 'all'])('native parsers supply syntax coverage at %s', async (level) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': `version = 1\nlevel = "${level}"\nkits = ["typescript", "configs", "formatting"]\n`,
+        'gspot.toml': `version = 1\nlevel = "${level}"\nkits = ["typescript", "files", "formatting"]\n`,
         'source.ts': 'export const value = 1;\n',
         'settings.json': '{"value":1}\n',
     });

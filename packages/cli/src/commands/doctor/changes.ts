@@ -1,12 +1,12 @@
 import { statSync } from 'node:fs';
 import { join, relative } from 'node:path';
+import { detectKits } from '#cli/kits/detect.ts';
 import { pinnedTwice } from '#cli/tools/mise.ts';
 import { head } from '#cli/repository/tracked.ts';
 import { everyManifest } from '#cli/kits/select.ts';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { hasHeader } from '#cli/generation/headers.ts';
 import { isOwned } from '#cli/policy/adoption/collect.ts';
-import { detectConfigurations } from '#cli/kits/detect.ts';
 import { readManifests } from '#cli/repository/manifests.ts';
 import type { GeneratedFile } from '#cli/types/generation.ts';
 import { MISE_CONFIG_PATH } from '#cli/config/tools/tools.ts';
@@ -103,7 +103,7 @@ export function changeReport(session: Session): ChangeReport {
     });
     const generated = new Set(rendered.files.filter((file) => file.kind === 'workflow').map((file) => file.path));
     return {
-        detectedNotSelected: detectConfigurations(session.repository.files, session.manifests, facts)
+        detectedNotSelected: detectKits(session.repository.files, session.manifests, facts)
             .filter((proposal) => !selected.has(proposal.configuration))
             .filter((proposal) => {
                 const manifest = session.manifests.get(proposal.configuration);

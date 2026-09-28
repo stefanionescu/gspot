@@ -1,8 +1,8 @@
 // Every pin a manifest names exists in its registry, sits at or above its floor, and fits the ESLint the plugins support.
 import { test, expect } from 'bun:test';
 import type { ToolPin } from '#cli/types/kits.ts';
+import { kitManifests } from '#cli/kits/manifests.ts';
 import type { Pin } from '#tests/types/acceptance/release.ts';
-import { configurationManifests } from '#cli/kits/manifests.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { REGISTRY_TIMEOUT_MS } from '#tests/config/acceptance/release.ts';
 
@@ -14,7 +14,7 @@ function pinsOf(tool: ToolPin): Pin[] {
     });
 }
 
-const tools = [...configurationManifests().values()].flatMap((manifest) => manifest.tools);
+const tools = [...kitManifests().values()].flatMap((manifest) => manifest.tools);
 // The gspot packages reach the registry with the first release (D-158). Lookups wait until publication.
 const pins = tools
     .filter((tool) => tool.provider !== 'host')

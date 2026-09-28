@@ -16,11 +16,11 @@ test.each([
     await using sandbox = await testdir();
     const workflow = 'jobs:\n  check:\n    steps:\n      - uses: actions/checkout@v4\n';
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nkits = ["configs"]\n',
+        'gspot.toml': 'version = 1\nkits = ["files"]\n',
         '.github/workflows/check.yml': workflow,
     });
     const session = await openSession(sandbox.path);
-    const plans = await planRun(session, { stage: 'push', skips: [], only: ['configs/actions-pins'] });
+    const plans = await planRun(session, { stage: 'push', skips: [], only: ['files/actions-pins'] });
     const planned = plans[0]!;
     const result = {
         code: 1,
@@ -37,7 +37,7 @@ test.each([
         ]),
     ).toStrictEqual([
         containing({
-            check: 'configs/actions-pins',
+            check: 'files/actions-pins',
             message: 'invalid action pin: .github/workflows/check.yml:4',
         }),
     ]);

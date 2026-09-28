@@ -22,7 +22,8 @@ async function brokenLinks(input: EngineInput, isExternal: boolean): Promise<Fin
         (entry) => (entry.pattern === undefined ? [] : [entry.pattern]),
     );
     const skips = [
-        ...(isExternal ? [] : ['^https?://(?!localhost)']),
+        // Linkinator serves the output on the loopback address, so an internal run skips every other host.
+        ...(isExternal ? [] : [String.raw`^https?://(?!localhost|127\.0\.0\.1)`]),
         '^mailto:',
         '^tel:',
         '^sms:',

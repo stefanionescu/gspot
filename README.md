@@ -29,7 +29,7 @@ published release or native verification on every target platform.
   <img src="docs/public/brand/readme/tools/semgrep.svg" alt="Semgrep" width="120">
 </p>
 
-See the [configuration reference](https://gspot.dev/reference/configurations/) for supported technologies.
+See the [configuration reference](https://gspot.dev/reference/kits/) for supported technologies.
 
 ## Check a JavaScript module
 

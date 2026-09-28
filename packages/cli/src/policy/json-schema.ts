@@ -1,6 +1,6 @@
 import { z } from 'zod';
+import { kitManifests } from '#cli/kits/manifests.ts';
 import type { SchemaNode } from '#cli/types/policy/policy.ts';
-import { configurationManifests } from '#cli/kits/manifests.ts';
 import { policySchema, settingValueSchemas } from '#cli/policy/schema.ts';
 
 function childrenAt(node: SchemaNode, segment: string | number): SchemaNode[] {
@@ -31,7 +31,7 @@ function toolSettings(schema: SchemaNode): void {
     const toolSchema = tools.additionalProperties;
     if (typeof toolSchema !== 'object') throw new Error('The policy tools schema requires a tool table.');
     tools.properties ??= {};
-    const settings = [...configurationManifests().values()].flatMap((manifest) => manifest.settings);
+    const settings = [...kitManifests().values()].flatMap((manifest) => manifest.settings);
     const declared = settings.flatMap((spec) => {
         const [root, tool, ...segments] = spec.name.split('.');
         if (root !== 'tools' || tool === undefined) return [];

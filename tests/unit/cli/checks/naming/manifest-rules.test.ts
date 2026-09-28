@@ -1,11 +1,11 @@
 // A framework carries the naming rules of its own files in its manifest, and the repository's rules follow them (K-50).
 import { test, expect } from 'bun:test';
+import { kitManifests } from '#cli/kits/manifests.ts';
 import { parsePolicyText } from '#cli/policy/read.ts';
-import { configurationManifests } from '#cli/kits/manifests.ts';
 import { exposedSettings } from '#cli/policy/setting-surface.ts';
 import { rulesFor, effectivePolicy } from '#cli/checks/naming/policy.ts';
 
-const manifests = configurationManifests();
+const manifests = kitManifests();
 const express = manifests.get('express')!;
 test('a selected framework adds its rules after the shipped ones and before the repository rules', () => {
     const text =

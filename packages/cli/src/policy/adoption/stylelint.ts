@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { posix, extname } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import { toolPin } from '#cli/tools/inspect.ts';
-import { configurationManifests } from '#cli/kits/manifests.ts';
+import { kitManifests } from '#cli/kits/manifests.ts';
 import type { stylelintRequest } from '#cli/evaluation/protocol.ts';
 import { evaluateConfiguration } from '#cli/evaluation/configuration.ts';
 import { parse as parseToml, stringify as stringifyToml } from 'smol-toml';
@@ -73,7 +73,7 @@ async function carryStylelint(
     const converted = parseToml(stringifyToml({ rules: enabled }));
     if (!isDeepStrictEqual(converted['rules'], enabled))
         throw new Error(`${path}: Stylelint rule options cannot be represented without loss in TOML.`);
-    const version = z.string().min(1).parse(toolPin(configurationManifests().values(), 'stylelint').version);
+    const version = z.string().min(1).parse(toolPin(kitManifests().values(), 'stylelint').version);
     stylelintResponse.parse(
         await evaluateConfiguration({ root, tool: 'stylelint', operation: 'stylelint', version, rules }),
     );

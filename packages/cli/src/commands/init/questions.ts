@@ -105,7 +105,7 @@ async function askFormat(
  * @param manifests every configuration manifest
  * @returns the configuration ids the person kept, or undefined when the question was not asked
  */
-export async function askConfigurations(
+export async function askKits(
     options: InitOptions,
     selection: InitSelection,
     manifests: Map<string, Manifest>,

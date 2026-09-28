@@ -20,7 +20,7 @@ kits = ["express"]
 `;
 export const POSTGRES_HISTORY_POLICY = 'version = 1\nkits = ["postgres"]\n[tools.squawk]\nfrozen_through = "all"\n';
 export const TOOL_FAILURES_POLICY =
-    'version = 1\nlevel = "all"\nkits = ["configs"]\n[runner]\ntool = "mise"\n[guides]\ninstall = false\n';
+    'version = 1\nlevel = "all"\nkits = ["files"]\n[runner]\ntool = "mise"\n[guides]\ninstall = false\n';
 export const OPENAPI_FRESH_POLICY =
     'version = 1\nkits = ["express"]\n[tools.openapi]\ndocument = "openapi.json"\nproduced_by = "bun generate.ts \\"\\" \\"two words\\""\n';
 export const TSCONFIG_OPTIONS_POLICY = 'version = 1\nkits = ["typescript"]\n';

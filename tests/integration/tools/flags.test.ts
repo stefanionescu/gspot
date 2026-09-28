@@ -4,10 +4,10 @@ import { fileURLToPath } from 'node:url';
 import { readPolicy } from '#cli/policy/read.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { inspectTool } from '#cli/tools/inspect.ts';
+import { kitManifests } from '#cli/kits/manifests.ts';
 import { runProcess } from '#tests/support/cli/command.ts';
 import { privateToolInstallation } from '#cli/tools/pins.ts';
 import { test, expect, afterAll, beforeAll } from 'bun:test';
-import { configurationManifests } from '#cli/kits/manifests.ts';
 import { toolPackages } from '#cli/generation/tools/packages.ts';
 import type { ToolCommand } from '#tests/types/integration/tools.ts';
 import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
@@ -17,7 +17,7 @@ import { installPackageProject, preparePackageProject } from '#cli/tools/package
 import { HELP_TIMEOUT_MS, INSTALL_TIMEOUT_MS } from '#tests/config/integration/tools/tools.ts';
 
 const root = fileURLToPath(new URL('../../..', import.meta.url));
-const manifests = [...configurationManifests().values()];
+const manifests = [...kitManifests().values()];
 const context = { root, inspections: new Map(), policyFiles: readPolicy(root) };
 
 // The flags of a command: every dashed token before any `=`, and the flag a {each:--flag:setting} placeholder repeats.

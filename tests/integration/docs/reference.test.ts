@@ -44,10 +44,10 @@ test('command reference includes inherited options and nested usage while omitti
 test('identical setting definitions list every configuration owner and global settings remain visible', () => {
     const settings = referencePages().get('settings.md')!.body;
     const shared = settings.split('\n').find((line) => line.includes('`tools.openapi.produced_by`'))!;
-    expect(shared).toContain('/reference/configurations/express/');
-    expect(shared).toContain('/reference/configurations/fastapi/');
+    expect(shared).toContain('/reference/kits/express/');
+    expect(shared).toContain('/reference/kits/fastapi/');
     expect(settings).toContain('`require_reasons`');
-    const javascript = referencePages().get('configurations/javascript.md')!.body;
+    const javascript = referencePages().get('kits/javascript.md')!.body;
     expect(javascript).toContain('`runtime/node/NODE.md`\n');
     expect(javascript).toContain(
         '`runtime/bun/BUN.md` when the repository matches any of: filename `bun.lock`, filename `bun.lockb`, filename `bunfig.toml`.',
@@ -55,12 +55,12 @@ test('identical setting definitions list every configuration owner and global se
 });
 
 test('conflicting setting definitions stop reference generation', () => {
-    const manifests = new Map(manifestDefinitions.configurationManifests());
+    const manifests = new Map(manifestDefinitions.kitManifests());
     const fastapi = structuredClone(manifests.get('fastapi')!);
     const setting = fastapi.settings.find((entry) => entry.name === 'tools.openapi.produced_by')!;
     setting.kind = 'boolean';
     manifests.set('fastapi', fastapi);
-    const definitions = spyOn(manifestDefinitions, 'configurationManifests').mockReturnValue(manifests);
+    const definitions = spyOn(manifestDefinitions, 'kitManifests').mockReturnValue(manifests);
     try {
         expect(() => referencePages()).toThrow('Conflicting setting definition: tools.openapi.produced_by');
     } finally {
@@ -74,8 +74,8 @@ test('configuration-specific defaults retain distinct values and their owning co
         .body.split('\n')
         .filter((line) => line.includes('`tools.sqlfluff.dialect`'));
     expect(rows).toHaveLength(2);
-    expect(rows.find((line) => line.includes('`"ansi"`'))).toContain('/reference/configurations/sql/');
-    expect(rows.find((line) => line.includes('`"postgres"`'))).toContain('/reference/configurations/postgres/');
+    expect(rows.find((line) => line.includes('`"ansi"`'))).toContain('/reference/kits/sql/');
+    expect(rows.find((line) => line.includes('`"postgres"`'))).toContain('/reference/kits/postgres/');
 });
 
 test('generated source links resolve to their actual owner and display the current product version', () => {
@@ -90,11 +90,11 @@ test('generated source links resolve to their actual owner and display the curre
 });
 
 test('duplicate check identities stop reference loading instead of hiding one owner', () => {
-    const manifests = new Map(manifestDefinitions.configurationManifests());
+    const manifests = new Map(manifestDefinitions.kitManifests());
     const duplicate = structuredClone(manifests.get('sql')!);
     duplicate.checks.push(duplicate.checks[0]!);
     manifests.set('sql', duplicate);
-    const definitions = spyOn(manifestDefinitions, 'configurationManifests').mockReturnValue(manifests);
+    const definitions = spyOn(manifestDefinitions, 'kitManifests').mockReturnValue(manifests);
     try {
         expect(() => referencePages()).toThrow('Duplicate check identity:');
     } finally {
@@ -142,11 +142,11 @@ test('reference generation rejects a public command without behavioral documenta
 
 test('check references invoke the reporting check and expose execution restrictions', () => {
     const pages = referencePages();
-    const json = pages.get('rules/configs/json.md')!.body;
+    const json = pages.get('rules/files/json.md')!.body;
     expect(json).toContain('gspot check --stage commit --only formatting/prettier --no-cache');
-    expect(json).not.toContain('--only configs/json');
+    expect(json).not.toContain('--only files/json');
     expect(json).toContain('gspot ignore formatting/prettier --paths');
-    expect(json).not.toContain('gspot ignore configs/json');
+    expect(json).not.toContain('gspot ignore files/json');
     expect(json).toContain('This entry does not execute a separate check.');
     expect(json).toContain('Scope: follows the reporting check.');
     expect(pages.get('rules/bash/syntax.md')!.body).toContain('selected file lists under the applicable scope policy');
@@ -155,7 +155,7 @@ test('check references invoke the reporting check and expose execution restricti
         'each selected scope, excluding files owned by child scopes',
     );
     expect(pages.get('rules/xctest/coverage.md')!.body).toContain('Platform selection: macos');
-    const next = pages.get('configurations/nextjs.md')!.body;
+    const next = pages.get('kits/nextjs.md')!.body;
     expect(next).toContain('## Rule exclusions');
     expect(next).toContain('when `structure.reexports` is `"index-only"`');
     expect(next).toContain('Next.js discovers route files by name');
@@ -184,7 +184,7 @@ test('reference titles come from their definitions and exact rule identifiers re
         expect(pages.get(`commands/${command.name()}.md`)!.data.title).toBe(command.summary());
         expect(page).toContain(`gspot ${command.name()}`);
     }
-    for (const manifest of manifestDefinitions.configurationManifests().values()) {
+    for (const manifest of manifestDefinitions.kitManifests().values()) {
         for (const check of manifest.checks) {
             expect(check.title?.trim().length).toBeGreaterThan(0);
             const page = pages.get(`rules/${check.name}.md`)!.body;

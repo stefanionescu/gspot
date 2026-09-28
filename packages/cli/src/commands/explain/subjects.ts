@@ -2,9 +2,9 @@
 import { allChecks } from '#cli/kits/listing.ts';
 import { nearMatches } from '#cli/policy/near.ts';
 import * as messages from '#cli/policy/messages.ts';
+import { kitManifests } from '#cli/kits/manifests.ts';
 import { quoteArgument } from '#cli/platform/arguments.ts';
 import { explainPath } from '#cli/commands/explain/file.ts';
-import { configurationManifests } from '#cli/kits/manifests.ts';
 import { specFor, settingValue } from '#cli/policy/settings.ts';
 import type { Session } from '#cli/types/execution/execution.ts';
 import type { ListingRow, SettingSpec } from '#cli/types/kits.ts';
@@ -18,12 +18,12 @@ function listLine(label: string, items: string[]): string[] {
 }
 
 function configurationExplanation(configurationName: string): Explanation | { error: string } {
-    const manifest = configurationManifests().get(configurationName);
+    const manifest = kitManifests().get(configurationName);
     if (!manifest)
         return {
             error: messages.unknownConfiguration(
                 configurationName,
-                nearMatches(configurationName, configurationManifests().keys().toArray()),
+                nearMatches(configurationName, kitManifests().keys().toArray()),
             ),
         };
     const row: ListingRow = {

@@ -1,13 +1,13 @@
 import { test, expect } from 'bun:test';
+import { detectKits } from '#cli/kits/detect.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
+import { kitManifests } from '#cli/kits/manifests.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { readRepository } from '#cli/repository/tree.ts';
-import { detectConfigurations } from '#cli/kits/detect.ts';
 import { containing } from '#tests/support/expectations.ts';
-import { configurationManifests } from '#cli/kits/manifests.ts';
 
 test.each([
     { source: 'import XCTest\n', selected: true },
@@ -25,9 +25,7 @@ test.each([
     const repository = await readRepository(sandbox.path, [], [], []);
     expect(repository.files[0]!.tags.includes('swift-test')).toBe(selected);
     expect(
-        detectConfigurations(repository.files, configurationManifests(), []).some(
-            ({ configuration }) => configuration === 'xctest',
-        ),
+        detectKits(repository.files, kitManifests(), []).some(({ configuration }) => configuration === 'xctest'),
     ).toBe(selected);
 });
 
@@ -40,9 +38,7 @@ test.each([true, false])('Swift package test targets are executable declarations
     });
     const repository = await readRepository(sandbox.path, [], [], []);
     expect(
-        detectConfigurations(repository.files, configurationManifests(), []).some(
-            ({ configuration }) => configuration === 'xctest',
-        ),
+        detectKits(repository.files, kitManifests(), []).some(({ configuration }) => configuration === 'xctest'),
     ).toBe(declared);
 });
 

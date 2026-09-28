@@ -1,7 +1,7 @@
 // Whether a pinned tool ships for the machine the tests run on, read from its manifest pin.
 import { toolPin } from '#cli/tools/inspect.ts';
+import { kitManifests } from '#cli/kits/manifests.ts';
 import { missingBuild } from '#cli/tools/platforms.ts';
-import { configurationManifests } from '#cli/kits/manifests.ts';
 import { PLATFORM_NAMES } from '#cli/config/execution/execution.ts';
 
 /**
@@ -11,6 +11,6 @@ import { PLATFORM_NAMES } from '#cli/config/execution/execution.ts';
  */
 export function toolShipsHere(name: string): boolean {
     const platform = PLATFORM_NAMES[process.platform] ?? process.platform;
-    const pin = toolPin(configurationManifests().values(), name);
+    const pin = toolPin(kitManifests().values(), name);
     return missingBuild(pin, platform, process.arch) === undefined;
 }

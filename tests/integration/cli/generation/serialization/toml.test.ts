@@ -93,7 +93,7 @@ test('TOML tool configurations round-trip dynamic strings and option keys', asyn
     await createFileTree(sandbox.path, {
         'gspot.toml': stringify({
             version: 1,
-            kits: ['secrets', 'dependencies', 'configs', 'docs', 'python', 'postgres'],
+            kits: ['secrets', 'dependencies', 'files', 'docs', 'python', 'postgres'],
             format: { indent_style: 'tab' },
             tools: {
                 gitleaks: { allow: [{ description: text, paths: [path], regexes: [text], reason }] },

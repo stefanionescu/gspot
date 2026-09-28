@@ -106,7 +106,7 @@ export function configurationPage(manifest: Manifest): ReferencePage {
     const targets = manifest.configs.map((config) =>
         config.needs === undefined
             ? `\`${config.target}\``
-            : `\`${config.target}\` when the [${config.needs} configuration](/reference/configurations/${config.needs}/) is selected`,
+            : `\`${config.target}\` when the [${config.needs} configuration](/reference/kits/${config.needs}/) is selected`,
     );
     const rules = Object.values(manifest.guides).flatMap((files) => files.map((file) => guideSelection(file)));
     const settings = manifest.settings.map((setting) => `\`${setting.name}\`: ${setting.summary}`);
@@ -158,7 +158,7 @@ export function rulePage(check: CheckSpec, configuration: Manifest): ReferencePa
     const command = `gspot check --stage ${check.stage} --only ${check.reported_by ?? check.name} --no-cache`;
     const lines = [
         `${check.summary}\n\n## Why\n\n${check.why}\n\n## What to do\n\n${check.help}\n\n## Where it runs\n\n`,
-        `Check: \`${check.name}\`.\n\n- Configuration: [the ${configuration.kit.name} configuration](/reference/configurations/${configuration.kit.name}/)\n- Stage: ${check.stage}\n- Level: ${check.level}\n`,
+        `Check: \`${check.name}\`.\n\n- Configuration: [the ${configuration.kit.name} configuration](/reference/kits/${configuration.kit.name}/)\n- Stage: ${check.stage}\n- Level: ${check.level}\n`,
         ...checkEnvironment(check),
         section('Defect and correction', check.example),
         check.stage === 'message'

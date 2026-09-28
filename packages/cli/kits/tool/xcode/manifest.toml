@@ -2,7 +2,7 @@
 name = "xcode"
 kind = "tool"
 title = "Xcode"
-requires = ["configs"]
+requires = ["files"]
 recommends = ["swift"]
 description = "An Xcode project: property lists that parse, build settings files, and complete string catalogs. Asset catalogs hold their images, test targets sit in a plan, sources belong to a target, and entitlements stay on a list."
 

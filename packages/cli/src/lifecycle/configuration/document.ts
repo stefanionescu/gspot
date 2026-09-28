@@ -3,7 +3,7 @@ import { parse as parseToml } from 'smol-toml';
 import { patch as patchToml } from '@decimalturn/toml-patch';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { isMap, isNode, isAlias, isCollection, parseDocument } from 'yaml';
-import type { KeyPath, ConfigurationFormat, ConfigurationDocument } from '#cli/types/lifecycle/lifecycle.ts';
+import type { KeyPath, KitDocument, ConfigurationFormat } from '#cli/types/lifecycle/lifecycle.ts';
 import { modify, parseTree, applyEdits, getNodeValue, type ParseError, findNodeAtLocation } from 'jsonc-parser';
 
 function jsonDocument(text: string) {
@@ -49,7 +49,7 @@ function tomlTable(
 }
 
 // A TOML document edited in memory and printed by patching the source, so comments and layout survive.
-function tomlDocument(source: string): ConfigurationDocument {
+function tomlDocument(source: string): KitDocument {
     const document: Record<string, unknown> = parseToml(source);
     return {
         value: (path) => valueAt(document, path),
@@ -73,7 +73,7 @@ function tomlDocument(source: string): ConfigurationDocument {
 }
 
 // A YAML mapping edited through its own document model.
-function yamlDocument(source: string, created: boolean): ConfigurationDocument {
+function yamlDocument(source: string, created: boolean): KitDocument {
     const document = parseDocument(source);
     if (document.errors.length > 0 || !isMap(document.contents))
         throw new Error('Shared configuration must be a valid YAML mapping.');
@@ -98,7 +98,7 @@ function yamlDocument(source: string, created: boolean): ConfigurationDocument {
 }
 
 // A JSON object edited by text edits, so comments and layout survive.
-function jsoncDocument(source: string, created: boolean): ConfigurationDocument {
+function jsoncDocument(source: string, created: boolean): KitDocument {
     jsonDocument(source);
     let text = source;
     return {
@@ -121,11 +121,7 @@ function jsoncDocument(source: string, created: boolean): ConfigurationDocument 
  * @param created whether the file is new, so an empty document gets no leading blank line.
  * @returns a document that reads, sets, and prints values by key path.
  */
-export function configurationDocument(
-    source: string,
-    format: ConfigurationFormat,
-    created = false,
-): ConfigurationDocument {
+export function configurationDocument(source: string, format: ConfigurationFormat, created = false): KitDocument {
     if (format === 'toml') return tomlDocument(source);
     if (format === 'yaml') return yamlDocument(source, created);
     return jsoncDocument(source, created);

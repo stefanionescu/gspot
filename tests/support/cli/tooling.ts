@@ -25,6 +25,6 @@ export const PRETTIER_TOOLING: ExistingTooling = {
 export function testManifest(name: string, requires: string[] = []): Manifest {
     return parseManifest(
         `[kit]\nname = "${name}"\nkind = "language"\ntitle = "${name}"\nrequires = ${JSON.stringify(requires)}\ndescription = "A configuration for the tests, long enough."\n`,
-        `configurations/${name}`,
+        `kits/${name}`,
     );
 }

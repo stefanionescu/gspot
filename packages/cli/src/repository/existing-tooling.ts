@@ -2,12 +2,12 @@
 import picomatch from 'picomatch';
 import { parse as parseYaml } from 'yaml';
 import type { ToolPin } from '#cli/types/kits.ts';
+import { kitManifests } from '#cli/kits/manifests.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
 import type { ConfinedRoot } from '#cli/types/platform.ts';
 import { isLintOnlyManifest } from '#cli/repository/scopes.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { readGitSetting } from '#cli/repository/git-config.ts';
-import { configurationManifests } from '#cli/kits/manifests.ts';
 import { hookLocation } from '#cli/repository/hook-location.ts';
 import { configurationSection } from '#cli/repository/configuration/configuration-section.ts';
 import { AGENT_FILE_NAMES, LINT_FOLDER_NAMES, RULES_DIRECTORY_NAMES } from '#cli/config/repository/patterns.ts';
@@ -177,7 +177,7 @@ export function declaredConfigurations(root: string, paths: Iterable<string>, se
     );
     const files = openConfinedRoot(root);
     try {
-        return [...configurationManifests().values()].flatMap((manifest) =>
+        return [...kitManifests().values()].flatMap((manifest) =>
             manifest.tools
                 .filter((tool) => selected === undefined || selected.includes(tool.name))
                 .flatMap((tool) =>

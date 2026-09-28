@@ -48,8 +48,8 @@ test('environment templates preserve first missing reads per file and escaped cu
         'src/ignored.txt': 'process.env.TEXT\n',
     };
     await createFileTree(sandbox.path, source);
-    const input = await checkInput(sandbox.path, 'configs/env-example', Object.keys(source), {
-        kits: ['configs'],
+    const input = await checkInput(sandbox.path, 'files/env-example', Object.keys(source), {
+        kits: ['files'],
         tools: { dotenv: { templates: ['example.env'], accessor: 'config.$env' } },
     });
     expect(envExample(input).map(({ file, line, message: diagnostic }) => ({ file, line, diagnostic }))).toStrictEqual([
@@ -61,8 +61,8 @@ test('environment templates preserve first missing reads per file and escaped cu
     await Bun.write(`${sandbox.path}/config/example.env`, 'KNOWN=value\nMISSING=value\nCUSTOM=value\nOTHER=value\n');
     expect(
         envExample(
-            await checkInput(sandbox.path, 'configs/env-example', Object.keys(source), {
-                kits: ['configs'],
+            await checkInput(sandbox.path, 'files/env-example', Object.keys(source), {
+                kits: ['files'],
                 tools: { dotenv: { templates: ['example.env'], accessor: 'config.$env' } },
             }),
         ),
@@ -75,8 +75,8 @@ test('environment reads without a template in their scope remain unchecked', asy
         '.env.example': 'KNOWN=value\n',
         'app/source.ts': 'process.env.MISSING;\n',
     });
-    const input = await checkInput(sandbox.path, 'configs/env-example', ['.env.example', 'app/source.ts'], {
-        kits: ['configs'],
+    const input = await checkInput(sandbox.path, 'files/env-example', ['.env.example', 'app/source.ts'], {
+        kits: ['files'],
     });
     input.scope = 'app';
     expect(envExample(input)).toStrictEqual([]);

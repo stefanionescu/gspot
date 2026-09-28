@@ -9,13 +9,13 @@ Run commands from your repository root with [gspot installed](/guides/install/).
 
 Security checks cover different inputs. Select the configurations your repository needs:
 
-| Configuration  | Checks                                                                                                               | When                                                        |
-| -------------- | -------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
-| `secrets`      | Gitleaks scans staged changes and pushed commits; TruffleHog verifies candidate secrets with their issuing services. | Commit and push.                                            |
-| `dependencies` | Open Source Vulnerabilities (OSV) scans supported lockfiles for known vulnerable dependencies.                       | Push.                                                       |
-| `security`     | Semgrep runs shipped and repository rule packs.                                                                      | Push.                                                       |
-| `security`     | Configured public Semgrep packs and CodeQL queries.                                                                  | Manual.                                                     |
-| `docker`       | Trivy checks container configuration and a configured image.                                                         | See the [Docker checks](/reference/configurations/docker/). |
+| Configuration  | Checks                                                                                                               | When                                              |
+| -------------- | -------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
+| `secrets`      | Gitleaks scans staged changes and pushed commits; TruffleHog verifies candidate secrets with their issuing services. | Commit and push.                                  |
+| `dependencies` | Open Source Vulnerabilities (OSV) scans supported lockfiles for known vulnerable dependencies.                       | Push.                                             |
+| `security`     | Semgrep runs shipped and repository rule packs.                                                                      | Push.                                             |
+| `security`     | Configured public Semgrep packs and CodeQL queries.                                                                  | Manual.                                           |
+| `docker`       | Trivy checks container configuration and a configured image.                                                         | See the [Docker checks](/reference/kits/docker/). |
 
 Use `gspot explain <check>` for prerequisites and the enabled policy. A missing tool or an
 unconfigured manual scan is not a successful security scan. If a reported secret is real,

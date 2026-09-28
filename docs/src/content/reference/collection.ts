@@ -4,8 +4,8 @@ import { section, referencePage } from './page.ts';
 import { docsLoader } from '@astrojs/starlight/loaders';
 import { allChecks } from '@gspot/cli/src/kits/listing.ts';
 import type { ReferencePage } from '../../types/reference.ts';
+import { kitManifests } from '@gspot/cli/src/kits/manifests.ts';
 import { settingsPage, configurationReference } from './policy.ts';
-import { configurationManifests } from '@gspot/cli/src/kits/manifests.ts';
 import { rulePage, enginesPage, configurationPage, pluginReferencePages } from './definitions.ts';
 
 /**
@@ -19,7 +19,7 @@ export function referencePages(): Map<string, ReferencePage> {
         pages.set(path, content);
     };
     for (const [path, page] of commandPages()) add(path, page);
-    const manifests = configurationManifests()
+    const manifests = kitManifests()
         .values()
         .toArray()
         .toSorted((a, b) => a.kit.name.localeCompare(b.kit.name));
@@ -30,13 +30,13 @@ export function referencePages(): Map<string, ReferencePage> {
         ['library', 'Libraries'],
         ['platform', 'Platforms'],
         ['database', 'Databases'],
-        ['policy', 'Repository checks'],
+        ['general', 'Repository checks'],
     ];
     add(
-        'configurations/index.md',
+        'kits/index.md',
         referencePage(
-            'Configuration reference',
-            'Choose configurations by the files and tools they govern.',
+            'Kit reference',
+            'Choose kits by the files and tools they govern.',
             kinds
                 .map(([kind, title]) =>
                     section(
@@ -45,7 +45,7 @@ export function referencePages(): Map<string, ReferencePage> {
                             .filter((manifest) => manifest.kit.kind === kind)
                             .map(
                                 (manifest) =>
-                                    `[${manifest.kit.title}](/reference/configurations/${manifest.kit.name}/): ${manifest.kit.description}`,
+                                    `[${manifest.kit.title}](/reference/kits/${manifest.kit.name}/): ${manifest.kit.description}`,
                             )
                             .map((item) => `- ${item}`)
                             .join('\n'),
@@ -55,7 +55,7 @@ export function referencePages(): Map<string, ReferencePage> {
             'architecture/04-configurations.md',
         ),
     );
-    for (const manifest of manifests) add(`configurations/${manifest.kit.name}.md`, configurationPage(manifest));
+    for (const manifest of manifests) add(`kits/${manifest.kit.name}.md`, configurationPage(manifest));
     const checks = allChecks();
     for (const { check, kit: configuration } of checks.values())
         add(`rules/${check.name}.md`, rulePage(check, configuration));

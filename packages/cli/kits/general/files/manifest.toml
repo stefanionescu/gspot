@@ -1,5 +1,5 @@
 [kit]
-name = "configs"
+name = "files"
 kind = "general"
 title = "Configuration Files"
 default = true
@@ -114,7 +114,7 @@ template = "v8r.yml.tmpl"
 target = ".gspot/config/v8r.yml"
 
 [[checks]]
-name = "configs/json"
+name = "files/json"
 title = "JSON"
 example = "A JSON file containing `{ \"enabled\": true, }` has an invalid trailing comma. Remove the comma to obtain `{ \"enabled\": true }`. The reporting formatter performs this delegated check."
 level = "recommended"
@@ -128,7 +128,7 @@ why = "A JSON file that does not parse breaks the tool that reads it at the wors
 help = "Run gspot check --fix, or fix the syntax error Prettier names."
 
 [[checks]]
-name = "configs/toml"
+name = "files/toml"
 title = "TOML"
 example = "The TOML line `enabled =` lacks a value and reports a parse error. Use `enabled = true` when the setting is a boolean."
 level = "recommended"
@@ -143,7 +143,7 @@ why = "A TOML file that does not parse stops the tool that reads it at the worst
 help = "Fix the line taplo names."
 
 [[checks]]
-name = "configs/toml-format"
+name = "files/toml-format"
 title = "TOML format"
 example = "The TOML assignment `enabled=true` differs from the configured formatter output. Run the formatter to obtain `enabled = true` and rerun."
 level = "recommended"
@@ -160,7 +160,7 @@ why = "One formatter keeps a diff about the values, not the spacing."
 help = "Run gspot check --fix."
 
 [[checks]]
-name = "configs/yaml"
+name = "files/yaml"
 title = "YAML"
 example = "Two `enabled` keys in the same YAML mapping report a duplicate-key finding. Keep the one intended value and remove the duplicate."
 level = "recommended"
@@ -175,7 +175,7 @@ why = "A YAML file that parses to the wrong shape fails silently: a duplicated k
 help = "Fix the line yamllint names, or set the rule's options with gspot set tools.yamllint.rules."
 
 [[checks]]
-name = "configs/schema"
+name = "files/schema"
 title = "Validate configuration schemas"
 example = "A governed JSON file with a string where its selected schema requires a boolean reports a schema mismatch. Replace the value with the intended boolean and rerun against the same schema."
 level = "recommended"
@@ -192,7 +192,7 @@ why = "A key the schema refuses is a setting that never applies, and nobody find
 help = "Fix the key v8r names, or map the file to its schema under tools.v8r.schemas."
 
 [[checks]]
-name = "configs/actions"
+name = "files/actions"
 title = "Validate GitHub Actions workflows"
 example = "A workflow using an unknown expression context such as `${{ unknown.value }}` reports an actionlint error. Replace it with a supported context and property for that workflow location."
 level = "recommended"
@@ -209,7 +209,7 @@ why = "A workflow error surfaces on the first push after the change, in CI, wher
 help = "Fix the line actionlint names."
 
 [[checks]]
-name = "configs/actions-pins"
+name = "files/actions-pins"
 title = "Verify GitHub Actions pins"
 example = "An action reference such as `actions/checkout@v4` without a full commit pin reports an unpinned action. Resolve a reviewed release to its full commit SHA and record the matching version comment beside the pin."
 level = "recommended"
@@ -225,7 +225,7 @@ why = "A nonexistent action commit prevents the workflow from starting."
 help = "Replace the invalid action pin with a verified commit and its matching version comment."
 
 [[checks]]
-name = "configs/actions-security"
+name = "files/actions-security"
 title = "Audit GitHub Actions security"
 example = "A workflow interpolating pull-request text directly into a shell command can report a template-injection audit. Pass the text through a step environment variable and quote its expansion instead of interpolating it into shell code."
 level = "recommended"
@@ -238,10 +238,10 @@ coverage = ["security"]
 output = {format = "regex", pattern = "^::(?:warning|error|notice) file=(?<file>[^,]+),line=(?<line>\\d+),title=(?<rule>[^:]+)::(?<message>.*)$"}
 summary = "Audits every GitHub Actions workflow with zizmor: template injection, unpinned actions, excessive permissions, dangerous triggers."
 why = "A workflow runs with the repository's credentials; an injectable expression or an unpinned action hands them to a stranger."
-help = "Apply the fix zizmor names, or turn one audit off with gspot ignore configs/actions-security --rule <audit> and a reason."
+help = "Apply the fix zizmor names, or turn one audit off with gspot ignore files/actions-security --rule <audit> and a reason."
 
 [[checks]]
-name = "configs/dotenv"
+name = "files/dotenv"
 title = "Dotenv"
 example = "A dotenv file defining the same key twice reports a duplicate entry. Keep the intended assignment and remove the duplicate, preserving secret values outside version control."
 level = "recommended"
@@ -258,7 +258,7 @@ why = "A tracked environment file is a template other people copy; a malformed l
 help = "Run gspot check --fix, or fix the line dotenv-linter names."
 
 [[checks]]
-name = "configs/env-example"
+name = "files/env-example"
 title = "Environment example"
 example = "Source code reading `API_URL` while the environment template omits that key reports a missing template entry. Add `API_URL=` to `.env.example` and document the required value without committing credentials."
 level = "recommended"
@@ -272,7 +272,7 @@ why = "A variable missing from the template is the one a new machine lacks on it
 help = "Add the key to the template (.env.example or the files under tools.dotenv.templates), or stop reading it."
 
 [[checks]]
-name = "configs/plist"
+name = "files/plist"
 title = "Property lists"
 example = "A plist containing an unclosed dictionary fails native validation. Close the dictionary and plist elements, then rerun with plutil available on a declared platform."
 level = "recommended"
@@ -288,7 +288,7 @@ why = "A broken plist fails the build or, worse, ships an app whose settings sil
 help = "Fix the element plutil names."
 
 [[checks]]
-name = "configs/xml"
+name = "files/xml"
 title = "Validate XML"
 example = "The XML text `<settings><enabled>true</settings>` has mismatched tags. Close the child element as `<enabled>true</enabled>` before closing `settings`."
 level = "recommended"

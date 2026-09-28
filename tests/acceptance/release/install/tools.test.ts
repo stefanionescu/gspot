@@ -106,7 +106,7 @@ test(
             'check',
             'settings.toml',
             '--only',
-            'configs/toml-format',
+            'files/toml-format',
             '--no-cache',
             '--json',
         ];
@@ -116,7 +116,7 @@ test(
         expect(tomlReport.skips).toStrictEqual([]);
         expect(tomlReport.checks).toHaveLength(1);
         expect(tomlReport.checks[0]).toMatchObject({
-            check: 'configs/toml-format',
+            check: 'files/toml-format',
             status: 'fail',
             files: 1,
         });
@@ -129,7 +129,7 @@ test(
             })),
         ).toStrictEqual([
             {
-                check: 'configs/toml-format',
+                check: 'files/toml-format',
                 file: 'settings.toml',
                 message: 'The file is not formatted with the configured TOML settings.',
                 fixable: true,
@@ -144,7 +144,7 @@ test(
         const formattedToml = await run(tomlFormat, nativeOptions);
         expect(formattedToml.code, formattedToml.stdout + formattedToml.stderr).toBe(0);
         expect(reportSchema.parse(JSON.parse(formattedToml.stdout)).checks).toMatchObject([
-            { check: 'configs/toml-format', status: 'ok', files: 1, findings: [] },
+            { check: 'files/toml-format', status: 'ok', files: 1, findings: [] },
         ]);
         expect(readFileSync(join(nativeConsumer, 'package.json'), 'utf8')).toBe(authoredPackage);
     },
@@ -159,13 +159,13 @@ test(
         const { command } = fixture;
         const { nativeConsumer, nativeOptions, authoredPackage } = await prepareNativeConsumer(fixture);
         writeFileSync(join(nativeConsumer, 'settings.toml'), 'a = [\n');
-        const tomlSyntax = [...command, 'check', 'settings.toml', '--only', 'configs/toml', '--no-cache', '--json'];
+        const tomlSyntax = [...command, 'check', 'settings.toml', '--only', 'files/toml', '--no-cache', '--json'];
         const invalidToml = await run(tomlSyntax, nativeOptions);
         expect(invalidToml.code, invalidToml.stdout + invalidToml.stderr).toBe(1);
         const syntaxReport = reportSchema.parse(JSON.parse(invalidToml.stdout));
         expect(syntaxReport.skips).toStrictEqual([]);
         expect(syntaxReport.checks).toHaveLength(1);
-        expect(syntaxReport.checks[0]).toMatchObject({ check: 'configs/toml', status: 'fail', files: 1 });
+        expect(syntaxReport.checks[0]).toMatchObject({ check: 'files/toml', status: 'fail', files: 1 });
         expect(
             syntaxReport.checks[0]!.findings.map(({ check, file, line, column, message: text, fixable }) => ({
                 check,
@@ -177,7 +177,7 @@ test(
             })),
         ).toStrictEqual([
             {
-                check: 'configs/toml',
+                check: 'files/toml',
                 file: 'settings.toml',
                 line: 2,
                 column: 1,
@@ -189,7 +189,7 @@ test(
         const validToml = await run(tomlSyntax, nativeOptions);
         expect(validToml.code, validToml.stdout + validToml.stderr).toBe(0);
         expect(reportSchema.parse(JSON.parse(validToml.stdout)).checks).toMatchObject([
-            { check: 'configs/toml', status: 'ok', files: 1, findings: [] },
+            { check: 'files/toml', status: 'ok', files: 1, findings: [] },
         ]);
         expect(readFileSync(join(nativeConsumer, 'package.json'), 'utf8')).toBe(authoredPackage);
     },

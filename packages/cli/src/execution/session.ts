@@ -3,10 +3,10 @@ import { npmPins } from '#cli/tools/pins.ts';
 import type { Manifest } from '#cli/types/kits.ts';
 import { mergeForScope } from '#cli/policy/merge.ts';
 import { selectForScope } from '#cli/kits/select.ts';
+import { kitManifests } from '#cli/kits/manifests.ts';
 import { readRepository } from '#cli/repository/tree.ts';
 import packageManifest from '#package' with { type: 'json' };
 import { packageTool } from '#cli/tools/packages/identity.ts';
-import { configurationManifests } from '#cli/kits/manifests.ts';
 import type { Session } from '#cli/types/execution/execution.ts';
 import { exposedSettings } from '#cli/policy/setting-surface.ts';
 import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
@@ -34,7 +34,7 @@ const { version: GSPOT_VERSION } = packageManifest;
  */
 export async function openSession(root: string, policyFiles: PolicyFiles = readPolicy(root)): Promise<Session> {
     assertPolicyComplete(policyFiles);
-    const manifests = configurationManifests();
+    const manifests = kitManifests();
     const repo = await readRepository(
         root,
         policyFiles.policy.declarations,

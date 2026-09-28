@@ -33,7 +33,7 @@ export type ApplyReport = {
 export type KeyPath = (string | number)[];
 export type Field = z.infer<typeof configurationFieldsSchema>[number];
 export type ConfigurationOwnership = NonNullable<OwnershipEntry['configuration']>;
-export type ConfigurationPlan = {
+export type KitPlan = {
     next: FileObservation;
     configuration: ConfigurationOwnership;
     status: 'changed' | 'unchanged';
@@ -120,7 +120,7 @@ export type LifecycleOwner = {
 };
 export type ConfigurationFormat = 'json' | 'yaml' | 'toml';
 /** A configuration document that preserves comments and layout when reading and editing keys. */
-export type ConfigurationDocument = {
+export type KitDocument = {
     value(path: KeyPath): unknown;
     set(path: KeyPath, value: unknown): void;
     text(): string;

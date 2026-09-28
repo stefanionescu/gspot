@@ -7,7 +7,7 @@ import { openSession } from '#cli/execution/session.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
 import { applyBlock } from '#cli/lifecycle/managed-blocks.ts';
 import { uninstallCommand } from '#cli/commands/uninstall.ts';
-import { parseManifest, gitignoreBlock, configurationManifests } from '#cli/kits/manifests.ts';
+import { kitManifests, parseManifest, gitignoreBlock } from '#cli/kits/manifests.ts';
 import { MANAGED_IGNORES_CONFIGURATION } from '#tests/config/integration/cli/generation/generation.ts';
 
 test.each([true, false])(
@@ -53,7 +53,7 @@ test('manifest-owned tool directories are ignored while generated rules and auth
         'untracked = [".gspot/local/downloads/"]\n' + MANAGED_IGNORES_CONFIGURATION,
         'configurations/local',
     );
-    const block = gitignoreBlock([...configurationManifests().values(), manifest, manifest]);
+    const block = gitignoreBlock([...kitManifests().values(), manifest, manifest]);
     const authored = '# Authored entries\nprivate.tmp\n';
     const content = applyBlock(authored, block, 'hash');
     await createFileTree(repository.path, { '.gitignore': content });

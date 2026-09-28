@@ -274,7 +274,7 @@ Source: `SA quality/sql/`, `SA .squawk.toml`, `SA supabase/`, SA.
 | edge functions: Deno lint and format, no dynamic import, no eval, no wildcard CORS with credentials, JSON body validated                                                                                                  | `supabase/deno-lint`, `security/semgrep`                          |
 | service-role key never in client code, no RLS bypass, no raw SQL interpolation, no RPC with user input, no secrets in console logs                                                                                        | `security/semgrep` (10 rules)                                     |
 | SQL naming: schemas, tables, columns, functions, parameters, indexes, triggers, policies snake case; 55 characters, 7 words; `uuid_v7` identifier pattern                                                                 | naming engine                                                     |
-| `supabase/config.toml` validates                                                                                                                                                                                          | `configs/schema`                                                  |
+| `supabase/config.toml` validates                                                                                                                                                                                          | `files/schema`                                                    |
 | `supabase gen types` freshness                                                                                                                                                                                            | `supabase/types-fresh`                                            |
 
 ## 9. Static site and Cloudflare
@@ -341,7 +341,7 @@ Source: `SS quality/`.
 | `docker compose config`                                                                                                                                                                                                                                                 | none ran it; the audit named it       | `docker/compose-config`                                                                                                        |
 | ansible-lint over playbooks                                                                                                                                                                                                                                             | SA pinned `ansible-core`, ran nothing | `ansible/lint` when a playbook or `ansible.cfg` exists                                                                         |
 | nginx `-t` through the compose service                                                                                                                                                                                                                                  | SA                                    | `nginx/config-test` (push, docker)                                                                                             |
-| dotenv-linter                                                                                                                                                                                                                                                           | SA qlty (never ran)                   | `configs/dotenv`                                                                                                               |
+| dotenv-linter                                                                                                                                                                                                                                                           | SA qlty (never ran)                   | `files/dotenv`                                                                                                                 |
 | license allowlist with exact-version exceptions; every lockfile through `osv-scanner`; TI exceptions record the accepted license and a reason                                                                                                                           | all                                   | `licenses/packages`, `licenses/packages` (push); every exception carries `license` and fails when the reported license differs |
 | syncpack one version per dependency across the workspace                                                                                                                                                                                                                | SA                                    | `dependencies/syncpack` with a rendered config that also holds the paired-package groups                                       |
 | lychee offline over Markdown                                                                                                                                                                                                                                            | SA                                    | `docs/links` (lychee, `--include-fragments`)                                                                                   |
@@ -1527,7 +1527,7 @@ Checks:
 | `secrets/trufflehog`        | push   | `trufflehog git file://. --since-commit <base> --results=verified --fail`                                                                                           |
 | `secrets/env-files`         | commit | no environment file staged except templates. The shipped pattern list is `.env*` and Wrangler's `.dev.vars*`; a configuration adds a pattern as data, never as code |
 | `secrets/gitleaks-baseline` | commit | every baseline fingerprint has a reason and names a path that existed                                                                                               |
-| `configs/dotenv`            | commit | tracked `.env*` files hold keys only                                                                                                                                |
+| `files/dotenv`              | commit | tracked `.env*` files hold keys only                                                                                                                                |
 
 Settings:
 
@@ -1823,21 +1823,21 @@ and bare tool runs find it.
 
 Checks:
 
-| Id                         | Stage         | Command                                                                                                                                          |
-| -------------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `configs/json`             | commit        | Prettier parses and formats JSON, JSONC and JSON5; the findings come from `formatting/prettier`                                                  |
-| `configs/toml`             | commit        | `taplo check --no-schema {files}`: syntax alone, offline                                                                                         |
-| `configs/toml-format`      | commit        | `taplo fmt --check {files}`; fix, order format                                                                                                   |
-| `configs/yaml`             | commit        | `yamllint -c .gspot/config/yamllint.yml -f parsable -s {files}`                                                                                  |
-| `configs/schema`           | push, network | `v8r --ignore-errors {files}` over JSON, YAML and TOML: `package.json`, `tsconfig.json`, workflows, mise and the rest of the SchemaStore catalog |
-| `configs/actions`          | commit        | `actionlint {files}` over `.github/workflows/*`                                                                                                  |
-| `configs/actions-security` | commit        | `zizmor --offline --format github {files}` over `.github/workflows/*`                                                                            |
-| `configs/dotenv`           | commit        | `dotenv-linter check {files}` over tracked environment files (`.env*`, `.dev.vars*`); fix, order format                                          |
-| `configs/env-example`      | push          | engine: every key the code reads through `process.env`, `os.environ` or the declared accessor appears in a template                              |
-| `configs/plist`            | commit, macOS | `plutil -lint {files}` over `.plist` and `.entitlements`                                                                                         |
-| `configs/xml`              | commit        | `xmllint --noout {files}` over `.xml`, `.storyboard` and `.xib`                                                                                  |
+| Id                       | Stage         | Command                                                                                                                                          |
+| ------------------------ | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `files/json`             | commit        | Prettier parses and formats JSON, JSONC and JSON5; the findings come from `formatting/prettier`                                                  |
+| `files/toml`             | commit        | `taplo check --no-schema {files}`: syntax alone, offline                                                                                         |
+| `files/toml-format`      | commit        | `taplo fmt --check {files}`; fix, order format                                                                                                   |
+| `files/yaml`             | commit        | `yamllint -c .gspot/config/yamllint.yml -f parsable -s {files}`                                                                                  |
+| `files/schema`           | push, network | `v8r --ignore-errors {files}` over JSON, YAML and TOML: `package.json`, `tsconfig.json`, workflows, mise and the rest of the SchemaStore catalog |
+| `files/actions`          | commit        | `actionlint {files}` over `.github/workflows/*`                                                                                                  |
+| `files/actions-security` | commit        | `zizmor --offline --format github {files}` over `.github/workflows/*`                                                                            |
+| `files/dotenv`           | commit        | `dotenv-linter check {files}` over tracked environment files (`.env*`, `.dev.vars*`); fix, order format                                          |
+| `files/env-example`      | push          | engine: every key the code reads through `process.env`, `os.environ` or the declared accessor appears in a template                              |
+| `files/plist`            | commit, macOS | `plutil -lint {files}` over `.plist` and `.entitlements`                                                                                         |
+| `files/xml`              | commit        | `xmllint --noout {files}` over `.xml`, `.storyboard` and `.xib`                                                                                  |
 
-`configs/env-example` searches the whole scope for reads and compares them with the
+`files/env-example` searches the whole scope for reads and compares them with the
 templates in the scope; a scope with no template has nothing to compare and no finding.
 `.xcstrings` files are claimed here and checked by the xcode configuration.
 

@@ -4,8 +4,8 @@ import * as linguistLanguages from 'linguist-languages';
 import { projectFolder } from '#cli/repository/scopes.ts';
 import { GLOB_CHARS, SHEBANG_TAG } from '#cli/config/kits.ts';
 import { baseName, extensionOf } from '#cli/platform/paths.ts';
+import type { Manifest, KitEvidence, LinguistEntry, UnknownLanguage } from '#cli/types/kits.ts';
 import type { TreeFacts, TrackedFile, ManifestFacts } from '#cli/types/repository/repository.ts';
-import type { Manifest, LinguistEntry, UnknownLanguage, ConfigurationEvidence } from '#cli/types/kits.ts';
 
 const LANGUAGE_BY_FILENAME = new Map(
     Object.entries(linguistLanguages).flatMap(([language, value]) =>
@@ -114,7 +114,7 @@ function tagEvidence(detect: Manifest['detect'], tree: TreeFacts): string | unde
 
 const EVIDENCE = [projectEvidence, filenameEvidence, dependencyEvidence, shebangEvidence, tagEvidence, pathEvidence];
 
-function proposalFor(manifest: Manifest, tree: TreeFacts): ConfigurationEvidence | undefined {
+function proposalFor(manifest: Manifest, tree: TreeFacts): KitEvidence | undefined {
     const { kit: configuration } = manifest;
     const byExtension = extensionEvidence(manifest.detect, tree);
     if (byExtension !== undefined)
@@ -145,12 +145,12 @@ function proposalFor(manifest: Manifest, tree: TreeFacts): ConfigurationEvidence
  * @param scope the scope path, '' for the root
  * @returns one proposal per configuration with evidence
  */
-export function detectConfigurations(
+export function detectKits(
     files: TrackedFile[],
     manifests: Map<string, Manifest>,
     facts: ManifestFacts[],
     scope = '',
-): ConfigurationEvidence[] {
+): KitEvidence[] {
     const tree = treeFacts(files, facts, scope);
     return manifests
         .values()

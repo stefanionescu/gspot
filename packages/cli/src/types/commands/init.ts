@@ -3,7 +3,7 @@ import type { Profile } from '#cli/types/policy/profiles.ts';
 import type { FileObservation } from '#cli/types/platform.ts';
 import type { Policy, RawPolicy } from '#cli/types/policy/policy.ts';
 import type { AdoptionResult, AdoptedFormatting } from '#cli/types/policy/adoption.ts';
-import type { Manifest, SettingSpec, UnknownLanguage, ConfigurationEvidence as Proposal } from '#cli/types/kits.ts';
+import type { Manifest, SettingSpec, UnknownLanguage, KitEvidence as Proposal } from '#cli/types/kits.ts';
 
 import type {
     TomlTable,
@@ -34,7 +34,7 @@ export type DetectionSummary = {
     manifests: Map<string, Manifest>;
     hasGit: boolean;
 };
-export type ConfigurationReason = 'named' | 'detected' | 'recommended' | 'required';
+export type KitReason = 'named' | 'detected' | 'recommended' | 'required';
 export type Detect = NonNullable<SettingSpec['detect']>;
 export type DetectedSetting = { key: string; value: unknown; configuration: string };
 export type InitOptions = {
@@ -74,7 +74,7 @@ export type InitSelection = {
     scopeProposals: Map<string, string[]>;
     selectedIds: Set<string>;
     rootProposals: Proposal[];
-    how: Map<string, ConfigurationReason>;
+    how: Map<string, KitReason>;
 };
 /** The answers init collects from flags or the terminal. */
 export type InitAnswers = {
@@ -133,7 +133,7 @@ export type InstallSettings = { min_release_age_days?: number; security_scanner?
 export type TakeoverPlan = {
     ci?: { commands: string[]; reports: string };
     profile?: { name: string; digest: string; selection: string; detected: string[] };
-    kits: { kit: string; how: ConfigurationReason; checks: number }[];
+    kits: { kit: string; how: KitReason; checks: number }[];
     write: { path: string; note: string }[];
     remove: { path: string; note: string }[];
     unread: { path: string; note: string }[];

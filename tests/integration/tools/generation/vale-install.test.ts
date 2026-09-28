@@ -2,9 +2,9 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { run } from '#cli/platform/spawn.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { kitManifests } from '#cli/kits/manifests.ts';
 import { parseAlerts } from '#cli/checks/prose/vale.ts';
 import { containing } from '#tests/support/expectations.ts';
-import { configurationManifests } from '#cli/kits/manifests.ts';
 import { installPackages, hasOwnedPackages } from '#cli/tools/vale.ts';
 import { chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { readOwnership, openLifecycleOwner } from '#cli/lifecycle/ownership/owner.ts';
@@ -86,7 +86,7 @@ test.each([
         await createFileTree(directory.path, { 'guide.md': 'An ambiguousword.\n', 'authored.txt': 'keep\n' });
         const server = Bun.serve({ hostname: '127.0.0.1', port: 0, fetch: () => new Response(PACKAGE) });
         try {
-            const pin = configurationManifests()
+            const pin = kitManifests()
                 .get('prose')!
                 .tools.find((tool) => tool.name === 'vale')!.version!;
             const version = await run(['vale', '--version'], { cwd: directory.path });

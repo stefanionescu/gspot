@@ -20,14 +20,14 @@ test.each([
         const reference = `${prefix}.github/workflows/${filename}${suffix}`;
         const workflow = `name: Caller\non: workflow_dispatch\npermissions: {}\njobs:\n    caller:\n        uses: ${reference}\n        with:\n            greeting: \${{ unknown.value }}\n`;
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\nkits = ["configs"]\n',
+            'gspot.toml': 'version = 1\nkits = ["files"]\n',
             '.github/workflows/caller.yml': workflow,
             [`.github/workflows/${filename}`]:
                 'name: Called\non:\n    workflow_call:\n        inputs:\n            greeting:\n                type: string\n                required: true\npermissions: {}\njobs:\n    greet:\n        runs-on: ubuntu-latest\n        steps:\n            - run: echo "$GREETING"\n              env:\n                  GREETING: ${{ inputs.greeting }}\n',
             'unrelated.yaml': '42\n',
         });
         const session = await openSession(sandbox.path);
-        const plans = await planRun(session, { stage: 'commit', skips: [], only: ['configs/actions'] });
+        const plans = await planRun(session, { stage: 'commit', skips: [], only: ['files/actions'] });
         const planned = plans[0]!;
         const failed = await checkExecution(planned.spec)(session, planned);
         expect(failed.status, JSON.stringify(failed)).toBe('fail');
@@ -45,7 +45,7 @@ test.each([
             workflow.replace('${{ unknown.value }}', 'Hello'),
         );
         const corrected = await openSession(sandbox.path);
-        const correctedPlans = await planRun(corrected, { stage: 'commit', skips: [], only: ['configs/actions'] });
+        const correctedPlans = await planRun(corrected, { stage: 'commit', skips: [], only: ['files/actions'] });
         const valid = correctedPlans[0]!;
         const result = await checkExecution(valid.spec)(corrected, valid);
         expect(result.status).toBe('ok');
@@ -69,12 +69,12 @@ test.each([
     const called =
         'on:\n  workflow_call:\n    inputs:\n      greeting:\n        type: string\n        required: true\njobs:\n  greet:\n    runs-on: ubuntu-latest\n    steps:\n      - run: echo hello\n';
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nkits = ["configs"]\n',
+        'gspot.toml': 'version = 1\nkits = ["files"]\n',
         '.github/workflows/caller.yml': workflow,
         '.github/workflows/called.yml': called,
     });
     const session = await openSession(sandbox.path);
-    const plans = await planRun(session, { stage: 'commit', skips: [], only: ['configs/actions'] });
+    const plans = await planRun(session, { stage: 'commit', skips: [], only: ['files/actions'] });
     const planned = plans[0]!;
     const failed = await checkExecution(planned.spec)(session, planned);
     expect(failed.status, JSON.stringify(failed)).toBe('fail');
@@ -93,7 +93,7 @@ test.each([
         `${workflow}    with:\n      greeting: Hello\n`,
     );
     const corrected = await openSession(sandbox.path);
-    const correctedPlans = await planRun(corrected, { stage: 'commit', skips: [], only: ['configs/actions'] });
+    const correctedPlans = await planRun(corrected, { stage: 'commit', skips: [], only: ['files/actions'] });
     const valid = correctedPlans[0]!;
     const result = await checkExecution(valid.spec)(corrected, valid);
     expect(result.status).toBe('ok');
@@ -105,11 +105,11 @@ test('Actionlint resolves a self-repository alias and reports a missing workflow
     const workflow =
         'on: workflow_dispatch\nenv:\n  WORKFLOW: &workflow $/.github/workflows/called.yml\njobs:\n  caller:\n    uses: *workflow\n';
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nkits = ["configs"]\n',
+        'gspot.toml': 'version = 1\nkits = ["files"]\n',
         '.github/workflows/caller.yml': workflow,
     });
     const session = await openSession(sandbox.path);
-    const plans = await planRun(session, { stage: 'commit', skips: [], only: ['configs/actions'] });
+    const plans = await planRun(session, { stage: 'commit', skips: [], only: ['files/actions'] });
     const planned = plans[0]!;
     const failed = await checkExecution(planned.spec)(session, planned);
     expect(failed.status, JSON.stringify(failed)).toBe('fail');
@@ -127,7 +127,7 @@ test('Actionlint resolves a self-repository alias and reports a missing workflow
         'on: workflow_call\njobs:\n  greet:\n    runs-on: ubuntu-latest\n    steps:\n      - run: echo hello\n',
     );
     const corrected = await openSession(sandbox.path);
-    const correctedPlans = await planRun(corrected, { stage: 'commit', skips: [], only: ['configs/actions'] });
+    const correctedPlans = await planRun(corrected, { stage: 'commit', skips: [], only: ['files/actions'] });
     const valid = correctedPlans[0]!;
     const result = await checkExecution(valid.spec)(corrected, valid);
     expect(result.status).toBe('ok');

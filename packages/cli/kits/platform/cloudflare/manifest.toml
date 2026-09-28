@@ -3,7 +3,7 @@ name = "cloudflare"
 kind = "platform"
 title = "Cloudflare"
 requires = ["javascript"]
-recommends = ["security", "configs"]
+recommends = ["security", "files"]
 description = "Cloudflare Pages and Workers: a wrangler configuration that parses and pins its date, headers and redirects files Cloudflare can read, fresh binding types, and the Semgrep rules for workers."
 
 [detect]

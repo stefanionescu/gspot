@@ -1,22 +1,18 @@
 import { tmpdir } from 'node:os';
 import { join, posix } from 'node:path';
 import { scopeOf } from '#cli/repository/scopes.ts';
+import type { Mount } from '#cli/types/checks/nginx.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { rmSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import { nginxDirectives } from '#cli/checks/nginx/directives.ts';
 import { nginxTestArguments } from '#cli/checks/nginx/test-plan.ts';
-import type { MountedConfiguration } from '#cli/types/checks/nginx.ts';
 import type { Finding, EngineInput, EngineOutcome } from '#cli/types/checks/checks.ts';
 import { MAIN_FILE, DEFAULT_IMAGE, CERTIFICATE_ARGUMENTS } from '#cli/config/checks/nginx.ts';
 
 // Include paths are resolved against the main configuration directory, matching nginx prefix semantics.
-function includedConfigurations(
-    input: EngineInput,
-    text: string,
-    base: string,
-): Pick<MountedConfiguration, 'path' | 'target'>[] {
-    const included: Pick<MountedConfiguration, 'path' | 'target'>[] = [];
+function includedConfigurations(input: EngineInput, text: string, base: string): Pick<Mount, 'path' | 'target'>[] {
+    const included: Pick<Mount, 'path' | 'target'>[] = [];
     for (const [name, value] of nginxDirectives(text)) {
         if (name !== 'include' || value === undefined || value.includes('$')) continue;
         const target = posix.resolve('/etc/nginx', value);
@@ -27,9 +23,9 @@ function includedConfigurations(
     return included;
 }
 
-function configurationCopies(input: EngineInput, path: string, work: string): Map<string, MountedConfiguration> {
+function configurationCopies(input: EngineInput, path: string, work: string): Map<string, Mount> {
     const directory = mkdtempSync(join(work, 'configuration-'));
-    const configurations = new Map<string, MountedConfiguration>();
+    const configurations = new Map<string, Mount>();
     const pending = [{ path, target: '/etc/nginx/nginx.conf' }];
     const base = posix.dirname(path);
     for (const entry of pending) {
@@ -47,7 +43,7 @@ function configurationCopies(input: EngineInput, path: string, work: string): Ma
 function configurationFailure(
     check: string,
     path: string,
-    configurations: Map<string, MountedConfiguration>,
+    configurations: Map<string, Mount>,
     said: string,
 ): EngineOutcome {
     const { file: target = '', line = '1' } = / in (?<file>\/[^\n]+):(?<line>\d+)\s*$/u.exec(said)?.groups ?? {};

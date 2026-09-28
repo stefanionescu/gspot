@@ -1,3 +1,4 @@
+import { detectKits } from '#cli/kits/detect.ts';
 import { Argument, type Command } from 'commander';
 import { everyManifest } from '#cli/kits/select.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
@@ -6,7 +7,6 @@ import { checkState } from '#cli/policy/check-state.ts';
 import { coverageLines } from '#cli/output/coverage.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { directoryOf } from '#cli/platform/arguments.ts';
-import { detectConfigurations } from '#cli/kits/detect.ts';
 import { coverageReport } from '#cli/execution/coverage.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import { readManifests } from '#cli/repository/manifests.ts';
@@ -67,7 +67,7 @@ function configurationsResult(session: Session): CommandResult {
         ),
     }));
     const facts = readManifests(session.root, session.repository.files);
-    const detected = detectConfigurations(session.repository.files, session.manifests, facts)
+    const detected = detectKits(session.repository.files, session.manifests, facts)
         .filter((proposal) => !names.has(proposal.configuration))
         .map((proposal) => ({
             name: proposal.configuration,

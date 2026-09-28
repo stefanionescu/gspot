@@ -15,7 +15,7 @@ import { CONFIGS_INIT } from '#tests/config/acceptance/source/kits/init-argument
 
 const CASES: (FindingCase & { corrected: Record<string, string> })[] = [
     {
-        check: 'configs/toml-format',
+        check: 'files/toml-format',
         corrected: { 'settings/layout.toml': 'a = 1\nb = 2\n' },
         files: { 'settings/layout.toml': 'a    =     1\nb=2\n' },
         expected: {
@@ -24,13 +24,13 @@ const CASES: (FindingCase & { corrected: Record<string, string> })[] = [
         },
     },
     {
-        check: 'configs/actions',
+        check: 'files/actions',
         corrected: { '.github/workflows/broken.yml': `${WORKFLOW_HEAD}            - run: echo corrected\n` },
         files: { '.github/workflows/broken.yml': `${WORKFLOW_HEAD}            - run: echo "\${{ nothing.here }}"\n` },
         expected: { file: '.github/workflows/broken.yml', rule: 'expression', line: 9, column: 30 },
     },
     {
-        check: 'configs/actions-security',
+        check: 'files/actions-security',
         corrected: { '.github/workflows/unpinned.yml': `${WORKFLOW_HEAD}            - run: echo corrected\n` },
         files: {
             '.github/workflows/unpinned.yml': `${WORKFLOW_HEAD}            - uses: actions/checkout@v4\n            - run: echo "\${{ github.event.pull_request.title }}"\n`,
@@ -38,13 +38,13 @@ const CASES: (FindingCase & { corrected: Record<string, string> })[] = [
         expected: { file: '.github/workflows/unpinned.yml', rule: 'template-injection', line: 10 },
     },
     {
-        check: 'configs/dotenv',
+        check: 'files/dotenv',
         corrected: { '.env.example': 'PORT=3000\n' },
         files: { '.env.example': 'PORT=3000\nport=3000\nPORT=4000\n' },
         expected: { file: '.env.example', rule: 'LowercaseKey', line: 2 },
     },
     {
-        check: 'configs/xml',
+        check: 'files/xml',
         corrected: { 'settings/feed.xml': '<feed><entry /></feed>\n' },
         files: { 'settings/feed.xml': '<feed><entry></feed>\n' },
         expected: {
@@ -102,21 +102,21 @@ test.each(CASES)(
         expect(reportSchema.parse(JSON.parse(correctedCheck.stdout)).checks).toMatchObject([
             { check: planted.check, status: 'ok', findings: [] },
         ]);
-        const jsonCheck = await run(sandbox.path, ['check', '--only', 'configs/json'], environment);
+        const jsonCheck = await run(sandbox.path, ['check', '--only', 'files/json'], environment);
         expect(jsonCheck.stdout).toContain('its findings come from');
         const checked = await run(sandbox.path, ['check', '--stage', 'commit', '--json'], environment);
         const record = JSON.parse(checked.stdout) as {
             checks: { check: string }[];
         };
-        expect(record.checks.map((check) => check.check)).not.toContain('configs/schema');
-        expect(record.checks.map((check) => check.check)).toContain('configs/toml');
+        expect(record.checks.map((check) => check.check)).not.toContain('files/schema');
+        expect(record.checks.map((check) => check.check)).toContain('files/toml');
     },
     PLANTED_TIMEOUT_MS * 2,
 );
 
 if (process.platform === 'darwin')
     test(
-        'the configs configuration: configs/plist reports a property list that does not parse',
+        'the configs configuration: files/plist reports a property list that does not parse',
         async () => {
             await using sandbox = await testdir();
             await createFileTree(sandbox.path, { 'scripts/a.sh': script, 'settings/clean.toml': 'a = 1\n' });
@@ -126,14 +126,14 @@ if (process.platform === 'darwin')
             const outcome = await runPlanted(
                 sandbox.path,
                 {
-                    check: 'configs/plist',
+                    check: 'files/plist',
                     files: { 'app/Info.plist': '<plist><dict><key>A</key></plist>\n' },
                 },
                 environment,
             );
             expect(outcome.code, outcome.stdout).toBe(1);
             const failed = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
-            expect(failed.checks).toMatchObject([{ check: 'configs/plist', status: 'fail' }]);
+            expect(failed.checks).toMatchObject([{ check: 'files/plist', status: 'fail' }]);
             expect(failed.checks[0]!.findings).toContainEqual(containing({ file: 'app/Info.plist' }));
             await Bun.write(
                 join(sandbox.path, 'app/Info.plist'),
@@ -141,12 +141,12 @@ if (process.platform === 'darwin')
             );
             const correctedCheck = await run(
                 sandbox.path,
-                ['check', '--only', 'configs/plist', '--no-cache', '--json'],
+                ['check', '--only', 'files/plist', '--no-cache', '--json'],
                 environment,
             );
             expect(correctedCheck.code, correctedCheck.stdout + correctedCheck.stderr).toBe(0);
             expect(reportSchema.parse(JSON.parse(correctedCheck.stdout)).checks).toMatchObject([
-                { check: 'configs/plist', status: 'ok', findings: [] },
+                { check: 'files/plist', status: 'ok', findings: [] },
             ]);
         },
         PLANTED_TIMEOUT_MS,
@@ -154,21 +154,21 @@ if (process.platform === 'darwin')
 
 test.each([
     {
-        check: 'configs/toml',
+        check: 'files/toml',
         path: 'settings.toml',
         broken: 'a = 1\n[x\n',
         corrected: 'a = 1\n',
         expected: { file: 'settings.toml', line: 2 },
     },
     {
-        check: 'configs/yaml',
+        check: 'files/yaml',
         path: 'config.yaml',
         broken: 'key: 1\nkey: 2\n',
         corrected: '---\nkey: 1\n',
         expected: { file: 'config.yaml', line: 2, rule: 'key-duplicates' },
     },
     {
-        check: 'configs/env-example',
+        check: 'files/env-example',
         path: '.env.example',
         broken: 'PORT=3000\n',
         corrected: 'PORT=3000\nHOST=localhost\n',
@@ -233,12 +233,12 @@ test(
         const path = join(sandbox.path, 'settings/café.json');
         await Bun.write(path, JSON.stringify({ count: 'invalid' }));
         expect(git(sandbox.path, ['add', '-A']).code).toBe(0);
-        const command = ['check', '--only', 'configs/schema', '--staged', '--stage', 'push', '--no-cache', '--json'];
+        const command = ['check', '--only', 'files/schema', '--staged', '--stage', 'push', '--no-cache', '--json'];
         const invalid = await run(sandbox.path, command, environment);
         expect(invalid.code, invalid.stdout + invalid.stderr).toBe(1);
         expect(reportSchema.parse(JSON.parse(invalid.stdout)).checks).toMatchObject([
             {
-                check: 'configs/schema',
+                check: 'files/schema',
                 status: 'fail',
                 findings: [
                     containing({
@@ -253,7 +253,7 @@ test(
         const valid = await run(sandbox.path, command, environment);
         expect(valid.code, valid.stdout + valid.stderr).toBe(0);
         expect(reportSchema.parse(JSON.parse(valid.stdout)).checks).toMatchObject([
-            { check: 'configs/schema', status: 'ok', findings: [] },
+            { check: 'files/schema', status: 'ok', findings: [] },
         ]);
     },
     PLANTED_TIMEOUT_MS,
@@ -269,14 +269,10 @@ test(
         await install(sandbox.path, [...CONFIGS_INIT, '--no-hooks'], environment);
         const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
         expect(selected.code, selected.stdout + selected.stderr).toBe(0);
-        const fixed = await run(
-            sandbox.path,
-            ['check', '--only', 'configs/dotenv', '--fix', '--no-cache'],
-            environment,
-        );
+        const fixed = await run(sandbox.path, ['check', '--only', 'files/dotenv', '--fix', '--no-cache'], environment);
         expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
         expect(await Bun.file(join(sandbox.path, '.env.example')).text()).toBe('LOWERCASE=value\n');
-        const checked = await run(sandbox.path, ['check', '--only', 'configs/dotenv', '--no-cache'], environment);
+        const checked = await run(sandbox.path, ['check', '--only', 'files/dotenv', '--no-cache'], environment);
         expect(checked.code, checked.stdout + checked.stderr).toBe(0);
     },
     PLANTED_TIMEOUT_MS,

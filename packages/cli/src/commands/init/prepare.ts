@@ -2,13 +2,13 @@
 import { print } from '#cli/output/messages.ts';
 import * as messages from '#cli/policy/messages.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
+import { kitManifests } from '#cli/kits/manifests.ts';
 import { unknownLanguages } from '#cli/kits/detect.ts';
 import { readRepository } from '#cli/repository/tree.ts';
 import type { Policy } from '#cli/types/policy/policy.ts';
 import { proposedScopes } from '#cli/repository/scopes.ts';
 import { proposeText } from '#cli/commands/init/propose.ts';
 import { readManifests } from '#cli/repository/manifests.ts';
-import { configurationManifests } from '#cli/kits/manifests.ts';
 import { detectionText } from '#cli/commands/init/detection.ts';
 import { selectForInit } from '#cli/commands/init/selection.ts';
 import { detectedSettings } from '#cli/commands/init/settings.ts';
@@ -16,9 +16,9 @@ import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import { proposedRunnerTasks } from '#cli/generation/runner/plan.ts';
 import { existingTooling } from '#cli/repository/existing-tooling.ts';
 import { isOwned, collectCarried } from '#cli/policy/adoption/collect.ts';
+import { askKits, askInitQuestions } from '#cli/commands/init/questions.ts';
 import { buildInitPlan, buildProposal } from '#cli/commands/init/plan/build.ts';
 import type { TomlTable, ExistingTooling } from '#cli/types/repository/repository.ts';
-import { askInitQuestions, askConfigurations } from '#cli/commands/init/questions.ts';
 import { PolicyError, parsePolicyText, assertPolicyComplete } from '#cli/policy/read.ts';
 import type { Planning, InitInputs, InitOptions, InitPrepared, InitSelection } from '#cli/types/commands/init.ts';
 
@@ -37,7 +37,7 @@ async function chosenSelection(
     detected: InitSelection,
 ): Promise<InitSelection> {
     if (options.json) return detected;
-    const kept = await askConfigurations(options, detected, inputs.manifests);
+    const kept = await askKits(options, detected, inputs.manifests);
     if (kept === undefined) return detected;
     const configurations = kept.length === 0 ? ['none'] : kept;
     return selectForInit({ ...inputs, options: { ...options, kits: configurations, isListExact: true } });
@@ -84,7 +84,7 @@ function policyTextFor(
  * @returns the plan, the policy text, and what the takeover observed
  */
 export async function prepare(root: string, options: InitOptions): Promise<InitPrepared> {
-    const manifests = configurationManifests();
+    const manifests = kitManifests();
     const runtime = readOwnership(root)
         .files.filter((entry) => entry.kind === 'runtime')
         .map((entry) => entry.path);

@@ -16,7 +16,7 @@ test.each([2, 6])('format width %i reaches editors and generated tool configurat
         'gspot.toml': stringify({
             version: 1,
             level: 'all',
-            kits: ['formatting', 'configs', 'python', 'swift', 'sql', 'markdown', 'bash'],
+            kits: ['formatting', 'files', 'python', 'swift', 'sql', 'markdown', 'bash'],
             format: { indent_width: width },
         }),
         'sample.yaml': 'parent:\n child: value\n',

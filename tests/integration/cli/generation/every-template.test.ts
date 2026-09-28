@@ -8,8 +8,8 @@ import { parse as parseYaml } from 'yaml';
 import { parse as parseToml } from 'smol-toml';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
+import { kitManifests } from '#cli/kits/manifests.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { configurationManifests } from '#cli/kits/manifests.ts';
 import { type ParseError, parse as parseJsonc } from 'jsonc-parser';
 import type { Parser } from '#tests/types/integration/cli/generation.ts';
 import { PLANTED } from '#tests/config/integration/cli/generation/generation.ts';
@@ -44,7 +44,7 @@ function parseModule(text: string, path: string): void {
     if (errors.length > 0) throw new Error(`${path}: ${errors.join('; ')}`);
 }
 
-const kits = [...configurationManifests().values()]
+const kits = [...kitManifests().values()]
     .filter((manifest) => manifest.configs.some((config) => !config.fragment))
     .map((manifest) => manifest.kit.name);
 

@@ -116,7 +116,7 @@ test.each(['def broken(:\n', 'value = "\u0000"\n'])(
         ).toContainEqual(containing({ file: 'sample.py', line: 1, message: "unused import 'os' (90% confidence)" }));
         expect(await Bun.file(join(sandbox.path, 'sample.py')).text()).toBe(source);
         await Bun.write(join(sandbox.path, 'sample.py'), 'print("Ready")\n');
-        const corrected = Bun.spawnSync(command, { cwd: sandbox.path });
+        const corrected = Bun.spawnSync(command, { cwd: sandbox.path, env });
         expect(corrected.exitCode).toBe(0);
         expect(
             checkedFindings(

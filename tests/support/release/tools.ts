@@ -87,7 +87,7 @@ export async function prepareNativeConsumer(installation: InstalledConsumer): Pr
             'init',
             '--yes',
             '--kits',
-            'configs',
+            'files',
             '--no-runner',
             '--no-ci',
             '--no-hooks',

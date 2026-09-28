@@ -33,7 +33,7 @@ process.exit(2);
         const environment = {
             PATH: `${join(sandbox.path, 'bin')}${delimiter}${environmentVariables()['PATH'] ?? ''}`,
         };
-        const result = await run(sandbox.path, ['check', '--only', 'configs/toml-format', '--no-cache'], environment);
+        const result = await run(sandbox.path, ['check', '--only', 'files/toml-format', '--no-cache'], environment);
         expect(result.code, result.stderr + result.stdout).toBe(2);
         expect(result.stdout).toContain('taplo broke: exit 2');
         expect(result.stdout).toContain('INFO taplo: loaded configuration');
@@ -44,12 +44,12 @@ process.exit(2);
         );
         const corrected = await run(
             sandbox.path,
-            ['check', '--only', 'configs/toml-format', '--no-cache', '--json'],
+            ['check', '--only', 'files/toml-format', '--no-cache', '--json'],
             environment,
         );
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
-            { check: 'configs/toml-format', status: 'ok', findings: [] },
+            { check: 'files/toml-format', status: 'ok', findings: [] },
         ]);
     },
     PLANTED_TIMEOUT_MS,
@@ -75,7 +75,7 @@ test(
         await Bun.write(path, workflow);
         const result = await run(
             sandbox.path,
-            ['check', '--only', 'configs/actions-pins', '--stage', 'push', '--no-cache'],
+            ['check', '--only', 'files/actions-pins', '--stage', 'push', '--no-cache'],
             environment,
         );
         expect(result.code, result.stderr + result.stdout).toBe(1);
@@ -84,12 +84,12 @@ test(
         await Bun.write(path, workflow.replace('0'.repeat(40), 'a'.repeat(40)));
         const corrected = await run(
             sandbox.path,
-            ['check', '--only', 'configs/actions-pins', '--stage', 'push', '--no-cache', '--json'],
+            ['check', '--only', 'files/actions-pins', '--stage', 'push', '--no-cache', '--json'],
             environment,
         );
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
-            { check: 'configs/actions-pins', status: 'ok', findings: [] },
+            { check: 'files/actions-pins', status: 'ok', findings: [] },
         ]);
     },
     PLANTED_TIMEOUT_MS,

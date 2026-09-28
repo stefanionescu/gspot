@@ -1,12 +1,12 @@
+import { detectKits } from '#cli/kits/detect.ts';
 import { nearMatches } from '#cli/policy/near.ts';
 import type { Manifest } from '#cli/types/kits.ts';
 import * as messages from '#cli/policy/messages.ts';
-import { detectConfigurations } from '#cli/kits/detect.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { NO_CONFIGURATIONS } from '#cli/config/commands/init.ts';
 import type { ScopeEntry } from '#cli/types/repository/repository.ts';
 import { requireChain, SelectionError, selectConfigurations } from '#cli/kits/select.ts';
-import type { InitInputs, InitContext, InitSelection, ConfigurationReason } from '#cli/types/commands/init.ts';
+import type { KitReason, InitInputs, InitContext, InitSelection } from '#cli/types/commands/init.ts';
 
 function parseScopeFlags(flags: string[] | undefined): Map<string, string[]> {
     const map = new Map<string, string[]>();
@@ -74,7 +74,7 @@ function scopeSelection(
     const without = new Set(context.options.without);
     const ids =
         flagged ??
-        detectConfigurations(context.files, context.manifests, context.facts, scope.path)
+        detectKits(context.files, context.manifests, context.facts, scope.path)
             .filter((proposal) => {
                 const manifest = getCandidate(context, proposal.configuration, without);
                 return manifest !== undefined && manifest.kit.kind !== 'general';
@@ -157,10 +157,7 @@ function listedConfigurations(
     ];
 }
 
-function reasonFor(
-    id: string,
-    sets: { named: Set<string>; chosen: Set<string>; listed: Set<string> },
-): ConfigurationReason {
+function reasonFor(id: string, sets: { named: Set<string>; chosen: Set<string>; listed: Set<string> }): KitReason {
     if (sets.named.has(id)) return 'named';
     if (sets.chosen.has(id)) return 'detected';
     return sets.listed.has(id) ? 'recommended' : 'required';
@@ -187,7 +184,7 @@ export function selectForInit(inputs: InitInputs): InitSelection {
     assertKnown(options, scopeFlags, manifests);
     const scopes = initScopes(root, workspace, scopeFlags);
     const hasScopes = scopes.length > 1;
-    const rootProposals = detectConfigurations(repo.files, manifests, facts);
+    const rootProposals = detectKits(repo.files, manifests, facts);
     const proposedRoot = rootSelection(context, rootProposals, hasScopes);
     const scopeProposals = new Map<string, string[]>();
     const heldAtRoot = proposedRoot.filter((id) => {

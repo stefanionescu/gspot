@@ -1,10 +1,10 @@
 import { test, expect } from 'bun:test';
+import { kitManifests } from '#cli/kits/manifests.ts';
 import type { Detect } from '#cli/types/commands/init.ts';
-import { configurationManifests } from '#cli/kits/manifests.ts';
 import { detectedSettings } from '#cli/commands/init/settings.ts';
 import type { TrackedFile, ManifestFacts } from '#cli/types/repository/repository.ts';
 
-const manifests = configurationManifests();
+const manifests = kitManifests();
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the line limit.
 const selected = (...names: string[]) => names.map((name) => manifests.get(name)!);
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the line limit.

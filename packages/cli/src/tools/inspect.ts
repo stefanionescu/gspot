@@ -4,13 +4,13 @@ import semver from 'semver';
 import { join } from 'node:path';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { stripVTControlCharacters } from 'node:util';
+import { kitManifests } from '#cli/kits/manifests.ts';
 import type { SpawnResult } from '#cli/types/platform.ts';
 import { installHint } from '#cli/tools/install/hints.ts';
 import type { ToolPin, Manifest } from '#cli/types/kits.ts';
 import { hasPolicy, readPolicy } from '#cli/policy/read.ts';
 import { privateToolInstallation } from '#cli/tools/pins.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import { configurationManifests } from '#cli/kits/manifests.ts';
 import { NODE_MODULES_DIRECTORY } from '#cli/config/platform.ts';
 import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import { NO_VERSION, VERSION_TIMEOUT_MS } from '#cli/config/tools/tools.ts';
@@ -182,7 +182,7 @@ export function toolVersionState(found: string, want: string, floor: string): To
  */
 export function locateTool(root: string, name: string): string | undefined {
     const runner = hasPolicy(root) ? readPolicy(root).policy.runner?.tool : undefined;
-    const tool = toolPin(configurationManifests().values(), name);
+    const tool = toolPin(kitManifests().values(), name);
     if (isInstallationPending(readOwnership(root).installations, tool, runner))
         throw new Error('Tool installation is incomplete. Run: gspot install');
     const isExternal = tool.provider === 'host' || (runner === 'mise' && tool.installers['mise'] !== undefined);

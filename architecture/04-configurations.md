@@ -43,7 +43,7 @@ Configuration names are bare names; the kind is not part of the public name. Dis
 manifest's actual directory and resolves its assets there. No category registry, old-path
 aliases, or forwarding files duplicate that ownership.
 
-The public `configs` configuration lives at `packages/cli/kits/general/configs/` and is titled Configuration
+The public `configs` configuration lives at `packages/cli/kits/general/files/` and is titled Configuration
 Files. It covers JSON, YAML, TOML, workflows, environment files, XML, and related formats.
 Its templates configure the tools that inspect those files; the configuration is not a generic
 owner for every configuration's configuration assets.

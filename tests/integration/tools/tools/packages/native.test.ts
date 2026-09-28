@@ -3,10 +3,10 @@ import { readFileSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { run } from '#cli/platform/spawn.ts';
 import { inspectTool } from '#cli/tools/inspect.ts';
+import { kitManifests } from '#cli/kits/manifests.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
 import { gspot as CLI } from '#tests/support/cli/command.ts';
-import { configurationManifests } from '#cli/kits/manifests.ts';
 import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import { readPackageInputs, createPackageProject } from '#tests/support/cli/package-project.ts';
 
@@ -27,7 +27,7 @@ test('CLI installation records the native wrapper binary and reports a usable to
             entry.path.endsWith('/editorconfig-checker'),
     );
     expect(binary?.installed).toBeDefined();
-    const checker = configurationManifests()
+    const checker = kitManifests()
         .get('formatting')!
         .tools.find((tool) => tool.name === 'ec')!;
     expect(inspectTool({ root, inspections: new Map() }, checker).state).toBe('ok');

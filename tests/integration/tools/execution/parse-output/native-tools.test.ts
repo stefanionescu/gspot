@@ -4,13 +4,13 @@ import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { renameSync, writeFileSync } from 'node:fs';
 import { emitAll } from '#cli/generation/outputs.ts';
+import { kitManifests } from '#cli/kits/manifests.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { parseOutput } from '#cli/execution/output/parse.ts';
 import { randomUUID, generateKeyPairSync } from 'node:crypto';
 import { trivyImage } from '#cli/checks/docker/image-scan.ts';
-import { configurationManifests } from '#cli/kits/manifests.ts';
 import { ToolOutputError } from '#cli/execution/output/tool-formats.ts';
 import { containing, textContaining } from '#tests/support/expectations.ts';
 import { isToolBroken, checkedFindings } from '#cli/execution/broken-tool.ts';
@@ -124,7 +124,7 @@ test('native forbidden spelling reports null corrections as a non-fixable findin
         'native.toml': '[default.extend-words]\nforbidden = ""\n',
         'sample.txt': 'forbidden\n',
     });
-    const spec = configurationManifests()
+    const spec = kitManifests()
         .get('spelling')!
         .checks.find((check) => check.name === 'spelling/typos')!;
     const command = ['typos', '--isolated', '--config', 'native.toml', '--format', 'json', 'sample.txt'];
@@ -147,7 +147,7 @@ test('native spelling JSON retains filename delimiters and Unicode character col
         ...(process.platform === 'win32' ? [] : ['name:part.txt', 'line\nbreak.txt']),
     ];
     await createFileTree(sandbox.path, Object.fromEntries(paths.map((path) => [`nested/${path}`, 'café teh\n'])));
-    const spec = configurationManifests()
+    const spec = kitManifests()
         .get('spelling')!
         .checks.find((check) => check.name === 'spelling/typos')!;
     const cwd = join(sandbox.path, 'nested');

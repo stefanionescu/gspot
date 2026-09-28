@@ -5,12 +5,12 @@ import { requireChain } from '#cli/kits/select.ts';
 import { scopeHolder } from '#cli/policy/write.ts';
 import * as messages from '#cli/policy/messages.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
+import { kitManifests } from '#cli/kits/manifests.ts';
 import { commitPolicy } from '#cli/commands/policy.ts';
 import { openSession } from '#cli/execution/session.ts';
 import type { Mutation } from '#cli/types/policy/policy.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import { installTools } from '#cli/tools/install/execution.ts';
-import { configurationManifests } from '#cli/kits/manifests.ts';
 import { assertPinMatches } from '#cli/lifecycle/version-pin.ts';
 import { textEntry, directoryOf } from '#cli/platform/arguments.ts';
 import type { AddOptions, CommandResult, RemoveOptions } from '#cli/types/commands/commands.ts';
@@ -35,7 +35,7 @@ async function installChangedSelection(
 export async function addCommand(o: AddOptions): Promise<CommandResult> {
     const root = findRoot(o.cwd);
     assertPinMatches(root);
-    const manifests = configurationManifests();
+    const manifests = kitManifests();
     for (const id of o.kits)
         if (!manifests.has(id)) {
             const known = manifests.keys().toArray();
@@ -60,7 +60,7 @@ export async function addCommand(o: AddOptions): Promise<CommandResult> {
 export async function removeCommand(o: RemoveOptions): Promise<CommandResult> {
     const root = findRoot(o.cwd);
     assertPinMatches(root);
-    const manifests = configurationManifests();
+    const manifests = kitManifests();
     const mutation: Mutation = (raw) => {
         const holder = scopeHolder(raw, o.scope);
         const list = (holder['kits'] as string[] | undefined) ?? [];

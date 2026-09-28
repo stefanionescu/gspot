@@ -2,15 +2,15 @@ import { join, win32 } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import type { CheckSpec } from '#cli/types/kits.ts';
+import { kitManifests } from '#cli/kits/manifests.ts';
 import { isToolBroken } from '#cli/execution/broken-tool.ts';
 import { parseOutput } from '#cli/execution/output/parse.ts';
-import { configurationManifests } from '#cli/kits/manifests.ts';
 import { ToolOutputError } from '#cli/execution/output/tool-formats.ts';
 
 test('invalid Markdown records remain execution errors and valid records parse', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'sample.md': '<span>Content</span>\n' });
-    const spec = configurationManifests()
+    const spec = kitManifests()
         .get('markdown')!
         .checks.find(({ name }) => name === 'markdown/markdownlint')!;
     const valid = {
@@ -63,7 +63,7 @@ test.each([
 ])('invalid spelling output %s is an execution error', async (stdout) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'sample.txt': 'teh\n' });
-    const spec = configurationManifests()
+    const spec = kitManifests()
         .get('spelling')!
         .checks.find((check) => check.name === 'spelling/typos')!;
     expect(() => parseOutput(spec, stdout, '', sandbox.path)).toThrow(ToolOutputError);
@@ -81,7 +81,7 @@ test.each([
 test('ShellCheck diagnostics retain their path, position, and rule with either line ending', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'scripts/café build.sh': 'echo $1\n' });
-    const spec = configurationManifests()
+    const spec = kitManifests()
         .get('bash')!
         .checks.find((check) => check.name === 'bash/shellcheck')!;
     const path = join('scripts', 'café build.sh');
@@ -97,9 +97,9 @@ test('ShellCheck diagnostics retain their path, position, and rule with either l
 test('XML diagnostics with carriage returns remain findings on real files', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'settings/feed.xml': '<feed><entry></feed>\n' });
-    const spec = configurationManifests()
-        .get('configs')!
-        .checks.find((check) => check.name === 'configs/xml')!;
+    const spec = kitManifests()
+        .get('files')!
+        .checks.find((check) => check.name === 'files/xml')!;
     const findings = parseOutput(
         spec,
         '',
@@ -114,9 +114,9 @@ test('XML diagnostics with carriage returns remain findings on real files', asyn
 test('Taplo reports one finding from a diff, a log entry, or both', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'settings/café.toml': 'a=1\n' });
-    const spec = configurationManifests()
-        .get('configs')!
-        .checks.find((check) => check.name === 'configs/toml-format')!;
+    const spec = kitManifests()
+        .get('files')!
+        .checks.find((check) => check.name === 'files/toml-format')!;
     const path = join(sandbox.path, 'settings', 'café.toml');
     const diff = `--- a/${path}\n+++ b/${path}\n@@ -1 +1 @@\n-a=1\n+a = 1\n`;
     const log = `ERROR taplo:format_files: the file is not properly formatted path="${path}"\n`;
@@ -135,9 +135,9 @@ test('Taplo reports one finding from a diff, a log entry, or both', async () => 
 test('grouped output strips line endings and relativizes native absolute paths', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'settings/café.toml': 'a=1\n' });
-    const base = configurationManifests()
-        .get('configs')!
-        .checks.find((check) => check.name === 'configs/toml-format')!;
+    const base = kitManifests()
+        .get('files')!
+        .checks.find((check) => check.name === 'files/toml-format')!;
     const spec: CheckSpec = { ...base, output: { format: 'grouped' } };
     const output = `${join(sandbox.path, 'settings', 'café.toml')}:\r\n  1: Incorrect spacing\r\n`;
     const findings = parseOutput(spec, output, '', sandbox.path);
@@ -146,13 +146,13 @@ test('grouped output strips line endings and relativizes native absolute paths',
 });
 
 test('a syntax diagnostic cannot promise an automatic fix when its check has no fixer', () => {
-    const spec = configurationManifests()
-        .get('configs')!
-        .checks.find((check) => check.name === 'configs/toml')!;
+    const spec = kitManifests()
+        .get('files')!
+        .checks.find((check) => check.name === 'files/toml')!;
     const findings = parseOutput(spec, '', '  ┌─ settings.toml:2:1\n', '/repository');
     expect(findings).toStrictEqual([
         {
-            check: 'configs/toml',
+            check: 'files/toml',
             file: 'settings.toml',
             line: 2,
             column: 1,
@@ -171,7 +171,7 @@ test.each([
     '[{"filePath":"/repo/a.js","messages":null}]',
     '[{"filePath":"/repo/a.js","messages":[{"message":"partial"}]}]',
 ])('malformed ESLint output fails instead of becoming empty findings: %s', (text) => {
-    const spec = configurationManifests()
+    const spec = kitManifests()
         .get('javascript')!
         .checks.find((check) => check.name === 'javascript/eslint')!;
     expect(() => parseOutput(spec, text, '', '/repo')).toThrow(ToolOutputError);
@@ -184,7 +184,7 @@ test.each([
     // Bun escapes a non-ASCII character inside String.raw, so the Windows path is normalized from slashes.
     [win32.normalize('C:/repo'), win32.normalize('C:/repo/café file.js'), 'café file.js'],
 ])('ESLint locations respect the root boundary %s for %s', (root, path, expected) => {
-    const spec = configurationManifests()
+    const spec = kitManifests()
         .get('javascript')!
         .checks.find((check) => check.name === 'javascript/eslint')!;
     const stdout = JSON.stringify([

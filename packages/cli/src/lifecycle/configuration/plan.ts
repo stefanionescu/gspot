@@ -8,8 +8,8 @@ import { configurationDocument } from '#cli/lifecycle/configuration/document.ts'
 import type {
     Field,
     KeyPath,
-    ConfigurationPlan,
-    ConfigurationDocument,
+    KitPlan,
+    KitDocument,
     ConfigurationOwnership,
     ConfigurationWriteRequest,
 } from '#cli/types/lifecycle/lifecycle.ts';
@@ -39,7 +39,7 @@ function isUnplannable(request: ConfigurationWriteRequest): boolean {
 }
 
 // Puts back the original value of each unrequested key, as long as the developer left it as installed.
-function retireFields(document: ConfigurationDocument, recorded: Field[], requested: Field[]): Field[] | undefined {
+function retireFields(document: KitDocument, recorded: Field[], requested: Field[]): Field[] | undefined {
     const retired = recorded.filter(
         (previous) => !requested.some((field) => isDeepStrictEqual(field.path, previous.path)),
     );
@@ -52,7 +52,7 @@ function retireFields(document: ConfigurationDocument, recorded: Field[], reques
 
 // The field as it will be recorded, or undefined when the developer's value stands in the way of installing it.
 function plannedField(
-    document: ConfigurationDocument,
+    document: KitDocument,
     request: ConfigurationWriteRequest,
     field: Field,
     previous: Field | undefined,
@@ -68,7 +68,7 @@ function plannedField(
 }
 
 // Records the containers above a key that do not exist yet, which this owner is about to create.
-function recordParents(document: ConfigurationDocument, path: KeyPath, parents: KeyPath[]): void {
+function recordParents(document: KitDocument, path: KeyPath, parents: KeyPath[]): void {
     for (let length = 1; length < path.length; length++) {
         const parent = path.slice(0, length);
         if (document.value(parent) === undefined && !parents.some((known) => isDeepStrictEqual(known, parent)))
@@ -78,7 +78,7 @@ function recordParents(document: ConfigurationDocument, path: KeyPath, parents: 
 
 // Installs every requested field, returning the recorded fields, or undefined when one cannot be installed.
 function installFields(
-    document: ConfigurationDocument,
+    document: KitDocument,
     request: ConfigurationWriteRequest,
     recorded: Field[],
     requested: Field[],
@@ -123,7 +123,7 @@ function planned(
     nextText: string,
     fields: Field[],
     parents: KeyPath[],
-): ConfigurationPlan {
+): KitPlan {
     const next = { bytes: Buffer.from(nextText), mode: request.current?.mode ?? OWNER_WRITABLE_FILE };
     const recorded = request.existing?.configuration;
     const status = nextText === text ? 'unchanged' : 'changed';
@@ -140,7 +140,7 @@ function planned(
  * @returns the created containers that still exist
  */
 export function pruneConfigurationParents(
-    document: ConfigurationDocument,
+    document: KitDocument,
     parents: KeyPath[],
     protectedFields: KeyPath[] = [],
 ): KeyPath[] {
@@ -161,7 +161,7 @@ export function pruneConfigurationParents(
  * @param request the destination, requested fields, and observed ownership
  * @returns the next snapshot with its ownership, or undefined when the recorded format differs
  */
-export function planConfiguration(request: ConfigurationWriteRequest): ConfigurationPlan | undefined {
+export function planConfiguration(request: ConfigurationWriteRequest): KitPlan | undefined {
     const { format, changes, current, existing } = request;
     const text = sourceText(request);
     const document = configurationDocument(text, format, current === undefined);

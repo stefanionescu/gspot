@@ -1,11 +1,11 @@
 import { test, expect, describe } from 'bun:test';
+import { kitManifests } from '#cli/kits/manifests.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
 import { selectConfigurations } from '#cli/kits/select.ts';
-import { configurationManifests } from '#cli/kits/manifests.ts';
 import { shebangInterpreter } from '#cli/repository/shebang.ts';
 import { isClaimed, claimedByClaims } from '#cli/kits/claims.ts';
+import { detectKits, unknownLanguages } from '#cli/kits/detect.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
-import { unknownLanguages, detectConfigurations } from '#cli/kits/detect.ts';
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the line limit.
 const file = (path: string, tags: string[] = ['text']): TrackedFile => ({
@@ -16,7 +16,7 @@ const file = (path: string, tags: string[] = ['text']): TrackedFile => ({
     executable: false,
     size: 1,
 });
-const manifests = configurationManifests();
+const manifests = kitManifests();
 
 describe('claims', () => {
     test('match by extension, filename at any depth, tag and glob', () => {
@@ -66,7 +66,7 @@ describe('claims', () => {
 
 describe('detection', () => {
     test('proposes a language from an extension and the defaults for every repository', () => {
-        const proposals = detectConfigurations([file('a.sh')], manifests, []);
+        const proposals = detectKits([file('a.sh')], manifests, []);
         expect(proposals.find((proposal) => proposal.configuration === 'bash')?.evidence).toBe('1 .sh file');
         expect(proposals.some((proposal) => proposal.configuration === 'spelling')).toBe(true);
     });
@@ -78,7 +78,7 @@ describe('detection', () => {
 
     test('Sass is a language without a configuration, and a stylesheet proposes css alone', () => {
         const files = [file('theme.scss'), file('site.css')];
-        const proposals = detectConfigurations(files, manifests, []);
+        const proposals = detectKits(files, manifests, []);
         expect(proposals.find((proposal) => proposal.configuration === 'css')?.evidence).toBe('1 .css file');
         expect(unknownLanguages(files, manifests)).toStrictEqual([
             { language: 'SCSS', extensions: ['.scss'], count: 1 },
@@ -87,7 +87,7 @@ describe('detection', () => {
 
     test('names unsupported source languages and disambiguates a module filename', () => {
         const module = file('go.mod');
-        const proposals = detectConfigurations([module], manifests, []);
+        const proposals = detectKits([module], manifests, []);
         expect(proposals.filter((proposal) => proposal.kind === 'language')).toStrictEqual([]);
         const unknown = unknownLanguages([module, file('main.go'), file('lib.rs'), file('app.rb')], manifests);
         expect(unknown).toStrictEqual([

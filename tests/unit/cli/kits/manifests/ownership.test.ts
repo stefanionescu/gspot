@@ -1,7 +1,7 @@
 import { test, expect } from 'bun:test';
 import { PINNED_HEADER } from '#tests/config/unit/cli/kits.ts';
 import { validateManifests } from '#cli/kits/manifest-problems.ts';
-import { parseManifest, configurationManifests } from '#cli/kits/manifests.ts';
+import { kitManifests, parseManifest } from '#cli/kits/manifests.ts';
 
 test('loading two configurations refuses duplicate executable check ownership', () => {
     const definition =
@@ -11,7 +11,7 @@ test('loading two configurations refuses duplicate executable check ownership', 
             name,
             parseManifest(
                 `[kit]\nname = "${name}"\nkind = "tool"\ntitle = "Input"\ndescription = "Checks the project input."\n${definition}`,
-                `configurations/${name}`,
+                `kits/${name}`,
             ),
         ]),
     );
@@ -25,7 +25,7 @@ test.each(['reported_by', 'takes_over'] as const)(
     (field) => {
         const project = parseManifest(
             `[kit]\nname = "project"\nkind = "language"\ntitle = "project"\nrequires = ${JSON.stringify([])}\ndescription = "A configuration for the tests, long enough."\n`,
-            `configurations/project`,
+            `kits/project`,
         );
         const checks = `
 [[checks]]
@@ -70,9 +70,9 @@ help = "Correct the reported input."
 test('manifest collection refuses circular replacement before either check can suppress execution', () => {
     const project = parseManifest(
         `[kit]\nname = "project"\nkind = "language"\ntitle = "project"\nrequires = ${JSON.stringify([])}\ndescription = "A configuration for the tests, long enough."\n`,
-        `configurations/project`,
+        `kits/project`,
     );
-    const original = configurationManifests()
+    const original = kitManifests()
         .get('bash')!
         .checks.find((check) => check.command !== undefined)!;
     project.checks = [
@@ -87,7 +87,7 @@ test('manifest collection refuses circular replacement before either check can s
 test.each(['missing/check', 'bash/shfmt'])(
     'takeover refuses destination %s and accepts the check that executes its tool',
     (destination) => {
-        const manifests = structuredClone(configurationManifests());
+        const manifests = structuredClone(kitManifests());
         const row = manifests.get('bash')!.tools.find((tool) => tool.name === 'shellcheck')!.takeover![0]!;
         row.check = destination;
         expect(() => {
@@ -103,13 +103,13 @@ test.each(['missing/check', 'bash/shfmt'])(
 test('check references require one standalone built-in owner and preserve its definition', () => {
     const owner = parseManifest(
         `[kit]\nname = "owner"\nkind = "language"\ntitle = "owner"\nrequires = ${JSON.stringify([])}\ndescription = "A configuration for the tests, long enough."\n`,
-        `configurations/owner`,
+        `kits/owner`,
     );
     const consumer = parseManifest(
         `[kit]\nname = "consumer"\nkind = "language"\ntitle = "consumer"\nrequires = ${JSON.stringify([])}\ndescription = "A configuration for the tests, long enough."\n`,
-        `configurations/consumer`,
+        `kits/consumer`,
     );
-    const spec = configurationManifests()
+    const spec = kitManifests()
         .get('structure')!
         .checks.find((check) => check.name === 'integrity/allowlists-match')!;
     if (spec.engine !== 'integrity') throw new Error('Expected an integrity check fixture.');

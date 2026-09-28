@@ -430,12 +430,10 @@ CI. Tracked-source lookup cannot resolve either contract. Remove these allowance
 if the invocation directory or report path changes. The published 404 filename
 exception is removable only when Starlight stops requiring that route convention.
 
-The UUID advisory remains scoped to `GHSA-w5hq-g745-h8pq`. The installed graph has
-`linkinator@6.1.4` depending on `gaxios@6.7.1`, which depends on `uuid@9.0.1`. Its only UUID call is `v4()`
-with no arguments. The [upstream advisory](https://github.com/advisories/GHSA-w5hq-g745-h8pq)
-affects caller-buffer writes in v3, v5, and v6; v4 is unaffected. Registry metadata
-confirms that releases through `6.3.0` retain gaxios 6. Reassess on lock changes and remove
-the exception when the affected dependency leaves the graph.
+The UUID advisory `GHSA-w5hq-g745-h8pq` reached the lockfile through `gaxios`, a dependency
+of linkinator 6. Linkinator 8.1.0 fetches with `undici` and carries no `uuid`, so the
+advisory left the graph and its exception is gone. Linkinator 8 serves the site on the
+loopback address and reports relative links, and the internal-link skip names that host.
 
 Documentation path analysis recognizes document-relative references and mise aliases.
 Allowlist validation accepts untracked path allowances only when documentation

@@ -8,7 +8,7 @@ import ThemeSelect from '../components/starlight/ThemeSelect.astro';
 
 const workflow = [
     { title: 'Choose your checks', description: 'Choose configurations and settings in gspot.toml. Apply those choices to generate configuration for the selected tools.', image: '/brand/home/policy.svg', href: '/guides/customize/', link: 'Choose checks and exceptions' },
-    { title: 'Run pinned tool versions', description: 'Run selected tools with pinned versions. ESLint, Ruff, Prettier, and other tools keep their own diagnostic rules.', image: '/brand/home/toolchain.svg', href: '/reference/configurations/', link: 'Browse the configuration reference' },
+    { title: 'Run pinned tool versions', description: 'Run selected tools with pinned versions. ESLint, Ruff, Prettier, and other tools keep their own diagnostic rules.', image: '/brand/home/toolchain.svg', href: '/reference/kits/', link: 'Browse the configuration reference' },
     { title: 'Find the code to fix', description: 'Find the file, check, and correction advice in the report. Rerun the check after correcting the code.', image: '/brand/home/finding.svg', href: '/guides/you-got-a-finding/', link: 'Read and resolve findings' },
 ];
 const repository = [
@@ -30,7 +30,7 @@ const repository = [
                 ['eslint', 'ESLint'], ['prettier', 'Prettier'], ['ruff', 'Ruff'],
                 ['stylelint', 'Stylelint'], ['shellcheck', 'ShellCheck'], ['semgrep', 'Semgrep'],
             ].map(([icon, name]) => <li><img src={`/tools/${icon}.${icon === 'shellcheck' ? 'png' : 'svg'}`} alt="" width="24" height="24" /><span>{name}</span></li>)}</ul>
-            <a class="tool-directory" href="/reference/configurations/">Also configure TypeScript, Python, Swift, React, Next.js, and more →</a>
+            <a class="tool-directory" href="/reference/kits/">Also configure TypeScript, Python, Swift, React, Next.js, and more →</a>
         </section>
         <Features title="Configure tools and check code" description="Choose checks in gspot.toml, generate tool configuration, and run them against your code." features={workflow} />
         <section class="demonstration" aria-labelledby="finding">

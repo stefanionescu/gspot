@@ -17,7 +17,7 @@ import type { NextjsObserved } from '#tests/types/integration/cli/checks.ts';
 import { chmodSync, mkdirSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
 
 /** init selecting nextjs without the recommendations the tests leave out. */
-const NEXT_INIT = initArgs(['nextjs'], ['naming', 'spelling', 'css', 'configs']); /**
+const NEXT_INIT = initArgs(['nextjs'], ['naming', 'spelling', 'css', 'files']); /**
  * Plants the project beside this repository's node_modules, initializes it, and sets the all level.
  * @returns the sandbox and the environment its commands run with
  */

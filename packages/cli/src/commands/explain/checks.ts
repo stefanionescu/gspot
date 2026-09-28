@@ -2,9 +2,9 @@
 import { allChecks } from '#cli/kits/listing.ts';
 import { inspectTool } from '#cli/tools/inspect.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
+import { kitManifests } from '#cli/kits/manifests.ts';
 import { quoteArgument } from '#cli/platform/arguments.ts';
 import type { ToolPin, CheckSpec } from '#cli/types/kits.ts';
-import { configurationManifests } from '#cli/kits/manifests.ts';
 import type { Session } from '#cli/types/execution/execution.ts';
 import { repositoryCheckSpec } from '#cli/policy/check-state.ts';
 import { SWIFTLINT_LINES, TOOL_TIMEOUT_MS } from '#cli/config/commands/explain.ts';
@@ -32,7 +32,7 @@ const TOOL_RULE_SOURCES: Record<string, (rule: string, path: string) => string |
 
 function pinNamed(name: string | undefined): ToolPin | undefined {
     if (name === undefined) return undefined;
-    return configurationManifests()
+    return kitManifests()
         .values()
         .flatMap((manifest) => manifest.tools)
         .find((entry) => entry.name === name);

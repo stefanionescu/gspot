@@ -3,12 +3,12 @@ import { parse } from 'smol-toml';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
+import { kitManifests } from '#cli/kits/manifests.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { allRuleExamples } from '#cli/agents/examples.ts';
 import { runProcess } from '#tests/support/cli/command.ts';
 import { containingAll } from '#tests/support/expectations.ts';
-import { configurationManifests } from '#cli/kits/manifests.ts';
 import { DOCSTRING_COMMAND } from '#cli/config/checks/python.ts';
 import { PYTHON_STRUCTURE } from '#cli/checks/python/analyses.ts';
 import { generatedFile } from '#tests/support/cli/generated/files.ts';
@@ -19,7 +19,7 @@ test.each(['recommended', 'all'] as const)(
     'Python guide examples satisfy %s types and docstrings',
     async (level) => {
         await using sandbox = await testdir();
-        const pins = configurationManifests()
+        const pins = kitManifests()
             .get('python')!
             .tools.filter((tool) => ['basedpyright', 'pydoclint'].includes(tool.name))
             .map((tool) => `${tool.name}==${tool.version!}`);

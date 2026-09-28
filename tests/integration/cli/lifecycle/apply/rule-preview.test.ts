@@ -177,7 +177,7 @@ test('apply preview names added Vale styles when prose moves from recommended to
 
 test.each([
     { configuration: 'commits', check: 'commitlint', rule: 'type-case', target: 'commitlint.config.cjs' },
-    { configuration: 'configs', check: 'yaml', rule: 'truthy', target: 'yamllint.yml' },
+    { configuration: 'files', check: 'yaml', rule: 'truthy', target: 'yamllint.yml' },
     { configuration: 'html', check: 'html-validate', rule: 'no-inline-style', target: 'html-validate-templates.json' },
 ])(
     'apply preview names an enabled $check rule and preserves installed configuration',

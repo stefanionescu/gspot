@@ -6,7 +6,7 @@ import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { proposeText } from '#cli/commands/init/propose.ts';
 import { collectCarried } from '#cli/policy/adoption/collect.ts';
-import { configurationManifests } from '#cli/kits/manifests.ts';
+import { kitManifests } from '#cli/kits/manifests.ts';
 import type { ExistingTooling } from '#cli/types/repository/repository.ts';
 
 const tooling: ExistingTooling = {
@@ -65,7 +65,7 @@ test.each(LICENSE_SCOPES)(
         mkdirSync(join(sandbox.path, 'node_modules'));
         symlinkSync(scanner, join(sandbox.path, 'node_modules/license-checker-rseidelsohn'));
         const installed = (await Bun.file(join(scanner, 'package.json')).json()) as { version: string };
-        expect(installed.version).toBe(configurationManifests().get('licenses')!.tools[0]!.version!);
+        expect(installed.version).toBe(kitManifests().get('licenses')!.tools[0]!.version!);
         const refused = await collectCarried(root, selected, new Set(['licenses']), []);
         expect(refused.unread.map((entry) => entry.path)).toStrictEqual([path]);
         expect(refused.tools.size).toBe(0);
@@ -105,7 +105,7 @@ test.each(LICENSE_SCOPES)(
         mkdirSync(join(sandbox.path, 'node_modules'));
         symlinkSync(scanner, join(sandbox.path, 'node_modules/license-checker-rseidelsohn'));
         const installed = (await Bun.file(join(scanner, 'package.json')).json()) as { version: string };
-        expect(installed.version).toBe(configurationManifests().get('licenses')!.tools[0]!.version!);
+        expect(installed.version).toBe(kitManifests().get('licenses')!.tools[0]!.version!);
         await Bun.write(
             join(project, 'node_modules/missing-dependency/package.json'),
             JSON.stringify({ name: 'missing-dependency', version: '2.0.0', license: 'MPL-2.0' }),

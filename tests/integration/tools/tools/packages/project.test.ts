@@ -2,11 +2,11 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { run } from '#cli/platform/spawn.ts';
 import { emitAll } from '#cli/generation/outputs.ts';
+import { kitManifests } from '#cli/kits/manifests.ts';
 import { computeDrift } from '#cli/lifecycle/drift.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
 import { statSync, existsSync, readFileSync } from 'node:fs';
-import { configurationManifests } from '#cli/kits/manifests.ts';
 import { setEnvironmentVariable } from '#cli/platform/environment.ts';
 import { installPackageProject } from '#cli/tools/packages/project.ts';
 import { PACKAGE_PROJECTS } from '#tests/config/integration/tools/packages.ts';
@@ -17,7 +17,7 @@ test.each(PACKAGE_PROJECTS)(
     async (client, projectPath, runner) => {
         await using fixture = await createPackageProject(client, projectPath, runner);
         const { root, artifacts, registry, rootPackage, yarnConfiguration } = fixture;
-        const tools = [...configurationManifests().values()].flatMap((manifest) => manifest.tools);
+        const tools = [...kitManifests().values()].flatMap((manifest) => manifest.tools);
         const first = await applyAll(await openSession(root));
         expect(first.notes.filter((note) => note.startsWith('preserved'))).toStrictEqual([]);
         const { manifest, lockPath, lock, mode } = readPackageInputs(root, client);

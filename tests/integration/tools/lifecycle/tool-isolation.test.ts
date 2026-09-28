@@ -2,9 +2,9 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { inspectTool } from '#cli/tools/inspect.ts';
+import { kitManifests } from '#cli/kits/manifests.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
-import { configurationManifests } from '#cli/kits/manifests.ts';
 import { run, runProcess } from '#tests/support/cli/command.ts';
 import { cpSync, chmodSync, mkdirSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
 
@@ -65,7 +65,7 @@ test(
         chmodSync(join(repository.path, '.gspot/node_modules/.bin/tsc'), 0o755);
         mkdirSync(join(repository.path, 'node_modules/.bin'), { recursive: true });
         symlinkSync(join(MODULES, '.bin/tsc'), join(repository.path, 'node_modules/.bin/tsc'));
-        const tool = configurationManifests()
+        const tool = kitManifests()
             .get('typescript')!
             .tools.find((entry) => entry.name === 'tsc')!;
         const inspection = inspectTool({ root: repository.path, inspections: new Map() }, tool);

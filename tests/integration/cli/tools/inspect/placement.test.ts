@@ -2,8 +2,8 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { RUNS } from '#tests/config/cli.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { kitManifests } from '#cli/kits/manifests.ts';
 import { privateToolInstallation } from '#cli/tools/pins.ts';
-import { configurationManifests } from '#cli/kits/manifests.ts';
 import { locateTool, inspectTool } from '#cli/tools/inspect.ts';
 import { commandPin, libraryPin } from '#tests/support/cli/pins.ts';
 import { chmodSync, mkdirSync, existsSync, unlinkSync, symlinkSync } from 'node:fs';
@@ -51,7 +51,7 @@ test.each([
     ['python', 'ruff', 'mise', 'python'],
     ['typescript', 'tsc', undefined, undefined],
 ] as const)('installation placement for %s/%s under %s is %s', (configuration, name, runner, kind) => {
-    const tool = configurationManifests()
+    const tool = kitManifests()
         .get(configuration)!
         .tools.find((entry) => entry.name === name)!;
     expect(tool).toBeDefined();

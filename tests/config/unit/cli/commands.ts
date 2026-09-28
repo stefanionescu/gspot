@@ -12,7 +12,7 @@ export const CONFIGURATIONS = [
     'prose',
     'spelling',
     'commits',
-    'configs',
+    'files',
     'naming',
     'formatting',
     'docs',

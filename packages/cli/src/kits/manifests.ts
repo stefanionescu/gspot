@@ -125,7 +125,7 @@ export function parseManifest(text: string, dir: string): Manifest {
  * Every embedded manifest by configuration name. Read once per process.
  * @returns the manifests
  */
-export function configurationManifests(): Map<string, Manifest> {
+export function kitManifests(): Map<string, Manifest> {
     if (state.cache) return state.cache;
     const manifests = new Map<string, Manifest>();
     for (const path of listAssets('packages/cli/kits/'))
@@ -142,8 +142,6 @@ export function configurationManifests(): Map<string, Manifest> {
  * @returns the block body
  */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The .gitignore block: the paths gspot writes that git never tracks. 5 files make 5 calls; one owner keeps that behavior in one place.
-export function gitignoreBlock(
-    manifests: Iterable<Pick<Manifest, 'untracked'>> = configurationManifests().values(),
-): string {
+export function gitignoreBlock(manifests: Iterable<Pick<Manifest, 'untracked'>> = kitManifests().values()): string {
     return [...new Set([...PRIVATE_PATHS, ...[...manifests].flatMap((manifest) => manifest.untracked)])].join('\n');
 }

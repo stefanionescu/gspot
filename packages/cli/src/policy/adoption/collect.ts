@@ -1,10 +1,10 @@
 import { z } from 'zod';
 import { dirname } from 'node:path';
+import { kitManifests } from '#cli/kits/manifests.ts';
 import { osvImporter } from '#cli/policy/adoption/osv.ts';
 import { typosImporter } from '#cli/policy/adoption/typos.ts';
 import { collectEslint } from '#cli/policy/adoption/eslint.ts';
 import { appendSetting } from '#cli/policy/adoption/results.ts';
-import { configurationManifests } from '#cli/kits/manifests.ts';
 import { gitleaksImporter } from '#cli/policy/adoption/gitleaks.ts';
 import { licensesImporter } from '#cli/policy/adoption/licenses.ts';
 import { stylelintImporter } from '#cli/policy/adoption/stylelint.ts';
@@ -168,7 +168,7 @@ export const nativeImporters: Record<
  * @returns whether takeover replaces the tool's configuration
  */
 export function isOwned(tool: string, selected: Set<string>): boolean {
-    const manifests = configurationManifests();
+    const manifests = kitManifests();
     return [...selected].some(
         (id) => manifests.get(id)?.tools.some((entry) => entry.name === tool && entry.takeover !== undefined) === true,
     );

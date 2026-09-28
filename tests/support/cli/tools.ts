@@ -3,10 +3,10 @@ import { readPolicy } from '#cli/policy/read.ts';
 import { run } from '#tests/support/cli/command.ts';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { join, dirname, delimiter } from 'node:path';
+import { kitManifests } from '#cli/kits/manifests.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { privateToolInstallation } from '#cli/tools/pins.ts';
 import { toolPin, inspectTool } from '#cli/tools/inspect.ts';
-import { configurationManifests } from '#cli/kits/manifests.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import { installPythonProject, preparePythonProject } from '#cli/tools/python-project.ts';
@@ -19,7 +19,7 @@ const root = fileURLToPath(new URL('../../..', import.meta.url));
  * @returns the PATH value
  */
 export function toolsPath(names: string[]): string {
-    const manifests = [...configurationManifests().values()];
+    const manifests = [...kitManifests().values()];
     const context = { root, inspections: new Map(), policyFiles: readPolicy(root) };
     const folders = names.flatMap((name) => {
         const tool = toolPin(manifests, name.replace(/^[a-z]+:/u, ''));

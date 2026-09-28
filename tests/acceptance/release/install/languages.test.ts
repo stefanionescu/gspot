@@ -2,10 +2,10 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { writeFileSync } from 'node:fs';
+import { kitManifests } from '#cli/kits/manifests.ts';
 import { parseAlerts } from '#cli/checks/prose/vale.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { RELEASE_TIMEOUT_MS } from '#tests/config/release.ts';
-import { configurationManifests } from '#cli/kits/manifests.ts';
 import type { InstalledConsumer } from '#tests/types/release.ts';
 import { runProcess as run } from '#tests/support/cli/command.ts';
 import { createConsumer } from '#tests/support/release/consumer.ts';
@@ -70,7 +70,7 @@ test(
             options,
         );
         expect(vocabulary.code, vocabulary.stdout + vocabulary.stderr).toBe(0);
-        const valePin = configurationManifests()
+        const valePin = kitManifests()
             .get('prose')!
             .tools.find((tool) => tool.name === 'vale')!;
         const valeVersion = await run(['vale', '--version'], options);
@@ -124,7 +124,7 @@ test(
         expect(installation.installed.code, installation.installed.stdout + installation.installed.stderr).toBe(0);
         const { consumer, command, options } = installation;
         await initializeConsumer(release, installation);
-        const ruffPin = configurationManifests()
+        const ruffPin = kitManifests()
             .get('python')!
             .tools.find((tool) => tool.name === 'ruff')!;
         const ruffVersion = await run(['ruff', '--version'], options);
@@ -175,7 +175,7 @@ test(
         expect(installation.installed.code, installation.installed.stdout + installation.installed.stderr).toBe(0);
         const { consumer, command, options } = installation;
         await initializeConsumer(release, installation);
-        const shellcheck = configurationManifests()
+        const shellcheck = kitManifests()
             .get('bash')!
             .tools.find((tool) => tool.name === 'shellcheck')!;
         const toolVersion = await run(['shellcheck', '--version'], options);

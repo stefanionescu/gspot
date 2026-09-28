@@ -1,7 +1,7 @@
 import { test, expect, describe } from 'bun:test';
+import { kitManifests } from '#cli/kits/manifests.ts';
 import { selectConfigurations } from '#cli/kits/select.ts';
 import { testManifest } from '#tests/support/cli/tooling.ts';
-import { configurationManifests } from '#cli/kits/manifests.ts';
 
 describe('selectConfigurations', () => {
     test('pulls required configurations in, dependencies first, in order of first mention', () => {
@@ -16,13 +16,13 @@ describe('selectConfigurations', () => {
     });
 
     test('a recommended configuration is not pulled in by selection; init adds it and a person can drop it', () => {
-        const manifests = configurationManifests();
+        const manifests = kitManifests();
         const ids = selectConfigurations(['bash'], manifests).map((entry) => entry.kit.name);
         expect(ids).not.toContain('naming');
     });
 
     test('an unknown configuration names the near matches', () => {
-        expect(() => selectConfigurations(['bassh'], configurationManifests())).toThrow('Did you mean `bash`');
+        expect(() => selectConfigurations(['bassh'], kitManifests())).toThrow('Did you mean `bash`');
     });
 
     test('a circular requires fails with the chain', () => {

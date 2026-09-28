@@ -12,7 +12,7 @@ kits = [
     "markdown",
     "prose",
     "commits",
-    "configs",
+    "files",
     "naming",
     "formatting",
     "docs",

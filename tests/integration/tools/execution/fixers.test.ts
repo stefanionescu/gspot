@@ -3,10 +3,10 @@ import { test, expect } from 'bun:test';
 import { join, dirname } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
+import { kitManifests } from '#cli/kits/manifests.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { explain } from '#cli/commands/explain/subjects.ts';
-import { configurationManifests } from '#cli/kits/manifests.ts';
 import { textContaining } from '#tests/support/expectations.ts';
 import type { RunOptions } from '#cli/types/execution/execution.ts';
 import { chmodSync, mkdirSync, copyFileSync, readFileSync, writeFileSync } from 'node:fs';
@@ -14,7 +14,7 @@ import { chmodSync, mkdirSync, copyFileSync, readFileSync, writeFileSync } from 
 if (!(process.platform === 'win32' || process.getuid?.() === 0))
     test('SQLFluff write failures remain execution errors when its exit code also means findings', async () => {
         await using sandbox = await testdir();
-        const sql = configurationManifests().get('sql')!;
+        const sql = kitManifests().get('sql')!;
         const spec = sql.checks.find((check) => check.name === 'sql/sqlfluff')!;
         // A repository command declares the crash pattern itself; the manifest keeps it on the sqlfluff tool.
         const crashPattern = sql.tools.find((tool) => tool.name === 'sqlfluff')!.crash_pattern!;
@@ -97,7 +97,7 @@ test.each([
     },
 ])('$check preserves native partial corrections and accepts a manual correction', async (entry) => {
     await using sandbox = await testdir();
-    const spec = configurationManifests()
+    const spec = kitManifests()
         .get(entry.configuration)!
         .checks.find((check) => check.name === entry.check)!;
     const executable = Bun.which(entry.command[0]);
@@ -163,7 +163,7 @@ test.each([
     },
 ])('$configuration correction status agrees with native residual diagnostics', async (entry) => {
     await using sandbox = await testdir();
-    const spec = configurationManifests()
+    const spec = kitManifests()
         .get(entry.configuration)!
         .checks.find((check) => check.name === `${entry.configuration}/${entry.tool}`)!;
     const executable = join(

@@ -3,7 +3,7 @@ name = "nextjs"
 kind = "framework"
 title = "Next.js"
 requires = ["typescript", "react"]
-recommends = ["css", "configs", "i18n"]
+recommends = ["css", "files", "i18n"]
 description = "A Next.js app: the framework and hooks rules of ESLint, and server code marked as server only. Route segments serve one thing, the configuration turns no build check off, and message files parse."
 
 [detect]

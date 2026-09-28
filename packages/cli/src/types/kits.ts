@@ -5,7 +5,7 @@ import type { manifestSchema } from '#cli/kits/schema.ts';
 import type { Defined } from '#cli/types/policy/policy.ts';
 import type { outputSchema } from '#cli/kits/output-format.ts';
 
-export type ConfigurationEvidence = { configuration: string; evidence: string; kind: string; count?: number };
+export type KitEvidence = { configuration: string; evidence: string; kind: string; count?: number };
 export type ExecutionFields<Check> = Check extends unknown ? Omit<Check, 'example'> : never;
 export type Stage = RawCheck['stage'];
 export type FixOrder = 'codemod' | 'imports' | 'manifest' | 'format';
@@ -52,7 +52,7 @@ export type ListingRow = {
     proposed: boolean;
 };
 export type NpmInstallerDefinition = Exclude<NonNullable<RawTool['npm']>, string>;
-export type ConfigurationHeader = Omit<RawManifest['kit'], 'check_references'> & {
+export type KitHeader = Omit<RawManifest['kit'], 'check_references'> & {
     check_references?: RawManifest['kit']['check_references'];
 };
 export type InstallerPin = Pick<NpmInstallerDefinition, 'name'> & Partial<Omit<NpmInstallerDefinition, 'name'>>;
@@ -79,7 +79,7 @@ export type ToolPin = {
     installers: Record<string, InstallerPin>;
 };
 export type Manifest = Omit<RawManifest, 'kit' | 'tools' | 'checks' | 'settings'> & {
-    kit: ConfigurationHeader;
+    kit: KitHeader;
     tools: ToolPin[];
     checks: CheckSpec[];
     settings: SettingSpec[];

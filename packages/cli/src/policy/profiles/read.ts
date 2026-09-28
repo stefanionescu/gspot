@@ -4,8 +4,8 @@ import { readFileSync } from 'node:fs';
 import { parse as parseToml } from 'smol-toml';
 import { nearMatches } from '#cli/policy/near.ts';
 import * as messages from '#cli/policy/messages.ts';
+import { kitManifests } from '#cli/kits/manifests.ts';
 import type { Profile } from '#cli/types/policy/profiles.ts';
-import { configurationManifests } from '#cli/kits/manifests.ts';
 import { profileSchema, isRepositoryPath } from '#cli/policy/profiles/schema.ts';
 import { RAW_HOST, PROFILE_FILE, GITHUB_PREFIX, REQUEST_TIMEOUT_MS } from '#cli/config/policy/profiles.ts';
 
@@ -84,7 +84,7 @@ export function parseProfile(text: string, source: string): Profile {
               return `${where === '' ? source : where}: ${issue.message}`;
           });
     const named = (raw as { kits?: unknown }).kits;
-    const known = configurationManifests().keys().toArray();
+    const known = kitManifests().keys().toArray();
     const configurations = (Array.isArray(named) ? named.map(String) : [])
         .filter((id) => !known.includes(id))
         .map((id) => messages.unknownConfiguration(id, nearMatches(id, known)));
