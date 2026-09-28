@@ -16,7 +16,7 @@ The user committed the implementation as `3c4d0ba5e6ce1fc7947fcef270ddeecd95294a
 during verification. Its files matched the candidate at that checkpoint. With explicit user approval, the normal
 hooks reworded that commit to `fix(root): Complete repository cleanup`, producing
 `bd7c65943be772c769fcf76dfe04b27c233dcb72`. Its tree, author, author date, and parents are
-unchanged. The task branch requires the approved force-with-lease update.
+unchanged. The approved force-with-lease update pushed the task branch with normal hooks.
 
 The empty index and its hash were recorded
 after the user commit. Later verification preserves this new checkpoint. The user authorized merging the completed branch into `main` after verification.
@@ -35,6 +35,26 @@ The preceding full native suite passes 417 tests with 2,793 assertions across 65
 243.05 seconds. Both suites use the same CLI and plugin. CI remains open.
 
 ## Current implementation evidence
+
+The first remote run verifies documentation but stops Linux installation at the virtual
+environment's `lib64` directory link. Installation publication now resolves internal directory
+aliases into owned files. The filesystem owner still rejects external links and cycles before
+publication. Nested aliases preserve file contents without introducing linked destination parents.
+
+The first version of that repair checked a link with `lstat` before opening the same path, and
+CodeQL reported `js/file-system-race`. The reader now asks `readlink` first; a regular file
+answers `EINVAL`, so one call decides and CodeQL passes. All 65 ownership tests pass with 405
+assertions; 33 native Python installation and isolation tests pass with 215 assertions.
+
+Coverage passes 2,391 tests with 9,763 assertions, covering 83.39% of
+functions and 84.85% of lines. Types and focused lint pass. All seven binaries rebuild,
+and affected source acceptance passes 25 tests with 178 assertions. Installed-release
+acceptance passes all 171 tests with 394 assertions. The performance fixture passes at
+8.507 seconds for initialization, 4.480 seconds cold, and 4.161 seconds warm.
+
+The macOS job exposed an undeclared pnpm prerequisite. The authored mise configuration
+pins pnpm 9.9.0 and Yarn 1.22.22, matching the versions used in accepted local journeys.
+Both install through mise; all 24 license-lock tests pass with 51 assertions.
 
 The documentation review covers all 20 authored guides and the owners of generated references.
 Page and sidebar names use direct task names. Repeated explanations are removed; setup,
@@ -485,12 +505,12 @@ remain outside tracked source under `/tmp/gspot-lint-cleanup/resumption/`.
 | Required gate                 | Current evidence                                                                                                 | Scope and required follow-up                                                                     |
 | ----------------------------- | ---------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
 | Discovery                     | 453 files: 94 unit, 179 deterministic integration, 66 native, 105 source, and nine release.                      | Complete.                                                                                        |
-| Types and coverage            | Types pass. Coverage passes 2,389 tests with 9,752 assertions; 83.39% functions and 84.78% lines.                | The manual coverage replacement passes too.                                                      |
+| Types and coverage            | Types pass. Coverage passes 2,391 tests with 9,763 assertions; 83.39% functions and 84.85% lines.                | The manual coverage replacement passes too.                                                      |
 | Native tools                  | 419 tests and 2,816 assertions across 66 files pass.                                                             | Local macOS evidence; other native platforms use their CI runners.                               |
 | Builds and packages           | Seven targets and plugin build; eight CLI package dry runs and one plugin dry run pass.                          | Host embedded parsers, ESM/CommonJS imports, and installed journeys pass.                        |
 | Source and release acceptance | Full source baseline: 557 tests and 4,364 assertions. Current release: 171 tests and 394 assertions.             | Affected reruns: 32 Python/lifecycle tests, four commit tests, and 54 workspace-copy tests.      |
 | Documentation                 | 15 tests and 1,711 assertions pass; 324 pages build with valid links and fragments.                              | Schema parity, responsive controls, code indentation, and README artwork have rendered evidence. |
-| Performance                   | 5,000 files, ten staged: initialization 8.924 seconds, cold 4.513 seconds, warm 4.124 seconds.                   | Measured after source and installed-release acceptance; all limits pass.                         |
+| Performance                   | 5,000 files, ten staged: initialization 8.507 seconds, cold 4.480 seconds, warm 4.161 seconds.                   | Measured after source and installed-release acceptance; all limits pass.                         |
 | Full checks and doctor        | 141 normal checks pass with 12 ownership skips; seven manual checks pass without skips. Doctor exits 0.          | Every ownership skip names its passing replacement.                                              |
 | Lifecycle                     | 18 final clone and hook tests pass with 237 assertions. Repeated apply writes nothing; preview reports no drift. | The real index matches its recorded checkpoint before staged verification.                       |
 | Staged index                  | The final check uses a disposable index containing the reviewed changes.                                         | `final-staged.json` and `final-staged-index.json` record its result and real-index hashes.       |

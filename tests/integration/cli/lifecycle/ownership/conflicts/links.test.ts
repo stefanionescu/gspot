@@ -6,6 +6,58 @@ import { publishInstalledFiles } from '#cli/tools/installed-files.ts';
 import { openLifecycleOwner } from '#cli/lifecycle/ownership/owner.ts';
 import { chmodSync, lstatSync, readFileSync, readlinkSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
 
+test('installation publishes internal directory aliases as owned files without following external links', async () => {
+    await using repository = await testdir();
+    await using installation = await testdir();
+    await using outside = await testdir();
+    await createFileTree(installation.path, { 'lib/package.py': 'value = 7\n' });
+    await createFileTree(outside.path, { 'secret.py': 'external bytes' });
+    symlinkSync('lib', join(installation.path, 'lib64'), 'dir');
+    const owner = openLifecycleOwner(repository.path);
+    try {
+        publishInstalledFiles(owner, installation.path, 'python');
+        expect(owner.read('.gspot/.venv/lib64/package.py')?.bytes.toString()).toBe('value = 7\n');
+        expect(lstatSync(join(repository.path, '.gspot/.venv/lib64')).isSymbolicLink()).toBe(false);
+        publishInstalledFiles(owner, installation.path, 'python');
+        expect(owner.read('.gspot/.venv/lib/package.py')?.bytes.toString()).toBe('value = 7\n');
+        symlinkSync(outside.path, join(installation.path, 'external'), 'dir');
+        expect(() => {
+            publishInstalledFiles(owner, installation.path, 'python');
+        }).toThrow('Source link leaves the repository');
+        expect(owner.read('.gspot/.venv/external/secret.py')).toBeUndefined();
+        expect(readFileSync(join(outside.path, 'secret.py'), 'utf8')).toBe('external bytes');
+    } finally {
+        owner.close();
+    }
+});
+
+test('installation resolves nested directory aliases and rejects cycles before publication', async () => {
+    await using repository = await testdir();
+    await using installation = await testdir();
+    await createFileTree(installation.path, {
+        'lib/package.py': 'value = 9\n',
+        'lib/__pycache__/package.pyc': 'temporary cache',
+        'nested/.keep': '',
+    });
+    symlinkSync('package.py', join(installation.path, 'lib/alias.py'), 'file');
+    symlinkSync('../lib', join(installation.path, 'nested/library'), 'dir');
+    const owner = openLifecycleOwner(repository.path);
+    try {
+        publishInstalledFiles(owner, installation.path, 'python');
+        expect(owner.read('.gspot/.venv/nested/library/alias.py')?.bytes.toString()).toBe('value = 9\n');
+        expect(owner.read('.gspot/.venv/nested/library/__pycache__/package.pyc')).toBeUndefined();
+        expect(readlinkSync(join(repository.path, '.gspot/.venv/lib/alias.py'))).toBe('package.py');
+        symlinkSync('..', join(installation.path, 'lib/cycle'), 'dir');
+        writeFileSync(join(installation.path, 'lib/package.py'), 'unpublished change');
+        expect(() => {
+            publishInstalledFiles(owner, installation.path, 'python');
+        }).toThrow('Installed directory link forms a cycle');
+        expect(owner.read('.gspot/.venv/lib/package.py')?.bytes.toString()).toBe('value = 9\n');
+    } finally {
+        owner.close();
+    }
+});
+
 test('installation refuses a linked output root before publication and accepts a real directory', async () => {
     await using repository = await testdir();
     await using installation = await testdir();

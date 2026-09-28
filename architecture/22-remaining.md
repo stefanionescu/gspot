@@ -791,7 +791,7 @@ Repair TypeScript and ESLint findings, including authored build code.
 All installed commit tools execute. Full normal and manual checks pass code, structure,
 formatting, prose, and asset checks. Guide corrections pass native verification.
 
-The deterministic suite passes 2,389 cases with coverage. The full native suite passes
+The deterministic suite passes 2,391 cases with coverage. The full native suite passes
 419 cases. Seven-target builds, package dry runs, and embedded-parser verification pass.
 Source and installed-release acceptance pass. Exact-commit CI evidence remains open. A source repair requires affected checks
 to run again.
@@ -944,7 +944,7 @@ Evidence for step 9.6.
 
 Owner: execution cache and lifecycle installation. Measure cold and warm initialization,
 commit checks, parser reuse, and build caches under the contract's stated conditions. The post-release performance case passes with 5,000 files and ten staged inputs.
-Initialization takes 8.924 seconds, the cold check 4.513 seconds, and the warm check 4.124 seconds.
+Initialization takes 8.507 seconds, the cold check 4.480 seconds, and the warm check 4.161 seconds.
 The cleanup record names the host, runtime, and measurement order. No bound changes.
 
 Depends on
@@ -1030,8 +1030,8 @@ and external repository changes are outside this cleanup.
 Verification uses the repository-pinned Bun 1.4.2. Test startup rejects an unsupported
 runtime before executing scenarios. Run the mise tasks from the repository root.
 
-The complete deterministic lane passes 2,389 tests across 273 files with coverage and
-9,752 assertions, including execution from the pre-push environment. Workspace and
+The complete deterministic lane passes 2,391 tests across 273 files with coverage and
+9,763 assertions, including execution from the pre-push environment. Workspace and
 documentation types pass. Full normal and manual checks pass. The final disposable-index
 check passes and preserves the real index before staging the reviewed commits.
 

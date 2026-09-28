@@ -1,10 +1,48 @@
-import { basename, dirname, join, posix } from 'node:path';
 import { mutationTarget } from '#cli/platform/safe-paths.ts';
 import type { FileObservation } from '#cli/types/platform.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import { lstatSync, readFileSync, readlinkSync } from 'node:fs';
 import type { LifecycleOwner } from '#cli/types/lifecycle/lifecycle.ts';
+import { basename, dirname, join, posix, relative, sep } from 'node:path';
 import { MODE_BITS, NODE_MODULES_DIRECTORY, PYTHON_ENVIRONMENT_DIRECTORY } from '#cli/constants/platform.ts';
+
+import {
+    closeSync,
+    constants,
+    fstatSync,
+    lstatSync,
+    openSync,
+    readFileSync,
+    readlinkSync,
+    realpathSync,
+} from 'node:fs';
+
+// The link target of an entry, or nothing when the entry is not a link. One call decides, so no check precedes a use.
+function linkTarget(entry: string): string | undefined {
+    try {
+        return readlinkSync(entry);
+    } catch (error) {
+        if (error instanceof Error && 'code' in error && error.code === 'EINVAL') return undefined;
+        throw error;
+    }
+}
+
+// Preserve file links at their original location and copy their bytes inside a directory alias.
+function installedFile(directory: string, local: string, target: string, source: string): FileObservation {
+    if (local === target) {
+        const entry = join(directory, local);
+        const link = linkTarget(entry);
+        if (link !== undefined)
+            return { bytes: Buffer.from(link), mode: lstatSync(entry).mode & MODE_BITS, isLink: true };
+    }
+    const descriptor = openSync(source, constants.O_RDONLY | constants.O_NONBLOCK);
+    try {
+        const stat = fstatSync(descriptor);
+        if (!stat.isFile()) throw new Error(`Unsupported installed entry: ${local}`);
+        return { bytes: readFileSync(descriptor), mode: stat.mode & MODE_BITS };
+    } finally {
+        closeSync(descriptor);
+    }
+}
 
 // Read the complete isolated installation before opening a publication transaction.
 function installationFiles(
@@ -20,43 +58,26 @@ function installationFiles(
     } finally {
         parent.close();
     }
-    const files = openConfinedRoot(directory, 'native');
+    const root = realpathSync(directory);
+    const files = openConfinedRoot(root, 'native');
     const cacheDirectory = kind === 'python' ? '__pycache__' : undefined;
-    const collect = (prefix: string | undefined): void => {
+    const collect = (prefix: string | undefined, output: string, ancestors: string[]): void => {
+        const canonical = join(root, prefix ?? '');
+        if (ancestors.includes(canonical)) throw new Error(`Installed directory link forms a cycle: ${output}`);
         for (const name of files.list(prefix)) {
             const local = posix.join(prefix ?? '', name);
-            const path = `${destination}/${local}`;
+            const target = posix.join(output, name);
+            const path = `${destination}/${target}`;
             mutationTarget(path);
-            const source = join(directory, local);
-            const stat = lstatSync(source);
-            if (stat.isDirectory() && name === cacheDirectory) continue;
-            switch (true) {
-                case stat.isDirectory(): {
-                    collect(local);
-                    break;
-                }
-                case stat.isFile(): {
-                    outputs.push({
-                        path,
-                        file: { bytes: readFileSync(files.source(local)), mode: stat.mode & MODE_BITS },
-                    });
-                    break;
-                }
-                case stat.isSymbolicLink(): {
-                    outputs.push({
-                        path,
-                        file: { bytes: Buffer.from(readlinkSync(source)), mode: stat.mode & MODE_BITS, isLink: true },
-                    });
-                    break;
-                }
-                default: {
-                    throw new Error(`Unsupported installed entry: ${path}`);
-                }
-            }
+            const source = files.source(local);
+            if (lstatSync(source).isDirectory()) {
+                if (name === cacheDirectory) continue;
+                collect(relative(root, source).split(sep).join('/'), target, [...ancestors, canonical]);
+            } else outputs.push({ path, file: installedFile(directory, local, target, source) });
         }
     };
     try {
-        collect(undefined);
+        collect(undefined, '', []);
     } finally {
         files.close();
     }
