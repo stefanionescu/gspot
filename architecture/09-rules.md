@@ -24,11 +24,11 @@ arranged by layer:
 | templates  | `templates/docs/`         | document templates                                                                                                                                                                                                                                                                                                                               | offered once at init, never upgraded          |
 | project    | the repository's own      | whatever the team writes                                                                                                                                                                                                                                                                                                                         | never written by gspot                        |
 
-Each kit manifest names its files under `[rule_files]`. A source file has one owner; multiple configurations can select shared guidance without copying it.
+Each kit manifest names its files under `[guides]`. A source file has one owner; multiple kits can select shared guidance without copying it.
 
 The agent layer tells the agent how to work in a repository; the code and prose layers say
 what the code and text must look like. The general agent, code, and prose layers are installed when rules are enabled.
-Other layers follow configuration selection; installation does not make every guide required reading
+Other layers follow kit selection; installation does not make every guide required reading
 for every task.
 
 ## What belongs to one product
@@ -96,7 +96,7 @@ inline code. What the gate enforces is the acceptance record's business ([06-acc
 ## Size
 
 No file exceeds 800 lines. A file that grows past the ceiling is split into siblings under the
-same configuration (`packages/cli/guides/language/python/TYPING.md` beside `packages/cli/guides/language/PYTHON.md`) only when distinct reader
+same kit (`packages/cli/guides/language/python/TYPING.md` beside `packages/cli/guides/language/PYTHON.md`) only when distinct reader
 tasks justify the split. Remove repetition before splitting. Each guide states its own scope. Templates are project files and are
 not measured.
 
@@ -152,7 +152,7 @@ the `[[check]]` entry `guides/lint` in the `gspot.toml` of this repository, at t
 over `packages/cli/guides/**` and its implementation and test owners. Its code sits in `packages/cli/src/agents/`. Prose is no part of it: `prose/vale`
 reads the rule files like every other text.
 
-- Front matter holds `layer`, `configuration`, and `title`. The layer agrees with the path and the title
+- Front matter holds `layer`, `kit`, and `title`. The layer agrees with the path and the title
   agrees with the H1; do not require a metadata migration merely to remove a validated field.
 - Configuration-specific files have a manifest owner. General agent, code, and prose files belong to
   the general corpus. Shared selection does not require duplicated source files.
@@ -227,7 +227,7 @@ and idempotent regeneration. Do not assert a fixed guide inventory or snapshot b
 
 ### Acceptance K-67
 
-Rule front matter holds `layer`, `configuration`, and `title`. Validate these against the actual owner,
+Rule front matter holds `layer`, `kit`, and `title`. Validate these against the actual owner,
 path, and heading. The managed block derives its labels from validated metadata. Verify incorrect
 metadata and corrected input; no field-removal migration or compatibility parser is required.
 
@@ -254,7 +254,7 @@ A unit test of the lint with one cut item.
 
 ### Acceptance K-241
 
-A rule file never asks for what a check of the same configuration refuses.
+A rule file never asks for what a check of the same kit refuses.
 
 Each of the nine is settled on the side of the decision or the check, and the rule
 file changes. `explicit_acl` moves to the level `all` (row 11), and the rule file says so.

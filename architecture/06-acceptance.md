@@ -111,7 +111,7 @@ folders (`SA eslint/local/`, `LA shared/eslint/plugin/rules/`, `SS shared/eslint
 | `no-console` in source files                                                                                                                                                                                                                                      | SA                                     | core `no-console` over the source file class                                                                                                                            |
 | import path styles `js`, `ts`, `extensionless` per file class                                                                                                                                                                                                     | SA                                     | `gspot/import-path-style` with `[tools.eslint] import_style`                                                                                                            |
 | call-through allowlist keyed `file:function`                                                                                                                                                                                                                      | SA                                     | `[structure] call_through_allowed` entries carry `file`, `name`, `reason`                                                                                               |
-| Deno file class: `n/*` and `n/prefer-promises/*` off, Deno globals                                                                                                                                                                                                | SA                                     | supabase configuration override for `functions/**`                                                                                                                      |
+| Deno file class: `n/*` and `n/prefer-promises/*` off, Deno globals                                                                                                                                                                                                | SA                                     | supabase kit override for `functions/**`                                                                                                                                |
 | plugin floor versions (`UNICORN_ESLINT_MIN` 9.38.0)                                                                                                                                                                                                               | SA, LA `version-policy.js`             | `doctor` floors in the kit manifests                                                                                                                                    |
 | exports last, private declarations first                                                                                                                                                                                                                          | new                                    | `import-x/exports-last`, `gspot/private-before-public`                                                                                                                  |
 | `process.env` only in the configuration owner                                                                                                                                                                                                                     | SS `no-client-environment` generalized | `gspot/env-access-owner` with `[architecture] roles.env`                                                                                                                |
@@ -318,7 +318,7 @@ Source: `SS quality/`.
 | docs: every Markdown link and anchor resolves                                                                                                                                                   | lychee `--offline --include-fragments`                                                                                          |
 | task policy: required runner tasks exist, no runtime-named folders, no stale paths                                                                                                              | `integrity/task-policy`                                                                                                         |
 | zod rules (13), react-hook-form, tanstack-query, zustand, drizzle, trpc rule files                                                                                                              | library kits                                                                                                                    |
-| framework entry files retain mandatory structural rules                                                                                                                                         | nextjs configuration overrides                                                                                                  |
+| framework entry files retain mandatory structural rules                                                                                                                                         | nextjs kit overrides                                                                                                            |
 
 ## 11. Repository-wide
 
@@ -335,7 +335,7 @@ Source: `SS quality/`.
 | osv-scanner over lockfiles with ignored vulnerabilities carrying reasons                                                                                                                                                                                                | all                                   | `dependencies/osv` (push)                                                                                                      |
 | trivy config and image                                                                                                                                                                                                                                                  | SA                                    | `docker/trivy-config` (push, docker)                                                                                           |
 | bearer with skip paths and ignore file                                                                                                                                                                                                                                  | SA, LA, TI                            | Semgrep carries the same pattern classes; bearer is cut and its ignore entries map to Semgrep rule ignores                     |
-| semgrep with the configuration rule packs and vendored OWASP, python, bash, secrets sets                                                                                                                                                                                | all (never wired in SA; wired here)   | `security/semgrep` (push); the vendored bandit set is cut because Ruff `S` is the port                                         |
+| semgrep with the kit rule packs and vendored OWASP, python, bash, secrets sets                                                                                                                                                                                          | all (never wired in SA; wired here)   | `security/semgrep` (push); the vendored bandit set is cut because Ruff `S` is the port                                         |
 | CodeQL per language with scan configs, false-positive filter, path integrity                                                                                                                                                                                            | all                                   | `security/codeql` (manual)                                                                                                     |
 | hadolint                                                                                                                                                                                                                                                                | SA, TI                                | `docker/hadolint`                                                                                                              |
 | `docker compose config`                                                                                                                                                                                                                                                 | none ran it; the audit named it       | `docker/compose-config`                                                                                                        |
@@ -383,7 +383,7 @@ indexes them by area, in the table style slopshop uses.
 
 ## Reference tool versions
 
-The versions the four repositories pin today, taken as the initial configuration pins:
+The versions the four repositories pin today, taken as the initial kit pins:
 
 | Tool                       | Version                                                                                                                    | Tool                                                                                            | Version                                                                         |
 | -------------------------- | -------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
@@ -414,15 +414,15 @@ The versions the four repositories pin today, taken as the initial configuration
 | sqlfluff                   | 4.0.0                                                                                                                      | ansible-core                                                                                    | 2.19.4                                                                          |
 | ast-grep                   | the latest stable release on the day the configuration is written, recorded in the manifest, moved only by a gspot release | ruff, basedpyright, deptry, vulture, pydoclint, import-linter, pip-licenses, validate-pyproject | the same rule, starting from the versions the reference `uv.lock` files resolve |
 
-Where two repositories pin different versions, the configuration takes the newer one and the acceptance record records the older as the floor `doctor` accepts. Some tools the reference repositories pinned are not used. [11-toolchain.md](11-toolchain.md) lists them (lizard, madge, sort-package-json, bearer, bandit, pip-audit, interrogate, pyright) with the tool that does their job.
+Where two repositories pin different versions, the kit takes the newer one and the acceptance record records the older as the floor `doctor` accepts. Some tools the reference repositories pinned are not used. [11-toolchain.md](11-toolchain.md) lists them (lizard, madge, sort-package-json, bearer, bandit, pip-audit, interrogate, pyright) with the tool that does their job.
 
-## Configuration enforcement contracts
+## Kit enforcement contracts
 
 These clauses specify required behavior. [Remaining work](22-remaining.md) owns status and evidence.
 The configuration entries retain agreed enforcement, settings, and detection, including unimplemented
 capabilities. They are target contracts, not a generated inventory of the current manifests.
 
-The level owner in [configurations](04-configurations.md) governs every rule below: house-style, naming, layout,
+The level owner in [kits](04-kits.md) governs every rule below: house-style, naming, layout,
 and optional abstraction preferences remain available at `all`. Trivial-function and trivial-file
 enforcement belongs to `all`, as defined in [slop in structure](07-drift.md#slop-in-structure).
 
@@ -546,7 +546,7 @@ A unit test with both forms.
 
 ### Acceptance K-233
 
-The css configuration owns `.css` alone. Detection names Sass as a language gspot has no
+The css kit owns `.css` alone. Detection names Sass as a language gspot has no
 configuration for.
 
 Two endings leave the own.
@@ -556,7 +556,7 @@ The css planted repository holds a `.scss` file with a mixin and no finding.
 ### Acceptance K-236
 
 One check, `licenses/packages`, runs `osv-scanner` with its license flag over every
-lockfile of the scope. The supabase configuration gains `supabase/db-lint` at the `manual` stage.
+lockfile of the scope. The supabase kit gains `supabase/db-lint` at the `manual` stage.
 
 The allowed list stays `tools.licenses.allowed`, and the scanner takes it as
 `--licenses=<list>`. `supabase/db-lint` declares `requires = "database"`, as
@@ -720,7 +720,7 @@ key `env`, which `tool-runner.ts` passes to the spawn.
 
 The contract test runs `<tool> --help` for each pinned tool and holds each flag.
 
-### Configuration swift
+### Kit swift
 
 Kind: language. Requires: formatting. Recommends: structure, naming, spelling.
 
@@ -766,7 +766,7 @@ and are part of the level `all`.
 
 Shipped rule sets:
 
-The configuration renders these lists. They are the measured set of the reference repository, so the
+The kit renders these lists. They are the measured set of the reference repository, so the
 acceptance run compares like with like. A person turns one rule off with
 `gspot ignore swift/swiftlint --rule <rule>` and a reason.
 
@@ -935,9 +935,9 @@ Rule files:
 Not covered here:
 
 Package dependency scanning: osv-scanner has no `Package.resolved` extractor. The dependencies
-configuration reports the gap.
+kit reports the gap.
 
-### Configuration markdown
+### Kit markdown
 
 Kind: language. Requires: formatting. Recommends: docs, spelling.
 
@@ -979,7 +979,7 @@ Rule files:
 
 `packages/cli/guides/general/prose/DOCS.md` and its siblings (installed by docs), `packages/cli/guides/general/prose/WRITING.md`.
 
-### Configuration i18n
+### Kit i18n
 
 Kind: library. Requires: javascript.
 
@@ -1008,7 +1008,7 @@ Rule files:
 
 `packages/cli/guides/shared/i18n/I18N.md`; `packages/cli/guides/library/next-intl/NEXTINTL.md` when `next-intl` is a dependency.
 
-### Configuration react-native
+### Kit react-native
 
 Kind: framework. Requires: react. Recommends: typescript, jest.
 
@@ -1033,7 +1033,7 @@ typescript configurations own those rules.
 Generated configuration:
 
 Every shared rule of the javascript and typescript configurations reads the files of this framework
-too, with the same limits. A rule this configuration turns off stands in its manifest with a
+too, with the same limits. A rule this kit turns off stands in its manifest with a
 reason, and the page lists each one.
 
 The ESLint config gains, over every code file:
@@ -1085,7 +1085,7 @@ Rule files:
 
 `packages/cli/guides/framework/react-native/REACT-NATIVE.md`.
 
-### Configuration postgres
+### Kit postgres
 
 Kind: database. Requires: sql.
 
@@ -1133,7 +1133,7 @@ Rule files:
 
 `packages/cli/guides/database/postgres/POSTGRES.md`.
 
-### Configuration python
+### Kit python
 
 Kind: language. Requires: formatting. Recommends: structure, naming, spelling, dependencies.
 
@@ -1187,7 +1187,7 @@ configuration sits under `.gspot/`, so the scope holds a root pointer, `pyrightc
 one key: `extends`. It is generated and read-only, unlike the
 `tsconfig.json` pointer, because a repository has nothing of its own to keep in it. Replacement replaces
 an old `pyrightconfig.json` and carries its `exclude` paths into `tools.basedpyright.exclude`, without
-dot folders and the folders the configuration leaves out by itself.
+dot folders and the folders the kit leaves out by itself.
 
 Settings:
 
@@ -1212,10 +1212,10 @@ Not covered here:
 Notebook linting. Ruff runs over `.ipynb` when the repository has them, through a `[tools.ruff]`
 slot; no other check reads notebooks.
 
-### Configuration structure
+### Kit structure
 
-Kind: policy. Requires: nothing. Required by every language kit, because it owns the `limits.*`
-settings their configurations read. It runs the structural rules no standard linter ships.
+Kind: general. Requires: nothing. Required by every language kit, because it owns the `limits.*`
+settings their kits read. It runs the structural rules no standard linter ships.
 
 Owners:
 
@@ -1246,7 +1246,7 @@ Facts about folders hold for every language, and the structure engine alone repo
 `structure/single-file-folder` (level `all`), `structure/prefix-collisions`,
 `structure/file-directory-collision`, and `structure/folder-names`.
 
-The configuration also ships the checks over the config and the files gspot writes:
+The kit also ships the checks over the config and the files gspot writes:
 `integrity/policy`, `integrity/generated-drift`, `integrity/files`, `integrity/suppressions`, `integrity/allowlists-match`,
 `integrity/task-policy`, and `integrity/large-files`.
 
@@ -1265,7 +1265,7 @@ Rule files:
 - `packages/cli/guides/general/code/CONFIGURATION.md` states the environment owner rule.
 - Each language file states its private-first, private-prefix, types, and re-export rules.
 
-### Configuration svelte
+### Kit svelte
 
 Kind: framework. Requires: javascript. Recommends: typescript, css, vitest.
 
@@ -1286,10 +1286,10 @@ As a command: svelte-check 4.7.6.
 Generated configuration:
 
 Every shared rule of the javascript and typescript configurations reads the files of this framework
-too, with the same limits. A rule this configuration turns off stands in its manifest with a
+too, with the same limits. A rule this kit turns off stands in its manifest with a
 reason, and the page lists each one.
 
-The configuration owns `.svelte`, `.svelte.js` and `.svelte.ts`, so the list of code files of the
+The kit owns `.svelte`, `.svelte.js` and `.svelte.ts`, so the list of code files of the
 ESLint config holds them. The config gains the `recommended` blocks of the Svelte plugin, with
 every rule that is on set to error. One more block sets the parser, and hands it the TypeScript
 parser for the script where typescript is selected. It adds: `svelte/no-at-html-tags`,
@@ -1334,7 +1334,7 @@ Rule files:
 
 `packages/cli/guides/framework/svelte/SVELTE.md`.
 
-### Configuration zustand
+### Kit zustand
 
 Kind: library. Requires: javascript.
 
@@ -1361,7 +1361,7 @@ Rule files:
 
 `packages/cli/guides/library/zustand/ZUSTAND.md`.
 
-### Configuration css
+### Kit css
 
 Kind: language. Requires: formatting. Recommends: spelling.
 
@@ -1390,7 +1390,7 @@ Generated configuration:
 
 Checks:
 
-`formatting/prettier` formats CSS files, so this configuration has no format check of its own.
+`formatting/prettier` formats CSS files, so this kit has no format check of its own.
 
 | Id                   | Stage  | Command                                                                        |
 | -------------------- | ------ | ------------------------------------------------------------------------------ |
@@ -1406,9 +1406,9 @@ Rule files:
 
 `packages/cli/guides/language/CSS.md`, `packages/cli/guides/language/naming/CSS.md`; `packages/cli/guides/tool/tailwind/TAILWIND.md` when Tailwind is a dependency.
 
-### Configuration prose
+### Kit prose
 
-Kind: policy. Requires: markdown. Runs Vale over every comment and every documentation file.
+Kind: general. Requires: markdown. Runs Vale over every comment and every documentation file.
 
 Owners:
 
@@ -1454,7 +1454,7 @@ The prose checks read the files a change touches, so a repository with a backlog
 not blocked by it.
 disabled upstream rules and the reason for each is in the template.
 
-### Configuration xctest
+### Kit xctest
 
 Kind: tool. Requires: swift. macOS only. Every check here passes as a platform skip elsewhere.
 Covers XCTest, Swift Testing, and snapshot tests.
@@ -1499,9 +1499,9 @@ Rule files:
 
 `packages/cli/guides/tool/xctest/XCTEST.md`, `packages/cli/guides/general/code/TESTING.md`.
 
-### Configuration secrets
+### Kit secrets
 
-Kind: policy. Requires: nothing. Selected by default in every repository.
+Kind: general. Requires: nothing. Selected by default in every repository.
 
 Owners:
 
@@ -1520,14 +1520,14 @@ Generated configuration:
 
 Checks:
 
-| Id                          | Stage  | Command                                                                                                                                                             |
-| --------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `secrets/gitleaks-staged`   | commit | `gitleaks git --staged --config .gspot/config/gitleaks.toml --redact`                                                                                               |
-| `secrets/gitleaks`          | push   | `gitleaks git --config .gspot/config/gitleaks.toml --baseline-path .gitleaks-baseline.json --redact` over the pushed range                                          |
-| `secrets/trufflehog`        | push   | `trufflehog git file://. --since-commit <base> --results=verified --fail`                                                                                           |
-| `secrets/env-files`         | commit | no environment file staged except templates. The shipped pattern list is `.env*` and Wrangler's `.dev.vars*`; a configuration adds a pattern as data, never as code |
-| `secrets/gitleaks-baseline` | commit | every baseline fingerprint has a reason and names a path that existed                                                                                               |
-| `files/dotenv`              | commit | tracked `.env*` files hold keys only                                                                                                                                |
+| Id                          | Stage  | Command                                                                                                                                                   |
+| --------------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `secrets/gitleaks-staged`   | commit | `gitleaks git --staged --config .gspot/config/gitleaks.toml --redact`                                                                                     |
+| `secrets/gitleaks`          | push   | `gitleaks git --config .gspot/config/gitleaks.toml --baseline-path .gitleaks-baseline.json --redact` over the pushed range                                |
+| `secrets/trufflehog`        | push   | `trufflehog git file://. --since-commit <base> --results=verified --fail`                                                                                 |
+| `secrets/env-files`         | commit | no environment file staged except templates. The shipped pattern list is `.env*` and Wrangler's `.dev.vars*`; a kit adds a pattern as data, never as code |
+| `secrets/gitleaks-baseline` | commit | every baseline fingerprint has a reason and names a path that existed                                                                                     |
+| `files/dotenv`              | commit | tracked `.env*` files hold keys only                                                                                                                      |
 
 Settings:
 
@@ -1538,7 +1538,7 @@ Rule files:
 
 `packages/cli/guides/general/code/SECRETS.md`, `packages/cli/guides/general/code/SECURITY.md`.
 
-### Configuration pytest
+### Kit pytest
 
 Kind: tool. Requires: python.
 
@@ -1576,9 +1576,9 @@ Rule files:
 
 `packages/cli/guides/general/code/TESTING.md`; the Tests section of `packages/cli/guides/language/PYTHON.md`.
 
-### Configuration static-site
+### Kit static-site
 
-Kind: policy. Requires: html, css, javascript. For a site built to a directory and served
+Kind: general. Requires: html, css, javascript. For a site built to a directory and served
 as files: the checks that only make sense over built output.
 
 Detects and owns:
@@ -1591,7 +1591,7 @@ Detects and owns:
 Tools:
 
 html-validate, purgecss, linkinator, svgo. linkinator serves the output folder itself. Cycle
-and complexity checks come from the javascript configuration (import-x, sonarjs); madge and Lizard are
+and complexity checks come from the javascript kit (import-x, sonarjs); madge and Lizard are
 not used.
 
 Checks:
@@ -1606,7 +1606,7 @@ Checks:
 | `static-site/links-external`      | manual, network | the same with external links, `[tools.linkinator] status_overrides` and `skip`                                                                                                                                                                                                        |
 | `static-site/dead-assets`         | push            | every file under `assets/**` is referenced from a template, a stylesheet, or a script                                                                                                                                                                                                 |
 | `static-site/svg`                 | commit          | svgo over each file to standard output; a smaller result is a finding, because svgo has no check mode                                                                                                                                                                                 |
-| `static-site/size`                | push, build     | the compressed weight of the output paths each entry of `[tools.site] size_limits` names; built in, so no size-limit package and no second configuration                                                                                                                              |
+| `static-site/size`                | push, build     | the compressed weight of the output paths each entry of `[tools.site] size_limits` names; built in, so no size-limit package and no second kit                                                                                                                                        |
 | `static-site/sitemap`             | push, build     | every route in the sitemap is in the output; every HTML page is in the sitemap unless excluded                                                                                                                                                                                        |
 | `static-site/webmanifest`         | commit          | validates against the schema                                                                                                                                                                                                                                                          |
 | `integrity/security-headers`      | commit          | `_headers` sets `X-Frame-Options`, `X-Content-Type-Options: nosniff`, `Referrer-Policy`; HTML paths carry a revalidating `Cache-Control`; hashed assets are immutable. Here because a site of files has no other place to set headers; a framework app sets them in its configuration |
@@ -1621,7 +1621,7 @@ Rule files:
 
 `packages/cli/guides/repository/static-site/STATIC-SITE.md`, `packages/cli/guides/runtime/browser/BROWSER.md`.
 
-### Configuration nginx
+### Kit nginx
 
 Kind: tool. Requires: nothing.
 
@@ -1656,7 +1656,7 @@ Rule files:
 
 `packages/cli/guides/tool/nginx/NGINX.md`.
 
-### Configuration vue
+### Kit vue
 
 Kind: framework. Requires: javascript. Recommends: typescript, css, vitest.
 
@@ -1677,10 +1677,10 @@ As a command: vue-tsc 3.3.11.
 Generated configuration:
 
 Every shared rule of the javascript and typescript configurations reads the files of this framework
-too, with the same limits. A rule this configuration turns off stands in its manifest with a
+too, with the same limits. A rule this kit turns off stands in its manifest with a
 reason, and the page lists each one.
 
-The configuration owns `.vue`, so the list of code files of the ESLint config holds it. The config
+The kit owns `.vue`, so the list of code files of the ESLint config holds it. The config
 gains the `flat/recommended` blocks of the Vue plugin and of the accessibility plugin, with every
 rule that is on set to error. One more block over `.vue` files sets the parser, and hands it the
 TypeScript parser for the script where typescript is selected. It adds: `vue/no-v-html`,
@@ -1723,7 +1723,7 @@ Rule files:
 
 `packages/cli/guides/framework/vue/VUE.md`.
 
-### Configuration nextjs
+### Kit nextjs
 
 Kind: framework. Requires: typescript, react. Recommends: css, configs.
 
@@ -1780,7 +1780,7 @@ Settings:
 
 | Setting                                            | Default                                                             |
 | -------------------------------------------------- | ------------------------------------------------------------------- |
-| `tools.i18n.translations` (directory, base locale) | detected from next-intl configuration                               |
+| `tools.i18n.translations` (directory, base locale) | detected from next-intl kit                                         |
 | `tools.next.build_in_gate`                         | false                                                               |
 | `tools.next.build_flags`                           | `[]`; `["--webpack"]` for an app that does not build with Turbopack |
 | `tools.eslint.restricted_imports` (name, message)  | none; the reference picture-component rule is one entry             |
@@ -1791,9 +1791,9 @@ Rule files:
 `packages/cli/guides/runtime/browser/BROWSER.md`; `packages/cli/guides/runtime/workers/WORKERS.md` through cloudflare when `@opennextjs/cloudflare` is
 present; `packages/cli/guides/library/next-intl/NEXTINTL.md` when `next-intl` is a dependency.
 
-### Configuration configs
+### Kit configs
 
-Kind: policy. Requires: formatting. Recommends: spelling. Owners every data and configuration file no
+Kind: general. Requires: formatting. Recommends: spelling. Owners every data and configuration file no
 language owns, so `.toml`, `.yaml` and `.json` files stop being spell-checked only.
 
 Detects and owns:
@@ -1856,9 +1856,9 @@ Rule files:
 Ansible playbooks have their own configuration, `ansible`, so a repository with no playbook installs no
 ansible-lint. It detects `ansible.cfg` and runs `ansible/lint` in every folder that holds one.
 
-### Configuration dependencies
+### Kit dependencies
 
-Kind: policy. Requires: nothing. Dependency health: advisories, unused, duplicated,
+Kind: general. Requires: nothing. Dependency health: advisories, unused, duplicated,
 skewed, foreign lockfiles, ownership, install policy.
 
 Owners:
@@ -1907,7 +1907,7 @@ Rule files:
 
 `packages/cli/guides/general/code/DEPENDENCIES.md`.
 
-### Configuration trpc
+### Kit trpc
 
 Kind: library. Requires: javascript.
 
@@ -1938,7 +1938,7 @@ Rule files:
 
 `packages/cli/guides/library/trpc/TRPC.md`, `packages/cli/guides/shared/http/HTTP.md`.
 
-### Configuration express
+### Kit express
 
 Kind: framework. Requires: javascript. Recommends: security, vitest.
 
@@ -1979,7 +1979,7 @@ Rule files:
 `packages/cli/guides/framework/express/EXPRESS.md`, `packages/cli/guides/framework/express/API.md`, `packages/cli/guides/framework/express/OPENAPI.md`,
 `packages/cli/guides/shared/http/HTTP.md`, `packages/cli/guides/runtime/node/NODE.md`.
 
-### Configuration sql
+### Kit sql
 
 Kind: language. Requires: formatting. Recommends: naming, structure, spelling.
 
@@ -2045,9 +2045,9 @@ Not covered here:
 Migration safety, documentation layout, and immutability belong to postgres. Row-level security
 and grants belong to supabase.
 
-### Configuration licenses
+### Kit licenses
 
-Kind: policy. Requires: nothing. Offered when a manifest exists; selected only on acceptance.
+Kind: general. Requires: nothing. Offered when a manifest exists; selected only on acceptance.
 
 Owners:
 
@@ -2094,7 +2094,7 @@ Rule files:
 
 None.
 
-### Configuration javascript
+### Kit javascript
 
 Kind: language. Requires: structure. Recommends: naming, formatting, spelling.
 
@@ -2150,7 +2150,7 @@ Type checking of untyped JavaScript is `checkJs` with JSDoc; no reference reposi
 it is part of the level `all`. Lizard and madge are not used: sonarjs and import-x do their jobs in
 the editor.
 
-### Configuration zod
+### Kit zod
 
 Kind: library. Requires: javascript.
 
@@ -2178,7 +2178,7 @@ Rule files:
 
 `packages/cli/guides/library/zod/ZOD.md`.
 
-### Configuration xcode
+### Kit xcode
 
 Kind: tool. Requires: configs. Recommends: swift. macOS only; every check here passes as a platform skip
 elsewhere.
@@ -2218,14 +2218,14 @@ Rule files:
 
 `packages/cli/guides/tool/xcode/XCODE.md`.
 
-### Configuration commits
+### Kit commits
 
-Kind: policy. Requires: nothing. Offered at `init` and not selected. The security and licenses configurations work the same way.
+Kind: general. Requires: nothing. Offered at `init` and not selected. The security and licenses kits work the same way.
 
 Tools:
 
 commitlint. The conventional rule set is written into the rendered configuration, so
-`@commitlint/config-conventional` is not installed and the configuration works wherever the
+`@commitlint/config-conventional` is not installed and the kit works wherever the
 commitlint binary runs.
 
 Generated configuration:
@@ -2264,7 +2264,7 @@ Rule files:
 
 `packages/cli/guides/general/agent/GIT.md`, `packages/cli/guides/tool/commitlint/COMMITLINT.md`.
 
-### Configuration react-hook-form
+### Kit react-hook-form
 
 Kind: library. Requires: javascript.
 
@@ -2290,7 +2290,7 @@ Rule files:
 
 `packages/cli/guides/library/react-hook-form/REACTHOOKFORM.md`.
 
-### Configuration supabase
+### Kit supabase
 
 Kind: platform. Requires: postgres. Recommends: typescript, configs, security.
 
@@ -2342,7 +2342,7 @@ Rule files:
 `packages/cli/guides/platform/supabase/SUPABASE.md`, `packages/cli/guides/database/postgres/POSTGRES.md`, `packages/cli/guides/runtime/deno/DENO.md`.
 Project-specific deployment conventions belong to the repository.
 
-### Configuration drizzle
+### Kit drizzle
 
 Kind: library. Requires: javascript.
 
@@ -2372,11 +2372,11 @@ Rule files:
 
 `packages/cli/guides/library/drizzle/DRIZZLE.md`.
 
-### Configuration jest
+### Kit jest
 
 Kind: tool. Requires: typescript or javascript.
 
-NestJS and React Native test with Jest by default, so this configuration ships beside `vitest`.
+NestJS and React Native test with Jest by default, so this kit ships beside `vitest`.
 A repository selects the one its tests run with.
 
 Detects and owns:
@@ -2393,7 +2393,7 @@ Vitest under the vitest configuration.
 
 Generated configuration:
 
-The ESLint config gains, over test files, the same test rules the vitest configuration holds, under the
+The ESLint config gains, over test files, the same test rules the vitest kit holds, under the
 `jest` prefix: `no-focused-tests`, `no-disabled-tests`, `no-identical-title`,
 `no-standalone-expect`, `no-commented-out-tests`, `expect-expect`, `valid-describe-callback`,
 `no-conditional-expect`, `valid-expect`, and `prefer-strict-equal`. The relaxations for test files
@@ -2418,7 +2418,7 @@ Rule files:
 
 `packages/cli/guides/general/code/TESTING.md`.
 
-### Configuration react
+### Kit react
 
 Kind: framework. Requires: javascript. Recommends: typescript, css, vitest.
 
@@ -2438,7 +2438,7 @@ As libraries, each with ESLint 9 in its range:
 Generated configuration:
 
 Every shared rule of the javascript and typescript configurations reads the files of this framework
-too, with the same limits. A rule this configuration turns off stands in its manifest with a
+too, with the same limits. A rule this kit turns off stands in its manifest with a
 reason, and the page lists each one.
 
 The ESLint config gains one block over `js`, `jsx`, `ts`, and `tsx` files:
@@ -2482,7 +2482,7 @@ Rule files:
 
 `packages/cli/guides/framework/react/REACT.md`.
 
-### Configuration ansible
+### Kit ansible
 
 Kind: tool. Requires: configs.
 
@@ -2511,9 +2511,9 @@ The check lived in configs in an earlier draft. A configuration installs its too
 repository with a YAML file installed ansible-lint. Detection by `ansible.cfg` installs it only
 where a playbook exists.
 
-### Configuration spelling
+### Kit spelling
 
-Kind: policy. Requires: nothing. Recommended by every language kit.
+Kind: general. Requires: nothing. Recommended by every language kit.
 
 Owners:
 
@@ -2545,7 +2545,7 @@ Rule files:
 
 None.
 
-### Configuration tanstack-query
+### Kit tanstack-query
 
 Kind: library. Requires: javascript.
 
@@ -2570,7 +2570,7 @@ Rule files:
 
 `packages/cli/guides/library/tanstack-query/TANSTACKQUERY.md`.
 
-### Configuration cloudflare
+### Kit cloudflare
 
 Kind: platform. Requires: javascript. Recommends: security, configs.
 
@@ -2588,7 +2588,7 @@ wrangler, zizmor is not relevant; the Semgrep landing pack for workers.
 
 Generated configuration:
 
-The files this configuration owns get the `worker` runtime (the rule in [javascript.md](#configuration-javascript)), so the scope's ESLint config gains worker globals (`Response`, `Request`, `fetch`, `caches`) for
+The files this kit owns get the `worker` runtime (the rule in [javascript.md](#kit-javascript)), so the scope's ESLint config gains worker globals (`Response`, `Request`, `fetch`, `caches`) for
 `functions/**` and `_worker.*`.
 
 Checks:
@@ -2611,9 +2611,9 @@ Rule files:
 
 `packages/cli/guides/runtime/workers/WORKERS.md`. The configs configuration installs the GitHub Actions rule file.
 
-### Configuration docs
+### Kit docs
 
-Kind: policy. Requires: nothing. Documentation integrity: links, anchors, headings,
+Kind: general. Requires: nothing. Documentation integrity: links, anchors, headings,
 stale paths, and the agent files.
 
 Owners:
@@ -2655,7 +2655,7 @@ Rule files:
 `packages/cli/guides/general/prose/DOCS-MEDIA.md`, `packages/cli/guides/general/prose/DOCS-SURFACES.md`, `packages/cli/guides/general/prose/DOCS-REVIEW.md`,
 `packages/cli/guides/general/prose/WRITING.md`, `packages/cli/guides/general/code/COMMENTS.md`; the templates under `templates/docs/`.
 
-### Configuration docker
+### Kit docker
 
 Kind: tool. Requires: configs. Recommends: spelling.
 
@@ -2702,7 +2702,7 @@ Not covered here:
 
 The compose file itself is a configs YAML with the Compose schema.
 
-### Configuration nestjs
+### Kit nestjs
 
 Kind: framework. Requires: typescript. Recommends: jest, security, dependencies.
 
@@ -2713,18 +2713,18 @@ Detects and owns:
 | Detect | `@nestjs/core` in dependencies, `nest-cli.json` |
 | Owners | `nest-cli.json`                                 |
 
-What the framework needs from the other configurations:
+What the framework needs from the other kits:
 
 NestJS injects by the types of constructor parameters. That takes decorators with emitted
 metadata, which the repository's own `tsconfig.json` turns on with `experimentalDecorators` and
 `emitDecoratorMetadata`. gspot writes no compiler option that changes emit
-([K-201](04-configurations.md#acceptance-k-201)), so `typescript/tsconfig-options` requires both
+([K-201](04-kits.md#acceptance-k-201)), so `typescript/tsconfig-options` requires both
 options in a scope that selects nestjs.
 `@typescript-eslint/consistent-type-imports` stays on: it leaves a file with decorators alone when
 both decorator options are on.
 
 The Nest generator names a file for its feature and its kind: `cats.controller.ts` beside
-`cats.service.ts`. `[[naming.rules]]` of this configuration say so for the sixteen kinds the generator
+`cats.service.ts`. `[[naming.rules]]` of this kit say so for the sixteen kinds the generator
 writes and for `.spec` files, and `structure/prefix-collisions` reads those rules.
 
 The acceptance bar is a planted module, controller, and service written the Nest way. They pass
@@ -2737,7 +2737,7 @@ As a library: @darraghor/eslint-plugin-nestjs-typed 7.5.5, which runs on the pin
 Generated configuration:
 
 Every shared rule of the javascript and typescript configurations reads the files of this framework
-too, with the same limits. A rule this configuration turns off stands in its manifest with a
+too, with the same limits. A rule this kit turns off stands in its manifest with a
 reason, and the page lists each one.
 
 - the `flatRecommended` set of the nestjs-typed plugin. It finds a provider that no module
@@ -2773,9 +2773,9 @@ Rule files:
 
 `packages/cli/guides/framework/nestjs/NESTJS.md`.
 
-### Configuration formatting
+### Kit formatting
 
-Kind: policy. Requires: nothing. Recommended by every language kit. One `[format]` block that every formatter
+Kind: general. Requires: nothing. Recommended by every language kit. One `[format]` block that every formatter
 reads, so indentation cannot disagree between Prettier, shfmt, Ruff, and markdownlint.
 
 Settings:
@@ -2824,7 +2824,7 @@ Rule files:
 
 None. Formatting decisions are the tools' and are not restated in prose.
 
-### Configuration fastapi
+### Kit fastapi
 
 Kind: framework. Requires: python. Recommends: security, pytest.
 
@@ -2863,9 +2863,9 @@ Rule files:
 
 `packages/cli/guides/framework/fastapi/FASTAPI.md`, `packages/cli/guides/framework/fastapi/RUNTIME.md`, `packages/cli/guides/shared/http/HTTP.md`.
 
-### Configuration naming
+### Kit naming
 
-Kind: policy. Requires: nothing. Recommended by every language kit. Runs the naming engine over every language
+Kind: general. Requires: nothing. Recommended by every language kit. Runs the naming engine over every language
 with the shipped policy in [08-naming-policy.md](08-naming-policy.md).
 
 Banned terms and reserved-word restrictions are level `all`. The shipped policy permits
@@ -2905,7 +2905,7 @@ Rule files:
 
 `packages/cli/guides/general/code/NAMING.md`, `packages/cli/guides/general/code/NAMING-FILES.md` and each language's `naming/<LANGUAGE>.md`.
 
-### Configuration typescript
+### Kit typescript
 
 Kind: language. Requires: javascript, structure. Recommends: naming, formatting, spelling.
 
@@ -2982,7 +2982,7 @@ Not covered here:
 Runtime-specific rules (Node, browser, workers) come from the runtime detected in
 `package.json` and the framework kit. React rules come from the react configuration.
 
-### Configuration bash
+### Kit bash
 
 Kind: language. Requires: structure. Recommends: naming, formatting, spelling.
 
@@ -3053,9 +3053,9 @@ Zsh-specific lint and formatting remain outside this configuration. Zsh syntax u
 and shfmt own Bash and Bats files. Broader dialect-aware structure analysis
 remains open.
 
-### Configuration security
+### Kit security
 
-Kind: policy. Requires: nothing. Static analysis for security patterns, per language. One SAST tool.
+Kind: general. Requires: nothing. Static analysis for security patterns, per language. One SAST tool.
 
 Owners:
 
@@ -3097,7 +3097,7 @@ Rule files:
 
 `packages/cli/guides/general/code/SECURITY.md`, `packages/cli/guides/general/code/SECRETS.md`; the security sections of each framework file.
 
-### Configuration html
+### Kit html
 
 Kind: language. Requires: formatting. Recommends: spelling.
 
@@ -3140,9 +3140,9 @@ Rule files:
 
 `packages/cli/guides/language/HTML.md`, `packages/cli/guides/language/naming/HTML.md`, `packages/cli/guides/repository/static-site/STATIC-SITE.md`.
 
-### Configuration duplication
+### Kit duplication
 
-Kind: policy. Requires: nothing. Copy-paste detection across every language.
+Kind: general. Requires: nothing. Copy-paste detection across every language.
 
 Tools:
 
@@ -3170,7 +3170,7 @@ Rule files:
 
 `packages/cli/guides/general/agent/WORKING.md` (the duplication section).
 
-### Configuration vitest
+### Kit vitest
 
 Kind: tool. Requires: javascript.
 
@@ -3184,11 +3184,11 @@ Detects and owns:
 Tools:
 
 @vitest/eslint-plugin. The repository owns its coverage provider, istanbul or v8, as it owns
-Vitest: the configuration lists neither as a tool, so `doctor` never calls one missing.
+Vitest: the kit lists neither as a tool, so `doctor` never calls one missing.
 
 Versions:
 
-The repository owns the version of its test framework. The configuration pins neither `vitest` nor
+The repository owns the version of its test framework. The kit pins neither `vitest` nor
 `@vitest/coverage-v8`, and its floor is Vitest 2. The same holds for the Supabase CLI
 in the supabase configuration. A pin never lowers an exact version a `package.json` already holds.
 

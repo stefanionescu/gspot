@@ -56,7 +56,7 @@ The first release needs these, in this order:
 
 ## Pins
 
-Every configuration lists its tools with one version and the name under each installer. An installer
+Every kit lists its tools with one version and the name under each installer. An installer
 that numbers differently carries its own version:
 
 ```toml
@@ -121,7 +121,7 @@ the package manager. It stays a project of its own inside a pnpm or Yarn workspa
 hint names Homebrew only for a tool with no pin, because Homebrew installs the
 current version alone.
 
-Every tool in the configurations has a Windows build except `plutil`, `xcodebuild`, `xcstringstool`,
+Every tool in the kits has a Windows build except `plutil`, `xcodebuild`, `xcstringstool`,
 `swiftlint`, `swiftformat`, and `periphery`. Their checks are platform skips elsewhere.
 A tool pin names the platforms it ships for under `platforms`. Each entry is an operating system
 alone, or one with an architecture. CodeQL ships no arm64 Linux build, so its check is a platform

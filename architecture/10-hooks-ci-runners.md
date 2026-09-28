@@ -405,7 +405,7 @@ Changed paths select file-list tools and affected projects, never filter the fin
 
 Preserve deleted paths and both sides of renames for impact selection. Configuration, locks, and shared project references trigger dependent projects. Keep every whole-project finding, fileless finding, and failed tool status. Unknown impact selects the broader set.
 
-CI uses event-specific base and target objects, including merge queues and zero-base fallback, from [10-hooks-ci-runners.md](10-hooks-ci-runners.md). Managed tools use the package manager selected by the configuration contract and immutable locks.
+CI uses event-specific base and target objects, including merge queues and zero-base fallback, from [10-hooks-ci-runners.md](10-hooks-ci-runners.md). Managed tools use the package manager selected by the kit contract and immutable locks.
 
 Changing an export in `a.ts` must fail on a new error in unchanged `b.ts`. Cover deleted exports, renames, config-only changes, dependency changes, fileless failures, missing tools, old project errors, and every CI event. A clean commit with broken uncommitted work passes when its committed snapshot is clean.
 
@@ -445,10 +445,10 @@ history scans. Without git, every check that needs no history runs over the file
 finds.
 
 `--staged` and `--changed` exit 2 with one sentence: this folder is no git
-repository, so run `gspot check`. The secrets configuration gains `secrets/gitleaks-files`, which runs
+repository, so run `gspot check`. The secrets kit gains `secrets/gitleaks-files`, which runs
 `gitleaks dir`, with `needs_git = false`, and the two history checks take `needs_git = true`.
 `doctor` prints one line when a `.git` folder appeared after `init`, with the commands that add
-the hooks and the configurations that need git. A Mercurial, Perforce, or jj folder without `.git` is
+the hooks and the kits that need git. A Mercurial, Perforce, or jj folder without `.git` is
 this same mode, and the walk honors `.gitignore` and `.hgignore`.
 
 A planted folder with no `.git` and a planted secret holds the finding, and

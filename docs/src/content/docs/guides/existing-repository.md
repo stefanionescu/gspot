@@ -38,7 +38,7 @@ Supported exception lists become explicit repository policy:
 
 - typos words and excludes.
 - Rules turned off in a linter configuration, as `[[ignore]]` entries.
-- Gitleaks allowlists, Open Source Vulnerabilities (OSV) ignored advisories, and license exceptions when those configurations run.
+- Gitleaks allowlists, Open Source Vulnerabilities (OSV) ignored advisories, and license exceptions when those kits run.
 
 Carried entries retain source comments where supported. Otherwise, their reason identifies
 the source as `carried from <file> at init`. Review these reasons after adoption.

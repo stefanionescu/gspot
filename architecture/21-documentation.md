@@ -74,7 +74,7 @@ Use this ordered content brief when rewriting the root README:
    and `install`. Explain that teammates run `gspot install` after cloning; gspot does not
    inject a `prepare` script. Link the full command reference instead of listing every command.
 1. `## Choose your checks`: one runnable configuration example, one scoped exception with a
-   reason, and links to configurations and profiles. Explain `recommended` versus `all`: banned names
+   reason, and links to kits and profiles. Explain `recommended` versus `all`: banned names
    and optional house-style checks belong to `all`, including trivial-function and trivial-file checks.
    Distinguish check names from tool rule names.
 1. `## Adopt and remove`: summarize keeping, retained unsupported configuration, recovery
@@ -82,7 +82,7 @@ Use this ordered content brief when rewriting the root README:
    project-wide tools can report errors in unchanged files. Describe `git commit --no-verify`
    and `git push --no-verify` as bypassing local hooks. CI and server policy remain enforced.
 1. `## Support and help`: summarize verified language and platform support with links to the
-   release-matched configurations. Link troubleshooting for missing tools and configuration errors.
+   release-matched kits. Link troubleshooting for missing tools and policy errors.
    Avoid a hand-maintained total of checks as a proxy for support quality.
 1. `## Contribute` and `## License`: link contribution instructions, the actual license,
    release notes, and a private security-reporting route once configured. Label architecture
@@ -128,7 +128,7 @@ The sidebar groups are:
 - Get started: overview at `/guides/overview/`, install, quick start, and existing repository.
 - Guides: findings, customization, profiles, agents, integrations, troubleshooting, and recovery.
 - Reference: Commands, Configurations, Checks, ESLint plugin, Settings, and Configuration file.
-  Group configurations into Languages, Frameworks, Tools, Libraries, Platforms, Databases, and
+  Group kits into Languages, Frameworks, Tools, Libraries, Platforms, Databases, and
   Repository checks. Keep long lists collapsed.
 - Development: building, contributing, and engine implementation details at `/development/engines/`.
 
@@ -311,14 +311,14 @@ Acceptance is task-based as well as mechanical:
 ## Deployment and released documentation
 
 Keep the landing page, Starlight manual, reference generator, and schema in this repository's
-`docs/` project. They share CLI and configuration definitions; a second repository requires a second
+`docs/` project. They share CLI and kit definitions; a second repository requires a second
 version-coordination mechanism without providing a product benefit.
 
 The GitHub Pages definition is `.github/workflows/site.yml`. Its presence does not establish
 that the protected environment, hosting account, domain, or live rollback has been verified.
 
 - Build from a published release tag. Use its pinned runtime and frozen repository lockfile.
-  Run the existing docs build, including reference generation from that tag's CLI and configurations,
+  Run the existing docs build, including reference generation from that tag's CLI and kits,
   and upload `docs/dist/`. Generated reference entries and staged schema copies stay in build output.
 - The build job has read-only repository access. A separate deployment job uses the protected
   `github-pages` environment and the Pages artifact. Only that job receives `pages: write`
@@ -335,7 +335,7 @@ that the protected environment, hosting account, domain, or live rollback has be
   release, never unreleased default-branch behavior. Historical release-tag artifacts remain
   downloadable; a version switcher is outside the first deployment.
 - A documentation correction is built from a reviewed docs-only commit based on the stable release, retaining its CLI and
-  configuration definitions and recording both source revision and product version.
+  kit definitions and recording both source revision and product version.
 - Keep the preceding production artifact and source revision for rollback. Redeploy that
   artifact, or rebuild its exact pinned source if retention has expired; do not roll back DNS
   for an ordinary content defect.
@@ -358,7 +358,7 @@ usage, choices, defaults, implicit help, and nested commands. Exclude hidden/int
 Command definitions own effects, exits, and examples in their behavioral help. The CLI and
 reference loader consume that same text. Missing behavioral help fails reference generation.
 
-Settings cover the complete root, scope, integration, and configuration contracts.
+Settings cover the complete root, scope, integration, and kit contracts.
 Matching shared settings list every owner; conflicting definitions fail the build. Include
 plugin rules, public options, and both exported levels without duplicating manually maintained
 lists. Generated pages show the release version and link to the owning source definition.
@@ -408,7 +408,7 @@ Render complete public reference from validated command, configuration, configur
 
 ### Acceptance S-4
 
-Check architecture links and anchors. Public guides and demonstrations use reproducible commands and complete configurations exercised by ordinary behavioral tests. Generated reference derives from validated definitions. Do not require a separate documentation fixture system, root examples inventory, or universal parser of prose code blocks.
+Check architecture links and anchors. Public guides and demonstrations use reproducible commands and complete kits exercised by ordinary behavioral tests. Generated reference derives from validated definitions. Do not require a separate documentation fixture system, root examples inventory, or universal parser of prose code blocks.
 
 ### Acceptance S-15
 

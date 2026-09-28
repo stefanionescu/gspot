@@ -1,12 +1,12 @@
 ---
 title: Configuration
-description: Select configurations, adjust settings, and keep exceptions scoped and explained.
+description: Select kits, adjust settings, and keep exceptions scoped and explained.
 ---
 
 Run commands from the configured repository root with the [CLI available](/guides/install/).
 
 Choose language and framework kits, then change individual settings or record an exception.
-A configuration selects checks and their required tools.
+A kit selects checks and their required tools.
 
 ## Inspect the current choices
 
@@ -18,7 +18,7 @@ gspot list settings
 Use `gspot explain <check>` before changing its policy. The generated
 [settings reference](/reference/settings/) gives accepted values and defaults.
 
-## Select configurations and a level
+## Select kits and a level
 
 A complete policy starts with a schema version and selected kits:
 

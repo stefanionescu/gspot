@@ -3,7 +3,7 @@ title: Generated files
 description: Know which files to edit, commit, regenerate, and retain for recovery.
 ---
 
-Edit `gspot.toml` to choose configurations, checks, and exceptions. Commands such as
+Edit `gspot.toml` to choose kits, checks, and exceptions. Commands such as
 `gspot set` and `gspot ignore` edit the same file. Keep exception reasons there;
 `gspot explain` shows the policy behind a check.
 

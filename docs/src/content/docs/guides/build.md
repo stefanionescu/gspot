@@ -42,7 +42,7 @@ repositories retain their generated pinned executable.
 and run `mise run apply` to regenerate managed configuration.
 
 Native tools discover
-`typos.toml` by filename; the spelling configuration owns its content. The editor schema is generated
+`typos.toml` by filename; the spelling kit owns its content. The editor schema is generated
 from the policy schema and copied into the published documentation during the site build.
 Do not edit managed outputs to resolve drift. Change their source and regenerate them.
 

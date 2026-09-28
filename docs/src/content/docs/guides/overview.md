@@ -9,7 +9,7 @@ and repository checks, then reports findings with paths, check names, and correc
 ## Set up a repository
 
 Start with the [source installation prerequisites](/guides/install/). From your project root,
-`gspot init` proposes configurations for the detected languages and tools. Each configuration selects checks and their required tools.
+`gspot init` proposes kits for the detected languages and tools. Each kit selects checks and their required tools.
 Review the proposed writes before accepting them. Initialization does not run checks.
 
 - For a disposable example, [run your first check](/guides/quick-start/).
@@ -30,7 +30,7 @@ installed first.
 ## Maintain the policy
 
 `gspot.toml` owns the policy. [Choose checks and exceptions](/guides/customize/) there or through
-the configuration commands. Commands apply their changes; after a manual edit, run `gspot apply`
+the `gspot` commands. Commands apply their changes; after a manual edit, run `gspot apply`
 to regenerate configuration. Review generated
 changes and share matching tool locks. Teammates run `gspot install` after receiving them.
 

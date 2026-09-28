@@ -33,7 +33,7 @@ open requirements, and deferred verification.
 | [01-product.md](01-product.md)                     | Who gspot is for, what it promises, what it refuses to do                                                                                   |
 | [02-cli.md](02-cli.md)                             | Every command, flag, output line, and exit code                                                                                             |
 | [03-configuration.md](03-configuration.md)         | The one file a person edits, and the files gspot owns                                                                                       |
-| [04-configurations.md](04-configurations.md)       | The unit of selection: manifest format, detection, available configurations                                                                 |
+| [04-kits.md](04-kits.md)                           | The unit of selection: manifest format, detection, available kits                                                                           |
 | [05-engines.md](05-engines.md)                     | The six things that produce findings                                                                                                        |
 | [06-acceptance.md](06-acceptance.md)               | Every rule and check carried from the reference repositories, and where it lands                                                            |
 | [07-drift.md](07-drift.md)                         | New enforcement: what LLM slop and repository drift look like and how gspot catches them                                                    |
@@ -88,7 +88,7 @@ One word, one meaning, everywhere in this folder, and in the code.
 | profile              | Portable config without repository-specific paths.                                                                        |
 | general              | The kit kind for checks that span languages.                                                                              |
 
-[Configuration definitions](04-configurations.md#names-across-the-public-contract) and
+[Configuration definitions](04-kits.md#names-across-the-public-contract) and
 [execution results](05-engines.md#actions-and-their-results) own exact public fields. File ownership and
 recovery are defined in [03-configuration.md](03-configuration.md), not inferred from a name.
 

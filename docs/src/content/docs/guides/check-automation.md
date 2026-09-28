@@ -92,7 +92,7 @@ dispatcher. Authored commands and inherited settings remain active. Installation
 Use the installed Git hooks for native commit, push, and message checks. They carry exact Git
 arguments and replay push input. gspot still runs when native file selection is empty or an
 initialization script exits successfully. Initialization failures remain failures. A missing
-executable or invalid configuration reports a setup failure.
+executable or invalid policy reports a setup failure.
 
 Run `gspot install` after cloning
 or changing native hook-template settings. Uninstall restores unchanged owned fields and hooks.

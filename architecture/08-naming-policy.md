@@ -119,8 +119,8 @@ and `visit_*` visitor methods, `setUp`, `setUpClass`, `tearDown`, `tearDownClass
 variable names a runtime fixes (`HF_TOKEN`, `CUDA_MODULE_LOADING`, `CODEQL_*`).
 
 The shared policy names no framework. A framework kit carries the names its framework fixes
-as `[[naming.rules]]` in its manifest. The nextjs configuration holds the exports of Next.js
-and its route file names. The react configuration holds the hooks of React, and PascalCase for a
+as `[[naming.rules]]` in its manifest. The nextjs kit holds the exports of Next.js
+and its route file names. The react kit holds the hooks of React, and PascalCase for a
 component and its file. Vue, Svelte, and React Native do the same.
 
 Each language kit contributes its external names. A repository adds more under `[naming]
@@ -183,12 +183,12 @@ prefix. SQL boolean columns remain bare predicates such as `enabled` and `retrya
 These house-style checks run at `all`. The action and parameter contract in
 [public vocabulary](README.md#glossary) also applies to the naming rules and lint configuration of gspot itself.
 
-`handle` as a leading verb is a `verbs` finding in the shared policy. A configuration whose framework
+`handle` as a leading verb is a `verbs` finding in the shared policy. A kit whose framework
 uses the word allows it in its own rules: react for an event prop (`handleSubmit`), express and
 nestjs for a request handler, and swift for an `@objc` selector. `Handler` as a type or role
 suffix is always a `roles` finding.
 
-The nextjs configuration strips the brackets and parentheses of a route segment before matching:
+The nextjs kit strips the brackets and parentheses of a route segment before matching:
 `[slug]` is a path parameter in camel case, `(group)` is a folder in kebab case, and `@slot`
 likewise. `_private` folders drop the underscore.
 
@@ -257,7 +257,7 @@ exemptions that whole-part matching does not need.
 The engine extracts identifiers with tree-sitter per language and classifies them. One unit test for each language runs the shipped policy over a short file written the way
 that language and its frameworks are written, and expects no finding (T-19).
 
-Extraction skips: generated files (by kind), lockfiles, the paths a configuration excludes
+Extraction skips: generated files (by kind), lockfiles, the paths a kit excludes
 (`node_modules`, build output, `.git`, caches, `Generated/`, `vendor/`), and string contents.
 Three things in a file are not declarations and are not extracted. Declaration files (`.d.ts`) describe another module. Import bindings (`const { existsSync } = require('node:fs')`, `const { default: X } = await import(...)`) belong to the imported module. The keys and methods of object literals name what another party reads (an ESLint visitor, an option table).
 

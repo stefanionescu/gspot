@@ -1,12 +1,12 @@
 ---
 title: Monorepos
-description: Give nested projects their own configurations and settings in one policy file.
+description: Give nested projects their own kits and settings in one policy file.
 ---
 
 Run commands from your repository root with [gspot installed](/guides/install/).
 
 Start from a repository with nested projects. Initialization reads supported package-manager
-workspace declarations and proposes scopes. Review their paths and configurations before accepting.
+workspace declarations and proposes scopes. Review their paths and kits before accepting.
 
 A complete example policy:
 
@@ -55,7 +55,7 @@ The command writes the scoped setting and applies policy. Root settings supply d
 more specific scope settings override them. Keep scope paths relative to the policy root.
 PostgreSQL migration directories are also relative to their scope.
 
-The PostgreSQL configuration supplies the `postgres` SQLFluff dialect. Set `tools.sqlfluff.dialect`
+The PostgreSQL kit supplies the `postgres` SQLFluff dialect. Set `tools.sqlfluff.dialect`
 at the root or in a scope to select another dialect. Each scope receives its effective dialect
 in its generated SQLFluff configuration, including inherited scope values.
 Use the tool's lowercase dialect label, such as `postgres`, `sqlite`, or `duckdb`.
@@ -80,9 +80,9 @@ Paths in `tools.typos.exclude` remain relative to the policy root, including ins
 Editor configuration translates those patterns to its directory. CLI checks and fixes use only
 the generated configuration, so an unowned nested typos file cannot add word allowances.
 
-List settings append values from configurations, the root table, and containing scopes, and remove
+List settings append values from kits, the root table, and containing scopes, and remove
 repeated values. Scalar settings replace the preceding value. If selected kits provide
-conflicting scalar defaults, the error names both configurations. Set that key in the root table to
+conflicting scalar defaults, the error names both kits. Set that key in the root table to
 settle the conflict for all scopes, or in a containing scope table for that scope and its
 descendants.
 

@@ -38,7 +38,7 @@ export default [{
 }];
 ```
 
-Only this rule runs in the example. A repository using the JavaScript configuration has other checks.
+Only this rule runs in the example. A repository using the JavaScript kit has other checks.
 See the [plugin reference](/reference/plugin/no-client-environment/) for options.
 
 ## 2. Check the defect

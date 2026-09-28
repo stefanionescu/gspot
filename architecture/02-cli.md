@@ -216,7 +216,7 @@ exit 2 and nothing written, in these cases:
 4. Run `gspot install`, unless `--no-install` was given. Run no check.
 5. Delete a replaced original only after its replacement and recovery entry are complete.
 
-A failed resolution leaves existing lockfiles and old configurations in place. The setup report
+A failed resolution leaves existing lockfiles and old configuration files in place. The setup report
 names incomplete steps and the command to retry. Missing tools do not undo completed setup
 ; no old file is deleted without a usable generated replacement and recoverable bytes.
 
@@ -257,7 +257,7 @@ Runs checks and prints findings. `gspot check` is the truth, and the hooks are t
 A changed-file run narrows file-list checks, not the findings of a project-wide check.
 A project-wide check runs when a changed, deleted, or renamed path affects its inputs. Every
 finding from that check contributes to its exit code, including findings in unchanged callers
-and findings without a file. Tool failures and invalid configuration also fail the run.
+and findings without a file. Tool failures and invalid policy also fail the run.
 Existing project errors can therefore block a changed-file run; no baseline or hidden filter
 suppresses them. [10-hooks-ci-runners.md](10-hooks-ci-runners.md) defines revision selection.
 
@@ -344,7 +344,7 @@ policy writes.
 `gspot list` prints what exists and what is on. Configurations come in three groups: installed,
 found in the repository and not selected, and the rest. Under each installed configuration stand its
 checks with their state: `on`, `off (level)`, `off (ignore)`, or `waits for <setting>`. Each
-configuration of the second group ends with its `gspot add` line.
+kit of the second group ends with its `gspot add` line.
 
 `gspot list settings` prints every setting of the selection: the setting name, its value, and where the
 value comes from.
@@ -472,7 +472,7 @@ from its ownership record without loading tool configurations.
 A profile carries a setup between repositories.
 [03-configuration.md](03-configuration.md) holds the format.
 
-`gspot export <file>` writes a profile from this repository. It keeps the level, the configurations,
+`gspot export <file>` writes a profile from this repository. It keeps the level, the kits,
 `extra_checks`, `[limits]`, `[naming]` lists, `[format]`, and `[prose]`. It keeps the options and
 the rules of each tool, and the choices for hooks, CI, rules, and runner. It keeps every `[[ignore]]` that names no
 path. It leaves out every entry that names a path, and prints each one.
@@ -512,7 +512,7 @@ These clauses specify required behavior. [Remaining work](22-remaining.md) owns 
 
 The [command surface](#commands) owns supported commands and flags. Keep one implementation
 per command, with no removed-name aliases or compatibility forwarding. Explain supports paths,
-checks, configurations, rules, and settings. Set writes supported generated and vendored declarations.
+checks, kits, rules, and settings. Set writes supported generated and vendored declarations.
 Doctor performs local diagnosis without network access. Apply previews through `--dry-run`.
 
 Exercise completion for supported commands, values, and paths (T-22). Verify observable explain,
@@ -567,12 +567,12 @@ repository with an old finding in an untouched file commits a change to another 
 
 ### Acceptance K-62
 
-`gspot list` prints configurations in three groups: installed, found in the repository and
+`gspot list` prints kits in three groups: installed, found in the repository and
 not selected, and the rest. Under each installed configuration it prints its checks with their state:
 on, off by level, off by an ignore, or waiting for a setting. `gspot list settings` prints every
 setting with its value and where the value comes from.
 
-List and explain use the same effective check selection and setting prerequisites. Each configuration
+List and explain use the same effective check selection and setting prerequisites. Each kit
 found but not selected ends with its `gspot add` line. `--json` prints the same data.
 
 Exercise each effective state through list and explain, including their structured output.

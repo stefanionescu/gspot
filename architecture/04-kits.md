@@ -1,7 +1,7 @@
 # Configurations
 
-This document decides the unit of selection: its manifest, how it is detected, how configurations
-combine, and the available configurations.
+This document decides the unit of selection: its manifest, how it is detected, how kits
+combine, and the available kits.
 
 ## Policy ownership
 
@@ -24,7 +24,7 @@ in ordinary code, not a manifest workflow language. The execution contract lives
 
 ## What a configuration is
 
-A configuration bundles its manifest and assets under its name. Resolve templates and rule
+A kit bundles its manifest and assets under its name. Resolve templates and rule
 assets from the manifest's actual directory. Agent rule guides remain separate and are selected
 by the manifest; no source/test directory inventory is implied.
 
@@ -33,17 +33,17 @@ runs, settings it exposes, and rule files it installs. It contributes nothing it
 
 ## Kinds
 
-`policy` is the kind for configurations whose checks span languages. It is part of
+`general` is the kind for kits whose checks span languages. It is part of
 manifest validation, grouped discovery, and selection, not a public synonym for a check.
 The kind does not require unrelated implementation or test directories to mirror this taxonomy.
 
-Each configuration lives at `configurations/<kind>/<name>/` and declares its kind in its manifest.
+Each kit lives at `kits/<kind>/<name>/` and declares its kind in its manifest.
 The kind groups both selection and source ownership. Move each manifest with its templates and assets.
 Configuration names are bare names; the kind is not part of the public name. Discovery reads each
 manifest's actual directory and resolves its assets there. No category registry, old-path
 aliases, or forwarding files duplicate that ownership.
 
-The public `configs` configuration lives at `packages/cli/kits/general/files/` and is titled Configuration
+The public `configs` kit lives at `packages/cli/kits/general/files/` and is titled Configuration
 Files. It covers JSON, YAML, TOML, workflows, environment files, XML, and related formats.
 Its templates configure the tools that inspect those files; the configuration is not a generic
 owner for every kit's configuration assets.
@@ -61,7 +61,7 @@ owner for every kit's configuration assets.
 ## Manifest
 
 ```toml
-[configuration]
+[kit]
 name         = "typescript"
 kind       = "language"
 title      = "TypeScript"
@@ -69,7 +69,7 @@ requires   = ["javascript", "structure"]
 recommends = ["naming", "formatting", "spelling"]
 
 [detect]
-project_files = ["tsconfig.json"]      # a folder that holds one is a scope, and proposes the configuration
+project_files = ["tsconfig.json"]      # a folder that holds one is a scope, and proposes the kit
 extensions    = [".ts", ".tsx", ".mts", ".cts"]
 dependencies  = ["typescript"]
 
@@ -97,7 +97,7 @@ shared  = true                         # read and carried, never deleted or edit
 keeps = "eslint-config"
 
 [[configs]]
-template = "eslint.fragment.js.tmpl"   # exports config blocks and selectors; names no other configuration
+template = "eslint.fragment.js.tmpl"   # exports config blocks and selectors; names no other kit
 target   = ".gspot/config/eslint.config.mjs"
 fragment = true
 
@@ -147,7 +147,7 @@ case       = "PascalCase"
 [coverage]
 ".ts" = ["format", "syntax", "style", "types"]
 
-[rule_files]
+[guides]
 language = ["packages/cli/guides/language/TYPESCRIPT.md", "packages/cli/guides/language/naming/TYPESCRIPT.md"]
 ```
 
@@ -157,15 +157,15 @@ tool, and no check name outside `src/checks/`, and a unit test holds that.
 ### Field rules
 
 - `name` is a bare kebab-case name and matches the folder name.
-- `requires` pulls configurations in, and a person cannot drop them. It holds what the configuration cannot
+- `requires` pulls kits in, and a person cannot drop them. It holds what the kit cannot
   work without: `typescript` requires `javascript`, because its configuration is a fragment of
   the JavaScript one. A required kit that is missing fails to load.
-- `recommends` names configurations that `init` selects with this one and a person can drop.
+- `recommends` names kits that `init` selects with this one and a person can drop.
   Every language kit recommends `naming`, `formatting` and `spelling`. `structure` stays
   required, because it owns the `limits.*` settings the language kits read.
   `gspot remove naming`, `init --without naming` and a profile that leaves `naming` out all work.
-- A check whose engine belongs to a dropped configuration does not run. `doctor` lists the recommended
-  configurations that are not selected.
+- A check whose engine belongs to a dropped kit does not run. `doctor` lists the recommended
+  kits that are not selected.
 - `[[tools]]` rows take `kind = "binary"` (the default) or `kind = "library"`. `doctor`
   looks for a library under `.gspot/node_modules/<npm name>/` and reads its version there
   . A library is never spawned.
@@ -179,14 +179,14 @@ tool, and no check name outside `src/checks/`, and a unit test holds that.
   the named check is skipped with the note `<taker> runs it here`.
 - `[coverage]` lists, for each extension, the check kinds a file of that extension must
   receive. `doctor` reports a file that misses one as partly checked.
-- `[rule_files]` lists the corpus files the configuration installs, by layer.
+- `[guides]` lists the corpus files the configuration installs, by layer.
 - `[required_rules]` lists, for a file ending, the ESLint rules that must be on for a file with
   that ending. `javascript/required-rules` reads it.
 - A check name is `<family>/<name>`. The family is the engine or the tool family that produces the
-  finding (`structure`, `naming`, `integrity`, `prose`, `security`, or the configuration's own name), not
+  finding (`structure`, `naming`, `integrity`, `prose`, `security`, or the kit's own name), not
   always the configuration. `gspot explain <check>` prints the kit that ships it.
 - `detect` proposes the configuration at `init` and in `doctor`. Detection never selects.
-- `owners` decides which files the configuration's checks receive. A `filenames` own matches at any
+- `owners` decides which files the kit's checks receive. A `filenames` own matches at any
   depth (`_headers` under `public/` is `_headers`); an `extensions` own likewise. A file owned by no selected kit is unchecked.
 - `owners` may also name `tags`, computed the way the pre-commit `identify` library does from extension, shebang, executable bit, and content (`shell`, `python`, `node`, `executable`, `text`, `binary`). Hooks and task files with no extension are then owned without a filename list.
 - Every tool the checks or the generated configuration need is in `[[tools]]` with a version
@@ -208,15 +208,15 @@ tool, and no check name outside `src/checks/`, and a unit test holds that.
 - A check carries `level`, `recommended` or `all`, and a check with no level fails to load.
 - A check takes `waits_for`, the setting it needs. With the setting unset the check prints
   `skipped` and names it.
-- A check takes `needs`, the configuration whose generated files it reads. Where the scope does
+- A check takes `needs`, the kit whose generated files it reads. Where the scope does
   not select it, the check is skipped with that note.
 - A command check is cached unless it takes `cached = false`, for a verdict that depends on more than its files.
 - An analysis is not cached unless it takes `cached = true`, for one that reads only its files.
 - A check takes `needs_git`. With `true` it reads git and is skipped, with a note, in a folder
   that has no `.git`; with `false` it stands in for such a check and runs only there. A
-  configuration can also declare this requirement.
-- A configuration takes `needs_git = true` when every check reads Git. `init` leaves that
-  configuration out of a folder with no `.git`.
+  kit can also declare this requirement.
+- A kit takes `needs_git = true` when every check reads Git. `init` leaves that
+  kit out of a folder with no `.git`.
 - A check takes `env`, a table of environment values for its tool. Values expand scalar command
   placeholders such as `{config:name}` before execution.
 - A tool takes `version_command`, `rule_page`, `suppression`, `crash_pattern`, and
@@ -236,14 +236,14 @@ tool, and no check name outside `src/checks/`, and a unit test holds that.
 - The base template joins the selector rows of every selected fragment into the one
   `no-restricted-syntax` rule per file set.
 - A manifest takes `entry_files`, the files a dead-code scan starts from in the code it knows,
-  relative to the scope. The knip configuration joins them with `tools.knip.entry`.
+  relative to the scope. The knip kit joins them with `tools.knip.entry`.
 - A setting takes `role`, the architecture role of the folder it names, such as `harness` for
   a test runner's support folder. A template asks for the folders of a role, never for the
   setting by name.
-- A setting two configurations need is declared by both under one name with the same kind,
+- A setting two kits need is declared by both under one name with the same kind,
   direction, and summary. A list merges the defaults. A framework or platform default replaces
   a scalar one.
-- Through such a shared setting a fragment learns what another configuration knows, without
+- Through such a shared setting a fragment learns what another kit knows, without
   asking whether it is selected.
 - Tool `env` supplies literal environment settings to version inspections and commands. Check
   `env` overrides tool settings and supports command placeholders.
@@ -261,7 +261,7 @@ tool, and no check name outside `src/checks/`, and a unit test holds that.
   as `*.xcodeproj`, or a short path such as `supabase/config.toml`. `init` proposes the
   configuration from such a file and a scope for the folder that holds it.
 - `[[rules_off]]` lists the shared rules a framework turns off, each with a reason.
-- A `[rule_files]` entry may carry `when`, a detection table, so a file installs where its
+- A `[guides]` entry may carry `when`, a detection table, so a file installs where its
   subject is found.
 - A manifest that repeats the check name of another manifest fails to load.
 - A check with `fix_command` names its `fix_order`. Repository-defined checks use those same fields. `help` is the prose that tells a person what to do; `fix_command` is what `check --fix` runs.
@@ -306,10 +306,10 @@ being written.
 ## Selection
 
 ```text
-selected = configurations in gspot.toml
+selected = kits in gspot.toml
          + every kit they require, transitively
 
-at init   = proposed configurations, or the configurations of the profile
+at init   = proposed kits, or the kits of the profile
          + every kit they recommend whose own detection matches, or that has no detection
          + every kit they require, transitively
          - what --without names and what the person cleared
@@ -319,14 +319,14 @@ Order is the order of first mention, dependencies first. Settings merge in that 
 `requires` fails to load.
 
 A scope's selection is the root selection plus the scope's own. A check runs once per scope
-over that scope's files. Root-only configurations (policy kind) run once over the whole tree.
+over that scope's files. Root-only kits (general kind) run once over the whole tree.
 
 ## Detection
 
 A language with a project file is proposed from that file, as a scope is. A language with
 no project file is proposed from its files. A tool, framework, or library kit is proposed
 only where the repository holds the thing. The plan lists what was found and not proposed, each
-with its `gspot add` line. A configuration whose checks all need git is not proposed in a folder that
+with its `gspot add` line. A kit whose checks all need git is not proposed in a folder that
 is no git repository.
 
 Signals, in the order `init` prints them:
@@ -364,7 +364,7 @@ A framework changes which plugins run. It does not change the rules of the langu
 - Every shared rule reads every code file: `js`, `ts`, `jsx`, `tsx`, and the component endings
   a framework kit owns (`.vue`, `.svelte`, `.svelte.ts`).
 - A limit is the same number in every framework: lines for each file, lines for each function,
-  parameters, depth, statements, and complexity. No configuration may change one.
+  parameters, depth, statements, and complexity. No kit may change one.
 - A framework turns a shared rule off only in its manifest, with a reason. A test compares the
   final ESLint config of a component file with that of a plain `ts` file, and fails on a
   difference that is not on the list.
@@ -381,13 +381,13 @@ A framework changes which plugins run. It does not change the rules of the langu
 | vue          | `eslint-plugin-vue`                                                                                     | `eslint-plugin-vuejs-accessibility`   | `vue-tsc`             | vitest, testing-library         | nothing                                                                             |
 | svelte       | `eslint-plugin-svelte`                                                                                  | `svelte-check`                        | `svelte-check`        | vitest, testing-library         | the one-file-folder rule, for SvelteKit route files                                 |
 
-## Available configurations
+## Available kits
 
-The [acceptance record](06-acceptance.md#configuration-enforcement-contracts) preserves
+The [acceptance record](06-acceptance.md#kit-enforcement-contracts) preserves
 the detection, settings, and checks of each agreed configuration. The v1 set is every kit the four reference repositories need. That covers a Python API, a Swift
 app, an Express API, a Supabase project, a static site on Cloudflare, and a Next.js app.
 
-## What a configuration never does
+## What a kit never does
 
 - Hard-code a directory layout. A framework kit owns only the paths the framework itself
   dictates (`app/`, `supabase/migrations/`, `functions/`).
@@ -430,7 +430,7 @@ blanket callback, framework, or entrypoint exemptions. Snapshot messages only af
 renders by level: `recommended` writes the recommended set of each tool, defect checks,
 and mandatory trivial-function and trivial-file enforcement; `all` adds the remaining policy.
 
-Every check declares its level. Planning, template emission, standalone plugin configurations,
+Every check declares its level. Planning, template emission, standalone plugin kits,
 and references consume the same level policy. Verify the resulting selection at both levels;
 no dedicated level module or duplicate rule registry is required.
 
@@ -440,17 +440,17 @@ second adds `strictTypeChecked`, sonarjs, unicorn, and jsdoc. For ruff the first
 is the default rules and the opt-in rules that find a defect. basedpyright runs at `standard`,
 ShellCheck with its default set, and hadolint fails at `warning`.
 
-Generated-configuration cases exercise both levels through their consumers (T-36). Manifest
+Generated-kit cases exercise both levels through their consumers (T-36). Manifest
 validation rejects a check without its required level or nonempty example.
 
 ### Acceptance K-101
 
-Preserve every public plugin rule and option. Derive `configs.recommended` and `configs.all` from rule metadata. Both configurations enable trivial-function and trivial-file enforcement by default.
+Preserve every public plugin rule and option. Derive `configs.recommended` and `configs.all` from rule metadata. Both kits enable trivial-function and trivial-file enforcement by default.
 Other placement and abstraction preferences require all or explicit opt-in. Verify standalone and generated configurations with invalid and corrected inputs.
 
 ### Acceptance K-135
 
-At `recommended` the bash configuration runs the checks that find a defect. They are strict
+At `recommended` the bash kit runs the checks that find a defect. They are strict
 mode, a `mktemp` with no trap, a failure discarded by an or-true, and `cd` with no failure path.
 They are also a recursive remove, a broad `pkill`, unread arguments, duplicate functions, and
 unused functions. The header,
@@ -477,7 +477,7 @@ A planted pip project with `requirements.txt` and NumPy docstrings passes.
 ### Acceptance K-174
 
 `html/scripts`, `sql/block-comments`, and the README contents rule are `all`. The
-postgres configuration ships `client_schemas = []`, and the supabase configuration sets `["public"]`. The
+postgres kit ships `client_schemas = []`, and the supabase kit sets `["public"]`. The
 commits configuration is proposed and not selected, as security and licenses are, and its scopes are
 what `tools.commitlint.scopes` names.
 
@@ -503,7 +503,7 @@ runs with the network off; native package downloads stay in explicit suites.
 
 gspot writes no option that changes emit or resolution. The type check runs
 through a generated file that extends the `tsconfig.json` of the repository and adds flags that
-only add errors, as [04-configurations.md](04-configurations.md) builds it (K-74).
+only add errors, as [04-kits.md](04-kits.md) builds it (K-74).
 
 The generated file holds `strict` at `recommended`, and four more flags at `all`. `javascript/checkjs`
 reads the `jsconfig.json` of the repository for resolution.
@@ -575,7 +575,7 @@ gspot pins itself in the mise file as `"github:stefanionescu/gspot"`, not throug
 ### Acceptance K-79
 
 Checks belong to the domain they inspect. Shared parsers and platform
-operations live outside configuration definitions. Infrastructure must not import configuration definitions for basic work.
+operations live outside kit definitions. Infrastructure must not import kit definitions for basic work.
 
 Actual planned checks execute once and report intended defects at their
 locations. Valid inputs pass; invalid manifest combinations fail at loading. Registry metadata
@@ -684,7 +684,7 @@ The loader passes the parsed config on whole.
 
 `toConfiguration` returns the zod output, and the type is inferred from the schema.
 
-A planted Cloudflare repository without the security configuration holds no
+A planted Cloudflare repository without the security kit holds no
 `.gspot/config/semgrep/workers.yml`.
 
 ### Acceptance K-182
@@ -695,8 +695,8 @@ proposed from its files. A tool configuration is proposed only where the reposit
 plan lists what was found and not proposed, each with its `gspot add` line.
 
 A configuration that another configuration recommends is selected only when its own `[detect]`
-matches (configurations without detection, such as naming, remain explicitly selectable). A manifest takes
-`needs_git = true`, and `selection.ts` leaves such a configuration out where `git rev-parse` fails. The
+matches (kits without detection, such as naming, remain explicitly selectable). A manifest takes
+`needs_git = true`, and `selection.ts` leaves such a kit out where `git rev-parse` fails. The
 plan then opens with one line that says the folder is no git repository. A `workspaces` key of
 `package.json` gives scopes with no lockfile present.
 
@@ -706,9 +706,9 @@ folder with no `.git`, and a workspace with no lockfile.
 ## Names across the public contract
 
 Use `name` for a definition's own name. Use the entity word for a reference to that
-definition: `check`, `configuration`, or `rule`. A finding's `check` field holds a check name;
+definition: `check`, `kit`, or `rule`. A finding's `check` field holds a check name;
 it is not a second definition. Do not rename it to a generic `name` field. A setting name is
-its dotted configuration address.
+its dotted kit address.
 
 | Meaning                                  | Definition or serialized field                               | Local variable or parameter                               |
 | ---------------------------------------- | ------------------------------------------------------------ | --------------------------------------------------------- |

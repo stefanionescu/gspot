@@ -77,7 +77,7 @@ exclude = ["legacy", "third_party"]
 # The selection. Configurations are bare names.
 kits = ["typescript", "bash", "sql", "supabase", "docker", "markdown"]
 
-# A scope is a folder with a project file and its own selection. Root configurations apply everywhere.
+# A scope is a folder with a project file and its own selection. Root kits apply everywhere.
 [[scope]]
 path    = "api"
 kits = ["typescript", "express", "docker", "nginx", "vitest"]
@@ -165,7 +165,7 @@ paths = ["api/types/supabase.ts"]
 paths  = ["vendor"]
 reason = "Upstream source, patched only by rebase."
 
-# A script the repository already runs. It joins the run like a configuration check.
+# A script the repository already runs. It joins the run like a kit check.
 [[check]]
 name      = "sql/migration-data"
 command = ["bunx", "tsx", "supabase/scripts/migrations.ts", "check"]
@@ -268,13 +268,13 @@ A profile is a TOML file with the schema of `gspot.toml` and three differences:
 
 | Difference | Rule                                                                                                                                       |
 | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| Head       | `profile = "<name>"` and `selection = "exact"` or `"detect"` stand beside `version`, `level`, and `configurations`                         |
+| Head       | `profile = "<name>"` and `selection = "exact"` or `"detect"` stand beside `version`, `level`, and `kits`                                   |
 | Left out   | `[[scope]]`, `[[generated]]`, `[[vendored]]`, `[[check]]`, and any entry with `paths` are refused. An `[[ignore]]` with no `paths` travels |
 | Reasons    | a loosened setting keeps its reason, and the reason travels with the profile                                                               |
 
 `selection = "exact"` installs the named kits and what they require. Detection still runs,
 and the plan lists what it found and did not install. `selection = "detect"` adds the detected
-configurations to the named ones. A profile is read through the same schema as the config, so a value
+kits to the named ones. A profile is read through the same schema as the config, so a value
 it carries is held to the same rules.
 
 ```toml
@@ -282,7 +282,7 @@ version   = 1
 level     = "all"
 profile   = "house-style"
 selection = "exact"
-configurations   = ["typescript", "formatting", "spelling", "markdown", "commits"]
+kits   = ["typescript", "formatting", "spelling", "markdown", "commits"]
 
 [format]
 indent_width = 2
@@ -300,14 +300,14 @@ makes every run depend on a second file and, for an address, on the network.
 For every setting:
 
 ```text
-configuration default
+kit default
   → framework or platform kit, in selection order
   → root table
   → scope table
 ```
 
-Lists append and drop repeats. Scalars replace. Two configurations that set one scalar to two values
-fail at load with both configurations named, and a root value settles it.
+Lists append and drop repeats. Scalars replace. Two kits that set one scalar to two values
+fail at load with both kits named, and a root value settles it.
 
 ## An old repository
 
@@ -463,7 +463,7 @@ No Git, unborn Git, untracked config, dirty replacement, second replacement, ful
 ### Acceptance K-217
 
 gspot never writes a lint tool into a manifest of the developer. The npm tools and
-libraries a configuration pins install into `.gspot/node_modules`, from a generated `.gspot/package.json`
+libraries a kit pins install into `.gspot/node_modules`, from a generated `.gspot/package.json`
 and its lockfile. Every check runs the binary under `.gspot/`. The ESLint of the developer, its
 config, and its plugins stay, and replacement lists them for removal by hand.
 
@@ -754,7 +754,7 @@ not carried.
 
 A flat ESLint config is a module, so gspot loads it through ESLint itself.
 Resolve the config for every governed file using the repository's installed ESLint. Group equal
-configurations and preserve path-specific differences in `[[tools.eslint.overrides]]`.
+kits and preserve path-specific differences in `[[tools.eslint.overrides]]`.
 
 Compare against proposed output for those same paths. An extension is not a configuration class.
 Preserve enabled rules, options, disabled rules, and ignores.

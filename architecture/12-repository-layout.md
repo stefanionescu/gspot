@@ -57,7 +57,7 @@ Do not require a file per
 type, constant, forwarding function, or check. Test locations follow the behavior they exercise;
 source/test directory symmetry is not required.
 
-Use the kit kind `policy` for cross-language checks. It groups configuration
+Use the kit kind `general` for cross-language checks. It groups configuration
 selection and planning; it does not prescribe the taxonomy of commands, tests, docs,
 or unrelated source directories. Configurable shipped naming and placement policies remain
 available at their specified levels. They are not blanket instructions to reorganize gspot.
@@ -87,7 +87,7 @@ The executable entry delegates to Commander composition. Command adapters parse 
 present command results. Execution planning, scheduling, cancellation, and diagnostic parsing
 remain separate from check implementations.
 
-Policy owns validation and mutation plans. The `configurations` owner provides shipped check
+Policy owns validation and mutation plans. The `kits` owner provides shipped check
 definitions and selection. Output owns terminal and report formats.
 Naming and structure analyses retain their language-specific semantics beside their consumers.
 
@@ -210,7 +210,7 @@ and installed release consumers require separate explicit tasks.
 
 The release task runs directly
 after its artifact prerequisites are built; no environment opt-in hides its tests. Do not add Vitest, Jest, or a custom coordinator for this
-repository. Framework configurations can still use their own test tools.
+repository. Framework kits can still use their own test tools.
 
 Root configuration has explicit owners. `gspot.toml`, `mise.toml`, `package.json`,
 `bunfig.toml`, `tsconfig.json`, and the authored portions of `.gitignore` and `.gitattributes`
@@ -272,7 +272,7 @@ questions when interactive input is available.
 | Job                                                   | Library                                                                | Note                                                                                                                                                       |
 | ----------------------------------------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Temporary test directories                            | `testdirs`                                                             | Call `testdir()` with no files, register async disposal, then call `createFileTree`. This order preserves cleanup after setup failure.                     |
-| Render a configuration template                       | `eta`                                                                  | every `*.tmpl` under `packages/cli/kits/`; the generated-file header is prepended by gspot                                                                 |
+| Render a kit template                                 | `eta`                                                                  | every `*.tmpl` under `packages/cli/kits/`; the generated-file header is prepended by gspot                                                                 |
 | Command parsing, `--help`, unknown-command suggestion | commander                                                              | the public command definition feeds the reference content loader                                                                                           |
 | The questions in `init`                               | `@clack/prompts`                                                       | imported by those two commands only; never under `--yes`, `CI` or no terminal                                                                              |
 | Color                                                 | picocolors                                                             | off under `NO_COLOR`, `CI`, `--no-color` or no terminal                                                                                                    |
@@ -306,7 +306,7 @@ Not used: any terminal UI framework, table renderer, spinner library outside cla
 framework, or dependency-injection container. Columns are computed from the longest id.
 [15-prior-art.md](15-prior-art.md) records the candidates that were considered and not taken.
 
-Custom code owns the rules and decisions specific to gspot: configuration selection and precedence,
+Custom code owns the rules and decisions specific to gspot: kit selection and precedence,
 coverage policy, finding semantics, managed ownership, and recovery decisions. Use the libraries
 above for parsing, matching, serialization, and execution where their contracts fit. Do not own
 that no library exists without evaluating candidates. Do not require one library to implement
@@ -315,7 +315,7 @@ an entire gspot workflow before reusing the part it already solves.
 ## Build
 
 - `bun build --compile --target=bun-<os>-<arch>` per platform, with the grammar WASM files,
-  configurations, rules and prose embedded through the file embedding of Bun. Output: `gspot-darwin-arm64`,
+  kits, rules and prose embedded through the file embedding of Bun. Output: `gspot-darwin-arm64`,
   `gspot-darwin-x64`, `gspot-linux-x64`, `gspot-linux-arm64`, `gspot-windows-x64.exe`, plus Linux x64 and ARM64 musl targets from the same platform definition.
 - The release tag must match the package version source; generated file headers use that version.
 - The npm release publishes one platform package per target plus the launcher package, all at one version.
@@ -623,7 +623,7 @@ Candidate acceptance also runs `test:tools`,
 before installed consumers. Native tools and downloads do not belong in routine documentation
 tests.
 
-The Jest configuration configures ESLint for `bun:test` through `globalPackage`; the repository
+The Jest kit configures ESLint for `bun:test` through `globalPackage`; the repository
 replaces native Jest coverage execution with its Bun tasks. Preserve `level = "all"` and
 `[coverage] strict = true`, which govern product checks rather than a test coverage percentage.
 

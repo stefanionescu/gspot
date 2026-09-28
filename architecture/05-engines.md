@@ -4,7 +4,7 @@ This document decides the six things inside gspot that produce findings, what ea
 where each draws its line against writing original analysis.
 
 ```text
-                     gspot.toml + configurations
+                     gspot.toml + kits
                               |
         +----------+----------+-----------+----------+-----------+
         |          |          |           |          |           |
@@ -282,7 +282,7 @@ Repository-level assertions. Each is small, reads git or a manifest, and answers
 | `integrity/allowlists-match`      | Does every path in an allowlist or `[[ignore]]` match at least one tracked file?                                                                                                                                                                                                                                                                                                                |
 | `integrity/files`                 | Does every file in a declared config directory hold only literals (no functions, control flow, I/O)?                                                                                                                                                                                                                                                                                            |
 | `integrity/suppressions`          | Does every inline suppression carry a reason, and did the census grow?                                                                                                                                                                                                                                                                                                                          |
-| `javascript/required-rules`       | Does the resolved configuration of every owned tool still enable every rule the configuration requires?                                                                                                                                                                                                                                                                                         |
+| `javascript/required-rules`       | Does the resolved configuration of every owned tool still enable every rule the kit requires?                                                                                                                                                                                                                                                                                                   |
 | `dependencies/manifest-policy`    | Exact versions, sorted keys, no range prefixes, no foreign lockfiles, engines match the runtime pin, root packages private, `packageManager` pinned and equal across workspace packages; scripts policy: `any`, `wrappers` (root scripts limited to an approved set, every `bun run <script>` names an existing script, no `---` section markers, no package script wraps the runner) or `none` |
 | `dependencies/install-policy`     | Is the package manager's minimum release age at or above the limit (bun `minimumReleaseAge`, npm `min-release-age`, pnpm `minimumReleaseAge`)? Is a security scanner declared where the manager supports one? Does the installed tree match the lockfile, version for version, with every peer satisfied?                                                                                       |
 | `dependencies/lockfile-fresh`     | Does the lockfile match the manifest (`bun install --frozen-lockfile --dry-run`, `uv lock --check`)?                                                                                                                                                                                                                                                                                            |
@@ -336,8 +336,8 @@ Type check, format, style, and names reach a component file.
 `CODE` in the template is built from the `owns.extensions` of the selected kits.
 A manifest takes `[[rules_off]]` with `rule` and `reason`, and the template renders that list.
 
-`vue/eslint` and `svelte/eslint` go, because `javascript/eslint` reads their files. The vue configuration
-runs `vue-tsc` and the svelte configuration `svelte-check` through `replaces` of `typescript/tsc`. The
+`vue/eslint` and `svelte/eslint` go, because `javascript/eslint` reads their files. The vue kit
+runs `vue-tsc` and the svelte kit `svelte-check` through `replaces` of `typescript/tsc`. The
 formatting manifest gains `prettier-plugin-svelte` where svelte is selected. Stylelint gains
 `postcss-html` for component files. The naming extractor reads the script block of a component
 through the offsets its parser gives.
@@ -366,7 +366,7 @@ rules as well as their framework-specific rules. See
 [05-engines.md](#shared-enforcement-across-languages-and-frameworks).
 
 Execute invalid and corrected inputs through the standalone plugin and generated
-CLI configurations. Assert check or rule, diagnostic, file, and location. Cover aliases,
+CLI kits. Assert check or rule, diagnostic, file, and location. Cover aliases,
 type-only imports, approved exemptions, valid code, and repeated runs after files change.
 Folder tests cover all four languages and framework source. Preserve process and parser fixes;
 do not restore stale global reads merely to restore a rule.
@@ -386,7 +386,7 @@ No-Git folders still work. A failed Git listing inside a repository does not sil
 
 ### Acceptance K-308
 
-Definitions use `name`; references retain `check`, `configuration`, or `rule`. Keep external wire names and existing internal `Policy` terminology. Distinguish actions from predicates, executable `fix_command` from `help`, and failed fixes from unchanged output. Retire synonym replacement campaigns and cosmetic source renames.
+Definitions use `name`; references retain `check`, `kit`, or `rule`. Keep external wire names and existing internal `Policy` terminology. Distinguish actions from predicates, executable `fix_command` from `help`, and failed fixes from unchanged output. Retire synonym replacement campaigns and cosmetic source renames.
 
 ### Acceptance K-43
 
@@ -396,7 +396,7 @@ edits. Full-run pruning removes owned verdict entries older than 30 days. Tool b
 the platform cache location.
 
 Verify that changing a relevant configuration invalidates the result, changing an unrelated
-configuration does not, and stale owned entries are pruned without deleting unrelated files.
+kit does not, and stale owned entries are pruned without deleting unrelated files.
 The contract does not require a particular session field, hash helper, or module name.
 
 ### Acceptance K-53

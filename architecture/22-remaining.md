@@ -51,12 +51,12 @@ paths. Build ownership is `packages/cli/scripts/`; configuration and rule owners
 `packages/cli/`. Each retained task below names its owner, dependencies, acceptance clauses,
 and required completion evidence. Those requirements are not owns of completed execution.
 
-Retired directory prescriptions, removed Go/Rust/Ruby configurations, generated-Markdown
+Retired directory prescriptions, removed Go/Rust/Ruby kits, generated-Markdown
 inventories, project-template flags, and delegation preferences remain retired.
 
 ## 1. Settle scope and dependency decisions
 
-Owner: policy adoption and configuration/tool owners. Read the linked contracts before edits.
+Owner: policy adoption and kit/tool owners. Read the linked contracts before edits.
 
 Complete 1.1 before 1.2.
 
@@ -74,7 +74,7 @@ Decision, 2026-09-25. The manifests pin these packages, and each ESLint plugin a
 - Vue: eslint-plugin-vuejs-accessibility 2.6.0, eslint-plugin-testing-library 7.16.2, and
   vue-tsc 3.3.11.
 - Svelte: svelte-check 4.7.6, prettier-plugin-svelte 4.1.1, and eslint-plugin-testing-library
-  7.16.2. The css configuration pins postcss-html 2.0.0.
+  7.16.2. The css kit pins postcss-html 2.0.0.
 - NestJS: @darraghor/eslint-plugin-nestjs-typed 7.5.5, published on 2026-09-19. The seven-day
   release age admits it on 2026-09-26.
 
@@ -127,7 +127,7 @@ Step 2.2. Verification and confirmed repairs.
 
 Verify feature-owned policy, tool metadata, fragments, schemas, and check dispatch. Derive parsed types and choices from definitions. Reject conflicting identities and invalid variants; keep shared parsers outside check definitions.
 
-Owner: `configurations/ and policy/`. Dependencies: contract audit. Completion evidence: Runtime/editor schemas, choices, fragments, identity collisions, and dispatch agree with feature-owned definitions.
+Owner: `kits/ and policy/`. Dependencies: contract audit. Completion evidence: Runtime/editor schemas, choices, fragments, identity collisions, and dispatch agree with feature-owned definitions.
 
 Acceptance: `K-100`, `K-79`, `K-39`, `K-14`, `K-107`, `K-13`, `K-38`, `K-17`, `K-85`, `K-113`, `K-177`, `K-203`, `K-197`, `K-223`, `K-199`, `K-220`, `K-105`, `K-183`, `K-106`, `K-55`, `K-77`, `K-124`, `K-131`, `K-165`, `K-94`, `K-169`, `K-119`, `K-255`, `K-99`, `K-104`.
 
@@ -138,11 +138,11 @@ Done 2026-09-26, `K-197`. No template names another configuration. The template 
   and `code_files`; the base ESLint template joins them.
 - The TypeScript imports are the typescript configuration's own imports template.
 - The import style default is a setting default: `js` from javascript, `extensionless` from nextjs.
-  The static-site configuration sets none, because a site served as files imports with a suffix.
+  The static-site kit sets none, because a site served as files imports with a suffix.
 - Component script languages are `tools.eslint.script_languages`, declared by vue, svelte, and
   typescript.
 - The at-rules Stylelint accepts are `tools.stylelint.ignore_at_rules`. The css and nextjs
-  configurations declare it.
+  kits declare it.
 - The extra Ruff families and test ignores are `tools.ruff.select`, `tools.ruff.test_files`, and
   `tools.ruff.test_ignores`, declared by python, pytest, and fastapi.
 - Knip entries come from `entry_files` in the javascript manifest plus `tools.knip.entry`.
@@ -209,7 +209,7 @@ Checked without change on 2026-09-26:
 
 `K-224` and `K-228` have no text in the architecture folder.
 
-Done 2026-09-26, `K-233` (step 2.4): the css configuration detects and owns `.css` alone. The
+Done 2026-09-26, `K-233` (step 2.4): the css kit detects and owns `.css` alone. The
 css checks read `.module.css` and no Sass; a `.scss` file is a language init lists without a
 configuration.
 
@@ -394,7 +394,7 @@ at both levels. Remaining native-platform evidence is explicitly deferred to pha
 
 Use the verified publication contracts before changing adoption or command consumers.
 
-### Bounded configuration conversion
+### Bounded kit conversion
 
 Step 5.1. Scoped conversion implementation.
 
@@ -463,7 +463,7 @@ Acceptance: `D-100`, `K-47`, `K-259`, `K-246`, `A-5`, `K-296`, `K-274`.
 
 Done 2026-09-26, steps 5.2 to 5.6:
 
-- Setting messages say a configuration has a setting. A unit test checks that vocabulary (`K-89`).
+- Setting messages say a kit has a setting. A unit test checks that vocabulary (`K-89`).
 - The structure manifest declares and tests `integrity/generated-drift` (`K-246`).
 - Merge conflict markers in generated files produce drift findings naming `gspot apply` and
   `gspot install`. `apply` rewrites those files (`K-274`).
@@ -537,7 +537,7 @@ Step 6.4. Verification and confirmed repairs.
 
 Verify configuration, tool, scope, and declared-input invalidation; relocate platform build caches. Preserve owned 30-day retention and narrowed-run behavior. Measure bounded commit and initialization cost under stated cold/warm conditions.
 
-Owner: `packages/cli/src/execution/cache.ts`. Dependencies: stable source and normal acquisition. Completion evidence: Tool/configuration/scope/declared-input changes invalidate results; owned retention and cold/warm timing meet the contract.
+Owner: `packages/cli/src/execution/cache.ts`. Dependencies: stable source and normal acquisition. Completion evidence: Tool/kit/scope/declared-input changes invalidate results; owned retention and cold/warm timing meet the contract.
 
 Acceptance: `K-43`, `K-44`, `K-71`, `K-196`, `T-12`, `K-69`.
 
@@ -590,7 +590,7 @@ Owner: `policy/ and generation/`. Dependencies: schemas and shared enforcement. 
 
 Acceptance: `K-198`, `K-52`, `K-221`, `K-135`, `K-141`, `K-142`, `K-123`, `K-152`, `K-227`, `K-174`, `K-161`, `K-167`, `K-112`, `K-200`, `K-175`, `T-19`, `T-33`, `K-75`, `K-91`, `K-301`, `K-101`, `K-151`, `K-201`, `K-74`.
 
-### Integration and configuration coverage
+### Integration and kit coverage
 
 Step 6.9. Verification and confirmed repairs.
 
@@ -600,7 +600,7 @@ gaps are recorded in phase 4. Verify scoped security packs, non-npm
 licenses, database lint, and Swift test overrides against native results. Do not expand this into
 adding every available linter.
 
-Owner: `configurations/ and checks/`. Dependencies: acceptance reconciliation. Completion evidence: Each agreed capability has native defect/correction evidence, including Jest, nginx, accessibility, security packs, licenses, databases, and Swift overrides.
+Owner: `kits/ and checks/`. Dependencies: acceptance reconciliation. Completion evidence: Each agreed capability has native defect/correction evidence, including Jest, nginx, accessibility, security packs, licenses, databases, and Swift overrides.
 
 Acceptance: `K-218`, `K-211`, `K-212`, `K-233`, `K-236`, `K-80`, `K-248`, `K-256`.
 
@@ -618,7 +618,7 @@ Acceptance: `K-109`, `K-76`, `K-78`, `K-56`, `K-57`, `K-58`, `K-60`, `K-292`, `K
 
 Step 6.11. Verification and confirmed repairs.
 
-Verify progress output, truthful summaries and cached results, Git hook diagnostics, per-kind check coverage, scoped explanations, and useful configuration errors. Message-stage runs must preserve the prior report.
+Verify progress output, truthful summaries and cached results, Git hook diagnostics, per-kind check coverage, scoped explanations, and useful policy errors. Message-stage runs must preserve the prior report.
 
 Owner: `output/ and commands/doctor/`. Dependencies: execution and comparison owners. Completion evidence: Progress, summaries, caching, coverage, explanations, hook readiness, and message-stage report preservation are exercised.
 
@@ -756,7 +756,7 @@ Candidate guide verification:
 - `K-231`: the lint retains curated boundary terms. A word list from every tool name also
   matches ordinary words such as `next` and `globals`, so it is not a valid replacement.
 - `K-241`: named ESLint rules follow the generated level inventory. Native guide examples verify
-  the effective configurations. They cover Swift access declarations and required Python signatures.
+  the effective kits. They cover Swift access declarations and required Python signatures.
 - `K-261`: the push-stage rules check automatically discovers every Good block and invokes the
   existing native owners. It passes 33 tests with 181 assertions.
 

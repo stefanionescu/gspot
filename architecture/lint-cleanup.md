@@ -74,7 +74,7 @@ The rendered Python example retains four-space indentation at every tested width
 
 This example exposed deptry scanning private installed tools outside Git repositories. The
 Python check excludes `.gspot` while retaining authored native exclusions. Its regression keeps
-an undeclared application import failing, accepts the correction, and verifies configuration
+an undeclared application import failing, accepts the correction, and verifies kit
 changes invalidate the Git-backed cache.
 
 The affected native run passes 35 tests and 262 assertions. The Python source file passes
@@ -398,7 +398,7 @@ line-scoped exceptions when the dependency exports the enum.
 The Astro schema route retains its published URL through an exact directory
 exception. Its callback uses the framework APIRoute type. The obsolete npm
 single-file exception is removed. Exact language-test directories identify the
-configuration being tested, rather than the implementation language. Remove
+kit being tested, rather than the implementation language. Remove
 these exceptions if the route contract or test ownership changes. Neighboring
 invalid support folders remain covered by regression tests.
 

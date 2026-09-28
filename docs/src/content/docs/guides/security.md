@@ -7,7 +7,7 @@ Run commands from your repository root with [gspot installed](/guides/install/).
 
 ## Choose the scan
 
-Security checks cover different inputs. Select the configurations your repository needs:
+Security checks cover different inputs. Select the kits your repository needs:
 
 | Configuration  | Checks                                                                                                               | When                                              |
 | -------------- | -------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
@@ -32,7 +32,7 @@ gspot check --stage push --only security/semgrep
 Add local rule paths with `tools.semgrep.rules`. Set `tools.semgrep.registry` to the public
 packs you want, then run `gspot check --stage manual --only security/semgrep-registry`.
 Registry checks require network access. Keep exceptions scoped to the affected rule and paths
-with a reason; see [configuration](/guides/customize/#record-one-exception).
+with a reason; see [customize](/guides/customize/#record-one-exception).
 
 ## Swift security rules
 
@@ -44,7 +44,7 @@ The generated pack is `.gspot/config/semgrep/ios.yml`.
 
 ## CodeQL analysis
 
-In a repository with the `security` configuration selected, add the languages to scan in `gspot.toml`:
+In a repository with the `security` kit selected, add the languages to scan in `gspot.toml`:
 
 ```toml
 [tools.codeql]
@@ -60,6 +60,6 @@ gspot check --stage manual --only security/codeql --no-cache
 ```
 
 CodeQL runs against a disposable copy of the selected sources. Findings use repository-relative
-paths. The security configuration pins the CLI and its matching query packs; the first scan downloads
+paths. The security kit pins the CLI and its matching query packs; the first scan downloads
 missing packs. An unreadable report or failed native analysis returns status 2. Repair the
 reported tool failure before treating the scan as complete.
