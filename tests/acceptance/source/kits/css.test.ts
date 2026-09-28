@@ -6,6 +6,7 @@ import { commitAll } from '#tests/support/cli/git.ts';
 import type { FindingCase } from '#tests/types/cli.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
+import { keptMode } from '#tests/support/cli/platforms.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
 import { run, runProcess } from '#tests/support/cli/command.ts';
 import { statSync, chmodSync, symlinkSync, readFileSync } from 'node:fs';
@@ -124,7 +125,7 @@ test.each([
         const removed = await run(sandbox.path, ['uninstall', '--yes'], environment);
         expect(removed.code, removed.stdout + removed.stderr).toBe(0);
         expect(readFileSync(join(sandbox.path, configuration), 'utf8')).toBe(original);
-        expect(statSync(join(sandbox.path, configuration)).mode & 0o777).toBe(0o640);
+        expect(statSync(join(sandbox.path, configuration)).mode & 0o777).toBe(keptMode(0o640));
         expect(readFileSync(join(sandbox.path, 'package.json'), 'utf8')).toBe(STYLELINT_MANIFEST);
         // An inherited parent configuration is left as it was.
         expect(!inherited || readFileSync(join(sandbox.path, prefix, 'styles/config.json'), 'utf8') === parent).toBe(

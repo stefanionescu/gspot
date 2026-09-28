@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { installCommand } from '#cli/commands/install.ts';
+import { keptMode } from '#tests/support/cli/platforms.ts';
 import { uninstallCommand } from '#cli/commands/uninstall.ts';
 import { hookLocation } from '#cli/repository/hook-location.ts';
 import { statSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
@@ -50,7 +51,7 @@ test.each(['before', 'after'] as const)(
         const removed = await uninstallCommand({ cwd: sandbox.path, yes: true, isDryRun: false });
         expect(removed.exitCode, removed.text).toBe(0);
         expect(readFileSync(hook, 'utf8')).toBe(original);
-        expect(statSync(hook).mode & 0o777).toBe(0o751);
+        expect(statSync(hook).mode & 0o777).toBe(keptMode(0o751));
         expect(existsSync(`${hook}.gspot-original`)).toBe(false);
     },
 );
@@ -95,6 +96,6 @@ test('uninstall recovers after restoring an original hook and before removing it
     const retry = await uninstallCommand({ cwd: sandbox.path, yes: true, isDryRun: false });
     expect(retry.exitCode, retry.text).toBe(0);
     expect(readFileSync(hook, 'utf8')).toBe(original);
-    expect(statSync(hook).mode & 0o777).toBe(0o751);
+    expect(statSync(hook).mode & 0o777).toBe(keptMode(0o751));
     expect(existsSync(`${hook}.gspot-original`)).toBe(false);
 });

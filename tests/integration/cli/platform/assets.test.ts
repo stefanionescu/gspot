@@ -26,6 +26,7 @@ describe('development assets', () => {
         });
         const cwd = join(sandbox.path, CHECKOUT);
         symlinkSync(join(ROOT, 'packages/cli/node_modules'), join(cwd, 'packages/cli/node_modules'), 'junction');
+        symlinkSync(join(ROOT, 'node_modules'), join(cwd, 'node_modules'), 'junction');
         const missing = Bun.spawnSync([process.execPath, '--no-install', join(cwd, 'assets-reader.ts')], {
             cwd,
             stdout: 'pipe',

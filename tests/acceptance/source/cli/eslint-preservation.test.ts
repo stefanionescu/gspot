@@ -4,6 +4,7 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
+import { keptMode } from '#tests/support/cli/platforms.ts';
 import type { ApplyPreviewJson } from '#cli/types/commands/apply.ts';
 import { statSync, chmodSync, readFileSync, writeFileSync } from 'node:fs';
 
@@ -52,7 +53,7 @@ test.each(['eslint.config.js', 'eslint.config.mjs', 'eslint.config.cjs'])(
             expect(corrected!.messages).toStrictEqual([]);
         }
         expect(readFileSync(join(repository.path, path), 'utf8')).toBe(original);
-        expect(statSync(join(repository.path, path)).mode & 0o777).toBe(0o640);
+        expect(statSync(join(repository.path, path)).mode & 0o777).toBe(keptMode(0o640));
         const repeated = await run(repository.path, ['apply', '--dry-run', '--json']);
         expect(repeated.code, repeated.stdout + repeated.stderr).toBe(0);
         expect((JSON.parse(repeated.stdout) as ApplyPreviewJson).drift).toStrictEqual([]);

@@ -1,4 +1,5 @@
 // The types of platform in this package.
+import type { Result } from 'execa';
 import type { Stats } from 'node:fs';
 
 export type Read = { bytes: Buffer; mode: number; isLink?: true };
@@ -30,6 +31,11 @@ export type ProcessTermination = {
     drainTimer: ReturnType<typeof setTimeout> | undefined;
 };
 export type BinarySpawnResult = Omit<SpawnResult, 'stdout'> & { stdout: Uint8Array };
+/** What Execa reports about a finished or unstarted process, before this package classifies it. */
+export type SpawnCompletion = Pick<
+    Result<{ encoding: 'utf8'; reject: false }>,
+    'code' | 'exitCode' | 'failed' | 'shortMessage' | 'stdout' | 'stderr' | 'timedOut' | 'isCanceled'
+> & { cause?: unknown };
 export type EmbeddedIndex = Record<string, string>;
 export type Proposed = ReadonlyMap<string, Read | undefined>;
 export type PathFormat = 'portable' | 'native';

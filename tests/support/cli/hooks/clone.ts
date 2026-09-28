@@ -1,10 +1,10 @@
-import { chmodSync } from 'node:fs';
 import { createFileTree } from 'testdirs';
 import { join, delimiter } from 'node:path';
 import { run } from '#cli/platform/spawn.ts';
 import type { SpawnResult } from '#cli/types/platform.ts';
 import { cliSource } from '#tests/support/cli/process.ts';
 import { applyCommand } from '#cli/commands/apply/command.ts';
+import { plantLauncher } from '#tests/support/cli/platforms.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import type { PrepareHookCloneResult } from '#tests/types/results.ts';
 
@@ -63,9 +63,12 @@ export async function prepareHookClone(
         'source.txt': 'allowed\n',
         'check-source.mjs':
             'for (const path of process.argv.slice(2)) { if ((await Bun.file(path).text()).includes("forbidden")) { console.log(`${path}:1:1: forbidden source token`); process.exitCode = 1; } }\n',
-        'bin/gspot': `#!${process.execPath}\nconst child = Bun.spawnSync([process.execPath, ${JSON.stringify(main)}, ...process.argv.slice(2)], { stdin: 'inherit', stdout: 'inherit', stderr: 'inherit' }); process.exit(child.exitCode);\n`,
     });
-    chmodSync(join(repository, 'bin/gspot'), 0o755);
+    await plantLauncher(
+        repository,
+        'bin/gspot',
+        `const child = Bun.spawnSync([process.execPath, ${JSON.stringify(main)}, ...process.argv.slice(2)], { stdin: 'inherit', stdout: 'inherit', stderr: 'inherit' }); process.exit(child.exitCode);\n`,
+    );
     for (const command of [
         ['git', 'init', '--quiet'],
         ...(hookTool === 'pre-commit'

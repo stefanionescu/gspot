@@ -6,6 +6,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { initArgs } from '#tests/support/cli/init.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
+import { keptMode } from '#tests/support/cli/platforms.ts';
 import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
 import type { ApplyPreviewJson } from '#cli/types/commands/apply.ts';
 import { statSync, chmodSync, symlinkSync, readFileSync } from 'node:fs';
@@ -44,7 +45,7 @@ test(
         const removed = await run(sandbox.path, ['uninstall', '--yes']);
         expect(removed.code, removed.stdout + removed.stderr).toBe(0);
         expect(readFileSync(join(sandbox.path, '.editorconfig'), 'utf8')).toBe(editorconfig);
-        expect(statSync(join(sandbox.path, '.editorconfig')).mode & 0o777).toBe(0o640);
+        expect(statSync(join(sandbox.path, '.editorconfig')).mode & 0o777).toBe(keptMode(0o640));
         expect(readFileSync(join(sandbox.path, 'prettier.config.mjs'), 'utf8')).toBe(formatter);
     },
     PLANTED_TIMEOUT_MS,

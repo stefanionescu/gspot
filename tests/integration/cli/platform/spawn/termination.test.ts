@@ -8,6 +8,13 @@ import { waitForExit } from '#tests/support/cli/process.ts';
 
 const captures = { text: run, binary: runBinary };
 
+// What the supervisor leaves on a child it stopped: a signal on a POSIX host, an exit code on Windows.
+function terminated(child: childProcess.ChildProcess | undefined): boolean {
+    if (child === undefined) return false;
+    if (process.platform === 'win32') return child.exitCode !== null;
+    return child.signalCode !== null;
+}
+
 test.each(['text', 'binary'] as const)('a failed %s stream read terminates the owned child', async (capture) => {
     await using sandbox = await testdir();
     const children = spyOn(childProcess, 'spawn');
@@ -29,8 +36,7 @@ test.each(['text', 'binary'] as const)('a failed %s stream read terminates the o
         expect(result.code).not.toBe(0);
         expect(result.missing).toBe(false);
         expect(result.stderr).toContain('Planted stream failure');
-        expect(child).toBeDefined();
-        expect(child?.signalCode).not.toBeNull();
+        expect(terminated(child)).toBe(true);
     } finally {
         children.mockRestore();
         if (child?.exitCode === null && child.signalCode === null) child.kill('SIGKILL');

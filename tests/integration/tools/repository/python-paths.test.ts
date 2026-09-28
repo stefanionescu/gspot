@@ -4,6 +4,7 @@ import { run } from '#cli/platform/spawn.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { rejection } from '#tests/support/expectations.ts';
 import { commitAll, gitOutput } from '#tests/support/cli/git.ts';
+import { venvExecutable } from '#tests/support/cli/platforms.ts';
 import { useRevision } from '#cli/repository/revisions/contents.ts';
 
 test.each(['index', 'commit'] as const)(
@@ -27,7 +28,12 @@ test.each(['index', 'commit'] as const)(
         const source = kind === 'index' ? { kind } : { kind, hash: gitOutput(root, ['rev-parse', 'HEAD']).trim() };
         await Bun.write(join(root, 'selected_source.py'), 'VALUE = "working"\n');
         const sites = await run(
-            [join(root, '.venv/bin/python'), '-I', '-c', 'import site; print(site.getsitepackages()[0])'],
+            [
+                venvExecutable(join(root, '.venv'), 'python'),
+                '-I',
+                '-c',
+                'import site; print(site.getsitepackages()[0])',
+            ],
             { cwd: root },
         );
         expect(sites.code, sites.stderr).toBe(0);
@@ -42,7 +48,7 @@ test.each(['index', 'commit'] as const)(
         await useRevision(root, source, async (snapshot) => {
             const result = await run(
                 [
-                    join(snapshot, '.venv/bin/python'),
+                    venvExecutable(join(snapshot, '.venv'), 'python'),
                     '-I',
                     '-c',
                     'import selected_source; print(selected_source.VALUE)',

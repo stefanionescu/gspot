@@ -10,10 +10,14 @@ import { mkdirSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { swiftInput, removeBuildFolders } from '#tests/support/cli/swift.ts';
 import { rejection, containing, textContaining } from '#tests/support/expectations.ts';
 
+// The build checks inspect the Swift toolchain before their mocked runs.
+const HAS_SWIFT = Bun.which('swift') !== null;
+
 afterEach(() => {
     removeBuildFolders();
 });
 
+if (HAS_SWIFT)
 test.each([0, 7])('a silent Swift build with exit %i retains its verdict', async (code) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': 'version = 1\nkits = ["swift"]\n' });
@@ -32,6 +36,7 @@ test.each([0, 7])('a silent Swift build with exit %i retains its verdict', async
 });
 
 describe.if(process.platform === 'darwin')('with the macOS toolchain', () => {
+if (HAS_SWIFT)
 test('a failed Swift build without source diagnostics returns execution exit 2 and recovers', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
@@ -79,6 +84,7 @@ test('a failed Swift build without source diagnostics returns execution exit 2 a
 });
 });
 
+if (HAS_SWIFT)
 test('a later Swift session reads a failed build after an earlier successful build', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': 'version = 1\nkits = ["swift"]\n' });
@@ -112,6 +118,7 @@ test('a later Swift session reads a failed build after an earlier successful bui
     }
 });
 
+if (HAS_SWIFT)
 test('Swift compiler diagnostics retain their source location on a failed build', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': 'version = 1\nkits = ["swift"]\n' });
@@ -132,6 +139,7 @@ test('Swift compiler diagnostics retain their source location on a failed build'
     }
 });
 
+if (HAS_SWIFT)
 test('canceled Swift compilation refuses to launch the compiler', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': 'version = 1\nkits = ["swift"]\n' });
@@ -146,6 +154,7 @@ test('canceled Swift compilation refuses to launch the compiler', async () => {
     expect(readFileSync(state, 'utf8')).toBe('retained compiler state');
 });
 
+if (HAS_SWIFT)
 test('Swift response files stay inside the compiler cache before log publication', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {

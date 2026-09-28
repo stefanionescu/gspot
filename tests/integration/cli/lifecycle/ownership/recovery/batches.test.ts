@@ -2,6 +2,7 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { cliSource } from '#tests/support/cli/process.ts';
+import { keptMode } from '#tests/support/cli/platforms.ts';
 import { statSync, chmodSync, readFileSync } from 'node:fs';
 import { openOwner } from '#cli/lifecycle/ownership/owner.ts';
 
@@ -62,7 +63,7 @@ owner.close();
             for (const path of paths) {
                 expect(owner.restore(path)).toBe('changed');
                 expect(readFileSync(join(directory.path, path), 'utf8')).toBe(`authored ${path}\n`);
-                expect(statSync(join(directory.path, path)).mode & 0o777).toBe(0o640);
+                expect(statSync(join(directory.path, path)).mode & 0o777).toBe(keptMode(0o640));
             }
             expect(owner.installedPaths()).toStrictEqual([]);
         } finally {

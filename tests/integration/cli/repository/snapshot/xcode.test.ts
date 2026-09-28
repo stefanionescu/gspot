@@ -9,59 +9,61 @@ import { containing } from '#tests/support/expectations.ts';
 import { unlinkSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
 import { orphanSources, projectSymlinks } from '#cli/checks/xcode/project/checks.ts';
 
-test('Xcode reports exact staged symlink targets before the first commit and clears corrected files', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nkits = ["xcode"]\n',
-        'App.xcodeproj/project.pbxproj': '{}\n',
-        'target.swift': 'let value = 1\n',
+// Windows file names cannot hold a newline or a quote.
+if (process.platform !== 'win32')
+    test('Xcode reports exact staged symlink targets before the first commit and clears corrected files', async () => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'gspot.toml': 'version = 1\nkits = ["xcode"]\n',
+            'App.xcodeproj/project.pbxproj': '{}\n',
+            'target.swift': 'let value = 1\n',
+        });
+        const path = 'link\n"é.swift';
+        symlinkSync('target.swift', join(sandbox.path, path));
+        gitOutput(sandbox.path, ['init']);
+        gitOutput(sandbox.path, ['add', '.']);
+        unlinkSync(join(sandbox.path, path));
+        symlinkSync('working-tree.swift', join(sandbox.path, path));
+        const session = await openSession(sandbox.path);
+        const selected = session.scopes[0]!;
+        const spec = selected.selected
+            .flatMap((manifest) => manifest.checks)
+            .find((check) => check.name === 'xcode/symlinks')!;
+        const input = engineInput(session, {
+            scope: session.scopes.find((entry) => entry.scope.path === '')!,
+            spec: spec,
+            files: session.repository.files,
+        });
+        expect(await projectSymlinks(input)).toStrictEqual([
+            {
+                check: 'xcode/symlinks',
+                file: path,
+                line: 1,
+                rule: 'symlink',
+                fixable: false,
+                message: 'A symlink to target.swift; Xcode and the checks each follow it their own way.',
+            },
+        ]);
+        unlinkSync(join(sandbox.path, path));
+        writeFileSync(join(sandbox.path, path), 'let value = 1\n');
+        gitOutput(sandbox.path, ['add', '.']);
+        expect(await projectSymlinks(input)).toStrictEqual([
+            containing({
+                file: path,
+                message: 'A symlink to target.swift; Xcode and the checks each follow it their own way.',
+            }),
+        ]);
+        input.reads = { root: sandbox.path, sources: new Map() };
+        expect(await projectSymlinks(input)).toStrictEqual([]);
+        const index = readFileSync(join(sandbox.path, '.git', 'index'));
+        writeFileSync(join(sandbox.path, '.git', 'index'), 'broken');
+        input.reads = { root: sandbox.path, sources: new Map() };
+        await rejects(projectSymlinks(input), { message: /Cannot read the Git index/u });
+        writeFileSync(join(sandbox.path, '.git', 'index'), index);
+        input.reads = { root: sandbox.path, sources: new Map() };
+        expect(await projectSymlinks(input)).toStrictEqual([]);
+        expect(readFileSync(join(sandbox.path, path), 'utf8')).toBe('let value = 1\n');
     });
-    const path = 'link\n"é.swift';
-    symlinkSync('target.swift', join(sandbox.path, path));
-    gitOutput(sandbox.path, ['init']);
-    gitOutput(sandbox.path, ['add', '.']);
-    unlinkSync(join(sandbox.path, path));
-    symlinkSync('working-tree.swift', join(sandbox.path, path));
-    const session = await openSession(sandbox.path);
-    const selected = session.scopes[0]!;
-    const spec = selected.selected
-        .flatMap((manifest) => manifest.checks)
-        .find((check) => check.name === 'xcode/symlinks')!;
-    const input = engineInput(session, {
-        scope: session.scopes.find((entry) => entry.scope.path === '')!,
-        spec: spec,
-        files: session.repository.files,
-    });
-    expect(await projectSymlinks(input)).toStrictEqual([
-        {
-            check: 'xcode/symlinks',
-            file: path,
-            line: 1,
-            rule: 'symlink',
-            fixable: false,
-            message: 'A symlink to target.swift; Xcode and the checks each follow it their own way.',
-        },
-    ]);
-    unlinkSync(join(sandbox.path, path));
-    writeFileSync(join(sandbox.path, path), 'let value = 1\n');
-    gitOutput(sandbox.path, ['add', '.']);
-    expect(await projectSymlinks(input)).toStrictEqual([
-        containing({
-            file: path,
-            message: 'A symlink to target.swift; Xcode and the checks each follow it their own way.',
-        }),
-    ]);
-    input.reads = { root: sandbox.path, sources: new Map() };
-    expect(await projectSymlinks(input)).toStrictEqual([]);
-    const index = readFileSync(join(sandbox.path, '.git', 'index'));
-    writeFileSync(join(sandbox.path, '.git', 'index'), 'broken');
-    input.reads = { root: sandbox.path, sources: new Map() };
-    await rejects(projectSymlinks(input), { message: /Cannot read the Git index/u });
-    writeFileSync(join(sandbox.path, '.git', 'index'), index);
-    input.reads = { root: sandbox.path, sources: new Map() };
-    expect(await projectSymlinks(input)).toStrictEqual([]);
-    expect(readFileSync(join(sandbox.path, path), 'utf8')).toBe('let value = 1\n');
-});
 
 test('Xcode source membership does not mix independent nested projects', async () => {
     await using sandbox = await testdir();

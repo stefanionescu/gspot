@@ -1,5 +1,5 @@
-import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { join, resolve } from 'node:path';
 import { rejects } from 'node:assert/strict';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
@@ -111,7 +111,7 @@ test('uninstall reports both restoration-conflict paths and restores the origina
     writeFileSync(join(sandbox.path, 'authored.txt'), 'later authored bytes');
     const conflict = await uninstallCommand({ cwd: sandbox.path, yes: true, isDryRun: false });
     expect(conflict.text).toContain('authored.txt');
-    expect(conflict.text).toContain(backup);
+    expect(conflict.text).toContain(resolve(sandbox.path, backup));
     expect(conflict.text).not.toContain('private original bytes');
     expect(conflict.json).toMatchObject({
         preserved: ['authored.txt'],

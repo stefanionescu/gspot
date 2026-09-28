@@ -5,6 +5,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/execution/session.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { checkExecution } from '#cli/execution/engines.ts';
+import { keptMode } from '#tests/support/cli/platforms.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { runToolCheck } from '#cli/execution/tool/runner.ts';
 import { statSync, chmodSync, existsSync, writeFileSync } from 'node:fs';
@@ -79,7 +80,7 @@ test.each([0, 1, 3] as const)(
         expect(workspace).not.toBe(sandbox.path);
         expect(existsSync(workspace)).toBe(false);
         expect(await Bun.file(join(sandbox.path, '.github/workflows/caller.yml')).text()).toBe(workflow);
-        expect(statSync(join(sandbox.path, '.github/workflows/caller.yml')).mode & 0o777).toBe(0o444);
+        expect(statSync(join(sandbox.path, '.github/workflows/caller.yml')).mode & 0o777).toBe(keptMode(0o444));
         expect(existsSync(join(sandbox.path, '.git'))).toBe(false);
         // An exit outside the contract is an error that names the exit code and carries no findings.
         expect(result.note?.includes('exit 3') ?? false).toBe(code === 3);

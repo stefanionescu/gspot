@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import { keptMode } from '#tests/support/cli/platforms.ts';
 import { openOwner } from '#cli/lifecycle/ownership/owner.ts';
 import { statSync, chmodSync, readFileSync, writeFileSync } from 'node:fs';
 
@@ -136,7 +137,7 @@ test('restoration plans preserve reviewed bytes and refuse the whole batch after
         expect(readFileSync(join(directory.path, 'generated.txt'), 'utf8')).toBe('user edit\n');
         owner.applyPlans([owner.proposeRestoration('authored.txt')]);
         expect(readFileSync(join(directory.path, 'authored.txt'), 'utf8')).toBe('original\n');
-        expect(statSync(join(directory.path, 'authored.txt')).mode & 0o777).toBe(0o640);
+        expect(statSync(join(directory.path, 'authored.txt')).mode & 0o777).toBe(keptMode(0o640));
         expect(owner.restore('generated.txt')).toBe('preserved');
     } finally {
         owner.close();

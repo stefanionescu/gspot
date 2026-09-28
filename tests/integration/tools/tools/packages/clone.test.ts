@@ -47,7 +47,10 @@ test.each((['npm', 'bun', 'pnpm', 'yarn'] as const).map((client) => [client, 'pa
             const status = await run(['git', 'status', '--porcelain'], { cwd: clone });
             expect(status.code, status.stderr).toBe(0);
             expect(status.stdout).toBe('');
-            expect(readFileSync(join(clone, '.gspot', LOCKS[client]))).toStrictEqual(lock);
+            // A Windows checkout may hold the lock with CRLF; the bytes are otherwise the committed ones.
+            expect(readFileSync(join(clone, '.gspot', LOCKS[client]), 'utf8').replaceAll('\r\n', '\n')).toBe(
+                lock.toString('utf8').replaceAll('\r\n', '\n'),
+            );
             expect(readFileSync(join(clone, '.gspot/package.json'))).toStrictEqual(manifest);
         }
         const formatter = join(clone, '.gspot/node_modules/.bin/prettier');

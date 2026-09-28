@@ -7,10 +7,14 @@ import { swiftBuild, swiftPeriphery } from '#cli/checks/swift/build.ts';
 import { swiftInput, removeBuildFolders } from '#tests/support/cli/swift.ts';
 import { statSync, mkdirSync, existsSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
 
+// The build checks inspect the Swift toolchain before their mocked runs.
+const HAS_SWIFT = Bun.which('swift') !== null;
+
 afterEach(() => {
     removeBuildFolders();
 });
 
+if (HAS_SWIFT)
 test('Swift build side effects stay in the source copy and do not become later inputs', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
@@ -50,6 +54,7 @@ test('Swift build side effects stay in the source copy and do not become later i
 });
 
 describe.if(process.platform === 'darwin')('with the macOS toolchain', () => {
+if (HAS_SWIFT)
 test('Periphery build side effects stay in its source copy and findings name original source paths', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
@@ -81,6 +86,7 @@ test('Periphery build side effects stay in its source copy and findings name ori
 });
 
 describe.if(process.platform === 'darwin')('with the macOS toolchain', () => {
+if (HAS_SWIFT)
 test('concurrent Swift compilation and Periphery retain separate source and artifact directories', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': 'version = 1\nkits = ["swift"]\n' });
@@ -106,6 +112,7 @@ test('concurrent Swift compilation and Periphery retain separate source and arti
 });
 
 describe.if(process.platform === 'darwin')('with the macOS toolchain', () => {
+if (HAS_SWIFT)
 test.each(['../External.xcodeproj', '/External.xcodeproj', 'C:External.xcodeproj', String.raw`..\External.xcodeproj`])(
     'Xcode project %s cannot redirect an isolated build outside the scope',
     async (project) => {

@@ -121,29 +121,31 @@ test('engine inputs expose selected files and reserve the repository inventory f
     }
 });
 
-test('shell reads distinguish filename lists containing newlines', async () => {
-    await using sandbox = await testdir();
-    const names = ['a.sh', 'b.sh\nc.sh', 'a.sh\nb.sh', 'c.sh'];
-    await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nkits = ["bash"]\n',
-        ...Object.fromEntries(
-            names.map((name, index) => [name, `function name${String(index)}() { echo ${String(index)}; }\n`]),
-        ),
+// Windows file names cannot hold a newline or a quote.
+if (process.platform !== 'win32')
+    test('shell reads distinguish filename lists containing newlines', async () => {
+        await using sandbox = await testdir();
+        const names = ['a.sh', 'b.sh\nc.sh', 'a.sh\nb.sh', 'c.sh'];
+        await createFileTree(sandbox.path, {
+            'gspot.toml': 'version = 1\nkits = ["bash"]\n',
+            ...Object.fromEntries(
+                names.map((name, index) => [name, `function name${String(index)}() { echo ${String(index)}; }\n`]),
+            ),
+        });
+        const session = await openSession(sandbox.path);
+        const scope = session.scopes[0]!;
+        const request = engineInput(session, {
+            scope,
+            spec: session.manifests.get('bash')!.checks[0]!,
+            files: session.repository.files,
+        });
+        const files = names.map((path) => session.repository.files.find((file) => file.path === path)!);
+        const first = await scriptIndex(request, files.slice(0, 2));
+        const second = await scriptIndex(request, files.slice(2));
+        expect(first.files.map((file) => file.path)).toStrictEqual(names.slice(0, 2));
+        expect(second.files.map((file) => file.path)).toStrictEqual(names.slice(2));
+        expect([...second.owners.keys()]).toStrictEqual(['name2', 'name3']);
     });
-    const session = await openSession(sandbox.path);
-    const scope = session.scopes[0]!;
-    const request = engineInput(session, {
-        scope,
-        spec: session.manifests.get('bash')!.checks[0]!,
-        files: session.repository.files,
-    });
-    const files = names.map((path) => session.repository.files.find((file) => file.path === path)!);
-    const first = await scriptIndex(request, files.slice(0, 2));
-    const second = await scriptIndex(request, files.slice(2));
-    expect(first.files.map((file) => file.path)).toStrictEqual(names.slice(0, 2));
-    expect(second.files.map((file) => file.path)).toStrictEqual(names.slice(2));
-    expect([...second.owners.keys()]).toStrictEqual(['name2', 'name3']);
-});
 
 test.each([
     ['javascript', 'javascript/checkjs', 'source.js', 'export const value = 1;\n'],
@@ -170,51 +172,53 @@ test.each([
     },
 );
 
-test('engines share source bytes within a run and refresh reused sessions after corrections', async () => {
-    await using sandbox = await testdir();
-    const path = 'app/café\nquery.sql';
-    await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nlevel = "all"\nkits = ["sql"]\n[[scope]]\npath = "app"\n',
-        [path]: 'select 1;\n',
+// Windows file names cannot hold a newline or a quote.
+if (process.platform !== 'win32')
+    test('engines share source bytes within a run and refresh reused sessions after corrections', async () => {
+        await using sandbox = await testdir();
+        const path = 'app/café\nquery.sql';
+        await createFileTree(sandbox.path, {
+            'gspot.toml': 'version = 1\nlevel = "all"\nkits = ["sql"]\n[[scope]]\npath = "app"\n',
+            [path]: 'select 1;\n',
+        });
+        const session = await openSession(sandbox.path);
+        const options = {
+            stage: 'all' as const,
+            skips: [],
+            only: ['sql/syntax', 'sql/block-comments', 'sql/file-length'],
+            fix: false,
+            isDryRun: true,
+            noCache: true,
+        };
+        const read = spyOn(fs, 'readFileSync');
+        try {
+            const clean = await executeRun(session, options);
+            expect(clean.report.exitCode).toBe(0);
+            expect(
+                clean.report.checks
+                    .filter((check) => check.scope === 'app')
+                    .map((check) => check.check)
+                    .toSorted((left, right) => left.localeCompare(right)),
+            ).toStrictEqual(['sql/block-comments', 'sql/file-length', 'sql/syntax']);
+            expect(read.mock.calls.filter(([file]) => file === join(sandbox.path, path))).toHaveLength(1);
+            read.mockClear();
+            await Bun.write(join(sandbox.path, path), 'select from;\n');
+            const defect = await executeRun(session, options);
+            expect(defect.report.exitCode).toBe(1);
+            expect(defect.report.checks.flatMap((check) => check.findings)).toContainEqual(
+                containing({ file: path, line: 1 }),
+            );
+            expect(read.mock.calls.filter(([file]) => file === join(sandbox.path, path))).toHaveLength(1);
+            read.mockClear();
+            await Bun.write(join(sandbox.path, path), 'select 2;\n');
+            const corrected = await executeRun(session, options);
+            expect(corrected.report.exitCode).toBe(0);
+            expect(read.mock.calls.filter(([file]) => file === join(sandbox.path, path))).toHaveLength(1);
+        } finally {
+            read.mockRestore();
+        }
+        expect(await Bun.file(join(sandbox.path, path)).text()).toBe('select 2;\n');
     });
-    const session = await openSession(sandbox.path);
-    const options = {
-        stage: 'all' as const,
-        skips: [],
-        only: ['sql/syntax', 'sql/block-comments', 'sql/file-length'],
-        fix: false,
-        isDryRun: true,
-        noCache: true,
-    };
-    const read = spyOn(fs, 'readFileSync');
-    try {
-        const clean = await executeRun(session, options);
-        expect(clean.report.exitCode).toBe(0);
-        expect(
-            clean.report.checks
-                .filter((check) => check.scope === 'app')
-                .map((check) => check.check)
-                .toSorted((left, right) => left.localeCompare(right)),
-        ).toStrictEqual(['sql/block-comments', 'sql/file-length', 'sql/syntax']);
-        expect(read.mock.calls.filter(([file]) => file === join(sandbox.path, path))).toHaveLength(1);
-        read.mockClear();
-        await Bun.write(join(sandbox.path, path), 'select from;\n');
-        const defect = await executeRun(session, options);
-        expect(defect.report.exitCode).toBe(1);
-        expect(defect.report.checks.flatMap((check) => check.findings)).toContainEqual(
-            containing({ file: path, line: 1 }),
-        );
-        expect(read.mock.calls.filter(([file]) => file === join(sandbox.path, path))).toHaveLength(1);
-        read.mockClear();
-        await Bun.write(join(sandbox.path, path), 'select 2;\n');
-        const corrected = await executeRun(session, options);
-        expect(corrected.report.exitCode).toBe(0);
-        expect(read.mock.calls.filter(([file]) => file === join(sandbox.path, path))).toHaveLength(1);
-    } finally {
-        read.mockRestore();
-    }
-    expect(await Bun.file(join(sandbox.path, path)).text()).toBe('select 2;\n');
-});
 
 test('source reads never cache isolated output or turn failed reads into success', async () => {
     await using sandbox = await testdir();

@@ -3,6 +3,7 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { run } from '#cli/platform/spawn.ts';
 import { rejection } from '#tests/support/expectations.ts';
+import { venvExecutable } from '#tests/support/cli/platforms.ts';
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { useRevision } from '#cli/repository/revisions/contents.ts';
 import { prepareEditableSnapshot } from '#tests/support/cli/python/snapshot.ts';
@@ -22,8 +23,13 @@ test.each([
         const { source, packageDirectory, working } = await prepareEditableSnapshot(root, kind, backend);
         await useRevision(root, source, async (snapshot) => {
             for (const command of [
-                [join(snapshot, '.venv/bin/python'), '-I', '-c', 'from editable_fixture import main; main()'],
-                [join(snapshot, '.venv/bin/fixture-entry')],
+                [
+                    venvExecutable(join(snapshot, '.venv'), 'python'),
+                    '-I',
+                    '-c',
+                    'from editable_fixture import main; main()',
+                ],
+                [venvExecutable(join(snapshot, '.venv'), 'fixture-entry')],
             ]) {
                 const result = await run(command, { cwd: snapshot });
                 expect(result.code, result.stdout + result.stderr).toBe(0);
@@ -31,7 +37,7 @@ test.each([
             }
         });
         expect(readFileSync(join(root, packageDirectory, '__init__.py'), 'utf8')).toBe(working);
-        const original = await run([join(root, '.venv/bin/fixture-entry')], { cwd: root });
+        const original = await run([venvExecutable(join(root, '.venv'), 'fixture-entry')], { cwd: root });
         expect(original.code, original.stderr).toBe(0);
         expect(original.stdout.trim()).toBe('working source');
     },
@@ -49,7 +55,12 @@ test.each([
         const { source } = await prepareEditableSnapshot(root, kind, backend);
         await useRevision(root, source, async (snapshot) => {
             const result = await run(
-                [join(snapshot, '.venv/bin/python'), '-I', '-c', 'from namespace_fixture.child import main; main()'],
+                [
+                    venvExecutable(join(snapshot, '.venv'), 'python'),
+                    '-I',
+                    '-c',
+                    'from namespace_fixture.child import main; main()',
+                ],
                 { cwd: snapshot },
             );
             expect(result.code, result.stderr).toBe(0);
@@ -85,7 +96,7 @@ test.each([
         );
         writeFileSync(mappingPath, originalMapping);
         await useRevision(root, source, async (snapshot) => {
-            const result = await run([join(snapshot, '.venv/bin/fixture-entry')], { cwd: snapshot });
+            const result = await run([venvExecutable(join(snapshot, '.venv'), 'fixture-entry')], { cwd: snapshot });
             expect(result.code, result.stderr).toBe(0);
             expect(result.stdout.trim()).toBe('selected source');
         });
@@ -118,9 +129,12 @@ test.each([
         );
         writeFileSync(metadata, `# Preserved comment\n\n${root}\n`);
         await useRevision(root, source, async (snapshot) => {
-            const result = await run([join(snapshot, '.venv/bin/python'), '-I', '-c', 'import sys; print(sys.path)'], {
-                cwd: snapshot,
-            });
+            const result = await run(
+                [venvExecutable(join(snapshot, '.venv'), 'python'), '-I', '-c', 'import sys; print(sys.path)'],
+                {
+                    cwd: snapshot,
+                },
+            );
             expect(result.code, result.stderr).toBe(0);
             expect(result.stdout).toContain(snapshot);
             expect(readFileSync(metadata, 'utf8')).toBe(`# Preserved comment\n\n${root}\n`);

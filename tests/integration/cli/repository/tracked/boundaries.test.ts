@@ -117,34 +117,36 @@ test('a managed secret baseline rejects linked bytes before evaluating entries',
     expect(fs.readFileSync(join(sandbox.path, 'baseline.json'), 'utf8')).toBe('[]\n');
 });
 
-test('a non-Git walk preserves newline directories, nested negations, pruning, and link boundaries', async () => {
-    await using sandbox = await testdir();
-    const root = join(sandbox.path, 'project');
-    await createFileTree(sandbox.path, {
-        'project/.gitignore': '*.log\npruned/\n',
-        'project/source\nfiles/.gitignore': '!keep.log\nlocal.ts\n',
-        'project/source\nfiles/keep.log': 'retained',
-        'project/source\nfiles/drop.log': 'ignored',
-        'project/source\nfiles/local.ts': 'ignored',
-        'project/source\nfiles/code.ts': 'export {};\n',
-        'project/pruned/.gitignore': '!keep.ts\n',
-        'project/pruned/keep.ts': 'ignored with its parent',
-        'outside/private.ts': 'external bytes',
+// Windows file names cannot hold a newline or a quote.
+if (process.platform !== 'win32')
+    test('a non-Git walk preserves newline directories, nested negations, pruning, and link boundaries', async () => {
+        await using sandbox = await testdir();
+        const root = join(sandbox.path, 'project');
+        await createFileTree(sandbox.path, {
+            'project/.gitignore': '*.log\npruned/\n',
+            'project/source\nfiles/.gitignore': '!keep.log\nlocal.ts\n',
+            'project/source\nfiles/keep.log': 'retained',
+            'project/source\nfiles/drop.log': 'ignored',
+            'project/source\nfiles/local.ts': 'ignored',
+            'project/source\nfiles/code.ts': 'export {};\n',
+            'project/pruned/.gitignore': '!keep.ts\n',
+            'project/pruned/keep.ts': 'ignored with its parent',
+            'outside/private.ts': 'external bytes',
+        });
+        fs.symlinkSync('../../outside', join(root, 'pruned', 'external'));
+        fs.symlinkSync('source\nfiles', join(root, 'linked-directory'));
+        const entries = trackedEntries(root);
+        expect(entries.map((entry) => entry.path).toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
+            '.gitignore',
+            'source\nfiles/.gitignore',
+            'source\nfiles/code.ts',
+            'source\nfiles/keep.log',
+        ]);
+        fs.symlinkSync('../outside/private.ts', join(root, 'external.ts'));
+        expect(trackedEntries(root).map((entry) => entry.path)).toStrictEqual(entries.map((entry) => entry.path));
+        fs.unlinkSync(join(root, 'external.ts'));
+        expect(trackedEntries(root).map((entry) => entry.path)).toStrictEqual(entries.map((entry) => entry.path));
     });
-    fs.symlinkSync('../../outside', join(root, 'pruned', 'external'));
-    fs.symlinkSync('source\nfiles', join(root, 'linked-directory'));
-    const entries = trackedEntries(root);
-    expect(entries.map((entry) => entry.path).toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
-        '.gitignore',
-        'source\nfiles/.gitignore',
-        'source\nfiles/code.ts',
-        'source\nfiles/keep.log',
-    ]);
-    fs.symlinkSync('../outside/private.ts', join(root, 'external.ts'));
-    expect(trackedEntries(root).map((entry) => entry.path)).toStrictEqual(entries.map((entry) => entry.path));
-    fs.unlinkSync(join(root, 'external.ts'));
-    expect(trackedEntries(root).map((entry) => entry.path)).toStrictEqual(entries.map((entry) => entry.path));
-});
 
 if (process.platform !== 'win32')
     test('a non-Git walk omits named pipes from readable source files', async () => {

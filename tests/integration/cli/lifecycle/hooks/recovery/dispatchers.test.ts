@@ -6,6 +6,7 @@ import type { HookCapture } from '#tests/types/cli.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { installCommand } from '#cli/commands/install.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
+import { keptMode } from '#tests/support/cli/platforms.ts';
 import { uninstallCommand } from '#cli/commands/uninstall.ts';
 import { textContaining } from '#tests/support/expectations.ts';
 import { readHookStatus } from '#tests/support/cli/hooks/projects.ts';
@@ -36,7 +37,7 @@ test.each(['default', 'external', 'worktree'] as const)(
         }
         expect(readFileSync(join(sandbox.path, '.git/config'))).toStrictEqual(config);
         expect(readFileSync(`${hook}.gspot-original`, 'utf8')).toBe(original);
-        expect(statSync(`${hook}.gspot-original`).mode & 0o777).toBe(0o751);
+        expect(statSync(`${hook}.gspot-original`).mode & 0o777).toBe(keptMode(0o751));
     },
 );
 
@@ -98,7 +99,7 @@ test.each(['default', 'external', 'worktree'] as const)(
         expect(readFileSync(join(directory, 'pre-commit'), 'utf8')).toBe(editedDispatcher);
         expect(removed.exitCode, removed.text).toBe(0);
         expect(readFileSync(hook, 'utf8')).toBe(editedOriginal);
-        expect(statSync(hook).mode & 0o777).toBe(0o751);
+        expect(statSync(hook).mode & 0o777).toBe(keptMode(0o751));
         expect(readFileSync(`${hook}.gspot-original`, 'utf8')).toBe(editedOriginal);
         expect(readFileSync(join(sandbox.path, '.git/config'))).toStrictEqual(config);
     },

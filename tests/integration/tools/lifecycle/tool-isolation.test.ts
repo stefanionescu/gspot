@@ -57,14 +57,14 @@ test(
     'the project TypeScript compiler remains authoritative when managed dependencies expose another tsc',
     async () => {
         await using repository = await testdir();
-        const managed = '#!/bin/sh\necho "Version 99.0.0"\nexit 7\n';
+        const managed = `#!${process.execPath}\nconsole.log('Version 99.0.0');\nprocess.exit(7);\n`;
         await createFileTree(repository.path, {
             '.gspot/node_modules/.bin/tsc': managed,
             'source.ts': 'export const port: number = "wrong";\n',
         });
         chmodSync(join(repository.path, '.gspot/node_modules/.bin/tsc'), 0o755);
         mkdirSync(join(repository.path, 'node_modules/.bin'), { recursive: true });
-        symlinkSync(join(MODULES, '.bin/tsc'), join(repository.path, 'node_modules/.bin/tsc'));
+        symlinkSync(join(MODULES, 'typescript/bin/tsc'), join(repository.path, 'node_modules/.bin/tsc'));
         const tool = kitManifests()
             .get('typescript')!
             .tools.find((entry) => entry.name === 'tsc')!;

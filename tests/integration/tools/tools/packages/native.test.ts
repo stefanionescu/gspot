@@ -24,7 +24,7 @@ test('CLI installation records the native wrapper binary and reports a usable to
     const binary = readOwnership(root).files.find(
         (entry) =>
             entry.path.startsWith('.gspot/node_modules/editorconfig-checker/bin/') &&
-            entry.path.endsWith('/editorconfig-checker'),
+            /\/editorconfig-checker(?:\.exe)?$/u.test(entry.path),
     );
     expect(binary?.installed).toBeDefined();
     const checker = kitManifests()

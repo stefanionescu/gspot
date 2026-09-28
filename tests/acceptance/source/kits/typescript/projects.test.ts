@@ -7,6 +7,7 @@ import { commitAll } from '#tests/support/cli/git.ts';
 import { initArgs } from '#tests/support/cli/init.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
+import { keptMode } from '#tests/support/cli/platforms.ts';
 import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { statSync, chmodSync, mkdirSync, readdirSync, symlinkSync, writeFileSync } from 'node:fs';
@@ -100,7 +101,7 @@ test.each(['', 'apps/web'])(
         ]);
         expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
         expect(await Bun.file(join(sandbox.path, scope, 'tsconfig.json')).text()).toBe(authored);
-        expect(statSync(join(sandbox.path, scope, 'tsconfig.json')).mode & 0o777).toBe(0o640);
+        expect(statSync(join(sandbox.path, scope, 'tsconfig.json')).mode & 0o777).toBe(keptMode(0o640));
         const failed = await run(sandbox.path, ['check', '--only', 'typescript/tsc', '--no-cache', '--json']);
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
         const report = JSON.parse(failed.stdout) as RunReport;
@@ -128,7 +129,7 @@ test.each(['', 'apps/web'])(
         const corrected = await run(sandbox.path, ['check', '--only', 'typescript/tsc', '--no-cache', '--json']);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect(await Bun.file(join(sandbox.path, scope, 'tsconfig.json')).text()).toBe(authored);
-        expect(statSync(join(sandbox.path, scope, 'tsconfig.json')).mode & 0o777).toBe(0o640);
+        expect(statSync(join(sandbox.path, scope, 'tsconfig.json')).mode & 0o777).toBe(keptMode(0o640));
         expect(await Bun.file(join(sandbox.path, scope, 'build/cache.tsbuildinfo')).text()).toBe('authored metadata\n');
     },
     PLANTED_TIMEOUT_MS,

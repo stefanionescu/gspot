@@ -1,9 +1,9 @@
 import { z } from 'zod';
-import { join } from 'node:path';
 import { statSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { CHECK_LOCATION } from '#cli/config/checks/supabase.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
+import { join, isAbsolute, relative as relativePath } from 'node:path';
 import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
 import { functionFolders, supabaseFinding } from '#cli/checks/supabase/project.ts';
 
@@ -24,10 +24,10 @@ function denoFileArguments(root: string, folder: string): string[] {
     return statSync(path, { throwIfNoEntry: false }) === undefined ? [] : ['--config', path];
 }
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Three readers turn a Deno locator into a repository path; one owner keeps the file scheme handling.
 function relative(root: string, locator: string): string {
     const path = locator.startsWith('file://') ? fileURLToPath(locator) : locator;
-    return path.startsWith(`${root}/`) ? path.slice(root.length + 1) : path;
+    const local = relativePath(root, path).replaceAll('\\', '/');
+    return local === '' || local.startsWith('../') || isAbsolute(local) ? path : local;
 }
 
 async function linted(input: EngineInput, folder: string): Promise<Finding[]> {

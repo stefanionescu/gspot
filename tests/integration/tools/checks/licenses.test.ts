@@ -7,6 +7,7 @@ import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { licensesPackages } from '#cli/checks/licenses.ts';
 import type { EngineInput } from '#cli/types/checks/checks.ts';
+import { venvExecutable } from '#tests/support/cli/platforms.ts';
 import { containing, textContaining } from '#tests/support/expectations.ts';
 
 async function input(root: string): Promise<EngineInput> {
@@ -38,13 +39,18 @@ test('native Python license scanning ignores project scanner exclusions and veri
     for (const command of [
         ['uv', 'venv', '.venv'],
         ['uv', 'venv', '.gspot/.venv'],
-        ['uv', 'pip', 'install', '--python', '.gspot/.venv/bin/python', 'pip-licenses==5.5.5'],
+        ['uv', 'pip', 'install', '--python', venvExecutable('.gspot/.venv', 'python'), 'pip-licenses==5.5.5'],
     ]) {
         const result = await run(command, { cwd: root, timeoutMs: 60_000 });
         expect(result.code, result.stdout + result.stderr).toBe(0);
     }
     const location = await run(
-        [join(root, '.venv/bin/python'), '-I', '-c', 'import sysconfig; print(sysconfig.get_path("purelib"))'],
+        [
+            venvExecutable(join(root, '.venv'), 'python'),
+            '-I',
+            '-c',
+            'import sysconfig; print(sysconfig.get_path("purelib"))',
+        ],
         { cwd: root },
     );
     expect(location.code, location.stderr).toBe(0);

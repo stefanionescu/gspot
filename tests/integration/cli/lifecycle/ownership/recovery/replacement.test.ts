@@ -3,6 +3,7 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { ownershipSchema } from '#cli/lifecycle/log.ts';
 import { cliSource } from '#tests/support/cli/process.ts';
+import { keptMode } from '#tests/support/cli/platforms.ts';
 import { runProcess } from '#tests/support/cli/command.ts';
 import { statSync, readFileSync, writeFileSync } from 'node:fs';
 import { openOwner, readOwnership } from '#cli/lifecycle/ownership/owner.ts';
@@ -62,7 +63,7 @@ try {
     );
     if (point === 'error') {
         expect(readFileSync(destination)).toStrictEqual(original);
-        expect(statSync(destination).mode & 0o777).toBe(0o444);
+        expect(statSync(destination).mode & 0o777).toBe(keptMode(0o444));
     }
     const state = ownershipSchema.parse(
         JSON.parse(readFileSync(join(directory.path, '.gspot/state/ownership.json'), 'utf8')),

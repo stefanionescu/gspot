@@ -1,5 +1,5 @@
 import { ESLint } from 'eslint';
-import { join } from 'node:path';
+import { sep, join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
@@ -34,7 +34,11 @@ test('apply preview names a generated ESLint rule change using installed depende
         'gspot.toml': policy + ignored,
         '.gspot/config/.keep': '',
     });
-    symlinkSync(join(import.meta.dir, '../../../../node_modules'), join(directory.path, '.gspot/node_modules'), 'dir');
+    symlinkSync(
+        join(import.meta.dir, '../../../../node_modules'),
+        join(directory.path, '.gspot/node_modules'),
+        process.platform === 'win32' ? 'junction' : 'dir',
+    );
     const originalSession = await openSession(directory.path);
     const original = emitAll(originalSession.policyFiles.policy, originalSession.repository, originalSession.scopes, {
         version: originalSession.version,
@@ -103,7 +107,7 @@ export default [{ files: ['**/*.js'], ignores: ['tests/**'], rules: { ...rules, 
     expect(result[0]?.['no-eval']).toStrictEqual([{ files: ['**/*.js'], ignores: ['tests/**'], setting: 'error' }]);
     expect(result[1]?.['no-eval']).toStrictEqual([{ files: ['**/*.js'], ignores: ['tests/**'], setting: 'off' }]);
     expect(result[0]?.['example/root']).toStrictEqual([
-        { files: ['**/*.js'], ignores: ['tests/**'], setting: ['error', { root: `${directory.path}/` }] },
+        { files: ['**/*.js'], ignores: ['tests/**'], setting: ['error', { root: `${directory.path}${sep}` }] },
     ]);
     expect(readFileSync(join(directory.path, '.gspot/config/eslint.config.mjs'), 'utf8')).toBe(installed);
 });

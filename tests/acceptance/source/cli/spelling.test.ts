@@ -6,6 +6,7 @@ import { initArgs } from '#tests/support/cli/init.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
 import { git, commitAll } from '#tests/support/cli/git.ts';
+import { keptMode } from '#tests/support/cli/platforms.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { containing, containingAll } from '#tests/support/expectations.ts';
 import { statSync, chmodSync, renameSync, unlinkSync, readFileSync } from 'node:fs';
@@ -36,7 +37,7 @@ async function expectSpellingRestoration(
     const removed = await run(root, ['uninstall', '--yes'], environment);
     expect(removed.code, removed.stdout + removed.stderr).toBe(0);
     expect(readFileSync(join(root, 'nested/typos.toml'), 'utf8')).toBe(original);
-    expect(statSync(join(root, 'nested/typos.toml')).mode & 0o777).toBe(0o640);
+    expect(statSync(join(root, 'nested/typos.toml')).mode & 0o777).toBe(keptMode(0o640));
 }
 
 test(

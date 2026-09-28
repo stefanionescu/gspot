@@ -7,6 +7,7 @@ import { openSession } from '#cli/execution/session.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { statSync, chmodSync, existsSync } from 'node:fs';
+import { keptMode } from '#tests/support/cli/platforms.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { checkJavascript } from '#cli/checks/typescript/tsc.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
@@ -76,7 +77,7 @@ test.each([false, true])(
             'Preserve this authored metadata.\n',
         );
         expect(await Bun.file(join(sandbox.path, generated.path)).text()).toBe(generated.content);
-        expect(statSync(join(sandbox.path, generated.path)).mode & 0o777).toBe(0o444);
+        expect(statSync(join(sandbox.path, generated.path)).mode & 0o777).toBe(keptMode(0o444));
         expect(existsSync(join(sandbox.path, 'jsconfig.json'))).toBe(authored);
         for (const [path, original] of Object.entries(authoredFiles))
             expect(await Bun.file(join(sandbox.path, path)).text()).toBe(original);

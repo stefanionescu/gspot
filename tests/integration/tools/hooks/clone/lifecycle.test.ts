@@ -1,10 +1,11 @@
+import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { join, delimiter } from 'node:path';
 import { run } from '#cli/platform/spawn.ts';
-import { testdir, createFileTree } from 'testdirs';
+import { plantLauncher } from '#tests/support/cli/platforms.ts';
+import { existsSync, unlinkSync, readFileSync, writeFileSync } from 'node:fs';
 import { installHookClone, prepareHookClone } from '#tests/support/cli/hooks/clone.ts';
 import { readHookStatus, installHookTool } from '#tests/support/cli/hooks/projects.ts';
-import { chmodSync, existsSync, unlinkSync, readFileSync, writeFileSync } from 'node:fs';
 
 test('edited cloned integrations refuse install and apply until restored', async () => {
     await using repository = await testdir();
@@ -37,10 +38,11 @@ test('cloned runner switches refuse edited originals and restore clean dispatch 
     expect(await installHookClone(project)).toMatchObject({ code: 0 });
     expect(await run([process.execPath, main, 'apply'], options)).toMatchObject({ code: 0 });
     await using launcher = await testdir();
-    await createFileTree(launcher.path, {
-        gspot: `#!${process.execPath}\nawait Bun.write('runner-read', JSON.stringify(process.argv.slice(2)));\n`,
-    });
-    chmodSync(join(launcher.path, 'gspot'), 0o755);
+    await plantLauncher(
+        launcher.path,
+        'gspot',
+        "await Bun.write('runner-read', JSON.stringify(process.argv.slice(2)));\n",
+    );
     const policy = readFileSync(join(clonePath, 'gspot.toml'));
     const originalPath = join(clonePath, '.gspot/integrations/simple-git-hooks/pre-commit.gspot-original');
     const original = readFileSync(originalPath);

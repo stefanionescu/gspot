@@ -92,26 +92,28 @@ test('nested policies retain repository context with policy-relative index and c
     expect(await Bun.file(join(project, 'source.txt')).text()).toBe('working');
 });
 
-test('unborn history is empty and committed blobs retain unusual filenames and bytes', async () => {
-    await using sandbox = await testdir();
-    gitOutput(sandbox.path, ['init']);
-    expect(await committedEntries(sandbox.path)).toStrictEqual([]);
-    const path = 'a\n"é.sql';
-    await createFileTree(sandbox.path, { [path]: 'select 1;\n' });
-    gitOutput(sandbox.path, ['add', '.']);
-    gitOutput(sandbox.path, ['commit', '-m', 'Fixture']);
-    const entries = await committedEntries(sandbox.path);
-    expect(entries.map((entry) => entry.path)).toStrictEqual([path]);
-    const blobs = await gitBlobs(
-        sandbox.path,
-        entries.map((entry) => entry.hash),
-    );
-    expect(blobs.get(entries[0]!.hash)?.toString()).toBe('select 1;\n');
-    await useRevision(sandbox.path, { kind: 'index' }, async (snapshot) => {
-        expect(await Bun.file(join(snapshot, path)).text()).toBe('select 1;\n');
+// Windows file names cannot hold a newline or a quote.
+if (process.platform !== 'win32')
+    test('unborn history is empty and committed blobs retain unusual filenames and bytes', async () => {
+        await using sandbox = await testdir();
+        gitOutput(sandbox.path, ['init']);
+        expect(await committedEntries(sandbox.path)).toStrictEqual([]);
+        const path = 'a\n"é.sql';
+        await createFileTree(sandbox.path, { [path]: 'select 1;\n' });
+        gitOutput(sandbox.path, ['add', '.']);
+        gitOutput(sandbox.path, ['commit', '-m', 'Fixture']);
+        const entries = await committedEntries(sandbox.path);
+        expect(entries.map((entry) => entry.path)).toStrictEqual([path]);
+        const blobs = await gitBlobs(
+            sandbox.path,
+            entries.map((entry) => entry.hash),
+        );
+        expect(blobs.get(entries[0]!.hash)?.toString()).toBe('select 1;\n');
+        await useRevision(sandbox.path, { kind: 'index' }, async (snapshot) => {
+            expect(await Bun.file(join(snapshot, path)).text()).toBe('select 1;\n');
+        });
+        writeFileSync(join(sandbox.path, '.git', 'index'), 'broken');
+        await rejects(gitEntries(sandbox.path, { kind: 'index' }), { message: /Cannot read the Git index/u });
+        writeFileSync(join(sandbox.path, '.git', 'HEAD'), 'broken');
+        await rejects(committedEntries(sandbox.path));
     });
-    writeFileSync(join(sandbox.path, '.git', 'index'), 'broken');
-    await rejects(gitEntries(sandbox.path, { kind: 'index' }), { message: /Cannot read the Git index/u });
-    writeFileSync(join(sandbox.path, '.git', 'HEAD'), 'broken');
-    await rejects(committedEntries(sandbox.path));
-});

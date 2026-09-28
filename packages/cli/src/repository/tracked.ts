@@ -30,10 +30,24 @@ function symlinkEntry(root: string, path: string): RawEntry | undefined {
     }
 }
 
+// A listed file whose parent is now a file is reported the same way on every platform.
+function assertParents(root: string, path: string): void {
+    const parts = path.split('/').slice(0, -1);
+    const parents = parts.map((_, index) => parts.slice(0, index + 1).join('/')).toReversed();
+    const nearest = parents.find((parent) => lstatSync(join(root, parent), { throwIfNoEntry: false }) !== undefined);
+    if (nearest === undefined || lstatSync(join(root, nearest)).isDirectory()) return;
+    throw Object.assign(new Error(`ENOTDIR: not a directory, lstat '${join(root, path)}' (${nearest} is a file)`), {
+        code: 'ENOTDIR',
+    });
+}
+
 function entryFor(root: string, path: string): RawEntry | undefined {
     const full = join(root, path);
     const stat = lstatSync(full, { throwIfNoEntry: false });
-    if (stat === undefined) return undefined;
+    if (stat === undefined) {
+        assertParents(root, path);
+        return undefined;
+    }
     if (stat.isSymbolicLink()) {
         if (DEPENDENCY_FOLDERS.includes(path.slice(path.lastIndexOf('/') + 1))) return undefined;
         // Inventory installed links without reading their dependency targets outside this root.

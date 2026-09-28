@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
+import { keptMode } from '#tests/support/cli/platforms.ts';
 import type { ApplyPreviewJson } from '#cli/types/commands/apply.ts';
 import { statSync, chmodSync, readFileSync, writeFileSync } from 'node:fs';
 
@@ -41,7 +42,7 @@ test.each([
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     expect(applied.stdout).toContain(`retained ${path}: editor configuration remains active`);
     expect(readFileSync(original, 'utf8')).toBe(text);
-    expect(statSync(original).mode & 0o777).toBe(0o640);
+    expect(statSync(original).mode & 0o777).toBe(keptMode(0o640));
     for (const file of ['source.js', 'future.js']) {
         const filePath = join(repository.path, file);
         if (file === 'future.js') writeFileSync(filePath, PRETTIER_CARRY_SOURCE);

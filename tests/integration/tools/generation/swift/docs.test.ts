@@ -5,6 +5,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { allRuleExamples } from '#cli/agents/examples.ts';
+import { keptMode } from '#tests/support/cli/platforms.ts';
 import { run as runProcess } from '#cli/platform/spawn.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { writeSwiftlint } from '#tests/support/cli/swift.ts';
@@ -123,7 +124,7 @@ if (process.platform !== 'win32') {
         await writeSwiftlint(root);
         chmodSync(join(root, 'Value.swift'), 0o444);
         const found = await documentationFindings(root, 1);
-        expect(statSync(join(root, 'Value.swift')).mode & 0o777).toBe(0o444);
+        expect(statSync(join(root, 'Value.swift')).mode & 0o777).toBe(keptMode(0o444));
         chmodSync(join(root, 'Value.swift'), 0o644);
         expect(found.map(({ line, column }) => [line, column])).toStrictEqual([
             [4, 14],

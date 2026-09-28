@@ -26,7 +26,8 @@ function importImages(sandbox: string, tags: readonly string[]): void {
     }
 }
 
-describe.if(Bun.which('docker') !== null)('with docker', () => {
+// A Windows Docker daemon runs Windows containers, which the Linux image cannot use.
+describe.if(Bun.which('docker') !== null && process.platform !== 'win32')('with docker', () => {
     test('native image reports distinguish a generated test key, invalid configuration, and a clean image', async () => {
         await using sandbox = await testdir();
         const prefix = `gspot-image-acceptance-${randomUUID()}`;

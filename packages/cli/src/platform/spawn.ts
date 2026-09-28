@@ -1,14 +1,16 @@
 // Execa owns capture and platform shims; this boundary supervises each asynchronous process tree.
+import { statSync } from 'node:fs';
 import { onExit } from 'signal-exit';
-import { execa, execaSync, type Result } from 'execa';
+import { execa, execaSync } from 'execa';
 import type { ChildProcess } from 'node:child_process';
-import { dirname, delimiter, isAbsolute } from 'node:path';
+import { dirname, resolve, delimiter, isAbsolute } from 'node:path';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { REAP_MS, DRAIN_MS, FAILED_CODE, MISSING_CODE, TASKKILL_GONE_CODE } from '#cli/config/platform.ts';
 
 import type {
     SpawnResult,
     SpawnOptions,
+    SpawnCompletion,
     AsyncSpawnOptions,
     BinarySpawnResult,
     ProcessTermination,
@@ -32,20 +34,41 @@ function commandOptions(options: SpawnOptions, executable: string) {
     };
 }
 
-function completed(
-    result: Pick<
-        Result<{ encoding: 'utf8'; reject: false }>,
-        'code' | 'exitCode' | 'failed' | 'shortMessage' | 'stdout' | 'stderr' | 'timedOut' | 'isCanceled'
-    >,
-    started: number,
-    diagnostic: string,
-): SpawnResult {
+// A command that names a file which does not exist. A bare name is left to PATH lookup at spawn time.
+function missingExecutable(executable: string, cwd: string): boolean {
+    if (!/[\\/]/u.test(executable)) return false;
+    return statSync(resolve(cwd, executable), { throwIfNoEntry: false }) === undefined;
+}
+
+// The result of a command whose executable file does not exist, decided before any process starts.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The three run functions share the shape of a command that never started.
+function notFound(executable: string): SpawnCompletion {
+    return {
+        code: 'ENOENT',
+        failed: true,
+        shortMessage: `Executable not found: ${executable}`,
+        stdout: '',
+        stderr: '',
+        timedOut: false,
+        isCanceled: false,
+    };
+}
+
+// A process that never ran, or that a launch or stream error stopped, is an execution error and not a verdict.
+function failedToRun(result: SpawnCompletion): boolean {
+    if (result.exitCode === undefined) return true;
+    if (result.code !== undefined) return true;
+    return result.cause !== undefined;
+}
+
+function completed(result: SpawnCompletion, started: number, diagnostic: string): SpawnResult {
     const missing = result.code === 'ENOENT';
-    const isErrored = result.failed && (result.exitCode === undefined || result.code !== undefined);
+    const unfinished = failedToRun(result);
+    const isErrored = result.failed && unfinished;
     const code = missing ? MISSING_CODE : (result.exitCode ?? FAILED_CODE);
     const diagnostics: (string | undefined)[] = [diagnostic];
     // Successful Execa results always contain exit code zero.
-    if (result.exitCode === undefined) diagnostics.push(result.shortMessage);
+    if (unfinished) diagnostics.push(result.shortMessage);
     return {
         code: isErrored && code === 0 ? FAILED_CODE : code,
         stdout: result.stdout,
@@ -146,6 +169,7 @@ export async function run(command: string[], options: AsyncSpawnOptions): Promis
     const started = performance.now();
     const [executable, ...argv] = command;
     if (executable === undefined) throw new Error('An empty command cannot run.');
+    if (missingExecutable(executable, options.cwd)) return completed(notFound(executable), started, '');
     const base = commandOptions(options, executable);
     const child = execa(executable, argv, { ...base, detached: process.platform !== 'win32' });
     const supervision = supervise(child, options);
@@ -174,6 +198,7 @@ export function runBlocking(command: string[], options: SpawnOptions): SpawnResu
     const started = performance.now();
     const [executable, ...argv] = command;
     if (executable === undefined) throw new Error('An empty command cannot run.');
+    if (missingExecutable(executable, options.cwd)) return completed(notFound(executable), started, '');
     const deadline = options.timeoutMs === undefined ? {} : { timeout: options.timeoutMs };
     const result = execaSync(executable, argv, { ...commandOptions(options, executable), ...deadline });
     return completed(result, started, result.stderr);
@@ -189,6 +214,8 @@ export async function runBinary(command: string[], options: AsyncSpawnOptions): 
     const started = performance.now();
     const [executable, ...argv] = command;
     if (executable === undefined) throw new Error('An empty command cannot run.');
+    if (missingExecutable(executable, options.cwd))
+        return { ...completed(notFound(executable), started, ''), stdout: Buffer.alloc(0) };
     const base = commandOptions(options, executable);
     const child = execa(executable, argv, {
         ...base,

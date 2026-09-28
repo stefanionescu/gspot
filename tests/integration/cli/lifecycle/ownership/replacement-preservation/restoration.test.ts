@@ -2,6 +2,7 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import type { Read } from '#cli/types/platform.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { keptMode } from '#tests/support/cli/platforms.ts';
 import { openOwner } from '#cli/lifecycle/ownership/owner.ts';
 import type { Owner } from '#cli/types/lifecycle/lifecycle.ts';
 
@@ -48,8 +49,8 @@ if (process.platform !== 'win32') {
             expect(owner.read('config.txt')).toStrictEqual({ bytes: original, mode: 0o640 });
             expect(readFileSync(join(directory.path, '.gspot/authored.txt'), 'utf8')).toBe('keep\n');
             expect(owner.paths()).toStrictEqual([]);
-            expect(statSync(join(directory.path, '.gspot/state/ownership.json')).mode & 0o777).toBe(0o600);
-            expect(statSync(join(directory.path, '.gspot/state/recovery')).mode & 0o777).toBe(0o700);
+            expect(statSync(join(directory.path, '.gspot/state/ownership.json')).mode & 0o777).toBe(keptMode(0o600));
+            expect(statSync(join(directory.path, '.gspot/state/recovery')).mode & 0o777).toBe(keptMode(0o700));
         } finally {
             owner.close();
         }
@@ -85,7 +86,9 @@ if (process.platform !== 'win32') {
             expect(owner.restore(path)).toBe('changed');
             expect(readlinkSync(absolute)).toBe('../tool/original.sh');
             expect(lstatSync(absolute).mode & 0o7777).toBe(originalMode);
-            expect(statSync(join(directory.path, '.gspot/node_modules/tool/original.sh')).mode & 0o777).toBe(0o755);
+            expect(statSync(join(directory.path, '.gspot/node_modules/tool/original.sh')).mode & 0o777).toBe(
+                keptMode(0o755),
+            );
             expectEditedLinkPreserved(owner, path, absolute, next);
         } finally {
             owner.close();

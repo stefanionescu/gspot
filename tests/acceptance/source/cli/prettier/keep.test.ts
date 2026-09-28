@@ -4,6 +4,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { initArgs } from '#tests/support/cli/init.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
+import { keptMode } from '#tests/support/cli/platforms.ts';
 import { formatSources } from '#tests/support/cli/prettier.ts';
 import { installPrivateTools } from '#tests/support/cli/tools.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
@@ -181,7 +182,7 @@ test(
         expect(restored.code, restored.stdout + restored.stderr).toBe(0);
         for (const [path, text] of Object.entries(configs)) {
             expect(readFileSync(join(repository.path, path), 'utf8')).toBe(text);
-            expect(statSync(join(repository.path, path)).mode & 0o777).toBe(0o640);
+            expect(statSync(join(repository.path, path)).mode & 0o777).toBe(keptMode(0o640));
         }
     },
     PLANTED_TIMEOUT_MS,

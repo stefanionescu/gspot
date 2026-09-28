@@ -4,6 +4,7 @@ import { parse as parseYaml } from 'yaml';
 import { parse as parseToml } from 'smol-toml';
 import { testdir, createFileTree } from 'testdirs';
 import { ownershipSchema } from '#cli/lifecycle/log.ts';
+import { keptMode } from '#tests/support/cli/platforms.ts';
 import { applyBlock } from '#cli/lifecycle/managed-blocks.ts';
 import { openOwner } from '#cli/lifecycle/ownership/owner.ts';
 import { statSync, chmodSync, readFileSync, writeFileSync } from 'node:fs';
@@ -187,7 +188,7 @@ test('adopting identical authored configuration retains original recovery bytes 
         expect(readFileSync(join(directory.path, original!.backup), 'utf8')).toBe(content);
         expect(owner.restore('package.json')).toBe('changed');
         expect(readFileSync(join(directory.path, 'package.json'), 'utf8')).toBe(content);
-        expect(statSync(join(directory.path, 'package.json')).mode & 0o777).toBe(0o640);
+        expect(statSync(join(directory.path, 'package.json')).mode & 0o777).toBe(keptMode(0o640));
     } finally {
         owner.close();
     }

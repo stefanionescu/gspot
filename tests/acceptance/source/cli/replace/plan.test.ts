@@ -9,6 +9,7 @@ import { parseJsonc } from '#cli/repository/jsonc.ts';
 import { script } from '#tests/support/cli/planted.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
+import { keptMode } from '#tests/support/cli/platforms.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
 import { textContaining } from '#tests/support/expectations.ts';
 import { treeContents } from '#tests/support/cli/preservation.ts';
@@ -152,11 +153,11 @@ test.each(['setup.cfg', 'tox.ini'])(
             note: textContaining('remove that section manually'),
         });
         expect(readFileSync(join(sandbox.path, path), 'utf8')).toBe(original);
-        expect(statSync(join(sandbox.path, path)).mode & 0o777).toBe(0o640);
+        expect(statSync(join(sandbox.path, path)).mode & 0o777).toBe(keptMode(0o640));
         const removed = await run(sandbox.path, ['uninstall', '--yes']);
         expect(removed.code, removed.stdout + removed.stderr).toBe(0);
         expect(readFileSync(join(sandbox.path, path), 'utf8')).toBe(original);
-        expect(statSync(join(sandbox.path, path)).mode & 0o777).toBe(0o640);
+        expect(statSync(join(sandbox.path, path)).mode & 0o777).toBe(keptMode(0o640));
     },
     PLANTED_TIMEOUT_MS,
 );

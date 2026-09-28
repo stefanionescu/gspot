@@ -8,10 +8,14 @@ import { rejection, textContaining } from '#tests/support/expectations.ts';
 import { mkdirSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { swiftInput, removeBuildFolders } from '#tests/support/cli/swift.ts';
 
+// The build checks inspect the Swift toolchain before their mocked runs.
+const HAS_SWIFT = Bun.which('swift') !== null;
+
 afterEach(() => {
     removeBuildFolders();
 });
 
+if (HAS_SWIFT)
 test('analysis refuses an incomplete compiler log after a failed build', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': 'version = 1\nkits = ["swift"]\n' });
@@ -26,6 +30,7 @@ test('analysis refuses an incomplete compiler log after a failed build', async (
     }
 });
 
+if (HAS_SWIFT)
 test.each([0, 7])('a silent SwiftLint analyzer with exit %i retains its verdict', async (code) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': 'version = 1\nkits = ["swift"]\n' });
@@ -45,6 +50,7 @@ test.each([0, 7])('a silent SwiftLint analyzer with exit %i retains its verdict'
     }
 });
 
+if (HAS_SWIFT)
 test.each(['build', 'analyzer'])('a timed-out Swift %s reports an error', async (step) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': 'version = 1\nkits = ["swift"]\n' });
@@ -60,6 +66,7 @@ test.each(['build', 'analyzer'])('a timed-out Swift %s reports an error', async 
     }
 });
 
+if (HAS_SWIFT)
 test('manual analysis clears its own compiler state without consuming the incremental build result', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': 'version = 1\nkits = ["swift"]\n' });

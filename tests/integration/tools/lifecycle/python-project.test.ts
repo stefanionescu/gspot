@@ -6,6 +6,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { everyManifest } from '#cli/kits/select.ts';
 import { gitOutput } from '#tests/support/cli/git.ts';
 import { rejection } from '#tests/support/expectations.ts';
+import { venvExecutable } from '#tests/support/cli/platforms.ts';
 import type { InstallJson } from '#cli/types/commands/commands.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
@@ -78,13 +79,13 @@ test.each(PYTHON_PROJECTS)(
         await using registry = await createPythonRegistry(artifacts.path);
         await using prepared = await preparePythonInstallation(repository.path, configuration, runner, registry.url);
         await installPythonProject(prepared.root);
-        const installed = join(repository.path, '.gspot/.venv/bin/ruff');
+        const installed = venvExecutable(join(repository.path, '.gspot/.venv'), 'ruff');
         const copiedEnvironment = join(artifacts.path, 'relocated environment');
         cpSync(join(repository.path, '.gspot/.venv'), copiedEnvironment, {
             recursive: true,
             verbatimSymlinks: true,
         });
-        const relocated = await run([join(copiedEnvironment, 'bin/gspot-relocation-marker')], {
+        const relocated = await run([venvExecutable(copiedEnvironment, 'gspot-relocation-marker')], {
             cwd: artifacts.path,
         });
         expect(relocated.code, relocated.stderr).toBe(0);
@@ -138,7 +139,7 @@ test.each([
                 configuration: readFileSync(join(clone, configuration)),
             }).toStrictEqual({ manifest, lock, configuration: rootConfiguration });
         }
-        const checker = join(clone, '.gspot/.venv/bin/ruff');
+        const checker = venvExecutable(join(clone, '.gspot/.venv'), 'ruff');
         writeFileSync(join(clone, 'source.py'), 'import os\n');
         const defect = await run([checker, 'check', '--output-format', 'json', 'source.py'], { cwd: clone });
         expect(defect.code, defect.stderr).toBe(1);
@@ -149,7 +150,9 @@ test.each([
         expect(fixed.code, fixed.stderr).toBe(0);
         const clean = await run([checker, 'check', 'source.py'], { cwd: clone });
         expect(clean.code, clean.stderr).toBe(0);
-        const prefix = await run([join(clone, '.gspot/.venv/bin/gspot-relocation-marker')], { cwd: clone });
+        const prefix = await run([venvExecutable(join(clone, '.gspot/.venv'), 'gspot-relocation-marker')], {
+            cwd: clone,
+        });
         expect(prefix.code, prefix.stderr).toBe(0);
         expect(realpathSync(prefix.stdout.trim())).toBe(realpathSync(join(clone, '.gspot/.venv')));
     },
@@ -167,7 +170,7 @@ test.each(PYTHON_PROJECTS)(
         const lockPath = join(repository.path, '.gspot/uv.lock');
         const lock = readFileSync(lockPath);
         await installPythonProject(repository.path);
-        const installed = join(repository.path, '.gspot/.venv/bin/ruff');
+        const installed = venvExecutable(join(repository.path, '.gspot/.venv'), 'ruff');
         writeFileSync(join(repository.path, 'source.py'), '');
         chmodSync(lockPath, 0o644);
         writeFileSync(lockPath, '<<<<<<< interrupted lock\n');

@@ -55,7 +55,7 @@ async function brokenLinks(input: EngineInput, isExternal: boolean): Promise<Fin
         .filter((link) => link.state === 'BROKEN')
         .map((link) => ({
             check: input.spec.name,
-            file: link.parent ?? '',
+            file: (link.parent ?? '').replaceAll('\\', '/'),
             line: 1,
             rule: 'broken-link',
             message: `${link.url} answers ${String(link.status ?? 0)}.`,

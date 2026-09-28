@@ -4,6 +4,7 @@ import { git } from '#tests/support/cli/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { reportSchema } from '#cli/execution/report.ts';
+import { keptMode } from '#tests/support/cli/platforms.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
 import type { CommandFailureJson } from '#cli/types/commands/commands.ts';
 import { statSync, chmodSync, existsSync, unlinkSync, readFileSync, writeFileSync } from 'node:fs';
@@ -166,7 +167,7 @@ stage = "commit"
     expect(result.code, result.stdout + result.stderr).toBe(0);
     expect(reportSchema.parse(JSON.parse(result.stdout)).checks[0]?.status).toBe('ok');
     expect(readFileSync(join(directory.path, 'payload.dat'))).toStrictEqual(Buffer.from([0, 1, 2]));
-    expect(statSync(join(directory.path, 'task.sh')).mode & 0o777).toBe(0o644);
+    expect(statSync(join(directory.path, 'task.sh')).mode & 0o777).toBe(keptMode(0o644));
     expect(existsSync(join(directory.path, 'created.txt'))).toBe(false);
 });
 

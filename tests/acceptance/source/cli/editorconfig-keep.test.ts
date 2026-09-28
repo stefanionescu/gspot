@@ -5,6 +5,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { initArgs } from '#tests/support/cli/init.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
+import { keptMode } from '#tests/support/cli/platforms.ts';
 import { statSync, chmodSync, symlinkSync, readFileSync } from 'node:fs';
 
 import {
@@ -57,7 +58,7 @@ test.each([false, true])(
         expect(restored.code, restored.stdout + restored.stderr).toBe(0);
         for (const [file, text] of Object.entries(originals)) {
             expect(readFileSync(join(repository.path, file), 'utf8')).toBe(text);
-            expect(statSync(join(repository.path, file)).mode & 0o777).toBe(0o640);
+            expect(statSync(join(repository.path, file)).mode & 0o777).toBe(keptMode(0o640));
         }
         for (const file of EDITORCONFIG_CARRY_FILES)
             expect(readFileSync(join(repository.path, file), 'utf8')).toBe(PRETTIER_CARRY_SOURCE);

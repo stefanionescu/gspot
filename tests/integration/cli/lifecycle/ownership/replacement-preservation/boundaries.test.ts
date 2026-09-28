@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import { keptMode } from '#tests/support/cli/platforms.ts';
 import { statSync, chmodSync, existsSync, readFileSync } from 'node:fs';
 import { openOwner, readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 
@@ -38,7 +39,7 @@ test.each(['.automation/hooks', '.gspot/hooks', '.git/hooks', 'external', 'proje
             owner.close();
         }
         expect(readFileSync(join(location.absolute, 'pre-commit'), 'utf8')).toBe(original);
-        expect(statSync(join(location.absolute, 'pre-commit')).mode & 0o777).toBe(0o750);
+        expect(statSync(join(location.absolute, 'pre-commit')).mode & 0o777).toBe(keptMode(0o750));
         expect(existsSync(join(location.root, location.stateDirectory, 'ownership.json'))).toBe(true);
     },
 );
@@ -68,8 +69,8 @@ test.each(['.gspot', '.gspot/.gspot', '.automation/.gspot'])(
         }
         expect(readFileSync(join(repository.path, 'config.txt'), 'utf8')).toBe('unowned configuration\n');
         expect(readFileSync(join(repository.path, log), 'utf8')).toBe('obsolete log bytes\n');
-        expect(statSync(join(repository.path, log)).mode & 0o777).toBe(0o640);
+        expect(statSync(join(repository.path, log)).mode & 0o777).toBe(keptMode(0o640));
         expect(readFileSync(join(repository.path, backup), 'utf8')).toBe('authored recovery bytes\n');
-        expect(statSync(join(repository.path, backup)).mode & 0o777).toBe(0o400);
+        expect(statSync(join(repository.path, backup)).mode & 0o777).toBe(keptMode(0o400));
     },
 );

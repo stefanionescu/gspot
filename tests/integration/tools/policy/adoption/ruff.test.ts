@@ -26,7 +26,7 @@ function diagnostics(
     result: Pick<Bun.SyncSubprocess<'pipe', 'pipe'>, 'stdout'>,
 ): { path: string; code: string }[] {
     return (JSON.parse(result.stdout.toString()) as { filename: string; code: string }[]).map(({ filename, code }) => ({
-        path: relative(realpathSync(root), filename),
+        path: relative(realpathSync(root), filename).replaceAll('\\', '/'),
         code,
     }));
 }
@@ -84,7 +84,7 @@ test('adopted Ruff basename and directory selectors retain their scope in pinned
     const findings = JSON.parse(failed.stdout.toString()) as { filename: string }[];
     expect(
         findings
-            .map(({ filename }) => relative(realpathSync(sandbox.path), filename))
+            .map(({ filename }) => relative(realpathSync(sandbox.path), filename).replaceAll('\\', '/'))
             .toSorted((left, right) => left.localeCompare(right)),
     ).toStrictEqual(['backend/kept.py', 'ignored.py']);
     for (const path of ['backend/kept.py', 'ignored.py']) await Bun.write(join(sandbox.path, path), 'pass\n');

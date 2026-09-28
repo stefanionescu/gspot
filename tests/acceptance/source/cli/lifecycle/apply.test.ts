@@ -5,6 +5,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { initArgs } from '#tests/support/cli/init.ts';
+import { keptMode } from '#tests/support/cli/platforms.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { statSync, chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 
@@ -33,7 +34,7 @@ test('apply and uninstall preserve later edits and unowned content while restori
     expect(readFileSync(generated, 'utf8')).toBe(edited);
     expect(readFileSync(join(directory.path, '.gspot/authored.txt'), 'utf8')).toBe('Preserve this file.\n');
     expect(readFileSync(join(directory.path, '.shellcheckrc'), 'utf8')).toBe(original);
-    expect(statSync(join(directory.path, '.shellcheckrc')).mode & 0o777).toBe(0o640);
+    expect(statSync(join(directory.path, '.shellcheckrc')).mode & 0o777).toBe(keptMode(0o640));
     expect(readFileSync(join(directory.path, '.gitignore'), 'utf8')).toContain('.gspot/state/');
 });
 

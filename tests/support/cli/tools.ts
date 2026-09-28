@@ -1,6 +1,5 @@
 import { fileURLToPath } from 'node:url';
 import { readPolicy } from '#cli/policy/read.ts';
-import { run } from '#tests/support/cli/command.ts';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { join, dirname, delimiter } from 'node:path';
 import { kitManifests } from '#cli/kits/manifests.ts';
@@ -9,6 +8,8 @@ import { privateToolInstallation } from '#cli/tools/pins.ts';
 import { toolPin, inspectTool } from '#cli/tools/inspect.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
+import { run, gspot, runProcess } from '#tests/support/cli/command.ts';
+import { INSTALL_TIMEOUT_MS } from '#tests/config/integration/tools/tools.ts';
 import { installPythonProject, preparePythonProject } from '#cli/tools/python-project.ts';
 
 const root = fileURLToPath(new URL('../../..', import.meta.url));
@@ -52,7 +53,11 @@ export async function install(cwd: string, argv: string[], environment: Record<s
 /** Install generated, locked tool projects through the public command. */
 export async function installPrivateTools(cwd: string): Promise<void> {
     // No release of gspot exists yet, so a sandbox with a mise runner skips its own pin as this repository does.
-    const outcome = await run(cwd, ['install'], { MISE_DISABLE_TOOLS: 'github:stefanionescu/gspot' });
+    const outcome = await runProcess([process.execPath, gspot, 'install'], {
+        cwd,
+        env: { NO_COLOR: '1', CI: '1', MISE_DISABLE_TOOLS: 'github:stefanionescu/gspot' },
+        timeoutMs: INSTALL_TIMEOUT_MS,
+    });
     if (outcome.code !== 0)
         throw new Error(
             `Sandbox installation failed with status ${String(outcome.code)}: ${outcome.stderr}${outcome.stdout}`,

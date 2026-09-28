@@ -2,16 +2,17 @@
 import { createFileTree } from 'testdirs';
 import { join, delimiter } from 'node:path';
 import { run } from '#cli/platform/spawn.ts';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { openSession } from '#cli/execution/session.ts';
 import { hookStatus } from '#cli/lifecycle/hooks/status.ts';
 import { applyCommand } from '#cli/commands/apply/command.ts';
 import { hookLocation } from '#cli/repository/hook-location.ts';
 import type { Session } from '#cli/types/execution/execution.ts';
-import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
 import type { PrepareHuskyResult } from '#tests/types/results.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { installNativeHooks } from '#cli/lifecycle/hooks/managers.ts';
 import type { HookLocation } from '#cli/types/repository/repository.ts';
+import { plantLauncher, venvExecutable } from '#tests/support/cli/platforms.ts';
 import { PRE_COMMIT_POLICY, SIMPLE_GIT_HOOKS_POLICY } from '#tests/config/integration/tools/hooks.ts';
 
 /**
@@ -57,9 +58,12 @@ export async function prepareSimpleGitHooks(
             ) + '\n',
         'original.js':
             'await Bun.write("package-input", await Bun.stdin.text()); await Bun.write("package-args", JSON.stringify(process.argv.slice(2)));',
-        'bin/gspot': `#!${process.execPath}\n(await import('node:fs')).appendFileSync('gspot-runs', 'x'); await Bun.write('gspot-input', await Bun.stdin.text()); await Bun.write('gspot-args', JSON.stringify(process.argv.slice(2))); process.exitCode = (await Bun.file('failed').exists()) ? 1 : 0;\n`,
     });
-    chmodSync(join(root, 'bin/gspot'), 0o755);
+    await plantLauncher(
+        root,
+        'bin/gspot',
+        `(await import('node:fs')).appendFileSync('gspot-runs', 'x'); await Bun.write('gspot-input', await Bun.stdin.text()); await Bun.write('gspot-args', JSON.stringify(process.argv.slice(2))); process.exitCode = (await Bun.file('failed').exists()) ? 1 : 0;\n`,
+    );
     const ran = await run(['git', 'init', '-q', repository], { cwd: root });
     if (ran.code !== 0) throw new Error(`Hook fixture Git setup failed: ${ran.stderr}`);
     const installed = await run(['npm', 'install', '--ignore-scripts', '--no-audit', '--no-fund'], {
@@ -85,13 +89,16 @@ export async function preparePreCommit(
         'gspot.toml': PRE_COMMIT_POLICY,
         '.gitignore': '.venv/\nbin/\npre-commit-cache/\nobserved\nfailed\n',
         'source.txt': 'input',
-        'bin/gspot': `#!${process.execPath}\nconst {appendFileSync} = await import('node:fs'); appendFileSync('read', JSON.stringify({args: process.argv.slice(2), input: await Bun.stdin.text()}) + '\\n'); process.exitCode = (await Bun.file('setup-failed').exists()) ? 2 : (await Bun.file('failed').exists()) ? 1 : 0;\n`,
     });
-    chmodSync(join(root, 'bin/gspot'), 0o755);
+    await plantLauncher(
+        root,
+        'bin/gspot',
+        `const {appendFileSync} = await import('node:fs'); appendFileSync('read', JSON.stringify({args: process.argv.slice(2), input: await Bun.stdin.text()}) + '\\n'); process.exitCode = (await Bun.file('setup-failed').exists()) ? 2 : (await Bun.file('failed').exists()) ? 1 : 0;\n`,
+    );
     for (const command of [
         ['git', 'init', '-q', repository],
         ['uv', 'venv', '.venv'],
-        ['uv', 'pip', 'install', '--python', '.venv/bin/python', 'pre-commit==4.5.1'],
+        ['uv', 'pip', 'install', '--python', venvExecutable('.venv', 'python'), 'pre-commit==4.5.1'],
     ]) {
         const result = await run(command, { cwd: root, timeoutMs: 60_000 });
         if (result.code !== 0) throw new Error(`Pre-commit fixture setup failed: ${result.stderr}`);
@@ -129,11 +136,14 @@ export async function prepareHusky(root: string, top: string, kind: string): Pro
         '.husky/commit-msg': 'printf "%s" "$1" > authored-message\ncd authored-cwd\nset -- changed\n',
         'scratch/.keep': '',
         'config/husky/init.sh': 'printf initialized > initialized\n',
-        'bin/gspot': `#!${process.execPath}\n(await import('node:fs')).appendFileSync('gspot-runs', 'x'); await Bun.write('captured.json', JSON.stringify({args:process.argv.slice(2), input:process.argv.includes('--push') ? await Bun.stdin.text() : ''})); process.exitCode = Number(await Bun.file('verdict').text());\n`,
         verdict: '0',
     });
     await createFileTree(top, { 'authored-cwd/.keep': '' });
-    chmodSync(join(root, 'bin/gspot'), 0o755);
+    await plantLauncher(
+        root,
+        'bin/gspot',
+        `(await import('node:fs')).appendFileSync('gspot-runs', 'x'); await Bun.write('captured.json', JSON.stringify({args:process.argv.slice(2), input:process.argv.includes('--push') ? await Bun.stdin.text() : ''})); process.exitCode = Number(await Bun.file('verdict').text());\n`,
+    );
     const ran = await run(['git', 'init', '-q'], { cwd: top });
     if (ran.code !== 0) throw new Error(`Husky fixture Git setup failed: ${ran.stderr}`);
     const installed = await run(['npm', 'install', '--ignore-scripts', '--no-audit', '--no-fund'], {

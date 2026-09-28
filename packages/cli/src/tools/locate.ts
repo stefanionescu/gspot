@@ -2,11 +2,11 @@
 import { homedir } from 'node:os';
 import type { ToolPin } from '#cli/types/kits.ts';
 import type { Root } from '#cli/types/platform.ts';
-import { join, dirname, relative } from 'node:path';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { miseHome } from '#cli/platform/environment.ts';
 import { MANAGED_PREFIX } from '#cli/config/tools/tools.ts';
 import { statSync, readFileSync, realpathSync } from 'node:fs';
+import { join, dirname, relative, isAbsolute } from 'node:path';
 import type { Package, PrivateKind } from '#cli/types/tools/tools.ts';
 import { NODE_MODULES_DIRECTORY, PYTHON_ENVIRONMENT_DIRECTORY } from '#cli/config/platform.ts';
 
@@ -92,6 +92,8 @@ function versionAbove(files: Root | undefined, root: string, start: string, name
  * @returns the paths that exist.
  */
 export function locateCandidates(root: string, roots: string[], name: string, privateKind?: PrivateKind): string[] {
+    // A command that names its executable by path is that file or nothing.
+    if (isAbsolute(name)) return statSync(name, { throwIfNoEntry: false }) === undefined ? [] : [name];
     const names = IS_WINDOWS ? [`${name}.cmd`, `${name}.exe`, name] : [name];
     const found = repositoryCandidates(root, searchDirectories(root, roots, privateKind), names);
     if (privateKind !== undefined) return found;

@@ -3,6 +3,7 @@ import { writeFileSync } from 'node:fs';
 import { createFileTree } from 'testdirs';
 import { run } from '#cli/platform/spawn.ts';
 import { gitOutput } from '#tests/support/cli/git.ts';
+import { venvExecutable } from '#tests/support/cli/platforms.ts';
 import type { PrepareEditableSnapshotResult } from '#tests/types/results.ts';
 
 const HATCHLING_BUILD =
@@ -43,7 +44,7 @@ export async function preparePythonSnapshot(
     gitOutput(root, ['add', '.']);
     gitOutput(root, ['-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.test', 'commit', '-qm', 'fixture']);
     const source = kind === 'index' ? { kind } : { kind, hash: gitOutput(root, ['rev-parse', 'HEAD']) };
-    const python = join(root, '.venv/bin/python');
+    const python = venvExecutable(join(root, '.venv'), 'python');
     return { source, python };
 }
 
@@ -82,17 +83,17 @@ export async function prepareEditableSnapshot(
     if (backend !== 'hatchling') {
         const compiled = await run(
             [
-                join(root, '.venv/bin/python'),
+                venvExecutable(join(root, '.venv'), 'python'),
                 '-I',
                 '-S',
                 '-c',
-                'import glob, py_compile; [py_compile.compile(path, invalidation_mode=py_compile.PycInvalidationMode.UNCHECKED_HASH) for path in glob.glob(".venv/lib/python*/site-packages/*_finder.py") + glob.glob(".venv/lib/python*/site-packages/_editable_impl_*.py")]',
+                'import glob, py_compile; [py_compile.compile(path, invalidation_mode=py_compile.PycInvalidationMode.UNCHECKED_HASH) for pattern in ("lib/python*", "Lib") for path in glob.glob(f".venv/{pattern}/site-packages/*_finder.py") + glob.glob(f".venv/{pattern}/site-packages/_editable_impl_*.py")]',
             ],
             { cwd: root },
         );
         if (compiled.code !== 0) throw new Error(`Editable bytecode fixture failed: ${compiled.stderr}`);
     }
-    const python = join(root, '.venv/bin/python');
+    const python = venvExecutable(join(root, '.venv'), 'python');
     const sites = await run([python, '-I', '-c', 'import site; print(site.getsitepackages()[0])'], { cwd: root });
     if (sites.code !== 0) throw new Error(`Editable site-directory lookup failed: ${sites.stderr}`);
     return { source, packageDirectory, working, python, siteDirectory: sites.stdout.trim() };

@@ -7,6 +7,7 @@ import { openSession } from '#cli/execution/session.ts';
 import { installCommand } from '#cli/commands/install.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
 import { installHooks } from '#cli/lifecycle/hooks/git.ts';
+import { keptMode } from '#tests/support/cli/platforms.ts';
 import { uninstallCommand } from '#cli/commands/uninstall.ts';
 import { hookLocation } from '#cli/repository/hook-location.ts';
 import { readHookStatus } from '#tests/support/cli/hooks/projects.ts';
@@ -62,7 +63,7 @@ test.each(['default', 'external'] as const)(
         const restored = await uninstallCommand({ cwd: root, yes: true, isDryRun: false });
         expect(restored.json).toMatchObject({ preserved: [], originals: [] });
         expect(readFileSync(hook, 'utf8')).toBe(original);
-        expect(statSync(hook).mode & 0o777).toBe(0o751);
+        expect(statSync(hook).mode & 0o777).toBe(keptMode(0o751));
     },
 );
 

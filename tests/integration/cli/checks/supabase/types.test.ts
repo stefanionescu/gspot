@@ -4,6 +4,7 @@ import { test, expect } from 'bun:test';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
+import { keptMode } from '#tests/support/cli/platforms.ts';
 import { statSync, chmodSync, readFileSync } from 'node:fs';
 import { typesFresh } from '#cli/checks/supabase/types-fresh.ts';
 import { rejection, textContaining } from '#tests/support/expectations.ts';
@@ -39,7 +40,7 @@ test.each(['', 'apps/api'])(
             findings: [{ check: 'supabase/types-fresh', file: `${prefix}database.ts`, rule: 'types', line: 1 }],
         });
         expect(readFileSync(join(sandbox.path, prefix, 'database.ts'), 'utf8')).toBe('export type Database = {};\n');
-        expect(statSync(join(sandbox.path, prefix, 'database.ts')).mode & 0o777).toBe(0o640);
+        expect(statSync(join(sandbox.path, prefix, 'database.ts')).mode & 0o777).toBe(keptMode(0o640));
         await Bun.write(join(sandbox.path, prefix, 'database.ts'), generated);
         expect(await execute()).toMatchObject({ status: 'ok', findings: [] });
         expect(fixture.requests).toStrictEqual([
@@ -75,7 +76,7 @@ test.each(['', 'apps/api'])(
         input.cancelSignal = AbortSignal.abort();
         expect(await rejection(typesFresh(input))).toContain('The command was canceled.');
         expect(readFileSync(join(sandbox.path, prefix, 'database.ts'), 'utf8')).toBe(generated);
-        expect(statSync(join(sandbox.path, prefix, 'database.ts')).mode & 0o777).toBe(0o640);
+        expect(statSync(join(sandbox.path, prefix, 'database.ts')).mode & 0o777).toBe(keptMode(0o640));
         expect(fixture.requests).toStrictEqual([
             { args: ['gen', 'types', 'typescript', '--local'], cwd: join(sandbox.path, scope) },
         ]);

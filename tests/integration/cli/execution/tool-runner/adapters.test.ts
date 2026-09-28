@@ -4,6 +4,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { chmodSync, existsSync, writeFileSync } from 'node:fs';
+import { toolShipsHere } from '#tests/support/cli/platforms.ts';
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the complexity limit.
 const versionScript = (version: string, slow: boolean): string => `#!${process.execPath}
@@ -11,58 +12,60 @@ if (process.argv.includes('--version')) { console.log(${JSON.stringify(version)}
 else { await Bun.write('started.txt', 'started'); ${slow ? 'await Bun.sleep(10_000);' : ''} }
 `;
 
-test.each(['outdated', 'timeout', 'canceled'] as const)(
-    'Ansible adapter reports %s through the shared runner and accepts corrected execution',
-    async (failure) => {
-        await using sandbox = await testdir();
-        const executable = join(sandbox.path, '.gspot/.venv/bin/ansible-lint');
-        const version = failure === 'outdated' ? '23.0.0' : '26.8.0';
-        await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\nlevel = "all"\nkits = ["ansible", "structure"]\n[limits]\ntool_seconds = 1\n',
-            'deploy/ansible.cfg': '[defaults]\n',
-            'deploy/site.yml': '---\n- hosts: all\n  tasks: []\n',
-            '.gspot/.venv/bin/ansible-lint': versionScript(version, failure !== 'outdated'),
-        });
-        chmodSync(executable, 0o755);
-        const controller = new AbortController();
-        const session = await openSession(sandbox.path);
-        const options = {
-            stage: 'all' as const,
-            skips: [],
-            only: ['ansible/lint'],
-            fix: false,
-            isDryRun: false,
-            noCache: true,
-        };
-        const running = executeRun(session, { ...options, cancelSignal: controller.signal });
-        try {
-            const started = join(sandbox.path, 'deploy/started.txt');
-            if (failure === 'canceled') {
-                const deadline = performance.now() + 5000;
-                while (!existsSync(started) && performance.now() < deadline) await Bun.sleep(20);
+if (toolShipsHere('ansible-lint'))
+    test.each(['outdated', 'timeout', 'canceled'] as const)(
+        'Ansible adapter reports %s through the shared runner and accepts corrected execution',
+        async (failure) => {
+            await using sandbox = await testdir();
+            const executable = join(sandbox.path, '.gspot/.venv/bin/ansible-lint');
+            const version = failure === 'outdated' ? '23.0.0' : '26.8.0';
+            await createFileTree(sandbox.path, {
+                'gspot.toml':
+                    'version = 1\nlevel = "all"\nkits = ["ansible", "structure"]\n[limits]\ntool_seconds = 1\n',
+                'deploy/ansible.cfg': '[defaults]\n',
+                'deploy/site.yml': '---\n- hosts: all\n  tasks: []\n',
+                '.gspot/.venv/bin/ansible-lint': versionScript(version, failure !== 'outdated'),
+            });
+            chmodSync(executable, 0o755);
+            const controller = new AbortController();
+            const session = await openSession(sandbox.path);
+            const options = {
+                stage: 'all' as const,
+                skips: [],
+                only: ['ansible/lint'],
+                fix: false,
+                isDryRun: false,
+                noCache: true,
+            };
+            const running = executeRun(session, { ...options, cancelSignal: controller.signal });
+            try {
+                const started = join(sandbox.path, 'deploy/started.txt');
+                if (failure === 'canceled') {
+                    const deadline = performance.now() + 5000;
+                    while (!existsSync(started) && performance.now() < deadline) await Bun.sleep(20);
+                }
+                // The cancellation reaches a tool that has started running.
+                expect(failure !== 'canceled' || existsSync(started)).toBe(true);
+                if (failure === 'canceled') controller.abort();
+                const outcome = await running;
+                expect(outcome.report.exitCode).toBe(2);
+                expect(outcome.report.checks).toHaveLength(1);
+                expect(outcome.report.checks[0]!.status).toBe(failure === 'outdated' ? 'missing' : 'error');
+                expect(outcome.report.checks[0]!.note).toContain(
+                    { outdated: 'is below 24.0.0', timeout: 'ran past 1 seconds', canceled: 'canceled' }[failure],
+                );
+                expect(outcome.report.checks[0]!.findings).toStrictEqual([]);
+                expect(existsSync(join(sandbox.path, 'deploy/started.txt'))).toBe(failure !== 'outdated');
+                writeFileSync(executable, versionScript('26.8.0', false));
+                const corrected = await executeRun(await openSession(sandbox.path), options);
+                expect(corrected.report.exitCode).toBe(0);
+                expect(corrected.report.checks[0]!.status).toBe('ok');
+            } finally {
+                controller.abort();
+                await running;
             }
-            // The cancellation reaches a tool that has started running.
-            expect(failure !== 'canceled' || existsSync(started)).toBe(true);
-            if (failure === 'canceled') controller.abort();
-            const outcome = await running;
-            expect(outcome.report.exitCode).toBe(2);
-            expect(outcome.report.checks).toHaveLength(1);
-            expect(outcome.report.checks[0]!.status).toBe(failure === 'outdated' ? 'missing' : 'error');
-            expect(outcome.report.checks[0]!.note).toContain(
-                { outdated: 'is below 24.0.0', timeout: 'ran past 1 seconds', canceled: 'canceled' }[failure],
-            );
-            expect(outcome.report.checks[0]!.findings).toStrictEqual([]);
-            expect(existsSync(join(sandbox.path, 'deploy/started.txt'))).toBe(failure !== 'outdated');
-            writeFileSync(executable, versionScript('26.8.0', false));
-            const corrected = await executeRun(await openSession(sandbox.path), options);
-            expect(corrected.report.exitCode).toBe(0);
-            expect(corrected.report.checks[0]!.status).toBe('ok');
-        } finally {
-            controller.abort();
-            await running;
-        }
-    },
-);
+        },
+    );
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the complexity limit.
 const versionCommand = (version: string): string =>

@@ -189,7 +189,9 @@ test.each(['default', 'native', 'nested'])(
         const { authored, original, location, config, options } = await prepareHusky(root, top, kind);
         await installHookTool(root);
         writeFileSync(join(root, 'verdict'), '0');
-        const commitText = 'message with "quotes" and spaces';
+        // Windows file names cannot hold a double quote.
+        const commitText =
+            process.platform === 'win32' ? "message with 'quotes' and spaces" : 'message with "quotes" and spaces';
         writeFileSync(join(top, commitText), 'test: fixture\n');
         writeFileSync(join(root, 'gspot-runs'), '');
         const checked = await run(['git', 'hook', 'run', 'commit-msg', '--', commitText], options);

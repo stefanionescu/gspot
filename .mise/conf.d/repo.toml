@@ -43,7 +43,7 @@ run = "bun packages/eslint-plugin/build.ts"
 depends = ["prepare:grammar", "build:plugin"]
 description = "Run deterministic unit and integration tests."
 dir = "{{config_root}}/tests"
-run = "bun test --timeout 60000 --path-ignore-patterns '**/integration/tools/**' ./unit ./integration"
+run = "bun test --timeout 60000 ./unit ./integration/cli ./integration/docs ./integration/repository"
 
 [tasks."test:unit"]
 depends = ["prepare:grammar", "build:plugin"]
@@ -55,19 +55,25 @@ run = "bun test --timeout 60000 ./unit"
 depends = ["prepare:grammar", "build:plugin"]
 description = "Run unit and integration tests with coverage."
 dir = "{{config_root}}/tests"
-run = "bun test --timeout 60000 --coverage --path-ignore-patterns '**/integration/tools/**' ./unit ./integration"
+run = "bun test --timeout 60000 --coverage ./unit ./integration/cli ./integration/docs ./integration/repository"
 
 [tasks."test:integration"]
 depends = ["prepare:grammar", "build:plugin"]
 description = "Run integration tests."
 dir = "{{config_root}}/tests"
-run = "bun test --timeout 60000 --path-ignore-patterns '**/integration/tools/**' ./integration"
+run = "bun test --timeout 60000 ./integration/cli ./integration/docs ./integration/repository"
 
 [tasks."test:tools"]
 depends = ["prepare:grammar", "build:plugin"]
 description = "Run native compatibility tests with the selected tools installed."
 dir = "{{config_root}}/tests"
 run = "bun test --timeout 60000 ./integration/tools"
+
+[tasks."test:probe"]
+depends = ["prepare:grammar", "build:plugin"]
+description = "Run the named test files, for one platform of the CI matrix."
+dir = "{{config_root}}/tests"
+run = "bun test --timeout 60000"
 
 [tasks."guides:lint"]
 depends = ["prepare:grammar", "build:plugin"]

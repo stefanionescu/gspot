@@ -1,6 +1,6 @@
-import { join } from 'node:path';
 import { homedir } from 'node:os';
 import { testdir } from 'testdirs';
+import { sep, join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { buildFolder } from '#cli/platform/paths.ts';
 import { cacheHome } from '#cli/platform/environment.ts';
@@ -13,7 +13,7 @@ test('build state is platform-local, stable for one repository, and distinct bet
     const folder = buildFolder(first.path);
     expect(folder).toBe(buildFolder(first.path));
     expect(folder).not.toBe(buildFolder(second.path));
-    expect(folder.startsWith(join(cacheHome(), 'gspot') + '/')).toBe(true);
+    expect(folder.startsWith(join(cacheHome(), 'gspot') + sep)).toBe(true);
     // macOS keeps caches under the library folder; other platforms follow their own convention.
     expect(process.platform !== 'darwin' || cacheHome() === join(homedir(), 'Library', 'Caches')).toBe(true);
     expect(existsSync(join(first.path, '.gspot'))).toBe(false);

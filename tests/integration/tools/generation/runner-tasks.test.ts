@@ -14,6 +14,9 @@ import packageManifest from '#cli-package' with { type: 'json' };
 import { exportedProfile } from '#cli/policy/profiles/export.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 
+// A Windows command shim rejects a `%` in an argument, so the runners get the accented word alone there.
+const SPECIAL = process.platform === 'win32' ? 'café' : 'café%';
+
 const { version: GSPOT_VERSION } = packageManifest;
 
 test.each([undefined, 'yarn'])(
@@ -46,7 +49,7 @@ test.each([undefined, 'yarn'])(
         expect(
             parseProfile(exportedProfile(policy, 'team.profile.toml').text, 'team.profile.toml').tables.runner?.tool,
         ).toBe('yarn');
-        const executed = Bun.spawnSync(['yarn', '--silent', 'run', 'gspot:check', '--json', 'a b', 'café%'], {
+        const executed = Bun.spawnSync(['yarn', '--silent', 'run', 'gspot:check', '--json', 'a b', SPECIAL], {
             cwd: directory.path,
             env: {
                 ...environmentVariables(),
@@ -57,7 +60,7 @@ test.each([undefined, 'yarn'])(
             timeout: 10_000,
         });
         expect(executed.exitCode, executed.stdout.toString() + executed.stderr.toString()).toBe(0);
-        expect(JSON.parse(executed.stdout.toString())).toStrictEqual(['check', '--json', 'a b', 'café%']);
+        expect(JSON.parse(executed.stdout.toString())).toStrictEqual(['check', '--json', 'a b', SPECIAL]);
         expect(
             (
                 JSON.parse(readFileSync(join(directory.path, 'package.json'), 'utf8')) as {
@@ -168,7 +171,7 @@ test('mise gives the root task precedence and forwards arguments unchanged', asy
     expect(discovered.exitCode, discovered.stderr.toString()).toBe(0);
     const tasks = JSON.parse(discovered.stdout.toString()) as { name: string; source: string }[];
     expect(tasks.find((task) => task.name === 'gspot:fix')?.source).toBe(join(directory.path, generated.path));
-    const result = Bun.spawnSync(['mise', 'run', '--skip-tools', 'gspot:check', '--', '--json', 'a b', 'café%'], {
+    const result = Bun.spawnSync(['mise', 'run', '--skip-tools', 'gspot:check', '--', '--json', 'a b', SPECIAL], {
         cwd: directory.path,
         env: { ...environmentVariables(), MISE_TRUSTED_CONFIG_PATHS: directory.path, MISE_OFFLINE: '1' },
         stdout: 'pipe',
@@ -176,5 +179,5 @@ test('mise gives the root task precedence and forwards arguments unchanged', asy
         timeout: 10_000,
     });
     expect(result.exitCode, result.stderr.toString()).toBe(0);
-    expect(JSON.parse(result.stdout.toString())).toStrictEqual(['--json', 'a b', 'café%']);
+    expect(JSON.parse(result.stdout.toString())).toStrictEqual(['--json', 'a b', SPECIAL]);
 }, 25_000);

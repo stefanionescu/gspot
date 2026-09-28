@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
 import { reportSchema } from '#cli/execution/report.ts';
+import { keptMode } from '#tests/support/cli/platforms.ts';
 import { waitForExit } from '#tests/support/cli/process.ts';
 import { RELEASE_TIMEOUT_MS } from '#tests/config/release.ts';
 import { runProcess as run } from '#tests/support/cli/command.ts';
@@ -107,7 +108,7 @@ test(
         const removed = await run([...command, 'uninstall', '--yes'], options);
         expect(removed.code, removed.stdout + removed.stderr).toBe(0);
         expect(readFileSync(join(consumer, '.editorconfig'), 'utf8')).toBe(editorconfig);
-        expect(lstatSync(join(consumer, '.editorconfig')).mode & 0o777).toBe(0o640);
+        expect(lstatSync(join(consumer, '.editorconfig')).mode & 0o777).toBe(keptMode(0o640));
         expect(readFileSync(join(consumer, 'prettier.config.mjs'), 'utf8')).toBe(formatter);
     },
     RELEASE_TIMEOUT_MS,

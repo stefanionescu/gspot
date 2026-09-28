@@ -80,17 +80,19 @@ process.exitCode = ${String(status)};`;
         expect(result.duration).toBeLessThan(3000);
     });
 
-    test(`${backend.name}: a signal before the deadline is not a timeout`, async () => {
-        await using sandbox = await testdir();
-        const result = await backend.execute([process.execPath, '-e', "process.kill(process.pid, 'SIGTERM')"], {
-            cwd: sandbox.path,
-            timeoutMs: 5000,
+    // Windows has no signals: a process that kills itself exits with a code.
+    if (process.platform !== 'win32')
+        test(`${backend.name}: a signal before the deadline is not a timeout`, async () => {
+            await using sandbox = await testdir();
+            const result = await backend.execute([process.execPath, '-e', "process.kill(process.pid, 'SIGTERM')"], {
+                cwd: sandbox.path,
+                timeoutMs: 5000,
+            });
+            expect(result.isTimedOut).toBe(false);
+            expect(result.isErrored).toBe(true);
+            expect(result.code).not.toBe(0);
+            expect(result.missing).toBe(false);
         });
-        expect(result.isTimedOut).toBe(false);
-        expect(result.isErrored).toBe(true);
-        expect(result.code).not.toBe(0);
-        expect(result.missing).toBe(false);
-    });
 }
 
 test('cancellation terminates the process without reporting a timeout', async () => {

@@ -5,6 +5,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { kitManifests } from '#cli/kits/manifests.ts';
 import { privateToolInstallation } from '#cli/tools/pins.ts';
 import { locateTool, inspectTool } from '#cli/tools/inspect.ts';
+import { venvExecutable } from '#tests/support/cli/platforms.ts';
 import { commandPin, libraryPin } from '#tests/support/cli/pins.ts';
 import { chmodSync, mkdirSync, existsSync, unlinkSync, symlinkSync } from 'node:fs';
 
@@ -103,16 +104,17 @@ test('direct host lookup excludes an unrelated managed compiler', async () => {
 test('a private Python pin refuses a project executable and uses its own environment', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        '.venv/bin/teller': '#!/bin/sh\ntouch fallback-ran\necho 1.2.3\n',
+        [venvExecutable('.venv', 'teller')]:
+            `#!${process.execPath}\nawait Bun.write('fallback-ran', '');\nconsole.log('1.2.3');\n`,
     });
-    chmodSync(join(sandbox.path, '.venv/bin/teller'), RUNS);
+    chmodSync(join(sandbox.path, venvExecutable('.venv', 'teller')), RUNS);
     const tool = commandPin('teller', '1.2.3');
     tool.installers['pypi'] = { name: 'teller', version: '1.2.3' };
     expect(inspectTool({ root: sandbox.path, inspections: new Map() }, tool).state).toBe('missing');
     await createFileTree(sandbox.path, {
-        '.gspot/.venv/bin/teller': '#!/bin/sh\necho 1.2.3\n',
+        [venvExecutable('.gspot/.venv', 'teller')]: `#!${process.execPath}\nconsole.log('1.2.3');\n`,
     });
-    chmodSync(join(sandbox.path, '.gspot/.venv/bin/teller'), RUNS);
+    chmodSync(join(sandbox.path, venvExecutable('.gspot/.venv', 'teller')), RUNS);
     expect(inspectTool({ root: sandbox.path, inspections: new Map() }, tool)).toMatchObject({
         state: 'ok',
         found: '1.2.3',

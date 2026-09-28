@@ -1,16 +1,17 @@
+import { readFileSync } from 'node:fs';
 import { createFileTree } from 'testdirs';
 import { join, delimiter } from 'node:path';
 import { run } from '#cli/platform/spawn.ts';
-import { chmodSync, readFileSync } from 'node:fs';
 import { applyCommand } from '#cli/commands/apply/command.ts';
 import { hookLocation } from '#cli/repository/hook-location.ts';
 import { VERSIONS } from '#tests/config/integration/tools/hooks.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import type { PrepareHookAdoptionResult } from '#tests/types/results.ts';
+import { plantLauncher, venvExecutable } from '#tests/support/cli/platforms.ts';
 
 const NATIVE_INSTALL = {
     'pre-commit': [
-        '.venv/bin/pre-commit',
+        venvExecutable('.venv', 'pre-commit'),
         'install',
         '--hook-type',
         'pre-commit',
@@ -36,10 +37,9 @@ export async function prepareHookAdoption(
             devDependencies: hookTool === 'pre-commit' ? {} : { [hookTool]: VERSIONS[hookTool] },
         }),
         'source.txt': 'fixture\n',
-        'bin/gspot': `#!${process.execPath}\n(await import('node:fs')).appendFileSync('read', 'x');\n`,
         'native-init.sh': 'true\n',
     });
-    chmodSync(join(root, 'bin/gspot'), 0o755);
+    await plantLauncher(root, 'bin/gspot', `(await import('node:fs')).appendFileSync('read', 'x');\n`);
     const options = {
         cwd: root,
         timeoutMs: 60_000,
@@ -56,7 +56,14 @@ export async function prepareHookAdoption(
         ...(hookTool === 'pre-commit'
             ? [
                   ['uv', 'venv', '.venv'],
-                  ['uv', 'pip', 'install', '--python', '.venv/bin/python', `pre-commit==${VERSIONS[hookTool]}`],
+                  [
+                      'uv',
+                      'pip',
+                      'install',
+                      '--python',
+                      venvExecutable('.venv', 'python'),
+                      `pre-commit==${VERSIONS[hookTool]}`,
+                  ],
               ]
             : [['npm', 'install', '--ignore-scripts', '--no-audit', '--no-fund']]),
     ]) {

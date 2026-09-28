@@ -6,6 +6,7 @@ import { initArgs } from '#tests/support/cli/init.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
 import { git, commitAll } from '#tests/support/cli/git.ts';
+import { keptMode } from '#tests/support/cli/platforms.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { run, runProcess } from '#tests/support/cli/command.ts';
 import { installPrivateTools } from '#tests/support/cli/tools.ts';
@@ -82,9 +83,9 @@ async function expectStagedMarkdown({
     const removed = await run(root, ['uninstall', '--yes']);
     expect(removed.code, removed.stdout + removed.stderr).toBe(0);
     expect(readFileSync(join(root, configuration), 'utf8')).toBe(original);
-    expect(statSync(join(root, configuration)).mode & 0o777).toBe(0o640);
+    expect(statSync(join(root, configuration)).mode & 0o777).toBe(keptMode(0o640));
     expect(readFileSync(join(root, parent), 'utf8')).toBe(inherited);
-    expect(statSync(join(root, parent)).mode & 0o777).toBe(0o640);
+    expect(statSync(join(root, parent)).mode & 0o777).toBe(keptMode(0o640));
 }
 
 test.each(
@@ -124,7 +125,7 @@ test.each(
         const initialized = await run(sandbox.path, initArgs(['markdown'], ['docs', 'spelling']));
         expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
         expect(readFileSync(join(sandbox.path, parent), 'utf8')).toBe(inherited);
-        expect(statSync(join(sandbox.path, parent)).mode & 0o777).toBe(0o640);
+        expect(statSync(join(sandbox.path, parent)).mode & 0o777).toBe(keptMode(0o640));
         const selected = await run(sandbox.path, ['set', 'level', 'all']);
         expect(selected.code, selected.stdout + selected.stderr).toBe(0);
         await installPrivateTools(sandbox.path);

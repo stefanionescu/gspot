@@ -2,6 +2,7 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { openRoot } from '#cli/platform/filesystem.ts';
+import { keptDirectoryMode } from '#tests/support/cli/platforms.ts';
 import { fileMode, mutationPath } from '#cli/platform/safe-paths.ts';
 import { linkSync, statSync, symlinkSync, readFileSync } from 'node:fs';
 
@@ -74,7 +75,7 @@ if (process.platform !== 'win32') {
                     expect(readFileSync(join(outside, 'sentinel'), 'utf8')).toBe('authored\n');
                 }
                 root.mkdir('.gspot/state/recovery', 0o700);
-                expect(statSync(join(project, '.gspot/state/recovery')).mode & 0o777).toBe(0o700);
+                expect(statSync(join(project, '.gspot/state/recovery')).mode & 0o777).toBe(keptDirectoryMode(0o700));
             } finally {
                 root.close();
             }

@@ -4,9 +4,10 @@ import { run } from '#cli/platform/spawn.ts';
 import { gitOutput } from '#tests/support/cli/git.ts';
 import { applyCommand } from '#cli/commands/apply/command.ts';
 import { hookLocation } from '#cli/repository/hook-location.ts';
+import { plantLauncher } from '#tests/support/cli/platforms.ts';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import type { PrepareLefthookResult } from '#tests/types/results.ts';
-import { chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { LEFTHOOK_PUSH_ARGS } from '#tests/config/integration/tools/hooks.ts';
 
 /** Prepares authored Lefthook configuration and existing Git hooks for native installation. */
@@ -19,9 +20,12 @@ export async function prepareLefthook(root: string, existing: string): Promise<P
         'hook-init.sh': 'export GSPOT_FIXTURE_RC=retained\nprintf "%s" "$GSPOT_FIXTURE_RC" > rc-ran\n',
         'lefthook.yml':
             '# Authored hook\nextends: [hook-settings.yml]\npre-push:\n  commands:\n    authored:\n      run: echo retained\n',
-        'bin/gspot': `#!${process.execPath}\n(await import('node:fs')).appendFileSync('gspot-runs', 'x'); await Bun.write('captured.json', JSON.stringify({args:process.argv.slice(2), input:process.argv.includes('--push') ? await Bun.stdin.text() : ''})); process.exitCode = await Bun.file('setup-failed').exists() ? 2 : await Bun.file('failed').exists() ? 1 : 0;\n`,
     });
-    chmodSync(join(root, 'bin/gspot'), 0o755);
+    await plantLauncher(
+        root,
+        'bin/gspot',
+        `(await import('node:fs')).appendFileSync('gspot-runs', 'x'); await Bun.write('captured.json', JSON.stringify({args:process.argv.slice(2), input:process.argv.includes('--push') ? await Bun.stdin.text() : ''})); process.exitCode = await Bun.file('setup-failed').exists() ? 2 : await Bun.file('failed').exists() ? 1 : 0;\n`,
+    );
     const installed = await run(['npm', 'install', '--ignore-scripts', '--no-audit', '--no-fund'], {
         cwd: root,
         timeoutMs: 60_000,

@@ -2,6 +2,7 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { join, relative } from 'node:path';
 import { run } from '#cli/platform/spawn.ts';
+import { venvExecutable } from '#tests/support/cli/platforms.ts';
 import { installNativeHooks } from '#cli/lifecycle/hooks/managers.ts';
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml';
 import { renameSync, unlinkSync, readFileSync, writeFileSync } from 'node:fs';
@@ -135,7 +136,7 @@ test.each(['', "apps/worker's tools"])(
         await using sandbox = await testdir();
         const root = join(sandbox.path, directory);
         const { env } = await preparePreCommit(root, sandbox.path);
-        const executable = join(root, '.venv/bin/pre-commit');
+        const executable = venvExecutable(join(root, '.venv'), 'pre-commit');
         renameSync(executable, `${executable}.retained`);
         try {
             const missing = await run(['git', 'hook', 'run', 'pre-commit'], { cwd: root, env });

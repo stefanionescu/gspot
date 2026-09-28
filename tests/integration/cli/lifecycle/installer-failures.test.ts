@@ -153,39 +153,41 @@ test.each([0, 1])('a hook conflict preserves independent installer execution and
     }
 });
 
-test.each(['missing', 'not executable'])(
-    'an installed hook reports setup failure when its gspot launcher is %s',
-    async (condition) => {
-        await using repository = await testdir();
-        await createFileTree(repository.path, {
-            'gspot.toml': 'version = 1\nkits = []\n[hooks]\ntool = "gspot"\n[guides]\ninstall = false\n',
-            'bin/gspot': '#!/bin/sh\nexit 0\n',
-        });
-        const ran = await processes.run(['git', 'init', '-q'], { cwd: repository.path });
-        expect(ran.code).toBe(0);
-        installHooks(
-            await openSession(repository.path).then((session) => ({
-                policy: session.policyFiles.policy,
-                repository: session.repository,
-            })),
-        );
-        const launcher = join(repository.path, 'bin/gspot');
-        if (condition === 'missing') rmSync(launcher);
-        else chmodSync(launcher, 0o644);
-        const hook = join(hookLocation(repository.path).absolute, 'pre-commit');
-        const options = {
-            cwd: repository.path,
-            env: { PATH: `${join(repository.path, 'bin')}${delimiter}/usr/bin${delimiter}/bin` },
-        };
-        const failed = await processes.run([hook], options);
-        expect(failed.code, failed.stdout + failed.stderr).toBe(2);
-        expect(failed.stderr).toContain('gspot install');
-        writeFileSync(launcher, '#!/bin/sh\nexit 0\n', { mode: 0o755 });
-        chmodSync(launcher, 0o755);
-        const corrected = await processes.run([hook], options);
-        expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    },
-);
+// The hook is a POSIX shell script that a POSIX PATH runs directly.
+if (process.platform !== 'win32')
+    test.each(['missing', 'not executable'])(
+        'an installed hook reports setup failure when its gspot launcher is %s',
+        async (condition) => {
+            await using repository = await testdir();
+            await createFileTree(repository.path, {
+                'gspot.toml': 'version = 1\nkits = []\n[hooks]\ntool = "gspot"\n[guides]\ninstall = false\n',
+                'bin/gspot': '#!/bin/sh\nexit 0\n',
+            });
+            const ran = await processes.run(['git', 'init', '-q'], { cwd: repository.path });
+            expect(ran.code).toBe(0);
+            installHooks(
+                await openSession(repository.path).then((session) => ({
+                    policy: session.policyFiles.policy,
+                    repository: session.repository,
+                })),
+            );
+            const launcher = join(repository.path, 'bin/gspot');
+            if (condition === 'missing') rmSync(launcher);
+            else chmodSync(launcher, 0o644);
+            const hook = join(hookLocation(repository.path).absolute, 'pre-commit');
+            const options = {
+                cwd: repository.path,
+                env: { PATH: `${join(repository.path, 'bin')}${delimiter}/usr/bin${delimiter}/bin` },
+            };
+            const failed = await processes.run([hook], options);
+            expect(failed.code, failed.stdout + failed.stderr).toBe(2);
+            expect(failed.stderr).toContain('gspot install');
+            writeFileSync(launcher, '#!/bin/sh\nexit 0\n', { mode: 0o755 });
+            chmodSync(launcher, 0o755);
+            const corrected = await processes.run([hook], options);
+            expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+        },
+    );
 
 test('installation attributes a non-Error rejection to its phase', async () => {
     await using sandbox = await testdir();

@@ -43,7 +43,7 @@ test('native wrapper download failure preserves the lock and publishes no partia
     const { lockPath, lock } = readPackageInputs(root, 'npm');
     const original = spawn.run;
     const initialize = spyOn(spawn, 'run').mockImplementation(async (argv, options) => {
-        if (argv[0]?.includes('editorconfig-checker') === true)
+        if (/(?:editorconfig-checker|[\\/]ec(?:\.cmd)?$)/u.test(argv[0] ?? ''))
             return {
                 code: 7,
                 stdout: '',

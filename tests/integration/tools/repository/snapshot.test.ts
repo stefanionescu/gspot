@@ -3,6 +3,7 @@ import { join, relative } from 'node:path';
 import { run } from '#cli/platform/spawn.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { rejection } from '#tests/support/expectations.ts';
+import { venvExecutable } from '#tests/support/cli/platforms.ts';
 import { useRevision } from '#cli/repository/revisions/contents.ts';
 import { preparePythonSnapshot } from '#tests/support/cli/python/snapshot.ts';
 import { unlinkSync, symlinkSync, readFileSync, readlinkSync, writeFileSync } from 'node:fs';
@@ -20,12 +21,12 @@ test.each([
             cwd: root,
         });
         expect(module.code, module.stderr).toBe(0);
-        const modulePath = relative(root, module.stdout.trim());
+        const modulePath = relative(root, module.stdout.trim()).replaceAll('\\', '/');
         expect(modulePath.startsWith('.venv/')).toBe(true);
         const original = readFileSync(join(root, modulePath));
-        const launcher = readFileSync(join(root, '.venv/bin/pre-commit'));
+        const launcher = readFileSync(venvExecutable(join(root, '.venv'), 'pre-commit'));
         await useRevision(root, source, async (snapshot) => {
-            const executable = join(snapshot, '.venv/bin/python');
+            const executable = venvExecutable(join(snapshot, '.venv'), 'python');
             const prefix = await run([executable, '-I', '-c', 'import sys; print(sys.prefix)'], { cwd: snapshot });
             expect(prefix.code, prefix.stderr).toBe(0);
             expect(prefix.stdout.trim()).toBe(join(snapshot, '.venv'));
@@ -34,7 +35,7 @@ test.each([
                 'def main():\n    print("snapshot dependency")\n    return 0\n',
             );
             for (const command of [
-                [join(snapshot, '.venv/bin/pre-commit'), '--version'],
+                [venvExecutable(join(snapshot, '.venv'), 'pre-commit'), '--version'],
                 [executable, '-I', '-c', 'from pre_commit.main import main; main()'],
             ]) {
                 const result = await run(command, { cwd: snapshot });
@@ -43,7 +44,7 @@ test.each([
             }
         });
         expect(readFileSync(join(root, modulePath))).toStrictEqual(original);
-        expect(readFileSync(join(root, '.venv/bin/pre-commit'))).toStrictEqual(launcher);
+        expect(readFileSync(venvExecutable(join(root, '.venv'), 'pre-commit'))).toStrictEqual(launcher);
     },
     90_000,
 );
@@ -71,9 +72,12 @@ test.each([
         unlinkSync(python);
         symlinkSync(interpreter, python);
         await useRevision(root, source, async (snapshot) => {
-            const checked = await run([join(snapshot, '.venv/bin/python'), '-m', 'pre_commit', '--version'], {
-                cwd: snapshot,
-            });
+            const checked = await run(
+                [venvExecutable(join(snapshot, '.venv'), 'python'), '-m', 'pre_commit', '--version'],
+                {
+                    cwd: snapshot,
+                },
+            );
             expect(checked.code, checked.stderr).toBe(0);
             expect(checked.stdout.trim()).toBe('pre-commit 4.5.1');
         });
@@ -114,9 +118,12 @@ test.each([
         unlinkSync(configuration);
         writeFileSync(configuration, configured);
         await useRevision(root, source, async (snapshot) => {
-            const checked = await run([join(snapshot, '.venv/bin/python'), '-m', 'pre_commit', '--version'], {
-                cwd: snapshot,
-            });
+            const checked = await run(
+                [venvExecutable(join(snapshot, '.venv'), 'python'), '-m', 'pre_commit', '--version'],
+                {
+                    cwd: snapshot,
+                },
+            );
             expect(checked.code, checked.stderr).toBe(0);
             expect(checked.stdout.trim()).toBe('pre-commit 4.5.1');
         });
@@ -149,9 +156,12 @@ test.each([
         symlinkSync(interpreter, python);
         writeFileSync(configuration, configured);
         await useRevision(root, source, async (snapshot) => {
-            const checked = await run([join(snapshot, '.venv/bin/python'), '-m', 'pre_commit', '--version'], {
-                cwd: snapshot,
-            });
+            const checked = await run(
+                [venvExecutable(join(snapshot, '.venv'), 'python'), '-m', 'pre_commit', '--version'],
+                {
+                    cwd: snapshot,
+                },
+            );
             expect(checked.code, checked.stderr).toBe(0);
             expect(checked.stdout.trim()).toBe('pre-commit 4.5.1');
         });

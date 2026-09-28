@@ -19,8 +19,8 @@ describe('tags', () => {
         const repository = await readRepository(sandbox.path, [], [], []);
         const files = new Map(repository.files.map((file) => [file.path, file]));
         const hook = files.get('hook')!;
-        // Windows has no executable bit to read.
-        expect(hook.tags.includes('executable')).toBe(process.platform !== 'win32');
+        // The shell shebang grants the executable tag, so the bit itself is not needed.
+        expect(hook.tags).toContain('executable');
         for (const tag of ['shell', 'shebang:shell', 'text']) expect(hook.tags).toContain(tag);
         expect(files.get('a.png')!.kind).toBe('binary');
         expect(files.get('binary.js')!.kind).toBe('binary');

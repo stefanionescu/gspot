@@ -11,6 +11,15 @@ on:
                 description: Run full platform acceptance
                 type: boolean
                 default: true
+            runner:
+                description: One runner of the matrix to run, or all
+                type: choice
+                options: [all, ubuntu-24.04, ubuntu-24.04-arm, macos-15, windows-2025]
+                default: all
+            tests:
+                description: Test files to run instead of the acceptance steps, relative to tests/
+                type: string
+                default: ''
     workflow_call:
         inputs:
             full:
@@ -59,7 +68,7 @@ jobs:
         strategy:
             fail-fast: false
             matrix:
-                os: [ubuntu-24.04, ubuntu-24.04-arm, macos-15, windows-2025]
+                os: ${{ fromJSON((inputs.runner == '' || inputs.runner == 'all') && '["ubuntu-24.04", "ubuntu-24.04-arm", "macos-15", "windows-2025"]' || format('["{0}"]', inputs.runner)) }}
         runs-on: ${{ matrix.os }}
         timeout-minutes: 180
         env:
@@ -88,15 +97,21 @@ jobs:
               run: mise run --skip-tools ci:swiftformat
             - run: mise run --skip-tools repo:install-checks
             - run: mise run --skip-tools check:types
-            - run: mise run --skip-tools test:coverage
-            - name: Native checks including Linux database journeys
-              if: runner.os == 'Linux'
+            - name: Run the named tests of a probe
+              if: inputs.tests != ''
+              env:
+                  PROBE_TESTS: ${{ inputs.tests }}
+              run: |
+                  read -ra files <<< "$PROBE_TESTS"
+                  mise run --skip-tools test:probe -- "${files[@]}"
+            - if: inputs.tests == ''
+              run: mise run --skip-tools test:coverage
+            - if: inputs.tests == ''
               run: mise run --skip-tools test:tools
-            - name: Native checks with database journeys owned by Linux
-              if: runner.os != 'Linux'
-              run: mise run --skip-tools test:tools -- --path-ignore-patterns '**/checks/supabase/types.test.ts'
-            - run: mise run --skip-tools test:acceptance
+            - if: inputs.tests == ''
+              run: mise run --skip-tools test:acceptance
             - id: normal
+              if: inputs.tests == ''
               run: mise run --skip-tools gspot:check
             - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
               if: always() && !cancelled() && steps.normal.outcome != 'skipped'
@@ -107,11 +122,14 @@ jobs:
                   if-no-files-found: warn
                   retention-days: 14
             - id: manual
+              if: inputs.tests == ''
               run: mise run --skip-tools gspot:check -- --stage manual
-            - run: mise run --skip-tools doctor
-            - run: mise run --skip-tools build -- --all
+            - if: inputs.tests == ''
+              run: mise run --skip-tools doctor
+            - if: inputs.tests == ''
+              run: mise run --skip-tools build -- --all
             - name: Run the musl binary of this architecture on Alpine
-              if: runner.os == 'Linux'
+              if: runner.os == 'Linux' && inputs.tests == ''
               run: |
                   case "$(uname -m)" in
                       x86_64) binary=gspot-linux-x64-musl ;;
@@ -120,9 +138,10 @@ jobs:
                   esac
                   docker run --rm --volume "$PWD/dist:/dist:ro" alpine:3.22 sh -ec "/dist/$binary --version && /dist/$binary --help"
             - name: Run the x64 binary under Rosetta, which is not native evidence
-              if: runner.os == 'macOS'
+              if: runner.os == 'macOS' && inputs.tests == ''
               run: arch -x86_64 dist/gspot-darwin-x64 --version && arch -x86_64 dist/gspot-darwin-x64 --help
-            - run: mise run --skip-tools test:release
+            - if: inputs.tests == ''
+              run: mise run --skip-tools test:release
             - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
               if: always() && !cancelled() && steps.manual.outcome != 'skipped'
               with:

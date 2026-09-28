@@ -4,6 +4,7 @@ import { ESLint, loadESLint } from 'eslint';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
+import { keptMode } from '#tests/support/cli/platforms.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
 import type { ApplyPreviewJson } from '#cli/types/commands/apply.ts';
 import type { EslintAdoption } from '#tests/types/acceptance/source/cli.ts';
@@ -72,7 +73,7 @@ async function expectRestoredConfiguration({ root, path, original }: EslintAdopt
     const removed = await run(root, ['uninstall', '--yes']);
     expect(removed.code, removed.stdout + removed.stderr).toBe(0);
     expect(readFileSync(join(root, path), 'utf8')).toBe(original);
-    expect(statSync(join(root, path)).mode & 0o777).toBe(0o640);
+    expect(statSync(join(root, path)).mode & 0o777).toBe(keptMode(0o640));
 }
 
 test.each(
