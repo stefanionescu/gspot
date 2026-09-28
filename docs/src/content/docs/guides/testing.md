@@ -1,5 +1,5 @@
 ---
-title: Check tests and coverage
+title: Tests and coverage
 description: Configure Jest coverage and Swift test checks without weakening source rules.
 ---
 
@@ -32,6 +32,35 @@ that cannot load or a missing report returns status 2.
 `tools.jest.global_package = "bun:test"` lets the ESLint rules recognize Bun test imports.
 It also accepts the optional failure message in Bun `expect` calls while rejecting extra arguments.
 This setting affects linting; the coverage check still runs Jest.
+
+## Vitest coverage
+
+Select `vitest` for a project that already has Vitest and its coverage provider installed.
+Run its suite with:
+
+```bash
+gspot check --stage push --only vitest/coverage --no-cache
+```
+
+Set `tools.vitest.coverage_lines`, `coverage_branches`, `coverage_functions`, and
+`coverage_statements` to the required percentages. Use `tools.vitest.coverage_file` for a
+configuration file outside Vitest's normal discovery paths. Paths are relative to the scope.
+
+## Python coverage
+
+Select `pytest` and install pytest with pytest-cov in the project's `.venv`. Keep those
+application test dependencies in the project manifest and lock. Then run:
+
+```bash
+gspot check --stage push --only pytest/coverage --no-cache
+```
+
+`tools.pytest.coverage` sets the required line coverage. The check runs pytest with strict
+markers and configuration. Failed tests and insufficient coverage fail the check.
+The Ruff pytest rules apply to test files without relaxing rules in application source.
+
+The default coverage floors are zero at `recommended` and 80% at `all`. Explicit floors
+apply at either level. Use [custom checks](/guides/custom-checks/) for another test runner.
 
 ## Swift tests
 

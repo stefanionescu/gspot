@@ -1,12 +1,11 @@
 ---
-title: Adopt gspot in an existing repository
+title: Existing repositories
 description: Review configuration adoption, preserve unsupported settings, and run your first checks.
 sidebar:
     order: 2
 ---
 
-Use the [source installation guide](/guides/install/) to prepare the CLI. Run the commands below
-from the repository root unless a step names another directory.
+Run commands from your repository root with [gspot installed](/guides/install/).
 
 Preview adoption from the repository root:
 
@@ -37,9 +36,9 @@ and retain it while restoration remains necessary.
 
 Supported exception lists become explicit repository policy:
 
-- typos words and excludes;
-- rules turned off in a linter configuration, as `[[ignore]]` entries;
-- gitleaks allowlists, osv ignored advisories and license exceptions, when those configurations run.
+- typos words and excludes.
+- Rules turned off in a linter configuration, as `[[ignore]]` entries.
+- Gitleaks allowlists, Open Source Vulnerabilities (OSV) ignored advisories, and license exceptions when those configurations run.
 
 Carried entries retain source comments where supported. Otherwise, their reason identifies
 the source as `carried from <file> at init`. Review these reasons after adoption.
@@ -122,6 +121,12 @@ Overlapping spelling configurations require explicit conversion because native c
 replace parent settings while policy lists append. Nested secret allowlists, advisory exceptions,
 and license settings stop adoption when their scope cannot be preserved.
 
+### Python docstrings
+
+An adopted Ruff Google or NumPy convention also selects the pydoclint style unless you set
+`style` in `[tool.pydoclint]` explicitly. An explicit pydoclint style wins. Without either setting,
+pydoclint keeps its native default. These choices follow scope inheritance.
+
 ### ESLint
 
 ESLint adoption preserves ordered selectors, `basePath` directories, and processors. Named
@@ -166,7 +171,8 @@ and its native defaults. Profiles omit these repository-specific EditorConfig do
 ### Ignore files
 
 SQLFluff and Semgrep ignore files retain their directory base, including nested files.
-Nested Prettier ignore files and selectors that cannot be relocated without changing their
+Nested Prettier ignore files carry into the generated ignore file with their directory bases
+and ordered negations preserved. Selectors that cannot be relocated without changing their
 meaning stop adoption and leave the original configuration active.
 
 ## Keep existing integrations

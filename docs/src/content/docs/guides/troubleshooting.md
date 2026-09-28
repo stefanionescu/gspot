@@ -1,10 +1,9 @@
 ---
-title: Diagnose a check that cannot run
+title: Troubleshooting
 description: Resolve missing tools, mismatched locks, version pins, and edited generated files.
 ---
 
-Use the [source installation guide](/guides/install/) to prepare the CLI. Run the commands below
-from the repository root unless a step names another directory.
+Run commands from your repository root with [gspot installed](/guides/install/).
 
 Run diagnostics from the repository root:
 

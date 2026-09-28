@@ -5,7 +5,6 @@ description: Choose a setup, run checks, and resolve findings with gspot.
 
 gspot configures linters, runs checks, and generates instructions for coding agents from one repository configuration. It runs selected tools
 and repository checks, then reports findings with paths, check names, and correction guidance.
-It does not determine who wrote the code.
 
 ## Set up a repository
 
@@ -39,11 +38,3 @@ Use [scopes](/guides/scopes/) for different parts of a repository and [profiles]
 for policy shared across repositories. Configure [hooks and CI](/guides/hooks-and-ci/) to run
 checks at the intended stages. If setup or removal conflicts with edited files, follow the
 [recovery procedure](/guides/uninstall/) before deleting anything.
-
-## From policy to findings
-
-![Policy, apply, and check workflow](/brand/diagrams/workflow.svg)
-
-Choose configurations and settings in policy. Run `gspot apply` to generate configuration for those
-tools. Run `gspot check` to execute the selected checks and report findings. Correct the code
-or change policy with a reason, then apply policy changes before checking again.

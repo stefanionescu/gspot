@@ -1,6 +1,6 @@
 ---
 slug: guides/hooks-and-ci
-title: Use hooks and CI
+title: Hooks and CI
 description: Understand staged and pushed-content checks, retained hooks, and CI reports.
 ---
 
@@ -39,6 +39,18 @@ If installation reports a differing native hook, preserve its authored changes i
 manager configuration and regenerate the native hooks before running `gspot install` again.
 gspot retains the existing launchers and publishes no hook changes until the conflict is
 resolved. This prevents chaining the same native manager twice.
+
+## Use built-in hooks
+
+Without a hook manager, select the built-in Git hooks:
+
+```shell
+gspot set hooks.tool gspot
+gspot install
+```
+
+Run `gspot install` after cloning. Use `gspot doctor` to check whether the installed hooks
+match the policy. Existing local hook commands stay in the chain.
 
 ## Use Husky
 
@@ -191,3 +203,22 @@ CI installs tracked tool locks before checking. Generated shell steps require Ba
 Generated jobs require the selected installer
 on the runner. The mise integration provisions its pinned tools; without mise, provision the
 package manager, uv when Python tools are selected, and required native tools on the runner.
+
+## Keep an existing pipeline
+
+When initialization detects an existing lint job or Bitbucket Pipelines, it prints setup
+instructions instead of generating a competing workflow. Provision the pinned gspot version
+and required runtimes on that runner, then run from the repository root:
+
+```shell
+gspot install
+gspot check
+```
+
+Run `gspot check --stage manual` in a separate job when you want manual checks. Preserve
+nonzero exit codes so findings and setup failures fail the job.
+
+Configure the provider to upload `.gspot/reports/report.*` after success or failure. Use
+separate artifact names for each stage and platform so one run does not overwrite another.
+The files include JSON, Static Analysis Results Interchange Format (SARIF), and GitLab Code
+Quality reports. Do not upload `.gspot/state/`, installed dependencies, or credentials.

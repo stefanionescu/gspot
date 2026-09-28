@@ -34,8 +34,8 @@ const repository = [
         </section>
         <Features title="Configure tools and check code" description="Choose checks in gspot.toml, generate tool configuration, and run them against your code." features={workflow} />
         <section class="demonstration" aria-labelledby="finding">
-            <div class="section-heading"><div><p class="eyebrow">JavaScript example</p><h2 id="finding">Check a JavaScript module</h2></div><a class="pill" href="/guides/client-environment/">Run this example ↗</a></div>
-            <p>The gspot ESLint plugin flags this <code>process.env</code> access in a client module. Change the client to call an API route, then run the check again.</p>
+            <div class="section-heading"><div><p class="eyebrow">Repository example</p><h2 id="finding">Fix the code behind the findings</h2></div><a class="pill" href="/guides/quick-start/">Run this example ↗</a></div>
+            <p>Ruff catches executable input in Python. ShellCheck catches an unquoted path in Bash. Make these two changes, then rerun <code>gspot check</code>.</p>
             <Example />
         </section>
         <Features title="Configure the whole repository" description="Use the same configuration for agent instructions, nested projects, and generated files." features={repository} />

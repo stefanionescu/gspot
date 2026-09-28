@@ -1,10 +1,38 @@
 ---
-title: Run security checks
+title: Security
 description: Run the Swift security rules and a configured CodeQL analysis.
 ---
 
-Use the [source installation guide](/guides/install/) to prepare the CLI. Run the commands below
-from the repository root unless a step names another directory.
+Run commands from your repository root with [gspot installed](/guides/install/).
+
+## Choose the scan
+
+Security checks cover different inputs. Select the configurations your repository needs:
+
+| Configuration  | Checks                                                                                                               | When                                                        |
+| -------------- | -------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| `secrets`      | Gitleaks scans staged changes and pushed commits; TruffleHog verifies candidate secrets with their issuing services. | Commit and push.                                            |
+| `dependencies` | Open Source Vulnerabilities (OSV) scans supported lockfiles for known vulnerable dependencies.                       | Push.                                                       |
+| `security`     | Semgrep runs shipped and repository rule packs.                                                                      | Push.                                                       |
+| `security`     | Configured public Semgrep packs and CodeQL queries.                                                                  | Manual.                                                     |
+| `docker`       | Trivy checks container configuration and a configured image.                                                         | See the [Docker checks](/reference/configurations/docker/). |
+
+Use `gspot explain <check>` for prerequisites and the enabled policy. A missing tool or an
+unconfigured manual scan is not a successful security scan. If a reported secret is real,
+revoke or rotate it before removing it from code; deleting the current line leaves Git history.
+
+## Semgrep rules
+
+Select `security`, then run the shipped and repository rules:
+
+```shell
+gspot check --stage push --only security/semgrep
+```
+
+Add local rule paths with `tools.semgrep.rules`. Set `tools.semgrep.registry` to the public
+packs you want, then run `gspot check --stage manual --only security/semgrep-registry`.
+Registry checks require network access. Keep exceptions scoped to the affected rule and paths
+with a reason; see [configuration](/guides/customize/#record-one-exception).
 
 ## Swift security rules
 

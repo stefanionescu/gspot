@@ -1,5 +1,5 @@
 ---
-title: Work with coding agents
+title: Coding agents
 description: Install selected rule guides and direct agents to policy-owned changes.
 sidebar:
     order: 6
@@ -12,8 +12,9 @@ gspot installs its rule files under `.gspot/rules/` and links them from a manage
 receive the same block. When `.cursor/` exists, gspot creates `.cursor/rules/gspot.mdc`
 with `alwaysApply: true`. An authored file at that path is preserved.
 
-Those links give an agent the selected repository instructions. The agent must still read and
-follow them; installing files does not establish compliance.
+Guides follow the selected languages, frameworks, and policy level. `recommended` retains
+safety and correctness guidance; `all` also includes naming, architecture, and style conventions.
+Run `gspot apply` after policy changes to update the instructions.
 
 To include another instruction file, run:
 

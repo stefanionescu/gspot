@@ -1,5 +1,5 @@
 ---
-title: Check dependency licenses
+title: Dependency licenses
 description: Check installed dependency licenses and record exact package exceptions.
 ---
 
@@ -10,7 +10,7 @@ Install the project dependencies first. Python projects use their scope's `.venv
 scanner is installed separately by `gspot install`.
 
 `gspot apply` writes the effective allowances and exceptions to `.gspot/config/licenses.json`.
-Scoped policies have their own files under `.gspot/<scope>/licenses.json`. Change these values
+Scoped policies have their own files under `.gspot/config/<scope>/licenses.json`. Change these values
 with `gspot set`, which applies the setting. After a manual edit of `gspot.toml`, run `gspot apply`.
 The scanner reads this generated configuration and refuses missing or stale values before
 scanning dependencies.

@@ -64,8 +64,10 @@ their destination. State required tools and working directories. Pair diagnostic
 a correction and the command that verifies it. Never invent successful output or imply a
 manual correction is automatic.
 
-The landing page uses the captured JavaScript defect and correction in
-`src/components/home/client-environment.json`. The first-check guide points to the complete JavaScript walkthrough.
+The landing page uses the captured repository example in `src/components/home/repository.json`.
+The quickstart supplies every input and runs the same Python and Bash checks through the CLI.
+Native tests verify the findings, corrected result, and example behavior. The standalone plugin
+example remains in the client-environment guide.
 
 Use short, direct headings and consistent terms: configuration, check, tool rule, finding, stage,
 level, scope, and profile. Remove repeated claims, vague assurances, self-referential openings,

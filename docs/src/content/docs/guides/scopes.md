@@ -1,10 +1,9 @@
 ---
-title: Monorepos and scopes
+title: Monorepos
 description: Give nested projects their own configurations and settings in one policy file.
 ---
 
-Use the [source installation guide](/guides/install/) to prepare the CLI. Run the commands below
-from the repository root unless a step names another directory.
+Run commands from your repository root with [gspot installed](/guides/install/).
 
 Start from a repository with nested projects. Initialization reads supported package-manager
 workspace declarations and proposes scopes. Review their paths and configurations before accepting.
@@ -40,7 +39,7 @@ gspot check api
 
 The deepest containing scope owns a file. Files outside nested scopes belong to the root.
 A project-wide check triggered by a path can inspect other files in that project. Generated
-configuration lives under `.gspot/<path>/` when the owning tool needs a separate scope file.
+configuration lives under `.gspot/config/<path>/` when the owning tool needs a separate scope file.
 
 `gspot explain <file>` reports the scope and claims. Use `./` for a filename that also names a
 configuration or check: `gspot explain bash` explains the configuration, while `gspot explain ./bash`

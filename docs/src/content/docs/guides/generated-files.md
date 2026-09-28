@@ -1,5 +1,5 @@
 ---
-title: Edit and retain repository files
+title: Generated files
 description: Know which files to edit, commit, regenerate, and retain for recovery.
 ---
 

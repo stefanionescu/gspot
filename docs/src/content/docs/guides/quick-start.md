@@ -1,43 +1,130 @@
 ---
-title: Run your first JavaScript check
-description: Find a private environment read in a client module, correct it, and rerun ESLint.
+title: Quickstart
+description: Check Python and Bash together, correct two defects, and rerun the same command.
 ---
 
-Start with [the JavaScript walkthrough](/guides/client-environment/). It runs the gspot ESLint
-plugin against a small client module, reports the exact line that reads private configuration,
-and checks the corrected module.
+Check a Python settings parser and a shell archive script in one repository. Ruff reports
+executable input; ShellCheck reports a path that breaks when its filename contains spaces.
 
-## What you will check
+Complete [source installation](/guides/install/), including the `gspot` shell function.
+Use Bash on macOS or Linux, Git, and network access for tool installation.
 
-This client module reads a variable intended for the server:
+## Create the repository
 
-```javascript
-"use client";
-export const endpoint = process.env.PRIVATE_API_URL;
+In the same shell, create a disposable directory and provision the native tools:
+
+```bash
+example_root="$(mktemp -d)"
+cd "$example_root"
+git init -q
+mise use uv@0.12.13 shellcheck@0.11.0 shfmt@3.12.0
+eval "$(mise env --shell bash)"
+mkdir src scripts
 ```
 
-The `gspot/no-client-environment` rule reports the read at line 2, column 25. Change the
-client to use an API route:
+Save this complete policy as `gspot.toml`:
 
-```javascript
-"use client";
-export const endpoint = "/api/search";
+```toml
+version = 1
+configurations = ["python", "bash"]
+level = "recommended"
 ```
 
-The corrected module produces no finding from this rule. An application still needs to
-implement that route on the server, where it can read private configuration.
+Save this Python project metadata as `pyproject.toml`:
 
-## Run the example
+```toml
+[project]
+name = "settings-example"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = []
+```
 
-The [walkthrough](/guides/client-environment/) includes the complete setup, ESLint
-configuration, commands, and expected output. It uses a disposable directory and the plugin
-built from your [source checkout](/guides/install/). No published gspot package is required.
+Save the parser as `src/settings.py`:
 
-## Check your repository
+```python
+import json
 
-After trying the example, follow [adopt an existing repository](/guides/existing-repository/)
-to select configurations and review generated configuration. The JavaScript configuration runs ESLint and
-other checks; the walkthrough selects one rule so its result is easy to inspect.
 
-See [edit and retain repository files](/guides/generated-files/) for what to commit,
-regenerate, and keep for restoration.
+def normalize_settings(source: str) -> str:
+    return json.dumps(eval(source), sort_keys=True)
+```
+
+Save the script as `scripts/list-archive.sh`:
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+archive=$1
+tar -tf $archive
+```
+
+## Generate, install, and check
+
+From the example directory, run:
+
+```bash
+gspot apply
+gspot install
+gspot check
+```
+
+Apply generates configuration and tool locks. Install prepares the locked tools. Check runs
+them and exits `1` with these findings:
+
+| File                          | Check             | Finding                                 |
+| ----------------------------- | ----------------- | --------------------------------------- |
+| `src/settings.py:5:23`        | `python/ruff`     | `S307`: input reaches `eval`.           |
+| `scripts/list-archive.sh:5:9` | `bash/shellcheck` | `SC2086`: the archive path is unquoted. |
+
+For the check's explanation and correction guidance, run:
+
+```bash
+gspot explain python/ruff
+gspot explain shellcheck/SC2086
+```
+
+The report also names skipped checks. This example configures no Python import contract,
+so `python/import-linter` is skipped.
+
+## Correct both files
+
+Replace `src/settings.py` with a parser for JSON values:
+
+```python
+import json
+
+
+def normalize_settings(source: str) -> str:
+    return json.dumps(json.loads(source), sort_keys=True)
+```
+
+Replace `scripts/list-archive.sh` with:
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+archive=$1
+tar -tf "$archive"
+```
+
+Run `gspot check` again. With gspot 0.1.0 and the generated tool pins, the same repository
+reports 22 checks passed, one check skipped, and no findings. The command exits `0`.
+These corrections are manual; a formatter cannot choose the intended input format for you.
+
+Reports are saved under `.gspot/reports/`. To inspect only the two affected checks later:
+
+```bash
+gspot check --only python/ruff bash/shellcheck
+```
+
+## Use it in your project
+
+Follow [existing repositories](/guides/existing-repository/) to preview adoption without
+losing existing settings. Add [Git hooks or CI](/guides/hooks-and-ci/) to run checks before
+changes reach the default branch.
+
+The disposable example is stored at `example_root`. Leave it before removing it when you
+have finished inspecting the files and reports.

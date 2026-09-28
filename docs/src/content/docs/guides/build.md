@@ -1,5 +1,5 @@
 ---
-title: Build gspot
+title: Build and contribute
 description: Build local binaries, prepare the upstream Swift parser, and package releases.
 sidebar:
     order: 2

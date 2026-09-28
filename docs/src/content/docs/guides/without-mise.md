@@ -1,5 +1,5 @@
 ---
-title: Without mise
+title: Package managers
 description: Private tool projects and task integration when mise is not the runner.
 sidebar:
     order: 5
@@ -47,3 +47,18 @@ commands.
 Omit `[runner]` to leave task-runner configuration unmanaged. An absent `[hooks]` or `[ci]`
 table enables no integration. When a table is present, name its tool or provider explicitly.
 Use `--no-runner`, `--no-hooks`, and `--no-ci` during initialization to omit those tables.
+
+## Private registries
+
+Configure npm-compatible registries and scoped authentication through the repository or user
+`.npmrc`, or the package manager environment. gspot carries those connection settings into
+its isolated npm, Bun, pnpm, and Yarn operations. Keep credential values in your environment
+or private user configuration, not `gspot.toml` or committed lockfiles.
+
+For Python tools, configure uv indexes in `uv.toml` or `[tool.uv]` in `pyproject.toml`.
+uv resolves user configuration and environment precedence. gspot retains project index
+settings while generating and installing the private Python lock.
+
+Run `gspot apply` to resolve a policy change, then commit the generated manifests and locks.
+Teammates use their own registry credentials with `gspot install`. Installation refuses a
+mismatched lock; it does not silently resolve a replacement.

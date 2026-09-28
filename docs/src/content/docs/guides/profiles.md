@@ -1,5 +1,5 @@
 ---
-title: Share a team profile
+title: Team profiles
 description: Export portable policy, review it, and use it when initializing another repository.
 ---
 

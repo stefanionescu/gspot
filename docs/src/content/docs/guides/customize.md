@@ -1,15 +1,12 @@
 ---
-title: Choose checks and exceptions
+title: Configuration
 description: Select configurations, adjust settings, and keep exceptions scoped and explained.
 ---
 
 Run commands from the configured repository root with the [CLI available](/guides/install/).
 
-Start with an initialized repository. A **configuration** groups checks and tool configuration.
-A **check** runs an analysis or a tool; a **tool rule** identifies a diagnostic within that
-check. A **finding** is the reported problem. The **level** selects policy strength, the
-**stage** selects when checks run, and a **scope** selects a project within the repository.
-A **profile** carries portable policy between repositories.
+Choose language and framework configurations, then change individual settings or record an exception.
+A configuration selects checks and their required tools.
 
 ## Inspect the current choices
 
@@ -89,14 +86,10 @@ changing one. Review `gspot.toml` and generated changes before sharing them.
 See [edit and retain repository files](/guides/generated-files/) for what to commit,
 regenerate, and keep for restoration.
 
-## Regenerate an existing recommended project
+## Upgrade tool configuration
 
-Run `gspot apply` after upgrading. Recommended projects gain routine formatting and broader
-baseline checks; opinionated restrictions move to `all`. Tool installation follows selected
-integrations and their dependencies, independently of rule membership. Network access,
-platform support, execution cost, and commit or push stages do not determine a rule level.
+After upgrading gspot, preview changes with `gspot apply --dry-run`. Run `gspot apply`,
+review the generated changes and locks, then run `gspot install` and `gspot check`.
 
-Coverage floors default to zero at recommended and 80% at all. Explicit floors apply at
-either level. Recommended enforces declared license and file-size policies without imposing
-a universal allowance list or size budget. Vulture uses 100% confidence at recommended and
-80% at all, unless `tools.vulture.min_confidence` is set explicitly.
+The [settings reference](/reference/settings/) lists defaults at both levels. Explicit settings
+remain effective at either level, including coverage floors, license allowances, and file-size limits.

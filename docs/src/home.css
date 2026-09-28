@@ -104,8 +104,8 @@
 .demo-steps button {
     border: 1px solid var(--sl-color-gray-4);
     border-radius: 0.25rem;
-    min-height: 2.25rem;
-    padding-inline: 0.75rem;
+    min-height: 2.75rem;
+    padding-inline: 0.625rem;
     background: transparent;
     color: var(--sl-color-gray-2);
     font: inherit;
@@ -124,37 +124,59 @@
     font-size: 0.8125rem;
 }
 
-.demo-result {
+.demo-panels {
+    min-height: 17rem;
+}
+
+.demo-findings {
     display: grid;
-    gap: 0.5rem;
-    padding-block: 1rem;
+    gap: 1rem;
+    padding: 0;
+    list-style: none;
 }
 
-.result-label {
-    font-size: 0.75rem;
-    font-weight: 650;
-    color: var(--sl-color-text-accent);
-}
-
-.demo-result code {
-    overflow-wrap: anywhere;
-    font-size: 0.75rem;
-}
-
-.demo-result p {
-    color: var(--sl-color-gray-2);
-    font-size: 0.8125rem;
+.demo-findings li {
     margin: 0;
+    padding-inline-start: 0.75rem;
+    border-inline-start: 2px solid var(--sl-color-text-accent);
+}
+
+.demo-findings code,
+.demo-findings span {
+    font-size: 0.75rem;
+    overflow-wrap: anywhere;
+}
+
+.demo-findings p,
+.demo-note,
+.demo-corrections,
+.demo-status {
+    font-size: 0.8125rem;
+    line-height: 1.6;
+}
+
+.demo-findings p {
+    margin-block: 0.25rem;
+}
+
+.demo-findings span,
+.demo-note {
+    color: var(--sl-color-gray-2);
+}
+
+.demo-corrections {
+    padding-inline-start: 1.25rem;
+    margin-block: 0 1rem;
+}
+
+.demo-status {
+    font-weight: 600;
+    margin-block: 1rem 0;
 }
 
 .hero-demo .expressive-code code,
 .comparison .expressive-code code {
     font-size: 0.8125rem;
-}
-
-.hero-demo .expressive-code .code,
-.comparison .expressive-code .code {
-    padding-inline: 0.5rem;
 }
 
 .demo-guide {

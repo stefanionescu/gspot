@@ -1,15 +1,14 @@
 ---
-title: You got a finding, now what
+title: Fix findings
 description: Read diagnostics, verify corrections, and inspect check reports.
 sidebar:
     order: 3
 ---
 
-Use the [source installation guide](/guides/install/) to prepare the CLI. Run the commands below
-from the repository root unless a step names another directory.
+Run commands from your repository root with [gspot installed](/guides/install/).
 
 A located finding identifies its file, line, check, and message. The `help:` line describes
-the correction. Some tool failures have no file location:
+the correction. For example:
 
 ```text
 greet.sh:1  bash/syntax  syntax error near unexpected token `then'

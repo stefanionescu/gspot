@@ -1,6 +1,6 @@
 ---
 slug: guides/custom-checks
-title: Add your own check
+title: Custom checks
 description: Run a repository command with explicit inputs, stage, and output.
 ---
 

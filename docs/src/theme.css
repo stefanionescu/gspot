@@ -311,6 +311,10 @@ html[data-has-hero] .sl-markdown-content:not(:has(.landing)) h2 {
     transform: translateY(-50%);
 }
 
+.expressive-code .frame:not(.has-title) .ec-line .code {
+    padding-inline-end: 4rem;
+}
+
 .expressive-code .copy button {
     width: 2.75rem;
     height: 2.75rem;

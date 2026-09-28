@@ -1,6 +1,6 @@
 ---
 import { Code } from '@astrojs/starlight/components';
-import example from './client-environment.json';
+import example from './repository.json';
 ---
 <section class="home-hero" aria-labelledby="_top">
     <div class="hero-copy">
@@ -13,21 +13,34 @@ import example from './client-environment.json';
         </nav>
         <div class="setup-command"><p>From your source checkout</p><Code code="mise run repo:setup" lang="sh" frame="none" /></div>
     </div>
-    <section class="hero-demo" aria-labelledby="hero-example">
-        <div class="demo-heading"><h2 id="hero-example">Catch it before you commit.</h2><span>A real ESLint check, before and after.</span></div>
-        <div class="demo-steps" role="group" aria-label="Example version">
-            <button type="button" data-example="before" aria-pressed="true">Before</button>
-            <button type="button" data-example="after" aria-pressed="false">After</button>
+    <section class="hero-demo" aria-labelledby="hero-example" data-example-root>
+        <div class="demo-heading"><h2 id="hero-example">Two languages. One check.</h2><span>Recorded local run · Python + Bash</span></div>
+        <div class="demo-steps" role="group" aria-label="Repository example">
+            <button type="button" data-example="policy" aria-controls="demo-policy" aria-pressed="false">1. Configure</button>
+            <button type="button" data-example="before" aria-controls="demo-before" aria-pressed="true">2. Check</button>
+            <button type="button" data-example="after" aria-controls="demo-after" aria-pressed="false">3. Correct</button>
         </div>
-        <div data-example-panel="before">
-            <Code code={example.broken.trimEnd()} lang="js" title="search.js" wrap />
-            <div class="demo-result"><span class="result-label">1 finding</span><p>Private environment variable in client code.</p><code>{example.findings[0].ruleId}</code></div>
+        <div class="demo-panels" aria-live="polite">
+            <div id="demo-policy" data-example-panel="policy" hidden>
+                <Code code={example.policy.trimEnd()} lang="toml" title="gspot.toml" wrap />
+                <Code code="gspot apply
+gspot install" lang="sh" frame="none" />
+                <p class="demo-note">Generate tool configuration and install its locked dependencies.</p>
+            </div>
+            <div id="demo-before" data-example-panel="before">
+                <Code code="gspot check" lang="sh" frame="none" />
+                <ul class="demo-findings">{example.findings.map((finding) => <li><code>{finding.file}:{finding.line}</code><p>{finding.message}</p><span>{finding.rule} · {finding.check}</span></li>)}</ul>
+                <p class="demo-status">{example.failedChecks} checks failed · {example.findings.length} findings · exit 1</p>
+            </div>
+            <div id="demo-after" data-example-panel="after" hidden>
+                <ul class="demo-corrections"><li>Parse JSON instead of executing input.</li><li>Quote the archive path to preserve spaces.</li></ul>
+                <Code code="gspot check" lang="sh" frame="none" />
+                <p class="demo-status">{example.passedChecks} checks passed · 0 findings · exit 0</p>
+                <p class="demo-note">{example.skippedChecks} check skipped: no Python import contract configured.</p>
+                <a href="#finding">See both code changes ↓</a>
+            </div>
         </div>
-        <div data-example-panel="after" hidden>
-            <Code code={example.corrected.trimEnd()} lang="js" title="search.js" wrap />
-            <div class="demo-result"><span class="result-label">Rule passes</span><p>Private configuration stays on the server.</p><code>0 client-environment findings</code></div>
-        </div>
-        <a class="demo-guide" href="/guides/client-environment/">Run this example <span aria-hidden="true">→</span></a>
+        <a class="demo-guide" href="/guides/quick-start/">Run the complete example <span aria-hidden="true">→</span></a>
     </section>
 </section>
 <script>

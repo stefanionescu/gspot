@@ -1,5 +1,5 @@
 ---
-title: Check Client Environment Access
+title: Client environment variables
 description: Find a private environment read in client code and correct the boundary.
 ---
 

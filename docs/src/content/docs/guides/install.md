@@ -1,5 +1,5 @@
 ---
-title: Install gspot
+title: Install
 description: Install dependencies and run gspot from source.
 sidebar:
     order: 1
@@ -35,9 +35,6 @@ security, accessibility, and type checks. Select `all` for additional stable con
 Neither level enables experimental rules. Selected integrations determine installed tools,
 including parser and plugin dependencies for rules that are disabled.
 
-After an upgrade, run `gspot apply` to regenerate an existing project. Recommended projects
-gain formatting and broader baseline checks, while opinionated restrictions move to `all`.
-
 ## Match the repository version
 
 `gspot init` writes `.gspot/version` and, when mise runs the repository, a pin in
@@ -69,7 +66,7 @@ xattr -d com.apple.quarantine ./gspot-darwin-arm64
 ```
 
 Use the filename for your architecture. Windows builds are not Authenticode signed; Windows
-can display an unknown-publisher warning. Windows installation and hook behavior have not been verified natively.
+can display an unknown-publisher warning.
 
 ## Join a configured repository
 

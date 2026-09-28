@@ -1,10 +1,9 @@
 ---
-title: Remove gspot and recover original files
+title: Uninstall
 description: Preview removal, preserve later edits, and restore recorded originals.
 ---
 
-Use the [source installation guide](/guides/install/) to prepare the CLI. Run the commands below
-from the repository root unless a step names another directory.
+Run commands from your repository root with [gspot installed](/guides/install/).
 
 Run removal from the configured repository root. Inspect the plan before applying it:
 

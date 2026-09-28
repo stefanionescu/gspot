@@ -174,13 +174,15 @@ patterns = [
     "processing.mjs",
     "rules.mjs",
     "src/app/api/checkout/route.ts",
+    "src/settings.py",
+    "scripts/list-archive.sh",
     "supabase/scripts/migrations.ts",
     "supabase/seed.sql",
     "turn",
     "typecheck/trt.json",
     "utils/common.ts",
 ]
-reason = "Architecture examples and regression records use these exact consumer paths, deliberately invalid imports, and sandbox module names. They are not tracked checkout claims. Remove an entry when its example or regression record is removed."
+reason = "Architecture examples, documentation walkthroughs, and regression records use these exact consumer paths, deliberately invalid imports, and sandbox module names. They are not tracked checkout claims. Remove an entry when its example or regression record is removed."
 
 [[tools.docs.paths_allowed]]
 patterns = ["acceptance/source/configurations/css.test.ts"]

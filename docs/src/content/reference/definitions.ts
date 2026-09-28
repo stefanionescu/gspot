@@ -3,6 +3,37 @@ import type { ReferencePage } from '../../types/reference.ts';
 import { bullets, cell, referencePage, section, table } from './page.ts';
 import type { CheckSpec, Manifest } from '@gspot/cli/src/types/configurations.ts';
 
+function guideSelection(file: Manifest['rule_files'][string][number]): string {
+    if (file.when === undefined) return `\`${file.path}\``;
+    const labels = {
+        extensions: 'file extension',
+        filenames: 'filename',
+        dependencies: 'dependency',
+        shebangs: 'script interpreter',
+        tags: 'file tag',
+        paths: 'file path',
+        project_files: 'project file',
+    };
+    const conditions = Object.entries(file.when).flatMap(([kind, patterns]) =>
+        patterns.map((pattern) => `${labels[kind as keyof typeof labels]} \`${pattern}\``),
+    );
+    return `\`${file.path}\` when the repository matches any of: ${conditions.join(', ')}.`;
+}
+
+function ruleExclusions(manifest: Manifest): string {
+    return bullets(
+        manifest.rules_off.map((exclusion) => {
+            const rules = exclusion.rules.map((rule) => `\`${rule}\``).join(', ');
+            const files = exclusion.files?.map((path) => `\`${path}\``).join(', ') ?? 'all files in the scope';
+            const condition =
+                exclusion.when === undefined
+                    ? ''
+                    : ` when \`${exclusion.when.setting}\` is \`${JSON.stringify(exclusion.when.value)}\``;
+            return `${rules} (${exclusion.tool}) for ${files}${condition}. ${exclusion.reason}`;
+        }),
+    );
+}
+
 function checkEnvironment(check: CheckSpec): string[] {
     const tool = check.tool ?? check.command?.[0];
     const attributes: [string, string | undefined][] = [
@@ -73,7 +104,7 @@ export function configurationPage(manifest: Manifest): ReferencePage {
             ? `\`${config.target}\``
             : `\`${config.target}\` when the [${config.needs} configuration](/reference/configurations/${config.needs}/) is selected`,
     );
-    const rules = Object.values(manifest.rule_files).flatMap((files) => files.map((file) => `\`${file.path}\``));
+    const rules = Object.values(manifest.rule_files).flatMap((files) => files.map((file) => guideSelection(file)));
     const settings = manifest.settings.map((setting) => `\`${setting.name}\`: ${setting.summary}`);
     const requires = configuration.requires.map((id) => `\`${id}\``).join(', ');
     const opening = [
@@ -99,6 +130,7 @@ export function configurationPage(manifest: Manifest): ReferencePage {
             ),
         ),
         section('Settings', bullets(settings)),
+        section('Rule exclusions', ruleExclusions(manifest)),
         section('Rule files', bullets(rules)),
     ].join('');
     return referencePage(configuration.title, configuration.description, body, `${manifest.dir}/manifest.toml`);

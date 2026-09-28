@@ -47,6 +47,11 @@ test('identical setting definitions list every configuration owner and global se
     expect(shared).toContain('/reference/configurations/express/');
     expect(shared).toContain('/reference/configurations/fastapi/');
     expect(settings).toContain('`require_reasons`');
+    const javascript = referencePages().get('configurations/javascript.md')!.body;
+    expect(javascript).toContain('`runtime/node/NODE.md`\n');
+    expect(javascript).toContain(
+        '`runtime/bun/BUN.md` when the repository matches any of: filename `bun.lock`, filename `bun.lockb`, filename `bunfig.toml`.',
+    );
 });
 
 test('conflicting setting definitions stop reference generation', () => {
@@ -150,6 +155,10 @@ test('check references invoke the reporting check and expose execution restricti
         'each selected scope, excluding files owned by child scopes',
     );
     expect(pages.get('rules/xctest/coverage.md')!.body).toContain('Platform selection: macos');
+    const next = pages.get('configurations/nextjs.md')!.body;
+    expect(next).toContain('## Rule exclusions');
+    expect(next).toContain('when `structure.reexports` is `"index-only"`');
+    expect(next).toContain('Next.js discovers route files by name');
 });
 
 test('plugin references reject an empty example before publishing pages', () => {
