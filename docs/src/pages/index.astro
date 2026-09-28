@@ -7,7 +7,7 @@ import Features from '../components/home/Features.astro';
 import ThemeSelect from '../components/starlight/ThemeSelect.astro';
 
 const workflow = [
-    { title: 'Choose your checks', description: 'Choose configurations and settings in gspot.toml. Apply those choices to generate configuration for the selected tools.', image: '/brand/home/policy.svg', href: '/guides/customize/', link: 'Choose checks and exceptions' },
+    { title: 'Choose your checks', description: 'Choose kits and settings in gspot.toml. Apply those choices to generate configuration for the selected tools.', image: '/brand/home/policy.svg', href: '/guides/customize/', link: 'Choose checks and exceptions' },
     { title: 'Run pinned tool versions', description: 'Run selected tools with pinned versions. ESLint, Ruff, Prettier, and other tools keep their own diagnostic rules.', image: '/brand/home/toolchain.svg', href: '/reference/kits/', link: 'Browse the configuration reference' },
     { title: 'Find the code to fix', description: 'Find the file, check, and correction advice in the report. Rerun the check after correcting the code.', image: '/brand/home/finding.svg', href: '/guides/findings/', link: 'Read and resolve findings' },
 ];
@@ -42,11 +42,11 @@ const repository = [
         <section class="setup" aria-labelledby="setup">
             <div class="section-heading"><div><h2 id="setup">Set up a repository</h2><p>Install from source, select the JavaScript configuration, and run your first checks.</p></div><a class="pill" href="/guides/install/">Get started ↗</a></div>
             <div class="setup-grid">
-                <div><Code code={'version = 1\nconfigurations = ["javascript"]\nlevel = "recommended"'} lang="toml" title="gspot.toml" /><p>1. Select a configuration in your repository policy.</p></div>
+                <div><Code code={'version = 1\nkits = ["javascript"]\nlevel = "recommended"'} lang="toml" title="gspot.toml" /><p>1. Select a configuration in your repository policy.</p></div>
                 <div><Code code={'gspot apply --dry-run\ngspot apply\ngspot install'} lang="sh" title="Repository root" /><p>2. Preview, generate, and install selected tools.</p></div>
                 <div><Code code={'gspot check\ngspot explain javascript/eslint\ngspot doctor'} lang="sh" title="Repository root" /><p>3. Check code and diagnose findings or setup.</p></div>
             </div>
-            <p class="setup-note">For a new configuration, <code>gspot init</code> proposes configurations and integrations before applying them. Initialization runs no checks.</p>
+            <p class="setup-note">For a new configuration, <code>gspot init</code> proposes kits and integrations before applying them. Initialization runs no checks.</p>
         </section>
         <section class="closing" aria-label="Next steps"><h2>Start linting your code.</h2><nav><a class="pill primary" href="/guides/install/">Get started ↗</a><a class="pill" href="/reference/commands/check/">View commands</a></nav></section>
         <footer class="home-footer">

@@ -25,13 +25,13 @@ function ruleAnswer(install: boolean | undefined): 'yes' | 'no' | undefined {
     return install ? 'yes' : 'no';
 }
 
-// A profile answers the questions a flag did not: its configurations, hooks, workflow, runner, and guides.
+// A profile answers the questions a flag did not: its kits, hooks, workflow, runner, and guides.
 function profileAnswers(profile: Profile): Partial<InitOptions> {
     const { tables } = profile;
     const configurations = tables.kits ?? [];
     const install = tables.guides?.install;
     return compact({
-        configurations: configurations.length === 0 ? ['none'] : configurations,
+        kits: configurations.length === 0 ? ['none'] : configurations,
         hooks: tables.hooks === undefined ? 'none' : tables.hooks.tool,
         ci: tables.ci === undefined ? 'none' : tables.ci.provider,
         runner: tables.runner === undefined ? 'none' : tables.runner.tool,

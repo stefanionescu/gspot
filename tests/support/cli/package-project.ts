@@ -86,7 +86,7 @@ export async function createPackageProject(
             [projectPath]: rootPackage,
             ...(projectPath === 'package.json' ? { 'pnpm-workspace.yaml': 'packages:\n  - "**"\n' } : {}),
             '.npmrc': `registry=${registry.url}/\nalways-auth=true\n${registry.url.replace('http:', '')}/:_authToken=${registry.token}\n`,
-            'gspot.toml': `version = 1\nlevel = "recommended"\nkits = ["formatting"]\n${RUNNER_POLICY[runner]}[rules]\ninstall = false\n`,
+            'gspot.toml': `version = 1\nlevel = "recommended"\nkits = ["formatting"]\n${RUNNER_POLICY[runner]}[guides]\ninstall = false\n`,
             ...AUTHORED_FILES,
         });
         const yarnConfiguration =

@@ -101,7 +101,7 @@ test(
             Bun.TOML.parse(await Bun.file(join(first.path, 'gspot.toml')).text()) as Record<string, unknown>,
             Bun.TOML.parse(await Bun.file(join(second.path, 'gspot.toml')).text()) as Record<string, unknown>,
         ];
-        expect(two['configurations']).toStrictEqual(one['configurations']);
+        expect(two['kits']).toStrictEqual(one['kits']);
         expect(two['format']).toStrictEqual({ indent_width: 2 });
         expect(two['hooks']).toStrictEqual(one['hooks']);
         expect(two['ignore']).toStrictEqual([
@@ -157,7 +157,7 @@ test(
         );
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         const read = Bun.TOML.parse(await Bun.file(join(sandbox.path, 'gspot.toml')).text()) as Record<string, unknown>;
-        expect(read['configurations']).toStrictEqual(['bash']);
+        expect(read['kits']).toStrictEqual(['bash']);
     },
     PLANTED_TIMEOUT_MS,
 );

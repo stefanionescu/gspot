@@ -1,6 +1,6 @@
 {
     "version": "0.1.0",
-    "policy": "version = 1\nconfigurations = [\"python\", \"bash\"]\nlevel = \"recommended\"\n",
+    "policy": "version = 1\nkits = [\"python\", \"bash\"]\nlevel = \"recommended\"\n",
     "project": "[project]\nname = \"settings-example\"\nversion = \"0.1.0\"\nrequires-python = \">=3.12\"\ndependencies = []\n",
     "files": [
         {
