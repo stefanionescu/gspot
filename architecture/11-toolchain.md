@@ -130,7 +130,7 @@ skip there.
 ## One tool per job
 
 A tool enters a configuration only when it does something no tool already in the set does. Applied to
-the reference set, these were cut, and every rule they enforced is re-pointed in the ledger:
+the reference set, these were cut, and every rule they enforced is re-pointed in the acceptance record:
 
 | Cut                                     | Kept instead                                             | Why                                                               |
 | --------------------------------------- | -------------------------------------------------------- | ----------------------------------------------------------------- |

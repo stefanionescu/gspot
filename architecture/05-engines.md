@@ -167,7 +167,7 @@ listed owner to avoid duplicate findings; standalone plugin coverage remains req
 
 `gspot/newline-after-imports` and `gspot/no-imports-after-statements` are expressed by
 `import-x/newline-after-import` and `import-x/first`, which the generated config enables. The
-ledger records both.
+acceptance record records both.
 
 Each rule has options for its limits and allowlists. The generated config sets them from
 `[limits]` and `[[ignore]]`.

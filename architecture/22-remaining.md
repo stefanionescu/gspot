@@ -36,7 +36,7 @@ Record failures at their owning step. A blocked prerequisite blocks its dependen
 it does not count as a pass. Unavailable native platforms and authorization-dependent external
 work remain explicitly deferred in phase 10. A later source change reopens affected earlier
 steps and invalidates affected candidate evidence.
-Adding the ledger's missing tool integrations requires a separately authorized dependency scope;
+Adding the acceptance record's missing tool integrations requires a separately authorized dependency scope;
 the cleanup's existing-dependencies constraint does not silently remove those commitments.
 
 ### CI verification
@@ -217,7 +217,7 @@ configuration.
 
 Step 2.4. Confirmed defect.
 
-[Acceptance `K-233`](06-enforcement-ledger.md#acceptance-k-233) limits CSS owns to `.css` and
+[Acceptance `K-233`](06-acceptance.md#acceptance-k-233) limits CSS owns to `.css` and
 requires Sass to be reported as unsupported. The
 [CSS manifest](../packages/cli/kits/language/css/manifest.toml) instead detects and
 owns `.scss` and `.pcss` alongside `.css`.
@@ -594,13 +594,13 @@ Acceptance: `K-198`, `K-52`, `K-221`, `K-135`, `K-141`, `K-142`, `K-123`, `K-152
 
 Step 6.9. Verification and confirmed repairs.
 
-Verify the agreed ledger capabilities. Jest and nginx already have manifests, check execution,
+Verify the agreed acceptance record capabilities. Jest and nginx already have manifests, check execution,
 and acceptance suites; their remaining work is execution and coverage verification. Framework
 gaps are recorded in phase 4. Verify scoped security packs, non-npm
 licenses, database lint, and Swift test overrides against native results. Do not expand this into
 adding every available linter.
 
-Owner: `configurations/ and checks/`. Dependencies: ledger reconciliation. Completion evidence: Each agreed capability has native defect/correction evidence, including Jest, nginx, accessibility, security packs, licenses, databases, and Swift overrides.
+Owner: `configurations/ and checks/`. Dependencies: acceptance reconciliation. Completion evidence: Each agreed capability has native defect/correction evidence, including Jest, nginx, accessibility, security packs, licenses, databases, and Swift overrides.
 
 Acceptance: `K-218`, `K-211`, `K-212`, `K-233`, `K-236`, `K-80`, `K-248`, `K-256`.
 

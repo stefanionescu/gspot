@@ -383,7 +383,7 @@ A framework changes which plugins run. It does not change the rules of the langu
 
 ## Available configurations
 
-The [enforcement ledger](06-enforcement-ledger.md#configuration-enforcement-contracts) preserves
+The [acceptance record](06-acceptance.md#configuration-enforcement-contracts) preserves
 the detection, settings, and checks of each agreed configuration. The v1 set is every kit the four reference repositories need. That covers a Python API, a Swift
 app, an Express API, a Supabase project, a static site on Cloudflare, and a Next.js app.
 
@@ -413,7 +413,7 @@ includes correctness, security, accessibility, type safety, routine formatting,
 and declared project contracts. Naming, placement, abstraction, and complexity
 preferences belong to `all`.
 
-Use the naming policy with the corrected structural contract in [07-slop-drift.md](07-slop-drift.md). Trivial-function and trivial-file preferences run at `all`, including nested
+Use the naming policy with the corrected structural contract in [07-drift.md](07-drift.md). Trivial-function and trivial-file preferences run at `all`, including nested
 scopes and standalone plugins. JavaScript and TypeScript preserve identifiable
 required callbacks and signatures. Other required APIs need narrow, reasoned exceptions.
 
@@ -564,7 +564,7 @@ A manifest test repository with `engine = "nope"` fails to load.
 ### Acceptance K-180
 
 `--runner` takes `mise`, `npm`, `pnpm`, `yarn`, and `bun`. The Python tools install
-under `.gspot/` with uv, as the Python toolchain contract specifies ([06-enforcement-ledger.md](06-enforcement-ledger.md), K-266).
+under `.gspot/` with uv, as the Python toolchain contract specifies ([06-acceptance.md](06-acceptance.md), K-266).
 
 gspot pins itself in the mise file as `"github:stefanionescu/gspot"`, not through
 `ubi`, in `packages/cli/src/generation/runner/tasks.ts` and in installation diagnostics. Detection in

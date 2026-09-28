@@ -186,10 +186,10 @@ reason = "The Virtua list virtualization library. Native dictionary matching als
 [tools.typos.extra]
 reason = "These exact filename types preserve deliberate defect fixtures and external rule identifiers or quoted descriptions. Native Typos matches basenames rather than directory paths. Other words stay checked. Remove each allowance when its fixture, mapping, or upstream identifier is removed."
 
-[tools.typos.extra.type.06-enforcement-ledger-md]
-extend-glob = ["06-enforcement-ledger.md"]
+[tools.typos.extra.type.06-acceptance-md]
+extend-glob = ["06-acceptance.md"]
 
-[tools.typos.extra.type.06-enforcement-ledger-md.extend-words]
+[tools.typos.extra.type.06-acceptance-md.extend-words]
 capitalisation = "capitalisation"
 
 [tools.typos.extra.type.08-naming-policy-md]

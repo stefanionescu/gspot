@@ -4,6 +4,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { LINT_TIMEOUT_MS } from '#tests/config/integration/tools/tools.ts';
 
 const cases = [
     {
@@ -71,7 +72,7 @@ for (const scenario of cases.filter((entry) => entry.language !== 'swift' || pro
             cwd: directory.path,
             stdout: 'pipe',
             stderr: 'pipe',
-            timeout: 10_000,
+            timeout: LINT_TIMEOUT_MS,
         });
         const findings = JSON.parse(result.stdout.toString()) as {
             code?: string;

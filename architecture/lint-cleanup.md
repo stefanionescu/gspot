@@ -502,7 +502,7 @@ The twelve enum-comparison suppressions around the TOML parser are gone:
 keeps its enum private. The build
 script reads the release target table from disk instead of importing across package folders.
 The two npm lockfile formats are named constants. The Vale image and merge-marker rules run on
-markup files only, so the seven test-file ignores are gone. The enforcement ledger and the prior
+markup files only, so the seven test-file ignores are gone. The acceptance record and the prior
 art record name their reference repositories without file paths, so the docs path allowance is
 gone. Linkinator 8.1.0 dropped the dependency that carried the uuid advisory, so the ignore for
 Open Source Vulnerabilities (OSV) is gone.

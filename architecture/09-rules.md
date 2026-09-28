@@ -91,7 +91,7 @@ anything is enforced. Where a rule needs the idea, it names the checks of the re
 A rule may name a tool as a standard, such as a script that passes ShellCheck, or as its subject,
 such as a suppression comment. A person who installs the rule files alone reads nothing about a
 setup they do not have. The rules lint of this repository fails on each of those patterns outside
-inline code. What the gate enforces is the ledger's business ([06-enforcement-ledger.md](06-enforcement-ledger.md)), not the reader's.
+inline code. What the gate enforces is the acceptance record's business ([06-acceptance.md](06-acceptance.md)), not the reader's.
 
 ## Size
 
@@ -272,4 +272,4 @@ the level `all`.
 
 `guides/lint` runs the examples at the push stage.
 
-Structural prose follows the executable-statement contract in [07-slop-drift.md](07-slop-drift.md). Do not encourage tiny wrappers, arbitrary declaration splitting, or padding to satisfy a threshold. Required API functions use narrow, reasoned suppressions.
+Structural prose follows the executable-statement contract in [07-drift.md](07-drift.md). Do not encourage tiny wrappers, arbitrary declaration splitting, or padding to satisfy a threshold. Required API functions use narrow, reasoned suppressions.
