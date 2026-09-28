@@ -6,6 +6,7 @@ import { commitAll } from '#tests/support/cli/git.ts';
 import type { FindingCase } from '#tests/types/cli.ts';
 // Planted repository for the python configuration: a lint finding, a layout finding, a type error, a stale docstring, a requirements file.
 import { reportSchema } from '#cli/execution/report.ts';
+import { run as runCommand } from '#cli/platform/spawn.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
@@ -74,6 +75,55 @@ const CASES: FindingCase[] = [
         expected: { file: 'gspot.toml', rule: 'stale-exclusion', line: 1 },
     },
 ];
+
+test(
+    'deptry excludes private tools without Git and preserves authored exclusions beside real findings',
+    async () => {
+        await using sandbox = await testdir();
+        const project = '[project]\nname = "dependency-example"\nversion = "1.0.0"\ndependencies = []\n';
+        const exclusions = '\n[tool.deptry]\nexclude = ["^generated/"]\nextend_exclude = ["^vendor/"]\n';
+        await createFileTree(sandbox.path, {
+            'gspot.toml': 'version = 1\nconfigurations = ["python"]\n',
+            'pyproject.toml': project + exclusions,
+            'src/main.py': 'import undeclared_example\n',
+            'generated/client.py': 'import generated_dependency\n',
+            'vendor/client.py': 'import vendor_dependency\n',
+        });
+        for (const command of ['apply', 'install']) {
+            const prepared = await run(sandbox.path, [command]);
+            expect(prepared.code, prepared.stdout + prepared.stderr).toBe(0);
+        }
+        const args = ['check', '--only', 'python/deptry', '--json'];
+        const failed = await run(sandbox.path, args);
+        expect(failed.code, failed.stdout + failed.stderr).toBe(1);
+        const findings = reportSchema.parse(JSON.parse(failed.stdout)).checks[0]!.findings;
+        expect(findings).toHaveLength(1);
+        expect(findings[0]).toMatchObject({ file: 'src/main.py', rule: 'DEP001', line: 1 });
+        await Bun.write(join(sandbox.path, 'src/main.py'), 'import json\nprint(json.dumps({"ready": True}))\n');
+        const corrected = await run(sandbox.path, args);
+        expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+        expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks[0]).toMatchObject({
+            status: 'ok',
+            findings: [],
+        });
+        const initialized = await runCommand(['git', 'init', '-q'], { cwd: sandbox.path });
+        expect(initialized.code, initialized.stderr).toBe(0);
+        const applied = await run(sandbox.path, ['apply']);
+        expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+        const primed = await run(sandbox.path, args);
+        expect(primed.code, primed.stdout + primed.stderr).toBe(0);
+        const cached = await run(sandbox.path, args);
+        expect(cached.code, cached.stdout + cached.stderr).toBe(0);
+        expect(reportSchema.parse(JSON.parse(cached.stdout)).checks[0]!.status).toBe('cache');
+        await Bun.write(join(sandbox.path, 'pyproject.toml'), project + exclusions.replace('"^vendor/"', '"^other/"'));
+        const changed = await run(sandbox.path, args);
+        expect(changed.code, changed.stdout + changed.stderr).toBe(1);
+        expect(reportSchema.parse(JSON.parse(changed.stdout)).checks[0]!.findings).toMatchObject([
+            { file: 'vendor/client.py', rule: 'DEP001', line: 1 },
+        ]);
+    },
+    PLANTED_TIMEOUT_MS * 3,
+);
 
 test.each(CASES)(
     'the python configuration > $check reports its defect in $expected.file and accepts a correction',

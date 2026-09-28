@@ -198,7 +198,9 @@ level = "recommended"
 stage = "push"
 runs = "per-scope"
 cwd = "scope"
-command = ["deptry", ".", "--no-ansi"]
+analysis = "deptry"
+tool = "deptry"
+cached = true
 claims = {extensions = [".py"], filenames = ["pyproject.toml"]}
 coverage = ["consistency"]
 output = {format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<column>\\d+): (?<rule>DEP\\d+) (?<message>.*)$"}

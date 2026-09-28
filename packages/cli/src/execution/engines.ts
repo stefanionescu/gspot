@@ -11,6 +11,7 @@ import { namingEngine } from '#cli/checks/naming/engine.ts';
 import { runToolCheck } from '#cli/execution/tool/runner.ts';
 import type { CheckSpec } from '#cli/types/configurations.ts';
 import { sourceBans } from '#cli/checks/prose/source-bans.ts';
+import { checkDependencies } from '#cli/checks/python/project.ts';
 import { structureEngine } from '#cli/checks/structure/engine.ts';
 import { checkDocstrings } from '#cli/checks/python/docstrings.ts';
 import { checkSecretHistory } from '#cli/checks/secrets/history.ts';
@@ -44,6 +45,7 @@ const analyses = new Map<string, Executable['run']>([
     ['javascript', checkJavascript],
     ['swiftlint', checkSwiftlint],
     ['pydoclint', checkDocstrings],
+    ['deptry', checkDependencies],
     ['actions', checkActions],
 ]);
 

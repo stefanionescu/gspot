@@ -132,6 +132,7 @@ const checkSchema = z.union(
                 'verified-secrets',
                 'swiftlint',
                 'pydoclint',
+                'deptry',
                 'actions',
             ]),
             command: absent,
