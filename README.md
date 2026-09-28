@@ -13,7 +13,7 @@
 
 **Lint AI generated code.**
 
-gspot configures linters, runs checks, and generates instructions for coding agents from one configuration file.
+gspot configures linters, runs checks, and generates instructions for coding agents from one policy file, `gspot.toml`.
 
 Edit `gspot.toml` to choose checks. See [edit and retain repository files](docs/src/content/docs/guides/generated-files.md) for what to commit and keep for recovery.
 
@@ -29,7 +29,7 @@ published release or native verification on every target platform.
   <img src="docs/public/brand/readme/tools/semgrep.svg" alt="Semgrep" width="120">
 </p>
 
-See the [configuration reference](https://gspot.dev/reference/kits/) for supported technologies.
+See the [kit reference](https://gspot.dev/reference/kits/) for supported technologies.
 
 ## Check a JavaScript module
 

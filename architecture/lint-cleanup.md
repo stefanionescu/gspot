@@ -527,6 +527,24 @@ CodeQL passed after `installed-files.ts` reads a link target before opening a fi
 `locate.ts` reads a manifest without a preceding stat. Types, 961 unit tests, 1,441 integration
 tests, 463 plugin tests, 141 normal checks, and seven manual checks pass on the current tree.
 
+## Public vocabulary
+
+Done on 2026-09-28. One word names one thing. A `kit` is the unit of selection: the
+`configurations` key, command, flag, folders, manifest table, and types became `kits`, `[kit]`,
+`Kit*`. The `gspot.toml` file is the `policy`, and the manifest kind that was `policy` is
+`general`, after its folder.
+
+Agent Markdown files are `guides`: the `[rules]` table is
+`[guides]`, the install directory is `.gspot/guides`, and the manifest table is `[guides]`.
+The `configs` kit is `files`. `src/constants/` is `src/config/`. The word `configuration` now
+means a tool's configuration file and nothing else.
+
+Internal names follow the same rule: drift, acceptance, replace, keep, root, owner, plan, log,
+read, kind, owners, fields, token, weaker, similar, native; the checks `integrity/files`,
+`structure/inline`, `structure/remote`, `structure/guards`, `prose/banned`, `html/text`; and the
+page `findings.md`. Each rename went through `git mv` so history survives, and the naming
+engine accepted every new identifier.
+
 ## Verification
 
 Bun 1.4.2 owns all accepted runtime evidence. Detailed reports and failed diagnostic history

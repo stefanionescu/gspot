@@ -88,7 +88,7 @@ One word, one meaning, everywhere in this folder, and in the code.
 | profile              | Portable config without repository-specific paths.                                                                        |
 | general              | The kit kind for checks that span languages.                                                                              |
 
-[Configuration definitions](04-kits.md#names-across-the-public-contract) and
+[Kit definitions](04-kits.md#names-across-the-public-contract) and
 [execution results](05-engines.md#actions-and-their-results) own exact public fields. File ownership and
 recovery are defined in [03-configuration.md](03-configuration.md), not inferred from a name.
 

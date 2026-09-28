@@ -451,6 +451,9 @@ Owner: `policy/ and commands/`. Dependencies: schema/command agreement. Completi
 
 Acceptance: `K-89`, `K-66`, `K-308`, `K-111`, `K-115`, `K-234`, `K-110`, `K-114`.
 
+Done on 2026-09-28. [The cleanup record](lint-cleanup.md#public-vocabulary) lists the public and
+internal renames: kits, policy, guides, general, files, and the one-word internal table.
+
 ### Generated metadata and drift
 
 Step 5.6. Verification and confirmed repairs.
