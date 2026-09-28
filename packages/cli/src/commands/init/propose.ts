@@ -23,17 +23,17 @@ function xcodeTable(xcode: InitProposal['xcode']): TomlTable | undefined {
 }
 
 function toolTables(
-    carried: AdoptionResult,
+    kept: AdoptionResult,
     commitScopes: string[] | undefined,
     xcode?: InitProposal['xcode'],
 ): Record<string, TomlTable | undefined> {
     const tables: Record<string, TomlTable | undefined> = Object.fromEntries(
-        [...carried.tools]
+        [...kept.tools]
             .filter(([, entry]) => Object.keys(entry.settings).length > 0)
             .map(([tool, entry]) => [tool, entry.settings]),
     );
-    if (carried.formatter?.ignorePatterns !== undefined)
-        tables['prettier'] = { ...tables['prettier'], ignore_patterns: carried.formatter.ignorePatterns };
+    if (kept.formatter?.ignorePatterns !== undefined)
+        tables['prettier'] = { ...tables['prettier'], ignore_patterns: kept.formatter.ignorePatterns };
     if (commitScopes !== undefined && commitScopes.length > 0)
         tables['commitlint'] = { ...tables['commitlint'], scopes: commitScopes };
     if (xcode?.scope === '') tables['xcode'] = xcodeTable(xcode);
@@ -56,7 +56,7 @@ function headTables(proposal: InitProposal): TomlTable {
             },
         ]),
     );
-    for (const [path, adopted] of proposal.carried.scopes) {
+    for (const [path, adopted] of proposal.kept.scopes) {
         const scope = scopes.get(path) ?? { path, kits: [], tools: {} };
         scope.kits = [...new Set([...scope.kits, ...adopted.kits])];
         scope.tools = { ...scope.tools, ...adopted.tools };
@@ -162,13 +162,13 @@ function bodyText(document: TomlTable): string {
  */
 export function proposeText(proposal: InitProposal): string {
     const document = headTables(proposal);
-    const tools = toolTables(proposal.carried, proposal.commitScopes, proposal.xcode);
+    const tools = toolTables(proposal.kept, proposal.commitScopes, proposal.xcode);
     applyFormatter(tools, proposal.formatter);
     applyDetectedTools(tools, proposal.detected);
     applyDetectedArchitecture(document, proposal.detected);
     if (Object.keys(tools).length > 0) document['tools'] = tools;
     mergeProfile(document, proposal.profileTables);
-    const ignores = [...proposal.carried.tools.values()]
+    const ignores = [...proposal.kept.tools.values()]
         .flatMap((tool) => tool.ignores)
         .map((entry) => ({
             check: entry.check,

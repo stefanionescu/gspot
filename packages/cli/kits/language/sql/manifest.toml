@@ -23,27 +23,27 @@ pypi = "sqlfluff"
 mise = "pipx:sqlfluff"
 brew = "sqlfluff"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = ".sqlfluff"
-carries = "rules-table"
+keeps = "rules-table"
 check = "sql/sqlfluff"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = ".sqlfluffignore"
-carries = "ignore-paths"
+keeps = "ignore-paths"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = "setup.cfg"
 table = "sqlfluff"
 shared = true
-carries = "rules-table"
+keeps = "rules-table"
 check = "sql/sqlfluff"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = "tox.ini"
 table = "sqlfluff"
 shared = true
-carries = "rules-table"
+keeps = "rules-table"
 check = "sql/sqlfluff"
 
 [[configs]]

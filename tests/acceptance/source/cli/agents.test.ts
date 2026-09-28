@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
-import type { TakeoverPlan } from '#cli/types/commands/init.ts';
+import type { ReplacePlan } from '#cli/types/commands/init.ts';
 import { currentBlock } from '#cli/lifecycle/managed-blocks.ts';
 import { statSync, chmodSync, existsSync, readFileSync } from 'node:fs';
 
@@ -83,7 +83,7 @@ test('init previews the same detected agent destinations without writing them', 
         '--no-install',
     ]);
     expect(preview.code, preview.stdout + preview.stderr).toBe(0);
-    const proposal = JSON.parse(preview.stdout) as { plan: TakeoverPlan };
+    const proposal = JSON.parse(preview.stdout) as { plan: ReplacePlan };
     const paths = proposal.plan.write.map((entry) => entry.path);
     expect(proposal.plan.change.map((entry) => entry.path)).toContain('.gitattributes');
     expect(paths).toContain('AGENTS.md');

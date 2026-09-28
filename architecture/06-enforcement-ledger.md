@@ -1185,7 +1185,7 @@ Checks:
 basedpyright takes the folder of its configuration as the project root. The generated
 configuration sits under `.gspot/`, so the scope holds a root pointer, `pyrightconfig.json`, with
 one key: `extends`. It is generated and read-only, unlike the
-`tsconfig.json` pointer, because a repository has nothing of its own to keep in it. Takeover replaces
+`tsconfig.json` pointer, because a repository has nothing of its own to keep in it. Replacement replaces
 an old `pyrightconfig.json` and carries its `exclude` paths into `tools.basedpyright.exclude`, without
 dot folders and the folders the configuration leaves out by itself.
 
@@ -1315,9 +1315,9 @@ Turned off:
 
 Checks:
 
-| Id             | Stage | Command                                                                                                                                 |
-| -------------- | ----- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| `svelte/check` | push  | `svelte-check --fail-on-warnings`; takes over `typescript/tsc` in the scope, and reports the accessibility warnings of the compiler too |
+| Id             | Stage | Command                                                                                                                               |
+| -------------- | ----- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `svelte/check` | push  | `svelte-check --fail-on-warnings`; replaces `typescript/tsc` in the scope, and reports the accessibility warnings of the compiler too |
 
 Where the scope selects typescript, `svelte-check` reads the generated
 `.gspot/config/tsconfig.check.json` through `--tsconfig`, so the strict compiler options hold for
@@ -1704,9 +1704,9 @@ Nothing.
 
 Checks:
 
-| Id              | Stage | Command                                                                     |
-| --------------- | ----- | --------------------------------------------------------------------------- |
-| `vue/typecheck` | push  | `vue-tsc --noEmit`; takes over `typescript/tsc` in the scope (`takes_over`) |
+| Id              | Stage | Command                                                                 |
+| --------------- | ----- | ----------------------------------------------------------------------- |
+| `vue/typecheck` | push  | `vue-tsc --noEmit`; replaces `typescript/tsc` in the scope (`replaces`) |
 
 `vue/typecheck` runs `vue-tsc` with the compiler options of the TypeScript check, and is skipped in
 a scope that selects no typescript.
@@ -1766,7 +1766,7 @@ Checks:
 | Id                               | Stage       | Command                                                                                                                                 |
 | -------------------------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------- |
 | `typescript/eslint`              | commit      | with the additions above                                                                                                                |
-| `nextjs/typecheck`               | commit      | `next typegen` under `CI=1`, then `tsc --noEmit`; takes over `typescript/tsc` in its scope                                              |
+| `nextjs/typecheck`               | commit      | `next typegen` under `CI=1`, then `tsc --noEmit`; replaces `typescript/tsc` in its scope                                                |
 | `nextjs/build`                   | push, build | `next build` when `[tools.next] build_in_gate = true`                                                                                   |
 | `integrity/route-segments`       | commit      | no segment holds both `page` and `route`                                                                                                |
 | `integrity/next-config`          | commit      | `next.config.*` parsed as syntax: no secret in `env`, no `eslint.ignoreDuringBuilds`, no `typescript.ignoreBuildErrors`                 |
@@ -2017,7 +2017,7 @@ Shipped sqlfluff settings:
 | `exclude_rules`                        | none shipped                           |
 
 The reference repository excludes `RF02`, `RF04`, `RF05`, `RF06`, `AM04`, `LT02`, `LT05` and
-`LT12`. Takeover carries each one as an `[[ignore]]` entry for `sql/sqlfluff` with the comment
+`LT12`. Replacement carries each one as an `[[ignore]]` entry for `sql/sqlfluff` with the comment
 above it as the reason, so the exclusions stay visible and reviewable, and no repository inherits
 them.
 

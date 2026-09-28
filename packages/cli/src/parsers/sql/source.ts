@@ -1,5 +1,5 @@
 // The index of the first stop character at or after from, or the text length.
-import type { Lexeme, SqlToken } from '#cli/types/parsers/sql.ts';
+import type { Token, SqlToken } from '#cli/types/parsers/sql.ts';
 
 // Two characters read together: a doubled quote or a two-character operator.
 const PAIR = 2;
@@ -49,43 +49,43 @@ function variableEnd(text: string, at: number): number {
     return text[end] === quote ? end + 1 : -1;
 } // An E'' string, whose E must start a word.
 
-function escapedStringAt(text: string, at: number): Lexeme | undefined {
+function escapedStringAt(text: string, at: number): Token | undefined {
     if (text[at + 1] !== "'" || /\w/u.test(text[at - 1] ?? '')) return undefined;
     return { end: escapedStringEnd(text, at + "E'".length), kind: 'other' };
 }
 
 // A dollar-quote tag, which cannot continue an identifier or a number.
-function dollarAt(text: string, at: number): Lexeme | undefined {
+function dollarAt(text: string, at: number): Token | undefined {
     if (/[\p{L}\p{N}_$]/u.test(text[at - 1] ?? '')) return undefined;
     const end = identifierEnd(text, at + 1);
     return text[end] === '$' ? { end: end + 1, kind: 'dollar' } : undefined;
 }
 
 // A cast operator, or a psql variable.
-function colonAt(text: string, at: number): Lexeme | undefined {
+function colonAt(text: string, at: number): Token | undefined {
     if (text[at + 1] === ':') return { end: at + '::'.length, kind: 'other' };
     const end = variableEnd(text, at);
     return end === -1 ? undefined : { end, kind: 'variable' };
 }
 
 // The reader for each character that can start a lexeme.
-const READERS: Record<string, (text: string, at: number) => Lexeme | undefined> = {
-    '-': (text: string, at: number): Lexeme | undefined => {
+const READERS: Record<string, (text: string, at: number) => Token | undefined> = {
+    '-': (text: string, at: number): Token | undefined => {
         return text[at + 1] === '-' ? { end: lineEnd(text, at, '\n'), kind: 'line-comment' } : undefined;
     },
-    '/': (text: string, at: number): Lexeme | undefined => {
+    '/': (text: string, at: number): Token | undefined => {
         return text[at + 1] === '*' ? { end: at + '/*'.length, kind: 'block-comment' } : undefined;
     },
     E: escapedStringAt,
     e: escapedStringAt,
-    "'": (text: string, at: number): Lexeme => {
+    "'": (text: string, at: number): Token => {
         return { end: doubledQuoteEnd(text, at + 1, text[at] ?? ''), kind: 'other' };
     },
-    '"': (text: string, at: number): Lexeme => {
+    '"': (text: string, at: number): Token => {
         return { end: doubledQuoteEnd(text, at + 1, text[at] ?? ''), kind: 'other' };
     },
     $: dollarAt,
-    '\\': (text: string, at: number): Lexeme => {
+    '\\': (text: string, at: number): Token => {
         return { end: lineEnd(text, at, '\r\n'), kind: 'command' };
     },
     ':': colonAt,
@@ -109,7 +109,7 @@ function blockCommentEnd(text: string, from: number): number {
 }
 
 // The index past the whole lexeme: a block comment closes with nesting, and a dollar quote at its tag's return.
-function lexemeSpanEnd(text: string, at: number, lexeme: Lexeme): number {
+function lexemeSpanEnd(text: string, at: number, lexeme: Token): number {
     if (lexeme.kind === 'block-comment') return blockCommentEnd(text, lexeme.end);
     if (lexeme.kind !== 'dollar') return lexeme.end;
     const tag = text.slice(at, lexeme.end);
@@ -118,7 +118,7 @@ function lexemeSpanEnd(text: string, at: number, lexeme: Lexeme): number {
 }
 
 // The parser text that stands in for a meta-command or a psql variable, with the same length so positions hold.
-function replacement(kind: Lexeme['kind'], lexeme: string): string {
+function replacement(kind: Token['kind'], lexeme: string): string {
     if (kind === 'command') return ' '.repeat(lexeme.length);
     if (lexeme[1] === "'") return `''${' '.repeat(lexeme.length - "''".length)}`;
     if (lexeme[1] === '"') return ` ${lexeme.slice(1)}`;

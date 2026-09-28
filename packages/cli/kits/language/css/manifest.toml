@@ -20,49 +20,49 @@ version = "16.23.1"
 floor = "16.0.0"
 npm = "stylelint"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = ".stylelintrc"
-carries = "rules-table"
+keeps = "rules-table"
 check = "css/stylelint"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = ".stylelintrc.json"
-carries = "rules-table"
+keeps = "rules-table"
 check = "css/stylelint"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = ".stylelintrc.js"
-carries = "rules-table"
+keeps = "rules-table"
 check = "css/stylelint"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = ".stylelintrc.cjs"
-carries = "rules-table"
+keeps = "rules-table"
 check = "css/stylelint"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = ".stylelintrc.yml"
-carries = "rules-table"
+keeps = "rules-table"
 check = "css/stylelint"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = ".stylelintrc.yaml"
-carries = "rules-table"
+keeps = "rules-table"
 check = "css/stylelint"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = "stylelint.config.js"
-carries = "rules-table"
+keeps = "rules-table"
 check = "css/stylelint"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = "stylelint.config.cjs"
-carries = "rules-table"
+keeps = "rules-table"
 check = "css/stylelint"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = "stylelint.config.mjs"
-carries = "rules-table"
+keeps = "rules-table"
 check = "css/stylelint"
 
 [[tools]]

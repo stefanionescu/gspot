@@ -33,8 +33,8 @@ function lifecycleOwner(journal: Journal): LifecycleOwner {
             if (state.installations.length === 0) delete state.installations;
             journal.save();
         },
-        proposeConfiguration: (path, format, changes, takeover) =>
-            proposeConfiguration(journal, path, format, changes, takeover),
+        proposeConfiguration: (path, format, changes, replace) =>
+            proposeConfiguration(journal, path, format, changes, replace),
         applyProposal: (proposal) => applyProposal(journal, proposal),
         applyProposals: (proposals) => applyProposals(journal, proposals),
         proposeBlock: (path, body, style) => proposeBlock(journal, path, body, style),
@@ -44,10 +44,10 @@ function lifecycleOwner(journal: Journal): LifecycleOwner {
             return confined.read(path);
         },
         paths: () => state.files.map((entry) => entry.path),
-        proposeReplacement: (path, next, kind, takeover, expected, proposed) =>
-            proposeReplacement(journal, { path, next, kind, takeover, expected, proposed }),
-        replace: (path, next, kind, takeover, expected) =>
-            applyProposal(journal, proposeReplacement(journal, { path, next, kind, takeover, expected })),
+        proposeReplacement: (path, next, kind, replace, expected, proposed) =>
+            proposeReplacement(journal, { path, next, kind, replace, expected, proposed }),
+        replace: (path, next, kind, replace, expected) =>
+            applyProposal(journal, proposeReplacement(journal, { path, next, kind, replace, expected })),
         installedPaths: () => state.files.filter((entry) => entry.installed !== undefined).map((entry) => entry.path),
         proposeRetirement: (path, expected) => proposeRetirement(journal, path, expected),
         proposeRestoration: (path, original) => proposeRestoration(journal, path, original),

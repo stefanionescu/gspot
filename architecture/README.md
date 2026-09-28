@@ -79,7 +79,7 @@ One word, one meaning, everywhere in this folder, and in the code.
 | check coverage       | The kinds of checks a file receives, such as syntax, types, or spelling.                                                  |
 | test coverage        | Code exercised by tests. Distinct from check coverage.                                                                    |
 | version pin          | The gspot version selected by the repository. Upgrade and recovery exceptions follow the CLI contract.                    |
-| takeover             | Accepted replacement of existing tooling, with configuration carryover and saved originals.                               |
+| replacement          | Accepted replacement of existing tooling, with configuration keeping and saved originals.                                 |
 | setting              | One named kit choice with a type, scope, and default.                                                                     |
 | allowed list         | Entries a specific check permits through a setting ending in `_allowed`. It is not a second ignore mechanism.             |
 | directory setting    | A single folder uses `_directory`, including `functions_directory`, `migrations_directory`, and `harness_directory`.      |
@@ -116,15 +116,15 @@ These documents specify the target, not a claim that the implementation already 
 When a contract changes, update its owner and its grouped disposition in remaining work.
 Acceptance clauses describe the target; only remaining work records completion evidence.
 
-| Contract                                                             | Owner                                            |
-| -------------------------------------------------------------------- | ------------------------------------------------ |
-| Commands, dry-run, init and apply sequence                           | [02-cli.md](02-cli.md)                           |
-| Paths, recovery, ownership, carryover, serialization, and tool locks | [03-configuration.md](03-configuration.md)       |
-| Banned terms and naming defaults                                     | [08-naming-policy.md](08-naming-policy.md)       |
-| Revision selection, hooks and CI                                     | [10-hooks-ci-runners.md](10-hooks-ci-runners.md) |
-| Public and internal domain vocabulary                                | [public vocabulary](#glossary)                   |
-| Website source, released docs and deployment                         | [21-documentation.md](21-documentation.md)       |
-| Implementation verification and app branch handoff                   | [22-remaining.md](22-remaining.md)               |
+| Contract                                                           | Owner                                            |
+| ------------------------------------------------------------------ | ------------------------------------------------ |
+| Commands, dry-run, init and apply sequence                         | [02-cli.md](02-cli.md)                           |
+| Paths, recovery, ownership, keeping, serialization, and tool locks | [03-configuration.md](03-configuration.md)       |
+| Banned terms and naming defaults                                   | [08-naming-policy.md](08-naming-policy.md)       |
+| Revision selection, hooks and CI                                   | [10-hooks-ci-runners.md](10-hooks-ci-runners.md) |
+| Public and internal domain vocabulary                              | [public vocabulary](#glossary)                   |
+| Website source, released docs and deployment                       | [21-documentation.md](21-documentation.md)       |
+| Implementation verification and app branch handoff                 | [22-remaining.md](22-remaining.md)               |
 
 The [remaining-work record](22-remaining.md) owns all status.
 Start with [missing implementation](22-remaining.md#missing-implementation) and

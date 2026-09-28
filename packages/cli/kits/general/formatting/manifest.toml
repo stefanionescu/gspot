@@ -13,93 +13,93 @@ crash_pattern = "\\[error\\] (?:No parser|Cannot find|Invalid)"
 version = "3.8.1"
 npm = "prettier"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = ".prettierrc"
-carries = "rules-table"
+keeps = "rules-table"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = ".prettierrc.json"
-carries = "rules-table"
+keeps = "rules-table"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = ".prettierrc.yml"
-carries = "rules-table"
+keeps = "rules-table"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = ".prettierrc.yaml"
-carries = "rules-table"
+keeps = "rules-table"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = ".prettierrc.json5"
-carries = "rules-table"
+keeps = "rules-table"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = ".prettierrc.js"
-carries = "rules-table"
+keeps = "rules-table"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = "prettier.config.js"
-carries = "rules-table"
+keeps = "rules-table"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = ".prettierrc.ts"
-carries = "rules-table"
+keeps = "rules-table"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = "prettier.config.ts"
-carries = "rules-table"
+keeps = "rules-table"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = ".prettierrc.mjs"
-carries = "rules-table"
+keeps = "rules-table"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = "prettier.config.mjs"
-carries = "rules-table"
+keeps = "rules-table"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = ".prettierrc.mts"
-carries = "rules-table"
+keeps = "rules-table"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = "prettier.config.mts"
-carries = "rules-table"
+keeps = "rules-table"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = ".prettierrc.cjs"
-carries = "rules-table"
+keeps = "rules-table"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = "prettier.config.cjs"
-carries = "rules-table"
+keeps = "rules-table"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = ".prettierrc.cts"
-carries = "rules-table"
+keeps = "rules-table"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = "prettier.config.cts"
-carries = "rules-table"
+keeps = "rules-table"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = ".prettierrc.toml"
-carries = "rules-table"
+keeps = "rules-table"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = ".prettierignore"
-carries = "ignore-paths"
+keeps = "ignore-paths"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = "package.json"
 key = "prettier"
 shared = true
-carries = "rules-table"
+keeps = "rules-table"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = "package.yaml"
 key = "prettier"
 shared = true
-carries = "rules-table"
+keeps = "rules-table"
 
 [[tools]]
 name = "ec"
@@ -110,9 +110,9 @@ mise = "aqua:editorconfig-checker/editorconfig-checker"
 brew = "editorconfig-checker"
 github = {name = "editorconfig-checker/editorconfig-checker", version = "v3.4.0"}
 
-[[tools.takeover]]
+[[tools.replace]]
 file = ".editorconfig"
-carries = "rules-table"
+keeps = "rules-table"
 
 [[configs]]
 template = "editorconfig.tmpl"

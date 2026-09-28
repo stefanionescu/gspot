@@ -2,9 +2,9 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { readRepository } from '#cli/repository/tree.ts';
+import { collectKept } from '#cli/policy/adoption/collect.ts';
 import { textContaining } from '#tests/support/expectations.ts';
 import { PRETTIER_TOOLING } from '#tests/support/cli/tooling.ts';
-import { collectCarried } from '#cli/policy/adoption/collect.ts';
 import { existingTooling } from '#cli/repository/existing-tooling.ts';
 
 test.each(['setup.cfg', 'tox.ini'])(
@@ -16,16 +16,16 @@ test.each(['setup.cfg', 'tox.ini'])(
             await createFileTree(sandbox.path, { [path]: original, 'query.sql': 'SELECT 1;\n' });
             const repository = await readRepository(sandbox.path, [], [], []);
             const discovered = existingTooling(sandbox.path, repository.files, []);
-            const carried = await collectCarried(sandbox.path, discovered, new Set(['sql']), ['query.sql']);
-            expect(carried.unread).toStrictEqual([]);
-            expect(carried.removed).toStrictEqual([]);
+            const kept = await collectKept(sandbox.path, discovered, new Set(['sql']), ['query.sql']);
+            expect(kept.unread).toStrictEqual([]);
+            expect(kept.removed).toStrictEqual([]);
             expect(
-                [...carried.tools.values()].flatMap((tool) => tool.ignores).map(({ check, rule }) => ({ check, rule })),
+                [...kept.tools.values()].flatMap((tool) => tool.ignores).map(({ check, rule }) => ({ check, rule })),
             ).toStrictEqual([
                 { check: 'sql/sqlfluff', rule: 'LT01' },
                 { check: 'sql/sqlfluff', rule: 'RF01' },
             ]);
-            expect(carried.retained).toStrictEqual([{ path, note: textContaining('remove that section manually') }]);
+            expect(kept.retained).toStrictEqual([{ path, note: textContaining('remove that section manually') }]);
             expect(await Bun.file(join(sandbox.path, path)).text()).toBe(original);
         }
         await Bun.write(join(sandbox.path, path), '[flake8]\nignore = E501\n');
@@ -39,17 +39,17 @@ test('nested SQLFluff exclusions stay inside their configuration directory', asy
     const path = 'database/.sqlfluff';
     await createFileTree(sandbox.path, { [path]: '[sqlfluff]\n; Repository exception\nexclude_rules = LT01\n' });
     const repository = await readRepository(sandbox.path, [], [], []);
-    const carried = await collectCarried(
+    const kept = await collectKept(
         sandbox.path,
         existingTooling(sandbox.path, repository.files, []),
         new Set(['sql']),
         ['database/query.sql', 'other/query.sql'],
     );
-    expect(carried.unread).toStrictEqual([]);
-    expect([...carried.tools.values()].flatMap((tool) => tool.ignores)).toStrictEqual([
+    expect(kept.unread).toStrictEqual([]);
+    expect([...kept.tools.values()].flatMap((tool) => tool.ignores)).toStrictEqual([
         { check: 'sql/sqlfluff', rule: 'LT01', paths: ['database/**'], reason: expect.any(String) as string },
     ]);
-    expect(carried.removed.map((entry) => entry.path)).toStrictEqual([path]);
+    expect(kept.removed.map((entry) => entry.path)).toStrictEqual([path]);
 });
 
 test.each(['.sqlfluff', 'setup.cfg'])(
@@ -61,13 +61,13 @@ test.each(['.sqlfluff', 'setup.cfg'])(
         await createFileTree(sandbox.path, { [path]: original });
         const repository = await readRepository(sandbox.path, [], [], []);
         const detected = existingTooling(sandbox.path, repository.files, []);
-        const adopted = await collectCarried(sandbox.path, detected, new Set(['sql']), []);
+        const adopted = await collectKept(sandbox.path, detected, new Set(['sql']), []);
         expect(adopted.unread).toStrictEqual([]);
         expect(adopted.tools.get('sqlfluff')!.ignores.map((entry) => entry.rule)).toStrictEqual(['LT01', 'RF01']);
         expect(await Bun.file(join(sandbox.path, path)).text()).toBe(original);
         const invalid = `${prefix}[sqlfluff]\nexclude_rules = LT01\nexclude_rules = RF01\n`;
         await Bun.write(join(sandbox.path, path), invalid);
-        const refused = await collectCarried(sandbox.path, detected, new Set(['sql']), []);
+        const refused = await collectKept(sandbox.path, detected, new Set(['sql']), []);
         expect(refused.unread).toMatchObject([{ path, note: textContaining('Duplicate SQLFluff option') }]);
         expect(refused.removed).toStrictEqual([]);
         expect(await Bun.file(join(sandbox.path, path)).text()).toBe(invalid);
@@ -82,20 +82,15 @@ test.each([
     const path = 'setup.cfg';
     await createFileTree(sandbox.path, { [path]: original });
     const configs = [
-        { tool: 'sqlfluff', check: 'sql/sqlfluff', path, table: 'sqlfluff', shared: true, carries: 'rules-table' },
+        { tool: 'sqlfluff', check: 'sql/sqlfluff', path, table: 'sqlfluff', shared: true, keeps: 'rules-table' },
     ] as const;
-    const carried = await collectCarried(
-        sandbox.path,
-        { ...PRETTIER_TOOLING, configs: [...configs] },
-        new Set(['sql']),
-        [],
-    );
-    expect(carried.unread.map((entry) => entry.path)).toStrictEqual([path]);
-    expect([...carried.tools.values()].flatMap((tool) => tool.ignores)).toStrictEqual([]);
-    expect(carried.removed).toStrictEqual([]);
+    const kept = await collectKept(sandbox.path, { ...PRETTIER_TOOLING, configs: [...configs] }, new Set(['sql']), []);
+    expect(kept.unread.map((entry) => entry.path)).toStrictEqual([path]);
+    expect([...kept.tools.values()].flatMap((tool) => tool.ignores)).toStrictEqual([]);
+    expect(kept.removed).toStrictEqual([]);
     expect(await Bun.file(join(sandbox.path, path)).text()).toBe(original);
     await Bun.write(join(sandbox.path, path), '[sqlfluff]\nexclude_rules = LT01\n');
-    const corrected = await collectCarried(
+    const corrected = await collectKept(
         sandbox.path,
         { ...PRETTIER_TOOLING, configs: [...configs] },
         new Set(['sql']),

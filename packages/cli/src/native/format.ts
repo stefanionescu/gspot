@@ -7,14 +7,14 @@ import { createRequire } from 'node:module';
 import { compact } from '#cli/policy/normalize.ts';
 import { join, dirname, basename } from 'node:path';
 import type { ConfinedRoot } from '#cli/types/platform.ts';
-import { CARRIED_REASON } from '#cli/config/policy/policy.ts';
+import { KEPT_REASON } from '#cli/config/policy/policy.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import type { prettierIgnoreRequest } from '#cli/native/protocol.ts';
 import type { AdoptedFormatting } from '#cli/types/policy/adoption.ts';
-import type { prettierIgnoreRequest } from '#cli/evaluation/protocol.ts';
 import { prettierOptions } from '#cli/generation/formatting/settings.ts';
 import { literalGlob, rebaseOverrides } from '#cli/generation/formatting/selectors.ts';
-import { MODELED_OPTIONS, MODULE_CONFIGURATION, PACKAGE_CONFIGURATION } from '#cli/config/evaluation.ts';
-import { formatFields, formatRequest, prettierSource, prettierSettings } from '#cli/evaluation/protocol.ts';
+import { MODELED_OPTIONS, MODULE_CONFIGURATION, PACKAGE_CONFIGURATION } from '#cli/config/native.ts';
+import { formatFields, formatRequest, prettierSource, prettierSettings } from '#cli/native/protocol.ts';
 
 import type {
     Base,
@@ -24,7 +24,7 @@ import type {
     FormatRequest,
     PrettierOverride,
     FormatterSettings,
-} from '#cli/types/evaluation.ts';
+} from '#cli/types/native.ts';
 
 // Git precedence: a nested ignore line is relative to its folder and follows the lines of every ancestor file.
 function rebasedIgnoreLine(line: string, folder: string): string {
@@ -157,7 +157,7 @@ function formattingSettings(source: Source, defaults: Record<string, unknown>): 
 async function nestedInputs(request: FormatRequest, top: NestedInput): Promise<NestedInput[]> {
     const inputs = [top];
     for (const input of request.nested ?? []) {
-        const settings = await evaluateFormat({
+        const settings = await runFormat({
             root: request.root,
             from: input.from,
             nativeDefaults: request.nativeDefaults,
@@ -187,8 +187,8 @@ function overridesOf(input: NestedInput, inputs: NestedInput[]): PrettierOverrid
         .map((entry) => folderOf(entry))
         .filter((child) => child !== folder && child !== '.' && (folder === '.' || child.startsWith(`${folder}/`)))
         .map((child) => `${literalGlob(child)}/**/*`);
-    const { overrides: childOverrides = [], ...carried } = input.settings.extra ?? {};
-    const options = Object.fromEntries(Object.entries(carried).filter(([key]) => key !== 'reason'));
+    const { overrides: childOverrides = [], ...kept } = input.settings.extra ?? {};
+    const options = Object.fromEntries(Object.entries(kept).filter(([key]) => key !== 'reason'));
     const own: PrettierOverride = {
         files: folder === '.' ? '**/*' : `${literalGlob(folder)}/**/*`,
         excludeFiles: exclusions,
@@ -206,7 +206,7 @@ function overridesOf(input: NestedInput, inputs: NestedInput[]): PrettierOverrid
  * @param request the repository root, the formatter configuration to read, and its ignore files
  * @returns the carried formatter settings
  */
-export async function evaluateFormat(request: FormatRequest): Promise<AdoptedFormatting> {
+export async function runFormat(request: FormatRequest): Promise<AdoptedFormatting> {
     const { root, from, ignorePaths = [] } = request;
     const files = openConfinedRoot(root);
     try {
@@ -217,7 +217,7 @@ export async function evaluateFormat(request: FormatRequest): Promise<AdoptedFor
             source,
             await nativeDefaults(prettier, request.nativeDefaults === true),
         );
-        const reason = CARRIED_REASON.replaceAll('{{file}}', () => from);
+        const reason = KEPT_REASON.replaceAll('{{file}}', () => from);
         if ((request.nested?.length ?? 0) > 0) {
             const inputs = await nestedInputs(request, { from, settings: { format, extra } });
             const overrides = inputs.flatMap((input) => overridesOf(input, inputs));
@@ -234,7 +234,7 @@ export async function evaluateFormat(request: FormatRequest): Promise<AdoptedFor
  * @param request the repository root and the ignore file to read
  * @returns the ignored paths
  */
-export async function evaluateIgnoredPaths(request: z.infer<typeof prettierIgnoreRequest>): Promise<string[]> {
+export async function runIgnoredPaths(request: z.infer<typeof prettierIgnoreRequest>): Promise<string[]> {
     if (openConfinedRoot(request.root).read(request.ignorePath) === undefined)
         throw new Error(`The observed formatter ignore file is missing: ${request.ignorePath}. Retry adoption.`);
     const ignored: string[] = [];

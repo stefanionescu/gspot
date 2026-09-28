@@ -5,7 +5,7 @@ import type { ExistingTooling } from '#cli/types/repository/repository.ts';
 
 /** One discovered root Prettier configuration. */
 export const PRETTIER_TOOLING: ExistingTooling = {
-    configs: [{ tool: 'prettier', path: '.prettierrc.json', carries: 'rules-table' }],
+    configs: [{ tool: 'prettier', path: '.prettierrc.json', keeps: 'rules-table' }],
     hooks: [],
     ci: [],
     agentFiles: [],

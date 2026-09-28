@@ -33,8 +33,8 @@ export type AdoptionResult = {
     unread: { path: string; note: string }[];
     retained: { path: string; note: string }[];
 };
-export type CarryPush = (rule: string, paths?: string[]) => void;
-export type Carrier = (
+export type KeepPush = (rule: string, paths?: string[]) => void;
+export type Kept = (
     source: ConfigurationSource,
     path: string,
     lists: AdoptionResult,
@@ -43,11 +43,11 @@ export type Carrier = (
 ) => void | Promise<void>;
 export type Owned = ExistingTooling['configs'][number];
 
-export type CarryRequest = {
+export type KeepRequest = {
     tool: string;
     path: string;
     lists: AdoptionResult;
     root: string;
-    reader: ExistingTool['carries'];
+    reader: ExistingTool['keeps'];
     check?: string | undefined;
 };

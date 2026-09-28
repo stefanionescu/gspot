@@ -11,7 +11,7 @@ export async function writeAdoptedMarkdown(root: string, adoption: AdoptionResul
         proposeText({
             kits: ['markdown'],
             scopes: [],
-            carried: adoption,
+            kept: adoption,
             hooks: 'none',
             ci: 'none',
             rules: false,

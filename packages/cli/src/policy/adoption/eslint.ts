@@ -1,8 +1,8 @@
 import { basename } from 'node:path';
-import { eslintResponse } from '#cli/evaluation/protocol.ts';
+import { eslintResponse } from '#cli/native/protocol.ts';
 import { adoptedTool } from '#cli/policy/adoption/results.ts';
+import { runConfiguration } from '#cli/native/configuration.ts';
 import type { AdoptionResult } from '#cli/types/policy/adoption.ts';
-import { evaluateConfiguration } from '#cli/evaluation/configuration.ts';
 import type { ExistingTooling } from '#cli/types/repository/repository.ts';
 
 // Reject ambiguous source trees before choosing the native ESLint configuration format.
@@ -39,8 +39,8 @@ export async function collectEslint(
     if (first === undefined) return;
     try {
         const flat = validateEslintSources(configs);
-        const carried = eslintResponse.parse(
-            await evaluateConfiguration({
+        const kept = eslintResponse.parse(
+            await runConfiguration({
                 tool: 'eslint',
                 operation: 'rules',
                 root,
@@ -50,7 +50,7 @@ export async function collectEslint(
                 configs: configs.map(({ path }) => path),
             }),
         );
-        adoptedTool(lists, 'eslint').settings['adopted'] = carried.adopted;
+        adoptedTool(lists, 'eslint').settings['adopted'] = kept.adopted;
         for (const { path } of configs) {
             if (basename(path) === 'package.json')
                 lists.retained.push({

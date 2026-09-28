@@ -32,7 +32,7 @@ test(
         `;
         const result = await runProcess([process.execPath, '--eval', child], { cwd: sandbox.path });
         expect(result.code, result.stdout + result.stderr).toBe(2);
-        expect(result.stderr).toContain('changed after takeover was planned');
+        expect(result.stderr).toContain('changed after replace was planned');
         expect(readFileSync(join(sandbox.path, '.prettierrc.json'), 'utf8')).toBe('{"semi":true}\n');
         expect(existsSync(join(sandbox.path, 'gspot.toml'))).toBe(false);
         expect(existsSync(join(sandbox.path, '.gspot/version'))).toBe(false);

@@ -1,7 +1,7 @@
 import { test, expect } from 'bun:test';
 import { docstringStyle } from '#cli/checks/python/docstrings.ts';
 
-test.each(['google', 'numpy'] as const)('Ruff %s docstrings carry into an unconfigured pydoclint style', (style) => {
+test.each(['google', 'numpy'] as const)('Ruff %s docstrings keep into an unconfigured pydoclint style', (style) => {
     const project = `[tool.ruff.lint.pydocstyle]\nconvention = "${style}"\n`;
     expect(docstringStyle(project)).toBe(style);
     expect(docstringStyle(`${project}[tool.pydoclint]\nskip-checking-raises = true\n`)).toBe(style);

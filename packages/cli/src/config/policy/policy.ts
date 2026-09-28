@@ -43,7 +43,7 @@ export const REFUSED_REASONS = [
     '.',
 ];
 export const MINIMUM_REASON_WORDS = 2;
-export const CARRIED_REASON = 'carried from {{file}} at init';
+export const KEPT_REASON = 'kept from {{file}} at init';
 export const LIMITS_PREFIX = 'limits.';
 export const PACKAGE_LIFECYCLE: readonly string[] = [
     'preinstall',

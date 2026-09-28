@@ -51,5 +51,5 @@ export const gitleaksImporter = {
         allowlists: z.array(allowlist).optional(),
         extend: z.strictObject({ useDefault: z.literal(true) }).optional(),
     }),
-    carry: carryGitleaks,
+    keep: carryGitleaks,
 };

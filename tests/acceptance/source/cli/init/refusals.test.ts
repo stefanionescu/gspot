@@ -134,7 +134,7 @@ test(
     PLANTED_TIMEOUT_MS,
 );
 
-test('initialization flags control integrations and formatter carryover in the proposal', async () => {
+test('initialization flags control integrations and formatter keep in the proposal', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'source.js': 'export const port = 8080;\n',

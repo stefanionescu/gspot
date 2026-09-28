@@ -1,6 +1,6 @@
 // The init, upgrade and --dry-run plans as text.
 import { colors } from '#cli/output/messages.ts';
-import type { TakeoverPlan } from '#cli/types/commands/init.ts';
+import type { ReplacePlan } from '#cli/types/commands/init.ts';
 import { KIT_WIDTH, COLUMN_GAP, REASON_WIDTH } from '#cli/config/commands/init.ts';
 
 function section(title: string, rows: { path: string; note: string }[]): string[] {
@@ -9,7 +9,7 @@ function section(title: string, rows: { path: string; note: string }[]): string[
     return [title, ...rows.map((row) => `  ${row.path.padEnd(width)}${row.note}`), ''];
 }
 
-function kitSection(rows: TakeoverPlan['kits']): string[] {
+function kitSection(rows: ReplacePlan['kits']): string[] {
     if (rows.length === 0) return ['kits', '  none: the guides install alone', ''];
     const lines = rows.map((row) => {
         const noun = row.checks === 1 ? 'check' : 'checks';
@@ -18,7 +18,7 @@ function kitSection(rows: TakeoverPlan['kits']): string[] {
     return ['kits', ...lines, ''];
 }
 
-function profileSection(profile: TakeoverPlan['profile']): string[] {
+function profileSection(profile: ReplacePlan['profile']): string[] {
     if (!profile) return [];
     const detected = profile.detected.map(
         (id) => `  detected, not in the profile: ${id}  (add it afterwards: gspot add ${id})`,
@@ -26,11 +26,11 @@ function profileSection(profile: TakeoverPlan['profile']): string[] {
     return [`profile    ${profile.name}  sha256 ${profile.digest}  selection ${profile.selection}`, ...detected, ''];
 }
 
-function carriedSection(rows: TakeoverPlan['carried']): string[] {
+function keptSection(rows: ReplacePlan['kept']): string[] {
     if (rows.length === 0) return [];
     const width = Math.max(...rows.map((row) => row.from.length)) + COLUMN_GAP;
     return [
-        'carried into gspot.toml',
+        'kept in gspot.toml',
         ...rows.map((row) => `  ${row.from.padEnd(width)}${String(row.count)} ${row.into}`),
         '',
     ];
@@ -41,7 +41,7 @@ function carriedSection(rows: TakeoverPlan['carried']): string[] {
  * @param plan the plan
  * @returns the text
  */
-export function initPlanText(plan: TakeoverPlan): string {
+export function initPlanText(plan: ReplacePlan): string {
     const { dim } = colors;
     const lines = [
         ...profileSection(plan.profile),
@@ -49,8 +49,8 @@ export function initPlanText(plan: TakeoverPlan): string {
         ...section('write', plan.write),
         ...section(`delete ${dim('(git keeps them: git show HEAD:<path>)')}`, plan.remove),
         ...section('kept active', plan.retained),
-        ...section('could not read; fix the file and carry its exceptions by hand', plan.unread),
-        ...carriedSection(plan.carried),
+        ...section('could not read; fix the file and keep its exceptions by hand', plan.unread),
+        ...keptSection(plan.kept),
         ...section('change', plan.change),
         ...section('no longer runs; delete when ready', plan.noLongerRuns),
         ...(plan.ci === undefined

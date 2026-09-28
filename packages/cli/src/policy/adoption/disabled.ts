@@ -3,13 +3,13 @@ import type { TomlTable } from '#cli/types/repository/repository.ts';
 import { asRaw, asText, asStrings } from '#cli/policy/adoption/source.ts';
 import { shellcheckRules } from '#cli/repository/configuration/shellcheck-rules.ts';
 import { reasonFor, adoptedTool, appendSetting } from '#cli/policy/adoption/results.ts';
-import type { CarryPush, AdoptionResult, ConfigurationSource } from '#cli/types/policy/adoption.ts';
+import type { KeepPush, AdoptionResult, ConfigurationSource } from '#cli/types/policy/adoption.ts';
 
-function pushCodes(push: CarryPush, codes: string): void {
+function pushCodes(push: KeepPush, codes: string): void {
     for (const code of codes.split(',')) if (code.trim() !== '') push(code.trim());
 }
 
-const DISABLED_READERS: Record<string, (source: ConfigurationSource, push: CarryPush, path: string) => void> = {
+const DISABLED_READERS: Record<string, (source: ConfigurationSource, push: KeepPush, path: string) => void> = {
     shellcheck: (source, push) => {
         for (const code of shellcheckRules(source.text).disable) push(code);
     },
@@ -47,7 +47,7 @@ export function valueOfKeyLine(line: string, key: string): string | undefined {
  * @param key the key that holds the disabled rules
  * @param push receives each rule
  */
-export function disabledFromList(parsed: TomlTable, key: string, push: CarryPush): void {
+export function disabledFromList(parsed: TomlTable, key: string, push: KeepPush): void {
     const rules = asStrings(parsed[key]);
     for (const rule of rules) push(rule);
 }
@@ -60,7 +60,7 @@ export function disabledFromList(parsed: TomlTable, key: string, push: CarryPush
  * @param lists the carried configuration
  * @param check the check the ignores belong to
  */
-export function carryDisabled(
+export function keepDisabled(
     source: ConfigurationSource,
     tool: string,
     path: string,
@@ -70,7 +70,7 @@ export function carryDisabled(
     const reader = DISABLED_READERS[tool];
     if (check === undefined || reader === undefined)
         throw new Error(`No complete ${tool} configuration importer is available for ${path}.`);
-    const push: CarryPush = (rule, paths) => {
+    const push: KeepPush = (rule, paths) => {
         const base = posix.dirname(path);
         const selected = paths ?? (base === '.' ? undefined : [`${base}/**`]);
         adoptedTool(lists, tool).ignores.push({
@@ -89,7 +89,7 @@ export function carryDisabled(
  * @param path the authored file's path
  * @param lists the carried configuration
  */
-export function carryPyright(source: ConfigurationSource, path: string, lists: AdoptionResult): void {
+export function keepPyright(source: ConfigurationSource, path: string, lists: AdoptionResult): void {
     if (path.includes('/')) throw new Error(`Scoped Pyright configuration ${path} requires explicit conversion.`);
     const parsed = source.parsed;
     const kept = asStrings(parsed['exclude']);

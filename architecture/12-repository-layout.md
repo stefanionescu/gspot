@@ -507,7 +507,7 @@ behavior still needs defect and correction evidence at both levels.
 
 ### Acceptance T-3
 
-Exercise adoption defects with focused product journeys: preserved hooks and tasks, lossless configuration carryover, local ownership and recovery, readable scopes, fresh clone installation, strictness choices, and generated-file handling. Integrate cases with the behavior they verify, without a separate scenario inventory.
+Exercise adoption defects with focused product journeys: preserved hooks and tasks, lossless configuration keeping, local ownership and recovery, readable scopes, fresh clone installation, strictness choices, and generated-file handling. Integrate cases with the behavior they verify, without a separate scenario inventory.
 
 ### Acceptance T-28
 

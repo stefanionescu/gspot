@@ -69,7 +69,7 @@ Use this ordered content brief when rewriting the root README:
 1. `## First run`: from the repository root, run `gspot init`, review and accept its plan, then
    run `gspot check` separately. Initialization does not run a check. Explain writes to
    `gspot.toml`, generated configuration, locks, and hooks before confirmation. Include the
-   route for an existing setup. Do not hide takeover consequences behind `--yes`.
+   route for an existing setup. Do not hide replacement consequences behind `--yes`.
 1. `## Use it every day`: a small command-and-purpose table for `check`, `explain`, `apply`,
    and `install`. Explain that teammates run `gspot install` after cloning; gspot does not
    inject a `prepare` script. Link the full command reference instead of listing every command.
@@ -77,7 +77,7 @@ Use this ordered content brief when rewriting the root README:
    reason, and links to configurations and profiles. Explain `recommended` versus `all`: banned names
    and optional house-style checks belong to `all`, including trivial-function and trivial-file checks.
    Distinguish check names from tool rule names.
-1. `## Adopt and remove`: summarize carryover, retained unsupported configuration, recovery
+1. `## Adopt and remove`: summarize keeping, retained unsupported configuration, recovery
    copies, and uninstall conflicts. Link the complete recovery procedure. Explain that affected
    project-wide tools can report errors in unchanged files. Describe `git commit --no-verify`
    and `git push --no-verify` as bypassing local hooks. CI and server policy remain enforced.

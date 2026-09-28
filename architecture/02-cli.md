@@ -147,7 +147,7 @@ replace (original bytes saved under .gspot/state/recovery/)
   .prettierrc.yaml                 one tool owns it; your tabs and 100 columns go into [format]
   ios/.swiftlint.yml               one tool owns it; 2 rules off and 1 rule on are carried
 
-carried into gspot.toml
+kept in gspot.toml
   typos.toml                       14 words
   .gitleaks.toml                   6 allowlist entries
   eslint.config.mjs                3 rules off for tests/**, no-var on, as tools.eslint.rules
@@ -172,7 +172,7 @@ A no writes nothing. After the yes, `init` runs `gspot install`. `--no-install` 
 prints that one command. `init` runs no check. Its last lines name the three commands a developer learns, and
 `gspot check --fix`, so the developer decides when to lint and when to fix.
 
-### Takeover
+### Replacement
 
 gspot deletes a file only when one tool owns it. A file that several tools read, such as
 `setup.cfg`, `pyproject.toml`, or `package.json`, is read, its lint tables are carried, and the
@@ -186,7 +186,7 @@ A rule is carried in both directions. A rule the old config turned off becomes a
 and carries differences with their path scope.
 
 Unsupported settings retain their original file and appear in the plan.
-The takeover contract is in [03-configuration.md](03-configuration.md). The plan lists every setting it did
+The replacement contract is in [03-configuration.md](03-configuration.md). The plan lists every setting it did
 not carry. Every carried entry has the reason `carried from <file> at init`.
 
 Hooks a repository has keep running, tracked or local to one clone, and gspot never sets

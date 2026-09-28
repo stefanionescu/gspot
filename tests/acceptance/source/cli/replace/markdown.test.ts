@@ -1,4 +1,4 @@
-// Takeover at init: an adopted Markdown configuration keeps its native defaults through checks, fixes, and uninstall.
+// Replace at init: an adopted Markdown configuration keeps its native defaults through checks, fixes, and uninstall.
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';

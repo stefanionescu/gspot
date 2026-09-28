@@ -1,6 +1,6 @@
 import type { Command } from 'commander';
+import { similar } from '#cli/policy/similar.ts';
 import { PolicyError } from '#cli/policy/read.ts';
-import { nearMatches } from '#cli/policy/near.ts';
 import { requireChain } from '#cli/kits/select.ts';
 import { scopeHolder } from '#cli/policy/write.ts';
 import * as messages from '#cli/policy/messages.ts';
@@ -39,7 +39,7 @@ export async function addCommand(o: AddOptions): Promise<CommandResult> {
     for (const id of o.kits)
         if (!manifests.has(id)) {
             const known = manifests.keys().toArray();
-            throw new PolicyError([messages.unknownKit(id, nearMatches(id, known))]);
+            throw new PolicyError([messages.unknownKit(id, similar(id, known))]);
         }
     const mutation: Mutation = (raw) => {
         const holder = scopeHolder(raw, o.scope);

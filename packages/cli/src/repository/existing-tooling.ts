@@ -97,15 +97,15 @@ function hasPackageHooks(root: string): boolean {
 function hasConfigurationSection(
     files: ConfinedRoot,
     path: string,
-    takeover: NonNullable<ToolPin['takeover']>[number],
+    replace: NonNullable<ToolPin['replace']>[number],
 ): boolean {
-    if (takeover.table === undefined && takeover.key === undefined) return true;
+    if (replace.table === undefined && replace.key === undefined) return true;
     const source = files.read(path);
     if (source === undefined) return false;
     return (
         kitSection(source.bytes.toString('utf8'), path, {
-            ...(takeover.table === undefined ? {} : { table: takeover.table }),
-            ...(takeover.key === undefined ? {} : { key: takeover.key }),
+            ...(replace.table === undefined ? {} : { table: replace.table }),
+            ...(replace.key === undefined ? {} : { key: replace.key }),
         }) !== undefined
     );
 }
@@ -135,32 +135,28 @@ function isLintJob(name: string, job: unknown): boolean {
     );
 }
 
-// The tool configurations one takeover row finds among the tracked files.
-function takeoverTools(
+// The tool configurations one replace row finds among the tracked files.
+function replaceTools(
     files: ConfinedRoot,
     inventory: Set<string>,
     tool: string,
-    takeover: NonNullable<ToolPin['takeover']>[number],
+    replace: NonNullable<ToolPin['replace']>[number],
 ): ExistingTool[] {
-    const matches = pathMatcher([takeover.file, `**/${takeover.file}`]);
+    const matches = pathMatcher([replace.file, `**/${replace.file}`]);
     const candidates = new Set(inventory);
-    if (
-        !picomatch.scan(takeover.file).isGlob &&
-        !candidates.has(takeover.file) &&
-        files.stat(takeover.file) !== undefined
-    )
-        candidates.add(takeover.file);
+    if (!picomatch.scan(replace.file).isGlob && !candidates.has(replace.file) && files.stat(replace.file) !== undefined)
+        candidates.add(replace.file);
     return [...candidates]
         .filter((candidate) => matches(candidate))
-        .filter((path) => hasConfigurationSection(files, path, takeover))
+        .filter((path) => hasConfigurationSection(files, path, replace))
         .map((path) => ({
             tool,
             path,
-            shared: takeover.shared,
-            carries: takeover.carries,
-            ...(takeover.check === undefined ? {} : { check: takeover.check }),
-            ...(takeover.table === undefined ? {} : { table: takeover.table }),
-            ...(takeover.key === undefined ? {} : { key: takeover.key }),
+            shared: replace.shared,
+            keeps: replace.keeps,
+            ...(replace.check === undefined ? {} : { check: replace.check }),
+            ...(replace.table === undefined ? {} : { table: replace.table }),
+            ...(replace.key === undefined ? {} : { key: replace.key }),
         }));
 }
 
@@ -181,7 +177,7 @@ export function declaredKits(root: string, paths: Iterable<string>, selected?: s
             manifest.tools
                 .filter((tool) => selected === undefined || selected.includes(tool.name))
                 .flatMap((tool) =>
-                    (tool.takeover ?? []).flatMap((takeover) => takeoverTools(files, inventory, tool.name, takeover)),
+                    (tool.replace ?? []).flatMap((replace) => replaceTools(files, inventory, tool.name, replace)),
                 ),
         );
     } finally {

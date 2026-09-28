@@ -14,9 +14,9 @@ version = "5.2.0"
 npm = "jscpd"
 mise = "npm:jscpd"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = ".jscpd.json"
-carries = "rules-table"
+keeps = "rules-table"
 
 [[configs]]
 template = "jscpd.json.tmpl"

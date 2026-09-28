@@ -105,9 +105,9 @@ test.each([
             editorconfig: false,
             useCache: false,
         };
-        const carried = await formatSources(repository.path, PRETTIER_CARRY_FILES, PRETTIER_CARRY_SOURCE, options);
+        const kept = await formatSources(repository.path, PRETTIER_CARRY_FILES, PRETTIER_CARRY_SOURCE, options);
         for (const file of PRETTIER_CARRY_FILES) {
-            expect(carried.get(file), file).toBe(expected.get(file));
+            expect(kept.get(file), file).toBe(expected.get(file));
             expect(readFileSync(join(repository.path, file), 'utf8')).toBe(PRETTIER_CARRY_SOURCE);
         }
         await installPrivateTools(repository.path);
@@ -168,13 +168,13 @@ test(
         expect(result.code, result.stdout + result.stderr).toBe(0);
         const applied = await run(repository.path, ['apply']);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-        const carried = await formatSources(repository.path, files, PRETTIER_CARRY_SOURCE, {
+        const kept = await formatSources(repository.path, files, PRETTIER_CARRY_SOURCE, {
             config: join(repository.path, '.gspot/config/prettier.json'),
             editorconfig: true,
             useCache: false,
         });
         for (const file of files) {
-            expect(carried.get(file), file).toBe(expected.get(file));
+            expect(kept.get(file), file).toBe(expected.get(file));
             expect(readFileSync(join(repository.path, file), 'utf8')).toBe(PRETTIER_CARRY_SOURCE);
         }
         const restored = await run(repository.path, ['uninstall', '--yes']);

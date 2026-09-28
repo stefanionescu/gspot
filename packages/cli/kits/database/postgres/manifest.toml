@@ -20,14 +20,14 @@ mise = "github:sbdchd/squawk"
 npm = "squawk-cli"
 github = {name = "sbdchd/squawk", version = "v2.64.0"}
 
-[[tools.takeover]]
+[[tools.replace]]
 file = ".squawk.toml"
-carries = "rules-table"
+keeps = "rules-table"
 check = "postgres/squawk"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = "squawk.toml"
-carries = "rules-table"
+keeps = "rules-table"
 check = "postgres/squawk"
 
 [[configs]]

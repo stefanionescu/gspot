@@ -5,9 +5,9 @@ import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { applyCommand } from '#cli/commands/apply/command.ts';
+import { eslintPreviewResponse } from '#cli/native/protocol.ts';
+import { runConfiguration } from '#cli/native/configuration.ts';
 import { symlinkSync, readFileSync, writeFileSync } from 'node:fs';
-import { eslintPreviewResponse } from '#cli/evaluation/protocol.ts';
-import { evaluateConfiguration } from '#cli/evaluation/configuration.ts';
 import { containing, containingAll } from '#tests/support/expectations.ts';
 import type { ResolvedRules } from '#tests/types/integration/cli/lifecycle/lifecycle.ts';
 
@@ -92,7 +92,7 @@ const root = fileURLToPath(new URL('../..', import.meta.url));
 console.log('Configuration log stays outside the structured result.');
 export default [{ files: ['**/*.js'], ignores: ['tests/**'], rules: { ...rules, 'example/root': ['error', { root }] } }];`;
     const result = eslintPreviewResponse.parse(
-        await evaluateConfiguration({
+        await runConfiguration({
             tool: 'eslint',
             operation: 'preview-rules',
             root: directory.path,

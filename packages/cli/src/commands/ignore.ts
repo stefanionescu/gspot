@@ -1,6 +1,6 @@
 import type { Command } from 'commander';
 import { allChecks } from '#cli/kits/listing.ts';
-import { nearMatches } from '#cli/policy/near.ts';
+import { similar } from '#cli/policy/similar.ts';
 import * as messages from '#cli/policy/messages.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
@@ -18,7 +18,7 @@ function knownCheck(checkName: string, repositoryChecks: string[]): void {
     }
 
     const known = [...allChecks().keys(), ...repositoryChecks];
-    throw new PolicyError([messages.unknownCheck(checkName, nearMatches(checkName, known))]);
+    throw new PolicyError([messages.unknownCheck(checkName, similar(checkName, known))]);
 }
 
 function ignoreCommandLine(o: IgnoreOptions): string {

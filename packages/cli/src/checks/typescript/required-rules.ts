@@ -1,8 +1,8 @@
 import { scopeOf } from '#cli/repository/scopes.ts';
-import { eslintCoverageResponse } from '#cli/evaluation/protocol.ts';
+import { runConfiguration } from '#cli/native/configuration.ts';
+import { eslintCoverageResponse } from '#cli/native/protocol.ts';
 import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
 import { ESLINT_RULE_LEVELS } from '#cli/config/checks/eslint-levels.ts';
-import { evaluateConfiguration } from '#cli/evaluation/configuration.ts';
 import { ESLINT_FILE, LINT_CHECKS } from '#cli/config/checks/typescript.ts';
 
 // The rules the selected kits require, for each file ending they name.
@@ -40,7 +40,7 @@ export async function requiredRules(input: EngineInput): Promise<Finding[]> {
     );
     if (files.length === 0) return findings;
     const resolved = eslintCoverageResponse.parse(
-        await evaluateConfiguration(
+        await runConfiguration(
             { tool: 'eslint', operation: 'coverage', root: input.root, paths: files.map((file) => file.path) },
             input.view,
             input.cancelSignal,

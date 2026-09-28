@@ -220,7 +220,7 @@ export const packageManifestSchema = z.object({
 });
 
 /**
- * Reads the package fields used by detection, takeover, and manifest checks.
+ * Reads the package fields used by detection, replace, and manifest checks.
  * @param root the repository root
  * @param path the manifest path relative to the root
  * @returns the validated package fields

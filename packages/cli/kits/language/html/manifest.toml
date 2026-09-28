@@ -20,17 +20,17 @@ version = "11.6.1"
 floor = "11.6.1"
 npm = "html-validate"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = ".htmlvalidate.json"
-carries = "rules-table"
+keeps = "rules-table"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = ".htmlvalidate.js"
-carries = "rules-table"
+keeps = "rules-table"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = ".htmlvalidate.cjs"
-carries = "rules-table"
+keeps = "rules-table"
 
 [[configs]]
 template = "templates.json.tmpl"

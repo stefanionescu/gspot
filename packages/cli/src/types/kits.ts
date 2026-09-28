@@ -72,7 +72,7 @@ export type ToolPin = {
     crash_pattern?: string;
     rule_page?: string;
     suppression?: NonNullable<RawTool['suppression']>;
-    takeover?: NonNullable<RawTool['takeover']>;
+    replace?: NonNullable<RawTool['replace']>;
     query_packs?: NonNullable<RawTool['query_packs']>;
     prettier?: NonNullable<RawTool['prettier']>;
     env?: Record<string, string>;

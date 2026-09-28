@@ -19,17 +19,17 @@ mise = "pipx:semgrep"
 brew = "semgrep"
 platforms = ["macos", "linux"]
 
-[[tools.takeover]]
+[[tools.replace]]
 file = "bearer.yml"
-carries = "rules-table"
+keeps = "rules-table"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = "bearer.ignore"
-carries = "rules-table"
+keeps = "rules-table"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = ".semgrepignore"
-carries = "ignore-paths"
+keeps = "ignore-paths"
 
 [[tools]]
 name = "codeql"

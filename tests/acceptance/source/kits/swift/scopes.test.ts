@@ -12,7 +12,7 @@ import { containing, containingAll } from '#tests/support/expectations.ts';
 import { CAST_SWIFT, CLEAN_SWIFT, PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
 
 test(
-    'the swift configuration inside a scope > SwiftLint and SwiftFormat read the configuration of their scope, and the findings carry the scope path',
+    'the swift configuration inside a scope > SwiftLint and SwiftFormat read the configuration of their scope, and the findings keep the scope path',
     async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {

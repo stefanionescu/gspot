@@ -341,7 +341,7 @@ the old body after `uninstall`.
 A table in a shared manifest is read, carried, and left in place. The plan
 lists each under the heading for what the developer removes by hand.
 
-A takeover row takes `table = "tool.ruff"` or `key = "eslintConfig"` with
+A replacement row takes `table = "tool.ruff"` or `key = "eslintConfig"` with
 `shared = true`. `carryFrom` reads the table through the same reader as a file of that tool.
 
 A planted `pyproject.toml` with `[tool.ruff] ignore = ["E501"]` holds the carried
@@ -493,7 +493,7 @@ lint-staged call.
 
 For the pre-commit framework, gspot writes one `repo: local` hook into
 `.pre-commit-config.yaml`, as a managed block, with `entry: gspot check --staged` and
-`pass_filenames: false`. The takeover rows of the python manifest list the hooks of that file
+`pass_filenames: false`. The replacement rows of the python manifest list the hooks of that file
 that gspot replaces, such as ruff and black, under removal by hand. For lint-staged, the plan
 proposes the gspot line in the husky hook, and lists the lint-staged entries that run a tool
 gspot now runs. For `simple-git-hooks`, the line goes into its key of `package.json` after a yes,
@@ -545,7 +545,7 @@ names.
 The name leaves the list. `existing-tooling.ts` reads `git config core.hooksPath`
 first, and that answer wins over any folder name.
 
-`takeover.test.ts` plants `hooks/use-thing.ts` and holds that the plan names no hooks.
+`replacement.test.ts` plants `hooks/use-thing.ts` and holds that the plan names no hooks.
 
 ### Acceptance K-45
 

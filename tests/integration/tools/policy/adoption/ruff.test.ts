@@ -5,11 +5,11 @@ import { join, relative } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { collectCarried } from '#cli/policy/adoption/collect.ts';
+import { collectKept } from '#cli/policy/adoption/collect.ts';
 import type { ExistingTooling } from '#cli/types/repository/repository.ts';
 
 const tooling: ExistingTooling = {
-    configs: [{ tool: 'ruff', check: 'python/ruff', path: 'backend/ruff.toml', carries: 'rules-table' as const }],
+    configs: [{ tool: 'ruff', check: 'python/ruff', path: 'backend/ruff.toml', keeps: 'rules-table' as const }],
     hooks: [],
     ci: [],
     agentFiles: [],
@@ -44,12 +44,12 @@ test('adopted Ruff basename and directory selectors retain their scope in pinned
         'backend/ruff.toml': '[lint.per-file-ignores]\n"ignored.py" = ["F"]\n"tests/*.py" = ["F401"]\n',
         ...Object.fromEntries(paths.map((path) => [path, 'import os\n'])),
     });
-    const carried = await collectCarried(sandbox.path, tooling, new Set(['python']), paths);
-    expect(carried.unread).toStrictEqual([]);
+    const kept = await collectKept(sandbox.path, tooling, new Set(['python']), paths);
+    expect(kept.unread).toStrictEqual([]);
     const policy = {
         version: 1,
         kits: ['python'],
-        ignore: [...carried.tools.values()].flatMap((tool) => tool.ignores),
+        ignore: [...kept.tools.values()].flatMap((tool) => tool.ignores),
     };
     await Bun.write(join(sandbox.path, 'gspot.toml'), stringify(policy));
     const session = await openSession(sandbox.path);
@@ -112,11 +112,11 @@ test('additive Ruff exclusions preserve native findings and combine rules for th
         });
     const before = run('backend/ruff.toml');
     expect(before.exitCode, before.stderr.toString()).toBe(1);
-    const carried = await collectCarried(sandbox.path, tooling, new Set(['python']), paths);
-    expect(carried.unread).toStrictEqual([]);
+    const kept = await collectKept(sandbox.path, tooling, new Set(['python']), paths);
+    expect(kept.unread).toStrictEqual([]);
     await Bun.write(
         join(sandbox.path, 'gspot.toml'),
-        stringify({ version: 1, kits: ['python'], ignore: carried.tools.get('ruff')!.ignores }),
+        stringify({ version: 1, kits: ['python'], ignore: kept.tools.get('ruff')!.ignores }),
     );
     const session = await openSession(sandbox.path);
     const config = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
@@ -172,18 +172,19 @@ test('Ruff inheritance retains native merges and each parent selector directory'
         );
     const before = run();
     expect(before.exitCode, before.stderr.toString()).toBe(1);
-    const carried = await collectCarried(sandbox.path, tooling, new Set(['python']), paths);
-    expect(carried.unread).toStrictEqual([]);
-    expect(carried.removed.map(({ path }) => path)).toStrictEqual(['backend/ruff.toml']);
-    expect(carried.retained.map(({ path }) => path).toSorted((left, right) => left.localeCompare(right))).toStrictEqual(
-        ['config/base.toml', 'config/pyproject.toml'],
-    );
-    expect([...carried.observed.keys()].toSorted((left, right) => left.localeCompare(right))).toStrictEqual(
+    const kept = await collectKept(sandbox.path, tooling, new Set(['python']), paths);
+    expect(kept.unread).toStrictEqual([]);
+    expect(kept.removed.map(({ path }) => path)).toStrictEqual(['backend/ruff.toml']);
+    expect(kept.retained.map(({ path }) => path).toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
+        'config/base.toml',
+        'config/pyproject.toml',
+    ]);
+    expect([...kept.observed.keys()].toSorted((left, right) => left.localeCompare(right))).toStrictEqual(
         Object.keys(INHERITED_FILES.configs).toSorted((left, right) => left.localeCompare(right)),
     );
     await Bun.write(
         join(sandbox.path, 'gspot.toml'),
-        stringify({ version: 1, kits: ['python'], ignore: carried.tools.get('ruff')!.ignores }),
+        stringify({ version: 1, kits: ['python'], ignore: kept.tools.get('ruff')!.ignores }),
     );
     const session = await openSession(sandbox.path);
     const config = emitAll(session.policyFiles.policy, session.repository, session.scopes, {

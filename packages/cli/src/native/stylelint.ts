@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { createRequire } from 'node:module';
-import type { stylelintRequest } from '#cli/evaluation/protocol.ts';
+import type { stylelintRequest } from '#cli/native/protocol.ts';
 
 const reportSchema = z.object({
     results: z
@@ -21,7 +21,7 @@ const reportSchema = z.object({
  * @param request the repository root and the rules to validate
  * @returns true once every rule is accepted
  */
-export async function evaluateStylelint(request: z.infer<typeof stylelintRequest>): Promise<true> {
+export async function runStylelint(request: z.infer<typeof stylelintRequest>): Promise<true> {
     const require = createRequire(join(request.root, 'package.json'));
     const installed = z.object({ version: z.string() }).parse(require('stylelint/package.json'));
     if (installed.version !== request.version)

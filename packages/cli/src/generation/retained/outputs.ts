@@ -7,7 +7,7 @@ import { retainedConfigurationPaths } from '#cli/generation/retained/configurati
 // The authored configuration files of the tools that the repository keeps.
 function retainedPaths(retention: Retention, tools: string[]): string[] {
     const sources = retention.files.filter((file) => file.nature === 'source').map((file) => file.path);
-    return retainedConfigurationPaths(retention.root, sources, tools, retention.takeover);
+    return retainedConfigurationPaths(retention.root, sources, tools, retention.replace);
 }
 
 // The .editorconfig paths the policy adopts, which stay generated beside retained editor configuration.
@@ -40,7 +40,7 @@ function retainFormatting(retention: Retention, out: GeneratedProposal): void {
 
 /**
  * Withdraw generated files shadowed by retained authored configuration and record their paths.
- * @param retention the repository, its policy, and the takeover originals
+ * @param retention the repository, its policy, and the replace originals
  * @param out the proposal
  */
 export function withdrawRetained(retention: Retention, out: GeneratedProposal): void {

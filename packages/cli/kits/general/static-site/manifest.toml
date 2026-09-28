@@ -18,9 +18,9 @@ name = "linkinator"
 version = "8.1.0"
 npm = "linkinator"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = "linkinator.config.json"
-carries = "rules-table"
+keeps = "rules-table"
 
 [[tools]]
 name = "svgo"

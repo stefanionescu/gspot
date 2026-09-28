@@ -1,4 +1,4 @@
-import { nearMatches } from '#cli/policy/near.ts';
+import { similar } from '#cli/policy/similar.ts';
 import { selectForScope } from '#cli/kits/select.ts';
 import { unknownKit } from '#cli/policy/messages.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
@@ -64,7 +64,7 @@ export function unknownKitProblems(policy: Policy): PolicyProblem[] {
         .filter(({ name }) => !manifests.has(name))
         .map(({ name, path }) => ({
             path,
-            message: unknownKit(name, nearMatches(name, [...manifests.keys()])),
+            message: unknownKit(name, similar(name, [...manifests.keys()])),
         }));
 }
 

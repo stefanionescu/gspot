@@ -20,7 +20,7 @@ test('loading two configurations refuses duplicate executable check ownership', 
     }).toThrow('check project/parse is already owned by first');
 });
 
-test.each(['reported_by', 'takes_over'] as const)(
+test.each(['reported_by', 'replaces'] as const)(
     'manifest collection rejects invalid %s ownership and accepts a runnable owner',
     (field) => {
         const project = parseManifest(
@@ -76,8 +76,8 @@ test('manifest collection refuses circular replacement before either check can s
         .get('bash')!
         .checks.find((check) => check.command !== undefined)!;
     project.checks = [
-        { ...original, name: 'project/first', takes_over: 'project/second' },
-        { ...original, name: 'project/second', takes_over: 'project/first' },
+        { ...original, name: 'project/first', replaces: 'project/second' },
+        { ...original, name: 'project/second', replaces: 'project/first' },
     ];
     expect(() => {
         validateManifests(new Map([['project', project]]));
@@ -85,10 +85,10 @@ test('manifest collection refuses circular replacement before either check can s
 });
 
 test.each(['missing/check', 'bash/shfmt'])(
-    'takeover refuses destination %s and accepts the check that executes its tool',
+    'replace refuses destination %s and accepts the check that executes its tool',
     (destination) => {
         const manifests = structuredClone(kitManifests());
-        const row = manifests.get('bash')!.tools.find((tool) => tool.name === 'shellcheck')!.takeover![0]!;
+        const row = manifests.get('bash')!.tools.find((tool) => tool.name === 'shellcheck')!.replace![0]!;
         row.check = destination;
         expect(() => {
             validateManifests(manifests);

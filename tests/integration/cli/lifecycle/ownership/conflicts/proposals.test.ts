@@ -143,7 +143,7 @@ test('restoration proposals preserve reviewed bytes and refuse the whole batch a
     }
 });
 
-test('takeover removal proposals retain every original when a later observation is stale', async () => {
+test('replace removal proposals retain every original when a later observation is stale', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, { 'first.json': '{}\n', 'second.json': '{}\n' });
     const owner = openLifecycleOwner(directory.path);

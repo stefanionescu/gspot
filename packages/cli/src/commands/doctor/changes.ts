@@ -36,7 +36,7 @@ function configurationRow(session: Session, config: ExistingTool, selected: Set<
         return {
             path: config.path,
             note: `beside gspot's ${config.tool} configuration`,
-            command: 'review gspot.toml and carry settings before removing the authored configuration',
+            command: 'review gspot.toml and keep settings before removing the authored configuration',
         };
     const owner = session.manifests
         .values()

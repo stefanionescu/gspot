@@ -18,7 +18,7 @@ import { SECONDS_PER_DAY, DEFAULT_RELEASE_AGE_DAYS } from '#cli/config/generatio
 import type {
     Planning,
     InitAnswers,
-    TakeoverPlan,
+    ReplacePlan,
     InitSelection,
     DetectedSetting,
     InstallSettings,
@@ -32,8 +32,8 @@ function carriedCount(value: unknown): number {
     return 1;
 }
 
-function carriedRows(carried: AdoptionResult): TakeoverPlan['carried'] {
-    const rows = [...carried.tools].flatMap(([tool, entries]) => {
+function carriedRows(kept: AdoptionResult): ReplacePlan['kept'] {
+    const rows = [...kept.tools].flatMap(([tool, entries]) => {
         const settings = Object.entries(entries.settings).map(([key, value]) => ({
             from: `${tool} ${key}`,
             count: carriedCount(value),
@@ -47,7 +47,7 @@ function carriedRows(carried: AdoptionResult): TakeoverPlan['carried'] {
             });
         return settings.filter((row) => row.count > 0);
     });
-    const scopeSettings = [...carried.scopes].flatMap(([scope, entry]) =>
+    const scopeSettings = [...kept.scopes].flatMap(([scope, entry]) =>
         Object.entries(entry.tools).flatMap(([tool, settings]) =>
             Object.entries(settings).map(([key, value]) => ({
                 from: `${scope}: ${tool} ${key}`,
@@ -64,9 +64,9 @@ function runnerRows(
     answers: InitAnswers,
     everySelected: Manifest[],
     names?: RunnerTaskNames,
-): TakeoverPlan['change'] {
+): ReplacePlan['change'] {
     const count = Object.keys(npmPins(everySelected, answers.runner)).length;
-    const rows: TakeoverPlan['change'] =
+    const rows: ReplacePlan['change'] =
         count === 0
             ? []
             : [{ path: '.gspot/package.json', note: `${String(count)} pinned npm tools; matching lockfile` }];
@@ -109,29 +109,29 @@ function bunfigSettings(text: string): InstallSettings {
 }
 
 // Records the install settings of one scope, merged over what the scope already carries.
-function carryInstallSettings(carried: AdoptionResult, path: string, settings: InstallSettings): void {
+function carryInstallSettings(kept: AdoptionResult, path: string, settings: InstallSettings): void {
     if (path === '') {
-        const existing = carried.tools.get('install');
-        carried.tools.set('install', {
+        const existing = kept.tools.get('install');
+        kept.tools.set('install', {
             settings: { ...existing?.settings, ...settings },
             ignores: existing?.ignores ?? [],
         });
         return;
     }
-    const scope = carried.scopes.get(path) ?? { kits: [], tools: {} };
+    const scope = kept.scopes.get(path) ?? { kits: [], tools: {} };
     scope.tools['install'] = { ...scope.tools['install'], ...settings };
-    carried.scopes.set(path, scope);
+    kept.scopes.set(path, scope);
 }
 
 // Carries the install settings of every scope's bunfig.toml into the proposal.
-function carryBunfigSettings(root: string, selection: InitSelection, carried: AdoptionResult): void {
+function carryBunfigSettings(root: string, selection: InitSelection, kept: AdoptionResult): void {
     const files = openConfinedRoot(root);
     try {
         for (const path of new Set(['', ...selection.scopes.map((scope) => scope.path)])) {
             const source = files.read(path === '' ? 'bunfig.toml' : `${path}/bunfig.toml`);
             if (source === undefined) continue;
             const settings = bunfigSettings(source.bytes.toString('utf8'));
-            if (Object.keys(settings).length > 0) carryInstallSettings(carried, path, settings);
+            if (Object.keys(settings).length > 0) carryInstallSettings(kept, path, settings);
         }
     } finally {
         files.close();
@@ -154,7 +154,7 @@ function xcodeRow(root: string, selection: InitSelection): ReturnType<typeof xco
 }
 
 // The agent instruction files init writes, when any agent is configured.
-function agentRows(agents: string[]): TakeoverPlan['write'] {
+function agentRows(agents: string[]): ReplacePlan['write'] {
     if (agents.length === 0) return [];
     const files = agents.map((path) => ({
         path,
@@ -164,14 +164,14 @@ function agentRows(agents: string[]): TakeoverPlan['write'] {
 }
 
 // The CI workflow init writes for the chosen host.
-function ciRows(ci: InitAnswers['ci']): TakeoverPlan['write'] {
+function ciRows(ci: InitAnswers['ci']): ReplacePlan['write'] {
     if (ci === 'none') return [];
     if (ci === 'github') return [{ path: '.github/workflows/gspot.yml', note: 'check workflow' }];
     return [{ path: '.gitlab/ci/gspot.yml', note: 'add include: [{ local: .gitlab/ci/gspot.yml }] to .gitlab-ci.yml' }];
 }
 
 // The CI files init leaves alone: every one when no workflow is written, and every existing lint job.
-function retainedCiRows(ci: InitAnswers['ci'], ciFiles: string[], lintJobs: string[]): TakeoverPlan['retained'] {
+function retainedCiRows(ci: InitAnswers['ci'], ciFiles: string[], lintJobs: string[]): ReplacePlan['retained'] {
     const untouched =
         ci === 'none' && lintJobs.length === 0
             ? ciFiles.map((path) => ({
@@ -188,7 +188,7 @@ function retainedCiRows(ci: InitAnswers['ci'], ciFiles: string[], lintJobs: stri
  * @param root the repository root
  * @param selection what init selected
  * @param answers the answers to the init questions
- * @param carried the lists carried from old configuration files
+ * @param kept the lists kept from old configuration files
  * @param detected the settings init filled from the repository
  * @returns the proposal
  */
@@ -196,10 +196,10 @@ export function buildProposal(
     root: string,
     selection: InitSelection,
     answers: InitAnswers,
-    carried: AdoptionResult,
+    kept: AdoptionResult,
     detected: DetectedSetting[] = [],
 ): Proposal {
-    if (selection.selectedIds.has('dependencies')) carryBunfigSettings(root, selection, carried);
+    if (selection.selectedIds.has('dependencies')) carryBunfigSettings(root, selection, kept);
     const scopes: ScopeEntry[] = selection.scopes.filter((scope) => scope.path !== '');
     const commitScopes = commitScopeNames(scopes, selection);
     const xcode = xcodeRow(root, selection);
@@ -209,7 +209,7 @@ export function buildProposal(
             path: scope.path,
             kits: selection.scopeProposals.get(scope.path) ?? [],
         })),
-        carried,
+        kept,
         hooks: answers.hooks,
         ci: answers.ci,
         rules: answers.isRules,
@@ -228,8 +228,8 @@ export function buildProposal(
  * @param policyText the proposed policy text
  * @returns the plan
  */
-export function buildInitPlan(planning: Planning, policy: Policy, policyText: string): TakeoverPlan {
-    const { root, tooling, everySelected, selection, answers, carried, options } = planning;
+export function buildInitPlan(planning: Planning, policy: Policy, policyText: string): ReplacePlan {
+    const { root, tooling, everySelected, selection, answers, kept, options } = planning;
     const profile =
         options.profile === undefined
             ? undefined
@@ -263,14 +263,14 @@ export function buildInitPlan(planning: Planning, policy: Policy, policyText: st
             ...agentRows(agents),
             ...ciRows(answers.ci),
         ],
-        remove: carried.removed,
-        unread: carried.unread,
+        remove: kept.removed,
+        unread: kept.unread,
         retained: [
-            ...carried.retained,
+            ...kept.retained,
             ...submodulePaths(root).map((path) => ({ path, note: 'submodule; contents are not read' })),
             ...retainedCiRows(answers.ci, tooling.ci, lintJobs),
         ],
-        carried: carriedRows(carried),
+        kept: carriedRows(kept),
         change: [
             { path: '.gitignore', note: 'one managed block' },
             { path: '.gitattributes', note: 'managed generated-file classification and LF line endings' },
@@ -278,6 +278,6 @@ export function buildInitPlan(planning: Planning, policy: Policy, policyText: st
             ...(answers.hooks === 'gspot' ? [HOOKS_ROW] : []),
         ],
         noLongerRuns: noLongerRuns(tooling, pinnedTwice(root, everySelected)),
-        ignores: [...carried.tools.values()].flatMap((tool) => tool.ignores),
+        ignores: [...kept.tools.values()].flatMap((tool) => tool.ignores),
     };
 }

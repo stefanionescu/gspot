@@ -1,10 +1,10 @@
 import { compareRules } from '#cli/lifecycle/rule-diff.ts';
 import type { MergedView } from '#cli/types/policy/policy.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import { eslintPreviewResponse } from '#cli/native/protocol.ts';
+import { runConfiguration } from '#cli/native/configuration.ts';
 import type { GeneratedProposal } from '#cli/types/generation.ts';
 import type { DriftEntry } from '#cli/types/lifecycle/lifecycle.ts';
-import { eslintPreviewResponse } from '#cli/evaluation/protocol.ts';
-import { evaluateConfiguration } from '#cli/evaluation/configuration.ts';
 
 /**
  * Enrich an explicit apply preview with imported and computed ESLint rule data.
@@ -33,7 +33,7 @@ export async function eslintRuleDiff(
                 const current = files.read(file.path)?.bytes.toString('utf8');
                 const sources = [current, file.content].filter((source) => source !== undefined);
                 const resolvedRules = eslintPreviewResponse.length(sources.length).parse(
-                    await evaluateConfiguration(
+                    await runConfiguration(
                         {
                             tool: 'eslint',
                             operation: 'preview-rules',

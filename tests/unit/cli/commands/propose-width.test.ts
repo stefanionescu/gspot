@@ -8,7 +8,7 @@ test('a proposed policy holds no line over 120 characters and reads back as writ
     const text = proposeText({
         kits: CONFIGURATIONS,
         scopes: [{ path: 'apps/site', kits: CONFIGURATIONS.slice(0, 12) }],
-        carried: NOTHING_CARRIED,
+        kept: NOTHING_CARRIED,
         hooks: 'gspot',
         ci: 'none',
         rules: true,
@@ -22,11 +22,11 @@ test('a proposed policy holds no line over 120 characters and reads back as writ
     expect(policy.scopes[0]?.kits).toStrictEqual(CONFIGURATIONS.slice(0, 12));
 });
 
-test('detected settings override carried and profile values while unrelated profile settings survive', () => {
+test('detected settings override kept and profile values while unrelated profile settings survive', () => {
     const text = proposeText({
         kits: ['python'],
         scopes: [],
-        carried: { ...NOTHING_CARRIED, tools: new Map([['ruff', { settings: { select: ['F'] }, ignores: [] }]]) },
+        kept: { ...NOTHING_CARRIED, tools: new Map([['ruff', { settings: { select: ['F'] }, ignores: [] }]]) },
         profileTables: {
             tools: { ruff: { select: ['E'], exclude: ['generated'] } },
             architecture: { types_directory: 'types', config_directory: 'constants' },
@@ -53,7 +53,7 @@ test('initialization preserves formatter overrides and profile runner tasks whil
     const text = proposeText({
         kits: ['formatting'],
         scopes: [],
-        carried: NOTHING_CARRIED,
+        kept: NOTHING_CARRIED,
         formatter: { format: { print_width: 90 }, extra: { bracketSpacing: false }, nativeDefaults: true },
         profileTables: {
             hooks: { tool: 'husky' },
@@ -92,7 +92,7 @@ test('initialization writes scoped reasoned allowances as table arrays', () => {
             { path: 'api', kits: ['spelling'] },
             { path: 'web', kits: ['spelling'] },
         ],
-        carried: {
+        kept: {
             ...NOTHING_CARRIED,
             scopes: new Map([['api', { kits: ['spelling'], tools: { typos: { words } } }]]),
         },

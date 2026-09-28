@@ -52,7 +52,7 @@ if (process.platform !== 'win32') {
         },
     );
 
-    test('lifecycle ownership: unavailable recovery refuses takeover before modifying the original', async () => {
+    test('lifecycle ownership: unavailable recovery refuses replace before modifying the original', async () => {
         await using directory = await testdir();
         await createFileTree(directory.path, {
             'config.txt': 'original\n',

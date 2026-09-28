@@ -4,7 +4,7 @@ import { writeFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import { join, resolve } from 'node:path';
 import { mutationPath } from '#cli/platform/safe-paths.ts';
-import type { eslintPreviewRequest, eslintPreviewResponse } from '#cli/evaluation/protocol.ts';
+import type { eslintPreviewRequest, eslintPreviewResponse } from '#cli/native/protocol.ts';
 
 function moduleSource(path: string, text: string): string {
     const source = ts.createSourceFile(path, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);
@@ -71,7 +71,7 @@ function ruleTable(value: unknown): z.infer<typeof eslintPreviewResponse>[number
  * @param work the directory the configuration process runs in
  * @returns the rules each source resolves to
  */
-export async function evaluateEslintPreview(
+export async function runEslintPreview(
     request: z.infer<typeof eslintPreviewRequest>,
     work: string,
 ): Promise<z.infer<typeof eslintPreviewResponse>> {

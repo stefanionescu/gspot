@@ -19,8 +19,8 @@ const cases = {
     extraCoversSlot: () => messages.extraCoversSlot('ruff', 'rules'),
     extraNeedsReason: () => messages.extraNeedsReason('ruff'),
     conflictingScalars: () => messages.conflictingScalars('tools.sqlfluff.dialect', 'sql', 'postgres'),
-    loosenNeedsReason: () =>
-        messages.loosenNeedsReason('limits.file_lines', '500', '300', 'gspot set limits.file_lines 500'),
+    weakerNeedsReason: () =>
+        messages.weakerNeedsReason('limits.file_lines', '500', '300', 'gspot set limits.file_lines 500'),
     groupNotRemovable: () => messages.groupNotRemovable('example'),
     versionMismatch: () => messages.versionMismatch('1.0.0', '2.0.0'),
     unknownCheck: () => messages.unknownCheck('python/example', ['python/lint']),

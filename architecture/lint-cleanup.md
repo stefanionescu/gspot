@@ -382,7 +382,7 @@ accessibility plugin depends on this unmodified development package. It is absen
 from the CLI binary. Review the exception when the dependency version changes.
 
 The `node-no-configured-require` exception applies only to six named files under
-`packages/cli/src/evaluation/` in policy. These evaluators execute authored
+`packages/cli/src/native/` in policy. These evaluators execute authored
 configuration and resolve installed APIs from the target repository. Static
 imports select the CLI dependency graph and cannot implement that contract.
 

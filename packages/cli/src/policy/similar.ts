@@ -26,7 +26,7 @@ function distance(a: string, b: string): number {
  * @param candidates the names that exist
  * @returns the closest candidates
  */
-export function nearMatches(name: string, candidates: string[]): string[] {
+export function similar(name: string, candidates: string[]): string[] {
     const lower = name.toLowerCase();
     const limit = Math.max(TYPO_MIN, Math.floor(name.length / TYPO_FRACTION));
     return candidates

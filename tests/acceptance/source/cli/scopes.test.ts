@@ -106,7 +106,7 @@ test(
         await installAtLevel(sandbox.path, argv, environment);
         const policy = await Bun.file(join(sandbox.path, 'gspot.toml')).text();
         expect(policy).toContain('db/**/templates/**');
-        expect(policy).toContain('carried from db/.sqlfluffignore at init: Templates');
+        expect(policy).toContain('kept from db/.sqlfluffignore at init: Templates');
         const syntax = await run(sandbox.path, ['check', '--only', 'sql/syntax', '--no-cache'], environment);
         expect(syntax.code).toBe(0);
     },

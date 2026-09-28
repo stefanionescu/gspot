@@ -6,8 +6,8 @@ merge.
 Configuration-document editing owns parsing and field edits for shared JSON, YAML, and TOML.
 The lifecycle owner retains locking, observations, journals, publication, and recovery. Static
 configuration reading captures the bytes and permissions that authorize adoption; tool-specific
-carryover converts those observed settings without acquiring a separate mutation owner. Formatter
-and ESLint adoption own their conversion rules; takeover coordinates observations and retirement.
+keeping converts those observed settings without acquiring a separate mutation owner. Formatter
+and ESLint adoption own their conversion rules; replacement coordinates observations and retirement.
 
 ## Ownership boundaries
 
@@ -458,14 +458,14 @@ Use the recovery and ownership rules of [03-configuration.md](03-configuration.m
 
 Save original bytes and mode before replacement, record installed hashes, serialize writers, resume interrupted operations, and restore only absent or unchanged destinations. Preserve unowned files, subsequent developer edits, and local recovery. Keep ignore entries while recovery remains.
 
-No Git, unborn Git, untracked config, dirty takeover, second replacement, full disk before backup, interrupted replacement, edited tasks, fresh clone with no original backup, unmarked and modified marked files under `.gspot/`.
+No Git, unborn Git, untracked config, dirty replacement, second replacement, full disk before backup, interrupted replacement, edited tasks, fresh clone with no original backup, unmarked and modified marked files under `.gspot/`.
 
 ### Acceptance K-217
 
 gspot never writes a lint tool into a manifest of the developer. The npm tools and
 libraries a configuration pins install into `.gspot/node_modules`, from a generated `.gspot/package.json`
 and its lockfile. Every check runs the binary under `.gspot/`. The ESLint of the developer, its
-config, and its plugins stay, and takeover lists them for removal by hand.
+config, and its plugins stay, and replacement lists them for removal by hand.
 
 `tool-packages.ts` collects every tool with an `npm` name from the selected manifests,
 with its pinned version, and writes `.gspot/package.json` with the mark `_gspot`. `install-tools.ts`
@@ -504,7 +504,7 @@ token, served by the harness registry.
 The plan tells the developer the one ignore line for each such tool, and gspot never
 reports its own folder to them twice.
 
-A takeover row takes `ignore_hint`, the line that tool needs, such as `.gspot/` for
+A replacement row takes `ignore_hint`, the line that tool needs, such as `.gspot/` for
 `.prettierignore` or `"ignorePaths": [".gspot/**"]` for Renovate. The plan prints the hints of
 the tools it found under removal by hand. The checks of gspot skip `.gspot/node_modules` and
 `.gspot/.venv`. `dependencies/osv` reports an advisory in a lockfile of gspot apart from the
@@ -543,7 +543,7 @@ repository as `.gitleaks-baseline.json`, a file the developer owns, and the secr
 names that path.
 
 A planted repository with a hand-made JSON file under `.gspot/` holds the file after
-`apply`, `remove`, and `uninstall`, and a line for it in `doctor`. A modified marked file, a no-git takeover, an unborn repository, and a dirty task replacement all preserve the developer's bytes.
+`apply`, `remove`, and `uninstall`, and a line for it in `doctor`. A modified marked file, a no-git replacement, an unborn repository, and a dirty task replacement all preserve the developer's bytes.
 
 ### Acceptance K-296
 
@@ -681,13 +681,13 @@ the two commands.
 
 ### Acceptance K-36
 
-Takeover deletes a file only when one tool owns it. A shared file is read,
+Replacement deletes a file only when one tool owns it. A shared file is read,
 its section is carried, and the plan names the section for the developer to remove.
 
-A takeover row of a manifest has `file` and `shared = true` or no such key.
+A replacement row of a manifest has `file` and `shared = true` or no such key.
 `deleteReplaced` skips a shared row, and `noLongerRuns` prints its section name.
 
-`takeover.test.ts` plants a `setup.cfg` with `[flake8]` and `[sqlfluff]`, and holds
+`replacement.test.ts` plants a `setup.cfg` with `[flake8]` and `[sqlfluff]`, and holds
 that the file is there after `init --yes`.
 
 ### Acceptance K-257
@@ -747,7 +747,7 @@ Parse every generated format after inputs containing quotes, backslashes, commen
 
 ### Acceptance K-193
 
-Takeover carries a rule in both directions, with the paths it held for. A rule turned
+Replacement carries a rule in both directions, with the paths it held for. A rule turned
 off becomes an `[[ignore]]` with `rule` and `paths`. A rule turned on, with its options, becomes
 an entry of `tools.<tool>.rules`, or a path-specific override when applicability differs. The plan lists, for each replaced file, every setting that was
 not carried.
@@ -764,7 +764,7 @@ A warning alone is not permission to delete it. New-file applicability and order
 [03-configuration.md](03-configuration.md). An `.eslintrc` file is read the same way. `disabledFromRulesTable` stays for
 markdownlint and stylelint, whose files are plain JSON.
 
-`takeover.test.ts` plants a config with `no-var: error`, a rule off for `tests/**`, and
+`replacement.test.ts` plants a config with `no-var: error`, a rule off for `tests/**`, and
 a plugin gspot does not ship. It holds separate source, test, and package overrides; the unsupported plugin keeps its original configuration active and out of the deletion plan.
 
 ### Acceptance K-120
@@ -776,7 +776,7 @@ selectors as described above. Exercise files created after adoption. Unsupported
 produce a specific conversion failure, leave original bytes intact, and prevent successful
 adoption; they never become a sampled filename list or a global approximation.
 
-`takeover.test.ts` plants each of the five forms with tabs, and holds
+`replacement.test.ts` plants each of the five forms with tabs, and holds
 `indent_style = "tab"` in the written config.
 
 ### Acceptance K-126
@@ -818,13 +818,13 @@ A lint package is a package that a tool of a selected kit names.
 The list is built from the `npm` and `pypi` names of every manifest tool, plus the
 `replaces` names a manifest gives, such as `eslint-config-*` for the javascript configuration.
 
-`takeover.test.ts` plants a `package.json` with `husky` and `concurrently` alone, and
+`replacement.test.ts` plants a `package.json` with `husky` and `concurrently` alone, and
 holds that the plan does not name it.
 
 ## Adoption and preservation
 
 Support empty repositories, repositories without Git, existing lint setups, and mixed-language
-projects. Before takeover, classify existing configuration and tasks as carried, replaced,
+projects. Before replacement, classify existing configuration and tasks as carried, replaced,
 retained, or developer cleanup. Shared manifests and product data remain authored content.
 Unsupported options or path applicability keep their source configuration active. Recovery
 must exist before replacement; Git tracking alone does not establish recoverability.

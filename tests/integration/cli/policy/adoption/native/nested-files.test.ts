@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { readRepository } from '#cli/repository/tree.ts';
-import { collectCarried } from '#cli/policy/adoption/collect.ts';
+import { collectKept } from '#cli/policy/adoption/collect.ts';
 import { existingTooling } from '#cli/repository/existing-tooling.ts';
 
 test.each([
@@ -17,15 +17,15 @@ test.each([
         await createFileTree(sandbox.path, { [path]: original });
         const repository = await readRepository(sandbox.path, [], [], []);
         const discovered = existingTooling(sandbox.path, repository.files, []);
-        const carried = await collectCarried(sandbox.path, discovered, new Set([configuration]), []);
-        expect(carried.unread).toStrictEqual([]);
-        expect(carried.tools.get(tool)?.settings[key]).toStrictEqual([
+        const kept = await collectKept(sandbox.path, discovered, new Set([configuration]), []);
+        expect(kept.unread).toStrictEqual([]);
+        expect(kept.tools.get(tool)?.settings[key]).toStrictEqual([
             { paths: ['nested/**/fixtures/**'], reason: expect.any(String) as string },
         ]);
-        expect(carried.removed.map((entry) => entry.path)).toStrictEqual([path]);
+        expect(kept.removed.map((entry) => entry.path)).toStrictEqual([path]);
         const unsupported = `${original}!fixtures/checked.sql\n`;
         await Bun.write(join(sandbox.path, path), unsupported);
-        const refused = await collectCarried(sandbox.path, discovered, new Set([configuration]), []);
+        const refused = await collectKept(sandbox.path, discovered, new Set([configuration]), []);
         expect(refused.unread.map((entry) => entry.path)).toStrictEqual([path]);
         expect(refused.tools.get(tool)?.settings[key] ?? []).toStrictEqual([]);
         expect(refused.removed).toStrictEqual([]);
@@ -45,10 +45,10 @@ test.each([
         await createFileTree(sandbox.path, { [path]: original });
         const repository = await readRepository(sandbox.path, [], [], []);
         const discovered = existingTooling(sandbox.path, repository.files, []);
-        const carried = await collectCarried(sandbox.path, discovered, new Set([configuration]), []);
-        expect(carried.unread.map((entry) => entry.path)).toStrictEqual([path]);
-        expect(carried.tools.size).toBe(0);
-        expect(carried.removed).toStrictEqual([]);
+        const kept = await collectKept(sandbox.path, discovered, new Set([configuration]), []);
+        expect(kept.unread.map((entry) => entry.path)).toStrictEqual([path]);
+        expect(kept.tools.size).toBe(0);
+        expect(kept.removed).toStrictEqual([]);
         expect(await Bun.file(join(sandbox.path, path)).text()).toBe(original);
     },
 );

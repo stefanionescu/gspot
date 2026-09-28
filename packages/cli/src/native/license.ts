@@ -2,9 +2,9 @@ import { z } from 'zod';
 import { pathToFileURL } from 'node:url';
 import { dirname, join } from 'node:path';
 import { createRequire } from 'node:module';
-import type { LicenseChecker } from '#cli/types/evaluation.ts';
+import type { LicenseChecker } from '#cli/types/native.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import type { licenseRequest, licenseResponse } from '#cli/evaluation/protocol.ts';
+import type { licenseRequest, licenseResponse } from '#cli/native/protocol.ts';
 
 const reportSchema = z.record(
     z.string(),
@@ -31,7 +31,7 @@ function installedProject(root: string, from: string): string {
  * @param request the source project and package exclusions to resolve
  * @returns the installed package identities and license expressions
  */
-export async function evaluateLicenses(
+export async function runLicenses(
     request: z.infer<typeof licenseRequest>,
 ): Promise<z.infer<typeof licenseResponse>> {
     const start = installedProject(request.root, request.from);

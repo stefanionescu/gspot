@@ -1,6 +1,6 @@
 // Explain a check, tool rule, kit, setting, or file path.
 import { allChecks } from '#cli/kits/listing.ts';
-import { nearMatches } from '#cli/policy/near.ts';
+import { similar } from '#cli/policy/similar.ts';
 import * as messages from '#cli/policy/messages.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
 import { quoteArgument } from '#cli/platform/arguments.ts';
@@ -21,7 +21,7 @@ function kitExplanation(kitName: string): Explanation | { error: string } {
     const manifest = kitManifests().get(kitName);
     if (!manifest)
         return {
-            error: messages.unknownKit(kitName, nearMatches(kitName, kitManifests().keys().toArray())),
+            error: messages.unknownKit(kitName, similar(kitName, kitManifests().keys().toArray())),
         };
     const row: ListingRow = {
         name: manifest.kit.name,
@@ -131,14 +131,14 @@ function explainSlashed(session: Session | undefined, subject: string): Explanat
     const toolRule = toolRuleExplanation(session, subject.slice(0, slash), subject.slice(slash + 1));
     if (toolRule) return toolRule;
     const known = [...allChecks().keys(), ...(session?.policyFiles.policy.checks.map((check) => check.name) ?? [])];
-    return { error: messages.unknownCheck(subject, nearMatches(subject, known)) };
+    return { error: messages.unknownCheck(subject, similar(subject, known)) };
 }
 
 function explainDotted(session: Session | undefined, subject: string): Explanation | { error: string } {
     const setting = settingExplanation(session, subject);
     if (setting) return setting;
     const known = [...new Set(session?.scopes.flatMap((scope) => [...scope.surface.specs.keys()]))];
-    return { error: messages.settingNotExposed(subject, nearMatches(subject, known)) };
+    return { error: messages.settingNotExposed(subject, similar(subject, known)) };
 }
 
 /**

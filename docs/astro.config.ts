@@ -72,7 +72,7 @@ export default defineConfig({
                     label: 'Guides',
                     collapsed: true,
                     items: [
-                        { label: 'Fix findings', slug: 'guides/you-got-a-finding' },
+                        { label: 'Fix findings', slug: 'guides/findings' },
                         { label: 'Configuration', slug: 'guides/customize' },
                         { label: 'Generated files', slug: 'guides/generated-files' },
                         { label: 'Team profiles', slug: 'guides/profiles' },
@@ -100,7 +100,7 @@ export default defineConfig({
                         {
                             label: 'Configurations',
                             collapsed: true,
-                            items: [{ autogenerate: { directory: 'reference/configurations' } }],
+                            items: [{ autogenerate: { directory: 'reference/kits' } }],
                         },
                         {
                             label: 'Checks',

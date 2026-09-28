@@ -109,9 +109,9 @@ function narrowSet(options: PlanOptions): Set<string> | undefined {
 function yielded(planned: PlannedCheck[]): PlannedCheck[] {
     const takers = new Map(
         planned.flatMap((check): [string, string][] =>
-            check.spec.takes_over === undefined || check.skip !== undefined || !isActive(check)
+            check.spec.replaces === undefined || check.skip !== undefined || !isActive(check)
                 ? []
-                : [[check.spec.takes_over, check.check]],
+                : [[check.spec.replaces, check.check]],
         ),
     );
     return planned.map((check) => {

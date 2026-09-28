@@ -26,21 +26,21 @@ mise = "ruff"
 pypi = "ruff"
 brew = "ruff"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = "ruff.toml"
-carries = "rules-table"
+keeps = "rules-table"
 check = "python/ruff"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = ".ruff.toml"
-carries = "rules-table"
+keeps = "rules-table"
 check = "python/ruff"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = "pyproject.toml"
 table = "tool.ruff"
 shared = true
-carries = "rules-table"
+keeps = "rules-table"
 check = "python/ruff"
 
 [[tools]]
@@ -51,9 +51,9 @@ floor = "1.20.0"
 mise = "pipx:basedpyright"
 pypi = "basedpyright"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = "pyrightconfig.json"
-carries = "ignore-paths"
+keeps = "ignore-paths"
 
 [[tools]]
 name = "lint-imports"

@@ -50,7 +50,7 @@ export async function build(targets: string[], out: string): Promise<void> {
     await binaryNotices('');
     mkdirSync(join(here, '.build'), { recursive: true });
     const evaluator = await Bun.build({
-        entrypoints: [join(here, 'src/evaluation/process.ts')],
+        entrypoints: [join(here, 'src/native/process.ts')],
         target: 'bun',
         minify: { syntax: true },
         metafile: true,

@@ -5,8 +5,8 @@ import { openSession } from '#cli/execution/session.ts';
 import { readRepository } from '#cli/repository/tree.ts';
 import { proposeText } from '#cli/commands/init/propose.ts';
 import type { GeneratedFile } from '#cli/types/generation.ts';
+import { collectKept } from '#cli/policy/adoption/collect.ts';
 import type { Session } from '#cli/types/execution/execution.ts';
-import { collectCarried } from '#cli/policy/adoption/collect.ts';
 import type { AdoptionResult } from '#cli/types/policy/adoption.ts';
 import { existingTooling } from '#cli/repository/existing-tooling.ts';
 
@@ -14,7 +14,7 @@ import { existingTooling } from '#cli/repository/existing-tooling.ts';
 export async function prepareSpelling(
     root: string,
     existing: boolean,
-): Promise<{ original: string; carried: AdoptionResult; session: Session; outputs: GeneratedFile[] }> {
+): Promise<{ original: string; kept: AdoptionResult; session: Session; outputs: GeneratedFile[] }> {
     const original =
         '[default]\nlocale = "en-gb"\n[default.extend-words]\n# An imported name requires its exact spelling.\nteh = "teh"\n[files]\nextend-exclude = ["src/**", "*.skip", "!keep.skip"]\n';
     await createFileTree(root, {
@@ -27,11 +27,11 @@ export async function prepareSpelling(
     });
     const repository = await readRepository(root, [], [], []);
     const discovered = existingTooling(root, repository.files, []);
-    const carried = await collectCarried(root, discovered, new Set(['spelling']), []);
+    const kept = await collectKept(root, discovered, new Set(['spelling']), []);
     const policy = proposeText({
         kits: ['spelling'],
         scopes: existing ? [{ path: 'nested', kits: ['markdown'] }] : [],
-        carried,
+        kept,
         hooks: 'none',
         ci: 'none',
         rules: false,
@@ -45,5 +45,5 @@ export async function prepareSpelling(
     }).files;
     for (const config of outputs.filter(({ path }) => path.startsWith('.gspot/') && path.endsWith('typos.toml')))
         await Bun.write(join(root, config.path), config.content);
-    return { original, carried, session, outputs };
+    return { original, kept, session, outputs };
 }

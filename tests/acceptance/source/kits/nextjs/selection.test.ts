@@ -6,7 +6,7 @@ import { run } from '#tests/support/cli/command.ts';
 import { symlinkSync, writeFileSync } from 'node:fs';
 import { reportSchema } from '#cli/execution/report.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
-import type { TakeoverPlan } from '#cli/types/commands/init.ts';
+import type { ReplacePlan } from '#cli/types/commands/init.ts';
 import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
 import { installPrivateTools } from '#tests/support/cli/tools.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
@@ -136,7 +136,7 @@ test.each([
             '--no-install',
         ]);
         expect(result.code, result.stdout + result.stderr).toBe(0);
-        const { plan } = JSON.parse(result.stdout) as { plan: TakeoverPlan };
+        const { plan } = JSON.parse(result.stdout) as { plan: ReplacePlan };
         expect(plan.kits.some(({ kit }) => kit === 'i18n')).toBe(selected);
     },
 );

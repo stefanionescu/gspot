@@ -19,9 +19,9 @@ npm = "license-checker-rseidelsohn"
 version_exit_code = 1
 mise = "npm:license-checker-rseidelsohn"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = ".license-checker.json"
-carries = "licenses"
+keeps = "licenses"
 
 [[tools]]
 name = "pip-licenses"

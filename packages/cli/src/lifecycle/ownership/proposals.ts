@@ -18,18 +18,18 @@ import type {
     ConfigurationFormat,
 } from '#cli/types/lifecycle/lifecycle.ts';
 
-// Whether the current file must stay: an edited owned file without review, or an unowned file without takeover.
+// Whether the current file must stay: an edited owned file without review, or an unowned file without replace.
 function isPreservedReplacement(
     existing: OwnershipEntry | undefined,
     current: FileObservation | undefined,
     installed: ReturnType<typeof identity>,
     kind: OwnershipEntry['kind'],
-    takeover: boolean,
+    replace: boolean,
     expected: FileObservation | undefined,
 ): boolean {
     if (current === undefined) return false;
-    if (existing === undefined) return !matches(current, installed) && !takeover;
-    return !matches(current, existing.installed) && kind !== 'policy' && !(takeover && expected !== undefined);
+    if (existing === undefined) return !matches(current, installed) && !replace;
+    return !matches(current, existing.installed) && kind !== 'policy' && !(replace && expected !== undefined);
 }
 
 // The proposal that installs the next bytes, recording the original the entry already keeps.
@@ -164,15 +164,15 @@ export function currentObservation(
  * @returns the proposal
  */
 export function proposeReplacement(journal: Journal, request: ReplacementRequest): FileProposal {
-    const { path, next, kind, takeover = false, expected, proposed } = request;
+    const { path, next, kind, replace = false, expected, proposed } = request;
     const existing = journal.entryFor(path);
     journal.confined.validate(path, next, proposed);
     const current = currentObservation(journal, path, existing, next);
     if (expected !== undefined && !isDeepStrictEqual(current, expected))
-        throw new Error(`Configuration changed after takeover was planned: ${path}. Retry the command.`);
+        throw new Error(`Configuration changed after replace was planned: ${path}. Retry the command.`);
     const installed = identity(next);
     // An edited owned file is preserved unless the caller reviewed those exact bytes and authorizes the replacement.
-    if (isPreservedReplacement(existing, current, installed, kind, takeover, expected))
+    if (isPreservedReplacement(existing, current, installed, kind, replace, expected))
         return { path, current, previous: existing, status: 'preserved' };
     if (existing !== undefined && matches(current, installed))
         return { path, current, previous: existing, status: 'unchanged' };
@@ -209,7 +209,7 @@ export function proposeBlock(journal: Journal, path: string, body: string, style
  * @param path the file
  * @param format the file's format
  * @param changes the keys and the values they must hold
- * @param takeover whether an unowned file may be merged into
+ * @param replace whether an unowned file may be merged into
  * @returns the proposal
  */
 export function proposeConfiguration(
@@ -217,7 +217,7 @@ export function proposeConfiguration(
     path: string,
     format: ConfigurationFormat,
     changes: { path: (string | number)[]; value: unknown }[],
-    takeover = false,
+    replace = false,
 ): FileProposal {
     const existing = journal.entryFor(path);
     const current = journal.confined.read(path);
@@ -229,7 +229,7 @@ export function proposeConfiguration(
         current,
         existing,
         matchesInstalled: isInstalled,
-        takeover,
+        replace,
     });
     if (plan === undefined) return { path, current, previous: existing, status: 'preserved' };
     if (plan.status === 'unchanged' && existing?.configuration !== undefined)
@@ -248,7 +248,7 @@ export function proposeRetirement(journal: Journal, path: string, expected: File
     const existing = journal.entryFor(path);
     const current = journal.confined.read(path);
     if (!isDeepStrictEqual(current, expected))
-        throw new Error(`Configuration changed after takeover was planned: ${path}. Retry the command.`);
+        throw new Error(`Configuration changed after replace was planned: ${path}. Retry the command.`);
     if (current === undefined) return { path, current, previous: existing, status: 'unchanged' };
     if (existing !== undefined && !matches(current, existing.installed))
         return { path, current, previous: existing, status: 'preserved' };

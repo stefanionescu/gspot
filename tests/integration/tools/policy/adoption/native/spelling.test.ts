@@ -7,10 +7,10 @@ test.each([false, true])(
     'nested spelling adoption isolates scoped exclusions with an existing scope of %s',
     async (existing) => {
         await using sandbox = await testdir();
-        const { original, carried, session } = await prepareSpelling(sandbox.path, existing);
-        expect(carried.unread).toStrictEqual([]);
-        expect(carried.tools.has('typos')).toBe(false);
-        expect(carried.removed.map(({ path }) => path)).toStrictEqual(['nested/typos.toml']);
+        const { original, kept, session } = await prepareSpelling(sandbox.path, existing);
+        expect(kept.unread).toStrictEqual([]);
+        expect(kept.tools.has('typos')).toBe(false);
+        expect(kept.removed.map(({ path }) => path)).toStrictEqual(['nested/typos.toml']);
         expect(session.policyFiles.policy.scopes).toStrictEqual([
             { path: 'nested', kits: existing ? ['markdown', 'spelling'] : ['spelling'] },
         ]);

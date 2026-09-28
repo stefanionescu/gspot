@@ -41,7 +41,7 @@ function yarnCommand(client: PackageTool, frozen: boolean): string[] {
     return ['yarn', 'install', ...(frozen ? ['--immutable'] : ['--mode=update-lockfile'])];
 }
 
-// Every secret the environment carries: token and password settings, and passwords embedded in registry URLs.
+// Every secret the environment keeps: token and password settings, and passwords embedded in registry URLs.
 function credentialsOf(env: Record<string, string>): string[] {
     const credentials = Object.entries(env)
         .filter(([key]) => CREDENTIAL_KEY.test(key))

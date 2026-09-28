@@ -5,12 +5,12 @@ import { readOwnership, publicationObservation } from '#cli/lifecycle/ownership/
 import { READ_ONLY_FILE, EXECUTABLE_FILE, OWNER_WRITABLE_FILE } from '#cli/config/platform.ts';
 import type { ApplyReport, FileProposal, LifecycleOwner } from '#cli/types/lifecycle/lifecycle.ts';
 
-function configurationProposals(owner: LifecycleOwner, generated: GeneratedProposal, takeover: boolean) {
+function configurationProposals(owner: LifecycleOwner, generated: GeneratedProposal, replace: boolean) {
     const proposals: { proposal: FileProposal; package: boolean }[] = [];
     for (const merge of generated.merges) {
         proposals.push({
             package: false,
-            proposal: owner.proposeConfiguration(merge.path, merge.format, merge.changes, takeover),
+            proposal: owner.proposeConfiguration(merge.path, merge.format, merge.changes, replace),
         });
     }
     for (const output of generated.configurations) {
@@ -40,12 +40,12 @@ function recordPreserved(report: ApplyReport, proposals: FileProposal[]): void {
  * @param request generated outputs, pruning policy, and reviewed originals
  */
 export function publishGenerated(owner: LifecycleOwner, request: PublicationRequest): void {
-    const { root, rendered, report, retained, takeover, regenerate } = request;
-    const configurations = configurationProposals(owner, rendered, takeover !== undefined);
-    const authorized = new Map([...(regenerate ?? []), ...(takeover ?? [])]);
+    const { root, rendered, report, retained, replace, regenerate } = request;
+    const configurations = configurationProposals(owner, rendered, replace !== undefined);
+    const authorized = new Map([...(regenerate ?? []), ...(replace ?? [])]);
     const replacements = rendered.files.map((file) => {
         const kind = file.kind === 'lock' || file.kind === 'hook' ? file.kind : 'config';
-        // A reviewed original (takeover) or a file a merge broke (regenerate) is replaced whatever its bytes are.
+        // A reviewed original (replace) or a file a merge broke (regenerate) is replaced whatever its bytes are.
         const observed = file.kind === 'lock' ? file.observed : authorized.get(file.path);
         let mode = file.readOnly ? READ_ONLY_FILE : OWNER_WRITABLE_FILE;
         if (file.executable === true) mode = EXECUTABLE_FILE;
@@ -76,7 +76,7 @@ export function publishGenerated(owner: LifecycleOwner, request: PublicationRequ
         .map((path) => owner.proposeRestoration(path));
     const proposals = [...generated, ...pruning];
     const conflicts = proposals.filter((proposal) => proposal.status === 'preserved').map((proposal) => proposal.path);
-    if (takeover !== undefined && conflicts.length > 0)
+    if (replace !== undefined && conflicts.length > 0)
         throw new Error(
             `Setup preserved conflicting outputs: ${conflicts.join(', ')}. Move them aside and run gspot apply; old tool configuration was retained.`,
         );

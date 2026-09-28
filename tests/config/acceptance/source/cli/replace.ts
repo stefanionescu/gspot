@@ -1,4 +1,4 @@
-// The literal values acceptance/source/cli/takeover reads: names, patterns, limits, and tables.
+// The literal values acceptance/source/cli/replace reads: names, patterns, limits, and tables.
 
 export const PLAN_INIT = [
     'init',

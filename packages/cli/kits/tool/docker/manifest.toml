@@ -21,14 +21,14 @@ brew = "hadolint"
 github = {name = "hadolint/hadolint", version = "v2.14.0"}
 scoop = "hadolint"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = ".hadolint.yaml"
-carries = "rules-table"
+keeps = "rules-table"
 check = "docker/hadolint"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = ".hadolint.yml"
-carries = "rules-table"
+keeps = "rules-table"
 check = "docker/hadolint"
 
 [[tools]]
@@ -38,13 +38,13 @@ mise = "trivy"
 brew = "trivy"
 github = {name = "aquasecurity/trivy", version = "v0.69.3"}
 
-[[tools.takeover]]
+[[tools.replace]]
 file = "trivy.yaml"
-carries = "rules-table"
+keeps = "rules-table"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = ".trivyignore"
-carries = "rules-table"
+keeps = "rules-table"
 
 [[tools]]
 name = "docker"

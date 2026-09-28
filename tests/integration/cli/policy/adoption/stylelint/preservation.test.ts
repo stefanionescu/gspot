@@ -7,7 +7,7 @@ import { symlinkSync, readFileSync } from 'node:fs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { STYLELINT_TOOLING } from '#tests/config/cli.ts';
-import { collectCarried } from '#cli/policy/adoption/collect.ts';
+import { collectKept } from '#cli/policy/adoption/collect.ts';
 import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
 
 const RULES = {
@@ -40,16 +40,16 @@ test.each([false, true])(
                 : {}),
         });
         symlinkSync(INSTALLED_MODULES, join(sandbox.path, 'node_modules'), 'dir');
-        const carried = await collectCarried(sandbox.path, STYLELINT_TOOLING, new Set(['css']), []);
-        expect(carried.unread).toStrictEqual([]);
-        expect(carried.removed.map((entry) => entry.path)).toStrictEqual(['.stylelintrc.json']);
+        const kept = await collectKept(sandbox.path, STYLELINT_TOOLING, new Set(['css']), []);
+        expect(kept.unread).toStrictEqual([]);
+        expect(kept.removed.map((entry) => entry.path)).toStrictEqual(['.stylelintrc.json']);
         const policy = {
             version: 1,
             level: 'all',
             kits: ['css'],
             guides: { install: false },
-            tools: { stylelint: carried.tools.get('stylelint')!.settings },
-            ignore: carried.tools.get('stylelint')!.ignores,
+            tools: { stylelint: kept.tools.get('stylelint')!.settings },
+            ignore: kept.tools.get('stylelint')!.ignores,
         };
         await Bun.write(join(sandbox.path, 'gspot.toml'), stringify(policy));
         const session = await openSession(sandbox.path);

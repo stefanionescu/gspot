@@ -26,9 +26,9 @@ winget = "koalaman.shellcheck"
 scoop = "shellcheck"
 github = {name = "koalaman/shellcheck", version = "v0.11.0"}
 
-[[tools.takeover]]
+[[tools.replace]]
 file = ".shellcheckrc"
-carries = "rules-table"
+keeps = "rules-table"
 check = "bash/shellcheck"
 
 [[tools]]

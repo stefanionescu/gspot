@@ -136,7 +136,7 @@ if (process.platform !== 'win32') {
     });
 
     test.each(['bytes', 'mode', 'removed'])(
-        'lifecycle ownership: stale takeover %s refuses replacement and retirement, then a fresh observation succeeds',
+        'lifecycle ownership: stale replace %s refuses replacement and retirement, then a fresh observation succeeds',
         async (change) => {
             await using directory = await testdir();
             const path = join(directory.path, 'authored.json');
@@ -156,9 +156,9 @@ if (process.platform !== 'win32') {
                         true,
                         observed,
                     ),
-                ).toThrow('changed after takeover was planned');
+                ).toThrow('changed after replace was planned');
                 expect(() => owner.proposeRetirement('authored.json', observed)).toThrow(
-                    'changed after takeover was planned',
+                    'changed after replace was planned',
                 );
                 expect(owner.read('authored.json')).toStrictEqual(edited);
                 if (change === 'removed') writeFileSync(path, '{"semi":true}\n', { mode: 0o600 });

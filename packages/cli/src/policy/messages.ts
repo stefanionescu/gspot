@@ -181,7 +181,7 @@ export function conflictingScalars(key: string, a: string, b: string): string {
  * @param command the command line that carries the reason
  * @returns the message
  */
-export function loosenNeedsReason(key: string, value: string, shipped: string, command: string): string {
+export function weakerNeedsReason(key: string, value: string, shipped: string, command: string): string {
     return `\`${key} = ${value}\` is looser than the shipped ${shipped}, so it needs a reason. Run: ${command}`;
 }
 

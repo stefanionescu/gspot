@@ -1,5 +1,5 @@
 // Select the guides for the selection and render them under [guides] directory, keeping the layer folders.
-import { nearMatches } from '#cli/policy/near.ts';
+import { similar } from '#cli/policy/similar.ts';
 import type { Manifest } from '#cli/types/kits.ts';
 import type { RuleFile } from '#cli/types/agents.ts';
 import { detectConditions } from '#cli/kits/detect.ts';
@@ -118,7 +118,7 @@ export function excludeProblems(exclude: string[]): string[] {
             )
         )
             return [];
-        const near = nearMatches(entry, sources);
+        const near = similar(entry, sources);
         const names = near.map((name) => `\`${name}\``).join(', ');
         const hint = near.length > 0 ? ` Did you mean ${names}?` : '';
         return [`[guides] exclude names \`${entry}\`, which matches no guide.${hint}`];

@@ -3,12 +3,12 @@ import { join } from 'node:path';
 import { stringify } from 'smol-toml';
 import { test, expect } from 'bun:test';
 import { run } from '#cli/platform/spawn.ts';
+import { runEslint } from '#cli/native/eslint.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { evaluateEslint } from '#cli/evaluation/eslint.ts';
 import { rejection } from '#tests/support/expectations.ts';
-import { collectCarried } from '#cli/policy/adoption/collect.ts';
+import { collectKept } from '#cli/policy/adoption/collect.ts';
 import { mkdirSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
 
 const modules = join(import.meta.dir, '../../../../../node_modules');
@@ -36,12 +36,12 @@ test('adopted ESLint preserves plugins, custom rules, options, selectors, and ig
     });
     symlinkSync(modules, join(directory.path, 'node_modules'));
     const original = readFileSync(join(directory.path, 'eslint.config.mjs'), 'utf8');
-    const carried = await evaluateEslint({ root: directory.path, paths: ['src/current.js'], flat: true });
-    expect(carried.adopted[1]?.files).toStrictEqual(['src/**/*.js']);
-    expect(carried.adopted[1]?.plugins).toStrictEqual({ custom: { module: './rules.mjs', export: 'default' } });
+    const kept = await runEslint({ root: directory.path, paths: ['src/current.js'], flat: true });
+    expect(kept.adopted[1]?.files).toStrictEqual(['src/**/*.js']);
+    expect(kept.adopted[1]?.plugins).toStrictEqual({ custom: { module: './rules.mjs', export: 'default' } });
     writeFileSync(
         join(directory.path, 'gspot.toml'),
-        stringify({ version: 1, kits: ['javascript'], tools: { eslint: carried } }),
+        stringify({ version: 1, kits: ['javascript'], tools: { eslint: kept } }),
     );
     const session = await openSession(directory.path);
     const generated = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
@@ -68,7 +68,7 @@ test('unsupported executable selectors fail conversion without changing original
     const original = 'export default [{ files: [(path) => path.endsWith(".js")], rules: {} }];';
     await createFileTree(directory.path, { 'package.json': '{"type":"module"}', 'eslint.config.mjs': original });
     symlinkSync(modules, join(directory.path, 'node_modules'));
-    expect(await rejection(evaluateEslint({ root: directory.path, paths: [], flat: true }))).toContain(
+    expect(await rejection(runEslint({ root: directory.path, paths: [], flat: true }))).toContain(
         'TOML cannot represent',
     );
     expect(readFileSync(join(directory.path, 'eslint.config.mjs'), 'utf8')).toBe(original);
@@ -78,7 +78,7 @@ test('unsupported native rule options remain untouched and prevent successful ad
     await using directory = await testdir();
     const original = 'disabled_rules: [force_cast]\ncustom_rules:\n  project_rule:\n    regex: banned\n';
     await createFileTree(directory.path, { '.swiftlint.yml': original });
-    const carried = await collectCarried(
+    const kept = await collectKept(
         directory.path,
         {
             configs: [
@@ -86,7 +86,7 @@ test('unsupported native rule options remain untouched and prevent successful ad
                     tool: 'swiftlint',
                     check: 'swift/swiftlint',
                     path: '.swiftlint.yml',
-                    carries: 'rules-table' as const,
+                    keeps: 'rules-table' as const,
                 },
             ],
             hooks: [],
@@ -100,8 +100,8 @@ test('unsupported native rule options remain untouched and prevent successful ad
         new Set(['swift']),
         [],
     );
-    expect(carried.unread[0]?.note).toContain('custom_rules');
-    expect(carried.removed).toStrictEqual([]);
+    expect(kept.unread[0]?.note).toContain('custom_rules');
+    expect(kept.removed).toStrictEqual([]);
     expect(readFileSync(join(directory.path, '.swiftlint.yml'), 'utf8')).toBe(original);
 });
 
@@ -112,7 +112,7 @@ test.each(['new Date("2026-01-01")', 'new Map([["key", "value"]])', '/pattern/u'
         const original = `export default [{ settings: { custom: ${value} } }];`;
         await createFileTree(directory.path, { 'package.json': '{"type":"module"}', 'eslint.config.mjs': original });
         symlinkSync(modules, join(directory.path, 'node_modules'));
-        expect(await rejection(evaluateEslint({ root: directory.path, paths: [], flat: true }))).toContain(
+        expect(await rejection(runEslint({ root: directory.path, paths: [], flat: true }))).toContain(
             'TOML cannot represent',
         );
         expect(readFileSync(join(directory.path, 'eslint.config.mjs'), 'utf8')).toBe(original);
@@ -147,16 +147,16 @@ test.each(['object', 'named'])(
             'src/current.js': 'export const marker = 1;\n',
         });
         symlinkSync(modules, join(directory.path, 'node_modules'));
-        const carried = await evaluateEslint({ root: directory.path, paths: ['src/current.js'], flat: true });
-        expect(carried.adopted[0]?.basePath).toBe('src');
-        expect(carried.adopted[0]?.processor).toStrictEqual(
+        const kept = await runEslint({ root: directory.path, paths: ['src/current.js'], flat: true });
+        expect(kept.adopted[0]?.basePath).toBe('src');
+        expect(kept.adopted[0]?.processor).toStrictEqual(
             representation === 'object'
                 ? { module: './processing.mjs', export: 'default', members: ['processors', syntaxName] }
                 : `custom/${syntaxName}`,
         );
         writeFileSync(
             join(directory.path, 'gspot.toml'),
-            stringify({ version: 1, kits: ['javascript'], tools: { eslint: carried } }),
+            stringify({ version: 1, kits: ['javascript'], tools: { eslint: kept } }),
         );
         const session = await openSession(directory.path);
         const generated = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
@@ -206,15 +206,15 @@ test.each([
             [filename]: source,
         });
         symlinkSync(modules, join(directory.path, 'node_modules'));
-        const carried = await evaluateEslint({ root: directory.path, paths: [], flat: true });
-        expect(carried.adopted[0]?.plugins?.['inherited']).toStrictEqual({
+        const kept = await runEslint({ root: directory.path, paths: [], flat: true });
+        expect(kept.adopted[0]?.plugins?.['inherited']).toStrictEqual({
             module: './shared.cjs',
             export: 'default',
             members: ['0', 'plugins', 'inherited'],
         });
         writeFileSync(
             join(directory.path, 'gspot.toml'),
-            stringify({ version: 1, kits: ['javascript'], tools: { eslint: carried } }),
+            stringify({ version: 1, kits: ['javascript'], tools: { eslint: kept } }),
         );
         const session = await openSession(directory.path);
         const generated = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
@@ -257,14 +257,14 @@ test.each(['namespace', 'named export with dots'])(
                 export default [{files:['**/*.js'],plugins:{custom},rules:{'custom/sentinel':'error'}}];`,
         });
         symlinkSync(modules, join(directory.path, 'node_modules'));
-        const carried = await evaluateEslint({ root: directory.path, paths: [], flat: true });
-        expect(carried.adopted[0]?.plugins?.['custom']).toStrictEqual({
+        const kept = await runEslint({ root: directory.path, paths: [], flat: true });
+        expect(kept.adopted[0]?.plugins?.['custom']).toStrictEqual({
             module: './plugin.mjs',
             export: kind === 'namespace' ? '*' : 'custom.plugin',
         });
         writeFileSync(
             join(directory.path, 'gspot.toml'),
-            stringify({ version: 1, kits: ['javascript'], tools: { eslint: carried } }),
+            stringify({ version: 1, kits: ['javascript'], tools: { eslint: kept } }),
         );
         const session = await openSession(directory.path);
         const generated = emitAll(session.policyFiles.policy, session.repository, session.scopes, {

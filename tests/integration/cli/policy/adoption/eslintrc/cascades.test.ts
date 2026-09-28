@@ -5,8 +5,8 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { collectKept } from '#cli/policy/adoption/collect.ts';
 import { mkdirSync, symlinkSync, writeFileSync } from 'node:fs';
-import { collectCarried } from '#cli/policy/adoption/collect.ts';
 import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
 
 test('cascading legacy ESLint preserves root resets and directory-relative overrides', async () => {
@@ -28,10 +28,10 @@ test('cascading legacy ESLint preserves root resets and directory-relative overr
     };
     await createFileTree(directory.path, { 'package.json': '{"type":"module"}', ...configs });
     symlinkSync(INSTALLED_MODULES, join(directory.path, 'node_modules'));
-    const carried = await collectCarried(
+    const kept = await collectKept(
         directory.path,
         {
-            configs: Object.keys(configs).map((path) => ({ tool: 'eslint', carries: 'eslint-config' as const, path })),
+            configs: Object.keys(configs).map((path) => ({ tool: 'eslint', keeps: 'eslint-config' as const, path })),
             hooks: [],
             ci: [],
             agentFiles: [],
@@ -43,14 +43,14 @@ test('cascading legacy ESLint preserves root resets and directory-relative overr
         new Set(['javascript']),
         [],
     );
-    expect(carried.unread).toStrictEqual([]);
-    expect(carried.removed.map((entry) => entry.path)).toStrictEqual(Object.keys(configs));
+    expect(kept.unread).toStrictEqual([]);
+    expect(kept.removed.map((entry) => entry.path)).toStrictEqual(Object.keys(configs));
     writeFileSync(
         join(directory.path, 'gspot.toml'),
         stringify({
             version: 1,
             kits: ['javascript'],
-            tools: { eslint: { adopted: carried.tools.get('eslint')?.settings['adopted'] } },
+            tools: { eslint: { adopted: kept.tools.get('eslint')?.settings['adopted'] } },
         }),
     );
     const session = await openSession(directory.path);

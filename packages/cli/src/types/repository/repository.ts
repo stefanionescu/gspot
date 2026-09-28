@@ -50,7 +50,7 @@ export type ExistingTool = {
     shared?: boolean;
     table?: string;
     key?: string;
-    carries: NonNullable<ToolPin['takeover']>[number]['carries'];
+    keeps: NonNullable<ToolPin['replace']>[number]['keeps'];
     check?: string;
 };
 export type ExistingTooling = {

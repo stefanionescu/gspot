@@ -70,7 +70,7 @@ test.each([
     { scope: '', inherited: true },
     { scope: 'app', inherited: true },
 ])(
-    'Stylelint adoption enforces carried options through private installation and restores original configuration (scope: $scope, inherited: $inherited)',
+    'Stylelint adoption enforces kept options through private installation and restores original configuration (scope: $scope, inherited: $inherited)',
     async ({ scope, inherited }) => {
         await using sandbox = await testdir();
         const prefix = scope === '' ? '' : `${scope}/`;

@@ -1,7 +1,7 @@
 import { isDeepStrictEqual } from 'node:util';
+import { ignoredPathsResponse } from '#cli/native/protocol.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import { ignoredPathsResponse } from '#cli/evaluation/protocol.ts';
-import { evaluateConfiguration } from '#cli/evaluation/configuration.ts';
+import { runConfiguration } from '#cli/native/configuration.ts';
 import type { Session, PlannedCheck } from '#cli/types/execution/execution.ts';
 
 /**
@@ -18,7 +18,7 @@ export async function prettierInputs(session: Session, check: PlannedCheck): Pro
         if (observed === undefined) return check;
         const ignored = new Set(
             ignoredPathsResponse.parse(
-                await evaluateConfiguration(
+                await runConfiguration(
                     {
                         tool: 'prettier',
                         operation: 'ignore',

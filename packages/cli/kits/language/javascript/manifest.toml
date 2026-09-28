@@ -27,59 +27,59 @@ version = "9.39.5"
 npm = "eslint"
 floor = "9.38.0"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = ".whitelizard"
-carries = "rules-table"
+keeps = "rules-table"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = "eslint.config.js"
-carries = "eslint-config"
+keeps = "eslint-config"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = "eslint.config.mjs"
-carries = "eslint-config"
+keeps = "eslint-config"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = "eslint.config.cjs"
-carries = "eslint-config"
+keeps = "eslint-config"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = "eslint.config.ts"
-carries = "eslint-config"
+keeps = "eslint-config"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = ".eslintrc"
-carries = "eslint-config"
+keeps = "eslint-config"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = ".eslintrc.js"
-carries = "eslint-config"
+keeps = "eslint-config"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = ".eslintrc.cjs"
-carries = "eslint-config"
+keeps = "eslint-config"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = ".eslintrc.json"
-carries = "eslint-config"
+keeps = "eslint-config"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = ".eslintrc.yml"
-carries = "eslint-config"
+keeps = "eslint-config"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = ".eslintrc.yaml"
-carries = "eslint-config"
+keeps = "eslint-config"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = "package.json"
 key = "eslintConfig"
 shared = true
-carries = "eslint-config"
+keeps = "eslint-config"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = ".eslintignore"
-carries = "eslint-config"
+keeps = "eslint-config"
 
 [[tools]]
 name = "@eslint/eslintrc"
@@ -183,29 +183,29 @@ version = "6.35.1"
 npm = "knip"
 floor = "5.85.0"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = "knip.json"
-carries = "rules-table"
+keeps = "rules-table"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = "knip.jsonc"
-carries = "rules-table"
+keeps = "rules-table"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = ".knip.json"
-carries = "rules-table"
+keeps = "rules-table"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = "knip.config.js"
-carries = "rules-table"
+keeps = "rules-table"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = "knip.config.ts"
-carries = "rules-table"
+keeps = "rules-table"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = "knip.config.mjs"
-carries = "rules-table"
+keeps = "rules-table"
 
 [[tools]]
 name = "typescript"

@@ -1,4 +1,4 @@
-import { nearMatches } from '#cli/policy/near.ts';
+import { similar } from '#cli/policy/similar.ts';
 import * as messages from '#cli/policy/messages.ts';
 import type { Policy } from '#cli/types/policy/policy.ts';
 import { scopeAncestors } from '#cli/repository/scopes.ts';
@@ -15,7 +15,7 @@ function visit(walk: SelectionWalk, kitName: string): void {
     const manifest = walk.manifests.get(kitName);
     if (!manifest) {
         const known = walk.manifests.keys().toArray();
-        walk.problems.push(messages.unknownKit(kitName, nearMatches(kitName, known)));
+        walk.problems.push(messages.unknownKit(kitName, similar(kitName, known)));
         walk.seen.add(kitName);
         return;
     }

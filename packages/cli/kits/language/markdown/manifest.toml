@@ -24,37 +24,37 @@ version_command = ["--help"]
 version_exit_code = 2
 version_regex = "markdownlint-cli2 v(\\d+\\.\\d+\\.\\d+)"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = ".markdownlint-cli2.jsonc"
-carries = "rules-table"
+keeps = "rules-table"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = ".markdownlint-cli2.yaml"
-carries = "rules-table"
+keeps = "rules-table"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = ".markdownlint-cli2.cjs"
-carries = "rules-table"
+keeps = "rules-table"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = ".markdownlint-cli2.mjs"
-carries = "rules-table"
+keeps = "rules-table"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = ".markdownlint.json"
-carries = "rules-table"
+keeps = "rules-table"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = ".markdownlint.jsonc"
-carries = "rules-table"
+keeps = "rules-table"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = ".markdownlint.yaml"
-carries = "rules-table"
+keeps = "rules-table"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = ".markdownlint.yml"
-carries = "rules-table"
+keeps = "rules-table"
 
 [[configs]]
 template = "configuration.jsonc.tmpl"

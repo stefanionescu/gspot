@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { runEslint } from '#cli/native/eslint.ts';
+import { runFormat } from '#cli/native/format.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { evaluateEslint } from '#cli/evaluation/eslint.ts';
-import { evaluateFormat } from '#cli/evaluation/format.ts';
 import { rejection } from '#tests/support/expectations.ts';
 import { existsSync, symlinkSync, readFileSync } from 'node:fs';
 
@@ -23,9 +23,7 @@ test.each(['eslint', 'prettier'] as const)(
         symlinkSync(`../outside/${filename}`, join(root, filename));
         expect(
             await rejection(
-                tool === 'eslint'
-                    ? evaluateEslint({ root, paths: [], flat: true })
-                    : evaluateFormat({ root, from: filename }),
+                tool === 'eslint' ? runEslint({ root, paths: [], flat: true }) : runFormat({ root, from: filename }),
             ),
         ).toContain('private regular file');
         expect(existsSync(join(directory.path, 'outside/executed'))).toBe(false);

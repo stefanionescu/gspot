@@ -86,15 +86,15 @@ rule_page       = "https://typescript-eslint.io/rules/{rule}"
 suppression     = { marker = "eslint-disable", reason = " -- " }
 
 # The old files this tool owns, and what is carried from them.
-[[tools.takeover]]
+[[tools.replace]]
 file    = "eslint.config.*"
-carries = "eslint-config"
+keeps = "eslint-config"
 
-[[tools.takeover]]
+[[tools.replace]]
 file    = "package.json"
 key     = "eslintConfig"
 shared  = true                         # read and carried, never deleted or edited
-carries = "eslint-config"
+keeps = "eslint-config"
 
 [[configs]]
 template = "eslint.fragment.js.tmpl"   # exports config blocks and selectors; names no other configuration
@@ -175,7 +175,7 @@ tool, and no check name outside `src/checks/`, and a unit test holds that.
 - `reported_by` names the check whose run carries this check's findings, such as
   `markdown/prettier`, which `formatting/prettier` reports. The check shows as skipped with that
   note.
-- `takes_over` names a check whose work this check does itself. In a scope that plans both,
+- `replaces` names a check whose work this check does itself. In a scope that plans both,
   the named check is skipped with the note `<taker> runs it here`.
 - `[coverage]` lists, for each extension, the check kinds a file of that extension must
   receive. `doctor` reports a file that misses one as partly checked.
@@ -220,8 +220,8 @@ tool, and no check name outside `src/checks/`, and a unit test holds that.
 - A check takes `env`, a table of environment values for its tool. Values expand scalar command
   placeholders such as `{config:name}` before execution.
 - A tool takes `version_command`, `rule_page`, `suppression`, `crash_pattern`, and
-  `[[tools.takeover]]` rows. A takeover row names a `file`, or a `key` or `table` of a shared
-  manifest with `shared = true`, and what it `carries`.
+  `[[tools.replace]]` rows. A replacement row names a `file`, or a `key` or `table` of a shared
+  manifest with `shared = true`, and what it `keeps`.
 - `crash_pattern` is the output that means the tool fell over, for every check that runs it. A
   repository command declares its own under `tool_errors`. `rule_page` is where the tool
   documents one rule, with `{rule}` where the name goes; `explain` prints it for any tool.
@@ -585,15 +585,15 @@ validation complements these cases but cannot replace them.
 
 A manifest says which old files its tools own, and what is carried from them.
 
-A tool in a manifest takes `[[tools.takeover]]` rows. A row has `file` (a name or a
-glob), or `table` and `key` for a shared manifest, `shared`, and `carries`. `carries` names a
+A tool in a manifest takes `[[tools.replace]]` rows. A row has `file` (a name or a
+glob), or `table` and `key` for a shared manifest, `shared`, and `keeps`. `keeps` names a
 reader from a closed list: `ignore-paths`, `rules-table`, `words`, `advisories`, `licenses`,
 and `eslint-config`. Disabled-rule importers also declare `check`, naming the executable
 check that receives carried rule exceptions. The check must run the declared tool.
 `CarriedLists` becomes a map from a tool name to its carried entries, and
 the plan prints it by walking the map.
 
-`takeover.test.ts` runs unchanged. A unit test holds that every takeover row names a
+`replacement.test.ts` runs unchanged. A unit test holds that every replacement row names a
 reader from the list.
 
 ### Acceptance K-38

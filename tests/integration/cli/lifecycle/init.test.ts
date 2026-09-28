@@ -85,7 +85,7 @@ test('init plans scoped spelling settings and uninstall restores the original ne
     expect(preview.exitCode).toBe(0);
     expect(preview.json).toMatchObject({
         plan: {
-            carried: containingAll([
+            kept: containingAll([
                 { from: 'nested: typos locale', count: 1, into: '[[scope]] nested: tools.typos.locale' },
             ]),
         },

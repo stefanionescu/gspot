@@ -181,7 +181,7 @@ test(
             '--no-install',
         ]);
         expect(result.code, result.stdout + result.stderr).toBe(2);
-        expect(result.stdout + result.stderr).toContain('changed after takeover was planned');
+        expect(result.stdout + result.stderr).toContain('changed after replace was planned');
         expect(existsSync(join(repository.path, 'gspot.toml'))).toBe(false);
         expect(readFileSync(join(repository.path, 'eslint.config.mjs'), 'utf8')).toBe(replacement);
         expect(readFileSync(join(repository.path, 'prettier.config.mjs'), 'utf8')).toBe(formatter);

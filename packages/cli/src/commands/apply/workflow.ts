@@ -36,13 +36,10 @@ function conflictedOutputs(owner: LifecycleOwner, rendered: GeneratedProposal): 
 /**
  * Apply generated proposals through the repository's lifecycle owner.
  * @param session the configuration and repository observations
- * @param takeover reviewed originals authorized for replacement
+ * @param replace reviewed originals authorized for replacement
  * @returns generated changes and preserved files
  */
-export async function applyAll(
-    session: Session,
-    takeover?: ReadonlyMap<string, FileObservation>,
-): Promise<ApplyReport> {
+export async function applyAll(session: Session, replace?: ReadonlyMap<string, FileObservation>): Promise<ApplyReport> {
     // Generation requires a valid policy. Refuse errors before writing proposed files.
     assertNoProblems(session.policyFiles);
     return runOwnedLifecycle(session.root, async (owner) => {
@@ -60,7 +57,7 @@ export async function applyAll(
         const rendered = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
             version: session.version,
             packageClient: session.packageClient,
-            takeover: takeover,
+            replace: replace,
         });
         await preparePackageProject(session.root, rendered.files, owner);
         await preparePythonProject(session.root, rendered.files, owner);
@@ -75,7 +72,7 @@ export async function applyAll(
                 prose: session.scopes.some((scope) => scope.selected.some((manifest) => manifest.kit.name === 'prose')),
                 packages: session.packageClient !== undefined,
             },
-            takeover,
+            replace,
             regenerate: conflictedOutputs(owner, rendered),
         });
         await installProsePackages(session, report);

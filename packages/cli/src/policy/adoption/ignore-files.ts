@@ -1,4 +1,4 @@
-import { isReasonAccepted } from '#cli/policy/loosening.ts';
+import { isReasonAccepted } from '#cli/policy/weaker.ts';
 import { IGNORE_FILE_COMMENT } from '#cli/config/policy/adoption.ts';
 
 // A line of an ignore file as a glob from the repository root: a bare name matches at any depth, and a folder matches what it holds.
@@ -12,9 +12,9 @@ function globOf(folder: string, line: string): string {
 
 // A comment of a word or two is a label, which the policy refuses as a reason; it travels with where it came from.
 function reasonFrom(path: string, comment: string): string {
-    const carried = `carried from ${path} at init`;
-    if (comment === '') return carried;
-    return isReasonAccepted(comment) ? comment : `${carried}: ${comment}`;
+    const kept = `kept from ${path} at init`;
+    if (comment === '') return kept;
+    return isReasonAccepted(comment) ? comment : `${kept}: ${comment}`;
 }
 
 /**
@@ -26,7 +26,7 @@ function reasonFrom(path: string, comment: string): string {
 export function ignoreFileEntries(text: string, path: string): { paths: string[]; reason: string }[] {
     const folder = path.includes('/') ? path.slice(0, path.lastIndexOf('/')) : '';
     const entries: { paths: string[]; reason: string }[] = [];
-    let reason = `carried from ${path} at init`;
+    let reason = `kept from ${path} at init`;
     let current: string[] = [];
     const flush = (): void => {
         if (current.length > 0) entries.push({ paths: current, reason });

@@ -13,18 +13,18 @@ import { markdownImporter } from '#cli/policy/adoption/markdownlint.ts';
 import { ignoreFileEntries } from '#cli/policy/adoption/ignore-files.ts';
 import type { ExistingTooling } from '#cli/types/repository/repository.ts';
 import { SEPARATE_TOOLS, IGNORE_PATH_KEYS } from '#cli/config/policy/adoption.ts';
-import { carryPyright, carryDisabled, valueOfKeyLine } from '#cli/policy/adoption/disabled.ts';
+import { keepPyright, keepDisabled, valueOfKeyLine } from '#cli/policy/adoption/disabled.ts';
 import { observeConfiguration, parseConfigurationSource } from '#cli/policy/adoption/source.ts';
 import { ruffImporter, assertStableRuff, ExperimentalRuffError } from '#cli/policy/adoption/ruff.ts';
-import type { Owned, Carrier, CarryRequest, AdoptionResult, ConfigurationSource } from '#cli/types/policy/adoption.ts';
+import type { Kept, Owned, KeepRequest, AdoptionResult, ConfigurationSource } from '#cli/types/policy/adoption.ts';
 
 const strings = z.array(z.string());
 
 // The importer a manifest's reader kind selects, whatever tool declares it.
-const READER_CARRIERS: Record<string, Carrier | undefined> = {
-    words: typosImporter.carry,
-    advisories: osvImporter.carry,
-    licenses: licensesImporter.carry,
+const READER_CARRIERS: Record<string, Kept | undefined> = {
+    words: typosImporter.keep,
+    advisories: osvImporter.keep,
+    licenses: licensesImporter.keep,
 };
 // Refuses a ShellCheck configuration with any line other than a disable directive or a comment.
 function assertShellcheckSupported(source: ConfigurationSource, path: string): void {
@@ -58,7 +58,7 @@ function assertImportable(source: ConfigurationSource, tool: string, path: strin
  * @param source the input already read and parsed
  * @param request the importer, destination lists, and configuration context
  */
-async function carryFrom(source: ConfigurationSource, request: CarryRequest): Promise<void> {
+async function carryFrom(source: ConfigurationSource, request: KeepRequest): Promise<void> {
     const { tool, path, lists, root, reader, check } = request;
     if (reader === 'ignore-paths' && tool !== 'basedpyright') {
         const key = IGNORE_PATH_KEYS[tool];
@@ -67,9 +67,9 @@ async function carryFrom(source: ConfigurationSource, request: CarryRequest): Pr
         return;
     }
     assertSupported(source, tool, path);
-    const carry = READER_CARRIERS[reader] ?? nativeImporters[tool]?.carry;
-    if (carry) await carry(source, path, lists, root, check);
-    else carryDisabled(source, tool, path, lists, check);
+    const keep = READER_CARRIERS[reader] ?? nativeImporters[tool]?.keep;
+    if (keep) await keep(source, path, lists, root, check);
+    else keepDisabled(source, tool, path, lists, check);
 }
 
 // Whether another configuration of the same tool sits in or under the folder of this one.
@@ -111,7 +111,7 @@ function selectorOf(entry: Owned): { table?: string; key?: string } | undefined 
     return { ...(table === undefined ? {} : { table }), ...(key === undefined ? {} : { key }) };
 }
 
-// Records what takeover does with a carried file: keeps a shared file for the developer, removes an owned one.
+// Records what replace does with a carried file: keeps a shared file for the developer, removes an owned one.
 function recordOutcome(entry: Owned, lists: AdoptionResult): void {
     const { tool, path, shared, table, key } = entry;
     if (shared === true)
@@ -122,14 +122,14 @@ function recordOutcome(entry: Owned, lists: AdoptionResult): void {
     else lists.removed.push({ path, note: `replaced by gspot's ${tool} configuration` });
 }
 
-// Carries one owned file, then records whether takeover removes it or a shared file keeps it.
+// Carries one owned file, then records whether replace removes it or a shared file keeps it.
 async function carryOwned(root: string, entry: Owned, lists: AdoptionResult): Promise<void> {
-    const { tool, path, carries, check } = entry;
+    const { tool, path, keeps, check } = entry;
     try {
         const observed = lists.observed.get(path);
         if (observed === undefined) throw new Error(`${path} was not observed in the repository.`);
         const source = parseConfigurationSource(observed, tool, path, selectorOf(entry));
-        await carryFrom(source, { tool, path, lists, root, reader: carries, check });
+        await carryFrom(source, { tool, path, lists, root, reader: keeps, check });
     } catch (error) {
         if (error instanceof ExperimentalRuffError) throw error;
         lists.unread.push({ path, note: `not read and not deleted: ${(error as Error).message}` });
@@ -142,13 +142,13 @@ export const nativeImporters: Record<
     string,
     {
         schema: z.ZodType;
-        carry?: Carrier;
+        keep?: Kept;
     }
 > = {
     typos: typosImporter,
     gitleaks: gitleaksImporter,
     'osv-scanner': osvImporter,
-    basedpyright: { schema: z.strictObject({ exclude: strings.optional() }), carry: carryPyright },
+    basedpyright: { schema: z.strictObject({ exclude: strings.optional() }), keep: keepPyright },
     'license-checker-rseidelsohn': licensesImporter,
     ruff: ruffImporter,
     'markdownlint-cli2': markdownImporter,
@@ -165,12 +165,12 @@ export const nativeImporters: Record<
  * True when a selected kit declares adoption for the tool.
  * @param tool the tool a configuration file belongs to
  * @param selected the ids of the selected kits
- * @returns whether takeover replaces the tool's configuration
+ * @returns whether replace replaces the tool's configuration
  */
 export function isOwned(tool: string, selected: Set<string>): boolean {
     const manifests = kitManifests();
     return [...selected].some(
-        (id) => manifests.get(id)?.tools.some((entry) => entry.name === tool && entry.takeover !== undefined) === true,
+        (id) => manifests.get(id)?.tools.some((entry) => entry.name === tool && entry.replace !== undefined) === true,
     );
 }
 
@@ -181,9 +181,9 @@ export function isOwned(tool: string, selected: Set<string>): boolean {
  * @param tooling the configuration files, hooks, and lint folders found.
  * @param selected the ids of the selected kits.
  * @param paths the tracked source paths.
- * @returns the lists to write into gspot.toml and the files takeover replaces.
+ * @returns the lists to write into gspot.toml and the files replace replaces.
  */
-export async function collectCarried(
+export async function collectKept(
     root: string,
     tooling: ExistingTooling,
     selected: Set<string>,
@@ -208,12 +208,12 @@ export async function collectCarried(
     );
     await collectEslint(
         root,
-        owned.filter(({ carries }) => carries === 'eslint-config'),
+        owned.filter(({ keeps }) => keeps === 'eslint-config'),
         paths,
         lists,
     );
     for (const entry of owned)
-        if (!(entry.tool === 'prettier' || entry.tool === 'ec' || entry.carries === 'eslint-config'))
+        if (!(entry.tool === 'prettier' || entry.tool === 'ec' || entry.keeps === 'eslint-config'))
             await carryOwned(root, entry, lists);
     return lists;
 }

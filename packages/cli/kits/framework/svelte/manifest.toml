@@ -81,7 +81,7 @@ stage = "push"
 runs = "per-scope"
 engine = "integrity"
 analysis = "svelte-check"
-takes_over = "typescript/tsc"
+replaces = "typescript/tsc"
 claims = {extensions = [".svelte"]}
 coverage = ["types", "syntax"]
 summary = "Runs svelte-check over the scope: the warnings of the Svelte compiler, its accessibility warnings, and the types of every component and TypeScript file."

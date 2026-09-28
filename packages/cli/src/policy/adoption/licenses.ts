@@ -1,10 +1,10 @@
 import { z } from 'zod';
 import { posix } from 'node:path';
 import parseLicense from 'spdx-expression-parse';
-import { licenseResponse } from '#cli/evaluation/protocol.ts';
+import { licenseResponse } from '#cli/native/protocol.ts';
+import { runConfiguration } from '#cli/native/configuration.ts';
 import { asList, asStrings } from '#cli/policy/adoption/source.ts';
 import type { TomlTable } from '#cli/types/repository/repository.ts';
-import { evaluateConfiguration } from '#cli/evaluation/configuration.ts';
 import type { AdoptionResult, ConfigurationSource } from '#cli/types/policy/adoption.ts';
 import { reasonFor, adoptedScope, appendSetting } from '#cli/policy/adoption/results.ts';
 
@@ -44,7 +44,7 @@ async function carryLicenses(
     const settings: TomlTable = {};
     if (excluded.length > 0) {
         const entries = licenseResponse.parse(
-            await evaluateConfiguration({
+            await runConfiguration({
                 root,
                 from: path,
                 exclusions: excluded,
@@ -69,5 +69,5 @@ export const licensesImporter = {
         excludePackages: z.union([z.string(), strings]).optional(),
         onlyAllow: z.union([z.string(), strings]).optional(),
     }),
-    carry: carryLicenses,
+    keep: carryLicenses,
 };

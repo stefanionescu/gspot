@@ -7,6 +7,6 @@ export type PublicationRequest = {
     rendered: GeneratedProposal;
     report: ApplyReport;
     retained: { prose: boolean; packages: boolean };
-    takeover?: ReadonlyMap<string, FileObservation> | undefined;
+    replace?: ReadonlyMap<string, FileObservation> | undefined;
     regenerate?: ReadonlyMap<string, FileObservation>;
 };

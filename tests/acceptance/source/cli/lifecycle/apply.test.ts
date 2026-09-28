@@ -10,7 +10,7 @@ import { statSync, chmodSync, existsSync, readFileSync, writeFileSync } from 'no
 
 const INIT = initArgs(['bash']);
 
-test('apply and uninstall preserve later edits and unowned content while restoring a takeover original', async () => {
+test('apply and uninstall preserve later edits and unowned content while restoring a replace original', async () => {
     await using directory = await testdir();
     const original = 'disable=SC2086\n';
     await createFileTree(directory.path, { '.shellcheckrc': original, 'entry.sh': 'echo example\n' });

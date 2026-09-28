@@ -68,7 +68,7 @@ function optionsFrom(flags: Record<string, unknown>, global: Record<string, unkn
     };
 }
 
-// The result of an init that writes nothing: a preview or a takeover with unreadable configuration.
+// The result of an init that writes nothing: a preview or a replace with unreadable configuration.
 function unwritten(root: string, options: InitOptions, prepared: InitPrepared): InitResult | undefined {
     const { plan, policyText } = prepared;
     if (options.isDryRun) {
@@ -77,7 +77,7 @@ function unwritten(root: string, options: InitOptions, prepared: InitPrepared): 
     }
     if (plan.unread.length === 0) return undefined;
     return {
-        text: 'Cannot apply takeover because configuration could not be read. Fix the listed files and run gspot init again.\n',
+        text: 'Cannot apply replace because configuration could not be read. Fix the listed files and run gspot init again.\n',
         json: { root, plan, error: 'unread-configuration', written: false },
         exitCode: UNREADABLE_EXIT,
     };

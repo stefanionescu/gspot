@@ -80,7 +80,7 @@ runs = "per-scope"
 cwd = "scope"
 tool = "vue-tsc"
 analysis = "typescript"
-takes_over = "typescript/tsc"
+replaces = "typescript/tsc"
 needs = "typescript"
 claims = {extensions = [".vue"]}
 coverage = ["types"]

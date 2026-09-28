@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { existsSync, symlinkSync } from 'node:fs';
+import { runEslint } from '#cli/native/eslint.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { evaluateEslint } from '#cli/evaluation/eslint.ts';
 import { rejection } from '#tests/support/expectations.ts';
 
 const modules = join(import.meta.dir, '../../../../../node_modules');
@@ -24,7 +24,7 @@ test.each([
     });
     symlinkSync(modules, join(directory.path, 'project/node_modules'));
     symlinkSync('../outside/plugin.cjs', join(directory.path, 'project/plugin.cjs'));
-    expect(await rejection(evaluateEslint({ root: join(directory.path, 'project'), paths: [], flat: true }))).toContain(
+    expect(await rejection(runEslint({ root: join(directory.path, 'project'), paths: [], flat: true }))).toContain(
         'outside the repository',
     );
     expect(existsSync(join(directory.path, 'outside/executed'))).toBe(false);

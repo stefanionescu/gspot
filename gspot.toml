@@ -488,7 +488,7 @@ exclude = true
 reason = "Xcode writes this key in a string file, and the type spells it as the file does."
 
 [[naming.rules]]
-paths = ["packages/cli/src/types/evaluation.ts"]
+paths = ["packages/cli/src/types/native.ts"]
 names = [
     "Legacy",
     "ConfigArrayFactory",
@@ -840,12 +840,12 @@ reason = "This repository runs Bun tests. tests/unit runs unit and integration t
 check = "security/semgrep"
 rule = "node-no-configured-require"
 paths = [
-    "packages/cli/src/evaluation/eslintrc.ts",
-    "packages/cli/src/evaluation/eslint-modules.ts",
-    "packages/cli/src/evaluation/eslint-preview.ts",
-    "packages/cli/src/evaluation/eslint.ts",
-    "packages/cli/src/evaluation/format.ts",
-    "packages/cli/src/evaluation/stylelint.ts",
+    "packages/cli/src/native/eslintrc.ts",
+    "packages/cli/src/native/eslint-modules.ts",
+    "packages/cli/src/native/eslint-preview.ts",
+    "packages/cli/src/native/eslint.ts",
+    "packages/cli/src/native/format.ts",
+    "packages/cli/src/native/stylelint.ts",
 ]
 reason = "These configuration evaluators intentionally execute repository-selected modules and installed tool APIs in the configuration subprocess. Static imports select the CLI dependencies instead of the repository dependencies and cannot preserve executable configuration. Other security rules remain active for these exact files."
 

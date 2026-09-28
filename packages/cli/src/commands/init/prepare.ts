@@ -15,7 +15,7 @@ import { detectedSettings } from '#cli/commands/init/settings.ts';
 import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import { proposedRunnerTasks } from '#cli/generation/runner/plan.ts';
 import { existingTooling } from '#cli/repository/existing-tooling.ts';
-import { isOwned, collectCarried } from '#cli/policy/adoption/collect.ts';
+import { isOwned, collectKept } from '#cli/policy/adoption/collect.ts';
 import { askKits, askInitQuestions } from '#cli/commands/init/questions.ts';
 import { buildInitPlan, buildProposal } from '#cli/commands/init/plan/build.ts';
 import type { TomlTable, ExistingTooling } from '#cli/types/repository/repository.ts';
@@ -81,7 +81,7 @@ function policyTextFor(
  * Reads the repository, asks the questions, and builds the plan init shows before writing.
  * @param root the repository root
  * @param options the init options, with a profile's answers folded in
- * @returns the plan, the policy text, and what the takeover observed
+ * @returns the plan, the policy text, and what the replace observed
  */
 export async function prepare(root: string, options: InitOptions): Promise<InitPrepared> {
     const manifests = kitManifests();
@@ -98,21 +98,21 @@ export async function prepare(root: string, options: InitOptions): Promise<InitP
     if (!options.json) printDetection(inputs, detected, tooling);
     const selection = await chosenSelection(inputs, options, detected);
     const sources = repo.files.filter((file) => file.nature === 'source').map((file) => file.path);
-    const carried = await collectCarried(root, tooling, selection.selectedIds, sources);
-    const answers = await askInitQuestions(root, options, tooling, carried.formatter);
+    const kept = await collectKept(root, tooling, selection.selectedIds, sources);
+    const answers = await askInitQuestions(root, options, tooling, kept.formatter);
     const tasks = proposedRunnerTasks(root, answers.runner);
     const everySelected = [...selection.selectedIds]
         .map((id) => manifests.get(id))
         .filter((manifest) => manifest !== undefined);
-    const planning: Planning = { root, options, tooling, selection, everySelected, answers, carried };
+    const planning: Planning = { root, options, tooling, selection, everySelected, answers, kept };
     const settings = detectedSettings(everySelected, facts, repo.files);
-    const proposal = { ...buildProposal(root, selection, answers, carried, settings), runnerTasks: tasks.names };
+    const proposal = { ...buildProposal(root, selection, answers, kept, settings), runnerTasks: tasks.names };
     const { policyText, policy } = policyTextFor(planning, proposal);
     return {
         plan: buildInitPlan(planning, policy, policyText),
         policyText,
         runner: answers.runner,
-        removed: carried.removed,
-        observed: new Map([...carried.observed, ...tasks.observed]),
+        removed: kept.removed,
+        observed: new Map([...kept.observed, ...tasks.observed]),
     };
 }

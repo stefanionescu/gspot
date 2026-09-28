@@ -2,10 +2,10 @@ import { ESLint } from 'eslint';
 import { join } from 'node:path';
 import { stringify } from 'smol-toml';
 import { test, expect } from 'bun:test';
+import { runEslint } from '#cli/native/eslint.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { evaluateEslint } from '#cli/evaluation/eslint.ts';
 import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
 import { mkdirSync, existsSync, symlinkSync, writeFileSync } from 'node:fs';
 
@@ -24,18 +24,18 @@ test('legacy ESLint adoption preserves inherited overrides and ignores for futur
         'src/current.js': 'alert(1);',
     });
     symlinkSync(INSTALLED_MODULES, join(directory.path, 'node_modules'));
-    const carried = await evaluateEslint({
+    const kept = await runEslint({
         root: directory.path,
         paths: ['src/current.js'],
         flat: false,
         from: '.eslintrc.json',
     });
     expect(
-        carried.adopted.some((entry) => entry.legacyCriteria?.patterns[0]?.includes?.includes('src/**/*.js') === true),
+        kept.adopted.some((entry) => entry.legacyCriteria?.patterns[0]?.includes?.includes('src/**/*.js') === true),
     ).toBe(true);
     writeFileSync(
         join(directory.path, 'gspot.toml'),
-        stringify({ version: 1, kits: ['javascript'], tools: { eslint: carried } }),
+        stringify({ version: 1, kits: ['javascript'], tools: { eslint: kept } }),
     );
     const session = await openSession(directory.path);
     const generated = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
@@ -77,14 +77,14 @@ test('legacy ESLint adoption preserves inherited plugin environments and extensi
         'source.js': 'allowed;',
     });
     symlinkSync(join(INSTALLED_MODULES, 'eslint'), join(directory.path, 'node_modules/eslint'));
-    const carried = await evaluateEslint({
+    const kept = await runEslint({
         root: directory.path,
         paths: ['source.js'],
         flat: false,
         from: '.eslintrc.json',
     });
     expect(
-        carried.adopted.some(
+        kept.adopted.some(
             (entry) =>
                 entry.languageOptions?.['globals'] !== undefined &&
                 (entry.languageOptions['globals'] as Record<string, unknown>)['allowed'] === false,
@@ -92,7 +92,7 @@ test('legacy ESLint adoption preserves inherited plugin environments and extensi
     ).toBe(true);
     writeFileSync(
         join(directory.path, 'gspot.toml'),
-        stringify({ version: 1, kits: ['javascript'], tools: { eslint: carried } }),
+        stringify({ version: 1, kits: ['javascript'], tools: { eslint: kept } }),
     );
     const session = await openSession(directory.path);
     const generated = emitAll(session.policyFiles.policy, session.repository, session.scopes, {

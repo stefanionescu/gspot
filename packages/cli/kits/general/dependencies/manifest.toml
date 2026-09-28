@@ -22,9 +22,9 @@ github = {name = "google/osv-scanner", version = "v2.6.0"}
 winget = "Google.OSVScanner"
 scoop = "osv-scanner"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = "osv-scanner.toml"
-carries = "advisories"
+keeps = "advisories"
 
 [[tools]]
 name = "syncpack"
@@ -32,33 +32,33 @@ version = "15.3.3"
 npm = "syncpack"
 mise = "npm:syncpack"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = ".syncpackrc"
-carries = "rules-table"
+keeps = "rules-table"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = ".syncpackrc.json"
-carries = "rules-table"
+keeps = "rules-table"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = ".syncpackrc.js"
-carries = "rules-table"
+keeps = "rules-table"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = ".syncpackrc.cjs"
-carries = "rules-table"
+keeps = "rules-table"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = "syncpack.config.js"
-carries = "rules-table"
+keeps = "rules-table"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = "syncpack.config.cjs"
-carries = "rules-table"
+keeps = "rules-table"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = "syncpack.config.mjs"
-carries = "rules-table"
+keeps = "rules-table"
 
 [[configs]]
 template = "osv-scanner.toml.tmpl"

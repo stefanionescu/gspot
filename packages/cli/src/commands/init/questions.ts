@@ -130,36 +130,34 @@ export async function askKits(
  * @param root the repository root
  * @param options the init flags
  * @param tooling the configuration files, hooks and runner found
- * @param carriedFormat the validated formatter choices captured during takeover observation
+ * @param keptFormat the validated formatter choices captured during replace observation
  * @returns the answers
  */
 export async function askInitQuestions(
     root: string,
     options: InitOptions,
     tooling: ExistingTooling,
-    carriedFormat: AdoptedFormatting | undefined,
+    keptFormat: AdoptedFormatting | undefined,
 ): Promise<InitAnswers> {
     const hooks = await askHooks(options, tooling);
     const ci = await askCi(root, options, tooling);
     const isRules = await askRuleFiles(options);
     const runner = await askRunner(options, tooling);
     const answers = { hooks, ci, isRules, runner };
-    if (carriedFormat === undefined) return answers;
+    if (keptFormat === undefined) return answers;
     const shipped = shippedFormat();
     const differences =
-        carriedFormat.nativeDefaults === true
-            ? carriedFormat.format
+        keptFormat.nativeDefaults === true
+            ? keptFormat.format
             : (Object.fromEntries(
-                  Object.entries(carriedFormat.format).filter(
+                  Object.entries(keptFormat.format).filter(
                       ([key, value]) => value !== shipped[key as keyof FormatSettings],
                   ),
               ) as Policy['format']);
     const differing =
-        Object.keys(differences).length === 0 &&
-        carriedFormat.extra === undefined &&
-        carriedFormat.nativeDefaults !== true
+        Object.keys(differences).length === 0 && keptFormat.extra === undefined && keptFormat.nativeDefaults !== true
             ? undefined
-            : { ...carriedFormat, format: differences };
+            : { ...keptFormat, format: differences };
     const formatter = await askFormat(options, differing);
     return { ...answers, ...(formatter ? { formatter } : {}) };
 }

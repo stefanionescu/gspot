@@ -5,12 +5,12 @@ import { createFileTree, testdir } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { proposeText } from '#cli/commands/init/propose.ts';
-import { collectCarried } from '#cli/policy/adoption/collect.ts';
+import { collectKept } from '#cli/policy/adoption/collect.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
 import type { ExistingTooling } from '#cli/types/repository/repository.ts';
 
 const tooling: ExistingTooling = {
-    configs: [{ tool: 'license-checker-rseidelsohn', path: '.license-checker.json', carries: 'licenses' as const }],
+    configs: [{ tool: 'license-checker-rseidelsohn', path: '.license-checker.json', keeps: 'licenses' as const }],
     hooks: [],
     ci: [],
     agentFiles: [],
@@ -66,7 +66,7 @@ test.each(LICENSE_SCOPES)(
         symlinkSync(scanner, join(sandbox.path, 'node_modules/license-checker-rseidelsohn'));
         const installed = (await Bun.file(join(scanner, 'package.json')).json()) as { version: string };
         expect(installed.version).toBe(kitManifests().get('licenses')!.tools[0]!.version!);
-        const refused = await collectCarried(root, selected, new Set(['licenses']), []);
+        const refused = await collectKept(root, selected, new Set(['licenses']), []);
         expect(refused.unread.map((entry) => entry.path)).toStrictEqual([path]);
         expect(refused.tools.size).toBe(0);
         expect(refused.scopes.size).toBe(0);
@@ -76,18 +76,18 @@ test.each(LICENSE_SCOPES)(
             join(project, 'node_modules/missing-dependency/package.json'),
             JSON.stringify({ name: 'missing-dependency', version: '2.0.0', license: 'MPL-2.0' }),
         );
-        const carried = await collectCarried(root, selected, new Set(['licenses']), []);
-        expect(carried.unread).toStrictEqual([]);
+        const kept = await collectKept(root, selected, new Set(['licenses']), []);
+        expect(kept.unread).toStrictEqual([]);
         expect(
             scope === 'root'
-                ? carried.tools.get('licenses')?.settings
-                : carried.scopes.get('project')?.tools['licenses'],
+                ? kept.tools.get('licenses')?.settings
+                : kept.scopes.get('project')?.tools['licenses'],
         ).toStrictEqual({
             licenses_allowed: allowed,
             packages_allowed: EXPECTED_PACKAGES,
         });
-        expect(carried.tools.size).toBe(scope === 'nested' ? 0 : 1);
-        expect(carried.scopes.get('project')?.kits).toStrictEqual(
+        expect(kept.tools.size).toBe(scope === 'nested' ? 0 : 1);
+        expect(kept.scopes.get('project')?.kits).toStrictEqual(
             scope === 'nested' ? ['licenses'] : undefined,
         );
     },
@@ -110,13 +110,13 @@ test.each(LICENSE_SCOPES)(
             join(project, 'node_modules/missing-dependency/package.json'),
             JSON.stringify({ name: 'missing-dependency', version: '2.0.0', license: 'MPL-2.0' }),
         );
-        const carried = await collectCarried(root, selected, new Set(['licenses']), []);
+        const kept = await collectKept(root, selected, new Set(['licenses']), []);
         await Bun.write(
             join(root, 'gspot.toml'),
             proposeText({
                 kits: scope === 'root' ? ['licenses'] : [],
                 scopes: [{ path: 'sibling', kits: ['licenses'] }],
-                carried,
+                kept,
                 hooks: 'none',
                 ci: 'none',
                 rules: false,
@@ -139,7 +139,7 @@ test.each(LICENSE_SCOPES)(
         expect(JSON.parse(siblingConfig.content)).toMatchObject({
             packages_allowed: scope === 'nested' ? [] : EXPECTED_PACKAGES,
         });
-        expect(carried.removed.map((entry) => entry.path)).toStrictEqual([path]);
+        expect(kept.removed.map((entry) => entry.path)).toStrictEqual([path]);
         expect(await Bun.file(join(root, path)).text()).toBe(original);
     },
 );
@@ -150,13 +150,13 @@ test.each(['MIT*;Public Domain', 'MIT OR ISC', 'MIT;not-a-license'])(
         await using sandbox = await testdir();
         const original = JSON.stringify({ onlyAllow: allowance }) + '\n';
         await createFileTree(sandbox.path, { '.license-checker.json': original });
-        const carried = await collectCarried(sandbox.path, tooling, new Set(['licenses']), []);
-        expect(carried.unread.map((entry) => entry.path)).toStrictEqual(['.license-checker.json']);
-        expect(carried.tools.size).toBe(0);
-        expect(carried.removed).toStrictEqual([]);
+        const kept = await collectKept(sandbox.path, tooling, new Set(['licenses']), []);
+        expect(kept.unread.map((entry) => entry.path)).toStrictEqual(['.license-checker.json']);
+        expect(kept.tools.size).toBe(0);
+        expect(kept.removed).toStrictEqual([]);
         expect(await Bun.file(join(sandbox.path, '.license-checker.json')).text()).toBe(original);
         await Bun.write(join(sandbox.path, '.license-checker.json'), JSON.stringify({ onlyAllow: allowed.join(';') }));
-        const corrected = await collectCarried(sandbox.path, tooling, new Set(['licenses']), []);
+        const corrected = await collectKept(sandbox.path, tooling, new Set(['licenses']), []);
         expect(corrected.unread).toStrictEqual([]);
         expect(corrected.tools.get('licenses')?.settings).toStrictEqual({ licenses_allowed: allowed });
     },
@@ -174,14 +174,14 @@ test('overlapping license configurations remain intact without widening nested a
         configs: Object.keys(files).map((path) => ({
             tool: 'license-checker-rseidelsohn',
             path,
-            carries: 'licenses' as const,
+            keeps: 'licenses' as const,
         })),
     };
-    const carried = await collectCarried(sandbox.path, discovered, new Set(['licenses']), []);
-    expect(carried.unread.map(({ path }) => path)).toContain('.license-checker.json');
-    expect(carried.removed).toStrictEqual([]);
-    expect(carried.tools.size).toBe(0);
-    expect(carried.scopes.size).toBe(0);
+    const kept = await collectKept(sandbox.path, discovered, new Set(['licenses']), []);
+    expect(kept.unread.map(({ path }) => path)).toContain('.license-checker.json');
+    expect(kept.removed).toStrictEqual([]);
+    expect(kept.tools.size).toBe(0);
+    expect(kept.scopes.size).toBe(0);
     for (const [path, original] of Object.entries(files))
         expect(await Bun.file(join(sandbox.path, path)).text()).toBe(original);
 });

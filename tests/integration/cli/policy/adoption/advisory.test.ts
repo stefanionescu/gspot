@@ -5,7 +5,7 @@ import { emitAll } from '#cli/generation/outputs.ts';
 import { parse, TomlDate, stringify } from 'smol-toml';
 import { openSession } from '#cli/execution/session.ts';
 import { readRepository } from '#cli/repository/tree.ts';
-import { collectCarried } from '#cli/policy/adoption/collect.ts';
+import { collectKept } from '#cli/policy/adoption/collect.ts';
 import { existingTooling } from '#cli/repository/existing-tooling.ts';
 
 test.each(['2030-11-09', '2030-11-09T16:42:12Z', '2030-11-09T16:42:12-05:30'])(
@@ -16,15 +16,15 @@ test.each(['2030-11-09', '2030-11-09T16:42:12Z', '2030-11-09T16:42:12-05:30'])(
         await createFileTree(sandbox.path, { 'osv-scanner.toml': original });
         const repository = await readRepository(sandbox.path, [], [], []);
         const discovered = existingTooling(sandbox.path, repository.files, []);
-        const carried = await collectCarried(sandbox.path, discovered, new Set(['dependencies']), []);
-        expect(carried.unread).toStrictEqual([]);
-        expect(carried.removed.map((entry) => entry.path)).toStrictEqual(['osv-scanner.toml']);
+        const kept = await collectKept(sandbox.path, discovered, new Set(['dependencies']), []);
+        expect(kept.unread).toStrictEqual([]);
+        expect(kept.removed.map((entry) => entry.path)).toStrictEqual(['osv-scanner.toml']);
         await Bun.write(
             join(sandbox.path, 'gspot.toml'),
             stringify({
                 version: 1,
                 kits: ['dependencies'],
-                tools: Object.fromEntries([...carried.tools].map(([tool, entry]) => [tool, entry.settings])),
+                tools: Object.fromEntries([...kept.tools].map(([tool, entry]) => [tool, entry.settings])),
             }),
         );
         const session = await openSession(sandbox.path);

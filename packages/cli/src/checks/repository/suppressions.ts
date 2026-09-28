@@ -3,7 +3,7 @@ import { scopeOf } from '#cli/repository/scopes.ts';
 import { extensionOf } from '#cli/platform/paths.ts';
 import { claimedByClaims } from '#cli/kits/claims.ts';
 import { readSource } from '#cli/repository/tracked.ts';
-import { isReasonAccepted } from '#cli/policy/loosening.ts';
+import { isReasonAccepted } from '#cli/policy/weaker.ts';
 import type { ScopeSelection } from '#cli/types/policy/policy.ts';
 import type { SourceComment } from '#cli/types/parsers/parsers.ts';
 import { GSPOT_SUPPRESSION } from '#cli/config/checks/repository.ts';

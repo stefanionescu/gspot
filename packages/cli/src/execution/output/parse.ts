@@ -6,7 +6,7 @@ import { toPosix } from '#cli/platform/paths.ts';
 import { parseJson } from '#cli/execution/output/json.ts';
 import type { Finding } from '#cli/types/checks/checks.ts';
 import type { CheckSpec, OutputFormat } from '#cli/types/kits.ts';
-import { ESLINT_WARN, ESLINT_ERROR } from '#cli/config/evaluation.ts';
+import { ESLINT_WARN, ESLINT_ERROR } from '#cli/config/native.ts';
 import type { Parsing, RegexParser } from '#cli/types/execution/output.ts';
 
 import {

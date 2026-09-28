@@ -18,7 +18,7 @@ export type ConfigurationWriteRequest = {
     current: FileObservation | undefined;
     existing: OwnershipEntry | undefined;
     matchesInstalled: boolean;
-    takeover: boolean;
+    replace: boolean;
 };
 export type PendingOwnership = NonNullable<OwnershipState['pending']>[number];
 export type ApplyReport = {
@@ -58,7 +58,7 @@ export type Restoration = { next?: FileObservation };
 export type BlockStyle = 'markdown' | 'hash';
 export type BlockSpan = { start: number; end: number };
 export type PlannedBlock = { nextText: string; block: OwnedBlock };
-export type TakeoverRemovalResult = { removed: string[]; preserved: string[] };
+export type ReplaceRemovalResult = { removed: string[]; preserved: string[] };
 export type OwnershipState = z.infer<typeof ownershipSchema>;
 export type OwnershipEntry = OwnershipState['files'][number];
 export type Identity = z.infer<typeof identitySchema>;
@@ -89,13 +89,13 @@ export type LifecycleOwner = {
         path: string,
         format: ConfigurationFormat,
         changes: { path: (string | number)[]; value: unknown }[],
-        takeover?: boolean,
+        replace?: boolean,
     ): FileProposal;
     proposeReplacement(
         path: string,
         next: FileObservation,
         kind: OwnershipEntry['kind'],
-        takeover?: boolean,
+        replace?: boolean,
         expected?: FileObservation,
         proposed?: ReadonlyMap<string, FileObservation | undefined>,
     ): FileProposal;
@@ -111,7 +111,7 @@ export type LifecycleOwner = {
         path: string,
         next: FileObservation,
         kind: OwnershipEntry['kind'],
-        takeover?: boolean,
+        replace?: boolean,
         expected?: FileObservation,
     ): Outcome;
     proposeRestoration(path: string, original?: FileObservation): FileProposal;
@@ -130,7 +130,7 @@ export type ReplacementRequest = {
     path: string;
     next: FileObservation;
     kind: OwnershipEntry['kind'];
-    takeover?: boolean | undefined;
+    replace?: boolean | undefined;
     expected?: FileObservation | undefined;
     proposed?: ReadonlyMap<string, FileObservation | undefined> | undefined;
 };

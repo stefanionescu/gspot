@@ -19,17 +19,17 @@ winget = "crate-ci.typos"
 scoop = "typos"
 github = {name = "crate-ci/typos", version = "v1.43.5"}
 
-[[tools.takeover]]
+[[tools.replace]]
 file = "typos.toml"
-carries = "words"
+keeps = "words"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = ".typos.toml"
-carries = "words"
+keeps = "words"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = "_typos.toml"
-carries = "words"
+keeps = "words"
 
 [[configs]]
 template = "typos.toml.tmpl"

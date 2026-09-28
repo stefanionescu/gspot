@@ -10,7 +10,7 @@ import type {
     prettierSource,
     prettierSettings,
     configurationRequest,
-} from '#cli/evaluation/protocol.ts';
+} from '#cli/native/protocol.ts';
 
 export type PrettierOverride = NonNullable<z.infer<typeof prettierSource>['overrides']>[number];
 export type EvaluationRequest = z.infer<typeof configurationRequest>;

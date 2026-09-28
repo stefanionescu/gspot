@@ -31,17 +31,17 @@ winget = "errata-ai.Vale"
 scoop = "vale"
 github = {name = "errata-ai/vale", version = "v3.21.0"}
 
-[[tools.takeover]]
+[[tools.replace]]
 file = ".vale.ini"
-carries = "rules-table"
+keeps = "rules-table"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = "_vale.ini"
-carries = "rules-table"
+keeps = "rules-table"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = "vale.ini"
-carries = "rules-table"
+keeps = "rules-table"
 
 [[configs]]
 template = "vale.ini.tmpl"

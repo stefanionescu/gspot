@@ -1,4 +1,4 @@
-// Takeover at init: adopted Prettier and EditorConfig settings format later files the way the originals did.
+// Replace at init: adopted Prettier and EditorConfig settings format later files the way the originals did.
 import prettier from 'prettier';
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';

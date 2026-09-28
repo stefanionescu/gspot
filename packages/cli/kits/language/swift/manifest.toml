@@ -27,14 +27,14 @@ brew = "swiftlint"
 github = {name = "realm/SwiftLint", version = "0.63.2"}
 version_command = ["version"]
 
-[[tools.takeover]]
+[[tools.replace]]
 file = ".swiftlint.yml"
-carries = "rules-table"
+keeps = "rules-table"
 check = "swift/swiftlint"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = ".swiftlint.yaml"
-carries = "rules-table"
+keeps = "rules-table"
 check = "swift/swiftlint"
 
 [[tools]]
@@ -45,9 +45,9 @@ mise = "swiftformat"
 brew = "swiftformat"
 github = {name = "nicklockwood/SwiftFormat", version = "0.61.1"}
 
-[[tools.takeover]]
+[[tools.replace]]
 file = ".swiftformat"
-carries = "rules-table"
+keeps = "rules-table"
 
 [[tools]]
 name = "periphery"
@@ -58,13 +58,13 @@ brew = "periphery"
 github = {name = "peripheryapp/periphery", version = "3.6.0"}
 version_command = ["version"]
 
-[[tools.takeover]]
+[[tools.replace]]
 file = ".periphery.yml"
-carries = "rules-table"
+keeps = "rules-table"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = ".periphery.yaml"
-carries = "rules-table"
+keeps = "rules-table"
 
 [[tools]]
 name = "xcodebuild"

@@ -10,14 +10,14 @@ import { declaredKits } from '#cli/repository/existing-tooling.ts';
  * @param root the repository root
  * @param sourcePaths the tracked file paths
  * @param tools the tools whose configuration counts
- * @param takeover the reviewed originals a takeover replaces, when one was authorized
+ * @param replace the reviewed originals a replace replaces, when one was authorized
  * @returns the authored configuration files that stay
  */
 export function retainedConfigurationPaths(
     root: string,
     sourcePaths: string[],
     tools: string[],
-    takeover?: ReadonlyMap<string, FileObservation>,
+    replace?: ReadonlyMap<string, FileObservation>,
 ): string[] {
     const ownership = new Map(readOwnership(root).files.map((entry) => [entry.path, entry]));
     const declarations = declaredKits(root, sourcePaths, tools);
@@ -29,7 +29,7 @@ export function retainedConfigurationPaths(
             if (shared.has(path)) return true;
             const current = files.read(path);
             if (current === undefined) return false;
-            if (isDeepStrictEqual(current, takeover?.get(path))) return false;
+            if (isDeepStrictEqual(current, replace?.get(path))) return false;
             const installed = ownership.get(path)?.installed;
             return !(
                 current.mode === installed?.mode &&

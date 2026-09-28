@@ -16,45 +16,45 @@ version = "21.2.2"
 npm = "@commitlint/cli"
 mise = "npm:@commitlint/cli"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = ".commitlintrc"
-carries = "rules-table"
+keeps = "rules-table"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = ".commitlintrc.json"
-carries = "rules-table"
+keeps = "rules-table"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = ".commitlintrc.yml"
-carries = "rules-table"
+keeps = "rules-table"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = ".commitlintrc.yaml"
-carries = "rules-table"
+keeps = "rules-table"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = ".commitlintrc.js"
-carries = "rules-table"
+keeps = "rules-table"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = ".commitlintrc.cjs"
-carries = "rules-table"
+keeps = "rules-table"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = "commitlint.config.js"
-carries = "rules-table"
+keeps = "rules-table"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = "commitlint.config.cjs"
-carries = "rules-table"
+keeps = "rules-table"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = "commitlint.config.mjs"
-carries = "rules-table"
+keeps = "rules-table"
 
-[[tools.takeover]]
+[[tools.replace]]
 file = "commitlint.config.ts"
-carries = "rules-table"
+keeps = "rules-table"
 
 [[configs]]
 template = "commitlint.config.cjs.tmpl"

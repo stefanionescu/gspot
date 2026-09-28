@@ -13,7 +13,7 @@ test.each(['copy = true', 'body = "include target"', 'merge = { extends = "targe
 );
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the line limit.
-const takeoverDefinition = (reader: string) => `
+const replaceDefinition = (reader: string) => `
 [kit]
 name = "example"
 kind = "language"
@@ -22,15 +22,15 @@ description = "Configuration adoption for the example language."
 [[tools]]
 name = "example"
 version = "1.0.0"
-[[tools.takeover]]
+[[tools.replace]]
 file = ".example"
-carries = "${reader}"
+keeps = "${reader}"
 `;
 
-test('takeover declarations reject unknown readers and accept every declared reader', () => {
-    expect(() => parseManifest(takeoverDefinition('executable-script'), 'configurations/example')).toThrow();
+test('replace declarations reject unknown readers and accept every declared reader', () => {
+    expect(() => parseManifest(replaceDefinition('executable-script'), 'configurations/example')).toThrow();
     for (const reader of ['ignore-paths', 'rules-table', 'words', 'advisories', 'licenses', 'eslint-config'])
-        expect(() => parseManifest(takeoverDefinition(reader), 'configurations/example')).not.toThrow();
+        expect(() => parseManifest(replaceDefinition(reader), 'configurations/example')).not.toThrow();
 });
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the line limit.
@@ -43,13 +43,13 @@ description = "Configuration adoption for the example language."
 [[tools]]
 name = "example"
 version = "1.0.0"
-[[tools.takeover]]
+[[tools.replace]]
 file = "package.json"
-carries = "eslint-config"
+keeps = "eslint-config"
 ${selection}
 `;
 
-test('shared takeover selectors cannot authorize retiring the containing file', () => {
+test('shared replace selectors cannot authorize retiring the containing file', () => {
     for (const selection of [
         'key = "eslintConfig"',
         'table = "tool.ruff"',

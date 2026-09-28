@@ -129,7 +129,7 @@ export type SelectorGroup = {
 export type GenerationOptions = {
     version: string;
     packageClient: PackageTool | undefined;
-    takeover?: ReadonlyMap<string, FileObservation> | undefined;
+    replace?: ReadonlyMap<string, FileObservation> | undefined;
 };
 export type JsonFormat = { width: number; indent: number };
 export type HookName = (typeof HOOK_FILES)[number];
@@ -147,7 +147,7 @@ export type Retention = {
     root: string;
     policy: Policy;
     files: TrackedFile[];
-    takeover: ReadonlyMap<string, FileObservation> | undefined;
+    replace: ReadonlyMap<string, FileObservation> | undefined;
 };
 
 export type RunnerPlan = { tasks: RunnerTask[]; configuration?: ConfigurationOutput; notes: string[] };

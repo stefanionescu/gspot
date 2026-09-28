@@ -62,7 +62,7 @@ function plannedField(
         if (!isDeepStrictEqual(value, previous.installed)) return undefined;
         return { ...field, ...(previous.original === undefined ? {} : { original: previous.original }) };
     }
-    if (request.current !== undefined && !request.takeover && !isDeepStrictEqual(value, field.installed))
+    if (request.current !== undefined && !request.replace && !isDeepStrictEqual(value, field.installed))
         return undefined;
     return { ...field, ...(value === undefined ? {} : { original: z.json().parse(value) }) };
 }

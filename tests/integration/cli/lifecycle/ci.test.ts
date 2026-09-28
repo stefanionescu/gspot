@@ -1,8 +1,8 @@
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { initCommand } from '#cli/commands/init/command.ts';
+import type { ReplacePlan } from '#cli/types/commands/init.ts';
 import { initPlanText } from '#cli/commands/init/plan/text.ts';
-import type { TakeoverPlan } from '#cli/types/commands/init.ts';
 
 test.each(['bitbucket-pipelines.yml', 'Jenkinsfile', ''])(
     'no-workflow guidance includes setup and failed-job reports for %s',
@@ -23,7 +23,7 @@ test.each(['bitbucket-pipelines.yml', 'Jenkinsfile', ''])(
             allowDirty: false,
         });
         expect(result.exitCode).toBe(0);
-        const { plan } = result.json as { plan: TakeoverPlan };
+        const { plan } = result.json as { plan: ReplacePlan };
         expect(plan.ci?.commands).toStrictEqual([
             'npm install --global "gspot@$(cat .gspot/version)"',
             'gspot install',

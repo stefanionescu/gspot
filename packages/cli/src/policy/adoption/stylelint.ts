@@ -3,10 +3,10 @@ import { posix, extname } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import { toolPin } from '#cli/tools/inspect.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
-import type { stylelintRequest } from '#cli/evaluation/protocol.ts';
-import { evaluateConfiguration } from '#cli/evaluation/configuration.ts';
+import type { stylelintRequest } from '#cli/native/protocol.ts';
+import { runConfiguration } from '#cli/native/configuration.ts';
 import { parse as parseToml, stringify as stringifyToml } from 'smol-toml';
-import { stylelintSource, stylelintResponse } from '#cli/evaluation/protocol.ts';
+import { stylelintSource, stylelintResponse } from '#cli/native/protocol.ts';
 import { reasonFor, adoptedTool, adoptedScope } from '#cli/policy/adoption/results.ts';
 import type { AdoptionResult, ConfigurationSource } from '#cli/types/policy/adoption.ts';
 import { observeConfiguration, parseConfigurationSource } from '#cli/policy/adoption/source.ts';
@@ -75,11 +75,11 @@ async function carryStylelint(
         throw new Error(`${path}: Stylelint rule options cannot be represented without loss in TOML.`);
     const version = z.string().min(1).parse(toolPin(kitManifests().values(), 'stylelint').version);
     stylelintResponse.parse(
-        await evaluateConfiguration({ root, tool: 'stylelint', operation: 'stylelint', version, rules }),
+        await runConfiguration({ root, tool: 'stylelint', operation: 'stylelint', version, rules }),
     );
-    const carried = adoptedTool(lists, 'stylelint');
+    const kept = adoptedTool(lists, 'stylelint');
     const base = posix.dirname(path);
-    if (base === '.') carried.settings['rules'] = enabled;
+    if (base === '.') kept.settings['rules'] = enabled;
     else {
         const scope = adoptedScope(lists, base, 'css');
         scope.tools['stylelint'] = { rules: enabled };
@@ -87,7 +87,7 @@ async function carryStylelint(
     const literalBase = base.replaceAll(/[?*[\]{}]/gu, String.raw`\$&`);
     const paths = base === '.' ? undefined : [`${literalBase}/**`];
     for (const rule of disabled)
-        carried.ignores.push({ check, rule, reason: reasonFor(path), ...(paths === undefined ? {} : { paths }) });
+        kept.ignores.push({ check, rule, reason: reasonFor(path), ...(paths === undefined ? {} : { paths }) });
 }
 
-export const stylelintImporter = { schema: stylelintSource, carry: carryStylelint };
+export const stylelintImporter = { schema: stylelintSource, keep: carryStylelint };

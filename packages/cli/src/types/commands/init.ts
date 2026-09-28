@@ -21,7 +21,7 @@ export type Planning = {
     selection: InitSelection;
     everySelected: Manifest[];
     answers: InitAnswers;
-    carried: AdoptionResult;
+    kept: AdoptionResult;
 };
 export type DetectionSummary = {
     files: TrackedFile[];
@@ -59,7 +59,7 @@ export type InitOptions = {
 /** The JSON the init command prints: the plan, the policy it wrote or previewed, and what stopped it. */
 export type InitJson = {
     root?: string;
-    plan?: TakeoverPlan;
+    plan?: ReplacePlan;
     policy?: string;
     isDryRun?: boolean;
     written?: boolean;
@@ -86,7 +86,7 @@ export type InitAnswers = {
 };
 /** Everything init computes before it asks to continue. */
 export type InitPrepared = {
-    plan: TakeoverPlan;
+    plan: ReplacePlan;
     policyText: string;
     runner: InitAnswers['runner'];
     removed: { path: string }[];
@@ -114,7 +114,7 @@ export type InitProposal = {
     profileTables?: TomlTable;
     kits: string[];
     scopes: { path: string; kits: string[] }[];
-    carried: AdoptionResult;
+    kept: AdoptionResult;
     hooks: NonNullable<RawPolicy['hooks']>['tool'] | 'none';
     ci: NonNullable<RawPolicy['ci']>['provider'] | 'none';
     rules: boolean;
@@ -130,7 +130,7 @@ export type InitProposal = {
 export type Written = { lines: string[]; installNote: string; exitCode: number };
 export type Installed = { installNote: string; exitCode: number };
 export type InstallSettings = { min_release_age_days?: number; security_scanner?: string };
-export type TakeoverPlan = {
+export type ReplacePlan = {
     ci?: { commands: string[]; reports: string };
     profile?: { name: string; digest: string; selection: string; detected: string[] };
     kits: { kit: string; how: KitReason; checks: number }[];
@@ -138,7 +138,7 @@ export type TakeoverPlan = {
     remove: { path: string; note: string }[];
     unread: { path: string; note: string }[];
     retained: { path: string; note: string }[];
-    carried: { from: string; count: number; into: string }[];
+    kept: { from: string; count: number; into: string }[];
     change: { path: string; note: string }[];
     noLongerRuns: { path: string; note: string }[];
     ignores: { check: string; rule?: string; reason: string }[];

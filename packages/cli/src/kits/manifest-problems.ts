@@ -126,19 +126,19 @@ function assertReferences(manifest: Manifest, checks: Checks, owners: Map<string
     }
 }
 
-// Refuses a takeover row whose check does not run the tool that declares it.
-function assertTakeovers(manifest: Manifest, checks: Checks): void {
+// Refuses a replace row whose check does not run the tool that declares it.
+function assertReplaces(manifest: Manifest, checks: Checks): void {
     for (const tool of manifest.tools)
-        for (const takeover of tool.takeover ?? []) {
-            if (takeover.check === undefined || runsTool(checks.get(takeover.check), tool.name)) continue;
-            throw new ManifestError(manifest.kit.name, [`takeover check ${takeover.check} must execute ${tool.name}.`]);
+        for (const replace of tool.replace ?? []) {
+            if (replace.check === undefined || runsTool(checks.get(replace.check), tool.name)) continue;
+            throw new ManifestError(manifest.kit.name, [`replace check ${replace.check} must execute ${tool.name}.`]);
         }
 }
 
 // Refuses a chain of replacements that returns to a check it already passed.
 function assertNoReplacementCycle(manifest: Manifest, check: Manifest['checks'][number], checks: Checks): void {
     const chain = [check.name];
-    for (let next = check.takes_over; next !== undefined; next = checks.get(next)?.takes_over) {
+    for (let next = check.replaces; next !== undefined; next = checks.get(next)?.replaces) {
         if (chain.includes(next))
             throw new ManifestError(manifest.kit.name, [`Check replacement cycle: ${[...chain, next].join(' -> ')}.`]);
         chain.push(next);
@@ -147,7 +147,7 @@ function assertNoReplacementCycle(manifest: Manifest, check: Manifest['checks'][
 
 // Refuses a reporting or replacement target that is not a different executable check, or that forms a cycle.
 function assertReporting(manifest: Manifest, check: Manifest['checks'][number], checks: Checks): void {
-    for (const field of ['reported_by', 'takes_over'] as const) {
+    for (const field of ['reported_by', 'replaces'] as const) {
         const target = check[field];
         if (target === undefined) continue;
         const owner = checks.get(target);
@@ -264,7 +264,7 @@ export function validateManifests(manifests: Map<string, Manifest>): void {
     );
     for (const manifest of manifests.values()) {
         assertReferences(manifest, checks, owners);
-        assertTakeovers(manifest, checks);
+        assertReplaces(manifest, checks);
         for (const check of manifest.checks) assertReporting(manifest, check, checks);
     }
 }

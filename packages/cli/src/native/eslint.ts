@@ -2,16 +2,16 @@ import { z } from 'zod';
 import type * as Eslint from 'eslint';
 import { pathToFileURL } from 'node:url';
 import { createRequire } from 'node:module';
-import { ACTIVE_LEVELS } from '#cli/config/evaluation.ts';
+import { ACTIVE_LEVELS } from '#cli/config/native.ts';
+import { eslintResponse } from '#cli/native/protocol.ts';
+import { eslintrcEntries } from '#cli/native/eslintrc.ts';
 import { mutationPath } from '#cli/platform/safe-paths.ts';
-import { eslintResponse } from '#cli/evaluation/protocol.ts';
 import { join, dirname, resolve, relative } from 'node:path';
-import { eslintrcEntries } from '#cli/evaluation/eslintrc.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import type { Adoption, EslintRequest } from '#cli/types/native.ts';
 import type { EslintRegistration } from '#cli/types/policy/policy.ts';
-import type { Adoption, EslintRequest } from '#cli/types/evaluation.ts';
-import { importedModules, registerEslintModule } from '#cli/evaluation/eslint-modules.ts';
-import type { eslintCoverageRequest, eslintCoverageResponse } from '#cli/evaluation/protocol.ts';
+import { importedModules, registerEslintModule } from '#cli/native/eslint-modules.ts';
+import type { eslintCoverageRequest, eslintCoverageResponse } from '#cli/native/protocol.ts';
 
 // The values TOML cannot hold, which a configuration may carry only through a registered module.
 function isUnrepresentable(value: unknown): boolean {
@@ -153,7 +153,7 @@ function adoptEntry(adoption: Adoption, raw: unknown, index: number): Record<str
  * @param request the repository root, the configuration to read, and whether it is a flat configuration
  * @returns the rules, selectors, and module registrations the configuration holds
  */
-export async function evaluateEslint(request: EslintRequest): Promise<z.infer<typeof eslintResponse>> {
+export async function runEslint(request: EslintRequest): Promise<z.infer<typeof eslintResponse>> {
     if (!request.flat && request.from === undefined)
         throw new Error('Legacy ESLint adoption requires a configuration path.');
     const require = createRequire(join(request.root, 'package.json'));
@@ -187,7 +187,7 @@ export async function evaluateEslint(request: EslintRequest): Promise<z.infer<ty
  * @param request the repository root, the configuration, and the files whose rules to resolve
  * @returns the rules in force for each file
  */
-export async function evaluateRuleCoverage(
+export async function runRuleCoverage(
     request: z.infer<typeof eslintCoverageRequest>,
 ): Promise<z.infer<typeof eslintCoverageResponse>> {
     if (openConfinedRoot(request.root).read('.gspot/config/eslint.config.mjs') === undefined)

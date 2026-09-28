@@ -1,4 +1,4 @@
-// Takeover at init: the plan names hand-written hooks, refuses unreadable files, carries exception lists with a reason, and lists the lint folder.
+// Replace at init: the plan names hand-written hooks, refuses unreadable files, carries exception lists with a reason, and lists the lint folder.
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { git } from '#tests/support/cli/git.ts';
@@ -13,7 +13,7 @@ import type { InitJson } from '#cli/types/commands/init.ts';
 import { textContaining } from '#tests/support/expectations.ts';
 import { treeContents } from '#tests/support/cli/preservation.ts';
 import { statSync, chmodSync, existsSync, readFileSync } from 'node:fs';
-import { PLAN_INIT } from '#tests/config/acceptance/source/cli/takeover.ts';
+import { PLAN_INIT } from '#tests/config/acceptance/source/cli/replace.ts';
 
 test.each(['', 'hooks', '.husky'])(
     'dry-run distinguishes source hooks from configured hooks at %s',
@@ -62,7 +62,7 @@ test.each([
         expect(treeContents(sandbox.path)).toStrictEqual(before);
         const result = await run(sandbox.path, [...PLAN_INIT, '--no-hooks']);
         expect(result.code, result.stdout + result.stderr).toBe(2);
-        expect(result.stdout).toContain('Cannot apply takeover');
+        expect(result.stdout).toContain('Cannot apply replace');
         expect(treeContents(sandbox.path)).toStrictEqual(before);
     },
     PLANTED_TIMEOUT_MS,
@@ -87,16 +87,16 @@ test(
         git(sandbox.path, ['commit', '-qm', 'init']);
         const init = await run(sandbox.path, PLAN_INIT, { PATH: toolsPath(['ast-grep']) });
         expect(init.code, init.stdout + init.stderr).toBe(0);
-        expect(init.stdout).toContain('carried into gspot.toml');
+        expect(init.stdout).toContain('kept in gspot.toml');
         expect(init.stdout).toContain('quality/');
         const policy = readFileSync(join(sandbox.path, 'gspot.toml'), 'utf8');
         expect(policy).toContain('The device identifier API name.');
-        expect(policy).toContain('carried from typos.toml at init');
+        expect(policy).toContain('kept from typos.toml at init');
         // The old file named no locale, which accepts every English dialect, so the repository keeps that.
         expect(policy).toContain('locale = "en"');
         expect(readFileSync(join(sandbox.path, '.gspot/config/typos.toml'), 'utf8')).toContain('locale = "en"');
         expect(policy).toContain('SC2086');
-        expect(policy).toContain('carried from .shellcheckrc at init');
+        expect(policy).toContain('kept from .shellcheckrc at init');
         expect(policy).toContain('MD013');
         expect(policy).toContain('MD033 = true');
         const markdown = parseJsonc(readFileSync(join(sandbox.path, '.gspot/config/markdownlint.jsonc'), 'utf8'));

@@ -16,7 +16,7 @@ import { installTools } from '#cli/tools/install/execution.ts';
 import type { Session } from '#cli/types/execution/execution.ts';
 import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import { INCOMPLETE_INSTALL_EXIT } from '#cli/config/commands/init.ts';
-import type { LifecycleOwner, TakeoverRemovalResult } from '#cli/types/lifecycle/lifecycle.ts';
+import type { LifecycleOwner, ReplaceRemovalResult } from '#cli/types/lifecycle/lifecycle.ts';
 import type { Written, Installed, InitOptions, InitPrepared } from '#cli/types/commands/init.ts';
 
 const { version: GSPOT_VERSION } = packageManifest;
@@ -25,9 +25,9 @@ function retireReplaced(
     root: string,
     removed: { path: string }[],
     observed: ReadonlyMap<string, FileObservation>,
-): TakeoverRemovalResult {
+): ReplaceRemovalResult {
     return runOwnedLifecycle(root, (owner) => {
-        const result: TakeoverRemovalResult = { removed: [], preserved: [] };
+        const result: ReplaceRemovalResult = { removed: [], preserved: [] };
         const proposals = [];
         for (const entry of removed) {
             if (entry.path.endsWith('/')) {
@@ -35,7 +35,7 @@ function retireReplaced(
                 continue;
             }
             const expected = observed.get(entry.path);
-            if (expected === undefined) throw new Error(`No takeover observation exists for ${entry.path}.`);
+            if (expected === undefined) throw new Error(`No replace observation exists for ${entry.path}.`);
             const proposal = owner.proposeRetirement(entry.path, expected);
             proposals.push(proposal);
             const status = proposal.status;
@@ -47,19 +47,19 @@ function retireReplaced(
     });
 }
 
-// Refuses to write when a configuration the takeover read has changed after the plan was made.
+// Refuses to write when a configuration the replace read has changed after the plan was made.
 function assertObservedUnchanged(owner: LifecycleOwner, observed: ReadonlyMap<string, FileObservation>): void {
     for (const [path, original] of observed)
         if (!isDeepStrictEqual(owner.read(path), original))
-            throw new PolicyError([`Configuration changed after takeover was planned: ${path}. Run gspot init again.`]);
+            throw new PolicyError([`Configuration changed after replace was planned: ${path}. Run gspot init again.`]);
 }
 
 // The paths every generated output lands on.
-function generatedPaths(session: Session, takeover: ReadonlyMap<string, FileObservation>): Set<string> {
+function generatedPaths(session: Session, replace: ReadonlyMap<string, FileObservation>): Set<string> {
     const outputs = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
         version: session.version,
         packageClient: session.packageClient,
-        takeover,
+        replace,
     });
     const every = [...outputs.files, ...outputs.blocks, ...outputs.merges, ...outputs.configurations];
     return new Set(every.map((output) => output.path));
@@ -95,7 +95,7 @@ export async function write(root: string, options: InitOptions, prepared: InitPr
     return runOwnedLifecycle(root, async (owner) => {
         assertObservedUnchanged(owner, prepared.observed);
         const removedPaths = new Set(prepared.removed.map((entry) => entry.path));
-        const takeover = new Map([...prepared.observed].filter(([path]) => removedPaths.has(path)));
+        const replace = new Map([...prepared.observed].filter(([path]) => removedPaths.has(path)));
         owner.replace(
             'gspot.toml',
             { bytes: Buffer.from(prepared.policyText), mode: OWNER_WRITABLE_FILE },
@@ -104,8 +104,8 @@ export async function write(root: string, options: InitOptions, prepared: InitPr
         );
         if (isGitRepository(root)) owner.replaceBlock('.gitignore', gitignoreBlock(), 'hash');
         const session = await openSession(root);
-        const generated = generatedPaths(session, takeover);
-        const synced = await applyAll(session, takeover);
+        const generated = generatedPaths(session, replace);
+        const synced = await applyAll(session, replace);
         const retired = retireReplaced(
             root,
             prepared.removed.filter((entry) => !generated.has(entry.path)),

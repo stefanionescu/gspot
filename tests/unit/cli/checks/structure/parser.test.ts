@@ -47,7 +47,7 @@ describe('shell parsing', () => {
         expect(codeLines(['', '# note', 'a=1 # b', '  '])).toStrictEqual([{ number: 3, code: 'a=1' }]);
     });
 
-    test('functions carry their range and body', async () => {
+    test('functions keep their range and body', async () => {
         const found = await scriptFunctions(
             '#!/usr/bin/env bash\n_one() {\n    echo 1\n}\n\nmain() {\n    _one "$@"\n}\n',
         );

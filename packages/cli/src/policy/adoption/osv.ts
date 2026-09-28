@@ -35,5 +35,5 @@ export const osvImporter = {
             )
             .optional(),
     }),
-    carry: carryOsv,
+    keep: carryOsv,
 };

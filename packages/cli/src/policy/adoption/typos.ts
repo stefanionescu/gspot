@@ -28,7 +28,7 @@ function isKeyLine(line: string, key: string): boolean {
     return after.startsWith('"') ? after.slice(1).trimStart().startsWith('=') : after.startsWith('=');
 }
 
-function carryTyposWords(lines: string[], words: TomlTable, path: string): { word: string; reason: string }[] {
+function keepTyposWords(lines: string[], words: TomlTable, path: string): { word: string; reason: string }[] {
     return Object.keys(words).map((word) => {
         const index = lines.findIndex((line) => isKeyLine(line, word));
         const comment = index === -1 ? undefined : commentAbove(lines, index);
@@ -36,13 +36,13 @@ function carryTyposWords(lines: string[], words: TomlTable, path: string): { wor
     });
 }
 
-function carryTypos(source: ConfigurationSource, path: string, lists: AdoptionResult): void {
+function keepTypos(source: ConfigurationSource, path: string, lists: AdoptionResult): void {
     const text = source.text;
     const parsed = source.parsed;
     const defaults = asRaw(parsed['default']) ?? {};
     // typos with no locale accepts British and American spellings alike, and the repository was written under that.
     const settings: TomlTable = { locale: asText(defaults['locale']) ?? 'en' };
-    const words = carryTyposWords(text.split('\n'), asRaw(defaults['extend-words']) ?? {}, path);
+    const words = keepTyposWords(text.split('\n'), asRaw(defaults['extend-words']) ?? {}, path);
     if (words.length > 0) settings['words'] = words;
     const excludes = asStrings(asRaw(parsed['files'])?.['extend-exclude']);
     const base = posix.dirname(path);
@@ -88,5 +88,5 @@ export const typosImporter = {
             .optional(),
         files: z.strictObject({ 'extend-exclude': strings.optional() }).optional(),
     }),
-    carry: carryTypos,
+    keep: keepTypos,
 };

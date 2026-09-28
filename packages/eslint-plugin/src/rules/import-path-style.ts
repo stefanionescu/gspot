@@ -38,7 +38,7 @@ export const importPathStyle = createRule<ImportPathStyleOptions, 'js' | 'ts' | 
         messages: {
             js: 'Internal imports end with .js here: "{{source}}".',
             ts: 'Internal imports end with .ts here: "{{source}}".',
-            extensionless: 'Internal imports carry no suffix here: "{{source}}".',
+            extensionless: 'Internal imports keep no suffix here: "{{source}}".',
         },
     },
     defaultOptions: [{ style: 'js', internalPrefixes: DEFAULT_PREFIXES }],

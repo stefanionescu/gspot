@@ -1,11 +1,11 @@
-import { nearMatches } from '#cli/policy/near.ts';
+import { similar } from '#cli/policy/similar.ts';
 import * as messages from '#cli/policy/messages.ts';
 import { policyLayers } from '#cli/policy/problems.ts';
 import { writtenKeys } from '#cli/policy/written-keys.ts';
 import { quoteArgument } from '#cli/platform/arguments.ts';
 import { settingValueSchemas } from '#cli/policy/schema.ts';
 import { shippedPolicy } from '#cli/checks/naming/policy.ts';
-import { isLoosening, isReasonAccepted } from '#cli/policy/loosening.ts';
+import { isWeaker, isReasonAccepted } from '#cli/policy/weaker.ts';
 import { LIMITS_PREFIX, TOOL_KEY_DEPTH } from '#cli/config/policy/policy.ts';
 import { specFor, asRecord, policyValue, policyTables } from '#cli/policy/settings.ts';
 
@@ -32,7 +32,7 @@ function unknownKeyProblem(surface: ExposedSettings, key: string): string {
     const known = all
         .filter((candidate) => candidate.startsWith(`${prefix}.`))
         .map((candidate) => candidate.slice(prefix.length + 1));
-    const near = nearMatches(key.slice(prefix.length + 1), known);
+    const near = similar(key.slice(prefix.length + 1), known);
     const rest = known.filter((item) => !near.includes(item));
     return messages.settingNotExposed(key, known.length > 0 ? [...near, ...rest] : []);
 }
@@ -74,7 +74,7 @@ function looseningProblem(
     const shown = shipped === undefined ? 'default' : `default ${JSON.stringify(shipped)}`;
     const scopeFlag = scope === undefined ? '' : ` --scope ${quoteArgument(scope)}`;
     const value = JSON.stringify(written.value);
-    return messages.loosenNeedsReason(
+    return messages.weakerNeedsReason(
         key,
         value,
         shown,
@@ -106,7 +106,7 @@ function scalarProblems(
     scope: string | undefined,
 ): PolicyProblem[] {
     const shipped = surface.defaults.get(match.spec.name)?.value;
-    if (!isLoosening(match.spec, written.value, shipped) || isReasonAccepted(written.reason)) return [];
+    if (!isWeaker(match.spec, written.value, shipped) || isReasonAccepted(written.reason)) return [];
     const problem = looseningProblem(key, written, shipped, scope);
     return problem === undefined ? [] : [{ path: key.split('.'), message: problem }];
 }

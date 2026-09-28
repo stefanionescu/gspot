@@ -83,7 +83,7 @@ The root development dependencies move eslint-plugin-react-hooks to 7.1.1.
 ### Step 1.2
 
 Decide which nested ignore and relocated selector forms must be supported under
-[configuration carryover](03-configuration.md). Keep safe refusal and preservation for other
+[configuration keeping](03-configuration.md). Keep safe refusal and preservation for other
 forms. Record that decision in the owning contract before conversion changes in phase 5.
 
 Decision, 2026-09-25: nested `.prettierignore` files and negated override selectors become
@@ -341,14 +341,14 @@ The [Vue manifest](../packages/cli/kits/framework/vue/manifest.toml) pins `vue-t
 Vue accessibility, and Testing Library. The
 [Svelte manifest](../packages/cli/kits/framework/svelte/manifest.toml) pins
 `svelte-check`, `prettier-plugin-svelte`, and Testing Library. Component CSS selects
-`postcss-html`. Verify component and runes-module file selection, type-check takeover, and
+`postcss-html`. Verify component and runes-module file selection, type-check replacement, and
 native defect/correction cases before closing their acceptance clauses.
 
 Owner: Vue/Svelte definitions, ESLint/formatter generation, and component check selection.
-Task: verify the contracted type checking and takeover, accessibility, test-file rules,
+Task: verify the contracted type checking and replacement, accessibility, test-file rules,
 formatting, and component style checks. Dependencies: authorized pins, parser compatibility,
 and scope selection. Completion evidence: native defect/correction cases for each component
-language, warning failures, type-check takeover without duplicate checks, scoped test rules,
+language, warning failures, type-check replacement without duplicate checks, scoped test rules,
 and correction of component styles and formatting. Acceptance: `K-211`, `K-248`, `K-251`, `K-233`.
 
 ### Tool compatibility and release pins
@@ -384,13 +384,13 @@ Dependencies: the pin decision of step 1.1. Completion evidence: planted route, 
 decorator defects with their corrections. Setting detection at `init` stays with `K-93`.
 Acceptance: `K-211`, `K-248`.
 
-Within 4.3, verify Vue and Svelte tool definitions, parser/check selection, type-check takeover,
+Within 4.3, verify Vue and Svelte tool definitions, parser/check selection, type-check replacement,
 accessibility, test rules, formatting, and component styles.
 
 Exit: the agreed framework capabilities and generated configurations run with compatible pins
 at both levels. Remaining native-platform evidence is explicitly deferred to phase 10.
 
-## 5. Complete carryover and lifecycle consumers
+## 5. Complete keeping and lifecycle consumers
 
 Use the verified publication contracts before changing adoption or command consumers.
 
@@ -405,13 +405,13 @@ originals complies with the preservation contract; it is not evidence of data lo
 ordered ignore negations already have implementation and retained acceptance scenarios.
 
 Owner: policy adoption and formatter generation. Task: decide and document which refused forms
-must become supported under [configuration carryover](03-configuration.md), then implement
+must become supported under [configuration keeping](03-configuration.md), then implement
 those conversions when authorized. Dependencies: effective native semantics and publication.
 Completion evidence: existing/future-file comparisons, correction and recovery; every remaining
 unsupported form preserves its active original and reports every uncarried setting.
 Acceptance: `K-36`, `K-193`, `K-217`, `K-269`, `K-270`.
 
-### Configuration carryover
+### Configuration keeping
 
 Step 5.2. Verification and confirmed repairs.
 
@@ -480,7 +480,7 @@ the database driver or a `supabase` folder. The build command and the Xcode dest
 proposed by code in `commands/init/`. No text exists in the architecture folder for `K-41`, `K-239`, `K-270`, `K-214`,
 `K-247`, `K-127`, `K-63`, `K-98`, `K-285`, `K-288`, `K-289`, `K-115`, `K-110`, or `K-47`.
 
-Exit: supported carryover is lossless, unsupported originals remain active, and command,
+Exit: supported keeping is lossless, unsupported originals remain active, and command,
 profile, exception, generated-output, and recovery behavior agree with policy.
 
 ## 6. Verify execution and enforcement in dependency order

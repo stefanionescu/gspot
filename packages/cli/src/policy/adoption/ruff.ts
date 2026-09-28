@@ -10,8 +10,8 @@ import { asRaw, asStrings, observeConfiguration, parseConfigurationSource } from
 
 import type {
     PerFile,
+    KeepPush,
     RuffLint,
-    CarryPush,
     Inheritance,
     AdoptionResult,
     ConfigurationSource,
@@ -43,7 +43,7 @@ function perFilePattern(glob: string, base: string, path: string): string {
 }
 
 // Records globally disabled and per-file disabled rules from a Ruff lint table.
-function disabledRuff(parsed: TomlTable, push: CarryPush, path: string): void {
+function disabledRuff(parsed: TomlTable, push: KeepPush, path: string): void {
     const lint = asRaw(asRaw(asRaw(parsed['tool'])?.['ruff'])?.['lint']) ?? asRaw(parsed['lint']) ?? parsed;
     const base = posix.dirname(path);
     const entries = ['per-file-ignores', 'extend-per-file-ignores'].flatMap((key) =>
@@ -235,4 +235,4 @@ export const RUFF_SOURCE = z.union([
     z.strictObject({ lint: RUFF_LINT, extend: z.string().min(1).optional() }),
 ]);
 
-export const ruffImporter = { schema: RUFF_SOURCE, carry: carryRuff };
+export const ruffImporter = { schema: RUFF_SOURCE, keep: carryRuff };

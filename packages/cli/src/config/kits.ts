@@ -83,7 +83,7 @@ export const OPTIONAL_TOOL_KEYS = [
     'rule_page',
     'suppression',
     'env',
-    'takeover',
+    'replace',
     'query_packs',
     'prettier',
 ] as const;

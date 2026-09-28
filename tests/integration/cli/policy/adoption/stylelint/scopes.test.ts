@@ -8,7 +8,7 @@ import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { STYLELINT_TOOLING } from '#tests/config/cli.ts';
 import { proposeText } from '#cli/commands/init/propose.ts';
-import { collectCarried } from '#cli/policy/adoption/collect.ts';
+import { collectKept } from '#cli/policy/adoption/collect.ts';
 import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
 import type { ExistingTooling } from '#cli/types/repository/repository.ts';
 import { containing, textContaining } from '#tests/support/expectations.ts';
@@ -71,18 +71,18 @@ test.each([
         configs: ['theme[1]', 'other'].map((scope) => ({
             tool: 'stylelint',
             path: `${scope}/.stylelintrc.json`,
-            carries: 'rules-table',
+            keeps: 'rules-table',
             check: 'css/stylelint',
         })),
     };
-    const carried = await collectCarried(sandbox.path, discovered, new Set(['css']), []);
-    expect(carried.unread).toStrictEqual([]);
-    expect(carried.removed.map(({ path }) => path)).toStrictEqual([
+    const kept = await collectKept(sandbox.path, discovered, new Set(['css']), []);
+    expect(kept.unread).toStrictEqual([]);
+    expect(kept.removed.map(({ path }) => path)).toStrictEqual([
         'theme[1]/.stylelintrc.json',
         'other/.stylelintrc.json',
     ]);
-    expect(carried.tools.get('stylelint')?.settings).toStrictEqual({});
-    expect(carried.observed.has('theme[1]/base.json')).toBe(true);
+    expect(kept.tools.get('stylelint')?.settings).toStrictEqual({});
+    expect(kept.observed.has('theme[1]/base.json')).toBe(true);
     const baseline = await stylelint.lint({ code: 'a {}', codeFilename: join(sandbox.path, 'theme[1]/future.css') });
     expect(baseline.results.flatMap((result) => result.warnings)).toStrictEqual([]);
     await Bun.write(
@@ -90,7 +90,7 @@ test.each([
         proposeText({
             kits: ['css'],
             scopes: [{ path: 'theme[1]/deep', kits: ['css'] }],
-            carried,
+            kept,
             hooks: 'none',
             ci: 'none',
             rules: false,
@@ -118,23 +118,21 @@ test('overlapping Stylelint sources preserve every original before adoption', as
     await using sandbox = await testdir();
     const original = '{"rules":{"color-named":"never"}}\n';
     await createFileTree(sandbox.path, { '.stylelintrc.json': original, 'nested/.stylelintrc.json': original });
-    const carried = await collectCarried(
+    const kept = await collectKept(
         sandbox.path,
         {
             ...STYLELINT_TOOLING,
             configs: [
                 ...STYLELINT_TOOLING.configs,
-                { tool: 'stylelint', path: 'nested/.stylelintrc.json', carries: 'rules-table', check: 'css/stylelint' },
+                { tool: 'stylelint', path: 'nested/.stylelintrc.json', keeps: 'rules-table', check: 'css/stylelint' },
             ],
         },
         new Set(['css']),
         [],
     );
-    expect(carried.unread).toContainEqual(
-        containing({ path: '.stylelintrc.json', note: textContaining('Overlapping') }),
-    );
-    expect(carried.removed).toStrictEqual([]);
-    expect(carried.scopes.size).toBe(0);
+    expect(kept.unread).toContainEqual(containing({ path: '.stylelintrc.json', note: textContaining('Overlapping') }));
+    expect(kept.removed).toStrictEqual([]);
+    expect(kept.scopes.size).toBe(0);
     for (const path of ['.stylelintrc.json', 'nested/.stylelintrc.json'])
         expect(readFileSync(join(sandbox.path, path), 'utf8')).toBe(original);
 });

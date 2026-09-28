@@ -6,8 +6,8 @@ import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { readRepository } from '#cli/repository/tree.ts';
 import { proposeText } from '#cli/commands/init/propose.ts';
+import { collectKept } from '#cli/policy/adoption/collect.ts';
 import { PRETTIER_TOOLING } from '#tests/support/cli/tooling.ts';
-import { collectCarried } from '#cli/policy/adoption/collect.ts';
 import { existingTooling } from '#cli/repository/existing-tooling.ts';
 import { writeAdoptedMarkdown } from '#tests/support/cli/markdown.ts';
 
@@ -33,19 +33,19 @@ test('directory-local Markdown adoption preserves sibling rules and descendant e
     });
     const tree = await readRepository(sandbox.path, [], [], []);
     const discovered = existingTooling(sandbox.path, tree.files, []);
-    const carried = await collectCarried(sandbox.path, discovered, new Set(['markdown']), []);
-    expect(carried.unread).toStrictEqual([]);
-    expect(carried.removed.map(({ path }) => path).toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
+    const kept = await collectKept(sandbox.path, discovered, new Set(['markdown']), []);
+    expect(kept.unread).toStrictEqual([]);
+    expect(kept.removed.map(({ path }) => path).toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
         'guide/.markdownlint.jsonc',
         'reference/.markdownlint.jsonc',
     ]);
-    expect(carried.tools.has('markdownlint')).toBe(false);
+    expect(kept.tools.has('markdownlint')).toBe(false);
     await Bun.write(
         join(sandbox.path, 'gspot.toml'),
         proposeText({
             kits: ['markdown'],
             scopes: [{ path: 'guide/deep', kits: ['markdown'] }],
-            carried,
+            kept,
             hooks: 'none',
             ci: 'none',
             rules: false,
@@ -58,7 +58,7 @@ test('directory-local Markdown adoption preserves sibling rules and descendant e
         packageClient: session.packageClient,
     }).files.filter((file) => file.kind === 'config' || file.path.endsWith('.markdownlint-cli2.jsonc'));
     for (const file of configurations) await Bun.write(join(sandbox.path, file.path), file.content);
-    for (const { path } of carried.removed) unlinkSync(join(sandbox.path, path));
+    for (const { path } of kept.removed) unlinkSync(join(sandbox.path, path));
     for (const [scope, rule] of [
         ['guide', 'MD033'],
         ['guide/deep', 'MD033'],
@@ -110,24 +110,24 @@ test.each([
         const before = native(sandbox.path, '.markdownlint.jsonc');
         expect(before.exitCode).toBe(1);
         expect(before.stderr.toString()).toContain('MD033');
-        const carried = await collectCarried(
+        const kept = await collectKept(
             sandbox.path,
             {
                 ...PRETTIER_TOOLING,
-                configs: [{ tool: 'markdownlint-cli2', path: '.markdownlint.jsonc', carries: 'rules-table' }],
+                configs: [{ tool: 'markdownlint-cli2', path: '.markdownlint.jsonc', keeps: 'rules-table' }],
             },
             new Set(['markdown']),
             ['sample.md'],
         );
-        expect(carried.unread).toStrictEqual([]);
+        expect(kept.unread).toStrictEqual([]);
         // An inherited configuration keeps its parents in place and reads their settings; a flat one has no parents.
         expect({
-            removed: carried.removed.map(({ path }) => path),
-            retained: carried.retained.map(({ path }) => path).toSorted((left, right) => left.localeCompare(right)),
-            base: carried.observed.get('config/base.jsonc')?.bytes.toString().includes('"default":false'),
-            parent: carried.observed.get('config/parent.yaml')?.bytes.toString().includes('line_length: 3'),
+            removed: kept.removed.map(({ path }) => path),
+            retained: kept.retained.map(({ path }) => path).toSorted((left, right) => left.localeCompare(right)),
+            base: kept.observed.get('config/base.jsonc')?.bytes.toString().includes('"default":false'),
+            parent: kept.observed.get('config/parent.yaml')?.bytes.toString().includes('line_length: 3'),
         }).toStrictEqual({ ...expected, removed: [...expected.removed], retained: [...expected.retained] });
-        await writeAdoptedMarkdown(sandbox.path, carried);
+        await writeAdoptedMarkdown(sandbox.path, kept);
         // Remove discovery input so the generated file alone determines the native result.
         unlinkSync(join(sandbox.path, '.markdownlint.jsonc'));
         const after = native(sandbox.path, 'generated.jsonc');
@@ -161,17 +161,17 @@ test.each([{}, { default: true }])('Markdown adoption preserves native enabled d
     expect(before.exitCode).toBe(1);
     expect(before.stderr.toString()).toContain('MD013');
     expect(before.stderr.toString()).toContain('MD033');
-    const carried = await collectCarried(
+    const kept = await collectKept(
         sandbox.path,
         {
             ...PRETTIER_TOOLING,
-            configs: [{ tool: 'markdownlint-cli2', path: '.markdownlint.jsonc', carries: 'rules-table' }],
+            configs: [{ tool: 'markdownlint-cli2', path: '.markdownlint.jsonc', keeps: 'rules-table' }],
         },
         new Set(['markdown']),
         ['sample.md'],
     );
-    expect(carried.unread).toStrictEqual([]);
-    await writeAdoptedMarkdown(sandbox.path, carried);
+    expect(kept.unread).toStrictEqual([]);
+    await writeAdoptedMarkdown(sandbox.path, kept);
     unlinkSync(join(sandbox.path, '.markdownlint.jsonc'));
     const after = native(sandbox.path, 'generated.jsonc');
     expect(after.exitCode).toBe(1);

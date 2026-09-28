@@ -1,6 +1,6 @@
 import * as messages from '#cli/policy/messages.ts';
+import { isReasonAccepted } from '#cli/policy/weaker.ts';
 import { quoteArgument } from '#cli/platform/arguments.ts';
-import { isReasonAccepted } from '#cli/policy/loosening.ts';
 import type { Policy, Reasoned, ToolTable, PathSegment, PolicyProblem } from '#cli/types/policy/policy.ts';
 
 function needReason(where: string, reason: string | undefined, command: string): string | undefined {

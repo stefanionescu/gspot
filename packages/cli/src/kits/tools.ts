@@ -66,7 +66,7 @@ export const toolSchema = z.strictObject({
                 .default([]),
         })
         .optional(),
-    takeover: z
+    replace: z
         .array(
             z
                 .strictObject({
@@ -75,20 +75,13 @@ export const toolSchema = z.strictObject({
                     key: z.string().min(1).optional(),
                     shared: z.boolean().default(false),
                     check: z.string().min(1).optional(),
-                    carries: z.enum([
-                        'ignore-paths',
-                        'rules-table',
-                        'words',
-                        'advisories',
-                        'licenses',
-                        'eslint-config',
-                    ]),
+                    keeps: z.enum(['ignore-paths', 'rules-table', 'words', 'advisories', 'licenses', 'eslint-config']),
                 })
                 .superRefine((row, context) => {
                     if (row.key !== undefined && row.table !== undefined)
                         context.addIssue({
                             code: 'custom',
-                            message: 'A takeover row selects either a key or a table.',
+                            message: 'A replace row selects either a key or a table.',
                         });
                     if ((row.key !== undefined || row.table !== undefined) && !row.shared)
                         context.addIssue({

@@ -2,10 +2,10 @@ import { parseBuffer } from 'editorconfig';
 import { dirname, basename } from 'node:path';
 import { compact } from '#cli/policy/normalize.ts';
 import { policySchema } from '#cli/policy/schema.ts';
-import { evaluateConfiguration } from '#cli/evaluation/configuration.ts';
+import { runConfiguration } from '#cli/native/configuration.ts';
+import { formatRequest, formatResponse } from '#cli/native/protocol.ts';
 import { parseConfigurationSource } from '#cli/policy/adoption/source.ts';
 import type { ExistingTooling } from '#cli/types/repository/repository.ts';
-import { formatRequest, formatResponse } from '#cli/evaluation/protocol.ts';
 import type { AdoptionResult, AdoptedFormatting, ConfigurationSource } from '#cli/types/policy/adoption.ts';
 
 async function adoptFormatting(
@@ -36,7 +36,7 @@ async function adoptFormatting(
             `Formatter configuration cannot be replaced without losing settings: ${request.error.issues.map((issue) => issue.message).join('; ')}`,
         );
     const parsed = formatResponse.parse(
-        await evaluateConfiguration({ ...request.data, tool: 'prettier', operation: 'format' }),
+        await runConfiguration({ ...request.data, tool: 'prettier', operation: 'format' }),
     );
     return compact({
         format: compact(parsed.format),
@@ -91,7 +91,7 @@ export async function collectFormatting(
     const [first] = configs;
     if (first === undefined) return;
     try {
-        const format = configs.filter(({ tool, carries }) => tool === 'prettier' && carries !== 'ignore-paths');
+        const format = configs.filter(({ tool, keeps }) => tool === 'prettier' && keeps !== 'ignore-paths');
         const adopted = adoptEditorconfig(configs, lists.observed);
         const folders = new Set(format.map(({ path }) => dirname(path)));
         if (folders.size !== format.length)
@@ -110,7 +110,7 @@ export async function collectFormatting(
             root,
             sources,
             configs
-                .filter(({ carries }) => carries === 'ignore-paths')
+                .filter(({ keeps }) => keeps === 'ignore-paths')
                 .map(({ path }) => path)
                 .toSorted(
                     (first, second) =>

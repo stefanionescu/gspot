@@ -12,8 +12,8 @@ import { TOOL_KEY_DEPTH } from '#cli/config/policy/policy.ts';
 import { specFor, settingValue } from '#cli/policy/settings.ts';
 import type { Session } from '#cli/types/execution/execution.ts';
 import { assertPinMatches } from '#cli/lifecycle/version-pin.ts';
+import { isWeaker, isReasonAccepted } from '#cli/policy/weaker.ts';
 import { commitPolicy, requireReason } from '#cli/commands/policy.ts';
-import { isLoosening, isReasonAccepted } from '#cli/policy/loosening.ts';
 import type { SetOptions, CommandResult } from '#cli/types/commands/commands.ts';
 import { textEntry, directoryOf, quoteArgument } from '#cli/platform/arguments.ts';
 import type { Mutation, RawPolicy, ScopeSelection } from '#cli/types/policy/policy.ts';
@@ -77,7 +77,7 @@ function reasonsFilled(value: unknown, reason: string | undefined): unknown {
 }
 
 function isReasonOwed(spec: SettingSpec, o: SetOptions, value: unknown, shipped: unknown): boolean {
-    if (spec.kind !== 'list') return isLoosening(spec, value, shipped);
+    if (spec.kind !== 'list') return isWeaker(spec, value, shipped);
     if (o.remove) return spec.direction !== 'loosening' && spec.direction !== 'neutral';
     // A nonempty list of explained tables already carries the reasons for its entries.
     const items: unknown[] = Array.isArray(value) ? value : [];
@@ -88,7 +88,7 @@ function isReasonOwed(spec: SettingSpec, o: SetOptions, value: unknown, shipped:
         )
     )
         return false;
-    return o.replace ? spec.direction !== 'neutral' : isLoosening(spec, value, shipped);
+    return o.replace ? spec.direction !== 'neutral' : isWeaker(spec, value, shipped);
 }
 
 function setMutation(o: SetOptions, isList: boolean, value: unknown): Mutation {

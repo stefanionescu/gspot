@@ -66,7 +66,7 @@ Cache keys must include the actual source, policy, tool, and scope inputs they d
 
 Distinguish applicability from execution. Report explicit skips, unavailable platforms, missing
 prerequisites, missing tools, and delegated coverage accurately. Validate `reported_by` and
-`takes_over` ownership so descriptive coverage never impersonates an executed check.
+`replaces` ownership so descriptive coverage never impersonates an executed check.
 Infrastructure stays independent of domain check definitions.
 
 Command arguments must retain boundaries, including spaces, quotes, and empty arguments.
@@ -337,7 +337,7 @@ Type check, format, style, and names reach a component file.
 A manifest takes `[[rules_off]]` with `rule` and `reason`, and the template renders that list.
 
 `vue/eslint` and `svelte/eslint` go, because `javascript/eslint` reads their files. The vue configuration
-runs `vue-tsc` and the svelte configuration `svelte-check` through `takes_over` of `typescript/tsc`. The
+runs `vue-tsc` and the svelte configuration `svelte-check` through `replaces` of `typescript/tsc`. The
 formatting manifest gains `prettier-plugin-svelte` where svelte is selected. Stylelint gains
 `postcss-html` for component files. The naming extractor reads the script block of a component
 through the offsets its parser gives.
@@ -380,9 +380,9 @@ Keep real boundary validation, but do not turn failed observation into valid emp
 
 Use the existing structured process result to distinguish no Git repository from a failed Git operation. Fall back to a directory walk only after the no-Git case is established. Report permission, corruption, parse, and unexpected I/O errors with their path or command.
 
-Treat `ENOENT` as optional only where the caller's contract permits absence. A tracked deletion remains a change trigger, not an unreadable source to hide. Make one takeover reader return parsed content or its error; retain unsupported formats explicitly instead of a second suffix-based preflight.
+Treat `ENOENT` as optional only where the caller's contract permits absence. A tracked deletion remains a change trigger, not an unreadable source to hide. Make one replacement reader return parsed content or its error; retain unsupported formats explicitly instead of a second suffix-based preflight.
 
-No-Git folders still work. A failed Git listing inside a repository does not silently walk a different file set. Unreadable or malformed package JSON reports a failure. Takeover keeps originals after read errors. Missing optional files and deleted tracked paths retain their documented behavior.
+No-Git folders still work. A failed Git listing inside a repository does not silently walk a different file set. Unreadable or malformed package JSON reports a failure. Replacement keeps originals after read errors. Missing optional files and deleted tracked paths retain their documented behavior.
 
 ### Acceptance K-308
 
@@ -441,7 +441,7 @@ A check is at `commit` when it takes the staged files, or when it ends within fi
 seconds on the planted repository of its configuration. Every other check is at `push` or `manual`.
 
 The test runs each commit-stage check on the planted repository of its configuration, warm,
-and fails one that takes over five seconds with no file list. The type checkers move to `push`.
+and fails one that replaces five seconds with no file list. The type checkers move to `push`.
 The commit hook still runs a whole-project check of a project that holds a staged file, where the
 manifest marks it `runs = "per-scope"` and it passes the test.
 

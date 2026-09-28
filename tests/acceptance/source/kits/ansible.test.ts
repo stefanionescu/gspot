@@ -17,7 +17,7 @@ const SHELLED = `---\n- name: Deploy the service\n  hosts: all\n  tasks:\n    - 
 
 describe('the ansible configuration', () => {
     test(
-        'ansible-lint runs where the ansible.cfg is, and its findings carry the folder',
+        'ansible-lint runs where the ansible.cfg is, and its findings keep the folder',
         async () => {
             await using sandbox = await testdir();
             await createFileTree(sandbox.path, {

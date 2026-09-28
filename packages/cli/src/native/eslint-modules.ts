@@ -4,7 +4,7 @@ import ts from 'typescript';
 import { pathToFileURL } from 'node:url';
 import { relative, isAbsolute } from 'node:path';
 import { isBuiltin, createRequire } from 'node:module';
-import type { PendingModule } from '#cli/types/evaluation.ts';
+import type { PendingModule } from '#cli/types/native.ts';
 import type { EslintRegistration } from '#cli/types/policy/policy.ts';
 
 // Whether a value can be named by its module: an object or a function.

@@ -1,12 +1,12 @@
 // Read eslintrc configuration through the ESLint compatibility layer and translate it to flat entries.
 import { pathToFileURL } from 'node:url';
 import { createRequire } from 'node:module';
+import { CONFIG_KEYS } from '#cli/config/native.ts';
 import { dirname, resolve, relative } from 'node:path';
-import { CONFIG_KEYS } from '#cli/config/evaluation.ts';
 import { mutationPath } from '#cli/platform/safe-paths.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import { registerEslintModule } from '#cli/native/eslint-modules.ts';
 import type { EslintRegistration } from '#cli/types/policy/policy.ts';
-import { registerEslintModule } from '#cli/evaluation/eslint-modules.ts';
 
 import type {
     Ignores,
@@ -17,7 +17,7 @@ import type {
     EslintrcEntry,
     EslintrcMatcher,
     EslintrcTranslation,
-} from '#cli/types/evaluation.ts';
+} from '#cli/types/native.ts';
 
 // A directory name with every glob character escaped, for a files pattern that names it literally.
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Builds a template; inlining it nests a template inside a template.

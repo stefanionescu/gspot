@@ -6,7 +6,7 @@ import { runToolCommand } from '#cli/tools/command.ts';
 import type { MergedView } from '#cli/types/policy/policy.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { readAsset, isEmbedded } from '#cli/platform/assets.ts';
-import type { configurationRequest } from '#cli/evaluation/protocol.ts';
+import type { configurationRequest } from '#cli/native/protocol.ts';
 
 /**
  * Evaluate authored configuration with captured logs and a separate structured result.
@@ -15,7 +15,7 @@ import type { configurationRequest } from '#cli/evaluation/protocol.ts';
  * @param cancelSignal cancellation for the process
  * @returns the structured result the process reported
  */
-export async function evaluateConfiguration(
+export async function runConfiguration(
     request: z.infer<typeof configurationRequest>,
     view?: Pick<MergedView, 'limit'>,
     cancelSignal?: AbortSignal,

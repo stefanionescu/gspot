@@ -2,12 +2,12 @@ import prettier from 'prettier';
 import { join } from 'node:path';
 import { stringify } from 'smol-toml';
 import { test, expect } from 'bun:test';
+import { runFormat } from '#cli/native/format.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { evaluateFormat } from '#cli/evaluation/format.ts';
+import { collectKept } from '#cli/policy/adoption/collect.ts';
 import { PRETTIER_TOOLING } from '#tests/support/cli/tooling.ts';
-import { collectCarried } from '#cli/policy/adoption/collect.ts';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 
 test('Prettier adoption preserves override selectors for new files', async () => {
@@ -18,19 +18,19 @@ test('Prettier adoption preserves override selectors for new files', async () =>
         overrides: [{ files: 'src/**/*.js', excludeFiles: 'src/vendor/**', options: { tabWidth: 8 } }],
     };
     await createFileTree(directory.path, { '.prettierrc.json': JSON.stringify(source), 'source.js': 'const value=1' });
-    const carried = await evaluateFormat({
+    const kept = await runFormat({
         root: directory.path,
         from: '.prettierrc.json',
         source,
     });
-    expect(carried.extra?.['overrides']).toStrictEqual(source.overrides);
+    expect(kept.extra?.['overrides']).toStrictEqual(source.overrides);
     writeFileSync(
         join(directory.path, 'gspot.toml'),
         stringify({
             version: 1,
             kits: ['formatting'],
-            format: carried.format,
-            tools: { prettier: { extra: carried.extra } },
+            format: kept.format,
+            tools: { prettier: { extra: kept.extra } },
         }),
     );
     const session = await openSession(directory.path);
@@ -63,22 +63,22 @@ test('nested Prettier configurations reset parent options and preserve ordered f
         'src/deep/prettier.config.mjs': 'export default { semi: false, printWidth: 30 };',
     };
     await createFileTree(directory.path, configs);
-    const carried = await collectCarried(
+    const kept = await collectKept(
         directory.path,
         {
             ...PRETTIER_TOOLING,
-            configs: Object.keys(configs).map((path) => ({ tool: 'prettier', path, carries: 'rules-table' as const })),
+            configs: Object.keys(configs).map((path) => ({ tool: 'prettier', path, keeps: 'rules-table' as const })),
         },
         new Set(['formatting']),
         [],
     );
-    expect(carried.unread).toStrictEqual([]);
-    expect(carried.removed.map(({ path }) => path)).toStrictEqual(Object.keys(configs));
+    expect(kept.unread).toStrictEqual([]);
+    expect(kept.removed.map(({ path }) => path)).toStrictEqual(Object.keys(configs));
     const policy = {
         version: 1,
         kits: ['formatting'],
-        format: carried.formatter?.format,
-        tools: { prettier: { extra: carried.formatter?.extra } },
+        format: kept.formatter?.format,
+        tools: { prettier: { extra: kept.formatter?.extra } },
     };
     writeFileSync(join(directory.path, 'gspot.toml'), stringify(policy));
     const session = await openSession(directory.path);
@@ -134,14 +134,14 @@ test.each([
     const filepath = join(directory.path, path);
     const previous = await prettier.resolveConfig(filepath, { useCache: false });
     const expected = await prettier.format(text, { ...previous, filepath });
-    const carried = await evaluateFormat({ root: directory.path, from: '.prettierrc.json', source });
+    const kept = await runFormat({ root: directory.path, from: '.prettierrc.json', source });
     writeFileSync(
         join(directory.path, 'gspot.toml'),
         stringify({
             version: 1,
             kits: ['formatting'],
-            format: carried.format,
-            tools: { prettier: { extra: carried.extra } },
+            format: kept.format,
+            tools: { prettier: { extra: kept.extra } },
         }),
     );
     const session = await openSession(directory.path);
@@ -164,12 +164,12 @@ test('Prettier adoption preserves ordered ignore negations for files created lat
         '.prettierrc.json': '{"semi":false}',
         '.prettierignore': 'src/*\n!src/keep.js\n',
     });
-    const carried = await collectCarried(
+    const kept = await collectKept(
         directory.path,
         {
             configs: [
-                { tool: 'prettier', path: '.prettierrc.json', carries: 'rules-table' as const },
-                { tool: 'prettier', path: '.prettierignore', carries: 'ignore-paths' },
+                { tool: 'prettier', path: '.prettierrc.json', keeps: 'rules-table' as const },
+                { tool: 'prettier', path: '.prettierignore', keeps: 'ignore-paths' },
             ],
             hooks: [],
             ci: [],
@@ -182,30 +182,30 @@ test('Prettier adoption preserves ordered ignore negations for files created lat
         new Set(['formatting']),
         [],
     );
-    expect(carried.unread).toStrictEqual([]);
-    expect(carried.removed.map(({ path }) => path)).toStrictEqual(['.prettierrc.json', '.prettierignore']);
+    expect(kept.unread).toStrictEqual([]);
+    expect(kept.removed.map(({ path }) => path)).toStrictEqual(['.prettierrc.json', '.prettierignore']);
     writeFileSync(
         join(directory.path, 'gspot.toml'),
         stringify({
             version: 1,
             kits: ['formatting'],
-            format: carried.formatter!.format,
-            tools: { prettier: { ignore_patterns: carried.formatter!.ignorePatterns } },
+            format: kept.formatter!.format,
+            tools: { prettier: { ignore_patterns: kept.formatter!.ignorePatterns } },
         }),
     );
     const session = await openSession(directory.path);
     const generated = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
         version: session.version,
         packageClient: session.packageClient,
-        takeover: carried.observed,
+        replace: kept.observed,
     }).files.find(({ path }) => path === '.prettierignore')!;
     writeFileSync(join(directory.path, '.prettierignore'), generated.content);
     const fileStatus = await prettier.getFileInfo(join(directory.path, 'src/future.js'), {
         ignorePath: join(directory.path, '.prettierignore'),
     });
     expect(fileStatus.ignored).toBe(true);
-    const kept = await prettier.getFileInfo(join(directory.path, 'src/keep.js'), {
+    const keptFile = await prettier.getFileInfo(join(directory.path, 'src/keep.js'), {
         ignorePath: join(directory.path, '.prettierignore'),
     });
-    expect(kept.ignored).toBe(false);
+    expect(keptFile.ignored).toBe(false);
 });

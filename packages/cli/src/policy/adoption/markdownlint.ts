@@ -63,5 +63,5 @@ function isMarkdownlintKey(key: string): boolean {
 
 export const markdownImporter = {
     schema: z.union([MARKDOWN_SOURCE, z.strictObject({ config: MARKDOWN_SOURCE })]),
-    carry: carryMarkdownlint,
+    keep: carryMarkdownlint,
 };

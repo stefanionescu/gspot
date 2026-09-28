@@ -58,7 +58,7 @@ test(
         const result = await run(repository.path, [...initArgs(['formatting']), '--json']);
         expect(result.code, result.stdout + result.stderr).toBe(2);
         expect(result.stdout + result.stderr).toContain(
-            'Configuration changed after takeover was planned: src/.prettierrc.json',
+            'Configuration changed after replace was planned: src/.prettierrc.json',
         );
         expect(existsSync(join(repository.path, 'gspot.toml'))).toBe(false);
         expect(readFileSync(join(repository.path, 'src/.prettierrc.json'), 'utf8')).toBe('{"semi":true}\n');

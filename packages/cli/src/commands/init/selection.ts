@@ -1,5 +1,5 @@
 import { detectKits } from '#cli/kits/detect.ts';
-import { nearMatches } from '#cli/policy/near.ts';
+import { similar } from '#cli/policy/similar.ts';
 import type { Manifest } from '#cli/types/kits.ts';
 import * as messages from '#cli/policy/messages.ts';
 import { NO_KITS } from '#cli/config/commands/init.ts';
@@ -117,7 +117,7 @@ function assertKnown(
     const known = manifests.keys().toArray();
     const unknown = [...configurations, ...without, ...scopeFlags.values().toArray().flat()]
         .filter((id) => !manifests.has(id))
-        .map((id) => messages.unknownKit(id, nearMatches(id, known)));
+        .map((id) => messages.unknownKit(id, similar(id, known)));
     if (unknown.length > 0) throw new SelectionError(unknown);
 }
 

@@ -5,7 +5,7 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { collectCarried } from '#cli/policy/adoption/collect.ts';
+import { collectKept } from '#cli/policy/adoption/collect.ts';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 
 test('shared EditorConfig selectors govern files created after generation', async () => {
@@ -52,10 +52,10 @@ test('nested EditorConfig adoption preserves root boundaries and unset for futur
             prettier.resolveConfig(join(directory.path, path), { editorconfig: true, useCache: false }),
         ),
     );
-    const carried = await collectCarried(
+    const kept = await collectKept(
         directory.path,
         {
-            configs: Object.keys(configs).map((path) => ({ tool: 'ec', path, carries: 'rules-table' as const })),
+            configs: Object.keys(configs).map((path) => ({ tool: 'ec', path, keeps: 'rules-table' as const })),
             hooks: [],
             ci: [],
             agentFiles: [],
@@ -67,21 +67,21 @@ test('nested EditorConfig adoption preserves root boundaries and unset for futur
         new Set(['formatting']),
         [],
     );
-    expect(carried.unread).toStrictEqual([]);
-    expect(carried.removed.map((entry) => entry.path)).toStrictEqual(Object.keys(configs));
+    expect(kept.unread).toStrictEqual([]);
+    expect(kept.removed.map((entry) => entry.path)).toStrictEqual(Object.keys(configs));
     writeFileSync(
         join(directory.path, 'gspot.toml'),
         stringify({
             version: 1,
             kits: ['formatting'],
-            tools: { editorconfig: { adopted: carried.formatter?.editorconfig }, prettier: { native_defaults: true } },
+            tools: { editorconfig: { adopted: kept.formatter?.editorconfig }, prettier: { native_defaults: true } },
         }),
     );
     const session = await openSession(directory.path);
     const generated = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
         version: session.version,
         packageClient: session.packageClient,
-        takeover: carried.observed,
+        replace: kept.observed,
     });
     const editors = generated.files.filter((file) => file.path.endsWith('.editorconfig'));
     expect(editors.map((file) => file.path).toSorted((left, right) => left.localeCompare(right))).toStrictEqual(
@@ -128,12 +128,12 @@ test.each(PRECEDENCE_CASES)(
             ...(await prettier.resolveConfig(filepath, { editorconfig: true, useCache: false })),
             filepath,
         });
-        const carried = await collectCarried(
+        const kept = await collectKept(
             directory.path,
             {
                 configs: Object.keys(FORMATTER_CONFIGS).map((path) => ({
                     tool: path.endsWith('.editorconfig') ? 'ec' : 'prettier',
-                    carries: 'rules-table' as const,
+                    keeps: 'rules-table' as const,
                     path,
                 })),
                 hooks: [],
@@ -147,17 +147,17 @@ test.each(PRECEDENCE_CASES)(
             new Set(['formatting']),
             [],
         );
-        expect(carried.unread).toStrictEqual([]);
-        expect(carried.formatter?.nativeDefaults).toBe(true);
+        expect(kept.unread).toStrictEqual([]);
+        expect(kept.formatter?.nativeDefaults).toBe(true);
         writeFileSync(
             join(directory.path, 'gspot.toml'),
             stringify({
                 version: 1,
                 kits: ['formatting'],
-                format: carried.formatter?.format,
+                format: kept.formatter?.format,
                 tools: {
-                    prettier: { native_defaults: carried.formatter?.nativeDefaults, extra: carried.formatter?.extra },
-                    editorconfig: { adopted: carried.formatter?.editorconfig },
+                    prettier: { native_defaults: kept.formatter?.nativeDefaults, extra: kept.formatter?.extra },
+                    editorconfig: { adopted: kept.formatter?.editorconfig },
                 },
             }),
         );
@@ -165,7 +165,7 @@ test.each(PRECEDENCE_CASES)(
         const generated = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
             version: session.version,
             packageClient: session.packageClient,
-            takeover: carried.observed,
+            replace: kept.observed,
         });
         for (const file of generated.files.filter(
             (file) => file.path.endsWith('.editorconfig') || file.path === '.gspot/config/prettier.json',
