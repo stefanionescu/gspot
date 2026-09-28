@@ -80,7 +80,7 @@ export const scriptConfigDefaults: Analysis = async (context, scripts) => {
  * @param scripts the shell index
  * @returns the findings
  */
-export const scriptConfigGuards: Analysis = async (context, scripts) => {
+export const scriptGuards: Analysis = async (context, scripts) => {
     const owners = new Set(context.bashList('config_owners'));
     const index = await scripts();
     const seen = new Map<string, string>();

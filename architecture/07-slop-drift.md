@@ -128,7 +128,7 @@ SwiftLint, and SQL enforce it. Bash positional arguments are variadic, not decla
 | A binary committed outside LFS                                  | `integrity/large-files`                                                                               |
 | A dependency vulnerable with no recorded reason                 | `dependencies/osv`, every ignore carries a reason                                                     |
 | A license outside the allowlist                                 | `licenses/packages`                                                                                   |
-| A config file with logic in it                                  | `integrity/config-purity`                                                                             |
+| A config file with logic in it                                  | `integrity/files`                                                                                     |
 | A scalar hoisted into a config folder for no reader             | not carried; the reference audit found the inverse check caused the hoisting                          |
 
 ## Drift

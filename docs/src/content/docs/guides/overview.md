@@ -23,7 +23,7 @@ From a configured repository root, run `gspot check`. Exit 0 means the executed 
 a skip does not verify the affected files.
 
 A finding names its check and explains what to correct. Edit the affected file and rerun the
-check. Use [finding guidance](/guides/you-got-a-finding/) to inspect a check, select a narrower
+check. Use [finding guidance](/guides/findings/) to inspect a check, select a narrower
 run, or use an available automatic fixer. Checks that require external tools need those tools
 installed first.
 

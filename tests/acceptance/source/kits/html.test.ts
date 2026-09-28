@@ -38,7 +38,7 @@ const CASES: FindingCase[] = [
         expected: { file: 'pages/home.html', rule: 'inline-script', line: 8 },
     },
     {
-        check: 'html/copy',
+        check: 'html/text',
         files: {
             'pages/home.html': `<!doctype html>\n<html lang="en">\n    <head>\n        <meta charset="utf-8" />\n        <title>{{ title }}</title>\n    </head>\n    <body>\n        <h1>Welcome to the shop</h1>\n    </body>\n</html>\n`,
         },

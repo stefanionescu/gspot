@@ -11,7 +11,7 @@ import { expoDoctor } from '#cli/checks/react-native.ts';
 import type { Engine } from '#cli/types/checks/checks.ts';
 import { licensesPackages } from '#cli/checks/licenses.ts';
 import { docsHeadings } from '#cli/checks/docs/headings.ts';
-import { htmlCopy, htmlScripts } from '#cli/checks/html.ts';
+import { htmlText, htmlScripts } from '#cli/checks/html.ts';
 import { adminKey } from '#cli/checks/supabase/admin-key.ts';
 import { envFiles } from '#cli/checks/security/env/files.ts';
 import { nginxTest } from '#cli/checks/nginx/config-test.ts';
@@ -21,6 +21,7 @@ import { testCoverage } from '#cli/checks/xctest/coverage.ts';
 import { trivyImage } from '#cli/checks/docker/image-scan.ts';
 import { readmeShape } from '#cli/checks/docs/readme/shape.ts';
 import { SWIFT_STRUCTURE } from '#cli/checks/swift/analyses.ts';
+import { fileIntegrity } from '#cli/checks/repository/files.ts';
 import { copiedBlocks } from '#cli/checks/docs/copied-blocks.ts';
 import { dockerignore } from '#cli/checks/docker/ignore-file.ts';
 import { envExample } from '#cli/checks/security/env/example.ts';
@@ -47,7 +48,6 @@ import { drizzleRelations, drizzleMigrations } from '#cli/checks/drizzle.ts';
 import { gitleaksBaseline } from '#cli/checks/security/gitleaks-baseline.ts';
 import { manifestPolicy } from '#cli/checks/dependencies/manifest-policy.ts';
 import { tsconfigOptions } from '#cli/checks/typescript/tsconfig-options.ts';
-import { configurationPurity } from '#cli/checks/repository/config-purity.ts';
 import { siteBuilds, buildReproducible } from '#cli/checks/static-site/build.ts';
 import { migrationOrder, migrationsFrozen } from '#cli/checks/postgres/history.ts';
 import { trackedDependencies } from '#cli/checks/repository/tracked-dependencies.ts';
@@ -86,7 +86,7 @@ const checks: Record<string, Engine> = {
     'readme-shape': readmeShape,
     fences,
     'env-example': envExample,
-    'config-purity': configurationPurity,
+    files: fileIntegrity,
     suppressions,
     'allowlists-match': allowlistsMatch,
     'task-policy': taskPolicy,
@@ -125,7 +125,7 @@ const checks: Record<string, Engine> = {
     'site-webmanifest': webManifest,
     'site-security-headers': securityHeaders,
     'html-scripts': htmlScripts,
-    'html-copy': htmlCopy,
+    'html-text': htmlText,
     'css-module-usage': cssModuleUsage,
     ...PYTHON_STRUCTURE,
     ...SWIFT_STRUCTURE,

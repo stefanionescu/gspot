@@ -1,6 +1,7 @@
 // Dispatch to the built-in engines by `engine =` in the manifest.
 import { join } from 'node:path';
 import type { CheckSpec } from '#cli/types/kits.ts';
+import { banned } from '#cli/checks/prose/banned.ts';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { checkActions } from '#cli/checks/actions.ts';
 import { computeDrift } from '#cli/lifecycle/drift.ts';
@@ -11,7 +12,6 @@ import { integrityEngine } from '#cli/checks/dispatch.ts';
 import { checkSwiftlint } from '#cli/checks/swift/lint.ts';
 import { namingEngine } from '#cli/checks/naming/engine.ts';
 import { runToolCheck } from '#cli/execution/tool/runner.ts';
-import { sourceBans } from '#cli/checks/prose/source-bans.ts';
 import { checkDependencies } from '#cli/checks/python/project.ts';
 import { structureEngine } from '#cli/checks/structure/engine.ts';
 import { checkDocstrings } from '#cli/checks/python/docstrings.ts';
@@ -33,7 +33,7 @@ const engines: Record<NonNullable<CheckSpec['engine']>, (spec: CheckSpec) => Eng
     structure: structureEngine,
     prose(spec) {
         if (spec.analysis === 'vale') return valeFindings;
-        if (spec.analysis === 'source-bans') return sourceBans;
+        if (spec.analysis === 'banned') return banned;
         throw new Error(`No prose analysis is called ${spec.analysis ?? ''}.`);
     },
 };

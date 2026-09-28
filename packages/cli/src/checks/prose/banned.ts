@@ -38,7 +38,7 @@ function lineFindings(input: EngineInput, path: string, lines: string[]): Findin
  * @param input the engine input
  * @returns the findings
  */
-export function sourceBans(input: EngineInput): Finding[] {
+export function banned(input: EngineInput): Finding[] {
     return input.files
         .filter(
             (file) =>

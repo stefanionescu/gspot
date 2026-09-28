@@ -44,7 +44,7 @@ function quotedBlocks(file: ScriptFile): { start: number; length: number }[] {
  * @param scripts the shell index
  * @returns the findings
  */
-export const scriptSshBlocks: Analysis = async (context, scripts) => {
+export const scriptRemote: Analysis = async (context, scripts) => {
     const index = await scripts();
     return index.files.flatMap((file) => {
         const quoted = quotedBlocks(file)

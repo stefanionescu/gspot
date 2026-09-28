@@ -3,8 +3,9 @@ import { countFindings } from '#cli/checks/structure/counts.ts';
 import { docComment } from '#cli/checks/structure/doc-comment.ts';
 import { folderNames } from '#cli/checks/structure/folder-names.ts';
 import type { Engine, EngineInput } from '#cli/types/checks/checks.ts';
-import { scriptEmbeds } from '#cli/checks/structure/scripts/embeds.ts';
+import { scriptInline } from '#cli/checks/structure/scripts/inline.ts';
 import { scriptPolicy } from '#cli/checks/structure/scripts/policy.ts';
+import { scriptRemote } from '#cli/checks/structure/scripts/remote.ts';
 import { scriptSafety } from '#cli/checks/structure/scripts/safety.ts';
 import { scriptIndex } from '#cli/checks/structure/cross-file-index.ts';
 import { deadParameters } from '#cli/checks/structure/dead-parameters.ts';
@@ -13,7 +14,6 @@ import { envAccessOwner } from '#cli/checks/structure/env-access-owner.ts';
 import { trivialFunction } from '#cli/checks/structure/trivial-function.ts';
 import { unusedFunctions } from '#cli/checks/structure/unused-functions.ts';
 import { prefixCollisions } from '#cli/checks/structure/prefix-collisions.ts';
-import { scriptSshBlocks } from '#cli/checks/structure/scripts/ssh-blocks.ts';
 import { scriptBoundaries } from '#cli/checks/structure/scripts/boundaries.ts';
 import { singleFileFolder } from '#cli/checks/structure/single-file-folder.ts';
 import { scriptInterpreter } from '#cli/checks/structure/scripts/interpreter.ts';
@@ -22,7 +22,7 @@ import { privatePrefix, privateBeforePublic } from '#cli/checks/structure/visibi
 import type { StructureContext, StructureAnalysis } from '#cli/types/checks/structure.ts';
 import { fileLength, fileDirectoryCollision } from '#cli/checks/structure/file-layout.ts';
 import { scriptSourceOrder, scriptSourceComments } from '#cli/checks/structure/scripts/sources.ts';
-import { scriptConfigGuards, scriptConfigDefaults } from '#cli/checks/structure/scripts/configuration.ts';
+import { scriptGuards, scriptConfigDefaults } from '#cli/checks/structure/scripts/configuration.ts';
 import { SCRIPT_TAG, COUNT_ANALYSES, GSPOT_DIRECTORY, DOCUMENT_EXTENSIONS } from '#cli/config/checks/structure.ts';
 
 const ANALYSES: Record<string, StructureAnalysis> = {
@@ -42,10 +42,10 @@ const ANALYSES: Record<string, StructureAnalysis> = {
     'env-access-owner': envAccessOwner,
     'bash-interpreter': scriptInterpreter,
     'bash-script-policy': scriptPolicy,
-    'bash-embeds': scriptEmbeds,
-    'bash-ssh-blocks': scriptSshBlocks,
+    inline: scriptInline,
+    remote: scriptRemote,
     'bash-config-defaults': scriptConfigDefaults,
-    'bash-config-guards': scriptConfigGuards,
+    guards: scriptGuards,
     'bash-boundaries': scriptBoundaries,
     'bash-safety': scriptSafety,
     'source-comments': scriptSourceComments,

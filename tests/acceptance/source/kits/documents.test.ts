@@ -68,7 +68,7 @@ const CASES: FindingCase[] = [
         expected: { file: 'src/site.css', rule: 'gspot.marketing', line: 1, column: 9 },
     },
     {
-        check: 'prose/source-bans',
+        check: 'prose/banned',
         files: { 'docs/silenced.md': '# A page\n\n<!-- vale off -->\n\nText the prose check no longer reads.\n' },
         expected: { file: 'docs/silenced.md', rule: 'vale-directive', line: 3 },
     },

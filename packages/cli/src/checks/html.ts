@@ -189,7 +189,7 @@ export function htmlScripts(input: EngineInput): Promise<Finding[]> {
  * @param input the engine input
  * @returns the findings
  */
-export function htmlCopy(input: EngineInput): Finding[] | Promise<Finding[]> {
+export function htmlText(input: EngineInput): Finding[] | Promise<Finding[]> {
     const tool = input.view.tool('html');
     const templates = (tool['template_files'] as string[] | undefined) ?? [];
     if (templates.length === 0) return [];

@@ -123,7 +123,7 @@ test.each([
     },
     {
         configuration: 'html',
-        check: 'html/copy',
+        check: 'html/text',
         setting:
             '[tools.html]\ntemplate_files = ["**/*.html"]\ncopy_allowed = [{paths = ["trusted/**"], reason = "Fixture copy is owned by the producer."}]\n',
         path: 'trusted/page.html',

@@ -7,7 +7,7 @@ import type { StructureAnalysis as Analysis } from '#cli/types/checks/structure.
  * @param scripts the shell index
  * @returns the findings
  */
-export const scriptEmbeds: Analysis = async (context, scripts) => {
+export const scriptInline: Analysis = async (context, scripts) => {
     const index = await scripts();
     return index.files.flatMap((file) =>
         file.lines.flatMap((line, position) => {

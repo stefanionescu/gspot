@@ -143,7 +143,7 @@ const CASES: (FindingCase & { corrected: Record<string, string> })[] = [
         },
     },
     {
-        check: 'integrity/config-purity',
+        check: 'integrity/files',
         files: {
             'config/limits.ts': '// The limits.\n\n/** The most lines. */\nexport const MAX_LINES = 10;\n',
             'config/logic.ts':

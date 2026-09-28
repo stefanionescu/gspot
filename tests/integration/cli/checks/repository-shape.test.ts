@@ -4,9 +4,9 @@ import { testdir, createFileTree } from 'testdirs';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { checkInput } from '#tests/support/cli/input.ts';
+import { fileIntegrity } from '#cli/checks/repository/files.ts';
 import { largeFiles } from '#cli/checks/repository/large-files.ts';
 import { allowlistsMatch } from '#cli/checks/repository/allowlists-match.ts';
-import { configurationPurity } from '#cli/checks/repository/config-purity.ts';
 import { suppressions, suppressionComments } from '#cli/checks/repository/suppressions.ts';
 
 const policy = {
@@ -99,7 +99,7 @@ test('a configuration module with a function or a call is reported; literals pas
             "import { readFileSync } from 'node:fs';\n\nexport const text = readFileSync('x', 'utf8');\nexport const pick = (value: string): string => value;\n",
     });
     const paths = ['config/pure.ts', 'config/logic.ts'];
-    const found = await configurationPurity(await checkInput(sandbox.path, 'integrity/config-purity', paths, policy));
+    const found = await fileIntegrity(await checkInput(sandbox.path, 'integrity/files', paths, policy));
     expect(found.map((finding) => `${finding.file}:${String(finding.line)}`)).toStrictEqual([
         'config/logic.ts:1',
         'config/logic.ts:3',

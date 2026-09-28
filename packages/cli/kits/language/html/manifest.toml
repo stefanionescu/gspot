@@ -72,13 +72,13 @@ why = "A content security policy that allows inline script allows an injected on
 help = "Move the script into a file, and attach the handler from that file. Structured data of type application/ld+json stays inline."
 
 [[checks]]
-name = "html/copy"
+name = "html/text"
 title = "Use placeholders in HTML templates"
 example = "Authored prose embedded in a governed HTML template reports copy outside the content owner. Move the words to the content file and reference that content from the template."
 level = "all"
 stage = "commit"
 engine = "integrity"
-analysis = "html-copy"
+analysis = "html-text"
 coverage = ["structure"]
 summary = "In the template files named by tools.html.template_files, checks that text a person reads is a placeholder and never a literal."
 why = "Copy written into a template is copy no translator and no content file ever sees."

@@ -94,7 +94,7 @@ async function fileFindings(input: EngineInput, file: TrackedFile, language: str
  * @param input the engine input
  * @returns the findings
  */
-export async function configurationPurity(input: EngineInput): Promise<Finding[]> {
+export async function fileIntegrity(input: EngineInput): Promise<Finding[]> {
     const isConfig = pathMatcher(configurationRolePaths(input));
     const findings: Finding[] = [];
     for (const file of input.files) {

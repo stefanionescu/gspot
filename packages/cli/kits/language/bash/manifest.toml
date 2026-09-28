@@ -331,13 +331,13 @@ why = "A wrapper is a second entry point that drifts from the first; inline Node
 help = "Call the target script directly, delete the alias, and move the Node code into a .js file."
 
 [[checks]]
-name = "structure/bash-embeds"
+name = "structure/inline"
 title = "Avoid embedded scripts"
 example = "A shell heredoc containing a Python program reports embedded code. Move the program into a `.py` file and invoke that file from the shell script."
 level = "all"
 stage = "commit"
 engine = "structure"
-analysis = "bash-embeds"
+analysis = "inline"
 coverage = ["structure"]
 searched = ["shellcheck", "semgrep"]
 summary = "Finds inline Python, Node and generated-script heredocs in shell scripts."
@@ -345,13 +345,13 @@ why = "Code inside a heredoc is checked by nothing."
 help = "Move the embedded code into its own file and run that."
 
 [[checks]]
-name = "structure/bash-ssh-blocks"
+name = "structure/remote"
 title = "Name and document SSH blocks"
 example = "An anonymous SSH heredoc reports a remote-block finding. Move the remote operation into a named function with a comment that explains its purpose, then invoke that function through the supported remote call."
 level = "all"
 stage = "commit"
 engine = "structure"
-analysis = "bash-ssh-blocks"
+analysis = "remote"
 coverage = ["structure"]
 searched = ["shellcheck"]
 summary = "Checks that multi-line ssh blocks are named, documented, and inside a function."
@@ -373,13 +373,13 @@ why = "A default set in three places is three settings with one name."
 help = "Set the default in a configuration owner named under tools.bash.config_owners and read the variable everywhere else."
 
 [[checks]]
-name = "structure/bash-config-guards"
+name = "structure/guards"
 title = "Guard shell configuration imports"
 example = "A sourced configuration owner without a load guard reports a guard finding. Begin it with `[[ -n ${_CFG_APP_READY:-} ]] && return 0`, followed by `readonly _CFG_APP_READY=1`, before declaring its configuration."
 level = "all"
 stage = "commit"
 engine = "structure"
-analysis = "bash-config-guards"
+analysis = "guards"
 coverage = ["structure"]
 searched = ["shellcheck"]
 summary = "Checks that every kit owner opens with one include guard nobody else uses."

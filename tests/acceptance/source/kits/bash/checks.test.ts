@@ -40,7 +40,7 @@ describe('the bash configuration', () => {
                     script.replace('# gspot-ignore', '# main: runs the script.\n# gspot-ignore'),
                 ]),
             );
-            if (planted.check === 'structure/bash-config-guards')
+            if (planted.check === 'structure/guards')
                 files['scripts/settings.sh'] =
                     '#!/usr/bin/env bash\n[[ -n ${_CFG_SETTINGS_READY:-} ]] && return 0\nreadonly _CFG_SETTINGS_READY=1\nreadonly PORT=8080\n';
             if (planted.check === 'structure/bash-boundaries')

@@ -140,14 +140,14 @@ export const BASH_CASES: FindingCase[] = [
         expected: { file: 'scripts/node.sh', rule: 'inline-node', line: 10 },
     },
     {
-        check: 'structure/bash-embeds',
+        check: 'structure/inline',
         files: {
             'scripts/python.sh': `${HEAD}# main: runs the script.\nmain() {\n    python3 - <<'PY'\nprint(1)\nPY\n}\n\nmain "$@"\n`,
         },
         expected: { file: 'scripts/python.sh', rule: 'runtime-embed', line: 10 },
     },
     {
-        check: 'structure/bash-ssh-blocks',
+        check: 'structure/remote',
         files: {
             'scripts/remote.sh': `${HEAD}# main: runs the script.\nmain() {\n    ssh "$1" <<'REMOTE'\nuptime\nREMOTE\n}\n\nmain "$@"\n`,
         },
@@ -161,7 +161,7 @@ export const BASH_CASES: FindingCase[] = [
         expected: { file: 'scripts/defaults.sh', rule: 'default-outside-owner', line: 10 },
     },
     {
-        check: 'structure/bash-config-guards',
+        check: 'structure/guards',
         files: {
             'scripts/settings.sh':
                 '#!/usr/bin/env bash\n#\n# Holds the settings.\n# Runtime: Bash 4.0+, macOS and Linux.\n\nreadonly PORT=8080\n',
