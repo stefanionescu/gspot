@@ -21,6 +21,7 @@ import { duplicateFunctions } from '#cli/checks/structure/duplicate-functions.ts
 import { privatePrefix, privateBeforePublic } from '#cli/checks/structure/visibility.ts';
 import type { StructureContext, StructureAnalysis } from '#cli/types/checks/structure.ts';
 import { fileLength, fileDirectoryCollision } from '#cli/checks/structure/file-layout.ts';
+import { scriptSourceOrder, scriptSourceComments } from '#cli/checks/structure/scripts/sources.ts';
 import { scriptConfigGuards, scriptConfigDefaults } from '#cli/checks/structure/scripts/configuration.ts';
 import { SCRIPT_TAG, COUNT_ANALYSES, GSPOT_DIRECTORY, DOCUMENT_EXTENSIONS } from '#cli/constants/checks/structure.ts';
 
@@ -47,6 +48,8 @@ const ANALYSES: Record<string, StructureAnalysis> = {
     'bash-config-guards': scriptConfigGuards,
     'bash-boundaries': scriptBoundaries,
     'bash-safety': scriptSafety,
+    'source-comments': scriptSourceComments,
+    'source-order': scriptSourceOrder,
 };
 function contextFor(input: EngineInput): StructureContext {
     const files = input.files.filter(

@@ -214,7 +214,8 @@ Source: `TI quality/shell/`, `SA quality/shell/`, `LA shared/shell/`, `SS shared
 | shellcheck disable carries a reason (`# reason:` or `lint:justify reason:`)                                                                                                                                                                              | all four                                            | `integrity/suppressions`                                      |
 | duplicate function bodies, normalized, min lines                                                                                                                                                                                                         | TI, SA, LA                                          | `structure/duplicate-functions`                               |
 | unused functions across the shell set; `main` and `run_step` exempt; markers `lint:allow-unused-function`                                                                                                                                                | TI, SA, LA                                          | `structure/unused-functions`                                  |
-| dead positional parameters                                                                                                                                                                                                                               | SA `unused-functions.js`                            | `structure/dead-parameters`                                   |
+| dead positional parameters, each unread position past the highest read                                                                                                                                                                                   | SA `unused-functions.js`                            | `structure/dead-parameters`                                   |
+| no comment among `source` statements but a ShellCheck directive; `source` statements shortest first                                                                                                                                                      | none                                                | `structure/source-comments`, `structure/source-order`         |
 | trivial functions (statement ceiling), narrow reasoned suppression                                                                                                                                                                                       | SA `functions/shell.js`, SS `trivial-functions.mjs` | `structure/trivial-function`                                  |
 | file and function length                                                                                                                                                                                                                                 | all                                                 | `structure/file-length`, `structure/function-length`          |
 | prefix collisions with a per-directory allowlist (`pre` in hook dirs)                                                                                                                                                                                    | TI, SA                                              | `structure/prefix-collisions`                                 |
@@ -745,16 +746,17 @@ Generated configuration:
 
 Checks:
 
-| Id                                                    | Stage       | Command                                                                                                                 |
-| ----------------------------------------------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `swift/swiftlint`                                     | commit      | `swiftlint lint --strict --quiet --config .gspot/config/swiftlint.yml --reporter json {files}`                          |
-| `swift/swiftformat`                                   | commit      | `swiftformat --lint --config .gspot/config/swiftformat {files}`; fix order format                                       |
-| `swift/build`                                         | push, build | `xcodebuild build-for-testing` or `swift build`, incremental compiler state retained; analysis has separate clean state |
-| `swift/swiftlint-analyze`                             | push, build | `swiftlint analyze --strict --compiler-log-path <log>`                                                                  |
-| `swift/periphery`                                     | push, build | `periphery scan --config .gspot/config/periphery.yml --strict`                                                          |
-| `swift/trivial-function`, `swift/duplicate-functions` | commit      | analyses on the Swift grammar                                                                                           |
-| `swift/private-before-public`                         | commit      | `private` and `fileprivate` top-level declarations above `internal`, `public` and `open` ones                           |
-| `swift/env-access-owner`                              | commit      | `ProcessInfo.processInfo.environment` read only in the configuration owner                                              |
+| Id                                                    | Stage       | Command                                                                                                                      |
+| ----------------------------------------------------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `swift/swiftlint`                                     | commit      | `swiftlint lint --strict --quiet --config .gspot/config/swiftlint.yml --reporter json {files}`                               |
+| `swift/swiftformat`                                   | commit      | `swiftformat --lint --config .gspot/config/swiftformat {files}`; fix order format                                            |
+| `swift/build`                                         | push, build | `xcodebuild build-for-testing` or `swift build`, incremental compiler state retained; analysis has separate clean state      |
+| `swift/swiftlint-analyze`                             | push, build | `swiftlint analyze --strict --compiler-log-path <log>`                                                                       |
+| `swift/periphery`                                     | push, build | `periphery scan --config .gspot/config/periphery.yml --strict`                                                               |
+| `swift/trivial-function`, `swift/duplicate-functions` | commit      | analyses on the Swift grammar                                                                                                |
+| `swift/private-before-public`                         | commit      | `private` and `fileprivate` top-level declarations above `internal`, `public` and `open` ones                                |
+| `swift/env-access-owner`                              | commit      | `ProcessInfo.processInfo.environment` read only in the configuration owner                                                   |
+| `swift/import-comments`                               | commit      | no comment among the imports but a `swiftlint:` or `swiftformat:` directive; SwiftFormat `sortImports` orders them by length |
 
 Every check here is a platform skip on Linux and Windows.
 
@@ -812,12 +814,13 @@ capture_variable typesafe_array_init unused_import unused_declaration
 
 SwiftLint disabled rules. `identifier_name` and `type_name` are off because the naming
 engine owns names. `trailing_whitespace`, `opening_brace` and `statement_position` are off because
-SwiftFormat owns layout:
+SwiftFormat owns layout. `todo`, `large_tuple` and `notification_center_detachment` run, and
+`discouraged_optional_boolean` and `discouraged_optional_collection` are opted in. `line_length`
+ignores URLs only, `cyclomatic_complexity` counts every switch, and `missing_docs` excludes
+inherited members only:
 
 ```text
-trailing_whitespace opening_brace statement_position todo identifier_name type_name
-discouraged_optional_collection discouraged_optional_boolean notification_center_detachment
-large_tuple
+trailing_whitespace opening_brace statement_position identifier_name type_name
 ```
 
 SwiftLint options. Each number comes from `[limits]` and `[limits.swift]`, and warning equals error:
@@ -882,14 +885,20 @@ spaceInsideBrackets spaceInsideComments spaceInsideGenerics spaceInsideParens st
 strongifiedSelf todos trailingSpace typeSugar void
 ```
 
-SwiftFormat rules disabled. `redundantSelf` is off because `--self init-only` and the
-SwiftLint rule `redundant_self` own it. The wrap rules are off because a formatter that rewraps
-every argument list makes diffs nobody reads:
+SwiftFormat rules disabled, each with its reason in the generated file. `sortSwitchCases` is
+off because case order carries meaning. `acronyms` is off because the naming engine owns names.
+`organizeDeclarations`, `sortDeclarations` and `markTypes` are off because
+`swift/private-before-public` owns declaration order. `trailingClosures` is off because SwiftLint
+`trailing_closure` owns closure syntax. `initCoderUnavailable` is off because it inserts an
+attribute.
+
+`unusedArguments`, `redundantSelf`, `trailingCommas`, the wrap rules,
+`blankLinesBetweenImports` and `numberFormatting` run. `sortImports` with
+`--importgrouping length,alpha` orders imports shortest first:
 
 ```text
-redundantSelf trailingCommas wrapMultilineStatementBraces sortSwitchCases wrapEnumCases
-unusedArguments acronyms organizeDeclarations sortDeclarations markTypes trailingClosures wrap
-wrapArguments wrapAttributes initCoderUnavailable blankLinesBetweenImports numberFormatting
+sortSwitchCases acronyms organizeDeclarations sortDeclarations markTypes trailingClosures
+initCoderUnavailable
 ```
 
 Periphery: `retain_public`, `retain_objc_accessible`, `retain_assign_only_properties`,
@@ -897,14 +906,18 @@ Periphery: `retain_public`, `retain_objc_accessible`, `retain_assign_only_proper
 are true. `project` and `schemes` come from `tools.xcode.project` and `tools.xcode.scheme`, and
 `init` proposes the first shared scheme `xcodebuild -list` prints.
 
-A scope with no Xcode project builds as a Swift package, into persistent incremental state under the managed build cache. An incremental build logs only the files that changed, and the analyzer
-pairs each file with its compiler call from that log. The package manager hands the compiler its
+A scope with no Xcode project builds as a Swift package, into persistent incremental state
+under the managed build cache. An incremental build logs only the files that changed, and the
+analyzer pairs each file with its compiler call from that log. The package manager hands the compiler its
 sources in a response file, which the analyzer does not open, so gspot writes the file names into
-the log. The log also names files the way SwiftLint does under `/tmp` and `/var` on macOS. An
+the log.
+
+The log also names files the way SwiftLint does under `/tmp` and `/var` on macOS. An
 analyzer finding carries the id of its SwiftLint rule, such as `unused_import`.
 
 The structure checks read the Swift grammar: `swift/trivial-function`,
-`swift/duplicate-functions`, `swift/private-before-public`, and `swift/env-access-owner`.
+`swift/duplicate-functions`, `swift/private-before-public`, `swift/env-access-owner`, and
+`swift/import-comments`.
 The [shared structural contract](07-slop-drift.md#slop-in-structure) owns statement counting,
 trivial files, declared-parameter limits, and level selection. Attributes and `override` do not
 exempt functions from the trivial-function rule. Required APIs need narrow, reasoned suppressions.
@@ -1165,6 +1178,7 @@ Checks:
 | `python/private-prefix`                                                                                                                                        | commit | `_` for every top-level name `__all__` does not list; no `_` name in `__all__`; `_` for methods called from no other module           |
 | `python/private-before-public`                                                                                                                                 | commit | `_` names above public names; `__all__` last                                                                                          |
 | `python/exports-at-bottom`, `python/no-singletons`, `python/no-lazy-exports`, `python/package-exports`, `python/import-cycles`, `python/placeholder-docstring` | commit | engine, on the embedded Python grammar; `import-layout` is Ruff `E402` and `PLC0415`, and `import-boundary` is `python/import-linter` |
+| `python/import-comments`, `python/export-order`                                                                                                                | commit | engine, on the embedded Python grammar: no comment among the imports but a directive, and `__all__` names shortest first              |
 | `typescript/typecheck-membership`, `dependency-ownership`, `lockfile-fresh` (`uv lock --check`)                                                                | commit | engine                                                                                                                                |
 | `dependencies/osv` over `uv.lock`                                                                                                                              | push   | through dependencies                                                                                                                  |
 

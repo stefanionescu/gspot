@@ -67,6 +67,31 @@ export const BASH_CASES: FindingCase[] = [
         expected: { file: 'scripts/deaf.sh', rule: 'unread-arguments', line: 9 },
     },
     {
+        check: 'structure/dead-parameters',
+        files: {
+            'scripts/half.sh': `${HEAD}# _half: reads the first argument only.\n_half() {\n    echo a\n    echo b\n    echo "$1"\n}\n\n# main: runs the script.\nmain() {\n    _half "$1" two\n    _half "$1" four\n}\n\nmain "$@"\n`,
+        },
+        expected: { file: 'scripts/half.sh', rule: 'unread-arguments', line: 9 },
+    },
+    {
+        check: 'structure/source-comments',
+        files: {
+            'scripts/noted.sh': `${HEAD}source ./lib/a.sh\n# the b library\nsource ./lib/bb.sh\n\n${BASH_CASES_MAIN}`,
+            'scripts/lib/a.sh': `${HEAD}# a_step: one step.\na_step() {\n    echo a\n    echo b\n    echo "$1"\n}\n`,
+            'scripts/lib/bb.sh': `${HEAD}# b_step: one step.\nb_step() {\n    echo a\n    echo b\n    echo "$1"\n}\n`,
+        },
+        expected: { file: 'scripts/noted.sh', rule: 'source-comment', line: 9 },
+    },
+    {
+        check: 'structure/source-order',
+        files: {
+            'scripts/ordered.sh': `${HEAD}source ./lib/bb.sh\nsource ./lib/a.sh\n\n${BASH_CASES_MAIN}`,
+            'scripts/lib/a.sh': `${HEAD}# a_step: one step.\na_step() {\n    echo a\n    echo b\n    echo "$1"\n}\n`,
+            'scripts/lib/bb.sh': `${HEAD}# b_step: one step.\nb_step() {\n    echo a\n    echo b\n    echo "$1"\n}\n`,
+        },
+        expected: { file: 'scripts/ordered.sh', rule: 'source-order', line: 8 },
+    },
+    {
         check: 'structure/private-prefix',
         files: {
             'scripts/local.sh': `${HEAD}# build_it: only this file calls it.\nbuild_it() {\n    echo a\n    echo b\n    echo "$1"\n}\n\n# main: runs the script.\nmain() {\n    build_it "$1"\n    build_it "$1"\n}\n\nmain "$@"\n`,

@@ -1,6 +1,14 @@
 import { withoutComment } from '#cli/checks/structure/code-lines.ts';
 import type { ScriptIndex, StructureAnalysis as Analysis } from '#cli/types/checks/structure.ts';
-import { CALL, OPERATORS, FLOW_PREFIX, CALL_ENDINGS, POSITIONAL_PARAMETERS } from '#cli/constants/checks/structure.ts';
+
+import {
+    CALL,
+    OPERATORS,
+    FLOW_PREFIX,
+    CALL_ENDINGS,
+    ALL_PARAMETERS,
+    POSITIONAL_READ,
+} from '#cli/constants/checks/structure.ts';
 
 function argumentCount(rest: string): number {
     const cut = OPERATORS.map((token) => rest.indexOf(token)).filter((position) => position >= 0);
@@ -36,8 +44,14 @@ function widestCalls(index: ScriptIndex, names: Set<string>): Map<string, number
     return widest;
 }
 
+// The highest position a body reads, or infinity once it reads them all.
+function highestRead(code: string): number {
+    if (ALL_PARAMETERS.test(code)) return Number.POSITIVE_INFINITY;
+    return Math.max(0, ...[...code.matchAll(POSITIONAL_READ)].map((match) => Number(match.groups?.['position'])));
+}
+
 /**
- * One finding per function that is called with arguments somewhere but never reads a positional parameter.
+ * One finding per function that is called with more arguments than the positions it reads.
  * @param context the check context
  * @param scripts the shell index
  * @returns the findings
@@ -49,15 +63,16 @@ export const deadParameters: Analysis = async (context, scripts) => {
     return index.files.flatMap((file) =>
         file.functions.flatMap((entry) => {
             const width = widest.get(entry.name) ?? 0;
-            if (width === 0) return [];
-            const code = entry.body.map((line) => withoutComment(line)).join('\n');
-            if (POSITIONAL_PARAMETERS.some((pattern) => pattern.test(code))) return [];
+            const highest = highestRead(entry.body.map((line) => withoutComment(line)).join('\n'));
+            if (width <= highest) return [];
+            const unread = Array.from({ length: width - highest }, (_, offset) => String(highest + offset + 1));
+            const read = highest === 0 ? 'reads no positional parameter' : `reads none past $${String(highest)}`;
             return [
                 context.report(
                     file.path,
                     entry.start,
                     'unread-arguments',
-                    `${entry.name} is called with up to ${String(width)} argument(s) but reads no positional parameter.`,
+                    `${entry.name} is called with up to ${String(width)} argument(s) but ${read}: position ${unread.join(', ')} is never read.`,
                 ),
             ];
         }),

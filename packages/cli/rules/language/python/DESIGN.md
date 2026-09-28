@@ -301,7 +301,7 @@ Good mutable default:
 ```python
 """Represent an independently owned batch of prompt text."""
 
-from dataclasses import dataclass, field
+from dataclasses import field, dataclass
 
 
 @dataclass

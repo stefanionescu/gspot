@@ -197,6 +197,12 @@ For every language that is not JavaScript or TypeScript, and for repository-leve
 - **TypeScript in the editor.** TypeScript keeps its ESLint rules. One table of cases
   holds both implementations to the same answers.
 - **One count.** Every line limit gspot owns counts code lines, through one function.
+- **Import blocks.** A comment among the imports reports in every language, and a tool directive
+  does not. Imports and exports go shortest first. SQL has no import block, so no SQL rule exists.
+
+The plugin owns TypeScript imports and export braces. `python/export-order` owns `__all__`, and
+Ruff `I001` with `length-sort` owns Python imports. SwiftFormat `sortImports` owns Swift imports.
+`structure/source-order` owns shell `source` lines.
 
 | Idea                                                                | Level       | Bash | Python | Swift | TypeScript | SQL |
 | ------------------------------------------------------------------- | ----------- | ---- | ------ | ----- | ---------- | --- |
@@ -208,7 +214,8 @@ For every language that is not JavaScript or TypeScript, and for repository-leve
 | Folder facts: prefix, file beside folder                            | all         | yes  | yes    | yes   | yes        | yes |
 | Shell safety: strict mode, a trap for `mktemp`, a discarded failure | recommended | yes  | no     | no    | no         | no  |
 | Environment owner                                                   | all         | yes  | yes    | yes   | yes        | no  |
-| Import layout and boundaries                                        | all         | no   | yes    | no    | yes        | no  |
+| Import layout and boundaries                                        | all         | yes  | yes    | yes   | yes        | no  |
+| No comment among imports; imports and exports shortest first        | all         | yes  | yes    | yes   | yes        | no  |
 | Export-only files, alias constants                                  | all         | no   | yes    | no    | yes        | no  |
 | Private before public, doc comment form                             | all         | yes  | yes    | yes   | yes        | no  |
 | Script header, config owner, section order                          | all         | yes  | no     | no    | no         | no  |

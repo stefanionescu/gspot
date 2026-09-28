@@ -20,6 +20,9 @@ export const DECLARATIONS = new Set([
     'typealias_declaration',
 ]);
 export const FILE_LOCAL = new Set(['private', 'fileprivate']);
+export const COMMENTS = new Set(['comment', 'multiline_comment']);
+/** A comment that directs a tool rather than a reader, which must sit on the line it covers. */
+export const DIRECTIVE = /^\/[/*]\s*(?:swiftlint:|swiftformat:|periphery:|sourcery:)/u;
 export const ENVIRONMENT_READ = 'ProcessInfo.processInfo.environment';
 export const DEFAULT_DESTINATION = 'generic/platform=iOS Simulator';
 export const WORKSPACE_SUFFIX = '.xcworkspace';

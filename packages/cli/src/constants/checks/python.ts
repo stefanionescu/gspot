@@ -20,6 +20,9 @@ export const BLOCKING_NAMES = new Set([
 ]);
 export const BLOCKING_MODULES = ['requests.', 'urllib.request.'];
 export const DEFINITIONS = new Set(['function_definition', 'class_definition']);
+export const IMPORTS = new Set(['import_statement', 'import_from_statement', 'future_import_statement']);
+/** A comment that directs a tool rather than a reader, which must sit on the line it covers. */
+export const DIRECTIVE = /^#\s*(?:noqa|type:|pyright:|ruff:|isort:|pylint:|mypy:|fmt:|nosec|pragma)/u;
 export const PACKAGE_FILE = '__init__.py';
 export const PLACEHOLDERS = new Set(['todo', 'docstring', 'tbd', 'fixme', 'description', 'summary']);
 

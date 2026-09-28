@@ -75,6 +75,20 @@ const CASES: FindingCase[] = [
         expected: { file: 'planted/top.py', rule: 'exports-at-bottom', line: 4 },
     },
     {
+        check: 'python/import-comments',
+        files: {
+            'planted/noted.py': `"""A planted module."""\n\nimport os\n# the path tools\nimport sys\n\nVALUE = [os.sep, sys.prefix]\n`,
+        },
+        expected: { file: 'planted/noted.py', rule: 'import-comment', line: 4 },
+    },
+    {
+        check: 'python/export-order',
+        files: {
+            'planted/listed.py': `"""A planted module."""\n\n\ndef shown() -> int:\n    """Give one."""\n    return 1\n\n\ndef ab() -> int:\n    """Give two."""\n    return 2\n\n\n__all__ = ["shown", "ab"]\n`,
+        },
+        expected: { file: 'planted/listed.py', rule: 'export-order', line: 14 },
+    },
+    {
         check: 'python/no-lazy-exports',
         files: {
             'planted/lazy.py': `"""A planted module."""\n\n\ndef __getattr__(name: str) -> int:\n    """Make names appear."""\n    return len(name)\n`,

@@ -83,7 +83,7 @@ Good upload:
 
 from typing import Annotated
 
-from fastapi import FastAPI, File, HTTPException, UploadFile, status
+from fastapi import File, FastAPI, UploadFile, HTTPException, status
 from pydantic import BaseModel
 
 MAX_UPLOAD_BYTES = 1024 * 1024
@@ -362,12 +362,12 @@ Good streams:
 ```python
 """Stream public records as JSON Lines and server-sent events."""
 
-from collections.abc import Iterable
 from typing import ClassVar
+from collections.abc import Iterable
 
 from fastapi import FastAPI
-from fastapi.sse import EventSourceResponse, ServerSentEvent
 from pydantic import BaseModel, ConfigDict
+from fastapi.sse import ServerSentEvent, EventSourceResponse
 
 
 class Item(BaseModel):

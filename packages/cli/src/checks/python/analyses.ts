@@ -1,11 +1,10 @@
 import { trivialFile } from '#cli/checks/structure/statements.ts';
 import type { StructureReader } from '#cli/types/checks/python.ts';
 import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
-import { singletons, importCycles } from '#cli/checks/python/imports.ts';
 import { functionsOf, pythonModules } from '#cli/checks/python/modules.ts';
 import { DEFAULT_TRIVIAL_STATEMENTS } from '#cli/constants/checks/structure.ts';
+import { singletons, importCycles, importComments } from '#cli/checks/python/imports.ts';
 import { trivialFunctions, placeholderDocstrings } from '#cli/checks/python/functions.ts';
-import { packageExports, exportsAtBottom, privatePrefixes, privateBeforePublic } from '#cli/checks/python/exports.ts';
 
 import {
     DEFINITIONS,
@@ -13,6 +12,13 @@ import {
     DEFAULT_FUNCTION_LINES,
     DEFAULT_PACKAGE_EXPORTS,
 } from '#cli/constants/checks/python.ts';
+import {
+    exportOrder,
+    packageExports,
+    exportsAtBottom,
+    privatePrefixes,
+    privateBeforePublic,
+} from '#cli/checks/python/exports.ts';
 
 function analysis(read: StructureReader): (input: EngineInput) => Promise<Finding[]> {
     return async (input) => {
@@ -112,6 +118,8 @@ export const PYTHON_STRUCTURE: Record<string, (input: EngineInput) => Promise<Fi
         return packageExports(modules, typeof ceiling === 'number' ? ceiling : DEFAULT_PACKAGE_EXPORTS);
     }),
     'python-import-cycles': analysis(({ modules }) => importCycles(modules)),
+    'python-import-comments': analysis(({ modules }) => importComments(modules)),
+    'python-export-order': analysis(({ modules }) => exportOrder(modules)),
     'python-no-singletons': analysis(({ modules }, input) => {
         const entries =
             (input.view.settings['structure.python.singletons_allowed'] as { names?: string[] }[] | undefined) ?? [];

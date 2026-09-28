@@ -215,6 +215,34 @@ why = "An argument the callee ignores is a promise the call site believes in."
 help = "Read the argument in the function, or drop it from every call."
 
 [[checks]]
+name = "structure/source-comments"
+title = "No comments among source statements"
+example = "A comment written between two `source` lines reports a source comment. Move it above the block or next to the code that uses the sourced file; a `# shellcheck` directive stays."
+level = "all"
+stage = "commit"
+engine = "structure"
+analysis = "source-comments"
+coverage = ["structure"]
+searched = ["shellcheck"]
+summary = "Finds a comment written inside a block of source statements, between its first and last one."
+why = "A block of source statements is a list, and a note inside a list is read as part of the wrong entry."
+help = "Move the comment above the block or next to the code it explains."
+
+[[checks]]
+name = "structure/source-order"
+title = "Source order"
+example = "A block of `source` lines that is not ordered shortest first reports the sorted order. Reorder the lines."
+level = "all"
+stage = "commit"
+engine = "structure"
+analysis = "source-order"
+coverage = ["structure"]
+searched = ["shellcheck"]
+summary = "Checks that the source statements of a block go shortest first, alphabetically among lines of one length."
+why = "One order for every block means a reader never searches it."
+help = "Reorder the source statements shortest first."
+
+[[checks]]
 name = "structure/private-prefix"
 title = "Private prefix"
 example = "A function `build_it` called only from its own script reports a missing private prefix. Rename it `_build_it` and update each local call. A function called from another script keeps its public name."

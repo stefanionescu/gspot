@@ -4,8 +4,8 @@ import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
 import { DEFAULT_DUPLICATE_LINES } from '#cli/constants/checks/swift.ts';
 import { functionsOf, swiftSources } from '#cli/checks/swift/sources.ts';
 import { DEFAULT_TRIVIAL_STATEMENTS } from '#cli/constants/checks/structure.ts';
-import { environmentReads, privateBeforePublic } from '#cli/checks/swift/order.ts';
 import { trivialFunctions, duplicateFunctions } from '#cli/checks/swift/bodies.ts';
+import { importComments, environmentReads, privateBeforePublic } from '#cli/checks/swift/order.ts';
 
 function ownerPaths(input: EngineInput): string[] {
     const env = input.policyFiles.policy.architecture.roles['env'];
@@ -55,4 +55,5 @@ export const SWIFT_STRUCTURE: Record<string, (input: EngineInput) => Promise<Fin
     ),
     'swift-private-before-public': analysis(({ sources }) => privateBeforePublic(sources)),
     'swift-env-access-owner': analysis(({ sources }, input) => environmentReads(sources, ownerPaths(input))),
+    'swift-import-comments': analysis(({ sources }) => importComments(sources)),
 };

@@ -72,23 +72,29 @@
 --enable typeSugar
 --enable void
 
---disable redundantSelf
---disable trailingCommas
---disable wrapMultilineStatementBraces
+--enable redundantSelf
+--enable trailingCommas
+--enable wrapMultilineStatementBraces
+--enable wrapEnumCases
+--enable unusedArguments
+--enable wrap
+--enable wrapArguments
+--enable wrapAttributes
+--enable blankLinesBetweenImports
+--enable numberFormatting
+
+# The order of switch cases carries meaning: a match runs the first case that fits.
 --disable sortSwitchCases
---disable wrapEnumCases
---disable unusedArguments
+# Renaming identifiers is a naming decision; naming/identifiers owns it, and a formatter must not change API names.
 --disable acronyms
+# Declaration order is owned by swift/private-before-public; these would reorder and annotate declarations.
 --disable organizeDeclarations
 --disable sortDeclarations
 --disable markTypes
+# SwiftLint trailing_closure owns closure syntax, so one tool reports it.
 --disable trailingClosures
---disable wrap
---disable wrapArguments
---disable wrapAttributes
+# Inserts an availability attribute into UIKit initializers, a behavior change, not a layout one.
 --disable initCoderUnavailable
---disable blankLinesBetweenImports
---disable numberFormatting
 <% for (const rule of rulesOff('swift/swiftformat')) { -%>
 --disable <%= rule %>
 <% } -%>
@@ -151,7 +157,6 @@
 --disable redundantInternal
 --disable redundantMemberwiseInit
 --disable redundantOptionalBinding
---disable redundantProperty
 --disable redundantPublic
 --disable redundantSendable
 --disable redundantStaticSelf
@@ -163,11 +168,7 @@
 --disable redundantViewBuilder
 --disable simplifyGenericConstraints
 --disable sortTypealiases
---disable sortedImports
---disable sortedSwitchCases
---disable specifiers
 --disable swiftTestingTestCaseNames
---disable throwingTests
 --disable wrapFunctionBodies
 --disable wrapPropertyBodies
 --disable wrapSingleLineComments

@@ -230,6 +230,21 @@ why = "A file that opens with its own pieces and ends with what it offers reads 
 help = "Move the file-local declarations above the first internal, public, or open one."
 
 [[checks]]
+name = "swift/import-comments"
+title = "No comments among imports"
+example = "A comment written between two imports reports an import comment. Move it above the block or next to the code that uses the import; a `// swiftlint:` or `// swiftformat:` directive stays."
+level = "all"
+stage = "commit"
+runs = "per-scope"
+engine = "integrity"
+analysis = "swift-import-comments"
+claims = {extensions = [".swift"]}
+coverage = ["structure"]
+summary = "Finds a comment written inside an import block, between its first and last import."
+why = "An import block is a list, and a note inside a list is read as part of the wrong entry. SwiftFormat orders the block by length."
+help = "Move the comment above the block or next to the code it explains."
+
+[[checks]]
 name = "swift/env-access-owner"
 title = "Environment access owner"
 example = "A read of `ProcessInfo.processInfo.environment` outside the configured environment owner reports a finding. Move that read to the path named by `architecture.roles.env` and pass the required values to callers."

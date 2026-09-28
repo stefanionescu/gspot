@@ -81,7 +81,10 @@ export const VAGUE_SUMMARY_WORDS = [
 /** The doc sections a function comment may carry, in the order they go. */
 export const BASH_DOC_SECTIONS = ['# Globals:', '# Arguments:', '# Outputs:', '# Returns:'];
 /** A bare or braced positional parameter read. */
-export const POSITIONAL_PARAMETERS = [/(?:^|[^$])\$(?:[1-9]|[@*#])/u, /\$\{(?:[1-9]|[@*#])[:}]/u];
+/** A read of every positional parameter at once, after which no position is unread. */
+export const ALL_PARAMETERS = /(?:^|[^$])\$(?:[@*#]|\{[@*#][:}])|\bshift\b/u;
+/** A read of one positional parameter, with its position. */
+export const POSITIONAL_READ = /(?:^|[^$])\$\{?(?<position>[1-9]\d?)/gu;
 /** Tokens that end the argument list of a call. */
 export const CALL_ENDINGS = ['&&', '||', '|', ';', ';;', 'then', 'do', 'fi', 'done', ')'];
 /** A flow keyword that may precede a call on the same line. */

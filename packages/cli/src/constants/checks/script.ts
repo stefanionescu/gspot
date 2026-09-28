@@ -112,6 +112,9 @@ export const SOURCE_ANNOTATION = /^# shellcheck source=(?<path>\S+)$/u;
 /** A source statement. */
 export const SOURCE_STATEMENT = /^(?:source|\.)\s+/u;
 
+/** A comment that directs ShellCheck, which must sit on the line it covers. */
+export const SHELLCHECK_DIRECTIVE = /^#\s*shellcheck\b/u;
+
 export const SSH_BLOCK_MIN_LINES = 3;
 
 /** An ssh heredoc, which needs a name and a description on the line above. */

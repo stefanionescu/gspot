@@ -94,9 +94,9 @@ Good main module:
 ```python
 """Expose a fixed catalog with validated identifiers and public responses."""
 
-from typing import Annotated, ClassVar
+from typing import ClassVar, Annotated
 
-from fastapi import APIRouter, FastAPI, HTTPException, Path, status
+from fastapi import Path, FastAPI, APIRouter, HTTPException, status
 from pydantic import BaseModel, ConfigDict
 
 
@@ -233,10 +233,10 @@ Good query parameter model:
 ```python
 """Validate a filter preview without accessing a database."""
 
-from typing import Annotated, ClassVar
+from typing import ClassVar, Annotated
 
-from fastapi import FastAPI, Query
-from pydantic import BaseModel, ConfigDict, Field
+from fastapi import Query, FastAPI
+from pydantic import Field, BaseModel, ConfigDict
 
 
 class FilterParams(BaseModel):

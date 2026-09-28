@@ -407,6 +407,36 @@ why = "A package that exports everything has no surface, so every change to it i
 help = "Split the package, or export fewer names."
 
 [[checks]]
+name = "python/import-comments"
+title = "No comments among imports"
+example = "A comment written between two imports reports an import comment. Move it above the block or next to the code that uses the import; a `# noqa` or `# type:` directive stays."
+level = "all"
+stage = "commit"
+runs = "per-scope"
+engine = "integrity"
+analysis = "python-import-comments"
+claims = {extensions = [".py"]}
+coverage = ["structure"]
+summary = "Finds a comment written inside an import block, between its first and last import."
+why = "An import block is a list, and a note inside a list is read as part of the wrong entry."
+help = "Move the comment above the block or next to the code it explains."
+
+[[checks]]
+name = "python/export-order"
+title = "Export order"
+example = "An `__all__` list whose names are not ordered shortest first reports the sorted order. Reorder the list."
+level = "all"
+stage = "commit"
+runs = "per-scope"
+engine = "integrity"
+analysis = "python-export-order"
+claims = {extensions = [".py"]}
+coverage = ["structure"]
+summary = "Checks that the names in the export list go shortest first, alphabetically among names of one length."
+why = "One order for every export list means a reader never searches it."
+help = "Reorder the names shortest first."
+
+[[checks]]
 name = "python/import-cycles"
 title = "Import cycles"
 example = "If module `a` imports `b` and module `b` imports `a`, the dependency cycle reports a finding. Move the behavior both need into a third owner that imports neither, then update both imports."

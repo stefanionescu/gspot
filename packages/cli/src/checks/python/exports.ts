@@ -107,3 +107,27 @@ export function packageExports(modules: PythonModule[], ceiling: number): Struct
         ];
     });
 }
+
+/**
+ * The names in __all__ go shortest first, and alphabetically among names of one length.
+ * @param modules every module of the run
+ * @returns the problems
+ */
+export function exportOrder(modules: PythonModule[]): StructureProblem[] {
+    return modules.flatMap((module) => {
+        const exported = exportedNames(module);
+        if (exported === undefined) return [];
+        const sorted = exported.names.toSorted(
+            (left, right) => left.length - right.length || left.localeCompare(right),
+        );
+        if (sorted.every((name, order) => name === exported.names[order])) return [];
+        return [
+            {
+                file: module.path,
+                line: exported.statement.startPosition.row + 1,
+                rule: 'export-order',
+                text: `The names in __all__ go shortest first: ${sorted.join(', ')}.`,
+            },
+        ];
+    });
+}

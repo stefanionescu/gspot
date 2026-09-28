@@ -54,12 +54,28 @@ const CASES: FindingCase[] = [
         expected: { file: 'Sources/App/Limits.swift', rule: 'private-below-shared', line: 6 },
     },
     {
+        check: 'swift/import-comments',
+        files: {
+            'Sources/App/Noted.swift':
+                'import Foundation\n// the interface kit\nimport UIKit\n\n/// The size of a label.\nfunc labelSize() -> Int {\n    let label = UILabel()\n    return Int(label.frame.width)\n}\n',
+        },
+        expected: { file: 'Sources/App/Noted.swift', rule: 'import-comment', line: 2 },
+    },
+    {
         check: 'swift/env-access-owner',
         files: {
             'Sources/App/Home.swift': `import Foundation\n\n/// Reads one variable.\nfunc homeFolder() -> String? {\n    ProcessInfo.processInfo.environment["HOME"]\n}\n`,
             'Sources/App/User.swift': `import Foundation\n\n/// Reads one variable.\nfunc userFolder() -> String? {\n    ProcessInfo.processInfo.environment["HOME"]\n}\n`,
         },
         expected: { file: 'Sources/App/Home.swift', rule: 'read-outside-owner', line: 5 },
+    },
+    {
+        check: 'swift/import-comments',
+        files: {
+            'Sources/App/Noted.swift':
+                'import Foundation\n// the interface kit\nimport UIKit\n\n/// The size of a label.\nfunc labelSize() -> Int {\n    let label = UILabel()\n    return Int(label.frame.width)\n}\n',
+        },
+        expected: { file: 'Sources/App/Noted.swift', rule: 'import-comment', line: 2 },
     },
     {
         check: 'swift/env-access-owner',

@@ -2,7 +2,7 @@ import { pathMatcher } from '#cli/repository/paths.ts';
 import { visibilityOf } from '#cli/checks/swift/sources.ts';
 import type { SwiftSource } from '#cli/types/checks/swift.ts';
 import type { StructureProblem } from '#cli/types/checks/structure.ts';
-import { FILE_LOCAL, DECLARATIONS, ENVIRONMENT_READ } from '#cli/constants/checks/swift.ts';
+import { COMMENTS, DIRECTIVE, FILE_LOCAL, DECLARATIONS, ENVIRONMENT_READ } from '#cli/constants/checks/swift.ts';
 /**
  * Top-level declarations that are private or fileprivate and sit below one that other files see.
  * @param sources every source of the run
@@ -61,4 +61,33 @@ export function environmentReads(sources: SwiftSource[], owners: string[]): Stru
             )
             .map((line) => ({ file: source.path, line, rule: 'read-outside-owner', text })),
     );
+}
+
+/**
+ * Comments written among a file's imports, from the first import to the last. A tool directive is not a comment.
+ * @param sources every source of the run
+ * @returns the problems
+ */
+export function importComments(sources: SwiftSource[]): StructureProblem[] {
+    return sources.flatMap((source) => {
+        const nodes = source.tree.rootNode.namedChildren;
+        const imports = nodes.filter((node) => node.type === 'import_declaration');
+        const [first] = imports;
+        const last = imports.at(-1);
+        if (first === undefined || last === undefined) return [];
+        return nodes
+            .filter(
+                (node) =>
+                    COMMENTS.has(node.type) &&
+                    node.startIndex > first.startIndex &&
+                    node.startPosition.row <= last.endPosition.row &&
+                    !DIRECTIVE.test(node.text),
+            )
+            .map((node) => ({
+                file: source.path,
+                line: node.startPosition.row + 1,
+                rule: 'import-comment',
+                text: 'No comments among imports. Say it where the import is used, or above the block.',
+            }));
+    });
 }
