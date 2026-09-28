@@ -226,7 +226,7 @@ export function toolPin(manifests: Iterable<Manifest>, name: string): ToolPin {
         const pin = manifest.tools.find((tool) => tool.name === name);
         if (pin !== undefined) return pin;
     }
-    return { name, provider: 'host', windows: true, installers: {} };
+    return { name, provider: 'host', installers: {} };
 }
 
 /** Thrown by an analysis when the command it runs is not installed. */

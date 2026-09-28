@@ -21,7 +21,7 @@ export const CACHE_FORMAT = 5;
 export const RETENTION_MS = 2_592_000_000;
 export const CACHE_ENTRY = /^\.gspot\/cache\/[a-f0-9]{64}\.json$/u;
 export const FAILED_STATUSES = new Set(['fail', 'missing', 'error']);
-export const DOCKER = { name: 'docker', provider: 'host' as const, windows: true, installers: {} };
+export const DOCKER = { name: 'docker', provider: 'host' as const, installers: {} };
 // Each pattern captures the check identifier. The reason follows `--` after the match.
 export const INLINE_IGNORE: Record<string, RegExp> = {
     slash: /^\/\/ ?gspot-ignore +([a-z0-9/-]+)/u,
@@ -79,4 +79,6 @@ export const FINDING_EXIT_CODES = new Map<string | undefined, number[]>([
 export const SCRATCH_EXTRAS = ['gspot.toml', 'package.json', 'tsconfig.json', 'pyproject.toml'];
 export const SCRATCH_DIRECTORIES = ['node_modules', '.venv'];
 export const PLATFORM_NAMES: Record<string, string> = { darwin: 'macos', linux: 'linux', win32: 'windows' };
+/** The words a platform name is written with in a sentence. */
+export const PLATFORM_LABELS: Record<string, string> = { macos: 'macOS', linux: 'Linux', windows: 'Windows' };
 export const HISTORY_ANALYSES = new Set(['commit-messages', 'gitleaks-history', 'verified-secrets']);

@@ -51,7 +51,7 @@ stage = "commit"
     const session = await openSession(sandbox.path);
     const plans = await planRun(session, { stage: 'all', skips: [] });
     const planned = plans[0]!;
-    planned.tool = { name: 'echo', windows: true, installers: {}, env: { TOOL_RELEASE: 'v3.4.0' } };
+    planned.tool = { name: 'echo', installers: {}, env: { TOOL_RELEASE: 'v3.4.0' } };
     const prepared = prepareCommand(session, planned, planned.spec.command!);
     const result = await run(prepared.commands[0]!.argv, { cwd: prepared.cwd, env: prepared.env });
     expect(result.code, result.stderr).toBe(0);
@@ -129,7 +129,7 @@ test('per-file failures name the selected file when expanded arguments follow it
     const session = await openSession(sandbox.path);
     const plans = await planRun(session, { stage: 'all', skips: [] });
     const planned = plans[0]!;
-    planned.tool = { name: process.execPath, installers: {}, windows: true };
+    planned.tool = { name: process.execPath, installers: {} };
     const failed = await runToolCheck(session, planned);
     expect(failed.status).toBe('fail');
     expect(failed.findings.map((finding) => finding.file)).toStrictEqual(['inputs/café source.txt']);
@@ -159,7 +159,7 @@ test('a signaled per-file process is an execution error rather than a source fin
     const session = await openSession(sandbox.path);
     const plans = await planRun(session, { stage: 'all', skips: [] });
     const planned = plans[0]!;
-    planned.tool = { name: process.execPath, installers: {}, windows: true };
+    planned.tool = { name: process.execPath, installers: {} };
     const failed = await runToolCheck(session, planned);
     expect(failed.status).toBe('error');
     expect(failed.findings).toStrictEqual([]);

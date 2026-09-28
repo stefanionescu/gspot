@@ -29,7 +29,6 @@ test.each(PACKAGE_PROJECTS)(
             name: 'prettier',
             version: '3.8.1',
             installers: { npm: { name: 'prettier', version: '3.8.1' } },
-            windows: true,
         };
         expect(inspectTool(context, pin)).toMatchObject({
             state: 'error',

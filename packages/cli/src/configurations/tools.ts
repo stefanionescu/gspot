@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { MAX_EXIT_CODE } from '#cli/constants/configurations.ts';
 import { commandSchema } from '#cli/configurations/command-schema.ts';
+import { MAX_EXIT_CODE, TOOL_PLATFORMS } from '#cli/constants/configurations.ts';
 
 const installerDefinition = z.strictObject({ name: z.string(), version: z.string() });
 const installerSchema = z.union([z.string(), installerDefinition]);
@@ -39,7 +39,8 @@ export const toolSchema = z.strictObject({
     version: z.string().optional(),
     floor: z.string().optional(),
     provider: z.literal('host').optional(),
-    windows: z.boolean().default(true),
+    // The platforms the tool has a build for; unset means every platform.
+    platforms: z.array(z.enum(TOOL_PLATFORMS)).min(1).optional(),
     version_command: commandSchema.optional(),
     version_exit_code: z.number().int().min(0).max(MAX_EXIT_CODE).optional(),
     version_regex: z.string().optional(),

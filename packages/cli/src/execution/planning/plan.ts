@@ -95,7 +95,7 @@ function planOne(context: PlanContext, entry: PlanEntry, isWholeCheck: boolean):
         ...(options.commits === undefined ? {} : { commits: options.commits }),
         ...(options.messageFile === undefined ? {} : { messageFile: options.messageFile }),
     };
-    const skip = skipFor(check, options, platform, session.repository.hasGit);
+    const skip = skipFor(check, options, { platform, arch: process.arch }, session.repository.hasGit);
     return restrictIgnoredPaths(skip === undefined ? check : { ...check, skip });
 }
 

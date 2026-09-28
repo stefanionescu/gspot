@@ -19,7 +19,7 @@ floor = "24.0.0"
 pypi = "ansible-lint"
 mise = "pipx:ansible-lint"
 brew = "ansible-lint"
-windows = false
+platforms = ["macos", "linux"]
 
 [[checks]]
 name = "ansible/lint"

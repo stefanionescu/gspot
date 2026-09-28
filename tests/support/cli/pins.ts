@@ -9,7 +9,7 @@ import type { ToolPin } from '#cli/types/configurations.ts';
  */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: A library pin installed through npm. 3 files make 9 calls; one owner keeps that behavior in one place.
 export function libraryPin(name: string, version: string): ToolPin {
-    return { name, kind: 'library', version, windows: true, installers: { npm: { name, version } } };
+    return { name, kind: 'library', version, installers: { npm: { name, version } } };
 }
 
 /**
@@ -25,7 +25,6 @@ export function commandPin(name: string, version: string, npm?: string): ToolPin
         name,
         kind: 'binary',
         version,
-        windows: true,
         installers: npm === undefined ? {} : { npm: { name: npm, version } },
     };
 }

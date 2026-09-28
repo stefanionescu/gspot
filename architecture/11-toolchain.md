@@ -82,6 +82,10 @@ npm     = "eslint-plugin-regexp"
 [[tools]]
 name     = "xcodebuild"
 provider = "host"                   # present or the check fails; gspot cannot install it
+
+[[tools]]
+name      = "codeql"
+platforms = ["macos", "linux-x64", "windows"] # no arm64 Linux build; the check is skipped there
 ```
 
 One gspot version pins one version of every managed tool. Locked dependencies and the package-manager version are
@@ -119,6 +123,9 @@ current version alone.
 
 Every tool in the configurations has a Windows build except `plutil`, `xcodebuild`, `xcstringstool`,
 `swiftlint`, `swiftformat`, and `periphery`. Their checks are platform skips elsewhere.
+A tool pin names the platforms it ships for under `platforms`. Each entry is an operating system
+alone, or one with an architecture. CodeQL ships no arm64 Linux build, so its check is a platform
+skip there.
 
 ## One tool per job
 

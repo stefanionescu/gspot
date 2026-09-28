@@ -47,7 +47,6 @@ function hookExecutable(hookTool: HookTool, tools: ToolContext): string {
     const tool = inspectTool(tools, {
         name: hookTool,
         provider: 'host',
-        windows: true,
         installers: {},
         ...(hookTool === 'lefthook' ? { version_command: ['version'] } : {}),
     });

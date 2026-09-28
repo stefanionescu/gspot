@@ -36,7 +36,7 @@ test.each(['{file}', '{files}'])(
         const session = await openSession(sandbox.path);
         const plans = await planRun(session, { stage: 'all', skips: [] });
         const planned = plans[0]!;
-        planned.tool = { name: process.execPath, installers: {}, windows: true };
+        planned.tool = { name: process.execPath, installers: {} };
         const finding = await runToolCheck(session, planned);
         expect(finding.status).toBe('fail');
         expect(finding.findings).toStrictEqual([

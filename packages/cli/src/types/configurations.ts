@@ -2,6 +2,7 @@
 import type { z } from 'zod';
 import type { Defined } from '#cli/types/policy/policy.ts';
 import type { manifestSchema } from '#cli/configurations/schema.ts';
+import type { TOOL_PLATFORMS } from '#cli/constants/configurations.ts';
 import type { outputSchema } from '#cli/configurations/output-format.ts';
 
 export type ConfigurationEvidence = { configuration: string; evidence: string; kind: string; count?: number };
@@ -55,13 +56,16 @@ export type ConfigurationHeader = Omit<RawManifest['configuration'], 'check_refe
     check_references?: RawManifest['configuration']['check_references'];
 };
 export type InstallerPin = Pick<NpmInstallerDefinition, 'name'> & Partial<Omit<NpmInstallerDefinition, 'name'>>;
+/** A platform a tool pin may name: an operating system alone, or one with an architecture. */
+export type ToolPlatform = (typeof TOOL_PLATFORMS)[number];
 export type ToolPin = {
     name: string;
     kind?: 'binary' | 'library';
     version?: string;
     floor?: string;
     provider?: 'host';
-    windows: boolean;
+    /** The platforms the tool has a build for; unset means every platform. */
+    platforms?: readonly ToolPlatform[];
     version_command?: string[];
     version_exit_code?: number;
     version_regex?: string;

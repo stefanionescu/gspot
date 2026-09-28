@@ -72,6 +72,7 @@ export const VALE_CONFIG = '.gspot/config/vale.ini';
 export const FORMAT_PREFIX = 'format.';
 // The pin fields a manifest may leave out, copied when declared.
 export const OPTIONAL_TOOL_KEYS = [
+    'platforms',
     'version',
     'floor',
     'provider',
@@ -85,4 +86,16 @@ export const OPTIONAL_TOOL_KEYS = [
     'takeover',
     'query_packs',
     'prettier',
+] as const;
+/** The platforms a tool pin may name as having a build: an operating system alone, or one with an architecture. */
+export const TOOL_PLATFORMS = [
+    'macos',
+    'macos-x64',
+    'macos-arm64',
+    'linux',
+    'linux-x64',
+    'linux-arm64',
+    'windows',
+    'windows-x64',
+    'windows-arm64',
 ] as const;

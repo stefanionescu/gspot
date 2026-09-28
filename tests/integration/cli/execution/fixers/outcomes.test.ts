@@ -120,7 +120,7 @@ test('runs the correction executable when it differs from the check executable',
     const planned = await plannedCorrection(session, "await Bun.write('source.txt', 'corrected')");
     const result = await runFixer(
         session,
-        { ...planned, tool: { name: join(sandbox.path, 'absent-check-tool'), installers: {}, windows: true } },
+        { ...planned, tool: { name: join(sandbox.path, 'absent-check-tool'), installers: {} } },
         sandbox.path,
     );
     expect(result.status).toBe('changed');

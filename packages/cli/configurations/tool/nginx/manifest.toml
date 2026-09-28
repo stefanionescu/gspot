@@ -16,7 +16,7 @@ name = "gixy"
 version = "0.2.53"
 pypi = "gixy-ng"
 mise = "pipx:gixy-ng"
-windows = false
+platforms = ["macos", "linux"]
 version_regex = "(\\d+\\.\\d+\\.\\d+)"
 
 [[tools]]

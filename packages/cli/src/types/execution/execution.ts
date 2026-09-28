@@ -168,3 +168,5 @@ export type PlanContext = {
     narrow: Set<string> | undefined;
     children: string[];
 };
+/** The platform name and architecture a run is on. */
+export type Host = { platform: string; arch: string };

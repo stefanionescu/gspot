@@ -49,6 +49,8 @@ test('repository CI checks the committed change, preserves reports on invalid ba
     // The launcher needs Bun on PATH; a runner installs it for the repository, not for the sandbox.
     const environment = {
         MISE_TRUSTED_CONFIG_PATHS: sandbox.path,
+        // A runner reaches Bun through a mise shim, which needs a version where no configuration is in scope.
+        MISE_BUN_VERSION: Bun.version,
         PATH: [join(root, '.mise/gspot'), dirname(process.execPath), toolsPath([])].join(delimiter),
     };
     const argv = ['bash', '-euo', 'pipefail', '-c', step.run!];

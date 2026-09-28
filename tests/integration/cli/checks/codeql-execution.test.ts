@@ -1,12 +1,14 @@
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { codeql } from '#cli/checks/security/codeql.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { test, spyOn, expect, describe } from 'bun:test';
+import type { Finding } from '#cli/types/checks/checks.ts';
 import { rejection } from '#tests/support/expectations.ts';
+import { toolShipsHere } from '#tests/support/cli/platforms.ts';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 
 const JAVASCRIPT_LANGUAGES = JSON.stringify({
@@ -28,67 +30,66 @@ function expectNativeCodeqlOptions(commands: string[][], packVersion: string): v
     ]);
 }
 
-test.each(['../outside', '/outside', 'C:outside', String.raw`..\outside`])(
-    'CodeQL refuses output language %s before spawning and accepts a corrected language',
-    async (language) => {
-        await using directory = await testdir();
-        await createFileTree(directory.path, { 'gspot.toml': policy(language), 'source.py': 'value = 1\n' });
-        const session = await openSession(directory.path);
-        const spec = session.manifests.get('security')!.checks.find((entry) => entry.analysis === 'codeql')!;
-        const input = engineInput(session, {
-            scope: session.scopes.find((entry) => entry.scope.path === '')!,
-            spec: spec,
-            files: session.repository.files,
-        });
-        const copies: string[] = [];
-        // What the database creation saw in its copy of the repository.
-        const sources: string[] = [];
-        const run = spyOn(processes, 'run').mockImplementation(async (argv, options) => {
-            if (argv.includes('resolve'))
-                return {
-                    code: 0,
-                    missing: false,
-                    stdout: JSON.stringify({ aliases: {}, extractors: { python: [{}] } }),
-                    stderr: '',
-                    duration: 1,
-                };
-            const { cwd } = options;
-            copies.push(cwd);
-            if (argv.includes('create')) {
-                sources.push(readFileSync(join(cwd, 'source.py'), 'utf8'));
-                writeFileSync(join(cwd, 'generated.py'), 'build side effect');
-            }
-            const output = argv.find((part) => part.startsWith('--output='));
-            if (output !== undefined)
-                await Bun.write(output.slice('--output='.length), '{"version":"2.1.0","runs":[{"results":[]}]}');
-            return { code: 0, missing: false, stdout: '', stderr: '', duration: 1 };
-        });
-        try {
-            await rejection(codeql(input));
-            expect(run).not.toHaveBeenCalled();
-            await Bun.write(join(directory.path, 'gspot.toml'), policy('python'));
-            const corrected = await openSession(directory.path);
-            expect(
-                await codeql(
-                    engineInput(corrected, {
-                        scope: corrected.scopes[0]!,
-                        spec: input.spec,
-                        files: corrected.repository.files,
-                    }),
-                ),
-            ).toStrictEqual([]);
-            expect(run).toHaveBeenCalledTimes(3);
-            expect(copies).not.toContain(directory.path);
-            expect(sources).toStrictEqual(['value = 1\n']);
-            expect(existsSync(join(directory.path, 'generated.py'))).toBe(false);
-            expect(copies.every((copy) => !existsSync(copy))).toBe(true);
-        } finally {
-            run.mockRestore();
+// A language that names a path is refused before any process runs; a real language runs in a copy.
+async function refusesOutsideLanguage(language: string): Promise<string[]> {
+    await using directory = await testdir();
+    await createFileTree(directory.path, { 'gspot.toml': policy(language), 'source.py': 'value = 1\n' });
+    const session = await openSession(directory.path);
+    const spec = session.manifests.get('security')!.checks.find((entry) => entry.analysis === 'codeql')!;
+    const input = engineInput(session, {
+        scope: session.scopes.find((entry) => entry.scope.path === '')!,
+        spec: spec,
+        files: session.repository.files,
+    });
+    const copies: string[] = [];
+    // What the database creation saw in its copy of the repository.
+    const sources: string[] = [];
+    const run = spyOn(processes, 'run').mockImplementation(async (argv, options) => {
+        if (argv.includes('resolve'))
+            return {
+                code: 0,
+                missing: false,
+                stdout: JSON.stringify({ aliases: {}, extractors: { python: [{}] } }),
+                stderr: '',
+                duration: 1,
+            };
+        const { cwd } = options;
+        copies.push(cwd);
+        if (argv.includes('create')) {
+            sources.push(readFileSync(join(cwd, 'source.py'), 'utf8'));
+            writeFileSync(join(cwd, 'generated.py'), 'build side effect');
         }
-    },
-);
+        const output = argv.find((part) => part.startsWith('--output='));
+        if (output !== undefined)
+            await Bun.write(output.slice('--output='.length), '{"version":"2.1.0","runs":[{"results":[]}]}');
+        return { code: 0, missing: false, stdout: '', stderr: '', duration: 1 };
+    });
+    try {
+        await rejection(codeql(input));
+        expect(run).not.toHaveBeenCalled();
+        await Bun.write(join(directory.path, 'gspot.toml'), policy('python'));
+        const corrected = await openSession(directory.path);
+        expect(
+            await codeql(
+                engineInput(corrected, {
+                    scope: corrected.scopes[0]!,
+                    spec: input.spec,
+                    files: corrected.repository.files,
+                }),
+            ),
+        ).toStrictEqual([]);
+        expect(run).toHaveBeenCalledTimes(3);
+        expect(copies).not.toContain(directory.path);
+        expect(sources).toStrictEqual(['value = 1\n']);
+        expect(existsSync(join(directory.path, 'generated.py'))).toBe(false);
+    } finally {
+        run.mockRestore();
+    }
+    return copies;
+}
 
-test('CodeQL adapter uses native language names and pinned packs once and maps isolated SARIF locations', async () => {
+// Aliases resolve to one native language and its pinned pack; SARIF locations map back from the copy.
+async function mapsIsolatedLocations(): Promise<Finding[]> {
     await using directory = await testdir();
     await createFileTree(directory.path, {
         'gspot.toml':
@@ -141,11 +142,25 @@ test('CodeQL adapter uses native language names and pinned packs once and maps i
             invoked.map(({ argv }) => argv),
             packVersion!,
         );
-        expect(findings).toMatchObject([
-            { check: 'security/codeql', rule: 'js/sql-injection', file: 'source file.ts', line: 1, column: 14 },
-        ]);
         expect(readFileSync(join(directory.path, 'source file.ts'), 'utf8')).toBe('export const source = true;\n');
+        return findings;
     } finally {
         run.mockRestore();
     }
+}
+
+// CodeQL ships no arm64 Linux build; its pin says where it runs.
+describe.if(toolShipsHere('codeql'))('the CodeQL adapter', () => {
+    test.each(['../outside', '/outside', 'C:outside', String.raw`..\outside`])(
+        'CodeQL refuses output language %s before spawning and accepts a corrected language',
+        async (language) => {
+            const copies = await refusesOutsideLanguage(language);
+            expect(copies.every((copy) => !existsSync(copy))).toBe(true);
+        },
+    );
+    test('CodeQL adapter uses native language names and pinned packs once and maps isolated SARIF locations', async () => {
+        expect(await mapsIsolatedLocations()).toMatchObject([
+            { check: 'security/codeql', rule: 'js/sql-injection', file: 'source file.ts', line: 1, column: 14 },
+        ]);
+    });
 });

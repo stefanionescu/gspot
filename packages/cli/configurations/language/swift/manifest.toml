@@ -19,7 +19,7 @@ natures = ["source"]
 [[tools]]
 name = "swiftlint"
 suppression = {marker = "\\bswiftlint:disable\\b", reason = " - (?<reason>\\S.*)"}
-windows = false
+platforms = ["macos", "linux"]
 version = "0.63.2"
 floor = "0.57.0"
 mise = "swiftlint"

@@ -561,6 +561,12 @@ Keep accepted level assignments unchanged and commit with normal hooks. Enable
 [CI runs for this branch](https://github.com/stefanionescu/gspot/actions/workflows/ci.yml?query=branch%3Afix%2Froot-cause-lint-cleanup)
 record each commit's platform results and uploaded reports.
 
+The first full runs on the four-platform matrix found what each platform lacks. Arm64 Linux has
+no aqua build of dotenv-linter and no CodeQL CLI. The Linux runners had no Supabase CLI. A newer
+trivy checks bundle broke the pinned binary. Windows resolves a fake npm only through a command
+file, and the plugin tester needed an absolute parser root. Each is repaired in code or in the
+workflow, and a tool pin now names the platforms it ships for.
+
 Merge the completed task branch into `main` only after its exact-commit CI succeeds, using
 normal hooks. Do not create another branch. Public publication, deployment, and changes to
 other repositories remain excluded. Unavailable native targets and provider-dependent gates

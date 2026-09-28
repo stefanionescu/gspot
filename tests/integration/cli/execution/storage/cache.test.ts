@@ -162,7 +162,7 @@ test('an executable replacement cannot combine old permissions with new cached b
     const inode = fs.statSync(executable).ino;
     const session = await storageSession(sandbox.path, 0);
     const [planned] = await planRun(session, { stage: 'commit', skips: [] });
-    planned!.tool = { name: 'fixture-checker', windows: true, installers: {} };
+    planned!.tool = { name: 'fixture-checker', installers: {} };
     const inspection = spyOn(inspections, 'inspectTool').mockReturnValue({
         name: 'fixture-checker',
         state: 'ok',

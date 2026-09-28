@@ -104,7 +104,6 @@ export function parseManifest(text: string, dir: string): Manifest {
             return {
                 name: tool.name,
                 kind: tool.kind,
-                windows: tool.windows,
                 installers: installerPins(tool),
                 ...(Object.fromEntries(declared) as Partial<ToolPin>),
             };

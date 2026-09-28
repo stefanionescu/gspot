@@ -50,7 +50,6 @@ test('a failed version inspection blocks a check and its correction without chan
     planned.tool = {
         name: 'version-teller',
         version: '3.8.1',
-        windows: true,
         installers: {},
         version_command: ['-e', 'console.log("3.8.1"); process.exitCode = 7;'],
     };

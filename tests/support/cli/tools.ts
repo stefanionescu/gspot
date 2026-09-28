@@ -10,13 +10,8 @@ import { environmentVariables } from '#cli/platform/environment.ts';
 import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { installPythonProject, preparePythonProject } from '#cli/tools/python-project.ts';
-import { NODE_MODULES_DIRECTORY, PYTHON_ENVIRONMENT_DIRECTORY } from '#cli/constants/platform.ts';
 
 const root = fileURLToPath(new URL('../../..', import.meta.url));
-const PRIVATE_BIN = {
-    npm: join(NODE_MODULES_DIRECTORY, '.bin'),
-    python: join(PYTHON_ENVIRONMENT_DIRECTORY, process.platform === 'win32' ? 'Scripts' : 'bin'),
-};
 
 /**
  * A PATH for native and host tools; each sandbox installs its private tool projects.
@@ -28,9 +23,7 @@ export function toolsPath(names: string[]): string {
     const context = { root, inspections: new Map(), policyFiles: readPolicy(root) };
     const folders = names.flatMap((name) => {
         const tool = toolPin(manifests, name.replace(/^[a-z]+:/u, ''));
-        const installation = privateToolInstallation(tool, context.policyFiles.policy.runner?.tool);
-        // A private tool comes from the installation gspot made for this repository, which a runner does not put on PATH.
-        if (installation !== undefined) return [join(root, PRIVATE_BIN[installation.kind])];
+        if (privateToolInstallation(tool, context.policyFiles.policy.runner?.tool) !== undefined) return [];
         const found = inspectTool(context, tool);
         if (found.path === undefined || !['ok', 'host'].includes(found.state))
             throw new Error(`Required tool ${name} is ${found.state}. ${found.hint ?? ''} ${found.note ?? ''}`);
