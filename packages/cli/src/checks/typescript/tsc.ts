@@ -52,6 +52,30 @@ function validateBuild(root: string, path: string, visited = new Set<string>()):
     }
 }
 
+// Rewrites the disposable copy of the generated JavaScript project to the scope's files, and counts them.
+function writeScopeProject(session: Session, scratch: string, scope: string, target: string): number {
+    const generatedPath = join(scratch, target);
+    const generated = getTsconfig(scratch, generatedPath);
+    if (generated === undefined) throw new Error(`Missing JavaScript configuration: ${target}`);
+    const scopeFiles = generated.fileNames.filter(
+        (path) => scopeOf(relative(scratch, path).replaceAll('\\', '/'), session.repository.scopes).path === scope,
+    );
+    if (scopeFiles.length === 0) return 0;
+    const authored = JSON.parse(readFileSync(generatedPath, 'utf8')) as Record<string, unknown>;
+    // Managed configurations are read-only; only the disposable copy is rewritten.
+    chmodSync(generatedPath, PRIVATE_FILE);
+    writeFileSync(
+        generatedPath,
+        JSON.stringify({
+            ...authored,
+            files: scopeFiles.map((path) => relative(dirname(generatedPath), path).replaceAll('\\', '/')),
+            include: [],
+            exclude: [],
+        }),
+    );
+    return scopeFiles.length;
+}
+
 /**
  * Checks ordinary projects and every project named by a solution configuration.
  * @param session the repository session
@@ -100,24 +124,9 @@ export async function checkJavascript(session: Session, planned: PlannedCheck): 
     try {
         const directory = join(scratch, scope);
         const config = getTsconfig(scratch, join(directory, 'jsconfig.json'));
-        const generatedPath = join(scratch, target);
-        const generated = getTsconfig(scratch, generatedPath);
-        if (generated === undefined) throw new Error(`Missing JavaScript configuration: ${target}`);
-        const scopeFiles = generated.fileNames.filter(
-            (path) => scopeOf(relative(scratch, path).replaceAll('\\', '/'), session.repository.scopes).path === scope,
-        );
-        const authored = JSON.parse(readFileSync(generatedPath, 'utf8')) as Record<string, unknown>;
-        // Managed configurations are read-only; only the disposable copy is rewritten.
-        chmodSync(generatedPath, PRIVATE_FILE);
-        writeFileSync(
-            generatedPath,
-            JSON.stringify({
-                ...authored,
-                files: scopeFiles.map((path) => relative(dirname(generatedPath), path).replaceAll('\\', '/')),
-                include: [],
-                exclude: [],
-            }),
-        );
+        // A push that changes no JavaScript file leaves the project empty, and the compiler refuses an empty project.
+        if (writeScopeProject(session, scratch, scope, target) === 0)
+            return { check: planned.check, scope, status: 'ok', files: 0, findings: [], duration: 0 };
         const roots = ts.getEffectiveTypeRoots(config?.options ?? {}, { getCurrentDirectory: () => directory });
         const command = ['tsc', '-p', '{config:jsconfig}', '--pretty', 'false'];
         if (roots !== undefined) command.push('--typeRoots', roots.join(','));

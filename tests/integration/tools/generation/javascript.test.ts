@@ -5,8 +5,10 @@ import { run } from '#tests/support/cli/command.ts';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';
+import { planRun } from '#cli/execution/planning/plan.ts';
 import { statSync, chmodSync, existsSync } from 'node:fs';
 import { containing } from '#tests/support/expectations.ts';
+import { checkJavascript } from '#cli/checks/typescript/tsc.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { JAVASCRIPT_AUTHORED_FILES } from '#tests/config/integration/tools/generation.ts';
 
@@ -164,3 +166,30 @@ test('JavaScript projects retain nested compiler options and isolate the deepest
     expect(invalid.stderr).toContain('app/jsconfig.json');
     expect(await Bun.file(join(sandbox.path, 'app/jsconfig.json')).text()).toBe('{');
 }, 60_000);
+
+test('a scope whose project lists no JavaScript file passes with nothing to compile', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml':
+            'version = 1\nkits = ["javascript"]\n[guides]\ninstall = false\n[[scope]]\npath = "site"\nkits = ["javascript"]\n',
+        'source/main.js': 'export const value = 1;\n',
+        'site/README.md': '# No script here\n',
+    });
+    const session = await openSession(sandbox.path);
+    const projects = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
+        version: session.version,
+        packageClient: session.packageClient,
+    }).files.filter(({ path }) => path.endsWith('jsconfig.json'));
+    for (const project of projects) await Bun.write(join(sandbox.path, project.path), project.content);
+    const reopened = await openSession(sandbox.path);
+    const [root] = await planRun(reopened, { stage: 'push', skips: [], only: ['javascript/checkjs'] });
+    // A policy change plans the check in every scope, including one with no JavaScript file.
+    const site = { ...root!, scope: reopened.scopes.find((entry) => entry.scope.path === 'site')!, files: [] };
+    expect(await checkJavascript(reopened, site)).toMatchObject({
+        check: 'javascript/checkjs',
+        scope: 'site',
+        status: 'ok',
+        files: 0,
+        findings: [],
+    });
+});
