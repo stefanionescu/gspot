@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { isDeepStrictEqual } from 'node:util';
+import { openRoot } from '#cli/platform/filesystem.ts';
 import type { FileObservation } from '#cli/types/platform.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import { declaredKits } from '#cli/repository/existing-tooling.ts';
 
@@ -23,7 +23,7 @@ export function retainedConfigurationPaths(
     const declarations = declaredKits(root, sourcePaths, tools);
     const candidates = new Set(declarations.map((entry) => entry.path));
     const shared = new Set(declarations.filter((entry) => entry.shared === true).map((entry) => entry.path));
-    const files = openConfinedRoot(root);
+    const files = openRoot(root);
     try {
         return [...candidates].filter((path) => {
             if (shared.has(path)) return true;

@@ -3,7 +3,7 @@ import { similar } from '#cli/policy/similar.ts';
 import type { Manifest } from '#cli/types/kits.ts';
 import * as messages from '#cli/policy/messages.ts';
 import { NO_KITS } from '#cli/config/commands/init.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import { openRoot } from '#cli/platform/filesystem.ts';
 import type { ScopeEntry } from '#cli/types/repository/repository.ts';
 import { selectKits, requireChain, SelectionError } from '#cli/kits/select.ts';
 import type { KitReason, InitInputs, InitContext, InitSelection } from '#cli/types/commands/init.ts';
@@ -27,7 +27,7 @@ function initScopes(root: string, workspace: ScopeEntry[], scopeFlags: Map<strin
         { name: 'root', path: '', kits: [], source: 'root' },
         ...workspace.filter((scope) => scopeFlags.size === 0 || scopeFlags.has(scope.path)),
     ];
-    const files = openConfinedRoot(root);
+    const files = openRoot(root);
     try {
         for (const path of new Set([...scopes.map((scope) => scope.path), ...scopeFlags.keys()])) {
             if (path === '') continue;

@@ -1,12 +1,12 @@
 import { createHash } from 'node:crypto';
 import { join, relative } from 'node:path';
 import { rmSync, statSync } from 'node:fs';
+import { openRoot } from '#cli/platform/filesystem.ts';
 import { asText } from '#cli/policy/adoption/source.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { SkippedCheckError } from '#cli/checks/result.ts';
 import { mutationTarget } from '#cli/platform/safe-paths.ts';
 import { commandArguments } from '#cli/platform/arguments.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import { scratchCopy } from '#cli/execution/files/workspace.ts';
 import type { SiteBuild } from '#cli/types/checks/static-site.ts';
@@ -31,7 +31,7 @@ async function built(input: EngineInput): Promise<SiteBuild> {
     const command = (asText(input.view.tool('site')['build']) ?? '') || DEFAULT_BUILD;
     const result = await runCheckCommand(input, commandArguments(command), { cwd });
     const output = join(cwd, outputPath);
-    const files = openConfinedRoot(scratch);
+    const files = openRoot(scratch);
     let isBuilt: boolean;
     try {
         isBuilt =
@@ -50,7 +50,7 @@ async function built(input: EngineInput): Promise<SiteBuild> {
  */
 export function filesUnder(folder: string): string[] {
     if (statSync(folder, { throwIfNoEntry: false }) === undefined) return [];
-    const files = openConfinedRoot(folder, 'native');
+    const files = openRoot(folder, 'native');
     const found: string[] = [];
     const directories = [''];
     try {

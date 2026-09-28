@@ -1,7 +1,7 @@
 import { isDeepStrictEqual } from 'node:util';
 import { parse as parseToml } from 'smol-toml';
+import { openRoot } from '#cli/platform/filesystem.ts';
 import { patch as patchToml } from '@decimalturn/toml-patch';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { isMap, isNode, isAlias, isCollection, parseDocument } from 'yaml';
 import type { KeyPath, KitDocument, ConfigurationFormat } from '#cli/types/lifecycle/lifecycle.ts';
 import { modify, parseTree, applyEdits, getNodeValue, type ParseError, findNodeAtLocation } from 'jsonc-parser';
@@ -144,7 +144,7 @@ export function hasConfiguration(
         changes: { path: (string | number)[]; value: unknown }[];
     },
 ): boolean {
-    const files = openConfinedRoot(root);
+    const files = openRoot(root);
     try {
         const current = files.read(output.path);
         if (current === undefined) return false;

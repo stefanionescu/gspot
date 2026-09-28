@@ -31,7 +31,7 @@ commit manifest and lockfile changes together.
 - Choose the Drizzle adapter that matches the actual driver. A `postgres` client uses the
   Postgres.js adapter; a `pg` client uses the node-postgres adapter. Confirm connection and
   transaction support before selecting an HTTP driver or Edge runtime.
-- Keep generated migrations, snapshots, and the journal in the format expected by the selected
+- Keep generated migrations, snapshots, and the log in the format expected by the selected
   runner. Update them together during a Kit upgrade.
 - Use locally installed executables through the project's task runner. Hooks use those tools and
   do not fetch a new CLI version while checking a change.
@@ -533,7 +533,7 @@ version-controlled migrations.
 
 - Configure the dialect, schema discovery, output directory, and target environment explicitly. Keep
   configuration secrets out of version control and command output.
-- Keep SQL, snapshots, and journals together in the format required by the installed Kit release. Do
+- Keep SQL, snapshots, and logs together in the format required by the installed Kit release. Do
   not mix artifacts from different migration formats or delete snapshots to force a clean diff.
 - When Supabase CLI applies migrations, produce files in the format and naming convention it
   accepts. Drizzle's output directory alone does not make its migration history compatible with

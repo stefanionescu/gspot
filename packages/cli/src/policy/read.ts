@@ -3,12 +3,12 @@ import { join } from 'node:path';
 import * as messages from '#cli/policy/messages.ts';
 import { normalize } from '#cli/policy/normalize.ts';
 import { policySchema } from '#cli/policy/schema.ts';
+import { openRoot } from '#cli/platform/filesystem.ts';
 import { knownKeysAt } from '#cli/policy/json-schema.ts';
 import { reasonProblems } from '#cli/policy/problems.ts';
 import { TomlError, parse as parseToml } from 'smol-toml';
 import { pathProblems } from '#cli/policy/path-problems.ts';
 import { FIELD_PROBLEMS } from '#cli/config/policy/policy.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { unknownKitProblems, completenessProblems } from '#cli/policy/validate.ts';
 import { policyLocation, policyPosition, sourceLocations } from '#cli/policy/source-locations.ts';
 
@@ -224,7 +224,7 @@ export function assertNoProblems(files: PolicyFiles): void {
  */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: True when a root has a gspot.toml. 3 files make 3 calls; one owner keeps that behavior in one place.
 export function hasPolicy(root: string): boolean {
-    return openConfinedRoot(root).read('gspot.toml') !== undefined;
+    return openRoot(root).read('gspot.toml') !== undefined;
 }
 
 /**
@@ -234,7 +234,7 @@ export function hasPolicy(root: string): boolean {
  */
 export function readPolicy(root: string): PolicyFiles {
     const path = join(root, 'gspot.toml');
-    const current = openConfinedRoot(root).read('gspot.toml');
+    const current = openRoot(root).read('gspot.toml');
     if (current === undefined) throw new PolicyError([messages.fileMissing('gspot.toml')]);
     const text = current.bytes.toString('utf8');
     const { policy, problems } = readPolicyText(text, 'gspot.toml', root);

@@ -1,6 +1,6 @@
 import { rmSync } from 'node:fs';
 import { join, relative } from 'node:path';
-import type { ConfinedRoot } from '#cli/types/platform.ts';
+import type { Root } from '#cli/types/platform.ts';
 import { swiftBuildPlan } from '#cli/checks/swift/plan.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
@@ -38,7 +38,7 @@ function diagnostics(input: EngineInput, output: string, levels: Set<string>, na
 
 // The package manager hands the compiler its sources in a response file, written as @path. The analyzer reads the
 // file names from the log and opens no response file, so each one is written out in the log.
-function sourcesWritten(line: string, folder: string, files: ConfinedRoot): string {
+function sourcesWritten(line: string, folder: string, files: Root): string {
     if (!line.includes('swiftc ')) return line;
     return line.replaceAll(RESPONSE_FILE, (token, path: string) => {
         const content = files.read(relative(folder, path).replaceAll('\\', '/'));

@@ -1,9 +1,9 @@
 // apply --dry-run: render in memory, read recorded generated files, compare bytes, print the diff.
 import { createTwoFilesPatch } from 'diff';
+import { openRoot } from '#cli/platform/filesystem.ts';
 import { ruleDiff } from '#cli/lifecycle/rule-diff.ts';
 import type { Policy } from '#cli/types/policy/policy.ts';
 import { CACHE_DIRECTORY } from '#cli/config/platform.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { pythonLockDrift } from '#cli/tools/python-project.ts';
 import { currentBlock } from '#cli/lifecycle/managed-blocks.ts';
 import type { GeneratedProposal } from '#cli/types/generation.ts';
@@ -30,9 +30,9 @@ function patch(path: string, before: string, after: string, beforeName: string):
 
 function fileDrift(root: string, rendered: GeneratedProposal): DriftEntry[] {
     const entries: DriftEntry[] = [];
-    const confined = openConfinedRoot(root);
+    const files = openRoot(root);
     for (const file of rendered.files) {
-        const current = confined.read(file.path);
+        const current = files.read(file.path);
         if (current === undefined) {
             entries.push({ path: file.path, kind: 'missing', ...ruleDiff(file, undefined) });
             continue;
@@ -53,9 +53,9 @@ function fileDrift(root: string, rendered: GeneratedProposal): DriftEntry[] {
 
 function blockDrift(root: string, rendered: GeneratedProposal): DriftEntry[] {
     const entries: DriftEntry[] = [];
-    const confined = openConfinedRoot(root);
+    const files = openRoot(root);
     for (const block of rendered.blocks) {
-        const text = confined.read(block.path)?.bytes.toString('utf8') ?? '';
+        const text = files.read(block.path)?.bytes.toString('utf8') ?? '';
         const current = currentBlock(text, block.style);
         const wanted = block.block.trim();
         if (current === undefined) entries.push({ path: block.path, kind: 'missing' });
@@ -71,7 +71,7 @@ function blockDrift(root: string, rendered: GeneratedProposal): DriftEntry[] {
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Two generated files can be missing or changed; the caller sits at the complexity limit.
 function presenceDrift(root: string, path: string): DriftEntry {
-    return { path, kind: openConfinedRoot(root).read(path) === undefined ? 'missing' : 'changed' };
+    return { path, kind: openRoot(root).read(path) === undefined ? 'missing' : 'changed' };
 }
 
 function otherDrift(root: string, rendered: GeneratedProposal): DriftEntry[] {

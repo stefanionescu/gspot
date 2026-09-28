@@ -66,7 +66,7 @@ Keep the result in the existing owning acceptance item, not a separate audit fra
 | Temporary test directories   | [testdirs](https://github.com/luxass/testdirs)                                                   | Adopted as a direct development dependency used by product tests. Acquire the disposable directory before filling it. Do not maintain tests of its own API.                                                                       |
 | Temporary directory disposal | [Node filesystem APIs](https://nodejs.org/api/fs.html#fspromisesmkdtempdisposableprefix-options) | Prefer native operations where supported. `mkdtempDisposable` requires Node 24.4.0 or later, above the declared Node floor; the local Bun 1.3.11 inspection exposes no such function. Do not assume Bun implements a Node API.    |
 | Process lifecycle            | [Execa](https://github.com/sindresorhus/execa)                                                   | Adopted for the shared process boundary after Bun and compiled-consumer execution. Preserve the process-failure regressions; Windows execution, process-tree termination, and command-session cancellation remain required gates. |
-| Atomic file replacement      | [write-file-atomic](https://github.com/npm/write-file-atomic)                                    | Replacement and cleanup failures, bytes and modes, concurrency, and supported-platform behavior. A single-file atomic writer does not establish path confinement, multi-file recovery, or ownership.                              |
+| Atomic file replacement      | [write-file-atomic](https://github.com/npm/write-file-atomic)                                    | Replacement and cleanup failures, bytes and modes, concurrency, and supported-platform behavior. A single-file atomic writer does not establish path bounds, multi-file recovery, or ownership.                                   |
 | Writer serialization         | [proper-lockfile](https://github.com/moxystudio/node-proper-lockfile)                            | Contention, interrupted writers, stale locks, lock compromise, and cleanup. Verify its behavior against the lifecycle transaction before adopting it.                                                                             |
 | Git worktrees and revisions  | The installed Git executable through the shared runner                                           | Exact staged and pushed objects, checked exits, worktree preservation, and cleanup. Do not add a Git wrapper that only renames argument arrays.                                                                                   |
 | Installed-package acceptance | The existing Verdaccio dependency and npm commands                                               | Own the server process, port, registry routing, publication, consumer isolation, and shutdown. Do not implement a registry or fake package installation.                                                                          |
@@ -77,7 +77,7 @@ Do not add dependency API tests or tests of test helpers. Evaluate dependencies 
 keep regression tests only for behavior owned by gspot.
 
 The accepted package has an MIT license. Its Zod dependency is already used by the repository.
-The exact version belongs to `package.json` and the lockfile. Its API does not provide the lifecycle path-confinement or
+The exact version belongs to `package.json` and the lockfile. Its API does not provide the lifecycle path-bounds or
 recovery contract required for mutations of a developer repository. Do not use disposable test
 directories as the production mutation boundary.
 
@@ -105,7 +105,7 @@ The library does not own gspot tool selection, version policy, domain preparatio
 
 The current lifecycle boundary uses standard filesystem APIs in
 `packages/cli/src/platform/filesystem.ts`. It validates repository-relative paths and existing
-parents, checks expected bytes and modes before replacement, and supports journaled recovery.
+parents, checks expected bytes and modes before replacement, and supports logged recovery.
 It does not use `__openat` or provide handle-relative protection against hostile concurrent
 directory replacement. That race is outside the contract. Native platform evidence and
 remaining ownership work belong in [remaining work](22-remaining.md).

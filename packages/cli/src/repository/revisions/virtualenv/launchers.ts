@@ -3,7 +3,7 @@ import { SelectionError } from '#cli/kits/select.ts';
 import { EXECUTE_BITS } from '#cli/config/platform.ts';
 import { stat, readdir, realpath } from 'node:fs/promises';
 import { join, posix, basename, isAbsolute } from 'node:path';
-import type { ConfinedRoot, FileObservation } from '#cli/types/platform.ts';
+import type { Root, FileObservation } from '#cli/types/platform.ts';
 import type { PythonLauncher, RelocationContext } from '#cli/types/repository/revisions.ts';
 import { relocateWindowsLauncher } from '#cli/repository/revisions/virtualenv/windows-launcher.ts';
 
@@ -47,11 +47,7 @@ async function hostInterpreter(home: string, name: string, windows: boolean): Pr
 }
 
 // The kind of launcher a file is: a Windows executable, a script with a shebang, or neither.
-async function launcherKind(
-    selected: ConfinedRoot,
-    path: string,
-    name: string,
-): Promise<'windows' | 'shell' | undefined> {
+async function launcherKind(selected: Root, path: string, name: string): Promise<'windows' | 'shell' | undefined> {
     const signature = await Bun.file(selected.source(path)).slice(0, 'MZ'.length).text();
     if (signature === '#!') return 'shell';
     return signature === 'MZ' && name.endsWith('.exe') ? 'windows' : undefined;

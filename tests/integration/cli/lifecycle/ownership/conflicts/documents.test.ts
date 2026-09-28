@@ -3,12 +3,12 @@ import { test, expect } from 'bun:test';
 import { parse as parseToml } from 'smol-toml';
 import { testdir, createFileTree } from 'testdirs';
 import { readFileSync, writeFileSync } from 'node:fs';
-import { openLifecycleOwner } from '#cli/lifecycle/ownership/owner.ts';
+import { openOwner } from '#cli/lifecycle/ownership/owner.ts';
 
 test('TOML task ownership refuses malformed and edited fields and creates new tables', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, { 'broken.toml': '[tasks\n' });
-    const owner = openLifecycleOwner(directory.path);
+    const owner = openOwner(directory.path);
     try {
         const changes = [{ path: ['tasks', 'gspot:check', 'run'], value: 'gspot check' }];
         expect(() => owner.proposeConfiguration('broken.toml', 'toml', changes, true)).toThrow();
@@ -26,7 +26,7 @@ test('TOML task ownership refuses malformed and edited fields and creates new ta
 
 test('edited and repeated managed blocks are preserved without overwriting their contents', async () => {
     await using directory = await testdir();
-    const owner = openLifecycleOwner(directory.path);
+    const owner = openOwner(directory.path);
     try {
         owner.replaceBlock('AGENTS.md', 'installed instructions', 'markdown');
         const edited = owner
@@ -48,7 +48,7 @@ test('edited and repeated managed blocks are preserved without overwriting their
 test('shared JSON preserves changed managed keys and rejects malformed input', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, { 'tsconfig.json': '{"extends":"./original.json"}\n' });
-    const owner = openLifecycleOwner(directory.path);
+    const owner = openOwner(directory.path);
     try {
         owner.applyProposal(
             owner.proposeConfiguration('tsconfig.json', 'json', [{ path: ['extends'], value: './managed.json' }], true),

@@ -32,7 +32,7 @@ test('the Bash port example accepts decimal values and rejects syntax and range 
     expect(existsSync(join(sandbox.path, 'injected'))).toBe(false);
 });
 
-test('the Bash deletion example confines removal to an approved direct build directory', async () => {
+test('the Bash deletion example bounds removal to an approved direct build directory', async () => {
     const source = readFileSync(
         new URL('../../../../packages/cli/guides/language/bash/SAFETY.md', import.meta.url),
         'utf8',

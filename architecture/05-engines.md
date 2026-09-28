@@ -401,7 +401,7 @@ The contract does not require a particular session field, hash helper, or module
 
 ### Acceptance K-53
 
-Initialization detects and proposes once, validates the accepted proposal, then applies it through the lifecycle owner. It runs no checks and has no accidental second application. Verify read-only preview, unchanged authored files, final selection, and absence of check execution.
+Initialization detects and proposes once, validates the accepted proposal, then applies it through the owner. It runs no checks and has no accidental second application. Verify read-only preview, unchanged authored files, final selection, and absence of check execution.
 
 ### Acceptance K-125
 

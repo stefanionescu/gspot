@@ -257,11 +257,11 @@ Rules:
 - ViewModels are main-actor isolated; move expensive work into use cases,
   repositories, actors, or background tasks.
 - Use `@MainActor` for UI-facing observable state.
-- Keep `Task` creation at lifecycle owners such as ViewModels, coordinators,
+- Keep `Task` creation at owners such as ViewModels, coordinators,
   services, or views using `.task`.
 - Avoid starting long-running work in initializers; expose `start()`, `load()`,
   or lifecycle methods instead.
-- Do not create unstructured `Task` values without a lifecycle owner and
+- Do not create unstructured `Task` values without a owner and
   cancellation strategy.
 - Store task handles when work must be cancellable because a view disappears,
   the user retries, or a newer request supersedes an older one.

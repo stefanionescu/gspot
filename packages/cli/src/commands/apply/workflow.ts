@@ -1,7 +1,7 @@
 import { emitAll } from '#cli/generation/outputs.ts';
 import { assertNoProblems } from '#cli/policy/read.ts';
+import { writeGenerated } from '#cli/lifecycle/apply.ts';
 import { writePin } from '#cli/lifecycle/version-pin.ts';
-import { publishGenerated } from '#cli/lifecycle/apply.ts';
 import type { FileObservation } from '#cli/types/platform.ts';
 import type { Session } from '#cli/types/execution/execution.ts';
 import type { GeneratedProposal } from '#cli/types/generation.ts';
@@ -10,7 +10,7 @@ import { CONFLICT_MARKERS } from '#cli/config/lifecycle/lifecycle.ts';
 import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import { installPackages, hasOwnedPackages } from '#cli/tools/vale.ts';
 import { preparePackageProject } from '#cli/tools/packages/project.ts';
-import type { ApplyReport, LifecycleOwner } from '#cli/types/lifecycle/lifecycle.ts';
+import type { Owner, ApplyReport } from '#cli/types/lifecycle/lifecycle.ts';
 
 async function installProsePackages(session: Session, report: ApplyReport): Promise<void> {
     const isProse = session.scopes.some((selection) =>
@@ -23,7 +23,7 @@ async function installProsePackages(session: Session, report: ApplyReport): Prom
 }
 
 // A generated file a merge left with conflict markers is no edit anyone keeps: apply writes it again (K-274).
-function conflictedOutputs(owner: LifecycleOwner, rendered: GeneratedProposal): Map<string, FileObservation> {
+function conflictedOutputs(owner: Owner, rendered: GeneratedProposal): Map<string, FileObservation> {
     const conflicted = new Map<string, FileObservation>();
     for (const file of rendered.files) {
         const current = owner.read(file.path);
@@ -64,7 +64,7 @@ export async function applyAll(session: Session, replace?: ReadonlyMap<string, F
         if (owner.read('gspot.toml')?.bytes.toString('utf8') !== session.policyFiles.text)
             throw new Error('The gspot.toml file changed during tool resolution. Retry the command.');
         report.notes.push(...rendered.notes);
-        publishGenerated(owner, {
+        writeGenerated(owner, {
             root: session.root,
             rendered,
             report,

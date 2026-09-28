@@ -3,16 +3,16 @@ import { test, expect } from 'bun:test';
 import { parse as parseYaml } from 'yaml';
 import { parse as parseToml } from 'smol-toml';
 import { testdir, createFileTree } from 'testdirs';
-import { ownershipSchema } from '#cli/lifecycle/journal.ts';
+import { ownershipSchema } from '#cli/lifecycle/log.ts';
 import { applyBlock } from '#cli/lifecycle/managed-blocks.ts';
-import { openLifecycleOwner } from '#cli/lifecycle/ownership/owner.ts';
+import { openOwner } from '#cli/lifecycle/ownership/owner.ts';
 import { statSync, chmodSync, readFileSync, writeFileSync } from 'node:fs';
 
 test('managed block updates and removal preserve authored bytes and subsequent surrounding edits', async () => {
     await using directory = await testdir();
     const original = '# Authored\r\n\r\nKeep these trailing lines.\r\n\r\n';
     await createFileTree(directory.path, { 'AGENTS.md': original });
-    let owner = openLifecycleOwner(directory.path);
+    let owner = openOwner(directory.path);
     try {
         expect(owner.replaceBlock('AGENTS.md', 'first instructions', 'markdown')).toBe('changed');
         const installed = owner.read('AGENTS.md')!.bytes.toString('utf8');
@@ -25,7 +25,7 @@ test('managed block updates and removal preserve authored bytes and subsequent s
             prefix + applyBlock(original, 'updated instructions', 'markdown') + suffix,
         );
         owner.close();
-        owner = openLifecycleOwner(directory.path);
+        owner = openOwner(directory.path);
         expect(owner.restore('AGENTS.md')).toBe('changed');
         expect(owner.read('AGENTS.md')!.bytes.toString('utf8')).toBe(prefix + original + suffix);
     } finally {
@@ -36,7 +36,7 @@ test('managed block updates and removal preserve authored bytes and subsequent s
 test('removing a block restores an originally empty file instead of deleting it', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, { 'AGENTS.md': '' });
-    const owner = openLifecycleOwner(directory.path);
+    const owner = openOwner(directory.path);
     try {
         expect(owner.replaceBlock('AGENTS.md', 'instructions', 'markdown')).toBe('changed');
         expect(owner.restore('AGENTS.md')).toBe('changed');
@@ -51,7 +51,7 @@ test('shared JSON updates preserve comments and later authored settings through 
     const original =
         '{\n  // Keep this comment.\n  "extends": "./authored.json",\n  "compilerOptions": { "strict": false }\n}\n';
     await createFileTree(directory.path, { 'tsconfig.json': original });
-    let owner = openLifecycleOwner(directory.path);
+    let owner = openOwner(directory.path);
     try {
         expect(
             owner.applyProposal(
@@ -77,7 +77,7 @@ test('shared JSON updates preserve comments and later authored settings through 
             edited.replace('./.gspot/first.json', './.gspot/second.json'),
         );
         owner.close();
-        owner = openLifecycleOwner(directory.path);
+        owner = openOwner(directory.path);
         expect(owner.restore('tsconfig.json')).toBe('changed');
         expect(owner.read('tsconfig.json')!.bytes.toString('utf8')).toBe(
             original.replace('"strict": false', '"strict": true'),
@@ -91,7 +91,7 @@ test('leaving JSON keys restores their original values and preserves authored ch
     await using directory = await testdir();
     const original = '{"scripts":{"prepare":"build-app","check":"gspot check"},"optional":null,"private":true}\n';
     await createFileTree(directory.path, { 'package.json': original });
-    const owner = openLifecycleOwner(directory.path);
+    const owner = openOwner(directory.path);
     try {
         owner.applyProposal(
             owner.proposeConfiguration(
@@ -130,7 +130,7 @@ test('Lefthook YAML ownership preserves authored commands and comments through u
     await using directory = await testdir();
     const original = '# Keep this hook.\npre-commit:\n  commands:\n    authored:\n      run: echo original\n';
     await createFileTree(directory.path, { 'lefthook.yml': original });
-    const owner = openLifecycleOwner(directory.path);
+    const owner = openOwner(directory.path);
     try {
         expect(
             owner.applyProposal(
@@ -169,7 +169,7 @@ test('adopting identical authored configuration retains original recovery bytes 
     const content = '{\n    "scripts": {"check": "gspot check"},\n    "authored": true\n}\n';
     await createFileTree(directory.path, { 'package.json': content });
     chmodSync(join(directory.path, 'package.json'), 0o640);
-    const owner = openLifecycleOwner(directory.path);
+    const owner = openOwner(directory.path);
     try {
         owner.applyProposals([
             owner.proposeConfiguration(
@@ -198,7 +198,7 @@ test('identical unrecorded blocks and configuration fields survive adoption, lat
     const instructions = applyBlock('Authored instructions.\n', 'existing instructions', 'markdown');
     const configuration = '{"scripts":{"check":"gspot check"},"authored":true}\n';
     await createFileTree(directory.path, { 'AGENTS.md': instructions, 'package.json': configuration });
-    const owner = openLifecycleOwner(directory.path);
+    const owner = openOwner(directory.path);
     try {
         owner.applyProposals([
             owner.proposeBlock('AGENTS.md', 'existing instructions', 'markdown'),
@@ -227,7 +227,7 @@ test.each([
         await using directory = await testdir();
         const path = `config.${format}`;
         await createFileTree(directory.path, { [path]: source });
-        const owner = openLifecycleOwner(directory.path);
+        const owner = openOwner(directory.path);
         const fields = [
             { path: ['created', 'nested', 'first'], value: 1 },
             { path: ['created', 'nested', 'second'], value: 2 },

@@ -4,7 +4,7 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { openLifecycleOwner } from '#cli/lifecycle/ownership/owner.ts';
+import { openOwner } from '#cli/lifecycle/ownership/owner.ts';
 
 test('Bun safeguards preserve stricter age and unrelated fields across apply and restoration', async () => {
     await using repository = await testdir();
@@ -20,7 +20,7 @@ test('Bun safeguards preserve stricter age and unrelated fields across apply and
         version: session.version,
         packageClient: session.packageClient,
     }).configurations.find((entry) => entry.path === 'bunfig.toml')!;
-    const owner = openLifecycleOwner(repository.path);
+    const owner = openOwner(repository.path);
     owner.applyProposal(owner.proposeConfiguration(generated.path, generated.format, generated.changes, true));
     const installed = readFileSync(join(repository.path, 'bunfig.toml'), 'utf8');
     expect(Bun.TOML.parse(installed)).toStrictEqual({

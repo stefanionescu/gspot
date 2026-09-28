@@ -4,7 +4,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import type { SarifReport } from '#tests/types/cli.ts';
-import { ownershipSchema } from '#cli/lifecycle/journal.ts';
+import { ownershipSchema } from '#cli/lifecycle/log.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 
 import {
@@ -171,8 +171,8 @@ test.each(['before', 'after'])('an interrupted report %s publication recovers on
     const program = `
 import { mock } from 'bun:test';
 const boundary=await import(${JSON.stringify(boundary)});
-const open=boundary.openConfinedRoot;
-mock.module(${JSON.stringify(boundary)},()=>({...boundary,openConfinedRoot(root){
+const open=boundary.openRoot;
+mock.module(${JSON.stringify(boundary)},()=>({...boundary,openRoot(root){
 const files=open(root);
 return {...files,write(path,value,expected){
 if(path==='.gspot/reports/report.json' && ${JSON.stringify(point)}==='before') process.exit(73);

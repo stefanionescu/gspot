@@ -3,7 +3,7 @@ import { pathToFileURL } from 'node:url';
 import { dirname, join } from 'node:path';
 import { createRequire } from 'node:module';
 import type { LicenseChecker } from '#cli/types/native.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import { openRoot } from '#cli/platform/filesystem.ts';
 import type { licenseRequest, licenseResponse } from '#cli/native/protocol.ts';
 
 const reportSchema = z.record(
@@ -11,9 +11,9 @@ const reportSchema = z.record(
     z.object({ licenses: z.union([z.string(), z.array(z.string())]).optional() }),
 );
 
-// Resolve from an observed project directory only after its manifest passes confined access.
+// Resolve from an observed project directory only after its manifest passes files access.
 function installedProject(root: string, from: string): string {
-    const files = openConfinedRoot(root);
+    const files = openRoot(root);
     try {
         const path = dirname(from);
         if (path !== '.') files.stat(path);

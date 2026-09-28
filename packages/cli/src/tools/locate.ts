@@ -1,11 +1,11 @@
 // Where an executable and its installed package version are found: repository bin folders, PATH, and mise shims.
 import { homedir } from 'node:os';
 import type { ToolPin } from '#cli/types/kits.ts';
+import type { Root } from '#cli/types/platform.ts';
 import { join, dirname, relative } from 'node:path';
+import { openRoot } from '#cli/platform/filesystem.ts';
 import { miseHome } from '#cli/platform/environment.ts';
-import type { ConfinedRoot } from '#cli/types/platform.ts';
 import { MANAGED_PREFIX } from '#cli/config/tools/tools.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { statSync, readFileSync, realpathSync } from 'node:fs';
 import type { PrivateKind, PackageFacts } from '#cli/types/tools/tools.ts';
 import { NODE_MODULES_DIRECTORY, PYTHON_ENVIRONMENT_DIRECTORY } from '#cli/config/platform.ts';
@@ -23,8 +23,8 @@ function searchDirectories(root: string, roots: string[], privateKind: PrivateKi
     ]);
 }
 
-// Whether a candidate exists: a managed path must resolve through the confined root, any other is read from disk.
-function candidateExists(files: ConfinedRoot, root: string, path: string): boolean {
+// Whether a candidate exists: a managed path must resolve through the files root, any other is read from disk.
+function candidateExists(files: Root, root: string, path: string): boolean {
     const local = relative(root, path).replaceAll('\\', '/');
     if (!local.startsWith(MANAGED_PREFIX)) return statSync(path, { throwIfNoEntry: false }) !== undefined;
     try {
@@ -38,7 +38,7 @@ function candidateExists(files: ConfinedRoot, root: string, path: string): boole
 
 // The executables of the name that exist in the repository's search folders.
 function repositoryCandidates(root: string, directories: string[], names: string[]): string[] {
-    const files = openConfinedRoot(root);
+    const files = openRoot(root);
     try {
         const paths = directories.flatMap((directory) => names.map((file) => join(directory, file)));
         return paths.filter((path) => candidateExists(files, root, path));
@@ -58,7 +58,7 @@ function hostCandidates(name: string, names: string[]): string[] {
 }
 
 // The parsed package.json at a path, or undefined when there is none or it lies outside the managed tree.
-function packageFacts(files: ConfinedRoot | undefined, root: string, manifest: string): PackageFacts | undefined {
+function packageFacts(files: Root | undefined, root: string, manifest: string): PackageFacts | undefined {
     if (files === undefined) {
         try {
             return JSON.parse(readFileSync(manifest, 'utf8')) as PackageFacts;
@@ -72,7 +72,7 @@ function packageFacts(files: ConfinedRoot | undefined, root: string, manifest: s
 }
 
 // The version the first package.json above a folder declares for the named package, searching upward.
-function versionAbove(files: ConfinedRoot | undefined, root: string, start: string, name: string): string | undefined {
+function versionAbove(files: Root | undefined, root: string, start: string, name: string): string | undefined {
     for (let folder = start; folder !== dirname(folder); folder = dirname(folder)) {
         const manifest = join(folder, 'package.json');
         if (files !== undefined && !relative(root, manifest).replaceAll('\\', '/').startsWith(MANAGED_PREFIX))
@@ -107,9 +107,7 @@ export function locateCandidates(root: string, roots: string[], name: string, pr
  */
 export function packageVersion(root: string, path: string, name: string | undefined): string | undefined {
     if (name === undefined) return undefined;
-    const files = relative(root, path).replaceAll('\\', '/').startsWith(MANAGED_PREFIX)
-        ? openConfinedRoot(root)
-        : undefined;
+    const files = relative(root, path).replaceAll('\\', '/').startsWith(MANAGED_PREFIX) ? openRoot(root) : undefined;
     try {
         return versionAbove(
             files,

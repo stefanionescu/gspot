@@ -1,4 +1,4 @@
-// The configuration root confines every write: a linked managed directory is refused and a nested policy owns only its project.
+// The configuration root bounds every write: a linked managed directory is refused and a nested policy owns only its project.
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';

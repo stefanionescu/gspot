@@ -1,12 +1,12 @@
 // .gspot/cache/: a recorded verdict keyed on the tool version, the configuration hash and the content hash of every file read.
 import { globbySync } from 'globby';
 import { join, relative } from 'node:path';
+import { openRoot } from '#cli/platform/filesystem.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { CACHE_DIRECTORY } from '#cli/config/platform.ts';
 import { checkResultSchema } from '#cli/checks/result.ts';
 import { statSync, readdirSync, type Dirent } from 'node:fs';
 import type { CheckResult } from '#cli/types/checks/checks.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { reportStorageFailure } from '#cli/output/messages.ts';
 import type { CacheKeyInput } from '#cli/types/execution/execution.ts';
 import type { SourceObservations } from '#cli/types/repository/repository.ts';
@@ -41,7 +41,7 @@ export function fileHash(root: string, path: string, observations?: SourceObserv
  * @returns the files the selectors name, relative to the root
  */
 export function cacheInputs(root: string, patterns: string[]): string[] {
-    const files = openConfinedRoot(root, 'native');
+    const files = openRoot(root, 'native');
     function readDirectory(path: string): string[];
     function readDirectory(path: string, options: { withFileTypes: true }): Dirent[];
     function readDirectory(path: string, options?: { withFileTypes: true }): string[] | Dirent[] {
@@ -85,12 +85,12 @@ export function readCached(root: string, key: string): CheckResult | undefined {
         const relative = `${CACHE_DIRECTORY}/${key}.json`;
         const recorded = readOwnership(root).files.find((entry) => entry.path === relative && entry.kind === 'runtime');
         if (recorded?.installed === undefined) return undefined;
-        const confined = openConfinedRoot(root);
+        const files = openRoot(root);
         let file;
         try {
-            file = confined.read(relative);
+            file = files.read(relative);
         } finally {
-            confined.close();
+            files.close();
         }
         if (
             file?.mode !== recorded.installed.mode ||
@@ -137,7 +137,7 @@ export function pruneCache(root: string): void {
     const cutoff = Date.now() - RETENTION_MS;
     try {
         runOwnedLifecycle(root, (owner) => {
-            const files = openConfinedRoot(root);
+            const files = openRoot(root);
             const proposals = readOwnership(root)
                 .files.filter((entry) => entry.kind === 'runtime' && CACHE_ENTRY.test(entry.path))
                 .filter((entry) => {

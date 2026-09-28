@@ -4,9 +4,9 @@ import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { rejection } from '#tests/support/expectations.ts';
 import { applyCommand } from '#cli/commands/apply/command.ts';
+import { openOwner } from '#cli/lifecycle/ownership/owner.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
 import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
-import { openLifecycleOwner } from '#cli/lifecycle/ownership/owner.ts';
 
 const { version: GSPOT_VERSION } = packageManifest;
 
@@ -97,7 +97,7 @@ test('apply validates obsolete output parents before publishing new configuratio
         'outside/old.txt': 'outside bytes\n',
     });
     const root = join(directory.path, 'project');
-    const owner = openLifecycleOwner(root);
+    const owner = openOwner(root);
     try {
         owner.replace('.gspot/obsolete/old.txt', { bytes: Buffer.from('installed\n'), mode: 0o644 }, 'config');
     } finally {

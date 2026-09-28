@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { parse as parseYaml } from 'yaml';
 import { isDeepStrictEqual } from 'node:util';
 import { PATH } from '#cli/config/generation.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import { openRoot } from '#cli/platform/filesystem.ts';
 import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import type { ConfigurationOutput } from '#cli/types/generation.ts';
 import { hookPrefix, hookCommand } from '#cli/generation/hooks/scripts.ts';
@@ -25,7 +25,7 @@ export function preCommitConfiguration(
     runner: string | undefined,
     binary: string | undefined,
 ): ConfigurationOutput {
-    const files = openConfinedRoot(root);
+    const files = openRoot(root);
     let source;
     try {
         source = files.read(PATH);

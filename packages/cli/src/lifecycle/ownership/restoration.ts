@@ -2,13 +2,13 @@
 import { isDeepStrictEqual } from 'node:util';
 import { blockSpan } from '#cli/lifecycle/managed-blocks.ts';
 import type { FileObservation } from '#cli/types/platform.ts';
-import { matches, identity } from '#cli/lifecycle/ownership/journal.ts';
+import { matches, identity } from '#cli/lifecycle/ownership/log.ts';
 import { currentObservation } from '#cli/lifecycle/ownership/proposals.ts';
 import { configurationDocument } from '#cli/lifecycle/configuration/document.ts';
 import { pruneConfigurationParents } from '#cli/lifecycle/configuration/plan.ts';
 
 import type {
-    Journal,
+    Log,
     Restoration,
     FileProposal,
     OwnershipEntry,
@@ -61,13 +61,13 @@ function restoreBlock(
     return next === '' && !hasOriginal ? {} : { next: { bytes: Buffer.from(next), mode: current.mode } };
 }
 
-// The original bytes the journal backed up when the file was first owned.
+// The original bytes the log backed up when the file was first owned.
 function originalObservation(
-    journal: Journal,
+    log: Log,
     path: string,
     original: NonNullable<OwnershipEntry['original']>,
 ): FileObservation {
-    const saved = journal.confined.read(original.backup);
+    const saved = log.files.read(original.backup);
     if (saved === undefined || identity(saved).hash !== original.hash)
         throw new Error(`Original recovery bytes are missing or changed for ${path}: ${original.backup}`);
     return { bytes: saved.bytes, mode: original.mode, ...(original.isLink ? { isLink: true } : {}) };
@@ -75,21 +75,21 @@ function originalObservation(
 
 // The bytes that replace an owned file when it is given back, or {} when it is removed.
 function originalRestoration(
-    journal: Journal,
+    log: Log,
     path: string,
     existing: OwnershipEntry,
     current: FileObservation | undefined,
     original: FileObservation | undefined,
 ): Restoration | undefined {
     if (current !== undefined && !matches(current, existing.installed)) return undefined;
-    const saved = existing.original === undefined ? undefined : originalObservation(journal, path, existing.original);
+    const saved = existing.original === undefined ? undefined : originalObservation(log, path, existing.original);
     const next = original ?? saved;
     return next === undefined ? {} : { next };
 }
 
 // What a restoration writes, {} for a removal, or undefined when the file must be preserved.
 function restorationFor(
-    journal: Journal,
+    log: Log,
     path: string,
     existing: OwnershipEntry,
     current: FileObservation | undefined,
@@ -102,22 +102,22 @@ function restorationFor(
     }
     if (current !== undefined && existing.block !== undefined)
         return restoreBlock(current, existing.block, existing.original !== undefined);
-    return originalRestoration(journal, path, existing, current, original);
+    return originalRestoration(log, path, existing, current, original);
 }
 
 /**
  * Proposes giving a file back: merged fields return, a managed block leaves, or the original bytes return.
- * @param journal the open journal
+ * @param log the open log
  * @param path the file
  * @param original bytes to restore instead of the recorded original
  * @returns the proposal
  */
-export function proposeRestoration(journal: Journal, path: string, original?: FileObservation): FileProposal {
-    const existing = journal.entryFor(path);
-    const current = currentObservation(journal, path, existing);
+export function proposeRestoration(log: Log, path: string, original?: FileObservation): FileProposal {
+    const existing = log.entryFor(path);
+    const current = currentObservation(log, path, existing);
     const base = { path, current, previous: existing };
     if (existing === undefined) return { ...base, status: 'preserved' };
-    const restoration = restorationFor(journal, path, existing, current, original);
+    const restoration = restorationFor(log, path, existing, current, original);
     if (restoration === undefined) return { ...base, status: 'preserved' };
     return { ...base, ...(restoration.next === undefined ? {} : { next: restoration.next }), status: 'changed' };
 }

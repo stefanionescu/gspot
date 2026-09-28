@@ -1,7 +1,7 @@
-// Where Git keeps this clone's hooks, and which root confines and records them.
+// Where Git keeps this clone's hooks, and which root bounds and records them.
 import { runBlocking } from '#cli/platform/spawn.ts';
+import { openRoot } from '#cli/platform/filesystem.ts';
 import { STATE_DIRECTORY } from '#cli/config/platform.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import type { HookLocation } from '#cli/types/repository/repository.ts';
 import { dirname, resolve, basename, relative, isAbsolute } from 'node:path';
 
@@ -17,7 +17,7 @@ function assertHooksDirectory(top: string, local: string | undefined, location: 
     if (local === '') return;
     const root = local === undefined ? location.root : top;
     const path = local ?? location.directory;
-    const files = openConfinedRoot(root);
+    const files = openRoot(root);
     try {
         const directory = files.stat(path);
         if (directory !== undefined && !directory.isDirectory())
@@ -46,7 +46,7 @@ export function relativeInside(from: string, to: string): string | undefined {
  */
 export function hookLocation(root: string): HookLocation {
     const top = resolve(root, gitOutput(root, ['rev-parse', '--show-toplevel'], 'Git root'));
-    // An explicit path format canonicalizes symlinks before confinement can inspect them.
+    // An explicit path format canonicalizes symlinks before bounds can inspect them.
     const absolute = resolve(top, gitOutput(top, ['rev-parse', '--git-path', 'hooks'], 'Git hooks'));
     const location: HookLocation = {
         root: dirname(absolute),

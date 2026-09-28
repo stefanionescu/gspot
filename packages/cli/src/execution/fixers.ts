@@ -4,19 +4,19 @@ import { createTwoFilesPatch } from 'diff';
 import type { ToolPin } from '#cli/types/kits.ts';
 import { TOOL_DEADLINE } from '#cli/config/kits.ts';
 import { toPlatform } from '#cli/platform/paths.ts';
+import { openRoot } from '#cli/platform/filesystem.ts';
 import { runToolCommand } from '#cli/tools/command.ts';
 import { toolPin, inspectTool } from '#cli/tools/inspect.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { prepareCommand } from '#cli/execution/tool/runner.ts';
+import type { Root, SpawnResult } from '#cli/types/platform.ts';
 import { unlinkSync, readFileSync, writeFileSync } from 'node:fs';
-import type { SpawnResult, ConfinedRoot } from '#cli/types/platform.ts';
 import { commandConfigurations } from '#cli/execution/command-expansion.ts';
 import { hasToolError, executionFailure } from '#cli/execution/broken-tool.ts';
 import { FIX_ORDER, FIX_DIFF_CONTEXT } from '#cli/config/execution/execution.ts';
 import { scratchCopy, createFileWorkspace } from '#cli/execution/files/workspace.ts';
 import type { Session, FixReport, FixResult, PlannedCheck, PreparedCommand } from '#cli/types/execution/execution.ts';
 
-function sourceBytes(files: ConfinedRoot, path: string): Buffer | undefined {
+function sourceBytes(files: Root, path: string): Buffer | undefined {
     try {
         return readFileSync(files.source(path));
     } catch (error) {
@@ -26,7 +26,7 @@ function sourceBytes(files: ConfinedRoot, path: string): Buffer | undefined {
 }
 
 function contentsOf(root: string, paths: string[]): Map<string, Buffer | undefined> {
-    const files = openConfinedRoot(root, 'native');
+    const files = openRoot(root, 'native');
     try {
         return new Map(paths.map((path) => [path, sourceBytes(files, path)]));
     } finally {
@@ -105,7 +105,7 @@ async function isolatedCorrection(
     const result = await runCorrection(session, planned, prepared);
     const current = contentsOf(root, result.changed);
     const corrected = contentsOf(workspace.root, result.changed);
-    const files = openConfinedRoot(root, 'native');
+    const files = openRoot(root, 'native');
     try {
         // Validate every changed source before publishing any correction bytes.
         const destinations = [...workspace.originals]

@@ -16,7 +16,7 @@ publication prepares disposable package directories. Binary independence is exer
 isolated build whose checkout and dependencies are removed before the consumer runs.
 
 Revision selection keeps dependency copying and relocation separate from Git-object framing
-and reading. Both use the existing confinement boundary; neither changes the selected checkout.
+and reading. Both use the existing root boundary; neither changes the selected checkout.
 
 ## Ownership
 
@@ -30,8 +30,8 @@ Generators return proposed files, managed blocks, and structured configuration e
 owns publication contracts, collisions, recorded ownership, recovery, and removal. Stateless
 configuration planning belongs to its document owner.
 
-The lifecycle owner retains
-writer locks, original-byte observations, stale-input checks, permissions, journal transitions,
+The owner retains
+writer locks, original-byte observations, stale-input checks, permissions, log transitions,
 and recovery ordering. Package and Python lock resolution receive the proposed files they modify.
 A generated header or directory name does not authorize deletion.
 
@@ -108,7 +108,7 @@ ownership, preserves local edits, and restores recovery copies. Apply registrati
 
 Tool acquisition owns installation, version probes, installer hints,
 package-manager connection settings, locked npm and Python projects, and installed-file
-publication. It uses filesystem confinement and lifecycle ownership for repository writes.
+publication. It uses filesystem bounds and ownership for repository writes.
 
 Hook adoption
 and restoration remain lifecycle operations. Vale checking belongs to checks, style rendering to generation, and package installation to tools.
@@ -139,7 +139,7 @@ Swift preparation is independent of notices. Every downloaded or cached input mu
 pinned SHA-256; atomic cache publication preserves failed-download behavior.
 
 Types and runtime validators live with their feature owners. Filesystem and process operations
-own their boundary contracts. Policy, manifest, profile, journal, and report schemas sit with their
+own their boundary contracts. Policy, manifest, profile, log, and report schemas sit with their
 features. Evaluation request and response schemas form a shared protocol independent of the
 evaluators.
 
@@ -154,7 +154,7 @@ Tool command execution serves checking, installation, and detection without impo
 
 Check input contracts belong to the check feature, independently of the runtime dispatcher.
 Parsers accept source observations and disposable resources without importing check inputs.
-Repository discovery receives journal-owned runtime paths from command composition. The source
+Repository discovery receives log-owned runtime paths from command composition. The source
 reader owns the byte observations used by parsers, suppression readers, and result caching.
 
 Foreign configuration readers belong to adoption. Lifecycle retires explicitly selected files
@@ -227,7 +227,7 @@ The policy schema feeds the documentation endpoint at `/schema/gspot.schema.json
 The documentation build validates its emitted JSON against the runtime schema. Native filenames remain stable.
 
 Generated tool configuration and bundled tool rules live under `.gspot/config/`, with scope paths
-mirrored below it. Agent guides remain under `.gspot/guides/`. Ownership journals, writer locks,
+mirrored below it. Agent guides remain under `.gspot/guides/`. Ownership logs, writer locks,
 and recovery backups live under `.gspot/state/`. Reports use `.gspot/reports/`; disposable caches
 use `.gspot/cache/`.
 
@@ -236,9 +236,9 @@ environment remain at `.gspot/`'s root for native dependency resolution. Ignore 
 path definitions as storage. Only installed dependencies, downloaded styles, local state, reports,
 and caches are ignored.
 
-Hooks inside the configured repository share its ownership journal. Git-internal hooks use state
+Hooks inside the configured repository share its ownership log. Git-internal hooks use state
 under the resolved Git directory. External destinations keep their state and writer lock inside
-the hook destination. Only the current journal establishes ownership. Obsolete journals and
+the hook destination. Only the current log establishes ownership. Obsolete logs and
 recovery layouts remain unowned data and are not converted or deleted.
 
 The root `LICENSE.md` is the authored project license. Builds copy it into distribution output,

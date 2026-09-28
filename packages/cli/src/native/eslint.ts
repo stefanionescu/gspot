@@ -3,11 +3,11 @@ import type * as Eslint from 'eslint';
 import { pathToFileURL } from 'node:url';
 import { createRequire } from 'node:module';
 import { ACTIVE_LEVELS } from '#cli/config/native.ts';
+import { openRoot } from '#cli/platform/filesystem.ts';
 import { eslintResponse } from '#cli/native/protocol.ts';
 import { eslintrcEntries } from '#cli/native/eslintrc.ts';
 import { mutationPath } from '#cli/platform/safe-paths.ts';
 import { join, dirname, resolve, relative } from 'node:path';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import type { Adoption, EslintRequest } from '#cli/types/native.ts';
 import type { EslintRegistration } from '#cli/types/policy/policy.ts';
 import { importedModules, registerEslintModule } from '#cli/native/eslint-modules.ts';
@@ -30,7 +30,7 @@ async function configurationPath(request: EslintRequest, eslint: Eslint.ESLint):
 
 // The observed configuration's bytes, after every observed file is confirmed present.
 function readConfiguration(request: EslintRequest, configPath: string): string {
-    const files = openConfinedRoot(request.root);
+    const files = openRoot(request.root);
     try {
         for (const path of request.configs ?? []) {
             if (files.read(path) === undefined)
@@ -68,7 +68,7 @@ function referenceTransform(adoption: Adoption, entry: Record<string, unknown>, 
 // Refuses a base path that exists and is not a directory.
 function assertDirectory(root: string, base: string, index: number): void {
     mutationPath(base);
-    const files = openConfinedRoot(root);
+    const files = openRoot(root);
     try {
         const directory = files.stat(base);
         if (directory !== undefined && !directory.isDirectory())
@@ -190,7 +190,7 @@ export async function runEslint(request: EslintRequest): Promise<z.infer<typeof 
 export async function runRuleCoverage(
     request: z.infer<typeof eslintCoverageRequest>,
 ): Promise<z.infer<typeof eslintCoverageResponse>> {
-    if (openConfinedRoot(request.root).read('.gspot/config/eslint.config.mjs') === undefined)
+    if (openRoot(request.root).read('.gspot/config/eslint.config.mjs') === undefined)
         throw new Error('The generated ESLint configuration is missing. Run: gspot apply');
     const require = createRequire(join(request.root, '.gspot/package.json'));
     const module = (await import(pathToFileURL(require.resolve('eslint')).href)) as typeof Eslint;

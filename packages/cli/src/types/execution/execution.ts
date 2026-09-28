@@ -1,6 +1,6 @@
 // The types of execution in this package.
 import type { z } from 'zod';
-import type { ConfinedRoot } from '#cli/types/platform.ts';
+import type { Root } from '#cli/types/platform.ts';
 import type { ToolPin, Manifest, CheckSpec } from '#cli/types/kits.ts';
 import type { Finding, CheckResult } from '#cli/types/checks/checks.ts';
 import type { packageToolSchema } from '#cli/tools/packages/identity.ts';
@@ -125,7 +125,7 @@ export type Copy = { source: string; target: string };
 export type Scratch = {
     root: string;
     scratch: string;
-    files: ConfinedRoot;
+    files: Root;
     copies: Map<string, string>;
     pending: Copy[];
     fileLinks: Copy[];

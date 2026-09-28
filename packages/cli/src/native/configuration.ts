@@ -2,9 +2,9 @@ import type { z } from 'zod';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { rmSync, mkdtempSync } from 'node:fs';
+import { openRoot } from '#cli/platform/filesystem.ts';
 import { runToolCommand } from '#cli/tools/command.ts';
 import type { MergedView } from '#cli/types/policy/policy.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { readAsset, isEmbedded } from '#cli/platform/assets.ts';
 import type { configurationRequest } from '#cli/native/protocol.ts';
 
@@ -24,7 +24,7 @@ export async function runConfiguration(
         ? readAsset('packages/cli/scripts/configuration-process.js')
         : `await import(${JSON.stringify(new URL('process.ts', import.meta.url).href)});`;
     const work = mkdtempSync(join(tmpdir(), 'gspot-configuration-'));
-    const files = openConfinedRoot(work);
+    const files = openRoot(work);
     try {
         const result = await runToolCommand(
             view,

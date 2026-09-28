@@ -1,21 +1,21 @@
 import ts from 'typescript';
 import { rm } from 'node:fs/promises';
+import type { Root } from '#cli/types/platform.ts';
 import { join, dirname, relative } from 'node:path';
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { targetInScope } from '#cli/kits/targets.ts';
 import { PRIVATE_FILE } from '#cli/config/platform.ts';
+import { openRoot } from '#cli/platform/filesystem.ts';
 import { getTsconfig } from '#cli/repository/tsconfig.ts';
-import type { ConfinedRoot } from '#cli/types/platform.ts';
 import { runToolCheck } from '#cli/execution/tool/runner.ts';
 import type { CheckResult } from '#cli/types/checks/checks.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { scratchCopy } from '#cli/execution/files/workspace.ts';
 import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
 import { commandConfigurations } from '#cli/execution/command-expansion.ts';
 import type { Session, PlannedCheck } from '#cli/types/execution/execution.ts';
 
 // Both source reads and emitted paths must stay inside the disposable project tree.
-function validateOutputs(root: string, config: ts.ParsedCommandLine, files: ConfinedRoot): void {
+function validateOutputs(root: string, config: ts.ParsedCommandLine, files: Root): void {
     for (const file of config.fileNames) {
         files.source(relative(root, file).replaceAll('\\', '/'));
         if (config.options.noEmit === true) continue;
@@ -42,7 +42,7 @@ function validateBuild(root: string, path: string, visited = new Set<string>()):
     visited.add(path);
     const config = getTsconfig(root, path);
     if (config === undefined) throw new Error(`Missing TypeScript project: ${path}`);
-    const files = openConfinedRoot(root, 'native');
+    const files = openRoot(root, 'native');
     try {
         validateOutputs(root, config, files);
         for (const reference of config.projectReferences ?? [])

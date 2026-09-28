@@ -6,9 +6,9 @@ import { SETUP } from '#cli/config/tools/tools.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { InstallationError } from '#cli/tools/pins.ts';
 import { PRIVATE_FILE } from '#cli/config/platform.ts';
+import { openRoot } from '#cli/platform/filesystem.ts';
 import { runToolCommand } from '#cli/tools/command.ts';
 import { yarnSettings } from '#cli/tools/packages/yarn.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { acquisitionNote } from '#cli/tools/packages/acquisition.ts';
 import { packageEnvironment } from '#cli/tools/packages/environment.ts';
 import { portableBunLock, relativeYarnLock } from '#cli/tools/packages/locks.ts';
@@ -164,7 +164,7 @@ export async function prepareNativeWrappers(
     selected: Iterable<ToolPin>,
 ): Promise<void> {
     const tools = [...new Map([...selected].map((tool) => [tool.name, tool])).values()];
-    const files = openConfinedRoot(work, 'native');
+    const files = openRoot(work, 'native');
     const suffix = process.platform === 'win32' ? '.cmd' : '';
     try {
         for (const tool of tools.filter((candidate) => needsVersionCheck(candidate, dependencies)))

@@ -2,7 +2,7 @@
 import type { Stats } from 'node:fs';
 
 export type FileObservation = { bytes: Buffer; mode: number; isLink?: true };
-export type Staging = { confinement: Confinement; path: string; target: string; temporary: string };
+export type Staging = { bounds: Bounds; path: string; target: string; temporary: string };
 export type SpawnResult = {
     code: number;
     stdout: string;
@@ -33,13 +33,13 @@ export type BinarySpawnResult = Omit<SpawnResult, 'stdout'> & { stdout: Uint8Arr
 export type EmbeddedIndex = Record<string, string>;
 export type Proposed = ReadonlyMap<string, FileObservation | undefined>;
 export type PathFormat = 'portable' | 'native';
-export type Confinement = {
+export type Bounds = {
     canonical: string;
     pathFormat: PathFormat;
     partsOf: (path: string) => string[];
     locks: Map<string, string>;
 };
-export type ConfinedRoot = {
+export type Root = {
     source(path: string): string;
     list(path?: string): string[];
     stat(path: string): Stats | undefined;

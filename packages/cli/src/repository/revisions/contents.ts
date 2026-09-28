@@ -1,10 +1,10 @@
 import { tmpdir } from 'node:os';
 import { join, relative } from 'node:path';
+import type { Root } from '#cli/types/platform.ts';
 import { SelectionError } from '#cli/kits/select.ts';
+import { openRoot } from '#cli/platform/filesystem.ts';
 import { run, runBinary } from '#cli/platform/spawn.ts';
-import type { ConfinedRoot } from '#cli/types/platform.ts';
 import { rmSync, mkdtempSync, realpathSync } from 'node:fs';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import type { SourceObservations } from '#cli/types/repository/repository.ts';
 import type { GitEntry, RevisionSource } from '#cli/types/repository/revisions.ts';
 import { copyDependencies, copyProsePackages } from '#cli/repository/revisions/dependencies.ts';
@@ -37,16 +37,16 @@ async function gitOutput(root: string, args: string[], cancelSignal?: AbortSigna
 }
 
 // Writes one tracked entry into the snapshot: a directory for a gitlink, otherwise the blob with its mode.
-function writeEntry(confined: ConfinedRoot, entry: GitEntry, objects: Map<string, Buffer>): void {
+function writeEntry(files: Root, entry: GitEntry, objects: Map<string, Buffer>): void {
     if (entry.mode === '160000') {
-        confined.mkdir(entry.path, EXECUTABLE_MODE);
+        files.mkdir(entry.path, EXECUTABLE_MODE);
         return;
     }
     const bytes = objects.get(entry.hash);
     if (bytes === undefined) throw new SelectionError(['A requested Git blob was not returned.']);
     const mode = ENTRY_MODES[entry.mode] ?? FILE_MODE;
     const content = entry.mode === '120000' ? { bytes, mode, isLink: true as const } : { bytes, mode };
-    confined.write(entry.path, content, undefined);
+    files.write(entry.path, content, undefined);
 }
 
 async function populateRevision(
@@ -55,7 +55,7 @@ async function populateRevision(
     objects: Map<string, Buffer>,
     cancelSignal?: AbortSignal,
 ): Promise<void> {
-    const confined = openConfinedRoot(revisionRoot, 'native');
+    const files = openRoot(revisionRoot, 'native');
     // Write links last so a tracked link can never redirect another tracked write.
     const ordered = [
         ...entries.filter((entry) => entry.mode !== '120000'),
@@ -67,10 +67,10 @@ async function populateRevision(
                 await Bun.sleep(0);
                 cancelSignal?.throwIfAborted();
             }
-            writeEntry(confined, entry, objects);
+            writeEntry(files, entry, objects);
         }
     } finally {
-        confined.close();
+        files.close();
     }
 }
 

@@ -1,25 +1,25 @@
-// A reader and writer confined to one directory: every path is checked before each operation.
+// A reader and writer files to one directory: every path is checked before each operation.
 // Concurrent hostile directory replacement is outside this contract.
 import { sep, relative, isAbsolute } from 'node:path';
 import { sameEntry } from '#cli/platform/safe-paths.ts';
-import { acquireLock, writeObservation } from '#cli/platform/confined/writes.ts';
-import type { PathFormat, Confinement, ConfinedRoot, FileObservation } from '#cli/types/platform.ts';
-import { readEntry, parentPath, confinementOf, validateObservation } from '#cli/platform/confined/reads.ts';
+import { acquireLock, writeObservation } from '#cli/platform/root/writes.ts';
+import type { Root, Bounds, PathFormat, FileObservation } from '#cli/types/platform.ts';
+import { boundsOf, readEntry, parentPath, validateObservation } from '#cli/platform/root/reads.ts';
 import { chmodSync, lstatSync, mkdirSync, rmdirSync, type Stats, unlinkSync, readdirSync, realpathSync } from 'node:fs';
 
-// The real path of a confined entry, refusing one whose link chain leaves the root.
-function sourceOf(confinement: Confinement, path: string): string {
-    const target = realpathSync(parentPath(confinement, path));
-    const local = relative(confinement.canonical, target);
+// The real path of a files entry, refusing one whose link chain leaves the root.
+function sourceOf(bounds: Bounds, path: string): string {
+    const target = realpathSync(parentPath(bounds, path));
+    const local = relative(bounds.canonical, target);
     if (isAbsolute(local) || local === '..' || local.startsWith(`..${sep}`))
         throw new Error(`Source link leaves the repository: ${path}`);
     return target;
 }
 
-// The sorted names in a confined directory, or none when it is absent.
-function listOf(confinement: Confinement, path: string | undefined): string[] {
+// The sorted names in a files directory, or none when it is absent.
+function listOf(bounds: Bounds, path: string | undefined): string[] {
     try {
-        const target = path === undefined ? confinement.canonical : parentPath(confinement, path);
+        const target = path === undefined ? bounds.canonical : parentPath(bounds, path);
         if (!lstatSync(target).isDirectory()) throw new Error(`Unsafe lifecycle directory: ${path ?? '.'}`);
         return readdirSync(target).toSorted((left, right) => left.localeCompare(right));
     } catch (error) {
@@ -28,10 +28,10 @@ function listOf(confinement: Confinement, path: string | undefined): string[] {
     }
 }
 
-// The stat of a confined entry that is not a link, or undefined when it is absent.
-function statOf(confinement: Confinement, path: string): Stats | undefined {
+// The stat of a files entry that is not a link, or undefined when it is absent.
+function statOf(bounds: Bounds, path: string): Stats | undefined {
     try {
-        const stat = lstatSync(parentPath(confinement, path));
+        const stat = lstatSync(parentPath(bounds, path));
         if (stat.isSymbolicLink()) throw new Error(`Unsafe lifecycle destination: ${path}`);
         return stat;
     } catch (error) {
@@ -40,16 +40,16 @@ function statOf(confinement: Confinement, path: string): Stats | undefined {
     }
 }
 
-// Removes a confined file after checking that it is still the one the caller last saw.
-function removeEntry(confinement: Confinement, path: string, expected: FileObservation): void {
-    if (!sameEntry(readEntry(confinement, path, expected.isLink === true), expected))
+// Removes a files file after checking that it is still the one the caller last saw.
+function removeEntry(bounds: Bounds, path: string, expected: FileObservation): void {
+    if (!sameEntry(readEntry(bounds, path, expected.isLink === true), expected))
         throw new Error(`Lifecycle destination changed during removal: ${path}`);
-    unlinkSync(parentPath(confinement, path));
+    unlinkSync(parentPath(bounds, path));
 }
 
-// Creates a confined directory with the mode, accepting one that already exists.
-function makeDirectory(confinement: Confinement, path: string, mode: number): void {
-    const target = parentPath(confinement, path, true);
+// Creates a files directory with the mode, accepting one that already exists.
+function makeDirectory(bounds: Bounds, path: string, mode: number): void {
+    const target = parentPath(bounds, path, true);
     try {
         mkdirSync(target, { mode });
     } catch (error) {
@@ -60,47 +60,46 @@ function makeDirectory(confinement: Confinement, path: string, mode: number): vo
 }
 
 // Releases every lock this root still holds, leaving a lock another writer took over.
-function releaseLocks(confinement: Confinement): void {
-    for (const [path, holder] of confinement.locks)
-        if (readEntry(confinement, path, false)?.bytes.toString('utf8') === holder)
-            unlinkSync(parentPath(confinement, path));
-    confinement.locks.clear();
+function releaseLocks(bounds: Bounds): void {
+    for (const [path, holder] of bounds.locks)
+        if (readEntry(bounds, path, false)?.bytes.toString('utf8') === holder) unlinkSync(parentPath(bounds, path));
+    bounds.locks.clear();
 }
 
 /**
  * Check paths before each operation. Concurrent hostile directory replacement is outside this contract.
- * @param root the directory every path is confined to
+ * @param root the directory every path is files to
  * @param pathFormat whether paths use forward slashes or the platform's own spelling
- * @returns the confined reader and writer, which the caller closes
+ * @returns the files reader and writer, which the caller closes
  */
-export function openConfinedRoot(root: string, pathFormat: PathFormat = 'portable'): ConfinedRoot {
-    const confinement = confinementOf(realpathSync(root), pathFormat);
+export function openRoot(root: string, pathFormat: PathFormat = 'portable'): Root {
+    const bounds = boundsOf(realpathSync(root), pathFormat);
     return {
         rmdir: (path) => {
-            rmdirSync(parentPath(confinement, path));
+            rmdirSync(parentPath(bounds, path));
         },
-        source: (path) => sourceOf(confinement, path),
-        list: (path) => listOf(confinement, path),
-        stat: (path) => statOf(confinement, path),
+        source: (path) => sourceOf(bounds, path),
+        list: (path) => listOf(bounds, path),
+        stat: (path) => statOf(bounds, path),
         validate: (path, value, proposed) => {
-            validateObservation(confinement, path, value, proposed);
+            validateObservation(bounds, path, value, proposed);
         },
-        read: (path) => readEntry(confinement, path, false),
-        readEntry: (path) => readEntry(confinement, path, true),
+        read: (path) => readEntry(bounds, path, false),
+        readEntry: (path) => readEntry(bounds, path, true),
         write: (path, value, expected) => {
-            writeObservation(confinement, path, value, expected);
+            writeObservation(bounds, path, value, expected);
         },
         remove: (path, expected) => {
-            removeEntry(confinement, path, expected);
+            removeEntry(bounds, path, expected);
         },
         mkdir: (path, mode) => {
-            makeDirectory(confinement, path, mode);
+            makeDirectory(bounds, path, mode);
         },
         lock: (path) => {
-            acquireLock(confinement, path);
+            acquireLock(bounds, path);
         },
         close: () => {
-            releaseLocks(confinement);
+            releaseLocks(bounds);
         },
     };
 }

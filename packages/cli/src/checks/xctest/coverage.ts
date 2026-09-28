@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { join } from 'node:path';
+import type { Root } from '#cli/types/platform.ts';
 import { PERCENT } from '#cli/config/checks/xctest.ts';
-import type { ConfinedRoot } from '#cli/types/platform.ts';
 import { swiftBuildPlan } from '#cli/checks/swift/plan.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
@@ -12,7 +12,7 @@ const coverageReportSchema = z.object({
     targets: z.array(z.object({ name: z.string().min(1), lineCoverage: z.number().min(0).max(1) })),
 });
 // Removes one entry of the previous result bundle, queuing a folder for the walk.
-function removeBundleEntry(files: ConfinedRoot, path: string, directories: string[]): void {
+function removeBundleEntry(files: Root, path: string, directories: string[]): void {
     if (files.stat(path)?.isDirectory() === true) {
         directories.push(path);
         return;
@@ -22,7 +22,7 @@ function removeBundleEntry(files: ConfinedRoot, path: string, directories: strin
 }
 
 // Removes the previous result bundle by deleting files before their containing folders.
-function removePreviousBundle(files: ConfinedRoot): void {
+function removePreviousBundle(files: Root): void {
     if (files.stat('coverage.xcresult') === undefined) return;
     const directories = ['coverage.xcresult'];
     for (const directory of directories)

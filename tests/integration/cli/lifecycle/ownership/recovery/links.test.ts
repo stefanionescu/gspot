@@ -1,10 +1,10 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import { ownershipSchema } from '#cli/lifecycle/log.ts';
 import { cliSource } from '#tests/support/cli/process.ts';
-import { ownershipSchema } from '#cli/lifecycle/journal.ts';
+import { openOwner } from '#cli/lifecycle/ownership/owner.ts';
 import { symlinkSync, readFileSync, readlinkSync } from 'node:fs';
-import { openLifecycleOwner } from '#cli/lifecycle/ownership/owner.ts';
 
 const implementation = cliSource('lifecycle/ownership/owner.ts');
 const boundary = cliSource('platform/filesystem.ts');
@@ -19,8 +19,8 @@ if (process.platform !== 'win32') {
             const script = `
             import { mock } from 'bun:test';
             const boundary = await import(${JSON.stringify(boundary)});
-            const open = boundary.openConfinedRoot;
-            mock.module(${JSON.stringify(boundary)}, () => ({ ...boundary, openConfinedRoot(root) {
+            const open = boundary.openRoot;
+            mock.module(${JSON.stringify(boundary)}, () => ({ ...boundary, openRoot(root) {
                 const files = open(root);
                 return { ...files, write(path, value, expected) {
                     if (path === 'tool' && ${JSON.stringify(point)} === 'before') process.exit(73);
@@ -28,8 +28,8 @@ if (process.platform !== 'win32') {
                     if (path === 'tool' && ${JSON.stringify(point)} === 'after') process.exit(73);
                 }};
             }}));
-            const { openLifecycleOwner } = await import(${JSON.stringify(implementation)});
-            openLifecycleOwner(process.cwd()).replace('tool', {bytes: Buffer.from('target'), mode: 511, isLink: true}, 'config', true);
+            const { openOwner } = await import(${JSON.stringify(implementation)});
+            openOwner(process.cwd()).replace('tool', {bytes: Buffer.from('target'), mode: 511, isLink: true}, 'config', true);
         `;
             const child = Bun.spawnSync([process.execPath, '-e', script], {
                 cwd: directory.path,
@@ -37,7 +37,7 @@ if (process.platform !== 'win32') {
                 stderr: 'pipe',
             });
             expect(child.exitCode, child.stderr.toString()).toBe(73);
-            const owner = openLifecycleOwner(directory.path);
+            const owner = openOwner(directory.path);
             try {
                 // A publication that completed is restored on request; one that never happened has nothing to restore.
                 const restored = point === 'after' ? owner.restore('tool') : undefined;
@@ -58,7 +58,7 @@ if (process.platform !== 'win32') {
             'config.txt': 'original\n',
             '.gspot/state/recovery': 'authored obstruction\n',
         });
-        const owner = openLifecycleOwner(directory.path);
+        const owner = openOwner(directory.path);
         try {
             expect(() =>
                 owner.replace('config.txt', { bytes: Buffer.from('replacement'), mode: 0o644 }, 'config', true),
@@ -78,10 +78,10 @@ if (process.platform !== 'win32') {
             const script = String.raw`
             import { mock } from 'bun:test';
             const boundary = await import(${JSON.stringify(boundary)});
-            const open = boundary.openConfinedRoot;
+            const open = boundary.openRoot;
             mock.module(${JSON.stringify(boundary)}, () => ({
                 ...boundary,
-                openConfinedRoot(root) {
+                openRoot(root) {
                     const files = open(root);
                     return { ...files, write(path, value, expected) {
                         if (path === 'config.txt' && ${JSON.stringify(point)} === 'before') process.exit(73);
@@ -90,8 +90,8 @@ if (process.platform !== 'win32') {
                     } };
                 },
             }));
-            const { openLifecycleOwner } = await import(${JSON.stringify(implementation)});
-            openLifecycleOwner(process.cwd()).replace('config.txt', {bytes: Buffer.from('installed\n'), mode: 420}, 'config', true);
+            const { openOwner } = await import(${JSON.stringify(implementation)});
+            openOwner(process.cwd()).replace('config.txt', {bytes: Buffer.from('installed\n'), mode: 420}, 'config', true);
         `;
             const child = Bun.spawnSync([process.execPath, '-e', script], {
                 cwd: directory.path,
@@ -103,7 +103,7 @@ if (process.platform !== 'win32') {
                 JSON.parse(readFileSync(join(directory.path, '.gspot/state/ownership.json'), 'utf8')),
             );
             expect(pending.pending?.[0]?.path).toBe('config.txt');
-            const owner = openLifecycleOwner(directory.path);
+            const owner = openOwner(directory.path);
             try {
                 expect(owner.paths()).toStrictEqual(point === 'after' ? ['config.txt'] : []);
                 const restored = point === 'after' ? owner.restore('config.txt') : undefined;

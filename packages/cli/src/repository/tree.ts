@@ -35,7 +35,7 @@ function trackedFile(entry: RawEntry, prefix: Buffer, tagged: Tagged, verdict: N
  * @param declarations the generated and vendored declarations
  * @param scopeEntries the [[scope]] entries
  * @param exclude paths and directory patterns excluded before reading content
- * @param runtimeFiles journal-owned runtime outputs supplied by command composition
+ * @param runtimeFiles log-owned runtime outputs supplied by command composition
  * @returns the repository record
  */
 export async function readRepository(

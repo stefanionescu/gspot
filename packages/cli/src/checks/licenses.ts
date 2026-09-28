@@ -5,8 +5,8 @@ import satisfies from 'spdx-satisfies';
 import { isDeepStrictEqual } from 'node:util';
 import parseExpression from 'spdx-expression-parse';
 import { targetInScope } from '#cli/kits/targets.ts';
+import { openRoot } from '#cli/platform/filesystem.ts';
 import { rmSync, statSync, mkdtempSync } from 'node:fs';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import { LICENSE_CHECKER_TOOL } from '#cli/config/checks/checks.ts';
 import { normalizedPythonPackage } from '#cli/repository/manifests.ts';
@@ -33,11 +33,11 @@ function verdict(name: string, license: string, exception: LicenseException | un
     return `${name} reports ${license}, and its exception names ${exception.license}; the exception no longer holds.`;
 }
 
-// Read through the confined filesystem and verify the generated configuration against the selected policy.
+// Read through the files filesystem and verify the generated configuration against the selected policy.
 function readConfiguration(input: EngineInput): z.infer<typeof configurationSchema> {
     const target = input.manifests.get('licenses')?.configs.find((config) => !config.fragment);
     if (target === undefined) throw new Error('The license configuration has no configuration target.');
-    const files = openConfinedRoot(input.root);
+    const files = openRoot(input.root);
     let configuration: z.infer<typeof configurationSchema>;
     try {
         const content = files.read(targetInScope(input.scope, target));

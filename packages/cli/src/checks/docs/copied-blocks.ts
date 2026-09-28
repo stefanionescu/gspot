@@ -1,10 +1,10 @@
 import { z } from 'zod';
 import { tmpdir } from 'node:os';
 import { toPosix } from '#cli/platform/paths.ts';
+import { openRoot } from '#cli/platform/filesystem.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import type { CloneReport } from '#cli/types/checks/docs.ts';
 import { FULL_PERCENTAGE } from '#cli/config/checks/jest.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import { rmSync, statSync, mkdtempSync, writeFileSync } from 'node:fs';
 import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
@@ -74,7 +74,7 @@ export async function copiedBlocks(input: EngineInput): Promise<Finding[]> {
     const work = mkdtempSync(join(tmpdir(), 'gspot-jscpd-'));
     try {
         const claimed = input.files.filter((file) => file.nature === 'source').map((file) => file.path);
-        const files = openConfinedRoot(input.root);
+        const files = openRoot(input.root);
         let content: Buffer;
         try {
             const config = files.read('.gspot/config/jscpd.json');

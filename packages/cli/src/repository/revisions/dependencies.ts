@@ -1,9 +1,9 @@
 import pLimit from 'p-limit';
 import { createHash } from 'node:crypto';
+import type { Root } from '#cli/types/platform.ts';
 import { SelectionError } from '#cli/kits/select.ts';
-import type { ConfinedRoot } from '#cli/types/platform.ts';
+import { openRoot } from '#cli/platform/filesystem.ts';
 import { statSync, constants, readFileSync } from 'node:fs';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import { MODE_BITS, PRIVATE_DIRECTORY } from '#cli/config/platform.ts';
 import type { OwnershipEntry } from '#cli/types/lifecycle/lifecycle.ts';
@@ -67,7 +67,7 @@ function assertDependencyReady(revisionRoot: string, folder: string, dependency:
 }
 
 // Refuses a snapshot whose Vale configuration differs from the one the packages were installed for.
-function assertSameValeConfiguration(installed: ConfinedRoot, destination: ConfinedRoot): void {
+function assertSameValeConfiguration(installed: Root, destination: Root): void {
     const current = installed.read(VALE_CONFIGURATION);
     const selected = destination.read(VALE_CONFIGURATION);
     if (current === undefined || selected === undefined || !current.bytes.equals(selected.bytes))
@@ -76,8 +76,8 @@ function assertSameValeConfiguration(installed: ConfinedRoot, destination: Confi
         ]);
 }
 
-// Copies one journal-owned package file the snapshot lacks, after checking it still matches its record.
-function copyVerifiedPackage(installed: ConfinedRoot, destination: ConfinedRoot, entry: OwnershipEntry): void {
+// Copies one log-owned package file the snapshot lacks, after checking it still matches its record.
+function copyVerifiedPackage(installed: Root, destination: Root, entry: OwnershipEntry): void {
     if (entry.installed === undefined || destination.read(entry.path) !== undefined) return;
     const content = installed.read(entry.path);
     if (
@@ -92,7 +92,7 @@ function copyVerifiedPackage(installed: ConfinedRoot, destination: ConfinedRoot,
 }
 
 // The dependency folders the snapshot's projects own, when the working tree has them installed.
-function dependencyDirectories(installed: ConfinedRoot, projects: string[]): Directory[] {
+function dependencyDirectories(installed: Root, projects: string[]): Directory[] {
     return projects.flatMap((path) => {
         const folder = dirname(path);
         const dependency = basename(path) === 'package.json' ? 'node_modules' : '.venv';
@@ -101,12 +101,7 @@ function dependencyDirectories(installed: ConfinedRoot, projects: string[]): Dir
 }
 
 // Refuses a snapshot whose manifests or locks differ from the working tree's, which the installation came from.
-function assertManifestsUnchanged(
-    root: string,
-    installed: ConfinedRoot,
-    selected: ConfinedRoot,
-    inputs: string[],
-): void {
+function assertManifestsUnchanged(root: string, installed: Root, selected: Root, inputs: string[]): void {
     const changed = inputs.some(
         (path) =>
             statSync(join(root, path), { throwIfNoEntry: false }) === undefined ||
@@ -165,7 +160,7 @@ async function copyDirectory(
 }
 
 /**
- * Copy verified journal-owned Vale packages matching the selected kit.
+ * Copy verified log-owned Vale packages matching the selected kit.
  * @param root the repository root
  * @param revisionRoot the snapshot directory the packages are copied into
  * @param paths the snapshot's files, among them the Vale configurations that name packages
@@ -174,8 +169,8 @@ export function copyProsePackages(root: string, revisionRoot: string, paths: str
     const configs = paths.filter((path) => path === VALE_CONFIGURATION || path.endsWith(`/${VALE_CONFIGURATION}`));
     for (const config of configs) {
         const folder = dirname(dirname(dirname(config)));
-        const installed = openConfinedRoot(join(root, folder));
-        const destination = openConfinedRoot(join(revisionRoot, folder));
+        const installed = openRoot(join(root, folder));
+        const destination = openRoot(join(revisionRoot, folder));
         try {
             const packages = readOwnership(join(root, folder)).files.filter((entry) => isValePackageFile(entry.path));
             if (packages.length === 0) continue;
@@ -201,8 +196,8 @@ export async function copyDependencies(
     paths: string[],
     cancelSignal?: AbortSignal,
 ): Promise<void> {
-    const installed = openConfinedRoot(root, 'native');
-    const selected = openConfinedRoot(revisionRoot, 'native');
+    const installed = openRoot(root, 'native');
+    const selected = openRoot(revisionRoot, 'native');
     try {
         const inputs = paths.filter((path) => MANIFESTS.has(basename(path)));
         const projects = inputs.filter((path) => ['package.json', 'pyproject.toml'].includes(basename(path)));

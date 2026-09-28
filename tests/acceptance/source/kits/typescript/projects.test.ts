@@ -1,4 +1,4 @@
-// Source CLI journeys for TypeScript project references, authored compiler settings, and confined build output.
+// Source CLI journeys for TypeScript project references, authored compiler settings, and files build output.
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
@@ -135,7 +135,7 @@ test.each(['', 'apps/web'])(
 );
 
 test.each(['absolute', 'symlink'])(
-    'TypeScript confines %s build output to its disposable project',
+    'TypeScript bounds %s build output to its disposable project',
     async (kind) => {
         await using sandbox = await testdir();
         await using outside = await testdir();

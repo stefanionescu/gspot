@@ -7,7 +7,7 @@ import { parseAlerts } from '#cli/checks/prose/vale.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { installPackages, hasOwnedPackages } from '#cli/tools/vale.ts';
 import { chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
-import { readOwnership, openLifecycleOwner } from '#cli/lifecycle/ownership/owner.ts';
+import { openOwner, readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 
 // A Zip archive containing LocalStyle/terms.yml, an existence rule rejecting ambiguousword.
 const PACKAGE = Buffer.from(
@@ -48,7 +48,7 @@ async function expectPublishedRules(root: string): Promise<void> {
 
 async function expectPrunedRules(root: string): Promise<void> {
     const stale = '.gspot/config/vale/styles/Retired/terms.yml';
-    const staleOwner = openLifecycleOwner(root);
+    const staleOwner = openOwner(root);
     try {
         staleOwner.replace(stale, { bytes: Buffer.from('installed old rule\n'), mode: 0o644 }, 'config');
     } finally {
@@ -92,7 +92,7 @@ test.each([
             const version = await run(['vale', '--version'], { cwd: directory.path });
             expect(version.code, version.stdout + version.stderr).toBe(0);
             expect(version.stdout).toContain(pin);
-            const owner = openLifecycleOwner(directory.path);
+            const owner = openOwner(directory.path);
             try {
                 owner.replace(
                     '.gspot/config/vale.ini',

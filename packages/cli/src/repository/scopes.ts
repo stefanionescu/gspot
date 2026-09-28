@@ -9,8 +9,8 @@ import type { Package } from '@manypkg/tools';
 import { toPosix } from '#cli/platform/paths.ts';
 import type { Manifest } from '#cli/types/kits.ts';
 import { readdirSync, type Dirent } from 'node:fs';
+import { openRoot } from '#cli/platform/filesystem.ts';
 import { mutationPath } from '#cli/platform/safe-paths.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { packageManifestSchema } from '#cli/repository/manifests.ts';
 import { PnpmTool, RushTool, YarnTool, LernaTool } from '@manypkg/tools';
 import { LINT_TOOL_PACKAGE_PREFIXES } from '#cli/config/repository/patterns.ts';
@@ -49,7 +49,7 @@ function projectScopes(files: TrackedFile[], facts: ManifestFacts[], manifests: 
 
 // Validate filesystem access before the workspace resolver reads package manifests.
 function inspectWorkspacePaths(root: string, patterns: string[]): void {
-    const files = openConfinedRoot(root);
+    const files = openRoot(root);
     try {
         const normalized = patterns.map((pattern) => {
             const negate = pattern.startsWith('!') ? '!' : '';
@@ -87,7 +87,7 @@ function inspectWorkspacePaths(root: string, patterns: string[]): void {
 }
 
 function workspacePackages(root: string): Package[] {
-    const files = openConfinedRoot(root);
+    const files = openRoot(root);
     try {
         const rootSource = files.read('package.json');
         const packagePatterns = z
@@ -149,7 +149,7 @@ function npmScopes(root: string, byPath: Map<string, ManifestFacts>, lintOnly: s
 }
 
 function memberScopes(root: string, members: string[]): ScopeEntry[] {
-    const files = openConfinedRoot(root);
+    const files = openRoot(root);
     try {
         return members
             .filter((member) => !member.includes('*') && files.stat(member)?.isDirectory() === true)

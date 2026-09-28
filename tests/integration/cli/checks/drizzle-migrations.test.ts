@@ -25,7 +25,7 @@ async function plant(scope: string, schema: 'changed' | 'failure'): Promise<Plan
         [join(scope, 'schema.txt')]: schema,
         [join(scope, 'generate')]: DRIZZLE_MIGRATIONS_GENERATOR,
         [join(scope, 'migrations/0000_initial.sql')]: 'CREATE TABLE records (id int);\n',
-        [join(scope, 'migrations/meta/journal.json')]: '{"version":1}\n',
+        [join(scope, 'migrations/meta/log.json')]: '{"version":1}\n',
         'unrelated/keep.sql': '-- Keep another scope\n',
     });
     commitAll(directory.path);
@@ -57,7 +57,7 @@ function expectPreserved({ directory, path, manual, mode, initial }: Planted): v
     expect(readFileSync(manual, 'utf8')).toBe('-- Preserve manual migration\n');
     expect(statSync(manual).mode).toBe(mode);
     expect(readFileSync(initial, 'utf8')).toBe('-- Developer edit\n');
-    expect(readFileSync(join(directory.path, path('migrations/meta/journal.json')), 'utf8')).toBe('{"version":1}\n');
+    expect(readFileSync(join(directory.path, path('migrations/meta/log.json')), 'utf8')).toBe('{"version":1}\n');
     expect(readFileSync(join(directory.path, 'unrelated/keep.sql'), 'utf8')).toBe('-- Keep another scope\n');
 }
 
@@ -94,7 +94,7 @@ test.each(DRIZZLE_MIGRATIONS_SCOPES)(
                 },
                 {
                     check: planted.spec.name,
-                    file: planted.path('migrations/meta/journal.json').replaceAll('\\', '/'),
+                    file: planted.path('migrations/meta/log.json').replaceAll('\\', '/'),
                     rule: 'missing-migration',
                 },
             ]);

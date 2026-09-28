@@ -3,8 +3,8 @@ import { parse as parseYaml } from 'yaml';
 import { posix, extname } from 'node:path';
 import { parse as parseToml } from 'smol-toml';
 import { parseJsonc } from '#cli/repository/jsonc.ts';
+import { openRoot } from '#cli/platform/filesystem.ts';
 import type { FileObservation } from '#cli/types/platform.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import type { TomlTable } from '#cli/types/repository/repository.ts';
 import type { ConfigurationSource } from '#cli/types/policy/adoption.ts';
 import { sqlfluffConfiguration } from '#cli/repository/configuration/sqlfluff.ts';
@@ -43,13 +43,13 @@ function parseSource(tool: string, path: string, text: string): unknown {
 }
 
 /**
- * Capture original UTF-8 configuration bytes and permissions through the confined reader.
+ * Capture original UTF-8 configuration bytes and permissions through the files reader.
  * @param root the repository root
  * @param path the authored configuration file
  * @returns the file text with the snapshot of its bytes and mode
  */
 export function observeConfiguration(root: string, path: string): Omit<ConfigurationSource, 'parsed'> {
-    const files = openConfinedRoot(root);
+    const files = openRoot(root);
     try {
         const original = files.read(path);
         if (original === undefined) throw new Error('Configuration disappeared before it could be read.');

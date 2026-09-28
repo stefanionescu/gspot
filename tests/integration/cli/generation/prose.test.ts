@@ -4,8 +4,8 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { openOwner } from '#cli/lifecycle/ownership/owner.ts';
 import { hasPackages, hasOwnedPackages } from '#cli/tools/vale.ts';
-import { openLifecycleOwner } from '#cli/lifecycle/ownership/owner.ts';
 
 test('generated vocabulary combines shipped and project words without duplicates', async () => {
     await using sandbox = await testdir();
@@ -35,7 +35,7 @@ test('package readiness follows the generated Vale configuration', async () => {
     mkdirSync(join(sandbox.path, '.gspot/config/vale/styles/Google'), { recursive: true });
     expect(hasPackages(sandbox.path)).toBe(true);
     expect(hasOwnedPackages(sandbox.path)).toBe(false);
-    const owner = openLifecycleOwner(sandbox.path);
+    const owner = openOwner(sandbox.path);
     try {
         owner.replace(
             '.gspot/config/vale/styles/Google/terms.yml',

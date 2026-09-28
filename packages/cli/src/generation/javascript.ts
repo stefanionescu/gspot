@@ -1,9 +1,9 @@
 import { toPosix } from '#cli/platform/paths.ts';
+import { openRoot } from '#cli/platform/filesystem.ts';
 import type { Policy } from '#cli/types/policy/policy.ts';
 import { TRAILING_STAR } from '#cli/config/generation.ts';
 import { getTsconfig } from '#cli/repository/tsconfig.ts';
 import { join, dirname, resolve, relative } from 'node:path';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { readPackageManifest } from '#cli/repository/manifests.ts';
 
 function importTarget(target: unknown): string | undefined {
@@ -14,7 +14,7 @@ function importTarget(target: unknown): string | undefined {
 
 function packageAliases(root: string, prefix: string): Record<string, string> {
     const aliases: Record<string, string> = {};
-    const files = openConfinedRoot(root);
+    const files = openRoot(root);
     const path = `${prefix}package.json`;
     let imports: [string, unknown][];
     try {

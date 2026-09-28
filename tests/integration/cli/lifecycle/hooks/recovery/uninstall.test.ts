@@ -8,8 +8,8 @@ import { installHooks } from '#cli/lifecycle/hooks/git.ts';
 import { uninstallCommand } from '#cli/commands/uninstall.ts';
 import { hookLocation } from '#cli/repository/hook-location.ts';
 import { textContaining } from '#tests/support/expectations.ts';
+import { openOwner, readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import { rmSync, chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
-import { readOwnership, openLifecycleOwner } from '#cli/lifecycle/ownership/owner.ts';
 
 test.each([true, false])(
     'uninstall describes only owned hooks and preserves hooksPath when an original exists: %s',
@@ -66,7 +66,7 @@ test.each(['missing', 'malformed'])(
         });
         expect(processes.runBlocking(['git', 'init', '-q'], { cwd: sandbox.path }).code).toBe(0);
         const root = join(sandbox.path, 'project');
-        const owner = openLifecycleOwner(root);
+        const owner = openOwner(root);
         try {
             owner.replace('authored.txt', { bytes: Buffer.from('installed'), mode: 0o644 }, 'config', true);
             owner.replace('removed.txt', { bytes: Buffer.from('generated'), mode: 0o644 }, 'config');
@@ -101,7 +101,7 @@ test('uninstall reports both restoration-conflict paths and restores the origina
         'gspot.toml': 'version = 1\nkits = []\n[guides]\ninstall = false\n',
         'authored.txt': 'private original bytes',
     });
-    const owner = openLifecycleOwner(sandbox.path);
+    const owner = openOwner(sandbox.path);
     try {
         owner.replace('authored.txt', { bytes: Buffer.from('installed bytes'), mode: 0o644 }, 'config', true);
     } finally {
@@ -133,7 +133,7 @@ test('uninstall acquires the hook boundary before removing repository outputs', 
     expect(processes.runBlocking(['git', 'init', '-q'], { cwd: directory.path }).code).toBe(0);
     const session = await openSession(directory.path);
     installHooks({ policy: session.policyFiles.policy, repository: session.repository });
-    const repository = openLifecycleOwner(directory.path);
+    const repository = openOwner(directory.path);
     try {
         repository.replace('owned.txt', { bytes: Buffer.from('installed\n'), mode: 0o644 }, 'config');
     } finally {
@@ -141,7 +141,7 @@ test('uninstall acquires the hook boundary before removing repository outputs', 
     }
     const location = hookLocation(directory.path);
     const hook = readFileSync(join(location.absolute, 'pre-commit'));
-    const locked = openLifecycleOwner(location.root);
+    const locked = openOwner(location.root);
     try {
         await rejects(uninstallCommand({ cwd: directory.path, yes: true, isDryRun: false }), {
             message: /Another lifecycle writer/u,

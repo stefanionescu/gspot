@@ -1,6 +1,6 @@
+import { openRoot } from '#cli/platform/filesystem.ts';
 import { RUNNER_EXEC } from '#cli/config/generation.ts';
 import { hookPrefix } from '#cli/generation/hooks/scripts.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { HOOK_FILES } from '#cli/config/repository/repository.ts';
 import type { HookName, ConfigurationOutput } from '#cli/types/generation.ts';
 /**
@@ -44,7 +44,7 @@ export function lefthookConfiguration(
 ): ConfigurationOutput {
     if (hookPrefix(root) !== '')
         throw new Error('Lefthook reads configuration at the Git root. Configure its integration from that directory.');
-    const files = openConfinedRoot(root);
+    const files = openRoot(root);
     let path: string;
     try {
         path = ['lefthook.yml', '.lefthook.yml'].find((name) => files.read(name) !== undefined) ?? 'lefthook.yml';

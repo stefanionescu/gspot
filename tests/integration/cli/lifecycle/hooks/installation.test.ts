@@ -10,8 +10,8 @@ import { installHooks } from '#cli/lifecycle/hooks/git.ts';
 import { uninstallCommand } from '#cli/commands/uninstall.ts';
 import { hookLocation } from '#cli/repository/hook-location.ts';
 import { readHookStatus } from '#tests/support/cli/hooks/projects.ts';
+import { openOwner, readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import { containingAll, textContaining } from '#tests/support/expectations.ts';
-import { readOwnership, openLifecycleOwner } from '#cli/lifecycle/ownership/owner.ts';
 import { statSync, chmodSync, existsSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
 
 test.each(['default', 'external'] as const)(
@@ -151,7 +151,7 @@ test('a concurrent hook writer is refused and installation succeeds after its lo
     const ran = await processes.run(['git', 'init', '-q'], { cwd: sandbox.path });
     expect(ran.code).toBe(0);
     const location = hookLocation(sandbox.path);
-    const owner = openLifecycleOwner(location.root);
+    const owner = openOwner(location.root);
     try {
         const rejected = await installCommand({ cwd: sandbox.path, isDryRun: false });
         expect(rejected.exitCode).toBe(2);
@@ -268,7 +268,7 @@ test('a nested policy preserves tracked hooks outside its own directory', async 
     expect(existsSync(join(sandbox.path, 'hooks/pre-commit.gspot-original'))).toBe(false);
 });
 
-test('Git hooks can use the repository root without an empty confined path', async () => {
+test('Git hooks can use the repository root without an empty files path', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'repository/gspot.toml': 'version = 1\nkits = []\n[hooks]\ntool = "gspot"\n[guides]\ninstall = false\n',

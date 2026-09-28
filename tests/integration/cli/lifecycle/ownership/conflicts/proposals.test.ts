@@ -1,14 +1,14 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { openLifecycleOwner } from '#cli/lifecycle/ownership/owner.ts';
+import { openOwner } from '#cli/lifecycle/ownership/owner.ts';
 import { statSync, chmodSync, readFileSync, writeFileSync } from 'node:fs';
 
 test('a prepared configuration does not write and cannot overwrite a subsequent edit', async () => {
     await using directory = await testdir();
     const original = '{"extends":"./authored.json","strict":true}\n';
     await createFileTree(directory.path, { 'tsconfig.json': original });
-    const owner = openLifecycleOwner(directory.path);
+    const owner = openOwner(directory.path);
     try {
         const proposal = owner.proposeConfiguration(
             'tsconfig.json',
@@ -32,7 +32,7 @@ test('overlapping configuration fields are refused without changing authored byt
     await using directory = await testdir();
     const original = '{"scripts":{"check":"authored"}}\n';
     await createFileTree(directory.path, { 'package.json': original });
-    const owner = openLifecycleOwner(directory.path);
+    const owner = openOwner(directory.path);
     try {
         expect(() =>
             owner.proposeConfiguration(
@@ -58,7 +58,7 @@ test.each(['replacement', 'block'] as const)(
         await using directory = await testdir();
         await createFileTree(directory.path, { 'config.txt': 'authored\n' });
         chmodSync(join(directory.path, 'config.txt'), 0o640);
-        const owner = openLifecycleOwner(directory.path);
+        const owner = openOwner(directory.path);
         try {
             const proposal =
                 kind === 'replacement'
@@ -86,7 +86,7 @@ test.each(['replacement', 'block'] as const)(
 test('a batch validates every proposal before publishing any file', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, { 'first.txt': 'original first', 'last.txt': 'original last' });
-    const owner = openLifecycleOwner(directory.path);
+    const owner = openOwner(directory.path);
     try {
         const proposals = ['first.txt', 'last.txt'].map((path) =>
             owner.proposeReplacement(path, { bytes: Buffer.from('replacement'), mode: 0o644 }, 'config', true),
@@ -104,7 +104,7 @@ test('a batch validates every proposal before publishing any file', async () => 
 test('a preserved file refuses the whole batch and leaves every proposed destination unchanged', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, { 'owned.txt': 'original', 'authored.txt': 'keep authored' });
-    const owner = openLifecycleOwner(directory.path);
+    const owner = openOwner(directory.path);
     try {
         owner.replace('owned.txt', { bytes: Buffer.from('installed'), mode: 0o644 }, 'config', true);
         const proposals = ['owned.txt', 'authored.txt'].map((path) =>
@@ -124,7 +124,7 @@ test('restoration proposals preserve reviewed bytes and refuse the whole batch a
     await using directory = await testdir();
     await createFileTree(directory.path, { 'authored.txt': 'original\n' });
     chmodSync(join(directory.path, 'authored.txt'), 0o640);
-    const owner = openLifecycleOwner(directory.path);
+    const owner = openOwner(directory.path);
     try {
         owner.replace('authored.txt', { bytes: Buffer.from('installed\n'), mode: 0o444 }, 'config', true);
         owner.replace('generated.txt', { bytes: Buffer.from('generated\n'), mode: 0o644 }, 'config');
@@ -146,7 +146,7 @@ test('restoration proposals preserve reviewed bytes and refuse the whole batch a
 test('replace removal proposals retain every original when a later observation is stale', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, { 'first.json': '{}\n', 'second.json': '{}\n' });
-    const owner = openLifecycleOwner(directory.path);
+    const owner = openOwner(directory.path);
     try {
         const proposals = ['first.json', 'second.json'].map((path) => owner.proposeRetirement(path, owner.read(path)!));
         writeFileSync(join(directory.path, 'second.json'), '{"edited":true}\n');

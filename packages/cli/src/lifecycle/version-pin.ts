@@ -1,7 +1,7 @@
 // .gspot/version against the running binary; the exit-2 refusal with its two remedies.
 import * as messages from '#cli/policy/messages.ts';
+import { openRoot } from '#cli/platform/filesystem.ts';
 import packageManifest from '#package' with { type: 'json' };
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 
 const { version: GSPOT_VERSION } = packageManifest;
@@ -25,7 +25,7 @@ export class VersionPinError extends Error {
  * @returns the version in .gspot/version
  */
 export function pinnedVersion(root: string): string | undefined {
-    const current = openConfinedRoot(root).read('.gspot/version');
+    const current = openRoot(root).read('.gspot/version');
     if (current === undefined) return undefined;
     const line = current.bytes.toString('utf8').trim();
     return line === '' ? undefined : line;

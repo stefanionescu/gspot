@@ -79,10 +79,10 @@ export function privateTarget(path: string): void {
 }
 
 /**
- * Public mutation proposals cannot target the owner's journal, lock, or recovery files.
+ * Public mutation proposals cannot target the owner's log, lock, or recovery files.
  * @param path the proposed path
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Public mutation proposals cannot target the owner's journal, lock, or recovery files. 9 files make 11 calls; one owner keeps that behavior in one place.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Public mutation proposals cannot target the owner's log, lock, or recovery files. 9 files make 11 calls; one owner keeps that behavior in one place.
 export function mutationTarget(path: string): void {
     mutationPath(path);
     privateTarget(path);

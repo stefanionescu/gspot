@@ -1,4 +1,5 @@
 import type { Manifest } from '#cli/types/kits.ts';
+import { openRoot } from '#cli/platform/filesystem.ts';
 import { agentFiles } from '#cli/agents/instructions.ts';
 import { npmPins, pythonPins } from '#cli/tools/pins.ts';
 import { misePins, pinnedTwice } from '#cli/tools/mise.ts';
@@ -6,7 +7,6 @@ import { submodulePaths } from '#cli/repository/tracked.ts';
 import { xcodeProposal } from '#cli/commands/init/xcode.ts';
 import { MISE_CONFIG_PATH } from '#cli/config/tools/tools.ts';
 import { noLongerRuns } from '#cli/policy/adoption/collect.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { runnerTaskPlan } from '#cli/generation/runner/plan.ts';
 import { ciLintJobs } from '#cli/repository/existing-tooling.ts';
 import type { AdoptionResult } from '#cli/types/policy/adoption.ts';
@@ -125,7 +125,7 @@ function carryInstallSettings(kept: AdoptionResult, path: string, settings: Inst
 
 // Carries the install settings of every scope's bunfig.toml into the proposal.
 function carryBunfigSettings(root: string, selection: InitSelection, kept: AdoptionResult): void {
-    const files = openConfinedRoot(root);
+    const files = openRoot(root);
     try {
         for (const path of new Set(['', ...selection.scopes.map((scope) => scope.path)])) {
             const source = files.read(path === '' ? 'bunfig.toml' : `${path}/bunfig.toml`);

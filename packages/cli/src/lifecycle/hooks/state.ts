@@ -1,7 +1,7 @@
+import type { Root } from '#cli/types/platform.ts';
 import { EXECUTE_BITS } from '#cli/config/platform.ts';
-import type { ConfinedRoot } from '#cli/types/platform.ts';
+import { openRoot } from '#cli/platform/filesystem.ts';
 import { huskyLines } from '#cli/generation/hooks/husky.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import { blockSpan, currentBlock } from '#cli/lifecycle/managed-blocks.ts';
 import { hasConfiguration } from '#cli/lifecycle/configuration/document.ts';
@@ -9,10 +9,10 @@ import { HOOK_FILES, SIMPLE_GIT_HOOKS_DIRECTORY as DIRECTORY } from '#cli/config
 import { hookBody, hookPrefix, hookCommand, simpleGitHookCommand } from '#cli/generation/hooks/scripts.ts';
 
 /**
- * Refuse alternate native configuration before publishing or verifying package-owned commands.
- * @param files the confined repository root
+ * Refuse alternate native configuration before writing or verifying package-owned commands.
+ * @param files the files repository root
  */
-export function requirePackageConfiguration(files: ConfinedRoot): void {
+export function requirePackageConfiguration(files: Root): void {
     for (const prefix of ['', '.']) {
         for (const extension of ['cjs', 'js', 'mjs', 'json']) {
             const path = `${prefix}simple-git-hooks.${extension}`;
@@ -32,7 +32,7 @@ export function requirePackageConfiguration(files: ConfinedRoot): void {
  * @returns whether every Husky script carries the current gspot line
  */
 export function huskyReady(root: string, runner: string | undefined, binaryPath?: string): boolean {
-    const files = openConfinedRoot(root);
+    const files = openRoot(root);
     try {
         return huskyLines(root, runner, binaryPath).every(({ path, line }) => {
             const current = files.read(path);
@@ -60,7 +60,7 @@ export function simpleGitHooksReady(root: string, runner: string | undefined, bi
         value: simpleGitHookCommand(prefix, name),
     }));
     if (!hasConfiguration(root, { path: 'package.json', format: 'json', changes })) return false;
-    const files = openConfinedRoot(root);
+    const files = openRoot(root);
     try {
         requirePackageConfiguration(files);
         return HOOK_FILES.every((name) => {

@@ -16,7 +16,7 @@ import { installTools } from '#cli/tools/install/execution.ts';
 import type { Session } from '#cli/types/execution/execution.ts';
 import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import { INCOMPLETE_INSTALL_EXIT } from '#cli/config/commands/init.ts';
-import type { LifecycleOwner, ReplaceRemovalResult } from '#cli/types/lifecycle/lifecycle.ts';
+import type { Owner, ReplaceRemovalResult } from '#cli/types/lifecycle/lifecycle.ts';
 import type { Written, Installed, InitOptions, InitPrepared } from '#cli/types/commands/init.ts';
 
 const { version: GSPOT_VERSION } = packageManifest;
@@ -48,7 +48,7 @@ function retireReplaced(
 }
 
 // Refuses to write when a configuration the replace read has changed after the plan was made.
-function assertObservedUnchanged(owner: LifecycleOwner, observed: ReadonlyMap<string, FileObservation>): void {
+function assertObservedUnchanged(owner: Owner, observed: ReadonlyMap<string, FileObservation>): void {
     for (const [path, original] of observed)
         if (!isDeepStrictEqual(owner.read(path), original))
             throw new PolicyError([`Configuration changed after replace was planned: ${path}. Run gspot init again.`]);

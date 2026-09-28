@@ -4,14 +4,14 @@ This document decides the one file a person edits, the files gspot writes, and h
 merge.
 
 Configuration-document editing owns parsing and field edits for shared JSON, YAML, and TOML.
-The lifecycle owner retains locking, observations, journals, publication, and recovery. Static
+The owner retains locking, observations, logs, writes, and recovery. Static
 configuration reading captures the bytes and permissions that authorize adoption; tool-specific
 keeping converts those observed settings without acquiring a separate mutation owner. Formatter
 and ESLint adoption own their conversion rules; replacement coordinates observations and retirement.
 
 ## Ownership boundaries
 
-One lifecycle owner records originals, installed content, modes, later edits, and interrupted
+One owner records originals, installed content, modes, later edits, and interrupted
 operations for init, apply, remove, and uninstall. Names, headers, and current templates
 cannot reconstruct permission to delete. All mutations use the validated path boundary. It checks symlink parents and supported
 platform forms. Never remove `.gspot/` recursively.
@@ -538,7 +538,7 @@ The planted install holds the block, and `uninstall.test.ts` holds that it is go
 
 `init`, `apply`, `remove`, and `uninstall` share the ownership and recovery contract in [03-configuration.md](03-configuration.md). Unowned files and developer-modified owned files survive. Uninstall never recursively removes `.gspot/`.
 
-Marks identify candidate managed files, but deletion also checks the locally recorded installed hash, path confinement, and completed recovery. Fresh clones preserve unrecorded files even when they match generated templates. Modified files are reported, not discarded. The path prefix test goes. The gitleaks baseline moves to the root of the
+Marks identify candidate managed files, but deletion also checks the locally recorded installed hash, path bounds, and completed recovery. Fresh clones preserve unrecorded files even when they match generated templates. Modified files are reported, not discarded. The path prefix test goes. The gitleaks baseline moves to the root of the
 repository as `.gitleaks-baseline.json`, a file the developer owns, and the secrets manifest
 names that path.
 

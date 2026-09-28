@@ -1,9 +1,9 @@
 import { statSync } from 'node:fs';
 import { join, posix } from 'node:path';
 import { toPlatform } from '#cli/platform/paths.ts';
+import { openRoot } from '#cli/platform/filesystem.ts';
 import type { ConfigurationTarget } from '#cli/types/kits.ts';
 import { kitName, targetInScope } from '#cli/kits/targets.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 
 import type {
     Session,
@@ -77,12 +77,12 @@ function plainPart(session: Session, planned: PlannedCheck, part: string, sub: S
     return [substituteValue(session, planned, part, sub)];
 }
 
-// Read only confined ancestor configurations between each input and its declared scope.
+// Read only files ancestor configurations between each input and its declared scope.
 function nestedConfigurations(session: Session, planned: PlannedCheck): string[] {
     const nested = planned.spec.nested_config;
     if (nested === undefined) return [];
     const scope = planned.scope.scope.path;
-    const files = openConfinedRoot(session.root);
+    const files = openRoot(session.root);
     try {
         const paths = [
             scope === '' ? nested : `${scope}/${nested}`,

@@ -3,9 +3,9 @@ import ignore from 'ignore';
 import type { Dirent } from 'node:fs';
 import { join, dirname, resolve } from 'node:path';
 import { runBlocking } from '#cli/platform/spawn.ts';
+import { openRoot } from '#cli/platform/filesystem.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
 import type { SpawnResult } from '#cli/types/platform.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { LIFECYCLE_PRIVATE_PATH } from '#cli/config/platform.ts';
 import type { RawEntry, PathIgnore, SourceObservations } from '#cli/types/repository/repository.ts';
 import { openSync, readSync, statSync, closeSync, lstatSync, readdirSync, readFileSync } from 'node:fs';
@@ -18,7 +18,7 @@ import {
 } from '#cli/config/repository/repository.ts';
 
 function symlinkEntry(root: string, path: string): RawEntry | undefined {
-    const files = openConfinedRoot(root, 'native');
+    const files = openRoot(root, 'native');
     try {
         const target = statSync(files.source(path));
         return target.isDirectory() ? undefined : { path, size: target.size, executable: false, symlink: true };
@@ -237,7 +237,7 @@ export function trackedEntries(root: string, exclude: string[] = []): RawEntry[]
  */
 export function readPrefix(root: string, path: string, bytes: number): Buffer {
     const buffer = Buffer.alloc(bytes);
-    const files = openConfinedRoot(root, 'native');
+    const files = openRoot(root, 'native');
     let source: string;
     try {
         source = files.source(path);
@@ -282,7 +282,7 @@ export function readSource(root: string, path: string, observations?: SourceObse
     const observed = observations?.root === root ? observations.sources : undefined;
     const held = observed?.get(path);
     if (held !== undefined) return held;
-    const files = openConfinedRoot(root, 'native');
+    const files = openRoot(root, 'native');
     try {
         const bytes = readFileSync(files.source(path));
         observed?.set(path, bytes);

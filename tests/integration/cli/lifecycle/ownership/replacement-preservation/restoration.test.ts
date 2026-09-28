@@ -2,8 +2,8 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import type { FileObservation } from '#cli/types/platform.ts';
-import { openLifecycleOwner } from '#cli/lifecycle/ownership/owner.ts';
-import type { LifecycleOwner } from '#cli/types/lifecycle/lifecycle.ts';
+import { openOwner } from '#cli/lifecycle/ownership/owner.ts';
+import type { Owner } from '#cli/types/lifecycle/lifecycle.ts';
 
 import {
     statSync,
@@ -19,7 +19,7 @@ import {
 } from 'node:fs';
 
 // Later user edits remain intact across replacement and restoration.
-function expectEditedLinkPreserved(owner: LifecycleOwner, path: string, absolute: string, next: FileObservation): void {
+function expectEditedLinkPreserved(owner: Owner, path: string, absolute: string, next: FileObservation): void {
     expect(owner.replace(path, next, 'config', true)).toBe('changed');
     unlinkSync(absolute);
     symlinkSync('../tool/original.sh', absolute);
@@ -34,7 +34,7 @@ if (process.platform !== 'win32') {
         await createFileTree(directory.path, { '.gspot/authored.txt': 'keep\n' });
         const original = Buffer.from([0, 255, 1, 10]);
         writeFileSync(join(directory.path, 'config.txt'), original, { mode: 0o640 });
-        let owner = openLifecycleOwner(directory.path);
+        let owner = openOwner(directory.path);
         try {
             expect(owner.replace('config.txt', { bytes: Buffer.from('first'), mode: 0o444 }, 'config', true)).toBe(
                 'changed',
@@ -43,7 +43,7 @@ if (process.platform !== 'win32') {
                 'changed',
             );
             owner.close();
-            owner = openLifecycleOwner(directory.path);
+            owner = openOwner(directory.path);
             expect(owner.restore('config.txt')).toBe('changed');
             expect(owner.read('config.txt')).toStrictEqual({ bytes: original, mode: 0o640 });
             expect(readFileSync(join(directory.path, '.gspot/authored.txt'), 'utf8')).toBe('keep\n');
@@ -71,7 +71,7 @@ if (process.platform !== 'win32') {
         if (process.platform === 'darwin') lchmodSync(absolute, 0o700);
         const originalMode = lstatSync(absolute).mode & 0o7777;
         const next = { bytes: Buffer.from('../tool/bin.sh'), mode: 0o777, isLink: true as const };
-        let owner = openLifecycleOwner(directory.path);
+        let owner = openOwner(directory.path);
         try {
             expect(owner.replace(path, next, 'config')).toBe('preserved');
             expect(owner.replace(path, next, 'config', true)).toBe('changed');
@@ -81,7 +81,7 @@ if (process.platform !== 'win32') {
             expect(executed.stdout.toString()).toBe('installed');
             expect(() => owner.read(path)).toThrow();
             owner.close();
-            owner = openLifecycleOwner(directory.path);
+            owner = openOwner(directory.path);
             expect(owner.restore(path)).toBe('changed');
             expect(readlinkSync(absolute)).toBe('../tool/original.sh');
             expect(lstatSync(absolute).mode & 0o7777).toBe(originalMode);
@@ -95,7 +95,7 @@ if (process.platform !== 'win32') {
     test('lifecycle ownership: a regular file containing a link target is preserved after replacing an installed link', async () => {
         await using directory = await testdir();
         await createFileTree(directory.path, { target: 'authored target' });
-        const owner = openLifecycleOwner(directory.path);
+        const owner = openOwner(directory.path);
         const next = { bytes: Buffer.from('target'), mode: 0o777, isLink: true as const };
         try {
             expect(owner.replace('tool', next, 'config')).toBe('changed');

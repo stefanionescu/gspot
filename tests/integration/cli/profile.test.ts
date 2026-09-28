@@ -216,7 +216,7 @@ test('profile export preserves an unowned destination and refuses the managed re
     expect(readFileSync(join(directory.path, 'gspot.toml'))).toStrictEqual(original);
 });
 
-test('profile publication recovers an interrupted write through the lifecycle journal', async () => {
+test('profile publication recovers an interrupted write through the lifecycle log', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, { 'gspot.toml': 'version = 1\nkits = []\n' });
     const path = join(directory.path, 'shared.profile.toml');

@@ -1,11 +1,11 @@
-// Replacing files under a confined root atomically, and the lock that keeps one lifecycle writer at a time.
+// Replacing files under a files root atomically, and the lock that keeps one lifecycle writer at a time.
 import { randomUUID } from 'node:crypto';
 import { join, dirname } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import { sameEntry } from '#cli/platform/safe-paths.ts';
 import { PRIVATE_FILE, OWNER_WRITE_BIT } from '#cli/config/platform.ts';
-import type { Staging, Confinement, FileObservation } from '#cli/types/platform.ts';
-import { readEntry, parentPath, validateObservation } from '#cli/platform/confined/reads.ts';
+import type { Bounds, Staging, FileObservation } from '#cli/types/platform.ts';
+import { readEntry, parentPath, validateObservation } from '#cli/platform/root/reads.ts';
 
 import {
     openSync,
@@ -49,7 +49,7 @@ function stageLink(temporary: string, link: string, value: FileObservation): voi
     }
 }
 
-// Windows cannot rename over a read-only file. The owner journals its saved bytes before this removal,
+// Windows cannot rename over a read-only file. The owner logs its saved bytes before this removal,
 // so an interrupted replacement can restore the absent target.
 function mustUnlinkFirst(expected: FileObservation | undefined): boolean {
     if (process.platform !== 'win32' || expected === undefined || expected.isLink === true) return false;
@@ -58,8 +58,8 @@ function mustUnlinkFirst(expected: FileObservation | undefined): boolean {
 
 // Moves the staged entry over the destination, after checking that the destination is still as expected.
 function commitStaged(staging: Staging, expected: FileObservation | undefined): void {
-    const { confinement, path, target, temporary } = staging;
-    if (!sameEntry(readEntry(confinement, path, expected?.isLink === true), expected))
+    const { bounds, path, target, temporary } = staging;
+    if (!sameEntry(readEntry(bounds, path, expected?.isLink === true), expected))
         throw new Error(`Lifecycle destination changed during the operation: ${path}`);
     let removed = false;
     try {
@@ -69,15 +69,15 @@ function commitStaged(staging: Staging, expected: FileObservation | undefined): 
         }
         renameSync(temporary, target);
     } catch (error) {
-        if (removed && expected !== undefined) restoreRemoved(confinement, path, expected, error);
+        if (removed && expected !== undefined) restoreRemoved(bounds, path, expected, error);
         throw error;
     }
 }
 
 // Puts the expected file back after a replacement that removed it failed.
-function restoreRemoved(confinement: Confinement, path: string, expected: FileObservation, error: unknown): void {
+function restoreRemoved(bounds: Bounds, path: string, expected: FileObservation, error: unknown): void {
     try {
-        if (readEntry(confinement, path, false) === undefined) writeObservation(confinement, path, expected, undefined);
+        if (readEntry(bounds, path, false) === undefined) writeObservation(bounds, path, expected, undefined);
     } catch (restorationError) {
         throw new AggregateError([error, restorationError], `Replacement and restoration failed: ${path}`);
     }
@@ -121,21 +121,21 @@ function isAlive(pid: number): boolean {
 
 /**
  * Replaces the entry at a path with the snapshot, through a staged file renamed into place.
- * @param confinement the root
- * @param path the confined path
+ * @param bounds the root
+ * @param path the files path
  * @param value the snapshot to write
  * @param expected the snapshot the caller last saw there, or undefined for a new file
  */
 export function writeObservation(
-    confinement: Confinement,
+    bounds: Bounds,
     path: string,
     value: FileObservation,
     expected: FileObservation | undefined,
 ): void {
-    const link = validateObservation(confinement, path, value);
-    const target = parentPath(confinement, path, true);
+    const link = validateObservation(bounds, path, value);
+    const target = parentPath(bounds, path, true);
     const staging: Staging = {
-        confinement,
+        bounds,
         path,
         target,
         temporary: join(dirname(target), `.gspot-${randomUUID()}.tmp`),
@@ -153,20 +153,20 @@ export function writeObservation(
 
 /**
  * Takes the writer lock at a path, clearing one whose holder has exited and refusing one whose holder runs.
- * @param confinement the root, which records the lock it now holds
- * @param path the confined path of the lock file
+ * @param bounds the root, which records the lock it now holds
+ * @param path the files path of the lock file
  */
-export function acquireLock(confinement: Confinement, path: string): void {
-    const target = parentPath(confinement, path, true);
+export function acquireLock(bounds: Bounds, path: string): void {
+    const target = parentPath(bounds, path, true);
     const token = `${String(process.pid)}:${randomUUID()}`;
     for (;;) {
         if (claimLock(target, token)) {
-            confinement.locks.set(path, token);
+            bounds.locks.set(path, token);
             return;
         }
-        const current = readEntry(confinement, path, false);
+        const current = readEntry(bounds, path, false);
         if (isAlive(lockHolder(current, path)))
             throw new Error('Another lifecycle writer holds this repository. Retry after it finishes.');
-        if (isDeepStrictEqual(current, readEntry(confinement, path, false))) unlinkSync(target);
+        if (isDeepStrictEqual(current, readEntry(bounds, path, false))) unlinkSync(target);
     }
 }

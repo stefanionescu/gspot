@@ -3,7 +3,7 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { cliSource } from '#tests/support/cli/process.ts';
 import { statSync, chmodSync, readFileSync } from 'node:fs';
-import { openLifecycleOwner } from '#cli/lifecycle/ownership/owner.ts';
+import { openOwner } from '#cli/lifecycle/ownership/owner.ts';
 
 const implementation = cliSource('lifecycle/ownership/owner.ts');
 const boundary = cliSource('platform/filesystem.ts');
@@ -18,8 +18,8 @@ test.each(['before', 'after'] as const)(
         const program = String.raw`
 import { mock } from 'bun:test';
 const boundary=await import(${JSON.stringify(boundary)});
-const open=boundary.openConfinedRoot;
-mock.module(${JSON.stringify(boundary)},()=>({...boundary,openConfinedRoot(root){
+const open=boundary.openRoot;
+mock.module(${JSON.stringify(boundary)},()=>({...boundary,openRoot(root){
 const files=open(root);
 return {...files,write(path,value,expected){
 if(path==='middle.txt' && ${JSON.stringify(point)}==='before') process.exit(73);
@@ -27,8 +27,8 @@ files.write(path,value,expected);
 if(path==='middle.txt' && ${JSON.stringify(point)}==='after') process.exit(73);
 }};
 }}));
-const {openLifecycleOwner}=await import(${JSON.stringify(implementation)});
-const owner=openLifecycleOwner(process.cwd());
+const {openOwner}=await import(${JSON.stringify(implementation)});
+const owner=openOwner(process.cwd());
 owner.applyProposals(${JSON.stringify(paths)}.map(path=>owner.proposeReplacement(path,{bytes:Buffer.from('installed '+path+'\n'),mode:0o444},'config',true)));
 owner.close();
 `;
@@ -44,7 +44,7 @@ owner.close();
             `${point === 'before' ? 'authored' : 'installed'} middle.txt\n`,
         );
         expect(readFileSync(join(directory.path, 'last.txt'), 'utf8')).toBe('authored last.txt\n');
-        const owner = openLifecycleOwner(directory.path);
+        const owner = openOwner(directory.path);
         try {
             expect(owner.installedPaths().toSorted((left, right) => left.localeCompare(right))).toStrictEqual(
                 point === 'before' ? ['first.txt'] : ['first.txt', 'middle.txt'],
@@ -76,7 +76,7 @@ test.each(['before', 'after'] as const)(
     async (point) => {
         await using directory = await testdir();
         const paths = ['first.txt', 'middle.txt', 'last.txt'];
-        const initial = openLifecycleOwner(directory.path);
+        const initial = openOwner(directory.path);
         try {
             initial.applyProposals(
                 paths.map((path) =>
@@ -89,8 +89,8 @@ test.each(['before', 'after'] as const)(
         const program = `
 import { mock } from 'bun:test';
 const boundary=await import(${JSON.stringify(boundary)});
-const open=boundary.openConfinedRoot;
-mock.module(${JSON.stringify(boundary)},()=>({...boundary,openConfinedRoot(root){
+const open=boundary.openRoot;
+mock.module(${JSON.stringify(boundary)},()=>({...boundary,openRoot(root){
 const files=open(root);
 return {...files,remove(path,expected){
 if(path==='middle.txt' && ${JSON.stringify(point)}==='before') process.exit(73);
@@ -98,8 +98,8 @@ files.remove(path,expected);
 if(path==='middle.txt' && ${JSON.stringify(point)}==='after') process.exit(73);
 }};
 }}));
-const {openLifecycleOwner}=await import(${JSON.stringify(implementation)});
-const owner=openLifecycleOwner(process.cwd());
+const {openOwner}=await import(${JSON.stringify(implementation)});
+const owner=openOwner(process.cwd());
 owner.applyProposals(${JSON.stringify(paths)}.map(path=>owner.proposeRestoration(path)));
 owner.close();
 `;
@@ -110,7 +110,7 @@ owner.close();
         });
         const streams = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text()]);
         expect(await child.exited, streams.join('\n')).toBe(73);
-        const owner = openLifecycleOwner(directory.path);
+        const owner = openOwner(directory.path);
         try {
             expect(owner.read('first.txt')).toBeUndefined();
             expect(owner.installedPaths().toSorted((left, right) => left.localeCompare(right))).toStrictEqual(

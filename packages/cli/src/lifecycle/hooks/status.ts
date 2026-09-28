@@ -1,20 +1,20 @@
-// Whether the installed Git hooks still match what the journal recorded, with the line that says so.
+// Whether the installed Git hooks still match what the log recorded, with the line that says so.
 import { posix, basename } from 'node:path';
 import { binaryPath } from '#cli/platform/assets.ts';
 import { EXECUTE_BITS } from '#cli/config/platform.ts';
+import { openRoot } from '#cli/platform/filesystem.ts';
 import type { HookName } from '#cli/types/generation.ts';
 import type { Policy } from '#cli/types/policy/policy.ts';
 import { HOOK_ARTIFACTS } from '#cli/repository/hooks.ts';
 import { huskyLines } from '#cli/generation/hooks/husky.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { hookLocation } from '#cli/repository/hook-location.ts';
 import { HOOK_FILES } from '#cli/config/repository/repository.ts';
 import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
+import type { Root, FileObservation } from '#cli/types/platform.ts';
 import type { Repository } from '#cli/types/repository/repository.ts';
 import type { Status, Readiness } from '#cli/types/lifecycle/hooks.ts';
 import type { OwnershipEntry } from '#cli/types/lifecycle/lifecycle.ts';
 import { lefthookConfiguration } from '#cli/generation/hooks/lefthook.ts';
-import type { ConfinedRoot, FileObservation } from '#cli/types/platform.ts';
 import { hasConfiguration } from '#cli/lifecycle/configuration/document.ts';
 import { preCommitConfiguration } from '#cli/generation/hooks/pre-commit.ts';
 import { huskyReady, simpleGitHooksReady } from '#cli/lifecycle/hooks/state.ts';
@@ -38,7 +38,7 @@ function integrationStatus(policy: Policy, root: string): string | undefined {
         : `${tool} integration is missing or edited; run gspot apply`;
 }
 
-// Whether a file is the one the journal installed, by mode and content.
+// Whether a file is the one the log installed, by mode and content.
 function isInstalled(current: FileObservation | undefined, installed: OwnershipEntry['installed']): boolean {
     if (current?.mode !== installed?.mode || current === undefined) return false;
     return new Bun.CryptoHasher('sha256').update(current.bytes).digest('hex') === installed?.hash;
@@ -56,7 +56,7 @@ function expectedCommand(status: Status, name: HookName): string | undefined {
 }
 
 // The text that says an original sibling is missing or not executable, or undefined when it is sound or absent.
-function siblingStatus(status: Status, files: ConfinedRoot, name: string, sibling: string): string | undefined {
+function siblingStatus(status: Status, files: Root, name: string, sibling: string): string | undefined {
     if (!status.entries.some((entry) => entry.path === sibling)) return undefined;
     const original = files.read(sibling);
     const isExecutable =
@@ -66,7 +66,7 @@ function siblingStatus(status: Status, files: ConfinedRoot, name: string, siblin
 }
 
 // The text that says a required hook file is missing or edited, or undefined when it is installed.
-function requiredStatus(status: Status, files: ConfinedRoot, name: HookName, required: string): string | undefined {
+function requiredStatus(status: Status, files: Root, name: HookName, required: string): string | undefined {
     const current = files.read(required);
     const installed = status.entries.find((entry) => entry.path === required)?.installed;
     const command = expectedCommand(status, name);
@@ -78,7 +78,7 @@ function requiredStatus(status: Status, files: ConfinedRoot, name: HookName, req
 }
 
 // The text that says one gspot stage hook is not as installed, or undefined when all its files are.
-function stageStatus(status: Status, files: ConfinedRoot, name: HookName): string | undefined {
+function stageStatus(status: Status, files: Root, name: HookName): string | undefined {
     const path = posix.join(status.location.directory, name);
     const sibling = siblingStatus(status, files, name, `${path}.gspot-original`);
     if (sibling !== undefined) return sibling;
@@ -87,7 +87,7 @@ function stageStatus(status: Status, files: ConfinedRoot, name: HookName): strin
 }
 
 // The text that says a hook outside the stages is not as installed, or undefined when every one is.
-function extraStatus(status: Status, files: ConfinedRoot): string | undefined {
+function extraStatus(status: Status, files: Root): string | undefined {
     for (const entry of status.entries.filter((entry) => entry.kind === 'hook')) {
         const name = basename(entry.path);
         if (HOOK_ARTIFACTS.includes(name)) continue;
@@ -133,7 +133,7 @@ export function hookStatus({
         hasNativeHooks: policy.hooks.tool in INTEGRATIONS,
         husky,
     };
-    const files = openConfinedRoot(location.root);
+    const files = openRoot(location.root);
     try {
         const stages = HOOK_FILES.map((name) => stageStatus(status, files, name));
         const failure = stages.find((text) => text !== undefined) ?? extraStatus(status, files);

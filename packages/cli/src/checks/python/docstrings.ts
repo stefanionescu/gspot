@@ -1,9 +1,9 @@
 import { z } from 'zod';
 import { parse } from 'smol-toml';
 import { posix } from 'node:path';
+import { openRoot } from '#cli/platform/filesystem.ts';
 import { runToolCheck } from '#cli/execution/tool/runner.ts';
 import type { CheckResult } from '#cli/types/checks/checks.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { DOCSTRING_COMMAND } from '#cli/config/checks/python.ts';
 import type { Session, PlannedCheck } from '#cli/types/execution/execution.ts';
 
@@ -44,7 +44,7 @@ export function docstringStyle(text: string, adopted?: unknown): 'google' | 'num
  * @returns the native check result with shared batching and error handling.
  */
 export async function checkDocstrings(session: Session, planned: PlannedCheck): Promise<CheckResult> {
-    const files = openConfinedRoot(session.root);
+    const files = openRoot(session.root);
     let style: 'google' | 'numpy' | undefined;
     try {
         const project = files.read(posix.join(planned.scope.scope.path, 'pyproject.toml'));

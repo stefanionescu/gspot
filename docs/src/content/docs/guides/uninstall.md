@@ -19,7 +19,7 @@ gspot uninstall --yes
 ```
 
 Uninstall uses the current local ownership record under `.gspot/state/`.
-Obsolete journals and recovery layouts remain unowned data. gspot does not convert or delete them.
+Obsolete logs and recovery layouts remain unowned data. gspot does not convert or delete them.
 
 Uninstall restores an original when the destination is absent or still matches the installed bytes and permissions. Later edits and unowned files
 remain. It also keeps `gspot.toml`, exported profiles, the project rule layer, and local recovery material.

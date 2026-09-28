@@ -3,8 +3,8 @@ import { pathToFileURL } from 'node:url';
 import { createRequire } from 'node:module';
 import { CONFIG_KEYS } from '#cli/config/native.ts';
 import { dirname, resolve, relative } from 'node:path';
+import { openRoot } from '#cli/platform/filesystem.ts';
 import { mutationPath } from '#cli/platform/safe-paths.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { registerEslintModule } from '#cli/native/eslint-modules.ts';
 import type { EslintRegistration } from '#cli/types/policy/policy.ts';
 
@@ -194,7 +194,7 @@ export async function eslintrcEntries(
     configPaths: string[],
 ): Promise<Record<string, unknown>[]> {
     const eslintrc = await eslintrcTranslation(root, configPath);
-    const files = openConfinedRoot(root);
+    const files = openRoot(root);
     try {
         files.read('.eslintignore');
         files.read('package.json');

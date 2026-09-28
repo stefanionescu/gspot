@@ -1,8 +1,8 @@
 // Temporary copies of selected files for commands that must not read the working tree.
 import { tmpdir } from 'node:os';
 import { cp, rm, readdir } from 'node:fs/promises';
+import { openRoot } from '#cli/platform/filesystem.ts';
 import { PERMISSION_BITS } from '#cli/config/platform.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { sep, join, dirname, relative, isAbsolute } from 'node:path';
 import type { Copy, Scratch } from '#cli/types/execution/execution.ts';
 import { SCRATCH_EXTRAS, SCRATCH_DIRECTORIES } from '#cli/config/execution/execution.ts';
@@ -22,7 +22,7 @@ import {
 } from 'node:fs';
 
 const CLONE_OPTIONS = { recursive: true, verbatimSymlinks: true, mode: constants.COPYFILE_FICLONE } as const;
-// Copies each selected file that exists, resolving it through the confined root.
+// Copies each selected file that exists, resolving it through the files root.
 async function copySelected(context: Scratch, paths: string[], dependencies: string[]): Promise<void> {
     const copied = new Set(
         [...paths, ...SCRATCH_EXTRAS].filter(
@@ -113,7 +113,7 @@ export function createFileWorkspace(
     const directory = realpathSync(mkdtempSync(join(tmpdir(), 'gspot-files-')));
     const originals = new Map<string, Buffer>();
     try {
-        const files = openConfinedRoot(root, 'native');
+        const files = openRoot(root, 'native');
         try {
             for (const path of new Set(paths)) {
                 const source = files.source(path);
@@ -148,7 +148,7 @@ export function createFileWorkspace(
  */
 export async function scratchCopy(root: string, paths: string[], scopePaths: string[]): Promise<string> {
     const scratch = realpathSync(mkdtempSync(join(tmpdir(), 'gspot-fix-')));
-    const files = openConfinedRoot(root, 'native');
+    const files = openRoot(root, 'native');
     const context: Scratch = {
         root,
         scratch,

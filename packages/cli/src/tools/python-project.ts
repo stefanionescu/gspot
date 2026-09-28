@@ -4,15 +4,15 @@ import { parse, stringify } from 'smol-toml';
 import { isDeepStrictEqual } from 'node:util';
 import { join, resolve, isAbsolute } from 'node:path';
 import { InstallationError } from '#cli/tools/pins.ts';
+import { openRoot } from '#cli/platform/filesystem.ts';
 import { runToolCommand } from '#cli/tools/command.ts';
 import { MissingToolError } from '#cli/tools/inspect.ts';
 import type { GeneratedFile } from '#cli/types/generation.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import type { Owner } from '#cli/types/lifecycle/lifecycle.ts';
+import { writeInstalled } from '#cli/tools/installed-files.ts';
 import { MODE_BITS, PRIVATE_FILE } from '#cli/config/platform.ts';
-import { publishInstalledFiles } from '#cli/tools/installed-files.ts';
 import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import { normalizedPythonPackage } from '#cli/repository/manifests.ts';
-import type { LifecycleOwner } from '#cli/types/lifecycle/lifecycle.ts';
 import { LOCK, SETUP, INDEX_SETTINGS, TOOL_PYTHON_PROJECT } from '#cli/config/tools/tools.ts';
 
 import {
@@ -80,7 +80,7 @@ function matches(project: string, lock: string): boolean {
  * @param work the directory the resolution runs in
  * @returns index credentials that must remain absent from generated lock files
  */
-function writePythonSettings(root: string, owner: LifecycleOwner, work: string): string[] {
+function writePythonSettings(root: string, owner: Owner, work: string): string[] {
     const configuration = owner.read('uv.toml');
     const source = configuration ?? owner.read('pyproject.toml');
     const parsed = parse(source?.bytes.toString('utf8') ?? '');
@@ -123,7 +123,7 @@ function writePythonSettings(root: string, owner: LifecycleOwner, work: string):
     });
 }
 
-async function uv(root: string, owner: LifecycleOwner, work: string, args: string[], executable = 'uv'): Promise<void> {
+async function uv(root: string, owner: Owner, work: string, args: string[], executable = 'uv'): Promise<void> {
     const credentials = writePythonSettings(root, owner, work);
     const result = await runToolCommand(
         undefined,
@@ -144,9 +144,9 @@ async function uv(root: string, owner: LifecycleOwner, work: string, args: strin
         throw new Error('The uv lock includes repository index credentials. Existing files were preserved.');
 }
 
-// Detach the host interpreter link and verify the copied environment before publication.
+// Detach the host interpreter link and verify the copied environment before writing.
 async function relocateInterpreter(work: string): Promise<void> {
-    // uv links the host interpreter. Copy its executable so the published environment has no external link.
+    // uv links the host interpreter. Copy its executable so the written environment has no external link.
     const interpreter = join(work, '.venv', process.platform === 'win32' ? 'Scripts/python.exe' : 'bin/python');
     const source = realpathSync(interpreter);
     const mode = lstatSync(source).mode & MODE_BITS;
@@ -162,17 +162,17 @@ async function relocateInterpreter(work: string): Promise<void> {
     );
     if (observed.code !== 0)
         throw new Error(
-            'The Python interpreter cannot run from a copied environment. No installed files were published.',
+            'The Python interpreter cannot run from a copied environment. No installed files were written.',
         );
 }
 
 /**
- * Resolve Python tool requirements outside the repository before publishing generated files.
+ * Resolve Python tool requirements outside the repository before writing generated files.
  * @param root the repository root
  * @param files the generated files, among them the Python project
  * @param owner the lifecycle owner that records the lock
  */
-export async function preparePythonProject(root: string, files: GeneratedFile[], owner: LifecycleOwner): Promise<void> {
+export async function preparePythonProject(root: string, files: GeneratedFile[], owner: Owner): Promise<void> {
     const project = files.find((file) => file.path === TOOL_PYTHON_PROJECT);
     if (project === undefined) return;
     projectSchema.parse(parse(project.content));
@@ -211,7 +211,7 @@ export function pythonLockDrift(
 ): { path: string; kind?: 'missing' | 'changed' } | undefined {
     const project = generated.find((file) => file.path === TOOL_PYTHON_PROJECT);
     if (project === undefined) return undefined;
-    const files = openConfinedRoot(root);
+    const files = openRoot(root);
     try {
         const lock = files.read(LOCK);
         if (lock === undefined) return { path: LOCK, kind: 'missing' };
@@ -227,7 +227,7 @@ export function pythonLockDrift(
  * @returns the commands an install runs, or none without a Python project
  */
 export function pythonInstallSteps(root: string): string[][] {
-    const files = openConfinedRoot(root);
+    const files = openRoot(root);
     try {
         const project = files.read(TOOL_PYTHON_PROJECT);
         if (project === undefined) return [];
@@ -242,7 +242,7 @@ export function pythonInstallSteps(root: string): string[][] {
 }
 
 /**
- * Install Python tools immutably and publish the relocatable environment through lifecycle ownership.
+ * Install Python tools immutably and write the relocatable environment through lifecycle ownership.
  * @param root the repository root
  * @param executable the uv executable to run
  * @returns the line that says what was installed, or '' without a Python project
@@ -272,7 +272,7 @@ export async function installPythonProject(root: string, executable = 'uv'): Pro
                 !isDeepStrictEqual(owner.read(LOCK), lock)
             )
                 throw new Error('Python tool inputs changed during installation. Retry the command.');
-            publishInstalledFiles(owner, join(work, '.venv'), 'python');
+            writeInstalled(owner, join(work, '.venv'), 'python');
             return 'installed locked Python tools under .gspot/.venv';
         } finally {
             rmSync(work, { recursive: true, force: true });

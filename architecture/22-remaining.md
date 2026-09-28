@@ -227,7 +227,7 @@ contract. Dependencies: scope/claim selection. Completion evidence: `.css` recei
 checks, unsupported files receive no CSS findings, and Sass detection explains unsupported
 coverage. Acceptance: `K-233`.
 
-### Lifecycle confinement
+### Lifecycle bounds
 
 Step 2.5. Verification and confirmed repairs.
 
@@ -243,18 +243,18 @@ Step 2.6. Verification and confirmed repairs.
 
 Verify common ownership routing, proposal publication, pruning, and interrupted recovery across init, apply, remove, and uninstall. Preserve unowned files, later edits, original bytes and modes, and fresh-clone files.
 
-Owner: `packages/cli/src/lifecycle/ownership/owner.ts`. Dependencies: confinement. Completion evidence: Init, apply, remove, uninstall, and interrupted batches preserve authored bytes and modes.
+Owner: `packages/cli/src/lifecycle/ownership/owner.ts`. Dependencies: bounds. Completion evidence: Init, apply, remove, uninstall, and interrupted batches preserve authored bytes and modes.
 
 Acceptance: `K-257`, `K-252`, `K-118`, `K-299`.
 
-Checked without change, 2026-09-26, steps 2.5 and 2.6. The confinement tests hold escaped,
+Checked without change, 2026-09-26, steps 2.5 and 2.6. The bounds tests hold escaped,
 linked, private, and missing targets, a second writer, read-only identities, and empty-directory
 removal. The ownership tests hold two replacements, later edits through apply and uninstall,
-interrupted journals, damaged backups, a full disk during a batch, a failed rename, and a fresh
+interrupted logs, damaged backups, a full disk during a batch, a failed rename, and a fresh
 clone. `K-252` has no text in the architecture folder.
 
 Exit: fixture scenarios reach their intended assertions; schemas, scopes, CSS claims, and
-local publication/recovery contracts agree. Verify confinement primitives in 2.5, then their
+local publication/recovery contracts agree. Verify bounds primitives in 2.5, then their
 publication/recovery integration in 2.6. Native-only evidence remains assigned to phase 10.
 
 ## 3. Establish installation and normal acquisition
@@ -497,7 +497,7 @@ Step 6.1. Verification and confirmed repairs.
 
 Verify exact staged and pushed object selection, all ref pairs, first pushes, deleted branches, shallow clones, submodules, linked worktrees, and config below the Git root. Keep whole-project findings and failures for affected scopes; no-Git mode remains supported.
 
-Owner: `repository/revisions/`. Dependencies: confinement and dependency copying. Completion evidence: Staged and all pushed objects, shallow clones, worktrees, submodules, and nested policy use immutable selected inputs.
+Owner: `repository/revisions/`. Dependencies: bounds and dependency copying. Completion evidence: Staged and all pushed objects, shallow clones, worktrees, submodules, and nested policy use immutable selected inputs.
 
 Current evidence: revision dependency copying includes POSIX and Windows launcher relocation
 and known editable Python loaders. Unsupported executable `.pth` forms are refused. Native

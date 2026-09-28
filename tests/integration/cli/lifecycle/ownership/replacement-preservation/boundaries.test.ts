@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { statSync, chmodSync, existsSync, readFileSync } from 'node:fs';
-import { readOwnership, openLifecycleOwner } from '#cli/lifecycle/ownership/owner.ts';
+import { openOwner, readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 
 test.each(['.automation/hooks', '.gspot/hooks', '.git/hooks', 'external', 'project/.automation/hooks'])(
     'hook destination %s restores current ownership under the shared writer boundary',
@@ -24,15 +24,15 @@ test.each(['.automation/hooks', '.gspot/hooks', '.git/hooks', 'external', 'proje
         const path = `${location.directory}/pre-commit`;
         await createFileTree(location.root, { [path]: original });
         chmodSync(join(location.root, path), 0o750);
-        const initial = openLifecycleOwner(location.root, location.stateDirectory);
+        const initial = openOwner(location.root, location.stateDirectory);
         try {
             initial.replace(path, { bytes: Buffer.from(installed), mode: 0o644 }, 'hook', true);
         } finally {
             initial.close();
         }
-        const owner = openLifecycleOwner(location.root, location.stateDirectory);
+        const owner = openOwner(location.root, location.stateDirectory);
         try {
-            expect(() => openLifecycleOwner(location.root, location.stateDirectory)).toThrow();
+            expect(() => openOwner(location.root, location.stateDirectory)).toThrow();
             expect(owner.restore(path)).toBe('changed');
         } finally {
             owner.close();
@@ -47,17 +47,17 @@ test.each(['.gspot', '.gspot/.gspot', '.automation/.gspot'])(
     'obsolete ownership in %s remains unowned and unchanged',
     async (directory) => {
         await using repository = await testdir();
-        const journal = `${directory}/ownership.json`;
+        const log = `${directory}/ownership.json`;
         const backup = `${directory}/recovery/original`;
         await createFileTree(repository.path, {
-            [journal]: 'obsolete journal bytes\n',
+            [log]: 'obsolete log bytes\n',
             [backup]: 'authored recovery bytes\n',
             'config.txt': 'unowned configuration\n',
         });
-        chmodSync(join(repository.path, journal), 0o640);
+        chmodSync(join(repository.path, log), 0o640);
         chmodSync(join(repository.path, backup), 0o400);
         expect(readOwnership(repository.path).files).toStrictEqual([]);
-        const owner = openLifecycleOwner(repository.path);
+        const owner = openOwner(repository.path);
         try {
             expect(owner.paths()).toStrictEqual([]);
             expect(owner.restore('config.txt')).toBe('preserved');
@@ -67,8 +67,8 @@ test.each(['.gspot', '.gspot/.gspot', '.automation/.gspot'])(
             owner.close();
         }
         expect(readFileSync(join(repository.path, 'config.txt'), 'utf8')).toBe('unowned configuration\n');
-        expect(readFileSync(join(repository.path, journal), 'utf8')).toBe('obsolete journal bytes\n');
-        expect(statSync(join(repository.path, journal)).mode & 0o777).toBe(0o640);
+        expect(readFileSync(join(repository.path, log), 'utf8')).toBe('obsolete log bytes\n');
+        expect(statSync(join(repository.path, log)).mode & 0o777).toBe(0o640);
         expect(readFileSync(join(repository.path, backup), 'utf8')).toBe('authored recovery bytes\n');
         expect(statSync(join(repository.path, backup)).mode & 0o777).toBe(0o400);
     },

@@ -1,5 +1,5 @@
 // The types of repository/revisions in this package.
-import type { ConfinedRoot } from '#cli/types/platform.ts';
+import type { Root } from '#cli/types/platform.ts';
 
 /** An installed virtual environment whose launchers and loader metadata name working-tree paths. */
 export type PythonLauncher = {
@@ -13,7 +13,7 @@ export type PythonLauncher = {
 export type RelocationContext = {
     root: string;
     destination: string;
-    selected: ConfinedRoot;
+    selected: Root;
     cancelSignal?: AbortSignal;
 };
 export type RevisionSource = { kind: 'index' } | { kind: 'commit'; hash: string };

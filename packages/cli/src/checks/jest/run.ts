@@ -3,10 +3,10 @@ import { z } from 'zod';
 import { tmpdir } from 'node:os';
 import { mkdtempSync } from 'node:fs';
 import { rm } from 'node:fs/promises';
+import type { Root } from '#cli/types/platform.ts';
 import { stripVTControlCharacters } from 'node:util';
-import type { ConfinedRoot } from '#cli/types/platform.ts';
+import { openRoot } from '#cli/platform/filesystem.ts';
 import { sep, join, relative, isAbsolute } from 'node:path';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import { scratchCopy } from '#cli/execution/files/workspace.ts';
 import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
@@ -20,7 +20,7 @@ const coverageSchema = z.object({
 });
 
 // Read the Jest report and refuse a run that cannot execute its suites.
-function readTestReport(reports: ConfinedRoot, stderr: string): TestReport {
+function readTestReport(reports: Root, stderr: string): TestReport {
     const testFile = reports.read('tests.json');
     if (testFile === undefined)
         throw new Error(`Jest produced no test report: ${stripVTControlCharacters(stderr).trim()}`);
@@ -43,11 +43,7 @@ function suitePath(source: string, suite: Suite): string {
 }
 
 // One finding per coverage dimension under its floor.
-function coverageFindings(
-    run: JestRun,
-    reports: ConfinedRoot,
-    settings: z.infer<typeof jestCoverageSettings>,
-): Finding[] {
+function coverageFindings(run: JestRun, reports: Root, settings: z.infer<typeof jestCoverageSettings>): Finding[] {
     const coverageFile = reports.read('coverage/coverage-summary.json');
     if (coverageFile === undefined)
         throw new Error('Jest produced no coverage summary. Enable coverage for the selected project.');
@@ -71,7 +67,7 @@ function coverageFindings(
 // Runs Jest over the copied sources and reads its reports into findings.
 async function runJest(
     run: JestRun,
-    reports: ConfinedRoot,
+    reports: Root,
     settings: z.infer<typeof jestCoverageSettings>,
 ): Promise<Finding[]> {
     const { input, source, work } = run;
@@ -153,7 +149,7 @@ export async function jestCoverage(input: EngineInput): Promise<Finding[]> {
     const settings = jestCoverageSettings.parse(input.view.tool('jest'));
     const work = mkdtempSync(join(tmpdir(), 'gspot-jest-'));
     let source: string | undefined;
-    const reports = openConfinedRoot(work);
+    const reports = openRoot(work);
     try {
         source = await scratchCopy(
             input.root,

@@ -6,15 +6,15 @@ import { tmpdir } from 'node:os';
 import { isDeepStrictEqual } from 'node:util';
 import type { ToolPin } from '#cli/types/kits.ts';
 import { SETUP } from '#cli/config/tools/tools.ts';
+import { openRoot } from '#cli/platform/filesystem.ts';
 import { lockMatches } from '#cli/tools/packages/locks.ts';
 import type { FileObservation } from '#cli/types/platform.ts';
 import type { GeneratedFile } from '#cli/types/generation.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import type { Owner } from '#cli/types/lifecycle/lifecycle.ts';
+import { writeInstalled } from '#cli/tools/installed-files.ts';
 import { parsePackageTool } from '#cli/tools/packages/identity.ts';
-import { publishInstalledFiles } from '#cli/tools/installed-files.ts';
 import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import type { Inputs, ToolProject } from '#cli/types/tools/packages.ts';
-import type { LifecycleOwner } from '#cli/types/lifecycle/lifecycle.ts';
 import { rmSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { LOCKS, YARN_SETTINGS, TOOL_PACKAGE_PROJECT } from '#cli/config/tools/packages.ts';
 import { packageCommand, packageInstallCommand, prepareNativeWrappers } from '#cli/tools/packages/commands.ts';
@@ -76,21 +76,21 @@ async function prepareLock(
 }
 
 // Refuses an installation whose inputs the manager rewrote or another writer changed meanwhile.
-function assertInputsUnchanged(owner: LifecycleOwner, work: string, project: ToolProject, inputs: Inputs): void {
+function assertInputsUnchanged(owner: Owner, work: string, project: ToolProject, inputs: Inputs): void {
     const manifestKept = readFileSync(join(work, 'package.json')).equals(inputs.project.bytes);
     const lockKept = readFileSync(join(work, project.lock)).equals(inputs.recorded.bytes);
     if (!manifestKept || !lockKept)
-        throw new Error(`${project.client.name} changed locked inputs. No installed files were published. ${SETUP}`);
+        throw new Error(`${project.client.name} changed locked inputs. No installed files were written. ${SETUP}`);
     const manifestSame = isDeepStrictEqual(owner.read(TOOL_PACKAGE_PROJECT), inputs.project);
     const lockSame = isDeepStrictEqual(owner.read(project.lockPath), inputs.recorded);
     if (!manifestSame || !lockSame || !isDeepStrictEqual(owner.read(YARN_SETTINGS), inputs.yarn))
         throw new Error('Tool project inputs changed during installation. Retry the command.');
 }
 
-// Installs the recorded lock in a scratch directory and publishes the installed files through the owner.
+// Installs the recorded lock in a scratch directory and writes the installed files through the owner.
 async function installFromInputs(
     root: string,
-    owner: LifecycleOwner,
+    owner: Owner,
     project: ToolProject,
     inputs: Inputs,
     tools: Iterable<ToolPin>,
@@ -102,23 +102,19 @@ async function installFromInputs(
         await packageCommand(root, work, project.client, true);
         await prepareNativeWrappers(work, project.dependencies, tools);
         assertInputsUnchanged(owner, work, project, inputs);
-        publishInstalledFiles(owner, join(work, 'node_modules'), 'npm');
+        writeInstalled(owner, join(work, 'node_modules'), 'npm');
     } finally {
         rmSync(work, { recursive: true, force: true });
     }
 }
 
 /**
- * Resolve only a missing or mismatched tool lock, before apply publishes generated files.
+ * Resolve only a missing or mismatched tool lock, before apply writes generated files.
  * @param root the repository root
  * @param files the generated files, among them the tool project
  * @param owner the lifecycle owner that records the lock
  */
-export async function preparePackageProject(
-    root: string,
-    files: GeneratedFile[],
-    owner: LifecycleOwner,
-): Promise<void> {
+export async function preparePackageProject(root: string, files: GeneratedFile[], owner: Owner): Promise<void> {
     const generated = files.find((file) => file.path === TOOL_PACKAGE_PROJECT);
     if (generated === undefined) return;
     const project = projectOf(generated.content);
@@ -151,7 +147,7 @@ export function packageLockDrift(
     const manifest = generated.find((file) => file.path === TOOL_PACKAGE_PROJECT);
     if (manifest === undefined) return undefined;
     const project = projectOf(manifest.content);
-    const files = openConfinedRoot(root);
+    const files = openRoot(root);
     try {
         const recorded = files.read(project.lockPath);
         if (recorded === undefined) return { path: project.lockPath, kind: 'missing' };
@@ -169,7 +165,7 @@ export function packageLockDrift(
  * @returns the commands an install runs, or none without a tool project
  */
 export function packageInstallSteps(root: string): string[][] {
-    const files = openConfinedRoot(root);
+    const files = openRoot(root);
     try {
         const manifest = files.read(TOOL_PACKAGE_PROJECT);
         if (manifest === undefined) return [];
@@ -182,7 +178,7 @@ export function packageInstallSteps(root: string): string[][] {
 }
 
 /**
- * Install locked packages outside the repository, then publish each owned entry through native confinement.
+ * Install locked packages outside the repository, then write each owned entry through native bounds.
  * @param root the repository root
  * @param tools the pinned tools whose native wrappers the installation prepares
  * @returns the line that says what was installed, or '' without a tool project

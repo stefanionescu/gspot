@@ -2,8 +2,8 @@ import { dirname, relative } from 'node:path';
 import { toPosix } from '#cli/platform/paths.ts';
 import type { PointerSpec } from '#cli/types/kits.ts';
 import { headerFor } from '#cli/generation/headers.ts';
+import { openRoot } from '#cli/platform/filesystem.ts';
 import { TARGET_PLACEHOLDER } from '#cli/config/generation.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { type ParseError, parse as parseJsonc } from 'jsonc-parser';
 import type { GeneratedFile, ConfigurationOutput } from '#cli/types/generation.ts';
 
@@ -65,7 +65,7 @@ export function mergePointer(
     pointerPath: string,
     targetPath: string,
 ): ConfigurationOutput {
-    const files = openConfinedRoot(root);
+    const files = openRoot(root);
     try {
         const text = files.read(pointerPath)?.bytes.toString('utf8') ?? '{}\n';
         parsePointer(text, pointerPath);

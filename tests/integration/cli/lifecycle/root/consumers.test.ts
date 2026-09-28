@@ -11,7 +11,7 @@ import { astGrepMatches } from '#cli/checks/structure/ast-grep.ts';
 import { chmodSync, existsSync, unlinkSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
 
 if (process.platform !== 'win32')
-    describe('confined discovery', () => {
+    describe('files discovery', () => {
         test.each(['project', 'configuration', 'schemes'] as const)(
             'Xcode discovery rejects a symlinked %s and leaves outside data unchanged',
             async (kind) => {
@@ -37,7 +37,7 @@ if (process.platform !== 'win32')
         );
     });
 
-test('structural rule caching confines writes and preserves later rule edits', async () => {
+test('structural rule caching bounds writes and preserves later rule edits', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
         'project/gspot.toml': 'version = 1\nlevel = "all"\nkits = ["bash"]\n[runner]\ntool = "mise"\n',

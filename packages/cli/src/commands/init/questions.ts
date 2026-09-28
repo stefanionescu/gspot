@@ -1,7 +1,7 @@
 import type { Manifest } from '#cli/types/kits.ts';
 import { shippedFormat } from '#cli/kits/listing.ts';
+import { openRoot } from '#cli/platform/filesystem.ts';
 import { MISE_CONFIG_PATH } from '#cli/config/tools/tools.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { readGitSetting } from '#cli/repository/git-config.ts';
 import { ciLintJobs } from '#cli/repository/existing-tooling.ts';
 import type { AdoptedFormatting } from '#cli/types/policy/adoption.ts';
@@ -30,7 +30,7 @@ function hooksDefault(tooling: ExistingTooling): InitAnswers['hooks'] {
 function existingCi(root: string, tooling: ExistingTooling): InitAnswers['ci'] | undefined {
     if (tooling.ci.includes('.gitlab-ci.yml')) return 'gitlab';
     if (tooling.ci.some((path) => path.startsWith('.github/workflows/'))) return 'github';
-    const files = openConfinedRoot(root);
+    const files = openRoot(root);
     try {
         if (files.read('.gitlab-ci.yml') !== undefined) return 'gitlab';
         if (files.stat('.github/workflows')?.isDirectory() === true) return 'github';

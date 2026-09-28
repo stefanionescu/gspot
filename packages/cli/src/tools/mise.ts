@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { parse as parseToml } from 'smol-toml';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import { openRoot } from '#cli/platform/filesystem.ts';
 import type { ToolPin, Manifest, InstallerPin } from '#cli/types/kits.ts';
 import { collectPins, privateToolInstallation } from '#cli/tools/pins.ts';
 import { HOST_ONLY, UV_INSTALLER, MISE_BACKENDS } from '#cli/config/tools/tools.ts';
@@ -44,7 +44,7 @@ export function misePins(manifests: Manifest[], isPackagePinned: boolean): (Inst
  * @returns each tool pinned twice, with the file that pins it
  */
 export function pinnedTwice(root: string, manifests: Manifest[]): { tool: string; version: string; place: string }[] {
-    const files = openConfinedRoot(root);
+    const files = openRoot(root);
     let current;
     try {
         current = files.read('mise.toml');

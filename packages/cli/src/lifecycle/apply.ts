@@ -1,11 +1,11 @@
 import type { GeneratedProposal } from '#cli/types/generation.ts';
-import type { PublicationRequest } from '#cli/types/lifecycle/apply.ts';
+import type { WriteRequest } from '#cli/types/lifecycle/apply.ts';
 import { isValePackageFile } from '#cli/repository/file-classification.ts';
-import { readOwnership, publicationObservation } from '#cli/lifecycle/ownership/owner.ts';
+import { written, readOwnership } from '#cli/lifecycle/ownership/owner.ts';
+import type { Owner, ApplyReport, FileProposal } from '#cli/types/lifecycle/lifecycle.ts';
 import { READ_ONLY_FILE, EXECUTABLE_FILE, OWNER_WRITABLE_FILE } from '#cli/config/platform.ts';
-import type { ApplyReport, FileProposal, LifecycleOwner } from '#cli/types/lifecycle/lifecycle.ts';
 
-function configurationProposals(owner: LifecycleOwner, generated: GeneratedProposal, replace: boolean) {
+function configurationProposals(owner: Owner, generated: GeneratedProposal, replace: boolean) {
     const proposals: { proposal: FileProposal; package: boolean }[] = [];
     for (const merge of generated.merges) {
         proposals.push({
@@ -22,7 +22,7 @@ function configurationProposals(owner: LifecycleOwner, generated: GeneratedPropo
     return proposals;
 }
 
-// Both publication and pruning report preserved files through the same ownership result.
+// Both writing and pruning report preserved files through the same ownership result.
 function recordPreserved(report: ApplyReport, proposals: FileProposal[]): void {
     const preserved = proposals.filter((proposal) => proposal.status === 'preserved');
     report.preserved.push(...preserved.map((proposal) => proposal.path));
@@ -33,13 +33,13 @@ function recordPreserved(report: ApplyReport, proposals: FileProposal[]): void {
     }
 }
 
-// Every proposal is prepared before the owner publishes the batch.
+// Every proposal is prepared before the owner writes the batch.
 /**
  * Publish and prune generated files using recorded ownership and current snapshots.
  * @param owner the lifecycle owner of the repository
  * @param request generated outputs, pruning policy, and reviewed originals
  */
-export function publishGenerated(owner: LifecycleOwner, request: PublicationRequest): void {
+export function writeGenerated(owner: Owner, request: WriteRequest): void {
     const { root, rendered, report, retained, replace, regenerate } = request;
     const configurations = configurationProposals(owner, rendered, replace !== undefined);
     const authorized = new Map([...(regenerate ?? []), ...(replace ?? [])]);
@@ -49,7 +49,7 @@ export function publishGenerated(owner: LifecycleOwner, request: PublicationRequ
         const observed = file.kind === 'lock' ? file.observed : authorized.get(file.path);
         let mode = file.readOnly ? READ_ONLY_FILE : OWNER_WRITABLE_FILE;
         if (file.executable === true) mode = EXECUTABLE_FILE;
-        const replacement = publicationObservation({ bytes: Buffer.from(file.content), mode }, owner.read(file.path));
+        const replacement = written({ bytes: Buffer.from(file.content), mode }, owner.read(file.path));
         return owner.proposeReplacement(file.path, replacement, kind, observed !== undefined, observed);
     });
     const blocks = rendered.blocks.map((block) => owner.proposeBlock(block.path, block.block, block.style));

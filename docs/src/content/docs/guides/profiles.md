@@ -13,7 +13,7 @@ gspot export team.profile.toml
 Choose a destination inside the repository, relative to your working directory. Export refuses
 symlinked destinations, unrelated existing content, and later edits to a previous export.
 Repeat the command to refresh an unchanged export. Apply and uninstall retain exported profiles.
-An interrupted export resumes through the local recovery journal when you retry.
+An interrupted export resumes through the local recovery log when you retry.
 
 Read the resulting TOML and the list of omitted entries. A profile excludes repository-specific
 scope definitions, custom checks, generated/vendored declarations, and path-based entries.

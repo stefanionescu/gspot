@@ -60,7 +60,7 @@ const schema = readFileSync('schema.txt', 'utf8');
 if (schema !== 'current') {
     mkdirSync('migrations/meta', { recursive: true });
     writeFileSync('migrations/0001_change.sql', 'ALTER TABLE records ADD name text;\n');
-    writeFileSync('migrations/meta/journal.json', '{"version":2}\n');
+    writeFileSync('migrations/meta/log.json', '{"version":2}\n');
 }
 
 if (schema === 'failure') {

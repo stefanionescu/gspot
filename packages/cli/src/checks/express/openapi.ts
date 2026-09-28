@@ -1,10 +1,10 @@
 import { join } from 'node:path';
 import { rm } from 'node:fs/promises';
+import { openRoot } from '#cli/platform/filesystem.ts';
 import { asText } from '#cli/policy/adoption/source.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { SPECTRAL_LINE } from '#cli/config/checks/express.ts';
 import { commandArguments } from '#cli/platform/arguments.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import { scratchCopy } from '#cli/execution/files/workspace.ts';
 import { toolOutputDetail } from '#cli/execution/broken-tool.ts';
@@ -18,7 +18,7 @@ import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
 export async function openapiLint(input: EngineInput): Promise<Finding[]> {
     const document = asText(input.view.tool('openapi')['document']) ?? '';
     if (document === '') return [];
-    const files = openConfinedRoot(input.root, 'native');
+    const files = openRoot(input.root, 'native');
     try {
         files.source(document);
         if (files.read('.gspot/config/spectral.yaml') === undefined)

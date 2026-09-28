@@ -5,12 +5,12 @@ import { join } from 'node:path';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { stripVTControlCharacters } from 'node:util';
 import { kitManifests } from '#cli/kits/manifests.ts';
+import { openRoot } from '#cli/platform/filesystem.ts';
 import type { SpawnResult } from '#cli/types/platform.ts';
 import { installHint } from '#cli/tools/install/hints.ts';
 import type { ToolPin, Manifest } from '#cli/types/kits.ts';
 import { hasPolicy, readPolicy } from '#cli/policy/read.ts';
 import { privateToolInstallation } from '#cli/tools/pins.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { NODE_MODULES_DIRECTORY } from '#cli/config/platform.ts';
 import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import { NO_VERSION, VERSION_TIMEOUT_MS } from '#cli/config/tools/tools.ts';
@@ -66,7 +66,7 @@ function libraryInspection(root: string, tool: ToolPin, path: string, found: str
 
 // Read library versions from the private installation used by generated configurations.
 function inspectLibrary(root: string, tool: ToolPin): ToolInspection {
-    const files = openConfinedRoot(root);
+    const files = openRoot(root);
     const hint = installHint(tool);
     const name = tool.installers['npm']?.name ?? tool.name;
     const path = `${NODE_MODULES_DIRECTORY}/${name}/package.json`;

@@ -1,8 +1,8 @@
 // Runs external tools with explicit file lists and configuration, and turns their output into findings.
 import { join } from 'node:path';
+import { openRoot } from '#cli/platform/filesystem.ts';
 import type { ToolPin, CheckSpec } from '#cli/types/kits.ts';
 import { fileBatches } from '#cli/execution/files/batches.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import type { ToolInspection } from '#cli/types/tools/tools.ts';
 import { FILES_PLACEHOLDER } from '#cli/config/execution/execution.ts';
 import { collect, missingNote } from '#cli/execution/tool/findings.ts';
@@ -132,7 +132,7 @@ function missingConfiguration(
     base: CheckResult,
 ): CheckResult | undefined {
     if (planned.spec.nested_config === undefined) return undefined;
-    const files = openConfinedRoot(session.root);
+    const files = openRoot(session.root);
     try {
         const missing = commandConfigurations(session, planned, command).find((path) => files.read(path) === undefined);
         if (missing === undefined) return undefined;

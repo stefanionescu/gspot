@@ -94,7 +94,7 @@ test.each(LICENSE_SCOPES)(
 );
 
 test.each(LICENSE_SCOPES)(
-    'license adoption at $scope confines generated allowances to the owning scopes',
+    'license adoption at $scope bounds generated allowances to the owning scopes',
     async ({ scope, rootDirectory, path }) => {
         await using sandbox = await testdir();
         const project = join(sandbox.path, 'project');

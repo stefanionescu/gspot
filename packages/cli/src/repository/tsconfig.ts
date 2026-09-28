@@ -2,14 +2,14 @@ import { z } from 'zod';
 import ts from 'typescript';
 import { readFileSync } from 'node:fs';
 import { sep, dirname, relative } from 'node:path';
+import { openRoot } from '#cli/platform/filesystem.ts';
 import { mutationPath } from '#cli/platform/safe-paths.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { NO_INPUTS, EMPTY_FILES } from '#cli/config/repository/repository.ts';
 
 const configSchema = z.looseObject({ compilerOptions: z.record(z.string(), z.unknown()).optional() });
 function configurationText(root: string, path: string): string | undefined {
     const local = relative(root, path).split(sep).join('/');
-    const files = openConfinedRoot(root, 'native');
+    const files = openRoot(root, 'native');
     try {
         const segments = local.split('/');
         const dependency = segments.indexOf('node_modules');

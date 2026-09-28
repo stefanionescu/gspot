@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { ownershipSchema } from '#cli/lifecycle/journal.ts';
-import { publishInstalledFiles } from '#cli/tools/installed-files.ts';
-import { openLifecycleOwner } from '#cli/lifecycle/ownership/owner.ts';
+import { ownershipSchema } from '#cli/lifecycle/log.ts';
+import { openOwner } from '#cli/lifecycle/ownership/owner.ts';
+import { writeInstalled } from '#cli/tools/installed-files.ts';
 import { chmodSync, lstatSync, unlinkSync, symlinkSync, readFileSync, readlinkSync, writeFileSync } from 'node:fs';
 
 test('installation publishes internal directory aliases as owned files without following external links', async () => {
@@ -13,16 +13,16 @@ test('installation publishes internal directory aliases as owned files without f
     await createFileTree(installation.path, { 'lib/package.py': 'value = 7\n' });
     await createFileTree(outside.path, { 'secret.py': 'external bytes' });
     symlinkSync('lib', join(installation.path, 'lib64'), 'dir');
-    const owner = openLifecycleOwner(repository.path);
+    const owner = openOwner(repository.path);
     try {
-        publishInstalledFiles(owner, installation.path, 'python');
+        writeInstalled(owner, installation.path, 'python');
         expect(owner.read('.gspot/.venv/lib64/package.py')?.bytes.toString()).toBe('value = 7\n');
         expect(lstatSync(join(repository.path, '.gspot/.venv/lib64')).isSymbolicLink()).toBe(false);
-        publishInstalledFiles(owner, installation.path, 'python');
+        writeInstalled(owner, installation.path, 'python');
         expect(owner.read('.gspot/.venv/lib/package.py')?.bytes.toString()).toBe('value = 7\n');
         symlinkSync(outside.path, join(installation.path, 'external'), 'dir');
         expect(() => {
-            publishInstalledFiles(owner, installation.path, 'python');
+            writeInstalled(owner, installation.path, 'python');
         }).toThrow('Source link leaves the repository');
         expect(owner.read('.gspot/.venv/external/secret.py')).toBeUndefined();
         expect(readFileSync(join(outside.path, 'secret.py'), 'utf8')).toBe('external bytes');
@@ -41,16 +41,16 @@ test('installation resolves nested directory aliases and rejects cycles before p
     });
     symlinkSync('package.py', join(installation.path, 'lib/alias.py'), 'file');
     symlinkSync('../lib', join(installation.path, 'nested/library'), 'dir');
-    const owner = openLifecycleOwner(repository.path);
+    const owner = openOwner(repository.path);
     try {
-        publishInstalledFiles(owner, installation.path, 'python');
+        writeInstalled(owner, installation.path, 'python');
         expect(owner.read('.gspot/.venv/nested/library/alias.py')?.bytes.toString()).toBe('value = 9\n');
         expect(owner.read('.gspot/.venv/nested/library/__pycache__/package.pyc')).toBeUndefined();
         expect(readlinkSync(join(repository.path, '.gspot/.venv/lib/alias.py'))).toBe('package.py');
         symlinkSync('..', join(installation.path, 'lib/cycle'), 'dir');
         writeFileSync(join(installation.path, 'lib/package.py'), 'unpublished change');
         expect(() => {
-            publishInstalledFiles(owner, installation.path, 'python');
+            writeInstalled(owner, installation.path, 'python');
         }).toThrow('Installed directory link forms a cycle');
         expect(owner.read('.gspot/.venv/lib/package.py')?.bytes.toString()).toBe('value = 9\n');
     } finally {
@@ -64,16 +64,16 @@ test('installation refuses a linked output root before publication and accepts a
     await using outside = await testdir();
     await createFileTree(outside.path, { 'package/file.js': 'external bytes' });
     symlinkSync(outside.path, join(installation.path, 'node_modules'), 'dir');
-    const owner = openLifecycleOwner(repository.path);
+    const owner = openOwner(repository.path);
     try {
         expect(() => {
-            publishInstalledFiles(owner, join(installation.path, 'node_modules'), 'npm');
+            writeInstalled(owner, join(installation.path, 'node_modules'), 'npm');
         }).toThrow('Unsafe lifecycle destination');
         expect(owner.read('.gspot/node_modules/package/file.js')).toBeUndefined();
         expect(readFileSync(join(outside.path, 'package/file.js'), 'utf8')).toBe('external bytes');
         unlinkSync(join(installation.path, 'node_modules'));
         await createFileTree(installation.path, { 'node_modules/package/file.js': 'installed bytes' });
-        publishInstalledFiles(owner, join(installation.path, 'node_modules'), 'npm');
+        writeInstalled(owner, join(installation.path, 'node_modules'), 'npm');
         expect(owner.read('.gspot/node_modules/package/file.js')?.bytes.toString()).toBe('installed bytes');
     } finally {
         owner.close();
@@ -85,7 +85,7 @@ if (process.platform !== 'win32') {
         await createFileTree(directory.path, { 'project/.keep': '', outside: 'authored' });
         const project = join(directory.path, 'project');
         symlinkSync('../outside', join(project, 'tool'));
-        const owner = openLifecycleOwner(project);
+        const owner = openOwner(project);
         try {
             expect(() =>
                 owner.replace(
@@ -112,7 +112,7 @@ if (process.platform !== 'win32') {
     test('lifecycle ownership: later edits survive both apply and uninstall, with the original recovery bytes retained', async () => {
         await using directory = await testdir();
         await createFileTree(directory.path, { 'config.txt': 'authored original\n' });
-        const owner = openLifecycleOwner(directory.path);
+        const owner = openOwner(directory.path);
         try {
             expect(
                 owner.replace('config.txt', { bytes: Buffer.from('installed\n'), mode: 0o644 }, 'config', true),
@@ -141,7 +141,7 @@ if (process.platform !== 'win32') {
             await using directory = await testdir();
             const path = join(directory.path, 'authored.json');
             writeFileSync(path, '{"semi":false}\n', { mode: 0o640 });
-            const owner = openLifecycleOwner(directory.path);
+            const owner = openOwner(directory.path);
             try {
                 const observed = owner.read('authored.json')!;
                 if (change === 'bytes') writeFileSync(path, '{"semi":true}\n');

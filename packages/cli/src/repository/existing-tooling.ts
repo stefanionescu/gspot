@@ -2,11 +2,11 @@
 import picomatch from 'picomatch';
 import { parse as parseYaml } from 'yaml';
 import type { ToolPin } from '#cli/types/kits.ts';
+import type { Root } from '#cli/types/platform.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
+import { openRoot } from '#cli/platform/filesystem.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
-import type { ConfinedRoot } from '#cli/types/platform.ts';
 import { isLintOnlyManifest } from '#cli/repository/scopes.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { readGitSetting } from '#cli/repository/git-config.ts';
 import { hookLocation } from '#cli/repository/hook-location.ts';
 import { kitSection } from '#cli/repository/configuration/configuration-section.ts';
@@ -40,7 +40,7 @@ function runsLint(command: string): boolean {
 }
 
 function listDir(root: string, rel: string): string[] {
-    const files = openConfinedRoot(root);
+    const files = openRoot(root);
     try {
         if (files.stat(rel)?.isDirectory() !== true) return [];
         return files.list(rel).filter((entry) => !entry.startsWith('.') || entry === '.gitkeep');
@@ -83,7 +83,7 @@ function runnerFound(paths: Set<string>): { runner: ExistingTooling['runner']; r
 }
 
 function hasPackageHooks(root: string): boolean {
-    const files = openConfinedRoot(root);
+    const files = openRoot(root);
     try {
         const source = files.read('package.json');
         if (source === undefined) return false;
@@ -94,11 +94,7 @@ function hasPackageHooks(root: string): boolean {
     }
 }
 
-function hasConfigurationSection(
-    files: ConfinedRoot,
-    path: string,
-    replace: NonNullable<ToolPin['replace']>[number],
-): boolean {
+function hasConfigurationSection(files: Root, path: string, replace: NonNullable<ToolPin['replace']>[number]): boolean {
     if (replace.table === undefined && replace.key === undefined) return true;
     const source = files.read(path);
     if (source === undefined) return false;
@@ -137,7 +133,7 @@ function isLintJob(name: string, job: unknown): boolean {
 
 // The tool configurations one replace row finds among the tracked files.
 function replaceTools(
-    files: ConfinedRoot,
+    files: Root,
     inventory: Set<string>,
     tool: string,
     replace: NonNullable<ToolPin['replace']>[number],
@@ -171,7 +167,7 @@ export function declaredKits(root: string, paths: Iterable<string>, selected?: s
     const inventory = new Set(
         [...paths].filter((path) => !path.split('/').some((part) => part.toLowerCase() === '.gspot')),
     );
-    const files = openConfinedRoot(root);
+    const files = openRoot(root);
     try {
         return [...kitManifests().values()].flatMap((manifest) =>
             manifest.tools
@@ -238,7 +234,7 @@ export function existingTooling(root: string, files: TrackedFile[], facts: Manif
  * @returns the names of the jobs that already run a linter
  */
 export function ciLintJobs(root: string, paths: string[]): string[] {
-    const files = openConfinedRoot(root);
+    const files = openRoot(root);
     try {
         return paths
             .filter((path) => !OTHER_CI_FILES.has(path))

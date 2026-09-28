@@ -2,12 +2,12 @@
 import { isDeepStrictEqual } from 'node:util';
 import type { FileObservation } from '#cli/types/platform.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/platform.ts';
-import { matches, identity } from '#cli/lifecycle/ownership/journal.ts';
+import { matches, identity } from '#cli/lifecycle/ownership/log.ts';
 import { blockSpan, applyBlock } from '#cli/lifecycle/managed-blocks.ts';
 import { planConfiguration } from '#cli/lifecycle/configuration/plan.ts';
 
 import type {
-    Journal,
+    Log,
     BlockSpan,
     BlockStyle,
     OwnedBlock,
@@ -141,33 +141,33 @@ function retirementProposal(
 
 /**
  * The file as it is now, read as a link entry when the proposal or the record involves a link.
- * @param journal the open journal
+ * @param log the open log
  * @param path the file
  * @param existing the file's record
  * @param next the bytes proposed for it, when a replacement is proposed
  * @returns the snapshot, or undefined when the file does not exist
  */
 export function currentObservation(
-    journal: Journal,
+    log: Log,
     path: string,
     existing: OwnershipEntry | undefined,
     next?: FileObservation,
 ): FileObservation | undefined {
     const isLink = [next, existing?.installed, existing?.original].some((observation) => observation?.isLink === true);
-    return isLink ? journal.confined.readEntry(path) : journal.confined.read(path);
+    return isLink ? log.files.readEntry(path) : log.files.read(path);
 }
 
 /**
  * Proposes the next bytes of a file, preserving an edited or unowned file unless the caller takes it over.
- * @param journal the open journal
+ * @param log the open log
  * @param request the replacement and reviewed file state
  * @returns the proposal
  */
-export function proposeReplacement(journal: Journal, request: ReplacementRequest): FileProposal {
+export function proposeReplacement(log: Log, request: ReplacementRequest): FileProposal {
     const { path, next, kind, replace = false, expected, proposed } = request;
-    const existing = journal.entryFor(path);
-    journal.confined.validate(path, next, proposed);
-    const current = currentObservation(journal, path, existing, next);
+    const existing = log.entryFor(path);
+    log.files.validate(path, next, proposed);
+    const current = currentObservation(log, path, existing, next);
     if (expected !== undefined && !isDeepStrictEqual(current, expected))
         throw new Error(`Configuration changed after replace was planned: ${path}. Retry the command.`);
     const installed = identity(next);
@@ -181,15 +181,15 @@ export function proposeReplacement(journal: Journal, request: ReplacementRequest
 
 /**
  * Proposes the managed block of a file, preserving the file when its recorded block was edited away.
- * @param journal the open journal
+ * @param log the open log
  * @param path the file
  * @param body the block body
  * @param style the comment style of the block markers
  * @returns the proposal
  */
-export function proposeBlock(journal: Journal, path: string, body: string, style: BlockStyle): FileProposal {
-    const existing = journal.entryFor(path);
-    const current = journal.confined.read(path);
+export function proposeBlock(log: Log, path: string, body: string, style: BlockStyle): FileProposal {
+    const existing = log.entryFor(path);
+    const current = log.files.read(path);
     const text = blockText(path, current);
     const span = blockSpan(text, style);
     const recorded = existing?.block;
@@ -205,7 +205,7 @@ export function proposeBlock(journal: Journal, path: string, body: string, style
 
 /**
  * Proposes merged fields in a configuration file the repository authored.
- * @param journal the open journal
+ * @param log the open log
  * @param path the file
  * @param format the file's format
  * @param changes the keys and the values they must hold
@@ -213,14 +213,14 @@ export function proposeBlock(journal: Journal, path: string, body: string, style
  * @returns the proposal
  */
 export function proposeConfiguration(
-    journal: Journal,
+    log: Log,
     path: string,
     format: ConfigurationFormat,
     changes: { path: (string | number)[]; value: unknown }[],
     replace = false,
 ): FileProposal {
-    const existing = journal.entryFor(path);
-    const current = journal.confined.read(path);
+    const existing = log.entryFor(path);
+    const current = log.files.read(path);
     const isInstalled = matches(current, existing?.installed);
     const plan = planConfiguration({
         path,
@@ -239,14 +239,14 @@ export function proposeConfiguration(
 
 /**
  * Proposes the removal of a file whose bytes the caller reviewed.
- * @param journal the open journal
+ * @param log the open log
  * @param path the file
  * @param expected the bytes the caller reviewed, which must still be the file's
  * @returns the proposal
  */
-export function proposeRetirement(journal: Journal, path: string, expected: FileObservation): FileProposal {
-    const existing = journal.entryFor(path);
-    const current = journal.confined.read(path);
+export function proposeRetirement(log: Log, path: string, expected: FileObservation): FileProposal {
+    const existing = log.entryFor(path);
+    const current = log.files.read(path);
     if (!isDeepStrictEqual(current, expected))
         throw new Error(`Configuration changed after replace was planned: ${path}. Retry the command.`);
     if (current === undefined) return { path, current, previous: existing, status: 'unchanged' };

@@ -30,8 +30,8 @@ test.each(['before', 'after'] as const)(
         const child = `
         import { mock } from 'bun:test';
         const boundary = await import(${JSON.stringify(boundary)});
-        const open = boundary.openConfinedRoot;
-        mock.module(${JSON.stringify(boundary)}, () => ({ ...boundary, openConfinedRoot(root) {
+        const open = boundary.openRoot;
+        mock.module(${JSON.stringify(boundary)}, () => ({ ...boundary, openRoot(root) {
             const files = open(root);
             return { ...files, write(path, value, expected) {
                 if (path === 'hooks/pre-push' && ${JSON.stringify(point)} === 'before') process.exit(73);
@@ -77,8 +77,8 @@ test('uninstall recovers after restoring an original hook and before removing it
     const child = `
         import { mock } from 'bun:test';
         const boundary = await import(${JSON.stringify(boundary)});
-        const open = boundary.openConfinedRoot;
-        mock.module(${JSON.stringify(boundary)}, () => ({ ...boundary, openConfinedRoot(root) {
+        const open = boundary.openRoot;
+        mock.module(${JSON.stringify(boundary)}, () => ({ ...boundary, openRoot(root) {
             const files = open(root);
             return { ...files, remove(path, expected) {
                 if (path === 'hooks/pre-push.gspot-original') process.exit(73);

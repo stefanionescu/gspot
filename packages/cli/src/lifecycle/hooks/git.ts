@@ -9,10 +9,10 @@ import type { FileObservation } from '#cli/types/platform.ts';
 import { posix, resolve, basename, relative } from 'node:path';
 import { EXECUTE_BITS, EXECUTABLE_FILE } from '#cli/config/platform.ts';
 import { hookBody, hookCommand } from '#cli/generation/hooks/scripts.ts';
+import type { Owner, FileProposal } from '#cli/types/lifecycle/lifecycle.ts';
 import { hookLocation, relativeInside } from '#cli/repository/hook-location.ts';
 import type { Repository, HookLocation } from '#cli/types/repository/repository.ts';
 import { readOwnership, runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
-import type { FileProposal, LifecycleOwner } from '#cli/types/lifecycle/lifecycle.ts';
 import { HOOK_FILES, NATIVE_HOOK_MARKERS } from '#cli/config/repository/repository.ts';
 import type { Installation, PreparedHook, Restorations } from '#cli/types/lifecycle/hooks.ts';
 
@@ -42,7 +42,7 @@ function assertUntracked(location: HookLocation, path: string, advice: string): 
     if (result.code === 0) throw new Error(`Retained tracked hook ${tracked}. ${advice}`);
 }
 
-// Refuses an original sibling the journal does not agree about.
+// Refuses an original sibling the log does not agree about.
 function assertSiblingRecorded(
     recorded: Set<string>,
     location: HookLocation,
@@ -183,12 +183,7 @@ function extraHookProposal(installation: Installation, name: string, content: Pr
 }
 
 // The restorations of one stage hook, its sibling, and its manager copy, and the edited files that are kept.
-function stageRestorations(
-    owner: LifecycleOwner,
-    location: HookLocation,
-    paths: Set<string>,
-    name: string,
-): Restorations {
+function stageRestorations(owner: Owner, location: HookLocation, paths: Set<string>, name: string): Restorations {
     const path = posix.join(location.directory, name);
     const sibling = `${path}.gspot-original`;
     const original = paths.has(sibling) ? owner.read(sibling) : undefined;
@@ -258,7 +253,7 @@ export function installHooks(
  * @param location the hooks directory with its roots
  * @returns the restorations to apply and the edited hooks that are kept
  */
-export function proposeHookRestorations(owner: LifecycleOwner, location: HookLocation): Restorations {
+export function proposeHookRestorations(owner: Owner, location: HookLocation): Restorations {
     const entries = readOwnership(location.root, location.stateDirectory).files.filter(
         (entry) => entry.kind === 'hook',
     );

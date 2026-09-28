@@ -2,9 +2,9 @@ import { z } from 'zod';
 import { dirname, basename } from 'node:path';
 import { runLicenses } from '#cli/native/license.ts';
 import { PRIVATE_FILE } from '#cli/config/platform.ts';
+import { openRoot } from '#cli/platform/filesystem.ts';
 import { runStylelint } from '#cli/native/stylelint.ts';
 import type { EvaluationRequest } from '#cli/types/native.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { runEslintPreview } from '#cli/native/eslint-preview.ts';
 import { runEslint, runRuleCoverage } from '#cli/native/eslint.ts';
 import { runFormat, runIgnoredPaths } from '#cli/native/format.ts';
@@ -56,7 +56,7 @@ try {
         .min(1)
         .parse((globalThis as { gspotConfigurationOutput?: unknown }).gspotConfigurationOutput);
     const result = await evaluate(request, output);
-    const files = openConfinedRoot(dirname(output));
+    const files = openRoot(dirname(output));
     try {
         files.write(basename(output), { bytes: Buffer.from(JSON.stringify(result)), mode: PRIVATE_FILE }, undefined);
     } finally {

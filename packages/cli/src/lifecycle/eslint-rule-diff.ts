@@ -1,6 +1,6 @@
+import { openRoot } from '#cli/platform/filesystem.ts';
 import { compareRules } from '#cli/lifecycle/rule-diff.ts';
 import type { MergedView } from '#cli/types/policy/policy.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { eslintPreviewResponse } from '#cli/native/protocol.ts';
 import { runConfiguration } from '#cli/native/configuration.ts';
 import type { GeneratedProposal } from '#cli/types/generation.ts';
@@ -26,7 +26,7 @@ export async function eslintRuleDiff(
         const entry = drift.find((candidate) => candidate.path === file.path);
         return entry === undefined ? [] : [{ file, entry, rulesPath: file.rulesPath }];
     });
-    const files = openConfinedRoot(root);
+    const files = openRoot(root);
     try {
         for (const { file, entry, rulesPath } of selected) {
             try {

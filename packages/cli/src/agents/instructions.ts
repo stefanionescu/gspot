@@ -1,8 +1,8 @@
 import type { Manifest } from '#cli/types/kits.ts';
 import type { RuleFile } from '#cli/types/agents.ts';
+import { openRoot } from '#cli/platform/filesystem.ts';
 import type { Policy } from '#cli/types/policy/policy.ts';
 import { selectRuleFiles } from '#cli/agents/assemble.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import type { Repository } from '#cli/types/repository/repository.ts';
 import { RULES_ALONE, AREA_BY_LAYER, CHECKS_INSTALLED } from '#cli/config/agents.ts';
 
@@ -69,7 +69,7 @@ export function managedBlock(
  * @returns deduplicated repository-relative destinations
  */
 export function agentFiles(root: string, configured: string[] = []): string[] {
-    const files = openConfinedRoot(root);
+    const files = openRoot(root);
     const detected = ['CLAUDE.md', 'GEMINI.md', '.github/copilot-instructions.md'].filter(
         (path) => files.read(path) !== undefined,
     );

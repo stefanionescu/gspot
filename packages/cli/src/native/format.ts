@@ -4,11 +4,11 @@ import { pathToFileURL } from 'node:url';
 import { parse as parseYaml } from 'yaml';
 import * as bundledPrettier from 'prettier';
 import { createRequire } from 'node:module';
+import type { Root } from '#cli/types/platform.ts';
 import { compact } from '#cli/policy/normalize.ts';
 import { join, dirname, basename } from 'node:path';
-import type { ConfinedRoot } from '#cli/types/platform.ts';
+import { openRoot } from '#cli/platform/filesystem.ts';
 import { KEPT_REASON } from '#cli/config/policy/policy.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import type { prettierIgnoreRequest } from '#cli/native/protocol.ts';
 import type { AdoptedFormatting } from '#cli/types/policy/adoption.ts';
 import { prettierOptions } from '#cli/generation/formatting/settings.ts';
@@ -65,7 +65,7 @@ async function projectPrettier(root: string): Promise<typeof bundledPrettier> {
 }
 
 // The ignore lines of every observed ignore file, each nested file's lines rebased onto its folder.
-function ignoreLines(files: ConfinedRoot, ignorePaths: string[]): string[] {
+function ignoreLines(files: Root, ignorePaths: string[]): string[] {
     return ignorePaths.flatMap((path) => {
         const observed = files.read(path);
         if (observed === undefined)
@@ -79,7 +79,7 @@ function ignoreLines(files: ConfinedRoot, ignorePaths: string[]): string[] {
 // The settings a module or package configuration declares, loaded the way Prettier resolves them.
 async function evaluatedSource(
     prettier: typeof bundledPrettier,
-    files: ConfinedRoot,
+    files: Root,
     root: string,
     from: string,
 ): Promise<Source> {
@@ -208,7 +208,7 @@ function overridesOf(input: NestedInput, inputs: NestedInput[]): PrettierOverrid
  */
 export async function runFormat(request: FormatRequest): Promise<AdoptedFormatting> {
     const { root, from, ignorePaths = [] } = request;
-    const files = openConfinedRoot(root);
+    const files = openRoot(root);
     try {
         const ignored = ignorePaths.length === 0 ? {} : { ignorePatterns: ignoreLines(files, ignorePaths) };
         const prettier = await projectPrettier(root);
@@ -235,7 +235,7 @@ export async function runFormat(request: FormatRequest): Promise<AdoptedFormatti
  * @returns the ignored paths
  */
 export async function runIgnoredPaths(request: z.infer<typeof prettierIgnoreRequest>): Promise<string[]> {
-    if (openConfinedRoot(request.root).read(request.ignorePath) === undefined)
+    if (openRoot(request.root).read(request.ignorePath) === undefined)
         throw new Error(`The observed formatter ignore file is missing: ${request.ignorePath}. Retry adoption.`);
     const ignored: string[] = [];
     for (const path of request.paths) {

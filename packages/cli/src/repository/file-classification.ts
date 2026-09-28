@@ -1,6 +1,6 @@
 // Every tracked path has one nature: source, generated, vendored, binary.
+import { openRoot } from '#cli/platform/filesystem.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import type { FileDeclaration } from '#cli/types/policy/policy.ts';
 import type { Attribute, NatureVerdict } from '#cli/types/repository/repository.ts';
 
@@ -114,7 +114,7 @@ export function natureOf(
  * @returns the parsed rules, or none when the optional file is absent
  */
 export function readAttributes(root: string): Attribute[] {
-    const files = openConfinedRoot(root);
+    const files = openRoot(root);
     try {
         return (files.read('.gitattributes')?.bytes.toString('utf8') ?? '')
             .split('\n')

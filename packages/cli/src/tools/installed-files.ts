@@ -1,7 +1,7 @@
+import { openRoot } from '#cli/platform/filesystem.ts';
 import { mutationTarget } from '#cli/platform/safe-paths.ts';
 import type { FileObservation } from '#cli/types/platform.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import type { LifecycleOwner } from '#cli/types/lifecycle/lifecycle.ts';
+import type { Owner } from '#cli/types/lifecycle/lifecycle.ts';
 import { sep, join, posix, dirname, basename, relative } from 'node:path';
 import { MODE_BITS, NODE_MODULES_DIRECTORY, PYTHON_ENVIRONMENT_DIRECTORY } from '#cli/config/platform.ts';
 
@@ -44,14 +44,14 @@ function installedFile(directory: string, local: string, target: string, source:
     }
 }
 
-// Read the complete isolated installation before opening a publication transaction.
+// Read the complete isolated installation before opening a write transaction.
 function installationFiles(
     directory: string,
     kind: 'npm' | 'python',
 ): { destination: string; outputs: { path: string; file: FileObservation }[] } {
     const destination = kind === 'npm' ? NODE_MODULES_DIRECTORY : PYTHON_ENVIRONMENT_DIRECTORY;
     const outputs: { path: string; file: FileObservation }[] = [];
-    const parent = openConfinedRoot(dirname(directory), 'native');
+    const parent = openRoot(dirname(directory), 'native');
     try {
         if (parent.stat(basename(directory))?.isDirectory() !== true)
             throw new Error(`Installed output is not a directory: ${directory}`);
@@ -59,7 +59,7 @@ function installationFiles(
         parent.close();
     }
     const root = realpathSync(directory);
-    const files = openConfinedRoot(root, 'native');
+    const files = openRoot(root, 'native');
     const cacheDirectory = kind === 'python' ? '__pycache__' : undefined;
     const collect = (prefix: string | undefined, output: string, ancestors: string[]): void => {
         const canonical = join(root, prefix ?? '');
@@ -85,12 +85,12 @@ function installationFiles(
 }
 
 /**
- * Publish an isolated native installation through the shared ownership journal.
+ * Publish an isolated native installation through the shared ownership log.
  * @param owner the lifecycle owner of the repository
- * @param directory the isolated installation to publish
+ * @param directory the isolated installation to write
  * @param kind whether the installation is the npm project or the Python environment
  */
-export function publishInstalledFiles(owner: LifecycleOwner, directory: string, kind: 'npm' | 'python'): void {
+export function writeInstalled(owner: Owner, directory: string, kind: 'npm' | 'python'): void {
     const { destination, outputs } = installationFiles(directory, kind);
     owner.beginInstallation(kind);
     const proposed = new Map(outputs.map(({ path, file }) => [path, file]));
@@ -107,10 +107,10 @@ export function publishInstalledFiles(owner: LifecycleOwner, directory: string, 
                 !(kind === 'python' && path.includes('/__pycache__/')),
         )
         .map((path) => owner.proposeRestoration(path));
-    const publication = [...proposals, ...pruning];
-    const conflict = publication.find((proposal) => proposal.status === 'preserved');
+    const writes = [...proposals, ...pruning];
+    const conflict = writes.find((proposal) => proposal.status === 'preserved');
     if (conflict !== undefined)
         throw new Error(`Preserved edited or unowned ${conflict.path}. Move it aside before installing.`);
-    owner.applyProposals(publication);
+    owner.applyProposals(writes);
     owner.finishInstallation(kind);
 }

@@ -2,10 +2,10 @@ import { tmpdir } from 'node:os';
 import { createHash } from 'node:crypto';
 import { run } from '#cli/platform/spawn.ts';
 import { toPosix } from '#cli/platform/paths.ts';
+import type { Root } from '#cli/types/platform.ts';
 import { locateTool } from '#cli/tools/inspect.ts';
-import type { ConfinedRoot } from '#cli/types/platform.ts';
+import { openRoot } from '#cli/platform/filesystem.ts';
 import { join, dirname, basename, relative } from 'node:path';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { VALE_CONFIG, STYLES_DIRECTORY } from '#cli/config/kits.ts';
 import { PRIVATE_FILE, READ_ONLY_FILE } from '#cli/config/platform.ts';
 import { isValePackageFile } from '#cli/repository/file-classification.ts';
@@ -13,7 +13,7 @@ import { readOwnership, runOwnedLifecycle } from '#cli/lifecycle/ownership/owner
 import { rmSync, mkdirSync, mkdtempSync, readdirSync, writeFileSync } from 'node:fs';
 
 // Harper also installs dictionaries beside its styles.
-function packageDirectories(files: ConfinedRoot): string[] | undefined {
+function packageDirectories(files: Root): string[] | undefined {
     const source = files.read(VALE_CONFIG);
     if (source === undefined) return undefined;
     const configured = /^Packages = (.*)$/mu.exec(source.bytes.toString('utf8'))?.[1] ?? '';
@@ -32,7 +32,7 @@ function packageDirectories(files: ConfinedRoot): string[] | undefined {
  * @returns whether every required directory exists
  */
 export function hasPackages(root: string): boolean {
-    const files = openConfinedRoot(root);
+    const files = openRoot(root);
     try {
         const needed = packageDirectories(files);
         if (needed === undefined) return false;
@@ -48,7 +48,7 @@ export function hasPackages(root: string): boolean {
  * @returns whether every configured package has its recorded bytes and modes
  */
 export function hasOwnedPackages(root: string): boolean {
-    const files = openConfinedRoot(root);
+    const files = openRoot(root);
     try {
         const needed = packageDirectories(files);
         if (needed === undefined) return false;
@@ -118,7 +118,7 @@ export async function installPackages(root: string): Promise<string | undefined>
             }
             const result = await run([binary, '--config', join(work, VALE_CONFIG), 'sync'], { cwd: work });
             if (result.code !== 0) return result.stderr.trim() || result.stdout.trim();
-            const staged = openConfinedRoot(work);
+            const staged = openRoot(work);
             try {
                 if (staged.stat(STYLES_DIRECTORY)?.isDirectory() !== true)
                     throw new Error('Vale did not produce a styles directory.');

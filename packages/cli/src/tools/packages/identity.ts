@@ -2,15 +2,15 @@ import { z } from 'zod';
 import semver from 'semver';
 import { join, dirname } from 'node:path';
 import { detectPackageManager } from 'nypm';
+import type { Root } from '#cli/types/platform.ts';
+import { openRoot } from '#cli/platform/filesystem.ts';
 import { runToolCommand } from '#cli/tools/command.ts';
-import type { ConfinedRoot } from '#cli/types/platform.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { readPackageManifest } from '#cli/repository/manifests.ts';
 
 // The first package manager a candidate manifest declares, reading each manifest that exists on the way.
 async function detectedTool(
     root: string,
-    files: ConfinedRoot,
+    files: Root,
     candidates: string[],
 ): Promise<Awaited<ReturnType<typeof detectPackageManager>>> {
     for (const path of candidates) {
@@ -42,7 +42,7 @@ export function parsePackageTool(value: string): z.infer<typeof packageToolSchem
  * @returns the package manager name and exact version
  */
 export async function packageTool(root: string, projectPaths: string[]): Promise<z.infer<typeof packageToolSchema>> {
-    const files = openConfinedRoot(root);
+    const files = openRoot(root);
     try {
         const candidates = [
             'package.json',

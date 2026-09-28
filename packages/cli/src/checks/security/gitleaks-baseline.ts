@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { statSync } from 'node:fs';
+import { openRoot } from '#cli/platform/filesystem.ts';
 import { BASELINE } from '#cli/config/checks/security.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
 import type { BaselineReason, GitleaksFinding } from '#cli/types/checks/security.ts';
 /**
@@ -10,7 +10,7 @@ import type { BaselineReason, GitleaksFinding } from '#cli/types/checks/security
  * @returns the findings
  */
 export function gitleaksBaseline(input: EngineInput): Finding[] {
-    const files = openConfinedRoot(input.root);
+    const files = openRoot(input.root);
     let bytes: Buffer | undefined;
     try {
         bytes = files.read(BASELINE)?.bytes;

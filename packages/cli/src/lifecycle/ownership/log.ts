@@ -1,14 +1,14 @@
-// The durable ownership journal an owner works from: its records, its recovery of an interrupted mutation, and
+// The durable ownership log an owner works from: its records, its recovery of an interrupted mutation, and
 // the backups it takes before a file changes hands.
 import { createHash, randomUUID } from 'node:crypto';
+import { ownershipSchema } from '#cli/lifecycle/log.ts';
 import { OUTPUT_JSON_INDENT } from '#cli/config/output.ts';
-import { ownershipSchema } from '#cli/lifecycle/journal.ts';
+import type { Root, FileObservation } from '#cli/types/platform.ts';
 import { fileMode, mutationTarget } from '#cli/platform/safe-paths.ts';
 import { PRIVATE_FILE, PRIVATE_DIRECTORY } from '#cli/config/platform.ts';
-import type { ConfinedRoot, FileObservation } from '#cli/types/platform.ts';
 
 import type {
-    Journal,
+    Log,
     Identity,
     Original,
     OwnershipEntry,
@@ -16,12 +16,12 @@ import type {
     PendingOwnership,
 } from '#cli/types/lifecycle/lifecycle.ts';
 
-// Restores the file an interrupted replacement removed, from the backup the journal recorded for it.
-function restoreFromBackup(confined: ConfinedRoot, pending: PendingOwnership, backup: Original): void {
-    const saved = confined.read(backup.backup);
+// Restores the file an interrupted replacement removed, from the backup the log recorded for it.
+function restoreFromBackup(files: Root, pending: PendingOwnership, backup: Original): void {
+    const saved = files.read(backup.backup);
     if (saved === undefined || identity(saved).hash !== backup.hash)
         throw new Error(`Interrupted replacement backup is missing or changed: ${pending.path}`);
-    confined.write(
+    files.write(
         pending.path,
         { bytes: saved.bytes, mode: backup.mode, ...(backup.isLink ? { isLink: true } : {}) },
         undefined,
@@ -30,19 +30,19 @@ function restoreFromBackup(confined: ConfinedRoot, pending: PendingOwnership, ba
 
 // Settles one interrupted mutation: accepted when it completed, restored when the file vanished, refused when edited.
 function recoverPending(
-    confined: ConfinedRoot,
+    files: Root,
     pending: PendingOwnership,
     accept: (pending: PendingOwnership) => void,
     recovery: string,
 ): void {
     const isLink = [pending.before, pending.after].some((entry) => entry?.isLink === true);
-    const current = isLink ? confined.readEntry(pending.path) : confined.read(pending.path);
+    const current = isLink ? files.readEntry(pending.path) : files.read(pending.path);
     if (matches(current, pending.after)) {
         accept(pending);
         return;
     }
     if (current === undefined && pending.beforeBackup !== undefined) {
-        restoreFromBackup(confined, pending, pending.beforeBackup);
+        restoreFromBackup(files, pending, pending.beforeBackup);
         return;
     }
     if (!matches(current, pending.before))
@@ -59,7 +59,7 @@ function readState(recorded: FileObservation | undefined): OwnershipState {
 
 // Settles every interrupted mutation, regular files before links so a restored link finds its target.
 function recoverAll(
-    confined: ConfinedRoot,
+    files: Root,
     pending: PendingOwnership[],
     accept: (pending: PendingOwnership) => void,
     recovery: string,
@@ -67,7 +67,7 @@ function recoverAll(
     const ordered = pending.toSorted(
         (left, right) => Number(left.before?.isLink === true) - Number(right.before?.isLink === true),
     );
-    for (const entry of ordered) recoverPending(confined, entry, accept, recovery);
+    for (const entry of ordered) recoverPending(files, entry, accept, recovery);
 }
 
 // The recorded entry of a path, refusing a record under another spelling of the same path.
@@ -79,19 +79,19 @@ function recordedEntry(entries: Map<string, OwnershipEntry>, path: string): Owne
 }
 
 // Writes backups into one recovery folder per operation, created on the first backup.
-function backupWriter(confined: ConfinedRoot, recovery: string): Journal['backup'] {
+function backupWriter(files: Root, recovery: string): Log['backup'] {
     const operation = `${recovery}/${randomUUID()}`;
     let isRecoveryReady = false;
     return (path, file) => {
         if (!isRecoveryReady) {
-            confined.mkdir(recovery, PRIVATE_DIRECTORY);
-            confined.mkdir(operation, PRIVATE_DIRECTORY);
+            files.mkdir(recovery, PRIVATE_DIRECTORY);
+            files.mkdir(operation, PRIVATE_DIRECTORY);
             isRecoveryReady = true;
         }
         const destination = `${operation}/${randomUUID()}.original`;
-        confined.write(destination, { bytes: file.bytes, mode: PRIVATE_FILE }, undefined);
+        files.write(destination, { bytes: file.bytes, mode: PRIVATE_FILE }, undefined);
         const backupRecord = { path, backup: destination, ...identity(file) };
-        confined.write(
+        files.write(
             `${destination}.json`,
             { bytes: Buffer.from(`${JSON.stringify(backupRecord)}\n`), mode: PRIVATE_FILE },
             undefined,
@@ -128,22 +128,22 @@ export function matches(file: FileObservation | undefined, expected: Identity | 
 }
 
 /**
- * Reads the journal under a locked root, recovers any interrupted mutation, and prepares the next operation.
- * @param confined the locked root the journal lives under
- * @param stateDirectory the directory under the root that holds the journal
- * @returns the journal
+ * Reads the log under a locked root, recovers any interrupted mutation, and prepares the next operation.
+ * @param files the locked root the log lives under
+ * @param stateDirectory the directory under the root that holds the log
+ * @returns the log
  */
-export function openJournal(confined: ConfinedRoot, stateDirectory: string): Journal {
+export function openLog(files: Root, stateDirectory: string): Log {
     const record = `${stateDirectory}/ownership.json`;
     const recovery = `${stateDirectory}/recovery`;
-    let recorded = confined.read(record);
+    let recorded = files.read(record);
     const state = readState(recorded);
     const entries = new Map(state.files.map((entry) => [entry.path.normalize('NFC').toLowerCase(), entry]));
     const save = (): void => {
         state.files = [...entries.values()];
         ownershipSchema.parse(state);
         const next = { bytes: Buffer.from(`${JSON.stringify(state, null, OUTPUT_JSON_INDENT)}\n`), mode: PRIVATE_FILE };
-        confined.write(record, next, recorded);
+        files.write(record, next, recorded);
         recorded = next;
     };
     const accept = (pending: PendingOwnership): void => {
@@ -152,13 +152,13 @@ export function openJournal(confined: ConfinedRoot, stateDirectory: string): Jou
         else entries.set(key, pending.entry);
     };
     if (state.pending !== undefined) {
-        recoverAll(confined, state.pending, accept, recovery);
+        recoverAll(files, state.pending, accept, recovery);
         delete state.pending;
         save();
     }
-    const backups = backupWriter(confined, recovery);
+    const backups = backupWriter(files, recovery);
     return {
-        confined,
+        files,
         state,
         save,
         backup: backups,

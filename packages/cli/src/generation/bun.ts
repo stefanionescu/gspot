@@ -1,4 +1,4 @@
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import { openRoot } from '#cli/platform/filesystem.ts';
 import type { ScopeSelection } from '#cli/types/policy/policy.ts';
 import type { ConfigurationOutput } from '#cli/types/generation.ts';
 import { SECONDS_PER_DAY, DEFAULT_RELEASE_AGE_DAYS } from '#cli/config/generation.ts';
@@ -10,7 +10,7 @@ import { SECONDS_PER_DAY, DEFAULT_RELEASE_AGE_DAYS } from '#cli/config/generatio
  * @returns the shared configuration keys to install in each Bun configuration file
  */
 export function bunConfiguration(root: string, scopes: ScopeSelection[]): ConfigurationOutput[] {
-    const files = openConfinedRoot(root);
+    const files = openRoot(root);
     try {
         const selected = scopes
             .filter((selection) => selection.selected.some((manifest) => manifest.kit.name === 'dependencies'))

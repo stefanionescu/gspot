@@ -1,14 +1,8 @@
 // The types of lifecycle in this package.
 import type { z } from 'zod';
 import type { WriteResult } from '#cli/types/policy/policy.ts';
-import type { ConfinedRoot, FileObservation } from '#cli/types/platform.ts';
-
-import type {
-    identitySchema,
-    originalSchema,
-    ownershipSchema,
-    configurationFieldsSchema,
-} from '#cli/lifecycle/journal.ts';
+import type { Root, FileObservation } from '#cli/types/platform.ts';
+import type { identitySchema, originalSchema, ownershipSchema, configurationFieldsSchema } from '#cli/lifecycle/log.ts';
 
 export type OwnedBlock = NonNullable<OwnershipEntry['block']>;
 export type ConfigurationWriteRequest = {
@@ -63,9 +57,9 @@ export type OwnershipState = z.infer<typeof ownershipSchema>;
 export type OwnershipEntry = OwnershipState['files'][number];
 export type Identity = z.infer<typeof identitySchema>;
 export type Original = z.infer<typeof originalSchema>;
-/** The open journal: the locked root, the recorded state, and the operations that read and write it. */
-export type Journal = {
-    confined: ConfinedRoot;
+/** The open log: the locked root, the recorded state, and the operations that read and write it. */
+export type Log = {
+    files: Root;
     state: OwnershipState;
     save(): void;
     backup(path: string, file: FileObservation): Original;
@@ -82,7 +76,7 @@ export type FileProposal = {
     entry?: OwnershipEntry;
     saveOriginal?: boolean;
 };
-export type LifecycleOwner = {
+export type Owner = {
     beginInstallation(kind: 'npm' | 'python'): void;
     finishInstallation(kind: 'npm' | 'python'): void;
     proposeConfiguration(

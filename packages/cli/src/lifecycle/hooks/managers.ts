@@ -5,13 +5,13 @@ import { tmpdir } from 'node:os';
 import { rmSync, mkdtempSync } from 'node:fs';
 import { inspectTool } from '#cli/tools/inspect.ts';
 import { binaryPath } from '#cli/platform/assets.ts';
+import { openRoot } from '#cli/platform/filesystem.ts';
 import { runToolCommand } from '#cli/tools/command.ts';
 import type { Policy } from '#cli/types/policy/policy.ts';
 import { installHooks } from '#cli/lifecycle/hooks/git.ts';
 import type { ToolContext } from '#cli/types/tools/tools.ts';
 import type { FileObservation } from '#cli/types/platform.ts';
 import { hookPrefix } from '#cli/generation/hooks/scripts.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { nativeHook } from '#cli/lifecycle/hooks/native-hooks.ts';
 import type { Repository } from '#cli/types/repository/repository.ts';
 import { MANAGERS, CONFIG_PATHS } from '#cli/config/lifecycle/hooks.ts';
@@ -85,7 +85,7 @@ async function hookConfiguration(
     executable: string,
 ): Promise<FileObservation | undefined> {
     if (hookTool === 'husky') return undefined;
-    const source = openConfinedRoot(root);
+    const source = openRoot(root);
     let configuration: FileObservation | undefined;
     try {
         configuration = source.read(configPath);
@@ -139,7 +139,7 @@ async function prepareHooks(
 }
 
 /**
- * Generate native manager hooks in an isolated Git directory, then publish through the lifecycle owner.
+ * Generate native manager hooks in an isolated Git directory, then write through the lifecycle owner.
  * @param options the policy, the repository, and the tools the manager runs with.
  * @param options.policy the repository policy.
  * @param options.repository the repository root and whether Git is present.
@@ -167,7 +167,7 @@ export async function installNativeHooks({
     const configuration = await hookConfiguration(hookTool, repository.root, configPath, executable);
     const installedConfig = hookTool === 'pre-commit' ? `${hookPrefix(repository.root)}${configPath}` : configPath;
     const work = mkdtempSync(join(tmpdir(), 'gspot-hook-manager-'));
-    const files = openConfinedRoot(work);
+    const files = openRoot(work);
     try {
         const preparation: Preparation = {
             hookTool,

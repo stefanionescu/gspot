@@ -6,7 +6,7 @@ import { emitAll } from '#cli/generation/outputs.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { initArgs } from '#tests/support/cli/init.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { ownershipSchema } from '#cli/lifecycle/journal.ts';
+import { ownershipSchema } from '#cli/lifecycle/log.ts';
 import { applyBlock } from '#cli/lifecycle/managed-blocks.ts';
 import { run, runProcess as spawn } from '#tests/support/cli/command.ts';
 import { statSync, existsSync, unlinkSync, readFileSync, writeFileSync } from 'node:fs';

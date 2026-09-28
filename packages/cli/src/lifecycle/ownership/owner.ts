@@ -1,14 +1,14 @@
 import { realpathSync } from 'node:fs';
 import { AsyncLocalStorage } from 'node:async_hooks';
-import { ownershipSchema } from '#cli/lifecycle/journal.ts';
+import { openRoot } from '#cli/platform/filesystem.ts';
+import { ownershipSchema } from '#cli/lifecycle/log.ts';
+import { openLog } from '#cli/lifecycle/ownership/log.ts';
 import type { FileObservation } from '#cli/types/platform.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import { openJournal } from '#cli/lifecycle/ownership/journal.ts';
 import { fileMode, mutationTarget } from '#cli/platform/safe-paths.ts';
 import { proposeRestoration } from '#cli/lifecycle/ownership/restoration.ts';
 import { applyProposal, applyProposals } from '#cli/lifecycle/ownership/apply.ts';
+import type { Log, Owner, OwnershipState } from '#cli/types/lifecycle/lifecycle.ts';
 import { READ_ONLY_FILE, STATE_DIRECTORY, OWNER_WRITABLE_FILE } from '#cli/config/platform.ts';
-import type { Journal, LifecycleOwner, OwnershipState } from '#cli/types/lifecycle/lifecycle.ts';
 
 import {
     proposeBlock,
@@ -17,48 +17,48 @@ import {
     proposeConfiguration,
 } from '#cli/lifecycle/ownership/proposals.ts';
 
-const activeMutation = new AsyncLocalStorage<Map<string, LifecycleOwner>>();
-// The owner's operations over an open journal.
-function lifecycleOwner(journal: Journal): LifecycleOwner {
-    const { state, confined } = journal;
+const activeMutation = new AsyncLocalStorage<Map<string, Owner>>();
+// The owner's operations over an open log.
+function lifecycleOwner(log: Log): Owner {
+    const { state, files } = log;
     return {
         beginInstallation(kind) {
             state.installations = [...new Set([...(state.installations ?? []), kind])];
-            journal.save();
+            log.save();
         },
         finishInstallation(kind) {
             if (state.installations?.includes(kind) !== true)
                 throw new Error('Installation recovery state changed. Retry gspot install.');
             state.installations = state.installations.filter((entry) => entry !== kind);
             if (state.installations.length === 0) delete state.installations;
-            journal.save();
+            log.save();
         },
         proposeConfiguration: (path, format, changes, replace) =>
-            proposeConfiguration(journal, path, format, changes, replace),
-        applyProposal: (proposal) => applyProposal(journal, proposal),
-        applyProposals: (proposals) => applyProposals(journal, proposals),
-        proposeBlock: (path, body, style) => proposeBlock(journal, path, body, style),
-        replaceBlock: (path, body, style) => applyProposal(journal, proposeBlock(journal, path, body, style)),
+            proposeConfiguration(log, path, format, changes, replace),
+        applyProposal: (proposal) => applyProposal(log, proposal),
+        applyProposals: (proposals) => applyProposals(log, proposals),
+        proposeBlock: (path, body, style) => proposeBlock(log, path, body, style),
+        replaceBlock: (path, body, style) => applyProposal(log, proposeBlock(log, path, body, style)),
         read(path) {
             mutationTarget(path);
-            return confined.read(path);
+            return files.read(path);
         },
         paths: () => state.files.map((entry) => entry.path),
         proposeReplacement: (path, next, kind, replace, expected, proposed) =>
-            proposeReplacement(journal, { path, next, kind, replace, expected, proposed }),
+            proposeReplacement(log, { path, next, kind, replace, expected, proposed }),
         replace: (path, next, kind, replace, expected) =>
-            applyProposal(journal, proposeReplacement(journal, { path, next, kind, replace, expected })),
+            applyProposal(log, proposeReplacement(log, { path, next, kind, replace, expected })),
         installedPaths: () => state.files.filter((entry) => entry.installed !== undefined).map((entry) => entry.path),
-        proposeRetirement: (path, expected) => proposeRetirement(journal, path, expected),
-        proposeRestoration: (path, original) => proposeRestoration(journal, path, original),
+        proposeRetirement: (path, expected) => proposeRetirement(log, path, expected),
+        proposeRestoration: (path, original) => proposeRestoration(log, path, original),
         restore(path, original) {
-            const proposal = proposeRestoration(journal, path, original);
+            const proposal = proposeRestoration(log, path, original);
             if (proposal.status === 'preserved') return 'preserved';
-            applyProposals(journal, [proposal]);
+            applyProposals(log, [proposal]);
             return 'changed';
         },
         close: () => {
-            confined.close();
+            files.close();
         },
     };
 }
@@ -67,12 +67,9 @@ function lifecycleOwner(journal: Journal): LifecycleOwner {
  * Preserve Git's writable checkout mode when exact generated bytes reproduce a read-only proposal.
  * @param proposed the generated file
  * @param current the file as it is now, or undefined when it does not exist
- * @returns the snapshot to publish
+ * @returns the snapshot to write
  */
-export function publicationObservation(
-    proposed: FileObservation,
-    current: FileObservation | undefined,
-): FileObservation {
+export function written(proposed: FileObservation, current: FileObservation | undefined): FileObservation {
     const { bytes } = proposed;
     const mode = fileMode(proposed);
     const checkout =
@@ -84,32 +81,32 @@ export function publicationObservation(
 }
 
 /**
- * Serialize local lifecycle writers and recover their durable ownership journal before mutation.
- * @param root the root the owner confines its writes to
- * @param stateDirectory the directory under the root that holds the journal and lock
+ * Serialize local lifecycle writers and recover their durable ownership log before mutation.
+ * @param root the root the owner bounds its writes to
+ * @param stateDirectory the directory under the root that holds the log and lock
  * @returns the owner, which the caller closes
  */
-export function openLifecycleOwner(root: string, stateDirectory = STATE_DIRECTORY): LifecycleOwner {
-    const confined = openConfinedRoot(root);
+export function openOwner(root: string, stateDirectory = STATE_DIRECTORY): Owner {
+    const files = openRoot(root);
     try {
-        confined.lock(`${stateDirectory}/writer.lock`);
-        return lifecycleOwner(openJournal(confined, stateDirectory));
+        files.lock(`${stateDirectory}/writer.lock`);
+        return lifecycleOwner(openLog(files, stateDirectory));
     } catch (error) {
-        confined.close();
+        files.close();
         throw error;
     }
 }
 
 /**
  * Reuse active mutation owners and serialize each repository or Git-resolved root.
- * @param root the root the owner confines its writes to.
+ * @param root the root the owner bounds its writes to.
  * @param action the work to do with the owner open.
- * @param stateDirectory the directory under the root that holds the journal and lock.
+ * @param stateDirectory the directory under the root that holds the log and lock.
  * @returns what the action returns.
  */
 export function runOwnedLifecycle<Result>(
     root: string,
-    action: (owner: LifecycleOwner) => Result,
+    action: (owner: Owner) => Result,
     stateDirectory = STATE_DIRECTORY,
 ): Result {
     const canonical = realpathSync(root);
@@ -117,7 +114,7 @@ export function runOwnedLifecycle<Result>(
     const active = activeMutation.getStore();
     const existing = active?.get(key);
     if (existing !== undefined) return action(existing);
-    const owner = openLifecycleOwner(canonical, stateDirectory);
+    const owner = openOwner(canonical, stateDirectory);
     try {
         const result = activeMutation.run(new Map([...(active ?? []), [key, owner]]), () => action(owner));
         if (result instanceof Promise)
@@ -133,13 +130,13 @@ export function runOwnedLifecycle<Result>(
 }
 
 /**
- * Read ownership for a preview without creating a lock, directory, or journal.
+ * Read ownership for a preview without creating a lock, directory, or log.
  * @param root the root the ownership belongs to
- * @param stateDirectory the directory under the root that holds the journal
+ * @param stateDirectory the directory under the root that holds the log
  * @returns the recorded ownership, empty when nothing was recorded
  */
 export function readOwnership(root: string, stateDirectory = STATE_DIRECTORY): OwnershipState {
-    const files = openConfinedRoot(root);
+    const files = openRoot(root);
     try {
         const record = files.read(`${stateDirectory}/ownership.json`);
         return record === undefined

@@ -37,7 +37,7 @@ async function configuredRules(policy: string, files: string[]): Promise<Record<
     return results;
 }
 
-test('native DOM exclusions remain confined to their scope', async () => {
+test('native DOM exclusions remain files to their scope', async () => {
     const rules = await configuredRules(
         'kits = ["react", "typescript"]\n[[scope]]\npath = "native"\nkits = ["react-native"]',
         ['native/App.tsx', 'web/App.tsx'],

@@ -1,8 +1,8 @@
 // The types of lifecycle/hooks in this package.
+import type { Root } from '#cli/types/platform.ts';
 import type { Policy } from '#cli/types/policy/policy.ts';
-import type { ConfinedRoot } from '#cli/types/platform.ts';
 import type { HookLocation } from '#cli/types/repository/repository.ts';
-import type { FileProposal, LifecycleOwner, OwnershipEntry } from '#cli/types/lifecycle/lifecycle.ts';
+import type { Owner, FileProposal, OwnershipEntry } from '#cli/types/lifecycle/lifecycle.ts';
 
 export type Readiness = (root: string, runner: string | undefined, binary: string | undefined) => boolean;
 export type Status = {
@@ -23,12 +23,12 @@ export type Preparation = {
     executable: string;
     installedConfig: string;
     work: string;
-    files: ConfinedRoot;
+    files: Root;
 };
 /** A hook a native manager generated, and the text gspot installs in its place. */
 export type PreparedHook = { generated: string; installed: string };
 export type Installation = {
-    owner: LifecycleOwner;
+    owner: Owner;
     location: HookLocation;
     policy: Policy;
     nativeHooks: ReadonlyMap<string, PreparedHook> | undefined;

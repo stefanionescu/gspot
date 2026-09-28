@@ -1,13 +1,13 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import { openRoot } from '#cli/platform/filesystem.ts';
 import { fileMode, mutationPath } from '#cli/platform/safe-paths.ts';
 import { linkSync, statSync, symlinkSync, readFileSync } from 'node:fs';
 
 test('native replacement and removal preserve read-only identities', async () => {
     await using directory = await testdir();
-    const root = openConfinedRoot(directory.path);
+    const root = openRoot(directory.path);
     const original = { bytes: Buffer.from([0, 255, 10]), mode: fileMode({ mode: 0o444 }) };
     const replacement = { bytes: Buffer.from('replacement'), mode: fileMode({ mode: 0o644 }) };
     try {
@@ -28,9 +28,9 @@ test('native replacement and removal preserve read-only identities', async () =>
 });
 
 if (process.platform !== 'win32') {
-    test('confined lifecycle mutations: replacements preserve expected bytes and modes and refuse subsequent edits', async () => {
+    test('files lifecycle mutations: replacements preserve expected bytes and modes and refuse subsequent edits', async () => {
         await using directory = await testdir();
-        const root = openConfinedRoot(directory.path);
+        const root = openRoot(directory.path);
         try {
             const original = { bytes: Buffer.from([0, 255, 10]), mode: 0o640 };
             root.write('config/input', original, undefined);
@@ -53,7 +53,7 @@ if (process.platform !== 'win32') {
     });
 
     test.each(['portable', 'native'] as const)(
-        'confined lifecycle mutations: %s paths cannot use symlinks or hardlinks to change an external file',
+        'files lifecycle mutations: %s paths cannot use symlinks or hardlinks to change an external file',
         async (format) => {
             await using directory = await testdir();
             await createFileTree(directory.path, { 'project/.keep': '', 'outside/sentinel': 'authored\n' });
@@ -62,7 +62,7 @@ if (process.platform !== 'win32') {
             symlinkSync(outside, join(project, 'escape'));
             symlinkSync(join(outside, 'sentinel'), join(project, 'linked'));
             linkSync(join(outside, 'sentinel'), join(project, 'hardlinked'));
-            const root = openConfinedRoot(project, format);
+            const root = openRoot(project, format);
             try {
                 for (const path of ['escape/sentinel', 'linked', 'hardlinked']) {
                     expect(() => {
@@ -81,9 +81,9 @@ if (process.platform !== 'win32') {
         },
     );
 
-    test('confined lifecycle mutations: native snapshot names retain POSIX bytes while refusing traversal and private links', async () => {
+    test('files lifecycle mutations: native snapshot names retain POSIX bytes while refusing traversal and private links', async () => {
         await using directory = await testdir();
-        const root = openConfinedRoot(directory.path, 'native');
+        const root = openRoot(directory.path, 'native');
         const path = 'folder/a\n"é:?.txt';
         const original = { bytes: Buffer.from('inside'), mode: 0o640 };
         try {
@@ -106,13 +106,13 @@ if (process.platform !== 'win32') {
         }
     });
 
-    test('confined lifecycle mutations: link publication refuses escaped, private, missing, and symlinked targets', async () => {
+    test('files lifecycle mutations: link publication refuses escaped, private, missing, and symlinked targets', async () => {
         await using directory = await testdir();
         await createFileTree(directory.path, { 'project/target': 'inside', 'outside/sentinel': 'outside' });
         const project = join(directory.path, 'project');
         symlinkSync('../outside', join(project, 'escape'));
         symlinkSync('../outside/sentinel', join(project, 'escaped-file'));
-        const root = openConfinedRoot(project);
+        const root = openRoot(project);
         try {
             for (const target of [
                 '../outside/sentinel',
@@ -143,10 +143,10 @@ if (process.platform !== 'win32') {
         }
     });
 
-    test('confined lifecycle mutations: a second writer is refused until the first releases its lock', async () => {
+    test('files lifecycle mutations: a second writer is refused until the first releases its lock', async () => {
         await using directory = await testdir();
-        const first = openConfinedRoot(directory.path);
-        const second = openConfinedRoot(directory.path);
+        const first = openRoot(directory.path);
+        const second = openRoot(directory.path);
         try {
             first.lock('.gspot/mutation.lock');
             expect(() => {
@@ -202,12 +202,12 @@ test('Windows file identities retain read-only changes without inventing POSIX p
     }
 });
 
-test('empty-directory removal confines parents and preserves nonempty directories', async () => {
+test('empty-directory removal bounds parents and preserves nonempty directories', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'project/.keep': '', 'outside/kept/value': 'external' });
     const root = join(sandbox.path, 'project');
     symlinkSync('../outside', join(root, 'linked'));
-    const files = openConfinedRoot(root);
+    const files = openRoot(root);
     try {
         expect(() => {
             files.rmdir('linked/kept');

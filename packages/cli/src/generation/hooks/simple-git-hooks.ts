@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { isDeepStrictEqual } from 'node:util';
-import type { ConfinedRoot } from '#cli/types/platform.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+import type { Root } from '#cli/types/platform.ts';
+import { openRoot } from '#cli/platform/filesystem.ts';
 import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import type { OwnershipEntry } from '#cli/types/lifecycle/lifecycle.ts';
 import type { HookName, GeneratedProposal } from '#cli/types/generation.ts';
@@ -20,7 +20,7 @@ const manifestSchema = z.object({
 });
 
 function retainedContent(
-    files: ConfinedRoot,
+    files: Root,
     path: string,
     installed: OwnershipEntry['installed'],
     readiness: () => boolean | undefined,
@@ -59,7 +59,7 @@ export function simpleGitHookOutputs(
     binary: string | undefined,
 ): void {
     const prefix = hookPrefix(root);
-    const files = openConfinedRoot(root);
+    const files = openRoot(root);
     try {
         requirePackageConfiguration(files);
         const source = files.read('package.json');

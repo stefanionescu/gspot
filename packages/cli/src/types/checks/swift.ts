@@ -1,8 +1,8 @@
 // The types of checks/swift in this package.
 import type { Node, Tree } from 'web-tree-sitter';
 import type { EngineInput } from '#cli/types/checks/checks.ts';
+import type { Root, FileObservation } from '#cli/types/platform.ts';
 import type { StructureProblem } from '#cli/types/checks/structure.ts';
-import type { ConfinedRoot, FileObservation } from '#cli/types/platform.ts';
 
 /** One parsed Swift file of a run. */
 export type SwiftSource = { path: string; text: string; lines: string[]; tree: Tree };
@@ -22,7 +22,7 @@ export type ParsedSwift = { sources: SwiftSource[]; functions: SwiftFunction[] }
 export type SwiftReader = (parsed: ParsedSwift, input: EngineInput) => StructureProblem[];
 export type Pruning = {
     folder: string;
-    files: ConfinedRoot;
+    files: Root;
     desired: Map<string, FileObservation>;
     wanted: Set<string>;
 };

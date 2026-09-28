@@ -94,7 +94,7 @@ The full check exposed blocked process output during isolated dependency copying
 profile traced the delay to synchronous workspace copies and cleanup. Git read the same
 objects successfully on its own but exceeded its unchanged timeout during the full run.
 Workspace copies and concurrent cleanup now use asynchronous filesystem operations.
-Link repair, permissions, confinement, and working-tree preservation retain their existing owners.
+Link repair, permissions, bounds, and working-tree preservation retain their existing owners.
 A native-output regression fails with the synchronous implementation and passes after the repair.
 
 All 277 execution tests pass with 1,172 assertions, and TypeScript passes.

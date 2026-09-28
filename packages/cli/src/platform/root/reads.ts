@@ -1,9 +1,9 @@
-// Resolving and reading paths under a confined root: every parent must be a real directory and every file private.
+// Resolving and reading paths under a files root: every parent must be a real directory and every file private.
 import { join, posix } from 'node:path';
 import { MODE_BITS, PORTABLE_LINK_TARGET } from '#cli/config/platform.ts';
 import { lstatSync, mkdirSync, type Stats, readFileSync, readlinkSync } from 'node:fs';
+import type { Bounds, Proposed, PathFormat, FileObservation } from '#cli/types/platform.ts';
 import { fileMode, nativePath, mutationPath, privateTarget } from '#cli/platform/safe-paths.ts';
-import type { Proposed, PathFormat, Confinement, FileObservation } from '#cli/types/platform.ts';
 
 // The directory's stat, creating it first when asked and it is absent.
 function directoryStat(directory: string, create: boolean): Stats {
@@ -39,26 +39,26 @@ function fileObservation(target: string, stat: Stats, path: string): FileObserva
 }
 
 // Whether a link's target text is one the lifecycle refuses: not valid UTF-8, empty, absolute, or unsafe.
-function isUnsafeLinkTarget(confinement: Confinement, value: FileObservation, target: string): boolean {
+function isUnsafeLinkTarget(bounds: Bounds, value: FileObservation, target: string): boolean {
     if (!Buffer.from(target).equals(value.bytes) || target === '' || target.startsWith('/')) return true;
-    return confinement.pathFormat === 'portable' ? PORTABLE_LINK_TARGET.test(target) : target.includes('\0');
+    return bounds.pathFormat === 'portable' ? PORTABLE_LINK_TARGET.test(target) : target.includes('\0');
 }
 
 // Refuses a link whose destination is missing or is itself a link, reading proposed files before the disk.
-function assertLinkDestination(confinement: Confinement, path: string, destination: string, proposed?: Proposed): void {
+function assertLinkDestination(bounds: Bounds, path: string, destination: string, proposed?: Proposed): void {
     const targetFile =
-        proposed?.has(destination) === true ? proposed.get(destination) : readEntry(confinement, destination, false);
+        proposed?.has(destination) === true ? proposed.get(destination) : readEntry(bounds, destination, false);
     if (targetFile === undefined) throw new Error(`Lifecycle link target is missing: ${path}`);
     if (targetFile.isLink) throw new Error(`Lifecycle link target is not a regular file: ${path}`);
 }
 
 /**
- * The confinement of one root: where it is and how its paths are spelled.
+ * The bounds of one root: where it is and how its paths are spelled.
  * @param canonical the real path of the root
  * @param pathFormat whether paths use forward slashes or the platform's own spelling
- * @returns the confinement
+ * @returns the bounds
  */
-export function confinementOf(canonical: string, pathFormat: PathFormat): Confinement {
+export function boundsOf(canonical: string, pathFormat: PathFormat): Bounds {
     const partsOf = pathFormat === 'portable' ? mutationPath : nativePath;
     const locks = new Map<string, string>();
     return { canonical, pathFormat, partsOf, locks };
@@ -66,16 +66,16 @@ export function confinementOf(canonical: string, pathFormat: PathFormat): Confin
 
 /**
  * The absolute path of an entry, after checking that every parent is a real directory and not a link.
- * @param confinement the root
- * @param path the confined path
+ * @param bounds the root
+ * @param path the files path
  * @param create whether absent parents are created
  * @returns the absolute path
  */
-export function parentPath(confinement: Confinement, path: string, create = false): string {
-    const parts = confinement.partsOf(path);
+export function parentPath(bounds: Bounds, path: string, create = false): string {
+    const parts = bounds.partsOf(path);
     const leaf = parts.pop();
     if (leaf === undefined) throw new Error('A path inside the root cannot be empty.');
-    let directory = confinement.canonical;
+    let directory = bounds.canonical;
     for (const part of parts) {
         directory = join(directory, part);
         const stat = directoryStat(directory, create);
@@ -86,14 +86,14 @@ export function parentPath(confinement: Confinement, path: string, create = fals
 
 /**
  * The snapshot at a path, or undefined when nothing is there.
- * @param confinement the root
- * @param path the confined path
+ * @param bounds the root
+ * @param path the files path
  * @param allowLink whether a symbolic link is read as itself instead of refused
  * @returns the snapshot
  */
-export function readEntry(confinement: Confinement, path: string, allowLink: boolean): FileObservation | undefined {
+export function readEntry(bounds: Bounds, path: string, allowLink: boolean): FileObservation | undefined {
     try {
-        const target = parentPath(confinement, path);
+        const target = parentPath(bounds, path);
         const stat = lstatSync(target);
         if (allowLink && stat.isSymbolicLink()) return linkObservation(target, stat);
         return fileObservation(target, stat, path);
@@ -106,27 +106,27 @@ export function readEntry(confinement: Confinement, path: string, allowLink: boo
 /**
  * Checks a snapshot's path and, for a link, its target, which must be a normalized relative path to a regular file
  * inside the root.
- * @param confinement the root.
- * @param path the confined path.
+ * @param bounds the root.
+ * @param path the files path.
  * @param value the snapshot.
  * @param proposed files about to be written, consulted before the disk for a link's destination.
  * @returns the link target text, or undefined for a regular file.
  */
 export function validateObservation(
-    confinement: Confinement,
+    bounds: Bounds,
     path: string,
     value: FileObservation,
     proposed?: Proposed,
 ): string | undefined {
-    confinement.partsOf(path);
+    bounds.partsOf(path);
     if (!value.isLink) return undefined;
     const target = value.bytes.toString('utf8');
-    if (isUnsafeLinkTarget(confinement, value, target)) throw new Error(`Unsafe lifecycle link target: ${path}`);
+    if (isUnsafeLinkTarget(bounds, value, target)) throw new Error(`Unsafe lifecycle link target: ${path}`);
     const destination = posix.join(posix.dirname(path), target);
-    confinement.partsOf(destination);
+    bounds.partsOf(destination);
     privateTarget(destination);
     if (posix.relative(posix.dirname(path), destination) !== target)
         throw new Error(`Lifecycle link target must use a normalized relative path: ${path}`);
-    assertLinkDestination(confinement, path, destination, proposed);
+    assertLinkDestination(bounds, path, destination, proposed);
     return target;
 }

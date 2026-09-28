@@ -3,10 +3,10 @@ import { parse } from 'smol-toml';
 import { statSync } from 'node:fs';
 import { join, posix } from 'node:path';
 import { scopeOf } from '#cli/repository/scopes.ts';
+import { openRoot } from '#cli/platform/filesystem.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { SkippedCheckError } from '#cli/checks/result.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { runToolCheck, runCheckCommand } from '#cli/execution/tool/runner.ts';
 import type { Session, PlannedCheck } from '#cli/types/execution/execution.ts';
 import type { Finding, CheckResult, EngineInput } from '#cli/types/checks/checks.ts';
@@ -41,7 +41,7 @@ function finding(input: EngineInput, at: { file: string; line: number }, rule: s
  * @returns the native dependency findings, including undeclared application imports.
  */
 export async function checkDependencies(session: Session, planned: PlannedCheck): Promise<CheckResult> {
-    const files = openConfinedRoot(session.root);
+    const files = openRoot(session.root);
     let exclusions: string[];
     try {
         const project = files.read(posix.join(planned.scope.scope.path, PYTHON_MANIFEST));

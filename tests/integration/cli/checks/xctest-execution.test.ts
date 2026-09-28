@@ -109,7 +109,7 @@ describe.if(process.platform === 'darwin')('with the macOS toolchain', () => {
 });
 
 describe.if(process.platform === 'darwin')('with the macOS toolchain', () => {
-    test('XCTest coverage refuses an external result link and replaces a confined previous bundle', async () => {
+    test('XCTest coverage refuses an external result link and replaces a files previous bundle', async () => {
         await using sandbox = await testdir();
         await using outside = await testdir();
         const cache = join(buildFolder(sandbox.path), 'swift/root/coverage');
