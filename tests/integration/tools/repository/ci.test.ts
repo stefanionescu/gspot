@@ -1,10 +1,10 @@
 import { test, expect } from 'bun:test';
 import { fileURLToPath } from 'node:url';
-import { join, delimiter } from 'node:path';
 import { parse, stringify } from 'smol-toml';
 import { run } from '#cli/platform/spawn.ts';
 import { git } from '#tests/support/cli/git.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { join, dirname, delimiter } from 'node:path';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { toolsPath } from '#tests/support/cli/tools.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
@@ -46,9 +46,10 @@ test('repository CI checks the committed change, preserves reports on invalid ba
     writeFileSync(join(sandbox.path, 'changed.txt'), 'bad\n');
     commit();
     writeFileSync(join(sandbox.path, 'changed.txt'), 'working tree correction\n');
+    // The launcher needs Bun on PATH; a runner installs it for the repository, not for the sandbox.
     const environment = {
         MISE_TRUSTED_CONFIG_PATHS: sandbox.path,
-        PATH: `${join(root, '.mise/gspot')}${delimiter}${toolsPath([])}`,
+        PATH: [join(root, '.mise/gspot'), dirname(process.execPath), toolsPath([])].join(delimiter),
     };
     const argv = ['bash', '-euo', 'pipefail', '-c', step.run!];
     const settings = { cwd: sandbox.path, timeoutMs: 30_000 };

@@ -79,6 +79,9 @@ jobs:
             - name: Install Linux XML tools
               if: runner.os == 'Linux'
               run: sudo apt-get update && sudo apt-get install --yes libxml2-utils
+            - name: Install the Supabase CLI for the Linux database journeys
+              if: runner.os == 'Linux'
+              run: mise use --global supabase@2.118.0
             - run: mise run --skip-tools repo:setup
             - name: Extract Windows SwiftFormat executable
               if: runner.os == 'Windows'

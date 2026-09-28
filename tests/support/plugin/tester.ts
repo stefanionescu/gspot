@@ -1,4 +1,5 @@
 // The rule tester every rule test uses: the TypeScript parser, bun's describe and it.
+import { resolve } from 'node:path';
 import parser from '@typescript-eslint/parser';
 import { it, afterAll, describe } from 'bun:test';
 import { RuleTester } from '@typescript-eslint/rule-tester';
@@ -23,7 +24,8 @@ export function tester(root = '/repo'): RuleTester {
         languageOptions: {
             parser,
             parserOptions: {
-                tsconfigRootDir: root,
+                // The parser wants an absolute path, which a leading slash is not on Windows; the rules keep the posix root.
+                tsconfigRootDir: resolve(root),
                 ecmaVersion: 'latest',
                 sourceType: 'module',
                 ecmaFeatures: { jsx: true },

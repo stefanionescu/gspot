@@ -83,7 +83,7 @@ cargo = "zizmor"
 [[tools]]
 name = "dotenv-linter"
 version = "4.0.0"
-mise = "dotenv-linter"
+mise = "github:dotenv-linter/dotenv-linter"
 brew = "dotenv-linter"
 cargo = "dotenv-linter"
 github = {name = "dotenv-linter/dotenv-linter", version = "v4.0.0"}
