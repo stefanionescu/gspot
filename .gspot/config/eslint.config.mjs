@@ -768,19 +768,7 @@ const policyRules = [
 });
 
 const requireProject = createRequire(`${root}/package.json`);
-const adopted = [
-    {
-        "plugins": {
-            "gspot": {
-                "module": "@gspot/eslint-plugin",
-                "export": "default",
-                "members": [
-                    "default"
-                ]
-            }
-        }
-    }
-];
+const adopted = [];
 async function loadRegistration(reference) {
     const resolved = requireProject.resolve(reference.module);
     const imported = await import(isBuiltin(resolved) ? resolved : pathToFileURL(resolved).href);

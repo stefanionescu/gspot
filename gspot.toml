@@ -616,8 +616,6 @@ constants_directory = "constants"
 roles = {env = "packages/cli/src/platform/environment.ts"}
 
 [tools.eslint]
-# Source checks use the workspace plugin built by build:plugin.
-adopted = [{plugins = {gspot = {module = "@gspot/eslint-plugin", export = "default", members = ["default"]}}}]
 import_style = {"**/*" = "ts"}
 script_files = [
     "packages/npm/**",

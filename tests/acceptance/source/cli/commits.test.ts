@@ -51,6 +51,27 @@ function expectCompleteHistory(output: string, commits: string[]): void {
 }
 
 test(
+    'native commitlint discovers the generated pointer and rejects invalid messages',
+    async () => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'gspot.toml': 'version = 1\nconfigurations = ["commits"]\nlevel = "all"\n[rules]\ninstall = false\n',
+        });
+        for (const command of ['apply', 'install']) {
+            const prepared = await run(sandbox.path, [command]);
+            expect(prepared.code, prepared.stdout + prepared.stderr).toBe(0);
+        }
+        const command = ['node', join(sandbox.path, '.gspot/node_modules/@commitlint/cli/cli.js')];
+        const failed = await runProcess(command, { cwd: sandbox.path, stdin: 'Changed files.\n' });
+        expect(failed.code, failed.stdout + failed.stderr).toBe(1);
+        expect(failed.stdout + failed.stderr).toContain('type-empty');
+        const corrected = await runProcess(command, { cwd: sandbox.path, stdin: 'fix: validate configuration\n' });
+        expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+    },
+    PLANTED_TIMEOUT_MS,
+);
+
+test(
     'the commits configuration > the commit-msg hook refuses a free-form message and takes a conventional one',
     async () => {
         await using sandbox = await testdir();
