@@ -2,7 +2,7 @@
 import { tagEntry } from '#cli/repository/tags.ts';
 import { swiftSourceTags } from '#cli/repository/swift-source.ts';
 import type { FileDeclaration } from '#cli/types/policy/policy.ts';
-import { FILE_PREFIX_BYTES } from '#cli/constants/repository/repository.ts';
+import { FILE_PREFIX_BYTES } from '#cli/config/repository/repository.ts';
 import { natureOf, readAttributes } from '#cli/repository/file-classification.ts';
 import { readPrefix, readSource, trackedEntries, isGitRepository } from '#cli/repository/tracked.ts';
 

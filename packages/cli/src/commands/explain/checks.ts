@@ -1,13 +1,13 @@
 // Explain a check, or one rule of the tool a check runs.
+import { allChecks } from '#cli/kits/listing.ts';
 import { inspectTool } from '#cli/tools/inspect.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
-import { allChecks } from '#cli/configurations/listing.ts';
 import { quoteArgument } from '#cli/platform/arguments.ts';
+import type { ToolPin, CheckSpec } from '#cli/types/kits.ts';
+import { configurationManifests } from '#cli/kits/manifests.ts';
 import type { Session } from '#cli/types/execution/execution.ts';
 import { repositoryCheckSpec } from '#cli/policy/check-state.ts';
-import type { ToolPin, CheckSpec } from '#cli/types/configurations.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { SWIFTLINT_LINES, TOOL_TIMEOUT_MS } from '#cli/constants/commands/explain.ts';
+import { SWIFTLINT_LINES, TOOL_TIMEOUT_MS } from '#cli/config/commands/explain.ts';
 import type { Facts, Found, OwnCheck, Explanation } from '#cli/types/commands/explain.ts';
 
 const TOOL_RULE_SOURCES: Record<string, (rule: string, path: string) => string | undefined> = {

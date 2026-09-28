@@ -10,7 +10,7 @@ import {
     NAMED_DECLARATIONS,
     TYPESCRIPT_FUNCTION_NODES,
     TYPESCRIPT_PARAMETER_NODES,
-} from '#cli/constants/checks/naming.ts';
+} from '#cli/config/checks/naming.ts';
 
 function add(sink: ExtractSink, node: Node | null, category: string): void {
     if (node === null || !NAME_NODES.has(node.type)) return;

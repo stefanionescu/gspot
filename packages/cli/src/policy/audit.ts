@@ -6,7 +6,7 @@ import { quoteArgument } from '#cli/platform/arguments.ts';
 import { settingValueSchemas } from '#cli/policy/schema.ts';
 import { shippedPolicy } from '#cli/checks/naming/policy.ts';
 import { isLoosening, isReasonAccepted } from '#cli/policy/loosening.ts';
-import { LIMITS_PREFIX, TOOL_KEY_DEPTH } from '#cli/constants/policy/policy.ts';
+import { LIMITS_PREFIX, TOOL_KEY_DEPTH } from '#cli/config/policy/policy.ts';
 import { specFor, asRecord, policyValue, policyTables } from '#cli/policy/settings.ts';
 
 import type {

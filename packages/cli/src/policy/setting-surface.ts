@@ -1,10 +1,10 @@
 // Settings exposed by gspot and selected manifests. Later configurations override defaults.
 import * as messages from '#cli/policy/messages.ts';
 import { mergeValue } from '#cli/policy/settings.ts';
+import type { Manifest, SettingSpec } from '#cli/types/kits.ts';
+import { OVERRIDING_KINDS } from '#cli/config/policy/policy.ts';
 import type { ExposedSettings } from '#cli/types/policy/policy.ts';
-import { OVERRIDING_KINDS } from '#cli/constants/policy/policy.ts';
-import type { Manifest, SettingSpec } from '#cli/types/configurations.ts';
-import { TOOL_DEADLINE, COVERAGE_STRICT } from '#cli/constants/configurations.ts';
+import { TOOL_DEADLINE, COVERAGE_STRICT } from '#cli/config/kits.ts';
 import { rootSettingSchemas, integrationSettingSchemas } from '#cli/policy/schema.ts';
 
 // Whether another configuration's scalar default disagrees with this one, and this one may not override it.

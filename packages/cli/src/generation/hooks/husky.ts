@@ -1,4 +1,4 @@
-import { HOOK_FILES } from '#cli/constants/repository/repository.ts';
+import { HOOK_FILES } from '#cli/config/repository/repository.ts';
 import { hookPrefix, hookCommand } from '#cli/generation/hooks/scripts.ts';
 /**
  * The managed invocation in each authored Husky script.

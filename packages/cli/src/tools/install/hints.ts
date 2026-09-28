@@ -1,5 +1,5 @@
-import type { ToolPin } from '#cli/types/configurations.ts';
-import { HOST_HINTS, MISE_BACKENDS, PLATFORM_INSTALLERS } from '#cli/constants/tools/tools.ts';
+import type { ToolPin } from '#cli/types/kits.ts';
+import { HOST_HINTS, MISE_BACKENDS, PLATFORM_INSTALLERS } from '#cli/config/tools/tools.ts';
 
 /**
  * The installation command for managed tools, or platform guidance for a host tool.

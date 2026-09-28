@@ -1,6 +1,6 @@
 import { posix } from 'node:path';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
-import { DEFAULT_TEST, CODE_EXTENSION } from '#plugin/constants/rules.ts';
+import { DEFAULT_TEST, CODE_EXTENSION } from '#plugin/config/rules.ts';
 import type { TestsDirectoryContentsOptions } from '#plugin/types/rules.ts';
 import { lintedFile, lintedRoot, readDirectory, isAnyGlobMatch, relativeToRoot } from '#plugin/files.ts';
 

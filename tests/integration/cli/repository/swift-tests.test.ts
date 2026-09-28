@@ -5,9 +5,9 @@ import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { readRepository } from '#cli/repository/tree.ts';
+import { detectConfigurations } from '#cli/kits/detect.ts';
 import { containing } from '#tests/support/expectations.ts';
-import { detectConfigurations } from '#cli/configurations/detect.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { configurationManifests } from '#cli/kits/manifests.ts';
 
 test.each([
     { source: 'import XCTest\n', selected: true },

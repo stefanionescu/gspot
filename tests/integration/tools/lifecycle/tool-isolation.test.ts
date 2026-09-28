@@ -3,9 +3,9 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { inspectTool } from '#cli/tools/inspect.ts';
 import { reportSchema } from '#cli/execution/report.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
+import { configurationManifests } from '#cli/kits/manifests.ts';
 import { run, runProcess } from '#tests/support/cli/command.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { cpSync, chmodSync, mkdirSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
 
 const MODULES = join(import.meta.dir, '../../../../node_modules');

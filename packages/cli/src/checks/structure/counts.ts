@@ -1,7 +1,7 @@
 import type { Finding } from '#cli/types/checks/checks.ts';
 import { functionAt } from '#cli/checks/structure/parser.ts';
 import { astGrepMatches } from '#cli/checks/structure/ast-grep.ts';
-import { RULES, OUTER_LEVELS } from '#cli/constants/checks/structure.ts';
+import { RULES, OUTER_LEVELS } from '#cli/config/checks/structure.ts';
 import type { ScriptIndex, AstGrepMatch, StructureContext } from '#cli/types/checks/structure.ts';
 
 function scoreFor(matches: AstGrepMatch[], isDepth: boolean): number {
@@ -36,7 +36,7 @@ export async function countFindings(
     if (rule === undefined || ceiling === undefined) return [];
     const matches = await astGrepMatches(
         context.input,
-        `packages/cli/configurations/language/bash/rules/${rule.asset}`,
+        `packages/cli/kits/language/bash/rules/${rule.asset}`,
         index.files.map((file) => file.path),
     );
     return index.files.flatMap((file) => {

@@ -1,21 +1,21 @@
 // Every generated output of a repository: configuration files, pointers, blocks, hooks, runner tasks, and rules.
+import type { Manifest } from '#cli/types/kits.ts';
+import { everyManifest } from '#cli/kits/select.ts';
 import { binaryPath } from '#cli/platform/assets.ts';
 import { assembleRules } from '#cli/agents/assemble.ts';
+import { gitignoreBlock } from '#cli/kits/manifests.ts';
 import { bunConfiguration } from '#cli/generation/bun.ts';
 import { huskyLines } from '#cli/generation/hooks/husky.ts';
 import { miseTasks } from '#cli/generation/runner/tasks.ts';
 import { styleFiles } from '#cli/generation/vale-styles.ts';
-import type { Manifest } from '#cli/types/configurations.ts';
+import { emitConfigurations } from '#cli/generation/kits.ts';
 import { mutationTarget } from '#cli/platform/safe-paths.ts';
 import { applyBlock } from '#cli/lifecycle/managed-blocks.ts';
-import { everyManifest } from '#cli/configurations/select.ts';
 import { templateInputs } from '#cli/generation/templates.ts';
 import { runnerTaskPlan } from '#cli/generation/runner/plan.ts';
 import { toolPackages } from '#cli/generation/tools/packages.ts';
-import { gitignoreBlock } from '#cli/configurations/manifests.ts';
 import type { Repository } from '#cli/types/repository/repository.ts';
 import { agentFiles, managedBlock } from '#cli/agents/instructions.ts';
-import { emitConfigurations } from '#cli/generation/configurations.ts';
 import { gitlabFile, workflowFile } from '#cli/generation/workflow.ts';
 import { toolEnvironment } from '#cli/generation/tools/environment.ts';
 import { withdrawRetained } from '#cli/generation/retained/outputs.ts';

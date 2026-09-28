@@ -1,7 +1,7 @@
 import { extensionOf } from '#cli/platform/paths.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
-import { SQL, MARKDOWN, CODE_SPAN, VALE_DIRECTIVE, SQL_BLOCK_COMMENT } from '#cli/constants/checks/prose.ts';
+import { SQL, MARKDOWN, CODE_SPAN, VALE_DIRECTIVE, SQL_BLOCK_COMMENT } from '#cli/config/checks/prose.ts';
 
 function lineFindings(input: EngineInput, path: string, lines: string[]): Finding[] {
     const extension = extensionOf(path);

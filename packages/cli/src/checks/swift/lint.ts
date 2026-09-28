@@ -2,14 +2,14 @@ import { join } from 'node:path';
 import type { Node } from 'web-tree-sitter';
 import { chmodSync, writeFileSync } from 'node:fs';
 import { compact } from '#cli/policy/normalize.ts';
-import { PRIVATE_FILE } from '#cli/constants/platform.ts';
+import { PRIVATE_FILE } from '#cli/config/platform.ts';
 import { swiftSources } from '#cli/checks/swift/sources.ts';
 import { runToolCheck } from '#cli/execution/tool/runner.ts';
 import type { CheckResult } from '#cli/types/checks/checks.ts';
 import type { InlineDocumentation } from '#cli/types/checks/swift.ts';
 import { createFileWorkspace } from '#cli/execution/files/workspace.ts';
+import { DOC_RULE, SWIFTLINT_COMMAND } from '#cli/config/checks/swift.ts';
 import { commandConfigurations } from '#cli/execution/command-expansion.ts';
-import { DOC_RULE, SWIFTLINT_COMMAND } from '#cli/constants/checks/swift.ts';
 import type { Session, PlannedCheck } from '#cli/types/execution/execution.ts';
 
 // The grammar can expose comment-shaped extras inside strings. Those are literal content.

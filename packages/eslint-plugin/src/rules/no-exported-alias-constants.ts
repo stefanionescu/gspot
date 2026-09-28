@@ -1,6 +1,6 @@
 // `export const A = B` where B is an identifier or a member expression.
+import { WRAPPERS } from '#plugin/config/rules.ts';
 import { createRule } from '#plugin/definition.ts';
-import { WRAPPERS } from '#plugin/constants/rules.ts';
 import type { TSESTree } from '@typescript-eslint/utils';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 

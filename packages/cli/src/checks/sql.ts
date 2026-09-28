@@ -2,7 +2,7 @@ import { readSource } from '#cli/repository/tracked.ts';
 import { parseSql, parsePlpgsql } from '#cli/parsers/sql/parser.ts';
 import { sqlFile, positionAt } from '#cli/parsers/sql/statements.ts';
 import type { SqlFile, SqlStatementView } from '#cli/types/parsers/sql.ts';
-import { DEFAULT_TRIVIAL_STATEMENTS } from '#cli/constants/checks/structure.ts';
+import { DEFAULT_TRIVIAL_STATEMENTS } from '#cli/config/checks/structure.ts';
 import type { Finding, SqlSource, EngineInput, SqlAnalysis, FunctionOption } from '#cli/types/checks/checks.ts';
 
 import {
@@ -12,7 +12,7 @@ import {
     OUTPUT_PARAMETERS,
     POSTGRES_DIALECTS,
     SHIPPED_PARAMETER_LIMIT,
-} from '#cli/constants/checks/checks.ts';
+} from '#cli/config/checks/checks.ts';
 
 function sources(input: EngineInput): SqlSource[] {
     return input.files

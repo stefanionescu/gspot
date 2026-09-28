@@ -1,7 +1,7 @@
 import type { TSESLint } from '@typescript-eslint/utils';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
-import { DEFAULT_TRIVIAL_STATEMENTS } from '#plugin/constants/rules.ts';
+import { DEFAULT_TRIVIAL_STATEMENTS } from '#plugin/config/rules.ts';
 import { totalStatements, hasConstructorState } from '#plugin/syntax.ts';
 import { isRecursive, isInlineValue } from '#plugin/function-references.ts';
 import type { ImplementedFunction, NoTrivialFunctionsOptions } from '#plugin/types/rules.ts';

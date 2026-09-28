@@ -9,7 +9,7 @@ import {
     CHECKOUT,
     ASSET_READER_SCRIPT,
     ASSETS_CONFIGURATION,
-} from '#tests/constants/integration/cli/platform.ts';
+} from '#tests/config/integration/cli/platform.ts';
 
 const ROOT = fileURLToPath(new URL('../../../..', import.meta.url));
 describe('development assets', () => {
@@ -20,7 +20,7 @@ describe('development assets', () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
             ...sources,
-            [`${CHECKOUT}/packages/cli/configurations/language/bash/manifest.toml`]: ASSETS_CONFIGURATION,
+            [`${CHECKOUT}/packages/cli/kits/language/bash/manifest.toml`]: ASSETS_CONFIGURATION,
             [`${CHECKOUT}/assets-reader.ts`]: ASSET_READER_SCRIPT,
             [`${CHECKOUT}/packages/cli/.build/undeclared.wasm`]: 'not a declared asset',
         });
@@ -42,7 +42,7 @@ describe('development assets', () => {
         expect(result.exitCode, result.stderr.toString()).toBe(0);
         expect(JSON.parse(result.stdout.toString())).toStrictEqual({
             text: ASSETS_CONFIGURATION,
-            files: ['packages/cli/configurations/language/bash/manifest.toml'],
+            files: ['packages/cli/kits/language/bash/manifest.toml'],
         });
     });
 });

@@ -5,7 +5,7 @@ import { run } from '#cli/platform/spawn.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { useRevision } from '#cli/repository/revisions/contents.ts';
 import { relocateWindowsLauncher } from '#cli/repository/revisions/virtualenv/windows-launcher.ts';
-import { INTERPRETERS, WINDOWS_LAUNCHER_LAYOUTS } from '#tests/constants/integration/cli/repository.ts';
+import { INTERPRETERS, WINDOWS_LAUNCHER_LAYOUTS } from '#tests/config/integration/cli/repository.ts';
 
 function launcher(
     isExtended: boolean,

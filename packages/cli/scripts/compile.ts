@@ -4,8 +4,8 @@ import { prepareInput } from './inputs.ts';
 import { releaseTargets } from './targets.ts';
 import { join, dirname, relative } from 'node:path';
 import { grammarPath } from '#cli/platform/assets.ts';
+import { SWIFT_GRAMMAR } from '#cli/config/platform.ts';
 import { writeEntry, grammarAssets } from './assets.ts';
-import { SWIFT_GRAMMAR } from '#cli/constants/platform.ts';
 import { binaryNotices, dependencyNotices } from './notices.ts';
 import { rmSync, mkdirSync, copyFileSync, readFileSync, writeFileSync } from 'node:fs';
 

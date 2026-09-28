@@ -3,7 +3,7 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { PAGE } from '#tests/constants/integration/cli/execution/execution.ts';
+import { PAGE } from '#tests/config/integration/cli/execution/execution.ts';
 
 async function loneFiles(root: string): Promise<string[]> {
     const result = await executeRun(await openSession(root), {

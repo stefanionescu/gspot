@@ -5,8 +5,8 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
-import { COMPONENT, SELECTION_INIT, INIT_SELECTION_QUIET } from '#tests/constants/acceptance/source/cli/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
+import { COMPONENT, SELECTION_INIT, INIT_SELECTION_QUIET } from '#tests/config/acceptance/source/cli/cli.ts';
 
 async function selected(root: string): Promise<string[]> {
     const result = await run(root, [...SELECTION_INIT, ...INIT_SELECTION_QUIET]);

@@ -1,11 +1,11 @@
 import { join } from 'node:path';
 import { statSync } from 'node:fs';
 import { readSource } from '#cli/repository/tracked.ts';
-import { SECONDS_PER_DAY } from '#cli/constants/generation.ts';
+import { SECONDS_PER_DAY } from '#cli/config/generation.ts';
+import { LOCKFILES } from '#cli/config/repository/repository.ts';
 import type { Reporter } from '#cli/types/checks/dependencies.ts';
-import { LOCKFILES } from '#cli/constants/repository/repository.ts';
 import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
-import { BUNFIG, DEFAULT_AGE_DAYS } from '#cli/constants/checks/dependencies.ts';
+import { BUNFIG, DEFAULT_AGE_DAYS } from '#cli/config/checks/dependencies.ts';
 
 function installTable(root: string): Record<string, unknown> | undefined {
     const path = join(root, BUNFIG);

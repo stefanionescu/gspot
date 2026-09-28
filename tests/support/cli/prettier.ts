@@ -12,7 +12,7 @@ import {
     PRETTIER_IGNORE_FILES,
     PRETTIER_IGNORE_RULES,
     PRETTIER_IGNORE_SOURCE,
-} from '#tests/constants/acceptance/source/cli/cli.ts';
+} from '#tests/config/acceptance/source/cli/cli.ts';
 
 /**
  * Format the same source under each file's resolved native configuration.

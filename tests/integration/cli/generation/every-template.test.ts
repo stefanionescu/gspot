@@ -9,10 +9,10 @@ import { parse as parseToml } from 'smol-toml';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { configurationManifests } from '#cli/kits/manifests.ts';
 import { type ParseError, parse as parseJsonc } from 'jsonc-parser';
 import type { Parser } from '#tests/types/integration/cli/generation.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { PLANTED } from '#tests/constants/integration/cli/generation/generation.ts';
+import { PLANTED } from '#tests/config/integration/cli/generation/generation.ts';
 
 const MODULES = fileURLToPath(new URL('../../../../node_modules', import.meta.url));
 const PARSERS: Record<string, Parser> = {

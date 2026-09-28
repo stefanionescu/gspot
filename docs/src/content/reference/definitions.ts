@@ -1,7 +1,7 @@
 import plugin from '#plugin/plugin.ts';
 import type { ReferencePage } from '../../types/reference.ts';
 import { cell, table, section, referencePage } from './page.ts';
-import type { Manifest, CheckSpec } from '@gspot/cli/src/types/configurations.ts';
+import type { Manifest, CheckSpec } from '@gspot/cli/src/types/kits.ts';
 
 // The indentation of the JSON blocks a reference page shows.
 const JSON_INDENT = 2;

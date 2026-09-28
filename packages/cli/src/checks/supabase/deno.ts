@@ -2,8 +2,8 @@ import { z } from 'zod';
 import { join } from 'node:path';
 import { statSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { CHECK_LOCATION } from '#cli/config/checks/supabase.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
-import { CHECK_LOCATION } from '#cli/constants/checks/supabase.ts';
 import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
 import { functionFolders, supabaseFinding } from '#cli/checks/supabase/project.ts';
 

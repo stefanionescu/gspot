@@ -1,5 +1,5 @@
 import { join } from 'node:path';
-import { RUNS } from '#tests/constants/cli.ts';
+import { RUNS } from '#tests/config/cli.ts';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { inspectTool } from '#cli/tools/inspect.ts';

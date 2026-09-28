@@ -6,14 +6,14 @@ import type { Finding } from '#cli/types/checks/checks.ts';
 import { parseOutput } from '#cli/execution/output/parse.ts';
 import type { PlannedCheck } from '#cli/types/execution/execution.ts';
 import { ToolOutputError } from '#cli/execution/output/tool-formats.ts';
-import type { ToolPin, CheckSpec, OutputFormat } from '#cli/types/configurations.ts';
+import type { ToolPin, CheckSpec, OutputFormat } from '#cli/types/kits.ts';
 
 import {
     TAIL_LINES,
     FILELESS_FORMATS,
     FINDING_EXIT_CODES,
     TRUFFLEHOG_FINDINGS,
-} from '#cli/constants/execution/execution.ts';
+} from '#cli/config/execution/execution.ts';
 
 // Whether the findings of this output name files of the repository: a link target, a coverage floor and a plain line do not.
 function isFileNamed(output: OutputFormat | undefined): boolean {

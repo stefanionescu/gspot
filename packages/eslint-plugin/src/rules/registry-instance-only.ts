@@ -1,4 +1,4 @@
-import { WRAPPERS } from '#plugin/constants/rules.ts';
+import { WRAPPERS } from '#plugin/config/rules.ts';
 import type { TSESTree } from '@typescript-eslint/utils';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { createRule, optionsSchema } from '#plugin/definition.ts';

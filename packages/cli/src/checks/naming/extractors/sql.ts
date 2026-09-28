@@ -1,4 +1,4 @@
-import { SQL_LABELS } from '#cli/constants/checks/naming.ts';
+import { SQL_LABELS } from '#cli/config/checks/naming.ts';
 import type { Identifier } from '#cli/types/checks/naming.ts';
 import { sqlFile, positionAt } from '#cli/parsers/sql/statements.ts';
 import { textOf, nodesOf, partsOf } from '#cli/parsers/sql/parser.ts';

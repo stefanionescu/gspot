@@ -31,7 +31,7 @@ import {
     TOP_LEVEL_ASSIGNMENT,
     DIRECTORY_CONSTANT_PIECES,
     OTHER_INTERPRETER_SHEBANG,
-} from '#cli/constants/checks/script.ts';
+} from '#cli/config/checks/script.ts';
 
 // The line that must be a bare comment marker.
 const HEADER_LINE = 2;

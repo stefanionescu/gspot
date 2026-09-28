@@ -45,11 +45,7 @@ test('ast-grep batches all file arguments and retains matches from every batch',
         });
     });
     try {
-        const matches = await astGrepMatches(
-            input,
-            'packages/cli/configurations/language/bash/rules/branches.yml',
-            files,
-        );
+        const matches = await astGrepMatches(input, 'packages/cli/kits/language/bash/rules/branches.yml', files);
         expect(received).toStrictEqual(files);
         expect(matches.map((match) => match.file)).toStrictEqual(files);
         expect(processRun.mock.calls.length).toBeGreaterThan(1);
@@ -95,14 +91,10 @@ test.each(['fatal exit', 'deadline', 'cancellation', 'malformed JSON', 'invalid 
             isCanceled: failure === 'cancellation',
         });
         try {
-            await rejection(
-                astGrepMatches(input, 'packages/cli/configurations/language/bash/rules/branches.yml', ['source.sh']),
-            );
+            await rejection(astGrepMatches(input, 'packages/cli/kits/language/bash/rules/branches.yml', ['source.sh']));
             processRun.mockResolvedValue({ code: 0, missing: false, duration: 1, stdout: '[]', stderr: '' });
             expect(
-                await astGrepMatches(input, 'packages/cli/configurations/language/bash/rules/branches.yml', [
-                    'source.sh',
-                ]),
+                await astGrepMatches(input, 'packages/cli/kits/language/bash/rules/branches.yml', ['source.sh']),
             ).toStrictEqual([]);
         } finally {
             processRun.mockRestore();

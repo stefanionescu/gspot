@@ -7,11 +7,11 @@ import { openSession } from '#cli/execution/session.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
 import { rejection } from '#tests/support/expectations.ts';
 import { gspot as CLI } from '#tests/support/cli/command.ts';
+import { configurationManifests } from '#cli/kits/manifests.ts';
 import type { InstallJson } from '#cli/types/commands/commands.ts';
 import { installPackageProject } from '#cli/tools/packages/project.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { chmodSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { LOCKS, PACKAGE_PROJECTS } from '#tests/constants/integration/tools/packages.ts';
+import { LOCKS, PACKAGE_PROJECTS } from '#tests/config/integration/tools/packages.ts';
 import { readPackageInputs, createPackageProject } from '#tests/support/cli/package-project.ts';
 
 test.each(PACKAGE_PROJECTS)(

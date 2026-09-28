@@ -1,6 +1,6 @@
 import { test, expect } from 'bun:test';
 import * as messages from '#cli/policy/messages.ts';
-import { INTERNAL_WORDS } from '#tests/constants/unit/cli/policy.ts';
+import { INTERNAL_WORDS } from '#tests/config/unit/cli/policy.ts';
 
 const cases = {
     fileMissing: () => messages.fileMissing('gspot.toml'),

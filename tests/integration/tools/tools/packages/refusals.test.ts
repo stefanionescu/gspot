@@ -4,10 +4,10 @@ import * as spawn from '#cli/platform/spawn.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
 import { rejection } from '#tests/support/expectations.ts';
+import { configurationManifests } from '#cli/kits/manifests.ts';
 import { installPackageProject } from '#cli/tools/packages/project.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
-import { PACKAGE_PROJECTS } from '#tests/constants/integration/tools/packages.ts';
+import { PACKAGE_PROJECTS } from '#tests/config/integration/tools/packages.ts';
 import { readPackageInputs, createPackageProject } from '#tests/support/cli/package-project.ts';
 
 test.each(PACKAGE_PROJECTS)(

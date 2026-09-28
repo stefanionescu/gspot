@@ -5,9 +5,9 @@ import { parse as parseToml } from 'smol-toml';
 import { nearMatches } from '#cli/policy/near.ts';
 import * as messages from '#cli/policy/messages.ts';
 import type { Profile } from '#cli/types/policy/profiles.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { configurationManifests } from '#cli/kits/manifests.ts';
 import { profileSchema, isRepositoryPath } from '#cli/policy/profiles/schema.ts';
-import { RAW_HOST, PROFILE_FILE, GITHUB_PREFIX, REQUEST_TIMEOUT_MS } from '#cli/constants/policy/profiles.ts';
+import { RAW_HOST, PROFILE_FILE, GITHUB_PREFIX, REQUEST_TIMEOUT_MS } from '#cli/config/policy/profiles.ts';
 
 function githubUrl(reference: string): string {
     const [location = '', ref = 'HEAD'] = reference.slice(GITHUB_PREFIX.length).split('@');

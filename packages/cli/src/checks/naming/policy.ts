@@ -1,10 +1,10 @@
+import type { Manifest } from '#cli/types/kits.ts';
 import { compact } from '#cli/policy/normalize.ts';
 import { readAsset } from '#cli/platform/assets.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
 import { compileTerms } from '#cli/checks/naming/match.ts';
-import type { Manifest } from '#cli/types/configurations.ts';
 import { policyTables, settingValue } from '#cli/policy/settings.ts';
-import { POLICY_ASSET, CATEGORY_PARENTS } from '#cli/constants/checks/naming.ts';
+import { POLICY_ASSET, CATEGORY_PARENTS } from '#cli/config/checks/naming.ts';
 import type { Policy, NamingRule, NamingSettings, ExposedSettings } from '#cli/types/policy/policy.ts';
 
 import type {

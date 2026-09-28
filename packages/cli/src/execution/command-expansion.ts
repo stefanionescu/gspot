@@ -1,9 +1,9 @@
 import { statSync } from 'node:fs';
 import { join, posix } from 'node:path';
 import { toPlatform } from '#cli/platform/paths.ts';
+import type { ConfigurationTarget } from '#cli/types/kits.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import type { ConfigurationTarget } from '#cli/types/configurations.ts';
-import { targetInScope, configurationName } from '#cli/configurations/targets.ts';
+import { targetInScope, configurationName } from '#cli/kits/targets.ts';
 
 import type {
     Session,
@@ -19,7 +19,7 @@ import {
     SETTING_PLACEHOLDER,
     EXISTING_PLACEHOLDER,
     COMMAND_CONFIG_PLACEHOLDER,
-} from '#cli/constants/execution/execution.ts';
+} from '#cli/config/execution/execution.ts';
 
 /**
  * Expands an each part, or returns undefined when the part is something else.

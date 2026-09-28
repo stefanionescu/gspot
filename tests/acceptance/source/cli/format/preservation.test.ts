@@ -10,7 +10,7 @@ import {
     EXPECTED,
     PRETTIER_CARRY_SOURCE,
     FORMAT_PRESERVATION_POLICY,
-} from '#tests/constants/acceptance/source/cli/cli.ts';
+} from '#tests/config/acceptance/source/cli/cli.ts';
 
 test.each([
     ['.prettierrc.json5', '{semi: false, tabWidth: 8,}\n'],

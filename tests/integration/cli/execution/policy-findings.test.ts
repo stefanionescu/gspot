@@ -6,7 +6,7 @@ import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
 import { rejection, textContaining } from '#tests/support/expectations.ts';
-import { BROKEN, CORRECTED, POLICY_FINDINGS_OPTIONS } from '#tests/constants/integration/cli/execution/execution.ts';
+import { BROKEN, CORRECTED, POLICY_FINDINGS_OPTIONS } from '#tests/config/integration/cli/execution/execution.ts';
 
 test('a wrong line in gspot.toml is a finding of integrity/policy, and the other checks still run', async () => {
     await using sandbox = await testdir();

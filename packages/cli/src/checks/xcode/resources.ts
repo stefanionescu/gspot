@@ -3,7 +3,7 @@ import { statSync } from 'node:fs';
 import { readSource } from '#cli/repository/tracked.ts';
 import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
 import type { StringsFile, AssetContents } from '#cli/types/checks/xcode.ts';
-import { NOT_WORD, IMAGE_SET, NAMED_SETS } from '#cli/constants/checks/xcode.ts';
+import { NOT_WORD, IMAGE_SET, NAMED_SETS } from '#cli/config/checks/xcode.ts';
 import { xcodeFinding, trackedEnding } from '#cli/checks/xcode/project/checks.ts';
 
 // The parsed JSON of a file, or the parse error under the key error.

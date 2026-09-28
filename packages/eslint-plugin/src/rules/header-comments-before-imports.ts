@@ -3,7 +3,7 @@ import { isDirective, isImportLike } from '#plugin/imports.ts';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
 import type { HeaderCommentsOptions } from '#plugin/types/rules.ts';
 import { AST_NODE_TYPES, AST_TOKEN_TYPES } from '@typescript-eslint/utils';
-import { BLANK, WHITESPACE, ATTACHED_DISTANCE, BLANK_LINE_DISTANCE } from '#plugin/constants/rules.ts';
+import { BLANK, WHITESPACE, ATTACHED_DISTANCE, BLANK_LINE_DISTANCE } from '#plugin/config/rules.ts';
 
 // Adjacent prose lines form one comment so fixes preserve their attachment and order.
 function commentBlocks(text: string, comments: TSESTree.Comment[]): TSESTree.Comment[] {

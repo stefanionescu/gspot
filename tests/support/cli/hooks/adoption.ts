@@ -4,8 +4,8 @@ import { run } from '#cli/platform/spawn.ts';
 import { chmodSync, readFileSync } from 'node:fs';
 import { applyCommand } from '#cli/commands/apply/command.ts';
 import { hookLocation } from '#cli/repository/hook-location.ts';
+import { VERSIONS } from '#tests/config/integration/tools/hooks.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
-import { VERSIONS } from '#tests/constants/integration/tools/hooks.ts';
 import type { PrepareHookAdoptionResult } from '#tests/types/results.ts';
 
 const NATIVE_INSTALL = {

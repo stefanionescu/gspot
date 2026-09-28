@@ -2,9 +2,9 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
 import { run as runProcess } from '#cli/platform/spawn.ts';
 import { containing } from '#tests/support/expectations.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
 import { installSemgrep } from '#tests/support/cli/tools.ts';
 
 import {
@@ -12,7 +12,7 @@ import {
     SCRIPTS,
     SWIFT_SECURITY_ARGS,
     SWIFT_SECURITY_FINDINGS,
-} from '#tests/constants/integration/tools/generation.ts';
+} from '#tests/config/integration/tools/generation.ts';
 
 const SWIFT =
     [

@@ -7,8 +7,8 @@ import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { script } from '#tests/support/cli/planted.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
 import { containing } from '#tests/support/expectations.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
 import { treeContents } from '#tests/support/cli/preservation.ts';
 
 const TOOLS = { PATH: toolsPath(['ast-grep', 'shellcheck', 'shfmt', 'typos']) };

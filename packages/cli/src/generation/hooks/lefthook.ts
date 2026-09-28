@@ -1,7 +1,7 @@
-import { RUNNER_EXEC } from '#cli/constants/generation.ts';
+import { RUNNER_EXEC } from '#cli/config/generation.ts';
 import { hookPrefix } from '#cli/generation/hooks/scripts.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import { HOOK_FILES } from '#cli/constants/repository/repository.ts';
+import { HOOK_FILES } from '#cli/config/repository/repository.ts';
 import type { HookName, ConfigurationOutput } from '#cli/types/generation.ts';
 /**
  * Preserve the gspot verdict before the native manager combines job results.

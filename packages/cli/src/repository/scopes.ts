@@ -7,13 +7,13 @@ import { relative } from 'node:path';
 import { parse as parseYaml } from 'yaml';
 import type { Package } from '@manypkg/tools';
 import { toPosix } from '#cli/platform/paths.ts';
+import type { Manifest } from '#cli/types/kits.ts';
 import { readdirSync, type Dirent } from 'node:fs';
 import { mutationPath } from '#cli/platform/safe-paths.ts';
-import type { Manifest } from '#cli/types/configurations.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { packageManifestSchema } from '#cli/repository/manifests.ts';
 import { PnpmTool, RushTool, YarnTool, LernaTool } from '@manypkg/tools';
-import { LINT_TOOL_PACKAGE_PREFIXES } from '#cli/constants/repository/patterns.ts';
+import { LINT_TOOL_PACKAGE_PREFIXES } from '#cli/config/repository/patterns.ts';
 import type { ScopeEntry, TrackedFile, ManifestFacts } from '#cli/types/repository/repository.ts';
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Three discoverers build a scope entry; one owner trims the path and names it.

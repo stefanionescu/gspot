@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { HOOK_FILES } from '#cli/constants/repository/repository.ts';
+import { HOOK_FILES } from '#cli/config/repository/repository.ts';
 
 /** The files gspot owns in the hooks directory for its stages: each hook, its original sibling, and its manager copy. */
 export const HOOK_ARTIFACTS: readonly string[] = HOOK_FILES.flatMap((hook) => [

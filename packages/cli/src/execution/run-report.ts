@@ -5,7 +5,7 @@ import { claimedInputs } from '#cli/execution/planning/plan.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
 import type { Finding, CheckResult } from '#cli/types/checks/checks.ts';
 import { suppressionComments } from '#cli/checks/repository/suppressions.ts';
-import { UNABLE_EXIT, POLICY_CHECK, RAN_STATUSES, FAILED_STATUSES } from '#cli/constants/execution/execution.ts';
+import { UNABLE_EXIT, POLICY_CHECK, RAN_STATUSES, FAILED_STATUSES } from '#cli/config/execution/execution.ts';
 
 import type {
     Session,

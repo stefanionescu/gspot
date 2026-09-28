@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { getTsconfig } from '#cli/repository/tsconfig.ts';
+import { DECORATOR_OPTIONS } from '#cli/config/checks/typescript.ts';
 import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
-import { DECORATOR_OPTIONS } from '#cli/constants/checks/typescript.ts';
 import { ALL_COMPILER_OPTIONS } from '#cli/checks/typescript/compiler-options.ts';
 
 /**

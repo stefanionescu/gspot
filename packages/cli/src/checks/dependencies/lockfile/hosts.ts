@@ -1,6 +1,6 @@
 import { readSource } from '#cli/repository/tracked.ts';
-import { LOCKFILES } from '#cli/constants/repository/repository.ts';
-import { LOCKFILE_URL } from '#cli/constants/checks/dependencies.ts';
+import { LOCKFILES } from '#cli/config/repository/repository.ts';
+import { LOCKFILE_URL } from '#cli/config/checks/dependencies.ts';
 import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
 
 function problem(url: URL, hosts: Set<string>): string | undefined {

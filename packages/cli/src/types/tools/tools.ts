@@ -1,7 +1,7 @@
 // The types of tools in this package.
+import type { ToolPin, Manifest } from '#cli/types/kits.ts';
 import type { PolicyFiles } from '#cli/types/policy/policy.ts';
 import type { Session } from '#cli/types/execution/execution.ts';
-import type { ToolPin, Manifest } from '#cli/types/configurations.ts';
 
 export type ToolState = 'ok' | 'outdated' | 'newer' | 'missing' | 'host' | 'error';
 export type Inspected = { root: string; cwd: string; tool: ToolPin; path: string; hint: string };

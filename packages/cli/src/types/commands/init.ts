@@ -3,13 +3,8 @@ import type { Profile } from '#cli/types/policy/profiles.ts';
 import type { FileObservation } from '#cli/types/platform.ts';
 import type { Policy, RawPolicy } from '#cli/types/policy/policy.ts';
 import type { AdoptionResult, AdoptedFormatting } from '#cli/types/policy/adoption.ts';
+import type { Manifest, SettingSpec, UnknownLanguage, ConfigurationEvidence as Proposal } from '#cli/types/kits.ts';
 
-import type {
-    Manifest,
-    SettingSpec,
-    UnknownLanguage,
-    ConfigurationEvidence as Proposal,
-} from '#cli/types/configurations.ts';
 import type {
     TomlTable,
     Repository,

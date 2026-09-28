@@ -6,8 +6,8 @@ import { git } from '#tests/support/cli/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { script } from '#tests/support/cli/planted.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
 import { run, gspot } from '#tests/support/cli/command.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
 
 // A fresh clone installs immutable tools and rejects then accepts a real staged commit.
 async function expectCloneHooks(source: string, environment: Record<string, string>): Promise<void> {

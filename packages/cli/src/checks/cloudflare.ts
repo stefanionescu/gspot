@@ -14,7 +14,7 @@ import {
     REDIRECT_PARTS,
     HTTP_HEADER_LINE,
     COMPATIBILITY_DATE,
-} from '#cli/constants/checks/checks.ts';
+} from '#cli/config/checks/checks.ts';
 
 function named(input: EngineInput, name: string): string[] {
     return input.files

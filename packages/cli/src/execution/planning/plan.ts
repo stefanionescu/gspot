@@ -1,14 +1,14 @@
 // The check graph for a run: stage, scope, file sets, requirements, skips.
 import { toolPin } from '#cli/tools/inspect.ts';
-import { SelectionError } from '#cli/configurations/select.ts';
-import { claimedByClaims } from '#cli/configurations/claims.ts';
+import { SelectionError } from '#cli/kits/select.ts';
+import { claimedByClaims } from '#cli/kits/claims.ts';
 import type { ScopeSelection } from '#cli/types/policy/policy.ts';
 import { prettierInputs } from '#cli/execution/prettier-inputs.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
 import { checkState, repositoryCheckSpec } from '#cli/policy/check-state.ts';
+import type { Stage, ToolPin, Manifest, CheckSpec } from '#cli/types/kits.ts';
 import { skipFor, restrictIgnoredPaths } from '#cli/execution/planning/skips.ts';
-import type { Stage, ToolPin, Manifest, CheckSpec } from '#cli/types/configurations.ts';
-import { PLATFORM_NAMES, HISTORY_ANALYSES } from '#cli/constants/execution/execution.ts';
+import { PLATFORM_NAMES, HISTORY_ANALYSES } from '#cli/config/execution/execution.ts';
 import { filesFor, childScopes, isOutsideChildren, isRepositoryPolicy } from '#cli/execution/planning/files.ts';
 
 import type {

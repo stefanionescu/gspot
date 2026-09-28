@@ -6,9 +6,9 @@ import { join, dirname, delimiter } from 'node:path';
 import { openSession } from '#cli/execution/session.ts';
 import { privateToolInstallation } from '#cli/tools/pins.ts';
 import { toolPin, inspectTool } from '#cli/tools/inspect.ts';
+import { configurationManifests } from '#cli/kits/manifests.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { installPythonProject, preparePythonProject } from '#cli/tools/python-project.ts';
 
 const root = fileURLToPath(new URL('../../..', import.meta.url));

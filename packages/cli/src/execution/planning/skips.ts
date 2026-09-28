@@ -2,7 +2,7 @@
 import { missingBuild } from '#cli/tools/platforms.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
 import { waitingSetting } from '#cli/policy/check-state.ts';
-import type { ToolPin, CheckSpec } from '#cli/types/configurations.ts';
+import type { ToolPin, CheckSpec } from '#cli/types/kits.ts';
 import type { Host, Skip, RuleSkip, PlanOptions, PlannedCheck } from '#cli/types/execution/execution.ts';
 
 // The rules a check declares about where it runs, each with the sentence that says why it was skipped.

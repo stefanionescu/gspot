@@ -1,10 +1,10 @@
 import { join } from 'node:path';
 import { createFileTree } from 'testdirs';
+import { everyManifest } from '#cli/kits/select.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
+import { gitignoreBlock } from '#cli/kits/manifests.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { miseTasks } from '#cli/generation/runner/tasks.ts';
-import { everyManifest } from '#cli/configurations/select.ts';
-import { gitignoreBlock } from '#cli/configurations/manifests.ts';
 import { preparePythonProject } from '#cli/tools/python-project.ts';
 import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import { toolEnvironment } from '#cli/generation/tools/environment.ts';

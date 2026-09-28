@@ -3,7 +3,7 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { textContaining } from '#tests/support/expectations.ts';
 import { generatedEslint } from '#tests/support/cli/generated/eslint.ts';
-import { VITEST_FILES } from '#tests/constants/integration/cli/generation/plugin-levels.ts';
+import { VITEST_FILES } from '#tests/config/integration/cli/generation/plugin-levels.ts';
 
 async function ruleReports(eslint: ESLint, file: string, rule: string): Promise<{ message: string }[]> {
     const results = await eslint.lintFiles([file]);

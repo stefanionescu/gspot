@@ -1,8 +1,8 @@
 import { readSource } from '#cli/repository/tracked.ts';
+import { IDENTIFIER } from '#cli/config/checks/structure.ts';
 import type { EngineInput } from '#cli/types/checks/checks.ts';
-import { IDENTIFIER } from '#cli/constants/checks/structure.ts';
+import { TOP_LEVEL_ASSIGNMENT } from '#cli/config/checks/script.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
-import { TOP_LEVEL_ASSIGNMENT } from '#cli/constants/checks/script.ts';
 import { functionAt, scriptFunctions } from '#cli/checks/structure/parser.ts';
 import { withoutComment, withoutDeclaration } from '#cli/checks/structure/code-lines.ts';
 import type { ScriptFile, ScriptIndex, ScriptFunction } from '#cli/types/checks/structure.ts';

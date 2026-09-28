@@ -2,7 +2,7 @@ import { hasCase } from '#cli/checks/naming/cases.ts';
 import { rulesFor, limitsUnderRules } from '#cli/checks/naming/policy.ts';
 import { wordsOf, splitParts, repeatedPart } from '#cli/checks/naming/split.ts';
 import { isExempt, bannedTerm, isReservedUseAllowed } from '#cli/checks/naming/match.ts';
-import { DIGIT, TEST_GROUP, CALLBACK_VERB, VERB_CATEGORIES } from '#cli/constants/checks/naming.ts';
+import { DIGIT, TEST_GROUP, CALLBACK_VERB, VERB_CATEGORIES } from '#cli/config/checks/naming.ts';
 
 import type {
     PathRule,

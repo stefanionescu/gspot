@@ -6,7 +6,7 @@ import { existsSync, unlinkSync, symlinkSync, readFileSync } from 'node:fs';
 
 test('the Bash port example accepts decimal values and rejects syntax and range errors', async () => {
     const source = readFileSync(
-        new URL('../../../../packages/cli/rules/language/bash/LANGUAGE.md', import.meta.url),
+        new URL('../../../../packages/cli/guides/language/bash/LANGUAGE.md', import.meta.url),
         'utf8',
     );
     const snippet = [...source.matchAll(/```bash\n([\s\S]*?)```/gu)]
@@ -34,7 +34,7 @@ test('the Bash port example accepts decimal values and rejects syntax and range 
 
 test('the Bash deletion example confines removal to an approved direct build directory', async () => {
     const source = readFileSync(
-        new URL('../../../../packages/cli/rules/language/bash/SAFETY.md', import.meta.url),
+        new URL('../../../../packages/cli/guides/language/bash/SAFETY.md', import.meta.url),
         'utf8',
     );
     const snippet = [...source.matchAll(/```bash\n([\s\S]*?)```/gu)]

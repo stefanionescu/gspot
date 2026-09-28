@@ -4,7 +4,7 @@ import { stripVTControlCharacters } from 'node:util';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import { scratchCopy } from '#cli/execution/files/workspace.ts';
 import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
-import { TSC_LINE, CAUSE_MARKS, SHOWN_LINES } from '#cli/constants/checks/nextjs.ts';
+import { TSC_LINE, CAUSE_MARKS, SHOWN_LINES } from '#cli/config/checks/nextjs.ts';
 
 // The marked line and the one after it.
 const MARKED_LINES = 2;

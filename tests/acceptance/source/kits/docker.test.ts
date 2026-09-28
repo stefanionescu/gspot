@@ -1,0 +1,87 @@
+// Planted repository for the docker configuration: a careless Dockerfile, a missing ignore file, and a container that runs as root.
+import { join } from 'node:path';
+import { test, expect, describe } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
+import { run } from '#tests/support/cli/command.ts';
+import { commitAll } from '#tests/support/cli/git.ts';
+import type { FindingCase } from '#tests/types/cli.ts';
+import { reportSchema } from '#cli/execution/report.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
+import { runPlanted } from '#tests/support/cli/planted.ts';
+import { toolsPath, installAtLevel } from '#tests/support/cli/tools.ts';
+import { containing, textContaining } from '#tests/support/expectations.ts';
+import { DOCKER_INIT } from '#tests/config/acceptance/source/kits/init-arguments.ts';
+import { IGNORES, CARELESS, DOCKER_CLEAN } from '#tests/config/acceptance/source/kits/kits.ts';
+
+const CASES: FindingCase[] = [
+    {
+        check: 'docker/compose-config',
+        files: { 'api/compose.yml': 'services:\n    api:\n        image: example/image\n        bogus: true\n' },
+        expected: { file: 'api/compose.yml', message: textContaining('bogus') },
+    },
+    {
+        check: 'docker/hadolint',
+        files: { 'api/Dockerfile': CARELESS },
+        expected: { file: 'api/Dockerfile', rule: 'DL3007', line: 1 },
+    },
+    {
+        check: 'docker/dockerignore',
+        files: { 'worker/Dockerfile': DOCKER_CLEAN },
+        expected: { file: 'worker/Dockerfile', rule: 'missing', line: 1 },
+    },
+    {
+        check: 'docker/dockerignore',
+        files: { 'api/.dockerignore': '.git\n' },
+        expected: { file: 'api/.dockerignore', rule: 'entries', line: 1 },
+    },
+    {
+        check: 'docker/trivy-config',
+        files: { 'api/Dockerfile': CARELESS },
+        expected: { file: 'api/Dockerfile', rule: 'DS-0002' },
+    },
+];
+
+describe('the docker configuration', () => {
+    test.each(CASES)(
+        '$check reports its defect in $expected.file and accepts corrected configuration',
+        async (planted) => {
+            await using sandbox = await testdir();
+            await createFileTree(sandbox.path, {
+                'api/Dockerfile': DOCKER_CLEAN,
+                'api/.dockerignore': IGNORES,
+                'api/compose.yml': 'services:\n    api:\n        build: .\n        env_file: .env\n',
+                'api/package.json': '{\n    "name": "planted",\n    "private": true\n}\n',
+            });
+            commitAll(sandbox.path);
+            const environment = { PATH: toolsPath(['hadolint', 'trivy', 'typos', 'ec', 'taplo', 'yamllint']) };
+            await installAtLevel(sandbox.path, DOCKER_INIT, environment);
+            const outcome = await runPlanted(sandbox.path, planted, environment);
+            expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
+            const failed = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
+            expect(failed.checks).toMatchObject([{ check: planted.check, status: 'fail' }]);
+            expect(failed.checks[0]!.findings).toContainEqual(containing(planted.expected));
+            if (planted.expected.file === 'worker/Dockerfile')
+                await createFileTree(sandbox.path, {
+                    'worker/Dockerfile': DOCKER_CLEAN,
+                    'worker/.dockerignore': IGNORES,
+                });
+            const correctedCheck = await run(
+                sandbox.path,
+                ['check', '--only', planted.check, '--no-cache', '--json'],
+                environment,
+            );
+            expect(correctedCheck.code, correctedCheck.stdout + correctedCheck.stderr).toBe(0);
+            expect(reportSchema.parse(JSON.parse(correctedCheck.stdout)).checks).toMatchObject([
+                { check: planted.check, status: 'ok', findings: [] },
+            ]);
+            const checked = await run(sandbox.path, ['check', '--stage', 'push', '--json'], environment);
+            const atPush = JSON.parse(checked.stdout) as {
+                checks: { check: string }[];
+            };
+            const ids = atPush.checks.map((check) => check.check);
+            expect(ids).toContain('docker/compose-config');
+            expect(ids).not.toContain('docker/trivy-image');
+        },
+        PLANTED_TIMEOUT_MS * 4,
+    );
+});

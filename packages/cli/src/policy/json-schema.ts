@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { SchemaNode } from '#cli/types/policy/policy.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { configurationManifests } from '#cli/kits/manifests.ts';
 import { policySchema, settingValueSchemas } from '#cli/policy/schema.ts';
 
 function childrenAt(node: SchemaNode, segment: string | number): SchemaNode[] {

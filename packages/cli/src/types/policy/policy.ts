@@ -2,8 +2,8 @@
 import type { z } from 'zod';
 import type { parseDocument } from '@decimalturn/toml-patch';
 import type { runnerTasksSchema } from '#cli/policy/runner.ts';
+import type { Manifest, SettingSpec } from '#cli/types/kits.ts';
 import type { scopeSchema, policySchema } from '#cli/policy/schema.ts';
-import type { Manifest, SettingSpec } from '#cli/types/configurations.ts';
 import type { TomlTable, ScopeEntry } from '#cli/types/repository/repository.ts';
 
 export type PolicyFiles = {
@@ -138,7 +138,7 @@ export type ArchitectureElement = { name: string; paths: string[] };
 export type ArchitectureAllow = { from: string; to: string[]; reason?: string };
 export type ArchitectureSettings = {
     types_directory?: string;
-    constants_directory?: string;
+    config_directory?: string;
     elements: ArchitectureElement[];
     edges_allowed: ArchitectureAllow[];
     roles: Record<string, string | string[]>;

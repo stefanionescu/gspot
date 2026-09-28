@@ -6,9 +6,9 @@ import { locateTool } from '#cli/tools/inspect.ts';
 import type { ConfinedRoot } from '#cli/types/platform.ts';
 import { join, dirname, basename, relative } from 'node:path';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import { PRIVATE_FILE, READ_ONLY_FILE } from '#cli/constants/platform.ts';
+import { VALE_CONFIG, STYLES_DIRECTORY } from '#cli/config/kits.ts';
+import { PRIVATE_FILE, READ_ONLY_FILE } from '#cli/config/platform.ts';
 import { isValePackageFile } from '#cli/repository/file-classification.ts';
-import { VALE_CONFIG, STYLES_DIRECTORY } from '#cli/constants/configurations.ts';
 import { readOwnership, runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import { rmSync, mkdirSync, mkdtempSync, readdirSync, writeFileSync } from 'node:fs';
 

@@ -28,13 +28,13 @@ describe('build script arguments', () => {
                     'packages/cli/src/platform/environment.ts',
                     'packages/cli/src/repository/hooks.ts',
                     'packages/cli/src/types/platform.ts',
-                    'packages/cli/src/constants/platform.ts',
-                    'packages/cli/src/constants/repository/repository.ts',
+                    'packages/cli/src/config/platform.ts',
+                    'packages/cli/src/config/repository/repository.ts',
                     'packages/cli/scripts/inputs.ts',
                 ].map((path) => [path, readFileSync(join(ROOT, path), 'utf8')]),
             ),
             'packages/cli/.build/entry.ts': '// existing entry\n',
-            'packages/cli/configurations/fixture.txt': 'asset fixture\n',
+            'packages/cli/kits/fixture.txt': 'asset fixture\n',
             'dist/gspot-linux-arm64': 'existing binary',
         });
         symlinkSync(join(ROOT, 'packages/cli/.build/swift.wasm'), join(sandbox.path, 'packages/cli/.build/swift.wasm'));

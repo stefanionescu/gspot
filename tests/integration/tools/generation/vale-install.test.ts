@@ -4,8 +4,8 @@ import { run } from '#cli/platform/spawn.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { parseAlerts } from '#cli/checks/prose/vale.ts';
 import { containing } from '#tests/support/expectations.ts';
+import { configurationManifests } from '#cli/kits/manifests.ts';
 import { installPackages, hasOwnedPackages } from '#cli/tools/vale.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { readOwnership, openLifecycleOwner } from '#cli/lifecycle/ownership/owner.ts';
 

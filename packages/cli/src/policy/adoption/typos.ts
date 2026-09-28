@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { posix } from 'node:path';
 import { policySchema } from '#cli/policy/schema.ts';
-import { COMMENT_MARK } from '#cli/constants/policy/adoption.ts';
+import { COMMENT_MARK } from '#cli/config/policy/adoption.ts';
 import type { TomlTable } from '#cli/types/repository/repository.ts';
 import { asRaw, asText, asStrings } from '#cli/policy/adoption/source.ts';
 import { reasonFor, adoptedTool, adoptedScope } from '#cli/policy/adoption/results.ts';

@@ -1,9 +1,9 @@
 import { tmpdir } from 'node:os';
 import { join, relative } from 'node:path';
+import { SelectionError } from '#cli/kits/select.ts';
 import { run, runBinary } from '#cli/platform/spawn.ts';
 import type { ConfinedRoot } from '#cli/types/platform.ts';
 import { rmSync, mkdtempSync, realpathSync } from 'node:fs';
-import { SelectionError } from '#cli/configurations/select.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import type { SourceObservations } from '#cli/types/repository/repository.ts';
 import type { GitEntry, RevisionSource } from '#cli/types/repository/revisions.ts';
@@ -15,7 +15,7 @@ import {
     ENTRY_MODES,
     EXECUTABLE_MODE,
     MATERIALIZATION_BATCH_SIZE,
-} from '#cli/constants/repository/revisions.ts';
+} from '#cli/config/repository/revisions.ts';
 
 // A frame ends its header line and its blob with a newline each.
 const FRAME_NEWLINES = 2;

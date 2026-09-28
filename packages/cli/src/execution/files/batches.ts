@@ -4,7 +4,7 @@ import {
     WINDOWS_COMMAND_LIMIT,
     WINDOWS_ESCAPE_EXPANSION,
     WINDOWS_ARGUMENT_OVERHEAD,
-} from '#cli/constants/execution/execution.ts';
+} from '#cli/config/execution/execution.ts';
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Its callers sit at the complexity or length limit; inlining the expression pushes them over.
 function argumentSize(argument: string, platform: NodeJS.Platform): number {

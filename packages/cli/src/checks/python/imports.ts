@@ -2,7 +2,7 @@ import type { Node } from 'web-tree-sitter';
 import { assignmentOf } from '#cli/checks/python/modules.ts';
 import type { PythonModule } from '#cli/types/checks/python.ts';
 import type { StructureProblem } from '#cli/types/checks/structure.ts';
-import { IMPORTS, DIRECTIVE, CLASS_CALL, SINGLETONS_ALLOWED } from '#cli/constants/checks/python.ts';
+import { IMPORTS, DIRECTIVE, CLASS_CALL, SINGLETONS_ALLOWED } from '#cli/config/checks/python.ts';
 
 // The module a from-import starts at: an absolute name, or a relative one counted up from the current module.
 function sourceModule(source: Node, current: string): string {

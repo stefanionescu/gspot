@@ -6,7 +6,7 @@ import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
 import { openBuildCache, prepareBuildSources } from '#cli/checks/swift/cache.ts';
 import type { SwiftBuildPlan, SwiftBuildOutput } from '#cli/types/checks/swift.ts';
-import { DIAGNOSTIC, RULE_SUFFIX, RESPONSE_FILE, PRIVATE_PREFIX } from '#cli/constants/checks/swift.ts';
+import { DIAGNOSTIC, RULE_SUFFIX, RESPONSE_FILE, PRIVATE_PREFIX } from '#cli/config/checks/swift.ts';
 
 const builds = new WeakMap<object, Map<string, Promise<SwiftBuildOutput>>>();
 

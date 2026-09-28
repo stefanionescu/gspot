@@ -1,8 +1,8 @@
 // Staged files for the commit stage, and the honest note about unstaged changes.
 import { run } from '#cli/platform/spawn.ts';
-import { SelectionError } from '#cli/configurations/select.ts';
-import { GIT_TIMEOUT_MS } from '#cli/constants/checks/secrets.ts';
-import { CHANGED_PATHS } from '#cli/constants/repository/revisions.ts';
+import { SelectionError } from '#cli/kits/select.ts';
+import { GIT_TIMEOUT_MS } from '#cli/config/checks/secrets.ts';
+import { CHANGED_PATHS } from '#cli/config/repository/revisions.ts';
 import type { StagedSet, ChangedSet } from '#cli/types/repository/revisions.ts';
 import { gitLines, gitPaths, gitValue, isShallow } from '#cli/repository/revisions/git-queries.ts';
 

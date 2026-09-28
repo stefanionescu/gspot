@@ -7,7 +7,7 @@ import { hookLocation } from '#cli/repository/hook-location.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import type { PrepareLefthookResult } from '#tests/types/results.ts';
 import { chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
-import { LEFTHOOK_PUSH_ARGS } from '#tests/constants/integration/tools/hooks.ts';
+import { LEFTHOOK_PUSH_ARGS } from '#tests/config/integration/tools/hooks.ts';
 
 /** Prepares authored Lefthook configuration and existing Git hooks for native installation. */
 export async function prepareLefthook(root: string, existing: string): Promise<PrepareLefthookResult> {

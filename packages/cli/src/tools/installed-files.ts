@@ -3,7 +3,7 @@ import type { FileObservation } from '#cli/types/platform.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import type { LifecycleOwner } from '#cli/types/lifecycle/lifecycle.ts';
 import { sep, join, posix, dirname, basename, relative } from 'node:path';
-import { MODE_BITS, NODE_MODULES_DIRECTORY, PYTHON_ENVIRONMENT_DIRECTORY } from '#cli/constants/platform.ts';
+import { MODE_BITS, NODE_MODULES_DIRECTORY, PYTHON_ENVIRONMENT_DIRECTORY } from '#cli/config/platform.ts';
 
 import {
     openSync,

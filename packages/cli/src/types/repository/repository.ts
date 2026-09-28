@@ -1,8 +1,8 @@
 // The types of repository in this package.
 import type { z } from 'zod';
 import type { Ignore } from 'ignore';
+import type { ToolPin } from '#cli/types/kits.ts';
 import type { Policy } from '#cli/types/policy/policy.ts';
-import type { ToolPin } from '#cli/types/configurations.ts';
 import type { packageManifestSchema } from '#cli/repository/manifests.ts';
 
 export type ScopeEntry = {

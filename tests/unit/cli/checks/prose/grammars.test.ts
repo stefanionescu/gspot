@@ -1,5 +1,5 @@
+import { PROSE_FORMATS } from '#cli/kits/vale.ts';
 import { test, expect, describe } from 'bun:test';
-import { PROSE_FORMATS } from '#cli/configurations/vale.ts';
 import { routeFor, routeGroups } from '#cli/checks/prose/grammars.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
 

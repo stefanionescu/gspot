@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { join, dirname } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import { sameEntry } from '#cli/platform/safe-paths.ts';
-import { PRIVATE_FILE, OWNER_WRITE_BIT } from '#cli/constants/platform.ts';
+import { PRIVATE_FILE, OWNER_WRITE_BIT } from '#cli/config/platform.ts';
 import type { Staging, Confinement, FileObservation } from '#cli/types/platform.ts';
 import { readEntry, parentPath, validateObservation } from '#cli/platform/confined/reads.ts';
 

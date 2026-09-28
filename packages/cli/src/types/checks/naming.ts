@@ -31,7 +31,7 @@ export type NameProblem = {
 };
 /** What the engine needs to check a file's identifiers: the policy and the language the file belongs to. */
 export type NamingContext = { policy: EffectivePolicy; isReactFile: boolean; isTestFile: boolean };
-/** The shipped policy file, packages/cli/configurations/policy/naming/policy.json. */
+/** The shipped policy file, packages/cli/kits/general/naming/policy.json. */
 export type ShippedPolicy = {
     version: number;
     matching: { wholeParts: boolean; caseInsensitive: boolean };

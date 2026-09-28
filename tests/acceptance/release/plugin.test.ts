@@ -1,11 +1,11 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { fileURLToPath } from 'node:url';
-import { RELEASE_TIMEOUT_MS } from '#tests/constants/release.ts';
+import { RELEASE_TIMEOUT_MS } from '#tests/config/release.ts';
 import pluginPackage from '#plugin-package' with { type: 'json' };
 import { runProcess as run } from '#tests/support/cli/command.ts';
 import { startRegistry } from '#tests/support/registry/lifecycle.ts';
-import { CONSUMER, DECLARATIONS } from '#tests/constants/acceptance/release.ts';
+import { CONSUMER, DECLARATIONS } from '#tests/config/acceptance/release.ts';
 import { lstatSync, mkdirSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 
 const root = fileURLToPath(new URL('../../..', import.meta.url));

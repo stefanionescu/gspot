@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawn } from 'node:child_process';
 import type { SpawnOutcome } from '#tests/types/cli.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 
 const root = fileURLToPath(new URL('../../..', import.meta.url));

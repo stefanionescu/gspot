@@ -4,7 +4,7 @@ import { posix } from 'node:path';
 import { compact } from '#cli/policy/normalize.ts';
 import type { ConfinedRoot } from '#cli/types/platform.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import { SCHEME_SUFFIX, PERIPHERY_FILE, PROJECT_SUFFIX } from '#cli/constants/commands/init.ts';
+import { SCHEME_SUFFIX, PERIPHERY_FILE, PROJECT_SUFFIX } from '#cli/config/commands/init.ts';
 
 const peripherySchema = z.object({ schemes: z.array(z.string().min(1)).optional() });
 

@@ -3,7 +3,7 @@ import { readSource } from '#cli/repository/tracked.ts';
 import { sqlFile } from '#cli/parsers/sql/statements.ts';
 import type { EngineInput } from '#cli/types/checks/checks.ts';
 import type { Migration } from '#cli/types/checks/postgres.ts';
-import { MIGRATION_FOLDERS, MIGRATION_VERSION } from '#cli/constants/checks/postgres.ts';
+import { MIGRATION_FOLDERS, MIGRATION_VERSION } from '#cli/config/checks/postgres.ts';
 
 const observations = new WeakMap<object, Map<string, Promise<Migration[]>>>();
 

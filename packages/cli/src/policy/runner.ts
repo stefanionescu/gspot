@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { PACKAGE_LIFECYCLE } from '#cli/constants/policy/policy.ts';
+import { PACKAGE_LIFECYCLE } from '#cli/config/policy/policy.ts';
 
 const taskName = z
     .string()

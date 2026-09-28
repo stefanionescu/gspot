@@ -1,9 +1,9 @@
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { eslintCoverageResponse } from '#cli/evaluation/protocol.ts';
 import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
+import { ESLINT_RULE_LEVELS } from '#cli/config/checks/eslint-levels.ts';
 import { evaluateConfiguration } from '#cli/evaluation/configuration.ts';
-import { ESLINT_RULE_LEVELS } from '#cli/constants/checks/eslint-levels.ts';
-import { ESLINT_FILE, LINT_CHECKS } from '#cli/constants/checks/typescript.ts';
+import { ESLINT_FILE, LINT_CHECKS } from '#cli/config/checks/typescript.ts';
 
 // The rules the selected configurations require, for each file ending they name.
 function requiredByEnding(input: EngineInput): Map<string, Set<string>> {

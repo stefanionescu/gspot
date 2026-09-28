@@ -14,8 +14,8 @@ import { registerUninstall } from '#cli/commands/uninstall.ts';
 import { installCompletion } from '#cli/commands/completion.ts';
 import { registerDoctor } from '#cli/commands/doctor/command.ts';
 import { registerExplain } from '#cli/commands/explain/command.ts';
-import { ERROR_EXIT, HELP_CODES } from '#cli/constants/commands/commands.ts';
-import { registerAdd, registerRemove } from '#cli/commands/configurations.ts';
+import { registerAdd, registerRemove } from '#cli/commands/kits.ts';
+import { ERROR_EXIT, HELP_CODES } from '#cli/config/commands/commands.ts';
 import { fail, isColorAllowed, configureOutput } from '#cli/output/messages.ts';
 
 const { version: GSPOT_VERSION } = packageManifest;

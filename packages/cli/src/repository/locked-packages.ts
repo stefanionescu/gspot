@@ -4,7 +4,7 @@ import { parseSyml } from '@yarnpkg/parsers';
 import { parse as parseToml } from 'smol-toml';
 import { parseJsonc } from '#cli/repository/jsonc.ts';
 import { normalizedPythonPackage } from '#cli/repository/manifests.ts';
-import { LOCKFILE_VERSIONS } from '#cli/constants/repository/repository.ts';
+import { LOCKFILE_VERSIONS } from '#cli/config/repository/repository.ts';
 
 const PACKAGE = z.object({ name: z.string().min(1), version: z.string().min(1) });
 const VERSION = z.object({ version: z.string().optional(), name: z.string().optional() });

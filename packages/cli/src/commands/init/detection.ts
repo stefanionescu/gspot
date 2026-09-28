@@ -1,6 +1,6 @@
 // The header init prints: what it found in the repository, one row per kind.
 import type { DetectionSummary } from '#cli/types/commands/init.ts';
-import { GAP_WIDTH, KIND_ROWS, DETECTION_LABEL_WIDTH } from '#cli/constants/commands/init.ts';
+import { GAP_WIDTH, KIND_ROWS, DETECTION_LABEL_WIDTH } from '#cli/config/commands/init.ts';
 
 const GAP = ' '.repeat(GAP_WIDTH);
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Ten detection rows share this shape; one owner keeps the column layout.

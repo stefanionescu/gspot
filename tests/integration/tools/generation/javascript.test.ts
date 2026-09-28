@@ -8,7 +8,7 @@ import { toolsPath } from '#tests/support/cli/tools.ts';
 import { statSync, chmodSync, existsSync } from 'node:fs';
 import { containing } from '#tests/support/expectations.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
-import { JAVASCRIPT_AUTHORED_FILES } from '#tests/constants/integration/tools/generation.ts';
+import { JAVASCRIPT_AUTHORED_FILES } from '#tests/config/integration/tools/generation.ts';
 
 test.each(['recommended', 'all'])('JavaScript checking includes authored build directories at %s', async (level) => {
     await using sandbox = await testdir();

@@ -5,7 +5,7 @@ import {
     HASH_BLOCK_START,
     MANAGED_BLOCK_END,
     MANAGED_BLOCK_START,
-} from '#cli/constants/lifecycle/lifecycle.ts';
+} from '#cli/config/lifecycle/lifecycle.ts';
 
 const MARKERS: Record<BlockStyle, { start: string; end: string }> = {
     markdown: { start: MANAGED_BLOCK_START, end: MANAGED_BLOCK_END },

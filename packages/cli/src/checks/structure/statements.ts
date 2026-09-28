@@ -9,7 +9,7 @@ import {
     TYPE_ALIASES,
     CONTAINER_NOISE,
     TYPE_REFERENCES,
-} from '#cli/constants/checks/structure.ts';
+} from '#cli/config/checks/structure.ts';
 
 // Whether a Bash node is one executable command or statement.
 function isBashStatement(node: Node): boolean {

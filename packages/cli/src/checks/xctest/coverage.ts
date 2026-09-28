@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { join } from 'node:path';
-import { PERCENT } from '#cli/constants/checks/xctest.ts';
+import { PERCENT } from '#cli/config/checks/xctest.ts';
 import type { ConfinedRoot } from '#cli/types/platform.ts';
 import { swiftBuildPlan } from '#cli/checks/swift/plan.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';

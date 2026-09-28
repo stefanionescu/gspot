@@ -7,8 +7,8 @@ import { commitAll } from '#tests/support/cli/git.ts';
 import { script } from '#tests/support/cli/planted.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
-import { ENTRY } from '#tests/constants/acceptance/source/cli/checks.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
+import { ENTRY } from '#tests/config/acceptance/source/cli/checks.ts';
 
 test('a [[check]] entry > reruns a repository check when an input outside its selected paths changes', async () => {
     const command = [process.execPath, '-e', "process.exit((await Bun.file('state.txt').text()) === 'valid' ? 0 : 1)"];

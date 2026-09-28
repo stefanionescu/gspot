@@ -2,7 +2,7 @@
 import { sep, join } from 'node:path';
 import { realpathSync } from 'node:fs';
 import { cacheHome } from '#cli/platform/environment.ts';
-import { DECLARATION_EXTENSIONS } from '#cli/constants/platform.ts';
+import { DECLARATION_EXTENSIONS } from '#cli/config/platform.ts';
 
 /**
  * Forward slashes on every platform, for selectors, records, and output.

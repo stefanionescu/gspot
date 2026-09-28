@@ -1,20 +1,20 @@
 // Running the package manager over the tool project in a scratch directory, with credentials kept out of its lock.
 import semver from 'semver';
 import { join } from 'node:path';
-import { SETUP } from '#cli/constants/tools/tools.ts';
+import type { ToolPin } from '#cli/types/kits.ts';
+import { SETUP } from '#cli/config/tools/tools.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { InstallationError } from '#cli/tools/pins.ts';
+import { PRIVATE_FILE } from '#cli/config/platform.ts';
 import { runToolCommand } from '#cli/tools/command.ts';
-import { PRIVATE_FILE } from '#cli/constants/platform.ts';
 import { yarnSettings } from '#cli/tools/packages/yarn.ts';
-import type { ToolPin } from '#cli/types/configurations.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { acquisitionNote } from '#cli/tools/packages/acquisition.ts';
 import { packageEnvironment } from '#cli/tools/packages/environment.ts';
 import { portableBunLock, relativeYarnLock } from '#cli/tools/packages/locks.ts';
 import type { PackageTool, PackageExecution } from '#cli/types/tools/packages.ts';
 import { MissingToolError, toolVersionState, observeToolVersion } from '#cli/tools/inspect.ts';
-import { LOCKS, CREDENTIAL_KEY, YARN_BERRY_MAJOR, NPM_SETTING_PREFIX } from '#cli/constants/tools/packages.ts';
+import { LOCKS, CREDENTIAL_KEY, YARN_BERRY_MAJOR, NPM_SETTING_PREFIX } from '#cli/config/tools/packages.ts';
 
 // The resolve or install command of each manager that has one form, by whether the lock is frozen.
 const COMMANDS: Record<Exclude<PackageTool['name'], 'yarn'>, (frozen: boolean) => string[]> = {

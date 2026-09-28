@@ -6,7 +6,7 @@ import { runBlocking } from '#cli/platform/spawn.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
 import type { SpawnResult } from '#cli/types/platform.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import { LIFECYCLE_PRIVATE_PATH } from '#cli/constants/platform.ts';
+import { LIFECYCLE_PRIVATE_PATH } from '#cli/config/platform.ts';
 import type { RawEntry, PathIgnore, SourceObservations } from '#cli/types/repository/repository.ts';
 import { openSync, readSync, statSync, closeSync, lstatSync, readdirSync, readFileSync } from 'node:fs';
 
@@ -15,7 +15,7 @@ import {
     NATURE_HEAD_BYTES,
     DEPENDENCY_FOLDERS,
     NOT_REPOSITORY_CODE,
-} from '#cli/constants/repository/repository.ts';
+} from '#cli/config/repository/repository.ts';
 
 function symlinkEntry(root: string, path: string): RawEntry | undefined {
     const files = openConfinedRoot(root, 'native');

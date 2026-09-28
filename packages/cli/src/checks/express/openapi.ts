@@ -2,11 +2,11 @@ import { join } from 'node:path';
 import { rm } from 'node:fs/promises';
 import { asText } from '#cli/policy/adoption/source.ts';
 import { readSource } from '#cli/repository/tracked.ts';
+import { SPECTRAL_LINE } from '#cli/config/checks/express.ts';
 import { commandArguments } from '#cli/platform/arguments.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import { scratchCopy } from '#cli/execution/files/workspace.ts';
-import { SPECTRAL_LINE } from '#cli/constants/checks/express.ts';
 import { toolOutputDetail } from '#cli/execution/broken-tool.ts';
 import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
 

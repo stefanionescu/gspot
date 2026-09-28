@@ -6,8 +6,8 @@ import { inspectTool } from '#cli/tools/inspect.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
 import { gspot as CLI } from '#tests/support/cli/command.ts';
+import { configurationManifests } from '#cli/kits/manifests.ts';
 import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { readPackageInputs, createPackageProject } from '#tests/support/cli/package-project.ts';
 
 test('CLI installation records the native wrapper binary and reports a usable tool', async () => {

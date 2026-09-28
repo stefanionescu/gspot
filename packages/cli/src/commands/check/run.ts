@@ -1,9 +1,9 @@
 // check: open the session, honor the pin, run, render, decide the exit code.
 import { resolve, relative } from 'node:path';
+import { SelectionError } from '#cli/kits/select.ts';
 import { checkPushed } from '#cli/commands/check/push.ts';
 import { checkContent } from '#cli/commands/check/content.ts';
 import { refusalFor } from '#cli/commands/check/selection.ts';
-import { SelectionError } from '#cli/configurations/select.ts';
 import type { CheckOptions } from '#cli/types/commands/check.ts';
 import { useRevision } from '#cli/repository/revisions/contents.ts';
 import type { CommandResult } from '#cli/types/commands/commands.ts';

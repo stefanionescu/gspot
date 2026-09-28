@@ -1,4 +1,4 @@
-import type { CheckSpec } from '#cli/types/configurations.ts';
+import type { CheckSpec } from '#cli/types/kits.ts';
 import { countFindings } from '#cli/checks/structure/counts.ts';
 import { docComment } from '#cli/checks/structure/doc-comment.ts';
 import { folderNames } from '#cli/checks/structure/folder-names.ts';
@@ -23,7 +23,7 @@ import type { StructureContext, StructureAnalysis } from '#cli/types/checks/stru
 import { fileLength, fileDirectoryCollision } from '#cli/checks/structure/file-layout.ts';
 import { scriptSourceOrder, scriptSourceComments } from '#cli/checks/structure/scripts/sources.ts';
 import { scriptConfigGuards, scriptConfigDefaults } from '#cli/checks/structure/scripts/configuration.ts';
-import { SCRIPT_TAG, COUNT_ANALYSES, GSPOT_DIRECTORY, DOCUMENT_EXTENSIONS } from '#cli/constants/checks/structure.ts';
+import { SCRIPT_TAG, COUNT_ANALYSES, GSPOT_DIRECTORY, DOCUMENT_EXTENSIONS } from '#cli/config/checks/structure.ts';
 
 const ANALYSES: Record<string, StructureAnalysis> = {
     'single-file-folder': singleFileFolder,

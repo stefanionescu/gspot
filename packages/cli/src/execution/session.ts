@@ -1,17 +1,17 @@
 // One session per command: the policy, the manifests, the repository, the selection, and the merged view per scope.
 import { npmPins } from '#cli/tools/pins.ts';
+import type { Manifest } from '#cli/types/kits.ts';
 import { mergeForScope } from '#cli/policy/merge.ts';
+import { selectForScope } from '#cli/kits/select.ts';
 import { readRepository } from '#cli/repository/tree.ts';
 import packageManifest from '#package' with { type: 'json' };
-import type { Manifest } from '#cli/types/configurations.ts';
 import { packageTool } from '#cli/tools/packages/identity.ts';
-import { selectForScope } from '#cli/configurations/select.ts';
+import { configurationManifests } from '#cli/kits/manifests.ts';
 import type { Session } from '#cli/types/execution/execution.ts';
 import { exposedSettings } from '#cli/policy/setting-surface.ts';
 import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import type { ScopeEntry } from '#cli/types/repository/repository.ts';
 import { readPolicy, assertPolicyComplete } from '#cli/policy/read.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
 import type { Policy, PolicyFiles, ScopeSelection } from '#cli/types/policy/policy.ts';
 
 // Resolves every scope: its selected configurations, settings surface, and merged view.

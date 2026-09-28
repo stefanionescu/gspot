@@ -2,7 +2,7 @@
 import { pathToFileURL } from 'node:url';
 import { createRequire } from 'node:module';
 import { dirname, resolve, relative } from 'node:path';
-import { CONFIG_KEYS } from '#cli/constants/evaluation.ts';
+import { CONFIG_KEYS } from '#cli/config/evaluation.ts';
 import { mutationPath } from '#cli/platform/safe-paths.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import type { EslintRegistration } from '#cli/types/policy/policy.ts';

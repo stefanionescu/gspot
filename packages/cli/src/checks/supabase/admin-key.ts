@@ -2,7 +2,7 @@ import { pathMatcher } from '#cli/repository/paths.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { supabaseFinding } from '#cli/checks/supabase/project.ts';
 import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
-import { DEFAULT_PATHS, ADMIN_KEY_NAMES, CODE_EXTENSIONS } from '#cli/constants/checks/supabase.ts';
+import { DEFAULT_PATHS, ADMIN_KEY_NAMES, CODE_EXTENSIONS } from '#cli/config/checks/supabase.ts';
 
 /**
  * One finding for each line that names the service role key outside tools.supabase.admin_key_files.

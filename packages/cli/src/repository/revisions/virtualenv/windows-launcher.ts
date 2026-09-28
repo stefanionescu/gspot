@@ -1,5 +1,5 @@
 import { win32 } from 'node:path';
-import { SelectionError } from '#cli/configurations/select.ts';
+import { SelectionError } from '#cli/kits/select.ts';
 import type { WindowsImage, WindowsResource } from '#cli/types/repository/revisions.ts';
 
 import {
@@ -41,7 +41,7 @@ import {
     READABLE_INITIALIZED_SECTION,
     SECTION_CHARACTERISTICS_FIELD,
     SECTION_VIRTUAL_ADDRESS_FIELD,
-} from '#cli/constants/repository/windows-launcher.ts';
+} from '#cli/config/repository/windows-launcher.ts';
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: A throw cannot sit in an expression, and eleven parser branches return this one.
 function fail(): never {

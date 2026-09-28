@@ -11,7 +11,7 @@ import {
     INSTALLED_PREFIXES,
     VALE_STYLES_PREFIX,
     VENDORED_DIRECTORIES,
-} from '#cli/constants/repository/patterns.ts';
+} from '#cli/config/repository/patterns.ts';
 import {
     BANNER_BYTES,
     BINARY_ATTRIBUTES,
@@ -19,7 +19,7 @@ import {
     ENV_TEMPLATE_NAMES,
     VENDORED_ATTRIBUTES,
     GENERATED_ATTRIBUTES,
-} from '#cli/constants/repository/repository.ts';
+} from '#cli/config/repository/repository.ts';
 
 const matchesEnvironmentFile = pathMatcher(ENV_FILE_PATTERNS.map((pattern) => `**/${pattern}`));
 

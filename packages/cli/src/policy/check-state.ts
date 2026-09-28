@@ -1,4 +1,4 @@
-import type { CheckSpec } from '#cli/types/configurations.ts';
+import type { CheckSpec } from '#cli/types/kits.ts';
 import type { Policy, ScopeSelection, RepositoryCheck } from '#cli/types/policy/policy.ts';
 
 /**

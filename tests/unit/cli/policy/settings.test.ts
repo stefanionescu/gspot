@@ -1,11 +1,11 @@
 import { test, expect, describe } from 'bun:test';
 import { parsePolicyText } from '#cli/policy/read.ts';
+import { selectConfigurations } from '#cli/kits/select.ts';
 import { commandArguments } from '#cli/platform/arguments.ts';
 import { validateAgainstSurface } from '#cli/policy/audit.ts';
+import { configurationManifests } from '#cli/kits/manifests.ts';
 import { specFor, settingValue } from '#cli/policy/settings.ts';
 import { exposedSettings } from '#cli/policy/setting-surface.ts';
-import { selectConfigurations } from '#cli/configurations/select.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
 
 const selected = selectConfigurations(['bash', 'naming', 'formatting', 'spelling'], configurationManifests());
 const surface = exposedSettings(selected);

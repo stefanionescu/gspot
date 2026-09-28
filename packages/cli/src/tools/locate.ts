@@ -1,14 +1,14 @@
 // Where an executable and its installed package version are found: repository bin folders, PATH, and mise shims.
 import { homedir } from 'node:os';
+import type { ToolPin } from '#cli/types/kits.ts';
 import { join, dirname, relative } from 'node:path';
 import { miseHome } from '#cli/platform/environment.ts';
 import type { ConfinedRoot } from '#cli/types/platform.ts';
-import type { ToolPin } from '#cli/types/configurations.ts';
-import { MANAGED_PREFIX } from '#cli/constants/tools/tools.ts';
+import { MANAGED_PREFIX } from '#cli/config/tools/tools.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { statSync, readFileSync, realpathSync } from 'node:fs';
 import type { PrivateKind, PackageFacts } from '#cli/types/tools/tools.ts';
-import { NODE_MODULES_DIRECTORY, PYTHON_ENVIRONMENT_DIRECTORY } from '#cli/constants/platform.ts';
+import { NODE_MODULES_DIRECTORY, PYTHON_ENVIRONMENT_DIRECTORY } from '#cli/config/platform.ts';
 
 const IS_WINDOWS = process.platform === 'win32';
 

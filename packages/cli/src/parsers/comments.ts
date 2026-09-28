@@ -5,9 +5,9 @@ import { extensionOf } from '#cli/platform/paths.ts';
 import { sqlTokens } from '#cli/parsers/sql/source.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
+import { COMMENT_GRAMMARS } from '#cli/config/parsers/parsers.ts';
 import type { SourceComment } from '#cli/types/parsers/parsers.ts';
-import { COMMENT_GRAMMARS } from '#cli/constants/parsers/parsers.ts';
-import { COMMENT_OPENERS, COMMENT_STYLE_BY_EXTENSION } from '#cli/constants/execution/execution.ts';
+import { COMMENT_OPENERS, COMMENT_STYLE_BY_EXTENSION } from '#cli/config/execution/execution.ts';
 
 // Only token-leading trivia is eligible: string, template, regular-expression, and JSX text stay source values.
 function javascriptComments(path: string, text: string): SourceComment[] {

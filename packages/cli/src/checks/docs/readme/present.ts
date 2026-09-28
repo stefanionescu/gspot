@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 import { statSync } from 'node:fs';
-import { LICENSE_NAMES } from '#cli/constants/checks/docs.ts';
+import { LICENSE_NAMES } from '#cli/config/checks/docs.ts';
 import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
 
 /**

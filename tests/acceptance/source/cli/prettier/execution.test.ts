@@ -4,8 +4,8 @@ import { existsSync, readFileSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { initArgs } from '#tests/support/cli/init.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
-import { PRETTIER_CARRY_SOURCE } from '#tests/constants/acceptance/source/cli/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
+import { PRETTIER_CARRY_SOURCE } from '#tests/config/acceptance/source/cli/cli.ts';
 
 test.each([false, true])(
     'executable formatter logs preserve JSON; throws=%s',

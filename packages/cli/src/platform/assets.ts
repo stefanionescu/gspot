@@ -5,7 +5,7 @@ import { join, dirname } from 'node:path';
 import { statSync, readFileSync } from 'node:fs';
 import { toPosix } from '#cli/platform/paths.ts';
 import type { EmbeddedIndex } from '#cli/types/platform.ts';
-import { GRAMMAR_SOURCES, ROOT_SEARCH_DEPTH } from '#cli/constants/platform.ts';
+import { GRAMMAR_SOURCES, ROOT_SEARCH_DEPTH } from '#cli/config/platform.ts';
 
 const state: { embedded: EmbeddedIndex | null | undefined; developmentRoot: string | undefined } = {
     embedded: undefined,
@@ -16,7 +16,7 @@ function findRepoRoot(): string {
     let dir = dirname(fileURLToPath(new URL(import.meta.url)));
     for (let index = 0; index < ROOT_SEARCH_DEPTH; index += 1) {
         if (
-            statSync(join(dir, 'packages/cli/configurations'), { throwIfNoEntry: false }) !== undefined &&
+            statSync(join(dir, 'packages/cli/kits'), { throwIfNoEntry: false }) !== undefined &&
             statSync(join(dir, 'packages'), { throwIfNoEntry: false }) !== undefined
         )
             return dir;
@@ -66,7 +66,7 @@ export function isEmbedded(): boolean {
 }
 
 /**
- * Reads one asset by its repository-relative path (`packages/cli/configurations/language/bash/manifest.toml`).
+ * Reads one asset by its repository-relative path (`packages/cli/kits/language/bash/manifest.toml`).
  * @param path the asset path
  * @returns the text
  */

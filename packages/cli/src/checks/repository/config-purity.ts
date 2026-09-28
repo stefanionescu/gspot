@@ -11,7 +11,7 @@ import {
     CONFIG_CALL_ALLOWED,
     LANGUAGE_BY_EXTENSION,
     CONFIG_IMPORT_PREFIXES,
-} from '#cli/constants/checks/repository.ts';
+} from '#cli/config/checks/repository.ts';
 
 function configurationRolePaths(input: EngineInput): string[] {
     const role = input.policyFiles.policy.architecture.roles['config'];

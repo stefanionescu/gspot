@@ -1,7 +1,7 @@
 import { test, expect } from 'bun:test';
 import type { Detect } from '#cli/types/commands/init.ts';
+import { configurationManifests } from '#cli/kits/manifests.ts';
 import { detectedSettings } from '#cli/commands/init/settings.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
 import type { TrackedFile, ManifestFacts } from '#cli/types/repository/repository.ts';
 
 const manifests = configurationManifests();

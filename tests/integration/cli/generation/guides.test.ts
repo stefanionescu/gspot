@@ -1,9 +1,9 @@
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
+import { parseManifest } from '#cli/kits/manifests.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { selectRuleFiles } from '#cli/agents/assemble.ts';
-import { parseManifest } from '#cli/configurations/manifests.ts';
 
 async function generatedGuides(level: string, files: Record<string, string>): Promise<Map<string, string>> {
     await using sandbox = await testdir();

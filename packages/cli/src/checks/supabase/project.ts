@@ -4,7 +4,7 @@ import { statSync } from 'node:fs';
 import { join, posix } from 'node:path';
 import { readSource } from '#cli/repository/tracked.ts';
 import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
-import { SHARED_PREFIX, SUPABASE_CONFIG, DEFAULT_FUNCTIONS } from '#cli/constants/checks/supabase.ts';
+import { SHARED_PREFIX, SUPABASE_CONFIG, DEFAULT_FUNCTIONS } from '#cli/config/checks/supabase.ts';
 
 const projectSchema = z.object({
     functions: z.record(z.string(), z.unknown()).optional(),

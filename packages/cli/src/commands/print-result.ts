@@ -1,6 +1,6 @@
 import { fail, print } from '#cli/output/messages.ts';
-import { OUTPUT_JSON_INDENT } from '#cli/constants/output.ts';
-import { KNOWN_ERRORS } from '#cli/constants/commands/commands.ts';
+import { OUTPUT_JSON_INDENT } from '#cli/config/output.ts';
+import { KNOWN_ERRORS } from '#cli/config/commands/commands.ts';
 import type { CommandResult, CommandFailureJson } from '#cli/types/commands/commands.ts';
 
 function printResult(result: CommandResult, isJson: boolean): void {

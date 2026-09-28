@@ -34,7 +34,7 @@ test('the published syntax example produces the captured finding and accepts its
 
 test('the Bash retry example preserves the final failure status', async () => {
     const source = readFileSync(
-        new URL('../../../../packages/cli/rules/language/bash/OPERATIONS.md', import.meta.url),
+        new URL('../../../../packages/cli/guides/language/bash/OPERATIONS.md', import.meta.url),
         'utf8',
     );
     const snippet = [...source.matchAll(/```bash\n([\s\S]*?)```/gu)]
@@ -54,7 +54,7 @@ test('the Bash retry example preserves the final failure status', async () => {
 
 test('the Bash sentinel example preserves trailing newlines and rejects producer failure', async () => {
     const source = readFileSync(
-        new URL('../../../../packages/cli/rules/language/bash/LANGUAGE.md', import.meta.url),
+        new URL('../../../../packages/cli/guides/language/bash/LANGUAGE.md', import.meta.url),
         'utf8',
     );
     const snippet = [...source.matchAll(/```bash\n([\s\S]*?)```/gu)]

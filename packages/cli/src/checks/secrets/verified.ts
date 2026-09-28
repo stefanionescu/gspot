@@ -2,17 +2,17 @@
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { runBinary } from '#cli/platform/spawn.ts';
+import { SelectionError } from '#cli/kits/select.ts';
+import { PRIVATE_FILE } from '#cli/config/platform.ts';
 import { runToolCommand } from '#cli/tools/command.ts';
-import { PRIVATE_FILE } from '#cli/constants/platform.ts';
 import { runToolCheck } from '#cli/execution/tool/runner.ts';
 import type { CheckResult } from '#cli/types/checks/checks.ts';
 import type { SecretScan } from '#cli/types/checks/secrets.ts';
-import { SelectionError } from '#cli/configurations/select.ts';
 import { gitBlobs } from '#cli/repository/revisions/contents.ts';
 import { pushBase } from '#cli/repository/revisions/selection.ts';
 import { rmSync, mkdtempSync, writeFileSync, appendFileSync } from 'node:fs';
 import type { Session, PlannedCheck } from '#cli/types/execution/execution.ts';
-import { DIFF_TREE, CHANGE_LINE, GIT_TIMEOUT_MS, COMMIT_METADATA } from '#cli/constants/checks/secrets.ts';
+import { DIFF_TREE, CHANGE_LINE, GIT_TIMEOUT_MS, COMMIT_METADATA } from '#cli/config/checks/secrets.ts';
 
 // The fields come as key and value pairs.
 const PAIR = 2;

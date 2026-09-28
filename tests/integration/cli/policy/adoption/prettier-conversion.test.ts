@@ -9,7 +9,7 @@ import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { evaluateFormat } from '#cli/evaluation/format.ts';
 import { collectCarried } from '#cli/policy/adoption/collect.ts';
-import { TEXT, TOOLING } from '#tests/constants/integration/cli/policy/adoption.ts';
+import { TEXT, TOOLING } from '#tests/config/integration/cli/policy/adoption.ts';
 
 test('nested Prettier ignore files convert with Git precedence for files created later', async () => {
     await using directory = await testdir();

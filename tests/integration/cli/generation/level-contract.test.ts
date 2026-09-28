@@ -7,10 +7,10 @@ import { parse as parseToml } from 'smol-toml';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { configurationManifests } from '#cli/kits/manifests.ts';
+import { RUFF_PREVIEW_RULES } from '#cli/config/checks/ruff-rules.ts';
 import { generatedFile } from '#tests/support/cli/generated/files.ts';
-import { RUFF_PREVIEW_RULES } from '#cli/constants/checks/ruff-rules.ts';
 import { generatedEslint } from '#tests/support/cli/generated/eslint.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { parsePolicyText, assertPolicyComplete } from '#cli/policy/read.ts';
 
 const review = readFileSync(new URL('../../../../architecture/levels/inventory.csv', import.meta.url), 'utf8');

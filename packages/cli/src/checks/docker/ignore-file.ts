@@ -1,7 +1,7 @@
 import { statSync } from 'node:fs';
 import { join, posix } from 'node:path';
 import { readSource } from '#cli/repository/tracked.ts';
-import { DOCKERIGNORE_ENTRIES } from '#cli/constants/checks/docker.ts';
+import { DOCKERIGNORE_ENTRIES } from '#cli/config/checks/docker.ts';
 import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
 
 /**

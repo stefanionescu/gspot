@@ -8,7 +8,7 @@ import {
     CALL_ENDINGS,
     ALL_PARAMETERS,
     POSITIONAL_READ,
-} from '#cli/constants/checks/structure.ts';
+} from '#cli/config/checks/structure.ts';
 
 function argumentCount(rest: string): number {
     const cut = OPERATORS.map((token) => rest.indexOf(token)).filter((position) => position >= 0);

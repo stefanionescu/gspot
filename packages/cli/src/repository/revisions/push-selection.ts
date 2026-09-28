@@ -1,10 +1,10 @@
 // The revisions a push sends, resolved from the ref and object pairs Git hands the pre-push hook.
 import { resolve } from 'node:path';
 import { readFile } from 'node:fs/promises';
-import { SelectionError } from '#cli/configurations/select.ts';
+import { SelectionError } from '#cli/kits/select.ts';
 import { fetchedRevisions } from '#cli/repository/revisions/refspecs.ts';
+import { GIT_HASH, LOG_PATHS, DIFF_PATHS, ABSENT_HASH } from '#cli/config/repository/revisions.ts';
 import { gitLines, gitPaths, gitValue, isShallow } from '#cli/repository/revisions/git-queries.ts';
-import { GIT_HASH, LOG_PATHS, DIFF_PATHS, ABSENT_HASH } from '#cli/constants/repository/revisions.ts';
 
 import type {
     PushLine,

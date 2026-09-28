@@ -6,10 +6,10 @@ import { computeDrift } from '#cli/lifecycle/drift.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
 import { statSync, existsSync, readFileSync } from 'node:fs';
+import { configurationManifests } from '#cli/kits/manifests.ts';
 import { setEnvironmentVariable } from '#cli/platform/environment.ts';
 import { installPackageProject } from '#cli/tools/packages/project.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { PACKAGE_PROJECTS } from '#tests/constants/integration/tools/packages.ts';
+import { PACKAGE_PROJECTS } from '#tests/config/integration/tools/packages.ts';
 import { readPackageInputs, createPackageProject } from '#tests/support/cli/package-project.ts';
 
 test.each(PACKAGE_PROJECTS)(

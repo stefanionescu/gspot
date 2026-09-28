@@ -113,14 +113,14 @@ reason = "Architecture examples, documentation walkthroughs, and regression reco
 
 [[tools.docs.paths_allowed]]
 patterns = ["acceptance/source/configurations/css.test.ts"]
-reason = "The documented acceptance command resolves this argument from its declared tests working directory; the tracked target is tests/acceptance/source/configurations/css.test.ts."
+reason = "The documented acceptance command resolves this argument from its declared tests working directory; the tracked target is tests/acceptance/source/kits/css.test.ts."
 
 [[tools.docs.paths_allowed]]
 patterns = [".gspot/reports/report.json"]
 reason = "The check runner writes this ignored runtime report and the CI workflow uploads it. Runtime reports are not tracked repository inputs."
 
 [[tools.docs.paths_allowed]]
-patterns = ["packages/cli/rules/**"]
+patterns = ["packages/cli/guides/**"]
 reason = "The rule corpus is generic text installed into other repositories; it names nothing in this one."
 
 [[tools.docs.paths_allowed]]
@@ -156,7 +156,7 @@ reason = "The guides explicitly introduce these downloaded binaries, consumer pr
 
 [[tools.docs.paths_allowed]]
 patterns = ["acceptance/source/configurations/vite.test.ts"]
-reason = "The acceptance runner resolves this documented argument from its tests working directory. The tracked file is tests/acceptance/source/configurations/vite.test.ts."
+reason = "The acceptance runner resolves this documented argument from its tests working directory. The tracked file is tests/acceptance/source/kits/vite.test.ts."
 [tools.lychee]
 
 
@@ -344,7 +344,7 @@ case = ["snake"]
 reason = "Installer settings preserve these exact public TOML keys during initialization. Remove an allowance when its setting leaves the supported policy."
 
 [[naming.rules]]
-paths = ["packages/cli/src/types/configurations.ts"]
+paths = ["packages/cli/src/types/kits.ts"]
 categories = ["properties"]
 names = [
     "check_references",
@@ -366,7 +366,7 @@ names = [
     "allow_duplicate_words",
     "allowed_for",
     "banned_terms",
-    "constants_directory",
+    "config_directory",
     "contract_properties",
     "edges_allowed",
     "folder_name_allowed",
@@ -446,7 +446,7 @@ exclude = true
 reason = "GitHub Actions names action inputs with, and GitLab CI names artifact retention when. These test types inspect those exact generated workflow keys. Remove an allowance if its workflow provider or field leaves the contract."
 
 [[naming.rules]]
-paths = ["packages/cli/src/constants/repository/windows-launcher.ts"]
+paths = ["packages/cli/src/config/repository/windows-launcher.ts"]
 names = ["PE32_MAGIC", "PE32_PLUS_MAGIC", "PE32_DIRECTORIES_OFFSET", "PE32_PLUS_DIRECTORIES_OFFSET"]
 exclude = true
 reason = "The Microsoft Portable Executable specification names these formats PE32 and PE32+. The constants identify their magic values and directory offsets. Their exact format names require digits and the term PLUS. Only these four names are excepted. Remove this allowance if the launcher stops supporting those formats."
@@ -541,7 +541,7 @@ reason = "Starlight uses this exact filename for the HTTP 404 route. Renaming it
 
 [architecture]
 types_directory = "types"
-constants_directory = "constants"
+config_directory = "config"
 roles = {env = "packages/cli/src/platform/environment.ts"}
 
 [tools.eslint]
@@ -756,10 +756,10 @@ reason = "The grammar WASM file is read from the package, not imported."
 
 [[structure.folder_name_allowed]]
 paths = [
-    "tests/acceptance/source/configurations/bash",
-    "tests/acceptance/source/configurations/python",
-    "tests/acceptance/source/configurations/swift",
-    "tests/acceptance/source/configurations/typescript",
+    "tests/acceptance/source/kits/bash",
+    "tests/acceptance/source/kits/python",
+    "tests/acceptance/source/kits/swift",
+    "tests/acceptance/source/kits/typescript",
     "tests/integration/cli/checks/swift",
     "tests/integration/tools/bash",
     "tests/support/cli/python",
@@ -785,7 +785,7 @@ reason = "Astro fixes the name of the content configuration file beside the cont
 [[check]]
 name = "rules/lint"
 command = ["mise", "run", "rules:lint"]
-paths = ["packages/cli/rules/**", "packages/cli/src/agents/**", "packages/cli/configurations/**", "tests/integration/tools/generation/**", "tests/unit/cli/agents/**", ".mise/conf.d/repo.toml"]
+paths = ["packages/cli/guides/**", "packages/cli/src/agents/**", "packages/cli/kits/**", "tests/integration/tools/generation/**", "tests/unit/cli/agents/**", ".mise/conf.d/repo.toml"]
 stage = "push"
 summary = "Validates guide structure and runs Good examples through their native linters."
 
@@ -875,8 +875,8 @@ paths = [
     "packages/eslint-plugin/**",
     "tests/**",
     ".mise/gspot/**",
-    "packages/cli/configurations/**",
-    "packages/cli/rules/**",
+    "packages/cli/kits/**",
+    "packages/cli/guides/**",
     "package.json",
     "bun.lock",
     "tsconfig.json",
@@ -898,8 +898,8 @@ paths = [
     "packages/eslint-plugin/**",
     "tests/**",
     ".mise/gspot/**",
-    "packages/cli/configurations/**",
-    "packages/cli/rules/**",
+    "packages/cli/kits/**",
+    "packages/cli/guides/**",
     "package.json",
     "bun.lock",
     "tsconfig.json",

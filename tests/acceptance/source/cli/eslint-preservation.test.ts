@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
 import type { ApplyPreviewJson } from '#cli/types/commands/apply.ts';
 import { statSync, chmodSync, readFileSync, writeFileSync } from 'node:fs';
 
@@ -11,7 +11,7 @@ import {
     ESLINT_PRESERVATION_CONFIG,
     ESLINT_PRESERVATION_POLICY,
     ESLINT_PRESERVATION_SOURCE,
-} from '#tests/constants/acceptance/source/cli/cli.ts';
+} from '#tests/config/acceptance/source/cli/cli.ts';
 
 test.each(['eslint.config.js', 'eslint.config.mjs', 'eslint.config.cjs'])(
     'apply preserves authored %s and native ESLint path behavior',

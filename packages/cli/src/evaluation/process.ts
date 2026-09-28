@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { dirname, basename } from 'node:path';
-import { PRIVATE_FILE } from '#cli/constants/platform.ts';
+import { PRIVATE_FILE } from '#cli/config/platform.ts';
 import { evaluateLicenses } from '#cli/evaluation/license.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { evaluateStylelint } from '#cli/evaluation/stylelint.ts';

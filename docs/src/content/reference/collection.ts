@@ -2,10 +2,10 @@ import type { Loader } from 'astro/loaders';
 import { commandPages } from './commands.ts';
 import { section, referencePage } from './page.ts';
 import { docsLoader } from '@astrojs/starlight/loaders';
+import { allChecks } from '@gspot/cli/src/kits/listing.ts';
 import type { ReferencePage } from '../../types/reference.ts';
 import { settingsPage, configurationReference } from './policy.ts';
-import { allChecks } from '@gspot/cli/src/configurations/listing.ts';
-import { configurationManifests } from '@gspot/cli/src/configurations/manifests.ts';
+import { configurationManifests } from '@gspot/cli/src/kits/manifests.ts';
 import { rulePage, enginesPage, configurationPage, pluginReferencePages } from './definitions.ts';
 
 /**

@@ -1,5 +1,5 @@
 // Initializes named configurations without installing tools. Generates only policy and configuration.
-import { QUIET_INIT } from '#tests/constants/cli.ts';
+import { QUIET_INIT } from '#tests/config/cli.ts';
 
 /**
  * The init arguments that select the named configurations and leave the named recommendations out.

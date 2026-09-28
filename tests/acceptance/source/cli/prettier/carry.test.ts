@@ -3,7 +3,7 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { initArgs } from '#tests/support/cli/init.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
 import { formatSources } from '#tests/support/cli/prettier.ts';
 import { installPrivateTools } from '#tests/support/cli/tools.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
@@ -19,7 +19,7 @@ import {
     PRETTIER_CARRY_CONFIG,
     PRETTIER_CARRY_SOURCE,
     PRETTIER_NATIVE_FORMATS,
-} from '#tests/constants/acceptance/source/cli/cli.ts';
+} from '#tests/config/acceptance/source/cli/cli.ts';
 
 // What became of the authored file after init: its text and mode as they were, another text, or nothing.
 function authoredState(path: string, text: string): AuthoredState {

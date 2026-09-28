@@ -4,7 +4,7 @@ import { run } from '#tests/support/cli/command.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import type { Finding } from '#cli/types/checks/checks.ts';
 import { containing } from '#tests/support/expectations.ts';
-import { READERS_HEADERS } from '#tests/constants/integration/cli/execution/scopes.ts';
+import { READERS_HEADERS } from '#tests/config/integration/cli/execution/scopes.ts';
 
 const EXPECTED_READERS: { check: string; root: Finding[]; nested: Finding[] }[] = [
     {

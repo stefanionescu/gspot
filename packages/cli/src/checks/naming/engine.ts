@@ -1,18 +1,18 @@
+import { isClaimed } from '#cli/kits/claims.ts';
+import type { CheckSpec } from '#cli/types/kits.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { roleFolders } from '#cli/policy/settings.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { CASE_NAMES } from '#cli/checks/naming/cases.ts';
-import { isClaimed } from '#cli/configurations/claims.ts';
-import type { CheckSpec } from '#cli/types/configurations.ts';
 import { identifiersOf } from '#cli/checks/naming/extract.ts';
 import { isInScope, pathMatcher } from '#cli/repository/paths.ts';
 import { nameProblems } from '#cli/checks/naming/validate-name.ts';
+import { TEST_FILE, REACT_FILE } from '#cli/config/checks/naming.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
-import { TEST_FILE, REACT_FILE } from '#cli/constants/checks/naming.ts';
+import { selectForScope, languageConfigurations } from '#cli/kits/select.ts';
 import { shippedPolicy, effectivePolicy } from '#cli/checks/naming/policy.ts';
 import type { Engine, Finding, EngineInput } from '#cli/types/checks/checks.ts';
 import { fileIdentifier, directoryIdentifiers } from '#cli/checks/naming/paths.ts';
-import { selectForScope, languageConfigurations } from '#cli/configurations/select.ts';
 import type { Identifier, NamingContext, EffectivePolicy } from '#cli/types/checks/naming.ts';
 
 function sourceFiles(input: EngineInput): { file: TrackedFile; language: string }[] {

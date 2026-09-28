@@ -1,5 +1,5 @@
 // Tool pins for inspection tests: a binary found on a path and a library found in the private installation.
-import type { ToolPin } from '#cli/types/configurations.ts';
+import type { ToolPin } from '#cli/types/kits.ts';
 
 /**
  * A library pin installed through npm.

@@ -1,6 +1,6 @@
 // What the adoption and selection tests start from: a discovery result naming configurations, and a minimal manifest.
-import type { Manifest } from '#cli/types/configurations.ts';
-import { parseManifest } from '#cli/configurations/manifests.ts';
+import type { Manifest } from '#cli/types/kits.ts';
+import { parseManifest } from '#cli/kits/manifests.ts';
 import type { ExistingTooling } from '#cli/types/repository/repository.ts';
 
 /** One discovered root Prettier configuration. */

@@ -1,10 +1,10 @@
 // The types of generation in this package.
 import type { FileObservation } from '#cli/types/platform.ts';
 import type { PackageTool } from '#cli/types/tools/packages.ts';
-import type { HOOK_FILES } from '#cli/constants/repository/repository.ts';
+import type { HOOK_FILES } from '#cli/config/repository/repository.ts';
 import type { ConfigurationFormat } from '#cli/types/lifecycle/lifecycle.ts';
 import type { TrackedFile, PathExpressions } from '#cli/types/repository/repository.ts';
-import type { Manifest, FragmentSelector, ConfigurationTarget } from '#cli/types/configurations.ts';
+import type { Manifest, FragmentSelector, ConfigurationTarget } from '#cli/types/kits.ts';
 import type { Policy, MergedView, RunnerTask, FormatSettings, ScopeSelection } from '#cli/types/policy/policy.ts';
 
 export type Fragment = { manifest: Manifest; config: ConfigurationTarget };

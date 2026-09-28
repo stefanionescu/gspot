@@ -2,8 +2,8 @@
 import { nodesOf } from '#cli/parsers/sql/parser.ts';
 import { positionAt } from '#cli/parsers/sql/statements.ts';
 import type { Declared } from '#cli/types/checks/postgres.ts';
+import { DEFAULT_SCHEMA } from '#cli/config/checks/postgres.ts';
 import { migrationsOf } from '#cli/checks/postgres/migrations.ts';
-import { DEFAULT_SCHEMA } from '#cli/constants/checks/postgres.ts';
 import { schemaFacts } from '#cli/checks/postgres/schema/facts.ts';
 import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
 import type { SqlNode, SqlStatementView } from '#cli/types/parsers/sql.ts';

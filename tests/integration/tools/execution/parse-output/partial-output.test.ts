@@ -8,8 +8,8 @@ import { containing } from '#tests/support/expectations.ts';
 import { checkedFindings } from '#cli/execution/broken-tool.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import type { PlannedCheck } from '#cli/types/execution/execution.ts';
+import { PYTHON_ENVIRONMENT_DIRECTORY } from '#cli/config/platform.ts';
 import { ToolOutputError } from '#cli/execution/output/tool-formats.ts';
-import { PYTHON_ENVIRONMENT_DIRECTORY } from '#cli/constants/platform.ts';
 import { toolsPath, installPrivateTools } from '#tests/support/cli/tools.ts';
 
 test('ShellCheck rejects partial findings when another selected file cannot be read', async () => {

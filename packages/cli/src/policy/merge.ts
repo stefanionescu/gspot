@@ -1,8 +1,8 @@
 // A literal directory followed by /** covers that complete scope and each descendant.
 
-import type { Manifest } from '#cli/types/configurations.ts';
-import { shippedFormat } from '#cli/configurations/listing.ts';
-import { TOOL_PREFIX, RESERVED_SLOTS } from '#cli/constants/policy/policy.ts';
+import type { Manifest } from '#cli/types/kits.ts';
+import { shippedFormat } from '#cli/kits/listing.ts';
+import { TOOL_PREFIX, RESERVED_SLOTS } from '#cli/config/policy/policy.ts';
 import { listSettings, policyTables, settingValue } from '#cli/policy/settings.ts';
 
 import type {

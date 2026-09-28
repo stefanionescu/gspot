@@ -1,19 +1,19 @@
+import type { Manifest } from '#cli/types/kits.ts';
 import { agentFiles } from '#cli/agents/instructions.ts';
 import { npmPins, pythonPins } from '#cli/tools/pins.ts';
 import { misePins, pinnedTwice } from '#cli/tools/mise.ts';
 import { submodulePaths } from '#cli/repository/tracked.ts';
 import { xcodeProposal } from '#cli/commands/init/xcode.ts';
-import type { Manifest } from '#cli/types/configurations.ts';
+import { MISE_CONFIG_PATH } from '#cli/config/tools/tools.ts';
 import { noLongerRuns } from '#cli/policy/adoption/collect.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { runnerTaskPlan } from '#cli/generation/runner/plan.ts';
-import { MISE_CONFIG_PATH } from '#cli/constants/tools/tools.ts';
 import { ciLintJobs } from '#cli/repository/existing-tooling.ts';
 import type { AdoptionResult } from '#cli/types/policy/adoption.ts';
 import type { ScopeEntry } from '#cli/types/repository/repository.ts';
 import type { Policy, RunnerTaskNames } from '#cli/types/policy/policy.ts';
-import { CI_SETUP, HOOKS_ROW, CURSOR_RULE } from '#cli/constants/commands/init.ts';
-import { SECONDS_PER_DAY, DEFAULT_RELEASE_AGE_DAYS } from '#cli/constants/generation.ts';
+import { CI_SETUP, HOOKS_ROW, CURSOR_RULE } from '#cli/config/commands/init.ts';
+import { SECONDS_PER_DAY, DEFAULT_RELEASE_AGE_DAYS } from '#cli/config/generation.ts';
 
 import type {
     Planning,

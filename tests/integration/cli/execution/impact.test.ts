@@ -1,13 +1,13 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import type { CheckSpec } from '#cli/types/kits.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { applyFixers } from '#cli/execution/fixers.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { rejection } from '#tests/support/expectations.ts';
-import type { CheckSpec } from '#cli/types/configurations.ts';
 import { mkdirSync, existsSync, readFileSync } from 'node:fs';
 import type { Session } from '#cli/types/execution/execution.ts';
 import { stagedFiles, changedFiles } from '#cli/repository/revisions/selection.ts';

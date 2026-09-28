@@ -6,11 +6,11 @@ import { git } from '#tests/support/cli/git.ts';
 import { chmodSync, readFileSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
 import { script } from '#tests/support/cli/planted.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
 import { pushReportSchema } from '#cli/execution/report.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
 import { run, gspot, runProcess } from '#tests/support/cli/command.ts';
 import type { CommandFailureJson } from '#cli/types/commands/commands.ts';
-import { COMMITS_INIT } from '#tests/constants/acceptance/source/cli/cli.ts';
+import { COMMITS_INIT } from '#tests/config/acceptance/source/cli/cli.ts';
 import { toolsPath, installPrivateTools } from '#tests/support/cli/tools.ts';
 
 // Message checks preserve prior reports and a later range check rejects a bypassed hook.

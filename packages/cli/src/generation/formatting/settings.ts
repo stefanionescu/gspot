@@ -1,10 +1,10 @@
 // The Prettier and EditorConfig settings a policy generates, with authored overrides carried along.
 import { dirname, relative } from 'node:path';
 import { compact } from '#cli/policy/normalize.ts';
+import { shippedFormat } from '#cli/kits/listing.ts';
 import { expandedPaths } from '#cli/repository/paths.ts';
-import { shippedFormat } from '#cli/configurations/listing.ts';
-import { NODE_MODULES_DIRECTORY } from '#cli/constants/platform.ts';
-import { UNREPRESENTABLE_SELECTOR } from '#cli/constants/generation.ts';
+import { NODE_MODULES_DIRECTORY } from '#cli/config/platform.ts';
+import { UNREPRESENTABLE_SELECTOR } from '#cli/config/generation.ts';
 import type { Policy, FormatSettings } from '#cli/types/policy/policy.ts';
 import { literalGlob, rebaseOverrides } from '#cli/generation/formatting/selectors.ts';
 

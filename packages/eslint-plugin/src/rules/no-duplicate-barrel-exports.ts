@@ -1,6 +1,6 @@
 import { createRule } from '#plugin/definition.ts';
 import { join, dirname, resolve } from 'node:path';
-import { EXTENSIONS } from '#plugin/constants/rules.ts';
+import { EXTENSIONS } from '#plugin/config/rules.ts';
 import type { TSESTree } from '@typescript-eslint/utils';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { lintedFile, isIndexFile } from '#plugin/files.ts';

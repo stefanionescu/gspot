@@ -4,7 +4,7 @@ import { readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 import type { RuleContextOf, DirectoryEntry } from '#plugin/types/plugin.ts';
-import { FILE_SCHEME, STDIN_NAMES, INDEX_BASENAMES, DECLARATION_SUFFIX } from '#plugin/constants/plugin.ts';
+import { FILE_SCHEME, STDIN_NAMES, INDEX_BASENAMES, DECLARATION_SUFFIX } from '#plugin/config/plugin.ts';
 
 const globCache = new Map<string, (path: string) => boolean>();
 

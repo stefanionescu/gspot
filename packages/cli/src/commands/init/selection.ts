@@ -1,11 +1,11 @@
 import { nearMatches } from '#cli/policy/near.ts';
+import type { Manifest } from '#cli/types/kits.ts';
 import * as messages from '#cli/policy/messages.ts';
-import type { Manifest } from '#cli/types/configurations.ts';
+import { detectConfigurations } from '#cli/kits/detect.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import { NO_CONFIGURATIONS } from '#cli/constants/commands/init.ts';
-import { detectConfigurations } from '#cli/configurations/detect.ts';
+import { NO_CONFIGURATIONS } from '#cli/config/commands/init.ts';
 import type { ScopeEntry } from '#cli/types/repository/repository.ts';
-import { requireChain, SelectionError, selectConfigurations } from '#cli/configurations/select.ts';
+import { requireChain, SelectionError, selectConfigurations } from '#cli/kits/select.ts';
 import type { InitInputs, InitContext, InitSelection, ConfigurationReason } from '#cli/types/commands/init.ts';
 
 function parseScopeFlags(flags: string[] | undefined): Map<string, string[]> {

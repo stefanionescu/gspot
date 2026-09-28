@@ -1,12 +1,12 @@
-import { EXECUTE_BITS } from '#cli/constants/platform.ts';
+import { EXECUTE_BITS } from '#cli/config/platform.ts';
 import type { ConfinedRoot } from '#cli/types/platform.ts';
 import { huskyLines } from '#cli/generation/hooks/husky.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import { blockSpan, currentBlock } from '#cli/lifecycle/managed-blocks.ts';
 import { hasConfiguration } from '#cli/lifecycle/configuration/document.ts';
+import { HOOK_FILES, SIMPLE_GIT_HOOKS_DIRECTORY as DIRECTORY } from '#cli/config/repository/repository.ts';
 import { hookBody, hookPrefix, hookCommand, simpleGitHookCommand } from '#cli/generation/hooks/scripts.ts';
-import { HOOK_FILES, SIMPLE_GIT_HOOKS_DIRECTORY as DIRECTORY } from '#cli/constants/repository/repository.ts';
 
 /**
  * Refuse alternate native configuration before publishing or verifying package-owned commands.

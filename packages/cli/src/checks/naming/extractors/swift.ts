@@ -1,6 +1,6 @@
 import type { Node } from 'web-tree-sitter';
 import type { Identifier, ExtractSink } from '#cli/types/checks/naming.ts';
-import { TYPE_NODES, SWIFT_LABELS, MEMBER_PARENTS, SWIFT_FUNCTION_NODES } from '#cli/constants/checks/naming.ts';
+import { TYPE_NODES, SWIFT_LABELS, MEMBER_PARENTS, SWIFT_FUNCTION_NODES } from '#cli/config/checks/naming.ts';
 
 function add(sink: ExtractSink, node: Node, category: string): void {
     const name = node.text.replaceAll('`', '');

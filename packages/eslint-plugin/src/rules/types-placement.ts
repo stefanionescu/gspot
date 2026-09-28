@@ -1,5 +1,5 @@
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { TYPE_DECLARATIONS } from '#plugin/constants/rules.ts';
+import { TYPE_DECLARATIONS } from '#plugin/config/rules.ts';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
 import { lintedFile, lintedRoot, staticString, isAnyGlobMatch, relativeToRoot } from '#plugin/files.ts';

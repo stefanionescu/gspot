@@ -22,7 +22,7 @@ and reading. Both use the existing confinement boundary; neither changes the sel
 
 gspot is unreleased and has no users. Change names and configuration directly. Do not maintain
 compatibility aliases, Changesets, or release-PR promises. Configurations live at
-`packages/cli/configurations/<kind>/<name>`; the data/configuration configuration and its public check prefix are `configs`.
+`packages/cli/kits/<kind>/<name>`; the data/configuration configuration and its public check prefix are `configs`.
 
 The CLI owns command behavior, planning, execution, and lifecycle operations. Commands translate
 arguments and present results; output renders the statuses and findings computed by the runner.
@@ -49,7 +49,7 @@ Group source by behavior and ownership. Extract a shared module only when it own
 or a shared contract.
 
 Every type alias lives under the `types/` folder of its package, and every
-literal constant under its `constants/` folder. Each holds one file per source folder and one per
+literal constant under its `config/` folder. Each holds one file per source folder and one per
 subfolder; a folder with both gets a folder-level file named after it. Schemas, function tables,
 and values computed at load stay beside the logic that owns them.
 
@@ -78,7 +78,7 @@ with its callers, assets, and build inputs in the same implementation batch. Upd
 
 Use `testdirs` directly for temporary test directories. Register disposal before creating files
 so setup failures are cleaned up. Test-only types live under `tests/types/` and test constants
-under `tests/constants/`, mirroring the test tree; a table of cases stays with its test. Exercise
+under `tests/config/`, mirroring the test tree; a table of cases stays with its test. Exercise
 harness behavior through real product journeys.
 
 ## CLI ownership boundaries
@@ -95,11 +95,11 @@ Next.js source checks and execution live in `packages/cli/src/checks/nextjs/sour
 Jest execution and its shared validation schema live in `packages/cli/src/checks/jest/run.ts` and
 `packages/cli/src/checks/jest/schema.ts`. Hook names and hook metadata belong to `packages/cli/src/repository/hooks.ts`;
 dependency directory names belong to repository file classification. Dependency checks share
-lockfile formats. Check constants live under `constants/checks/`, one file per check folder.
+lockfile formats. Check constants live under `config/checks/`, one file per check folder.
 
 Agent metadata and generated instructions belong to `packages/cli/src/agents/metadata.ts` and
-`packages/cli/src/agents/instructions.ts`. Shipped assets remain under `packages/cli/configurations/`; source definitions and selection belong
-to `packages/cli/src/configurations/`. Homepage components live under `docs/src/components/home/`; Starlight
+`packages/cli/src/agents/instructions.ts`. Shipped assets remain under `packages/cli/kits/`; source definitions and selection belong
+to `packages/cli/src/kits/`. Homepage components live under `docs/src/components/home/`; Starlight
 overrides live under `docs/src/components/starlight/`. Artwork is grouped by home, identity, README, badges,
 and diagrams under `docs/public/brand/`.
 
@@ -183,7 +183,7 @@ ESLint adoption, preservation, and native selection suites separate their distin
 The CLI and independently usable ESLint plugin remain separate workspace packages.
 The plugin exports `configs.recommended`, `configs.all`, and its existing rules through
 [the conventional ESLint plugin shape](https://eslint.org/docs/latest/extend/plugins).
-Its types live under `src/types/` and its literal constants under `src/constants/`; rule logic stays with the rule.
+Its types live under `src/types/` and its literal constants under `src/config/`; rule logic stays with the rule.
 
 Keep all authored repository tasks, including source-checkout overrides and CI orchestration, in `.mise/conf.d/repo.toml` and generated integration in
 `.mise/conf.d/gspot-tools.toml`, using the
@@ -272,7 +272,7 @@ questions when interactive input is available.
 | Job                                                   | Library                                                                | Note                                                                                                                                                       |
 | ----------------------------------------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Temporary test directories                            | `testdirs`                                                             | Call `testdir()` with no files, register async disposal, then call `createFileTree`. This order preserves cleanup after setup failure.                     |
-| Render a configuration template                       | `eta`                                                                  | every `*.tmpl` under `packages/cli/configurations/`; the generated-file header is prepended by gspot                                                       |
+| Render a configuration template                       | `eta`                                                                  | every `*.tmpl` under `packages/cli/kits/`; the generated-file header is prepended by gspot                                                                 |
 | Command parsing, `--help`, unknown-command suggestion | commander                                                              | the public command definition feeds the reference content loader                                                                                           |
 | The questions in `init`                               | `@clack/prompts`                                                       | imported by those two commands only; never under `--yes`, `CI` or no terminal                                                                              |
 | Color                                                 | picocolors                                                             | off under `NO_COLOR`, `CI`, `--no-color` or no terminal                                                                                                    |
@@ -436,7 +436,7 @@ follows the task; no page quota, separate fixture system, or universal prose par
 Documentation content loading belongs in `docs/src/content/reference/collection.ts`. The executable checks
 for built links and release-aligned deployment belong in `docs/scripts/`. Plugin rule metadata
 and common option schemas belong in `packages/eslint-plugin/src/rules/` beside their consumers,
-with their literal constants under `packages/eslint-plugin/src/constants/`.
+with their literal constants under `packages/eslint-plugin/src/config/`.
 
 ## Contribution rule
 
@@ -467,13 +467,13 @@ Share proven parsing, line counting, and extraction operations without forcing l
 
 ### Acceptance G-13
 
-Every literal constant of a package lives under its `constants/` folder and every type under its
+Every literal constant of a package lives under its `config/` folder and every type under its
 `types/` folder, in the file named for the source folder that reads it. Two constants with one
 value are one constant. Two with one name and different values carry names that say what each
 one is. Configurations own shipped tool pins and policy.
 
 No forwarding accessor wraps a constant. Schemas, function tables, and values computed at load
-stay with their logic. `[architecture] types_directory` and `constants_directory` name the two
+stay with their logic. `[architecture] types_directory` and `config_directory` name the two
 folders, so the types placement rule and the registry rule enforce them.
 
 Exercise the behavior that consumes a shared contract. Moving a local constant alone

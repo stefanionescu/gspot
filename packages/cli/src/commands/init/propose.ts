@@ -5,8 +5,8 @@ import { asRaw } from '#cli/policy/adoption/source.ts';
 import type { InitProposal } from '#cli/types/commands/init.ts';
 import type { AdoptionResult } from '#cli/types/policy/adoption.ts';
 import type { TomlTable } from '#cli/types/repository/repository.ts';
+import { SCHEMA_LINE, PROFILE_HEAD } from '#cli/config/commands/init.ts';
 import { policyIndent, wrapLongArrays } from '#cli/policy/toml/width.ts';
-import { SCHEMA_LINE, PROFILE_HEAD } from '#cli/constants/commands/init.ts';
 
 const PREFACE = [
     SCHEMA_LINE,

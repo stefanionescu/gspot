@@ -1,4 +1,4 @@
-import { ENTRY_FUNCTIONS } from '#cli/constants/checks/structure.ts';
+import { ENTRY_FUNCTIONS } from '#cli/config/checks/structure.ts';
 import type { StructureAnalysis as Analysis } from '#cli/types/checks/structure.ts';
 
 /**

@@ -1,6 +1,6 @@
 import { stringify } from 'smol-toml';
 import { pythonPins } from '#cli/tools/pins.ts';
-import type { Manifest } from '#cli/types/configurations.ts';
+import type { Manifest } from '#cli/types/kits.ts';
 import type { GeneratedFile } from '#cli/types/generation.ts';
 
 /**

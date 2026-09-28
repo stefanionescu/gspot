@@ -3,7 +3,7 @@ import { inspectTool } from '#cli/tools/inspect.ts';
 import { sep, join, relative, isAbsolute } from 'node:path';
 import type { CheckResult } from '#cli/types/checks/checks.ts';
 import { prepareCommand } from '#cli/execution/tool/runner.ts';
-import { RAN_STATUSES } from '#cli/constants/execution/execution.ts';
+import { RAN_STATUSES } from '#cli/config/execution/execution.ts';
 import { commandConfigurations } from '#cli/execution/command-expansion.ts';
 import { openSync, closeSync, fstatSync, readFileSync, realpathSync } from 'node:fs';
 import type { Session, RunHashes, PlannedCheck } from '#cli/types/execution/execution.ts';

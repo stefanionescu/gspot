@@ -1,13 +1,13 @@
-import type { Manifest } from '#cli/types/configurations.ts';
+import type { Manifest } from '#cli/types/kits.ts';
+import { shippedFormat } from '#cli/kits/listing.ts';
+import { MISE_CONFIG_PATH } from '#cli/config/tools/tools.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { readGitSetting } from '#cli/repository/git-config.ts';
-import { shippedFormat } from '#cli/configurations/listing.ts';
-import { MISE_CONFIG_PATH } from '#cli/constants/tools/tools.ts';
 import { ciLintJobs } from '#cli/repository/existing-tooling.ts';
 import type { AdoptedFormatting } from '#cli/types/policy/adoption.ts';
+import { CI_CHOICES, HOOK_CHOICES } from '#cli/config/commands/init.ts';
 import type { Policy, FormatSettings } from '#cli/types/policy/policy.ts';
 import type { ExistingTooling } from '#cli/types/repository/repository.ts';
-import { CI_CHOICES, HOOK_CHOICES } from '#cli/constants/commands/init.ts';
 import { askMany, askChoice, askConfirmation } from '#cli/commands/prompts.ts';
 import type { InitAnswers, InitOptions, InitSelection } from '#cli/types/commands/init.ts';
 

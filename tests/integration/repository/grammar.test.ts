@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { test, spyOn, expect } from 'bun:test';
 import { prepareInput } from '#scripts/inputs.ts';
 import { existsSync, readFileSync } from 'node:fs';
-import { SWIFT_GRAMMAR } from '#cli/constants/platform.ts';
+import { SWIFT_GRAMMAR } from '#cli/config/platform.ts';
 import { rejection } from '#tests/support/expectations.ts';
 
 const bytes = readFileSync(fileURLToPath(new URL('../../../packages/cli/.build/swift.wasm', import.meta.url)));

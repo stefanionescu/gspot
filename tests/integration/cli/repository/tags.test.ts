@@ -3,8 +3,8 @@ import { chmodSync } from 'node:fs';
 import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { readRepository } from '#cli/repository/tree.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { unknownLanguages, detectConfigurations } from '#cli/configurations/detect.ts';
+import { configurationManifests } from '#cli/kits/manifests.ts';
+import { unknownLanguages, detectConfigurations } from '#cli/kits/detect.ts';
 
 describe('tags', () => {
     test('tags come from extension, filename, shebang and content', async () => {

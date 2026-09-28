@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { FULL_PERCENTAGE } from '#cli/constants/checks/jest.ts';
+import { FULL_PERCENTAGE } from '#cli/config/checks/jest.ts';
 
 export const jestPercentage = z.number().min(0).max(FULL_PERCENTAGE);
 

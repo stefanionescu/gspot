@@ -12,7 +12,7 @@ import type { PrepareHuskyResult } from '#tests/types/results.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { installNativeHooks } from '#cli/lifecycle/hooks/managers.ts';
 import type { HookLocation } from '#cli/types/repository/repository.ts';
-import { PRE_COMMIT_POLICY, SIMPLE_GIT_HOOKS_POLICY } from '#tests/constants/integration/tools/hooks.ts';
+import { PRE_COMMIT_POLICY, SIMPLE_GIT_HOOKS_POLICY } from '#tests/config/integration/tools/hooks.ts';
 
 /**
  * Read hook readiness and diagnostics from a fresh sandbox session.

@@ -5,7 +5,7 @@ import { policyLayers } from '#cli/policy/problems.ts';
 import type { ConfinedRoot } from '#cli/types/platform.ts';
 import { mutationPath } from '#cli/platform/safe-paths.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import { LOCATION_SPECIFIER } from '#cli/constants/policy/policy.ts';
+import { LOCATION_SPECIFIER } from '#cli/config/policy/policy.ts';
 
 import type {
     Policy,

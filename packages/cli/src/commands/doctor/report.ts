@@ -1,18 +1,18 @@
 import type { Colors } from 'picocolors/types';
 import { collectPins } from '#cli/tools/pins.ts';
 import { colors } from '#cli/output/messages.ts';
+import { everyManifest } from '#cli/kits/select.ts';
 import { inspectTool } from '#cli/tools/inspect.ts';
 import { coverageLines } from '#cli/output/coverage.ts';
 import { selectRuleFiles } from '#cli/agents/assemble.ts';
 import { coverageReport } from '#cli/execution/coverage.ts';
 import { hookStatus } from '#cli/lifecycle/hooks/status.ts';
 import { submodulePaths } from '#cli/repository/tracked.ts';
-import { everyManifest } from '#cli/configurations/select.ts';
 import { changeReport } from '#cli/commands/doctor/changes.ts';
 import type { ToolInspection } from '#cli/types/tools/tools.ts';
 import type { Session } from '#cli/types/execution/execution.ts';
 import type { ChangeReport, DoctorReport } from '#cli/types/commands/doctor.ts';
-import { VERSION_GAP, COLUMN_WIDTHS, DISPLAY_LIMITS, CHANGE_SECTIONS } from '#cli/constants/commands/doctor.ts';
+import { VERSION_GAP, COLUMN_WIDTHS, DISPLAY_LIMITS, CHANGE_SECTIONS } from '#cli/config/commands/doctor.ts';
 
 function stateLabel(tool: ToolInspection, colors: Colors): string {
     const { red, green, dim } = colors;

@@ -1,5 +1,5 @@
 import { readSource } from '#cli/repository/tracked.ts';
-import { KEY_GROUP } from '#cli/constants/checks/security.ts';
+import { KEY_GROUP } from '#cli/config/checks/security.ts';
 import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
 
 import {
@@ -7,7 +7,7 @@ import {
     ENV_READ_PATTERNS,
     ENV_TEMPLATE_NAMES,
     ENV_READ_EXTENSIONS,
-} from '#cli/constants/repository/repository.ts';
+} from '#cli/config/repository/repository.ts';
 
 function readPatterns(input: EngineInput): RegExp[] {
     const accessor = input.view.tool('dotenv')['accessor'];

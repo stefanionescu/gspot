@@ -10,7 +10,7 @@ import { planRun } from '#cli/execution/planning/plan.ts';
 import { run as runProcess } from '#cli/platform/spawn.ts';
 import { containing, containingAll } from '#tests/support/expectations.ts';
 import { commandConfigurations } from '#cli/execution/command-expansion.ts';
-import { DEFECT, CORRECT } from '#tests/constants/integration/tools/generation.ts';
+import { DEFECT, CORRECT } from '#tests/config/integration/tools/generation.ts';
 
 // Configuration edits invalidate cached findings and missing inputs fail explicitly.
 async function expectConfigurationChanges(root: string, prefix: string, command: string[]): Promise<void> {

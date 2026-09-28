@@ -4,9 +4,9 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { run } from '#tests/support/cli/command.ts';
 import { reportSchema } from '#cli/execution/report.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
 import { containing } from '#tests/support/expectations.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
 import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
 import type { ApplyPreviewJson } from '#cli/types/commands/apply.ts';
 import { prepareIgnoredFormatter } from '#tests/support/cli/prettier.ts';
@@ -16,7 +16,7 @@ import {
     PRETTIER_IGNORE_FILES,
     PRETTIER_IGNORE_RULES,
     PRETTIER_IGNORE_SOURCE,
-} from '#tests/constants/acceptance/source/cli/cli.ts';
+} from '#tests/config/acceptance/source/cli/cli.ts';
 
 test(
     'init carries current native Prettier ignores and preserves negated and future patterns',

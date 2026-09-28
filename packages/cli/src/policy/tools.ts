@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { quoteArgument } from '#cli/platform/arguments.ts';
 import { jestCoverageSettings } from '#cli/checks/jest/schema.ts';
 import { reasoned, relativeDirectory } from '#cli/policy/fields.ts';
-import { ESLINT_WARN, ESLINT_ERROR } from '#cli/constants/evaluation.ts';
+import { ESLINT_WARN, ESLINT_ERROR } from '#cli/config/evaluation.ts';
 
 const text = z.string();
 const flag = z.boolean();

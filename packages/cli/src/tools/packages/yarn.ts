@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { parse, stringify } from 'yaml';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { runToolCommand } from '#cli/tools/command.ts';
-import { YARN_CONNECTION_KEYS, YARN_ENVIRONMENT_SETTINGS } from '#cli/constants/tools/packages.ts';
+import { YARN_CONNECTION_KEYS, YARN_ENVIRONMENT_SETTINGS } from '#cli/config/tools/packages.ts';
 
 /**
  * Read Yarn-owned connection settings and give its isolated project environment references.

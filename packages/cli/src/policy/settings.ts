@@ -1,7 +1,7 @@
 import { compact } from '#cli/policy/normalize.ts';
 import { scopeAncestors } from '#cli/repository/scopes.ts';
-import { LANGUAGE_GROUP_TABLES } from '#cli/constants/policy/policy.ts';
-import type { Manifest, SettingSpec } from '#cli/types/configurations.ts';
+import type { Manifest, SettingSpec } from '#cli/types/kits.ts';
+import { LANGUAGE_GROUP_TABLES } from '#cli/config/policy/policy.ts';
 
 import type {
     Policy,

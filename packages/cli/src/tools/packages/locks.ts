@@ -5,8 +5,8 @@ import { parse as parseYaml } from 'yaml';
 import { parseSyml } from '@yarnpkg/parsers';
 import { isDeepStrictEqual } from 'node:util';
 import { modify, applyEdits, parse as parseJsonc } from 'jsonc-parser';
+import { HTTP_URL, INTEGRITY, CONFLICT_MARKER } from '#cli/config/tools/packages.ts';
 import type { LockName, BunPackage, Dependencies } from '#cli/types/tools/packages.ts';
-import { HTTP_URL, INTEGRITY, CONFLICT_MARKER } from '#cli/constants/tools/packages.ts';
 
 const DEV_DEPENDENCIES = z.object({ devDependencies: z.record(z.string(), z.string()).optional() });
 const NPM_LOCK = z.object({ packages: z.record(z.string(), DEV_DEPENDENCIES) });

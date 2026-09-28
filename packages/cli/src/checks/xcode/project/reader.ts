@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { posix } from 'node:path';
 import type { Plist, Token, Folder, ProjectEntry, XcodeProject } from '#cli/types/checks/xcode.ts';
-import { BUILD_SETTING, WORD_CHARACTER, PBXPROJ_ESCAPES, PBXPROJ_PUNCTUATION } from '#cli/constants/checks/xcode.ts';
+import { BUILD_SETTING, WORD_CHARACTER, PBXPROJ_ESCAPES, PBXPROJ_PUNCTUATION } from '#cli/config/checks/xcode.ts';
 
 const entrySchema = z.object({
     isa: z.string(),

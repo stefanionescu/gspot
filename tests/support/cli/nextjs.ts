@@ -12,8 +12,8 @@ import { openSession } from '#cli/execution/session.ts';
 import type { EngineInput } from '#cli/types/checks/checks.ts';
 import { install, toolsPath } from '#tests/support/cli/tools.ts';
 import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
+import { NEXT_PAGE, NEXT_CONFIG, NEXT_LAYOUT } from '#tests/config/cli.ts';
 import type { NextjsObserved } from '#tests/types/integration/cli/checks.ts';
-import { NEXT_PAGE, NEXT_CONFIG, NEXT_LAYOUT } from '#tests/constants/cli.ts';
 import { chmodSync, mkdirSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
 
 /** init selecting nextjs without the recommendations the tests leave out. */

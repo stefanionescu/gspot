@@ -6,7 +6,7 @@ import { openSession } from '#cli/execution/session.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
 import { textContaining } from '#tests/support/expectations.ts';
 import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
-import { GENERATED, GENERATED_DRIFT_OPTIONS } from '#tests/constants/integration/cli/checks.ts';
+import { GENERATED, GENERATED_DRIFT_OPTIONS } from '#tests/config/integration/cli/checks.ts';
 
 test('an edited generated file and one holding merge markers are drift findings, and a fresh apply clears them', async () => {
     await using sandbox = await testdir();

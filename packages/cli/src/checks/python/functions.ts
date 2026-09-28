@@ -1,5 +1,5 @@
+import { PLACEHOLDERS } from '#cli/config/checks/python.ts';
 import { docstringOf } from '#cli/checks/python/modules.ts';
-import { PLACEHOLDERS } from '#cli/constants/checks/python.ts';
 import type { PythonFunction } from '#cli/types/checks/python.ts';
 import type { StructureProblem } from '#cli/types/checks/structure.ts';
 import { executableStatements } from '#cli/checks/structure/statements.ts';

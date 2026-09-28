@@ -1,4 +1,4 @@
-import type { ToolPin, Manifest } from '#cli/types/configurations.ts';
+import type { ToolPin, Manifest } from '#cli/types/kits.ts';
 
 /**
  * Select the private installation used by both generated projects and tool resolution.

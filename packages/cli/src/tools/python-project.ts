@@ -8,12 +8,12 @@ import { runToolCommand } from '#cli/tools/command.ts';
 import { MissingToolError } from '#cli/tools/inspect.ts';
 import type { GeneratedFile } from '#cli/types/generation.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import { MODE_BITS, PRIVATE_FILE } from '#cli/constants/platform.ts';
+import { MODE_BITS, PRIVATE_FILE } from '#cli/config/platform.ts';
 import { publishInstalledFiles } from '#cli/tools/installed-files.ts';
 import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import { normalizedPythonPackage } from '#cli/repository/manifests.ts';
 import type { LifecycleOwner } from '#cli/types/lifecycle/lifecycle.ts';
-import { LOCK, SETUP, INDEX_SETTINGS, TOOL_PYTHON_PROJECT } from '#cli/constants/tools/tools.ts';
+import { LOCK, SETUP, INDEX_SETTINGS, TOOL_PYTHON_PROJECT } from '#cli/config/tools/tools.ts';
 
 import {
     rmSync,

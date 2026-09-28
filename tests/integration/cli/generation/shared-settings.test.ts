@@ -7,7 +7,7 @@ import {
     PYTHON,
     TAILWIND_AT_RULES,
     SHARED_SETTINGS_PACKAGE,
-} from '#tests/constants/integration/cli/generation/generation.ts';
+} from '#tests/config/integration/cli/generation/generation.ts';
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Two cases read the generated knip configuration; one owner parses it.
 async function knipConfiguration(

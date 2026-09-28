@@ -7,8 +7,8 @@ import { openSession } from '#cli/execution/session.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
 import { applyBlock } from '#cli/lifecycle/managed-blocks.ts';
 import { uninstallCommand } from '#cli/commands/uninstall.ts';
-import { parseManifest, gitignoreBlock, configurationManifests } from '#cli/configurations/manifests.ts';
-import { MANAGED_IGNORES_CONFIGURATION } from '#tests/constants/integration/cli/generation/generation.ts';
+import { parseManifest, gitignoreBlock, configurationManifests } from '#cli/kits/manifests.ts';
+import { MANAGED_IGNORES_CONFIGURATION } from '#tests/config/integration/cli/generation/generation.ts';
 
 test.each([true, false])(
     'apply waits for Git before managing ignore entries with authored file=%s',

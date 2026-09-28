@@ -7,8 +7,8 @@ import { knownKeysAt } from '#cli/policy/json-schema.ts';
 import { reasonProblems } from '#cli/policy/problems.ts';
 import { TomlError, parse as parseToml } from 'smol-toml';
 import { pathProblems } from '#cli/policy/path-problems.ts';
+import { FIELD_PROBLEMS } from '#cli/config/policy/policy.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import { FIELD_PROBLEMS } from '#cli/constants/policy/policy.ts';
 import { completenessProblems, unknownConfigurationProblems } from '#cli/policy/validate.ts';
 import { policyLocation, policyPosition, sourceLocations } from '#cli/policy/source-locations.ts';
 

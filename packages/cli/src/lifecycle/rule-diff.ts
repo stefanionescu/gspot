@@ -1,8 +1,8 @@
 import { isDeepStrictEqual } from 'node:util';
 import { parse as parseToml } from 'smol-toml';
 import type { GeneratedFile } from '#cli/types/generation.ts';
+import { GENERATED_JSON_KEY } from '#cli/config/generation.ts';
 import { baseName, extensionOf } from '#cli/platform/paths.ts';
-import { GENERATED_JSON_KEY } from '#cli/constants/generation.ts';
 import { type ParseError, parse as parseJson } from 'jsonc-parser';
 import type { DriftEntry } from '#cli/types/lifecycle/lifecycle.ts';
 import { gixyRules } from '#cli/repository/configuration/gixy-rules.ts';

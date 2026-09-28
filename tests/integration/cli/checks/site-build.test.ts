@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import { stringify } from 'smol-toml';
+import { SITE_BUILD } from '#tests/config/cli.ts';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { run } from '#tests/support/cli/command.ts';
-import { SITE_BUILD } from '#tests/constants/cli.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { siteInput } from '#tests/support/cli/site.ts';
 import { engineInput } from '#cli/execution/engines.ts';

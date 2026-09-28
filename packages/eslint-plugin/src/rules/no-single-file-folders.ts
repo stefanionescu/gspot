@@ -1,6 +1,6 @@
 import { posix } from 'node:path';
-import { DEFAULT_IGNORED } from '#plugin/constants/rules.ts';
-import { CODE_EXTENSIONS } from '#plugin/constants/plugin.ts';
+import { DEFAULT_IGNORED } from '#plugin/config/rules.ts';
+import { CODE_EXTENSIONS } from '#plugin/config/plugin.ts';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
 import type { SingleFileFoldersOptions } from '#plugin/types/rules.ts';
 import { lintedFile, lintedRoot, readDirectory, isAnyGlobMatch, relativeToRoot } from '#plugin/files.ts';

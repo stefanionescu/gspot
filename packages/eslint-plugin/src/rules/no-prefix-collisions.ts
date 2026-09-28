@@ -1,7 +1,7 @@
 import { posix } from 'node:path';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
 import type { NoPrefixCollisionsOptions } from '#plugin/types/rules.ts';
-import { DEFAULT_IGNORED, DEFAULT_THRESHOLD } from '#plugin/constants/rules.ts';
+import { DEFAULT_IGNORED, DEFAULT_THRESHOLD } from '#plugin/config/rules.ts';
 
 import {
     stemOf,

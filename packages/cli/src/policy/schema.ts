@@ -2,10 +2,10 @@ import { z } from 'zod';
 import { toolsSchema } from '#cli/policy/tools.ts';
 import { runnerSchema } from '#cli/policy/runner.ts';
 import { hooksSchema } from '#cli/repository/hooks.ts';
-import { outputSchema } from '#cli/configurations/output-format.ts';
+import { outputSchema } from '#cli/kits/output-format.ts';
 import { reasoned, relativeDirectory } from '#cli/policy/fields.ts';
-import { commandSchema, findingExitCodesSchema } from '#cli/configurations/command-schema.ts';
-import { INDENT_MAX, PRINT_WIDTH_MAX, PRINT_WIDTH_MIN } from '#cli/constants/policy/policy.ts';
+import { commandSchema, findingExitCodesSchema } from '#cli/kits/command-schema.ts';
+import { INDENT_MAX, PRINT_WIDTH_MAX, PRINT_WIDTH_MIN } from '#cli/config/policy/policy.ts';
 
 const text = z.string();
 
@@ -79,7 +79,7 @@ const roleGlobs = z.union([text, textList]);
 
 const architectureSchema = z.strictObject({
     types_directory: text.optional(),
-    constants_directory: text.optional(),
+    config_directory: text.optional(),
     elements: z.array(element).optional(),
     edges_allowed: z.array(allowedEdge).optional(),
     roles: z.record(text, roleGlobs).optional(),

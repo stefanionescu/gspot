@@ -14,7 +14,7 @@ import {
     INERT_SCRIPT_TYPES,
     ACTIVE_DOCUMENT_TYPES,
     DOCUMENT_URL_ATTRIBUTES,
-} from '#cli/constants/checks/checks.ts';
+} from '#cli/config/checks/checks.ts';
 
 // The text with every placeholder mark pair removed.
 function withoutPlaceholders(text: string): string {

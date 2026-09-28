@@ -11,7 +11,7 @@ import {
     XCTEST_COVERAGE_TESTS,
     XCTEST_COVERAGE_SOURCE,
     XCTEST_COVERAGE_PROJECT,
-} from '#tests/constants/integration/tools/checks.ts';
+} from '#tests/config/integration/tools/checks.ts';
 
 if (process.platform === 'darwin')
     test('XCTest and xccov report a below-floor target and pass after testing its uncovered function', async () => {

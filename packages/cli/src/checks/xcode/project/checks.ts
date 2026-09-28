@@ -4,7 +4,7 @@ import { readSource } from '#cli/repository/tracked.ts';
 import type { TestPlan } from '#cli/types/checks/xcode.ts';
 import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
 import { gitBlobs, gitEntries } from '#cli/repository/revisions/contents.ts';
-import { SYMLINK_MODE, XCODE_PROJECT_FILE } from '#cli/constants/checks/xcode.ts';
+import { SYMLINK_MODE, XCODE_PROJECT_FILE } from '#cli/config/checks/xcode.ts';
 import { readProject, projectTestTargets } from '#cli/checks/xcode/project/reader.ts';
 
 // The folder that holds the project bundle, with its trailing slash, or an empty string at the root.

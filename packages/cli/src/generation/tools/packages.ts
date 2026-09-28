@@ -1,10 +1,10 @@
 import semver from 'semver';
 import { npmPins } from '#cli/tools/pins.ts';
-import type { Manifest } from '#cli/types/configurations.ts';
+import type { Manifest } from '#cli/types/kits.ts';
 import type { GeneratedFile } from '#cli/types/generation.ts';
 import type { PackageTool } from '#cli/types/tools/packages.ts';
-import { PACKAGE_JSON_INDENT } from '#cli/constants/generation.ts';
-import { YARN_BERRY_MAJOR } from '#cli/constants/tools/packages.ts';
+import { PACKAGE_JSON_INDENT } from '#cli/config/generation.ts';
+import { YARN_BERRY_MAJOR } from '#cli/config/tools/packages.ts';
 
 /**
  * Generate the npm tools as a private project without adding dependencies to the repository.

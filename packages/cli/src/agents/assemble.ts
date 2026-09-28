@@ -1,15 +1,15 @@
 // Select the rule files for the selection and render them under [rules] directory, keeping the layer folders.
 import { nearMatches } from '#cli/policy/near.ts';
+import type { Manifest } from '#cli/types/kits.ts';
 import type { RuleFile } from '#cli/types/agents.ts';
+import { detectConditions } from '#cli/kits/detect.ts';
 import type { Policy } from '#cli/types/policy/policy.ts';
 import { selectedSections } from '#cli/agents/sections.ts';
-import type { Manifest } from '#cli/types/configurations.ts';
 import { readManifests } from '#cli/repository/manifests.ts';
 import type { GeneratedFile } from '#cli/types/generation.ts';
 import { readAsset, listAssets } from '#cli/platform/assets.ts';
-import { detectConditions } from '#cli/configurations/detect.ts';
 import type { Repository } from '#cli/types/repository/repository.ts';
-import { TITLE, FIRST_READ, AGENT_LAYERS, RULES_PREFIX } from '#cli/constants/agents.ts';
+import { TITLE, FIRST_READ, AGENT_LAYERS, RULES_PREFIX } from '#cli/config/agents.ts';
 
 function declaredGuides(
     manifests: Manifest[],

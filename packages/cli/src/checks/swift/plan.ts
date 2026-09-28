@@ -3,7 +3,7 @@ import { buildFolder } from '#cli/platform/paths.ts';
 import { mutationTarget } from '#cli/platform/safe-paths.ts';
 import type { EngineInput } from '#cli/types/checks/checks.ts';
 import type { SwiftBuildPlan } from '#cli/types/checks/swift.ts';
-import { WORKSPACE_SUFFIX, DEFAULT_DESTINATION } from '#cli/constants/checks/swift.ts';
+import { WORKSPACE_SUFFIX, DEFAULT_DESTINATION } from '#cli/config/checks/swift.ts';
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Three settings are read as text by the plan, whose caller sits at the complexity limit.
 function text(input: EngineInput, key: string): string {

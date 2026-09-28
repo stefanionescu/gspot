@@ -1,6 +1,6 @@
 import type { Finding } from '#cli/types/checks/checks.ts';
 import { codeLines } from '#cli/checks/structure/code-lines.ts';
-import { CONFIG_GUARD, DEFAULT_EXPANSION } from '#cli/constants/checks/script.ts';
+import { CONFIG_GUARD, DEFAULT_EXPANSION } from '#cli/config/checks/script.ts';
 
 import type {
     CodeLine,

@@ -1,5 +1,5 @@
 import type { Reader, Section } from '#cli/types/repository/repository.ts';
-import { KEY_QUOTES, VALUE_QUOTES, BYTE_ORDER_MARK } from '#cli/constants/repository/repository.ts';
+import { KEY_QUOTES, VALUE_QUOTES, BYTE_ORDER_MARK } from '#cli/config/repository/repository.ts';
 
 // The key and the value text of a plain option line: the key, then = or :, then the rest.
 function plainEntry(line: string): [string | undefined, string] {

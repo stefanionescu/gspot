@@ -3,7 +3,7 @@ import { test, expect } from 'bun:test';
 import { fileURLToPath } from 'node:url';
 import { join, dirname, relative } from 'node:path';
 import { reportSchema } from '#cli/execution/report.ts';
-import { RELEASE_TIMEOUT_MS } from '#tests/constants/release.ts';
+import { RELEASE_TIMEOUT_MS } from '#tests/config/release.ts';
 import { environment } from '#tests/support/release/packages.ts';
 import { runProcess as run } from '#tests/support/cli/command.ts';
 import type { InstallJson } from '#cli/types/commands/commands.ts';

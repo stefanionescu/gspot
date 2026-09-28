@@ -1,18 +1,18 @@
 import { Argument, type Command } from 'commander';
+import { everyManifest } from '#cli/kits/select.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
 import { listSettings } from '#cli/policy/settings.ts';
 import { checkState } from '#cli/policy/check-state.ts';
 import { coverageLines } from '#cli/output/coverage.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { directoryOf } from '#cli/platform/arguments.ts';
+import { detectConfigurations } from '#cli/kits/detect.ts';
 import { coverageReport } from '#cli/execution/coverage.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import { readManifests } from '#cli/repository/manifests.ts';
-import { everyManifest } from '#cli/configurations/select.ts';
 import type { Session } from '#cli/types/execution/execution.ts';
 import type { CommandResult } from '#cli/types/commands/commands.ts';
-import { detectConfigurations } from '#cli/configurations/detect.ts';
-import { KEY_GAP, VALUE_WIDTH } from '#cli/constants/commands/commands.ts';
+import { KEY_GAP, VALUE_WIDTH } from '#cli/config/commands/commands.ts';
 import type { Policy, ExtraRow, ToolTables, ScopeSelection, SettingsListing } from '#cli/types/policy/policy.ts';
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Three rows print the scope tag; inlining it nests a template inside a template.

@@ -5,7 +5,7 @@ import { test, expect } from 'bun:test';
 import { run } from '#cli/platform/spawn.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { CLI_VERSION } from '#tests/constants/integration/tools/checks.ts';
+import { CLI_VERSION } from '#tests/config/integration/tools/checks.ts';
 import { prepareSupabaseDatabase } from '#tests/support/cli/supabase/database.ts';
 
 test('the pinned Supabase CLI generates local database types without changing authored configuration', async () => {

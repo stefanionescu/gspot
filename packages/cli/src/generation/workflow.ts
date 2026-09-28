@@ -3,8 +3,8 @@ import { headerFor } from '#cli/generation/headers.ts';
 // eslint-disable-next-line gspot/no-cross-folder-imports, gspot/no-cross-project-imports -- reason: The npm launcher owns the shared release target contract.
 import releaseTargets from '../../../npm/targets.json' with { type: 'json' };
 import type { GeneratedFile, WorkflowShape } from '#cli/types/generation.ts';
-import { MISE_CONFIG_PATH, MISE_MIN_VERSION } from '#cli/constants/tools/tools.ts';
-import { MISE, CACHE, SARIF, UPLOAD, RUNNERS, CHECKOUT, DOWNLOAD, RELEASES } from '#cli/constants/generation.ts';
+import { MISE_CONFIG_PATH, MISE_MIN_VERSION } from '#cli/config/tools/tools.ts';
+import { MISE, CACHE, SARIF, UPLOAD, RUNNERS, CHECKOUT, DOWNLOAD, RELEASES } from '#cli/config/generation.ts';
 
 const ASSET_CASES = releaseTargets
     .filter((target) => target.os !== 'win32')

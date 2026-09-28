@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 import { statSync } from 'node:fs';
-import { BASELINE } from '#cli/constants/checks/security.ts';
+import { BASELINE } from '#cli/config/checks/security.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
 import type { BaselineReason, GitleaksFinding } from '#cli/types/checks/security.ts';

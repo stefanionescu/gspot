@@ -6,7 +6,7 @@ import { cacheHome } from '#cli/platform/environment.ts';
 import type { Pruning } from '#cli/types/checks/swift.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { statSync, lstatSync, mkdirSync, readdirSync } from 'node:fs';
-import { MODE_BITS, PRIVATE_DIRECTORY } from '#cli/constants/platform.ts';
+import { MODE_BITS, PRIVATE_DIRECTORY } from '#cli/config/platform.ts';
 import type { ConfinedRoot, FileObservation } from '#cli/types/platform.ts';
 
 // Checks one folder of the compiler directory: a link is refused, and each folder inside is queued.

@@ -1,5 +1,5 @@
 import { codeLines } from '#cli/checks/structure/code-lines.ts';
-import { DEFAULT_MIN_LINES } from '#cli/constants/checks/structure.ts';
+import { DEFAULT_MIN_LINES } from '#cli/config/checks/structure.ts';
 import type { ScriptFunction, StructureAnalysis as Analysis } from '#cli/types/checks/structure.ts';
 
 /**

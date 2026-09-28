@@ -6,8 +6,8 @@ import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import type { OwnershipEntry } from '#cli/types/lifecycle/lifecycle.ts';
 import type { HookName, GeneratedProposal } from '#cli/types/generation.ts';
 import { simpleGitHooksReady, requirePackageConfiguration } from '#cli/lifecycle/hooks/state.ts';
+import { HOOK_FILES, SIMPLE_GIT_HOOKS_DIRECTORY as DIRECTORY } from '#cli/config/repository/repository.ts';
 import { hookBody, hookPrefix, hookCommand, simpleGitHookCommand } from '#cli/generation/hooks/scripts.ts';
-import { HOOK_FILES, SIMPLE_GIT_HOOKS_DIRECTORY as DIRECTORY } from '#cli/constants/repository/repository.ts';
 
 const manifestSchema = z.object({
     'simple-git-hooks': z

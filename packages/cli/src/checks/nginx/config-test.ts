@@ -8,7 +8,7 @@ import { nginxDirectives } from '#cli/checks/nginx/directives.ts';
 import { nginxTestArguments } from '#cli/checks/nginx/test-plan.ts';
 import type { MountedConfiguration } from '#cli/types/checks/nginx.ts';
 import type { Finding, EngineInput, EngineOutcome } from '#cli/types/checks/checks.ts';
-import { MAIN_FILE, DEFAULT_IMAGE, CERTIFICATE_ARGUMENTS } from '#cli/constants/checks/nginx.ts';
+import { MAIN_FILE, DEFAULT_IMAGE, CERTIFICATE_ARGUMENTS } from '#cli/config/checks/nginx.ts';
 
 // Include paths are resolved against the main configuration directory, matching nginx prefix semantics.
 function includedConfigurations(

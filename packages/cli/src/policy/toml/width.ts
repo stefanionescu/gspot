@@ -3,7 +3,7 @@ import { parseDocument } from '@decimalturn/toml-patch';
 import { expandLongTables } from '#cli/policy/toml/tables.ts';
 import type { TomlTable } from '#cli/types/repository/repository.ts';
 import type { Edit, KeyValue, TomlBlock } from '#cli/types/policy/policy.ts';
-import { POLICY_LINE_WIDTH, DEFAULT_INDENT_WIDTH } from '#cli/constants/policy/policy.ts';
+import { POLICY_LINE_WIDTH, DEFAULT_INDENT_WIDTH } from '#cli/config/policy/policy.ts';
 import { isComment, isKeyValue, isTomlValue, isInlineArray } from '#cli/policy/toml/nodes.ts';
 
 function keyAssignments(blocks: TomlBlock[]): KeyValue[] {

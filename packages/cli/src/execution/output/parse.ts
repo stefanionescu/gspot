@@ -5,9 +5,9 @@ import { realpathSync } from 'node:fs';
 import { toPosix } from '#cli/platform/paths.ts';
 import { parseJson } from '#cli/execution/output/json.ts';
 import type { Finding } from '#cli/types/checks/checks.ts';
-import { ESLINT_WARN, ESLINT_ERROR } from '#cli/constants/evaluation.ts';
+import type { CheckSpec, OutputFormat } from '#cli/types/kits.ts';
+import { ESLINT_WARN, ESLINT_ERROR } from '#cli/config/evaluation.ts';
 import type { Parsing, RegexParser } from '#cli/types/execution/output.ts';
-import type { CheckSpec, OutputFormat } from '#cli/types/configurations.ts';
 
 import {
     typosFindings,
@@ -22,7 +22,7 @@ import {
     DEFAULT_OUTPUT_FORMAT,
     TRAILING_BRACKET_RULE,
     DEFAULT_GROUPED_PATTERN,
-} from '#cli/constants/execution/output.ts';
+} from '#cli/config/execution/output.ts';
 
 const eslintEntry = z.object({
     ruleId: z.string().nullable(),

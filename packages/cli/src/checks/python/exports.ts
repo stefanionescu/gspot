@@ -1,7 +1,7 @@
 import { exportedNames } from '#cli/checks/python/modules.ts';
 import type { PythonModule } from '#cli/types/checks/python.ts';
 import type { StructureProblem } from '#cli/types/checks/structure.ts';
-import { DEFINITIONS, PACKAGE_FILE } from '#cli/constants/checks/python.ts';
+import { DEFINITIONS, PACKAGE_FILE } from '#cli/config/checks/python.ts';
 /**
  * In a module with __all__: every definition the list leaves out starts with an underscore, and the list holds no such name.
  * @param modules every module of the run

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { parse as parseToml } from 'smol-toml';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import { SWIFT_PACKAGE_URL, REQUIREMENT_NAME_END } from '#cli/constants/repository/repository.ts';
+import { SWIFT_PACKAGE_URL, REQUIREMENT_NAME_END } from '#cli/config/repository/repository.ts';
 import type { TrackedFile, DependencyMap, ManifestFacts, PackageManifest } from '#cli/types/repository/repository.ts';
 
 function manifestText(root: string, path: string): string {

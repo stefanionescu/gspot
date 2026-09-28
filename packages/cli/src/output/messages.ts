@@ -2,7 +2,7 @@
 import pc from 'picocolors';
 import { createConsola } from 'consola';
 import type { ConsolaInstance } from 'consola';
-import { LEVELS } from '#cli/constants/output.ts';
+import { LEVELS } from '#cli/config/output.ts';
 import type { OutputOptions } from '#cli/types/output.ts';
 import { isCi, environmentVariables } from '#cli/platform/environment.ts';
 

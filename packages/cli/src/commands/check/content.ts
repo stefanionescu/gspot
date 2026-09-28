@@ -7,7 +7,7 @@ import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { hookStatus } from '#cli/lifecycle/hooks/status.ts';
 import { reproduceLine } from '#cli/execution/reproduce.ts';
-import { CHANGED_SHOWN } from '#cli/constants/commands/check.ts';
+import { CHANGED_SHOWN } from '#cli/config/commands/check.ts';
 import { assertPinMatches } from '#cli/lifecycle/version-pin.ts';
 import { stagedFiles } from '#cli/repository/revisions/selection.ts';
 import type { StagedSet, ChangedSet } from '#cli/types/repository/revisions.ts';

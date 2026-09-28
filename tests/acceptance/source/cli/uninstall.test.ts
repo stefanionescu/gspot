@@ -6,7 +6,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { script } from '#tests/support/cli/planted.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
 
 describe('uninstall', () => {
     test(

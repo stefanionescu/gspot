@@ -5,7 +5,7 @@ import {
     DECLARATION_WORDS,
     DIRECTORY_CONSTANT_SIGNS,
     DIRECTORY_CONSTANT_START,
-} from '#cli/constants/checks/structure.ts';
+} from '#cli/config/checks/structure.ts';
 
 function quoteAfter(quote: string | undefined, char: string): string | undefined {
     if (quote !== undefined) return char === quote ? undefined : quote;

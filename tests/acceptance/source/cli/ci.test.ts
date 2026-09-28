@@ -6,7 +6,7 @@ import { run } from '#tests/support/cli/command.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { pushReportSchema } from '#cli/execution/report.ts';
 import type { Generated, Retention } from '#tests/types/acceptance/source/cli.ts';
-import { RETENTION, CODEQUALITY_REPORT } from '#tests/constants/acceptance/source/cli/cli.ts';
+import { RETENTION, CODEQUALITY_REPORT } from '#tests/config/acceptance/source/cli/cli.ts';
 import { runCiJob, commitCiSource, createCiDownload, prepareCiProject } from '#tests/support/cli/ci.ts';
 // What the generated job says about keeping reports and running the manual stage, in one shape per provider.
 function retention(provider: 'gitlab' | 'github', generated: Generated): Retention {

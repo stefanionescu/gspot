@@ -14,7 +14,7 @@ import {
     SOURCE_ANNOTATION,
     BOUNDARY_MIN_WORDS,
     BOUNDARY_HEADER_WINDOW,
-} from '#cli/constants/checks/script.ts';
+} from '#cli/config/checks/script.ts';
 
 function resolvedSource(owner: string, annotation: string): string {
     if (annotation.startsWith('/')) return annotation.slice(1);

@@ -1,6 +1,6 @@
+import { claimants } from '#cli/kits/claims.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
-import { claimants } from '#cli/configurations/claims.ts';
 import type { Session } from '#cli/types/execution/execution.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
 import { claimedInputs, configuredChecks } from '#cli/execution/planning/plan.ts';

@@ -1,8 +1,8 @@
 import { runBlocking } from '#cli/platform/spawn.ts';
 import type { HookName } from '#cli/types/generation.ts';
 import { isGitRepository } from '#cli/repository/tracked.ts';
-import { HOOK_ARGS, HOOK_HEADER, RUNNER_EXEC } from '#cli/constants/generation.ts';
-import { SIMPLE_GIT_HOOKS_DIRECTORY as DIRECTORY } from '#cli/constants/repository/repository.ts';
+import { HOOK_ARGS, HOOK_HEADER, RUNNER_EXEC } from '#cli/config/generation.ts';
+import { SIMPLE_GIT_HOOKS_DIRECTORY as DIRECTORY } from '#cli/config/repository/repository.ts';
 
 /**
  * Locate policy-owned hook configuration relative to the working directory Git uses for hooks.

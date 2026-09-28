@@ -1,6 +1,6 @@
 import { test, expect, describe } from 'bun:test';
 import { nginxTestArguments } from '#cli/checks/nginx/test-plan.ts';
-import { NGINX_TEST_PLAN_CONFIG } from '#tests/constants/unit/cli/checks/checks.ts';
+import { NGINX_TEST_PLAN_CONFIG } from '#tests/config/unit/cli/checks/checks.ts';
 
 describe('nginxTestArguments', () => {
     test('mounts the file, a certificate and a key where the file opens them, and resolves the names it uses', () => {

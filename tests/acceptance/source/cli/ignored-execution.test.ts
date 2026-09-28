@@ -5,7 +5,7 @@ import { reportSchema } from '#cli/execution/report.ts';
 import { parseProfile } from '#cli/policy/profiles/read.ts';
 import { run, runProcess } from '#tests/support/cli/command.ts';
 import { exportedProfile } from '#cli/policy/profiles/export.ts';
-import { ESLINT_OVERRIDE_POLICY } from '#tests/constants/acceptance/source/cli/cli.ts';
+import { ESLINT_OVERRIDE_POLICY } from '#tests/config/acceptance/source/cli/cli.ts';
 import { existsSync, unlinkSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
 
 const MODULES = join(import.meta.dir, '../../../../node_modules');

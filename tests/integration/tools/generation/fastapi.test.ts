@@ -3,14 +3,14 @@ import { testdir, createFileTree } from 'testdirs';
 import { readAsset } from '#cli/platform/assets.ts';
 import { ruleExamples } from '#cli/agents/examples.ts';
 import { runProcess } from '#tests/support/cli/command.ts';
-import { FASTAPI_GUIDE_TESTS } from '#tests/constants/integration/tools/generation.ts';
+import { FASTAPI_GUIDE_TESTS } from '#tests/config/integration/tools/generation.ts';
 
 test.each(FASTAPI_GUIDE_TESTS)(
     '$guide examples preserve their HTTP validation and response contracts',
     async (scenario) => {
         await using sandbox = await testdir();
         const path = `framework/fastapi/${scenario.guide}.md`;
-        const examples = ruleExamples({ path, text: readAsset(`packages/cli/rules/${path}`) }).filter(
+        const examples = ruleExamples({ path, text: readAsset(`packages/cli/guides/${path}`) }).filter(
             (example) => example.language === 'python',
         );
         expect(examples).toHaveLength(2);

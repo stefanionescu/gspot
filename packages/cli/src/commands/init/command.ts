@@ -15,7 +15,7 @@ import { readProfile } from '#cli/policy/profiles/read.ts';
 import type { Profile } from '#cli/types/policy/profiles.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import { initPlanText } from '#cli/commands/init/plan/text.ts';
-import { UNREADABLE_EXIT, ALREADY_INSTALLED } from '#cli/constants/commands/init.ts';
+import { UNREADABLE_EXIT, ALREADY_INSTALLED } from '#cli/config/commands/init.ts';
 import { listFlag, textFlag, textEntry, directoryOf } from '#cli/platform/arguments.ts';
 import type { InitResult, InitOptions, InitPrepared } from '#cli/types/commands/init.ts';
 

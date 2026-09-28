@@ -4,7 +4,7 @@ import { readSource } from '#cli/repository/tracked.ts';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
 import { xcodeFinding } from '#cli/checks/xcode/project/checks.ts';
 import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
-import { SLEEP_CALLS, SWIFT_COMMENT_LINE } from '#cli/constants/checks/xctest.ts';
+import { SLEEP_CALLS, SWIFT_COMMENT_LINE } from '#cli/config/checks/xctest.ts';
 
 function hasReason(value: Node | undefined): boolean {
     if (value === undefined || value.text === 'nil') return false;

@@ -1,7 +1,7 @@
 // What the owner proposes for one file: a replacement, a managed block, a merged configuration, or a retirement.
 import { isDeepStrictEqual } from 'node:util';
 import type { FileObservation } from '#cli/types/platform.ts';
-import { OWNER_WRITABLE_FILE } from '#cli/constants/platform.ts';
+import { OWNER_WRITABLE_FILE } from '#cli/config/platform.ts';
 import { matches, identity } from '#cli/lifecycle/ownership/journal.ts';
 import { blockSpan, applyBlock } from '#cli/lifecycle/managed-blocks.ts';
 import { planConfiguration } from '#cli/lifecycle/configuration/plan.ts';

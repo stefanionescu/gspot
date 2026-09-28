@@ -1,6 +1,6 @@
 import { test, expect, describe } from 'bun:test';
 import { identifiersOf } from '#cli/checks/naming/extract.ts';
-import { PYTHON_EXTRACTOR_SOURCE } from '#tests/constants/unit/cli/checks/naming.ts';
+import { PYTHON_EXTRACTOR_SOURCE } from '#tests/config/unit/cli/checks/naming.ts';
 
 describe('pythonIdentifiers', () => {
     test('every declared name arrives with its category, and dunder names and self stay out', async () => {

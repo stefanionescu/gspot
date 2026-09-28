@@ -1,5 +1,5 @@
 import { functionAt } from '#cli/checks/structure/parser.ts';
-import { SOURCE_STATEMENT, SHELLCHECK_DIRECTIVE } from '#cli/constants/checks/script.ts';
+import { SOURCE_STATEMENT, SHELLCHECK_DIRECTIVE } from '#cli/config/checks/script.ts';
 import type { ScriptFile, StructureAnalysis as Analysis } from '#cli/types/checks/structure.ts';
 
 // The runs of top-level source statements, each as the zero-based lines it spans. Blank lines and comments join a run.

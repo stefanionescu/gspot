@@ -1,9 +1,9 @@
 import type { SwiftReader } from '#cli/types/checks/swift.ts';
 import { trivialFile } from '#cli/checks/structure/statements.ts';
+import { DEFAULT_DUPLICATE_LINES } from '#cli/config/checks/swift.ts';
 import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
-import { DEFAULT_DUPLICATE_LINES } from '#cli/constants/checks/swift.ts';
 import { functionsOf, swiftSources } from '#cli/checks/swift/sources.ts';
-import { DEFAULT_TRIVIAL_STATEMENTS } from '#cli/constants/checks/structure.ts';
+import { DEFAULT_TRIVIAL_STATEMENTS } from '#cli/config/checks/structure.ts';
 import { trivialFunctions, duplicateFunctions } from '#cli/checks/swift/bodies.ts';
 import { importComments, environmentReads, privateBeforePublic } from '#cli/checks/swift/order.ts';
 

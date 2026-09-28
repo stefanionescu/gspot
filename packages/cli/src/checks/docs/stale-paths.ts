@@ -5,7 +5,7 @@ import { parse as parseToml } from 'smol-toml';
 import { pathMatcher } from '#cli/repository/paths.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { readSource } from '#cli/repository/tracked.ts';
-import { MISE_CONFIG_PATH } from '#cli/constants/tools/tools.ts';
+import { MISE_CONFIG_PATH } from '#cli/config/tools/tools.ts';
 import type { PathIndex, ProseLine } from '#cli/types/checks/docs.ts';
 import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
 
@@ -17,7 +17,7 @@ import {
     PATH_TOKEN_SKIPS,
     TOKEN_SEPARATORS,
     TRAILING_PUNCTUATION,
-} from '#cli/constants/checks/docs.ts';
+} from '#cli/config/checks/docs.ts';
 
 const MISE_FILES = ['mise.toml', '.mise.toml', '.config/mise/config.toml', MISE_CONFIG_PATH];
 function knownPaths(input: EngineInput): Set<string> {

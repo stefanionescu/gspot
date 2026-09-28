@@ -5,11 +5,11 @@ import { join, relative, isAbsolute } from 'node:path';
 import { readSource } from '#cli/repository/tracked.ts';
 import type { SpawnResult } from '#cli/types/platform.ts';
 import { routeGroups } from '#cli/checks/prose/grammars.ts';
+import { VALE_STDIN, VALE_CONFIG } from '#cli/config/kits.ts';
 import { fileBatches } from '#cli/execution/files/batches.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
 import type { ValeAlert, ProseRoute } from '#cli/types/checks/prose.ts';
-import { VALE_STDIN, VALE_CONFIG } from '#cli/constants/configurations.ts';
 
 const alertsSchema = z.record(
     z.string().min(1),

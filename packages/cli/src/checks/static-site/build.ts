@@ -11,7 +11,7 @@ import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import { scratchCopy } from '#cli/execution/files/workspace.ts';
 import type { SiteBuild } from '#cli/types/checks/static-site.ts';
 import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
-import { DEFAULT_BUILD, SHOWN_DIFFERENCES, DEFAULT_BUILD_OUTPUT } from '#cli/constants/checks/static-site.ts';
+import { DEFAULT_BUILD, SHOWN_DIFFERENCES, DEFAULT_BUILD_OUTPUT } from '#cli/config/checks/static-site.ts';
 
 const builds = new WeakMap<object, Map<string, Promise<SiteBuild>>>();
 

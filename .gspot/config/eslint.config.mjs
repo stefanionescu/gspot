@@ -146,7 +146,7 @@ const gspotRules = {
     "packages/eslint-plugin",
     "docs"
 ] }],
-    'gspot/registry-instance-only': ['error', { registryFiles: ['**/registry.ts', '**/registry.tsx', '**/registry.js', "constants/**", "**/constants/**"] }],
+    'gspot/registry-instance-only': ['error', { registryFiles: ['**/registry.ts', '**/registry.tsx', '**/registry.js', "config/**", "**/config/**"] }],
     'gspot/private-before-public': 'error',
     'gspot/import-direction': ['error', { roles: {
     "types": [

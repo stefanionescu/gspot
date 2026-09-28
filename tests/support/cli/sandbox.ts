@@ -2,9 +2,9 @@
 import { symlinkSync } from 'node:fs';
 import { createFileTree } from 'testdirs';
 import { join, delimiter } from 'node:path';
+import { QUIET_INIT } from '#tests/config/cli.ts';
 import type { Sandbox } from '#tests/types/cli.ts';
 import { run } from '#tests/support/cli/command.ts';
-import { QUIET_INIT } from '#tests/constants/cli.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { install, toolsPath } from '#tests/support/cli/tools.ts';
 

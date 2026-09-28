@@ -1,18 +1,18 @@
 // Corrections run in order; dry runs use a scratch copy and return diffs.
 import { rm } from 'node:fs/promises';
 import { createTwoFilesPatch } from 'diff';
+import type { ToolPin } from '#cli/types/kits.ts';
+import { TOOL_DEADLINE } from '#cli/config/kits.ts';
 import { toPlatform } from '#cli/platform/paths.ts';
 import { runToolCommand } from '#cli/tools/command.ts';
-import type { ToolPin } from '#cli/types/configurations.ts';
 import { toolPin, inspectTool } from '#cli/tools/inspect.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { prepareCommand } from '#cli/execution/tool/runner.ts';
-import { TOOL_DEADLINE } from '#cli/constants/configurations.ts';
 import { unlinkSync, readFileSync, writeFileSync } from 'node:fs';
 import type { SpawnResult, ConfinedRoot } from '#cli/types/platform.ts';
 import { commandConfigurations } from '#cli/execution/command-expansion.ts';
 import { hasToolError, executionFailure } from '#cli/execution/broken-tool.ts';
-import { FIX_ORDER, FIX_DIFF_CONTEXT } from '#cli/constants/execution/execution.ts';
+import { FIX_ORDER, FIX_DIFF_CONTEXT } from '#cli/config/execution/execution.ts';
 import { scratchCopy, createFileWorkspace } from '#cli/execution/files/workspace.ts';
 import type { Session, FixReport, FixResult, PlannedCheck, PreparedCommand } from '#cli/types/execution/execution.ts';
 

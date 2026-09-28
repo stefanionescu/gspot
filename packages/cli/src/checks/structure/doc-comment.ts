@@ -6,7 +6,7 @@ import {
     SHELLCHECK_COMMENT,
     VAGUE_SUMMARY_WORDS,
     BASH_DOC_SECTIONS as DOC_SECTIONS,
-} from '#cli/constants/checks/structure.ts';
+} from '#cli/config/checks/structure.ts';
 
 // From a one-based line to the zero-based index of the line above it.
 const LINE_ABOVE = 2;

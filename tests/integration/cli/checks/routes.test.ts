@@ -4,7 +4,7 @@ import { writeFileSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { ROUTE, ROUTES_POLICY, ROUTES_OPTIONS } from '#tests/constants/integration/cli/checks.ts';
+import { ROUTE, ROUTES_POLICY, ROUTES_OPTIONS } from '#tests/config/integration/cli/checks.ts';
 
 test('route imports must resolve to the route in the same scope', async () => {
     await using sandbox = await testdir();

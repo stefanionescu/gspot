@@ -2,7 +2,7 @@ import { posix } from 'node:path';
 import { normalizePath } from '#plugin/files.ts';
 import type { TSESTree } from '@typescript-eslint/utils';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { LEADING_STAR, TS_DIRECTIVE, DIRECTIVE_PREFIXES } from '#plugin/constants/rules.ts';
+import { LEADING_STAR, TS_DIRECTIVE, DIRECTIVE_PREFIXES } from '#plugin/config/rules.ts';
 
 function aliasTarget(source: string, prefix: string, target: string): string | undefined {
     const clean = prefix.endsWith('*') ? prefix.slice(0, -1) : prefix;

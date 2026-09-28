@@ -3,7 +3,7 @@ import { createRequire } from 'node:module';
 import { stripVTControlCharacters } from 'node:util';
 import { MissingToolError } from '#cli/tools/inspect.ts';
 import { SkippedCheckError } from '#cli/checks/result.ts';
-import { FAILED_CHECK } from '#cli/constants/checks/checks.ts';
+import { FAILED_CHECK } from '#cli/config/checks/checks.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import { readPackageManifest } from '#cli/repository/manifests.ts';
 import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';

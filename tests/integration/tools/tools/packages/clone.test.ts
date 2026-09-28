@@ -3,10 +3,10 @@ import { test, expect } from 'bun:test';
 import { run } from '#cli/platform/spawn.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
+import { configurationManifests } from '#cli/kits/manifests.ts';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
-import { LOCKS } from '#tests/constants/integration/tools/packages.ts';
+import { LOCKS } from '#tests/config/integration/tools/packages.ts';
 import { installPackageProject } from '#cli/tools/packages/project.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { readPackageInputs, createPackageProject } from '#tests/support/cli/package-project.ts';
 
 test.each((['npm', 'bun', 'pnpm', 'yarn'] as const).map((client) => [client, 'package.json', 'mise'] as const))(

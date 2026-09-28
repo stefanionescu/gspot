@@ -6,9 +6,9 @@ import { emitAll } from '#cli/generation/outputs.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { explain } from '#cli/commands/explain/subjects.ts';
+import { configurationManifests } from '#cli/kits/manifests.ts';
 import { textContaining } from '#tests/support/expectations.ts';
 import type { RunOptions } from '#cli/types/execution/execution.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { chmodSync, mkdirSync, copyFileSync, readFileSync, writeFileSync } from 'node:fs';
 
 if (!(process.platform === 'win32' || process.getuid?.() === 0))

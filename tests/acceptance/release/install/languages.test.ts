@@ -4,11 +4,11 @@ import { test, expect } from 'bun:test';
 import { writeFileSync } from 'node:fs';
 import { parseAlerts } from '#cli/checks/prose/vale.ts';
 import { reportSchema } from '#cli/execution/report.ts';
+import { RELEASE_TIMEOUT_MS } from '#tests/config/release.ts';
+import { configurationManifests } from '#cli/kits/manifests.ts';
 import type { InstalledConsumer } from '#tests/types/release.ts';
-import { RELEASE_TIMEOUT_MS } from '#tests/constants/release.ts';
 import { runProcess as run } from '#tests/support/cli/command.ts';
 import { createConsumer } from '#tests/support/release/consumer.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { initializeConsumer, getPublishedRelease } from '#tests/support/release/published.ts';
 
 const release = getPublishedRelease();

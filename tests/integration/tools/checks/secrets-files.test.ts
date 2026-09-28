@@ -7,7 +7,7 @@ import { openSession } from '#cli/execution/session.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
 import type { RunOptions } from '#cli/types/execution/execution.ts';
 import { containing, textContaining } from '#tests/support/expectations.ts';
-import { PLANTED_TOKEN, SECRETS_FILES_POLICY } from '#tests/constants/integration/tools/checks.ts';
+import { PLANTED_TOKEN, SECRETS_FILES_POLICY } from '#tests/config/integration/tools/checks.ts';
 
 async function secretChecks(root: string): Promise<{ check: string; status: string; findings: { file: string }[] }[]> {
     const options: RunOptions = { stage: 'all', skips: [], fix: false, isDryRun: false, noCache: true };

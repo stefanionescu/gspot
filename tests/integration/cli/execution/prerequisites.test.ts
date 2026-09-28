@@ -7,7 +7,7 @@ import { openSession } from '#cli/execution/session.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { checkExecution } from '#cli/execution/engines.ts';
 import { textContaining } from '#tests/support/expectations.ts';
-import { WAITING, PREREQUISITES_POLICY } from '#tests/constants/integration/cli/execution/execution.ts';
+import { WAITING, PREREQUISITES_POLICY } from '#tests/config/integration/cli/execution/execution.ts';
 
 test('disabled settings produce skipped results and enabling a setting runs the check', async () => {
     await using sandbox = await testdir();

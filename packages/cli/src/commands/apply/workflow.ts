@@ -6,10 +6,10 @@ import type { FileObservation } from '#cli/types/platform.ts';
 import type { Session } from '#cli/types/execution/execution.ts';
 import type { GeneratedProposal } from '#cli/types/generation.ts';
 import { preparePythonProject } from '#cli/tools/python-project.ts';
+import { CONFLICT_MARKERS } from '#cli/config/lifecycle/lifecycle.ts';
 import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import { installPackages, hasOwnedPackages } from '#cli/tools/vale.ts';
 import { preparePackageProject } from '#cli/tools/packages/project.ts';
-import { CONFLICT_MARKERS } from '#cli/constants/lifecycle/lifecycle.ts';
 import type { ApplyReport, LifecycleOwner } from '#cli/types/lifecycle/lifecycle.ts';
 
 async function installProsePackages(session: Session, report: ApplyReport): Promise<void> {

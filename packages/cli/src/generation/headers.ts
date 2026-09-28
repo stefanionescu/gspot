@@ -11,7 +11,7 @@ import {
     GENERATED_HEADER_LINE,
     GENERATED_HEADER_LINES,
     SLASH_COMMENT_EXTENSIONS,
-} from '#cli/constants/generation.ts';
+} from '#cli/config/generation.ts';
 
 function commented(lines: string[], mark: string): string {
     const marked = lines.map((line) => `${mark} ${line}`).join('\n');

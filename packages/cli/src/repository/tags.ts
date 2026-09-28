@@ -2,8 +2,8 @@
 import { baseName, extensionOf } from '#cli/platform/paths.ts';
 import type { Tagged, RawEntry } from '#cli/types/repository/repository.ts';
 import { shebangExecutable, shebangInterpreter } from '#cli/repository/shebang.ts';
-import { LOCKFILE_NAMES, BINARY_EXTENSIONS } from '#cli/constants/repository/patterns.ts';
-import { SHEBANG_TAGS, FILENAME_TAGS, EXTENSION_TAGS } from '#cli/constants/repository/repository.ts';
+import { LOCKFILE_NAMES, BINARY_EXTENSIONS } from '#cli/config/repository/patterns.ts';
+import { SHEBANG_TAGS, FILENAME_TAGS, EXTENSION_TAGS } from '#cli/config/repository/repository.ts';
 
 function sniff(buffer: Buffer): { isBinary: boolean; firstLine: string } {
     if (buffer.includes(0)) return { isBinary: true, firstLine: '' };

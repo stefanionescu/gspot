@@ -1,4 +1,4 @@
-import { ENVIRONMENT_HOSTS } from '#plugin/constants/plugin.ts';
+import { ENVIRONMENT_HOSTS } from '#plugin/config/plugin.ts';
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
 import { ASTUtils, AST_NODE_TYPES } from '@typescript-eslint/utils';
 

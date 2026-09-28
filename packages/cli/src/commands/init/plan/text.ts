@@ -1,7 +1,7 @@
 // The init, upgrade and --dry-run plans as text.
 import { colors } from '#cli/output/messages.ts';
 import type { TakeoverPlan } from '#cli/types/commands/init.ts';
-import { COLUMN_GAP, REASON_WIDTH, CONFIGURATION_WIDTH } from '#cli/constants/commands/init.ts';
+import { COLUMN_GAP, REASON_WIDTH, CONFIGURATION_WIDTH } from '#cli/config/commands/init.ts';
 
 function section(title: string, rows: { path: string; note: string }[]): string[] {
     if (rows.length === 0) return [];

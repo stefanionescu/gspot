@@ -2,7 +2,7 @@ import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { randomUUID } from 'node:crypto';
 import { Command, CommanderError } from 'commander';
-import { SWIFT_GRAMMAR } from '#cli/constants/platform.ts';
+import { SWIFT_GRAMMAR } from '#cli/config/platform.ts';
 import { rmSync, mkdirSync, existsSync, renameSync, readFileSync, writeFileSync } from 'node:fs';
 
 // The exit of a build step that did not finish.

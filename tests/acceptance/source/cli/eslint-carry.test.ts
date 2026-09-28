@@ -3,8 +3,8 @@ import { join, relative } from 'node:path';
 import { ESLint, loadESLint } from 'eslint';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
 import type { ApplyPreviewJson } from '#cli/types/commands/apply.ts';
 import type { EslintAdoption } from '#tests/types/acceptance/source/cli.ts';
 import { statSync, chmodSync, existsSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
@@ -13,7 +13,7 @@ import {
     ESLINT_CARRY_FILES,
     ESLINT_CARRY_CONFIG,
     ESLINT_CARRY_SOURCE,
-} from '#tests/constants/acceptance/source/cli/cli.ts';
+} from '#tests/config/acceptance/source/cli/cli.ts';
 
 async function expectAdoptedRules({ root, before }: EslintAdoption): Promise<void> {
     const expected = before.flatMap(({ filePath, messages }) =>

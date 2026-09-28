@@ -7,7 +7,7 @@ import { hookLocation } from '#cli/repository/hook-location.ts';
 import { proposeHookRestorations } from '#cli/lifecycle/hooks/git.ts';
 import { findRoot, isGitRepository } from '#cli/repository/tracked.ts';
 import type { OwnershipState } from '#cli/types/lifecycle/lifecycle.ts';
-import { OWNERSHIP_FILE, STATE_DIRECTORY } from '#cli/constants/platform.ts';
+import { OWNERSHIP_FILE, STATE_DIRECTORY } from '#cli/config/platform.ts';
 import { readOwnership, runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import type { CommandResult, UninstallPlan, UninstallOptions } from '#cli/types/commands/commands.ts';
 

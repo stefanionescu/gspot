@@ -1,15 +1,15 @@
 // Whether the installed Git hooks still match what the journal recorded, with the line that says so.
 import { posix, basename } from 'node:path';
 import { binaryPath } from '#cli/platform/assets.ts';
+import { EXECUTE_BITS } from '#cli/config/platform.ts';
 import type { HookName } from '#cli/types/generation.ts';
 import type { Policy } from '#cli/types/policy/policy.ts';
-import { EXECUTE_BITS } from '#cli/constants/platform.ts';
 import { HOOK_ARTIFACTS } from '#cli/repository/hooks.ts';
 import { huskyLines } from '#cli/generation/hooks/husky.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { hookLocation } from '#cli/repository/hook-location.ts';
+import { HOOK_FILES } from '#cli/config/repository/repository.ts';
 import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
-import { HOOK_FILES } from '#cli/constants/repository/repository.ts';
 import type { Repository } from '#cli/types/repository/repository.ts';
 import type { Status, Readiness } from '#cli/types/lifecycle/hooks.ts';
 import type { OwnershipEntry } from '#cli/types/lifecycle/lifecycle.ts';

@@ -3,9 +3,9 @@ import { join } from 'node:path';
 import plugin from '#plugin/plugin.ts';
 import { test, spyOn, expect } from 'bun:test';
 import { parsePolicyText } from '#cli/policy/read.ts';
+import * as manifestDefinitions from '#cli/kits/manifests.ts';
 import * as programDefinition from '#cli/commands/program.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
-import * as manifestDefinitions from '#cli/configurations/manifests.ts';
 import { referencePages } from '#docs/src/content/reference/collection.ts';
 
 test('command reference includes inherited options and nested usage while omitting hidden internals', () => {

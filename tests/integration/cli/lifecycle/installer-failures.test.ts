@@ -7,10 +7,10 @@ import { installCommand } from '#cli/commands/install.ts';
 import { installHooks } from '#cli/lifecycle/hooks/git.ts';
 import { rejection } from '#tests/support/expectations.ts';
 import { initCommand } from '#cli/commands/init/command.ts';
+import { MISE_MIN_VERSION } from '#cli/config/tools/tools.ts';
 import { installTools } from '#cli/tools/install/execution.ts';
 import { hookLocation } from '#cli/repository/hook-location.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
-import { MISE_MIN_VERSION } from '#cli/constants/tools/tools.ts';
 import { rmSync, chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 
 const { version: GSPOT_VERSION } = packageManifest;

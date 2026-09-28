@@ -9,13 +9,13 @@ import { commitAll } from '#tests/support/cli/git.ts';
 import { script } from '#tests/support/cli/planted.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
 import { runProcess } from '#tests/support/cli/command.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
 import releaseTargets from '#npm-targets' with { type: 'json' };
 import packageManifest from '#cli-package' with { type: 'json' };
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { cpSync, rmSync, mkdirSync, existsSync, copyFileSync, writeFileSync } from 'node:fs';
-import { EMBEDDED_INIT_ARGS, BUILD_CHECKOUT_PATHS, EMBEDDED_PARSER_SOURCES } from '#tests/constants/release.ts';
+import { EMBEDDED_INIT_ARGS, BUILD_CHECKOUT_PATHS, EMBEDDED_PARSER_SOURCES } from '#tests/config/release.ts';
 
 const { version: GSPOT_VERSION } = packageManifest;
 

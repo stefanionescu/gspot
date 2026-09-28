@@ -1,8 +1,8 @@
 // A copied virtual environment names working-tree interpreters in its launchers; these read its facts and move them.
-import { EXECUTE_BITS } from '#cli/constants/platform.ts';
+import { SelectionError } from '#cli/kits/select.ts';
+import { EXECUTE_BITS } from '#cli/config/platform.ts';
 import { stat, readdir, realpath } from 'node:fs/promises';
 import { join, posix, basename, isAbsolute } from 'node:path';
-import { SelectionError } from '#cli/configurations/select.ts';
 import type { ConfinedRoot, FileObservation } from '#cli/types/platform.ts';
 import type { PythonLauncher, RelocationContext } from '#cli/types/repository/revisions.ts';
 import { relocateWindowsLauncher } from '#cli/repository/revisions/virtualenv/windows-launcher.ts';

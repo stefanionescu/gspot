@@ -1,8 +1,8 @@
 import semver from 'semver';
+import { everyManifest } from '#cli/kits/select.ts';
 import { runToolCommand } from '#cli/tools/command.ts';
 import { MissingToolError } from '#cli/tools/inspect.ts';
 import { installHooks } from '#cli/lifecycle/hooks/git.ts';
-import { everyManifest } from '#cli/configurations/select.ts';
 import type { Session } from '#cli/types/execution/execution.ts';
 import type { InstallationStep } from '#cli/types/tools/tools.ts';
 import { pythonPins, InstallationError } from '#cli/tools/pins.ts';
@@ -10,7 +10,7 @@ import { installPythonProject } from '#cli/tools/python-project.ts';
 import { installNativeHooks } from '#cli/lifecycle/hooks/managers.ts';
 import { installPackageProject } from '#cli/tools/packages/project.ts';
 import { packageEnvironment } from '#cli/tools/packages/environment.ts';
-import { UV_INSTALLER, MISE_CONFIG_PATH, MISE_MIN_VERSION } from '#cli/constants/tools/tools.ts';
+import { UV_INSTALLER, MISE_CONFIG_PATH, MISE_MIN_VERSION } from '#cli/config/tools/tools.ts';
 
 const installations: InstallationStep[] = [
     {

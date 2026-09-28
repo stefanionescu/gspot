@@ -15,7 +15,7 @@ import { environmentVariables } from '#cli/platform/environment.ts';
 import { applyIgnores, applyInlineIgnores } from '#cli/execution/ignores.ts';
 import type { SourceObservations } from '#cli/types/repository/repository.ts';
 import { runHashes, cacheKeyFor, storeResult, cachedResult } from '#cli/execution/result-cache.ts';
-import { DOCKER, RAN_STATUSES, FAILED_STATUSES, HISTORY_ANALYSES } from '#cli/constants/execution/execution.ts';
+import { DOCKER, RAN_STATUSES, FAILED_STATUSES, HISTORY_ANALYSES } from '#cli/config/execution/execution.ts';
 
 import type {
     Pass,

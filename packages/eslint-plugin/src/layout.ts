@@ -1,5 +1,5 @@
 // Ordering shared by the import and export layout rules: statements by length, then the names inside braces.
-import { BLANK, SPACES } from '#plugin/constants/rules.ts';
+import { BLANK, SPACES } from '#plugin/config/rules.ts';
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
 import type { LayoutMessages, ImportLayoutEntry } from '#plugin/types/rules.ts';
 

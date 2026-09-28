@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import { fileURLToPath } from 'node:url';
 import { prepareInput } from './inputs.ts';
+import { SWIFT_GRAMMAR } from '#cli/config/platform.ts';
 import { sep, join, dirname, resolve } from 'node:path';
-import { SWIFT_GRAMMAR } from '#cli/constants/platform.ts';
 import type { UpstreamNotice } from '#cli/types/platform.ts';
 import { existsSync, readdirSync, readFileSync, realpathSync } from 'node:fs';
 

@@ -1,16 +1,16 @@
 // What init lists: configuration at conventional paths, hooks, CI, agent files, home-grown lint folders, the runner.
 import picomatch from 'picomatch';
 import { parse as parseYaml } from 'yaml';
+import type { ToolPin } from '#cli/types/kits.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
 import type { ConfinedRoot } from '#cli/types/platform.ts';
-import type { ToolPin } from '#cli/types/configurations.ts';
 import { isLintOnlyManifest } from '#cli/repository/scopes.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { readGitSetting } from '#cli/repository/git-config.ts';
+import { configurationManifests } from '#cli/kits/manifests.ts';
 import { hookLocation } from '#cli/repository/hook-location.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { configurationSection } from '#cli/repository/configuration/configuration-section.ts';
-import { AGENT_FILE_NAMES, LINT_FOLDER_NAMES, RULES_DIRECTORY_NAMES } from '#cli/constants/repository/patterns.ts';
+import { AGENT_FILE_NAMES, LINT_FOLDER_NAMES, RULES_DIRECTORY_NAMES } from '#cli/config/repository/patterns.ts';
 import type { TrackedFile, ExistingTool, ManifestFacts, ExistingTooling } from '#cli/types/repository/repository.ts';
 
 import {
@@ -21,7 +21,7 @@ import {
     TASK_RUNNERS,
     OTHER_CI_FILES,
     FOREIGN_HOOK_DIRECTORIES as HOOK_DIRECTORIES,
-} from '#cli/constants/repository/repository.ts';
+} from '#cli/config/repository/repository.ts';
 
 // In "<runner> run <task>", the task sits two words after the runner.
 const TASK_AFTER_RUN = 2;

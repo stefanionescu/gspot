@@ -1,5 +1,5 @@
 import type { FrontMatter, RuleFinding } from '#cli/types/agents.ts';
-import { FENCE, RULE_LAYERS, CONFIGURATION_ID } from '#cli/constants/agents.ts';
+import { FENCE, RULE_LAYERS, CONFIGURATION_ID } from '#cli/config/agents.ts';
 
 const LAYERS = new Set(RULE_LAYERS);
 function fieldsOf(lines: string[]): Record<string, string> {

@@ -14,13 +14,13 @@ import { hookPrefix } from '#cli/generation/hooks/scripts.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { nativeHook } from '#cli/lifecycle/hooks/native-hooks.ts';
 import type { Repository } from '#cli/types/repository/repository.ts';
+import { MANAGERS, CONFIG_PATHS } from '#cli/config/lifecycle/hooks.ts';
 import { lefthookConfiguration } from '#cli/generation/hooks/lefthook.ts';
-import { MANAGERS, CONFIG_PATHS } from '#cli/constants/lifecycle/hooks.ts';
 import { hasConfiguration } from '#cli/lifecycle/configuration/document.ts';
 import { preCommitConfiguration } from '#cli/generation/hooks/pre-commit.ts';
 import { huskyReady, simpleGitHooksReady } from '#cli/lifecycle/hooks/state.ts';
+import { HOOK_FILES, LEFTHOOK_MIN_VERSION } from '#cli/config/repository/repository.ts';
 import type { HookTool, Preparation, PreparedHook } from '#cli/types/lifecycle/hooks.ts';
-import { HOOK_FILES, LEFTHOOK_MIN_VERSION } from '#cli/constants/repository/repository.ts';
 
 // The native manager the policy names, when Git is present and the tool is one gspot integrates with.
 function selectedHookTool(policy: Policy, repository: Pick<Repository, 'hasGit'>): HookTool | undefined {

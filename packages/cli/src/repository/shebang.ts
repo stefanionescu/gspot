@@ -1,5 +1,5 @@
-import { ENV_SUFFIX } from '#cli/constants/repository/repository.ts';
-import { SHEBANG_INTERPRETERS } from '#cli/constants/repository/patterns.ts';
+import { ENV_SUFFIX } from '#cli/config/repository/repository.ts';
+import { SHEBANG_INTERPRETERS } from '#cli/config/repository/patterns.ts';
 
 function withoutTrailingVersion(word: string): string {
     let end = word.length;

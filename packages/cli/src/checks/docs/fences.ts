@@ -16,7 +16,7 @@ import {
     ANGLE_PLACEHOLDER,
     ELLIPSIS_ARGUMENTS,
     STRUCTURED_PARSERS,
-} from '#cli/constants/checks/docs.ts';
+} from '#cli/config/checks/docs.ts';
 
 function fencesOf(text: string): FencedBlock[] {
     const out: FencedBlock[] = [];

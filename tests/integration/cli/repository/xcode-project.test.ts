@@ -6,7 +6,7 @@ import { git, commitAll } from '#tests/support/cli/git.ts';
 import { unlink, symlink, readlink } from 'node:fs/promises';
 import { readProject } from '#cli/checks/xcode/project/reader.ts';
 import { containing, textContaining } from '#tests/support/expectations.ts';
-import { PBXPROJ_PROJECT } from '#tests/constants/integration/cli/repository.ts';
+import { PBXPROJ_PROJECT } from '#tests/config/integration/cli/repository.ts';
 
 test('Xcode sources follow group paths and target membership instead of duplicate filenames', async () => {
     await using sandbox = await testdir();

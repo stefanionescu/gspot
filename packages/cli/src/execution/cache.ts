@@ -2,8 +2,8 @@
 import { globbySync } from 'globby';
 import { join, relative } from 'node:path';
 import { readSource } from '#cli/repository/tracked.ts';
+import { CACHE_DIRECTORY } from '#cli/config/platform.ts';
 import { checkResultSchema } from '#cli/checks/result.ts';
-import { CACHE_DIRECTORY } from '#cli/constants/platform.ts';
 import { statSync, readdirSync, type Dirent } from 'node:fs';
 import type { CheckResult } from '#cli/types/checks/checks.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
@@ -11,7 +11,7 @@ import { reportStorageFailure } from '#cli/output/messages.ts';
 import type { CacheKeyInput } from '#cli/types/execution/execution.ts';
 import type { SourceObservations } from '#cli/types/repository/repository.ts';
 import { readOwnership, runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
-import { CACHE_ENTRY, CACHE_FORMAT, RETENTION_MS } from '#cli/constants/execution/execution.ts';
+import { CACHE_ENTRY, CACHE_FORMAT, RETENTION_MS } from '#cli/config/execution/execution.ts';
 /**
  * The cache key for one check run.
  * @param input the check name, scope, tool version, configuration hash and file hashes

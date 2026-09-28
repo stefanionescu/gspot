@@ -4,8 +4,8 @@ import { buildFolder } from '#cli/platform/paths.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { test, expect, describe, afterEach } from 'bun:test';
+import { XCTEST_EXECUTION_POLICY, XCTEST_EXECUTION_OPTIONS } from '#tests/config/integration/cli/checks.ts';
 import { rmSync, chmodSync, mkdirSync, existsSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
-import { XCTEST_EXECUTION_POLICY, XCTEST_EXECUTION_OPTIONS } from '#tests/constants/integration/cli/checks.ts';
 
 const caches = new Set<string>();
 afterEach(() => {

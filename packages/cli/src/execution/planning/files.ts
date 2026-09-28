@@ -1,10 +1,10 @@
 // Which files a planned check runs over: what it claims, less excluded and child-scope paths, narrowed to a selection.
-import { claimedByClaims } from '#cli/configurations/claims.ts';
+import { claimedByClaims } from '#cli/kits/claims.ts';
+import { configurationName } from '#cli/kits/targets.ts';
+import type { Manifest, CheckSpec } from '#cli/types/kits.ts';
 import type { ScopeSelection } from '#cli/types/policy/policy.ts';
 import { isInScope, pathMatcher } from '#cli/repository/paths.ts';
-import { configurationName } from '#cli/configurations/targets.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
-import type { Manifest, CheckSpec } from '#cli/types/configurations.ts';
 import type { Session, PlanEntry, PlanContext, PlannedCheck } from '#cli/types/execution/execution.ts';
 
 // Every tracked file under the scope.

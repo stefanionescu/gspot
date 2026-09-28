@@ -1,7 +1,7 @@
 import { staticString } from '#plugin/files.ts';
 import type { TSESTree } from '@typescript-eslint/utils';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { DEFAULT_PREFIXES } from '#plugin/constants/rules.ts';
+import { DEFAULT_PREFIXES } from '#plugin/config/rules.ts';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
 import type { ImportPathStyleName, ImportPathStyleOptions } from '#plugin/types/rules.ts';
 

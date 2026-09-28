@@ -1,6 +1,6 @@
 import type { SqlNode } from '#cli/types/parsers/sql.ts';
 import { textOf, nodesOf, partsOf } from '#cli/parsers/sql/parser.ts';
-import { KEY_KINDS, DEFAULT_SCHEMA, CONSTRAINT_SUFFIXES } from '#cli/constants/checks/postgres.ts';
+import { KEY_KINDS, DEFAULT_SCHEMA, CONSTRAINT_SUFFIXES } from '#cli/config/checks/postgres.ts';
 import type { Location, Migration, FactReader, SchemaFacts, SchemaState } from '#cli/types/checks/postgres.ts';
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Four readers qualify a relation name, and the default schema is applied in one place.

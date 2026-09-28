@@ -1,4 +1,4 @@
-import { CATEGORY_KEYS, NAMING_LIST_KEYS } from '#cli/constants/policy/policy.ts';
+import { CATEGORY_KEYS, NAMING_LIST_KEYS } from '#cli/config/policy/policy.ts';
 
 import type {
     Limits,

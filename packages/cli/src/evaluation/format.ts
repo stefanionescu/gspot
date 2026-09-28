@@ -7,13 +7,13 @@ import { createRequire } from 'node:module';
 import { compact } from '#cli/policy/normalize.ts';
 import { join, dirname, basename } from 'node:path';
 import type { ConfinedRoot } from '#cli/types/platform.ts';
+import { CARRIED_REASON } from '#cli/config/policy/policy.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import { CARRIED_REASON } from '#cli/constants/policy/policy.ts';
 import type { AdoptedFormatting } from '#cli/types/policy/adoption.ts';
 import type { prettierIgnoreRequest } from '#cli/evaluation/protocol.ts';
 import { prettierOptions } from '#cli/generation/formatting/settings.ts';
 import { literalGlob, rebaseOverrides } from '#cli/generation/formatting/selectors.ts';
-import { MODELED_OPTIONS, MODULE_CONFIGURATION, PACKAGE_CONFIGURATION } from '#cli/constants/evaluation.ts';
+import { MODELED_OPTIONS, MODULE_CONFIGURATION, PACKAGE_CONFIGURATION } from '#cli/config/evaluation.ts';
 import { formatFields, formatRequest, prettierSource, prettierSettings } from '#cli/evaluation/protocol.ts';
 
 import type {

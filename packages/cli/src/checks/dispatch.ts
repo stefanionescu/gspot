@@ -1,3 +1,4 @@
+import type { CheckSpec } from '#cli/types/kits.ts';
 import { cssModuleUsage } from '#cli/checks/css.ts';
 import { fences } from '#cli/checks/docs/fences.ts';
 import { svelteCheck } from '#cli/checks/svelte.ts';
@@ -16,7 +17,6 @@ import { envFiles } from '#cli/checks/security/env/files.ts';
 import { nginxTest } from '#cli/checks/nginx/config-test.ts';
 import { routesTested } from '#cli/checks/express/routes.ts';
 import { stalePaths } from '#cli/checks/docs/stale-paths.ts';
-import type { CheckSpec } from '#cli/types/configurations.ts';
 import { testCoverage } from '#cli/checks/xctest/coverage.ts';
 import { trivyImage } from '#cli/checks/docker/image-scan.ts';
 import { readmeShape } from '#cli/checks/docs/readme/shape.ts';

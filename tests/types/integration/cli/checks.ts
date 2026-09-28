@@ -1,8 +1,8 @@
 // The types of integration/cli/checks in this package.
 import type { Mock } from 'bun:test';
 import type { TestdirResult } from 'testdirs';
+import type { CheckSpec } from '#cli/types/kits.ts';
 import type { inspectTool } from '#cli/tools/inspect.ts';
-import type { CheckSpec } from '#cli/types/configurations.ts';
 import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
 
 /** What the Cloudflare types test plants: the generated declaration, its developer edit, and the mocked inspection. */

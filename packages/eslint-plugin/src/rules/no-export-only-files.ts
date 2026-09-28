@@ -1,5 +1,5 @@
+import { SKIPPED } from '#plugin/config/rules.ts';
 import { createRule } from '#plugin/definition.ts';
-import { SKIPPED } from '#plugin/constants/rules.ts';
 import type { TSESTree } from '@typescript-eslint/utils';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { lintedFile, isIndexFile } from '#plugin/files.ts';

@@ -7,7 +7,7 @@ import { parseAlerts } from '#cli/checks/prose/vale.ts';
 test('heading capitalization distinguishes ordinary edge from the browser name and rejects title case', async () => {
     await using directory = await testdir();
     const rule = readFileSync(
-        new URL('../../../../packages/cli/configurations/policy/prose/styles/gspot/headings.yml', import.meta.url),
+        new URL('../../../../packages/cli/kits/general/prose/styles/gspot/headings.yml', import.meta.url),
         'utf8',
     );
     await createFileTree(directory.path, {

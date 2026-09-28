@@ -1,8 +1,8 @@
 import type { GeneratedFile } from '#cli/types/generation.ts';
 import { readAsset, listAssets } from '#cli/platform/assets.ts';
 import type { Policy, MergedView } from '#cli/types/policy/policy.ts';
-import { MAX_LINE, LONGER_THAN, STYLE_ASSETS } from '#cli/constants/generation.ts';
-import { GSPOT_STYLE, LENGTH_RULES, STYLES_DIRECTORY } from '#cli/constants/configurations.ts';
+import { MAX_LINE, LONGER_THAN, STYLE_ASSETS } from '#cli/config/generation.ts';
+import { GSPOT_STYLE, LENGTH_RULES, STYLES_DIRECTORY } from '#cli/config/kits.ts';
 
 function renderedRule(stem: string, text: string, view: MergedView): string {
     const key = LENGTH_RULES[stem];
@@ -34,9 +34,7 @@ export function styleFiles(policy: Policy, view: MergedView): GeneratedFile[] {
                 configuration: 'prose',
             };
         });
-    const shipped = readAsset('packages/cli/configurations/policy/prose/vocabularies/gspot/accept.txt')
-        .trim()
-        .split(/\r?\n/u);
+    const shipped = readAsset('packages/cli/kits/general/prose/vocabularies/gspot/accept.txt').trim().split(/\r?\n/u);
     const vocabulary = [...new Set([...shipped, ...policy.prose.vocabulary])].toSorted((a, b) => a.localeCompare(b));
     const base = `${STYLES_DIRECTORY}/config/vocabularies/${GSPOT_STYLE}`;
     return [

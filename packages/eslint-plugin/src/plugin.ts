@@ -1,7 +1,7 @@
+import { INDEX_ONLY_RULES } from '#plugin/config/plugin.ts';
 import { noReexports } from '#plugin/rules/no-reexports.ts';
 import { exportLayout } from '#plugin/rules/export-layout.ts';
 import { importLayout } from '#plugin/rules/import-layout.ts';
-import { INDEX_ONLY_RULES } from '#plugin/constants/plugin.ts';
 import { typesPlacement } from '#plugin/rules/types-placement.ts';
 import { envAccessOwner } from '#plugin/rules/env-access-owner.ts';
 import { noIndexImports } from '#plugin/rules/no-index-imports.ts';

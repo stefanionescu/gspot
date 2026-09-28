@@ -1,6 +1,8 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { PROSE_FORMATS } from '#cli/kits/vale.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { TOKEN_IGNORES } from '#cli/config/kits.ts';
 import { readAsset } from '#cli/platform/assets.ts';
 import { run } from '#tests/support/cli/command.ts';
 import { openSession } from '#cli/execution/session.ts';
@@ -8,9 +10,7 @@ import { reportSchema } from '#cli/execution/report.ts';
 import { valeFindings } from '#cli/checks/prose/vale.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { runEngineCheck } from '#cli/execution/engines.ts';
-import { PROSE_FORMATS } from '#cli/configurations/vale.ts';
 import { containing } from '#tests/support/expectations.ts';
-import { TOKEN_IGNORES } from '#cli/constants/configurations.ts';
 
 for (const extension of ['md', 'sh']) {
     test(`native Vale reports a ${extension} defect and accepts corrected source`, async () => {
@@ -39,9 +39,7 @@ test('Vale preserves ESLint delimiters while checking punctuation inside reasons
     await createFileTree(directory.path, {
         'gspot.toml': 'version = 1\nconfigurations = ["prose", "typescript"]\n',
         '.gspot/config/vale.ini': 'StylesPath = styles\nMinAlertLevel = suggestion\n[*]\nBasedOnStyles = Example\n',
-        '.gspot/config/styles/Example/Dashes.yml': readAsset(
-            'packages/cli/configurations/policy/prose/styles/gspot/dashes.yml',
-        ),
+        '.gspot/config/styles/Example/Dashes.yml': readAsset('packages/cli/kits/general/prose/styles/gspot/dashes.yml'),
         'source.ts': [
             '// eslint-disable -- reason: The external declaration requires this signature.',
             '// eslint-enable no-x, @scope/no-y -- reason: Checks resume here.',
@@ -118,7 +116,7 @@ test('Vale accepts explicit minimum versions and still reports vague or redundan
         'gspot.toml': 'version = 1\nconfigurations = ["prose", "markdown"]\n',
         '.gspot/config/vale.ini': 'StylesPath = styles\nMinAlertLevel = suggestion\n[*]\nBasedOnStyles = Example\n',
         '.gspot/config/styles/Example/Versions.yml': readAsset(
-            'packages/cli/configurations/policy/prose/styles/gspot/version-range.yml',
+            'packages/cli/kits/general/prose/styles/gspot/version-range.yml',
         ),
         'versions.md': [
             'Use Node.js 24.2.0 or later.',
@@ -158,9 +156,7 @@ test('a raw-markup fixture exception preserves adjacent images and other prose r
             '',
         ].join('\n'),
         '.gspot/config/vale.ini': 'StylesPath = styles\n[*]\nBasedOnStyles = Example\n',
-        '.gspot/config/styles/Example/Alt.yml': readAsset(
-            'packages/cli/configurations/policy/prose/styles/gspot/alt-text.yml',
-        ),
+        '.gspot/config/styles/Example/Alt.yml': readAsset('packages/cli/kits/general/prose/styles/gspot/alt-text.yml'),
         '.gspot/config/styles/Example/Concrete.yml':
             'extends: existence\nmessage: "Use inspect."\nlevel: error\ntokens: [delve]\n',
         'fixture.ts': 'const markup = \'<img src="fixture.png">\';\n// We delve into records.\n',

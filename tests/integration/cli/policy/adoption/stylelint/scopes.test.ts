@@ -6,7 +6,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { symlinkSync, readFileSync } from 'node:fs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { STYLELINT_TOOLING } from '#tests/constants/cli.ts';
+import { STYLELINT_TOOLING } from '#tests/config/cli.ts';
 import { proposeText } from '#cli/commands/init/propose.ts';
 import { collectCarried } from '#cli/policy/adoption/collect.ts';
 import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';

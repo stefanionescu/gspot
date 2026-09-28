@@ -8,12 +8,12 @@ import { run } from '#tests/support/cli/command.ts';
 import { parseJsonc } from '#cli/repository/jsonc.ts';
 import { script } from '#tests/support/cli/planted.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
 import { textContaining } from '#tests/support/expectations.ts';
 import { treeContents } from '#tests/support/cli/preservation.ts';
 import { statSync, chmodSync, existsSync, readFileSync } from 'node:fs';
-import { PLAN_INIT } from '#tests/constants/acceptance/source/cli/takeover.ts';
+import { PLAN_INIT } from '#tests/config/acceptance/source/cli/takeover.ts';
 
 test.each(['', 'hooks', '.husky'])(
     'dry-run distinguishes source hooks from configured hooks at %s',

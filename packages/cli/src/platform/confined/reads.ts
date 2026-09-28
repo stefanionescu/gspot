@@ -1,6 +1,6 @@
 // Resolving and reading paths under a confined root: every parent must be a real directory and every file private.
 import { join, posix } from 'node:path';
-import { MODE_BITS, PORTABLE_LINK_TARGET } from '#cli/constants/platform.ts';
+import { MODE_BITS, PORTABLE_LINK_TARGET } from '#cli/config/platform.ts';
 import { lstatSync, mkdirSync, type Stats, readFileSync, readlinkSync } from 'node:fs';
 import { fileMode, nativePath, mutationPath, privateTarget } from '#cli/platform/safe-paths.ts';
 import type { Proposed, PathFormat, Confinement, FileObservation } from '#cli/types/platform.ts';

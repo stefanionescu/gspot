@@ -6,7 +6,7 @@ import { grammarPath, GRAMMAR_NAMES } from '#cli/platform/assets.ts';
 
 const here = fileURLToPath(new URL('..', import.meta.url));
 const root = join(here, '..', '..');
-const ASSET_FOLDERS = ['packages/cli/configurations', 'packages/cli/rules'];
+const ASSET_FOLDERS = ['packages/cli/kits', 'packages/cli/guides'];
 
 export const grammarAssets: Record<string, string> = Object.fromEntries(
     GRAMMAR_NAMES.map((name) => [

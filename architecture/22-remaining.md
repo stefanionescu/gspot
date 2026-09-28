@@ -196,7 +196,7 @@ indentation, and repeated-write stability. Full candidate verification remains r
 Done 2026-09-26, `K-48`: `[detect] project_files` names the files that mark a project, and `init`
 proposes a scope for every folder that holds one, workspace members included. The project file
 names live in the javascript, python, swift, xcode, and supabase manifests. `scopeFile(scope,
-name)` in `packages/cli/src/configurations/targets.ts` is the one function that spells the path of a scope's
+name)` in `packages/cli/src/kits/targets.ts` is the one function that spells the path of a scope's
 generated file.
 
 Checked without change on 2026-09-26:
@@ -219,7 +219,7 @@ Step 2.4. Confirmed defect.
 
 [Acceptance `K-233`](06-enforcement-ledger.md#acceptance-k-233) limits CSS claims to `.css` and
 requires Sass to be reported as unsupported. The
-[CSS manifest](../packages/cli/configurations/language/css/manifest.toml) instead detects and
+[CSS manifest](../packages/cli/kits/language/css/manifest.toml) instead detects and
 claims `.scss` and `.pcss` alongside `.css`.
 
 Owner: CSS configuration and detection. Task: align detection and check claims with the agreed
@@ -308,9 +308,9 @@ A test definition or package pin does not establish native acceptance.
 
 Step 4.1. Implemented; candidate source acceptance passes on macOS. Linux and Windows CI remain required.
 
-The [React manifest](../packages/cli/configurations/framework/react/manifest.toml) pins Hooks,
+The [React manifest](../packages/cli/kits/framework/react/manifest.toml) pins Hooks,
 JSX accessibility, refresh, and Testing Library. Its
-[fragment](../packages/cli/configurations/framework/react/eslint.fragment.js.tmpl) supplies the
+[fragment](../packages/cli/kits/framework/react/eslint.fragment.js.tmpl) supplies the
 React recommended and JSX-runtime rules and scopes Testing Library to tests.
 
 Owner: React configuration and ESLint generation. Task: verify the agreed rule sets with their
@@ -323,7 +323,7 @@ Acceptance: `K-211`, `K-248`, `K-251`.
 
 Step 4.2. Implemented; candidate source acceptance passes on macOS. Linux and Windows CI remain required.
 
-The [React Native manifest](../packages/cli/configurations/framework/react-native/manifest.toml)
+The [React Native manifest](../packages/cli/kits/framework/react-native/manifest.toml)
 pins both native ESLint plugins and Expo Doctor. Its fragment installs native rules and disables
 DOM accessibility rules. The Doctor check has an Expo precondition and runs at the push stage.
 Existing selectors cover Touchable, list keys, scrolling, and AsyncStorage.
@@ -337,9 +337,9 @@ Doctor failures without commit-stage network activity. Acceptance: `K-211`, `K-2
 
 Step 4.3. Implemented; candidate source acceptance passes on macOS. Linux and Windows CI remain required.
 
-The [Vue manifest](../packages/cli/configurations/framework/vue/manifest.toml) pins `vue-tsc`,
+The [Vue manifest](../packages/cli/kits/framework/vue/manifest.toml) pins `vue-tsc`,
 Vue accessibility, and Testing Library. The
-[Svelte manifest](../packages/cli/configurations/framework/svelte/manifest.toml) pins
+[Svelte manifest](../packages/cli/kits/framework/svelte/manifest.toml) pins
 `svelte-check`, `prettier-plugin-svelte`, and Testing Library. Component CSS selects
 `postcss-html`. Verify component and runes-module file selection, type-check takeover, and
 native defect/correction cases before closing their acceptance clauses.
@@ -374,7 +374,7 @@ through the licenses and readme-shape tests. `K-213` has no text in the architec
 
 Step 4.5. Implemented; candidate source acceptance passes on macOS. Linux and Windows CI remain required.
 
-The [NestJS manifest](../packages/cli/configurations/framework/nestjs/manifest.toml) pins
+The [NestJS manifest](../packages/cli/kits/framework/nestjs/manifest.toml) pins
 `@darraghor/eslint-plugin-nestjs-typed` and declares `tools.nestjs.swagger`. The fragment selects
 its recommended rules and applies the Swagger setting. The TypeScript option check requires
 both decorator options for NestJS scopes. Native defect/correction evidence remains required.

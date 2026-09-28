@@ -13,7 +13,7 @@ import {
     IGNORED_FOLDERS,
     DEFAULT_THRESHOLD,
     STRUCTURE_HOOK_DIRECTORIES as HOOK_DIRECTORIES,
-} from '#cli/constants/checks/structure.ts';
+} from '#cli/config/checks/structure.ts';
 
 // The shared first word is the feature, and the folder already carries it, so these files are no set to regroup.
 function isNestName(name: string): boolean {

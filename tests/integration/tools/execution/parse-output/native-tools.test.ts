@@ -10,8 +10,8 @@ import { planRun } from '#cli/execution/planning/plan.ts';
 import { parseOutput } from '#cli/execution/output/parse.ts';
 import { randomUUID, generateKeyPairSync } from 'node:crypto';
 import { trivyImage } from '#cli/checks/docker/image-scan.ts';
+import { configurationManifests } from '#cli/kits/manifests.ts';
 import { ToolOutputError } from '#cli/execution/output/tool-formats.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { containing, textContaining } from '#tests/support/expectations.ts';
 import { isToolBroken, checkedFindings } from '#cli/execution/broken-tool.ts';
 

@@ -1,4 +1,4 @@
-import { GITHUB_REFUSAL } from '#cli/constants/tools/packages.ts';
+import { GITHUB_REFUSAL } from '#cli/config/tools/packages.ts';
 /**
  * The one line that names the cause of a failed package installation when the output shows it.
  * @param output what the package manager printed on both streams

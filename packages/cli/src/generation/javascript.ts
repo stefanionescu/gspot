@@ -1,7 +1,7 @@
 import { toPosix } from '#cli/platform/paths.ts';
 import type { Policy } from '#cli/types/policy/policy.ts';
+import { TRAILING_STAR } from '#cli/config/generation.ts';
 import { getTsconfig } from '#cli/repository/tsconfig.ts';
-import { TRAILING_STAR } from '#cli/constants/generation.ts';
 import { join, dirname, resolve, relative } from 'node:path';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { readPackageManifest } from '#cli/repository/manifests.ts';

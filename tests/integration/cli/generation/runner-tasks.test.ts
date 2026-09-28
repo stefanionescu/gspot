@@ -8,9 +8,9 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { openSession } from '#cli/execution/session.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
 import { parseProfile } from '#cli/policy/profiles/read.ts';
+import { configurationManifests } from '#cli/kits/manifests.ts';
 import { runnerTaskPlan } from '#cli/generation/runner/plan.ts';
 import { exportedProfile } from '#cli/policy/profiles/export.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
 import type { PackageScripts } from '#tests/types/integration/cli/generation.ts';
 
 const CLI = fileURLToPath(new URL('../../../../packages/cli/src/main.ts', import.meta.url));

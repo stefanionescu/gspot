@@ -1,5 +1,5 @@
 import { runsOf } from '#plugin/layout.ts';
-import { BLANK } from '#plugin/constants/rules.ts';
+import { BLANK } from '#plugin/config/rules.ts';
 import type { TSESTree } from '@typescript-eslint/utils';
 import { isDirective, isImportLike } from '#plugin/imports.ts';
 import { createRule, optionsSchema } from '#plugin/definition.ts';

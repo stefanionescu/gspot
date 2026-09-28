@@ -8,10 +8,10 @@ import { openSession } from '#cli/execution/session.ts';
 import { allRuleExamples } from '#cli/agents/examples.ts';
 import { runProcess } from '#tests/support/cli/command.ts';
 import { containingAll } from '#tests/support/expectations.ts';
+import { configurationManifests } from '#cli/kits/manifests.ts';
+import { DOCSTRING_COMMAND } from '#cli/config/checks/python.ts';
 import { PYTHON_STRUCTURE } from '#cli/checks/python/analyses.ts';
-import { DOCSTRING_COMMAND } from '#cli/constants/checks/python.ts';
 import { generatedFile } from '#tests/support/cli/generated/files.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
 
 const examples = allRuleExamples().filter((example) => example.language === 'python');
 

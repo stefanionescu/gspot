@@ -1,7 +1,7 @@
 // The types of tools/packages in this package.
 import type { z } from 'zod';
+import type { LOCKS } from '#cli/config/tools/packages.ts';
 import type { FileObservation } from '#cli/types/platform.ts';
-import type { LOCKS } from '#cli/constants/tools/packages.ts';
 import type { packageToolSchema } from '#cli/tools/packages/identity.ts';
 
 export type ToolProject = {

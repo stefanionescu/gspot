@@ -9,7 +9,7 @@ import { rejection } from '#tests/support/expectations.ts';
 import { envTypesFresh, headersSyntax } from '#cli/checks/cloudflare.ts';
 import { statSync, chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import type { CloudflarePlanted as Planted } from '#tests/types/integration/cli/checks.ts';
-import { CLOUDFLARE_TYPES_SCOPES, CLOUDFLARE_TYPES_GENERATOR } from '#tests/constants/integration/cli/checks.ts';
+import { CLOUDFLARE_TYPES_SCOPES, CLOUDFLARE_TYPES_GENERATOR } from '#tests/config/integration/cli/checks.ts';
 
 // A planted Worker whose generator stands in for wrangler types: `bindings.txt` is what it writes, or the failure.
 async function plant(scope: string, bindings: string): Promise<Planted> {

@@ -6,7 +6,7 @@ import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { proposeText } from '#cli/commands/init/propose.ts';
 import { collectCarried } from '#cli/policy/adoption/collect.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { configurationManifests } from '#cli/kits/manifests.ts';
 import type { ExistingTooling } from '#cli/types/repository/repository.ts';
 
 const tooling: ExistingTooling = {

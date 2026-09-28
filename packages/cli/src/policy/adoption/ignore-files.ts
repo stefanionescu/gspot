@@ -1,5 +1,5 @@
 import { isReasonAccepted } from '#cli/policy/loosening.ts';
-import { IGNORE_FILE_COMMENT } from '#cli/constants/policy/adoption.ts';
+import { IGNORE_FILE_COMMENT } from '#cli/config/policy/adoption.ts';
 
 // A line of an ignore file as a glob from the repository root: a bare name matches at any depth, and a folder matches what it holds.
 function globOf(folder: string, line: string): string {

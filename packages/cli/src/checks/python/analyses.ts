@@ -2,7 +2,7 @@ import { trivialFile } from '#cli/checks/structure/statements.ts';
 import type { StructureReader } from '#cli/types/checks/python.ts';
 import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
 import { functionsOf, pythonModules } from '#cli/checks/python/modules.ts';
-import { DEFAULT_TRIVIAL_STATEMENTS } from '#cli/constants/checks/structure.ts';
+import { DEFAULT_TRIVIAL_STATEMENTS } from '#cli/config/checks/structure.ts';
 import { singletons, importCycles, importComments } from '#cli/checks/python/imports.ts';
 import { trivialFunctions, placeholderDocstrings } from '#cli/checks/python/functions.ts';
 
@@ -11,7 +11,7 @@ import {
     DEFAULT_FILE_LINES,
     DEFAULT_FUNCTION_LINES,
     DEFAULT_PACKAGE_EXPORTS,
-} from '#cli/constants/checks/python.ts';
+} from '#cli/config/checks/python.ts';
 import {
     exportOrder,
     packageExports,

@@ -3,7 +3,7 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { reportSchema } from '#cli/execution/report.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
 
 // Recommended keeps syntax enforcement while leaving naming preferences inactive.
 async function expectRecommendedLevel(root: string, command: string[]): Promise<void> {

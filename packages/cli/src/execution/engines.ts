@@ -1,5 +1,6 @@
 // Dispatch to the built-in engines by `engine =` in the manifest.
 import { join } from 'node:path';
+import type { CheckSpec } from '#cli/types/kits.ts';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { checkActions } from '#cli/checks/actions.ts';
 import { computeDrift } from '#cli/lifecycle/drift.ts';
@@ -10,7 +11,6 @@ import { integrityEngine } from '#cli/checks/dispatch.ts';
 import { checkSwiftlint } from '#cli/checks/swift/lint.ts';
 import { namingEngine } from '#cli/checks/naming/engine.ts';
 import { runToolCheck } from '#cli/execution/tool/runner.ts';
-import type { CheckSpec } from '#cli/types/configurations.ts';
 import { sourceBans } from '#cli/checks/prose/source-bans.ts';
 import { checkDependencies } from '#cli/checks/python/project.ts';
 import { structureEngine } from '#cli/checks/structure/engine.ts';

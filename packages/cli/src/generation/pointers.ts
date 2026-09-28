@@ -1,9 +1,9 @@
 import { dirname, relative } from 'node:path';
 import { toPosix } from '#cli/platform/paths.ts';
+import type { PointerSpec } from '#cli/types/kits.ts';
 import { headerFor } from '#cli/generation/headers.ts';
+import { TARGET_PLACEHOLDER } from '#cli/config/generation.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import type { PointerSpec } from '#cli/types/configurations.ts';
-import { TARGET_PLACEHOLDER } from '#cli/constants/generation.ts';
 import { type ParseError, parse as parseJsonc } from 'jsonc-parser';
 import type { GeneratedFile, ConfigurationOutput } from '#cli/types/generation.ts';
 

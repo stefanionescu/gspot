@@ -52,26 +52,22 @@ test('structural rule caching confines writes and preserves later rule edits', a
     const input = engineInput(session, planned!);
     symlinkSync('../../outside', cache);
     expect(
-        await rejection(
-            astGrepMatches(input, 'packages/cli/configurations/language/bash/rules/branches.yml', ['example.sh']),
-        ),
+        await rejection(astGrepMatches(input, 'packages/cli/kits/language/bash/rules/branches.yml', ['example.sh'])),
     ).toContain('Unsafe lifecycle parent');
     expect(readFileSync(join(directory.path, 'outside/ast-grep/branches.yml'), 'utf8')).toBe('external rule\n');
     unlinkSync(cache);
     expect(
-        await astGrepMatches(input, 'packages/cli/configurations/language/bash/rules/branches.yml', ['example.sh']),
+        await astGrepMatches(input, 'packages/cli/kits/language/bash/rules/branches.yml', ['example.sh']),
     ).toHaveLength(1);
     expect(
-        await astGrepMatches(input, 'packages/cli/configurations/language/bash/rules/branches.yml', ['example.sh']),
+        await astGrepMatches(input, 'packages/cli/kits/language/bash/rules/branches.yml', ['example.sh']),
     ).toHaveLength(1);
     const rule = '.gspot/cache/ast-grep/branches.yml';
     expect(readOwnership(root).files.find((entry) => entry.path === rule)?.kind).toBe('runtime');
     chmodSync(join(root, rule), 0o644);
     writeFileSync(join(root, rule), 'edited rule\n');
     expect(
-        await rejection(
-            astGrepMatches(input, 'packages/cli/configurations/language/bash/rules/branches.yml', ['example.sh']),
-        ),
+        await rejection(astGrepMatches(input, 'packages/cli/kits/language/bash/rules/branches.yml', ['example.sh'])),
     ).toContain(`Retained edited or unowned structural rule: ${rule}`);
     expect(readFileSync(join(root, rule), 'utf8')).toBe('edited rule\n');
 });

@@ -9,7 +9,7 @@ import { run as runProcess } from '#cli/platform/spawn.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { writeSwiftlint } from '#tests/support/cli/swift.ts';
 import { generatedFile } from '#tests/support/cli/generated/files.ts';
-import { SWIFT_DOCS_SOURCE, SWIFT_INLINE_DOCS } from '#tests/constants/integration/tools/generation.ts';
+import { SWIFT_DOCS_SOURCE, SWIFT_INLINE_DOCS } from '#tests/config/integration/tools/generation.ts';
 
 async function documentationFindings(root: string, code: 0 | 1) {
     const result = await run(root, ['check', '--only', 'swift/swiftlint', '--no-cache', '--json']);

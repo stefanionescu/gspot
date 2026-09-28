@@ -2,7 +2,7 @@ import { parse } from 'smol-toml';
 import { test, expect } from 'bun:test';
 import { parsePolicyText } from '#cli/policy/read.ts';
 import { proposeText } from '#cli/commands/init/propose.ts';
-import { CONFIGURATIONS, NOTHING_CARRIED } from '#tests/constants/unit/cli/commands.ts';
+import { CONFIGURATIONS, NOTHING_CARRIED } from '#tests/config/unit/cli/commands.ts';
 
 test('a proposed policy holds no line over 120 characters and reads back as written', () => {
     const text = proposeText({
@@ -29,7 +29,7 @@ test('detected settings override carried and profile values while unrelated prof
         carried: { ...NOTHING_CARRIED, tools: new Map([['ruff', { settings: { select: ['F'] }, ignores: [] }]]) },
         profileTables: {
             tools: { ruff: { select: ['E'], exclude: ['generated'] } },
-            architecture: { types_directory: 'types', constants_directory: 'constants' },
+            architecture: { types_directory: 'types', config_directory: 'constants' },
         },
         detected: [
             { key: 'tools.ruff.select', value: ['I'], configuration: 'python' },
@@ -45,7 +45,7 @@ test('detected settings override carried and profile values while unrelated prof
     });
     expect(parse(text)).toMatchObject({
         tools: { ruff: { select: ['I'], exclude: ['generated'] }, commitlint: { scopes: ['api'] } },
-        architecture: { types_directory: 'models', constants_directory: 'constants' },
+        architecture: { types_directory: 'models', config_directory: 'constants' },
     });
 });
 

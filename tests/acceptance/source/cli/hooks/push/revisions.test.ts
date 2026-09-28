@@ -5,8 +5,8 @@ import { test, expect } from 'bun:test';
 import { git } from '#tests/support/cli/git.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import type { SarifReport } from '#tests/types/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
 import { pushReportSchema } from '#cli/execution/report.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
 import { preparePushRepository } from '#tests/support/cli/push.ts';
 import { run, gspot, runProcess } from '#tests/support/cli/command.ts';
 

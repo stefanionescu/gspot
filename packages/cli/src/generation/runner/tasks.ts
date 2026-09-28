@@ -1,11 +1,11 @@
 import { misePins } from '#cli/tools/mise.ts';
+import type { Manifest } from '#cli/types/kits.ts';
+import { BARE_KEY } from '#cli/config/generation.ts';
 import { headerFor } from '#cli/generation/headers.ts';
-import { BARE_KEY } from '#cli/constants/generation.ts';
-import type { Manifest } from '#cli/types/configurations.ts';
+import { RUNNER_TASKS } from '#cli/config/policy/policy.ts';
 import type { GeneratedFile } from '#cli/types/generation.ts';
 import type { RunnerTask } from '#cli/types/policy/policy.ts';
-import { RUNNER_TASKS } from '#cli/constants/policy/policy.ts';
-import { MISE_CONFIG_PATH, MISE_MIN_VERSION } from '#cli/constants/tools/tools.ts';
+import { MISE_CONFIG_PATH, MISE_MIN_VERSION } from '#cli/config/tools/tools.ts';
 
 /**
  * Mise pins and tasks, with npm dependencies kept in the isolated tool project.

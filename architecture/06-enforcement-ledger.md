@@ -249,7 +249,7 @@ Source: SA, its SwiftLint, SwiftFormat, Periphery, naming extractor, and Semgrep
 | SwiftFormat config: the enabled and disabled rule lists and options                                                                                                                                                                                                                                                                                                                                                                                   | `swift/swiftformat`                                                                                    |
 | Periphery with the retain options                                                                                                                                                                                                                                                                                                                                                                                                                     | `swift/periphery` (push)                                                                               |
 | `swiftlint lint --strict` at commit, analyze after `xcodebuild` at push                                                                                                                                                                                                                                                                                                                                                                               | stages                                                                                                 |
-| Semgrep iOS: 14 rules (keychain accessibility, secrets in plist and UserDefaults, insecure HTTP, ATS exceptions, weak hashes, UIWebView, unsafe pointer casts, sensitive logging, script eval and unquoted vars, JavaScript in WKWebView, hardcoded keys and credential URLs)                                                                                                                                                                         | `security/semgrep` with `packages/cli/configurations/language/swift/semgrep/ios.yml.tmpl` (K-248)      |
+| Semgrep iOS: 14 rules (keychain accessibility, secrets in plist and UserDefaults, insecure HTTP, ATS exceptions, weak hashes, UIWebView, unsafe pointer casts, sensitive logging, script eval and unquoted vars, JavaScript in WKWebView, hardcoded keys and credential URLs)                                                                                                                                                                         | `security/semgrep` with `packages/cli/kits/language/swift/semgrep/ios.yml.tmpl` (K-248)                |
 | naming: swift categories, `pascal-plus` file case, 40 characters, 5 words                                                                                                                                                                                                                                                                                                                                                                             | naming engine                                                                                          |
 | trivial functions                                                                                                                                                                                                                                                                                                                                                                                                                                     | `structure/trivial-function`                                                                           |
 | `///` doc comments over `/** */`                                                                                                                                                                                                                                                                                                                                                                                                                      | SwiftLint custom rule                                                                                  |
@@ -612,7 +612,7 @@ Three checks with three claims. `zsh` and `bats` are host tools, so an absent on
 reports `missing` with its install hint. ShellCheck and shfmt keep skipping `.zsh`, which the
 manifest already says.
 
-`tests/acceptance/source/configurations/bash/syntax.test.ts` exercises valid and broken syntax in each dialect.
+`tests/acceptance/source/kits/bash/syntax.test.ts` exercises valid and broken syntax in each dialect.
 
 ### Acceptance K-258
 
@@ -929,8 +929,8 @@ Settings:
 
 Rule files:
 
-`packages/cli/rules/language/SWIFT.md`, `packages/cli/rules/language/naming/SWIFT.md`; `packages/cli/rules/framework/swiftui/SWIFTUI.md` and
-`packages/cli/rules/framework/uikit/UIKIT.md` when the corresponding import appears in the sources.
+`packages/cli/guides/language/SWIFT.md`, `packages/cli/guides/language/naming/SWIFT.md`; `packages/cli/guides/framework/swiftui/SWIFTUI.md` and
+`packages/cli/guides/framework/uikit/UIKIT.md` when the corresponding import appears in the sources.
 
 Not covered here:
 
@@ -977,7 +977,7 @@ Settings:
 
 Rule files:
 
-`packages/cli/rules/general/prose/DOCS.md` and its siblings (installed by docs), `packages/cli/rules/general/prose/WRITING.md`.
+`packages/cli/guides/general/prose/DOCS.md` and its siblings (installed by docs), `packages/cli/guides/general/prose/WRITING.md`.
 
 ### Configuration i18n
 
@@ -1006,7 +1006,7 @@ Settings:
 
 Rule files:
 
-`packages/cli/rules/shared/i18n/I18N.md`; `packages/cli/rules/library/next-intl/NEXTINTL.md` when `next-intl` is a dependency.
+`packages/cli/guides/shared/i18n/I18N.md`; `packages/cli/guides/library/next-intl/NEXTINTL.md` when `next-intl` is a dependency.
 
 ### Configuration react-native
 
@@ -1083,7 +1083,7 @@ None. A rule the repository decides against is `gspot ignore typescript/eslint -
 
 Rule files:
 
-`packages/cli/rules/framework/react-native/REACT-NATIVE.md`.
+`packages/cli/guides/framework/react-native/REACT-NATIVE.md`.
 
 ### Configuration postgres
 
@@ -1131,7 +1131,7 @@ Settings:
 
 Rule files:
 
-`packages/cli/rules/database/postgres/POSTGRES.md`.
+`packages/cli/guides/database/postgres/POSTGRES.md`.
 
 ### Configuration python
 
@@ -1204,8 +1204,8 @@ Settings:
 
 Rule files:
 
-`packages/cli/rules/language/PYTHON.md`, `packages/cli/rules/language/python/TYPING.md`, `packages/cli/rules/language/python/DESIGN.md`, `packages/cli/rules/language/python/FLOW.md`,
-`packages/cli/rules/language/python/PACKAGING.md`, `packages/cli/rules/language/naming/PYTHON.md`.
+`packages/cli/guides/language/PYTHON.md`, `packages/cli/guides/language/python/TYPING.md`, `packages/cli/guides/language/python/DESIGN.md`, `packages/cli/guides/language/python/FLOW.md`,
+`packages/cli/guides/language/python/PACKAGING.md`, `packages/cli/guides/language/naming/PYTHON.md`.
 
 Not covered here:
 
@@ -1256,13 +1256,13 @@ Every `[limits]` key in the ledger, at the root or under a language table (`limi
 `structure.single_file_folder_allowed`
 (paths, reason); `structure.prefix_collision_allowed` (paths, reason); `structure.call_through_allowed`
 (file, name, reason); `structure.folder_name_allowed` (paths, reason); `architecture.types_directory`;
-`architecture.constants_directory`; `architecture.roles`. Allowance validation follows `require_reasons`; verbose output includes supplied reasons.
+`architecture.config_directory`; `architecture.roles`. Allowance validation follows `require_reasons`; verbose output includes supplied reasons.
 
 Rule files:
 
-- `packages/cli/rules/general/agent/WORKING.md` carries the intent each rule enforces.
-- `packages/cli/rules/general/code/NAMING.md` "Files and Directories" states the folder, stem, and collision rules.
-- `packages/cli/rules/general/code/CONFIGURATION.md` states the environment owner rule.
+- `packages/cli/guides/general/agent/WORKING.md` carries the intent each rule enforces.
+- `packages/cli/guides/general/code/NAMING.md` "Files and Directories" states the folder, stem, and collision rules.
+- `packages/cli/guides/general/code/CONFIGURATION.md` states the environment owner rule.
 - Each language file states its private-first, private-prefix, types, and re-export rules.
 
 ### Configuration svelte
@@ -1332,7 +1332,7 @@ None. A rule the repository decides against is `gspot ignore typescript/eslint -
 
 Rule files:
 
-`packages/cli/rules/framework/svelte/SVELTE.md`.
+`packages/cli/guides/framework/svelte/SVELTE.md`.
 
 ### Configuration zustand
 
@@ -1351,7 +1351,7 @@ Checks:
 
 `typescript/eslint` with the selectors; `gspot/registry-instance-only` treats store files as
 registries when `[tools.zustand] store_files` names them, and the files under
-`[architecture] constants_directory` when the policy names that folder.
+`[architecture] config_directory` when the policy names that folder.
 
 Settings:
 
@@ -1359,7 +1359,7 @@ Settings:
 
 Rule files:
 
-`packages/cli/rules/library/zustand/ZUSTAND.md`.
+`packages/cli/guides/library/zustand/ZUSTAND.md`.
 
 ### Configuration css
 
@@ -1404,7 +1404,7 @@ Settings:
 
 Rule files:
 
-`packages/cli/rules/language/CSS.md`, `packages/cli/rules/language/naming/CSS.md`; `packages/cli/rules/tool/tailwind/TAILWIND.md` when Tailwind is a dependency.
+`packages/cli/guides/language/CSS.md`, `packages/cli/guides/language/naming/CSS.md`; `packages/cli/guides/tool/tailwind/TAILWIND.md` when Tailwind is a dependency.
 
 ### Configuration prose
 
@@ -1446,7 +1446,7 @@ Settings:
 
 Rule files:
 
-`packages/cli/rules/general/prose/WRITING.md`, `packages/cli/rules/general/code/COMMENTS.md`, `packages/cli/rules/general/prose/DOCS.md` and its five siblings.
+`packages/cli/guides/general/prose/WRITING.md`, `packages/cli/guides/general/code/COMMENTS.md`, `packages/cli/guides/general/prose/DOCS.md` and its five siblings.
 
 Rollout:
 
@@ -1497,7 +1497,7 @@ Settings:
 
 Rule files:
 
-`packages/cli/rules/tool/xctest/XCTEST.md`, `packages/cli/rules/general/code/TESTING.md`.
+`packages/cli/guides/tool/xctest/XCTEST.md`, `packages/cli/guides/general/code/TESTING.md`.
 
 ### Configuration secrets
 
@@ -1536,7 +1536,7 @@ Settings:
 
 Rule files:
 
-`packages/cli/rules/general/code/SECRETS.md`, `packages/cli/rules/general/code/SECURITY.md`.
+`packages/cli/guides/general/code/SECRETS.md`, `packages/cli/guides/general/code/SECURITY.md`.
 
 ### Configuration pytest
 
@@ -1574,7 +1574,7 @@ Settings:
 
 Rule files:
 
-`packages/cli/rules/general/code/TESTING.md`; the Tests section of `packages/cli/rules/language/PYTHON.md`.
+`packages/cli/guides/general/code/TESTING.md`; the Tests section of `packages/cli/guides/language/PYTHON.md`.
 
 ### Configuration static-site
 
@@ -1619,7 +1619,7 @@ reason), `tools.linkinator.status_overrides`.
 
 Rule files:
 
-`packages/cli/rules/repository/static-site/STATIC-SITE.md`, `packages/cli/rules/runtime/browser/BROWSER.md`.
+`packages/cli/guides/repository/static-site/STATIC-SITE.md`, `packages/cli/guides/runtime/browser/BROWSER.md`.
 
 ### Configuration nginx
 
@@ -1654,7 +1654,7 @@ Settings:
 
 Rule files:
 
-`packages/cli/rules/tool/nginx/NGINX.md`.
+`packages/cli/guides/tool/nginx/NGINX.md`.
 
 ### Configuration vue
 
@@ -1721,7 +1721,7 @@ None. A rule the repository decides against is `gspot ignore typescript/eslint -
 
 Rule files:
 
-`packages/cli/rules/framework/vue/VUE.md`.
+`packages/cli/guides/framework/vue/VUE.md`.
 
 ### Configuration nextjs
 
@@ -1787,9 +1787,9 @@ Settings:
 
 Rule files:
 
-`packages/cli/rules/framework/nextjs/NEXTJS.md`, `packages/cli/rules/framework/nextjs/SECURITY.md`, `packages/cli/rules/runtime/node/NODE.md`,
-`packages/cli/rules/runtime/browser/BROWSER.md`; `packages/cli/rules/runtime/workers/WORKERS.md` through cloudflare when `@opennextjs/cloudflare` is
-present; `packages/cli/rules/library/next-intl/NEXTINTL.md` when `next-intl` is a dependency.
+`packages/cli/guides/framework/nextjs/NEXTJS.md`, `packages/cli/guides/framework/nextjs/SECURITY.md`, `packages/cli/guides/runtime/node/NODE.md`,
+`packages/cli/guides/runtime/browser/BROWSER.md`; `packages/cli/guides/runtime/workers/WORKERS.md` through cloudflare when `@opennextjs/cloudflare` is
+present; `packages/cli/guides/library/next-intl/NEXTINTL.md` when `next-intl` is a dependency.
 
 ### Configuration configs
 
@@ -1850,8 +1850,8 @@ variables, on top of `process.env` and `os.environ`).
 
 Rule files:
 
-`packages/cli/rules/general/code/CONFIGURATION.md`, `packages/cli/rules/language/YAML.md`, `packages/cli/rules/tool/tasks/TASKS.md`;
-`packages/cli/rules/tool/github-actions/GITHUB-ACTIONS.md` when `.github/workflows/` holds a workflow.
+`packages/cli/guides/general/code/CONFIGURATION.md`, `packages/cli/guides/language/YAML.md`, `packages/cli/guides/tool/tasks/TASKS.md`;
+`packages/cli/guides/tool/github-actions/GITHUB-ACTIONS.md` when `.github/workflows/` holds a workflow.
 
 Ansible playbooks have their own configuration, `ansible`, so a repository with no playbook installs no
 ansible-lint. It detects `ansible.cfg` and runs `ansible/lint` in every folder that holds one.
@@ -1905,7 +1905,7 @@ Settings:
 
 Rule files:
 
-`packages/cli/rules/general/code/DEPENDENCIES.md`.
+`packages/cli/guides/general/code/DEPENDENCIES.md`.
 
 ### Configuration trpc
 
@@ -1936,7 +1936,7 @@ and reports value imports, re-exports, `require`, and literal dynamic imports.
 
 Rule files:
 
-`packages/cli/rules/library/trpc/TRPC.md`, `packages/cli/rules/shared/http/HTTP.md`.
+`packages/cli/guides/library/trpc/TRPC.md`, `packages/cli/guides/shared/http/HTTP.md`.
 
 ### Configuration express
 
@@ -1976,8 +1976,8 @@ Settings:
 
 Rule files:
 
-`packages/cli/rules/framework/express/EXPRESS.md`, `packages/cli/rules/framework/express/API.md`, `packages/cli/rules/framework/express/OPENAPI.md`,
-`packages/cli/rules/shared/http/HTTP.md`, `packages/cli/rules/runtime/node/NODE.md`.
+`packages/cli/guides/framework/express/EXPRESS.md`, `packages/cli/guides/framework/express/API.md`, `packages/cli/guides/framework/express/OPENAPI.md`,
+`packages/cli/guides/shared/http/HTTP.md`, `packages/cli/guides/runtime/node/NODE.md`.
 
 ### Configuration sql
 
@@ -2038,7 +2038,7 @@ is `gspot ignore sql/sqlfluff --rule <code>`, rendered into `exclude_rules`).
 
 Rule files:
 
-`packages/cli/rules/language/SQL.md`, `packages/cli/rules/language/naming/SQL.md`.
+`packages/cli/guides/language/SQL.md`, `packages/cli/guides/language/naming/SQL.md`.
 
 Not covered here:
 
@@ -2141,8 +2141,8 @@ The rendered knip ignore list carries `.gspot/config/commitlint.config.cjs` when
 
 Rule files:
 
-`packages/cli/rules/language/JAVASCRIPT.md`, `packages/cli/rules/language/naming/JAVASCRIPT.md`, plus the runtime file detected:
-`packages/cli/rules/runtime/node/NODE.md`, `packages/cli/rules/runtime/bun/BUN.md`, `packages/cli/rules/runtime/deno/DENO.md`, `packages/cli/rules/runtime/browser/BROWSER.md`, `packages/cli/rules/runtime/workers/WORKERS.md`.
+`packages/cli/guides/language/JAVASCRIPT.md`, `packages/cli/guides/language/naming/JAVASCRIPT.md`, plus the runtime file detected:
+`packages/cli/guides/runtime/node/NODE.md`, `packages/cli/guides/runtime/bun/BUN.md`, `packages/cli/guides/runtime/deno/DENO.md`, `packages/cli/guides/runtime/browser/BROWSER.md`, `packages/cli/guides/runtime/workers/WORKERS.md`.
 
 Not covered here:
 
@@ -2176,7 +2176,7 @@ Settings:
 
 Rule files:
 
-`packages/cli/rules/library/zod/ZOD.md`.
+`packages/cli/guides/library/zod/ZOD.md`.
 
 ### Configuration xcode
 
@@ -2216,7 +2216,7 @@ the level `all`, and `gspot ignore` turns it off.
 
 Rule files:
 
-`packages/cli/rules/tool/xcode/XCODE.md`.
+`packages/cli/guides/tool/xcode/XCODE.md`.
 
 ### Configuration commits
 
@@ -2262,7 +2262,7 @@ off is a `gspot ignore --rule`).
 
 Rule files:
 
-`packages/cli/rules/general/agent/GIT.md`, `packages/cli/rules/tool/commitlint/COMMITLINT.md`.
+`packages/cli/guides/general/agent/GIT.md`, `packages/cli/guides/tool/commitlint/COMMITLINT.md`.
 
 ### Configuration react-hook-form
 
@@ -2288,7 +2288,7 @@ None.
 
 Rule files:
 
-`packages/cli/rules/library/react-hook-form/REACTHOOKFORM.md`.
+`packages/cli/guides/library/react-hook-form/REACTHOOKFORM.md`.
 
 ### Configuration supabase
 
@@ -2339,7 +2339,7 @@ Settings:
 
 Rule files:
 
-`packages/cli/rules/platform/supabase/SUPABASE.md`, `packages/cli/rules/database/postgres/POSTGRES.md`, `packages/cli/rules/runtime/deno/DENO.md`.
+`packages/cli/guides/platform/supabase/SUPABASE.md`, `packages/cli/guides/database/postgres/POSTGRES.md`, `packages/cli/guides/runtime/deno/DENO.md`.
 Project-specific deployment conventions belong to the repository.
 
 ### Configuration drizzle
@@ -2370,7 +2370,7 @@ Settings:
 
 Rule files:
 
-`packages/cli/rules/library/drizzle/DRIZZLE.md`.
+`packages/cli/guides/library/drizzle/DRIZZLE.md`.
 
 ### Configuration jest
 
@@ -2416,7 +2416,7 @@ Settings:
 
 Rule files:
 
-`packages/cli/rules/general/code/TESTING.md`.
+`packages/cli/guides/general/code/TESTING.md`.
 
 ### Configuration react
 
@@ -2480,7 +2480,7 @@ None. A rule the repository decides against is `gspot ignore typescript/eslint -
 
 Rule files:
 
-`packages/cli/rules/framework/react/REACT.md`.
+`packages/cli/guides/framework/react/REACT.md`.
 
 ### Configuration ansible
 
@@ -2568,7 +2568,7 @@ Settings:
 
 Rule files:
 
-`packages/cli/rules/library/tanstack-query/TANSTACKQUERY.md`.
+`packages/cli/guides/library/tanstack-query/TANSTACKQUERY.md`.
 
 ### Configuration cloudflare
 
@@ -2609,7 +2609,7 @@ rule file states them.
 
 Rule files:
 
-`packages/cli/rules/runtime/workers/WORKERS.md`. The configs configuration installs the GitHub Actions rule file.
+`packages/cli/guides/runtime/workers/WORKERS.md`. The configs configuration installs the GitHub Actions rule file.
 
 ### Configuration docs
 
@@ -2646,14 +2646,14 @@ Settings:
 (url patterns, reason), `tools.docs.require_license` (default true).
 
 The shape check is the whole of README enforcement. What a README says is the rule file's job
-(`packages/cli/rules/general/prose/DOCS-CONTENT.md`, `packages/cli/rules/templates/docs/README.md` and `packages/cli/rules/templates/docs/ADVANCED.md`,
+(`packages/cli/guides/general/prose/DOCS-CONTENT.md`, `packages/cli/guides/templates/docs/README.md` and `packages/cli/guides/templates/docs/ADVANCED.md`,
 which follow the short-README-plus-ADVANCED shape); gspot does not grade content.
 
 Rule files:
 
-`packages/cli/rules/general/prose/DOCS.md`, `packages/cli/rules/general/prose/DOCS-FORMAT.md`, `packages/cli/rules/general/prose/DOCS-CONTENT.md`,
-`packages/cli/rules/general/prose/DOCS-MEDIA.md`, `packages/cli/rules/general/prose/DOCS-SURFACES.md`, `packages/cli/rules/general/prose/DOCS-REVIEW.md`,
-`packages/cli/rules/general/prose/WRITING.md`, `packages/cli/rules/general/code/COMMENTS.md`; the templates under `templates/docs/`.
+`packages/cli/guides/general/prose/DOCS.md`, `packages/cli/guides/general/prose/DOCS-FORMAT.md`, `packages/cli/guides/general/prose/DOCS-CONTENT.md`,
+`packages/cli/guides/general/prose/DOCS-MEDIA.md`, `packages/cli/guides/general/prose/DOCS-SURFACES.md`, `packages/cli/guides/general/prose/DOCS-REVIEW.md`,
+`packages/cli/guides/general/prose/WRITING.md`, `packages/cli/guides/general/code/COMMENTS.md`; the templates under `templates/docs/`.
 
 ### Configuration docker
 
@@ -2696,7 +2696,7 @@ Settings:
 
 Rule files:
 
-`packages/cli/rules/tool/docker/DOCKER.md`. Project-specific CUDA conventions belong to the repository.
+`packages/cli/guides/tool/docker/DOCKER.md`. Project-specific CUDA conventions belong to the repository.
 
 Not covered here:
 
@@ -2771,7 +2771,7 @@ Swagger rules off.
 
 Rule files:
 
-`packages/cli/rules/framework/nestjs/NESTJS.md`.
+`packages/cli/guides/framework/nestjs/NESTJS.md`.
 
 ### Configuration formatting
 
@@ -2861,7 +2861,7 @@ Settings:
 
 Rule files:
 
-`packages/cli/rules/framework/fastapi/FASTAPI.md`, `packages/cli/rules/framework/fastapi/RUNTIME.md`, `packages/cli/rules/shared/http/HTTP.md`.
+`packages/cli/guides/framework/fastapi/FASTAPI.md`, `packages/cli/guides/framework/fastapi/RUNTIME.md`, `packages/cli/guides/shared/http/HTTP.md`.
 
 ### Configuration naming
 
@@ -2903,7 +2903,7 @@ Settings:
 
 Rule files:
 
-`packages/cli/rules/general/code/NAMING.md`, `packages/cli/rules/general/code/NAMING-FILES.md` and each language's `naming/<LANGUAGE>.md`.
+`packages/cli/guides/general/code/NAMING.md`, `packages/cli/guides/general/code/NAMING-FILES.md` and each language's `naming/<LANGUAGE>.md`.
 
 ### Configuration typescript
 
@@ -2968,14 +2968,14 @@ Settings:
 | `tools.typescript.paths`                              | neutral                                                                | from the existing tsconfig at init                                                                                                                                    |
 | `tools.knip.entry`                                    | neutral                                                                | from the framework configuration                                                                                                                                      |
 | `architecture.types_directory`                        | neutral                                                                | `types`                                                                                                                                                               |
-| `architecture.constants_directory`                    | neutral                                                                | `constants`                                                                                                                                                           |
+| `architecture.config_directory`                       | neutral                                                                | `constants`                                                                                                                                                           |
 | `architecture.elements`, `architecture.edges_allowed` | tightening                                                             | one element; the default roles                                                                                                                                        |
 | `structure.reexports`                                 | tightening                                                             | `none`                                                                                                                                                                |
 | `structure.call_through_allowed` (file, name, reason) | loosening                                                              | none                                                                                                                                                                  |
 
 Rule files:
 
-`packages/cli/rules/language/TYPESCRIPT.md`, `packages/cli/rules/language/naming/TYPESCRIPT.md`.
+`packages/cli/guides/language/TYPESCRIPT.md`, `packages/cli/guides/language/naming/TYPESCRIPT.md`.
 
 Not covered here:
 
@@ -3043,8 +3043,8 @@ Settings:
 
 Rule files:
 
-`packages/cli/rules/language/BASH.md`, `packages/cli/rules/language/bash/LANGUAGE.md`, `packages/cli/rules/language/bash/SAFETY.md`, `packages/cli/rules/language/bash/OPERATIONS.md`,
-`packages/cli/rules/language/naming/BASH.md`.
+`packages/cli/guides/language/BASH.md`, `packages/cli/guides/language/bash/LANGUAGE.md`, `packages/cli/guides/language/bash/SAFETY.md`, `packages/cli/guides/language/bash/OPERATIONS.md`,
+`packages/cli/guides/language/naming/BASH.md`.
 
 Not covered here:
 
@@ -3095,7 +3095,7 @@ Settings:
 
 Rule files:
 
-`packages/cli/rules/general/code/SECURITY.md`, `packages/cli/rules/general/code/SECRETS.md`; the security sections of each framework file.
+`packages/cli/guides/general/code/SECURITY.md`, `packages/cli/guides/general/code/SECRETS.md`; the security sections of each framework file.
 
 ### Configuration html
 
@@ -3138,7 +3138,7 @@ Settings:
 
 Rule files:
 
-`packages/cli/rules/language/HTML.md`, `packages/cli/rules/language/naming/HTML.md`, `packages/cli/rules/repository/static-site/STATIC-SITE.md`.
+`packages/cli/guides/language/HTML.md`, `packages/cli/guides/language/naming/HTML.md`, `packages/cli/guides/repository/static-site/STATIC-SITE.md`.
 
 ### Configuration duplication
 
@@ -3168,7 +3168,7 @@ Settings:
 
 Rule files:
 
-`packages/cli/rules/general/agent/WORKING.md` (the duplication section).
+`packages/cli/guides/general/agent/WORKING.md` (the duplication section).
 
 ### Configuration vitest
 
@@ -3221,5 +3221,5 @@ The command reads them through `{setting:<name>}` parts.
 
 Rule files:
 
-`packages/cli/rules/tool/vitest/VITEST.md`, `packages/cli/rules/general/code/TESTING.md`; `packages/cli/rules/tool/playwright/PLAYWRIGHT.md` when Playwright is a
+`packages/cli/guides/tool/vitest/VITEST.md`, `packages/cli/guides/general/code/TESTING.md`; `packages/cli/guides/tool/playwright/PLAYWRIGHT.md` when Playwright is a
 dependency.

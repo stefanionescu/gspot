@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { sep, dirname, relative } from 'node:path';
 import { mutationPath } from '#cli/platform/safe-paths.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import { NO_INPUTS, EMPTY_FILES } from '#cli/constants/repository/repository.ts';
+import { NO_INPUTS, EMPTY_FILES } from '#cli/config/repository/repository.ts';
 
 const configSchema = z.looseObject({ compilerOptions: z.record(z.string(), z.unknown()).optional() });
 function configurationText(root: string, path: string): string | undefined {

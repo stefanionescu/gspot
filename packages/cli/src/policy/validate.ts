@@ -1,11 +1,11 @@
 import { nearMatches } from '#cli/policy/near.ts';
+import { selectForScope } from '#cli/kits/select.ts';
 import { excludeProblems } from '#cli/agents/assemble.ts';
 import { validateAgainstSurface } from '#cli/policy/audit.ts';
-import { selectForScope } from '#cli/configurations/select.ts';
 import { unknownConfiguration } from '#cli/policy/messages.ts';
+import { configurationManifests } from '#cli/kits/manifests.ts';
 import { exposedSettings } from '#cli/policy/setting-surface.ts';
-import { RUFF_PREVIEW_RULES } from '#cli/constants/checks/ruff-rules.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { RUFF_PREVIEW_RULES } from '#cli/config/checks/ruff-rules.ts';
 import { asRecord, policyValue, policyTables } from '#cli/policy/settings.ts';
 import type { Policy, PathSegment, PolicyProblem } from '#cli/types/policy/policy.ts';
 

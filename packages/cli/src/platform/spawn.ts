@@ -4,7 +4,7 @@ import { execa, execaSync, type Result } from 'execa';
 import type { ChildProcess } from 'node:child_process';
 import { dirname, delimiter, isAbsolute } from 'node:path';
 import { environmentVariables } from '#cli/platform/environment.ts';
-import { REAP_MS, DRAIN_MS, FAILED_CODE, MISSING_CODE, TASKKILL_GONE_CODE } from '#cli/constants/platform.ts';
+import { REAP_MS, DRAIN_MS, FAILED_CODE, MISSING_CODE, TASKKILL_GONE_CODE } from '#cli/config/platform.ts';
 
 import type {
     SpawnResult,

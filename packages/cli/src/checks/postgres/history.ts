@@ -1,6 +1,6 @@
 import { migrationsOf } from '#cli/checks/postgres/migrations.ts';
 import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
-import { FROZEN_ALL, FROZEN_NONE } from '#cli/constants/checks/postgres.ts';
+import { FROZEN_ALL, FROZEN_NONE } from '#cli/config/checks/postgres.ts';
 import { gitBlobs, committedEntries } from '#cli/repository/revisions/contents.ts';
 
 const history = new WeakMap<object, Promise<Map<string, string>>>();

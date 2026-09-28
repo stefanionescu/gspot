@@ -10,7 +10,7 @@ import {
     UNSAFE_PATH_END,
     UNSAFE_CHARACTERS,
     LIFECYCLE_PRIVATE_PATH,
-} from '#cli/constants/platform.ts';
+} from '#cli/config/platform.ts';
 
 // Whether one segment of a portable path means something different on a supported operating system.
 function isUnsafeSegment(part: string): boolean {

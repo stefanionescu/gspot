@@ -3,9 +3,9 @@ import { z } from 'zod';
 import { posix } from 'node:path';
 import { disabledFromList } from '#cli/policy/adoption/disabled.ts';
 import type { TomlTable } from '#cli/types/repository/repository.ts';
-import { RUFF_PREVIEW_RULES } from '#cli/constants/checks/ruff-rules.ts';
+import { RUFF_PREVIEW_RULES } from '#cli/config/checks/ruff-rules.ts';
 import { reasonFor, adoptedTool, adoptedScope } from '#cli/policy/adoption/results.ts';
-import { GLOB_MAGIC, UNSAFE_EXTEND, UNSAFE_GLOB_CHARACTERS } from '#cli/constants/policy/adoption.ts';
+import { GLOB_MAGIC, UNSAFE_EXTEND, UNSAFE_GLOB_CHARACTERS } from '#cli/config/policy/adoption.ts';
 import { asRaw, asStrings, observeConfiguration, parseConfigurationSource } from '#cli/policy/adoption/source.ts';
 
 import type {

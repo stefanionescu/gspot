@@ -3,15 +3,15 @@ import { test, expect } from 'bun:test';
 import { fileURLToPath } from 'node:url';
 import { run } from '#cli/platform/spawn.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { everyManifest } from '#cli/kits/select.ts';
 import { gitOutput } from '#tests/support/cli/git.ts';
 import { rejection } from '#tests/support/expectations.ts';
-import { everyManifest } from '#cli/configurations/select.ts';
 import type { InstallJson } from '#cli/types/commands/commands.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import { toolEnvironment } from '#cli/generation/tools/environment.ts';
 import { createPythonRegistry } from '#tests/support/registry/python.ts';
-import { PYTHON_PROJECTS } from '#tests/constants/integration/tools/python.ts';
+import { PYTHON_PROJECTS } from '#tests/config/integration/tools/python.ts';
 import { preparePythonInstallation } from '#tests/support/cli/python/project.ts';
 import { cpSync, chmodSync, existsSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
 

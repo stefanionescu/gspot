@@ -1,7 +1,7 @@
 // Planning the keys gspot owns in a shared configuration file the developer keeps, and the containers it created.
 import { z } from 'zod';
 import { isDeepStrictEqual } from 'node:util';
-import { OWNER_WRITABLE_FILE } from '#cli/constants/platform.ts';
+import { OWNER_WRITABLE_FILE } from '#cli/config/platform.ts';
 import { configurationFieldsSchema } from '#cli/lifecycle/journal.ts';
 import { configurationDocument } from '#cli/lifecycle/configuration/document.ts';
 

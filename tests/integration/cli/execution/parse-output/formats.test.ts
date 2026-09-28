@@ -1,11 +1,11 @@
 import { join, win32 } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import type { CheckSpec } from '#cli/types/kits.ts';
 import { isToolBroken } from '#cli/execution/broken-tool.ts';
 import { parseOutput } from '#cli/execution/output/parse.ts';
-import type { CheckSpec } from '#cli/types/configurations.ts';
+import { configurationManifests } from '#cli/kits/manifests.ts';
 import { ToolOutputError } from '#cli/execution/output/tool-formats.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
 
 test('invalid Markdown records remain execution errors and valid records parse', async () => {
     await using sandbox = await testdir();

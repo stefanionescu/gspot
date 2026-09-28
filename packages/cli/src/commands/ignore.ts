@@ -1,8 +1,8 @@
 import type { Command } from 'commander';
+import { allChecks } from '#cli/kits/listing.ts';
 import { nearMatches } from '#cli/policy/near.ts';
 import * as messages from '#cli/policy/messages.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
-import { allChecks } from '#cli/configurations/listing.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import { readPolicy, PolicyError } from '#cli/policy/read.ts';
 import { assertPinMatches } from '#cli/lifecycle/version-pin.ts';

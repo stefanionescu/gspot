@@ -4,7 +4,7 @@ import { stringify, parse as parseToml } from 'smol-toml';
 import { isRepositoryPath } from '#cli/policy/profiles/schema.ts';
 import type { ExportedProfile } from '#cli/types/policy/profiles.ts';
 import type { TomlTable } from '#cli/types/repository/repository.ts';
-import { PROFILE_EXTENSION, REPOSITORY_TABLES } from '#cli/constants/policy/profiles.ts';
+import { PROFILE_EXTENSION, REPOSITORY_TABLES } from '#cli/config/policy/profiles.ts';
 
 function isTable(value: unknown): value is TomlTable {
     return typeof value === 'object' && value !== null && !Array.isArray(value);

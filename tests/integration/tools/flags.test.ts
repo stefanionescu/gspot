@@ -7,14 +7,14 @@ import { inspectTool } from '#cli/tools/inspect.ts';
 import { runProcess } from '#tests/support/cli/command.ts';
 import { privateToolInstallation } from '#cli/tools/pins.ts';
 import { test, expect, afterAll, beforeAll } from 'bun:test';
+import { configurationManifests } from '#cli/kits/manifests.ts';
 import { toolPackages } from '#cli/generation/tools/packages.ts';
 import type { ToolCommand } from '#tests/types/integration/tools.ts';
 import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import { toolEnvironment } from '#cli/generation/tools/environment.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { installPythonProject, preparePythonProject } from '#cli/tools/python-project.ts';
 import { installPackageProject, preparePackageProject } from '#cli/tools/packages/project.ts';
-import { HELP_TIMEOUT_MS, INSTALL_TIMEOUT_MS } from '#tests/constants/integration/tools/tools.ts';
+import { HELP_TIMEOUT_MS, INSTALL_TIMEOUT_MS } from '#tests/config/integration/tools/tools.ts';
 
 const root = fileURLToPath(new URL('../../..', import.meta.url));
 const manifests = [...configurationManifests().values()];

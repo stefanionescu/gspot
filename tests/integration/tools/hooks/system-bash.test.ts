@@ -4,8 +4,8 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { toolsPath } from '#tests/support/cli/tools.ts';
 import { git, commitAll } from '#tests/support/cli/git.ts';
+import { SYSTEM_BASH } from '#tests/config/integration/tools/hooks.ts';
 import { hookBody, hookCommand } from '#cli/generation/hooks/scripts.ts';
-import { SYSTEM_BASH } from '#tests/constants/integration/tools/hooks.ts';
 
 if (process.platform !== 'win32')
     test('every hook body runs under the system Bash', async () => {

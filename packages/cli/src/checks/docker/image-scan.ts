@@ -1,14 +1,14 @@
 import { z } from 'zod';
 import { parse } from 'yaml';
 import { join } from 'node:path';
+import { scopeFile } from '#cli/kits/targets.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
 import { readSource } from '#cli/repository/tracked.ts';
-import { scopeFile } from '#cli/configurations/targets.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import { toolOutputDetail } from '#cli/execution/broken-tool.ts';
 import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
-import { COMPOSE_FILES, FINDINGS_EXIT, SHOWN_FINDINGS } from '#cli/constants/checks/docker.ts';
+import { COMPOSE_FILES, FINDINGS_EXIT, SHOWN_FINDINGS } from '#cli/config/checks/docker.ts';
 
 // The Trivy JSON report version this reader understands.
 const TRIVY_SCHEMA_VERSION = 2;

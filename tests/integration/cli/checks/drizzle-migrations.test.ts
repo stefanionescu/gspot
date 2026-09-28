@@ -12,7 +12,7 @@ import { rejection } from '#tests/support/expectations.ts';
 import { run as runCli } from '#tests/support/cli/command.ts';
 import type { DrizzlePlanted as Planted } from '#tests/types/integration/cli/checks.ts';
 import { statSync, chmodSync, mkdirSync, existsSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
-import { DRIZZLE_MIGRATIONS_SCOPES, DRIZZLE_MIGRATIONS_GENERATOR } from '#tests/constants/integration/cli/checks.ts';
+import { DRIZZLE_MIGRATIONS_SCOPES, DRIZZLE_MIGRATIONS_GENERATOR } from '#tests/config/integration/cli/checks.ts';
 
 // A planted scope with a generator script that stands in for drizzle-kit: `schema.txt` decides what it does.
 async function plant(scope: string, schema: 'changed' | 'failure'): Promise<Planted> {

@@ -4,9 +4,9 @@ import semver from 'semver';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { isDeepStrictEqual } from 'node:util';
-import { SETUP } from '#cli/constants/tools/tools.ts';
+import type { ToolPin } from '#cli/types/kits.ts';
+import { SETUP } from '#cli/config/tools/tools.ts';
 import { lockMatches } from '#cli/tools/packages/locks.ts';
-import type { ToolPin } from '#cli/types/configurations.ts';
 import type { FileObservation } from '#cli/types/platform.ts';
 import type { GeneratedFile } from '#cli/types/generation.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
@@ -16,7 +16,7 @@ import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import type { Inputs, ToolProject } from '#cli/types/tools/packages.ts';
 import type { LifecycleOwner } from '#cli/types/lifecycle/lifecycle.ts';
 import { rmSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
-import { LOCKS, YARN_SETTINGS, TOOL_PACKAGE_PROJECT } from '#cli/constants/tools/packages.ts';
+import { LOCKS, YARN_SETTINGS, TOOL_PACKAGE_PROJECT } from '#cli/config/tools/packages.ts';
 import { packageCommand, packageInstallCommand, prepareNativeWrappers } from '#cli/tools/packages/commands.ts';
 
 const packageSchema = z.strictObject({

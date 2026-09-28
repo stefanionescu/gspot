@@ -1,7 +1,7 @@
 import { globbySync } from 'globby';
 import { rm } from 'node:fs/promises';
 import { join, dirname, basename } from 'node:path';
-import { TABLE } from '#cli/constants/checks/checks.ts';
+import { TABLE } from '#cli/config/checks/checks.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import { scratchCopy } from '#cli/execution/files/workspace.ts';

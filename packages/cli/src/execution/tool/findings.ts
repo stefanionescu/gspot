@@ -2,8 +2,8 @@
 import { isAbsolute } from 'node:path';
 import type { SpawnResult } from '#cli/types/platform.ts';
 import type { Finding } from '#cli/types/checks/checks.ts';
+import type { ToolPin, CheckSpec } from '#cli/types/kits.ts';
 import { toolOutputDetail } from '#cli/execution/broken-tool.ts';
-import type { ToolPin, CheckSpec } from '#cli/types/configurations.ts';
 import type { PlannedCheck, ToolRunState, ToolInvocation } from '#cli/types/execution/execution.ts';
 
 function prefixScope(findings: Finding[], scopePath: string): void {

@@ -1,8 +1,8 @@
 // Whether a pinned tool ships for the machine the tests run on, read from its manifest pin.
 import { toolPin } from '#cli/tools/inspect.ts';
 import { missingBuild } from '#cli/tools/platforms.ts';
-import { PLATFORM_NAMES } from '#cli/constants/execution/execution.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { configurationManifests } from '#cli/kits/manifests.ts';
+import { PLATFORM_NAMES } from '#cli/config/execution/execution.ts';
 
 /**
  * Whether the pinned tool has a build for this machine.

@@ -1,11 +1,11 @@
 import { join, dirname } from 'node:path';
 import { readSource } from '#cli/repository/tracked.ts';
 import type { SpawnResult } from '#cli/types/platform.ts';
-import { SHOWN_LINES } from '#cli/constants/checks/nextjs.ts';
+import { SHOWN_LINES } from '#cli/config/checks/nextjs.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
 import { createFileWorkspace } from '#cli/execution/files/workspace.ts';
-import { FROZEN_INSTALLS, STALE_LOCK_DIAGNOSTICS } from '#cli/constants/checks/dependencies.ts';
+import { FROZEN_INSTALLS, STALE_LOCK_DIAGNOSTICS } from '#cli/config/checks/dependencies.ts';
 
 // Yarn metadata selects its immutable-installation protocol. Other filenames select their pinned client command.
 function frozenCommand(input: EngineInput, path: string): string[] | undefined {

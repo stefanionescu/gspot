@@ -1,6 +1,6 @@
 import { test, expect, describe } from 'bun:test';
+import { TS } from '#tests/config/unit/cli/checks/naming.ts';
 import { identifiersOf } from '#cli/checks/naming/extract.ts';
-import { TS } from '#tests/constants/unit/cli/checks/naming.ts';
 
 test('property signature spelling does not establish an external contract', async () => {
     const found = await identifiersOf(

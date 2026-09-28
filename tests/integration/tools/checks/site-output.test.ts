@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import { writeFileSync } from 'node:fs';
 import { test, spyOn, expect } from 'bun:test';
+import { SITE_BUILD } from '#tests/config/cli.ts';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
-import { SITE_BUILD } from '#tests/constants/cli.ts';
 import { siteInput } from '#tests/support/cli/site.ts';
 import * as toolRunner from '#cli/execution/tool/runner.ts';
 import { siteBuild } from '#cli/checks/static-site/build.ts';

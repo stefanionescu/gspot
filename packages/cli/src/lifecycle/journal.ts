@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { isDeepStrictEqual } from 'node:util';
-import { MODE_BITS } from '#cli/constants/platform.ts';
-import { RECOVERY_OWNER } from '#cli/constants/lifecycle/lifecycle.ts';
+import { MODE_BITS } from '#cli/config/platform.ts';
+import { RECOVERY_OWNER } from '#cli/config/lifecycle/lifecycle.ts';
 import { mutationPath, mutationTarget } from '#cli/platform/safe-paths.ts';
 
 const hashSchema = z.string().regex(/^[a-f0-9]{64}$/u);

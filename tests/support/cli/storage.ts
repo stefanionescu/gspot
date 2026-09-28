@@ -1,6 +1,6 @@
 // A session with one configurable check for cache and report storage tests.
+import type { Stage } from '#cli/types/kits.ts';
 import { openSession } from '#cli/execution/session.ts';
-import type { Stage } from '#cli/types/configurations.ts';
 import type { Session } from '#cli/types/execution/execution.ts';
 
 /**

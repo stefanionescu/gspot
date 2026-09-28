@@ -1,5 +1,5 @@
 // Moving Prettier overrides from the folder they were written in to a configuration generated elsewhere.
-import { GLOB_GROUPING, LEADING_GLOBSTARS } from '#cli/constants/generation.ts';
+import { GLOB_GROUPING, LEADING_GLOBSTARS } from '#cli/config/generation.ts';
 import type { FormatOverride, NativeOverride, ExcludedBasename, FormatSelectorGroup } from '#cli/types/generation.ts';
 
 // A selector list as written: one string or several.

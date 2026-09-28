@@ -7,7 +7,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { exportedProfile } from '#cli/policy/profiles/export.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { toolsPath, installPrivateTools } from '#tests/support/cli/tools.ts';
-import { FORMAT_OVERRIDES_POLICY } from '#tests/constants/acceptance/source/cli/cli.ts';
+import { FORMAT_OVERRIDES_POLICY } from '#tests/config/acceptance/source/cli/cli.ts';
 
 const CASES = [
     { file: 'source.js', tabWidth: 2, singleQuote: false, semi: false, endOfLine: 'lf' },

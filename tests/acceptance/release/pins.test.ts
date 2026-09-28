@@ -1,10 +1,10 @@
 // Every pin a manifest names exists in its registry, sits at or above its floor, and fits the ESLint the plugins support.
 import { test, expect } from 'bun:test';
-import type { ToolPin } from '#cli/types/configurations.ts';
+import type { ToolPin } from '#cli/types/kits.ts';
 import type { Pin } from '#tests/types/acceptance/release.ts';
+import { configurationManifests } from '#cli/kits/manifests.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { REGISTRY_TIMEOUT_MS } from '#tests/constants/acceptance/release.ts';
+import { REGISTRY_TIMEOUT_MS } from '#tests/config/acceptance/release.ts';
 
 function pinsOf(tool: ToolPin): Pin[] {
     return Object.entries(tool.installers).flatMap(([installer, entry]) => {

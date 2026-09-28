@@ -1,11 +1,11 @@
 // Temporary copies of selected files for commands that must not read the working tree.
 import { tmpdir } from 'node:os';
 import { cp, rm, readdir } from 'node:fs/promises';
-import { PERMISSION_BITS } from '#cli/constants/platform.ts';
+import { PERMISSION_BITS } from '#cli/config/platform.ts';
 import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { sep, join, dirname, relative, isAbsolute } from 'node:path';
 import type { Copy, Scratch } from '#cli/types/execution/execution.ts';
-import { SCRATCH_EXTRAS, SCRATCH_DIRECTORIES } from '#cli/constants/execution/execution.ts';
+import { SCRATCH_EXTRAS, SCRATCH_DIRECTORIES } from '#cli/config/execution/execution.ts';
 
 import {
     rmSync,

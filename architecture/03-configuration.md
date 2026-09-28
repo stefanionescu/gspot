@@ -113,7 +113,7 @@ structural_prefix = "^\\d{2}-"
 # Architecture. Elements and the imports allowed between them.
 [architecture]
 types_directory = "types"
-constants_directory = "constants"
+config_directory = "config"
 elements = [
   { name = "app",      paths = ["src/app"] },
   { name = "modules",  paths = ["src/modules"] },
@@ -237,8 +237,8 @@ tool. [public vocabulary](README.md#glossary) holds the table, and a test over t
 ### Architecture
 
 `[architecture]` is read by the boundaries rules and the types rules, at the level `all`. It has
-six keys: `types_directory`, `constants_directory`, `elements`, `edges_allowed`, `roles`, and
-`contracts`. `constants_directory` names the folder of literal constants; its files are the
+six keys: `types_directory`, `config_directory`, `elements`, `edges_allowed`, `roles`, and
+`contracts`. `config_directory` names the folder of literal constants; its files are the
 registries that may export instances built with `new`. `roles`
 names the files that own the config, the environment, and the test support. `contracts` holds
 the import contracts of a Python project.
@@ -246,7 +246,7 @@ the import contracts of a Python project.
 An element imports only itself unless a row of `edges_allowed` adds a target. No default names a
 folder: a rule with nothing configured reports nothing.
 
-`init` proposes `types_directory` and `constants_directory` from what exists.
+`init` proposes `types_directory` and `config_directory` from what exists.
 
 ### Options of a tool
 

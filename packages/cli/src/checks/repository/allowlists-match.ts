@@ -1,7 +1,7 @@
 import { dirname, basename } from 'node:path';
 import { pathMatcher } from '#cli/repository/paths.ts';
 import { readSource } from '#cli/repository/tracked.ts';
-import { POLICY_FILE } from '#cli/constants/checks/repository.ts';
+import { POLICY_FILE } from '#cli/config/checks/repository.ts';
 import { referencedPaths } from '#cli/checks/docs/stale-paths.ts';
 import type { PathPattern } from '#cli/types/checks/repository.ts';
 import { lockedPackages } from '#cli/repository/locked-packages.ts';

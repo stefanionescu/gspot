@@ -1,11 +1,11 @@
 import type { Colors } from 'picocolors/types';
 import { colors } from '#cli/output/messages.ts';
 import { stripVTControlCharacters } from 'node:util';
-import { ERROR_EXIT } from '#cli/constants/commands/commands.ts';
+import { ERROR_EXIT } from '#cli/config/commands/commands.ts';
+import { HOOK_FILES } from '#cli/config/repository/repository.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import type { Columns, ReporterOptions } from '#cli/types/output.ts';
-import { HOOK_FILES } from '#cli/constants/repository/repository.ts';
 import type { Finding, CheckResult } from '#cli/types/checks/checks.ts';
 
 import {
@@ -17,7 +17,7 @@ import {
     NOTE_STATUSES,
     FINDINGS_SHOWN,
     SCOPE_WIDTH_MIN,
-} from '#cli/constants/output.ts';
+} from '#cli/config/output.ts';
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Two lines print a duration; inlining it nests a template inside a template.
 function seconds(ms: number): string {

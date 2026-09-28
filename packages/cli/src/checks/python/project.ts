@@ -17,7 +17,7 @@ import {
     INSTALL_HOLDERS,
     PYTHON_MANIFEST,
     REQUIREMENTS_FILE,
-} from '#cli/constants/checks/python.ts';
+} from '#cli/config/checks/python.ts';
 
 const importConfiguration = z.object({
     tool: z.object({ importlinter: z.record(z.string(), z.unknown()).optional() }).optional(),

@@ -1,5 +1,5 @@
 import { splitByCase } from 'scule';
-import { DIGIT, SEPARATORS } from '#cli/constants/checks/naming.ts';
+import { DIGIT, SEPARATORS } from '#cli/config/checks/naming.ts';
 
 /**
  * The parts of an identifier, lowercased. `HTMLParser` gives `html`, `parser`; `user_id` gives `user`, `id`; `v2` gives `v`, `2`.

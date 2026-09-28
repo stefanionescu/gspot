@@ -4,14 +4,14 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { initArgs } from '#tests/support/cli/init.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/constants/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
 import { statSync, chmodSync, symlinkSync, readFileSync } from 'node:fs';
 
 import {
     EDITORCONFIG,
     PRETTIER_CARRY_SOURCE,
     EDITORCONFIG_CARRY_FILES,
-} from '#tests/constants/acceptance/source/cli/cli.ts';
+} from '#tests/config/acceptance/source/cli/cli.ts';
 
 test.each([false, true])(
     'nested EditorConfig adoption preserves formatting and restores original bytes, with Prettier config=%s',

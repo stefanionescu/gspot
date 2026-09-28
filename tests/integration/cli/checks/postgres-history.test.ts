@@ -10,7 +10,7 @@ import { rejection } from '#tests/support/expectations.ts';
 import { sessionInput } from '#tests/support/cli/input.ts';
 import { migrationsOf } from '#cli/checks/postgres/migrations.ts';
 import { migrationOrder, migrationsFrozen } from '#cli/checks/postgres/history.ts';
-import { PATH, ORIGINAL, POSTGRES_HISTORY_POLICY } from '#tests/constants/integration/cli/checks.ts';
+import { PATH, ORIGINAL, POSTGRES_HISTORY_POLICY } from '#tests/config/integration/cli/checks.ts';
 
 function git(root: string, args: string[]): string {
     const result = runBlocking(['git', ...args], { cwd: root });
