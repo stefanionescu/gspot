@@ -13,9 +13,10 @@ import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { install, toolsPath } from '#tests/support/cli/tools.ts';
 import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
+import { linkInstalledModules } from '#tests/support/cli/platforms.ts';
 import type { NextjsRead } from '#tests/types/integration/cli/checks.ts';
 import { NEXT_PAGE, NEXT_CONFIG, NEXT_LAYOUT } from '#tests/inputs/cli.ts';
-import { chmodSync, mkdirSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
+import { chmodSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 
 /** init selecting nextjs without the recommendations the tests leave out. */
 const NEXT_INIT = initArgs(['nextjs'], ['naming', 'spelling', 'css', 'files']); /**
@@ -43,7 +44,7 @@ export async function installedNextProject(): Promise<{
             'messages/en.json': '{\n    "home": { "title": "Home", "greeting": "Hello {name}" }\n}\n',
             'messages/de.json': '{\n    "home": { "title": "Start", "greeting": "Hallo {name}" }\n}\n',
         });
-        symlinkSync(INSTALLED_MODULES, join(sandbox.path, 'node_modules'));
+        linkInstalledModules(join(sandbox.path, 'node_modules'));
         commitAll(sandbox.path);
         const environment = {
             PATH: `${join(INSTALLED_MODULES, '.bin')}${delimiter}${toolsPath(['typos', 'ec', 'ast-grep'])}`,

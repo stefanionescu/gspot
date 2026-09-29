@@ -2,13 +2,12 @@
 import { ESLint } from 'eslint';
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { mkdirSync, symlinkSync, writeFileSync } from 'node:fs';
+import { linkInstalledModules } from '#tests/support/cli/platforms.ts';
 import { generatedEslint } from '#tests/support/cli/generated/eslint.ts';
-
-const modules = join(import.meta.dir, '../../../../node_modules');
 
 async function configuredRules(policy: string, files: string[]): Promise<Record<string, Record<string, unknown[]>>> {
     await using sandbox = await testdir();
@@ -18,10 +17,10 @@ async function configuredRules(policy: string, files: string[]): Promise<Record<
         'tsconfig.json': '{"compilerOptions":{"strict":true,"jsx":"react-jsx"},"include":["src"]}\n',
         ...Object.fromEntries(files.map((file) => [file, 'export const App = (): string => "app";\n'])),
     });
-    symlinkSync(modules, join(sandbox.path, 'node_modules'), 'dir');
+    linkInstalledModules(join(sandbox.path, 'node_modules'));
     mkdirSync(join(sandbox.path, '.gspot/config'), { recursive: true });
     // The generated configuration imports its plugins from the private installation.
-    symlinkSync(modules, join(sandbox.path, '.gspot/node_modules'), 'dir');
+    linkInstalledModules(join(sandbox.path, '.gspot/node_modules'));
     const session = await openSession(sandbox.path);
     const config = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
         version: session.version,
