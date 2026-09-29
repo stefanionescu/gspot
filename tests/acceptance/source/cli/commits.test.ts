@@ -53,7 +53,7 @@ function expectCompleteHistory(output: string, commits: string[]): void {
 }
 
 test(
-    'native commitlint discovers the generated pointer and rejects invalid messages',
+    'native commitlint reads the generated configuration and rejects invalid messages',
     async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
@@ -63,7 +63,14 @@ test(
             const prepared = await run(sandbox.path, [command]);
             expect(prepared.code, prepared.stdout + prepared.stderr).toBe(0);
         }
-        const command = ['node', join(sandbox.path, '.gspot/node_modules/@commitlint/cli/cli.js')];
+        // gspot and editors name the generated file; no pointer at the root leads commitlint to it.
+        const configuration = join(sandbox.path, '.gspot/config/commitlint.config.cjs');
+        const command = [
+            'node',
+            join(sandbox.path, '.gspot/node_modules/@commitlint/cli/cli.js'),
+            '--config',
+            configuration,
+        ];
         const failed = await processes.run(command, { cwd: sandbox.path, stdin: 'Changed files.\n' });
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
         expect(failed.stdout + failed.stderr).toContain('type-empty');
