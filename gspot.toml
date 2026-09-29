@@ -86,6 +86,10 @@ patterns = [".gspot/reports/report.json"]
 reason = "The check runner writes this ignored runtime report and the CI workflow uploads it. Runtime reports are not tracked repository inputs."
 
 [[tools.docs.paths_allowed]]
+patterns = [".mise/conf.d/repo.toml", ".mise/gspot/gspot"]
+reason = "ASSESSMENT.md records the layout before the mise fold; these names say what was removed."
+
+[[tools.docs.paths_allowed]]
 patterns = ["packages/cli/guides/**"]
 reason = "The rule corpus is generic text installed into other repositories; it names nothing in this one."
 
@@ -357,7 +361,7 @@ reason = "Astro fixes the name of the content configuration file beside the cont
 [[check]]
 name = "guides/lint"
 command = ["mise", "run", "guides:lint"]
-paths = ["packages/cli/guides/**", "packages/cli/src/agents/**", "packages/cli/kits/**", "tests/integration/tools/generation/**", "tests/unit/cli/agents/**", ".mise/conf.d/repo.toml"]
+paths = ["packages/cli/guides/**", "packages/cli/src/agents/**", "packages/cli/kits/**", "tests/integration/tools/generation/**", "tests/unit/cli/agents/**", "mise.toml"]
 stage = "push"
 summary = "Validates guide structure and runs Good examples through their native linters."
 
@@ -416,12 +420,6 @@ paths = [
 reason = "These configuration evaluators intentionally execute repository-selected modules and installed tool APIs in the configuration subprocess. Static imports select the CLI dependencies instead of the repository dependencies and cannot preserve executable configuration. Other security rules remain active for these exact files."
 
 [[ignore]]
-check = "prose/vale"
-rule = "Google.OxfordComma"
-paths = [".mise/gspot/gspot"]
-reason = "The required Bash runtime header is a version followed by two platforms, not a three-item list. The script runtime parser requires the exact macOS and Linux spelling. Remove this exception if that header contract changes or the upstream prose rule distinguishes this syntax."
-
-[[ignore]]
 check = "typescript/eslint"
 rule = "gspot/no-trivial-functions"
 paths = ["packages/cli/src/policy/messages.ts"]
@@ -440,7 +438,6 @@ paths = [
     "packages/cli/**",
     "packages/eslint-plugin/**",
     "tests/**",
-    ".mise/gspot/**",
     "packages/cli/kits/**",
     "packages/cli/guides/**",
     "package.json",
@@ -448,7 +445,6 @@ paths = [
     "tsconfig.json",
     "mise.toml",
     "docs/**",
-    ".mise/conf.d/repo.toml",
 ]
 stage = "push"
 summary = "Runs the routine unit and integration suites, including CLI, plugin, and documentation tests."
@@ -463,7 +459,6 @@ paths = [
     "packages/cli/**",
     "packages/eslint-plugin/**",
     "tests/**",
-    ".mise/gspot/**",
     "packages/cli/kits/**",
     "packages/cli/guides/**",
     "package.json",
@@ -471,7 +466,6 @@ paths = [
     "tsconfig.json",
     "mise.toml",
     "docs/**",
-    ".mise/conf.d/repo.toml",
 ]
 stage = "manual"
 summary = "Measures unit and integration coverage with Bun without imposing a percentage quota."

@@ -37,7 +37,7 @@ test('runner selection preserves policy after rejection and accepts a supported 
 
 // The planted mise and gspot are POSIX shell scripts.
 if (onPosix)
-    test('mise executes generated tasks with their arguments, and install rejects an old runner before corrected setup succeeds', async () => {
+    test('mise executes the pinned CLI with its arguments, and install rejects an old runner before corrected setup succeeds', async () => {
         await using repository = await testdir();
         await using state = await testdir();
         const policy = policyOf([], '[guides]\ninstall = false\n[runner]\ntool = "mise"\n', 'recommended');
@@ -83,11 +83,11 @@ if (onPosix)
             generated: readFileSync(join(repository.path, MISE_CONFIG_PATH)),
             policy: readFileSync(join(repository.path, 'gspot.toml'), 'utf8'),
         }).toStrictEqual({ generated, policy });
-        const invalid = await run(['mise', 'run', '--quiet', 'gspot:apply', '--', '--invalid'], options);
+        const invalid = await run(['mise', 'exec', '--', 'gspot', 'apply', '--invalid'], options);
         expect(invalid.code, invalid.stdout + invalid.stderr).toBe(2);
         expect(invalid.stdout + invalid.stderr).toContain('--invalid');
         expect(existsSync(join(repository.path, '.gspot/obsolete.json'))).toBe(true);
-        const applied = await run(['mise', 'run', '--quiet', 'gspot:apply'], options);
+        const applied = await run(['mise', 'exec', '--', 'gspot', 'apply'], options);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
         expect(existsSync(join(repository.path, '.gspot/obsolete.json'))).toBe(false);
         expect(readFileSync(join(repository.path, '.gspot/authored.txt'), 'utf8')).toBe('keep authored content');

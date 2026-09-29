@@ -22,7 +22,8 @@ CLI build.
 ## Hooks and configuration
 
 Activate mise in your shell before invoking Git hooks, or run Git through `mise exec -- git`.
-This checkout puts its source launcher on the mise PATH, so hooks and repository tasks run
+This checkout runs the source CLI through `mise run gspot -- <command>`. Its hooks reach the
+same CLI through the package bin on the mise PATH, so hooks and repository tasks run
 the source without a build. Confirm the resolution:
 
 ```shell

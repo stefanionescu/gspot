@@ -1,4 +1,4 @@
-// Every generated output of a repository: configuration files, pointers, blocks, hooks, runner tasks, and rules.
+// Every generated output of a repository: configuration files, pointers, blocks, hooks, tool pins, and rules.
 import type { Manifest } from '#cli/types/kits.ts';
 import { everyManifest } from '#cli/kits/select.ts';
 import { binaryPath } from '#cli/platform/assets.ts';
@@ -6,13 +6,12 @@ import { assembleRules } from '#cli/agents/assemble.ts';
 import { gitignoreBlock } from '#cli/kits/manifests.ts';
 import { bunConfiguration } from '#cli/generation/bun.ts';
 import { huskyLines } from '#cli/generation/hooks/husky.ts';
-import { miseTasks } from '#cli/generation/runner/tasks.ts';
 import { styleFiles } from '#cli/generation/vale-styles.ts';
 import { emitConfigurations } from '#cli/generation/kits.ts';
 import { mutationTarget } from '#cli/platform/safe-paths.ts';
 import { applyBlock } from '#cli/lifecycle/managed-blocks.ts';
+import { miseToolsFile } from '#cli/generation/tools/mise.ts';
 import { templateInputs } from '#cli/generation/templates.ts';
-import { runnerTaskPlan } from '#cli/generation/runner/plan.ts';
 import { GIT_ATTRIBUTES_BLOCK } from '#cli/config/generation.ts';
 import { toolPackages } from '#cli/generation/tools/packages.ts';
 import type { Repository } from '#cli/types/repository/repository.ts';
@@ -45,22 +44,6 @@ function hookOutputs(root: string, policy: Policy, out: Generated, binary: strin
     const tool = policy.hooks?.tool;
     if (tool === undefined) return;
     HOOK_OUTPUTS[tool]?.(root, policy.runner?.tool, out, binary);
-}
-
-function runnerOutputs(
-    root: string,
-    policy: Policy,
-    manifests: Manifest[],
-    version: string,
-    hasPackageClient: boolean,
-    out: Generated,
-): void {
-    const runner = policy.runner?.tool;
-    if (runner === undefined) return;
-    const plan = runnerTaskPlan(root, runner, policy.runner?.tasks);
-    out.notes.push(...plan.notes);
-    if (runner === 'mise') out.files.push(miseTasks(manifests, version, hasPackageClient, plan.tasks));
-    if (plan.configuration !== undefined) out.configurations.push(plan.configuration);
 }
 
 function workflowOutput(policy: Policy, scopes: ScopeSelection[], version: string, out: Generated): void {
@@ -156,7 +139,7 @@ export function emitAll(
     out.configurations.push(...bunConfiguration(root, scopes));
     hookOutputs(root, policy, out, binary);
     out.files.push(...toolPackages(manifests, packageClient, policy.runner?.tool), ...toolEnvironment(manifests));
-    runnerOutputs(root, policy, manifests, version, packageClient !== undefined, out);
+    if (policy.runner?.tool === 'mise') out.files.push(miseToolsFile(manifests, version, packageClient !== undefined));
     workflowOutput(policy, scopes, version, out);
     out.files.push(...assembleRules(policy.guides, manifests, policy.level, repository));
     if (scopes.some((selection) => selection.selected.some((manifest) => manifest.kit.name === 'prose')))

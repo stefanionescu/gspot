@@ -20,7 +20,7 @@ test('apply refuses a plan whose policy changed after the session was read', asy
     expect(existsSync(join(sandbox.path, '.gspot/state/ownership.json'))).toBe(false);
 });
 
-test('an npm runner preserves the authored prepare command while adding explicit check scripts', async () => {
+test('an npm runner preserves the authored scripts and adds no task of its own', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': policyOf([], '[runner]\ntool = "bun"\n[guides]\ninstall = false\n'),
@@ -30,9 +30,7 @@ test('an npm runner preserves the authored prepare command while adding explicit
     const content = JSON.parse(readFileSync(join(sandbox.path, 'package.json'), 'utf8')) as {
         scripts: Record<string, string>;
     };
-    expect(content.scripts['prepare']).toBe('build-app');
-    expect(content.scripts['gspot:check']).toBe('gspot check');
-    expect(content.scripts['gspot:apply']).toBe('gspot apply');
+    expect(content.scripts).toStrictEqual({ prepare: 'build-app' });
 });
 
 test('init refuses an unsafe output ancestor before attempting installation', async () => {

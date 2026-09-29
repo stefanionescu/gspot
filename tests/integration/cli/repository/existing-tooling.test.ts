@@ -117,7 +117,7 @@ test.each([
         path: '.gitlab-ci.yml',
         document: {
             quality: { script: 'eslint src' },
-            analysis: { script: [null, 12, 'npm run gspot:check'] },
+            analysis: { script: [null, 12, 'npm run lint'] },
             '.lint-template': { script: 'eslint src' },
             build: { script: ['bun run build'] },
         },

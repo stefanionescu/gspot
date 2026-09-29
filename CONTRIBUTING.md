@@ -30,7 +30,7 @@ the shell's `PATH`.
 | `mise run test:acceptance` | Behavioral acceptance from a planted repository through an isolated registry. |
 | `mise run build -- --all`  | All seven binaries, with licenses and notices.                                |
 | `mise run test:release`    | The built binary and the installed packages through an isolated registry.     |
-| `mise run gspot:check`     | This repository's own checks, run from source.                                |
+| `mise run check`           | This repository's own checks, run from source.                                |
 
 The full source acceptance suite has a 90-minute overall deadline. Individual test deadlines
 and performance limits remain separate. To run a focused subset, pass files or folders:
@@ -46,7 +46,7 @@ an hour stops the install.
 ## Policy and generated files
 
 `gspot.toml` is the policy of this repository. Change it with `gspot set`, `gspot ignore`, `gspot add`,
-or `gspot remove`, then run `mise run gspot:apply` to regenerate the files under `.gspot/`. Never edit
+or `gspot remove`, then run `mise run apply` to regenerate the files under `.gspot/`. Never edit
 a generated file by hand; `integrity/generated-drift` reports one that differs from its render.
 
 ## Commits

@@ -47,25 +47,24 @@ test('detected settings override profile values while unrelated profile settings
     });
 });
 
-test('initialization keeps profile runner tasks while honoring disabled integrations', () => {
+test('initialization keeps the profile runner while honoring disabled integrations', () => {
     const text = proposeText({
         kits: ['formatting'],
         scopes: [],
         profileTables: {
             hooks: { tool: 'husky' },
             ci: { provider: 'github' },
-            runner: { tool: 'mise', tasks: { check: 'profile-check', apply: 'profile-apply' } },
+            runner: { tool: 'mise' },
             coverage: { strict: true },
         },
         hooks: 'none',
         ci: 'none',
         rules: false,
         runner: 'mise',
-        runnerTasks: { check: 'detected-check', fix: 'detected-fix' },
     });
     const document = parse(text);
     expect(document).toMatchObject({
-        runner: { tool: 'mise', tasks: { check: 'profile-check', apply: 'profile-apply', fix: 'detected-fix' } },
+        runner: { tool: 'mise' },
         coverage: { strict: true },
         guides: { directory: '.gspot/guides', install: false },
     });

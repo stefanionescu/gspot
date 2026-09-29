@@ -35,7 +35,7 @@ function runsLint(command: string): boolean {
         if (next !== undefined && LINT_PAIRS.has(`${word} ${next}`)) return true;
         if (!TASK_RUNNERS.has(word)) return false;
         const task = next === 'run' ? words[index + TASK_AFTER_RUN] : next;
-        return task === 'lint' || task === 'gspot:check';
+        return task === 'lint';
     });
 }
 

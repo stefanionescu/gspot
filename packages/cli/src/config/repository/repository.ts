@@ -39,7 +39,7 @@ export const RULE_NAME = /^[a-zA-Z-]+$/u;
 export const RULE_CODE = /^(?:SC)?\d+$/u;
 // The words in a CI job name that say it lints.
 export const LINT_WORDS = new Set(['lint', 'quality', 'gspot']);
-// Two-word lint commands, and the package managers whose lint or gspot:check task counts.
+// Two-word lint commands, and the package managers whose lint task counts.
 export const LINT_PAIRS = new Set(['gspot check', 'biome check', 'ruff check']);
 export const TASK_RUNNERS = new Set(['npm', 'pnpm', 'yarn', 'bun', 'mise']);
 export const OTHER_CI_FILES = new Set([

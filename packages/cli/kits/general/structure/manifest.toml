@@ -136,20 +136,6 @@ why = "An ignore, declaration, or package allowance that matches nothing mislead
 help = "Remove the entry, correct its path or exact package version, or restore the project lockfile."
 
 [[checks]]
-name = "integrity/task-policy"
-title = "Task policy"
-example = "A generated check task or hook changed to bypass the configured command reports task-policy drift. Review the local edit, restore the policy-owned command through `gspot apply`, and rerun."
-level = "all"
-stage = "commit"
-runs = "once"
-engine = "integrity"
-analysis = "task-policy"
-coverage = ["consistency"]
-summary = "Checks that the task runner holds every task gspot writes and that the installed hooks exist, call gspot and are pointed at by core.hooksPath."
-why = "A missing task or a hook nobody points at means the gate runs only when someone remembers to."
-help = "Run gspot apply; it rewrites the tasks and the hooks and sets core.hooksPath."
-
-[[checks]]
 name = "integrity/large-files"
 title = "Large files"
 example = "A tracked `notes/big.txt` containing 1,100 KiB exceeds the default 1,024 KiB ceiling and reports `over-limit`. Remove accidental content or store a required large file through Git LFS. Generated and vendored classifications must describe the actual file ownership."

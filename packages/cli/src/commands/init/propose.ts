@@ -88,7 +88,7 @@ function mergeProfile(document: TomlTable, tables: TomlTable | undefined): void 
     }
 }
 
-// Initialization selects enabled integrations; profile task names retain precedence.
+// Initialization selects enabled integrations.
 function applyIntegrations(document: TomlTable, plan: InitPlan): void {
     if (plan.hooks === 'none') delete document['hooks'];
     else document['hooks'] = { ...asRaw(document['hooks']), tool: plan.hooks };
@@ -97,15 +97,7 @@ function applyIntegrations(document: TomlTable, plan: InitPlan): void {
     document['guides'] = { directory: '.gspot/guides', ...asRaw(document['guides']), install: plan.rules };
     document['coverage'] = { strict: false, ...asRaw(document['coverage']) };
     if (plan.runner === 'none') delete document['runner'];
-    else {
-        const runner = asRaw(document['runner']) ?? {};
-        const tasks = { ...plan.runnerTasks, ...asRaw(runner['tasks']) };
-        document['runner'] = {
-            ...runner,
-            tool: plan.runner,
-            ...(Object.keys(tasks).length === 0 ? {} : { tasks }),
-        };
-    }
+    else document['runner'] = { tool: plan.runner };
 }
 
 // The settings of a scope are written the way gspot set writes them, as one inline table inside the scope.

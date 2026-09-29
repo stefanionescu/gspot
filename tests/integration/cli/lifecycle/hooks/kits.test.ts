@@ -48,7 +48,7 @@ test('simple-git-hooks configuration coexists with generated npm scripts', async
     expect(applied.exitCode).toBe(0);
     const manifest = JSON.parse(readFileSync(join(sandbox.path, 'package.json'), 'utf8')) as PackageManifest;
     expect(manifest.scripts['authored']).toBe('echo keep');
-    expect(manifest.scripts['gspot:check']).toBe('gspot check');
+    expect(manifest.scripts).not.toHaveProperty('gspot:check');
     expect(manifest['simple-git-hooks']['pre-commit']).toContain('.gspot/integrations/simple-git-hooks/pre-commit');
 });
 

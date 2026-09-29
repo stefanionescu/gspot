@@ -37,7 +37,8 @@ file = ".swiftlint.yaml"
 name = "swiftformat"
 version = "0.61.1"
 floor = "0.54.0"
-mise = "swiftformat"
+# The GitHub release ships an app bundle beside the executable, which mise skips.
+mise = {name = "swiftformat", version = "0.61.1", options = {no_app = true, rename_exe = "swiftformat"}}
 brew = "swiftformat"
 github = {name = "nicklockwood/SwiftFormat", version = "0.61.1"}
 

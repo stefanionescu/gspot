@@ -315,8 +315,8 @@ and the kit manifests, and one generated place.
 `[env]` entry. **cut** and **merge**:
 
 - Move `.mise/conf.d/repo.toml` into `mise.toml` and delete it. One authored file.
-- Drop the three `gspot:*` tasks from the generated file; `gspot check` is shorter than
-  `mise run gspot:check`. The four source overrides go with them.
+- Drop the three `gspot:*` tasks from the generated file; `gspot check` is shorter than a
+  task that runs it. The four source overrides go with them.
 - One owner for tool pins: every kit tool in the generated file, or no mise pins from gspot at
   all and version checks only.
 - The source launcher becomes a task, not a directory on PATH.

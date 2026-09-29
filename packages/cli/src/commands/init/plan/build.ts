@@ -3,12 +3,11 @@ import { openRoot } from '#cli/platform/filesystem.ts';
 import { xcodePlan } from '#cli/commands/init/xcode.ts';
 import { agentFiles } from '#cli/agents/instructions.ts';
 import { npmPins, pythonPins } from '#cli/tools/pins.ts';
+import type { Policy } from '#cli/types/policy/policy.ts';
 import { misePins, pinnedTwice } from '#cli/tools/mise.ts';
 import { submodulePaths } from '#cli/repository/tracked.ts';
 import { MISE_CONFIG_PATH } from '#cli/config/tools/tools.ts';
-import { runnerTaskPlan } from '#cli/generation/runner/plan.ts';
 import { ciLintJobs } from '#cli/repository/existing-tooling.ts';
-import type { Policy, RunnerTaskNames } from '#cli/types/policy/policy.ts';
 import { CI_SETUP, HOOKS_ROW, CURSOR_RULE } from '#cli/config/commands/init.ts';
 import { SECONDS_PER_DAY, DEFAULT_RELEASE_AGE_DAYS } from '#cli/config/generation.ts';
 import type { ScopeEntry, ExistingTooling } from '#cli/types/repository/repository.ts';
@@ -23,12 +22,7 @@ import type {
     InitPlan as Plan,
 } from '#cli/types/commands.ts';
 
-function runnerRows(
-    root: string,
-    answers: InitAnswers,
-    everySelected: Manifest[],
-    names?: RunnerTaskNames,
-): ReplacePlan['change'] {
+function runnerRows(answers: InitAnswers, everySelected: Manifest[]): ReplacePlan['change'] {
     const count = Object.keys(npmPins(everySelected, answers.runner)).length;
     const rows: ReplacePlan['change'] =
         count === 0
@@ -40,21 +34,11 @@ function runnerRows(
             path: '.gspot/pyproject.toml',
             note: `${String(python)} pinned Python tools; matching uv.lock and private environment`,
         });
-    const tasks = runnerTaskPlan(root, answers.runner, names);
     if (answers.runner === 'mise')
         rows.unshift({
             path: MISE_CONFIG_PATH,
-            note: `${String(misePins(everySelected, count > 0).length)} tool pins, ${String(tasks.tasks.length)} tasks`,
+            note: `${String(misePins(everySelected, count > 0).length)} tool pins`,
         });
-    const configuration = tasks.configuration;
-    if (configuration !== undefined)
-        rows.push(
-            ...configuration.changes.map((field) => ({
-                path: configuration.path,
-                note: `task ${String(field.path[1])}: ${String(field.value)}`,
-            })),
-        );
-    rows.push(...tasks.notes.map((note) => ({ path: 'runner', note })));
     return rows;
 }
 
@@ -239,7 +223,7 @@ export function buildInitPlan(planning: Planning, policy: Policy, policyText: st
         change: [
             { path: '.gitignore', note: 'one managed block' },
             { path: '.gitattributes', note: 'managed generated-file classification and LF line endings' },
-            ...runnerRows(root, answers, everySelected, policy.runner?.tasks),
+            ...runnerRows(answers, everySelected),
             ...(answers.hooks === 'gspot' ? [HOOKS_ROW] : []),
         ],
         noLongerRuns: noLongerRuns(tooling, pinnedTwice(root, everySelected)),

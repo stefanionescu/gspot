@@ -17,10 +17,7 @@ const workflow = Bun.YAML.parse(readFileSync(join(root, '.github/workflows/ci.ym
     jobs: { affected: { steps: { name?: string; run?: string }[] } };
 };
 const step = workflow.jobs.affected.steps.find((entry) => entry.name === 'Check affected inputs')!;
-const tasks = parse(readFileSync(join(root, '.mise/conf.d/repo.toml'), 'utf8'))['tasks'] as Record<
-    string,
-    Record<string, string>
->;
+const tasks = parse(readFileSync(join(root, 'mise.toml'), 'utf8'))['tasks'] as Record<string, Record<string, string>>;
 
 test('repository CI checks the committed change, preserves reports on invalid bases, and accepts a correction', async () => {
     await using sandbox = await testdir();
@@ -50,12 +47,12 @@ test('repository CI checks the committed change, preserves reports on invalid ba
     writeFileSync(join(sandbox.path, 'changed.txt'), 'bad\n');
     commit();
     writeFileSync(join(sandbox.path, 'changed.txt'), 'working tree correction\n');
-    // The launcher needs Bun on PATH; a runner installs it for the repository, not for the sandbox.
+    // The task runs gspot from PATH: the package bin, which needs Bun; a runner installs Bun for the repository.
     const environment = {
         MISE_TRUSTED_CONFIG_PATHS: sandbox.path,
         // A runner reaches Bun through a mise shim, which needs a version where no configuration is in scope.
         MISE_BUN_VERSION: Bun.version,
-        PATH: [join(root, '.mise/gspot'), dirname(process.execPath), toolsPath([])].join(delimiter),
+        PATH: [join(root, 'packages/cli/bin'), dirname(process.execPath), toolsPath([])].join(delimiter),
     };
     const argv = ['bash', '-euo', 'pipefail', '-c', step.run!];
     const settings = { cwd: sandbox.path, timeoutMs: 30_000 };

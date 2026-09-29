@@ -34,8 +34,7 @@ field lists; a normalized type exists only for a real transformation.
 | the hook or task a hook calls                             | gspot, one managed block      | yes     | the gspot line: in the hook tool, the task, or the tracked hook file, or in `.git/hooks/` of each clone |
 | `.github/workflows/gspot.yml` or `.gitlab/ci/gspot.yml`   | gspot                         | yes     | the CI job, when enabled                                                                                |
 
-The only shared-manifest writes are the `gspot` launcher and explicitly accepted lint task
-entries. gspot never writes tool dependencies or package lifecycle scripts into the developer's
+The only shared-manifest write is the `gspot` launcher under an npm runner. gspot never writes tool dependencies or package lifecycle scripts into the developer's
 `package.json`, and never writes a table into their `pyproject.toml`.
 
 Every generated file opens with a mark:

@@ -158,21 +158,18 @@ cases. Uninstall restores only an unchanged dispatcher and leaves edited origina
 
 Every task calls gspot, and the order of checks lives in gspot.
 
-| `[runner] tool`              | gspot writes                                                            |
-| ---------------------------- | ----------------------------------------------------------------------- |
-| `mise`                       | `.mise/conf.d/gspot-tools.toml` with the tool pins, and the tasks below |
-| `npm`, `pnpm`, `yarn`, `bun` | the `gspot` launcher in `devDependencies`, and the scripts below        |
-| no table                     | nothing                                                                 |
+| `[runner] tool`              | gspot writes                                       |
+| ---------------------------- | -------------------------------------------------- |
+| `mise`                       | `.mise/conf.d/gspot-tools.toml` with the tool pins |
+| `npm`, `pnpm`, `yarn`, `bun` | the `gspot` launcher in `devDependencies`          |
+| no table                     | nothing                                            |
 
-Existing command names keep working. Where a `lint`, `format`, or `check` task exists, the plan
-proposes a new body that calls gspot, and the developer accepts it. gspot writes a
-`gspot:check` and a `gspot:fix` task only where the name is free, and `[runner] tasks` holds
-the names. Uninstall restores an old body only when its replacement is unchanged. gspot never
-creates or edits a package lifecycle script, including `prepare`, and never injects a setup
-task.
+gspot writes no task and no script: `gspot check` is shorter than a task that runs it, and
+the generated hooks and CI call the CLI through the runner (`mise exec -- gspot`,
+`npm exec --no -- gspot`). Authored tasks, including package lifecycle scripts such as
+`prepare`, are never edited.
 
-The mise file has one place in every repository, and gspot changes an existing task in
-`mise.toml` only when that exact replacement was accepted in the init plan. `init` runs
+The mise file has one place in every repository, and gspot never edits `mise.toml`. `init` runs
 `mise trust` on its file before the install. The file pins gspot itself through the `github`
 backend of mise, which is what `mise exec` and the hook find. Every tool a kit pins is written
 into that file by gspot, and `mise.toml` keeps the runtimes; `doctor` reports a version below

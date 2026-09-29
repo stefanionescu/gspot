@@ -4,8 +4,8 @@ import { everyManifest } from '#cli/kits/select.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { gitignoreBlock } from '#cli/kits/manifests.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { miseTasks } from '#cli/generation/runner/tasks.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
+import { miseToolsFile } from '#cli/generation/tools/mise.ts';
 import { preparePythonProject } from '#cli/tools/python-project.ts';
 import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import { toolEnvironment } from '#cli/generation/tools/environment.ts';
@@ -44,7 +44,7 @@ export async function preparePythonInstallation(
         })),
     }));
     const plans = toolEnvironment(everyManifest(scopes));
-    if (runner === 'mise') plans.push(miseTasks(everyManifest(scopes), session.version, false));
+    if (runner === 'mise') plans.push(miseToolsFile(everyManifest(scopes), session.version, false));
     const previous = ['UV_DEFAULT_INDEX', ...REDIRECTED].map((name) => [name, environmentVariables()[name]] as const);
     const resources = new AsyncDisposableStack();
     resources.defer(() => {

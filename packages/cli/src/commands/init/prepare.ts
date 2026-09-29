@@ -14,7 +14,6 @@ import { detectionText } from '#cli/commands/init/detection.ts';
 import { selectForInit } from '#cli/commands/init/selection.ts';
 import { detectedSettings } from '#cli/commands/init/settings.ts';
 import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
-import { proposedRunnerTasks } from '#cli/generation/runner/plan.ts';
 import { plan, buildInitPlan } from '#cli/commands/init/plan/build.ts';
 import { replacedConfiguration } from '#cli/commands/init/replaced.ts';
 import { askKits, askInitQuestions } from '#cli/commands/init/questions.ts';
@@ -100,19 +99,18 @@ export async function prepare(root: string, options: InitOptions): Promise<InitP
     const selection = await chosenSelection(inputs, options, detected);
     const replaced = replacedConfiguration(root, tooling, selection.selectedIds);
     const answers = await askInitQuestions(root, options, tooling);
-    const tasks = proposedRunnerTasks(root, answers.runner);
     const everySelected = [...selection.selectedIds]
         .map((id) => manifests.get(id))
         .filter((manifest) => manifest !== undefined);
     const planning: Planning = { root, options, tooling, selection, everySelected, answers, replaced };
     const settings = detectedSettings(everySelected, fields, repo.files);
-    const proposed = { ...plan(root, selection, answers, settings), runnerTasks: tasks.names };
+    const proposed = plan(root, selection, answers, settings);
     const { policyText, policy } = policyTextFor(planning, proposed);
     return {
         plan: buildInitPlan(planning, policy, policyText),
         policyText,
         runner: answers.runner,
         removed: replaced.removed,
-        read: new Map([...replaced.read, ...tasks.read]),
+        read: replaced.read,
     };
 }

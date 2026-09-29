@@ -126,7 +126,7 @@ function comparisonCheck(command: string, isFull: boolean): string {
 function checkJob(shape: WorkflowShape, platform: string, stage: 'check' | 'manual'): string[] {
     const runner = RUNNERS[platform];
     if (runner === undefined) throw new Error(`No GitHub runner is known for ${platform}.`);
-    const command = shape.isMise ? 'mise run gspot:check --' : 'gspot check';
+    const command = shape.isMise ? 'mise exec -- gspot check' : 'gspot check';
     const selected = stage === 'manual' ? `${command} --stage manual` : comparisonCheck(command, shape.run === 'all');
     return [
         `  ${stage}-${platform}:`,

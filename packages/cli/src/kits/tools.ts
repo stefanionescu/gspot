@@ -4,6 +4,11 @@ import { MAX_EXIT_CODE, TOOL_PLATFORMS } from '#cli/config/kits.ts';
 
 const installerDefinition = z.strictObject({ name: z.string(), version: z.string() });
 const installerSchema = z.union([z.string(), installerDefinition]);
+// Options mise writes beside the version, such as no_app or rename_exe for a release that ships an app bundle.
+const miseInstallerSchema = z.union([
+    z.string(),
+    installerDefinition.extend({ options: z.record(z.string(), z.union([z.string(), z.boolean()])).optional() }),
+]);
 const npmInstallerSchema = z.union([
     z.string(),
     installerDefinition.extend({ version_exit_code: z.number().int().min(0).max(MAX_EXIT_CODE).optional() }),
@@ -12,7 +17,7 @@ const npmInstallerSchema = z.union([
 const installerFields = {
     npm: npmInstallerSchema.optional(),
     pypi: installerSchema.optional(),
-    mise: installerSchema.optional(),
+    mise: miseInstallerSchema.optional(),
     brew: installerSchema.optional(),
     apt: installerSchema.optional(),
     cargo: installerSchema.optional(),

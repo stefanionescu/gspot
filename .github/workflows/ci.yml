@@ -112,7 +112,7 @@ jobs:
               run: mise run --skip-tools test:acceptance
             - id: normal
               if: inputs.tests == ''
-              run: mise run --skip-tools gspot:check
+              run: mise run --skip-tools check
             - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
               if: always() && !cancelled() && steps.normal.outcome != 'skipped'
               with:
@@ -123,7 +123,7 @@ jobs:
                   retention-days: 14
             - id: manual
               if: inputs.tests == ''
-              run: mise run --skip-tools gspot:check -- --stage manual
+              run: mise run --skip-tools check -- --stage manual
             - if: inputs.tests == ''
               run: mise run --skip-tools doctor
             - if: inputs.tests == ''

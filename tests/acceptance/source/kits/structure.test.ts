@@ -83,11 +83,6 @@ plantedCases(
             files: { 'notes/big.txt': 'x'.repeat(OVER_LIMIT_KB * KILOBYTE) },
             expected: { file: 'notes/big.txt', rule: 'over-limit', line: 1 },
         },
-        {
-            check: 'integrity/task-policy',
-            files: { 'package.json': '{"private":true,"scripts":{"gspot:check":"echo nothing"}}\n' },
-            expected: { file: 'package.json', rule: 'missing-task', line: 1 },
-        },
     ],
     (planted) => {
         test(

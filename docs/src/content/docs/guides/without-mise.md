@@ -18,18 +18,11 @@ manager, gspot selects Bun when available, or npm. Python tools use uv and insta
 
 ## With npm, Bun, pnpm, or Yarn
 
-Select the task integration with `gspot init --runner npm`, `--runner bun`, `--runner pnpm`, or `--runner yarn`.
-The integration adds available `gspot:check`, `gspot:fix`, `gspot:apply`, and `gspot:doctor` scripts.
-Initialization proposes existing check and format task names in `[runner.tasks]`. Review the
-listed replacements before accepting the plan. Authored lifecycle scripts remain intact.
-
-To choose names explicitly, set the mapping and apply it:
-
-```bash
-gspot set runner.tasks '{"check":"lint","fix":"format"}'
-```
-
-Uninstall restores accepted task bodies when they remain unchanged and preserves later edits.
+Select the package manager with `gspot init --runner npm`, `--runner bun`, `--runner pnpm`, or
+`--runner yarn`. The integration adds the `gspot` launcher to `devDependencies` and nothing
+else: no script is written, and authored scripts stay intact. Run the CLI through the package
+manager, as in `npx gspot check` or `bunx gspot check`. The generated hooks and CI workflow
+already do.
 
 ## With uv
 

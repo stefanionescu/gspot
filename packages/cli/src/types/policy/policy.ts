@@ -1,7 +1,6 @@
 // The types of policy in this package.
 import type { z } from 'zod';
 import type { parseDocument } from '@decimalturn/toml-patch';
-import type { runnerTasksSchema } from '#cli/policy/runner.ts';
 import type { Manifest, SettingSpec } from '#cli/types/kits.ts';
 import type { scopeSchema, policySchema } from '#cli/policy/schema.ts';
 import type { TomlTable, ScopeEntry } from '#cli/types/repository/repository.ts';
@@ -195,8 +194,6 @@ export type ScopeSelection = {
     surface: ExposedSettings;
     view: MergedView;
 };
-export type RunnerTaskNames = z.infer<typeof runnerTasksSchema>;
-export type RunnerTask = { name: string; description: string; run: string };
 export type MergedView = {
     scope: string;
     kits: string[];

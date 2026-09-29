@@ -257,7 +257,6 @@ export type InitPlan = {
     ci: NonNullable<RawPolicy['ci']>['provider'] | 'none';
     rules: boolean;
     runner: NonNullable<RawPolicy['runner']>['tool'] | 'none';
-    runnerTasks?: NonNullable<RawPolicy['runner']>['tasks'];
     /** The Bun install safeguards found in each bunfig.toml, by scope path ('' for the root). */
     install?: { path: string; settings: InstallSettings }[];
     /** The Xcode project and scheme init found, for the tools.xcode table. */

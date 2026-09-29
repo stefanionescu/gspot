@@ -36,7 +36,7 @@ describe('uninstall', () => {
             const installed = JSON.parse(readFileSync(join(sandbox.path, 'package.json'), 'utf8')) as {
                 scripts: Record<string, string>;
             };
-            expect(installed.scripts['gspot:check']).toBe('gspot check');
+            expect(installed.scripts).toStrictEqual({ build: 'true' });
             expect(readFileSync(join(sandbox.path, 'lefthook.yml'), 'utf8')).toContain('gspot');
             const removed = await run(sandbox.path, ['uninstall', '--yes', '--json']);
             expect(removed.code).toBe(0);

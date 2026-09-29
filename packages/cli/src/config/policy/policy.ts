@@ -1,5 +1,4 @@
 // The literal values policy reads: names, patterns, limits, and tables.
-import type { RunnerTask, RunnerTaskNames } from '#cli/types/policy/policy.ts';
 
 // A problem on one of these fields belongs to the entry or key that holds the field, and reading drops that owner.
 export const FIELD_PROBLEMS = new Set(['reason', 'paths', 'path', 'basePath', 'module', 'group']);
@@ -44,34 +43,6 @@ export const REFUSED_REASONS = [
 ];
 export const MINIMUM_REASON_WORDS = 2;
 export const LIMITS_PREFIX = 'limits.';
-export const PACKAGE_LIFECYCLE: readonly string[] = [
-    'preinstall',
-    'install',
-    'postinstall',
-    'prepublish',
-    'preprepare',
-    'prepare',
-    'postprepare',
-    'prepublishOnly',
-    'prepack',
-    'postpack',
-    'publish',
-    'postpublish',
-    'preversion',
-    'version',
-    'postversion',
-];
-export const RUNNER_TASKS: (RunnerTask & { key: keyof RunnerTaskNames })[] = [
-    { key: 'check', name: 'gspot:check', description: 'Run selected checks', run: 'gspot check' },
-    { key: 'fix', name: 'gspot:fix', description: 'Apply corrections and check again', run: 'gspot check --fix' },
-    { key: 'apply', name: 'gspot:apply', description: 'Generate configuration from gspot.toml', run: 'gspot apply' },
-    {
-        key: 'doctor',
-        name: 'gspot:doctor',
-        description: 'Report tools, coverage, and configuration changes',
-        run: 'gspot doctor',
-    },
-];
 export const TOOL_PREFIX = 'tools.';
 export const RESERVED_SLOTS = new Set(['extra']);
 /** A tool setting key is tools.<tool>.<slot>: two segments before the slot. */

@@ -235,7 +235,6 @@ drift nothing catches.
 | `integrity/docs-headings`        | Are banned headings (`Project structure`, `File map`) absent?                                                                                                                 |
 | `integrity/tsconfig-options`     | Are the required compiler options on?                                                                                                                                         |
 | `integrity/typecheck-membership` | Does every governed source file belong to a type-check project?                                                                                                               |
-| `integrity/task-policy`          | Do the required runner tasks exist, with no runtime-named folders and no stale paths?                                                                                         |
 | `files/env-example`, `secrets/*` | Is no `.env*` file except a template staged, and does every baseline fingerprint carry a reviewed reason?                                                                     |
 | `i18n/locales`                   | Do every locale's messages parse as ICU, have no empty values, and match the base locale's keys? Is every message key used?                                                   |
 | `integrity/css-usage`            | Is every CSS module class used, and every used class defined?                                                                                                                 |
