@@ -295,6 +295,11 @@ script_files = [
 globals = {"packages/npm/**" = "commonjs"}
 node_version = ">=24.2.0"
 
+[[tools.osv.ignore]]
+id = "GHSA-w6j9-cwv2-h6wq"
+reason = "semgrep 1.178.0, the newest release, pins pyjwt below 2.14.0, which holds the fix. The private semgrep scans local files and never parses a JSON Web Key Set."
+review_by = "2026-10-13"
+
 [tools.knip]
 entry = [
     "**/build.ts",
