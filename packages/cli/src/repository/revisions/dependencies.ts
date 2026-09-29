@@ -7,9 +7,9 @@ import { GspotError } from '#cli/platform/errors.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { isValePackageFile } from '#cli/repository/kind.ts';
 import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
-import { MODE_BITS, PRIVATE_DIRECTORY } from '#cli/config/platform.ts';
 import type { OwnershipEntry } from '#cli/types/lifecycle/lifecycle.ts';
 import type { GitEntry, Directory } from '#cli/types/repository/revisions.ts';
+import { MODE_BITS, GSPOT_FOLDER, PRIVATE_DIRECTORY } from '#cli/config/platform.ts';
 import { sep, join, posix, dirname, basename, relative, isAbsolute } from 'node:path';
 import { LOCKS, COPY_CONCURRENCY, VALE_CONFIGURATION } from '#cli/config/repository/revisions.ts';
 import { cp, stat, chmod, lstat, mkdir, readdir, symlink, readlink, realpath } from 'node:fs/promises';
@@ -134,10 +134,6 @@ async function copyDirectoryLink(source: string, target: string): Promise<boolea
 }
 
 async function copyTree(source: string, target: string, cancelSignal?: AbortSignal): Promise<void> {
-    if (statSync(target, { throwIfNoEntry: false }) !== undefined)
-        throw new GspotError('selection', [
-            'Installed dependencies are tracked in the selected revision. Untrack them before checking the index.',
-        ]);
     const sourceStat = await stat(source);
     await mkdir(target, { mode: PRIVATE_DIRECTORY });
     const copy = pLimit(COPY_CONCURRENCY);
@@ -164,17 +160,25 @@ async function copyTree(source: string, target: string, cancelSignal?: AbortSign
     await chmod(target, sourceStat.mode & MODE_BITS);
 }
 
-// Copies one package folder into the snapshot.
+// Copies one package folder into the snapshot. The private tools of gspot run in place, like its Python environment:
+// the manifest and lock guard has matched them, and no check writes into them.
 async function copyDirectory(
     root: string,
     revisionRoot: string,
     { folder, dependency }: Directory,
     cancelSignal?: AbortSignal,
 ): Promise<void> {
-    const pending =
-        basename(folder) === '.gspot' ? (readOwnership(join(root, dirname(folder))).installations ?? []) : [];
+    const isPrivate = basename(folder) === GSPOT_FOLDER;
+    const pending = isPrivate ? (readOwnership(join(root, dirname(folder))).installations ?? []) : [];
     assertDependencyReady(revisionRoot, folder, pending);
-    await copyTree(join(root, folder, dependency), join(revisionRoot, folder, dependency), cancelSignal);
+    const source = join(root, folder, dependency);
+    const target = join(revisionRoot, folder, dependency);
+    if (statSync(target, { throwIfNoEntry: false }) !== undefined)
+        throw new GspotError('selection', [
+            'Installed dependencies are tracked in the selected revision. Untrack them before checking the index.',
+        ]);
+    const kind = process.platform === 'win32' ? 'junction' : 'dir';
+    await (isPrivate ? symlink(source, target, kind) : copyTree(source, target, cancelSignal));
 }
 
 /**
@@ -227,7 +231,9 @@ export async function copyDependencies(
         for (const directory of packages) await copyDirectory(root, revisionRoot, directory, cancelSignal);
         // The snapshot root is compared in its resolved spelling, which a Windows temp path shortens.
         const resolvedRoot = await realpath(revisionRoot);
-        for (const { folder, dependency } of packages)
+        for (const { folder, dependency } of packages.filter(
+            (directory) => basename(directory.folder) !== GSPOT_FOLDER,
+        ))
             await validateCopiedLinks(resolvedRoot, join(resolvedRoot, folder, dependency), cancelSignal);
     } finally {
         installed.close();

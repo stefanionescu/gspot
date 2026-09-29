@@ -2,8 +2,8 @@
 import { tmpdir } from 'node:os';
 import { cp, rm, readdir } from 'node:fs/promises';
 import { openRoot } from '#cli/platform/filesystem.ts';
-import { PERMISSION_BITS } from '#cli/config/platform.ts';
 import type { Copy, Scratch } from '#cli/types/execution/execution.ts';
+import { GSPOT_FOLDER, PERMISSION_BITS } from '#cli/config/platform.ts';
 import { sep, join, posix, dirname, relative, isAbsolute } from 'node:path';
 import { SCRATCH_EXTRAS, PROJECT_MANIFESTS, SCRATCH_DIRECTORIES } from '#cli/config/execution/execution.ts';
 
@@ -160,8 +160,11 @@ export async function scratchCopy(root: string, paths: string[], scopePaths: str
         fileLinks: [],
     };
     try {
+        // The private tools of gspot run in place, so their folders stay out of the copy.
         const projects = paths.flatMap((path) =>
-            PROJECT_MANIFESTS.includes(posix.basename(path)) ? [posix.dirname(path)] : [],
+            PROJECT_MANIFESTS.includes(posix.basename(path)) && posix.basename(posix.dirname(path)) !== GSPOT_FOLDER
+                ? [posix.dirname(path)]
+                : [],
         );
         const dependencies = [
             ...new Set(

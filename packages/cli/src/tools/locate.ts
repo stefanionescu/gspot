@@ -13,15 +13,15 @@ import { NODE_MODULES_DIRECTORY, PYTHON_ENVIRONMENT_DIRECTORY } from '#cli/confi
 
 const IS_WINDOWS = process.platform === 'win32';
 
-// The folders a tool of the private kind, or a host tool, is searched in. A snapshot has no virtual
-// environments of its own: Python tools run from the working tree the snapshot stands for.
+// The folders a tool of the private kind, or a host tool, is searched in. A snapshot has no private tools or virtual
+// environments of its own: they run from the working tree the snapshot stands for.
 function searchDirectories(
     root: string,
     roots: string[],
     privateKind: PrivateKind | undefined,
     installedRoot: string,
 ): string[] {
-    if (privateKind === 'npm') return [join(root, NODE_MODULES_DIRECTORY, '.bin')];
+    if (privateKind === 'npm') return [join(installedRoot, NODE_MODULES_DIRECTORY, '.bin')];
     const binary = IS_WINDOWS ? 'Scripts' : 'bin';
     if (privateKind === 'python') return [join(installedRoot, PYTHON_ENVIRONMENT_DIRECTORY, binary)];
     return [...new Set(roots)].flatMap((searched) => [

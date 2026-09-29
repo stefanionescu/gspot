@@ -6,7 +6,7 @@ import { gitOutput } from '#tests/support/cli/git.ts';
 import { rejection } from '#tests/support/expectations.ts';
 import { useRevision } from '#cli/repository/revisions/contents.ts';
 import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
-import { existsSync, unlinkSync, symlinkSync, readFileSync } from 'node:fs';
+import { lstatSync, existsSync, unlinkSync, symlinkSync, readFileSync } from 'node:fs';
 
 test('staged snapshots copy all workspace dependency trees before validating cross-tree links', async () => {
     await using sandbox = await testdir();
@@ -87,6 +87,8 @@ test('a nested revision refuses its incomplete managed dependency installation',
         owner.finishInstallation('npm');
     });
     await useRevision(project, { kind: 'index' }, async (snapshot) => {
+        // The private tools run in place, so the snapshot links them instead of copying them.
+        expect(lstatSync(join(snapshot, '.gspot/node_modules')).isSymbolicLink()).toBe(true);
         expect(await Bun.file(join(snapshot, '.gspot/node_modules/example/index.js')).text()).toContain('value = 1');
     });
 });

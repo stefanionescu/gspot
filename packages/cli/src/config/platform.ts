@@ -50,6 +50,7 @@ export const ROOT_SEARCH_DEPTH = 6;
 export const PORTABLE_LINK_TARGET = /[\\:\p{Cc}]/u;
 export const DECLARATION_EXTENSIONS = ['.d.ts', '.d.mts', '.d.cts'];
 /** Repository-relative paths shared by generation, execution, and lifecycle storage. */
+export const GSPOT_FOLDER = '.gspot';
 export const CONFIGURATION_DIRECTORY = '.gspot/config';
 export const STATE_DIRECTORY = '.gspot/state';
 export const OWNERSHIP_FILE = `${STATE_DIRECTORY}/ownership.json`;

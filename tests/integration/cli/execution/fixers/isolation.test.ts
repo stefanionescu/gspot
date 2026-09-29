@@ -240,12 +240,17 @@ test('a workspace member that is no scope brings its own dependency store into t
         'tests/package.json': '{"name":"tests"}',
         'tests/app.js': 'import "vue";',
         'node_modules/.bun/vue@3/node_modules/vue/package.json': '{"name":"vue"}',
+        '.gspot/package.json': '{"private":true}',
+        '.gspot/node_modules/prettier/package.json': '{"name":"prettier"}',
     });
     mkdirSync(join(repository.path, 'tests/node_modules'));
     symlinkSync('../../node_modules/.bun/vue@3/node_modules/vue', join(repository.path, 'tests/node_modules/vue'));
-    const scratch = await scratchCopy(repository.path, ['package.json', 'tests/package.json', 'tests/app.js'], ['']);
+    const paths = ['package.json', 'tests/package.json', 'tests/app.js', '.gspot/package.json'];
+    const scratch = await scratchCopy(repository.path, paths, ['']);
     try {
         expect(readFileSync(join(scratch, 'tests/node_modules/vue/package.json'), 'utf8')).toBe('{"name":"vue"}');
+        // The private tools of gspot run in place and stay out of the copy.
+        expect(existsSync(join(scratch, '.gspot/node_modules'))).toBe(false);
     } finally {
         rmSync(scratch, { recursive: true, force: true });
     }
