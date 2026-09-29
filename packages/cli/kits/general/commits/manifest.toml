@@ -50,7 +50,6 @@ file = "commitlint.config.ts"
 template = "commitlint.config.cjs.tmpl"
 target = ".gspot/config/commitlint.config.cjs"
 rules_path = ["rules"]
-pointer = {path = ".commitlintrc.json", body = "{\n    \"extends\": [\"{target}\"]\n}\n"}
 
 [[checks]]
 name = "commits/commitlint"

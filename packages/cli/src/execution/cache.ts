@@ -2,10 +2,10 @@
 import { join } from 'node:path';
 import { globPaths } from '#cli/platform/paths.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
+import type { CheckResult } from '#cli/types/checks.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { CACHE_DIRECTORY } from '#cli/config/platform.ts';
 import { checkResultSchema } from '#cli/checks/result.ts';
-import type { CheckResult } from '#cli/types/checks/checks.ts';
 import { reportStorageFailure } from '#cli/output/messages.ts';
 import type { CacheKeyInput } from '#cli/types/execution/execution.ts';
 import type { SourceReads } from '#cli/types/repository/repository.ts';

@@ -1,7 +1,7 @@
 // JSON, SARIF, and GitLab Code Quality reports.
 import { join } from 'node:path';
 import { toolPath } from '#cli/platform/paths.ts';
-import type { Finding } from '#cli/types/checks/checks.ts';
+import type { Finding } from '#cli/types/checks.ts';
 import { REPORT_DIRECTORY } from '#cli/config/platform.ts';
 import packageManifest from '#package' with { type: 'json' };
 import { reportStorageFailure } from '#cli/output/messages.ts';

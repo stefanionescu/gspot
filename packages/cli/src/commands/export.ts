@@ -4,12 +4,12 @@ import { readPolicy } from '#cli/policy/read.ts';
 import { sep, resolve, relative } from 'node:path';
 import { findRoot } from '#cli/repository/tracked.ts';
 import { directoryOf } from '#cli/platform/arguments.ts';
+import type { CommandResult } from '#cli/types/commands.ts';
 import { parseProfile } from '#cli/policy/profiles/read.ts';
 import { mutationTarget } from '#cli/platform/safe-paths.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/platform.ts';
 import { exportedProfile } from '#cli/policy/profiles/export.ts';
-import type { CommandResult } from '#cli/types/commands/commands.ts';
 import { readOwnership, runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 
 /**

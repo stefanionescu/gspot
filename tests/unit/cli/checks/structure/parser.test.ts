@@ -1,6 +1,6 @@
 import { test, spyOn, expect, describe } from 'bun:test';
 import { rejection } from '#tests/support/expectations.ts';
-import { identifiersOf } from '#cli/checks/naming/extract.ts';
+import { identifiersOf } from '#cli/checks/naming/engine.ts';
 import { scriptFunctions } from '#cli/checks/structure/parser.ts';
 import { parserFor, parseSource } from '#cli/parsers/tree-sitter.ts';
 import { codeLines, withoutComment } from '#cli/checks/structure/code-lines.ts';

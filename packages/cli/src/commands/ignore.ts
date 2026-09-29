@@ -10,7 +10,7 @@ import { assertPinMatches } from '#cli/lifecycle/version-pin.ts';
 import { appendIgnore, removeEntries } from '#cli/policy/write.ts';
 import type { TomlTable } from '#cli/types/repository/repository.ts';
 import { commitPolicy, requireReason } from '#cli/commands/policy.ts';
-import type { CommandResult, IgnoreOptions } from '#cli/types/commands/commands.ts';
+import type { CommandResult, IgnoreOptions } from '#cli/types/commands.ts';
 import { listFlag, textEntry, directoryOf, quoteArgument } from '#cli/platform/arguments.ts';
 
 function knownCheck(checkName: string, repositoryChecks: string[]): void {

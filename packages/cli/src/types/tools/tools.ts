@@ -16,7 +16,7 @@ export type ToolInspection = {
     note?: string;
     floor?: string;
 };
-export type ToolContext = {
+export type ToolSearch = {
     root: string;
     /** The working tree whose installed Python tools run, when root is a snapshot of it. */
     installedRoot?: string;

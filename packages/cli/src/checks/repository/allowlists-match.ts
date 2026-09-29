@@ -3,10 +3,9 @@ import { pathMatcher } from '#cli/repository/paths.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { POLICY_FILE } from '#cli/config/checks/repository.ts';
 import { referencedPaths } from '#cli/checks/docs/stale-paths.ts';
-import type { PathPattern } from '#cli/types/checks/repository.ts';
 import { lockedPackages } from '#cli/repository/locked-packages.ts';
 import { normalizedPythonPackage } from '#cli/repository/manifests.ts';
-import type { Finding, EngineInput, LicenseException } from '#cli/types/checks/checks.ts';
+import type { Finding, EngineInput, PathPattern, LicenseException } from '#cli/types/checks.ts';
 
 function listed(value: unknown, key: string): string[] {
     if (!Array.isArray(value)) return [];

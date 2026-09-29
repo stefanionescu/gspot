@@ -3,10 +3,10 @@ import { test, expect } from 'bun:test';
 import { run } from '#cli/platform/spawn.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
+import type { EngineInput } from '#cli/types/checks.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { licensesPackages } from '#cli/checks/licenses.ts';
-import type { EngineInput } from '#cli/types/checks/checks.ts';
 import { venvExecutable } from '#tests/support/cli/platforms.ts';
 import { containing, textContaining } from '#tests/support/expectations.ts';
 

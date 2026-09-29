@@ -2,12 +2,12 @@ import { join } from 'node:path';
 import { writeFileSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
 import * as tools from '#cli/execution/tool/runner.ts';
+import type { EngineInput } from '#cli/types/checks.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { test, spyOn, expect, type Mock } from 'bun:test';
 import { rejection } from '#tests/support/expectations.ts';
 import { trivyImage } from '#cli/checks/docker/image-scan.ts';
-import type { EngineInput } from '#cli/types/checks/checks.ts';
 
 const sources = [
     'services:\n  app:\n    image: "nginx:1.27.2"\n',

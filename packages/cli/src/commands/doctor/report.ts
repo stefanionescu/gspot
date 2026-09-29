@@ -11,7 +11,7 @@ import { submodulePaths } from '#cli/repository/tracked.ts';
 import { changeReport } from '#cli/commands/doctor/changes.ts';
 import type { ToolInspection } from '#cli/types/tools/tools.ts';
 import type { Session } from '#cli/types/execution/execution.ts';
-import type { ChangeReport, DoctorReport } from '#cli/types/commands/doctor.ts';
+import type { ChangeReport, DoctorReport } from '#cli/types/commands.ts';
 import { VERSION_GAP, COLUMN_WIDTHS, DISPLAY_LIMITS, CHANGE_SECTIONS } from '#cli/config/commands/doctor.ts';
 
 function stateLabel(tool: ToolInspection, colors: Colors): string {

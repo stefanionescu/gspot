@@ -8,7 +8,7 @@ import type { ToolPin, CheckSpec } from '#cli/types/kits.ts';
 import type { Session } from '#cli/types/execution/execution.ts';
 import { repositoryCheckSpec } from '#cli/policy/check-state.ts';
 import { SWIFTLINT_LINES, TOOL_TIMEOUT_MS } from '#cli/config/commands/explain.ts';
-import type { Found, Fields, OwnCheck, Explanation } from '#cli/types/commands/explain.ts';
+import type { Found, OwnCheck, Explanation, ExplainFields } from '#cli/types/commands.ts';
 
 const TOOL_RULE_SOURCES: Record<string, (rule: string, path: string) => string | undefined> = {
     ruff: (rule, path) => {
@@ -59,7 +59,7 @@ function toolOf(check: CheckSpec): string | undefined {
 }
 
 // The settings that change the check, and the guides and crash pattern it carries.
-function checkFacts(check: CheckSpec, kit: Found['kit']): Fields {
+function checkFacts(check: CheckSpec, kit: Found['kit']): ExplainFields {
     const toolPrefix = `tools.${toolOf(check) ?? '~'}.`;
     const settings = (kit?.settings ?? [])
         .filter((setting) => setting.name === check.limit || setting.name.startsWith(toolPrefix))
@@ -93,7 +93,7 @@ function checkText(
     checkName: string,
     found: Found,
     own: OwnCheck | undefined,
-    fields: Fields,
+    fields: ExplainFields,
     owner: string,
 ): string {
     const { check, kit } = found;

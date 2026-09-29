@@ -1,8 +1,7 @@
 import type { Node } from 'web-tree-sitter';
 import { readSource } from '#cli/repository/tracked.ts';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
-import type { EngineInput } from '#cli/types/checks/checks.ts';
-import type { PythonModule, PythonFunction } from '#cli/types/checks/python.ts';
+import type { EngineInput, PythonModule, PythonFunction } from '#cli/types/checks.ts';
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Two readers ask whether a statement is a docstring, and both callers sit at the complexity limit.
 function isDocstring(statement: Node | undefined): boolean {

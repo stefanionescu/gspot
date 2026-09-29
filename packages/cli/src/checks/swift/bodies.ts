@@ -1,6 +1,5 @@
-import type { SwiftFunction } from '#cli/types/checks/swift.ts';
-import type { StructureProblem } from '#cli/types/checks/structure.ts';
 import { executableStatements } from '#cli/checks/structure/statements.ts';
+import type { SwiftFunction, StructureProblem } from '#cli/types/checks.ts';
 /**
  * Report every implemented function at or below the configured statement threshold.
  * @param functions the functions of a file

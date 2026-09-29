@@ -4,7 +4,7 @@ import { createFileTree } from 'testdirs';
 import { toolPin } from '#cli/tools/inspect.ts';
 import { toPosix } from '#cli/platform/paths.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
-import { missingBuild } from '#cli/tools/platforms.ts';
+import { missingBuild } from '#cli/execution/planning/skips.ts';
 import { PLATFORM_NAMES } from '#cli/config/execution/execution.ts';
 import { chmodSync, mkdirSync, readdirSync, symlinkSync, realpathSync } from 'node:fs';
 

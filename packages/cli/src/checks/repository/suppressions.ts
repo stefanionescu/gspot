@@ -10,7 +10,7 @@ import { GSPOT_SUPPRESSION } from '#cli/config/checks/repository.ts';
 import { commentText, sourceComments } from '#cli/parsers/comments.ts';
 import { COMMENT_STYLE_BY_EXTENSION } from '#cli/config/execution/execution.ts';
 import type { SourceReads, TrackedFile } from '#cli/types/repository/repository.ts';
-import type { Finding, EngineInput, SuppressionForm, SuppressionComment } from '#cli/types/checks/checks.ts';
+import type { Finding, EngineInput, SuppressionForm, SuppressionComment } from '#cli/types/checks.ts';
 
 // A preceding reason belongs only to the next line. Intervening source or comments break adjacency.
 function reasonAbove(previous: SourceComment | undefined, comment: SourceComment): string | undefined {

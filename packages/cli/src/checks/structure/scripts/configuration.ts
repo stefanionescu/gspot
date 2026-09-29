@@ -1,20 +1,20 @@
-import type { Finding } from '#cli/types/checks/checks.ts';
 import { codeLines } from '#cli/checks/structure/code-lines.ts';
-import { CONFIG_GUARD, DEFAULT_EXPANSION } from '#cli/config/checks/script.ts';
+import { CONFIG_GUARD, DEFAULT_EXPANSION } from '#cli/config/checks/structure.ts';
 
 import type {
+    Finding,
     CodeLine,
     ScriptFile,
-    StructureContext,
+    StructureInput,
     StructureAnalysis as Analysis,
-} from '#cli/types/checks/structure.ts';
+} from '#cli/types/checks.ts';
 
 function markProblems(
     file: ScriptFile,
     lines: [CodeLine, CodeLine | undefined],
     name: string,
     seen: Map<string, string>,
-    context: StructureContext,
+    context: StructureInput,
 ): Finding[] {
     const [first, second] = lines;
     const findings: Finding[] = [];
@@ -30,7 +30,7 @@ function markProblems(
     return findings;
 }
 
-function guardFindings(file: ScriptFile, seen: Map<string, string>, context: StructureContext): Finding[] {
+function guardFindings(file: ScriptFile, seen: Map<string, string>, context: StructureInput): Finding[] {
     const [first, second] = codeLines(file.lines).filter((line) => !line.code.startsWith('#!'));
     const name = first === undefined ? undefined : CONFIG_GUARD.exec(first.code)?.groups?.['name'];
     if (first === undefined || name === undefined)

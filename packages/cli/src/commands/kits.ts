@@ -8,12 +8,12 @@ import { findRoot } from '#cli/repository/tracked.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
 import { commitPolicy } from '#cli/commands/policy.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { installTools } from '#cli/tools/installation.ts';
 import type { Mutation } from '#cli/types/policy/policy.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
-import { installTools } from '#cli/tools/install/execution.ts';
 import { assertPinMatches } from '#cli/lifecycle/version-pin.ts';
 import { textEntry, directoryOf } from '#cli/platform/arguments.ts';
-import type { AddOptions, CommandResult, RemoveOptions } from '#cli/types/commands/commands.ts';
+import type { AddOptions, CommandResult, RemoveOptions } from '#cli/types/commands.ts';
 
 async function installChangedSelection(
     root: string,

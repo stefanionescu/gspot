@@ -11,8 +11,8 @@ import { collect, missingNote } from '#cli/execution/tool/findings.ts';
 import type { SpawnResult, SpawnOptions } from '#cli/types/platform.ts';
 import { createFileWorkspace } from '#cli/execution/files/workspace.ts';
 import { runToolCommand, toolDeadlineSeconds } from '#cli/tools/command.ts';
+import type { Finding, CheckResult, EngineInput } from '#cli/types/checks.ts';
 import { checkedFindings, executionFailure } from '#cli/execution/broken-tool.ts';
-import type { Finding, CheckResult, EngineInput } from '#cli/types/checks/checks.ts';
 
 import {
     substitute,

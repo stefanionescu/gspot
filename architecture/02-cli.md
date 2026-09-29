@@ -142,17 +142,9 @@ change, after your yes
   mise.toml task lint              new body: gspot check
   .githooks/pre-commit             unchanged; it calls the task above
 
-replace (original bytes saved under .gspot/state/recovery/)
-  .prettierrc.yaml                 one tool owns it; your tabs and 100 columns go into [format]
-  ios/.swiftlint.yml               one tool owns it; 2 rules off and 1 rule on are carried
-
-kept in gspot.toml
-  typos.toml                       14 words
-  .gitleaks.toml                   6 allowlist entries
-  eslint.config.mjs                3 rules off for tests/**, no-var on, as tools.eslint.rules
-
-not carried
-  eslint.config.mjs                the plugin eslint-plugin-foo, which gspot does not ship
+delete (git keeps them: git show HEAD:<path>)
+  .prettierrc.yaml                 replaced by the generated prettier configuration
+  ios/.swiftlint.yml               replaced by the generated swiftlint configuration
 
 not written
   CI                               Bitbucket found; paste these lines into your pipeline:

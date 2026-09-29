@@ -6,13 +6,12 @@ import { GspotError } from '#cli/platform/errors.ts';
 import { PRIVATE_FILE } from '#cli/config/platform.ts';
 import { runToolCommand } from '#cli/tools/command.ts';
 import { runToolCheck } from '#cli/execution/tool/runner.ts';
-import type { CheckResult } from '#cli/types/checks/checks.ts';
-import type { SecretScan } from '#cli/types/checks/secrets.ts';
 import { gitBlobs } from '#cli/repository/revisions/contents.ts';
 import { pushBase } from '#cli/repository/revisions/selection.ts';
+import type { SecretScan, CheckResult } from '#cli/types/checks.ts';
 import { rmSync, mkdtempSync, writeFileSync, appendFileSync } from 'node:fs';
 import type { Session, PlannedCheck } from '#cli/types/execution/execution.ts';
-import { DIFF_TREE, CHANGE_LINE, GIT_TIMEOUT_MS, COMMIT_METADATA } from '#cli/config/checks/secrets.ts';
+import { DIFF_TREE, CHANGE_LINE, GIT_TIMEOUT_MS, COMMIT_METADATA } from '#cli/config/checks/security.ts';
 
 // The fields come as key and value pairs.
 const PAIR = 2;

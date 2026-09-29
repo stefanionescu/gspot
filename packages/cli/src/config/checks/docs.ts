@@ -1,4 +1,4 @@
-// The literal values checks/docs reads: names, patterns, limits, and tables.
+// The literal values the checks of docs, prose read: names, patterns, limits, and tables.
 
 export const JSCPD_TOOL = 'jscpd';
 export const TRAILING_PUNCTUATION = '.,;:';
@@ -46,3 +46,13 @@ export const START_SECTION_WORDS = ['install', 'setup', 'start', 'requirements']
 export const CONTENTS_THRESHOLD = 6;
 export const CONTENTS_HEADING = 'contents';
 export const LICENSE_NAMES = ['LICENSE', 'LICENSE.md', 'LICENSE.txt'];
+
+/** The two things a source file must not say to Vale: a directive in Markdown, a block comment in SQL. */
+export const VALE_DIRECTIVE = /<!--\s*vale\b/u;
+export const CODE_SPAN = /`[^`]*`/gu;
+export const SQL_BLOCK_COMMENT = '/*';
+export const MARKDOWN = new Set(['.md', '.mdx']);
+export const SQL = new Set(['.sql', '.pgsql', '.psql']);
+
+/** A script with no extension reads through stdin as Python, whose comments start the same way. */
+export const SCRIPT_GRAMMAR = { mode: 'stdin', extension: '.py' } as const;

@@ -10,7 +10,7 @@ import { script } from '#tests/support/cli/planted.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
 import { run, gspot } from '#tests/support/cli/command.ts';
 import { pushReportSchema } from '#cli/execution/report.ts';
-import type { CommandFailureJson } from '#cli/types/commands/commands.ts';
+import type { CommandFailureJson } from '#cli/types/commands.ts';
 import { COMMITS_INIT } from '#tests/config/acceptance/source/cli/cli.ts';
 import { toolsPath, installPrivateTools } from '#tests/support/cli/tools.ts';
 

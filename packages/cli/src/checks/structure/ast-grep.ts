@@ -4,9 +4,8 @@ import { readAsset } from '#cli/platform/assets.ts';
 import { join, relative, isAbsolute } from 'node:path';
 import { CACHE_DIRECTORY } from '#cli/config/platform.ts';
 import { fileBatches } from '#cli/execution/files/batches.ts';
-import type { EngineInput } from '#cli/types/checks/checks.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
-import type { AstGrepMatch } from '#cli/types/checks/structure.ts';
+import type { EngineInput, AstGrepMatch } from '#cli/types/checks.ts';
 import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 
 const RULE_CACHE = `${CACHE_DIRECTORY}/ast-grep`;

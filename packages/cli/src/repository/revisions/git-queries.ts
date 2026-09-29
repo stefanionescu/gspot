@@ -1,7 +1,7 @@
 // Questions the revision code asks Git, each answered by one command whose failure names the command.
 import { run } from '#cli/platform/spawn.ts';
 import { GspotError } from '#cli/platform/errors.ts';
-import { GIT_TIMEOUT_MS } from '#cli/config/checks/secrets.ts';
+import { GIT_TIMEOUT_MS } from '#cli/config/checks/security.ts';
 
 /**
  * What a Git command prints, or the selection error it failed with.

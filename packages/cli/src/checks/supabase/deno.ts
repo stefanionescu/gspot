@@ -2,10 +2,10 @@ import { z } from 'zod';
 import { statSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { toPosix } from '#cli/platform/paths.ts';
-import { CHECK_LOCATION } from '#cli/config/checks/supabase.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
+import type { Finding, EngineInput } from '#cli/types/checks.ts';
+import { CHECK_LOCATION } from '#cli/config/checks/platforms.ts';
 import { join, isAbsolute, relative as relativePath } from 'node:path';
-import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
 import { functionFolders, supabaseFinding } from '#cli/checks/supabase/project.ts';
 
 const lintReport = z.object({

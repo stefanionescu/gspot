@@ -1,6 +1,6 @@
 import { pathMatcher } from '#cli/repository/paths.ts';
 import { scopeImports } from '#cli/checks/structure/imports.ts';
-import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
+import type { Finding, EngineInput } from '#cli/types/checks.ts';
 
 /**
  * Reports routes without a test that imports their resolved module in the same scope.

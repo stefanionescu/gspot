@@ -2,7 +2,7 @@ import type { GeneratedFile } from '#cli/types/generation.ts';
 import { readAsset, listAssets } from '#cli/platform/assets.ts';
 import type { Policy, MergedView } from '#cli/types/policy/policy.ts';
 import { MAX_LINE, LONGER_THAN, STYLE_ASSETS } from '#cli/config/generation.ts';
-import { GSPOT_STYLE, LENGTH_RULES, STYLES_DIRECTORY } from '#cli/config/kits.ts';
+import { GSPOT_STYLE, LENGTH_RULES, PROSE_GRAMMARS, STYLES_DIRECTORY } from '#cli/config/kits.ts';
 
 function renderedRule(stem: string, text: string, view: MergedView): string {
     const key = LENGTH_RULES[stem];
@@ -57,3 +57,8 @@ export function styleFiles(policy: Policy, view: MergedView): GeneratedFile[] {
 export function styleNames(): string[] {
     return listAssets(STYLE_ASSETS).map((asset) => asset.slice(STYLE_ASSETS.length).replace(/\.yml$/u, ''));
 }
+
+/** The [formats] lines of vale.ini: each borrowed extension, without its dot, and the format Vale reads it as. */
+export const PROSE_FORMATS: [string, string][] = Object.entries(PROSE_GRAMMARS).flatMap(([extension, grammar]) =>
+    grammar.format === undefined ? [] : [[extension.slice(1), grammar.format]],
+);

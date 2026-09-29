@@ -4,9 +4,9 @@ import { GspotError } from '#cli/platform/errors.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { isReasonAccepted } from '#cli/policy/weaker.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
+import type { CommandResult } from '#cli/types/commands.ts';
 import type { Mutation } from '#cli/types/policy/policy.ts';
 import type { ApplyReport } from '#cli/types/lifecycle/lifecycle.ts';
-import type { CommandResult } from '#cli/types/commands/commands.ts';
 import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import { writePolicy, preparePolicy } from '#cli/lifecycle/policy.ts';
 

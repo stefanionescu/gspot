@@ -5,16 +5,16 @@ import type { Manifest, CheckSpec } from '#cli/types/kits.ts';
 import type { ScopeSelection } from '#cli/types/policy/policy.ts';
 import { isInScope, pathMatcher } from '#cli/repository/paths.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
-import type { Session, PlanEntry, PlanContext, PlannedCheck } from '#cli/types/execution/execution.ts';
+import type { Session, PlanEntry, PlanInputs, PlannedCheck } from '#cli/types/execution/execution.ts';
 
 // Every tracked file under the scope.
-function projectFiles(context: PlanContext, scopeForFiles: string): TrackedFile[] {
+function projectFiles(context: PlanInputs, scopeForFiles: string): TrackedFile[] {
     const prefix = scopeForFiles === '' ? '' : `${scopeForFiles}/`;
     return context.session.repository.files.filter((file) => file.path.startsWith(prefix));
 }
 
 // The files a project-wide check runs over: the scope's tree, when its owners select anything in it.
-function projectOwned(context: PlanContext, spec: CheckSpec, scopeForFiles: string): TrackedFile[] {
+function projectOwned(context: PlanInputs, spec: CheckSpec, scopeForFiles: string): TrackedFile[] {
     const { session, scope, children } = context;
     const isPerScope = spec.runs === 'per-scope';
     const selectedFiles =
@@ -36,7 +36,7 @@ function projectOwned(context: PlanContext, spec: CheckSpec, scopeForFiles: stri
 }
 
 // The files a per-file check runs over: its own owners, its manifest's, or the paths a policy check names.
-function listOwned(context: PlanContext, entry: PlanEntry, scopeForFiles: string): TrackedFile[] {
+function listOwned(context: PlanInputs, entry: PlanEntry, scopeForFiles: string): TrackedFile[] {
     const { session, scope } = context;
     const { spec, manifest } = entry;
     if (!manifest) return session.repository.files.filter((file) => pathMatcher(spec.owners?.paths ?? [])(file.path));
@@ -45,7 +45,7 @@ function listOwned(context: PlanContext, entry: PlanEntry, scopeForFiles: string
 }
 
 // The files the check owners in the scope.
-function ownedFor(context: PlanContext, entry: PlanEntry, scopeForFiles: string): TrackedFile[] {
+function ownedFor(context: PlanInputs, entry: PlanEntry, scopeForFiles: string): TrackedFile[] {
     if (entry.spec.runs !== 'per-file-list') return projectOwned(context, entry.spec, scopeForFiles);
     return listOwned(context, entry, scopeForFiles);
 }
@@ -61,7 +61,7 @@ function withoutExcluded(files: TrackedFile[], spec: CheckSpec, scope: ScopeSele
 }
 
 // The policy changed, so the check runs over everything it owners, with the check's own owners kept.
-function allOwned(context: PlanContext, entry: PlanEntry): TrackedFile[] {
+function allOwned(context: PlanInputs, entry: PlanEntry): TrackedFile[] {
     const { scope, children } = context;
     const files = ownedFor(context, entry, scope.scope.path);
     return entry.manifest === undefined
@@ -70,7 +70,7 @@ function allOwned(context: PlanContext, entry: PlanEntry): TrackedFile[] {
 }
 
 // The files narrowed to the selection: a project check keeps everything when the selection touches it.
-function narrowed(context: PlanContext, entry: PlanEntry, files: TrackedFile[]): TrackedFile[] {
+function narrowed(context: PlanInputs, entry: PlanEntry, files: TrackedFile[]): TrackedFile[] {
     const { narrow } = context;
     if (!narrow) return files;
     const inNarrowed = files.filter((file) => narrow.has(file.path));
@@ -83,7 +83,7 @@ function narrowed(context: PlanContext, entry: PlanEntry, files: TrackedFile[]):
 }
 
 // Selected paths deleted from the tree but still trigger a project check.
-function missingTriggers(context: PlanContext, spec: CheckSpec, scopePath: string): string[] {
+function missingTriggers(context: PlanInputs, spec: CheckSpec, scopePath: string): string[] {
     if (spec.runs === 'per-file-list' || context.narrow === undefined) return [];
     const readable = new Set(context.session.repository.files.map((file) => file.path));
     return [...context.narrow].filter((path) => !readable.has(path) && isInScope(path, scopePath));
@@ -126,7 +126,7 @@ export function isRepositoryPolicy(manifest: Manifest, spec: CheckSpec): boolean
  * @returns the selected files and the trigger paths
  */
 export function filesFor(
-    context: PlanContext,
+    context: PlanInputs,
     entry: PlanEntry,
     isWholeCheck: boolean,
 ): Pick<PlannedCheck, 'files' | 'triggerPaths'> {

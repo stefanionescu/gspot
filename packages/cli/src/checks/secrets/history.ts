@@ -1,6 +1,6 @@
+import type { CheckResult } from '#cli/types/checks.ts';
 import { runToolCheck } from '#cli/execution/tool/runner.ts';
 import { fileBatches } from '#cli/execution/files/batches.ts';
-import type { CheckResult } from '#cli/types/checks/checks.ts';
 import { pushBase } from '#cli/repository/revisions/selection.ts';
 import type { Session, PlannedCheck } from '#cli/types/execution/execution.ts';
 

@@ -8,9 +8,9 @@ import { targetInScope } from '#cli/kits/targets.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { rmSync, statSync, mkdtempSync } from 'node:fs';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
-import { LICENSE_CHECKER_TOOL } from '#cli/config/checks/checks.ts';
 import { normalizedPythonPackage } from '#cli/repository/manifests.ts';
-import type { Finding, EngineInput, LicensedPackage, LicenseException } from '#cli/types/checks/checks.ts';
+import { LICENSE_CHECKER_TOOL } from '#cli/config/checks/repository.ts';
+import type { Finding, EngineInput, LicensedPackage, LicenseException } from '#cli/types/checks.ts';
 
 const licenseSchema = z.object({ licenses: z.union([z.string(), z.array(z.string())]).optional() });
 const reportSchema = z.record(z.string(), licenseSchema);

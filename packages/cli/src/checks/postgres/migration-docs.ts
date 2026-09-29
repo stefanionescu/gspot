@@ -1,9 +1,8 @@
 // The documented migration layout: a boxed header with the file name and a purpose, boxed sections, and a labeled block above each table and function.
-import { HEADER_LINES } from '#cli/config/checks/script.ts';
 import { positionAt } from '#cli/parsers/sql/statements.ts';
+import { HEADER_LINES } from '#cli/config/checks/structure.ts';
 import { migrationsOf } from '#cli/checks/postgres/migrations.ts';
-import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
-import type { Migration, DocProblem } from '#cli/types/checks/postgres.ts';
+import type { Finding, Migration, DocProblem, EngineInput } from '#cli/types/checks.ts';
 
 import {
     PURPOSE,
@@ -13,7 +12,7 @@ import {
     STATEMENT_WORDS,
     MIGRATION_DOC_LABELS,
     MIGRATION_DOC_SECTIONS,
-} from '#cli/config/checks/postgres.ts';
+} from '#cli/config/checks/platforms.ts';
 
 // From a one-based line to the zero-based index of the line above it.
 const LINE_ABOVE = 2;

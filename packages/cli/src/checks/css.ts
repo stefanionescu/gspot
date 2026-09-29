@@ -3,8 +3,8 @@ import { parse } from 'postcss';
 import { posix } from 'node:path';
 import selectorParser from 'postcss-selector-parser';
 import { readSource } from '#cli/repository/tracked.ts';
-import { CODE_SUFFIX, MODULE_SUFFIX } from '#cli/config/checks/checks.ts';
-import type { Finding, Importer, EngineInput } from '#cli/types/checks/checks.ts';
+import type { Finding, Importer, EngineInput } from '#cli/types/checks.ts';
+import { CODE_SUFFIX, MODULE_SUFFIX } from '#cli/config/checks/repository.ts';
 
 // CSS module objects use default or namespace bindings. Type-only and named imports do not carry the object.
 function moduleBinding(statement: ts.ImportDeclaration): ts.Identifier | undefined {

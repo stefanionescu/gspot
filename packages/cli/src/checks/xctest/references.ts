@@ -1,5 +1,5 @@
+import type { Finding, EngineInput } from '#cli/types/checks.ts';
 import { xcodeFinding } from '#cli/checks/xcode/project/checks.ts';
-import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Builds a template; inlining it nests a template inside a template.
 function escapePattern(text: string): string {

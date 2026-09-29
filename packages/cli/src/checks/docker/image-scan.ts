@@ -6,9 +6,9 @@ import { scopeOf } from '#cli/repository/scopes.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
+import type { Finding, EngineInput } from '#cli/types/checks.ts';
 import { toolOutputDetail } from '#cli/execution/broken-tool.ts';
-import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
-import { COMPOSE_FILES, FINDINGS_EXIT, SHOWN_FINDINGS } from '#cli/config/checks/docker.ts';
+import { COMPOSE_FILES, FINDINGS_EXIT, SHOWN_FINDINGS } from '#cli/config/checks/platforms.ts';
 
 // The Trivy JSON report version this reader understands.
 const TRIVY_SCHEMA_VERSION = 2;

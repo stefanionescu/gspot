@@ -1,5 +1,5 @@
 import { test, expect } from 'bun:test';
-import { acquisitionNote } from '#cli/tools/packages/acquisition.ts';
+import { acquisitionNote } from '#cli/tools/packages/commands.ts';
 
 test.each([
     'error: Request to https://api.github.com/repos/editorconfig-checker/editorconfig-checker/releases/tags/v3.4.0 failed with status 403',

@@ -1,4 +1,4 @@
-import type { Identifier } from '#cli/types/checks/naming.ts';
+import type { Identifier } from '#cli/types/checks.ts';
 import { WRAPPERS, MIGRATION_DIRECTORY, DECLARATION_SUFFIXES } from '#cli/config/checks/naming.ts';
 
 function stemOf(base: string): string {

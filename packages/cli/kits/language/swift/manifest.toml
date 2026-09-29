@@ -83,7 +83,6 @@ template = "swiftformat.tmpl"
 target = ".gspot/config/swiftformat"
 rules_path = ["enable", "disable", "rules", "lint-only"]
 per_scope = true
-pointer = {path = ".swiftformat", copy = true}
 
 [[configs]]
 template = "periphery.yml.tmpl"

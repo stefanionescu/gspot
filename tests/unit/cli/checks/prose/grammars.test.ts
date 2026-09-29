@@ -1,6 +1,6 @@
-import { PROSE_FORMATS } from '#cli/kits/vale.ts';
 import { test, expect, describe } from 'bun:test';
-import { routeFor, routeGroups } from '#cli/checks/prose/grammars.ts';
+import { PROSE_FORMATS } from '#cli/generation/vale-styles.ts';
+import { routeFor, routeGroups } from '#cli/checks/prose/vale.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the line limit.

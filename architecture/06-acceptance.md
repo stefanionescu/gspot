@@ -1818,8 +1818,8 @@ Generated configuration:
 | `.gspot/config/yamllint.yml` | `extends: default`, line length and document start off, `truthy` not on keys (the `on:` of a workflow), one space allowed inside braces and brackets (the Prettier style), indent from `[format]`                                               |
 | `.gspot/config/v8r.yml`      | errors for files with no known schema ignored; a custom catalog with the mise schema and every `[tools.v8r] schemas` entry on top of SchemaStore                                                                                                |
 
-Each has a pointer at the conventional path (`.taplo.toml`, `.yamllint.yml`, `.v8rrc.yml`) so editors
-and bare tool runs find it.
+Each check names its file by path; an editor integration points at the same path under
+`.gspot/config/`.
 
 Checks:
 

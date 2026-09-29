@@ -32,7 +32,6 @@ file = "_typos.toml"
 template = "typos.toml.tmpl"
 target = ".gspot/config/typos.toml"
 per_scope = true
-pointer = {path = "typos.toml", template = "typos.toml.tmpl"}
 
 [[checks]]
 name = "spelling/typos"

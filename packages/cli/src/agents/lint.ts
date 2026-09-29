@@ -2,7 +2,7 @@ import { fileURLToPath } from 'node:url';
 import { globPaths } from '#cli/platform/paths.ts';
 import { guideSections } from '#cli/agents/sections.ts';
 import { readSource } from '#cli/repository/tracked.ts';
-import { ESLINT_RULE_LEVELS } from '#cli/config/checks/eslint-levels.ts';
+import { ESLINT_RULE_LEVELS } from '#cli/config/checks/typescript.ts';
 import { layerOfPath, frontMatterFindings } from '#cli/agents/metadata.ts';
 import type { RuleText, RuleFinding, RulesLintReport } from '#cli/types/agents.ts';
 

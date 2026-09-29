@@ -1,6 +1,6 @@
 import { splitParts } from '#cli/checks/naming/split.ts';
 import { RESERVED_USES } from '#cli/config/checks/naming.ts';
-import type { Term, Identifier, EffectivePolicy } from '#cli/types/checks/naming.ts';
+import type { Term, Identifier, EffectivePolicy } from '#cli/types/checks.ts';
 
 function isConsecutive(parts: string[], termParts: string[]): boolean {
     if (termParts.length > parts.length) return false;

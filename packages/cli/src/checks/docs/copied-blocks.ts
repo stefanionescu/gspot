@@ -3,13 +3,12 @@ import { tmpdir } from 'node:os';
 import { toPosix } from '#cli/platform/paths.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { readSource } from '#cli/repository/tracked.ts';
-import type { CloneReport } from '#cli/types/checks/docs.ts';
-import { FULL_PERCENTAGE } from '#cli/config/checks/jest.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
+import { FULL_PERCENTAGE } from '#cli/config/checks/typescript.ts';
 import { rmSync, statSync, mkdtempSync, writeFileSync } from 'node:fs';
-import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
 import { JSCPD_TOOL, DEFAULT_CEILING } from '#cli/config/checks/docs.ts';
 import { join, relative, isAbsolute, toNamespacedPath } from 'node:path';
+import type { Finding, CloneReport, EngineInput } from '#cli/types/checks.ts';
 
 const clonePlaceSchema = z.object({
     name: z.string().min(1),

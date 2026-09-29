@@ -1,24 +1,21 @@
-import { PROSE_FORMATS } from '#cli/kits/vale.ts';
 import { eta } from '#cli/generation/registry.ts';
 import { stringify as stringifyYaml } from 'yaml';
 import { readAsset } from '#cli/platform/assets.ts';
 import { extensionOf } from '#cli/platform/paths.ts';
 import { jsonText } from '#cli/generation/json-format.ts';
-import { styleNames } from '#cli/generation/vale-styles.ts';
 import type { TemplateInputs } from '#cli/types/generation.ts';
 import { TomlDate, stringify as stringifyToml } from 'smol-toml';
 import { BLOCK_IGNORES, TOKEN_IGNORES } from '#cli/config/kits.ts';
 import { policyValue, roleFolders } from '#cli/policy/settings.ts';
-import { markdownlintRules } from '#cli/generation/markdownlint.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
-import { ESLINT_RULE_LEVELS } from '#cli/config/checks/eslint-levels.ts';
 import { scopeIgnorePatterns } from '#cli/generation/ignore-patterns.ts';
-import type { Policy, ScopeSelection } from '#cli/types/policy/policy.ts';
-import { RECOMMENDED_COMPILER_OPTIONS } from '#cli/config/checks/typescript.ts';
+import { styleNames, PROSE_FORMATS } from '#cli/generation/vale-styles.ts';
 import { ALL_COMPILER_OPTIONS } from '#cli/checks/typescript/compiler-options.ts';
 import { aliasesFor, javascriptConfiguration } from '#cli/generation/javascript.ts';
 import { headerFor, headerLines, jsonHeaderAdded } from '#cli/generation/headers.ts';
+import type { Policy, MergedView, ScopeSelection } from '#cli/types/policy/policy.ts';
 import { JSON_EXTENSIONS, LEADING_NEWLINES, PACKAGE_JSON_INDENT } from '#cli/config/generation.ts';
+import { ESLINT_RULE_LEVELS, RECOMMENDED_COMPILER_OPTIONS } from '#cli/config/checks/typescript.ts';
 import { editorconfigOverrides, prettierConfiguration } from '#cli/generation/formatting/settings.ts';
 import { eslintRuleBlocks, manifestRuleBlocks, structuralRuleBlocks } from '#cli/generation/eslint.ts';
 
@@ -193,4 +190,37 @@ export function emitTarget(
     const body = rendered.replace(LEADING_NEWLINES, '').trimEnd() + '\n';
     if (!isHeaderWanted) return body;
     return `${headerFor(targetPath, inputs.version)}${body}`;
+}
+
+/**
+ * Share effective Markdown rules between native editor and structured CLI configurations.
+ * @param view the merged view of the scope.
+ * @param isAll whether the all level enables document structure conventions.
+ * @returns the markdownlint rules table
+ */
+export function markdownlintRules(view: MergedView, isAll = false): Record<string, unknown> {
+    const rules = (view.tool('markdownlint')['rules'] ?? {}) as Record<string, unknown>;
+    const defaults =
+        rules['default'] === undefined
+            ? {
+                  default: true,
+                  MD007: { indent: view.format.indent_width },
+                  MD013: false,
+                  MD024: { siblings_only: true },
+                  MD033: false,
+                  MD041: isAll,
+                  MD045: false,
+                  MD025: isAll ? { front_matter_title: '' } : false,
+                  MD046: { style: 'fenced' },
+                  MD048: { style: 'backtick' },
+                  MD049: { style: 'underscore' },
+                  MD050: { style: 'asterisk' },
+                  MD060: false,
+              }
+            : {};
+    return {
+        ...defaults,
+        ...rules,
+        ...Object.fromEntries(view.rulesOff('markdown/markdownlint').map((rule) => [rule, false])),
+    };
 }

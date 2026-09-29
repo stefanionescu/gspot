@@ -1,8 +1,7 @@
 import { PLACEHOLDERS } from '#cli/config/checks/python.ts';
 import { docstringOf } from '#cli/checks/python/modules.ts';
-import type { PythonFunction } from '#cli/types/checks/python.ts';
-import type { StructureProblem } from '#cli/types/checks/structure.ts';
 import { executableStatements } from '#cli/checks/structure/statements.ts';
+import type { PythonFunction, StructureProblem } from '#cli/types/checks.ts';
 /**
  * Report every implemented function at or below the configured statement threshold.
  * @param functions the functions of a file

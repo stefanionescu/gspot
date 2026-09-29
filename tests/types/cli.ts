@@ -1,5 +1,5 @@
 // The types of support/cli in this package.
-import type { Finding } from '#cli/types/checks/checks.ts';
+import type { Finding } from '#cli/types/checks.ts';
 
 /** The fields the tests read from the SARIF report gspot writes. */
 export type SarifReport = {

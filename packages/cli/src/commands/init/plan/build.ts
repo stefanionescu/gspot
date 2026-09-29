@@ -21,7 +21,7 @@ import type {
     DetectedSetting,
     InstallSettings,
     InitPlan as Plan,
-} from '#cli/types/commands/init.ts';
+} from '#cli/types/commands.ts';
 
 function runnerRows(
     root: string,

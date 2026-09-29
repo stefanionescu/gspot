@@ -1,4 +1,4 @@
-import type { DirectoryEntry } from '#cli/types/checks/structure.ts';
+import type { DirectoryEntry } from '#cli/types/checks.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
 
 /**

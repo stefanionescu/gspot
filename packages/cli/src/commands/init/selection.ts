@@ -7,7 +7,7 @@ import { NO_KITS } from '#cli/config/commands/init.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { selectKits, requireChain } from '#cli/kits/select.ts';
 import type { ScopeEntry } from '#cli/types/repository/repository.ts';
-import type { KitReason, InitInputs, InitContext, InitSelection } from '#cli/types/commands/init.ts';
+import type { KitReason, InitInputs, InitDetection, InitSelection } from '#cli/types/commands.ts';
 
 function parseScopeFlags(flags: string[] | undefined): Map<string, string[]> {
     const map = new Map<string, string[]>();
@@ -43,7 +43,7 @@ function initScopes(root: string, workspace: ScopeEntry[], scopeFlags: Map<strin
     return scopes;
 }
 
-function getCandidate(context: InitContext, configuration: string, without: Set<string>): Manifest | undefined {
+function getCandidate(context: InitDetection, configuration: string, without: Set<string>): Manifest | undefined {
     const manifest = context.manifests.get(configuration);
     if (!manifest || without.has(configuration)) return undefined;
     if (manifest.kit.needs_git && !context.hasGit) return undefined;
@@ -51,7 +51,7 @@ function getCandidate(context: InitContext, configuration: string, without: Set<
     return manifest;
 }
 
-function rootSelection(context: InitContext, rootPlans: { kit: string }[], hasScopes: boolean): string[] {
+function rootSelection(context: InitDetection, rootPlans: { kit: string }[], hasScopes: boolean): string[] {
     const without = new Set(context.options.without);
     const named = context.options.kits?.filter((id) => id !== NO_KITS && !without.has(id));
     if (named && context.options.profile?.tables.selection !== 'detect') return named;
@@ -67,7 +67,7 @@ function rootSelection(context: InitContext, rootPlans: { kit: string }[], hasSc
 }
 
 function scopeSelection(
-    context: InitContext,
+    context: InitDetection,
     scope: ScopeEntry,
     flagged: string[] | undefined,
     rootIds: string[],
@@ -86,7 +86,7 @@ function scopeSelection(
     return ids.filter((id) => !atRoot.has(id) || context.manifests.get(id)?.kit.kind !== 'language');
 }
 
-function hasSourceOutsideScopes(context: InitContext, manifest: Manifest, scopes: ScopeEntry[]): boolean {
+function hasSourceOutsideScopes(context: InitDetection, manifest: Manifest, scopes: ScopeEntry[]): boolean {
     return context.files.some(
         (file) =>
             file.kind === 'source' &&
@@ -96,7 +96,7 @@ function hasSourceOutsideScopes(context: InitContext, manifest: Manifest, scopes
 }
 
 function rootLanguagesKept(
-    context: InitContext,
+    context: InitDetection,
     rootIds: string[],
     scopes: ScopeEntry[],
     inScopes: Set<string>,
@@ -180,7 +180,7 @@ function closure(ids: Iterable<string>, manifests: Map<string, Manifest>): Set<s
  */
 export function selectForInit(inputs: InitInputs): InitSelection {
     const { root, repo, fields, workspace, manifests, options } = inputs;
-    const context: InitContext = { manifests, files: repo.files, fields, options, hasGit: repo.hasGit };
+    const context: InitDetection = { manifests, files: repo.files, fields, options, hasGit: repo.hasGit };
     const scopeFlags = parseScopeFlags(options.scopes);
     assertKnown(options, scopeFlags, manifests);
     const scopes = initScopes(root, workspace, scopeFlags);

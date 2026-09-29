@@ -1,5 +1,5 @@
 import type { Node } from 'web-tree-sitter';
-import type { Identifier, ExtractSink } from '#cli/types/checks/naming.ts';
+import type { Identifier, ExtractSink } from '#cli/types/checks.ts';
 
 import {
     NAME_NODES,

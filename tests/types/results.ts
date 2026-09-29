@@ -1,7 +1,7 @@
 // The result shapes of the planted-project builders: what each one hands to its test.
+import type { CheckResult } from '#cli/types/checks.ts';
 import type { SpawnOutcome } from '#tests/types/cli.ts';
 import type { GeneratedFile } from '#cli/types/generation.ts';
-import type { CheckResult } from '#cli/types/checks/checks.ts';
 import type { Session } from '#cli/types/execution/execution.ts';
 import type { Generated } from '#tests/types/acceptance/source/cli.ts';
 import type { HookLocation } from '#cli/types/repository/repository.ts';

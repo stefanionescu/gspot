@@ -330,7 +330,7 @@ extend-ignore-re = ["The word `teh` in selected text reports a spelling finding[
 
 
 [[naming.rules]]
-paths = ["packages/cli/src/types/commands/init.ts"]
+paths = ["packages/cli/src/types/commands.ts"]
 categories = ["properties"]
 names = ["min_release_age_days", "security_scanner"]
 case = ["snake"]
@@ -439,7 +439,7 @@ exclude = true
 reason = "GitHub Actions names action inputs with, and GitLab CI names artifact retention when. These test types inspect those exact generated workflow keys. Remove an allowance if its workflow provider or field leaves the contract."
 
 [[naming.rules]]
-paths = ["packages/cli/src/types/checks/security.ts"]
+paths = ["packages/cli/src/types/checks.ts"]
 names = ["Fingerprint", "File", "RuleID", "Commit"]
 exclude = true
 reason = "gitleaks writes these keys in its report and its baseline, and the type names them as they are."
@@ -469,13 +469,13 @@ exclude = true
 reason = "Emscripten and libpg-query name these members, and the type spells them as the module exports them."
 
 [[naming.rules]]
-paths = ["packages/cli/src/types/checks/xcode.ts"]
+paths = ["packages/cli/src/types/checks.ts"]
 names = ["shouldTranslate"]
 exclude = true
 reason = "Xcode writes this key in a string file, and the type spells it as the file does."
 
 [[naming.rules]]
-paths = ["packages/cli/src/types/checks/checks.ts"]
+paths = ["packages/cli/src/types/checks.ts"]
 names = ["DefElem", "String", "List"]
 exclude = true
 reason = "libpg-query emits these exact PostgreSQL AST node tags. SQL option parsing consumes their original JSON shape. Remove an allowance when its node tag is no longer consumed."
@@ -801,7 +801,7 @@ check = "security/semgrep"
 rule = "node-no-configured-require"
 paths = [
     "packages/cli/src/native/eslint-preview.ts",
-    "packages/cli/src/native/eslint.ts",
+    "packages/cli/src/native/process.ts",
 ]
 reason = "These configuration evaluators intentionally execute repository-selected modules and installed tool APIs in the configuration subprocess. Static imports select the CLI dependencies instead of the repository dependencies and cannot preserve executable configuration. Other security rules remain active for these exact files."
 

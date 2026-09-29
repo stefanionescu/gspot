@@ -2,12 +2,12 @@ import { join } from 'node:path';
 import { rm } from 'node:fs/promises';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { readSource } from '#cli/repository/tracked.ts';
-import { SPECTRAL_LINE } from '#cli/config/checks/express.ts';
 import { commandArguments } from '#cli/platform/arguments.ts';
+import { SPECTRAL_LINE } from '#cli/config/checks/platforms.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import { scratchCopy } from '#cli/execution/files/workspace.ts';
+import type { Finding, EngineInput } from '#cli/types/checks.ts';
 import { toolOutputDetail } from '#cli/execution/broken-tool.ts';
-import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
 
 /**
  * Spectral over tools.openapi.document. With no document named the check passes.

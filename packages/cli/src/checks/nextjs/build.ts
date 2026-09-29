@@ -3,8 +3,8 @@ import { rm } from 'node:fs/promises';
 import { stripVTControlCharacters } from 'node:util';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import { scratchCopy } from '#cli/execution/files/workspace.ts';
-import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
-import { TSC_LINE, CAUSE_MARKS, SHOWN_LINES } from '#cli/config/checks/nextjs.ts';
+import type { Finding, EngineInput } from '#cli/types/checks.ts';
+import { TSC_LINE, CAUSE_MARKS, SHOWN_LINES } from '#cli/config/checks/platforms.ts';
 
 // The marked line and the one after it.
 const MARKED_LINES = 2;

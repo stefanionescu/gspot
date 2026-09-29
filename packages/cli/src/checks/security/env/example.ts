@@ -1,6 +1,6 @@
 import { readSource } from '#cli/repository/tracked.ts';
 import { KEY_GROUP } from '#cli/config/checks/security.ts';
-import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
+import type { Finding, EngineInput } from '#cli/types/checks.ts';
 
 import {
     ENV_KEY_LINE,

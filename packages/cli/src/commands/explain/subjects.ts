@@ -9,7 +9,7 @@ import { specFor, settingValue } from '#cli/policy/settings.ts';
 import type { Session } from '#cli/types/execution/execution.ts';
 import type { ListingRow, SettingSpec } from '#cli/types/kits.ts';
 import { STAGES, DIRECTIONS } from '#cli/config/commands/explain.ts';
-import type { Explanation, SettingScope } from '#cli/types/commands/explain.ts';
+import type { Explanation, SettingScope } from '#cli/types/commands.ts';
 import { checkExplanation, toolRuleExplanation } from '#cli/commands/explain/checks.ts';
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Seven rows of the subject listing share this shape; one owner keeps the label format.

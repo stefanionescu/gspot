@@ -1,11 +1,11 @@
 import { rm } from 'node:fs/promises';
 import { globPaths } from '#cli/platform/paths.ts';
 import { join, dirname, basename } from 'node:path';
-import { TABLE } from '#cli/config/checks/checks.ts';
 import { readSource } from '#cli/repository/tracked.ts';
+import { TABLE } from '#cli/config/checks/repository.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import { scratchCopy } from '#cli/execution/files/workspace.ts';
-import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
+import type { Engine, Finding, EngineInput } from '#cli/types/checks.ts';
 
 function generatedContents(cwd: string): Map<string, Buffer> {
     const paths = globPaths(cwd, ['**/*', '!**/node_modules/**', '!**/.venv/**', '!**/.gspot/**'], { dot: true });
@@ -95,3 +95,9 @@ export async function drizzleMigrations(input: EngineInput): Promise<Finding[]> 
         await rm(scratch, { recursive: true, force: true });
     }
 }
+
+/** The analyses this file provides, by the name a manifest check gives them. */
+export const DRIZZLE_ANALYSES: Record<string, Engine> = {
+    'drizzle-relations': drizzleRelations,
+    'drizzle-migrations': drizzleMigrations,
+};

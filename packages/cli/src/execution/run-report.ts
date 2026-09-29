@@ -2,8 +2,8 @@
 import { writeReport } from '#cli/output/report.ts';
 import { coverageReport } from '#cli/execution/coverage.ts';
 import { ownedInputs } from '#cli/execution/planning/plan.ts';
+import type { Finding, CheckResult } from '#cli/types/checks.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
-import type { Finding, CheckResult } from '#cli/types/checks/checks.ts';
 import { suppressionComments } from '#cli/checks/repository/suppressions.ts';
 import { UNABLE_EXIT, POLICY_CHECK, RAN_STATUSES, FAILED_STATUSES } from '#cli/config/execution/execution.ts';
 

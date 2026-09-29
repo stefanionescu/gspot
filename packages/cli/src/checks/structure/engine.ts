@@ -2,7 +2,6 @@ import type { CheckSpec } from '#cli/types/kits.ts';
 import { countFindings } from '#cli/checks/structure/counts.ts';
 import { docComment } from '#cli/checks/structure/doc-comment.ts';
 import { folderNames } from '#cli/checks/structure/folder-names.ts';
-import type { Engine, EngineInput } from '#cli/types/checks/checks.ts';
 import { scriptInline } from '#cli/checks/structure/scripts/inline.ts';
 import { scriptPolicy } from '#cli/checks/structure/scripts/policy.ts';
 import { scriptRemote } from '#cli/checks/structure/scripts/remote.ts';
@@ -19,8 +18,8 @@ import { singleFileFolder } from '#cli/checks/structure/single-file-folder.ts';
 import { scriptInterpreter } from '#cli/checks/structure/scripts/interpreter.ts';
 import { duplicateFunctions } from '#cli/checks/structure/duplicate-functions.ts';
 import { privatePrefix, privateBeforePublic } from '#cli/checks/structure/visibility.ts';
-import type { StructureContext, StructureAnalysis } from '#cli/types/checks/structure.ts';
 import { fileLength, fileDirectoryCollision } from '#cli/checks/structure/file-layout.ts';
+import type { Engine, EngineInput, StructureInput, StructureAnalysis } from '#cli/types/checks.ts';
 import { scriptSourceOrder, scriptSourceComments } from '#cli/checks/structure/scripts/sources.ts';
 import { scriptGuards, scriptConfigDefaults } from '#cli/checks/structure/scripts/configuration.ts';
 import { SCRIPT_TAG, COUNT_ANALYSES, GSPOT_DIRECTORY, DOCUMENT_EXTENSIONS } from '#cli/config/checks/structure.ts';
@@ -57,7 +56,7 @@ const ANALYSES: Record<string, StructureAnalysis> = {
     'source-comments': scriptSourceComments,
     'source-order': scriptSourceOrder,
 };
-function contextFor(input: EngineInput): StructureContext {
+function contextFor(input: EngineInput): StructureInput {
     const files = input.files.filter(
         (file) =>
             file.kind === 'source' &&

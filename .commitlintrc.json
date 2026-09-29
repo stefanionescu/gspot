@@ -1,3 +1,0 @@
-{
-    "extends": ["./.gspot/config/commitlint.config.cjs"]
-}

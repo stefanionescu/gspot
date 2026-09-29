@@ -1,11 +1,10 @@
 // The checks that read the schema the migrations build: row security, grants, definer functions, and foreign key indexes.
 import { nodesOf } from '#cli/parsers/sql/parser.ts';
 import { positionAt } from '#cli/parsers/sql/statements.ts';
-import type { Declared } from '#cli/types/checks/postgres.ts';
 import { schema } from '#cli/checks/postgres/schema/fields.ts';
-import { DEFAULT_SCHEMA } from '#cli/config/checks/postgres.ts';
+import { DEFAULT_SCHEMA } from '#cli/config/checks/platforms.ts';
 import { migrationsOf } from '#cli/checks/postgres/migrations.ts';
-import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
+import type { Finding, Declared, EngineInput } from '#cli/types/checks.ts';
 import type { SqlNode, SqlStatementView } from '#cli/types/parsers/sql.ts';
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Four checks build the finding with its statement position; one owner keeps that shape.

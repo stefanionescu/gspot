@@ -3,7 +3,7 @@ import { parseSql, parsePlpgsql } from '#cli/parsers/sql/parser.ts';
 import { sqlFile, positionAt } from '#cli/parsers/sql/statements.ts';
 import type { SqlFile, SqlStatementView } from '#cli/types/parsers/sql.ts';
 import { DEFAULT_TRIVIAL_STATEMENTS } from '#cli/config/checks/structure.ts';
-import type { Finding, SqlSource, EngineInput, SqlAnalysis, FunctionOption } from '#cli/types/checks/checks.ts';
+import type { Engine, Finding, SqlSource, EngineInput, SqlAnalysis, FunctionOption } from '#cli/types/checks.ts';
 
 import {
     SQL_TOKENS,
@@ -12,7 +12,7 @@ import {
     OUTPUT_PARAMETERS,
     POSTGRES_DIALECTS,
     SHIPPED_PARAMETER_LIMIT,
-} from '#cli/config/checks/checks.ts';
+} from '#cli/config/checks/repository.ts';
 
 function sources(input: EngineInput): SqlSource[] {
     return input.files
@@ -233,3 +233,11 @@ export async function sqlFunctions(input: EngineInput): Promise<Finding[]> {
     }
     return findings;
 }
+
+/** The analyses this file provides, by the name a manifest check gives them. */
+export const SQL_ANALYSES: Record<string, Engine> = {
+    'sql-functions': sqlFunctions,
+    'sql-syntax': sqlSyntax,
+    'sql-block-comments': sqlBlockComments,
+    'sql-file-length': sqlFileLength,
+};

@@ -3,11 +3,10 @@ import { readFileSync } from 'node:fs';
 import { GspotError } from '#cli/platform/errors.ts';
 import { isEnvironmentFile } from '#cli/repository/kind.ts';
 import { sep, resolve, relative, isAbsolute } from 'node:path';
-import type { CheckOptions } from '#cli/types/commands/check.ts';
 import { INVALID_INPUT_EXIT } from '#cli/config/commands/check.ts';
 import type { ChangedSet } from '#cli/types/repository/revisions.ts';
-import type { CommandResult } from '#cli/types/commands/commands.ts';
 import { changedFiles } from '#cli/repository/revisions/selection.ts';
+import type { CheckOptions, CommandResult } from '#cli/types/commands.ts';
 import type { Session, StageFilter } from '#cli/types/execution/execution.ts';
 
 function isReadable(path: string): boolean {

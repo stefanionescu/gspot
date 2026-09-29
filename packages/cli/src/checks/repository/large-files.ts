@@ -1,6 +1,6 @@
 import { pathMatcher } from '#cli/repository/paths.ts';
 import { KILOBYTE } from '#cli/config/checks/repository.ts';
-import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
+import type { Finding, EngineInput } from '#cli/types/checks.ts';
 
 /**
  * One finding per tracked file over `limits.file_size_kb` that is neither under LFS nor declared.

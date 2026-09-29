@@ -1,9 +1,9 @@
 // Telling a tool that found something from a tool that fell over: a crash must never pass for a finding.
 import { statSync } from 'node:fs';
 import { join, isAbsolute } from 'node:path';
+import type { Finding } from '#cli/types/checks.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import type { SpawnResult } from '#cli/types/platform.ts';
-import type { Finding } from '#cli/types/checks/checks.ts';
 import { parseOutput } from '#cli/execution/output/parse.ts';
 import type { PlannedCheck } from '#cli/types/execution/execution.ts';
 import type { ToolPin, CheckSpec, OutputFormat } from '#cli/types/kits.ts';

@@ -1,10 +1,11 @@
 import { trivialFile } from '#cli/checks/structure/statements.ts';
-import type { StructureReader } from '#cli/types/checks/python.ts';
-import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
 import { functionsOf, pythonModules } from '#cli/checks/python/modules.ts';
+import { pythonBlockingCalls } from '#cli/checks/python/blocking-calls.ts';
 import { DEFAULT_TRIVIAL_STATEMENTS } from '#cli/config/checks/structure.ts';
 import { singletons, importCycles, importComments } from '#cli/checks/python/imports.ts';
+import type { Engine, Finding, EngineInput, StructureReader } from '#cli/types/checks.ts';
 import { trivialFunctions, placeholderDocstrings } from '#cli/checks/python/functions.ts';
+import { importLinter, dependencyOwnership, typecheckMembership } from '#cli/checks/python/project.ts';
 
 import {
     DEFINITIONS,
@@ -40,7 +41,7 @@ function analysis(read: StructureReader): (input: EngineInput) => Promise<Findin
 }
 
 /** The analyses by the name a manifest gives them. */
-export const PYTHON_STRUCTURE: Record<string, (input: EngineInput) => Promise<Finding[]>> = {
+export const PYTHON_STRUCTURE: Record<string, Engine> = {
     'python-file-length': analysis(({ modules }, input) => {
         const ceiling = input.view.limit('file_lines', 'python') ?? DEFAULT_FILE_LINES;
         return modules.flatMap((module) => {
@@ -125,4 +126,13 @@ export const PYTHON_STRUCTURE: Record<string, (input: EngineInput) => Promise<Fi
             (input.view.settings['structure.python.singletons_allowed'] as { names?: string[] }[] | undefined) ?? [];
         return singletons(modules, new Set(entries.flatMap((entry) => entry.names ?? [])));
     }),
+};
+
+/** Every python analysis: the parsed-source ones above, then the ones that run the project's tools. */
+export const PYTHON_ANALYSES: Record<string, Engine> = {
+    ...PYTHON_STRUCTURE,
+    'python-import-linter': importLinter,
+    'python-blocking-calls': pythonBlockingCalls,
+    'python-dependency-ownership': dependencyOwnership,
+    'python-typecheck-membership': typecheckMembership,
 };

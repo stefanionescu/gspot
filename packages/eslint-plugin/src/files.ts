@@ -3,7 +3,7 @@ import { posix } from 'node:path';
 import { readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
-import type { RuleContextOf, DirectoryEntry } from '#plugin/types/plugin.ts';
+import type { RuleReporter, DirectoryEntry } from '#plugin/types/plugin.ts';
 import { FILE_SCHEME, STDIN_NAMES, INDEX_BASENAMES } from '#plugin/config/plugin.ts';
 
 const globCache = new Map<string, (path: string) => boolean>();
@@ -26,7 +26,7 @@ export function normalizePath(value: string): string {
  * @param context the rule context
  * @returns the path, or undefined when ESLint reads stdin
  */
-export function lintedFile(context: RuleContextOf): string | undefined {
+export function lintedFile(context: RuleReporter): string | undefined {
     const raw = context.physicalFilename === '' ? context.filename : context.physicalFilename;
     const normalized = normalizePath(raw);
     return STDIN_NAMES.has(normalized) ? undefined : normalized;
@@ -37,7 +37,7 @@ export function lintedFile(context: RuleContextOf): string | undefined {
  * @param context the rule context
  * @returns the root without a trailing slash
  */
-export function lintedRoot(context: RuleContextOf): string {
+export function lintedRoot(context: RuleReporter): string {
     const settings = (context.settings as { gspot?: { root?: string } } | undefined)?.gspot;
     const root = settings?.root ?? context.cwd;
     return normalizePath(root).replace(/\/$/u, '');

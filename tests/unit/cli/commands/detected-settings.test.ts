@@ -1,6 +1,6 @@
 import { test, expect } from 'bun:test';
+import type { Detect } from '#cli/types/commands.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
-import type { Detect } from '#cli/types/commands/init.ts';
 import { detectedSettings } from '#cli/commands/init/settings.ts';
 import type { Fields, TrackedFile } from '#cli/types/repository/repository.ts';
 

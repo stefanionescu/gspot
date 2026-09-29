@@ -20,7 +20,7 @@ import { checkVerifiedSecrets } from '#cli/checks/secrets/verified.ts';
 import { suppressionComments } from '#cli/checks/repository/suppressions.ts';
 import { checkJavascript, checkTypescript } from '#cli/checks/typescript/tsc.ts';
 import type { Session, Executable, PlannedCheck } from '#cli/types/execution/execution.ts';
-import type { Engine, Finding, CheckResult, EngineInput, EngineOutcome } from '#cli/types/checks/checks.ts';
+import type { Engine, Finding, CheckResult, EngineInput, EngineOutcome } from '#cli/types/checks.ts';
 
 // The executable contract includes staged state, while native commands use the check definition.
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Its callers sit at the complexity or length limit; inlining the expression pushes them over.

@@ -1,4 +1,4 @@
-import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
+import type { Finding, EngineInput } from '#cli/types/checks.ts';
 import { MESSAGES, DRIFT_HELP } from '#cli/config/checks/repository.ts';
 
 /**

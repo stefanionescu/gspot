@@ -21,7 +21,7 @@ import { askKits, askInitQuestions } from '#cli/commands/init/questions.ts';
 import { parsePolicyText, assertPolicyComplete } from '#cli/policy/read.ts';
 import { isOwned, existingTooling } from '#cli/repository/existing-tooling.ts';
 import type { TomlTable, ExistingTooling } from '#cli/types/repository/repository.ts';
-import type { Planning, InitInputs, InitOptions, InitPrepared, InitSelection } from '#cli/types/commands/init.ts';
+import type { Planning, InitInputs, InitOptions, InitPrepared, InitSelection } from '#cli/types/commands.ts';
 
 function assertCleanTree(root: string, options: InitOptions): void {
     if (options.allowDirty || options.isDryRun) return;

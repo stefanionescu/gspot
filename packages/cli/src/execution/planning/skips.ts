@@ -1,8 +1,8 @@
 // Why a planned check does not run: an ignore, a waiting setting, a rule, the platform, or a flag.
-import { missingBuild } from '#cli/tools/platforms.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
 import { waitingSetting } from '#cli/policy/check-state.ts';
 import type { ToolPin, CheckSpec } from '#cli/types/kits.ts';
+import { PLATFORM_LABELS } from '#cli/config/execution/execution.ts';
 import type { Host, Skip, RuleSkip, PlanOptions, PlannedCheck } from '#cli/types/execution/execution.ts';
 
 // The rules a check declares about where it runs, each with the sentence that says why it was skipped.
@@ -84,4 +84,20 @@ export function restrictIgnoredPaths(check: PlannedCheck): PlannedCheck {
     return files.length === 0
         ? { ...check, skip: { source: 'ignore', note: 'all selected paths are disabled by gspot.toml' } }
         : { ...check, files };
+}
+
+/**
+ * The build a tool lacks on a host, such as Windows or arm64 Linux, or undefined when the tool ships for it.
+ * @param tool the tool pin
+ * @param platform the host platform name: macos, linux, or windows
+ * @param arch the host architecture: x64 or arm64
+ * @returns the words for the missing build, or undefined
+ */
+export function missingBuild(tool: ToolPin, platform: string, arch: string): string | undefined {
+    const named: readonly string[] = tool.platforms ?? [];
+    if (tool.platforms === undefined || named.includes(platform) || named.includes(`${platform}-${arch}`))
+        return undefined;
+    const label = PLATFORM_LABELS[platform] ?? platform;
+    // A pin that names the operating system with another architecture lacks this architecture only.
+    return named.some((entry) => entry.startsWith(`${platform}-`)) ? `${arch} ${label}` : label;
 }

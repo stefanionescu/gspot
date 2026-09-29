@@ -2,11 +2,11 @@
 import { join } from 'node:path';
 import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import type { Finding } from '#cli/types/checks.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import type { FindingCase } from '#tests/types/cli.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
-import type { Finding } from '#cli/types/checks/checks.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
 import { toolsPath, installAtLevel } from '#tests/support/cli/tools.ts';
 import { containing, containingAll } from '#tests/support/expectations.ts';

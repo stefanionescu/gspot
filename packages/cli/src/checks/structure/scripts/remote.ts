@@ -1,6 +1,6 @@
 import { functionAt } from '#cli/checks/structure/parser.ts';
-import type { ScriptFile, StructureAnalysis as Analysis } from '#cli/types/checks/structure.ts';
-import { SSH_HEREDOC, RUN_SSH_START, CLOSING_QUOTE_LINE, SSH_BLOCK_MIN_LINES } from '#cli/config/checks/script.ts';
+import type { ScriptFile, StructureAnalysis as Analysis } from '#cli/types/checks.ts';
+import { SSH_HEREDOC, RUN_SSH_START, CLOSING_QUOTE_LINE, SSH_BLOCK_MIN_LINES } from '#cli/config/checks/structure.ts';
 
 // Quotes close in pairs.
 const PAIR = 2;

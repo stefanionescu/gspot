@@ -4,16 +4,16 @@ import { everyManifest } from '#cli/kits/select.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { directoryOf } from '#cli/platform/arguments.ts';
+import { installTools } from '#cli/tools/installation.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import { MISE_CONFIG_PATH } from '#cli/config/tools/tools.ts';
-import { installTools } from '#cli/tools/install/execution.ts';
 import { hookLocation } from '#cli/repository/hook-location.ts';
 import type { Session } from '#cli/types/execution/execution.ts';
 import { assertPinMatches } from '#cli/lifecycle/version-pin.ts';
 import { pythonInstallSteps } from '#cli/tools/python-project.ts';
 import { packageInstallSteps } from '#cli/tools/packages/project.ts';
 import { toolEnvironment } from '#cli/generation/tools/environment.ts';
-import type { InstallJson, CommandResult, InstallOptions } from '#cli/types/commands/commands.ts';
+import type { InstallJson, CommandResult, InstallOptions } from '#cli/types/commands.ts';
 
 function preparation(session: Session): { steps: string[][]; failures: string[]; hooks: string | undefined } {
     const failures: string[] = [];

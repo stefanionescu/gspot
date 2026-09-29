@@ -11,7 +11,7 @@ import { CHANGED_SHOWN } from '#cli/config/commands/check.ts';
 import { assertPinMatches } from '#cli/lifecycle/version-pin.ts';
 import { stagedFiles } from '#cli/repository/revisions/selection.ts';
 import type { StagedSet, ChangedSet } from '#cli/types/repository/revisions.ts';
-import type { Revision, Selections, CheckOptions, CheckCommandResult } from '#cli/types/commands/check.ts';
+import type { Revision, Selections, CheckOptions, CheckCommandResult } from '#cli/types/commands.ts';
 import type { Session, FixReport, RunReport, RunOptions, StageFilter } from '#cli/types/execution/execution.ts';
 import { refusalFor, selectedPaths, unknownSelection, revisionSelection } from '#cli/commands/check/selection.ts';
 

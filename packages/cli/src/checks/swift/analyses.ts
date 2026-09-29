@@ -1,10 +1,10 @@
-import type { SwiftReader } from '#cli/types/checks/swift.ts';
 import { trivialFile } from '#cli/checks/structure/statements.ts';
 import { DEFAULT_DUPLICATE_LINES } from '#cli/config/checks/swift.ts';
-import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
 import { functionsOf, swiftSources } from '#cli/checks/swift/sources.ts';
 import { DEFAULT_TRIVIAL_STATEMENTS } from '#cli/config/checks/structure.ts';
 import { trivialFunctions, duplicateFunctions } from '#cli/checks/swift/bodies.ts';
+import type { Engine, Finding, EngineInput, SwiftReader } from '#cli/types/checks.ts';
+import { swiftBuild, swiftAnalyze, swiftPeriphery } from '#cli/checks/swift/build.ts';
 import { importComments, environmentReads, privateBeforePublic } from '#cli/checks/swift/order.ts';
 
 function ownerPaths(input: EngineInput): string[] {
@@ -33,7 +33,7 @@ function analysis(read: SwiftReader): (input: EngineInput) => Promise<Finding[]>
 }
 
 /** The analyses by the name a manifest gives them. */
-export const SWIFT_STRUCTURE: Record<string, (input: EngineInput) => Promise<Finding[]>> = {
+export const SWIFT_STRUCTURE: Record<string, Engine> = {
     'swift-trivial-function': analysis(({ functions, sources }, input) => {
         const threshold = input.view.limit('trivial_statements', 'swift') ?? DEFAULT_TRIVIAL_STATEMENTS;
         return [
@@ -56,4 +56,12 @@ export const SWIFT_STRUCTURE: Record<string, (input: EngineInput) => Promise<Fin
     'swift-private-before-public': analysis(({ sources }) => privateBeforePublic(sources)),
     'swift-env-access-owner': analysis(({ sources }, input) => environmentReads(sources, ownerPaths(input))),
     'swift-import-comments': analysis(({ sources }) => importComments(sources)),
+};
+
+/** Every swift analysis: the parsed-source ones above, then the ones that run the project's tools. */
+export const SWIFT_ANALYSES: Record<string, Engine> = {
+    ...SWIFT_STRUCTURE,
+    'swift-build': swiftBuild,
+    'swift-analyze': swiftAnalyze,
+    'swift-periphery': swiftPeriphery,
 };

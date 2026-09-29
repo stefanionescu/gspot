@@ -1,7 +1,7 @@
 import { posix } from 'node:path';
 import { readSource } from '#cli/repository/tracked.ts';
 import { parse } from '@formatjs/icu-messageformat-parser';
-import type { Finding, EngineInput, Translations } from '#cli/types/checks/checks.ts';
+import type { Finding, EngineInput, Translations } from '#cli/types/checks.ts';
 
 // Every message of a file by its dotted key: a nested table adds its key to the path of what it holds.
 function flat(value: unknown, prefix = ''): Map<string, string> {

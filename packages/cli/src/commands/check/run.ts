@@ -4,11 +4,10 @@ import { GspotError } from '#cli/platform/errors.ts';
 import { checkPushed } from '#cli/commands/check/push.ts';
 import { checkContent } from '#cli/commands/check/content.ts';
 import { refusalFor } from '#cli/commands/check/selection.ts';
-import type { CheckOptions } from '#cli/types/commands/check.ts';
 import { useRevision } from '#cli/repository/revisions/contents.ts';
-import type { CommandResult } from '#cli/types/commands/commands.ts';
 import { stagedFiles } from '#cli/repository/revisions/selection.ts';
 import { findRoot, isGitRepository } from '#cli/repository/tracked.ts';
+import type { CheckOptions, CommandResult } from '#cli/types/commands.ts';
 // Checks an exact snapshot of the staged index, with the report published to the repository.
 async function checkStaged(root: string, options: CheckOptions, signal: AbortSignal): Promise<CommandResult> {
     if (options.fix)

@@ -1,6 +1,5 @@
 // The interpreter contract of a Bash script: the header, strict mode, the entry point, the library shape, the directory constants, mktemp cleanup.
 import semver from 'semver';
-import type { Finding } from '#cli/types/checks/checks.ts';
 import { functionAt } from '#cli/checks/structure/parser.ts';
 
 import {
@@ -10,12 +9,13 @@ import {
     isDirectoryConstant,
 } from '#cli/checks/structure/code-lines.ts';
 import type {
+    Finding,
     CodeLine,
     ScriptFile,
     ScriptReport,
-    StructureContext,
+    StructureInput,
     StructureAnalysis as Analysis,
-} from '#cli/types/checks/structure.ts';
+} from '#cli/types/checks.ts';
 import {
     EXIT_CALL,
     MAIN_CALL,
@@ -31,7 +31,7 @@ import {
     TOP_LEVEL_ASSIGNMENT,
     DIRECTORY_CONSTANT_PIECES,
     OTHER_INTERPRETER_SHEBANG,
-} from '#cli/config/checks/script.ts';
+} from '#cli/config/checks/structure.ts';
 
 // The line that must be a bare comment marker.
 const HEADER_LINE = 2;
@@ -168,12 +168,7 @@ function cleanupProblems(code: CodeLine[], report: ScriptReport): void {
         report(temporary.number, 'mktemp-trap', 'A temporary file needs a trap that removes it.');
 }
 
-function fileProblems(
-    context: StructureContext,
-    file: ScriptFile,
-    platforms: string,
-    isConfigOwner: boolean,
-): Finding[] {
+function fileProblems(context: StructureInput, file: ScriptFile, platforms: string, isConfigOwner: boolean): Finding[] {
     const findings: Finding[] = [];
     headerProblems(file, (line, rule, text) => {
         findings.push(context.report(file.path, line, rule, text));

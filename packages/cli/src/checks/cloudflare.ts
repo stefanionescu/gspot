@@ -6,7 +6,7 @@ import { readSource } from '#cli/repository/tracked.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import { scratchCopy } from '#cli/execution/files/workspace.ts';
 import { type ParseError, parse as parseJsonc } from 'jsonc-parser';
-import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
+import type { Engine, Finding, EngineInput } from '#cli/types/checks.ts';
 
 import {
     TYPES_FILE,
@@ -14,7 +14,7 @@ import {
     REDIRECT_PARTS,
     HTTP_HEADER_LINE,
     COMPATIBILITY_DATE,
-} from '#cli/config/checks/checks.ts';
+} from '#cli/config/checks/repository.ts';
 
 function named(input: EngineInput, name: string): string[] {
     return input.files
@@ -223,3 +223,11 @@ export async function envTypesFresh(input: EngineInput): Promise<Finding[]> {
         await rm(scratch, { recursive: true, force: true });
     }
 }
+
+/** The analyses this file provides, by the name a manifest check gives them. */
+export const CLOUDFLARE_ANALYSES: Record<string, Engine> = {
+    'cloudflare-headers': headersSyntax,
+    'cloudflare-redirects': redirectsSyntax,
+    'cloudflare-wrangler': wranglerFile,
+    'cloudflare-env-types': envTypesFresh,
+};

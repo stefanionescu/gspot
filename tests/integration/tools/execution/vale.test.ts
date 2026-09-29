@@ -1,6 +1,5 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { PROSE_FORMATS } from '#cli/kits/vale.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { TOKEN_IGNORES } from '#cli/config/kits.ts';
 import { readAsset } from '#cli/platform/assets.ts';
@@ -11,6 +10,7 @@ import { valeFindings } from '#cli/checks/prose/vale.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { runEngineCheck } from '#cli/execution/engines.ts';
 import { containing } from '#tests/support/expectations.ts';
+import { PROSE_FORMATS } from '#cli/generation/vale-styles.ts';
 
 for (const extension of ['md', 'sh']) {
     test(`native Vale reports a ${extension} defect and accepts corrected source`, async () => {

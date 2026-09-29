@@ -4,7 +4,7 @@ import { pathMatcher } from '#cli/repository/paths.ts';
 import { compileTerms } from '#cli/checks/naming/match.ts';
 import { shippedPolicy } from '#cli/checks/naming/policy.ts';
 import { nameProblems } from '#cli/checks/naming/validate-name.ts';
-import type { Identifier, EffectivePolicy } from '#cli/types/checks/naming.ts';
+import type { Identifier, EffectivePolicy } from '#cli/types/checks.ts';
 
 function caseFor(language: string, category: string): string[] {
     if (category === 'types') return ['pascal'];

@@ -3,9 +3,9 @@ import { join } from 'node:path';
 import { rmSync } from 'node:fs';
 import { buildFolder } from '#cli/platform/paths.ts';
 import { emitAll } from '#cli/generation/outputs.ts';
+import type { EngineInput } from '#cli/types/checks.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
-import type { EngineInput } from '#cli/types/checks/checks.ts';
 
 const folders = new Set<string>();
 

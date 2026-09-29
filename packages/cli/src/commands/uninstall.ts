@@ -9,7 +9,7 @@ import { findRoot, isGitRepository } from '#cli/repository/tracked.ts';
 import type { OwnershipState } from '#cli/types/lifecycle/lifecycle.ts';
 import { OWNERSHIP_FILE, STATE_DIRECTORY } from '#cli/config/platform.ts';
 import { readOwnership, runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
-import type { CommandResult, UninstallPlan, UninstallOptions } from '#cli/types/commands/commands.ts';
+import type { CommandResult, UninstallPlan, UninstallOptions } from '#cli/types/commands.ts';
 
 // Pending entries are candidates; the lifecycle owner confirms their state before mutation.
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Uninstall and its preview list the same candidates; one owner keeps the pending entries in the list.

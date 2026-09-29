@@ -4,9 +4,8 @@ import { toPosix } from '#cli/platform/paths.ts';
 import type { Root } from '#cli/types/platform.ts';
 import { swiftBuildPlan } from '#cli/checks/swift/plan.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
-import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
 import { openBuildCache, prepareBuildSources } from '#cli/checks/swift/cache.ts';
-import type { SwiftBuildPlan, SwiftBuildOutput } from '#cli/types/checks/swift.ts';
+import type { Finding, EngineInput, SwiftBuildPlan, SwiftBuildOutput } from '#cli/types/checks.ts';
 import { DIAGNOSTIC, RULE_SUFFIX, RESPONSE_FILE, PRIVATE_PREFIX } from '#cli/config/checks/swift.ts';
 
 const builds = new WeakMap<object, Map<string, Promise<SwiftBuildOutput>>>();

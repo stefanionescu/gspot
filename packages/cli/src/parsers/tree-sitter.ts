@@ -4,7 +4,7 @@ import { grammarPath } from '#cli/platform/assets.ts';
 import { Parser, Language, type Tree } from 'web-tree-sitter';
 import { DECLARATION_FILE } from '#cli/config/parsers/parsers.ts';
 import type { SourceReads } from '#cli/types/repository/repository.ts';
-import type { GrammarName, ParseContext } from '#cli/types/parsers/parsers.ts';
+import type { ParseReads, GrammarName } from '#cli/types/parsers/parsers.ts';
 
 const reads = new WeakMap<SourceReads, Map<string, Tree>>();
 
@@ -43,7 +43,7 @@ export function parserFor(name: GrammarName): Promise<Parser> {
  * @param context execution reads and their existing resource owner, when running checks.
  * @returns a caller-owned tree copy, or null when parsing cannot produce a tree.
  */
-export async function parseSource(name: GrammarName, text: string, context?: ParseContext): Promise<Tree | null> {
+export async function parseSource(name: GrammarName, text: string, context?: ParseReads): Promise<Tree | null> {
     const parser = await parserFor(name);
     if (context?.resources === undefined) return parser.parse(text);
     let trees = reads.get(context.reads);

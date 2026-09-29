@@ -5,11 +5,11 @@ import { git } from '#tests/support/cli/git.ts';
 import { readPolicy } from '#cli/policy/read.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
+import type { InitJson } from '#cli/types/commands.ts';
 import { script } from '#tests/support/cli/planted.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
 import { keptMode } from '#tests/support/cli/platforms.ts';
-import type { InitJson } from '#cli/types/commands/init.ts';
 import { textContaining } from '#tests/support/expectations.ts';
 import { statSync, chmodSync, existsSync, readFileSync } from 'node:fs';
 import { PLAN_INIT } from '#tests/config/acceptance/source/cli/init-replace.ts';
@@ -39,10 +39,11 @@ test.each(['', 'hooks', '.husky'])(
     PLANTED_TIMEOUT_MS,
 );
 
-// The pointers init writes at the paths of the deleted files, each naming gspot.
+// The ESLint pointer is written for editors; the other deleted files get no pointer, because each check names
+// its configuration by path.
 function expectPointers(root: string): void {
-    for (const pointer of ['typos.toml', '.shellcheckrc', '.markdownlint-cli2.jsonc'])
-        expect(readFileSync(join(root, pointer), 'utf8')).toContain('gspot');
+    for (const gone of ['typos.toml', '.shellcheckrc', '.markdownlint-cli2.jsonc'])
+        expect(existsSync(join(root, gone))).toBe(false);
     const eslintPointer = ['eslint.config.js', 'eslint.config.mjs'].find((name) => existsSync(join(root, name)));
     expect(eslintPointer).toBeDefined();
     expect(readFileSync(join(root, eslintPointer ?? ''), 'utf8')).toContain('gspot');

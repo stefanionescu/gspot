@@ -9,9 +9,8 @@ import { mutationTarget } from '#cli/platform/safe-paths.ts';
 import { commandArguments } from '#cli/platform/arguments.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import { scratchCopy } from '#cli/execution/files/workspace.ts';
-import type { SiteBuild } from '#cli/types/checks/static-site.ts';
-import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
-import { DEFAULT_BUILD, SHOWN_DIFFERENCES, DEFAULT_BUILD_OUTPUT } from '#cli/config/checks/static-site.ts';
+import type { Finding, SiteBuild, EngineInput } from '#cli/types/checks.ts';
+import { DEFAULT_BUILD, SHOWN_DIFFERENCES, DEFAULT_BUILD_OUTPUT } from '#cli/config/checks/platforms.ts';
 
 const builds = new WeakMap<object, Map<string, Promise<SiteBuild>>>();
 

@@ -1,11 +1,9 @@
 import { readSource } from '#cli/repository/tracked.ts';
-import { IDENTIFIER } from '#cli/config/checks/structure.ts';
-import type { EngineInput } from '#cli/types/checks/checks.ts';
-import { TOP_LEVEL_ASSIGNMENT } from '#cli/config/checks/script.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
 import { functionAt, scriptFunctions } from '#cli/checks/structure/parser.ts';
+import { IDENTIFIER, TOP_LEVEL_ASSIGNMENT } from '#cli/config/checks/structure.ts';
 import { withoutComment, withoutDeclaration } from '#cli/checks/structure/code-lines.ts';
-import type { ScriptFile, ScriptIndex, ScriptFunction } from '#cli/types/checks/structure.ts';
+import type { ScriptFile, EngineInput, ScriptIndex, ScriptFunction } from '#cli/types/checks.ts';
 
 const cache = new WeakMap<object, Map<string, Promise<ScriptIndex>>>();
 

@@ -2,10 +2,10 @@
 import { z } from 'zod';
 import { resolve, relative } from 'node:path';
 import { toPosix } from '#cli/platform/paths.ts';
+import type { Finding } from '#cli/types/checks.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { codePoints } from '#cli/platform/code-points.ts';
-import type { Finding } from '#cli/types/checks/checks.ts';
 import { LINE_FEED } from '#cli/config/execution/output.ts';
 import type { TypoEntry } from '#cli/types/execution/output.ts';
 

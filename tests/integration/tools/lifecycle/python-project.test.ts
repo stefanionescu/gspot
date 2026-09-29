@@ -5,9 +5,9 @@ import { run } from '#cli/platform/spawn.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { everyManifest } from '#cli/kits/select.ts';
 import { gitOutput } from '#tests/support/cli/git.ts';
+import type { InstallJson } from '#cli/types/commands.ts';
 import { rejection } from '#tests/support/expectations.ts';
 import { venvExecutable } from '#tests/support/cli/platforms.ts';
-import type { InstallJson } from '#cli/types/commands/commands.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import { toolEnvironment } from '#cli/generation/tools/environment.ts';
@@ -22,6 +22,7 @@ import {
     installPythonProject,
     preparePythonProject,
 } from '#cli/tools/python-project.ts';
+
 // A Windows virtual environment has launchers and no interpreter links; the windows-launcher tests cover it.
 const POSIX_ENVIRONMENT = process.platform !== 'win32';
 

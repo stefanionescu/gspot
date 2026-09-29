@@ -1,6 +1,6 @@
 // What init fills in from the repository: every setting whose manifest says where to look (K-93).
 import type { Manifest } from '#cli/types/kits.ts';
-import type { Detect, DetectedSetting } from '#cli/types/commands/init.ts';
+import type { Detect, DetectedSetting } from '#cli/types/commands.ts';
 import type { Fields, TrackedFile } from '#cli/types/repository/repository.ts';
 
 function folderNames(files: TrackedFile[]): Set<string> {

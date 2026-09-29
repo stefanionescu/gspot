@@ -1,9 +1,8 @@
 // File tags computed the way pre-commit's identify does: extension, filename, shebang, executable bit, content.
 import { baseName, extensionOf } from '#cli/platform/paths.ts';
 import type { Tagged, RawEntry } from '#cli/types/repository/repository.ts';
-import { shebangExecutable, shebangInterpreter } from '#cli/repository/shebang.ts';
-import { LOCKFILE_NAMES, BINARY_EXTENSIONS } from '#cli/config/repository/patterns.ts';
-import { SHEBANG_TAGS, FILENAME_TAGS, EXTENSION_TAGS } from '#cli/config/repository/repository.ts';
+import { LOCKFILE_NAMES, BINARY_EXTENSIONS, SHEBANG_INTERPRETERS } from '#cli/config/repository/patterns.ts';
+import { ENV_SUFFIX, SHEBANG_TAGS, FILENAME_TAGS, EXTENSION_TAGS } from '#cli/config/repository/repository.ts';
 
 function sniff(buffer: Buffer): { isBinary: boolean; firstLine: string } {
     if (buffer.includes(0)) return { isBinary: true, firstLine: '' };
@@ -32,6 +31,12 @@ function textTags(tags: Set<string>, firstLine: string): Tagged {
     return shebang === undefined ? { tags: [...tags], binary: false } : { tags: [...tags], binary: false, shebang };
 }
 
+function withoutTrailingVersion(word: string): string {
+    let end = word.length;
+    while (end > 0 && '0123456789.'.includes(word[end - 1] ?? '')) end -= 1;
+    return word.slice(0, end);
+}
+
 /**
  * Tags for one entry. Binary files retain path tags and do not receive content tags.
  * @param entry the tracked entry
@@ -57,4 +62,31 @@ export function tagEntry(entry: RawEntry, prefix: Buffer): Tagged {
     const sniffed = sniff(prefix);
     if (sniffed.isBinary) return { tags: ['binary', ...tags], binary: true };
     return textTags(tags, sniffed.firstLine);
+}
+
+/**
+ * Reads the executable token, including env -S and interpreter arguments.
+ * @param firstLine the first line of the file
+ * @returns the executable basename or undefined without a shebang
+ */
+export function shebangExecutable(firstLine: string): string | undefined {
+    if (!firstLine.startsWith('#!')) return undefined;
+    const tokens = firstLine.slice('#!'.length).trim().split(/\s+/u);
+    let index = 0;
+    if (tokens[index]?.endsWith(ENV_SUFFIX) === true) index += 1;
+    if (tokens[index] === '-S') index += 1;
+    const word = tokens[index];
+    return word === undefined || word === '' ? undefined : word.slice(word.lastIndexOf('/') + 1);
+}
+
+/**
+ * The interpreter a shebang names, or undefined.
+ * @param firstLine the first line of the file
+ * @returns the interpreter name the table knows
+ */
+export function shebangInterpreter(firstLine: string): string | undefined {
+    const word = shebangExecutable(firstLine);
+    if (word === undefined) return undefined;
+    const stripped = withoutTrailingVersion(word);
+    return SHEBANG_INTERPRETERS[word] ?? SHEBANG_INTERPRETERS[stripped];
 }

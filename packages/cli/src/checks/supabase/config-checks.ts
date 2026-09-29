@@ -1,7 +1,7 @@
 import { posix } from 'node:path';
+import type { Finding, EngineInput } from '#cli/types/checks.ts';
 import { migrationsOf } from '#cli/checks/postgres/migrations.ts';
-import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
-import { MIGRATION_NAME, SUPABASE_CONFIG } from '#cli/config/checks/supabase.ts';
+import { MIGRATION_NAME, SUPABASE_CONFIG } from '#cli/config/checks/platforms.ts';
 import { readProject, functionFolders, supabaseFinding } from '#cli/checks/supabase/project.ts';
 
 /**

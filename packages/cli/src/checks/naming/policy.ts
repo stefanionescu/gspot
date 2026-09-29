@@ -15,7 +15,7 @@ import type {
     CategoryLimits,
     EffectivePolicy,
     ShippedLanguage,
-} from '#cli/types/checks/naming.ts';
+} from '#cli/types/checks.ts';
 
 const state: { shipped: ShippedPolicy | undefined } = { shipped: undefined };
 

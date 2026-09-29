@@ -2,10 +2,10 @@ import { join } from 'node:path';
 import { createRequire } from 'node:module';
 import { GspotError } from '#cli/platform/errors.ts';
 import { stripVTControlCharacters } from 'node:util';
-import { FAILED_CHECK } from '#cli/config/checks/checks.ts';
+import { FAILED_CHECK } from '#cli/config/checks/repository.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
+import type { Finding, EngineInput } from '#cli/types/checks.ts';
 import { readPackageManifest } from '#cli/repository/manifests.ts';
-import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
 
 function hasInstalledExpo(scopeRoot: string): boolean {
     try {

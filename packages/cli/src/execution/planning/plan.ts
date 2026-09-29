@@ -1,9 +1,10 @@
 // The check graph for a run: stage, scope, file sets, requirements, skips.
+import ignore from 'ignore';
 import { ownedBy } from '#cli/kits/owners.ts';
 import { toolPin } from '#cli/tools/inspect.ts';
 import { GspotError } from '#cli/platform/errors.ts';
+import { openRoot } from '#cli/platform/filesystem.ts';
 import type { ScopeSelection } from '#cli/types/policy/policy.ts';
-import { prettierInputs } from '#cli/execution/prettier-inputs.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
 import { checkState, repositoryCheckSpec } from '#cli/policy/check-state.ts';
 import type { Stage, ToolPin, Manifest, CheckSpec } from '#cli/types/kits.ts';
@@ -14,7 +15,7 @@ import { filesFor, childScopes, isOutsideChildren, isRepositoryPolicy } from '#c
 import type {
     Session,
     PlanEntry,
-    PlanContext,
+    PlanInputs,
     PlanOptions,
     StageFilter,
     PlannedCheck,
@@ -79,7 +80,7 @@ function isWanted(spec: CheckSpec, options: PlanOptions): boolean {
     return (options.only !== undefined && options.stage === 'all') || isStageWanted(options.stage, spec.stage);
 }
 
-function planOne(context: PlanContext, entry: PlanEntry, isWholeCheck: boolean): PlannedCheck {
+function planOne(context: PlanInputs, entry: PlanEntry, isWholeCheck: boolean): PlannedCheck {
     const { session, scope, options, platform } = context;
     const { spec, manifest } = entry;
     const rootScope = session.scopes[0] ?? scope;
@@ -121,7 +122,7 @@ function yielded(planned: PlannedCheck[]): PlannedCheck[] {
     });
 }
 
-function planScope(context: PlanContext, seenRepoChecks: Set<string>, wholeSeen: Set<string>): PlannedCheck[] {
+function planScope(context: PlanInputs, seenRepoChecks: Set<string>, wholeSeen: Set<string>): PlannedCheck[] {
     const planned: PlannedCheck[] = [];
     const entries = entriesFor(context.session, context.scope, seenRepoChecks).filter(
         ({ spec }) => checkState(context.session.policyFiles.policy, context.scope, spec) !== 'off (level)',
@@ -142,7 +143,7 @@ function planScopes(session: Session, options: PlanOptions): PlannedCheck[][] {
     const platform = PLATFORM_NAMES[process.platform] ?? process.platform;
     const narrow = narrowSet(options);
     return session.scopes.map((scope) => {
-        const context: PlanContext = {
+        const context: PlanInputs = {
             session,
             scope,
             options,
@@ -230,4 +231,25 @@ export function planRun(session: Session, options: PlanOptions): PlannedCheck[] 
             ]);
     }
     return checks;
+}
+
+/**
+ * Leave out the files .prettierignore names before either the checker or its fixer receives file arguments.
+ * @param session the open session
+ * @param check the active native Prettier check with selected files
+ * @returns the check with the ignored files left out
+ */
+export function prettierInputs(session: Session, check: PlannedCheck): PlannedCheck {
+    const tree = openRoot(session.root);
+    try {
+        const read = tree.read('.prettierignore');
+        if (read === undefined) return check;
+        const matcher = ignore().add(read.bytes.toString('utf8'));
+        const files = check.files.filter((file) => !matcher.ignores(file.path));
+        return files.length === 0
+            ? { ...check, skip: { source: 'ignore', note: 'all selected paths are ignored by .prettierignore' } }
+            : { ...check, files };
+    } finally {
+        tree.close();
+    }
 }

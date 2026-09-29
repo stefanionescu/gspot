@@ -1,11 +1,11 @@
 import { join } from 'node:path';
 import type { Scalar, Document } from 'yaml';
 import { PRIVATE_FILE } from '#cli/config/platform.ts';
+import type { CheckResult } from '#cli/types/checks.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { runToolCheck } from '#cli/execution/tool/runner.ts';
 import { chmodSync, mkdirSync, writeFileSync } from 'node:fs';
-import type { CheckResult } from '#cli/types/checks/checks.ts';
-import { ACTIONLINT_COMMAND } from '#cli/config/checks/checks.ts';
+import { ACTIONLINT_COMMAND } from '#cli/config/checks/repository.ts';
 import { isMap, isSeq, isAlias, isScalar, parseDocument } from 'yaml';
 import { createFileWorkspace } from '#cli/execution/files/workspace.ts';
 import type { Session, PlannedCheck } from '#cli/types/execution/execution.ts';

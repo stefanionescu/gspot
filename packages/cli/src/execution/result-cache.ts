@@ -1,7 +1,7 @@
 // Which planned checks may reuse a stored result, the key that identifies one, and how a result is stored.
 import { inspectTool } from '#cli/tools/inspect.ts';
+import type { CheckResult } from '#cli/types/checks.ts';
 import { sep, join, relative, isAbsolute } from 'node:path';
-import type { CheckResult } from '#cli/types/checks/checks.ts';
 import { prepareCommand } from '#cli/execution/tool/runner.ts';
 import { RAN_STATUSES } from '#cli/config/execution/execution.ts';
 import { commandConfigurations } from '#cli/execution/command-expansion.ts';

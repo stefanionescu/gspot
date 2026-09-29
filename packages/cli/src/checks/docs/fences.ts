@@ -4,10 +4,9 @@ import { parse as parseToml } from 'smol-toml';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { parserFor } from '#cli/parsers/tree-sitter.ts';
 import { readSource } from '#cli/repository/tracked.ts';
-import type { FencedBlock } from '#cli/types/checks/docs.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import type { GrammarName } from '#cli/types/parsers/parsers.ts';
-import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
+import type { Finding, EngineInput, FencedBlock } from '#cli/types/checks.ts';
 
 import {
     TREE_PARSERS,

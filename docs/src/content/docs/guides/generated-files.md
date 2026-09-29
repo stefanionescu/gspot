@@ -19,8 +19,11 @@ gspot install
 
 `apply` writes tool configuration under `.gspot/config/` and copies agent guides to
 `.gspot/guides/`. Scoped configuration mirrors the scope path under `.gspot/config/`.
-Some tools require a root file for discovery. gspot writes a pointer where the tool
-supports one, or writes the native configuration file directly.
+Five root files exist for editors: `eslint.config.mjs`, `.prettierrc.json`, `.prettierignore`,
+`.stylelintrc.json`, and `.editorconfig`. SwiftLint and basedpyright also get a root pointer,
+because they find their configuration by directory. Every other check names its configuration by
+path, so an editor integration for ShellCheck, markdownlint, typos, yamllint, taplo, SwiftFormat,
+commitlint, gitleaks, or osv-scanner points at the file under `.gspot/config/`.
 
 Do not edit generated files. Init deletes the configuration files of the selected tools; see
 [existing repositories](/guides/existing-repository/). Shared configuration, including

@@ -10,7 +10,7 @@ import { openRoot } from '#cli/platform/filesystem.ts';
 import { runToolCommand } from '#cli/tools/command.ts';
 import type { Policy } from '#cli/types/policy/policy.ts';
 import { installHooks } from '#cli/lifecycle/hooks/git.ts';
-import type { ToolContext } from '#cli/types/tools/tools.ts';
+import type { ToolSearch } from '#cli/types/tools/tools.ts';
 import { hookPrefix } from '#cli/generation/hooks/scripts.ts';
 import { nativeHook } from '#cli/lifecycle/hooks/native-hooks.ts';
 import type { Repository } from '#cli/types/repository/repository.ts';
@@ -43,7 +43,7 @@ function isIntegrationReady(hookTool: HookTool, policy: Policy, root: string): b
 }
 
 // The manager's executable, found through the repository's tools and, for Lefthook, new enough to be safe.
-function hookExecutable(hookTool: HookTool, tools: ToolContext): string {
+function hookExecutable(hookTool: HookTool, tools: ToolSearch): string {
     const tool = inspectTool(tools, {
         name: hookTool,
         provider: 'host',
@@ -153,7 +153,7 @@ export async function installNativeHooks({
 }: {
     policy: Policy;
     repository: Pick<Repository, 'root' | 'hasGit'>;
-    tools: ToolContext;
+    tools: ToolSearch;
 }): Promise<string> {
     const hookTool = selectedHookTool(policy, repository);
     if (hookTool === undefined) return '';

@@ -1,4 +1,4 @@
-import type { ScriptFunction, StructureAnalysis as Analysis } from '#cli/types/checks/structure.ts';
+import type { ScriptFunction, StructureAnalysis as Analysis } from '#cli/types/checks.ts';
 
 import {
     WORD,

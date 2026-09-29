@@ -1,7 +1,7 @@
 // Builds the Repository record: the file set with kinds and tags, and the scopes.
 import { tagEntry } from '#cli/repository/tags.ts';
+import { parserFor } from '#cli/parsers/tree-sitter.ts';
 import { kindOf, readAttributes } from '#cli/repository/kind.ts';
-import { swiftSourceTags } from '#cli/repository/swift-source.ts';
 import type { FileDeclaration } from '#cli/types/policy/policy.ts';
 import { FILE_PREFIX_BYTES } from '#cli/config/repository/repository.ts';
 import { readPrefix, readSource, trackedEntries, isGitRepository } from '#cli/repository/tracked.ts';
@@ -80,4 +80,38 @@ export async function readRepository(
             ),
         ],
     };
+}
+
+/**
+ * Identify Swift imports, test declarations, and package targets without matching comment or string text.
+ * @param text the Swift source
+ * @returns the imported modules, test frameworks, and target kinds the source declares
+ */
+export async function swiftSourceTags(text: string): Promise<string[]> {
+    const parser = await parserFor('swift');
+    const tree = parser.parse(text);
+    if (tree === null) throw new Error('Swift source detection could not parse the source.');
+    try {
+        const imports = tree.rootNode
+            .descendantsOfType('import_declaration')
+            .map((node) => node.namedChildren.find((child) => child.type === 'identifier')?.text.split('.', 1)[0])
+            .filter((name) => name !== undefined);
+        const attributes = tree.rootNode.descendantsOfType('attribute');
+        const isTest =
+            imports.some((name) => name === 'XCTest' || name === 'Testing') ||
+            attributes.some((node) => {
+                const name = node.namedChildren.find((child) => child.type === 'user_type')?.text;
+                return name !== undefined && ['Test', 'Suite', 'Testing.Test', 'Testing.Suite'].includes(name);
+            });
+        const hasTarget = tree.rootNode
+            .descendantsOfType('call_expression')
+            .some((node) => ['.testTarget', 'Target.testTarget'].includes(node.firstNamedChild?.text ?? ''));
+        return [
+            ...new Set(imports.map((name) => `swift-import:${name}`)),
+            ...(isTest ? ['swift-test'] : []),
+            ...(hasTarget ? ['swift-test-target'] : []),
+        ];
+    } finally {
+        tree.delete();
+    }
 }

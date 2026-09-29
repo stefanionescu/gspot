@@ -1,8 +1,7 @@
-import type { Finding } from '#cli/types/checks/checks.ts';
 import { functionAt } from '#cli/checks/structure/parser.ts';
 import { astGrepMatches } from '#cli/checks/structure/ast-grep.ts';
 import { RULES, OUTER_LEVELS } from '#cli/config/checks/structure.ts';
-import type { ScriptIndex, AstGrepMatch, StructureContext } from '#cli/types/checks/structure.ts';
+import type { Finding, ScriptIndex, AstGrepMatch, StructureInput } from '#cli/types/checks.ts';
 
 function scoreFor(matches: AstGrepMatch[], isDepth: boolean): number {
     if (!isDepth) return matches.length;
@@ -26,11 +25,7 @@ function scoreFor(matches: AstGrepMatch[], isDepth: boolean): number {
  * @param index the shell index
  * @returns the findings; a missing ast-grep raises MissingToolError
  */
-export async function countFindings(
-    analysis: string,
-    context: StructureContext,
-    index: ScriptIndex,
-): Promise<Finding[]> {
+export async function countFindings(analysis: string, context: StructureInput, index: ScriptIndex): Promise<Finding[]> {
     const rule = RULES[analysis];
     const ceiling = rule === undefined ? undefined : context.limit(rule.limit, 'bash');
     if (rule === undefined || ceiling === undefined) return [];

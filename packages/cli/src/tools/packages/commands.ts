@@ -9,12 +9,18 @@ import { openRoot } from '#cli/platform/filesystem.ts';
 import { runToolCommand } from '#cli/tools/command.ts';
 import { yarnSettings } from '#cli/tools/packages/yarn.ts';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
-import { acquisitionNote } from '#cli/tools/packages/acquisition.ts';
 import { readVersion, toolVersionState } from '#cli/tools/inspect.ts';
 import { packageEnvironment } from '#cli/tools/packages/environment.ts';
 import { portableBunLock, relativeYarnLock } from '#cli/tools/packages/locks.ts';
 import type { PackageTool, PackageExecution } from '#cli/types/tools/packages.ts';
-import { LOCKS, CREDENTIAL_KEY, YARN_BERRY_MAJOR, NPM_SETTING_PREFIX } from '#cli/config/tools/packages.ts';
+
+import {
+    LOCKS,
+    CREDENTIAL_KEY,
+    GITHUB_REFUSAL,
+    YARN_BERRY_MAJOR,
+    NPM_SETTING_PREFIX,
+} from '#cli/config/tools/packages.ts';
 
 // The resolve or install command of each manager that has one form, by whether the lock is frozen.
 const COMMANDS: Record<Exclude<PackageTool['name'], 'yarn'>, (frozen: boolean) => string[]> = {
@@ -189,4 +195,14 @@ export async function prepareNativeWrappers(
 export function packageInstallCommand(client: PackageTool, frozen: boolean): string[] {
     if (client.name === 'yarn') return yarnCommand(client, frozen);
     return COMMANDS[client.name](frozen);
+}
+
+/**
+ * The one line that names the cause of a failed package installation when the output shows it.
+ * @param output what the package manager printed on both streams
+ * @returns the note, or undefined when the output names no cause gspot knows
+ */
+export function acquisitionNote(output: string): string | undefined {
+    if (!GITHUB_REFUSAL.test(output)) return undefined;
+    return 'A tool fetches its binary from GitHub at install time and GitHub refused the anonymous request. Set GITHUB_TOKEN to a token that reads public releases and retry.';
 }

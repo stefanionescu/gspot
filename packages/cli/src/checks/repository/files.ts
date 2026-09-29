@@ -1,9 +1,9 @@
 import type { Node } from 'web-tree-sitter';
 import { pathMatcher } from '#cli/repository/paths.ts';
 import { readSource } from '#cli/repository/tracked.ts';
+import type { Finding, EngineInput } from '#cli/types/checks.ts';
 import { grammarFor, parseSource } from '#cli/parsers/tree-sitter.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
-import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
 
 import {
     CONFIG_STATEMENTS,

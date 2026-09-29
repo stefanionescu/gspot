@@ -1,6 +1,6 @@
 import { stemOf } from '#cli/checks/structure/directories.ts';
 import { codeLines } from '#cli/checks/structure/code-lines.ts';
-import type { StructureAnalysis as Analysis } from '#cli/types/checks/structure.ts';
+import type { StructureAnalysis as Analysis } from '#cli/types/checks.ts';
 
 import {
     INLINE_NODE,
@@ -9,7 +9,7 @@ import {
     FORWARDED_SCRIPT,
     FORWARDING_MAX_LINES,
     FORWARDING_INTERPRETER,
-} from '#cli/config/checks/script.ts';
+} from '#cli/config/checks/structure.ts';
 
 /**
  * One finding per policy the script breaks: inline Node, a wrapper stem, a deprecated alias, or a forwarding body.

@@ -1,5 +1,9 @@
+import { join } from 'node:path';
+import { rmSync, existsSync } from 'node:fs';
 import type { Read } from '#cli/types/platform.ts';
+import { globPaths } from '#cli/platform/paths.ts';
 import { emitAll } from '#cli/generation/outputs.ts';
+import { RULES_FOLDER } from '#cli/config/platform.ts';
 import { assertNoProblems } from '#cli/policy/read.ts';
 import { writeGenerated } from '#cli/lifecycle/apply.ts';
 import { writePin } from '#cli/lifecycle/version-pin.ts';
@@ -31,6 +35,17 @@ function conflictedOutputs(owner: Owner, rendered: Generated): Map<string, Read>
             conflicted.set(file.path, current);
     }
     return conflicted;
+}
+
+// An older layout copied the guides to .gspot/rules; the folder goes once nothing is generated into it.
+function retireRulesFolder(root: string, rendered: Generated, report: ApplyReport): void {
+    const folder = join(root, RULES_FOLDER);
+    if (!existsSync(folder) || rendered.files.some((file) => file.path.startsWith(`${RULES_FOLDER}/`))) return;
+    const foreign = globPaths(folder, '**/*', { dot: true }).filter((path) => !path.endsWith('.md'));
+    if (foreign.length > 0) return;
+    rmSync(folder, { recursive: true, force: true });
+    report.removed.push(RULES_FOLDER);
+    report.notes.push(`removed ${RULES_FOLDER}: the guides live under .gspot/guides`);
 }
 
 /**
@@ -74,6 +89,7 @@ export async function applyAll(session: Session, replace?: ReadonlyMap<string, R
             replace,
             regenerate: conflictedOutputs(owner, rendered),
         });
+        retireRulesFolder(session.root, rendered, report);
         await installProsePackages(session, report);
         const toolInputs = new Set(
             rendered.files

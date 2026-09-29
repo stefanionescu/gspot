@@ -7,9 +7,9 @@ import { GspotError } from '#cli/platform/errors.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
 import { readSource } from '#cli/repository/tracked.ts';
+import type { Finding, CheckResult, EngineInput } from '#cli/types/checks.ts';
 import { runToolCheck, runCheckCommand } from '#cli/execution/tool/runner.ts';
 import type { Session, PlannedCheck } from '#cli/types/execution/execution.ts';
-import type { Finding, CheckResult, EngineInput } from '#cli/types/checks/checks.ts';
 
 import {
     PIP_INSTALL,

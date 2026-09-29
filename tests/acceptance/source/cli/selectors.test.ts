@@ -6,7 +6,7 @@ import { run } from '#tests/support/cli/command.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { keptMode } from '#tests/support/cli/platforms.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
-import type { CommandFailureJson } from '#cli/types/commands/commands.ts';
+import type { CommandFailureJson } from '#cli/types/commands.ts';
 import { statSync, chmodSync, existsSync, unlinkSync, readFileSync, writeFileSync } from 'node:fs';
 
 const { version: GSPOT_VERSION } = packageManifest;

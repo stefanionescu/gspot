@@ -3,7 +3,7 @@ import { decodeHTMLAttribute } from 'entities';
 import { pathMatcher } from '#cli/repository/paths.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
-import type { Finding, EngineInput, MarkupProblem, MarkupAttribute } from '#cli/types/checks/checks.ts';
+import type { Engine, Finding, EngineInput, MarkupProblem, MarkupAttribute } from '#cli/types/checks.ts';
 
 import {
     LETTERS,
@@ -14,7 +14,7 @@ import {
     INERT_SCRIPT_TYPES,
     ACTIVE_DOCUMENT_TYPES,
     DOCUMENT_URL_ATTRIBUTES,
-} from '#cli/config/checks/checks.ts';
+} from '#cli/config/checks/repository.ts';
 
 // The text with every placeholder mark pair removed.
 function withoutPlaceholders(text: string): string {
@@ -197,3 +197,9 @@ export function htmlText(input: EngineInput): Finding[] | Promise<Finding[]> {
     const paths = input.files.map((file) => file.path).filter((path) => isTemplate(path) && !isExcluded(path));
     return findings(input, paths, copyProblems);
 }
+
+/** The analyses this file provides, by the name a manifest check gives them. */
+export const HTML_ANALYSES: Record<string, Engine> = {
+    'html-scripts': htmlScripts,
+    'html-text': htmlText,
+};

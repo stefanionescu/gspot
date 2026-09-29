@@ -1,5 +1,5 @@
 // The literal values commands/init reads: names, patterns, limits, and tables.
-import type { InitAnswers } from '#cli/types/commands/init.ts';
+import type { InitAnswers } from '#cli/types/commands.ts';
 
 export const DETECTION_LABEL_WIDTH = 13;
 export const NO_KITS = 'none';

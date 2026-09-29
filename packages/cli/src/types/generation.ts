@@ -129,7 +129,7 @@ export type JsonFormat = { width: number; indent: number };
 export type HookName = (typeof HOOK_FILES)[number];
 export type Pointer = NonNullable<ConfigurationTarget['pointer']>;
 /** What emitting one manifest in one scope needs. */
-export type EmitContext = {
+export type EmitInputs = {
     root: string;
     files: TrackedFile[];
     scopes: ScopeSelection[];

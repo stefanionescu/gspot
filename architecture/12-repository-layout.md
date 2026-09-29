@@ -215,9 +215,10 @@ Root configuration has explicit owners. `gspot.toml`, `mise.toml`, `package.json
 `bunfig.toml`, `tsconfig.json`, and the authored portions of `.gitignore` and `.gitattributes`
 are repository inputs. Bun owns `bun.lock`.
 
-Policy generation owns the native-discovery
-files `.commitlintrc.json`, `.gitleaks.toml`, `.markdownlint-cli2.jsonc`, `.semgrepignore`,
-`.shellcheckrc`, `.taplo.toml`, `.yamllint.yml`, `osv-scanner.toml`, and `typos.toml`.
+Policy generation owns the editor files `eslint.config.mjs`, `.prettierrc.json`,
+`.prettierignore`, `.stylelintrc.json`, and `.editorconfig`, the directory pointers
+`.swiftlint.yml` and `pyrightconfig.json`, and `.semgrepignore`; every other check names its
+configuration under `.gspot/config/` by path.
 Retained EditorConfig, Prettier, and ESLint entry points continue serving editors; ownership
 records, rather than generated-looking headers, govern replacement. Agent instructions and
 Git attributes retain their authored content outside managed blocks.

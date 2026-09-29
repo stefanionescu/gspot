@@ -604,20 +604,16 @@ a scope file.
 
 This table, held in the manifests by a `pointer` key, and tested for each row:
 
-| Tool                                                                                        | Root pointer                                                      | Form                                                |
-| ------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- | --------------------------------------------------- |
-| Prettier                                                                                    | `prettier.config.mjs`                                             | re-export                                           |
-| commitlint                                                                                  | `commitlint.config.mjs`                                           | re-export                                           |
-| ESLint                                                                                      | none where the developer keeps a config; else `eslint.config.mjs` | re-export                                           |
-| stylelint                                                                                   | `.stylelintrc.json`                                               | `extends`                                           |
-| markdownlint-cli2                                                                           | `.markdownlint-cli2.jsonc`                                        | `config.extends`                                    |
-| yamllint                                                                                    | `.yamllint.yml`                                                   | `extends`                                           |
-| Ruff                                                                                        | `ruff.toml`                                                       | `extend`                                            |
-| basedpyright                                                                                | `pyrightconfig.json`                                              | `extends`                                           |
-| SwiftLint                                                                                   | `.swiftlint.yml`                                                  | `parent_config`                                     |
-| gitleaks                                                                                    | `.gitleaks.toml`                                                  | `[extend] path`                                     |
-| EditorConfig                                                                                | `.editorconfig`, the file itself                                  | written from format and overrides, only if lossless |
-| ShellCheck, shfmt, SwiftFormat, sqlfluff, hadolint, typos, taplo, osv-scanner, v8r, Semgrep | none                                                              | the check passes the path by flag                   |
+| Tool                                                                                                                                           | Root pointer                                                      | Form                                                |
+| ---------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- | --------------------------------------------------- |
+| Prettier                                                                                                                                       | `prettier.config.mjs`                                             | re-export                                           |
+| ESLint                                                                                                                                         | none where the developer keeps a config; else `eslint.config.mjs` | re-export                                           |
+| stylelint                                                                                                                                      | `.stylelintrc.json`                                               | `extends`                                           |
+| Ruff                                                                                                                                           | `ruff.toml`                                                       | `extend`                                            |
+| basedpyright                                                                                                                                   | `pyrightconfig.json`                                              | `extends`                                           |
+| SwiftLint                                                                                                                                      | `.swiftlint.yml`                                                  | `parent_config`                                     |
+| EditorConfig                                                                                                                                   | `.editorconfig`, the file itself                                  | written from format and overrides, only if lossless |
+| ShellCheck, shfmt, SwiftFormat, sqlfluff, hadolint, typos, taplo, osv-scanner, v8r, Semgrep, commitlint, markdownlint-cli2, yamllint, gitleaks | none                                                              | the check passes the path by flag                   |
 
 A config in a manifest takes `pointer = { path, form }`. `pointers.ts` writes one
 small file for each, with the mark. A pointer is never written over a file the developer keeps.
@@ -625,8 +621,8 @@ small file for each, with the mark. A pointer is never written over a file the d
 An existing `.editorconfig` or Prettier file is deleted at init and the generated one takes its place. Saved recovery precedes the deletion.
 
 It leaves the shared-file list of
-K-36. The guide on editors names, for each tool with no pointer, the editor setting that reads
-`.gspot/`.
+K-36. The generated-files guide names, for each tool with no pointer, the configuration path an
+editor integration reads under `.gspot/config/`.
 
 Verify emitted pointers through their native consumers (T-36). A planted case formats a file
 through the root pointer of Prettier and through `gspot check --fix`, and requires equal bytes.

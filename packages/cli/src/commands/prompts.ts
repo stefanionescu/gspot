@@ -1,8 +1,8 @@
 // The clack questions, asked only in a terminal and never under --yes.
 import { note } from '#cli/output/messages.ts';
 import { isCi } from '#cli/platform/environment.ts';
+import type { Choice } from '#cli/types/commands.ts';
 import { GspotError } from '#cli/platform/errors.ts';
-import type { Choice } from '#cli/types/commands/commands.ts';
 import { select, confirm, multiselect } from '@clack/prompts';
 
 /**

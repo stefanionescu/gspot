@@ -4,8 +4,7 @@ import type { RootContent } from 'mdast';
 import { toString } from 'mdast-util-to-string';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { readSource } from '#cli/repository/tracked.ts';
-import type { ShapeProblem } from '#cli/types/checks/docs.ts';
-import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
+import type { Finding, EngineInput, ShapeProblem } from '#cli/types/checks.ts';
 import { CONTENTS_HEADING, CONTENTS_THRESHOLD, START_SECTION_WORDS } from '#cli/config/checks/docs.ts';
 
 // A README section is a second-level heading.

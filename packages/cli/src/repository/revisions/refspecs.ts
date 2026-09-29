@@ -1,7 +1,7 @@
 // The objects a remote's fetch mappings already brought into the repository, which a push need not re-check.
 import { run } from '#cli/platform/spawn.ts';
 import { GspotError } from '#cli/platform/errors.ts';
-import { GIT_TIMEOUT_MS } from '#cli/config/checks/secrets.ts';
+import { GIT_TIMEOUT_MS } from '#cli/config/checks/security.ts';
 import { gitText, gitLines } from '#cli/repository/revisions/git-queries.ts';
 import type { RefRules, ParsedMapping } from '#cli/types/repository/revisions.ts';
 

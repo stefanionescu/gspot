@@ -4,8 +4,8 @@ import { test, expect } from 'bun:test';
 import { writeFileSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
+import type { CheckResult } from '#cli/types/checks.ts';
 import { openSession } from '#cli/execution/session.ts';
-import type { CheckResult } from '#cli/types/checks/checks.ts';
 
 test('completion callbacks publish filtered results before the remaining check finishes', async () => {
     await using sandbox = await testdir();

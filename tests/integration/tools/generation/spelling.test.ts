@@ -18,10 +18,7 @@ test.each(['recommended', 'all'])(
             version: session.version,
             packageClient: session.packageClient,
         }).files.filter(({ path }) => path.endsWith('typos.toml'));
-        expect(configs.map(({ path }) => path).toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
-            '.gspot/config/typos.toml',
-            'typos.toml',
-        ]);
+        expect(configs.map(({ path }) => path)).toStrictEqual(['.gspot/config/typos.toml']);
         for (const config of configs) {
             await Bun.write(join(sandbox.path, config.path), config.content);
             const policy = Bun.spawnSync(['typos', '--isolated', '--config', config.path, 'gspot.toml'], {
@@ -86,9 +83,6 @@ test.each(['recommended', 'all'])(
             '.gspot/config/british/child/typos.toml',
             '.gspot/config/british/typos.toml',
             '.gspot/config/typos.toml',
-            'british/child/typos.toml',
-            'british/typos.toml',
-            'typos.toml',
         ]);
         for (const config of configs) await Bun.write(join(sandbox.path, config.path), config.content);
         // eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the line limit.

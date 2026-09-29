@@ -55,7 +55,6 @@ file = "syncpack.config.mjs"
 [[configs]]
 template = "osv-scanner.toml.tmpl"
 target = ".gspot/config/osv-scanner.toml"
-pointer = {path = "osv-scanner.toml", copy = true}
 
 [[configs]]
 template = "syncpack.json.tmpl"

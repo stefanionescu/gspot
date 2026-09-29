@@ -10,7 +10,7 @@ import type { ScopeSelection } from '#cli/types/policy/policy.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
 import { bodyPointer, mergePointer } from '#cli/generation/pointers.ts';
 import { GENERATED_JSON_KEY, PACKAGE_JSON_INDENT } from '#cli/config/generation.ts';
-import type { Pointer, Generated, EmitContext, GeneratedFile } from '#cli/types/generation.ts';
+import type { Pointer, Generated, EmitInputs, GeneratedFile } from '#cli/types/generation.ts';
 
 // A copied JSON pointer without the generated marker the body carries.
 function copyPointerContent(content: string, pointerPath: string): string {
@@ -21,7 +21,7 @@ function copyPointerContent(content: string, pointerPath: string): string {
 }
 
 // Whether a file belongs to a scope nested inside the one being emitted.
-function isInChildScope(context: EmitContext, file: TrackedFile): boolean {
+function isInChildScope(context: EmitInputs, file: TrackedFile): boolean {
     const scope = context.selection.scope.path;
     const children = context.scopes.map((entry) => entry.scope.path).filter((path) => path !== '' && path !== scope);
     return children.some(
@@ -41,7 +41,7 @@ function pointerDirectories(scope: string, file: TrackedFile, matches: (path: st
 }
 
 // One pointer per directory the kit's owned files sit in, when the pointer names directories.
-function directoryPointers(context: EmitContext, configuration: ConfigurationTarget, target: string): GeneratedFile[] {
+function directoryPointers(context: EmitInputs, configuration: ConfigurationTarget, target: string): GeneratedFile[] {
     const { files, inputs, selection, manifest } = context;
     const pointer = configuration.pointer;
     if (pointer?.directories === undefined) return [];
@@ -58,7 +58,7 @@ function directoryPointers(context: EmitContext, configuration: ConfigurationTar
 
 // The pointer file at a path: a rendered template, a copy of the body, or a reference to it.
 function pointerFile(
-    context: EmitContext,
+    context: EmitInputs,
     configuration: ConfigurationTarget,
     pointer: Pointer,
     file: GeneratedFile,
@@ -77,7 +77,7 @@ function pointerFile(
 
 // Adds the pointer a configuration declares for its generated file.
 function pointerFor(
-    context: EmitContext,
+    context: EmitInputs,
     configuration: ConfigurationTarget,
     file: GeneratedFile,
     plan: Generated,
@@ -115,7 +115,7 @@ function isWanted(configuration: ConfigurationTarget, scopes: ScopeSelection[], 
 
 // Emits one configuration target: its file, its nested copies, and its pointer.
 function emitConfiguration(
-    context: EmitContext,
+    context: EmitInputs,
     configuration: ConfigurationTarget,
     target: string,
     plan: Generated,
@@ -140,7 +140,7 @@ function emitConfiguration(
  * @param plan the plan the files are added to
  * @param seen the targets already emitted
  */
-export function emitConfigurations(context: EmitContext, plan: Generated, seen: Set<string>): void {
+export function emitConfigurations(context: EmitInputs, plan: Generated, seen: Set<string>): void {
     const { scopes, selection, manifest } = context;
     for (const configuration of manifest.configs) {
         if (!isWanted(configuration, scopes, selection)) continue;

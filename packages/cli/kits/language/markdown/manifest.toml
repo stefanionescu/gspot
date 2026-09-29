@@ -53,7 +53,6 @@ template = "configuration.jsonc.tmpl"
 target = ".gspot/config/markdownlint.jsonc"
 per_scope = true
 rules_path = [""]
-pointer = {path = ".markdownlint-cli2.jsonc", body = "{\n    \"config\": { \"extends\": \"{target}\" },\n    \"globs\": [\"**/*.md\", \"**/*.mdx\", \"!.gspot/**\", \"!**/node_modules/**\", \"!**/dist/**\", \"!**/build/**\", \"!**/coverage/**\"]\n}\n"}
 
 [[configs]]
 template = "runner.mjs.tmpl"

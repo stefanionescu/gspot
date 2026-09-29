@@ -1,10 +1,10 @@
 // The types of execution in this package.
 import type { z } from 'zod';
 import type { Root } from '#cli/types/platform.ts';
+import type { Finding, CheckResult } from '#cli/types/checks.ts';
 import type { ToolPin, Manifest, CheckSpec } from '#cli/types/kits.ts';
-import type { Finding, CheckResult } from '#cli/types/checks/checks.ts';
 import type { packageToolSchema } from '#cli/tools/packages/identity.ts';
-import type { ToolContext, ToolInspection } from '#cli/types/tools/tools.ts';
+import type { ToolSearch, ToolInspection } from '#cli/types/tools/tools.ts';
 import type { reportSchema, pushReportSchema } from '#cli/execution/report.ts';
 import type { Repository, SourceReads, TrackedFile } from '#cli/types/repository/repository.ts';
 import type { Defined, IgnoreEntry, PolicyFiles, ScopeSelection } from '#cli/types/policy/policy.ts';
@@ -66,7 +66,7 @@ export type CoverageReport = {
     partial: { path: string; missing: string[] }[];
     checked: number;
 };
-export type Session = ToolContext & {
+export type Session = ToolSearch & {
     reads: SourceReads;
     /** Persistent result storage for a disposable revision snapshot. */
     cacheRoot?: string;
@@ -160,7 +160,7 @@ export type PlannedCheck = {
 /** One check to plan: its spec and the manifest it came from, none for a [[check]] entry. */
 export type PlanEntry = { spec: CheckSpec; manifest?: Manifest };
 /** What planning one scope needs. */
-export type PlanContext = {
+export type PlanInputs = {
     session: Session;
     scope: ScopeSelection;
     options: PlanOptions;

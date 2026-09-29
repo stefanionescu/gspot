@@ -2,9 +2,9 @@
 import { z } from 'zod';
 import { isAbsolute } from 'node:path';
 import { realpathSync } from 'node:fs';
+import type { Finding } from '#cli/types/checks.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { parseJson } from '#cli/execution/output/json.ts';
-import type { Finding } from '#cli/types/checks/checks.ts';
 import { toPosix, toolPath } from '#cli/platform/paths.ts';
 import type { CheckSpec, OutputFormat } from '#cli/types/kits.ts';
 import { ESLINT_WARN, ESLINT_ERROR } from '#cli/config/native.ts';

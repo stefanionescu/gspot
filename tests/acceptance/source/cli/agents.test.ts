@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
-import type { ReplacePlan } from '#cli/types/commands/init.ts';
+import type { ReplacePlan } from '#cli/types/commands.ts';
 import { currentBlock } from '#cli/lifecycle/managed-blocks.ts';
 import { statSync, chmodSync, existsSync, readFileSync } from 'node:fs';
 

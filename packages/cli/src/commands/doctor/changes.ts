@@ -14,7 +14,7 @@ import { hookLocation } from '#cli/repository/hook-location.ts';
 import type { Session } from '#cli/types/execution/execution.ts';
 import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import { CHANGE_HEAD_BYTES } from '#cli/config/commands/doctor.ts';
-import type { ChangeRow, ChangeReport } from '#cli/types/commands/doctor.ts';
+import type { ChangeRow, ChangeReport } from '#cli/types/commands.ts';
 import type { ExistingTool, ExistingTooling } from '#cli/types/repository/repository.ts';
 import { isOwned, ciLintJobs, existingTooling } from '#cli/repository/existing-tooling.ts';
 

@@ -9,9 +9,8 @@ import { openRoot } from '#cli/platform/filesystem.ts';
 import { sep, join, relative, isAbsolute } from 'node:path';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import { scratchCopy } from '#cli/execution/files/workspace.ts';
-import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
-import type { Suite, JestRun, TestReport } from '#cli/types/checks/jest.ts';
 import { jestPercentage, jestCoverageSettings } from '#cli/checks/jest/schema.ts';
+import type { Suite, Finding, JestRun, TestReport, EngineInput } from '#cli/types/checks.ts';
 
 const dimensions = ['lines', 'branches', 'functions', 'statements'] as const;
 const metric = z.object({ pct: jestPercentage });

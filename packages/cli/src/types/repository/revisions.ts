@@ -18,7 +18,7 @@ export type ChangedSet = { reference: string; paths: string[] };
 export type StagedSet = { staged: string[]; unstaged: number };
 export type PushLine = { localRef: string; localHash: string; remoteRef: string; remoteHash: string };
 export type Comparison = { changed: string[] | undefined; excluded: string[] };
-export type PushContext = {
+export type PushSearch = {
     root: string;
     cancelSignal: AbortSignal | undefined;
     commits: Map<string, string | undefined>;

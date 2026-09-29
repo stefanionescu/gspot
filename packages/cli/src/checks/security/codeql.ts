@@ -10,9 +10,8 @@ import { mutationTarget } from '#cli/platform/safe-paths.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import { scratchCopy } from '#cli/execution/files/workspace.ts';
 import { placeOf, sarifLog } from '#cli/checks/security/sarif.ts';
-import type { AcceptedResult } from '#cli/types/checks/security.ts';
-import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
 import { CODEQL_TOOL, DEFAULT_SUITE } from '#cli/config/checks/security.ts';
+import type { Finding, EngineInput, AcceptedResult } from '#cli/types/checks.ts';
 
 async function spawned(input: EngineInput, argv: string[], cwd: string): Promise<string> {
     const result = await runCheckCommand(input, [CODEQL_TOOL, ...argv], { cwd });

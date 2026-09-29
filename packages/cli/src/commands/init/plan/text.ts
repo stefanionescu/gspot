@@ -1,6 +1,6 @@
 // The init, upgrade and --dry-run plans as text.
 import { colors } from '#cli/output/messages.ts';
-import type { ReplacePlan } from '#cli/types/commands/init.ts';
+import type { ReplacePlan } from '#cli/types/commands.ts';
 import { KIT_WIDTH, COLUMN_GAP, REASON_WIDTH } from '#cli/config/commands/init.ts';
 
 function section(title: string, rows: { path: string; note: string }[]): string[] {

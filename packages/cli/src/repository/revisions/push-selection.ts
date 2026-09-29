@@ -5,14 +5,7 @@ import { GspotError } from '#cli/platform/errors.ts';
 import { fetchedRevisions } from '#cli/repository/revisions/refspecs.ts';
 import { GIT_HASH, LOG_PATHS, DIFF_PATHS, ABSENT_HASH } from '#cli/config/repository/revisions.ts';
 import { gitLines, gitPaths, gitValue, isShallow } from '#cli/repository/revisions/git-queries.ts';
-
-import type {
-    PushLine,
-    Comparison,
-    PushContext,
-    PushRevision,
-    PushSelection,
-} from '#cli/types/repository/revisions.ts';
+import type { PushLine, Comparison, PushSearch, PushRevision, PushSelection } from '#cli/types/repository/revisions.ts';
 
 // Whether a pre-push field pair holds two object ids of the same hash length.
 function isHashPair(localHash: string | undefined, remoteHash: string | undefined): boolean {
@@ -33,7 +26,7 @@ function parsePushLine(line: string): PushLine {
 }
 
 // The commit an object peels to, or undefined for an object that is not a commit, remembered per object.
-async function commitOf(context: PushContext, gitHash: string): Promise<string | undefined> {
+async function commitOf(context: PushSearch, gitHash: string): Promise<string | undefined> {
     if (context.commits.has(gitHash)) return context.commits.get(gitHash);
     const { root, cancelSignal } = context;
     const peeled = await gitValue(root, ['rev-parse', '--verify', `${gitHash}^{}`], cancelSignal);
@@ -51,7 +44,7 @@ async function shallowBoundaries(root: string, cancelSignal?: AbortSignal): Prom
 }
 
 // The commits the fetched objects name, in the order the mappings listed them.
-async function fetchedCommits(context: PushContext, remote: string | undefined): Promise<string[]> {
+async function fetchedCommits(context: PushSearch, remote: string | undefined): Promise<string[]> {
     const fetched: string[] = [];
     for (const stored of await fetchedRevisions(context.root, remote, context.cancelSignal)) {
         const commit = await commitOf(context, stored);
@@ -61,7 +54,7 @@ async function fetchedCommits(context: PushContext, remote: string | undefined):
 }
 
 // What a pushed commit is compared against: the remote's commit, or every fetched commit for a new ref.
-async function comparison(context: PushContext, gitHash: string, remoteHash: string): Promise<Comparison> {
+async function comparison(context: PushSearch, gitHash: string, remoteHash: string): Promise<Comparison> {
     const { root, cancelSignal, fetched, shallow } = context;
     if (!ABSENT_HASH.test(remoteHash)) {
         const previous = await commitOf(context, remoteHash);
@@ -76,7 +69,7 @@ async function comparison(context: PushContext, gitHash: string, remoteHash: str
 }
 
 // The revision a pushed commit forms: its history back to the comparison, its tree, and its changed paths.
-async function revisionOf(context: PushContext, line: PushLine, gitHash: string): Promise<PushRevision> {
+async function revisionOf(context: PushSearch, line: PushLine, gitHash: string): Promise<PushRevision> {
     const { root, cancelSignal, boundaries } = context;
     const { changed, excluded } = await comparison(context, gitHash, line.remoteHash);
     const exclusion = excluded.length === 0 ? [] : ['--not', ...excluded];
@@ -109,7 +102,7 @@ function recordRevision(result: PushSelection, revision: PushRevision): void {
 }
 
 // Records what one pre-push line pushes: a deleted ref, a non-commit object, or a revision.
-async function selectLine(context: PushContext, result: PushSelection, line: PushLine): Promise<void> {
+async function selectLine(context: PushSearch, result: PushSelection, line: PushLine): Promise<void> {
     if (ABSENT_HASH.test(line.localHash)) {
         result.notApplicable.push({ ref: line.remoteRef, object: line.localHash, reason: 'deleted ref' });
         return;
@@ -137,7 +130,7 @@ export async function pushedRevisions(
     cancelSignal?: AbortSignal,
 ): Promise<PushSelection> {
     const shallow = await isShallow(root, cancelSignal);
-    const context: PushContext = {
+    const context: PushSearch = {
         root,
         cancelSignal,
         commits: new Map(),

@@ -1,20 +1,20 @@
 import { posix } from 'node:path';
 import { pathMatcher } from '#cli/repository/paths.ts';
-import type { Finding } from '#cli/types/checks/checks.ts';
 
 import type {
+    Finding,
     ScriptFile,
     ScriptIndex,
-    StructureContext,
+    StructureInput,
     StructureAnalysis as Analysis,
-} from '#cli/types/checks/structure.ts';
+} from '#cli/types/checks.ts';
 import {
     BOUNDARY_HEADER,
     SOURCE_STATEMENT,
     SOURCE_ANNOTATION,
     BOUNDARY_MIN_WORDS,
     BOUNDARY_HEADER_WINDOW,
-} from '#cli/config/checks/script.ts';
+} from '#cli/config/checks/structure.ts';
 
 function resolvedSource(owner: string, annotation: string): string {
     if (annotation.startsWith('/')) return annotation.slice(1);
@@ -22,7 +22,7 @@ function resolvedSource(owner: string, annotation: string): string {
     return posix.normalize(posix.join(directory, annotation));
 }
 
-function annotatedSources(file: ScriptFile, context: StructureContext): { sources: Set<string>; findings: Finding[] } {
+function annotatedSources(file: ScriptFile, context: StructureInput): { sources: Set<string>; findings: Finding[] } {
     const sources = new Set<string>();
     const findings = file.lines.flatMap((line, position) => {
         if (!SOURCE_STATEMENT.test(line.trim())) return [];
@@ -46,7 +46,7 @@ function dependencyFindings(
     file: ScriptFile,
     sources: Set<string>,
     index: ScriptIndex,
-    context: StructureContext,
+    context: StructureInput,
 ): Finding[] {
     return file.references
         .entries()

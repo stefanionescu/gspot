@@ -1,14 +1,13 @@
 import { tmpdir } from 'node:os';
 import { join, posix } from 'node:path';
 import { scopeOf } from '#cli/repository/scopes.ts';
-import type { Mount } from '#cli/types/checks/nginx.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { rmSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import { nginxDirectives } from '#cli/checks/nginx/directives.ts';
 import { nginxTestArguments } from '#cli/checks/nginx/test-plan.ts';
-import type { Finding, EngineInput, EngineOutcome } from '#cli/types/checks/checks.ts';
-import { MAIN_FILE, DEFAULT_IMAGE, CERTIFICATE_ARGUMENTS } from '#cli/config/checks/nginx.ts';
+import type { Mount, Finding, EngineInput, EngineOutcome } from '#cli/types/checks.ts';
+import { MAIN_FILE, DEFAULT_IMAGE, CERTIFICATE_ARGUMENTS } from '#cli/config/checks/platforms.ts';
 
 // Include paths are resolved against the main configuration directory, matching nginx prefix semantics.
 function includedConfigurations(input: EngineInput, text: string, base: string): Pick<Mount, 'path' | 'target'>[] {

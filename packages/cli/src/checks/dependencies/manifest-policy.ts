@@ -1,16 +1,9 @@
 import { pathMatcher } from '#cli/repository/paths.ts';
 import { LOCKFILES } from '#cli/config/repository/repository.ts';
-import type { Reporter } from '#cli/types/checks/dependencies.ts';
 import { readPackageManifest } from '#cli/repository/manifests.ts';
-import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
+import type { Finding, Reporter, EngineInput } from '#cli/types/checks.ts';
 import type { PackageManifest } from '#cli/types/repository/repository.ts';
-
-import {
-    NPM_MANIFEST,
-    EXACT_VERSION,
-    DEPENDENCY_TABLES,
-    NON_REGISTRY_VERSION,
-} from '#cli/config/checks/dependencies.ts';
+import { NPM_MANIFEST, EXACT_VERSION, DEPENDENCY_TABLES, NON_REGISTRY_VERSION } from '#cli/config/checks/repository.ts';
 
 function rootFindings(report: Reporter, root: PackageManifest | undefined): Finding[] {
     if (root === undefined) return [];

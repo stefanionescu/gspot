@@ -2,9 +2,9 @@ import { test, expect } from 'bun:test';
 import { git } from '#tests/support/cli/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { checkInput } from '#tests/support/cli/input.ts';
+import type { CheckOptions } from '#cli/types/commands.ts';
 import { envFiles } from '#cli/checks/security/env/files.ts';
 import { refusalFor } from '#cli/commands/check/selection.ts';
-import type { CheckOptions } from '#cli/types/commands/check.ts';
 import { envExample } from '#cli/checks/security/env/example.ts';
 
 test('staged refusal and tracked-file checks agree on environment files and templates in nested folders', async () => {

@@ -4,10 +4,10 @@ import { writeFileSync } from 'node:fs';
 import { rejects } from 'node:assert/strict';
 import { testdir, createFileTree } from 'testdirs';
 import { fences } from '#cli/checks/docs/fences.ts';
+import type { EngineInput } from '#cli/types/checks.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { checkInput } from '#tests/support/cli/input.ts';
 import { stalePaths } from '#cli/checks/docs/stale-paths.ts';
-import type { EngineInput } from '#cli/types/checks/checks.ts';
 
 test('fences and paths > wildcard examples stay intact while emphasized literal paths remain checked', async () => {
     await using sandbox = await testdir();

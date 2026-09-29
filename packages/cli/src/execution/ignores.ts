@@ -1,8 +1,8 @@
 // The [[ignore]] filter, the inline gspot-ignore syntax, and the suppression census input.
+import type { Finding } from '#cli/types/checks.ts';
 import { extensionOf } from '#cli/platform/paths.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
 import { readSource } from '#cli/repository/tracked.ts';
-import type { Finding } from '#cli/types/checks/checks.ts';
 import type { IgnoreEntry } from '#cli/types/policy/policy.ts';
 import type { SourceComment } from '#cli/types/parsers/parsers.ts';
 import type { SourceReads } from '#cli/types/repository/repository.ts';

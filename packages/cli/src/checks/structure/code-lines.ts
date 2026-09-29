@@ -1,4 +1,4 @@
-import type { CodeLine } from '#cli/types/checks/structure.ts';
+import type { CodeLine } from '#cli/types/checks.ts';
 
 import {
     QUOTES,

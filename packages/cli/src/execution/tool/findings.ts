@@ -1,8 +1,8 @@
 // What one tool run accumulates from its spawns: findings attributed to files and scopes, and whether it failed.
 import { isAbsolute } from 'node:path';
 import { toolPath } from '#cli/platform/paths.ts';
+import type { Finding } from '#cli/types/checks.ts';
 import type { SpawnResult } from '#cli/types/platform.ts';
-import type { Finding } from '#cli/types/checks/checks.ts';
 import type { ToolPin, CheckSpec } from '#cli/types/kits.ts';
 import { toolOutputDetail } from '#cli/execution/broken-tool.ts';
 import type { PlannedCheck, ToolRunState, ToolInvocation } from '#cli/types/execution/execution.ts';

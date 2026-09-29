@@ -6,7 +6,7 @@ import { ciLintJobs } from '#cli/repository/existing-tooling.ts';
 import { CI_CHOICES, HOOK_CHOICES } from '#cli/config/commands/init.ts';
 import type { ExistingTooling } from '#cli/types/repository/repository.ts';
 import { askMany, askChoice, askConfirmation } from '#cli/commands/prompts.ts';
-import type { InitAnswers, InitOptions, InitSelection } from '#cli/types/commands/init.ts';
+import type { InitAnswers, InitOptions, InitSelection } from '#cli/types/commands.ts';
 
 const RUNNER_CHOICES: { value: InitAnswers['runner']; label: string }[] = [
     { value: 'mise', label: `mise (${MISE_CONFIG_PATH})` },

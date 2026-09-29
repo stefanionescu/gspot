@@ -6,16 +6,16 @@ import { GspotError } from '#cli/platform/errors.ts';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { gitignoreBlock } from '#cli/kits/manifests.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { installTools } from '#cli/tools/installation.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
 import packageManifest from '#package' with { type: 'json' };
 import { isGitRepository } from '#cli/repository/tracked.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/platform.ts';
-import { installTools } from '#cli/tools/install/execution.ts';
 import type { Session } from '#cli/types/execution/execution.ts';
 import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import { INCOMPLETE_INSTALL_EXIT } from '#cli/config/commands/init.ts';
 import type { Owner, ReplaceRemovalResult } from '#cli/types/lifecycle/lifecycle.ts';
-import type { Written, Installed, InitOptions, InitPrepared } from '#cli/types/commands/init.ts';
+import type { Written, Installed, InitOptions, InitPrepared } from '#cli/types/commands.ts';
 
 const { version: GSPOT_VERSION } = packageManifest;
 // Retire explicitly replaced files after saving recoverable originals; retain directories.

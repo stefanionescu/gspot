@@ -96,13 +96,11 @@ provider = "host"
 [[configs]]
 template = "taplo.toml.tmpl"
 target = ".gspot/config/taplo.toml"
-pointer = {path = ".taplo.toml", copy = true}
 
 [[configs]]
 template = "yamllint.yml.tmpl"
 target = ".gspot/config/yamllint.yml"
 rules_path = ["rules"]
-pointer = {path = ".yamllint.yml", copy = true}
 
 [[configs]]
 template = "v8r.yml.tmpl"

@@ -7,15 +7,21 @@ import { stripVTControlCharacters } from 'node:util';
 import { kitManifests } from '#cli/kits/manifests.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import type { SpawnResult } from '#cli/types/platform.ts';
-import { installHint } from '#cli/tools/install/hints.ts';
 import type { ToolPin, Manifest } from '#cli/types/kits.ts';
 import { hasPolicy, readPolicy } from '#cli/policy/read.ts';
 import { privateToolInstallation } from '#cli/tools/pins.ts';
 import { NODE_MODULES_DIRECTORY } from '#cli/config/platform.ts';
 import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
-import { NO_VERSION, VERSION_TIMEOUT_MS } from '#cli/config/tools/tools.ts';
 import { miseVersion, packageVersion, locateCandidates } from '#cli/tools/locate.ts';
-import type { Package, Inspected, ToolContext, VersionRead, ToolInspection } from '#cli/types/tools/tools.ts';
+import type { Package, Inspected, ToolSearch, VersionRead, ToolInspection } from '#cli/types/tools/tools.ts';
+
+import {
+    HOST_HINTS,
+    NO_VERSION,
+    MISE_BACKENDS,
+    VERSION_TIMEOUT_MS,
+    PLATFORM_INSTALLERS,
+} from '#cli/config/tools/tools.ts';
 
 function parsedVersion(text: string, tool: ToolPin): string | undefined {
     if (tool.version_regex === undefined) return semver.coerce(text)?.version;
@@ -99,7 +105,7 @@ function pinnedInspection(inspected: Inspected, want: string): ToolInspection {
     return { name: tool.name, state, path, want, found: read.version, hint, floor };
 }
 
-function inspectUncached(context: ToolContext, cwd: string, tool: ToolPin, runner?: string): ToolInspection {
+function inspectUncached(context: ToolSearch, cwd: string, tool: ToolPin, runner?: string): ToolInspection {
     const { root } = context;
     const isExternal = tool.provider === 'host' || (runner === 'mise' && tool.installers['mise'] !== undefined);
     const roots = isExternal ? [cwd, root] : [join(root, '.gspot'), cwd, root];
@@ -191,7 +197,7 @@ export function locateTool(root: string, name: string): string | undefined {
  * @param tool the pin
  * @returns where the tool is, its version, and its state
  */
-export function inspectTool(context: ToolContext, tool: ToolPin): ToolInspection {
+export function inspectTool(context: ToolSearch, tool: ToolPin): ToolInspection {
     const { root, inspections } = context;
     const runner = context.policyFiles?.policy.runner?.tool;
     if (isInstallationPending(readOwnership(context.installedRoot ?? root).installations, tool, runner))
@@ -223,4 +229,19 @@ export function toolPin(manifests: Iterable<Manifest>, name: string): ToolPin {
         if (pin !== undefined) return pin;
     }
     return { name, provider: 'host', installers: {} };
+}
+
+/**
+ * The installation command for managed tools, or platform guidance for a host tool.
+ * @param tool the pin
+ * @returns the hint
+ */
+export function installHint(tool: ToolPin): string {
+    if (tool.provider === 'host') return HOST_HINTS[tool.name] ?? `install ${tool.name}`;
+    if (MISE_BACKENDS.some(({ installer }) => tool.installers[installer] !== undefined)) return 'Run: gspot install';
+    const match = PLATFORM_INSTALLERS.find(
+        ({ platform, installer }) => platform === process.platform && tool.installers[installer] !== undefined,
+    );
+    if (match !== undefined) return `${match.command} ${tool.installers[match.installer]?.name ?? ''}`;
+    return tool.version === undefined ? `install ${tool.name}` : `install ${tool.name} ${tool.version}`;
 }

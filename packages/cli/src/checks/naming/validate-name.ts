@@ -8,10 +8,10 @@ import type {
     PathRule,
     Identifier,
     NameProblem,
-    NamingContext,
+    NamingInputs,
     CategoryLimits,
     EffectivePolicy,
-} from '#cli/types/checks/naming.ts';
+} from '#cli/types/checks.ts';
 
 function stripped(name: string, rules: PathRule[]): string {
     let result = name;
@@ -58,7 +58,7 @@ function repeatProblem(words: string[], rules: PathRule[], policy: EffectivePoli
     return repeated === undefined ? undefined : { rule: 'duplicate-words', message: `"${repeated}" repeats` };
 }
 
-function termProblems(identifier: Identifier, parts: string[], context: NamingContext): NameProblem[] {
+function termProblems(identifier: Identifier, parts: string[], context: NamingInputs): NameProblem[] {
     const { policy } = context;
     const problems: NameProblem[] = [];
     const terms = context.isTestFile ? policy.terms.filter((term) => term.source !== TEST_GROUP) : policy.terms;
@@ -89,7 +89,7 @@ function callbackProblem(identifier: Identifier, parts: string[], isReactFile: b
  * @param context the effective policy, and whether the file is a React file or a test file
  * @returns the problems, empty when the name passes
  */
-export function nameProblems(identifier: Identifier, context: NamingContext): NameProblem[] {
+export function nameProblems(identifier: Identifier, context: NamingInputs): NameProblem[] {
     const { policy } = context;
     if (isExempt(policy, identifier)) return [];
     const rules = rulesFor(policy, identifier);

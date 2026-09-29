@@ -2,9 +2,9 @@ import type { Node } from 'web-tree-sitter';
 import { pathMatcher } from '#cli/repository/paths.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
+import type { Finding, EngineInput } from '#cli/types/checks.ts';
 import { xcodeFinding } from '#cli/checks/xcode/project/checks.ts';
-import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
-import { SLEEP_CALLS, SWIFT_COMMENT_LINE } from '#cli/config/checks/xctest.ts';
+import { SLEEP_CALLS, SWIFT_COMMENT_LINE } from '#cli/config/checks/swift.ts';
 
 function hasReason(value: Node | undefined): boolean {
     if (value === undefined || value.text === 'nil') return false;

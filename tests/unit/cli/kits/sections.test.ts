@@ -1,6 +1,6 @@
 import { test, expect } from 'bun:test';
-import { iniSection } from '#cli/repository/configuration/ini.ts';
 import { gixyRules } from '#cli/repository/configuration/gixy-rules.ts';
+import { iniSection } from '#cli/repository/configuration/configuration-section.ts';
 import { javascriptRules } from '#cli/repository/configuration/javascript-rules.ts';
 
 test('INI selection retains exact section text and treats malformed headings as content', () => {

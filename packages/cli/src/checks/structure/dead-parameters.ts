@@ -1,5 +1,5 @@
 import { withoutComment } from '#cli/checks/structure/code-lines.ts';
-import type { ScriptIndex, StructureAnalysis as Analysis } from '#cli/types/checks/structure.ts';
+import type { ScriptIndex, StructureAnalysis as Analysis } from '#cli/types/checks.ts';
 
 import {
     CALL,

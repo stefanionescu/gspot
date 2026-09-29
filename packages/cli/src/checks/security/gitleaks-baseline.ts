@@ -2,8 +2,7 @@ import { join } from 'node:path';
 import { statSync } from 'node:fs';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { BASELINE } from '#cli/config/checks/security.ts';
-import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
-import type { BaselineReason, GitleaksFinding } from '#cli/types/checks/security.ts';
+import type { Finding, EngineInput, BaselineReason, GitleaksFinding } from '#cli/types/checks.ts';
 /**
  * One finding for each baseline entry with no reason, and one for each whose file is gone.
  * @param input the engine input

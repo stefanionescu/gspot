@@ -1,6 +1,5 @@
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
-import type { EngineInput } from '#cli/types/checks/checks.ts';
-import type { ScriptFunction } from '#cli/types/checks/structure.ts';
+import type { EngineInput, ScriptFunction } from '#cli/types/checks.ts';
 import { executableStatements } from '#cli/checks/structure/statements.ts';
 
 /**

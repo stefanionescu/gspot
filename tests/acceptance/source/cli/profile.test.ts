@@ -110,8 +110,8 @@ test(
                 reason: 'The shell exports these variables to another process.',
             },
         ]);
-        // The second repository's .shellcheckrc is replaced by the generated pointer, not carried.
-        expect(await Bun.file(join(second.path, '.shellcheckrc')).text()).toContain('gspot');
+        // The second repository's .shellcheckrc is deleted, not carried; the check names its configuration by path.
+        expect(existsSync(join(second.path, '.shellcheckrc'))).toBe(false);
         // The profile's ignore covers the unused variable; nothing else in the script reports.
         await Bun.write(join(second.path, 'tools/b.sh'), '#!/usr/bin/env bash\nunused_variable=hello\n');
         const checked = await run(second.path, ['check', '--only', 'bash/shellcheck', '--no-cache'], TOOLS);

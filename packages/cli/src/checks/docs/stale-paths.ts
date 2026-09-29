@@ -6,8 +6,7 @@ import { pathMatcher } from '#cli/repository/paths.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { readSource } from '#cli/repository/tracked.ts';
 import { MISE_CONFIG_PATH } from '#cli/config/tools/tools.ts';
-import type { PathIndex, ProseLine } from '#cli/types/checks/docs.ts';
-import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
+import type { Finding, PathIndex, ProseLine, EngineInput } from '#cli/types/checks.ts';
 
 import {
     RUN_TOKEN,

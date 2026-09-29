@@ -7,11 +7,11 @@ import { checkState } from '#cli/policy/check-state.ts';
 import { coverageLines } from '#cli/output/coverage.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { directoryOf } from '#cli/platform/arguments.ts';
+import type { CommandResult } from '#cli/types/commands.ts';
 import { coverageReport } from '#cli/execution/coverage.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import { readManifests } from '#cli/repository/manifests.ts';
 import type { Session } from '#cli/types/execution/execution.ts';
-import type { CommandResult } from '#cli/types/commands/commands.ts';
 import { KEY_GAP, VALUE_WIDTH } from '#cli/config/commands/commands.ts';
 import type { Policy, ExtraRow, ToolTables, ScopeSelection, SettingsListing } from '#cli/types/policy/policy.ts';
 
