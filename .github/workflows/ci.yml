@@ -85,9 +85,9 @@ jobs:
               with:
                   version: '2026.8.8'
                   cache: true
-            - name: Install Linux XML tools
+            - name: Install Linux XML tools and zsh
               if: runner.os == 'Linux'
-              run: sudo apt-get update && sudo apt-get install --yes libxml2-utils
+              run: sudo apt-get update && sudo apt-get install --yes libxml2-utils zsh
             - name: Install the Supabase CLI for the Linux database journeys
               if: runner.os == 'Linux'
               run: mise use --global supabase@2.72.7
