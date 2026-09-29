@@ -71,6 +71,19 @@ async function relinkDirectory(context: Scratch, original: string, target: strin
     context.pending.push({ source: original, target });
 }
 
+// The entries of a folder, links ordered by how deep their targets lie, whatever order the filesystem lists them in.
+// A link into a tree that another link of the folder copies is then repaired after that copy, and points at it.
+async function outerTargetsFirst(source: string): Promise<Dirent[]> {
+    const entries = await readdir(source, { withFileTypes: true });
+    const depths = new Map(
+        entries.map((entry) => [
+            entry,
+            entry.isSymbolicLink() ? realpathSync(join(source, entry.name)).split(sep).length : 0,
+        ]),
+    );
+    return entries.toSorted((left, right) => (depths.get(left) ?? 0) - (depths.get(right) ?? 0));
+}
+
 // Handles one entry of a copied tree: folders are queued, file links deferred, directory links repaired now.
 async function visitEntry(context: Scratch, directory: Copy, entry: Dirent): Promise<void> {
     const source = join(directory.source, entry.name);
@@ -176,8 +189,7 @@ export async function scratchCopy(root: string, paths: string[], scopePaths: str
         await copySelected(context, paths, dependencies);
         await copyDependencies(context, dependencies);
         for (let directory = context.pending.pop(); directory !== undefined; directory = context.pending.pop())
-            for (const entry of await readdir(directory.source, { withFileTypes: true }))
-                await visitEntry(context, directory, entry);
+            for (const entry of await outerTargetsFirst(directory.source)) await visitEntry(context, directory, entry);
         await relinkFiles(context);
         return scratch;
     } catch (error) {

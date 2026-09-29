@@ -8,7 +8,17 @@ import { scratchCopy } from '#cli/execution/files/workspace.ts';
 import { runFixer, applyFixers } from '#cli/execution/fixers.ts';
 import { rejection, textContaining } from '#tests/support/expectations.ts';
 import { CORRECTION_POLICY, plannedCorrection } from '#tests/support/cli/correction.ts';
-import { rmSync, mkdirSync, existsSync, readdirSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
+
+import {
+    rmSync,
+    mkdirSync,
+    existsSync,
+    readdirSync,
+    symlinkSync,
+    readFileSync,
+    realpathSync,
+    writeFileSync,
+} from 'node:fs';
 
 test('dependency copies let concurrent native process output drain', async () => {
     await using repository = await testdir();
@@ -251,6 +261,27 @@ test('a workspace member that is no scope brings its own dependency store into t
         expect(readFileSync(join(scratch, 'tests/node_modules/vue/package.json'), 'utf8')).toBe('{"name":"vue"}');
         // The private tools of gspot run in place and stay out of the copy.
         expect(existsSync(join(scratch, '.gspot/node_modules'))).toBe(false);
+    } finally {
+        rmSync(scratch, { recursive: true, force: true });
+    }
+});
+
+test('a link into another linked tree points at the copy of that tree, whatever order the folder lists them in', async () => {
+    await using repository = await testdir();
+    await using store = await testdir();
+    await createFileTree(store.path, {
+        'next@16/node_modules/next/package.json': '{"name":"next"}',
+        'next@16/node_modules/helpers/package.json': '{"name":"helpers"}',
+    });
+    await createFileTree(repository.path, { 'package.json': '{"private":true}' });
+    mkdirSync(join(repository.path, 'node_modules'));
+    symlinkSync(join(store.path, 'next@16/node_modules/next'), join(repository.path, 'node_modules/beta'), 'dir');
+    symlinkSync(store.path, join(repository.path, 'node_modules/alpha'), 'dir');
+    const scratch = await scratchCopy(repository.path, ['package.json'], ['']);
+    try {
+        const copied = realpathSync(join(scratch, 'node_modules/beta'));
+        expect(copied.startsWith(realpathSync(join(scratch, 'node_modules/alpha')))).toBe(true);
+        expect(existsSync(join(copied, '../helpers/package.json'))).toBe(true);
     } finally {
         rmSync(scratch, { recursive: true, force: true });
     }
