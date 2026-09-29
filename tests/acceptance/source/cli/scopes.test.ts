@@ -2,6 +2,7 @@
 import { test, expect } from 'bun:test';
 import { join, delimiter } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
+import { existsSync, writeFileSync } from 'node:fs';
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { parsePolicyText } from '#cli/policy/read.ts';
@@ -9,12 +10,11 @@ import type { InitJson } from '#cli/types/commands.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { containing } from '#tests/support/expectations.ts';
-import { existsSync, symlinkSync, writeFileSync } from 'node:fs';
+import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
 import { treeContents } from '#tests/support/cli/preservation.ts';
+import { linkInstalledModules } from '#tests/support/cli/platforms.ts';
 import { toolsPath, installAtLevel } from '#tests/support/cli/tools.ts';
 import { SCOPES_SOURCE } from '#tests/inputs/acceptance/source/cli/cli.ts';
-
-const MODULES = join(import.meta.dir, '../../../../node_modules');
 
 test(
     'typescript in a scope > the shared ESLint configuration reads TypeScript although the root selects none',
@@ -31,10 +31,10 @@ test(
                 '{\n    "compilerOptions": {\n        "strict": true,\n        "noFallthroughCasesInSwitch": true,\n        "noUncheckedIndexedAccess": true,\n        "noImplicitOverride": true,\n        "exactOptionalPropertyTypes": true,\n        "target": "ES2022",\n        "module": "NodeNext",\n        "moduleResolution": "NodeNext",\n        "types": [],\n        "skipLibCheck": true\n    },\n    "include": ["src"]\n}\n',
             'api/src/port.ts': SCOPES_SOURCE,
         });
-        symlinkSync(MODULES, join(sandbox.path, 'node_modules'));
+        linkInstalledModules(join(sandbox.path, 'node_modules'));
         commitAll(sandbox.path);
         const environment = {
-            PATH: `${join(MODULES, '.bin')}${delimiter}${toolsPath(['typos', 'ec', 'ast-grep'])}`,
+            PATH: `${join(INSTALLED_MODULES, '.bin')}${delimiter}${toolsPath(['typos', 'ec', 'ast-grep'])}`,
         };
         const argv = [
             'init',

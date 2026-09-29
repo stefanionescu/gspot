@@ -1,5 +1,4 @@
 // A planted repository with its private tools installed: the files, the selected kits, and the level each framework test starts from.
-import { symlinkSync } from 'node:fs';
 import { createFileTree } from 'testdirs';
 import { join, delimiter } from 'node:path';
 import { QUIET_INIT } from '#tests/inputs/cli.ts';
@@ -7,8 +6,8 @@ import type { Sandbox } from '#tests/types/cli.ts';
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { install, toolsPath } from '#tests/support/cli/tools.ts';
-
-const MODULES = join(import.meta.dir, '../../../node_modules');
+import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
+import { linkInstalledModules } from '#tests/support/cli/platforms.ts';
 
 // The manifest a fixture with dependencies starts from.
 function manifestOf(dependencies: Record<string, string> | undefined): Record<string, string> {
@@ -39,11 +38,11 @@ export async function installSandbox(
         ...manifestOf(sandbox.dependencies),
         ...sandbox.files,
     });
-    if (sandbox.modules !== false) symlinkSync(MODULES, join(root, 'node_modules'), 'dir');
+    if (sandbox.modules !== false) linkInstalledModules(join(root, 'node_modules'));
     sandbox.before?.(root);
     commitAll(root);
     const tools = toolsPath(['typos', 'ec', 'ast-grep', ...(sandbox.tools ?? [])]);
-    const environment = { PATH: `${join(MODULES, '.bin')}${delimiter}${tools}` };
+    const environment = { PATH: `${join(INSTALLED_MODULES, '.bin')}${delimiter}${tools}` };
     await install(root, initArgumentsOf(sandbox), environment);
     const level = sandbox.level ?? 'all';
     const selected = await run(root, ['set', 'level', level], environment);

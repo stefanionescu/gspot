@@ -6,10 +6,10 @@ import { run } from '#tests/support/cli/command.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
+import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
 import { containing, textContaining } from '#tests/support/expectations.ts';
 import { toolsPath, installPrivateTools } from '#tests/support/cli/tools.ts';
 
-const modules = join(import.meta.dir, '../../../../node_modules');
 const source =
     'function total(values) { let sum = 0; for (const value of values) { if (value > 0) sum += value; } return sum; }\nfunction triple(value) { return value * 3; }\nmodule.exports = { total, triple };\n';
 const planted =
@@ -67,7 +67,7 @@ test(
             'app/math.test.cjs': planted,
             'app/authored.txt': 'preserved nested source\n',
         });
-        const environment = { PATH: `${join(modules, '.bin')}${delimiter}${toolsPath([])}` };
+        const environment = { PATH: `${join(INSTALLED_MODULES, '.bin')}${delimiter}${toolsPath([])}` };
         const command = ['check', '--stage', 'push', '--only', 'jest/coverage', '--no-cache', '--json'];
         const uncovered = await run(sandbox.path, command, environment);
         expect(uncovered.code, uncovered.stdout + uncovered.stderr).toBe(1);
@@ -106,7 +106,7 @@ test(
             'authored.txt': 'preserved source\n',
             'coverage/authored.txt': 'preserved report\n',
         });
-        const environment = { PATH: `${join(modules, '.bin')}${delimiter}${toolsPath([])}` };
+        const environment = { PATH: `${join(INSTALLED_MODULES, '.bin')}${delimiter}${toolsPath([])}` };
         const command = ['check', '--stage', 'push', '--only', 'jest/coverage', '--no-cache', '--json'];
         const uncovered = await run(sandbox.path, command, environment);
         expect(uncovered.code, uncovered.stdout + uncovered.stderr).toBe(1);

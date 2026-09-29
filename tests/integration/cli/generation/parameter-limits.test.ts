@@ -1,13 +1,12 @@
 import { ESLint } from 'eslint';
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
-import { mkdirSync, symlinkSync, writeFileSync } from 'node:fs';
-
-const modules = join(import.meta.dir, '../../../../node_modules');
+import { linkInstalledModules } from '#tests/support/cli/platforms.ts';
 
 for (const language of ['javascript', 'typescript']) {
     test.each([7, 8])(`${language} counts declared parameters with maximum %i`, async (maximum) => {
@@ -29,7 +28,7 @@ for (const language of ['javascript', 'typescript']) {
             'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["*.ts"]}',
             [`example.${extension}`]: source,
         });
-        symlinkSync(modules, join(directory.path, 'node_modules'));
+        linkInstalledModules(join(directory.path, 'node_modules'));
         const session = await openSession(directory.path);
         const files = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
             version: session.version,

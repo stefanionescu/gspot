@@ -7,12 +7,13 @@ import { reportSchema } from '#cli/execution/report.ts';
 import { parseProfile } from '#cli/policy/profiles/read.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { exportedProfile } from '#cli/policy/profiles/export.ts';
+import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
+import { linkInstalledModules } from '#tests/support/cli/platforms.ts';
+import { existsSync, unlinkSync, readFileSync, writeFileSync } from 'node:fs';
 import { ESLINT_OVERRIDE_POLICY } from '#tests/inputs/acceptance/source/cli/cli.ts';
-import { existsSync, unlinkSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
 
-const MODULES = join(import.meta.dir, '../../../../node_modules');
 const ESLINT_COMMAND = [
-    join(MODULES, '.bin/eslint'),
+    join(INSTALLED_MODULES, '.bin/eslint'),
     '--config',
     '.gspot/config/eslint.config.mjs',
     '--format',
@@ -62,7 +63,7 @@ test('generated ESLint applies explicit ignores after enabled rule settings', as
         'package.json': '{"private":true,"type":"module"}\n',
         'source.js': 'console.log("example");\n',
     });
-    symlinkSync(MODULES, join(directory.path, 'node_modules'));
+    linkInstalledModules(join(directory.path, 'node_modules'));
     for (const ignored of [false, true, false]) {
         writeFileSync(
             join(directory.path, 'gspot.toml'),
@@ -97,7 +98,7 @@ test('ESLint overrides preserve order, nested scope bounds, future files, and pa
         'apps/web/exempt.js': source,
         'apps/web/admin/page.js': source,
     });
-    symlinkSync(MODULES, join(directory.path, 'node_modules'));
+    linkInstalledModules(join(directory.path, 'node_modules'));
     const applied = await run(directory.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     writeFileSync(join(directory.path, 'tests/future.js'), source);

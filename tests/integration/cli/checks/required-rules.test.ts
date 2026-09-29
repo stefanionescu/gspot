@@ -7,8 +7,9 @@ import type { EngineInput } from '#cli/types/checks.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { linkInstalledModules } from '#tests/support/cli/platforms.ts';
 import { requiredRules } from '#cli/checks/typescript/required-rules.ts';
-import { mkdirSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
 
 test('required ESLint rules inspect later file overrides and accept their correction', async () => {
     await using sandbox = await testdir();
@@ -18,7 +19,7 @@ test('required ESLint rules inspect later file overrides and accept their correc
         'a.js': 'export const first = 1;\n',
         'z.js': 'export const last = 2;\n',
     });
-    symlinkSync(join(import.meta.dir, '../../../../node_modules'), join(sandbox.path, 'node_modules'), 'dir');
+    linkInstalledModules(join(sandbox.path, 'node_modules'));
     const session = await openSession(sandbox.path);
     const selected = session.scopes[0]!;
     const spec = selected.selected

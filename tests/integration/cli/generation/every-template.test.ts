@@ -1,8 +1,6 @@
 // Every template of every kit renders at both levels into a file its reader parses (S-1).
 import ts from 'typescript';
-import { symlinkSync } from 'node:fs';
 import { test, expect } from 'bun:test';
-import { fileURLToPath } from 'node:url';
 import { join, extname } from 'node:path';
 import { parse as parseYaml } from 'yaml';
 import { parse as parseToml } from 'smol-toml';
@@ -11,10 +9,10 @@ import { emitAll } from '#cli/generation/outputs.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { type ParseError, parse as parseJsonc } from 'jsonc-parser';
+import { linkInstalledModules } from '#tests/support/cli/platforms.ts';
 import type { Parser } from '#tests/types/integration/cli/generation.ts';
 import { PLANTED } from '#tests/inputs/integration/cli/generation/generation.ts';
 
-const MODULES = fileURLToPath(new URL('../../../../node_modules', import.meta.url));
 const PARSERS: Record<string, Parser> = {
     '.json': parseJson,
     '.jsonc': parseJson,
@@ -56,7 +54,7 @@ test.each(kits.flatMap((name) => ['recommended', 'all'].map((level) => [name, le
             ...PLANTED,
             'gspot.toml': `version = 1\nlevel = "${level}"\nkits = [${JSON.stringify(name)}]\n`,
         });
-        symlinkSync(MODULES, join(sandbox.path, 'node_modules'), 'dir');
+        linkInstalledModules(join(sandbox.path, 'node_modules'));
         const session = await openSession(sandbox.path);
         const output = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
             version: session.version,
