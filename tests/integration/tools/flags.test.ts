@@ -21,8 +21,6 @@ import { HELP_TIMEOUT_MS, INSTALL_TIMEOUT_MS } from '#tests/inputs/integration/t
 const root = fileURLToPath(new URL('../../..', import.meta.url));
 const manifests = [...kitManifests().values()];
 const context = { root, inspections: new Map(), policyFiles: readPolicy(root) };
-// Host tools such as vitest are dependencies of the tests workspace; the search walks up to the root store.
-const hostContext = { root: join(root, 'tests'), inspections: new Map(), policyFiles: readPolicy(root) };
 
 // The flags of a command: every dashed token before any `=`, and the flag a {each:--flag:setting} placeholder repeats.
 function flagsOf(argv: string[]): string[] {
@@ -59,11 +57,6 @@ async function helpText(executable: string, subcommands: string[], flags: string
     const text = pages.map((page) => `${page.stdout}\n${page.stderr}`).join('\n');
     // eslint-disable-next-line no-control-regex, sonarjs/no-control-regex -- reason: A man page overstrike is a character, a backspace, and the character again.
     return text.replaceAll(/.\u0008/gu, '');
-}
-
-function ownerOf(tool: ToolCommand['tool']): typeof context {
-    if (privateToolInstallation(tool, 'mise') !== undefined) return privateContext;
-    return tool.provider === 'host' || tool.version === undefined ? hostContext : context;
 }
 
 const commands: ToolCommand[] = [];
@@ -132,7 +125,7 @@ for (const command of distinct) {
     test(
         `the help of ${title} names ${command.flags.join(' ')}`,
         async () => {
-            const owner = ownerOf(command.tool);
+            const owner = privateToolInstallation(command.tool, 'mise') === undefined ? context : privateContext;
             const inspection = inspectTool(owner, command.tool);
             expect(inspection.state, `${title}: ${inspection.hint ?? ''} ${inspection.note ?? ''}`).toBe(
                 command.tool.version === undefined ? 'host' : 'ok',
