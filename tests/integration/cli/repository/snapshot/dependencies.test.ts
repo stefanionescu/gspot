@@ -203,3 +203,24 @@ test('cancellation drains dependency copies before removing the snapshot and pre
         copy.mockRestore();
     }
 });
+
+test('a manifest checked out with CRLF matches its LF blob when Git converts line endings', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'package.json': '{\n    "name": "crlf"\n}\n',
+        'bun.lock': '{}\n',
+        '.gitignore': 'node_modules/\n',
+        'node_modules/example/index.js': 'export const value = 1;',
+    });
+    gitOutput(sandbox.path, ['init']);
+    gitOutput(sandbox.path, ['config', 'core.autocrlf', 'true']);
+    gitOutput(sandbox.path, ['add', '.']);
+    await Bun.write(join(sandbox.path, 'package.json'), '{\r\n    "name": "crlf"\r\n}\r\n');
+    await useRevision(sandbox.path, { kind: 'index' }, async (snapshot) => {
+        expect(await Bun.file(join(snapshot, 'node_modules/example/index.js')).text()).toContain('value = 1');
+    });
+    await Bun.write(join(sandbox.path, 'package.json'), '{\r\n    "name": "changed"\r\n}\r\n');
+    expect(await rejection(useRevision(sandbox.path, { kind: 'index' }, () => Promise.resolve(undefined)))).toContain(
+        'do not match the revision manifests',
+    );
+});

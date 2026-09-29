@@ -3,9 +3,9 @@ import { tmpdir } from 'node:os';
 import { cp, rm, readdir } from 'node:fs/promises';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { PERMISSION_BITS } from '#cli/config/platform.ts';
-import { sep, join, dirname, relative, isAbsolute } from 'node:path';
 import type { Copy, Scratch } from '#cli/types/execution/execution.ts';
-import { SCRATCH_EXTRAS, SCRATCH_DIRECTORIES } from '#cli/config/execution/execution.ts';
+import { sep, join, posix, dirname, relative, isAbsolute } from 'node:path';
+import { SCRATCH_EXTRAS, PROJECT_MANIFESTS, SCRATCH_DIRECTORIES } from '#cli/config/execution/execution.ts';
 
 import {
     rmSync,
@@ -140,7 +140,9 @@ export function createFileWorkspace(
 }
 
 /**
- * Copies selected source and configuration files for commands run outside the working tree.
+ * Copies selected source and configuration files for commands run outside the working tree. Under pnpm and the Bun
+ * isolated linker, a workspace member keeps its own dependency folder. Every project among the paths brings that
+ * folder, whether or not it is a scope.
  * @param root the repository root
  * @param paths the source paths relative to the repository root
  * @param scopePaths the scopes whose installed dependencies the command needs
@@ -158,8 +160,15 @@ export async function scratchCopy(root: string, paths: string[], scopePaths: str
         fileLinks: [],
     };
     try {
+        const projects = paths.flatMap((path) =>
+            PROJECT_MANIFESTS.includes(posix.basename(path)) ? [posix.dirname(path)] : [],
+        );
         const dependencies = [
-            ...new Set(scopePaths.flatMap((scope) => SCRATCH_DIRECTORIES.map((name) => join(scope, name)))),
+            ...new Set(
+                [...scopePaths, ...projects].flatMap((folder) =>
+                    SCRATCH_DIRECTORIES.map((name) => posix.join(folder, name)),
+                ),
+            ),
         ];
         await copySelected(context, paths, dependencies);
         await copyDependencies(context, dependencies);

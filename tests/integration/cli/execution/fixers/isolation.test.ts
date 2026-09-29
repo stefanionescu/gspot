@@ -232,3 +232,21 @@ test('preview copies workspace dependencies and preserves executable links witho
         rmSync(scratch, { recursive: true, force: true });
     }
 });
+
+test('a workspace member that is no scope brings its own dependency store into the copy', async () => {
+    await using repository = await testdir();
+    await createFileTree(repository.path, {
+        'package.json': '{"private":true,"workspaces":["tests"]}',
+        'tests/package.json': '{"name":"tests"}',
+        'tests/app.js': 'import "vue";',
+        'node_modules/.bun/vue@3/node_modules/vue/package.json': '{"name":"vue"}',
+    });
+    mkdirSync(join(repository.path, 'tests/node_modules'));
+    symlinkSync('../../node_modules/.bun/vue@3/node_modules/vue', join(repository.path, 'tests/node_modules/vue'));
+    const scratch = await scratchCopy(repository.path, ['package.json', 'tests/package.json', 'tests/app.js'], ['']);
+    try {
+        expect(readFileSync(join(scratch, 'tests/node_modules/vue/package.json'), 'utf8')).toBe('{"name":"vue"}');
+    } finally {
+        rmSync(scratch, { recursive: true, force: true });
+    }
+});

@@ -1,14 +1,15 @@
 import pLimit from 'p-limit';
 import { createHash } from 'node:crypto';
+import { run } from '#cli/platform/spawn.ts';
+import { statSync, constants } from 'node:fs';
 import type { Root } from '#cli/types/platform.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { isValePackageFile } from '#cli/repository/kind.ts';
-import { statSync, constants, readFileSync } from 'node:fs';
 import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
-import type { Directory } from '#cli/types/repository/revisions.ts';
 import { MODE_BITS, PRIVATE_DIRECTORY } from '#cli/config/platform.ts';
 import type { OwnershipEntry } from '#cli/types/lifecycle/lifecycle.ts';
+import type { GitEntry, Directory } from '#cli/types/repository/revisions.ts';
 import { sep, join, posix, dirname, basename, relative, isAbsolute } from 'node:path';
 import { LOCKS, COPY_CONCURRENCY, VALE_CONFIGURATION } from '#cli/config/repository/revisions.ts';
 import { cp, stat, chmod, lstat, mkdir, readdir, symlink, readlink, realpath } from 'node:fs/promises';
@@ -91,16 +92,32 @@ function dependencyDirectories(installed: Root, projects: string[]): Directory[]
 }
 
 // Refuses a snapshot whose manifests or locks differ from the working tree's, which the installation came from.
-function assertManifestsUnchanged(root: string, installed: Root, selected: Root, inputs: string[]): void {
-    const changed = inputs.some(
-        (path) =>
-            statSync(join(root, path), { throwIfNoEntry: false }) === undefined ||
-            !readFileSync(installed.source(path)).equals(readFileSync(selected.source(path))),
-    );
-    if (changed)
+// Git's clean filters decide the comparison, so a manifest checked out with CRLF matches its LF blob.
+async function assertManifestsUnchanged(
+    root: string,
+    installed: Root,
+    inputs: GitEntry[],
+    cancelSignal?: AbortSignal,
+): Promise<void> {
+    const mismatch = new GspotError('selection', [
+        'Installed dependencies do not match the revision manifests and locks. Prepare this revision in a separate worktree and run gspot install.',
+    ]);
+    if (inputs.some((entry) => statSync(join(root, entry.path), { throwIfNoEntry: false }) === undefined))
+        throw mismatch;
+    // The confined read refuses a manifest link that leaves the repository before Git follows it.
+    for (const entry of inputs) installed.source(entry.path);
+    const hashed = await run(['git', 'hash-object', '--stdin-paths'], {
+        cwd: root,
+        stdin: inputs.map((entry) => `${entry.path}\n`).join(''),
+        timeoutMs: 30_000,
+        ...(cancelSignal === undefined ? {} : { cancelSignal }),
+    });
+    if (hashed.code !== 0)
         throw new GspotError('selection', [
-            'Installed dependencies do not match the revision manifests and locks. Prepare this revision in a separate worktree and run gspot install.',
+            `Git cannot hash the working-tree manifests: ${hashed.stderr.trim()}. Repair the repository before checking this revision.`,
         ]);
+    const hashes = hashed.stdout.trim().split('\n');
+    if (inputs.some((entry, index) => hashes[index] !== entry.hash)) throw mismatch;
 }
 
 // Copies one dependency tree into the snapshot with the mode of its source, draining every child before returning.
@@ -188,23 +205,24 @@ export function copyProsePackages(root: string, revisionRoot: string, paths: str
  * Copy the installed package trees the snapshot's projects own, after checking that their inputs match.
  * @param root the repository root
  * @param revisionRoot the snapshot directory the dependencies are copied into
- * @param paths the snapshot's files, among them the project manifests that own dependencies
+ * @param entries the snapshot's Git entries, among them the project manifests that own dependencies
  * @param cancelSignal cancellation for the copy
  */
 export async function copyDependencies(
     root: string,
     revisionRoot: string,
-    paths: string[],
+    entries: GitEntry[],
     cancelSignal?: AbortSignal,
 ): Promise<void> {
     const installed = openRoot(root, 'native');
-    const selected = openRoot(revisionRoot, 'native');
     try {
-        const inputs = paths.filter((path) => MANIFESTS.has(basename(path)));
-        const projects = inputs.filter((path) => ['package.json', 'pyproject.toml'].includes(basename(path)));
+        const inputs = entries.filter((entry) => MANIFESTS.has(basename(entry.path)));
+        const projects = inputs
+            .map((entry) => entry.path)
+            .filter((path) => ['package.json', 'pyproject.toml'].includes(basename(path)));
         const directories = dependencyDirectories(installed, projects);
         if (directories.length === 0) return;
-        assertManifestsUnchanged(root, installed, selected, inputs);
+        await assertManifestsUnchanged(root, installed, inputs, cancelSignal);
         const packages = directories.filter((directory) => directory.dependency === 'node_modules');
         for (const directory of packages) await copyDirectory(root, revisionRoot, directory, cancelSignal);
         // The snapshot root is compared in its resolved spelling, which a Windows temp path shortens.
@@ -213,6 +231,5 @@ export async function copyDependencies(
             await validateCopiedLinks(resolvedRoot, join(resolvedRoot, folder, dependency), cancelSignal);
     } finally {
         installed.close();
-        selected.close();
     }
 }

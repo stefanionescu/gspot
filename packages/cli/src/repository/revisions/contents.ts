@@ -264,12 +264,7 @@ export async function useRevision<Result>(
             revisionRoot,
             entries.map((entry) => entry.path),
         );
-        await copyDependencies(
-            gitRoot,
-            revisionRoot,
-            entries.map((entry) => entry.path),
-            cancelSignal,
-        );
+        await copyDependencies(gitRoot, revisionRoot, entries, cancelSignal);
         await Bun.sleep(0);
         cancelSignal?.throwIfAborted();
         return await action(join(revisionRoot, directory), tree.trim());

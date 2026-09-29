@@ -78,6 +78,8 @@ export const FINDING_EXIT_CODES = new Map<string | undefined, number[]>([
 
 export const SCRATCH_EXTRAS = ['gspot.toml', 'package.json', 'tsconfig.json', 'pyproject.toml'];
 export const SCRATCH_DIRECTORIES = ['node_modules', '.venv'];
+/** A project manifest marks a folder whose installed dependencies a scratch copy carries. */
+export const PROJECT_MANIFESTS = ['package.json', 'pyproject.toml'];
 export const PLATFORM_NAMES: Record<string, string> = { darwin: 'macos', linux: 'linux', win32: 'windows' };
 /** The words a platform name is written with in a sentence. */
 export const PLATFORM_LABELS: Record<string, string> = { macos: 'macOS', linux: 'Linux', windows: 'Windows' };
