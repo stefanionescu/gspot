@@ -1,5 +1,6 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { TYPO } from '#tests/support/spelling.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { GspotError } from '#cli/platform/errors.ts';
 import { openSession } from '#cli/execution/session.ts';
@@ -51,7 +52,7 @@ test('spelling distinguishes native findings from fatal exits for configuration 
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': 'version = 1\nkits = ["spelling"]\n',
-        'sample.txt': 'teh\n',
+        'sample.txt': `${TYPO.the}\n`,
     });
     const session = await openSession(sandbox.path);
     const plans = planRun(session, { stage: 'all', only: ['spelling/typos'], skips: [] });
@@ -63,7 +64,7 @@ test('spelling distinguishes native findings from fatal exits for configuration 
         path: 'sample.txt',
         line_num: 1,
         byte_offset: 0,
-        typo: 'teh',
+        typo: TYPO.the,
         corrections: ['the'],
     });
     const result = { stdout, stderr: '', code: 2, missing: false, duration: 1 };

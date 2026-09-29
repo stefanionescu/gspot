@@ -1,5 +1,6 @@
 import { join, win32 } from 'node:path';
 import { test, expect } from 'bun:test';
+import { TYPO } from '#tests/support/spelling.ts';
 import { testdir, createFileTree } from 'testdirs';
 import type { CheckSpec } from '#cli/types/kits.ts';
 import { GspotError } from '#cli/platform/errors.ts';
@@ -42,14 +43,14 @@ test('invalid Markdown records remain execution errors and valid records parse',
 
 test.each([
     '{',
-    JSON.stringify({ type: 'typo', path: 'sample.txt', typo: 'teh' }),
+    JSON.stringify({ type: 'typo', path: 'sample.txt', typo: TYPO.the }),
     JSON.stringify({ type: 'error', message: 'Read failed.' }),
     JSON.stringify({
         type: 'typo',
         path: '../outside.txt',
         line_num: 1,
         byte_offset: 0,
-        typo: 'teh',
+        typo: TYPO.the,
         corrections: ['the'],
     }),
     JSON.stringify({
@@ -57,12 +58,12 @@ test.each([
         path: 'sample.txt',
         line_num: 1,
         byte_offset: 99,
-        typo: 'teh',
+        typo: TYPO.the,
         corrections: ['the'],
     }),
 ])('invalid spelling output %s is an execution error', async (stdout) => {
     await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'sample.txt': 'teh\n' });
+    await createFileTree(sandbox.path, { 'sample.txt': `${TYPO.the}\n` });
     const spec = kitManifests()
         .get('spelling')!
         .checks.find((check) => check.name === 'spelling/typos')!;
@@ -72,7 +73,7 @@ test.each([
         path: 'sample.txt',
         line_num: 1,
         byte_offset: 0,
-        typo: 'teh',
+        typo: TYPO.the,
         corrections: ['the'],
     });
     expect(parseOutput(spec, corrected, '', sandbox.path)).toMatchObject([{ file: 'sample.txt', line: 1, column: 1 }]);

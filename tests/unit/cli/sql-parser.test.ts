@@ -1,3 +1,4 @@
+import { TYPO } from '#tests/support/spelling.ts';
 import { test, expect, describe } from 'bun:test';
 import { parseSql } from '#cli/parsers/sql/parser.ts';
 import { rejection } from '#tests/support/expectations.ts';
@@ -7,7 +8,7 @@ import type { SourceReads } from '#cli/types/repository/repository.ts';
 
 describe('parseSql', () => {
     test('a broken statement returns the error and where it points', async () => {
-        const parsed = await parseSql('SELECT 1;\nSELEC 2;');
+        const parsed = await parseSql(`SELECT 1;\n${TYPO.select} 2;`);
         expect(parsed.error?.text).toContain('syntax error');
         expect(parsed.error?.offset).toBe(10);
     });
@@ -26,15 +27,15 @@ test('SQL analyses share concurrent parses and refresh after source corrections'
         { name: 'user_accounts', line: 1, column: 14 },
         { name: 'display_name', line: 1, column: 29 },
     ]);
-    const broken = 'SELECT 1;\nSELEC 2;';
+    const broken = `SELECT 1;\n${TYPO.select} 2;`;
     const failed = await sqlFile(broken, reads);
     expect(failed.error).toStrictEqual({
-        text: 'syntax error at or near "SELEC"',
+        text: `syntax error at or near "${TYPO.select}"`,
         line: 2,
         column: 1,
     });
     expect(await rejection(sqlIdentifiers('broken.sql', broken, reads))).toContain('SQL parse failed at 2:1');
-    const corrected = await sqlFile(broken.replace('SELEC 2', 'SELECT 2'), reads);
+    const corrected = await sqlFile(broken.replace(`${TYPO.select} 2`, 'SELECT 2'), reads);
     expect(corrected.error).toBeUndefined();
     const refreshed = sqlFile(source, { root: reads.root, sources: new Map() });
     expect(refreshed).not.toBe(first);
@@ -64,14 +65,14 @@ test('SQL statement positions skip nested comments and count Unicode prefixes co
 test('concurrent SQL parsing returns independent results in a fresh process', () => {
     const script = `
         import { parseSql } from ${JSON.stringify(Bun.resolveSync('#cli/parsers/sql/parser.ts', import.meta.dir))};
-        const parsed = await Promise.all(['SELECT 1', 'SELEC 2', 'SELECT 3'].map((sql) => parseSql(sql)));
+        const parsed = await Promise.all(['SELECT 1', '${TYPO.select} 2', 'SELECT 3'].map((sql) => parseSql(sql)));
         console.log(JSON.stringify(parsed.map((result) => result.error ?? null)));
     `;
     const result = Bun.spawnSync([process.execPath, '-e', script], { timeout: 10_000 });
     expect(result.exitCode, result.stderr.toString()).toBe(0);
     expect(JSON.parse(result.stdout.toString())).toStrictEqual([
         null,
-        { text: 'syntax error at or near "SELEC"', offset: 0 },
+        { text: `syntax error at or near "${TYPO.select}"`, offset: 0 },
         null,
     ]);
 });
@@ -81,11 +82,11 @@ test('psql commands and variables preserve diagnostic positions and PostgreSQL c
         String.raw`\set account '前言'`,
         'SELECT :account::int, :\'label\', :"column" FROM :table;',
         'SELECT 1+:value, account$tag$ FROM user_accounts;',
-        'SELEC 2;',
+        `${TYPO.select} 2;`,
     ].join('\n');
     const broken = await sqlFile(text);
-    expect(broken.error).toStrictEqual({ text: 'syntax error at or near "SELEC"', line: 4, column: 1 });
-    const corrected = await sqlFile(text.replace('SELEC 2', 'SELECT 2'));
+    expect(broken.error).toStrictEqual({ text: `syntax error at or near "${TYPO.select}"`, line: 4, column: 1 });
+    const corrected = await sqlFile(text.replace(`${TYPO.select} 2`, 'SELECT 2'));
     expect(corrected.error).toBeUndefined();
     expect(corrected.statements.map((statement) => positionAt(text, statement.start))).toStrictEqual([
         { line: 2, column: 1 },
@@ -112,14 +113,14 @@ test('psql tokens inside quoted SQL and nested comments retain their literal con
 });
 
 test('SQL errors after Unicode point at the original token', async () => {
-    const text = "SELECT '前言😀', :value; SELEC 2;";
+    const text = `SELECT '前言😀', :value; ${TYPO.select} 2;`;
     const parsed = await sqlFile(text);
     expect(parsed.error).toStrictEqual({
-        text: 'syntax error at or near "SELEC"',
+        text: `syntax error at or near "${TYPO.select}"`,
         line: 1,
-        column: text.lastIndexOf('SELEC') + 1,
+        column: text.lastIndexOf(TYPO.select) + 1,
     });
-    const corrected = await sqlFile(text.replace('SELEC 2', 'SELECT 2'));
+    const corrected = await sqlFile(text.replace(`${TYPO.select} 2`, 'SELECT 2'));
     expect(corrected.error).toBeUndefined();
 });
 

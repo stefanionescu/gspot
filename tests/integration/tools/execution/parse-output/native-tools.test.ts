@@ -1,5 +1,6 @@
 import { join } from 'node:path';
 import { rejects } from 'node:assert/strict';
+import { TYPO } from '#tests/support/spelling.ts';
 import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { renameSync, writeFileSync } from 'node:fs';
@@ -142,10 +143,13 @@ test('native spelling JSON retains filename delimiters and Unicode character col
     await using sandbox = await testdir();
     const paths = [
         'space name.txt',
-        'teh.txt',
+        `${TYPO.the}.txt`,
         ...(process.platform === 'win32' ? [] : ['name:part.txt', 'line\nbreak.txt']),
     ];
-    await createFileTree(sandbox.path, Object.fromEntries(paths.map((path) => [`nested/${path}`, 'café teh\n'])));
+    await createFileTree(
+        sandbox.path,
+        Object.fromEntries(paths.map((path) => [`nested/${path}`, `café ${TYPO.the}\n`])),
+    );
     const spec = kitManifests()
         .get('spelling')!
         .checks.find((check) => check.name === 'spelling/typos')!;
@@ -161,16 +165,22 @@ test('native spelling JSON retains filename delimiters and Unicode character col
         expect(findings).toContainEqual(containing({ file: `nested/${path}`, line: 1, column: 6, fixable: true }));
     expect(findings).toContainEqual(
         containing({
-            file: 'nested/teh.txt',
-            message: 'Filename: `teh` should be `the`',
+            file: `nested/${TYPO.the}.txt`,
+            message: `Filename: \`${TYPO.the}\` should be \`the\``,
             fixable: false,
         }),
     );
     expect(isToolBroken(spec, findings, [sandbox.path])).toBe(false);
     for (const path of paths) await Bun.write(join(cwd, path), 'café the\n');
-    renameSync(join(cwd, 'teh.txt'), join(cwd, 'the.txt'));
+    renameSync(join(cwd, `${TYPO.the}.txt`), join(cwd, 'the.txt'));
     const corrected = Bun.spawnSync(
-        ['typos', '--isolated', '--format', 'json', ...paths.map((path) => (path === 'teh.txt' ? 'the.txt' : path))],
+        [
+            'typos',
+            '--isolated',
+            '--format',
+            'json',
+            ...paths.map((path) => (path === `${TYPO.the}.txt` ? 'the.txt' : path)),
+        ],
         {
             cwd,
             stdout: 'pipe',

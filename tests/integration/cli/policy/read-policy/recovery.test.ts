@@ -61,6 +61,6 @@ describe('readPolicyText', () => {
 
     test('a syntax error still stops reading, because no rest exists', () => {
         expect(() => readPolicyText(`${MINIMAL_POLICY}level = \n`, 'gspot.toml')).toThrow('is not valid TOML');
-        expect(() => readPolicyText(`${MINIMAL_POLICY}colour = "red"\n`, 'gspot.toml')).toThrow('`colour`');
+        expect(() => readPolicyText(`${MINIMAL_POLICY}hue = "red"\n`, 'gspot.toml')).toThrow('`hue`');
     });
 });

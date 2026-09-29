@@ -1,5 +1,6 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { TYPO } from '#tests/support/spelling.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { initArgs } from '#tests/support/cli/init.ts';
@@ -46,7 +47,7 @@ test(
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
             'gspot.toml': 'version = 1\nkits = ["spelling"]\n[guides]\ninstall = false\n',
-            'sample.txt': 'teh wether\n',
+            'sample.txt': `${TYPO.the} ${TYPO.whether}\n`,
         });
         const environment = { PATH: toolsPath(['typos']) };
         const applied = await run(sandbox.path, ['apply'], environment);
@@ -56,7 +57,7 @@ test(
         for (const attempt of [0, 1]) {
             const checked = await run(sandbox.path, args, environment);
             expect(checked.code, `Attempt ${String(attempt)}: ${checked.stdout}${checked.stderr}`).toBe(1);
-            expect(readFileSync(join(sandbox.path, 'sample.txt'), 'utf8')).toBe('the wether\n');
+            expect(readFileSync(join(sandbox.path, 'sample.txt'), 'utf8')).toBe(`the ${TYPO.whether}\n`);
             const report = JSON.parse(checked.stdout) as RunReport;
             expect(report.checks.flatMap((check) => check.findings)).toContainEqual(
                 containing({ file: 'sample.txt', fixable: false }),
@@ -75,13 +76,13 @@ test(
         await using sandbox = await testdir();
         const paths = [
             'space name.txt',
-            'teh.txt',
+            `${TYPO.the}.txt`,
             ...(process.platform === 'win32' ? [] : ['name:part.txt', 'line\nbreak.txt', 'tab\tname.txt']),
         ];
         await createFileTree(sandbox.path, {
             'gspot.toml': 'version = 1\nkits = ["spelling"]\n[guides]\ninstall = false\n',
             'the.txt': 'protected\n',
-            ...Object.fromEntries(paths.map((path) => [path, 'café teh\n'])),
+            ...Object.fromEntries(paths.map((path) => [path, `café ${TYPO.the}\n`])),
         });
         const environment = { PATH: toolsPath(['typos']) };
         const applied = await run(sandbox.path, ['apply'], environment);
@@ -94,9 +95,13 @@ test(
         for (const path of paths)
             expect(findings).toContainEqual(containing({ file: path, line: 1, column: 6, fixable: true }));
         expect(findings).toContainEqual(
-            containing({ file: 'teh.txt', message: 'Filename: `teh` should be `the`', fixable: false }),
+            containing({
+                file: `${TYPO.the}.txt`,
+                message: `Filename: \`${TYPO.the}\` should be \`the\``,
+                fixable: false,
+            }),
         );
-        await Bun.write(join(sandbox.path, 'space name.txt'), 'café teh teh\n');
+        await Bun.write(join(sandbox.path, 'space name.txt'), `café ${TYPO.the} ${TYPO.the}\n`);
         expect(git(sandbox.path, ['add', '--', 'space name.txt']).code).toBe(0);
         await Bun.write(join(sandbox.path, 'space name.txt'), 'the\n');
         const staged = await run(sandbox.path, [...args, '--staged'], environment);
@@ -106,13 +111,13 @@ test(
             containing({ file: 'space name.txt', line: 1, column: 6 }),
         );
         expect(readFileSync(join(sandbox.path, 'space name.txt'), 'utf8')).toBe('the\n');
-        await Bun.write(join(sandbox.path, 'space name.txt'), 'café teh\n');
+        await Bun.write(join(sandbox.path, 'space name.txt'), `café ${TYPO.the}\n`);
         const fixed = await run(sandbox.path, [...args, '--fix'], environment);
         expect(fixed.code, fixed.stdout + fixed.stderr).toBe(1);
         for (const path of paths) expect(readFileSync(join(sandbox.path, path), 'utf8')).toBe('café the\n');
         expect(readFileSync(join(sandbox.path, 'the.txt'), 'utf8')).toBe('protected\n');
         renameSync(join(sandbox.path, 'the.txt'), join(sandbox.path, 'protected.txt'));
-        renameSync(join(sandbox.path, 'teh.txt'), join(sandbox.path, 'the.txt'));
+        renameSync(join(sandbox.path, `${TYPO.the}.txt`), join(sandbox.path, 'the.txt'));
         const corrected = await run(sandbox.path, args, environment);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     },
@@ -123,12 +128,11 @@ test(
     'init deletes a nested spelling configuration, checks ignore rogue native files, and uninstall restores it',
     async () => {
         await using sandbox = await testdir();
-        const original =
-            '[default]\nlocale = "en-gb"\n[default.extend-words]\nteh = "teh"\n[files]\nextend-exclude = ["src/**"]\n';
+        const original = `[default]\nlocale = "en-gb"\n[default.extend-words]\n${TYPO.the} = "${TYPO.the}"\n[files]\nextend-exclude = ["src/**"]\n`;
         await createFileTree(sandbox.path, {
-            'sample.txt': 'teh\n',
+            'sample.txt': `${TYPO.the}\n`,
             'nested/typos.toml': original,
-            'nested/src/ignored.txt': 'recieve\n',
+            'nested/src/ignored.txt': `${TYPO.receive}\n`,
         });
         chmodSync(join(sandbox.path, 'nested/typos.toml'), 0o640);
         const environment = { PATH: toolsPath(['typos']) };
@@ -138,7 +142,7 @@ test(
         const configuration = readFileSync(join(sandbox.path, '.gspot/config/typos.toml'), 'utf8');
         await createFileTree(sandbox.path, {
             'nested/rogue/typos.toml': '[default]\ncheck-file = false\n',
-            'nested/rogue/sample.txt': 'recieve\n',
+            'nested/rogue/sample.txt': `${TYPO.receive}\n`,
         });
         commitAll(sandbox.path);
         const args = ['check', '--only', 'spelling/typos', '--no-cache', '--json'];

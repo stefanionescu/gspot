@@ -1,5 +1,4 @@
 // The literal values support/cli reads: names, patterns, limits, and tables.
-import type { ExistingTooling } from '#cli/types/repository/repository.ts';
 
 /** The Next.js configuration enabling Strict Mode. */
 export const NEXT_CONFIG =
@@ -26,17 +25,6 @@ rmSync('dist', { recursive: true, force: true });
 mkdirSync('dist');
 writeFileSync('dist/index.html', hadOutput ? 'second' : 'first');
 `;
-/** One discovered root Stylelint configuration and nothing else. */
-export const STYLELINT_TOOLING: ExistingTooling = {
-    configs: [{ tool: 'stylelint', path: '.stylelintrc.json' }],
-    hooks: [],
-    ci: [],
-    agentFiles: [],
-    rulesDirectories: [],
-    lintFolders: [],
-    lintOnlyManifests: [],
-    runner: 'none',
-};
 /** The strict compiler options a planted TypeScript repository reads. */
 export const COMPONENT_TSCONFIG =
     '{\n    "compilerOptions": {\n        "strict": true,\n        "noFallthroughCasesInSwitch": true,\n        "noUncheckedIndexedAccess": true,\n        "noImplicitOverride": true,\n        "exactOptionalPropertyTypes": true,\n        "target": "ES2022",\n        "module": "NodeNext",\n        "moduleResolution": "NodeNext",\n        "types": [],\n        "skipLibCheck": true\n    },\n    "include": ["src"]\n}\n';

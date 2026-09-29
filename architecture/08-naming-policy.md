@@ -129,7 +129,7 @@ external`.
 ### Contract properties
 
 Property keys fixed by a protocol, a package option or a data format are exempt when a named file lists them. Examples: HTTP headers (`Content-Type`, `Retry-After`), ARIA attributes, key names (`ArrowUp`), locale tags (`en-GB`), card brands. A repository lists them under
-`[naming] contract_properties = [{ file = "...", names = [...] }]`. A property signature in a
+`[naming] contract_properties = [{ file = "...", names = [...], reason = "..." }]`. A property signature in a
 type or interface whose name is snake_case or UPPER_SNAKE describes a shape another format
 fixes (TOML keys, a JSON API, a generated type). It is exempt from the case check without a listing; a class field is not.
 
@@ -273,7 +273,7 @@ allowed      = [{ name = "createServiceRoleClient", reason = "Supabase API name"
 external     = ["RTCPeerConnection", "RTCAudioSink"]
 reserved     = [{ term = "payload", allowed_for = ["queue message body"] }]
 remove_groups = [{ group = "verbs-strict", reason = "A model-serving codebase has real loaders." }]
-contract_properties = [{ file = "src/app/api/checkout/route.ts", names = ["Retry-After"] }]
+contract_properties = [{ file = "src/app/api/checkout/route.ts", names = ["Retry-After"], reason = "An HTTP header." }]
 
 # Ceilings and cases per language, and per category inside a language.
 [naming.python]

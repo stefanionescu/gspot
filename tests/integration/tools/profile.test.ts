@@ -2,6 +2,7 @@ import { join } from 'node:path';
 import { stringify } from 'smol-toml';
 import { readFileSync } from 'node:fs';
 import { test, expect } from 'bun:test';
+import { TYPO } from '#tests/support/spelling.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { initCommand } from '#cli/commands/init/command.ts';
@@ -15,14 +16,14 @@ test('profile tool settings survive adoption of another setting for the same too
         stringify({
             version: 1,
             kits: ['spelling'],
-            tools: { typos: { words: [{ word: 'teh', reason: 'A domain term used by the team.' }] } },
+            tools: { typos: { words: [{ word: TYPO.the, reason: 'A domain term used by the team.' }] } },
         }),
         'team.profile.toml',
     );
     await createFileTree(directory.path, {
         'team.profile.toml': profile.text,
         'typos.toml': original,
-        'sample.txt': 'colour teh\n',
+        'sample.txt': `${TYPO.color} ${TYPO.the}\n`,
     });
     const options = {
         cwd: directory.path,
@@ -45,13 +46,13 @@ test('profile tool settings survive adoption of another setting for the same too
         cwd: directory.path,
     });
     expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
-    await Bun.write(join(directory.path, 'sample.txt'), 'colour teh wrod\n');
+    await Bun.write(join(directory.path, 'sample.txt'), `${TYPO.color} ${TYPO.the} ${TYPO.word}\n`);
     const defect = runBlocking(['typos', '--isolated', '--config', '.gspot/config/typos.toml', 'sample.txt'], {
         cwd: directory.path,
     });
     expect(defect.code).toBe(2);
-    expect(defect.stdout).toContain('wrod');
-    await Bun.write(join(directory.path, 'sample.txt'), 'colour teh word\n');
+    expect(defect.stdout).toContain(TYPO.word);
+    await Bun.write(join(directory.path, 'sample.txt'), `${TYPO.color} ${TYPO.the} word\n`);
     expect(
         runBlocking(['typos', '--isolated', '--config', '.gspot/config/typos.toml', 'sample.txt'], {
             cwd: directory.path,

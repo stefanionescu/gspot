@@ -1,5 +1,6 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { TYPO } from '#tests/support/spelling.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
@@ -9,9 +10,9 @@ test.each(['recommended', 'all'])(
     async (level) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': `version = 1\nlevel = "${level}"\nkits = ["spelling"]\n[tools.typos.extra]\nreason = "The fixture filename owns an external spelling; other words remain checked."\n[tools.typos.extra.type.fixture]\nextend-glob = ["fixture.txt"]\n[tools.typos.extra.type.fixture.extend-words]\ncolour = "colour"\n[tools.typos.extra.type.fixture.extend-identifiers]\nIIFEs = "IIFEs"\n`,
-            'fixture.txt': 'colour teh\nIIFEs\n',
-            'neighbor.txt': 'colour teh\n',
+            'gspot.toml': `version = 1\nlevel = "${level}"\nkits = ["spelling"]\n[tools.typos.extra]\nreason = "The fixture filename owns an external spelling; other words remain checked."\n[tools.typos.extra.type.fixture]\nextend-glob = ["fixture.txt"]\n[tools.typos.extra.type.fixture.extend-words]\ncolour = "${TYPO.color}"\n[tools.typos.extra.type.fixture.extend-identifiers]\nIIFEs = "IIFEs"\n`,
+            'fixture.txt': `${TYPO.color} ${TYPO.the}\nIIFEs\n`,
+            'neighbor.txt': `${TYPO.color} ${TYPO.the}\n`,
         });
         const session = await openSession(sandbox.path);
         const configs = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
@@ -54,9 +55,9 @@ test.each(['recommended', 'all'])(
                     .split('\n')
                     .toSorted((left, right) => left.localeCompare(right)),
             ).toStrictEqual([
-                'fixture.txt:1:8: error: `teh` should be `the`',
-                'neighbor.txt:1:1: error: `colour` should be `color`',
-                'neighbor.txt:1:8: error: `teh` should be `the`',
+                `fixture.txt:1:8: error: \`${TYPO.the}\` should be \`the\``,
+                `neighbor.txt:1:1: error: \`${TYPO.color}\` should be \`color\``,
+                `neighbor.txt:1:8: error: \`${TYPO.the}\` should be \`the\``,
             ]);
         }
     },
@@ -67,11 +68,11 @@ test.each(['recommended', 'all'])(
     async (level) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': `version = 1\nlevel = "${level}"\nkits = ["spelling"]\n[[scope]]\npath = "british"\n[scope.tools.typos]\nlocale = "en-gb"\nwords = [{ word = "teh", reason = "An imported name requires this exact spelling." }]\n[scope.tools.typos.extra]\nreason = "A upstream fixture retains an external label."\n[scope.tools.typos.extra.type.upstream]\nextend-glob = ["upstream.txt"]\n[scope.tools.typos.extra.type.upstream.extend-words]\nrecieve = "recieve"\n[[scope]]\npath = "british/child"\n`,
-            'sample.txt': 'colour teh\n',
-            'british/child/sample.txt': 'colour teh\n',
-            'british/child/upstream.txt': 'recieve\n',
-            'upstream.txt': 'recieve\n',
+            'gspot.toml': `version = 1\nlevel = "${level}"\nkits = ["spelling"]\n[[scope]]\npath = "british"\n[scope.tools.typos]\nlocale = "en-gb"\nwords = [{ word = "${TYPO.the}", reason = "An imported name requires this exact spelling." }]\n[scope.tools.typos.extra]\nreason = "A upstream fixture retains an external label."\n[scope.tools.typos.extra.type.upstream]\nextend-glob = ["upstream.txt"]\n[scope.tools.typos.extra.type.upstream.extend-words]\nrecieve = "${TYPO.receive}"\n[[scope]]\npath = "british/child"\n`,
+            'sample.txt': `${TYPO.color} ${TYPO.the}\n`,
+            'british/child/sample.txt': `${TYPO.color} ${TYPO.the}\n`,
+            'british/child/upstream.txt': `${TYPO.receive}\n`,
+            'upstream.txt': `${TYPO.receive}\n`,
         });
         const session = await openSession(sandbox.path);
         const output = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
@@ -94,13 +95,13 @@ test.each(['recommended', 'all'])(
             });
         const root = run('.gspot/config/typos.toml', 'sample.txt');
         expect(root.exitCode, root.stderr.toString()).toBe(2);
-        expect(root.stdout.toString()).toContain('colour');
-        expect(root.stdout.toString()).toContain('teh');
+        expect(root.stdout.toString()).toContain(TYPO.color);
+        expect(root.stdout.toString()).toContain(TYPO.the);
         const policy = run('.gspot/config/typos.toml', 'gspot.toml');
         expect(policy.exitCode, policy.stdout.toString() + policy.stderr.toString()).toBe(0);
         const foreign = run('.gspot/config/typos.toml', 'upstream.txt');
         expect(foreign.exitCode, foreign.stdout.toString() + foreign.stderr.toString()).toBe(2);
-        expect(foreign.stdout.toString()).toContain('recieve');
+        expect(foreign.stdout.toString()).toContain(TYPO.receive);
         const upstream = run('.gspot/config/british/child/typos.toml', 'british/child/upstream.txt');
         expect(upstream.exitCode, upstream.stdout.toString() + upstream.stderr.toString()).toBe(0);
         const child = run('.gspot/config/british/child/typos.toml', 'british/child/sample.txt');

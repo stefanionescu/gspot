@@ -2,6 +2,7 @@
 import { join } from 'node:path';
 import { existsSync } from 'node:fs';
 import { test, expect } from 'bun:test';
+import { TYPO } from '#tests/support/spelling.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
@@ -130,8 +131,7 @@ test(
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
             'scripts/a.sh': script,
-            'bad.profile.toml':
-                'version = 1\nprofile = "bad"\nselection = "sometimes"\nkits = ["speling"]\n\n[[tools.typos.exclude]]\npaths = ["a/**"]\nreason = "A reason that says something."\n',
+            'bad.profile.toml': `version = 1\nprofile = "bad"\nselection = "sometimes"\nkits = ["${TYPO.spelling}"]\n\n[[tools.typos.exclude]]\npaths = ["a/**"]\nreason = "A reason that says something."\n`,
         });
         commitAll(sandbox.path);
         const init = await run(sandbox.path, ['init', '--yes', '--from', 'bad.profile.toml'], TOOLS);

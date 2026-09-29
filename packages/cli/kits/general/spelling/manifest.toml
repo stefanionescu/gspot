@@ -36,7 +36,7 @@ per_scope = true
 [[checks]]
 name = "spelling/typos"
 title = "Spelling"
-example = "The word `teh` in selected text reports a spelling finding. Correct it to `the` and rerun. Filename findings require a manual rename and reference updates."
+example = "A misspelled word in selected text reports a spelling finding. Correct it and rerun. Filename findings require a manual rename and reference updates."
 level = "recommended"
 stage = "commit"
 runs = "per-file-list"

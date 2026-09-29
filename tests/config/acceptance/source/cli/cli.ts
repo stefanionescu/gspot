@@ -3,10 +3,6 @@ import type { Retention } from '#tests/types/acceptance/source/cli.ts';
 
 export const SCOPES_SOURCE =
     '// The port the service listens on.\n\n/** The port, read once. */\nexport const port = Number("8080") as number;\n';
-export const PRETTIER_IGNORE_SOURCE = 'export const greeting="hello";\n';
-export const PRETTIER_IGNORE_FILES = ['source.js', 'generated/authored.js', 'generated/skipped.js', 'space name.js'];
-export const YAML =
-    'tabWidth: 2\nsingleQuote: false\noverrides:\n  - files: "tests/**"\n    options:\n      tabWidth: 8\n      singleQuote: true\n  - files: "**/*.js"\n    excludeFiles: "server/**"\n    options:\n      semi: false\n';
 export const CONFIGURATION_ARRIVAL_INIT = [
     'init',
     '--yes',
@@ -120,8 +116,6 @@ export const RETENTION: Record<'gitlab' | 'github', Retention> = {
     gitlab: { always: true, keepsCodequality: true },
     github: { always: true, keepsCodequality: true, manualStage: 'manual job only' },
 };
-export const EDITORCONFIG =
-    'root = true\n[*]\nindent_style = space\nindent_size = 2\nmax_line_length = 90\nend_of_line = lf\ncharset = utf-8\ntrim_trailing_whitespace = true\n[tests/**.js]\nindent_size = 4\n';
 export const REASON = 'The report names the folders the move deleted, which is what it is for.';
 export const TABLE = `[{patterns = ["REPORT.md"], reason = "${REASON}"}]`;
 
@@ -150,6 +144,3 @@ path = "apps/web/admin"
 paths = ["**/*"]
 rules = {eqeqeq = ["error", "always"]}
 `;
-
-export const PRETTIER_IGNORE_RULES =
-    '# Generated files except the authored entry\ngenerated/*\n!generated/authored.js\nspace\\ name.js\n';

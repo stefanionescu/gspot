@@ -1,6 +1,7 @@
 import { stringify } from 'smol-toml';
 import { test, expect } from 'bun:test';
 import { join, dirname } from 'node:path';
+import { TYPO } from '#tests/support/spelling.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
@@ -224,8 +225,8 @@ test.each([
         configuration: 'spelling',
         check: 'spelling/typos',
         path: 'sample.txt',
-        defect: 'teh wether\n',
-        partial: 'the wether\n',
+        defect: `${TYPO.the} ${TYPO.whether}\n`,
+        partial: `the ${TYPO.whether}\n`,
         corrected: 'the whether\n',
     },
     {

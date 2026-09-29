@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 import { stringify } from 'smol-toml';
 import { test, expect } from 'bun:test';
+import { TYPO } from '#tests/support/spelling.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
@@ -24,7 +25,7 @@ test.each([
             tools: { typos: { exclude: [{ paths: patterns, reason: 'Generated input is checked by its owner.' }] } },
             scope: [{ path: 'nested' }, { path: 'nested/child' }],
         }),
-        ...Object.fromEntries(paths.map((path) => [`nested/${path}`, 'teh\n'])),
+        ...Object.fromEntries(paths.map((path) => [`nested/${path}`, `${TYPO.the}\n`])),
     });
     const session = await openSession(sandbox.path);
     const outputs = emitAll(session.policyFiles.policy, session.repository, session.scopes, {

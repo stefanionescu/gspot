@@ -337,7 +337,7 @@ name = "tools.knip.ignore_dependencies"
 kind = "list"
 direction = "loosening"
 default = []
-summary = "Dependencies knip does not report as unused, each with a reason: packages only a spawned command uses."
+summary = "Dependencies knip does not report as unused, each with a reason: packages only a spawned command uses. A name that looks like a regular expression matches as one; an entry with workspace applies to that package.json workspace alone."
 
 [coverage]
 ".js" = ["format", "syntax", "style", "types", "structure", "naming", "prose", "spelling"]

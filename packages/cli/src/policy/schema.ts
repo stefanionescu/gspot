@@ -59,7 +59,7 @@ const reservedTerm = z.strictObject({ term: text, allowed_for: textList });
 
 const groupReason = z.strictObject({ group: text, reason: text.optional() });
 
-const contractProperties = z.strictObject({ file: text, names: textList });
+const contractProperties = z.strictObject({ file: text, names: textList, reason: text.optional() });
 
 const namingLists = z.object({
     banned_terms: textList.optional(),

@@ -2,6 +2,7 @@ import * as fs from 'node:fs';
 import { join } from 'node:path';
 import { rejects } from 'node:assert/strict';
 import { test, spyOn, expect } from 'bun:test';
+import { TYPO } from '#tests/support/spelling.ts';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { run } from '#tests/support/cli/command.ts';
@@ -64,8 +65,11 @@ test.each([
 
 test('init replaces a nested spelling configuration and uninstall restores the original', async () => {
     await using directory = await testdir();
-    const original = '[default]\nlocale = "en-gb"\n[default.extend-words]\nteh = "teh"\n';
-    await createFileTree(directory.path, { 'nested/typos.toml': original, 'nested/sample.txt': 'colour teh\n' });
+    const original = `[default]\nlocale = "en-gb"\n[default.extend-words]\n${TYPO.the} = "${TYPO.the}"\n`;
+    await createFileTree(directory.path, {
+        'nested/typos.toml': original,
+        'nested/sample.txt': `${TYPO.color} ${TYPO.the}\n`,
+    });
     const options = {
         cwd: directory.path,
         yes: true,

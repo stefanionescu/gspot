@@ -24,3 +24,6 @@ swap:
     normalise: normalize
     normalised: normalized
     analyse: analyze
+    capitalisation: capitalization
+    materialise: materialize
+    labelled: labeled
