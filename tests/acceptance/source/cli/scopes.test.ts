@@ -10,8 +10,8 @@ import type { InitJson } from '#cli/types/commands.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { containing } from '#tests/support/expectations.ts';
-import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
 import { treeContents } from '#tests/support/cli/preservation.ts';
+import { INSTALLED_BIN_PATH } from '#tests/support/cli/modules.ts';
 import { linkInstalledModules } from '#tests/support/cli/platforms.ts';
 import { toolsPath, installAtLevel } from '#tests/support/cli/tools.ts';
 import { SCOPES_SOURCE } from '#tests/inputs/acceptance/source/cli/cli.ts';
@@ -34,7 +34,7 @@ test(
         linkInstalledModules(join(sandbox.path, 'node_modules'));
         commitAll(sandbox.path);
         const environment = {
-            PATH: `${join(INSTALLED_MODULES, '.bin')}${delimiter}${toolsPath(['typos', 'ec', 'ast-grep'])}`,
+            PATH: `${INSTALLED_BIN_PATH}${delimiter}${toolsPath(['typos', 'ec', 'ast-grep'])}`,
         };
         const argv = [
             'init',

@@ -12,11 +12,11 @@ import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { install, toolsPath } from '#tests/support/cli/tools.ts';
-import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
 import { linkInstalledModules } from '#tests/support/cli/platforms.ts';
 import type { NextjsRead } from '#tests/types/integration/cli/checks.ts';
 import { NEXT_PAGE, NEXT_CONFIG, NEXT_LAYOUT } from '#tests/inputs/cli.ts';
 import { chmodSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { INSTALLED_MODULES, INSTALLED_BIN_PATH } from '#tests/support/cli/modules.ts';
 
 /** init selecting nextjs without the recommendations the tests leave out. */
 const NEXT_INIT = initArgs(['nextjs'], ['naming', 'spelling', 'css', 'files']); /**
@@ -47,7 +47,7 @@ export async function installedNextProject(): Promise<{
         linkInstalledModules(join(sandbox.path, 'node_modules'));
         commitAll(sandbox.path);
         const environment = {
-            PATH: `${join(INSTALLED_MODULES, '.bin')}${delimiter}${toolsPath(['typos', 'ec', 'ast-grep'])}`,
+            PATH: `${INSTALLED_BIN_PATH}${delimiter}${toolsPath(['typos', 'ec', 'ast-grep'])}`,
         };
         await install(sandbox.path, NEXT_INIT, environment);
         const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);

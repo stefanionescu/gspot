@@ -6,7 +6,7 @@ import { run } from '#tests/support/cli/command.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
-import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
+import { INSTALLED_BIN_PATH } from '#tests/support/cli/modules.ts';
 import { containing, textContaining } from '#tests/support/expectations.ts';
 import { toolsPath, installPrivateTools } from '#tests/support/cli/tools.ts';
 
@@ -67,7 +67,7 @@ test(
             'app/math.test.cjs': planted,
             'app/authored.txt': 'preserved nested source\n',
         });
-        const environment = { PATH: `${join(INSTALLED_MODULES, '.bin')}${delimiter}${toolsPath([])}` };
+        const environment = { PATH: `${INSTALLED_BIN_PATH}${delimiter}${toolsPath([])}` };
         const command = ['check', '--stage', 'push', '--only', 'jest/coverage', '--no-cache', '--json'];
         const uncovered = await run(sandbox.path, command, environment);
         expect(uncovered.code, uncovered.stdout + uncovered.stderr).toBe(1);
@@ -106,7 +106,7 @@ test(
             'authored.txt': 'preserved source\n',
             'coverage/authored.txt': 'preserved report\n',
         });
-        const environment = { PATH: `${join(INSTALLED_MODULES, '.bin')}${delimiter}${toolsPath([])}` };
+        const environment = { PATH: `${INSTALLED_BIN_PATH}${delimiter}${toolsPath([])}` };
         const command = ['check', '--stage', 'push', '--only', 'jest/coverage', '--no-cache', '--json'];
         const uncovered = await run(sandbox.path, command, environment);
         expect(uncovered.code, uncovered.stdout + uncovered.stderr).toBe(1);

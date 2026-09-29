@@ -1,12 +1,12 @@
 // What this machine can and cannot do: which pinned tools ship for it, the modes it keeps, and how it runs a launcher.
-import { join } from 'node:path';
 import { createFileTree } from 'testdirs';
+import { join, dirname } from 'node:path';
 import { toolPin } from '#cli/tools/inspect.ts';
 import { toPosix } from '#cli/platform/paths.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
 import { missingBuild } from '#cli/execution/planning/skips.ts';
-import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
 import { PLATFORM_NAMES } from '#cli/config/execution/execution.ts';
+import { PLANTED_MODULES, INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
 import { chmodSync, mkdirSync, existsSync, readdirSync, symlinkSync, realpathSync } from 'node:fs';
 
 /** Whether the platform has POSIX shells, links, and modes; Windows does not. */
@@ -84,24 +84,26 @@ export async function plantLauncher(root: string, path: string, script: string):
 
 /**
  * Links every installed module of this repository into a directory, entry by entry, so a relative link inside the
- * store resolves from its real location. A directory link of the whole store breaks those on Windows.
+ * store resolves from its real location. A directory link of the whole store breaks those on Windows. The planted
+ * packages of the tests store come first. The .bun folder comes along, so a copy of the sandbox keeps each package
+ * beside the packages it resolves, and so does the .bin folder of the planted packages.
  * @param target the node_modules directory to create
  */
 export function linkInstalledModules(target: string): void {
     const kind = process.platform === 'win32' ? 'junction' : 'dir';
-    const link = (name: string): void => {
+    const packages = [PLANTED_MODULES, INSTALLED_MODULES].flatMap((store) =>
+        readdirSync(store)
+            .filter((entry) => !entry.startsWith('.'))
+            .flatMap((entry) =>
+                entry.startsWith('@') ? readdirSync(join(store, entry)).map((child) => join(entry, child)) : [entry],
+            )
+            .map((name) => [store, name] as const),
+    );
+    const links = [[INSTALLED_MODULES, '.bun'] as const, [PLANTED_MODULES, '.bin'] as const, ...packages];
+    for (const [store, name] of links) {
         const destination = join(target, name);
-        if (!existsSync(destination)) symlinkSync(realpathSync(join(INSTALLED_MODULES, name)), destination, kind);
-    };
-    mkdirSync(target, { recursive: true });
-    // The executables come along, so a copy of the sandbox runs the packages it copied.
-    const entries = readdirSync(INSTALLED_MODULES).filter((entry) => entry === '.bin' || !entry.startsWith('.'));
-    for (const entry of entries) {
-        const isNamespace = entry.startsWith('@');
-        if (isNamespace) mkdirSync(join(target, entry), { recursive: true });
-        const names = isNamespace
-            ? readdirSync(join(INSTALLED_MODULES, entry)).map((child) => join(entry, child))
-            : [entry];
-        for (const name of names) link(name);
+        if (existsSync(destination)) continue;
+        mkdirSync(dirname(destination), { recursive: true });
+        symlinkSync(realpathSync(join(store, name)), destination, kind);
     }
 }

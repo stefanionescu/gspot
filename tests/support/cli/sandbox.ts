@@ -6,7 +6,7 @@ import type { Sandbox } from '#tests/types/cli.ts';
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { install, toolsPath } from '#tests/support/cli/tools.ts';
-import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
+import { INSTALLED_BIN_PATH } from '#tests/support/cli/modules.ts';
 import { linkInstalledModules } from '#tests/support/cli/platforms.ts';
 
 // The manifest a fixture with dependencies starts from.
@@ -42,7 +42,7 @@ export async function installSandbox(
     sandbox.before?.(root);
     commitAll(root);
     const tools = toolsPath(['typos', 'ec', 'ast-grep', ...(sandbox.tools ?? [])]);
-    const environment = { PATH: `${join(INSTALLED_MODULES, '.bin')}${delimiter}${tools}` };
+    const environment = { PATH: `${INSTALLED_BIN_PATH}${delimiter}${tools}` };
     await install(root, initArgumentsOf(sandbox), environment);
     const level = sandbox.level ?? 'all';
     const selected = await run(root, ['set', 'level', level], environment);
