@@ -207,8 +207,10 @@ export async function copyDependencies(
         assertManifestsUnchanged(root, installed, selected, inputs);
         const packages = directories.filter((directory) => directory.dependency === 'node_modules');
         for (const directory of packages) await copyDirectory(root, revisionRoot, directory, cancelSignal);
+        // The snapshot root is compared in its resolved spelling, which a Windows temp path shortens.
+        const resolvedRoot = await realpath(revisionRoot);
         for (const { folder, dependency } of packages)
-            await validateCopiedLinks(revisionRoot, join(revisionRoot, folder, dependency), cancelSignal);
+            await validateCopiedLinks(resolvedRoot, join(resolvedRoot, folder, dependency), cancelSignal);
     } finally {
         installed.close();
         selected.close();
