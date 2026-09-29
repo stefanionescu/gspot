@@ -20,8 +20,8 @@ gspot is the shared house style for AI-written code, delivered as one binary:
   such as ESLint, Prettier, Ruff, SwiftLint, ShellCheck, and sqlfluff. It runs file-list tools over an
   explicit file list and whole-project tools over affected projects.
 - **Two levels.** At `recommended` a tool runs its recommended set and the rules that find a
-  defect, plus mandatory trivial-function and trivial-file enforcement. The level `all` adds
-  the remaining house style.
+  defect. The level `all` adds the house style, including the trivial-function and
+  trivial-file rules.
 - **The missing rules.** gspot ships the structural, naming, prose, security, and drift checks
   the standard tools lack, as one engine per concern, versioned with the rest.
 - **Agent instructions.** gspot installs guide files that tell an agent how to write code in this
