@@ -1,16 +1,16 @@
 // Policy choices the nextjs configuration follows: the re-export mode, the compiler replacement, and locale checking.
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { writeFileSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
-import { symlinkSync, writeFileSync } from 'node:fs';
 import { reportSchema } from '#cli/execution/report.ts';
 import type { ReplacePlan } from '#cli/types/commands.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
-import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
 import { installPrivateTools } from '#tests/support/cli/tools.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
+import { linkInstalledModules } from '#tests/support/cli/platforms.ts';
 
 test.each(['none', 'index-only'])(
     'Next.js entry files preserve the re-export policy in %s mode',
@@ -26,7 +26,7 @@ test.each(['none', 'index-only'])(
             'app/page.ts': 'export { value } from "./value.ts";\n',
             'app/forward.ts': 'export { value } from "./value.ts";\n',
         });
-        symlinkSync(INSTALLED_MODULES, join(sandbox.path, 'node_modules'), 'dir');
+        linkInstalledModules(join(sandbox.path, 'node_modules'));
         const applied = await run(sandbox.path, ['apply']);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
         await installPrivateTools(sandbox.path);
@@ -70,7 +70,7 @@ test.each(['only', 'ignore', 'flag'])(
             'tsconfig.json': '{"compilerOptions":{"types":[],"skipLibCheck":true},"include":["src"]}',
             'src/count.ts': 'export const count: number = "wrong";\n',
         });
-        symlinkSync(INSTALLED_MODULES, join(sandbox.path, 'node_modules'), 'dir');
+        linkInstalledModules(join(sandbox.path, 'node_modules'));
         const applied = await run(sandbox.path, ['apply']);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
         await installPrivateTools(sandbox.path);

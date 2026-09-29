@@ -1,16 +1,16 @@
 // Source CLI journeys for the TypeScript ESLint rules the generated configuration enables.
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { writeFileSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
-import { symlinkSync, writeFileSync } from 'node:fs';
 import { reportSchema } from '#cli/execution/report.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
-import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
 import { installPrivateTools } from '#tests/support/cli/tools.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
+import { linkInstalledModules } from '#tests/support/cli/platforms.ts';
 
 test(
     'generated TypeScript configuration reports an interface once through the pinned replacement rule',
@@ -22,7 +22,7 @@ test(
             'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["src/**/*.ts"]}',
             'src/order.ts': 'export interface Order { total: number }\n',
         });
-        symlinkSync(INSTALLED_MODULES, join(sandbox.path, 'node_modules'), 'dir');
+        linkInstalledModules(join(sandbox.path, 'node_modules'));
         const applied = await run(sandbox.path, ['apply']);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
         await installPrivateTools(sandbox.path);
@@ -77,7 +77,7 @@ test.each([
             'src/bridge/index.ts': 'export * from "../first.js";\n',
             'src/forward.ts': 'export { shared } from "./first.ts";\n',
         });
-        symlinkSync(INSTALLED_MODULES, join(sandbox.path, 'node_modules'), 'dir');
+        linkInstalledModules(join(sandbox.path, 'node_modules'));
         const applied = await run(sandbox.path, ['apply']);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
         await installPrivateTools(sandbox.path);

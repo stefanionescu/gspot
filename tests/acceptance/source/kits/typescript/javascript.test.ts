@@ -1,6 +1,5 @@
 // Source CLI journey: the javascript configuration lints a repository with no TypeScript.
 import { join } from 'node:path';
-import { symlinkSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
@@ -10,8 +9,8 @@ import { reportSchema } from '#cli/execution/report.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
 import { containing } from '#tests/support/expectations.ts';
-import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
 import { TYPESCRIPT_PACKAGE } from '#tests/support/cli/typescript.ts';
+import { linkInstalledModules } from '#tests/support/cli/platforms.ts';
 import { toolsPath, installPrivateTools } from '#tests/support/cli/tools.ts';
 
 test(
@@ -26,7 +25,7 @@ test(
             'src/main.js': clean,
             'src/index.js': "// The entry point.\nexport { twice } from './main.js';\n",
         });
-        symlinkSync(INSTALLED_MODULES, join(sandbox.path, 'node_modules'), 'dir');
+        linkInstalledModules(join(sandbox.path, 'node_modules'));
         commitAll(sandbox.path);
         const environment = { PATH: toolsPath(['ast-grep', 'ec', 'typos']) };
         const initialized = await run(sandbox.path, initArgs(['javascript']), environment);

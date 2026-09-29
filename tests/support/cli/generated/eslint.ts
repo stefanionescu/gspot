@@ -1,10 +1,10 @@
 // The ESLint instance a planted repository's generated configuration produces, for tests of the emitted rules.
 import { ESLint } from 'eslint';
 import { join, dirname } from 'node:path';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { mkdirSync, symlinkSync, writeFileSync } from 'node:fs';
-import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
+import { linkInstalledModules } from '#tests/support/cli/platforms.ts';
 
 /**
  * Links the installed packages into the sandbox, writes its generated ESLint configuration, and loads it.
@@ -12,7 +12,7 @@ import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
  * @returns ESLint reading the generated configuration
  */
 export async function generatedEslint(root: string): Promise<ESLint> {
-    symlinkSync(INSTALLED_MODULES, join(root, 'node_modules'), 'dir');
+    linkInstalledModules(join(root, 'node_modules'));
     const session = await openSession(root);
     const config = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
         version: session.version,
