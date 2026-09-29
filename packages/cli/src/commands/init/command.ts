@@ -121,26 +121,36 @@ export async function initCommand(options: InitOptions): Promise<InitResult> {
 export function registerInit(program: Command): void {
     program
         .command('init')
-        .summary('Initialize a repository')
-        .description('Read this repository, propose a policy, and write it after a yes')
+        .summary('Set up gspot in a repository')
+        .description('Read the repository, show a plan, and write it when you accept')
         .addHelpText(
             'after',
-            '\nEffects:\nReads the repository and proposes gspot.toml, generated configuration, selected integrations, and private tool installation. Confirmation or --yes applies the plan. --dry-run writes nothing. The configuration files of the selected tools are deleted and the generated ones take over; git keeps the originals. Run from the repository you want to configure.\n\nExit codes:\n0: the request completed, including a preview or declined confirmation. 2: invalid input or inability to complete the request.\n\nExample:\ngspot init --yes --configurations bash',
+            '\nEffects:\nReads the repository and shows a plan: the policy file, the tool configuration, the guides for coding agents, the Git hooks, and the tool installation. With --yes or your answer, gspot writes the plan and installs the tools. It replaces the configuration files of the selected tools and keeps each original for gspot uninstall. init runs no check. --dry-run writes nothing.\n\nExit codes:\n- 0: the plan was written, shown, or declined.\n- 2: the input was invalid, or init could not finish.\n\nExample:\ngspot init --yes --kits bash',
         )
-        .option('--yes', 'Take every plan without asking')
-        .option('--from <profile>', 'Install from a profile: a path, an https URL or github:owner/repo')
-        .option('--kits <kits...>', 'The root kits instead of the detected ones')
-        .option('--without <configurations...>', 'Configurations to leave out of the plan')
-        .option('--scope <path=configurations...>', 'Scopes and their comma-separated configurations')
-        .option('--no-install', 'Skip the install step and print the command instead')
-        .option('--allow-dirty', 'Run although the working tree has uncommitted changes')
-        .addOption(new Option('--hooks <tool>', 'Where hooks go').choices(hooksSchema.shape.tool.options))
-        .addOption(new Option('--ci <provider>', 'Write a CI workflow').choices(ciSchema.shape.provider.options))
-        .option('--no-hooks', 'Do not install hooks')
+        .option('--yes', 'Accept the plan without asking')
+        .option('--from <profile>', 'Start from a profile: a path, an https URL, or github:owner/repo')
+        .option('--kits <kits...>', 'Use these kits at the root instead of the detected ones')
+        .option('--without <kits...>', 'Leave these kits out of the plan')
+        .option('--scope <path=kits...>', 'Add scopes, each as a path and its comma-separated kits')
+        .option('--no-install', 'Skip installing the tools and print the install command')
+        .option('--allow-dirty', 'Run even when the working tree has uncommitted changes')
+        .addOption(
+            new Option('--hooks <tool>', 'Install the Git hooks through this tool').choices(
+                hooksSchema.shape.tool.options,
+            ),
+        )
+        .addOption(
+            new Option('--ci <provider>', 'Write a CI workflow for this provider').choices(
+                ciSchema.shape.provider.options,
+            ),
+        )
+        .option('--no-hooks', 'Install no Git hooks')
         .option('--no-ci', 'Write no CI workflow')
-        .option('--no-guides', 'Leave the agent guides out')
-        .addOption(new Option('--runner <tool>', 'The task runner').choices(runnerSchema.shape.tool.options))
-        .option('--no-runner', 'Write no task-runner configuration')
+        .option('--no-guides', 'Install no guides for coding agents')
+        .addOption(
+            new Option('--runner <tool>', 'Add gspot to this task runner').choices(runnerSchema.shape.tool.options),
+        )
+        .option('--no-runner', 'Add gspot to no task runner')
         .option('--dry-run', 'Print the plan and write nothing')
         .action(async (flags: Record<string, unknown>, command: Command) => {
             const global = command.optsWithGlobals();

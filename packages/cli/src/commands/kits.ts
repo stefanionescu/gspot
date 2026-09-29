@@ -83,14 +83,14 @@ export async function removeCommand(o: RemoveOptions): Promise<CommandResult> {
 export function registerAdd(program: Command): void {
     program
         .command('add <kit...>')
-        .summary('Add configurations')
-        .description('Add configurations to the root selection, or to one scope')
+        .summary('Add kits')
+        .description('Add kits to the root selection or to one scope')
         .addHelpText(
             'after',
-            '\nEffects:\nAdds the named kits to the root or --scope selection, applies generated configuration, and installs the changed tool selection. Required configurations remain part of the selection. --dry-run previews the policy change without applying or installing it.\n\nExit codes:\n0: configurations were added, or the preview completed. 2: invalid input or inability to complete the request.\n\nExample:\ngspot add bash --dry-run',
+            '\nEffects:\nAdds the kits to the root or --scope selection, applies the configuration, and installs the tools the change needs. Kits that a selected kit requires stay selected. --dry-run prints the change and writes nothing.\n\nExit codes:\n- 0: the kits were added, or the preview finished.\n- 2: the input was invalid, or add could not finish.\n\nExample:\ngspot add bash --dry-run',
         )
-        .option('--scope <path>', 'The scope to add them to')
-        .option('--dry-run', 'Print what would be written and write nothing')
+        .option('--scope <path>', 'Add the kits to this scope')
+        .option('--dry-run', 'Print the change and write nothing')
         .action(async (configurations: string[], flags: Record<string, unknown>, command: Command) => {
             const global = command.optsWithGlobals();
             await printCommand(
@@ -113,14 +113,14 @@ export function registerAdd(program: Command): void {
 export function registerRemove(program: Command): void {
     program
         .command('remove <kit>')
-        .summary('Remove configurations')
-        .description('Remove a configuration from the root selection, or from one scope')
+        .summary('Remove a kit')
+        .description('Remove a kit from the root selection or from one scope')
         .addHelpText(
             'after',
-            '\nEffects:\nRemoves the named kit from the root or --scope selection and applies configuration. Removal is refused when another selected kit requires it. Installs the tools required by the remaining selection. --dry-run previews the policy change without applying or installing it.\n\nExit codes:\n0: the configuration was removed, or the preview completed. 2: invalid input or inability to complete the request.\n\nExample:\ngspot remove bash --dry-run',
+            '\nEffects:\nRemoves the kit from the root or --scope selection, applies the configuration, and installs the tools the remaining kits need. gspot refuses to remove a kit that another selected kit requires. --dry-run prints the change and writes nothing.\n\nExit codes:\n- 0: the kit was removed, or the preview finished.\n- 2: the input was invalid, or remove could not finish.\n\nExample:\ngspot remove bash --dry-run',
         )
-        .option('--scope <path>', 'The scope to remove it from')
-        .option('--dry-run', 'Print what would be written and write nothing')
+        .option('--scope <path>', 'Remove the kit from this scope')
+        .option('--dry-run', 'Print the change and write nothing')
         .action(async (configuration: string, flags: Record<string, unknown>, command: Command) => {
             const global = command.optsWithGlobals();
             await printCommand(

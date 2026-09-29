@@ -96,16 +96,16 @@ export async function ignoreCommand(o: IgnoreOptions): Promise<CommandResult> {
 export function registerIgnore(program: Command): void {
     program
         .command('ignore <check>')
-        .summary('Ignore a check or rule')
-        .description('Turn a check, or one rule in it, off for some paths or everywhere')
+        .summary('Ignore a check or a rule')
+        .description('Turn off a check, or one of its rules, for some paths or everywhere')
         .addHelpText(
             'after',
-            '\nEffects:\nWrites a policy exception and applies configuration. Select the check and optional rule or paths. When require_reasons is true, a meaningful reason is required.\n\nExit codes:\n0: the exception change was applied. 2: invalid input or inability to complete the request.\n\nExample:\ngspot ignore bash/syntax --paths scripts/example.sh --reason "The file is a syntax-error fixture."',
+            '\nEffects:\nWrites the ignore to gspot.toml and applies the configuration. Every report lists the ignores, and --verbose prints each reason.\n\nExit codes:\n- 0: the ignore was written and applied.\n- 2: the input was invalid, or ignore could not finish.\n\nExample:\ngspot ignore bash/syntax --paths scripts/example.sh --reason "The file tests a syntax error."',
         )
-        .option('--paths <glob...>', 'The paths the ignore applies to; none means the whole scope')
-        .option('--rule <rule>', 'One rule inside the check')
-        .option('--reason <text>', 'Optional explanation; required when require_reasons is true')
-        .option('--remove', 'Delete the matching entry instead')
+        .option('--paths <glob...>', 'Apply the ignore to these paths only; without it, to the whole scope')
+        .option('--rule <rule>', 'Turn off one rule of the check')
+        .option('--reason <text>', 'Say why; required when require_reasons is true')
+        .option('--remove', 'Delete the matching ignore')
         .action(async (check: string, flags: Record<string, unknown>, command: Command) => {
             const global = command.optsWithGlobals();
             const paths = listFlag(flags, 'paths');

@@ -133,13 +133,13 @@ export async function uninstallCommand(options: UninstallOptions): Promise<Comma
 export function registerUninstall(program: Command): void {
     program
         .command('uninstall')
-        .summary('Uninstall gspot')
-        .description('Remove what init wrote; keep gspot.toml and the project rule layer')
+        .summary('Remove gspot from the repository')
+        .description('Remove what gspot wrote, and keep gspot.toml and your own guides')
         .addHelpText(
             'after',
-            '\nEffects:\nShows managed removals and restorations, then applies them after confirmation or --yes. --dry-run writes nothing. Edited or unowned files are preserved. gspot.toml and recovery data remain available.\n\nExit codes:\n0: the request completed, including a preview or declined confirmation. 2: invalid input or inability to complete the request.\n\nExample:\ngspot uninstall --dry-run',
+            '\nEffects:\nShows what gspot removes and which original files it restores, then does it after you confirm or pass --yes. A file you edited after gspot wrote it stays. gspot.toml and the recovery data stay too. --dry-run changes nothing.\n\nExit codes:\n- 0: the removal finished, was shown, or was declined.\n- 2: the input was invalid, or uninstall could not finish.\n\nExample:\ngspot uninstall --dry-run',
         )
-        .option('--yes', 'Skip the question')
+        .option('--yes', 'Remove without asking')
         .option('--dry-run', 'Print the plan and remove nothing')
         .action(async (flags: Record<string, unknown>, command: Command) => {
             const global = command.optsWithGlobals();

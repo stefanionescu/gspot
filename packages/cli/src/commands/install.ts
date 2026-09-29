@@ -65,13 +65,13 @@ function previewInstallation(steps: string[][], failures: string[], hooks: strin
 export function registerInstall(program: Command): void {
     program
         .command('install')
-        .summary('Install locked tools')
-        .description('Install locked tools for this clone without changing tracked configuration')
+        .summary('Install the locked tools')
+        .description('Install the locked tools and the Git hooks for this clone')
         .addHelpText(
             'after',
-            '\nEffects:\nInstalls the locked tools selected by gspot.toml into the managed installation. It also installs selected hooks. It does not choose configurations. Use this after cloning a configured repository. A failed dependency installation preserves its previous tree. Completed setup steps can remain if a later step fails. --dry-run previews installation commands without writing files.\n\nExit codes:\n0: installation or its preview completed. 2: invalid input or inability to complete the request.\n\nExample:\ngspot install --dry-run',
+            '\nEffects:\nInstalls the tools gspot.toml selects, at the versions in the committed locks, and installs the selected Git hooks. install changes no tracked file. Run it after you clone a configured repository. If a package install fails, the previous installation stays. --dry-run prints the commands and writes nothing.\n\nExit codes:\n- 0: the tools were installed, or the preview finished.\n- 2: the input was invalid, or install could not finish.\n\nExample:\ngspot install --dry-run',
         )
-        .option('--dry-run', 'Preview installation commands without writing files')
+        .option('--dry-run', 'Print the install commands and write nothing')
         .action(async (flags: Record<string, unknown>, command: Command) => {
             const global = command.optsWithGlobals();
             await printCommand(

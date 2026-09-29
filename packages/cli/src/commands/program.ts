@@ -57,13 +57,15 @@ function exitCodeFor(error: unknown): number {
 export function buildProgram(): Command {
     const program = new Command('gspot');
     program
-        .description('CLI to lint and enforce rules for LLM generated codebases')
-        .version(GSPOT_VERSION, '--version', 'Print the version and nothing else')
-        .option('--json', 'Print the documented JSON object instead of text')
-        .option('--quiet', 'Print failures only')
-        .option('--verbose', 'Print every command with its arguments and every ignore with its reason')
-        .option('--no-color', 'No color in the output')
-        .option('-C <dir>', 'Run as if started in that directory')
+        .description('Lint AI-generated code and install rules for coding agents')
+        .version(GSPOT_VERSION, '--version', 'Print the version')
+        .option('--json', 'Print the result as JSON')
+        .option('--quiet', 'Print only failures')
+        .option('--verbose', 'Print each command gspot runs, and each ignore with its reason')
+        .option('--no-color', 'Print without color')
+        .option('-C <dir>', 'Run as if gspot started in this folder')
+        .helpOption('-h, --help', 'Print help for the command')
+        .helpCommand('help [command]', 'Print help for a command')
         .showSuggestionAfterError(true)
         .showHelpAfterError('(run gspot --help to see every command)')
         .exitOverride()

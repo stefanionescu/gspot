@@ -76,13 +76,13 @@ function reportText(report: ApplyReport): string {
 export function registerApply(program: Command): void {
     program
         .command('apply')
-        .summary('Generate tool files')
-        .description('Generate configuration from gspot.toml')
+        .summary('Write the configuration from gspot.toml')
+        .description('Regenerate the tool configuration, guides, and hooks from gspot.toml')
         .addHelpText(
             'after',
-            '\nEffects:\nReads gspot.toml and regenerates owned configuration, rule copies, and selected integrations. Authored or edited files remain subject to ownership validation. --dry-run previews the plan without writing project files. This command does not install newly selected tools.\n\nExit codes:\n0: configuration was applied, or the preview completed. 2: invalid input or inability to complete the request.\n\nExample:\ngspot apply --dry-run',
+            '\nEffects:\nReads gspot.toml and writes the tool configuration, the guides for coding agents, and the selected integrations. A generated file you edited stays as it is, and apply names it. --dry-run shows every change, including each rule that changes, without writing project files. apply installs no tools: run gspot install after it.\n\nExit codes:\n- 0: the configuration was written, or the preview finished.\n- 2: the input was invalid, or apply could not finish.\n\nExample:\ngspot apply --dry-run',
         )
-        .option('--dry-run', 'Preview proposed changes without writing project files')
+        .option('--dry-run', 'Show the changes without writing project files')
         .action(async (flags: Record<string, unknown>, command: Command) => {
             const global = command.optsWithGlobals();
             await printCommand(

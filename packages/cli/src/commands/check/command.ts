@@ -140,25 +140,29 @@ export function registerCheck(program: Command): void {
     program.addCommand(command);
     command
         .argument('[paths...]')
-        .summary('Run checks')
+        .summary('Run the checks')
         .description('Run checks over the selected files and folders and print findings')
         .addHelpText(
             'after',
-            '\nEffects:\nRuns the selected checks and writes managed reports and cache reads. --fix runs configured corrections and can change selected source files. --fix --dry-run previews corrections in a disposable copy. --staged checks index content; --changed checks working-tree content for paths changed from the comparison reference. A plain check uses the working tree.\n\nExit codes:\n0: executed checks passed; review skipped checks separately. 1: findings or failed corrections remain. 2: the run could not complete, including missing tools, invalid reports, or invalid input.\n\nExample:\ngspot check --staged',
+            '\nEffects:\nRuns the selected checks and prints each finding with its file, line, rule, and help. The reports go to .gspot/reports/. A plain check reads the working tree, --staged reads the staged files, and --changed reads the files changed since a branch. --fix runs the fixers and can change your source files. --fix --dry-run shows those changes in a copy.\n\nExit codes:\n- 0: every check that ran passed. The report lists the skipped checks.\n- 1: findings remain, or a fix failed.\n- 2: the run could not finish: a tool is missing, a report is invalid, or the input is invalid.\n\nExample:\ngspot check --staged',
         )
-        .option('--only <checks...>', 'Run the named checks')
+        .option('--only <checks...>', 'Run only these checks')
         .addOption(new Option('--push', 'Read Git pre-push object updates from stdin').hideHelp())
-        .option('--staged', 'The commit stage over staged files, as the pre-commit hook runs it')
+        .option('--staged', 'Check the staged files, as the commit hook does')
         .option(
             '--changed [ref]',
-            'Changed paths from the upstream or default branch; use --changed=<ref> to choose a ref',
+            'Check the files changed from the upstream or default branch, or from --changed=<ref>',
         )
-        .option('--fix', 'Run every fixer in order, then the checks again')
-        .option('--dry-run', 'With --fix, print the diff of every fix and write nothing')
-        .addOption(new Option('--stage <stage>', 'One stage').choices(PUBLIC_STAGES).argParser(stageArgument))
-        .option('--skip <checks...>', 'Skip the named checks for this run')
+        .option('--fix', 'Run every fixer, then run the checks again')
+        .option('--dry-run', 'With --fix, print the diff of each fix and write nothing')
+        .addOption(
+            new Option('--stage <stage>', 'Run the checks of one stage')
+                .choices(PUBLIC_STAGES)
+                .argParser(stageArgument),
+        )
+        .option('--skip <checks...>', 'Skip these checks for this run')
         .addOption(new Option('--message-file <path>', 'The commit message file, for the message stage').hideHelp())
-        .option('--no-cache', 'Run every check even when its inputs are unchanged')
+        .option('--no-cache', 'Run every check, even when its inputs did not change')
         .action(async (paths: string[], flags: Record<string, unknown>, command: Command) => {
             await runCheck(paths, flags, command.optsWithGlobals());
         });

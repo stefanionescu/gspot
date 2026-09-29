@@ -215,16 +215,16 @@ export function registerSet(program: Command): void {
     program
         .command('set <key> [value...]')
         .summary('Change a setting')
-        .description('Write one setting; the key is the dotted path gspot list settings prints')
+        .description('Write one setting to gspot.toml and apply it')
         .addHelpText(
             'after',
-            '\nEffects:\nValidates and writes the setting to gspot.toml, then applies generated configuration. --scope writes to an existing scope. Lists append by default; --replace replaces the written list and --remove removes written entries. --default deletes the written key so inherited or shipped values apply. It does not install tools.\n\nLevels:\nrecommended (default) enforces correctness, security, accessibility, type safety, dependency health, routine formatting, and declared project contracts. all adds stable conventions for naming, architecture, documentation, API style, and complexity. Neither level enables experimental or preview rules.\n\nExit codes:\n0: the setting change was applied. 2: invalid input or inability to complete the request.\n\nExample:\ngspot set level all',
+            '\nEffects:\nChecks the value, writes it to gspot.toml, and applies the configuration. The key is the dotted name gspot list settings prints. A list value adds to the list unless you pass --replace or --remove. set installs no tools: run gspot install for that.\n\nLevels:\nrecommended, the default, checks correctness, security, accessibility, type safety, dependency health, formatting, and declared project contracts. all adds stable conventions for naming, architecture, documentation, API style, and complexity. Neither level turns on experimental or preview rules.\n\nExit codes:\n- 0: the setting was written and applied.\n- 2: the input was invalid, or set could not finish.\n\nExample:\ngspot set level all',
         )
-        .option('--reason <text>', 'Optional explanation; require_reasons makes it required for loosening changes')
-        .option('--scope <path>', 'Write into a scope table instead of the root')
-        .option('--replace', 'For a list: replace the whole list')
-        .option('--remove', 'For a list: remove the named items')
-        .option('--default', 'Delete the written key so inherited or shipped values apply')
+        .option('--reason <text>', 'Say why; required to loosen a setting when require_reasons is true')
+        .option('--scope <path>', 'Write the setting in this scope instead of the root')
+        .option('--replace', 'Replace the whole list instead of adding to it')
+        .option('--remove', 'Remove these items from the list')
+        .option('--default', 'Delete the setting so the inherited or default value applies')
         .action(async (key: string, items: string[], flags: Record<string, unknown>, command: Command) => {
             const global = command.optsWithGlobals();
             await printCommand(

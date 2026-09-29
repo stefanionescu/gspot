@@ -52,10 +52,10 @@ export function registerExport(program: Command): void {
     program
         .command('export <file>')
         .summary('Export a profile')
-        .description('Write a profile from the policy of this repository, without anything that names a path')
+        .description('Write the policy to a profile other repositories can start from')
         .addHelpText(
             'after',
-            '\nEffects:\nWrites a reusable profile to the requested file from the current policy. Path-specific settings are omitted and reported. The repository policy remains unchanged.\n\nExit codes:\n0: the profile was written. 2: invalid input or inability to complete the request.\n\nExample:\ngspot export team.toml',
+            '\nEffects:\nWrites the policy to the file as a profile. Settings that name a path stay out, and export lists them. gspot.toml does not change.\n\nExit codes:\n- 0: the profile was written.\n- 2: the input was invalid, or export could not finish.\n\nExample:\ngspot export team.toml',
         )
         .action(async (file: string, _flags: Record<string, unknown>, command: Command) => {
             const global = command.optsWithGlobals();

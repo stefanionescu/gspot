@@ -128,13 +128,13 @@ export function settingRows(policy: Policy, scopes: ScopeSelection[]): SettingsL
 export function registerList(program: Command): void {
     program
         .command('list')
-        .summary('List configurations and settings')
-        .description('List configurations and check states, or effective settings and their sources')
+        .summary('List kits, checks, and settings')
+        .description('List the kits and their checks, or the settings and their sources')
         .addHelpText(
             'after',
-            '\nEffects:\nReads the policy and repository to list selected, detected, and available configurations. With settings, prints effective values and their sources. It does not execute checks or mutate project files.\n\nExit codes:\n0: the requested information was printed. 2: invalid input or inability to complete the request.\n\nExample:\ngspot list settings',
+            '\nEffects:\nLists the selected, detected, and available kits with the state of each check. gspot list settings prints each setting with its value and where the value comes from. list changes nothing and runs no check.\n\nExit codes:\n- 0: the list was printed.\n- 2: the input was invalid, or list could not finish.\n\nExample:\ngspot list settings',
         )
-        .addArgument(new Argument('[kind]', 'The information to list').choices(['settings']))
+        .addArgument(new Argument('[kind]', 'Pass settings to list the settings').choices(['settings']))
         .action(async (kind: string | undefined, _flags: Record<string, unknown>, command: Command) => {
             const global = command.optsWithGlobals();
             await printCommand(async () => {
