@@ -1,9 +1,10 @@
 import { Linter } from 'eslint';
 import { join } from 'node:path';
 import plugin from '#plugin/plugin.ts';
+import { readFileSync } from 'node:fs';
 import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import clientExample from '#docs/src/components/home/client-environment.json';
+import clientExample from '#tests/inputs/unit/plugin/client-environment.json';
 
 describe('the plugin', () => {
     test('the public client example retains its captured diagnostic and clean correction', () => {
@@ -14,6 +15,10 @@ describe('the plugin', () => {
         expect(broken).toStrictEqual(clientExample.findings);
         const corrected: unknown = linter.verify(clientExample.corrected, config, { filename: 'search.js' });
         expect(corrected).toStrictEqual(clientExample.clean);
+        // The plugin README shows the same defect and correction.
+        const readme = readFileSync(new URL('../../../packages/eslint-plugin/README.md', import.meta.url), 'utf8');
+        expect(readme).toContain(clientExample.broken);
+        expect(readme).toContain(clientExample.corrected);
     });
 
     test.each(['recommended', 'all'] as const)('%s applies its trivial-function rule', async (level) => {
