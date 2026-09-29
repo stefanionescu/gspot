@@ -1,16 +1,19 @@
+import { selectKits } from '#cli/kits/select.ts';
 import type { Manifest } from '#cli/types/kits.ts';
+import { kitManifests } from '#cli/kits/manifests.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { xcodePlan } from '#cli/commands/init/xcode.ts';
 import { agentFiles } from '#cli/agents/instructions.ts';
 import { npmPins, pythonPins } from '#cli/tools/pins.ts';
 import type { Policy } from '#cli/types/policy/policy.ts';
 import { misePins, pinnedTwice } from '#cli/tools/mise.ts';
+import { scopeAncestors } from '#cli/repository/scopes.ts';
 import { submodulePaths } from '#cli/repository/tracked.ts';
 import { MISE_CONFIG_PATH } from '#cli/config/tools/tools.ts';
 import { ciLintJobs } from '#cli/repository/existing-tooling.ts';
-import { CI_SETUP, HOOKS_ROW, CURSOR_RULE } from '#cli/config/commands/init.ts';
 import { SECONDS_PER_DAY, DEFAULT_RELEASE_AGE_DAYS } from '#cli/config/generation.ts';
 import type { ScopeEntry, ExistingTooling } from '#cli/types/repository/repository.ts';
+import { CI_SETUP, HOOKS_ROW, CURSOR_RULE, XCODE_PROJECT_SETTING } from '#cli/config/commands/init.ts';
 
 import type {
     Planning,
@@ -99,13 +102,23 @@ function commitScopeNames(scopes: ScopeEntry[], selection: InitSelection): strin
     return [...scopes.map((scope) => scope.name), 'root', 'hooks', 'deps'];
 }
 
-// The Xcode project plan, when the selection includes Xcode.
+// The Xcode project plan, when a kit selected for the scope that holds the project declares the Xcode settings.
 function xcodeRow(root: string, selection: InitSelection): ReturnType<typeof xcodePlan> | undefined {
     if (!selection.selectedIds.has('xcode')) return undefined;
-    return xcodePlan(
+    const found = xcodePlan(
         root,
         selection.scopes.map((scope) => scope.path),
     );
+    if (found === undefined) return undefined;
+    const scopes = selection.scopes.map((scope) => ({
+        path: scope.path,
+        kits: selection.scopePlans.get(scope.path) ?? [],
+    }));
+    const kits = [...selection.rootIds, ...scopeAncestors(scopes, found.scope).flatMap((entry) => entry.kits)];
+    const declared = selectKits(kits, kitManifests()).some((manifest) =>
+        manifest.settings.some((setting) => setting.name === XCODE_PROJECT_SETTING),
+    );
+    return declared ? found : undefined;
 }
 
 // The agent instruction files init writes, when any agent is configured.

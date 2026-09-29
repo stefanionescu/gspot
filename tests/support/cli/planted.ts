@@ -24,9 +24,8 @@ async function expectDefect(planted: Planted, entry: FindingCase): Promise<void>
 function correctionOf(entry: FindingCase, repository: PlantedRepository): PlantedInput {
     const given = entry.corrected ?? repository.corrected?.(entry) ?? { files: {} };
     const policy = 'policy' in given ? given.policy : entry.policy;
-    const policyEdit = 'policyEdit' in given ? given.policyEdit : entry.policyEdit;
     const executable = 'executable' in given ? given.executable : entry.executable;
-    const kept = { policy, policyEdit, executable, removed: given.removed };
+    const kept = { policy, executable, removed: given.removed };
     const defined = Object.entries(kept).filter(([, value]) => value !== undefined);
     return { check: entry.check, files: given.files, ...Object.fromEntries(defined) };
 }

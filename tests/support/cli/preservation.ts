@@ -84,16 +84,11 @@ function plantFiles(cwd: string, planted: PlantedInput, policy: string): void {
     writeFileSync(join(cwd, 'gspot.toml'), policy);
 }
 
-function plantedPolicy(policy: string, planted: PlantedInput): string {
-    const edited = planted.policyEdit === undefined ? policy : policy.replace(...planted.policyEdit);
-    if (edited === policy && planted.policyEdit !== undefined)
-        throw new Error(`The policy edit for ${planted.check} did not change the sandbox.`);
-    return planted.policy === undefined ? edited : `${edited}\n${planted.policy}`;
-}
 // Preserve bytes and permissions before the first mutation, including setup that fails partway through.
 export function plant(cwd: string, planted: PlantedInput): () => void {
     const policyPath = join(cwd, 'gspot.toml');
-    const policy = plantedPolicy(readFileSync(policyPath, 'utf8'), planted);
+    const current = readFileSync(policyPath, 'utf8');
+    const policy = planted.policy === undefined ? current : `${current}\n${planted.policy}`;
     const gone = planted.removed ?? [];
     const executables = planted.executable ?? [];
     const paths = [...new Set(['gspot.toml', ...gone, ...executables, ...Object.keys(planted.files)])];

@@ -116,7 +116,7 @@ plantedCases(
         {
             check: 'xcode/entitlements-policy',
             files: { 'App/App.entitlements': ENTITLED },
-            policyEdit: ['[tools.xcode]\n', '[tools.xcode]\nentitlements_allowed = ["aps-environment"]\n'],
+            policy: '[tools.xcode]\nentitlements_allowed = ["aps-environment"]\n',
             expected: { file: 'App/App.entitlements', rule: 'entitlement', line: 5 },
             corrected: {
                 files: {

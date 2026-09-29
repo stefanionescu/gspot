@@ -31,7 +31,6 @@ export type FindingCase = PlantedInput & {
 export type Correction = {
     files: Record<string, string>;
     policy?: string | undefined;
-    policyEdit?: [string, string] | undefined;
     removed?: string[];
     executable?: string[];
 };
@@ -73,7 +72,6 @@ export type PlantedInput = {
     check: string;
     files: Record<string, string>;
     policy?: string;
-    policyEdit?: [string, string];
     removed?: string[];
     executable?: string[];
 };
