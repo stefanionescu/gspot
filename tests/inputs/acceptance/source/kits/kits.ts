@@ -40,7 +40,6 @@ export const EVALUATED =
     'export function run(code: string): unknown {\n    // eslint-disable-next-line no-eval -- planted\n    return eval(code);\n}\n';
 export const OWN_RULE =
     'rules:\n    - id: planted-no-double\n      pattern: double(...)\n      message: The planted rule of the repository fires here.\n      languages: [typescript]\n      severity: ERROR\n';
-export const OWN_STYLES = ['gspot', 'config'];
 export const README = `# Planted
 
 A planted repository that holds documents and nothing else.

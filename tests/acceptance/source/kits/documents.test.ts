@@ -1,17 +1,14 @@
 // Public CLI journeys for document findings and tool failure recovery.
 import { join } from 'node:path';
+import { rmSync } from 'node:fs';
 import { test, expect } from 'bun:test';
-import { fileURLToPath } from 'node:url';
 import { run } from '#tests/support/cli/command.ts';
 import type { FindingCase } from '#tests/types/cli.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
-import { cpSync, rmSync, mkdirSync, readdirSync } from 'node:fs';
 import { runPlanted, plantedCases } from '#tests/support/cli/planted.ts';
-import { GUIDE, README, LICENSE, OWN_STYLES, REPORTED_ELSEWHERE } from '#tests/inputs/acceptance/source/kits/kits.ts';
+import { GUIDE, README, LICENSE, REPORTED_ELSEWHERE } from '#tests/inputs/acceptance/source/kits/kits.ts';
 
-const root = fileURLToPath(new URL('../../../..', import.meta.url));
-const STYLES = join(root, '.gspot', 'config', 'vale', 'styles');
 // What each check accepts in place of its planted document; the guide for the rest.
 const CORRECTIONS: Record<string, string> = {
     'markdown/fences': '# A page\n\n```json\n{ "open": true }\n```\n',
@@ -77,20 +74,6 @@ const CASES: FindingCase[] = [
     },
 ];
 
-// Copy the installed Vale packages so the fixture has private offline styles.
-function copyValePackages(target: string): void {
-    const styles = join(target, '.gspot', 'config', 'vale', 'styles');
-    mkdirSync(styles, { recursive: true });
-    for (const name of readdirSync(STYLES))
-        if (!OWN_STYLES.includes(name))
-            cpSync(join(STYLES, name), join(styles, name), { recursive: true, dereference: true });
-    mkdirSync(join(styles, 'config'), { recursive: true });
-    cpSync(join(STYLES, 'config', 'dictionaries'), join(styles, 'config', 'dictionaries'), {
-        recursive: true,
-        dereference: true,
-    });
-}
-
 plantedCases(
     'the markdown, docs and prose configurations',
     {
@@ -98,7 +81,6 @@ plantedCases(
         without: [],
         tools: ['vale', 'lychee', 'markdownlint-cli2'],
         files: { 'README.md': README, 'docs/guide.md': GUIDE, 'docs/second.md': GUIDE, LICENSE },
-        before: copyValePackages,
         corrected: (planted) => ({
             files: Object.fromEntries(
                 Object.keys(planted.files).map((path) => [path, CORRECTIONS[planted.check] ?? GUIDE]),
@@ -133,7 +115,9 @@ plantedCases(
                 expect(
                     reportSchema.parse(await Bun.file(join(sandbox, '.gspot/reports/report.json')).json()).checks,
                 ).toMatchObject([{ check: 'prose/vale', status: 'error' }]);
-                copyValePackages(sandbox);
+                // Apply syncs the missing packages again, which the error message tells the reader to run.
+                const synced = await run(sandbox, ['apply'], environment);
+                expect(synced.code, synced.stdout + synced.stderr).toBe(0);
                 const corrected = await run(
                     sandbox,
                     ['check', '--only', 'prose/vale', '--no-cache', '--json'],
