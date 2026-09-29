@@ -32,15 +32,15 @@ test('recommended guides omit marked sections and retain the next heading', asyn
     expect(all.get(path)).toContain('## Declaration order');
     expect(recommended.get(path)).toContain('## Rules not adopted');
     const writing = '.gspot/guides/general/prose/WRITING.md';
-    expect(recommended.get(writing)).not.toContain('### Avoid marketing language');
-    expect(all.get(writing)).toContain('### Avoid marketing language');
-    expect(recommended.get(writing)).toContain('### Write dates and times unambiguously');
+    expect(recommended.get(writing)).not.toContain('### Voice conventions');
+    expect(all.get(writing)).toContain('### Voice conventions');
+    expect(recommended.get(writing)).toContain('## Inclusive and respectful language');
     const css = '.gspot/guides/language/CSS.md';
     expect(recommended.get(css)).not.toContain('## Selectors and layout');
     expect(all.get(css)).toContain('## Selectors and layout');
     expect(recommended.get(css)).toContain('prefers-reduced-motion');
     for (const [guide, convention, safety] of [
-        ['language/TYPESCRIPT.md', '### Non-null assertion convention', '## Runtime boundaries'],
+        ['language/TYPESCRIPT.md', '### Type conventions', '## Runtime boundaries'],
         ['language/PYTHON.md', '### Import conventions', '## Imports'],
         ['language/BASH.md', '### Entrypoint conventions', '## Shell options'],
         ['framework/svelte/SVELTE.md', '### Callback naming', '## Runes and reactivity'],

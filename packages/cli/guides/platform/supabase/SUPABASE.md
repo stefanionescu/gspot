@@ -6,10 +6,10 @@ title: Supabase
 
 # Supabase
 
-Requirements about vocabulary, architecture, naming, documentation coverage, declaration
-order, API style, and complexity apply at `all` or when the project explicitly opts into
-them. Correctness, security, accessibility, type safety, routine formatting, and declared
-project contracts apply at both levels.
+The supabase kit's checks report a malformed config, a misnamed migration, a storage policy
+gap, and an admin key outside its allowed files. They report Deno lint and type errors, and
+generated types that drift from the schema. gitleaks reports a committed key. This guide
+holds the ownership and workflow decisions those checks cannot see.
 
 ## Ground rules
 
@@ -183,26 +183,13 @@ rows that are easier to maintain as source data.
 
 ## References
 
-- Supabase database migrations:
-  <https://supabase.com/docs/guides/deployment/database-migrations>.
-- Supabase CLI reference:
-  <https://supabase.com/docs/reference/cli/supabase-migration>.
-- Supabase Row Level Security:
-  <https://supabase.com/docs/guides/database/postgres/row-level-security>.
-- Supabase database functions:
-  <https://supabase.com/docs/guides/database/functions>.
-- Supabase Edge Functions:
-  <https://supabase.com/docs/guides/functions>.
-- Securing Supabase Edge Functions:
-  <https://supabase.com/docs/guides/functions/auth>.
-- Supabase Function Configuration:
-  <https://supabase.com/docs/guides/functions/function-configuration>.
-- Supabase Storage access control:
-  <https://supabase.com/docs/guides/storage/security/access-control>.
-- Supabase Storage schema:
-  <https://supabase.com/docs/guides/storage/schema/design>.
-- Scheduling Edge Functions:
-  <https://supabase.com/docs/guides/functions/schedule-functions>.
+[Database migrations](https://supabase.com/docs/guides/deployment/database-migrations),
+[row-level security](https://supabase.com/docs/guides/database/postgres/row-level-security),
+[Edge Functions](https://supabase.com/docs/guides/functions) and their
+[auth](https://supabase.com/docs/guides/functions/auth) and
+[configuration](https://supabase.com/docs/guides/functions/function-configuration),
+[storage access control](https://supabase.com/docs/guides/storage/security/access-control), and
+[scheduling functions](https://supabase.com/docs/guides/functions/schedule-functions).
 
 ## Edge function names
 

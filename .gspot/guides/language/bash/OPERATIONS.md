@@ -6,13 +6,12 @@ title: Bash Operations
 
 # Bash Operations
 
-Requirements about vocabulary, architecture, naming, documentation coverage, declaration
-order, API style, and complexity apply at `all` or when the project explicitly opts into
-them. Correctness, security, accessibility, type safety, routine formatting, and declared
-project contracts apply at both levels.
-
 Module ownership across a script family, deployment and publishing pipelines, and CI scripts.
-Script structure and options are in the Bash file; commands, processes, and secrets in Bash Safety.
+Script structure and options are in the Bash file; commands, processes, and secrets in Bash
+Safety. The structure checks of the bash kit report a barrel, a file that shares a stem with a
+sibling directory, and a private function called across files. They also report a public
+function outside `main` in an executable, and a discarded failure. This guide says why and
+holds the rest.
 
 ## Module ownership and visibility
 
@@ -219,23 +218,10 @@ retry_retryable() {
 }
 ```
 
-Use retries for:
-
-- retryable network pulls.
-- readiness polling.
-- `eventually consistent` provider APIs.
-- remote service startup checks.
-
-Do not use retries to mask:
-
-- corrupt data.
-- invalid credentials.
-- failed migrations or failed artifact validation.
-- syntax errors.
-- missing files.
-- failed validation.
-- failing checks.
-- permission problems.
+Retries cover network pulls, readiness polling, provider APIs that converge after a delay,
+and remote startup checks. They never mask corrupt data, invalid credentials, failed migrations or
+artifact validation, syntax errors, missing files, failed validation or checks, or permission
+problems.
 
 ## CI scripts
 

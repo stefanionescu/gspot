@@ -50,7 +50,7 @@ parameters:
 - Keep generated schemas and their inputs synchronized through the existing generator.
 
 An assertion that checks only selected response fields does not prove that the whole response
-satisfies its schema. Use the project's schema validator for that own.
+satisfies its schema. Use the project's schema validator for that claim.
 
 ## Contract organization
 

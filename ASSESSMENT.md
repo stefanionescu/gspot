@@ -256,8 +256,8 @@ them still spell the environment and package binary folders in places the helper
 
 ## 8. Documentation
 
-`architecture/` is 15,027 lines. `architecture/06-acceptance.md` alone is 3,225 lines and
-`architecture/22-remaining.md` is 1,075. Most of it is a decision log and a backlog, not
+`architecture/` is 15,027 lines. The acceptance record alone is 3,225 lines and the
+remaining-work record is 1,075. Most of it is a decision log and a backlog, not
 architecture. **cut**: keep the contracts a reader needs to change the code, and move the
 history to git.
 

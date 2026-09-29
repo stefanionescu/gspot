@@ -6,309 +6,36 @@ title: Swift
 
 # Swift
 
-Requirements about vocabulary, architecture, naming, documentation coverage, declaration
-order, API style, and complexity apply at `all` or when the project explicitly opts into
-them. Correctness, security, accessibility, type safety, routine formatting, and declared
-project contracts apply at both levels.
+Swift source follows the Apple API Design Guidelines and the local formatting and lint
+configuration. swift-format owns layout. SwiftLint reports unused imports, `try!`, `as!`,
+force unwraps at `all`, `fatalError`, `print`, `fallthrough`, and `unowned`. It reports
+implicitly unwrapped optionals, redundant `break`, `return`, `get`, `.init`, and raw values,
+`class func`, non-final classes, `fileprivate`, and `#imageLiteral`. It reports function
+length and complexity. The structure checks report declaration order.
 
-## Swift source style
+Warnings are errors in the build settings. This guide says why, and holds the rules no tool
+sees.
 
-Swift source follows Apple API Design Guidelines, Google Swift style guidance
-where it improves clarity, and the local formatting and lint configuration.
+## Files and style
 
-Rules:
-
-- Swift source files use UTF-8 and end in `.swift`.
-- Let formatter and lint configuration own indentation, wrapping, alignment,
-  spacing, semicolon policy, and brace placement.
-- Do not add manual formatting exceptions to work around local tooling.
-- Use `// MARK: - Section` only for meaningful groups in larger files.
-- File comments are optional and appear only when the file groups
-  multiple related abstractions and the grouping needs explanation.
-- Use type inference when the right-hand side makes the type obvious.
-- Add explicit type annotations for empty arrays/dictionaries, nil initial
-  values, weak type information, or public API clarity.
-
-Import rules:
-
-- Import exactly the top-level modules the file uses.
-- Do not rely on transitive imports.
-- Prefer whole-module imports.
-- Import individual declarations only when importing the whole module pollutes the namespace or create a known conflict.
-- Imports are the first non-comment tokens in the file.
-- Group imports by compiler condition where needed.
-- Place `@testable import` after regular imports when test files need it.
-- Remove unused imports instead of tolerating drift.
+Every file imports exactly the top-level modules it uses, as whole modules unless a single
+declaration avoids a known conflict. Imports are grouped by compiler condition, with
+`@testable import` after regular imports in tests. `// MARK: - Section` marks meaningful groups in larger files,
+and a file comment appears only when the file groups several abstractions and the grouping
+needs explanation. Type inference covers an obvious right-hand side; an explicit annotation
+covers empty collections, `nil` initial values, weak type information, and public API
+clarity. Enum raw values that map to an external wire or persistence contract are documented;
+an explicit case list replaces `default` where a future case must force review. Attributes
+with parameters go on their own line when they hurt readability inline.
 
 ### File organization
 
 <!-- level: all -->
 
-- Keep SwiftUI dynamic properties grouped by wrapper type.
-
-- Private declarations first, public last: every `private` and `fileprivate` top-level
-  declaration precedes the first internal or public one, so a reader meets the helpers before
-  the contract that uses them.
-- One primary top-level type per file by default.
-- Related small helper types may live in the same file when they are
-  private/fileprivate to the primary type.
-- Keep overloads with the same base name adjacent.
-- Extensions have a logical organization. Do not scatter a type across
-  many extension files without a clear reason.
-
-### Formatting constructs
-
-- Use one `let` or `var` declaration per statement except tuple destructuring.
-- Do not add multiple stored properties in one declaration except tuple
-  destructuring where appropriate.
-- Omit redundant `break` in switch cases.
-- Omit redundant `return` when Swift's implicit return improves readability and
-  local tooling accepts it.
-- Omit redundant raw enum values unless values map to external wire or
-  persistence contracts.
-- When enum raw values map to external systems, document the reason.
-- Prefer explicit enum case lists over `default` when future cases must force
-  code review.
-- Use `default` only when the behavior is intentionally the same for future
-  cases.
-- Use numeric separators for long numeric literals when they improve
-  readability.
-- Attributes with parameters go on their own line before the declaration when
-  they hurt readability inline.
-
-## Swift programming practices
-
-- Code compiles without warnings. Warnings are errors in the build settings.
-- Remove easy warnings. Do not normalize warning debt.
-- Prefer `let`; use `var` only when mutation is required.
-- Use `AnyObject` for class-constrained protocols.
-- Do not call literal protocol initializers directly, such as `integerLiteral:`.
-- Avoid explicit `.init(...)` when calling a concrete type initializer directly.
-- Omit `get` for read-only computed properties.
-- Prefer shorthand types: `[Element]`, `[Key: Value]`, and `Wrapped?`.
-- Use `Void` for function type returns, but omit `-> Void` in `func`
-  declarations.
-- Use optionals for valid absence, not sentinel values.
-- Compare optional values to `nil` when only presence matters and the wrapped
-  value is unused.
-- Use typed errors when there are multiple meaningful failure states.
-- Avoid unchecked `try!` and `as!` in production. A force unwrap requires a proven invariant.
-  The blanket force-unwrap prohibition applies at `all`.
-- A force unwrap/cast requires a nearby invariant comment unless in tests or a
-  clearly safe literal-only programmer-error case.
-- Avoid global mutable state.
-- Prefer immutable `static let` or computed `static var` over stored mutable
-  `static var`.
-- Prefer `guard` for early exits and invalid preconditions.
-- Use `for ... where` when the whole loop body is guarded by one condition.
-- Prefer `for` loops over `forEach` when control flow uses `return`, `break`,
-  `continue`, or async work.
-- Prefer `map`, `compactMap`, and `filter` when they directly express collection
-  transformation without side effects.
-- Use optional binding when the value is needed; compare to `nil` when only
-  presence matters.
-- Prefer optional chaining for one-off optional access; use binding when
-  multiple operations need the unwrapped value.
-- Do not use `fallthrough` for cases that can be merged.
-- In pattern matching, put `let` or `var` on each bound element rather than
-  distributing it across the whole pattern when that avoids ambiguity.
-- Avoid `unowned` captures; prefer `[weak self]` with an early return after
-  unwrapping, or capture the specific immutable values needed.
-- Prefer `#fileID` in production diagnostics; use `#filePath` only in tests or
-  developer tooling where the full path is useful.
-- Overload existing operators only when the meaning matches the standard
-  semantic meaning.
-
-### API and ownership conventions
-
-<!-- level: all -->
-
-- Prefer code that runs tests, removes meaningful duplication, expresses intent,
-  and minimizes unnecessary types and methods.
-- Remove duplication after the repeated concept is understood. Do not create a
-  speculative abstraction for a single call site.
-- At `all`, configured function-length and complexity limits apply. Split functions
-  by responsibility while preserving behavior and assertions.
-- Use synthesized memberwise initializers for structs when they are sufficient
-  and public API is not needed.
-- Prefer value types for data without identity.
-- Use classes for identity, reference semantics, lifecycle, observable state, or
-  framework requirements.
-- Mark classes `final` by default unless subclassing is intended.
-- Prefer `static func` over `class func` unless overriding is intended.
-- Avoid implicitly unwrapped optionals except Apple lifecycle cases such as
-  `@IBOutlet`, Objective-C interop nullability gaps, and test data.
-- Use `private` over `fileprivate` unless same-file cross-type access is
-  required.
-- Declare top-level access explicitly. Use `private`, `internal`, or `public`
-  according to the actual API contract.
-- Do not put explicit access control on an entire extension; mark members as
-  needed.
-- Nest types when the nested type only makes sense in the parent's context.
-- Use caseless enums for namespaces only when grouping truly related static
-  declarations.
-- Read `ProcessInfo.processInfo.environment` and `Bundle.main.infoDictionary` in one
-  configuration owner. Nowhere else.
-- Prefer methods/properties over free functions unless the free function is
-  standard-library-like and symmetric.
-- Do not use `print`, `debugPrint`, or `dump` for production logging; use the
-  project logging system.
-- Avoid `#imageLiteral` and `#colorLiteral`; use named assets or explicit
-  constructors.
-- Avoid custom operators unless the operator is a standard notation in the
-  problem domain.
-
-### Design conventions
-
-<!-- level: all -->
-
-- Avoid large `viewDidLoad`, `viewDidAppear`, app delegate, or scene delegate
-  methods. Move setup into named private methods or composition objects when it
-  clarifies responsibility.
-- Avoid condition flags that force the same branching across multiple methods.
-  Prefer separate strategy/data source objects or explicit state types when
-  modes have different behavior.
-- Prefer composition over inheritance for sharing UI behavior.
-- Inheritance is acceptable for framework requirements or stable shared
-  behavior, but not as a default reuse mechanism.
-
-Avoid mode checks repeated across every `UITableViewDataSource` method:
-
-```swift
-if mode == .sectioned {
-    // Section logic.
-} else {
-    // Flat logic.
-}
-```
-
-Prefer swapping a focused data source when the list mode changes:
-
-```swift
-currentDataSource = SectionedProductsDataSource(products: products)
-tableView.dataSource = currentDataSource
-tableView.reloadData()
-```
-
-## Networking
-
-- Build URLs with `URLComponents` or a typed endpoint value. Do not concatenate query strings.
-  `URL(string:)!` in production needs a documented invariant.
-- Base URLs and credentials come from configuration injected at composition.
-- Request bodies are `Encodable` types with an explicit method and content type, never
-  `[String: Any]`.
-- `URLSession` succeeds for non-2xx responses: validate the `HTTPURLResponse` status explicitly
-  and treat a non-HTTP response as a transport failure.
-- Decode into DTOs, map DTOs into domain values at the boundary, and validate required fields and
-  external enum values during mapping. Do not invent fallback IDs, dates, or cases.
-- Clients expose typed errors that distinguish encoding, decoding, transport, invalid response,
-  invalid status, and cancellation. Cancellation stays distinguishable when navigation supersedes
-  a task.
-- Tests inject the transport and cover request construction, status validation, decoding
-  failure, cancellation, and mapping. They never hit a live service.
-
-### Networking ownership
-
-<!-- level: all -->
-
-- A network client owns base URL, path construction, query items, method, headers, body
-  encoding, transport calls, response status validation, and response decoding. Views and view
-  models never construct a `URLRequest`, call `URLSession`, decode a DTO, or inspect a status code.
-- Prefer Foundation `URLSession` with async/await over a third-party networking framework.
-
-## Documentation comments
-
-Rules:
-
-- Use `///` for Swift documentation comments, not block comments.
-- Place doc comments before attributes and modifiers.
-- Public and open declarations require documentation when the local documentation
-  policy requires it.
-- Internal/private declarations need comments only when they explain non-obvious
-  invariants, concurrency, security, lifecycle, or domain rules.
-- Start doc comments with a brief summary.
-- Add `- Parameter`, `- Parameters`, `- Returns`, and `- Throws` only when they
-  add information not already obvious from the summary and signature.
-- Use singular `- Parameter name:` for one parameter.
-- Use grouped `- Parameters:` for multiple parameters.
-- Do not document overrides or protocol conformances by copying base
-  documentation.
-- Do not add comments that only repeat the declaration.
-- Do not include change history, old names, file paths, or implementation
-  chronology.
-- A `TODO` is `TODO(<issue-url-or-YYYY-MM-DD>): <sentence>`; the owner is an issue link or an
-  expiry date, never a person.
-- `// MARK:` comments are regular comments, not doc comments.
-- Comments before declarations are doc comments only when they document the
-  declaration's API contract.
-- Use ordinary `//` comments for implementation notes, TODOs, lint/tool
-  directives, and grouped blocks.
-- Use Apple markup where it improves symbol clarity, especially backticks for
-  parameter or type names.
-
-## Concurrency
-
-Rules:
-
-- Prefer structured concurrency with `async`/`await` over callback pyramids and
-  unmanaged task trees.
-- Prefer `async throws` APIs for asynchronous operations that can fail.
-- UI state mutation belongs on the main actor.
-- ViewModels are main-actor isolated; move expensive work into use cases,
-  repositories, actors, or background tasks.
-- Use `@MainActor` for UI-facing observable state.
-- Keep `Task` creation at owners such as ViewModels, coordinators,
-  services, or views using `.task`.
-- Avoid starting long-running work in initializers; expose `start()`, `load()`,
-  or lifecycle methods instead.
-- Do not create unstructured `Task` values without a owner and
-  cancellation strategy.
-- Store task handles when work must be cancellable because a view disappears,
-  the user retries, or a newer request supersedes an older one.
-- Check cancellation in long-running loops and before publishing stale async
-  results.
-- Keep shared mutable state behind actors, main-actor isolation, locks, or other
-  explicit synchronization.
-- Use actors for mutable shared state that can be accessed concurrently.
-- Avoid `DispatchQueue.main.async` when actor isolation can express the same
-  requirement.
-- Prefer `Sendable` designs the compiler can verify.
-- Use `@preconcurrency import` for modules without concurrency annotations instead of
-  unsafe Sendable workarounds.
-- Do not mark types `@unchecked Sendable` or use `nonisolated(unsafe)` unless a
-  local invariant is documented and there is no safer design.
-- Any `@unchecked Sendable` exception requires a nearby explanation of the
-  synchronization or invariant.
-- Inject clocks or scheduling boundaries when time affects business logic or
-  tests.
-
-## Error handling
-
-Rules:
-
-- Use typed errors where callers need different recovery paths.
-- Use untyped `Error` only at generic boundaries where concrete cases add no
-  value.
-- Convert technical errors to user-facing messages at presentation boundaries.
-- Do not expose API status codes, SQL errors, file paths, tokens, internal IDs,
-  or SDK messages directly to users.
-- Prefer throwing errors for failed operations and explicit state enums for UI
-  loading/error display.
-- Avoid `fatalError` in production except unrecoverable programmer errors with a
-  documented invariant; local lint already restricts this further.
-- Use `assertionFailure` for unexpected but recoverable states where production
-  can safely continue.
-- Use `precondition` only when continuing is invalid and the invariant is
-  required.
-- Do not add speculative fallback handling for states that cannot occur under
-  the real contract.
-
-## Declaration order
-
-<!-- level: all -->
-
-Put the private calculation before the function that exposes the comparison.
-Both calls share the same definition of a positive total.
+One primary top-level type per file, with small private helpers allowed beside it. Overloads
+sit adjacent, extensions are organized rather than scattered across files, and SwiftUI
+dynamic properties are grouped by wrapper type. Private declarations come first and public last, so a
+reader meets the helpers before the contract that uses them.
 
 Good:
 
@@ -323,8 +50,121 @@ private func positiveTotal(_ values: [Int]) -> Int {
 
 /// Compare the sums of positive values in two collections.
 public func comparePositiveTotals(_ left: [Int], _ right: [Int]) -> Int {
-    let leftTotal = positiveTotal(left)
-    let rightTotal = positiveTotal(right)
-    return leftTotal - rightTotal
+    positiveTotal(left) - positiveTotal(right)
 }
 ```
+
+## Practices
+
+`let` is the default and `var` marks required mutation; class-constrained protocols use
+`AnyObject`; shorthand types (`[Element]`, `[Key: Value]`, `Wrapped?`) and `Void` for function
+types are preferred. Optionals express valid absence rather than sentinel values, compared to
+`nil` when only presence matters and bound when the value is used, chained for one-off access.
+Typed errors distinguish several meaningful failure states. A force unwrap or cast needs a
+proven invariant stated in a nearby comment, except in tests or a literal-only programmer
+error. Global mutable state is avoided, with `static let` or computed `static var` over stored
+mutable statics.
+
+`guard` handles early exits, `for ... where` a loop guarded by one condition,
+`for` over `forEach` when control flow or async work is involved, and `map`, `compactMap`, and
+`filter` express side-effect-free transformation. Pattern bindings put `let` on each element
+where that avoids ambiguity. Closures capture `[weak self]` with an early return, or the
+specific immutable values they need. `#fileID` serves production diagnostics; `#filePath`
+only tests and tooling. Operators are overloaded only with their standard meaning, and a
+custom operator exists only as standard domain notation.
+
+### API and ownership conventions
+
+<!-- level: all -->
+
+Code runs its tests, removes understood duplication, expresses intent, and minimizes types
+and methods; no speculative abstraction serves one call site. Structs keep synthesized
+memberwise initializers where sufficient, value types hold data without identity, and classes
+serve identity, reference semantics, lifecycle, observable state, or framework requirements.
+An implicitly unwrapped optional appears only for Apple lifecycle cases such as `@IBOutlet`,
+Objective-C nullability gaps, and test data.
+
+Top-level access is declared explicitly per the real contract, `private` over `fileprivate`
+unless same-file cross-type access is required. An extension carries no blanket access
+modifier. Types nest when they only make sense in the parent's context, and a caseless enum
+groups truly related statics. Methods and properties beat free functions unless the function
+is standard-library-like and symmetric.
+`ProcessInfo.processInfo.environment` and `Bundle.main.infoDictionary` are read in one
+configuration owner and nowhere else. Logging goes through the project logging system, and
+images and colors come from named assets or explicit constructors.
+
+Large `viewDidLoad`, `viewDidAppear`, app delegate, or scene delegate methods move their
+setup into named private methods or composition objects. A mode flag that forces the same
+branching across several methods becomes separate strategy or data source objects or an
+explicit state type. Composition shares UI behavior. Inheritance serves framework
+requirements or stable shared behavior rather than default reuse:
+
+```swift
+currentDataSource = SectionedProductsDataSource(products: products)
+tableView.dataSource = currentDataSource
+tableView.reloadData()
+```
+
+## Networking
+
+URLs come from `URLComponents` or a typed endpoint value, never concatenated query strings,
+and a production `URL(string:)!` documents its invariant. Base URLs and credentials are
+injected at composition. Request bodies are `Encodable` types with an explicit method and
+content type, never `[String: Any]`. `URLSession` succeeds for non-2xx responses, so the
+`HTTPURLResponse` status is validated explicitly and a non-HTTP response is a transport
+failure.
+
+Responses decode into DTOs mapped into domain values at the boundary. Required fields and
+external enum values are validated there, and no fallback ID, date, or case is invented.
+Clients expose typed errors distinguishing encoding, decoding, transport, invalid response,
+invalid status, and cancellation, which stays distinguishable when navigation supersedes a
+task. Tests inject the transport and cover request construction, status validation, decoding
+failure, cancellation, and mapping without a live service.
+
+### Networking ownership
+
+<!-- level: all -->
+
+A network client owns base URL, path construction, query items, method, headers, body
+encoding, transport calls, status validation, and decoding. Views and view models never build
+a `URLRequest`, call `URLSession`, decode a DTO, or inspect a status. Foundation `URLSession`
+with async/await is preferred over a third-party networking framework.
+
+## Documentation comments
+
+`///` documents a declaration and sits before attributes and modifiers, opening with a brief
+summary; `- Parameter name:`, `- Parameters:`, `- Returns`, and `- Throws` appear only when
+they add information beyond the summary and signature. Public and open declarations are
+documented when the documentation policy requires it; internal and private ones only for
+non-obvious invariants, concurrency, security, lifecycle, or domain rules. No comment
+repeats the declaration, copies base documentation onto an override or conformance, or
+records change history, old names, or file paths. A `TODO` is
+`TODO(<issue-url-or-YYYY-MM-DD>): <sentence>`, owned by an issue link or an expiry date, never
+a person. `// MARK:` lines, implementation notes, and tool directives are ordinary `//`
+comments, and Apple markup backticks name parameters and types.
+
+## Concurrency and errors
+
+Structured `async`/`await` with `async throws` APIs replaces callback pyramids and unmanaged
+task trees. UI state mutates on the main actor: view models are `@MainActor`, and expensive
+work moves into use cases, repositories, actors, or background tasks. `Task` creation stays
+at owners (view models, coordinators, views through `.task`), never in an initializer, always
+with an owner and a cancellation strategy. Handles are stored when a disappearing view, a
+retry, or a newer request must cancel older work. Cancellation is checked in long loops and
+before publishing stale results.
+
+Shared mutable state sits behind actors, main-actor
+isolation, or explicit synchronization, with actor isolation preferred over
+`DispatchQueue.main.async`. Designs are `Sendable` as the compiler verifies; a module without
+concurrency annotations gets `@preconcurrency import`, and `@unchecked Sendable` or
+`nonisolated(unsafe)` appears only with a documented local invariant and no safer design.
+Clocks and scheduling boundaries are injected where time affects logic or tests.
+
+Typed errors serve callers with different recovery paths, and untyped `Error` only generic
+boundaries where cases add nothing. Technical errors become user-facing messages at the
+presentation boundary; status codes, SQL errors, file paths, tokens, internal IDs, and SDK
+messages never reach users. Failed operations throw, and UI loading and error display use
+explicit state enums. `fatalError` is reserved for an unrecoverable programmer error with a
+documented invariant, `assertionFailure` for an unexpected but recoverable state, and
+`precondition` for an invariant without which continuing is invalid. No speculative fallback
+handles a state the real contract cannot produce.

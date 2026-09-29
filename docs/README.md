@@ -56,8 +56,8 @@ guidance out of schema dumps and internal module inventories.
 Trace commands and settings to the source before documenting them. Distinguish a generated
 configuration from an executed tool, a compiled artifact from native platform acceptance, and
 a configured deployment from a live service. Document a user-visible limitation beside the
-affected procedure. Keep audit counts, incomplete implementation work, and acceptance history
-in `../architecture/22-remaining.md`.
+affected procedure. Audit counts, unfinished work, and history belong in the issue tracker and
+in Git, not in the manual.
 
 Use complete policy examples when a reader needs a starting file. Label fragments and name
 their destination. State required tools and working directories. Pair diagnostic examples with

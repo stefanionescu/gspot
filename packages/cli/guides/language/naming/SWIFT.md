@@ -6,104 +6,44 @@ title: Swift Naming
 
 # Swift Naming
 
-Requirements about vocabulary, architecture, naming, documentation coverage, declaration
-order, API style, and complexity apply at `all` or when the project explicitly opts into
-them. Correctness, security, accessibility, type safety, routine formatting, and declared
-project contracts apply at both levels.
+Swift naming follows the Apple API Design Guidelines and optimizes for call-site clarity.
+SwiftLint reports casing, leading underscores, `k` and `g` prefixes, and all-caps constants;
+the naming policy reports the banned role words and `should`. This guide holds the rest.
 
-Swift naming follows Apple API Design Guidelines, Google Swift file guidance
-where useful, and the local quality rules. Optimize for call-site clarity.
-
-## Swift case rules
+## Case, scope, and files
 
 <!-- level: all -->
 
-Rules:
+Types, protocols, actors, enums, structs, classes, and generic parameters are `PascalCase`;
+everything else, including enum cases and global constants, is `lowerCamelCase`. Swift-only
+types carry no Objective-C prefix, no Hungarian notation, and no `optional` or `maybe` in an
+optional's name. American English matches Apple APIs, initialisms read consistently at call
+sites (`URL`, `ID`, `API`, `HTTP`, `JSON`, so `userID` rather than `userId`), and a Unicode
+identifier exists only for domain notation the team shares. Privacy is an access modifier,
+never an underscore.
 
-- Types, protocols, actors, enums, structs, classes, and generic type parameters
-  use `PascalCase`.
-- Variables, constants, functions, methods, properties, parameters, argument
-  labels, enum cases, and global constants use `lowerCamelCase`.
-- Swift file names match the primary type or extension target pattern.
-- Do not use Objective-C style app or company prefixes for Swift-only types.
-- Do not use Hungarian notation, `k` prefixes, `g` prefixes, or all-caps global
-  constants.
-- Do not use leading underscores, suffixes, or prefixes as access control. Use
-  Swift access modifiers instead.
-- Use American English spellings to match Apple APIs.
-- Treat common initialisms consistently and readably at call sites, such as
-  `URL`, `ID`, `API`, `HTTP`, and `JSON`.
-- Do not include `optional` or `maybe` in optional variable names.
-- Use Unicode identifiers only for legitimate domain notation understood by the
-  team.
+A structural relationship is expressed by nesting rather than a longer
+top-level name: `Parser.Error`, not `ParseError`. A static property does not repeat its
+declaring type: `UIColor.primary`, not `UIColor.primaryColor`. `shared` and `default` are
+used only when they describe the role. An empty enum is a namespace only for tightly related
+constants or functions never instantiated.
 
-| Avoid                | Prefer           | Meaning                   |
-| -------------------- | ---------------- | ------------------------- |
-| `HTTPLoginViewModel` | `LoginViewModel` | Login presentation state. |
-| `user_profile`       | `UserProfile`    | A profile type.           |
-| `MAX_RETRY_COUNT`    | `maxRetryCount`  | A constant.               |
-| `maybeAvatarURL`     | `avatarURL`      | An optional URL.          |
-| `userId`             | `userID`         | A user identifier.        |
+A file with one primary type is named for it; small private helpers may share the file, and a
+file with no primary type is split. Extension files are `TypeName+Capability.swift` or
+`TypeName+ProtocolConformance.swift`, never `TypeName+Extensions.swift` when a narrower
+capability exists, and there is no extension dumping ground. The app name prefixes a file
+only for the entry point or an unavoidable framework collision. Directories are PascalCase
+and mirror the type or feature they group, `Features/Login/`, `Platform/Networking/`. Test
+files are `<Type>Tests.swift` in the test target, grouped by verified behavior.
 
-## Swift scoped names
+## Roles
 
 <!-- level: all -->
 
-Prefer language scoping over name prefixes when a relationship is structural.
-If a type is owned by another type and can be nested, nest it instead of
-inventing a longer top-level name.
-
-Rules:
-
-- Use access control for privacy; do not signal privacy with `_privateName`.
-- Nest owned errors, options, and helper types when Swift allows it.
-- Do not repeat the declaring type inside static or class properties that return an
-  instance of that same type.
-- Use lower camel case for global constants.
-- Use `shared` or `default` for singleton-like values only when those words
-  actually describe the role.
-- Use an empty enum as a namespace only for tightly related constants or helper
-  functions that are never instantiated.
-
-| Avoid                  | Prefer             | Meaning                     |
-| ---------------------- | ------------------ | --------------------------- |
-| `_cachedProfile`       | `cachedProfile`    | A private stored value.     |
-| `ParseError`           | `Parser.Error`     | An error owned by a parser. |
-| `UIColor.primaryColor` | `UIColor.primary`  | A color owned by its type.  |
-| `kSecondsPerMinute`    | `secondsPerMinute` | A global constant.          |
-
-## Swift files
-
-<!-- level: all -->
-
-Rules:
-
-- A file with one primary type is named after that type.
-- Related small helper types may live in the same file when they are private or
-  tightly owned by the primary type.
-- Split a file when there is no clear primary type.
-- Extension files use `TypeName+Capability.swift` or
-  `TypeName+ProtocolConformance.swift`.
-- Do not use `TypeName+Extensions.swift` when a narrower capability name exists.
-- Do not create broad extension dumping grounds.
-- Do not prefix files with the app name unless the file is the app entry point
-  or a framework collision makes the prefix unavoidable.
-- Directories are PascalCase and mirror the type or feature they group: `Features/Login/`,
-  `Platform/Networking/`.
-- Test files are `<Type>Tests.swift` in the test target, grouped by the behavior they verify.
-
-| Avoid                  | Prefer                                    | Meaning                       |
-| ---------------------- | ----------------------------------------- | ----------------------------- |
-| `LoginStuff.swift`     | `LoginView.swift`                         | Login presentation.           |
-| `String+Helpers.swift` | `String+SearchQuery.swift`                | Search query operations.      |
-| `Extensions.swift`     | `UIViewController+ChildContainment.swift` | Child containment operations. |
-
-## Suffixes that name a role
-
-<!-- level: all -->
-
-A type's suffix says what it owns. Which suffixes a project uses depends on the pattern it picked,
-and that list is the project's own. These framework role words have one meaning:
+A suffix says what a type owns and means one thing across the whole codebase. If `Repository`
+owns domain-facing data access in one feature, it does not own HTTP mechanics in another.
+Which suffixes a project uses depends on the pattern it picked, but these framework words have
+one meaning:
 
 | Role word        | Use when                                                                               |
 | ---------------- | -------------------------------------------------------------------------------------- |
@@ -117,236 +57,65 @@ and that list is the project's own. These framework role words have one meaning:
 | `DataSource`     | UIKit list adapter that feeds rows and sections.                                       |
 | `CellModel`      | Values a reusable cell renders: strings, image references, state, and lightweight IDs. |
 
-Two rules hold whatever the list is:
+`Manager`, `Handler`, `Helper`, `Util`, and `Data` name a position in an imagined architecture
+rather than a behavior: `LoginViewModel` rather than `LoginManager`, `LoginViewState` rather
+than `LoginData`, `LoginViewAction` rather than `LoginHandler`, `LoginView` rather than
+`LoginScreen`. Observable UI state stays on the main actor, with fields such as `email` and
+`isSubmitButtonEnabled` for presentation values and cases such as `emailChanged` and
+`submitButtonTapped` for typed intent.
 
-- A suffix means one thing across the whole codebase. If `Repository` owns domain-facing data
-  access in one feature, it does not own HTTP mechanics in another.
-- `Manager`, `Handler`, `Helper`, `Util` and `Data` are not roles. They name a position in an
-  imagined architecture rather than a behavior, and the naming policy bans them.
+Repository protocols speak domain language and return domain results through domain
+operations (`ProfileRepository.getProfile`); an implementation may name its technology
+(`HTTPProfileRepository`) when that distinguishes real implementations. Client types own
+external API or SDK mechanics (`ProfileAPIClient`). Coordinators own route state, destination
+construction, stack mutations, and presentation flow (`ProfileCoordinator.showEditProfile`).
+Route enums are feature-owned, named for the flow, and carry stable domain identifiers
+(`ProfileDestination.editProfile`), never view models, views, repository implementations, SDK
+clients, database records, or DTOs.
 
-| Avoid          | Prefer            | Meaning                              |
-| -------------- | ----------------- | ------------------------------------ |
-| `LoginManager` | `LoginViewModel`  | Login presentation state and intent. |
-| `LoginScreen`  | `LoginView`       | A rendered login view.               |
-| `LoginData`    | `LoginViewState`  | Values that describe presentation.   |
-| `LoginHandler` | `LoginViewAction` | Typed login intent.                  |
-
-Keep observable UI state on the main actor. Use fields such as `email` and
-`isSubmitButtonEnabled` for presentation values, and cases such as
-`emailChanged` and `submitButtonTapped` for typed intent.
-
-## Swift ViewModel methods
+## Methods, labels, and delegates
 
 <!-- level: all -->
 
-Use UI event names when a ViewModel method represents a direct UI event. Use
-domain verbs when the method does domain work.
+A ViewModel method that represents a direct UI event is named for the event
+(`submitButtonTapped()`, `cameraPermissionDenied()`, `selectedItemChanged(to:)`), and one that
+does domain work takes a domain verb (`enqueueFileUpload(_:)`, `refreshOrderHistory(for:)`,
+`validateEmailAddress(_:)`); `handle`, `process`, and `didTap` name neither. `handle...` is
+reserved for literal UIKit target-action and notification handlers marked `@objc`.
 
-Direct UI event examples:
+Names form grammatical English at the call site: the first label is omitted when the base
+name and argument form a phrase and included when it clarifies a weak type. Initializer
+arguments that set stored properties use the property names with explicit `self.`, and
+factories use `make...` (`makeProfileView(for:)`). Nonmutating methods without side effects
+read as noun phrases, and mutating methods read as imperatives. Pairs follow `sort`/`sorted`,
+`append`/`appending`, `formUnion`/`union`. `addMonthToDate` with a `monthCount` argument
+beats `addToDate`; `updateUser` beats `save`.
 
-```swift
-func submitButtonTapped()
-func cameraPermissionDenied()
-func fileImportStarted()
-func accountPickerSelectionChanged(to account: AccountOption)
-func retryButtonTapped()
-func selectedItemChanged(to itemID: Item.ID)
-```
+A delegate method passes the source object first and unlabeled, and is never trimmed because
+one caller currently owns it. A source-only `Void` event is the source type plus a tense
+phrase: `draftStore(_:didDeleteDraft:)`. A source-only `Bool` answer uses `can`, `is`, or
+another predicate, never the weak modal: `draftStoreCanDeleteDraft`. A source-only value is a
+noun phrase with a natural preposition: `numberOfSections(in:)`. Extra arguments make the
+second label describe the event or requested value:
+`messageListDataSource(_:heightForMessageAt:)`.
 
-Domain work examples:
-
-```swift
-func enqueueFileUpload(_ file: PendingUploadFile)
-func refreshOrderHistory(for accountID: Account.ID) async
-func updateDraftReport(_ report: DraftReport) async throws
-func validateEmailAddress(_ emailAddress: String) -> EmailValidationResult
-```
-
-| Avoid     | Prefer                   | Meaning                 |
-| --------- | ------------------------ | ----------------------- |
-| `handle`  | `submitButtonTapped`     | A submit-button event.  |
-| `process` | `passwordFieldChanged`   | A password-field event. |
-| `update`  | `updateDraftMessageText` | Draft text replacement. |
-| `didTap`  | `validateLoginForm`      | Login form validation.  |
-
-UIKit target-action and notification handlers may use `handle...` when they are
-literal framework handlers:
-
-```swift
-@objc
-func handleConfirmButtonTapped(_ sender: UIButton) { }
-
-@objc
-func handleKeyboardDidShowNotification(_ notification: Notification) { }
-```
-
-Do not use `handle` for normal ViewModel intent methods.
-
-## Swift function and argument labels
+## Protocols and identifiers
 
 <!-- level: all -->
 
-Rules:
+A protocol carries no `I` prefix and no `Protocol` suffix. A domain role is a noun
+(`ProfileRepository`), a capability is a natural capability name, often `-ing`
+(`ProgressReporting`, `ThemeColorProviding`, `LoginCoordinating`), and an automatic `-able`
+name that describes no clear capability is avoided. `Provider`, `Repository`, `Client`, and
+`Coordinating` appear only when that is the role, and no protocol exists per ViewModel or use
+case merely to enable mocks.
 
-- Function and method names form grammatical English at the call site.
-- Omit the first argument label when the base name and first argument form a
-  clear phrase.
-- Include argument labels when they clarify weak types or avoid ambiguity.
-- Initializer arguments that directly set stored properties use the
-  property names.
-- Use explicit `self.` in initializers when parameter and stored property names
-  match.
-- Factory methods that create new instances use `make...` when that
-  improves clarity.
-- Nonmutating methods without side effects read as noun phrases where
-  natural.
-- Mutating methods with side effects use imperative verb phrases.
-- Use Swift mutating/nonmutating pairs where applicable, such as
-  `sort`/`sorted`, `append`/`appending`, and `formUnion`/`union`.
-
-| Avoid       | Prefer            | Meaning                                        |
-| ----------- | ----------------- | ---------------------------------------------- |
-| `addToDate` | `addMonthToDate`  | Date addition with a `monthCount` argument.    |
-| `make`      | `makeProfileView` | View construction with a `for` argument label. |
-| `save`      | `updateUser`      | Update an existing user.                       |
-
-Initializer example:
-
-```swift
-struct Person {
-    let name: String
-    let phoneNumber: String
-
-    init(name: String, phoneNumber: String) {
-        self.name = name
-        self.phoneNumber = phoneNumber
-    }
-}
-```
-
-## Swift delegates
-
-<!-- level: all -->
-
-Delegate methods put the delegate owner first, following Apple API patterns.
-
-Rules:
-
-- Pass the delegate source object as the first argument.
-- Leave the source object argument unlabeled.
-- For a source-only `Void` event, use the source type plus a past-tense or
-  future-tense event phrase.
-- For a source-only `Bool` assertion, use the source type plus `can`, `is`, or
-  another allowed predicate phrase that describes the returned answer.
-- Do not introduce `should` in delegate names. Preserve it only for external
-  framework requirements covered by an explicit quality exemption.
-- For a source-only non-Boolean value, use a noun phrase for the queried value
-  and label the source object with a natural preposition.
-- When there are extra arguments, use the source type as the base name, then
-  make the second argument label describe the event, question, or requested
-  value.
-- Do not omit the source object just because the delegate is currently owned by
-  one caller.
-
-For a deletion event, use a method named `draftStore` whose first, unlabeled
-argument is the owning store and whose next label is `didDeleteDraft`.
-Use `draftStoreCanDeleteDraft` for a capability query. A section-count query
-can use `numberOfSections(in:)`; the preposition identifies the data source.
-
-A row-height query can use `messageListDataSource(_:heightForMessageAt:)`.
-The arguments identify the source and the index path, so the method does not
-rely on hidden caller state.
-
-## Swift protocols
-
-<!-- level: all -->
-
-Rules:
-
-- Do not prefix protocol names with `I`.
-- Do not suffix protocols with `Protocol`.
-- Protocols that describe what something is use nouns.
-- Capability protocols use natural capability names, often `-ing` when the
-  protocol describes behavior.
-- Use `Provider`, `Repository`, `Client`, or `Coordinating` only when that is the
-  actual role.
-- Avoid automatic `-able` names that do not describe a clear capability.
-- Do not create protocols for every ViewModel or use case just to make mocks.
-
-| Avoid                    | Prefer                | Meaning                          |
-| ------------------------ | --------------------- | -------------------------------- |
-| `IFooEventHandler`       | `ProgressReporting`   | A progress-reporting capability. |
-| `LoginViewModelProtocol` | `LoginCoordinating`   | Navigation coordination.         |
-| `DataLoadable`           | `ProfileRepository`   | Profile persistence.             |
-| `Colorable`              | `ThemeColorProviding` | Theme color access.              |
-
-Use a noun when the protocol describes a domain role, such as
-`ProfileRepository`. Use a capability name such as `ProgressReporting` when
-it describes behavior. Do not declare an empty protocol to demonstrate a name.
-
-## Swift repositories, clients, and coordinators
-
-<!-- level: all -->
-
-Rules:
-
-- Repository protocols speak domain language and return domain entities or
-  domain results.
-- Repository method names are domain operations.
-- Repository implementations may name their backing technology when useful.
-- Client types own external API or SDK mechanics.
-- Coordinators own route state, destination construction, stack mutations, and
-  presentation flow.
-- Route enums are feature-owned and named for the flow.
-- Route values must not hold ViewModels, SwiftUI views, repository
-  implementations, SDK clients, database records, or DTOs.
-
-Use `ProfileRepository.getProfile` for domain access and `ProfileAPIClient`
-for external API mechanics. An implementation can identify its technology as
-`HTTPProfileRepository` when that distinguishes real implementations.
-
-`ProfileCoordinator.showEditProfile` names a navigation operation.
-`ProfileDestination` cases such as `editProfile` and `avatarPreview` carry
-stable domain identifiers. Keep views and repository instances outside route values.
-
-## Swift presentation identifiers
-
-<!-- level: all -->
-
-Presentation identifiers are stable contracts for UI identity, diffable data
-sources, navigation, persistence, and tests. Name them for the thing they
-identify, not for the framework that consumes them.
-
-Rules:
-
-- Snapshot item identifiers use stable presentation or domain IDs.
-- Do not use DTO item identity, array offsets, or index paths as long-lived
-  item identity.
-- Use `id` only when the enclosing type already supplies the domain context.
-- Use a role-qualified name such as `messageID`, `avatarID`, or
-  `conversationID` when the surrounding scope contains multiple identifiers.
-- Keep accessibility identifiers separate from model identifiers.
-
-A `MessageRow` can expose its stable message identifier as `id` because its
-type supplies the context. Use `selectedMessageID` for a selection outside
-that owner. Do not use an `IndexPath` as the identity of a message across list
-updates.
-
-## Swift accessibility identifiers
-
-<!-- level: all -->
-
-Accessibility identifiers are stable UI test hooks, not localized user-facing
-copy.
-
-Rules:
-
-- Use stable `camelCase` strings.
-- Name the interaction surface or important state.
-- Do not include localized text.
-- Do not include user content, IDs, tokens, provider names, or database names.
-
-| Avoid                             | Prefer                | Meaning                               |
-| --------------------------------- | --------------------- | ------------------------------------- |
-| `Submit Button`                   | `submitButton`        | Submit control.                       |
-| `john@example.com-profile-button` | `profileAvatarButton` | Avatar control without personal data. |
+Presentation identifiers are stable contracts for UI identity, diffable data sources,
+navigation, persistence, and tests, named for what they identify rather than the framework
+that consumes them. Snapshot items use stable presentation or domain IDs, never DTO identity,
+array offsets, or index paths. `id` suffices when the enclosing type supplies the context
+(`MessageRow.id`); a role-qualified name such as `selectedMessageID` or `conversationID`
+serves a scope with several identifiers. Accessibility identifiers are separate stable
+`camelCase` UI test hooks that name the surface or state (`submitButton`,
+`profileAvatarButton`) and hold no localized text, user content, IDs, tokens, provider names,
+or database names.

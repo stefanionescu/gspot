@@ -6,42 +6,34 @@ title: Bash
 
 # Bash
 
-Requirements about vocabulary, architecture, naming, documentation coverage, declaration
-order, API style, and complexity apply at `all` or when the project explicitly opts into
-them. Correctness, security, accessibility, type safety, routine formatting, and declared
-project contracts apply at both levels.
+The Bash rules span four files. This one covers scope, files, structure, options, output,
+comments, and formatting. Language covers functions, variables, quoting, arrays, conditionals,
+arithmetic, loops, and paths. Safety covers commands, processes, network, secrets, temporary
+files, security, and portability. Operations covers ownership, deployment, publishing, and CI.
 
-The Bash rules span four files. This one covers scope, files, structure, options, output, comments,
-and formatting. Language covers functions, variables, quoting, arrays, conditionals, arithmetic,
-loops, and paths. Safety covers commands, processes, network, secrets, temporary files, security,
-and portability. Operations covers ownership, deployment, publishing, and CI.
+ShellCheck reports quoting, deprecated syntax, and unsafe constructs, and shfmt owns layout.
+The structure checks of the bash kit report the header, the strict-mode options, the `main`
+call, and the order of functions. They also report the doc comment of each function, a
+discarded failure, and an unchecked `cd`. This guide says why, and holds the rules no tool
+sees.
 
 ## Core Bash philosophy
 
 <!-- level: all -->
 
-Rules:
+Bash is glue code: it orchestrates commands and does not build application logic. Prefer
+small, boring scripts with explicit inputs, explicit outputs, and clear failure behavior.
+Treat every path, argument, environment value, command output, and user input as unsafe until
+quoted, validated, or parsed by a structured tool. A script that builds, deploys, deletes, or
+publishes artifacts makes its inputs, effects, and failure behavior explicit.
 
-- Bash is glue code. Use it to orchestrate commands, not to build complex
-  application logic.
-- Prefer small, boring scripts with explicit inputs, explicit outputs, and clear
-  failure behavior.
-- Treat every path, argument, environment value, command output, and user input
-  as unsafe until quoted, validated, or parsed by a structured tool.
-- A script that builds, deploys, deletes, or publishes artifacts must make its
-  inputs, effects, and failure behavior explicit.
-- ShellCheck warnings are design feedback. Fix them unless there is a documented
-  reason not to.
-- `set -euo pipefail` is not a substitute for checking dangerous commands.
-- Do not hide deployment or artifact lifecycle behavior in package scripts or CI YAML. Move non-trivial orchestration into a
-  reviewed Bash script.
-- When writing shell orchestration, write Bash. Do not create another scripting
-  language file as an escape hatch for shell work.
-- If scripting logic is too complex for Bash, simplify the workflow or split it into smaller
-  scripts. Otherwise, move the behavior into product-owned application code as part of a deliberate
-  feature change.
+`set -euo pipefail` is not a substitute for checking dangerous commands. Do not hide
+deployment or artifact lifecycle behavior in package scripts or CI YAML: move non-trivial
+orchestration into a reviewed Bash script, not another scripting language. If the logic is
+too complex for Bash, simplify the workflow, split it, or move the behavior into
+product-owned application code as a deliberate feature change.
 
-Good Bash:
+Good:
 
 ```bash
 #!/usr/bin/env bash
@@ -68,59 +60,32 @@ main "$@"
 
 <!-- level: all -->
 
-Use Bash when the script mostly:
-
-- calls other command-line tools.
-- wires together installation, lint, build, runtime, publication,
-  or cleanup steps.
-- validates environment and then dispatches to project commands.
-- performs simple file movement, process checks, or retry loops.
-
-Do not use Bash for:
-
-- complex business logic.
-- complex text parsing.
-- JSON, YAML, XML, or HTML transformations beyond simple extraction with a
-  dedicated parser.
-- large mutable data structures.
-- long-lived daemons.
-- high-performance work.
-- security-sensitive parsing of untrusted input.
-- behavior that needs typed contracts.
-
-Do not create non-Bash scripts as an escape hatch. A workflow that needs nested maps, large arrays,
-state machines, non-trivial validation, complex retries, concurrent work, or domain rules is too big
-for a script. Reduce the scripting scope or implement the behavior in the owning application code.
+Use Bash when the script mostly calls other command-line tools or wires together
+installation, lint, build, runtime, publication, or cleanup steps. Use it to validate the
+environment and dispatch to project commands, or for simple file movement, process checks,
+and retry loops. Do not use Bash for business logic or complex text parsing. Do not use it
+for JSON, YAML, XML, or HTML transformations beyond simple extraction with a dedicated
+parser. Large mutable data structures, long-lived daemons, high-performance work,
+security-sensitive parsing of untrusted input, and behavior that needs typed contracts belong
+elsewhere. A workflow that needs nested maps, large
+arrays, state machines, non-trivial validation, complex retries, concurrent work, or domain
+rules is too big for a script.
 
 ## File types and invocation
 
-Executable scripts:
-
-- Must start with a Bash shebang.
-- Must be executable and directly invoked.
-- Must not be sourced by another repository script.
-
-Libraries:
-
-- Keep library files non-executable.
-- Must be safe to `source` without running main program behavior.
-- Must not contain a `main` function or a `main "$@"` call.
-- Must not enable or disable shell options.
-- Must not call `exit`.
-- Must not perform workflow steps, start processes, mutate runtime state, or
-  delete files while loading.
-- Configuration libraries may assign documented configuration values while
-  loading. Other libraries may only declare readonly owner constants, source
-  direct dependencies, and define functions.
+An executable script starts with a Bash shebang, is executable and directly invoked, and is
+never sourced by another repository script. A library is not executable and is safe to
+`source` without running program behavior. It has no `main` function or `main "$@"` call,
+never enables or disables shell options, and never calls `exit`. It performs no workflow
+step, process start, state mutation, or deletion while loading. A configuration library may assign documented
+configuration values while loading; other libraries only declare readonly owner constants,
+source direct dependencies, and define functions. A file is exactly one of the two.
 
 ### Entrypoint conventions
 
 <!-- level: all -->
 
-Executable scripts own a `main` function and finish with `main "$@"`, except for externally
-defined hook and task entrypoints whose manager owns invocation.
-
-Every file declares its runtime contract in the header:
+Every file declares its runtime contract in the header, and the structure check reads it:
 
 ```bash
 #!/usr/bin/env bash
@@ -129,249 +94,74 @@ Every file declares its runtime contract in the header:
 # Runtime: Bash 3.2+, Linux.
 ```
 
-Use `macOS and Linux` only when the file is supported and reviewed on both
-platforms. A newer Bash requirement must name the minimum version and fail
-before any other work.
+### Shebangs and encoding
 
-Shebang rules:
+Use `macOS and Linux` only when the file is supported and reviewed on both. A newer Bash
+requirement names the minimum version and fails before any other work. Use
+`#!/usr/bin/env bash` for repository scripts; use `#!/bin/bash` only when the target runtime
+relies on system Bash at that path, such as a controlled Linux host. A `#!/bin/sh` file is
+POSIX `sh`, and this guide applies to it only in its quoting and security principles. SUID
+and SGID are forbidden on shell scripts; use `sudo` or a platform privilege boundary.
 
-```bash
-#!/usr/bin/env bash
-```
-
-Use this for repo scripts that may run on macOS, Linux, CI, or developer
-machines.
-
-```bash
-#!/bin/bash
-```
-
-Use this only when the target runtime deliberately relies on system Bash at that
-path, such as a controlled Linux remote host.
-
-Do not use:
-
-```bash
-#!/bin/sh
-#!/usr/bin/env sh
-```
-
-unless the file is intentionally POSIX `sh`. If a file uses `sh`, this Bash
-guide does not apply except for general quoting and security principles.
-
-SUID and SGID are forbidden on shell scripts. Use `sudo` or a platform-specific
-privilege boundary instead.
-
-## File encoding and line endings
-
-Rules:
-
-- Store Bash files as UTF-8 without a byte-order mark.
-- Use LF line endings. Do not commit CRLF shell scripts.
-- Do not put binary data in shell variables. Bash variables cannot contain NUL.
-- Do not use command substitution for content where exact trailing newlines
-  matter.
-- Keep generated shell snippets free of invisible prefix bytes before the
-  shebang.
-
-If a script has Windows line endings, convert it before review:
-
-```bash
-tr -d '\r' < "${script}" > "${script}.tmp"
-mv -- "${script}.tmp" "${script}"
-```
-
-A file that starts with a BOM before `#!` may fail to execute as a script. Treat
-that the same as a broken shebang.
+Store Bash files as UTF-8 without a byte-order mark and with LF endings; a BOM before `#!`
+breaks execution the way a broken shebang does. Bash variables cannot hold NUL, so binary data
+stays out of them, and command substitution loses trailing newlines where they matter.
 
 ## Runtime compatibility
 
-macOS ships Bash 3.2 by default. The header's `Runtime:` line is the contract. A file
-declaring `Bash 3.2+` uses only features available in that version. A newer minimum
-version permits features available at that minimum; Bash 4.0 does not imply
-support for all Bash 4 or Bash 5 features. Reject an older runtime before other work.
-
-Executable scripts enable `set -euo pipefail` before their first command. Scripts
-declaring Bash 4.4+ also enable `shopt -s inherit_errexit`. Do not use
-that option with an earlier declared minimum.
-
-Bash 3.2 lacks these features:
-
-- associative arrays.
-- `readarray` and `mapfile`.
-- `globstar`.
-- namerefs with `declare -n`.
-- `${var@Q}` and other newer parameter transformations.
-- `coproc`.
-- `BASH_XTRACEFD`.
-- `wait -n`.
-- `local -n`.
-- `shopt -s lastpipe`.
-- process-substitution behavior that has not been verified on the target OS.
-
-If a script requires a newer Bash:
-
-```bash
-require_bash_4() {
-  if (( BASH_VERSINFO[0] < 4 )); then
-    printf 'error: bash 4 or newer is required\n' >&2
-    return 1
-  fi
-}
-```
-
-State the requirement in the file header and fail before doing work.
+macOS ships Bash 3.2, and the `Runtime:` line is the contract. A file declaring `Bash 3.2+`
+uses only features of that version. A newer minimum permits the features of that minimum
+alone. Bash 3.2 lacks associative arrays, `readarray` and `mapfile`, `globstar`, namerefs,
+`${var@Q}` and the newer parameter transformations, `coproc`, `BASH_XTRACEFD`, `wait -n`,
+`local -n`, and `shopt -s lastpipe`. A script that requires a newer Bash checks
+`BASH_VERSINFO[0]` first and fails with a message. Executable scripts enable
+`set -euo pipefail` before their first command, and scripts declaring Bash 4.4+ add
+`shopt -s inherit_errexit`.
 
 ## Deprecated and forbidden syntax
 
-Use the modern, explicit Bash form even when an older spelling still works.
-
-Forbidden forms:
-
-- Arithmetic expansion: do not use `$[ ... ]`. Use `$(( ... ))`.
-- Command substitution: do not use backtick substitution. Use `$(...)`.
-- Arithmetic command: do not use `let`. Use `(( ... ))` or assignment with
-  `$(( ... ))`.
-- Declarations: do not use `typeset`. Use `local`, `declare`, `readonly`, or
-  `export` according to the value's real scope.
-- Function definitions: do not use the `function` keyword, including
-  `function name()`, `function name() { ... }`, or `function name { ... }`.
-  Use `name() { ...; }`.
-- Compact loop syntax: do not use `for arg; { ...; }`. Use
-  `for arg in "$@"; do ... done`.
-- Combined redirection shortcuts: do not use `&>file` or `>&file`. Use
-  `>file 2>&1`.
-- Combined pipeline shorthand: do not use `cmd |& other`. Use
-  `cmd 2>&1 | other`.
-- Test composition: do not use `test -a`, `test -o`, `[ ... -a ... ]`,
-  `[ ... -o ... ]`, or grouping operators inside `[ ... ]`. Use `[[ ... ]]`,
-  explicit `if` branches, or `case`.
-- `ERR` traps: do not use `trap ERR` as general error handling. Use explicit
-  status checks where failure matters, and reserve traps for cleanup that is
-  safe to run on the relevant exit path.
-- `eval`: do not use casual `eval` to turn strings into code. Use arrays,
-  direct validation, `case`, or fixed dispatch tables.
-
-Good:
-
-```bash
-# capture_output - Write both command streams to the caller-selected log file.
-capture_output() {
-  local log_file="${1:?Log file is required}"
-  shift
-  "$@" >"${log_file}" 2>&1
-}
-```
+ShellCheck reports the old spellings: `$[ ... ]` for `$(( ... ))`, backticks for `$(...)`,
+`let` for `(( ... ))`, `typeset` for `local`, `declare`, `readonly`, or `export`, the
+`function` keyword for `name() { ...; }`, `for arg; { ...; }` for `for arg in "$@"; do`,
+`&>file` and `>&file` for `>file 2>&1`, `cmd |& other` for `cmd 2>&1 | other`, and `-a` or
+`-o` inside `[ ... ]` for `[[ ... ]]`, explicit `if` branches, or `case`. Two forms are
+design decisions rather than lint findings. `trap ERR` is not general error handling, so
+failure is checked where it matters and traps run only cleanup that is safe on the relevant
+exit path. `eval` never turns strings into code, so dispatch uses arrays, direct validation,
+`case`, or fixed tables.
 
 ## Script structure
 
 <!-- level: all -->
 
-Order files like this:
+A file runs shebang, file header, shell options, `source` statements, constants, exported
+configuration, functions, `main`, and `main "$@"` as the last non-comment line. Private
+functions (prefixed `_`, called from no other file) come before the functions other files
+source, and `main` comes last. No executable program flow sits between function definitions,
+and a library mutates no global state while loading unless that mutation is its documented
+purpose. Source files by explicit paths built from `BASH_SOURCE[0]`, never from the caller's
+directory, and source every function dependency directly rather than through a barrel.
 
-1. Shebang.
-2. File header comment.
-3. Shell options.
-4. `source` statements.
-5. Constants and exported configuration.
-6. Functions: private functions (prefixed `_`, called from no other file) first, then the
-   functions other files source, then `main`.
-7. `main`.
-8. `main "$@"` as the last non-comment line for executable scripts.
-
-Example for an installed Python package:
-
-```bash
-#!/usr/bin/env bash
-#
-# Run one model pipeline step.
-
-set -euo pipefail
-
-main() {
-  local model_dir="${1:-}"
-
-  if [[ ! -d "${model_dir}" ]]; then
-    printf 'error: model directory is required\n' >&2
-    return 1
-  fi
-
-  python -m model_runtime.cli --model-path "${model_dir}"
-}
-
-main "$@"
-```
-
-Rules:
-
-- Every `_`-prefixed function is defined above the first function without the prefix. A
-  function sourced by another file has no prefix; a function used only in its own file has one.
-  `main` is exempt.
-
-## Source execution
-
-- Do not put executable program flow between function definitions.
-- Do not mutate global state while loading a library unless that mutation is the
-  documented purpose of the library.
-- Source files with explicit paths based on `BASH_SOURCE[0]`, not the caller's
-  current directory.
-- Libraries may define constants, functions, and validation helpers. Entrypoints
-  own argument parsing and `main`.
-- Executable scripts must finish with a meaningful program status. Do not let a
-  final diagnostic command, false condition, or optional cleanup check become
-  the script status by accident.
-- Use explicit `exit 0` only when the final command's status is not the program
-  result and success has already been established.
+An executable script finishes with a meaningful status: a final diagnostic command, a false
+condition, or an optional cleanup check must not become the script status by accident. Use
+an explicit `exit 0` only when the final command's status is not the program result and
+success is already established.
 
 ## Shell options
 
-Use shell options deliberately.
+`set -euo pipefail` is the entrypoint default, used only when the script is written and
+reviewed for those semantics. `errexit` is a backstop, not control flow: it has exceptions in
+conditionals, pipelines, command substitutions, subshells, and functions, so `cd`, `rm`,
+builds, publishing, uploads, and destructive commands are checked explicitly. Do not toggle
+options around a small operation without restoring the prior state. Do not change `IFS` as a
+strict-mode ritual; set it locally where reading or joining data requires it. Keep `set -x`
+out of committed code.
 
-Common entrypoint default:
-
-```bash
-set -euo pipefail
-```
-
-Rules:
-
-- Use `set -euo pipefail` only when the script is written and reviewed for those
-  semantics.
-- Do not rely on `errexit` for critical safety. Explicitly check `cd`, `rm`,
-  quantization, engine-build, runtime, publishing, upload, and destructive
-  commands.
-- Treat `errexit` as a backstop, not control flow. It has exceptions in
-  conditionals, pipelines, command substitutions, subshells, and functions.
-- Do not enable shell options in sourced libraries unless the library is part of
-  a script family that already owns those options.
-- Do not toggle options globally around a small operation without restoring the
-  prior state.
-- Sourced libraries must not call `set` at all. Capture command status with
-  `if`, `if !`, or an explicit conditional command instead.
-- Do not change `IFS` as part of a fake strict-mode ritual. Set `IFS` locally
-  only where reading or joining data requires it.
-- Avoid `set -x` in committed code. If temporary tracing is necessary, keep it
-  local and make sure secrets cannot be printed.
-
-`errexit` pitfalls:
+A function called in `if`, `while`, `&&`, or `||` writes its checks inside, because `errexit`
+does not stop it there:
 
 ```bash
-# Bad: this can keep running when called in a conditional context.
-cleanup() {
-  cd "${1}"
-  rm -rf ./*
-}
-
-cleanup "${target}" || exit 1
-```
-
-Functions, subshells, and groups behave differently when their caller checks
-their status. When a function may be called in `if`, `while`, `&&`, or `||`,
-write explicit checks inside the function instead of assuming `errexit` will
-stop at the first failing command.
-
-```bash
-# Good: failure is explicit where it matters.
+# cleanup - Removes the contents of the target directory.
 cleanup() {
   local target="$1"
 
@@ -380,93 +170,34 @@ cleanup() {
 }
 ```
 
-Command substitution inside another command's arguments does not reliably stop
-the script:
+Command substitution inside another command's arguments does not stop the script when the
+producer fails, and `local`, `export`, `readonly`, and `declare` mask the substitution status.
+Declare first, then assign and check:
 
 ```bash
-# Bad: printf can succeed even when generate_version fails.
-printf 'version=%s\n' "$(generate_version)"
-```
-
-```bash
-# Good: the producer status is checked before the value is consumed.
 version="$(generate_version)" || return 1
 printf 'version=%s\n' "${version}"
 ```
 
-`local`, `export`, `readonly`, and `declare` can mask command-substitution
-failures. Declare first, then assign and check the command status.
-
-Process substitution hides producer failures from the consumer's status:
-
-```bash
-# Risky: sort can succeed even when generate_lines fails.
-sort < <(generate_lines)
-```
-
-When the producer matters, write to a checked temporary file, use a checked
-pipeline with `PIPESTATUS`, or call the producer separately.
-
-`pipefail` pitfalls:
-
-```bash
-# Risky with pipefail: grep -q can exit early and make the producer see SIGPIPE.
-if produce_large_output | grep -q 'ready'; then
-  printf 'ready\n'
-fi
-```
-
-Prefer a command that consumes input predictably, or handle the known status
-explicitly. Short readers such as `head`, `grep -q`, and commands that stop
-after the first match can create false failures under `pipefail`.
-
-`nounset` rules:
-
-- Do not enable `set -u` blindly in an existing script. The script must be
-  reviewed for unset positional parameters, optional environment variables, and
-  arrays.
-- Use `${name:-}` when an unset variable is acceptable.
-- Use `${name:?message}` for required kit at a clear boundary.
-- Do not use unguarded `${1}` when an argument may be missing. Use `${1:-}`.
-- Be careful with arrays under `set -u`; check lengths before indexing.
-- If empty arrays are meaningful, require Bash 4.4+ before relying on
-  their behavior under `set -u`. Bash 3.2-compatible scripts must guard array
-  access explicitly.
+Process substitution hides producer failures; when the producer matters, write to a checked
+temporary file, use `PIPESTATUS`, or call the producer separately. Under `pipefail`, short
+readers such as `head` and `grep -q` can make the producer see SIGPIPE and fail the pipeline;
+consume input predictably or handle the known status. Under `nounset`, use `${name:-}` where
+an unset variable is acceptable and `${name:?message}` for a required value at a clear
+boundary. Use `${1:-}` where an argument may be missing, and guard array access explicitly in
+Bash 3.2 scripts.
 
 ## Output, logging, and errors
 
-STDOUT is for script output that another command may consume. STDERR is for
-status, warnings, prompts, and errors.
-
-Write diagnostics with `printf` at the operation that owns the failure.
-Return or exit with the intended status; printing an error does not make a command fail.
-
-Rules:
-
-- Use `printf`, not `echo`, for predictable output.
-- Error messages go to STDERR.
-- Machine-readable output goes to STDOUT and excludes progress text.
-- Pipeline scripts include enough context to diagnose the failing step.
-- Long-running, cron, publishing, and multi-target scripts use timestamped
-  diagnostics with stable fields instead of prose-only progress.
-- Include the script name, function or step, host or target, attempt number, and
-  status when those fields exist.
-- Do not print secrets, tokens, cookies, connection strings, `.env` content, or
-  provider payloads.
-- Do not use colored output in CI unless the runner and logs support it.
-- Do not make parsers depend on human log text.
-- Use `logger` or journald only in Linux-only scripts that validate the command
-  is available and document the runtime dependency.
-
-Good:
-
-```bash
-step_name="${1:?Step name is required}"
-target_name="${2:?Target name is required}"
-printf 'Running %s for %s\n' "${step_name}" "${target_name}" >&2
-```
-
-Structured diagnostic:
+STDOUT is for output another command may consume; STDERR is for status, warnings, prompts,
+and errors. Write diagnostics with `printf`, not `echo`, at the operation that owns the
+failure, and return or exit with the intended status, because printing an error does not make
+a command fail. Machine-readable output excludes progress text, and no parser depends on
+human log text. Long-running, cron, publishing, and multi-target scripts print timestamped
+diagnostics with stable fields (script, step, target, attempt, status) instead of prose
+progress. Never print secrets, tokens, cookies, connection strings, `.env` content, or provider
+payloads. Use colored output in CI only where the runner and logs support it, and `logger` or
+journald only in Linux-only scripts that check for the command.
 
 ```bash
 # log_status - Prints a timestamped diagnostic line to stderr.
@@ -487,194 +218,32 @@ log_status() {
 }
 ```
 
-## Literal text and here documents
-
-Rules:
-
-- Use here documents only with commands that read from STDIN.
-- Do not use `echo <<EOF`; `echo` does not read the here document body.
-- Quote the here-document delimiter when the body must remain literal.
-- Use unquoted delimiters only when parameter, command, or arithmetic expansion
-  is intended.
-- Use `<<-` only when tab-stripping is deliberate. The body must be indented
-  with tabs, not spaces.
-- Use `printf`, not `echo`, for short literal output.
-- Use `$HOME` for home-relative paths in quoted strings. Quoted `~` does not
-  expand.
-- In interactive shell snippets, quote `!` or disable history expansion with
-  `set +H`. Scripts do not use interactive history expansion.
-
-Good:
-
-```bash
-cat <<'EOF'
-This text is literal.
-$HOME is not expanded here.
-EOF
-```
-
-Good with expansion:
-
-```bash
-step_name="${1:?Step name is required}"
-target_name="${2:?Target name is required}"
-cat <<EOF
-Running ${step_name} for ${target_name}.
-EOF
-```
-
 ## Comments and documentation
 
 <!-- level: all -->
 
-Every Bash file starts with a short file header after the shebang:
+Every file starts with a short header after the shebang. Every function carries the one-line
+header the doc-comment check reads, as the examples above show. A function that is public, sourced by other files, non-obvious,
+or risky carries the full header with `Globals`, `Arguments`, `Outputs`, and `Returns`
+sections. Comments document behavior, not history. They explain why a shell pattern is needed
+when the code is not obvious, and they do not narrate every line.
 
-```bash
-#!/usr/bin/env bash
-#
-# Prepare the configured application runtime.
-```
-
-Every function requires a one-line header:
-
-```bash
-# normalize_env_name - Converts an environment alias to its canonical name.
-normalize_env_name() {
-  ...
-}
-```
-
-For functions that are public, sourced by other files, non-obvious, or risky,
-include the full header:
-
-```bash
-# push_model - Uploads one model artifact to Hugging Face.
-# Globals:
-#   HF_TOKEN
-# Arguments:
-#   Model directory.
-#   Hugging Face repository ID.
-# Outputs:
-#   Writes progress to stderr.
-# Returns:
-#   0 when upload succeeds, non-zero otherwise.
-push_model() {
-  ...
-}
-```
-
-Rules:
-
-- Document behavior, not history.
-- Comments explain why a shell pattern is needed when the code is not obvious.
-- Do not comment every line.
-- A `TODO` is `TODO(<issue-url-or-YYYY-MM-DD>): <sentence>`; the owner is an issue link or an
-  expiry date, never a person.
-- Suppressions must explain the real constraint and stay as narrow as
-  possible.
-
-## Formatting
-
-Rules:
-
-- Indent with 2 spaces. No tabs except tab-stripping here-documents with
-  `<<-`.
-- Keep Bash source lines within the line length the project sets.
-- Use blank lines between logical blocks.
-- Keep `; then` and `; do` on the same line as `if`, `for`, `while`, `until`,
-  and `select`.
-- Put `else`, `elif`, `fi`, `done`, and `esac` on their own aligned lines.
-- Prefer one command per line over dense semicolon chains.
-
-Control flow:
-
-```bash
-for arg in "$@"; do
-  if [[ -n "${arg}" ]]; then
-    printf '%s\n' "${arg}"
-  else
-    printf 'empty argument\n' >&2
-  fi
-done
-```
-
-Case statements:
-
-```bash
-case "${environment}" in
-  staging)
-    run_local_pipeline
-    ;;
-  production)
-    run_publish_pipeline
-    ;;
-  *)
-    printf 'error: unknown environment: %s\n' "${environment}" >&2
-    return 1
-    ;;
-esac
-```
-
-Short option parsing may keep simple branches on one line:
-
-```bash
-while getopts ':f:v' flag; do
-  case "${flag}" in
-    f) file="${OPTARG}" ;;
-    v) verbose='true' ;;
-    *) usage >&2; exit 2 ;;
-  esac
-done
-```
-
-Long pipelines:
-
-```bash
-generate_results \
-  | jq -r '.items[] | .name' \
-  | sort \
-  | uniq
-```
+A `TODO` is
+`TODO(<issue-url-or-YYYY-MM-DD>): <sentence>`, owned by an issue link or an expiry date, never
+a person. A suppression explains the real constraint and stays as narrow as possible.
 
 ## Review checklist
 
 <!-- level: all -->
 
-Before you run the checks of the repository, read the change against these questions:
+Before running the checks of the repository, read the change for what they cannot see.
 
-- The file has the correct shebang and header.
-- The script uses Bash only where Bash is intended.
-- Shell options are appropriate and not masking missing checks.
-- The script exits with a meaningful final status.
-- Every function has the required comment.
-- Variables are quoted.
-- Argument lists use arrays.
-- User input and external data are validated before arithmetic or command use.
-- No `eval`, configured `bash -c`, parsed `ls`, or untrusted shell fragments exist.
-- Directory changes, deployment, destructive commands, migrations, uploads, and sync commands have explicit failure handling.
-- Pipelines behave correctly with or without `pipefail`.
-- Redirections are ordered correctly.
-- Temporary files are created with `mktemp` and cleaned up.
-- Locks are acquired atomically, not with separate check-then-create steps.
-- Retries are limited to known retryable failures and have bounded attempts.
-- Background jobs are tracked by PID, waited on, and cleaned up on interruption.
-- Concurrent jobs keep output separated or use a tool that serializes output.
-- Checkpoint files cannot skip required work after inputs or targets change.
-- Long-running or multi-target scripts log stable status fields to STDERR.
-- Secrets are not printed, traced, or left in files/layers.
-- Filenames with spaces and leading dashes are safe.
-- Broken symlinks, home-relative paths, and no-match globs have explicit handling.
-- `IFS`, `read`, and delimited-data handling do not drop meaningful data.
-- Privileged redirection and globbing happen at the intended privilege level.
-- Process control does not rely on `ps | grep`.
-- Files have UTF-8 without BOM and LF endings.
-- macOS/Linux portability is acceptable for the script's runtime.
-- The owning shell lint command passes or remaining findings are documented.
-- The file is exactly one invocation type: executable entrypoint or sourced library.
-- Private functions precede public functions and are not called externally.
-- Public library functions and constants use their owner namespace.
-- Every repository function dependency is sourced directly.
-- No source-only barrel or one-function, one-caller pseudo-module remains.
-- Deprecated syntax such as `$[ ... ]`, backticks, `let`, `typeset`, `function`, `&>`, `|&`, and the `[ ... -a ... ]` forms is absent.
-- Downloads, generated files, and structured replacements validate temporary data before replacing known-good files.
-- Network, remote, mounted-filesystem, and readiness commands have bounded timeouts where they can hang.
+- The script uses Bash only where Bash is intended and is exactly one invocation type.
+- Shell options mask no missing check, and the final status is meaningful.
+- Argument lists use arrays, and external data is validated before arithmetic or command use.
+- No `eval`, configured `bash -c`, parsed `ls`, or untrusted shell fragment exists.
+- Destructive commands, uploads, and directory changes have explicit failure handling.
+- Temporary files come from `mktemp` and are cleaned up, and locks are atomic.
+- Retries and background jobs are bounded and tracked, and secrets are never printed.
+- Unusual filenames, broken symlinks, and no-match globs are handled.
+- Network and readiness commands have bounded timeouts.

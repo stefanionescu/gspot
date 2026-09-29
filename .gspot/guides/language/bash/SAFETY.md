@@ -6,48 +6,26 @@ title: Bash Safety
 
 # Bash Safety
 
-Requirements about vocabulary, architecture, naming, documentation coverage, declaration
-order, API style, and complexity apply at `all` or when the project explicitly opts into
-them. Correctness, security, accessibility, type safety, routine formatting, and declared
-project contracts apply at both levels.
-
 Calling commands, processes and privilege, structured data, network, secrets, temporary files,
-security, portability, testing, debugging, and refactoring.
+portability, and debugging. ShellCheck reports `eval`, unquoted paths, `xargs` without `-0`,
+`find -exec sh -c` with an embedded `{}`, parsed `ls`, and `sudo` redirections; the structure
+checks of the bash kit report a discarded failure. This guide holds the decisions behind them.
 
 ## Calling commands
 
-Rules:
+Commands are fixed names with argument arrays, never strings built from input, and a script
+never passes untrusted input to a shell. `bash -lc` is forbidden in repository scripts, and a
+function that runs a caller-supplied command takes the command and its arguments after
+`shift` and invokes `"$@"`. Application code that invokes commands passes an argument array
+to its process API; when shell features are required, a static snippet receives the dynamic
+values as positional arguments. Remote `ssh` command strings are a last resort: copy a
+reviewed script to the host, or pass fixed commands with deliberately quoted arguments.
 
-- Check command availability before using non-standard tools.
-- Check uncommon commands before long-running, destructive, publishing, or
-  error-handling paths depend on them.
-- Use fixed command names and argument arrays.
-- Do not build shell commands as strings.
-- Do not pass untrusted input to a shell.
-- Use `command -v` for command discovery.
-- `hash` is acceptable for simple PATH availability checks when no path output
-  is needed.
-- Use `builtin` or Bash parameter expansion instead of external commands for
-  simple string and arithmetic work.
-- Use `grep -q` only when early pipe closure will not cause false failures under
-  `pipefail`.
-- Use `--` before user-controlled positional arguments when supported.
-- Pass a file directly to a command instead of using `cat file | command` unless
-  concatenation or a pipeline-only interface is required.
-- Do not run `su -c 'command'` without the target username. Prefer `sudo` or the
-  platform's service owner tools.
-- For multiple date fields, get one timestamp, and derive fields from it.
-- Application code that invokes commands must pass an argument array to the
-  process API, not a shell string.
-- When shell features are genuinely required, use a static Bash snippet and pass
-  dynamic values as positional arguments.
-- Treat remote `ssh` command strings as a last resort. Prefer a reviewed script
-  copied to the host or pass fixed commands plus deliberately quoted arguments.
-- `bash -lc` is forbidden in repository scripts.
-- Do not accept a command string parameter. Accept the command and its
-  arguments after `shift`, then invoke `"$@"`.
-
-Command requirement helper:
+Check uncommon commands with `command -v` before a long-running, destructive, publishing, or
+error-handling path depends on them. Prefer builtins and parameter expansion to external
+commands for simple string and arithmetic work, and pass files directly rather than through
+`cat`. Use `grep -q` only where early pipe closure cannot fail the pipeline under `pipefail`.
+Never run `su -c` without the target user.
 
 ```bash
 # require_command - Ensures a command exists on PATH.
@@ -61,80 +39,26 @@ require_command() {
     return 1
   fi
 }
-```
 
-Good:
-
-```bash
-left_file="${1:?Left file is required}"
-right_file="${2:?Right file is required}"
 cmd=(diff -u -- "${left_file}" "${right_file}")
 "${cmd[@]}"
-```
 
-Shell boundary:
-
-```bash
 bash -c 'printf "%s\n" "$1"' bash "${message}"
 ```
 
-## Process management and privilege boundaries
+## Processes and privilege
 
-Rules:
-
-- Do not use `ps ... | grep name` as process control.
-- Prefer service-manager commands, PID files owned by the script family,
-  `pgrep`/`pkill` with exact matching, or platform-native process APIs.
-- Ordinary stop and restart paths stop only PIDs recorded by the owning script
-  family.
-- Treat process names as advisory. They are not an authorization boundary.
-- When starting background jobs, save each PID, `wait` for each PID, and capture
-  each job's status explicitly.
-- Scripts that start background work must clean up owned child processes on
-  `INT`, `TERM`, and `EXIT`.
-- Keep per-job output in separate files when concurrent jobs can interleave
-  logs.
-- Avoid unbounded fan-out. When targeting many hosts or files, use an explicit
-  concurrency limit or a purpose-built tool such as Ansible or GNU Parallel.
-- `sudo command > file` redirects as the current user, not as root.
-- Globs in `sudo command /path/*` expand before `sudo` runs.
-- Use `sudo tee` for privileged file writes.
-- Use a fixed `sudo sh -c '...'` wrapper only when root-owned shell expansion or
-  redirection is genuinely required.
-- Do not put user input inside privileged shell strings.
-
-Privileged write:
+Process names are advisory, never an authorization boundary. Stop and restart paths stop only
+PIDs recorded by the owning script family, found through the service manager, a PID file, or
+`pgrep -x`, never `ps | grep`. A script that starts background jobs saves each PID, waits for
+each, captures each status, and writes per-job output to separate files. It bounds its
+fan-out and kills owned children on `INT`, `TERM`, and `EXIT`. `sudo command > file` redirects
+as the current user, and a glob in `sudo command /path/*` expands before `sudo` runs.
+Privileged writes go through `sudo tee`, and a privileged shell string is a fixed literal
+with no input.
 
 ```bash
 generate_config | sudo tee /etc/service/config >/dev/null
-```
-
-Privileged glob, fixed string only:
-
-```bash
-sudo sh -c 'ls /root-owned-dir/*.conf'
-```
-
-Process lookup:
-
-```bash
-pgrep -x service_name >/dev/null
-```
-
-Small bounded background jobs:
-
-```bash
-declare -a child_pids
-
-# cleanup_children - Stops child processes started by this script.
-cleanup_children() {
-  local pid
-
-  for pid in "${child_pids[@]}"; do
-    kill -0 "${pid}" >/dev/null 2>&1 || continue
-    kill "${pid}" >/dev/null 2>&1 || true
-  done
-}
 
 # run_remote_checks - Runs remote checks and returns non-zero on any failure.
 # Arguments:
@@ -150,14 +74,11 @@ run_remote_checks() {
 
   for host in "$@"; do
     check_host "${host}" >"${tmp_dir}/${host}.log" 2>&1 &
-    pid=$!
-    child_pids+=( "${pid}" )
+    child_pids+=( "$!" )
   done
 
   for pid in "${child_pids[@]}"; do
-    if ! wait "${pid}"; then
-      status=1
-    fi
+    wait "${pid}" || status=1
   done
 
   trap - EXIT INT TERM
@@ -165,148 +86,62 @@ run_remote_checks() {
 }
 ```
 
-Bad:
+## Structured data
+
+Simple string edits use parameter expansion. JSON goes through `jq`, and YAML through `yq` or
+a project-owned parser. JSON, YAML, XML, HTML, plist, and xcodebuild output are never parsed
+with ad hoc `grep | sed | awk` unless the input is controlled and the format trivial.
+Prefer machine output modes (JSON, NUL, explicit format flags) and never parse process lists,
+pretty tables, progress bars, or localized text by fixed field numbers. Quote `tr` character
+classes and pin `LC_ALL=C` when converting case. macOS and GNU `sed -i` differ; a committed
+script rewrites through a temporary file unless it is documented as platform-specific.
 
 ```bash
-ps ax | grep service_name
-sudo mycmd > /etc/service/config
-sudo ls /root-owned-dir/*
-sudo sh -c "systemctl restart ${unit_name}"
-```
-
-## Text, JSON, and structured data
-
-Rules:
-
-- Use Bash parameter expansion for simple string edits.
-- Use `jq` for JSON.
-- Use `yq` or a project-owned parser for YAML when YAML structure matters.
-- Do not parse JSON, YAML, XML, HTML, plist, or xcodebuild output with ad hoc
-  `grep | sed | awk` unless the input is controlled and the format is trivial.
-- Prefer command output modes intended for machines, such as JSON, NUL, or
-  explicit format flags.
-- Avoid parsing human-oriented command output such as `ls`, pretty tables,
-  progress bars, or localized text.
-- Quote `tr` character classes and account for locale when converting case.
-- Use double quotes only when shell expansion is intended in `sed` expressions,
-  and escape replacement values correctly.
-- Do not parse process lists, table columns, or localized command output with
-  fixed field numbers unless the producer has a machine-readable contract.
-
-Good JSON:
-
-```bash
-# get_service_url - Print a required nonempty service URL from JSON configuration.
+# get_service_url - Prints a required nonempty service URL from JSON configuration.
 get_service_url() {
   local config_file="${1:?Configuration file is required}"
   local service_url
+
   service_url="$(jq -er '.service.url | select(type == "string" and length > 0)' "${config_file}")" || return 1
   printf '%s\n' "${service_url}"
 }
 ```
 
-Use `awk`, `sed`, and `perl` when they are the right text-processing tool, but
-keep shell quoting clear and avoid in-place editing portability traps.
+## Network
 
-macOS and GNU `sed -i` differ. Prefer temp files for committed scripts unless a
-script is platform-specific and documented.
-
-Case conversion:
-
-```bash
-tr '[:upper:]' '[:lower:]'
-LC_ALL=C tr '[:upper:]' '[:lower:]'
-```
-
-## Network commands
-
-Rules:
-
-- Use `curl --fail --show-error --silent --location` for downloads unless the
-  endpoint requires different behavior.
-- Use bounded timeouts for commands that can hang, including `ssh`, `scp`,
-  `curl`, `find` over mounted filesystems, and remote service checks.
-- Prefer tool-native timeout options first, such as SSH `ConnectTimeout` and
-  curl `--connect-timeout` plus `--max-time`.
-- Wrap with `timeout` only when GNU/coreutils availability has been validated
-  for the script's runtime. macOS does not provide GNU `timeout` by default.
-- Write downloads to explicit files.
-- Verify checksums or signatures for executable downloads.
-- Download executable content to an owned file and verify it before execution.
-  Do not pipe unverified network content into a shell.
-- Do not print response bodies that may contain secrets.
-- Use retries only for known retryable network, provider, or service failures,
-  with bounded attempts, delay, and attempt-count logging.
-- Do not retry corrupt data, syntax errors, invalid credentials, missing
-  required files, failed validation, or permission problems.
-- Separate download, verification, and execution into visible steps.
-
-Good:
+Downloads use `curl --fail --show-error --silent --location` into an explicit file, with
+tool-native timeouts (`--connect-timeout` plus `--max-time`, SSH `ConnectTimeout`) rather
+than GNU `timeout`, which macOS lacks. Executable content is downloaded, verified against an
+independently obtained checksum or signature, and only then run; nothing is piped from the
+network into an interpreter. Retries are bounded, logged with the attempt count, and reserved
+for known retryable failures, never for corrupt data, syntax errors, invalid credentials,
+missing files, failed validation, or permission problems. Response bodies that may hold
+secrets are not printed.
 
 ```bash
-download_file() {
-  local url="$1"
-  local output_file="$2"
-
-  curl --fail --show-error --silent --location \
-    --connect-timeout 10 \
-    --max-time 60 \
-    --output "${output_file}" \
-    "${url}"
-}
-```
-
-Remote timeout:
-
-```bash
-ssh \
-  -o ConnectTimeout=10 \
-  -o ServerAliveInterval=15 \
-  -o ServerAliveCountMax=2 \
-  -- "${host}" \
-  systemctl is-active --quiet "${service_name}"
-```
-
-Good standalone installer with an independently obtained checksum:
-
-```bash
-#!/usr/bin/env bash
-installer_url="${1:?installer URL required}"
-expected_sha256="${2:?reviewed SHA-256 required}"
-tool_version="${3:?version required}"
-tmp_dir="$(mktemp -d)" || exit 1
-trap 'rm -rf -- "${tmp_dir}"' EXIT
-
 installer="${tmp_dir}/install.sh"
 curl --fail --show-error --silent --location \
   --connect-timeout 10 \
   --max-time 60 \
   --output "${installer}" \
   "${installer_url}" || exit 1
-
 printf '%s  %s\n' "${expected_sha256}" "${installer}" | shasum -a 256 -c - || exit 1
 bash "${installer}" --version "${tool_version}"
+
+ssh -o ConnectTimeout=10 -o ServerAliveInterval=15 -o ServerAliveCountMax=2 \
+  -- "${host}" systemctl is-active --quiet "${service_name}"
 ```
 
 ## Secrets and environment
 
-Rules:
-
-- Read configuration and secrets from the caller environment in one place: the top of the
-  entrypoint or the configuration library. Workflow functions receive values as arguments.
-- Read secrets from the caller environment, a secret manager, or documented
-  ignored env files.
-- Validate required secrets at the boundary.
-- Do not echo, trace, write, commit, or include secrets in command-line
-  arguments when the process table can expose them.
-- Prefer files or stdin for tools that accept sensitive values that way.
-- Do not use `set -x` around secret handling.
-- Do not write `.env` files from scripts unless the script owns that lifecycle
-  and the path is ignored.
-- Do not include secret values in failure messages.
-- Redact secrets before logging external command output.
-
-Required env helper:
+Configuration and secrets are read from the caller environment, a secret manager, or a
+documented ignored env file, in one place: the top of the entrypoint or the configuration
+library. Workflow functions receive values as arguments, and required values are validated at
+that boundary. A secret never appears in traces, logs, failure messages, committed files, or
+command-line arguments where the process table can expose it. Pass it by file or standard
+input, redact external command output before logging, and keep `set -x` away from it. A
+script writes a `.env` file only when it owns that lifecycle and the path is ignored. An
+indirect expansion `${!name}` takes only a validated name.
 
 ```bash
 # require_env - Ensures an environment variable is set and non-empty.
@@ -315,6 +150,10 @@ Required env helper:
 require_env() {
   local name="$1"
 
+  if [[ ! "${name}" =~ ^[A-Z_][A-Z0-9_]*$ ]]; then
+    printf 'error: invalid env var name\n' >&2
+    return 1
+  fi
   if [[ -z "${!name:-}" ]]; then
     printf 'error: %s is required\n' "${name}" >&2
     return 1
@@ -322,110 +161,42 @@ require_env() {
 }
 ```
 
-Do not pass untrusted env names to `${!name}` without validation:
-
-```bash
-if [[ ! "${name}" =~ ^[A-Z_][A-Z0-9_]*$ ]]; then
-  printf 'error: invalid env var name\n' >&2
-  return 1
-fi
-```
-
 ## Temporary files, locks, and cleanup
 
-Rules:
+Temporary paths come from `mktemp` or `mktemp -d` under the system or an explicit project
+temp directory, never from predictable names, and cleanup is registered right after creation.
+Downloaded, copied, or generated content lands in a temporary file, is validated by the real
+parser, and replaces the destination with `mv`. The file keeps the restrictive permissions
+`mktemp` gave it unless deployment needs others. Failed artifacts are removed unless the script
+documents keeping them. Locks are acquired atomically with a `mkdir` lock directory holding
+the owner PID or with `noclobber` redirection, never with a `test` followed by a create.
 
-- Use `mktemp` or `mktemp -d`.
-- Put temporary files under the system temp directory or an explicit project
-  temp directory.
-- Quote temp paths.
-- Register cleanup immediately after creation.
-- Use `trap` carefully and restore traps when needed.
-- Do not use predictable names in `/tmp`.
-- Download, copy, or generate into a temporary file first, validate it, then
-  replace the destination with `mv`.
-- Validate structured data with the real parser before replacing known-good
-  data, such as `jq` for JSON.
-- Remove failed or corrupt temporary artifacts unless the script explicitly
-  documents that they are kept for inspection.
-- Acquire locks atomically with `mkdir` lock directories or `noclobber`
-  redirection. Do not check with `test` and then create the lock later.
-- For lock directories, write the owner PID, and recover stale locks explicitly.
-- Do not delete broad globs under variable paths without validation.
-- Full cleanup is opt-in. Stop commands preserve environments, caches, models,
-  and unrelated runtime resources by default.
-- Cleanup must be limited to repository-owned paths and PIDs. Do not delete
-  whole home cache roots, arbitrary dynamic cache roots, or shared `/tmp`
-  families.
-- Validate cleanup paths supplied by input or persistent state against their explicit owner
-  root. Reject empty paths, `/`, the repository root, `$HOME`, and paths outside that owner.
-- A directory returned by a successful `mktemp -d` call belongs to the current invocation;
-  retain that exact path and do not expand cleanup to neighboring files.
-- Do not use `|| true` on destructive commands or required installation,
-  publishing, quantization, engine-build, or runtime commands.
-
-Good entrypoint cleanup:
+Cleanup is limited to repository-owned paths and PIDs, and full cleanup is opt-in: stop
+commands preserve environments, caches, models, and unrelated resources. A cleanup path from
+input or persistent state is validated against its owner root. It rejects empty values, `/`,
+the repository root, `$HOME`, symlinks, and anything outside the owner. A `mktemp -d` result
+is kept exactly and never widened to its neighbors. `|| true` never follows a destructive
+command or a required installation, publishing, build, or runtime command.
 
 ```bash
-tmp_dir="$(mktemp -d)" || exit 1
-trap 'rm -rf -- "${tmp_dir}"' EXIT
-```
-
-Good standalone JSON replacement. The new file has the restrictive permissions supplied by
-`mktemp`; select any required deployment permissions explicitly before replacing the target.
-
-```bash
-#!/usr/bin/env bash
-config_file="${1:?configuration path required}"
-config_url="${2:?configuration URL required}"
 tmp_file="$(mktemp "${config_file}.XXXXXX")" || exit 1
 trap 'rm -f -- "${tmp_file}"' EXIT
-
-curl --fail --show-error --silent --location \
-  --connect-timeout 10 \
-  --max-time 60 \
-  --output "${tmp_file}" \
-  "${config_url}" || exit 1
-
+curl --fail --show-error --silent --location --output "${tmp_file}" "${config_url}" || exit 1
 jq empty "${tmp_file}" >/dev/null || exit 1
 mv -- "${tmp_file}" "${config_file}" || exit 1
 trap - EXIT
-```
-
-Race-safe lock directory:
-
-```bash
-lock_dir="${state_dir}/publish.lock"
 
 if ! mkdir "${lock_dir}"; then
   printf 'error: lock is already held: %s\n' "${lock_dir}" >&2
   return 1
 fi
-
 printf '%s\n' "$$" >"${lock_dir}/pid" || {
   rmdir "${lock_dir}"
   return 1
 }
-
 trap 'rm -rf "${lock_dir}"' EXIT
-```
 
-Subshell-scoped cleanup preserves the caller's traps. Use it only when the work does not need
-to change the caller's shell variables or working directory:
-
-```bash
-generate_in_temp_dir() (
-  tmp_dir="$(mktemp -d)" || exit 1
-  trap 'rm -rf -- "${tmp_dir}"' EXIT
-
-  generate_files "${tmp_dir}"
-)
-```
-
-The caller supplies the approved owner directory. Delete only its direct `build` child,
-and refuse a symlink or the filesystem root:
-
-```bash
+# remove_build_dir - Removes the build child of the approved owner directory.
 remove_build_dir() {
   local owner_root build_dir
 
@@ -438,179 +209,41 @@ remove_build_dir() {
 }
 ```
 
-## Security rules
+## Portability
 
-Never:
+The declared `Runtime:` line and the syntax agree: Bash 4+ features such as `mapfile`,
+associative arrays, and `${value,,}` need a checked Bash 4+ entry boundary. macOS and BSD
+differ from GNU in `sed`, `date`, `readlink`, `mktemp`, `stat`, `xargs`, and `grep`; keep a
+platform-specific branch with the operation that owns it, and do not use `realpath`, `sed -i`,
+or `date` parsing without handling the difference. `/bin/bash` on macOS is not a modern Bash,
+Linux-only utilities need checks in macOS-compatible scripts, and CI does not share the
+developer's `PATH`. Symlink-aware absolute paths come from `pwd -P` after `cd`, or from
+product-owned application code.
 
-- use `eval` with dynamic input.
-- use `ERR` traps as a substitute for explicit status checks.
-- build shell commands from user input.
-- pass user input to `bash -c`.
-- parse untrusted arithmetic expressions with `(( ... ))`.
-- use unsanitized values as variable names, associative array keys in arithmetic
-  contexts, model variants, repository names, remote paths, or remote shell
-  fragments.
-- use unquoted variables in paths or arguments.
-- run destructive commands against unchecked variables.
-- parse `ls`.
-- use `find -exec sh -c '...'` with `{}` embedded in the script string.
-- use `xargs` without `-0` for filenames.
-- pipe unverified network data to an interpreter.
-- log secrets.
-- keep debug tracing enabled around credentials.
+## Verification and debugging
 
-Safe `find -exec sh -c`:
+Static checks (syntax, ShellCheck, shfmt) run through the repository's verification owner,
+and destructive or provider-dependent journeys run only in a selected disposable environment.
+Production scripts gain no test-only flags, branches, or command replacements. When
+debugging, start from the exact error and line Bash reports, run `bash -n` and ShellCheck,
+reduce to the smallest reproducing block, and expose invisible characters with
+`printf '%q\n'`. Trace with `bash -x` or a local `set -x` block with a `PS4` naming file, line, and function,
+only while diagnosing, never around secrets, and never commit broad tracing, `trap DEBUG`, or stepping
+code. `BASH_XTRACEFD` needs Bash 4.1 and a version gate. A debug helper preserves the status
+it diagnoses.
 
-```bash
-find . -type f -name '*.sql' -exec sh -c 'lint_sql "$1"' sh {} \;
-```
-
-Safe xargs:
-
-```bash
-find . -type f -name '*.sh' -print0 | xargs -0 shellcheck --
-```
-
-If a value must become a command argument, keep it as an argument. Do not turn it
-into code.
-
-## Portability rules
-
-Rules:
-
-- Default to Bash 3.2-compatible syntax unless runtime support is checked.
-- Match any declared platform and minimum Bash version to the syntax actually used.
-- The declared contract and syntax must agree. Bash 4+ features such as
-  `mapfile`, `readarray`, associative arrays, and `${value,,}` require a
-  checked Bash 4+ entry boundary; otherwise they are forbidden.
-- Account for macOS/BSD and GNU differences in `sed`, `date`, `readlink`,
-  `mktemp`, `stat`, `xargs`, and `grep`.
-- Keep platform-specific behavior with the existing operation that owns it.
-- Do not use `realpath` unless the target platform guarantees it.
-- Use `pwd -P` after `cd` for physical paths when symlinks matter.
-- Avoid `sed -i` unless platform-specific behavior is handled.
-- Avoid `date` parsing that differs between GNU and BSD.
-- Do not assume `/bin/bash` is a modern Bash on macOS.
-- Do not use Linux-only utilities in macOS-compatible scripts without checks.
-- Do not assume CI has the same PATH as a developer shell.
-
-Portable-ish script directory:
-
-```bash
-SCRIPT_DIR="$(CDPATH='' cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
-readonly SCRIPT_DIR
-```
-
-When absolute path resolution must handle symlinks across platforms, prefer a
-small verified Bash helper or product-owned application code.
-
-## Bash verification
-
-Use the repository's existing verification owner. Static checks include syntax validation,
-ShellCheck, and shfmt. Verify process status, quoting, signal handling, and owned cleanup when
-those behaviors change. Run destructive or provider-dependent journeys only in the explicitly
-selected disposable environment.
-
-Keep test inputs and assertions in the existing test suite. Do not add test-only flags,
-branches, or command replacements to production scripts. Preserve the real command boundary
-and its failure behavior.
-
-## Debugging Bash
-
-Rules:
-
-- Start with the exact error message and the line it names. Do not guess before
-  checking the command Bash actually reports.
-- Use `bash -n` and ShellCheck before tracing.
-- Reduce the failing script to the smallest command block that reproduces the
-  problem.
-- Use `printf '%q\n'` to expose whitespace, CRLF, quoting, and invisible
-  characters in suspicious values.
-- Use `bash -x script.sh`, a local `set -x` block, or `set -v` only while
-  diagnosing. `set -v` prints input as Bash reads it and can expose surprising
-  line continuations.
-- Set `PS4` to include file, line, and function context when tracing complex
-  scripts.
-- Never trace secret handling.
-- Do not commit broad `set -x`, `trap DEBUG`, or interactive stepping code.
-- `BASH_XTRACEFD` requires newer Bash than the project default. Gate it with a
-  version check before use.
-- Debug helpers must preserve or explicitly return the script status they are
-  diagnosing. A helper that prints diagnostics must not accidentally turn a
-  failure into success.
-
-Tracing pattern:
-
-```bash
-PS4='+${BASH_SOURCE}:${LINENO}:${FUNCNAME[0]:-main}: '
-set -x
-run_non_secret_step
-set +x
-```
-
-Verbose input tracing:
-
-```bash
-set -v
-source "${config_file}"
-set +v
-```
-
-Expose invisible characters:
-
-```bash
-printf '%q\n' "${path}"
-```
-
-Gate newer trace-file support:
-
-```bash
-if (( BASH_VERSINFO[0] > 4 || (BASH_VERSINFO[0] == 4 && BASH_VERSINFO[1] >= 1) )); then
-  exec 9>"${trace_file}"
-  BASH_XTRACEFD=9
-fi
-```
-
-Syntax and lint checks:
-
-```bash
-bash -n path/to/script.sh
-shellcheck path/to/script.sh
-```
-
-Common failure causes:
-
-- `unexpected EOF`: unmatched quotes, unterminated here documents, missing
-  `fi`, `done`, `esac`, or a CRLF line ending hiding the delimiter.
-- `too many arguments`: unquoted expansion inside `[ ... ]`, or data that
-  belongs in `[[ ... ]]`.
-- `event not found`: interactive history expansion from `!`; quote the value or
-  disable history expansion in the interactive snippet.
-- Command runs differently than expected: alias, function, shell builtin, or
-  PATH collision. Check with `type -a command_name`.
-- Script fails before the shebang: UTF-8 BOM or CRLF line endings.
+Common causes follow. `unexpected EOF` is an unmatched quote, an unterminated here document,
+a missing `fi`, `done`, or `esac`, or a CRLF ending hiding the delimiter. `too many arguments`
+is an unquoted expansion inside `[ ... ]`. `event not found` is interactive history expansion
+of `!`. A command behaving differently is an alias, function, builtin, or `PATH` collision,
+found with `type -a`. Failure before the shebang is a BOM or CRLF.
 
 ## Refactoring existing scripts
 
-When fixing or refactoring Bash:
-
-1. Read the whole script and sourced libraries first.
-2. Identify the caller contract: local dev, CI, remote host, or package script.
-3. Preserve behavior before changing style.
-4. Fix quoting and argument arrays near the touched logic.
-5. Add explicit checks around dangerous commands.
-6. Move duplicated shell helpers into the local script family only when the
-   helper has a real shared contract.
-7. Do not convert a large script in one pass unless the task is explicitly a
-   script cleanup.
-8. Do not change shebangs across a script family unless runtime compatibility is
-   verified.
-9. Run the narrow shell lint/format command first, then broader checks when the
-   owning rule file requires them.
-
-When a script is too complex:
-
-- keep the Bash wrapper thin.
-- move parsing or business logic into product-owned application code.
-- keep command invocation and environment validation in Bash only if that is the
-  simplest operational boundary.
+Read the whole script and its sourced libraries, identify the caller contract (local, CI,
+remote host, package script), and preserve behavior before changing style. Fix quoting and
+argument arrays near the touched logic, and add explicit checks around dangerous commands.
+Share a helper across the script family only when it has a real shared contract. Do not
+convert a large script in one pass or change shebangs across a family without verifying the
+runtime. Run the narrow shell lint and format command before the broader checks. A script
+that is too complex keeps a thin Bash wrapper around product-owned application code.

@@ -3,29 +3,25 @@
 [![npm: unreleased](docs/public/brand/badges/npm.svg)](docs/src/content/docs/guides/install.md)
 [![Documentation source](docs/public/brand/badges/docs.svg)](docs/README.md)
 [![License: Apache-2.0](docs/public/brand/badges/license.svg)](LICENSE.md)
-[![Coverage instructions](docs/public/brand/badges/coverage.svg)](docs/src/content/docs/guides/testing.md)
 
-**Lint AI generated code.**
+gspot configures the linters a repository needs, runs them, and installs instructions for
+coding agents, all from one policy file, `gspot.toml`.
 
-gspot configures linters, runs checks, and generates instructions for coding agents from one policy file, `gspot.toml`.
+## Install
 
-Edit `gspot.toml` to choose checks. See [edit and retain repository files](docs/src/content/docs/guides/generated-files.md) for what to commit and keep for recovery.
+gspot is unreleased: complete the [source installation](docs/src/content/docs/guides/install.md),
+then run it in the repository you want to configure.
 
-**Unreleased:** use a source checkout. Local builds and package tests do not establish a
-published release or native verification on every target platform.
+```shell
+gspot init --dry-run
+gspot init
+gspot check
+```
 
-<p>
-  <img src="docs/public/brand/readme/tools/eslint.svg" alt="ESLint" width="120">
-  <img src="docs/public/brand/readme/tools/prettier.svg" alt="Prettier" width="120">
-  <img src="docs/public/brand/readme/tools/ruff.svg" alt="Ruff" width="120">
-  <img src="docs/public/brand/readme/tools/stylelint.svg" alt="Stylelint" width="120">
-  <img src="docs/public/brand/readme/tools/shellcheck.svg" alt="ShellCheck" width="120">
-  <img src="docs/public/brand/readme/tools/semgrep.svg" alt="Semgrep" width="120">
-</p>
+`init` proposes a policy from what the repository holds and installs the tools after a yes.
+`check` runs the selected checks and prints each finding with the command that reproduces it.
 
-See the [kit reference](https://gspot.dev/reference/kits/) for supported technologies.
-
-## Check a JavaScript module
+## One example
 
 A client module reads private configuration:
 
@@ -34,85 +30,31 @@ A client module reads private configuration:
 export const endpoint = process.env.PRIVATE_API_URL;
 ```
 
-The `gspot/no-client-environment` rule reports the read at line 2, column 25. Keep the private
-work on the server and let the client name a public route:
+`gspot check` reports the read through the `gspot/no-client-environment` rule, at line 2. Keep
+the private work on the server and let the client name a public route:
 
 ```javascript
 "use client";
 export const endpoint = "/api/search";
 ```
 
-The corrected module produces no finding from this rule. The application still needs a server
-implementation for the route. Follow the [executable JavaScript example](docs/src/content/docs/guides/client-environment.md)
-for setup, the captured diagnostic, and verification.
+The corrected module produces no finding. The
+[executable example](docs/src/content/docs/guides/client-environment.md) has the setup, the
+captured diagnostic, and the verification.
 
-## Source checkout setup
+## Read on
 
-Complete the [source installation](docs/src/content/docs/guides/install.md), including Git,
-mise, and the pinned Bun and Node runtimes. The guide defines a `gspot` shell function for
-the checkout.
-
-Change to the repository you want to configure. Preview the proposal, then initialize and check:
-
-```shell
-gspot init --dry-run
-gspot init
-gspot check
-```
-
-Review the proposed files and integrations before accepting. Initialization installs selected
-tools unless you pass `--no-install`; lock resolution can still use the network. Initialization
-runs no checks. For a disposable example, follow [your first check](docs/src/content/docs/guides/quick-start.md).
-
-## Set repository policy
-
-A complete policy can select one language:
-
-```toml
-version = 1
-kits = ["javascript"]
-level = "recommended"
-```
-
-<img src="docs/public/brand/diagrams/workflow.svg" alt="Choose policy, apply generated configuration, then run checks." width="720">
-
-`recommended` is the default: correctness, security, accessibility, type safety, dependency
-health, routine formatting, and declared project contracts. `all` adds stable conventions
-for naming, architecture, documentation, API style, ordering, and complexity. Neither
-level enables experimental or preview rules. Change policy with
-`gspot set` or `gspot ignore`; those commands apply their changes. Run `gspot apply` after
-editing `gspot.toml` directly. Do not edit generated files under `.gspot/`.
-
-Use [scopes](docs/src/content/docs/guides/scopes.md) for nested projects and
-[profiles](docs/src/content/docs/guides/profiles.md) to share policy between repositories.
-The [customization guide](docs/src/content/docs/guides/customize.md) covers settings and narrow exceptions.
-
-## Daily commands
-
-| Command                 | Purpose                                                                 |
-| ----------------------- | ----------------------------------------------------------------------- |
-| `gspot check`           | Run selected checks.                                                    |
-| `gspot check --staged`  | Check staged content while preserving unstaged edits.                   |
-| `gspot check --changed` | Select affected checks from working-tree changes.                       |
-| `gspot install`         | Install the repository's locked tools and selected hooks after cloning. |
-| `gspot doctor`          | Diagnose missing tools, configuration drift, and check coverage.        |
-
-An affected project check can report defects in unchanged files. Local hooks can be bypassed;
-[CI checks](docs/src/content/docs/guides/check-automation.md) run independently.
-For removal, preview `gspot uninstall --dry-run` and follow
-[restoration and recovery](docs/src/content/docs/guides/uninstall.md).
-If setup or a check cannot run, use the
-[troubleshooting guide](docs/src/content/docs/guides/troubleshooting.md) to diagnose the failure.
-
-## Contribute
-
-Read the [build and testing guide](docs/src/content/docs/guides/build.md) and the
-[documentation conventions](docs/README.md). The [standalone ESLint plugin](packages/eslint-plugin/README.md)
-can also run without the CLI.
-
-See [artwork sources and licenses](docs/README.md#identity-and-layout-assets) for the generated mark,
-upstream logos, and adapted layout.
-
-## License
+- [Your first check](docs/src/content/docs/guides/quick-start.md), a disposable walkthrough.
+- [Customize the policy](docs/src/content/docs/guides/customize.md).
+  [Scopes](docs/src/content/docs/guides/scopes.md) cover nested projects, and
+  [profiles](docs/src/content/docs/guides/profiles.md) share a policy.
+- [Generated files](docs/src/content/docs/guides/generated-files.md): what to commit, and
+  how to get an original back.
+- [CI](docs/src/content/docs/guides/check-automation.md), [troubleshooting](docs/src/content/docs/guides/troubleshooting.md),
+  and [uninstall](docs/src/content/docs/guides/uninstall.md).
+- [Kit reference](https://gspot.dev/reference/kits/) for the supported technologies, and the
+  [standalone ESLint plugin](packages/eslint-plugin/README.md).
+- [Build and test](docs/src/content/docs/guides/build.md) and the
+  [documentation conventions](docs/README.md) for contributors.
 
 [Apache-2.0](LICENSE.md).

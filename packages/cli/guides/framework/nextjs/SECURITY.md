@@ -6,279 +6,203 @@ title: Next.js Security
 
 # Next.js Security
 
-Requirements about vocabulary, architecture, naming, documentation coverage, declaration
-order, API style, and complexity apply at `all` or when the project explicitly opts into
-them. Correctness, security, accessibility, type safety, routine formatting, and declared
-project contracts apply at both levels.
+Runtime boundaries, configuration, authorization, rich content, service workers, telemetry,
+and streaming endpoints. Routing, rendering, and caching rules are in the Next.js file. The
+Next.js ESLint plugin and the `gspot/no-client-environment` rule report a server value read in
+a client module. Semgrep reports `dangerouslySetInnerHTML`, raw SQL, and shell strings built
+from input, and gitleaks reports a committed secret. This guide holds the decisions those
+tools cannot see.
 
-Runtime boundaries, configuration, authorization, rich content, service workers, telemetry, and
-streaming endpoints. Routing, rendering, and caching rules are in the Next.js file.
+## Boundaries
 
-## Next.js security and runtime boundaries
+Authentication identifies the caller, and authorization decides whether that caller may
+perform the operation. In a multitenant application, the tenant is the account whose data
+and permissions the operation uses. Every Server Action, Route Handler, tRPC procedure, and
+externally callable operation is an independent boundary. It authenticates and authorizes at
+the data or action owner, because a protected layout, hidden button, request proxy, or
+client-side redirect protects nothing.
 
-Authentication identifies the caller. Authorization checks whether that caller can perform the
-requested operation. In a multitenant application, a tenant is the account or organization whose
-data and permissions the operation uses.
+Identity comes from a verified server session. Reads and writes are restricted to the
+caller's resources and tenants, and no browser-provided role or user ID is trusted.
+Row-level security adds checks. Admin clients stay restricted to operations that need their
+authority and are never exposed through a shared provider or browser module. Signed-out
+callers, another user's resource, another tenant, and revoked access are tested as negative
+integration cases, and the deployed application's controls are exercised.
 
-- Treat every Server Action, Route Handler, tRPC procedure, and externally callable operation as an
-  independent boundary. Authenticate and authorize at the data/action owner. A protected layout,
-  hidden button, request proxy, or client-side redirect alone does not protect an endpoint.
-- Derive identity from a verified server session. Restrict reads and writes to resources and tenants
-  that the caller can access. Check permissions on the server instead of trusting a browser-provided
-  role or user ID.
-- Test signed-out callers, another user's resource, another tenant, and revoked access. Database
-  row-level security (RLS) adds access checks; keep admin clients restricted to operations that need
-  their authority.
-- Validate and bound all external input: bodies, query strings, path parameters, cookies, file
-  uploads, cursors, and provider responses. Enforce size and resource limits. Validate file
-  type/content and storage access where uploads exist. Raw strings do not become safe because
-  TypeScript calls them IDs.
-- Keep secrets in server configuration, validate required values, and fail clearly when absent.
-  `NEXT_PUBLIC_*` values are public and substituted at build time. Avoid exporting server
-  configuration through a shared barrel.
-- Server-only markers and build checks enforce module boundaries; client environment lint is a
-  limited additional check.
-- Expose only safe DTO fields and stable error codes. Logs must not contain session tokens,
-  authorization headers, passwords, private messages, full sensitive request bodies, or provider
-  credentials. Record enough safe context to diagnose a failure, including correlation IDs where
-  useful.
-- Use the framework's supported Server Action and origin checks. Protect custom cookie-authenticated
-  writes against cross-site request forgery (CSRF). Keep writes out of GET requests.
-- Cross-Origin Resource Sharing (CORS) controls browser access to responses; authenticate callers
-  separately. Allow credentialed cross-origin requests only from the required origins.
-- Route Handlers use the correct method/status/content type and parse failures safely. Verify
-  webhook signatures against the required raw body before processing, and handle replay/idempotency.
-  Rate-limit costly public operations using deployment-appropriate shared state.
-- Allow only approved redirect destinations and external fetch targets when users can influence
-  them. Prevent server-side request forgery (SSRF) by checking internal address targets and each
-  redirect in a chain.
-- Validate untrusted input and use safe APIs before passing it to SQL, shell commands, HTML
-  rendering, or browser navigation.
-- Render user content as text or through a reviewed sanitizer. Rich Markdown/HTML links, embedded
-  media, and translated rich text need explicit safe protocols/content rules. Do not use
-  `dangerouslySetInnerHTML` for unsanitized user or provider output.
-- Configure Content Security Policy (CSP) and other security headers for the application. Verify
-  them with its rendering and scripts.
-- Propagate cancellation and deadlines to streaming/provider work where supported. A disconnected
-  browser must not leave avoidable expensive work running indefinitely. Handle partial stream
-  failure separately from completion. Avoid unrestricted retries or unbounded request fan-out.
-- Keep request state isolated across deployment instances and define which data each cache stores.
-  Store sessions, uploads, and jobs in storage that survives instance restarts.
-- Check Node, Edge, static export, and deployment adapter support before selecting runtime features.
-  Use shared storage when a file or rate limit needs to be visible to several instances.
+Bodies, query strings, path parameters, cookies, uploads, cursors, and provider responses are
+validated and bounded. File type and content are checked where uploads exist. A raw string
+does not become safe because TypeScript calls it an ID. Secrets live in server configuration,
+validated with a clear failure when absent. `NEXT_PUBLIC_*` values are public and substituted
+at build time, and server configuration is not exported through a shared barrel.
 
-- Maintain dependency and secret scanning with the repository's tools and hooks. Investigate scanner
-  findings and scope each suppression to a reviewed finding with a documented reason.
-- Verify authorization and data isolation with negative integration cases and focused boundary
-  review. Exercise the deployed application's access controls and runtime configuration.
+Responses expose safe DTO fields and stable error codes. Logs hold no session tokens,
+authorization headers, passwords, private messages, full sensitive bodies, or provider
+credentials, while keeping correlation IDs and safe context. Writes stay out of GET. Custom
+cookie-authenticated writes carry CSRF protection through the framework's Server Action and
+origin checks. CORS controls browser access to responses without replacing authentication,
+and credentialed cross-origin requests are allowed from required origins only.
 
-### Keep configuration out of browser bundles
+Route Handlers use the right method, status, and content type and parse failures safely.
+They verify webhook signatures against the raw body before processing, with replay and
+idempotency handled, and rate-limit costly public operations through deployment-shared
+state. Redirect destinations and external fetch targets a user can influence are allowlisted.
+Internal addresses and every hop of a redirect chain are checked against SSRF. Untrusted
+input is validated and passed through safe APIs before SQL, shell commands, HTML rendering,
+or navigation.
 
-Keep private environment values out of `next.config.*`'s `env` option. That option makes configured
-values available to client bundles regardless of whether their names start with `NEXT_PUBLIC_`. Read
-secrets only from server runtime configuration. Expose a browser value through an explicit public
-variable or a reviewed public DTO. Do not spread the process environment into build options, webpack
-definitions, generated JavaScript, or HTML. See
-[Next.js configuration environment variables](https://nextjs.org/docs/app/api-reference/config/next-config-js/env).
+User content renders as text or through a reviewed sanitizer. A Content Security Policy and
+the other security headers are configured and verified against the real rendering and
+scripts. Cancellation and deadlines propagate to streaming and provider work, so a
+disconnected browser leaves no expensive work running. Partial stream failure is handled
+apart from completion, and retries and fan-out are bounded.
 
-- Inspect the composed configuration, including wrappers, imported fragments, and deployment
-  substitutions. A browser-only environment lint rule cannot inspect build-time injection by itself.
-- Verify the browser output of a production build with harmless marker values when changing secret
-  boundaries. Do not use real credentials as test data. If a credential was bundled into a
-  delivered asset, removing the source reference alone does not revoke that credential.
-- Keep type and lint failures visible. Do not enable `ignoreBuildErrors` or a version-specific
-  `ignoreDuringBuilds` escape hatch to make delivery pass.
-- Align Next, its ESLint configuration, React, the deployment adapter, and bundler plugins with the
-  installed major versions. An older application's working configuration is not evidence that the
-  same APIs or adapter work with a newer Next release.
+Request state is isolated across instances, and each cache's contents are defined. Sessions,
+uploads, jobs, files, and rate limits live in storage several instances can see. Node, Edge,
+static export, and adapter support are checked before choosing runtime features. Scanner
+findings are investigated, with each suppression scoped to a reviewed finding.
 
-### Check authorization where data is accessed
+## Configuration and bundles
 
-A redirect in a layout or proxy can improve navigation, but it cannot be the only place an operation
-checks access. The operation may be called directly, invoked from a different route, or reached
-after a session changes. Recheck access where protected data is read or changed.
+Private values stay out of the `env` option of `next.config.*`, which exposes configured
+values to client bundles whatever their names. Secrets are read from server runtime
+configuration. A browser value goes through an explicit public variable or a reviewed public
+DTO. The process environment is never spread into build options, bundler definitions,
+generated JavaScript, or HTML. The composed configuration, including wrappers, imported
+fragments, and deployment substitutions, is inspected because a browser-only lint cannot see
+build-time injection.
 
-Use verified identity consistently across data clients. A server admin/service-role client can
-bypass database policy; keep it restricted to operations that explicitly need that authority.
-Ordinary user operations retain the intended user and tenant context. Do not expose such a
-client through a shared provider or browser configuration module.
+When a secret boundary changes, the production browser output is verified with harmless
+marker values, never real credentials. A credential that once shipped in an asset is revoked
+rather than merely unreferenced. Type and lint failures stay visible, with no
+`ignoreBuildErrors` or `ignoreDuringBuilds`. Next, its ESLint configuration, React, the
+adapter, and bundler plugins align with the installed majors. See
+[configuration environment variables](https://nextjs.org/docs/app/api-reference/config/next-config-js/env).
 
-Where the auth library ships a framework integration, use it consistently; do not combine its cookie
-ownership with the older "Auth Helpers" package in the same authentication flow. Keep browser and request-scoped
-server clients distinct, and use verified server identity for authorization. A client-side
-`getSession()` read may supply a transport token but is not server authorization evidence. See
-[Supabase server-side auth for Next.js](https://supabase.com/docs/guides/auth/server-side/nextjs).
+A redirect in a layout or proxy improves navigation and is never the only access check. The
+operation may be called directly, from another route, or after a session change, so access
+is rechecked where protected data is read or changed. Where the auth library ships a
+framework integration, it is used alone, not combined with the older "Auth Helpers" package
+in one flow. Browser and request-scoped server clients stay distinct. A client-side
+`getSession()` read supplies a transport token and no server authorization. Session refresh
+with response cookies stays out of read-only RSC context creation.
 
-When session refresh requires response cookie updates, use the authentication library's supported
-integration for the installed Next/runtime release. Keep that behavior out of read-only RSC context
-creation. Handle expired and revoked sessions as real transitions, including clearing browser caches
-and preventing stale private views from reappearing through Back navigation.
+Expired and revoked sessions are real transitions. They clear browser caches and keep stale
+private views from returning through Back navigation. See
+[server-side auth for Next.js](https://supabase.com/docs/guides/auth/server-side/nextjs).
 
-### Render Markdown and rich editors safely
+## Rich content and editors
 
-Markdown parsing is not HTML sanitization. `marked` explicitly leaves sanitization to its caller.
-Render user and provider messages through one reviewed content boundary: either a renderer that
-rejects raw HTML or parsed HTML passed through a maintained sanitizer with a defined allowlist.
-Sanitize the final HTML after transformations and before any HTML sink. See
-[Marked's sanitization guidance](https://marked.js.org/).
+Markdown parsing is not sanitization, and `marked` leaves it to the caller. User and provider
+messages pass through one reviewed content boundary. That is a renderer that rejects raw HTML
+or a maintained sanitizer with a defined allowlist, applied to the final HTML after every
+transformation and before any sink. It covers links, image sources, inline event attributes,
+frames, SVG, and dangerous URL schemes. Regex replacements, type assertions, and
+trusted-looking model output make nothing safe.
 
-- Cover links, image sources, inline event attributes, embedded frames, SVG, and dangerous URL
-  schemes. Do not rely on regex replacements, TypeScript assertions, or trusted-looking model output
-  to make markup safe.
-- Restrict `dangerouslySetInnerHTML` to a reviewed rendering adapter. Keep sanitization tests
-  beside that adapter. If lint rejects the required HTML sink, use a narrow local suppression
-  that names the sanitizer or exact trusted static source.
-- Apply the same policy to streaming partial messages and final persisted messages. If parsing is
-  asynchronous, prevent an older parse from overwriting the latest text or a different message.
-- Initialize Tiptap in a Client Component with the installed version's supported SSR behavior,
-  including `immediatelyRender: false` where required. Keep extension versions compatible. See
-  [Tiptap's Next.js integration](https://tiptap.dev/docs/editor/getting-started/install/nextjs).
-- Keep editor updates as editor transactions. Avoid serializing the full document, rewriting HTML,
-  and calling `setContent` on every transaction; that can disturb selection, history, and input
-  composition. Use supported decorations, marks, or targeted transactions for visual annotations.
-- Do not submit while an IME composition is active. Test Enter, Shift+Enter, mobile keyboards,
-  multiline paste at the current selection, undo/redo, and the empty-to-nonempty transition.
-- Define the saved representation and its size limits. Editor JSON, HTML, and plain text have
-  different contracts; an editor extension schema does not make arbitrary saved HTML trusted.
+`dangerouslySetInnerHTML` is confined to a reviewed rendering adapter with its sanitization
+tests beside it and a narrow suppression naming the sanitizer or the exact static source. The
+same policy covers streaming partial messages and persisted messages. An asynchronous parse
+never overwrites newer text or another message.
 
-### Scope service workers and private media
+Tiptap initializes in a Client Component with the installed version's SSR behavior,
+`immediatelyRender: false` where required, and compatible extension versions. Updates stay
+editor transactions rather than full-document `setContent` calls that disturb selection,
+history, and composition. Submission waits for an active IME composition to end. Enter,
+Shift+Enter, mobile keyboards, multiline paste, undo, and the empty-to-nonempty transition
+are tested. The saved representation (editor JSON, HTML, or plain text) and its size limits
+are defined, and an extension schema does not make saved HTML trusted. See
+[Tiptap for Next.js](https://tiptap.dev/docs/editor/getting-started/install/nextjs).
 
-Treat the browser's service-worker cache as an additional cache owner. HTTP headers and query-cache
-invalidation do not automatically remove a response that a worker explicitly stored.
+## Service workers, media, and telemetry
 
-- Cache only the intended public assets. Exclude authenticated API responses, chat content,
-  personalized RSC payloads, signed media URLs, and private media unless a deliberate private
-  offline feature defines storage, expiry, logout, and account-switch behavior.
-- Match worker routes against actual request URLs, methods, origins, and paths. A broad image-file
-  suffix match can include authenticated media; a pathname regex may not match an absolute URL.
-- Define cache versioning and worker activation behavior. Test an existing controlled tab during an
-  update, offline reload, logout, account switching, and Back navigation. A new worker must not
-  discard an unsaved draft or serve another account's content.
-- For object storage, authorize the bucket and object path, not just the existence of a signed-in
-  session. Test another user's object and each preview, blurred, watermarked, or transformed
-  variant. Enforce resource access in database and storage policies.
-- Treat signed URLs as bearer access with an expiry. Keep them out of telemetry and persistent
-  shared caches. Bound refresh on expiry and clear account-scoped media/query state at logout.
-- Prefer an authorized media delivery mechanism appropriate to the runtime over repeatedly moving
-  large base64 media payloads through query caches. Test range requests, expiry during playback,
-  interrupted loads, and memory use with several visible videos.
-- Clean up image/video listeners, preload work, and object URLs. When `src` changes, ensure a late
-  load event cannot mark the new source as loaded or keep a failed preview from blocking recovery.
+A service-worker cache is another cache owner that HTTP headers and query invalidation do not
+clear. It stores only intended public assets. Authenticated API responses, chat content,
+personalized RSC payloads, signed media URLs, and private media stay out unless a deliberate
+private offline feature defines storage, expiry, logout, and account switching. Worker routes
+match real URLs, methods, origins, and paths, because a broad image suffix can catch
+authenticated media. Cache versioning and activation are defined and tested against a
+controlled tab during update, offline reload, logout, account switch, and Back navigation. A
+new worker discards no unsaved draft.
 
-### Separate telemetry and provider results
+Object storage authorizes the bucket and object path in database and storage policies,
+tested with another user's object and every preview or transformed variant. Signed URLs are
+bearer access with expiry. They stay out of telemetry and shared caches, are refreshed within
+bounds, and are cleared with account-scoped state at logout. Large media uses an authorized
+delivery mechanism rather than base64 through query caches. It is tested for range requests,
+expiry during playback, interrupted loads, and memory with several visible videos. Listeners,
+preloads, and object URLs are cleaned up so a late load event cannot mark a new source loaded.
 
-Use one initialization owner for browser analytics. Avoid loading both an inline bootstrap and an
-SDK provider for the same tracker unless that integration explicitly requires both. Server routes
-must use server-compatible telemetry, not import a module that initializes a browser SDK.
+Browser analytics has one initialization owner, and server routes use server-compatible
+telemetry rather than a browser SDK module. Allowed event properties are defined so chat
+transcripts, editor content, auth inputs, tokens, signed URLs, and private identifiers are
+masked from autocapture and session replay. Captured payloads are verified, including custom
+and contenteditable controls. Analytics identity resets on logout and account switch, with
+anonymous-to-authenticated changes explicit.
 
-- Define allowed event properties. Mask or exclude chat transcripts, editor content, auth inputs,
-  tokens, signed URLs, and private identifiers from autocapture and session replay. Verify the
-  actual captured payloads, including custom controls, and contenteditable elements.
-- Reset analytics identity on logout and account switch. Keep anonymous-to-authenticated identity
-  changes explicit; a module's prior identity must not label a different user's events.
-- Telemetry failure must not replace an operation's intended response, and diagnostic code must not
-  throw again while handling the original failure. Bound awaited logging and use the runtime's
-  supported lifecycle for deferred work.
-- Check an SDK's returned error field as well as caught exceptions. For example,
-  `resend.emails.send` can return `{ data, error }`; an awaited call is not by itself proof of
-  acceptance. Return success only after confirming the provider result, and distinguish acceptance
-  from delivery. See [Resend's Next.js example](https://resend.com/docs/send-with-nextjs).
-- Restrict email recipients and sender identity on the server, validate `reply-to` input, and apply
-  abuse controls to public feedback or OTP operations. Keep provider errors out of public responses.
+Telemetry failure never replaces an operation's response, and diagnostic code never throws
+while handling the original failure. Awaited logging is bounded through the runtime's
+deferred-work lifecycle. An SDK's returned error field is checked as well as thrown
+exceptions; `resend.emails.send` returns `{ data, error }`. Success is returned only after
+confirming the provider result, and acceptance is distinct from delivery. Email recipients,
+sender identity, and `reply-to` are restricted on the server, with abuse controls on public
+feedback and OTP operations.
 
-### Endpoint and streaming lifecycle
+## Endpoints and streaming
 
-For each Route Handler, define the allowed body size, content types, HTTP methods, validation,
-authorization, error responses, and caching behavior. Check incoming data before processing it.
+Each Route Handler defines allowed body size, content types, methods, validation,
+authorization, error responses, and caching, and it checks data before processing it. Each
+stream defines the signal that confirms completion, distinct from an open connection or
+partial data. The client represents partial output, completion, cancellation, timeout, and
+failure after output has started, with a defined point to save and merge the result.
 
-For each stream, define the signal that confirms completion. Distinguish that signal from an open
-connection or partial data. Let the client represent partial output, completion, cancellation,
-timeout, and failure after output has started. Define when to save the result and merge it with
-existing data for each outcome.
+An abort signal propagates upstream. Total work, token and media size, concurrency, and
+request lifetime are bounded. Readers, timers, subscriptions, and provider resources are
+released on every outcome including disconnect, and no detached promise keeps producing
+after cancellation. Temporary browser output keeps its relationship to persisted entities so
+a retry does not duplicate the durable operation. Provider and user output pass the same
+content policy, and public streams carry no error details or serialized upstream exceptions.
 
-- Propagate an abort signal to upstream work when the provider/runtime supports it.
-- Bound total work, token/media size, concurrency, and request lifetime according to the endpoint's
-  contract.
-- Release readers, timers, subscriptions, and provider resources on completion, cancellation,
-  failure, and client disconnect.
-- Do not keep producing expensive output after cancellation because a detached promise lost access
-  to the request lifecycle.
-- Preserve the relationship between temporary browser output and persisted server entities. A retry
-  must not silently duplicate the durable operation.
-- Sanitize rendered provider/user output through the same content policy as other untrusted input. A
-  generated answer is not trusted HTML.
-- Keep error details out of a public stream while retaining safe diagnostic context on the server.
-  Do not serialize raw upstream exception objects into chunks.
+A raw streaming handler uses the Web Streams API with a defined wire format and sets content
+type, cache policy, and headers before returning. It respects backpressure with bounded
+queues and supported piping or pull-based production. It parses the application format
+independently of network chunks, with incremental UTF-8 decoding and retained partial
+records. It defines framing for SSE or newline-delimited JSON rather than assuming one
+`enqueue` per read. It closes file handles and upstream readers per the runtime's ownership
+rules and streams large files incrementally. A late failure is reported through the stream
+protocol or by closing the stream, never by appending a second response.
 
-For a raw streaming Route Handler, use the Web Streams API and a defined wire format. Set content
-type, cache policy, and other response headers before returning the stream.
+An SSE consumer uses an established parser where available and dispatches an event only on a
+complete separator. It supports the protocol's line endings, comments, and multiline `data:`
+fields, and validates the parsed payload. It flushes the decoder at end of input and treats
+a closed socket without the required terminal event as incomplete. Buffered bytes are
+bounded. Tests cover split multibyte characters, split JSON, several frames per read, missing
+terminal events, malformed frames, and cancellation during a blocked read.
 
-- Respect backpressure: pace production when the consumer cannot keep up. Keep queues bounded and
-  use supported piping or pull-based production for large output.
-- Parse the application format independently of network chunks. A read can contain half a UTF-8
-  character, part of a JSON record, or several events. Use incremental decoding and retain an
-  incomplete record until it is complete.
-- Define framing for Server-Sent Events or newline-delimited JSON rather than assuming one `enqueue`
-  equals one client read.
-- Close or cancel file handles and upstream readers according to the runtime's stream ownership
-  rules. Stream large files incrementally instead of loading them fully into memory.
-- Once headers are committed, report late failures through the defined stream protocol or close the
-  failed stream. Do not try to append a second HTTP response or silently mark partial output as
-  completed. Follow the existing cancellation and persistence rules above.
+An inference proxy, retrieval request, and usage-verification endpoint are separate callable
+operations. Each verifies access and enforces its own budget before using a privileged
+credential. A protected page or a prior chat-creation mutation protects no other endpoint.
+Resource ownership and allowed model and provider choices derive on the server. Input bytes,
+context count, per-message size, output tokens, duration, and concurrency are bounded.
+Browser token estimates and disabled buttons are feedback, not quota.
 
-For SSE, use an established protocol parser when available. Decode UTF-8 incrementally, preserve
-incomplete frames across reads, and dispatch an event only when its separator is complete. Support
-the protocol's line endings, comments, and multiline `data:` fields. Do not parse every received
-line as a complete event. Validate the parsed event payload instead of asserting its type.
+Private prompts and retrieved passages stay out of query strings, referrers, and analytics
+URLs. Retrieved text and generated output are untrusted data. They authorize no tool call,
+select no credential, and override no access check, and structured provider results are
+validated before use as identifiers. Generation and persistence have one owner. When
+generation succeeds and saving fails, persistence retries under the same operation identity
+instead of generating and charging again. Quota and concurrency use shared state across
+instances, tested with direct signed-out requests, another user's chat, oversized contexts,
+excessive output, retries, and concurrent submissions.
 
-Flush the decoder at end of input and apply the protocol's rule for incomplete trailing data. A
-closed socket alone must not invoke a successful completion callback when the provider requires a
-terminal event. Bound buffered bytes and accumulated output. Test split multibyte characters, split
-JSON, multiple frames in one read, missing terminal events, malformed frames, and cancellation while
-blocked in a read. See
-[SSE framing](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events).
+Streaming is measured through the production adapter, proxy, CDN, and compression, because a
+chunking server can sit behind a buffering layer. Host streaming support and execution
+limits are checked; static export cannot stream at request time, and `X-Accel-Buffering: no`
+is not a universal control. Compression flushing is compared with an
+`Accept-Encoding: identity` request. Timestamps cover request start, headers, body reads, and
+completion rather than starting after `fetch()` resolves. Progressive visible content is
+inspected alongside timed reads.
 
-### Protect inference and retrieval endpoints
-
-Treat an inference proxy, retrieval request, and usage-verification endpoint as separate callable
-operations. Each must verify access and enforce its own resource budget before using a privileged
-provider credential. A protected page or a prior chat-creation mutation does not protect a direct
-request to another endpoint.
-
-- Derive resource ownership and allowed model and provider choices on the server. Bound input
-  bytes, context count, per-message size, output tokens, request duration, and concurrent work.
-  Browser token estimates and disabled buttons are feedback, not quota enforcement.
-- Keep private prompts and retrieved passages out of query strings, referrers, and analytics URLs.
-  Use a bounded request body for sensitive or costly generation operations.
-- Treat retrieved text and generated output as untrusted data. They cannot authorize a tool call,
-  select an arbitrary credential, or override server access checks. Validate structured provider
-  results before using them as identifiers or operational instructions.
-- Give generation and durable persistence a clear owner. If generation succeeds but saving fails,
-  retry persistence with the same operation identity instead of generating and charging again.
-  Define how cancellation and provider errors affect partial output and reserved quota.
-- Use shared quota and concurrency state when several instances serve requests. Test direct
-  signed-out requests, another user's chat, oversized contexts, excessive output requests, retries,
-  and concurrent submissions.
-
-### Verify streaming
-
-Measure streaming through the production adapter, proxy, CDN, and compression settings. A server
-that produces chunks can still sit behind a layer that buffers the entire response.
-
-- Check the host's response-streaming support and execution limits. Static export cannot perform
-  request-time server streaming. Apply proxy buffering settings only to infrastructure that supports
-  them; `X-Accel-Buffering: no` is not a universal CDN control.
-- Check compression flushing and client buffering. Compare compressed delivery with a diagnostic
-  request using `Accept-Encoding: identity` when the server honors it. Keep normal compression
-  decisions based on measured user experience.
-- Record request start, response headers, body-read timestamps, and completion. Starting the timer
-  only after `fetch()` resolves hides the time spent waiting for headers.
-- Inspect progressive visible content as well as timed body reads. An early first byte followed by a
-  long download can have other causes and does not by itself prove sections streamed usefully.
-- Treat network chunk boundaries as transport details. They need not match Suspense boundaries or
-  producer writes. Streaming over HTTP/2 or HTTP/3 does not require an HTTP/1.1
-  `Transfer-Encoding: chunked` header.
-- Verify slow data, slow networks, cancellation, mid-stream errors, and representative crawler
-  requests. Check that the final page has usable content and the expected metadata and status.
-- Keep diagnostics independent of private React payload syntax. Use observable timing, section
-  visibility, accessibility, and final outcomes as evidence.
+Chunk boundaries are transport details that need not match Suspense boundaries or require
+`Transfer-Encoding: chunked` on HTTP/2. Slow data, slow networks, cancellation, mid-stream
+errors, and crawler requests are verified with usable final content, metadata, and status.
+Evidence is observable timing and visibility rather than private React payload syntax.

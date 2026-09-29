@@ -24,7 +24,7 @@ gspot is the shared house style for AI-written code, delivered as one binary:
   the remaining house style.
 - **The missing rules.** gspot ships the structural, naming, prose, security, and drift checks
   the standard tools lack, as one engine per concern, versioned with the rest.
-- **Agent instructions.** gspot installs rule files that tell an agent how to write code in this
+- **Agent instructions.** gspot installs guide files that tell an agent how to write code in this
   repository, selected by what the repository uses.
 
 These arrive together, pinned to one version, in every repository that runs gspot.
@@ -37,25 +37,22 @@ run `gspot init` in a repository nobody at gspot has seen, answer the questions 
 `--yes`), and get a working gate. They change one line to adjust it. They run `gspot apply` and
 read a short diff.
 
-The secondary user is an AI agent working in that repository. It reads the installed rule files
+The secondary user is an AI agent working in that repository. It reads the installed guide files
 and gets findings from the hooks with a message it can act on.
 
 ## Promises
 
-These are target promises, not owns that every implementation already passes. Required
-evidence appears below; [remaining work](22-remaining.md) owns current dispositions.
-
-| Promise                                                  | What it means                                                                                                                                                   | Held by                                                                   |
-| -------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| One command installs it                                  | `gspot init --yes` detects, writes the config, and installs the tools. It runs no check, and the developer decides when to lint                                 | the six planted installs, and one generated project for each generator    |
-| Initialization preserves application build configuration | gspot edits no `tsconfig.json`, no `package.json` beyond its launcher and explicitly accepted lint-task entries, and no `pyproject.toml`                        | the planted installs compare every file of the developer before and after |
-| gspot deletes only what it owns                          | replacement saves originals; lifecycle deletion requires bounds and unchanged owned content; unowned or edited files survive, and no check writes into the tree | the replacement cases, and the planted cases for untracked files          |
-| One file configures it                                   | `gspot.toml` holds repository choices; CLI edits cover supported settings and complex entries can be edited directly                                            | the completion test and the settings test over the manifests              |
-| Nothing is silent                                        | an ignore prints with `--verbose`; a reason is required only with `require_reasons`, a skipped check prints why, and a check whose tool is absent fails         | the failing case of every check, and the report shape test                |
-| Nothing is hidden in the ignore file of a tool           | gspot hands every tool a file list, and `doctor` names a file or a kind of file no check reads                                                                  | the coverage tests of `doctor`                                            |
-| An upgrade is a diff                                     | generated configuration is tracked, and `apply --dry-run` lists every rule that changes, for every tool                                                         | the upgrade test repository                                               |
-| The rules an agent reads match the checks                | a rule file follows the level, names no tool of another configuration, and its good examples pass their linter                                                  | the rules lint                                                            |
-| gspot obeys its own rules                                | this repository runs gspot at `all`; every retained exception has a narrow scope, a reason, and verification                                                    | local candidate acceptance and the exact commit's full CI results         |
+| Promise                                                  | What it means                                                                                                                                                            | Held by                                                                   |
+| -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------- |
+| One command installs it                                  | `gspot init --yes` detects, writes the config, and installs the tools. It runs no check, and the developer decides when to lint                                          | the planted installs, and one generated project for each generator        |
+| Initialization preserves application build configuration | gspot edits no `tsconfig.json`, no `package.json` beyond its launcher and explicitly accepted lint-task entries, and no `pyproject.toml`                                 | the planted installs compare every file of the developer before and after |
+| gspot deletes only what it owns                          | init saves the originals it replaces; lifecycle deletion requires bounds and unchanged owned content; unowned or edited files survive, and no check writes into the tree | the replace cases, and the planted cases for untracked files              |
+| One file configures it                                   | `gspot.toml` holds repository choices; CLI edits cover supported settings and complex entries can be edited directly                                                     | the completion test and the settings test over the manifests              |
+| Nothing is silent                                        | an ignore prints with `--verbose`; a reason is required only with `require_reasons`, a skipped check prints why, and a check whose tool is absent fails                  | the failing case of every check, and the report shape test                |
+| Nothing is hidden in the ignore file of a tool           | gspot hands every tool a file list, and `doctor` names a file or a kind of file no check reads                                                                           | the coverage tests of `doctor`                                            |
+| An upgrade is a diff                                     | generated configuration is tracked, and `apply --dry-run` lists every rule that changes, for every tool                                                                  | the upgrade test repository                                               |
+| The guides an agent reads match the checks               | a guide follows the level, names no tool of another kit, and its good examples pass their linter                                                                         | the guides lint                                                           |
+| gspot obeys its own rules                                | this repository runs gspot at `all`; every retained exception has a narrow scope, a reason, and verification                                                             | the local gate and the exact commit's full CI results                     |
 
 ## The developer's day
 
@@ -74,7 +71,7 @@ evidence appears below; [remaining work](22-remaining.md) owns current dispositi
   and the command that adds it. The new checks are on from the next run.
 - Wonder what a finding means. `gspot explain <check>` says what the check looks for, what goes
   wrong without it, and what to do, in plain words.
-- Upgrade. Run `gspot apply`. Read the plan: new rules for every tool, tool pins, and rule
+- Upgrade. Run `gspot apply`. Read the plan: new rules for every tool, tool pins, and guide
   file changes. Say yes. Commit the diff. Nothing you wrote is touched.
 
 ## Principles
@@ -92,10 +89,9 @@ evidence appears below; [remaining work](22-remaining.md) owns current dispositi
 - **gspot brings its own tools and touches none of yours.** Its lint tools install under
   `.gspot/`. The linters of the developer, their configs, and their plugins stay until the
   developer removes them.
-- **Take over what one tool owns, and list the rest.** At `init`, gspot deletes a config file
-  only when one tool owns it. A shared file is read and left in place.
-- **Carry both ways.** gspot carries what was turned off and what was turned on, and lists every
-  setting it did not carry.
+- **Report and replace.** At `init`, gspot replaces a configuration file only when one tool
+  owns it, names every file it replaced, and keeps the original for `gspot uninstall`. A shared
+  file is read and left in place.
 - **Written for someone who does not code.** Every message, help text, check summary, and page
   says what happened and what to do next, in plain words, and names the command that does it.
   The prose of gspot itself runs through its own prose engine.
@@ -110,5 +106,5 @@ evidence appears below; [remaining work](22-remaining.md) owns current dispositi
 - gspot runs tests and builds only through declared checks at the manual stage. It does not deploy applications.
 - gspot does not manage product configuration. A check that needs a product fact reads the
   product's file.
-- gspot does not host every linter for every language. It covers the languages in
-  [kit reference](04-kits.md#available-kits) through the agreed acceptance record. Additional integrations require a concrete product requirement.
+- gspot does not host every linter for every language. It covers the languages in the
+  [kit reference](04-kits.md#available-kits). Additional integrations require a concrete product requirement.

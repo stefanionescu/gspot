@@ -6,70 +6,38 @@ title: FastAPI
 
 # FastAPI
 
-Requirements about vocabulary, architecture, naming, documentation coverage, declaration
-order, API style, and complexity apply at `all` or when the project explicitly opts into
-them. Correctness, security, accessibility, type safety, routine formatting, and declared
-project contracts apply at both levels.
+Structure, routers, parameters, schemas, responses, and errors for a Python project that uses
+FastAPI. Runtime covers forms and files, encoding, async, dependencies, security, streaming,
+background tasks, middleware, documentation exposure, and tests. Ruff reports the annotation,
+import, and docstring rules; the `fastapi/openapi-lint` check reports a schema that drifts
+from the routes. Examples are complete modules on FastAPI and Pydantic v2.
 
-These rules apply when a Python project uses FastAPI for an HTTP API, web
-service, internal service, webhook receiver, streaming endpoint, or API gateway.
-They do not apply to non-FastAPI Python modules except where the general Python
-rules already say the same thing.
+## Source decisions
 
-The FastAPI rules span two files: this one (structure, routers, parameters, schemas, responses,
-errors) and Runtime (forms and files, encoding, async, dependencies, security, streaming, background
-tasks, middleware, docs, tests).
+FastAPI parameters carry their metadata through `Annotated[..., Query(...)]`, `Path`, `Body`,
+`Depends`, `Header`, `Cookie`, `Form`, and `File`. Request bodies, response bodies, and
+documented structured data are Pydantic models, and a path operation returns a value that
+matches its declared return type. FastAPI and Starlette primitives are used directly where
+they own the HTTP behavior. Database, SDK, and service clients stay out of import-time work.
+A dependency, middleware, background task, or router is added only when a plain function is
+not enough. Documentation examples with fake secrets, hashes, users, or tokens are never a
+production pattern.
 
-The executable examples are complete modules using FastAPI and Pydantic v2.
-Domain calls inside async handlers must be nonblocking.
-
-## FastAPI source decisions
-
-Rules:
-
-- Prefer `Annotated[..., Query(...)]`, `Annotated[..., Path(...)]`,
-  `Annotated[..., Body(...)]`, `Annotated[..., Depends(...)]`,
-  `Annotated[..., Header()]`, `Annotated[..., Cookie()]`, and similar metadata
-  annotations for FastAPI parameters.
-- Use Pydantic models for request bodies, response bodies, and documented
-  structured data.
-- Return concrete Pydantic models, dataclasses, dictionaries, lists, or
-  iterables that match the declared return type.
-- Use FastAPI and Starlette primitives directly when they own the HTTP behavior.
-- Keep database, SDK, and service clients out of module-level import-time work.
-- Keep security-specific rules stricter than general examples. Documentation
-  examples with fake secrets, fake hashes, fake users, or fake tokens are not
-  acceptable production patterns.
-- Do not add a FastAPI dependency, middleware, background task, or router when a
-  plain Python function is enough.
-
-## FastAPI application structure
+## Application structure
 
 <!-- level: all -->
 
-Rules:
+Framework code is organized by boundary: app creation, routers, dependencies, schemas,
+security, middleware, and infrastructure. Path operations adapt HTTP input to application
+calls and application results to HTTP output; business logic lives outside them. A
+nontrivial app spans modules. One main module creates the `FastAPI` object and wires routers,
+global dependencies, middleware, exception handlers, metadata, and startup. Router modules
+hold related path operations. Shared dependencies sit in a dependencies module or a
+domain-owned one, and internal and admin routers sit in clearly named internal packages.
 
-- Keep FastAPI framework code organized by application boundaries: app creation,
-  routers, dependencies, schemas, security, middleware, and infrastructure.
-- Keep business logic outside path operation functions. Path operations adapt
-  HTTP input to application calls and adapt application results to HTTP output.
-
-- Split nontrivial FastAPI apps across multiple modules.
-- Use one main application module to create the `FastAPI` object and include
-  routers.
-- Put related path operations in router modules.
-- Put shared dependencies in a dependencies module or a domain-owned dependency
-  module.
-- Put internal-only routers or admin routers in clearly named internal packages.
-- Use `__init__.py` for regular packages. Preserve intentional namespace packages.
-- Keep the main app module small. It wires routers, global dependencies,
-  middleware, exception handlers, metadata, and startup configuration.
-- Configure the FastAPI entrypoint in project configuration when the deployment
-  tool supports it.
-- Do not depend on running the app from the repository root.
-- Do not patch `sys.path` to make a FastAPI app importable from source.
-
-Good shape:
+Regular packages carry `__init__.py`. The entrypoint is configured in project configuration
+where the deployment tool supports it. The app never depends on the repository root as the
+working directory, and nothing patches `sys.path`.
 
 ```text
 src/
@@ -86,10 +54,7 @@ src/
       admin.py
 ```
 
-The following complete module exposes a read-only catalog. The two catalog records are
-fixed demonstration data; application persistence belongs to its own boundary.
-
-Good main module:
+Good:
 
 ```python
 """Expose a fixed catalog with validated identifiers and public responses."""
@@ -128,107 +93,40 @@ app = FastAPI(openapi_url=None, docs_url=None, redoc_url=None)
 app.include_router(router)
 ```
 
-## Import correctness
+## Routers
 
-Run the application through its configured installation or module entrypoint. Imports must work
-without relying on the repository root as the current directory.
-
-## FastAPI routers
-
-Rules:
-
-- Use `APIRouter` to group related path operations.
-- Import router modules when multiple modules expose a `router` object, so names
-  do not collide.
-- Put shared router prefix, tags, dependencies, and default responses on the
-  `APIRouter`.
-- Router prefixes do not end with `/`.
-- Path operation paths start with `/`.
-- Add path-operation-specific tags, dependencies, status codes, and responses
-  only when they differ from the router default.
-- Include routers in the main app module or a higher-level router module.
-- Include a router in another router before including the parent router in the
-  app.
-- Reusing the same router under multiple prefixes is an advanced pattern. Use it
-  only when the same API must intentionally be exposed under multiple route
-  groups.
-
-A router that owns `/items` declares that prefix once. Give it shared tags,
-dependencies, and response metadata at construction. Attach each route before
-including the router in the application.
-
-Import router modules by domain, such as `items` and `users`, then include
-`items.router` and `users.router`. Avoid aliases that hide the owner.
+`APIRouter` groups related path operations and carries the shared prefix (never ending in
+`/`), tags, dependencies, and default responses; a path operation adds its own only where it
+differs. Paths start with `/`. Router modules are imported by domain, `items.router` and
+`users.router`, without aliases that hide the owner, and included in a parent before that
+parent joins the app. Exposing one router under several prefixes is reserved for an API that
+is intentionally published under several groups.
 
 ### Router naming
 
 <!-- level: all -->
 
-Name the router object `router` unless the project requires a more specific name.
+The router object is named `router` unless the project requires a more specific name.
 
-## FastAPI path operations
+## Path operations and parameters
 
-Rules:
+Every path operation annotates its parameters and return value so FastAPI can parse,
+validate, document, and serialize. Query and body parameters without defaults are required,
+including nullable ones; a default makes them optional, and a path parameter is always
+required. A parameter that accepts `None` says so in its annotation, with the default in the
+signature rather than inside the metadata object. String constraints (`min_length`,
+`max_length`, `pattern`) and numeric constraints (`gt`, `ge`, `lt`, `le`) belong at the
+boundary when they are part of the contract. Pydantic validators check request values alone;
+a check that needs a database, service, filesystem, or authorization state is a dependency.
 
-- Annotate path operation parameters and return values.
-- Use response models or return type annotations so FastAPI can validate,
-  filter, document, and serialize responses.
-- Use `HTTPException` for HTTP errors that are part of the API contract.
-- Use precise status codes.
-- Do not leak internal error details in `HTTPException.detail`.
-- Use `status` constants when they make intent clearer.
-- Use `Annotated` for headers, cookies, dependencies, form fields, and other
-  parameter metadata.
-- Put repeated path operation policy at the router or app level.
-- Use relative OpenAPI security URLs such as `tokenUrl="token"` so deployments
-  behind a proxy can keep working.
+Fixed routes such as `/users/me` are declared before `/users/{user_id}`, and no two path
+operations share a method and path. Documented string choices use a `str, Enum` type, the
+`{name:path}` convertor is used only where slashes are valid, and an alias only preserves an
+external name that is not a good identifier. A repeatable query parameter is
+`Annotated[list[str], Query()]`; a cohesive group such as pagination, filtering, or sorting is
+a Pydantic query model, with `extra="forbid"` when unknown parameters are invalid.
 
-The catalog route validates the identifier before indexing. A missing item
-raises a public 404 response; it does not expose an internal exception.
-
-## FastAPI parameters and validation
-
-Rules:
-
-- Use standard Python type annotations on path operation parameters so FastAPI
-  can parse, validate, document, and serialize consistently.
-- Query and body parameters without defaults are required, including nullable parameters.
-- Defaults make query and body parameters optional. Path parameters remain required.
-- When a parameter can be `None`, include `None` in the type annotation.
-- Use `Query`, `Path`, `Body`, `Header`, `Cookie`, and `Form` inside
-  `Annotated` for framework metadata and validation.
-- Keep `Annotated` defaults in the function signature, not inside `Query`,
-  `Path`, `Body`, or other metadata objects.
-- Use `min_length`, `max_length`, and `pattern` for string constraints at the
-  HTTP boundary when those constraints are part of the API contract.
-- Use `gt`, `ge`, `lt`, and `le` for numeric constraints at the HTTP boundary.
-- Use Pydantic validators for pure request-value validation that only depends
-  on the request data.
-- Use dependencies, not validators, for validation that needs a database,
-  service call, filesystem access, authorization state, or other external I/O.
-- Declare fixed routes before parameterized routes that otherwise match the same path.
-- Do not define two path operations for the same method and path.
-- Use `str, Enum` path parameter types for documented string choices.
-- Use the `{name:path}` path convertor only when a path parameter is genuinely
-  allowed to contain slashes.
-- Use aliases only to preserve external API names that are not valid or desired
-  Python identifiers. Translate to domain names before moving inward.
-- For query parameters that can appear multiple times, use an explicit
-  `Query()` annotation with a collection type such as `list[str]`.
-- Use Pydantic query parameter models for cohesive groups such as pagination,
-  filtering, sorting, or search options.
-- Set `model_config = {"extra": "forbid"}` on a query parameter model when
-  unknown query parameters are invalid for that endpoint.
-
-`Annotated[int, Path(ge=1)]` requires a positive path identifier.
-`Annotated[str | None, Query(max_length=50)] = None` accepts an omitted query
-value and bounds a supplied one. Path and query constraints belong to the
-HTTP contract, not to an undeclared domain helper.
-
-The following complete application returns its validated filter values. It requires
-FastAPI 0.115.0 or later for [query parameter models](https://fastapi.tiangolo.com/tutorial/query-param-models/).
-
-Good query parameter model:
+Good:
 
 ```python
 """Validate a filter preview without accessing a database."""
@@ -265,287 +163,87 @@ def get_filters(filters: Annotated[FilterParams, Query()]) -> FilterParams:
     return filters
 ```
 
-Declare `/users/me` before `/users/{user_id}` when the parameterized route
-can also accept `me`. This preserves the fixed route's intended behavior.
+## Schemas and fields
 
-## FastAPI request and response schemas
+Pydantic models are boundary schemas. Required fields have no default, and omittable fields
+have one; a nullable annotation alone does not make a field optional in v2. Mutable defaults
+use `Field(default_factory=...)`, and business workflows and persistence stay outside the
+class. Create, read, and update shapes are separate classes when their required, nullable, or
+public fields differ. An input schema holding passwords, tokens, or private fields is never
+the response schema. `GET` endpoints take no body.
 
-Rules:
+`Body()` moves a singular value from the query string into the body. `Body(embed=True)` wraps
+a single model under its parameter name only when the wire contract says so, and several body
+parameters document the keyed shape clients send. Partial updates read `model_dump(exclude_unset=True)`, merge with stored values, and
+revalidate the complete model, because `model_copy(update=...)` validates nothing.
+`jsonable_encoder()` converts models and datetimes for JSON-only storage or transport.
 
-- Use Pydantic `BaseModel` classes for JSON request bodies and response bodies.
-- Use Pydantic models as boundary schemas. Keep business workflows and
-  persistence behavior outside schema classes.
-- Declare required body fields without defaults.
-- Declare omittable fields with defaults. A nullable annotation permits `None` but does not
-  by itself make a field optional in Pydantic v2.
-- Prefer `Field(default_factory=...)` for mutable defaults, even when Pydantic copies mutable defaults.
-- Use `Field` constraints on model attributes when the constraint belongs to the
-  schema contract.
-- Use separate schema classes for create, read, and update shapes when their
-  required fields, nullable fields, or public fields differ.
-- Do not send request bodies with `GET` endpoints.
-- Use `Body()` for singular values that must come from the request body instead
-  of the query string.
-- Use `Body(embed=True)` only when the wire contract intentionally wraps a
-  single body model under its parameter name.
-- When multiple body parameters are declared, document and preserve the keyed
-  body shape clients must send.
-- Use `.model_dump()` for Pydantic v2 model-to-dict conversion.
-- Use `.model_dump(exclude_unset=True)` for partial-update input where omitted
-  values must not overwrite stored values.
-- Use `.model_copy(update=...)` only with already validated updates. It does not validate
-  update values. Revalidate the complete result when cross-field constraints can change.
-- Use `jsonable_encoder()` when converting Pydantic models or datetimes to
-  values that must be JSON-compatible for storage or transport.
-- Use `response_model` or a return type annotation when response filtering,
-  validation, serialization, or documentation matters.
+`Field` comes from `pydantic` and governs model attributes; `Query`, `Path`, `Body`, `Header`,
+`Cookie`, `Form`, and `File` govern FastAPI parameters. `title`, `description`, `deprecated`,
+`examples`, and constraints become JSON Schema and OpenAPI, so no arbitrary extra keywords
+are passed. Whole-model examples live in `json_schema_extra`, field examples in
+`Field(examples=[...])`, and body examples in `Body(examples=[...])` or `openapi_examples`
+when named examples with summaries are needed; the plural `examples` replaces singular
+`example`. Examples are valid, current, and free of secrets, internal IDs, hostnames, and
+personal data.
 
-A required `name: str` field has no default. Use `description: str | None = None`
-for an omitted or null description, and `Field(default_factory=list)` for an
-independent mutable list on each model instance.
+## Nested and special types
 
-`Body(embed=True)` on an `item` parameter requires an `{"item": ...}` JSON
-envelope. Keep that envelope only when the public API contract declares it.
+Known JSON object shapes are nested models, never `dict[str, object]`, and every `list`, `set`,
+`frozenset`, `tuple`, and `dict` names its type parameters. A top-level `list[Model]` body
+exists only when the contract is a JSON array. `set[T]` expresses uniqueness and still
+serializes as an array. A `dict[KeyType, ValueType]` body is for unknown field names, and its
+keys arrive as strings that Pydantic converts.
 
-Use `model_dump(exclude_unset=True)` for supplied patch fields, merge with the
-stored values, and call the complete model's `model_validate` method. The
-[body update guidance](https://fastapi.tiangolo.com/tutorial/body-updates/)
-explains omitted-field handling. Revalidate cross-field constraints before persistence.
+Identifiers are `UUID`, instants that cross a
+boundary are timezone-aware `datetime`, and exact quantities such as money are `Decimal`.
+URLs and emails use `HttpUrl` and `EmailStr` when validation is part of the contract.
+`bytes` holds only small binary values; uploads go through FastAPI file handling. Deeply nested
+bodies give way to smaller endpoints or named resources.
 
-## FastAPI schema fields and examples
+## Headers and cookies
 
-Rules:
+A value from a header or cookie is declared with `Header()` or `Cookie()`, because a plain
+scalar parameter is a query parameter. `Header()` converts underscores to hyphens, and
+`convert_underscores=False` exists only for an external protocol that requires underscores.
+A repeated header is `Annotated[list[str] | None, Header()] = None`. Cohesive header or
+cookie groups are Pydantic models, with `extra="forbid"` only where the deployment contract
+permits it, because proxies and clients add standard headers. Authentication uses the
+security utilities, never ad hoc header parameters, and a cookie's session value is validated
+by the authentication boundary before it conveys authority. Cookies, authorization headers,
+session IDs, and CSRF tokens are never logged, and Swagger UI does not prove cookie behavior.
 
-- Import `Field` from `pydantic`, not from `fastapi`.
-- Use `Field` for Pydantic model attribute validation, defaults, and schema
-  metadata.
-- Use `Query`, `Path`, `Body`, `Header`, `Cookie`, `Form`, and `File` for
-  FastAPI parameter metadata.
-- Keep model field defaults in `Field(default=...)` or ordinary assignment
-  syntax, consistently with surrounding schema code.
-- Use `Field(default_factory=...)` for mutable field defaults.
-- Use `Field` constraints when the constraint belongs to the JSON schema, not
-  only to one handler implementation.
-- Use `title`, `description`, `deprecated`, `examples`, and validation
-  arguments deliberately. They become part of generated JSON Schema and
-  OpenAPI.
-- Do not add arbitrary extra keyword arguments to `Field`, `Query`, `Body`, or
-  similar helpers unless the generated schema extension is intentional and
-  compatible with the OpenAPI tools that consume it.
-- Put whole-model request examples in `model_config["json_schema_extra"]`.
-- Put field-level examples in `Field(examples=[...])`.
-- Put body or parameter examples in the relevant FastAPI helper, such as
-  `Body(examples=[...])`.
-- Prefer the JSON Schema `examples` field over older singular `example`
-  metadata.
-- Use `openapi_examples` only when the API docs need named examples with
-  summaries, descriptions, values, or external example URLs.
-- Keep examples sanitized. Do not include real secrets, tokens, credentials,
-  internal IDs, production hostnames, personal data, or customer data.
-- Make examples valid by default. Include invalid examples only when the docs
-  intentionally demonstrate validation failure.
-- Keep examples aligned with current schema fields. Remove examples when they
-  become stale.
+## Response models
 
-Use `Field(examples=[...])` for field examples and numeric or string
-constraints for the actual accepted range. Examples describe valid values;
-they do not implement validation.
+A path operation that returns its public schema uses the return type. `response_model` is
+for a returned object that differs from the public shape, and it takes priority over the
+annotation. `-> Any` with `response_model=...` is reserved for a boundary where adapting the
+object first adds noise without safety. Schema inheritance filters a response only when the
+subclass is a true specialization. A `Response` subclass is the annotation when the route
+returns one directly. A return type FastAPI cannot turn into a model needs
+`response_model=None`, which also documents a route with two outcomes such as a redirect or a
+mapping.
 
-Put whole-model examples under `ConfigDict(json_schema_extra={...})`. Each
-example must supply the required fields and satisfy the model bounds.
+`response_model_exclude_unset=True` omits unset defaults; `exclude_defaults` and
+`exclude_none` only when that omission is the contract. Dedicated output models replace
+`response_model_include` and `exclude`, which never serve as security filtering because the
+OpenAPI schema still describes the full model. A response validation failure is a server bug:
+fix the data or the schema, never the validation.
 
-Use `Body(openapi_examples={...})` for named request examples with a summary
-and value. Keep the example envelope aligned with the declared body shape.
+## Status codes and errors
 
-## FastAPI nested and special types
+Non-default success codes go in the decorator's `status_code`, written with `fastapi.status`
+constants (or `http.HTTPStatus` where surrounding code uses it), never as function
+parameters. 201 marks creation, 202 accepted but incomplete work, and 204 a deliberate empty
+body; 204 and 304 carry no body. Ordinary failures are not hand-built 500 responses;
+unexpected exceptions surface at the server boundary. `HTTPException` is raised, never
+returned. Its `detail` is sanitized and user-facing, free of stack traces, paths, table names,
+internal IDs, request bodies, and secrets. Custom headers serve only public protocol
+requirements such as authentication challenges or rate limits.
 
-Rules:
-
-- Use nested Pydantic models for structured JSON objects with known fields.
-- Do not model known JSON object shapes as `dict[str, object]`.
-- Specify type parameters for `list`, `set`, `frozenset`, `tuple`, and `dict`
-  fields.
-- Use `list[Model]` for arrays of structured objects.
-- Use top-level `list[Model]` body parameters only when the external API
-  contract is a JSON array.
-- Use `set[T]` or `frozenset[T]` when uniqueness is part of the domain
-  contract. Remember that JSON responses still serialize these values as
-  arrays.
-- Use `dict[KeyType, ValueType]` bodies only when valid field names are not
-  known ahead of time.
-- Remember that JSON object keys are strings. If a body is typed as
-  `dict[int, float]`, clients still send string keys and Pydantic validates and
-  converts them.
-- Use precise Pydantic and standard-library types at API boundaries when they
-  express the domain better than plain strings.
-- Use `UUID` for UUID identifiers.
-- Use timezone-aware `datetime` values for instants that cross process or
-  service boundaries.
-- Use `date`, `time`, and `timedelta` when those are the actual domain values.
-- Use `Decimal` for exact decimal quantities such as money or prices when
-  binary floating-point behavior is not acceptable.
-- Use Pydantic string-like types such as `HttpUrl` and `EmailStr` when URL or
-  email validation is part of the schema contract.
-- Use `bytes` only for small binary values represented in JSON. Use FastAPI
-  file handling for uploaded files.
-- Avoid deeply nested request bodies when the domain can be expressed as
-  smaller endpoints or named resources.
-
-For nested image metadata, declare a model with a `HttpUrl` field and reference
-it through `list[Image]`. Use a default factory for the containing list.
-A `set[str]` models unique tags only when order is not part of their contract.
-
-An arbitrary-key body such as `dict[int, float]` still receives JSON string
-keys. Test both valid numeric keys and invalid keys at the HTTP boundary.
-
-## FastAPI headers and cookies
-
-Rules:
-
-- Use `Header()` for values that must come from HTTP headers.
-- Use `Cookie()` for values that must come from cookies.
-- Do not rely on plain scalar parameters for headers or cookies. FastAPI treats
-  plain non-path scalar parameters as query parameters.
-- Use `Annotated[..., Header()]` and `Annotated[..., Cookie()]` for new code.
-- Let `Header()` convert underscores to hyphens by default.
-- Set `Header(convert_underscores=False)` only when an external protocol
-  requires underscores in header names and the deployment path supports them.
-- Remember that HTTP header names are case-insensitive.
-- Use `list[str] | None` with `Header()` for duplicate headers that can appear
-  more than once.
-- Use Pydantic header parameter models for cohesive groups of related headers.
-- Use Pydantic cookie parameter models for cohesive groups of related cookies.
-- Use `model_config = {"extra": "forbid"}` on header or cookie models when
-  unknown headers or cookies are invalid for that endpoint.
-- Prefer `Field(default_factory=list)` for repeated header fields in models.
-- Do not log cookies, authorization headers, session IDs, CSRF tokens, or other
-  sensitive header values.
-- Do not use ad hoc header parameters for authentication when FastAPI security
-  utilities can express the authentication scheme.
-- Do not rely on Swagger UI execution to prove cookie behavior. Browser cookie
-  handling can prevent JavaScript-driven docs requests from sending the cookie
-  value entered in the UI.
-
-A parameter annotated with `Header()` reads from headers. By default,
-`user_agent` maps to the `User-Agent` header; an ordinary scalar parameter
-without that metadata reads from the query.
-
-Use `Annotated[list[str] | None, Header()] = None` for an optional repeated
-header. Keep the absent-header behavior explicit and avoid logging its values.
-
-A cohesive header model can declare required `host` and optional
-`if_modified_since` fields. Reject extra headers only if the deployment
-contract permits that restriction; proxies and clients add standard headers.
-
-A cookie model can require `session_id` through `Cookie()`. The session
-value still needs validation by the authentication boundary before it conveys
-authority.
-
-## FastAPI response models
-
-Rules:
-
-- Prefer return type annotations when the function returns the same public
-  schema shape it declares.
-- Use the path operation decorator's `response_model` when the returned Python
-  object differs from the public response schema.
-- Remember that `response_model` takes priority over the return type annotation
-  for FastAPI validation, serialization, documentation, and filtering.
-- Prefer returning an instance of the public response model when that is simple
-  and keeps type checking precise.
-- Use `-> Any` with `response_model=...` only at a FastAPI boundary where the
-  returned object intentionally differs from the response schema and adapting it first adds noise without improving safety.
-- Never reuse an input schema containing passwords, tokens, secrets, or private
-  fields as the response schema.
-- Use separate input and output models when request and response fields differ.
-- Schema inheritance is acceptable for response filtering only when the subclass
-  is a true specialization of the public base schema.
-- Use direct `Response` or `Response` subclass return annotations when returning
-  a Starlette/FastAPI response object directly.
-- Do not annotate a path operation with a return type that FastAPI cannot turn
-  into a Pydantic response model unless the path operation sets
-  `response_model=None`.
-- Use `response_model=None` only when response model generation is deliberately
-  disabled and the route's response contract is documented another way.
-- Use `response_model_exclude_unset=True` when omitted default-valued fields
-  are omitted from responses.
-- Use `response_model_exclude_defaults=True` or
-  `response_model_exclude_none=True` only when that omission is part of the
-  public response contract.
-- Prefer dedicated output models over `response_model_include` and
-  `response_model_exclude`.
-- Do not rely on `response_model_include` or `response_model_exclude` for
-  security filtering. The generated OpenAPI schema still describes the full
-  response model.
-- Treat response validation failures as server bugs. Fix the returned data or
-  response schema rather than weakening validation.
-
-The catalog route returns the declared public `Item` model. Its return type
-provides response validation and serialization without duplicating the
-`response_model` argument.
-
-When the internal result differs from the public shape, declare a public
-`response_model`. Verify that the response excludes private fields. Avoid
-`Any` when the internal return type can be expressed accurately.
-
-Return `FileResponse` for an owned report path. Authorize access and resolve
-the path at the file owner before exposing it through a download route.
-
-When a route intentionally returns either a redirect response or an ordinary
-mapping, use `response_model=None` and document both outcomes. The redirect
-target must follow the application's allowed-destination contract.
-
-## FastAPI status codes and errors
-
-Rules:
-
-- Declare successful non-default HTTP status codes with the path operation
-  decorator's `status_code` parameter.
-- Do not model status codes as path operation function parameters.
-- Prefer `fastapi.status` constants for readability, such as
-  `status.HTTP_201_CREATED`.
-- Python's `http.HTTPStatus` is acceptable when surrounding code already uses
-  it.
-- Use the default 200 only when it is the correct success response.
-- Use 201 for successful resource creation.
-- Use 202 only when the request was accepted but the work is not complete.
-- Use 204 only when the response intentionally has no body.
-- Do not return a body with status codes that must not have one, including 204
-  and 304.
-- Do not manually return 500-range status codes for ordinary application
-  failures. Raise or let unexpected exceptions surface at the server boundary.
-- Use `HTTPException` for HTTP errors that are part of the API contract.
-- Raise `HTTPException`; do not return it.
-- Keep `HTTPException.detail` sanitized and user-facing.
-- Do not include stack traces, file paths, table names, internal IDs, request
-  bodies, secrets, or implementation details in error responses.
-- Use custom `HTTPException` headers only for public protocol requirements,
-  such as authentication challenges, rate limits, or documented client
-  behavior.
-- Put global exception handlers in the FastAPI application setup boundary.
-- Register HTTP exception handlers for Starlette's `HTTPException` when the
-  handler must catch FastAPI, Starlette, and extension-raised HTTP errors.
-- Custom exception handlers must return the API's standard error shape and
-  status code policy.
-- Do not expose `RequestValidationError.body` to clients.
-- Do not stringify validation exceptions into client responses. Validation
-  errors can include internal context that is safe for logs only after review.
-- Reuse FastAPI's default exception handlers when adding logging or metrics
-  around the default behavior.
-- Log validation and HTTP errors carefully. Do not log full authenticated
-  request bodies or sensitive headers.
-
-Use `status.HTTP_201_CREATED` only after a new resource exists. A request
-accepted for later processing needs the separate 202 contract.
-
-A deletion with `status.HTTP_204_NO_CONTENT` returns no body. Complete the
-required deletion before reporting success.
-
-The catalog example raises `HTTPException` with a sanitized 404 detail.
-Authorization and existence checks must not reveal private resources through
-inconsistent response details.
-
-Register an exception boundary for Starlette's `HTTPException` when it must
-cover both framework and application errors. Preserve required protocol
-headers while returning a sanitized error body. Do not stringify the original
-exception into the public response.
+Existence and authorization checks answer consistently so private resources are not
+revealed. Global exception handlers live in the application setup and register for
+Starlette's `HTTPException` when they must cover framework and extension errors. They return
+the standard error shape and never expose `RequestValidationError.body` or a stringified
+validation exception. Logging around the
+default handlers omits authenticated request bodies and sensitive headers.

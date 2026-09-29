@@ -6,394 +6,141 @@ title: Documentation Surfaces
 
 # Documentation Surfaces
 
-Requirements about vocabulary, architecture, naming, documentation coverage, declaration
-order, API style, and complexity apply at `all` or when the project explicitly opts into
-them. Correctness, security, accessibility, type safety, routine formatting, and declared
-project contracts apply at both levels.
-
 Command-line interfaces, APIs, libraries, configuration, environment variables, architecture,
-contributor guides, troubleshooting, logs, audit events, and release notes.
+contributor guides, troubleshooting, logs, audit events, and release notes. No tool checks
+whether a surface is documented completely. The docs structure check reports the sections a
+README must and must not have, and the prose checker reports tense. This guide lists what
+each surface owes its reader.
 
-## Document specialized technical surfaces
-
-Different technical surfaces need additional contract details.
-
-### Command-line interfaces
-
-<!-- level: all -->
-
-For each command, document:
-
-- Purpose.
-- Syntax.
-- Required arguments.
-- Optional arguments and defaults.
-- Flags and accepted values.
-- Environment variables.
-- Working directory assumptions.
-- Input files or standard input.
-- Standard output and standard error behavior.
-- Exit status.
-- Side effects.
-- Permissions.
-- Safe examples.
-- Destructive consequences.
-
-Use command invocations and output, not screenshots of a terminal.
-
-Keep a short common-command list in the README. Put exhaustive command details
-in CLI reference documentation or the advanced guide when the surface is small
-and specialist.
-
-### APIs
+## Command-line interfaces
 
 <!-- level: all -->
 
-For each endpoint or operation, document:
+A command is documented as invocations and output, never as terminal screenshots. The README
+keeps a short list of common commands. Exhaustive detail lives in the CLI reference or, for a
+small specialist surface, in the advanced guide. Each command documents:
 
-- HTTP method and path.
-- Purpose.
-- Authentication.
-- Required role or scope.
-- Headers.
-- Path parameters.
-- Query parameters.
-- Request body.
-- Field types and required status.
-- Constraints and defaults.
-- Success status and response body.
-- Error statuses and stable error codes.
-- Pagination.
-- Rate limits.
-- Idempotency.
-- Retries.
-- Side effects.
-- Version availability.
-- One valid request and response example.
+- Purpose and syntax.
+- Required arguments, optional arguments with defaults, and flags with accepted values.
+- Environment variables and working directory assumptions.
+- Input files or standard input, and standard output and error behavior.
+- Exit status, side effects, and permissions.
+- Safe examples and destructive consequences.
 
-Use exact field names and values from the contract owner.
-
-Do not expose internal table names, stack traces, service topology, or other
-implementation details through error examples.
-
-Document full error messages exactly when they are part of a public terminal,
-log, or API contract.
-
-### Libraries and modules
+## APIs and libraries
 
 <!-- level: all -->
 
-A library README includes:
+An API operation uses the contract owner's exact names and values. Error examples expose no
+table names, stack traces, or service topology. A message that is part of a public terminal,
+log, or API contract is reproduced exactly. Each operation documents:
 
-- One-line purpose.
-- Installation.
-- Minimal import and use.
-- Supported runtime or language versions.
-- Main public types and functions.
-- Parameter and return behavior.
-- Errors and side effects.
-- Concurrency or thread-safety guarantees.
-- Compatibility constraints.
-- Link to complete API reference.
-- License.
+- Method and path, purpose, authentication, and required role or scope.
+- Headers, path and query parameters, and the request body with field types, required
+  status, constraints, and defaults.
+- Success status and body, and error statuses with stable codes.
+- Pagination, rate limits, idempotency, retries, and side effects.
+- Version availability and one valid request and response.
 
-Reference documentation must define:
+A library README holds a one-line purpose, installation, minimal import and use, and the
+supported runtime or language versions. It names the main public types and functions,
+parameter and return behavior, errors and side effects, concurrency guarantees, and
+compatibility constraints. It links to the complete reference and states the license. The
+reference defines signatures, types, optional values, defaults, return values, errors, and
+callbacks or events. It defines ownership and lifecycle where resources need cleanup. No
+reader inspects source for routine public behavior.
 
-- Signatures.
-- Types.
-- Optional values.
-- Defaults.
-- Return values.
-- Errors.
-- Callbacks or events.
-- Ownership and lifecycle when resources require cleanup.
-
-Do not require readers to inspect source to learn routine public behavior.
-
-### Configuration
+## Configuration and environment
 
 <!-- level: all -->
 
-For each kit key, document:
+A configuration key documents its exact name, purpose, type, default, and allowed values. It
+states required status, scope, precedence, environment availability, secret status, and any
+reload or restart requirement. It states its security effect and gives an example with its
+parent keys in YAML, TOML, or JSON so placement is unambiguous. One reference owns each
+default, and narrative sections link to it. The page states whether an empty string, a
+missing key, and an explicit `null` differ.
 
-- Exact key.
-- Purpose.
-- Type.
-- Default.
-- Allowed values.
-- Required or optional status.
-- Scope.
-- Precedence.
-- Environment availability.
-- Secret status.
-- Reload or restart requirement.
-- Security effect.
-- Example.
-
-Do not duplicate default values in several narrative sections. Keep one
-reference owner and link to it.
-
-Show parent keys in YAML, TOML, or JSON examples so placement is unambiguous.
-
-State whether an empty string, missing key, and explicit `null` have different
-meanings.
-
-### Environment variables
-
-<!-- level: all -->
-
-For each environment variable, document:
-
-- Name.
-- Purpose.
-- Required status.
-- Expected format.
-- Example placeholder.
-- Secret status.
-- Process that reads it.
-- When it is read.
-- Failure behavior when missing or invalid.
-
-Do not put real secret values in `.env` examples.
-
-Use:
+An environment variable documents its name, purpose, required status, format, and an example
+placeholder. It states secret status, the process that reads it and when, and the failure
+when it is missing or invalid. Committed example files are labeled, secret-bearing local
+files are ignored, and no example holds a real secret:
 
 ```dotenv
 API_BASE_URL=https://api.example.com
 ACCESS_TOKEN=<ACCESS_TOKEN>
 ```
 
-Label committed example files clearly and ensure secret-bearing local files are
-ignored.
-
-### Architecture
+## Architecture and contributors
 
 <!-- level: all -->
 
-Architecture documentation explains:
+Architecture documentation explains system boundaries, component ownership, dependency
+direction, primary data flows, and trust boundaries. It explains state ownership, external
+services, failure boundaries, the concurrency and persistence models, deployment shape, and
+important invariants. It gives the reason for a boundary where the model does not make it
+obvious. It describes durable concepts and responsibilities and never inventories source
+directories or classes. A diagram appears only where it beats prose.
 
-- System boundaries.
-- Component ownership.
-- Direction of dependencies.
-- Primary data flows.
-- Trust boundaries.
-- State ownership.
-- External services.
-- Failure boundaries.
-- Concurrency model.
-- Persistence model.
-- Deployment shape.
-- Important invariants.
+Contributor documentation covers the supported development environment, setup, and the
+ownership boundaries a contributor needs without a file inventory. It covers the normal
+workflow, branch and commit policy, code and documentation standards, and how to change
+generated artifacts. It states review expectations, the testing and verification policy,
+contribution licensing, and the security reporting route. It repeats product-user setup only
+when contributors use the same path.
 
-Explain why a boundary exists when the reason is not obvious from the model.
+## Troubleshooting, logs, and audit events
 
-Do not list source directories or classes as an architecture overview. The
-prohibition on project layout sections applies to architecture documentation.
-Describe durable concepts and responsibilities without inventorying the source
-tree.
+A troubleshooting entry has a symptom-first heading, `### Deployment remains in \`Pending\``.
+It gives the observable symptom, the exact message where relevant, and the affected scope. It
+gives a diagnostic command or interface check, the likely cause, the resolution, cleanup or
+recovery, and escalation information. Causes run from most common and least invasive to rare
+and destructive. A destructive reset never leads where a focused diagnosis exists. A
+speculative cause is not presented as confirmed.
 
-Use diagrams only when they make relationships clearer than prose.
+A log or error reproduces public text exactly, inline for a short message and in a `text`
+block for several lines. Timestamps and IDs that add nothing are removed and sensitive values
+are replaced. The part that matters is explained, and the scope and likely cause are stated. A few
+relevant lines replace a whole log.
 
-### Contributor documentation
-
-<!-- level: all -->
-
-Contributor documentation includes:
-
-- Supported development environment.
-- Setup.
-- Ownership and contribution boundaries needed to complete contributor tasks,
-  without a directory or file inventory.
-- Normal development workflow.
-- Branch and commit policy.
-- Code and documentation standards.
-- How to add or change generated artifacts.
-- Review expectations.
-- Testing and verification policy.
-- Contribution licensing.
-- Security reporting route.
-
-Do not repeat product-user setup unless contributors actually use the same path.
-
-### Troubleshooting
-
-Write symptom-first headings:
-
-```markdown
-### Deployment remains in `Pending`
-```
-
-For each problem, include:
-
-- Observable symptom.
-- Exact message when relevant.
-- Affected scope.
-- Diagnostic command or UI check.
-- Likely cause.
-- Resolution.
-- Cleanup or recovery.
-- Escalation information.
-
-Order causes from most common and least invasive to rare and destructive.
-
-Do not start with a destructive reset when a focused diagnosis exists.
-
-Do not present speculative causes as confirmed fields.
-
-### Logs and errors
-
-When showing a log or error:
-
-- Reproduce public text exactly.
-- Use inline code for a short message.
-- Use a `text` block for multi-line output.
-- Remove timestamps and IDs that add no diagnostic value.
-- Replace sensitive values.
-- Explain what part of the message matters.
-- State the scope and likely cause.
-
-Do not paste entire logs when a few relevant lines are enough.
-
-### Audit event references
+### Audit events
 
 <!-- level: all -->
 
-Audit events are historical records. Describe the completed event in past tense.
-Use passive voice when the actor varies or is separately captured.
+An audit event is a historical record described in past tense. Passive voice serves when the
+actor varies or is captured separately: "The repository visibility was changed." The entry
+does not repeat context the event table or category supplies.
 
-```text
-The repository visibility was changed.
-```
-
-Do not repeat context already supplied by the event table or category.
-
-## Document releases and lifecycle changes
-
-Release documentation tells users what they need to know about a version.
-
-### Feature notes
+## Releases and lifecycle
 
 <!-- level: all -->
 
-A feature note answers:
+A feature note says who is affected, what need they can address, what behavior is available,
+and where the complete documentation is. It uses present tense and avoids "now" unless a
+timing contrast is essential. A bug-fix note says who was affected, what incorrect behavior
+they observed, and whether action is required. It describes the previous symptom in past
+tense, because "Fixed a bug" adds nothing: "Workflow jobs remained queued when a matching
+runner became available after the job entered the queue."
 
-- Who is affected?
-- What need can they address?
-- What behavior is available?
-- Where is the complete documentation?
+A change note says what behavior differs, who is affected, why it matters, and what action is
+required, in present tense for the documented release. Update markers use ISO dates,
+`[Updated: 2026-07-15]`, and only on content whose age matters. Version control tracks
+routine edits.
 
-Use present tense.
+A security-fix note follows the disclosure policy and includes only authorized details:
+severity, affected versions, impact, mitigation or fixed version, the public vulnerability
+identifier, and required action. Exploit details wait for coordinated disclosure. A known
+issue names the affected audience and versions, the symptom, the triggering condition, a safe
+workaround, any data-loss or security risk, and the public tracking issue. "This can be
+ignored" appears only when ignoring it is verified safe.
 
-Do not use "now" unless timing contrast is essential.
+A deprecation notice states what is deprecated, who is affected, whether it is still
+supported, the replacement, and the migration path. It gives the earliest removal version or
+date once committed. It appears on the feature's reference page as well as in the release
+notes. A retirement notice states what is unavailable, the first version without it, the
+supported replacement, data export or migration requirements, and any remaining support. It
+uses direct language rather than "changes to availability."
 
-### Bug-fix notes
-
-<!-- level: all -->
-
-A bug-fix note answers:
-
-- Who was affected?
-- What incorrect behavior do they observe?
-- Is any action required?
-
-Describe the previous symptom in past tense. "Fixed a bug" is implied and does
-not add useful information.
-
-Use:
-
-```text
-Workflow jobs remained queued when a matching runner became available after the
-job entered the queue.
-```
-
-### Change notes
-
-<!-- level: all -->
-
-A change note answers:
-
-- What behavior differs?
-- Who is affected?
-- Why does the difference matter?
-- What action is required?
-
-Use present tense for behavior in the documented release.
-
-### Security-fix notes
-
-Follow the project's disclosure policy.
-
-Include only authorized details:
-
-- Severity.
-- Affected versions.
-- Impact.
-- Mitigation or fixed version.
-- Vulnerability identifier when public.
-- Required action.
-
-Do not publish exploit details before coordinated disclosure permits them.
-
-### Known issues
-
-A known-issue note includes:
-
-- Affected audience and versions.
-- Observable symptom.
-- Triggering condition.
-- Safe workaround.
-- Data-loss or security risk.
-- Tracking issue when public.
-
-Do not write "This can be ignored" unless ignoring the issue is verified as
-safe.
-
-### Deprecation and closing-down notices
-
-State:
-
-- What is deprecated.
-- Who is affected.
-- Whether it still receives support.
-- Recommended replacement.
-- Migration path.
-- Earliest removal version or date when formally committed.
-
-Put deprecation warnings in the reference page for the feature as well as
-release notes.
-
-### Retirement notices
-
-State:
-
-- What is unavailable now.
-- The first version without it.
-- The supported replacement.
-- Data export or migration requirements.
-- What support remains, if any.
-
-Use direct language. Do not hide retirement behind "changes to availability."
-
-### Errata
-
-When published documentation or release notes contained a material error:
-
-- Identify the affected statement.
-- Provide the corrected fact.
-- Add the correction date in the release system's standard format.
-- Update the canonical documentation.
-
-Do not silently preserve false history.
-
-### Datestamps
-
-<!-- level: all -->
-
-Use ISO dates for update markers:
-
-```text
-[Updated: 2026-07-15]
-```
-
-Do not add datestamps to ordinary evergreen content. Version control already
-tracks routine edits.
+An erratum identifies the affected statement, gives the corrected fact, and carries the
+correction date in the release system's format. It updates the canonical documentation.
+False history is never preserved silently.

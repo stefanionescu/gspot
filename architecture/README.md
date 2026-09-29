@@ -1,13 +1,7 @@
 # gspot Architecture
 
-The [active CI requirements](22-remaining.md#ci-verification) govern implementation work.
-Use normal hooks and verify the task branch's exact commit through the full CI workflow.
-
-This folder specifies the product contract. It does not certify the current implementation.
-Use the [remaining-work record](22-remaining.md) for active constraints, implementation defects,
-missing features, verification tasks, required lint remediation, and deferred external work. Each task names its
-owner, dependencies, completion evidence, and acceptance clauses. Contracts stay in their
-owning documents; Git retains historical handoffs.
+This folder holds the contracts a code reader needs: what each part of gspot promises, in the
+words the code uses. Status lives in the issue tracker and in Git, not here.
 
 ## What gspot is
 
@@ -18,35 +12,29 @@ policy, and on a yes it:
    match the languages and frameworks in the repository.
 2. Adds the rules those tools lack: structural limits, banned names, slop patterns, drift
    detection, and prose rules for comments and documentation.
-3. Installs instruction files for AI agents (`CLAUDE.md`, `AGENTS.md`, a rules directory) that
+3. Installs instruction files for AI agents (`CLAUDE.md`, `AGENTS.md`, a guides directory) that
    match the same selection.
 
 Every repository on the same gspot version runs the same rules. Upgrading gspot upgrades all three.
 
-The [remaining-work record](22-remaining.md) distinguishes current implementation,
-open requirements, and deferred verification.
-
 ## Reading order
 
-| File                                               | Decides                                                                                                                                     |
-| -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| [01-product.md](01-product.md)                     | Who gspot is for, what it promises, what it refuses to do                                                                                   |
-| [02-cli.md](02-cli.md)                             | Every command, flag, output line, and exit code                                                                                             |
-| [03-configuration.md](03-configuration.md)         | The one file a person edits, and the files gspot owns                                                                                       |
-| [04-kits.md](04-kits.md)                           | The unit of selection: manifest format, detection, available kits                                                                           |
-| [05-engines.md](05-engines.md)                     | The six things that produce findings                                                                                                        |
-| [06-acceptance.md](06-acceptance.md)               | Every rule and check carried from the reference repositories, and where it lands                                                            |
-| [07-drift.md](07-drift.md)                         | New enforcement: what LLM slop and repository drift look like and how gspot catches them                                                    |
-| [08-naming-policy.md](08-naming-policy.md)         | The banned-term and case policy, its schema, and its matching rules                                                                         |
-| [09-rules.md](09-rules.md)                         | The agent rule files: layers, assembly, repair, enforcement links                                                                           |
-| [10-hooks-ci-runners.md](10-hooks-ci-runners.md)   | Git hooks, staged mode, task runners, the CI workflow                                                                                       |
-| [11-toolchain.md](11-toolchain.md)                 | How gspot itself is installed and pinned per repository; how each tool is obtained, pinned, verified, and upgraded                          |
-| [12-repository-layout.md](12-repository-layout.md) | gspot's own repository, packages, tests and self-lint                                                                                       |
-| [15-prior-art.md](15-prior-art.md)                 | What gspot copies from tools people already use, and which libraries it reuses instead of writing its own                                   |
-| [21-documentation.md](21-documentation.md)         | What the README, the manual, and the site at gspot.dev hold, and what must be true before launch                                            |
-| [22-remaining.md](22-remaining.md)                 | Everything that is left, in order, with the linters and the custom rules of every language, and what happens to the ESLint of the developer |
+| File                                               | Decides                                                                        |
+| -------------------------------------------------- | ------------------------------------------------------------------------------ |
+| [01-product.md](01-product.md)                     | Who gspot is for, what it promises, what it refuses to do                      |
+| [02-cli.md](02-cli.md)                             | Every command, flag, output line, and exit code                                |
+| [03-configuration.md](03-configuration.md)         | The one file a person edits, and the files gspot owns                          |
+| [04-kits.md](04-kits.md)                           | The unit of selection: manifest format, detection, available kits              |
+| [05-engines.md](05-engines.md)                     | The engines that produce findings                                              |
+| [08-naming-policy.md](08-naming-policy.md)         | The banned-term and case policy, its schema, and its matching rules            |
+| [09-rules.md](09-rules.md)                         | The agent guide files: layers, assembly, repair, enforcement links             |
+| [10-hooks-ci-runners.md](10-hooks-ci-runners.md)   | Git hooks, staged mode, task runners, the CI workflow                          |
+| [11-toolchain.md](11-toolchain.md)                 | How gspot and every tool it runs are installed, pinned, verified, and upgraded |
+| [12-repository-layout.md](12-repository-layout.md) | gspot's own repository, packages, tests and self-lint                          |
 
-Read 01 to 05 to understand the tool. Read 06 to 09 to understand the rules. Read the integration, toolchain, and repository contracts to build it.
+Read 01 to 05 to understand the tool. Read 08 and 09 to understand the rules. Read 10 to 12 to
+build it. `levels/inventory.csv` and `levels/native.csv` are the source of which rule sits at
+which level.
 
 ## Glossary
 
@@ -79,12 +67,12 @@ One word, one meaning, everywhere in this folder, and in the code.
 | check coverage       | The kinds of checks a file receives, such as syntax, types, or spelling.                                                  |
 | test coverage        | Code exercised by tests. Distinct from check coverage.                                                                    |
 | version pin          | The gspot version selected by the repository. Upgrade and recovery exceptions follow the CLI contract.                    |
-| replacement          | Accepted replacement of existing tooling, with kept settings and saved originals.                                         |
+| replacement          | A file init replaced, with its original saved under recovery for `gspot uninstall` to restore.                            |
 | setting              | One named kit choice with a type, scope, and default.                                                                     |
 | allowed list         | Entries a specific check permits through a setting ending in `_allowed`. It is not a second ignore mechanism.             |
 | directory setting    | A single folder uses `_directory`, including `functions_directory`, `migrations_directory`, and `harness_directory`.      |
 | file pattern setting | File globs use `_files`, including `route_files`, `test_files`, `server_files`, and `admin_key_files`.                    |
-| tool option          | An external tool owns its option names, including `tools.knip.ignore` and `tools.typos.exclude`.                          |
+| tool option          | An external tool owns its option names, including `tools.knip.exclude` and `tools.typos.exclude`.                         |
 | profile              | Portable config without repository-specific paths.                                                                        |
 | general              | The kit kind for checks that span languages.                                                                              |
 
@@ -94,43 +82,7 @@ recovery are defined in [03-configuration.md](03-configuration.md), not inferred
 
 ## How this folder is maintained
 
-- Every document opens with what it decides.
-- Canonical sections describe the target contract. Keep status and historical evidence only
-  in remaining work; do not repeat completion owns across documents.
-- A number that summarizes a list lives beside the list, or not at all.
+- Every document opens with what it decides and stays under 300 lines.
+- A document states a contract once, in its owning section, and links to it elsewhere.
 - No document links to a file that does not exist. A link check runs over this folder in the gate of this repository.
-- Reference source paths belong in the acceptance record or the inspected prior-art rationale.
-- Delete obsolete prescriptions and empty retired acceptance sections. Retain their disposition
-  once in remaining work and update incoming links.
-- State each rule in its owning section and link to it elsewhere. Do not copy a policy paragraph
-  into every language or framework contract.
-- Keep implementation tasks behavioral. Do not require a helper, module, registry, test file,
-  or abstraction merely because a previous plan named it.
-- Keep one current disposition per behavior. Retain unique unresolved failures and the evidence
-  needed to assess them; remove superseded successful-run narratives after reconciliation.
-  Test totals, elapsed effort, and generated page counts do not establish product quality.
-
-## Contract owners
-
-These documents specify the target, not a own that the implementation already conforms.
-When a contract changes, update its owner and its grouped disposition in remaining work.
-Acceptance clauses describe the target; only remaining work records completion evidence.
-
-| Contract                                                           | Owner                                            |
-| ------------------------------------------------------------------ | ------------------------------------------------ |
-| Commands, dry-run, init and apply sequence                         | [02-cli.md](02-cli.md)                           |
-| Paths, recovery, ownership, keeping, serialization, and tool locks | [03-configuration.md](03-configuration.md)       |
-| Banned terms and naming defaults                                   | [08-naming-policy.md](08-naming-policy.md)       |
-| Revision selection, hooks and CI                                   | [10-hooks-ci-runners.md](10-hooks-ci-runners.md) |
-| Public and internal domain vocabulary                              | [public vocabulary](#glossary)                   |
-| Website source, released docs and deployment                       | [21-documentation.md](21-documentation.md)       |
-| Implementation verification and app branch handoff                 | [22-remaining.md](22-remaining.md)               |
-
-The [remaining-work record](22-remaining.md) owns all status.
-Start with [missing implementation](22-remaining.md#missing-implementation) and
-[confirmed defects](22-remaining.md#confirmed-defects); the
-[verification backlog](22-remaining.md#verification-still-required) identifies unresolved evidence. The acceptance record
-preserves agreed configuration capabilities, including those without a manifest. Directory inventories,
-cosmetic rename campaigns, and fixed rule totals do not establish completion. Updating this
-folder does not authorize implementation changes, publication, deployment, or changes to
-external repositories.
+- Status, evidence, and history do not live here. When a contract changes, its owner changes with the code.

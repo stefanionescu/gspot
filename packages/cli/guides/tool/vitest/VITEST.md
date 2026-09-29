@@ -6,68 +6,33 @@ title: Vitest
 
 # Vitest
 
-Requirements about vocabulary, architecture, naming, documentation coverage, declaration
-order, API style, and complexity apply at `all` or when the project explicitly opts into
-them. Correctness, security, accessibility, type safety, routine formatting, and declared
-project contracts apply at both levels.
+API test shape, test data, network and provider mocking, and mocking patterns. The Vitest
+ESLint plugin reports a focused or skipped test, a test without an assertion, a conditional
+expect, an unawaited async assertion, and an identical title. The general testing rules
+apply underneath. This guide holds the decisions those rules cannot see.
 
-## Testing
+## API tests
 
-Rules for API tests:
+Meaningful backend behavior gets component-style tests: start the API surface, run real
+middleware and routes, and mock only the boundaries that leave the process. Pure domain
+functions with algorithmic behavior or many branches get unit tests. The project's in-process
+HTTP test interface serves when lifecycle, ports, and startup are irrelevant, without a second
+request library. A real HTTP client against a started server serves when startup, shutdown,
+readiness, middleware order, sockets, or container-like behavior matters. That client is
+configured so a non-2xx response does not throw, and the test decides which status is
+acceptable.
 
-- Prefer component-style API tests for meaningful backend behavior: start the API surface, use real middleware and routes, mock only boundaries that leave the process.
-- Unit test pure domain functions when the behavior is algorithmic or has many input branches.
-- Use the project's existing in-process HTTP test interface when lifecycle, ports, and process
-  startup are irrelevant. Do not add a second request library solely for this pattern.
-- Use a real HTTP client against a started server when startup, shutdown, readiness, middleware order, sockets, or container-like behavior matters.
-- Configure real HTTP clients so non-2xx responses do not throw. The test decides which status is acceptable.
-- Use e2e tests only when runtime lifecycle, provider connection behavior, or deployment wiring matters.
-- Real provider tests need explicit opt-in env vars and must not run as part of default suites.
+End-to-end tests cover runtime lifecycle, provider connections, and deployment
+wiring only. Real provider tests need explicit opt-in environment variables outside the
+default suites.
 
-When an API behavior changes, consider the five backend outcomes:
+A changed API behavior is checked against five outcomes:
 
-- HTTP response: status, envelope, headers, and body.
+- The HTTP response: status, envelope, headers, and body.
 - Persisted state: rows created, updated, deleted, or deliberately unchanged.
-- External calls: provider, webhook, email, storage, or database calls.
+- External calls: provider, webhook, email, storage, and database.
 - Runtime side effects: locks, cache entries, queues, timers, readiness, and circuit state.
-- Observability: required logs, traces, metrics, and exception reports.
-
-```ts
-describe('buildOrderContext', () => {
-    it('builds context for a saved draft', () => {
-        const request = makeExistingDraftRequest();
-
-        const context = buildOrderContext(request);
-
-        expect(context).toEqual(
-            expect.objectContaining({
-                mode: 'existing_draft',
-                draftOrderId: request.draftOrderId,
-            }),
-        );
-    });
-});
-```
-
-```ts
-describe('POST /orders', () => {
-    it('rejects an empty item list', async () => {
-        const app = createApp();
-
-        const response = await request(app)
-            .post(API_ROUTE_ORDERS)
-            .send({ accountId: testAccountId, itemIds: [] });
-
-        expect(response.status).toBe(400);
-        expect(response.body).toEqual(
-            expect.objectContaining({
-                status: 'error',
-                code: errorCodes.INVALID_REQUEST,
-            }),
-        );
-    });
-});
-```
+- Observability: logs, traces, metrics, and exception reports.
 
 ```ts
 describe('POST /reports', () => {
@@ -86,127 +51,53 @@ describe('POST /reports', () => {
 });
 ```
 
-## Testing data and infrastructure
+## Test data
 
-Tests own the data they rely on. Build subjects through builders under `tests/support/` with a
-unique per-run suffix.
-
-```ts
-const uniqueSuffix = `${Date.now()}-${crypto.randomUUID()}`;
-const order = await createOrder({
-    name: `submit-order-owned-draft-${uniqueSuffix}`,
-    userId,
-});
-```
+Tests own the data they rely on, built through builders under the test-support directory
+with a unique per-run suffix such as `${Date.now()}-${crypto.randomUUID()}`. An assertion
+checks the record this test owns, never a count that assumes a shared database starts empty.
+Each test creates its own subject instead of reading state a previous test left behind:
 
 ```ts
 // Bad: assumes a shared database starts empty.
 expect(await countMessages()).toBe(1);
 
 // Good: checks the record owned by this test.
-await expectAuditEventCreatedForOrder(order.id, {
-    type: 'order_submitted',
-});
+await expectAuditEventCreatedForOrder(order.id, { type: 'order_submitted' });
 ```
 
-```ts
-// Bad: order-dependent test state.
-let createdOrderId: string;
+## Network and providers
 
-it('creates an order', async () => {
-    createdOrderId = await createOrder();
-});
-
-it('reads that order', async () => {
-    await expectOrderExists(createdOrderId);
-});
-
-// Good: each test creates the subject it needs.
-it('reads a created order', async () => {
-    const order = await createOrder({ userId });
-
-    await expectOrderExists(order.id);
-});
-```
-
-## Network and provider testing
-
-Block unmocked external HTTP by default (`vi.stubGlobal('fetch', ...)` or an interceptor that
-rejects unknown hosts). Assert the outbound contract this API owns.
+Unmocked external HTTP is blocked by default, through `vi.stubGlobal('fetch', ...)` or an
+interceptor that rejects unknown hosts. The test asserts the outbound contract this API owns:
+the path, method, headers, and signal it sends, and the payload the provider receives. A
+mock that accepts every payload and replies success only proves a request happened. Provider
+failure states are simulated and mapped: a timeout becomes a retryable platform error, and the
+test asserts that mapping.
 
 ```ts
-expect(mockedFetch).toHaveBeenCalledWith(
-    expect.stringContaining('/v1/provider/operations'),
-    expect.objectContaining({
-        method: 'POST',
-        headers: expect.objectContaining({
-            'Content-Type': 'application/json',
-            'X-Request-ID': trace.requestId,
-        }),
-        signal: expect.any(AbortSignal),
-    }),
-);
-```
-
-```ts
-it('maps a provider timeout to a retryable platform error', async () => {
-    mockedCreateProviderOperation.mockRejectedValueOnce(new ProviderTimeoutError('Provider request timed out'));
-
-    await expect(submitOrder(request, trace)).resolves.toEqual(
-        expect.objectContaining({
-            success: false,
-            error: expect.objectContaining({
-                retryable: true,
-            }),
-        }),
-    );
-});
-```
-
-```ts
-// Bad: mock accepts every payload and only proves a request happened.
-mockProvider.post('/analyze').reply(200, { status: 'ok' });
-
-// Good: mock verifies the outbound contract this API owns.
 mockProvider
     .post('/analyze', (providerRequest) => {
         expect(providerRequest).toEqual(
-            expect.objectContaining({
-                documentId: documentId,
-                operationId: operationId,
-            }),
+            expect.objectContaining({ documentId, operationId }),
         );
-
         return true;
     })
     .reply(200, { status: 'ok' });
 ```
 
-## Vitest mocking patterns
+## Mocking
 
-Use mocks to isolate boundaries and simulate external behavior. Do not use
-mocks to prove private implementation details.
+Mocks isolate boundaries and simulate external behavior; they never prove private
+implementation details. Isolation mocks replace external systems (provider HTTP, database,
+filesystem, timers, queues). Simulation mocks model realistic states (timeout, provider 429,
+stale lock, malformed payload, empty result). An implementation mock that replaces code inside
+the behavior under test is a smell, and mocking the candidate under test proves nothing.
 
-Mock taxonomy:
-
-- Isolation mocks replace external systems such as provider HTTP, database, filesystem, timers, and queues.
-- Simulation mocks model realistic states such as timeout, provider 429, stale lock, malformed payload, or empty query result.
-- Implementation mocks replace code inside the behavior under test and are a smell.
-
-Rules:
-
-- Mock at the platform boundary whenever possible.
-- Keep outcome-affecting mocks in the test arrange block.
-- Reset or redefine common mocks in `beforeEach()`.
-- Restore environment variables, globals, fake timers, and spies in cleanup.
-- Avoid surprising global auto-mocks.
-- Use `vi.mocked()` for typed mock access.
-- Use partial mocks sparingly and only when a full boundary replacement hides too much useful behavior.
-- Do not mock the candidate under test.
-
-Mock global fetch with a fresh response for each call. Restore stubbed globals after each test,
-or enable the documented `unstubGlobals` configuration option. See
-[Vitest's global-mocking documentation](https://vitest.dev/guide/mocking/globals).
+Mocks sit at the platform boundary, outcome-affecting mocks live in the arrange block, and
+common mocks reset in `beforeEach()`. Environment variables, globals, fake timers, and spies
+are restored in cleanup. Global auto-mocks are avoided, `vi.mocked()` gives typed access, and a
+partial mock exists only where a full boundary replacement hides useful behavior.
 
 ```ts
 vi.stubGlobal(
@@ -214,66 +105,27 @@ vi.stubGlobal(
     vi.fn<typeof fetch>().mockImplementation(() => Promise.resolve(Response.json({ status: 'ready' }))),
 );
 
-afterEach(() => {
-    vi.unstubAllGlobals();
-});
-```
-
-Mock ordered provider calls:
-
-```ts
-const mockedProvider = vi.mocked(createVisionCompletion);
-
-mockedProvider.mockResolvedValueOnce(firstProviderResponse).mockResolvedValueOnce(secondProviderResponse);
-```
-
-Typed mock:
-
-```ts
-const mockedCreateProviderOperation = vi.mocked(createProviderOperation);
-
-mockedCreateProviderOperation.mockResolvedValue({
-    providerOperationId,
-    status,
-});
-```
-
-Partial mock:
-
-```ts
-vi.mock('@/platform/providers/client.js', async (importOriginal) => {
-    const original = await importOriginal();
-
-    return {
-        ...original,
-        createProviderOperation: vi.fn(),
-    };
-});
-```
-
-Fake timers:
-
-```ts
 beforeEach(() => {
     vi.useFakeTimers();
     vi.clearAllMocks();
 });
 
 afterEach(() => {
+    vi.unstubAllGlobals();
     vi.useRealTimers();
     vi.restoreAllMocks();
 });
-```
 
-Rejected promise:
+const mockedProvider = vi.mocked(createVisionCompletion);
+mockedProvider.mockResolvedValueOnce(firstProviderResponse).mockResolvedValueOnce(secondProviderResponse);
 
-```ts
+vi.mock('@/platform/providers/client.js', async (importOriginal) => ({
+    ...(await importOriginal()),
+    createProviderOperation: vi.fn(),
+}));
+
 await expect(createProviderOperation(request)).rejects.toThrow('Provider request failed');
-```
 
-Parameterized test:
-
-```ts
 it.each([
     ['missing account', { accountId: undefined }],
     ['empty item list', { itemIds: [] }],
@@ -282,19 +134,13 @@ it.each([
 });
 ```
 
-Bad test:
+Stubbed globals are restored after each test or through the `unstubGlobals` option; see
+[global mocking](https://vitest.dev/guide/mocking/globals).
 
-```ts
-// Bad: this mocks the candidate under test and proves nothing.
-vi.mock('@/modules/orders/submit.js');
-vi.mocked(submitOrder).mockResolvedValue(success);
-expect(await submitOrder(input)).toBe(success);
-```
-
-## Test organization
+## Organization
 
 <!-- level: all -->
 
-Use descriptive test names and group related cases when that makes reports easier to read.
-Keep shared setup under the project's declared test-support directory. Avoid deep `describe()`
-nesting that adds structure without separating distinct behavior.
+Test names describe the behavior, and related cases are grouped where that makes reports
+easier to read. Shared setup lives under the declared test-support directory. `describe()`
+nesting stops where it separates no distinct behavior.

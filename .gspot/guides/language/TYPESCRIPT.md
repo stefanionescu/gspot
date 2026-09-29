@@ -6,334 +6,121 @@ title: TypeScript
 
 # TypeScript
 
-Requirements about vocabulary, architecture, naming, documentation coverage, declaration
-order, API style, and complexity apply at `all` or when the project explicitly opts into
-them. Correctness, security, accessibility, type safety, routine formatting, and declared
-project contracts apply at both levels.
+`tsc` runs with `strict`, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`,
+`noImplicitOverride`, and `forceConsistentCasingInFileNames`. ESLint with typescript-eslint
+reports `any`, unsafe assertions, non-null assertions, enums, namespaces, triple-slash
+references, `var`, and parameter reassignment. It reports a missing `import type`, default
+exports, mutable exports, re-exports and barrels, thrown non-errors, and floating and misused
+promises. It reports `return await` placement, missing JSDoc on exports, declaration order,
+and the placement of enum-replacement objects. Prettier owns formatting.
 
-## Core TypeScript philosophy
+This guide says why, and holds the rules those tools cannot see. Import extensions and module
+resolution belong to the runtime file.
 
-TypeScript is useful here because it makes contracts explicit at compile time,
-but it is not a runtime validation layer. Use the type system to describe values
-after they have crossed a trusted boundary. Use Zod, custom guards, or
-database constraints to prove unknown input before treating it as typed data.
+## Philosophy
 
-Prefer plain values, small functions, discriminated unions, and clear module
-boundaries. Avoid type gymnastics that make code harder to understand than the
-runtime behavior. If enforcement differs from this document, fix the enforcement
-or update the rule explicitly. Do not use mismatch as an excuse to ignore the
-standard.
+TypeScript makes contracts explicit at compile time; it is not a runtime validation layer.
+Types describe values after they cross a trusted boundary, and Zod, custom guards, or
+database constraints prove unknown input before it is treated as typed data. Plain values,
+small functions, discriminated unions, and clear module boundaries beat type gymnastics
+harder to read than the runtime behavior. When enforcement and this guide disagree, fix the
+enforcement or change the rule explicitly; drift is not a reason to weaken either.
 
-## TypeScript standard
+## Files and modules
 
-TypeScript projects must use strict compiler settings:
-
-- `strict`.
-- `noUncheckedIndexedAccess`.
-- `exactOptionalPropertyTypes`.
-- `noImplicitOverride`.
-- `forceConsistentCasingInFileNames`.
-
-How an internal import resolves is a fact about the runtime, not about TypeScript. See the
-`runtime/` rules for the runtime this code targets.
-
-Local lint configuration owns exact TypeScript enforcement. Do not duplicate
-rule IDs or lint options here.
-
-Validate external input at runtime and preserve type safety after validation. Apply the
-module, declaration, and API conventions selected by the project.
-
-When implementation or enforcement conflicts with this standard, call out the
-conflict or fix it in an explicit task. Do not weaken the rule to match drift.
-
-## File classes
-
-Apply the lint configuration for the file's role and scope. Application source,
-scripts, tests, generated files, and shared tooling can have different requirements.
-Check the effective configuration for the specific path before assuming that a
-rule is enabled or disabled.
-
-Keep diagnostics and process termination at executable boundaries. Preserve the
-import style supported by the declared runtime and compiler configuration.
-
-## Source files
-
-Keep TypeScript files as normal UTF-8 source files with imports before
-implementation. Do not put imports after statements.
-
-Rules:
-
-- Use `const` by default.
-- Use `let` only for reassignment.
-- Never use `var`.
-- Keep side-effect imports rare and explicit.
-- Do not add file-level history comments, stale path references, or generated
-  examples that are not part of the working code.
-
-Prefer direct, searchable code over clever indirection. If a module needs a
-short explanation, document the purpose, not how it changed.
-
-## Modules, imports, and exports
-
-Use module syntax supported by the declared runtime and compiler.
-
-Follow the import extension policy of the runtime this code targets. It is stated once, in the
-`runtime/` rule file for that runtime, and not repeated per language.
+A file is UTF-8 with imports before implementation, `const` by default, and `let` only for
+reassignment. Side-effect imports are rare and explicit. No history comments, stale path
+references, or example code sit outside the working code. Direct, searchable code beats clever
+indirection, and a module comment states purpose, not change history. Diagnostics and process
+termination stay at executable boundaries. Application source, scripts, tests, generated
+files, and tooling have different lint configuration, so check the effective configuration
+for a path before assuming a rule.
 
 ### Module conventions
 
 <!-- level: all -->
 
-- Read `process.env` in one configuration owner module. Nowhere else.
-- Do not use triple-slash references.
-- Use `import type` for symbols used only as types.
-- Use `export type` when re-exporting type-only symbols.
-- Prefer named imports and named exports for app code.
-- Avoid mutable exports such as `export let`.
-- Avoid default exports in app modules.
-- Allow default exports for ecosystem-owned config files when the tool expects
-  them.
-- Do not create container classes or exported objects only to simulate a
-  namespace.
-- Do not use `namespace`, `module`, or `import x = require(...)`.
+`process.env` is read in one configuration owner module and nowhere else. App code uses named
+imports and exports; a default export exists only in an ecosystem-owned configuration file
+whose tool expects it. No container class or exported object simulates a namespace. Every
+symbol is imported from the module that declares it; a library scope may allow re-exports in
+its index files as a recorded project choice.
 
-No re-exports in application source: no `export { x } from`, no `export * from`, no index
-barrels. Import the module that declares the symbol. A library scope may allow re-exports in
-index files only, as a recorded project choice.
+Type aliases, interfaces, enum-replacement objects, and generic helper types sit beside their
+behavioral owner. Schema types are inferred from the authored schema. A shared contract lives
+with its consumers rather than a mandatory top-level types directory. When a project
+configures a types directory, enum-replacement objects go there beside their types. The
+placement check recognizes literal records whose member names match their string values, or
+whose values form a `typeof Record[keyof typeof Record]` union. Column widths, download
+metadata, and other constant records stay runtime values.
 
-## Type placement
+## Values and shapes
 
-<!-- level: all -->
+User input, environment values, and provider responses are parsed explicitly, never coerced,
+and a truthiness check is not used where `0`, `''`, `false`, `null`, and `undefined` mean
+different things. `as const` fixes a value set when it improves precision without obscuring
+the runtime shape. Grouped data is an object literal, annotated rather than cast when its
+contract matters, and destructured where that names the fields in use. `T[]` serves simple
+arrays and `Array<T>` or `ReadonlyArray<T>` complex element types; `readonly` marks a
+contract, not decoration. With `noUncheckedIndexedAccess`, an indexed read is optional and is
+narrowed before use.
 
-Keep type aliases, interfaces, enum-replacement objects, and generic helper types beside their
-behavioral owner. Infer schema types from their authored schema. Use `import type` when an import
-has no runtime use. A shared contract belongs with its consumers, not in a mandatory top-level
-types directory. Do not split declarations into files merely to satisfy a placement convention.
+Untrusted values are `unknown` plus narrowing. Casts give way to runtime narrowing, typed
+helpers, or fixing the source type, and a type alias that only renames another adds nothing.
+Known variants are discriminated unions.
 
-When a project configures a types directory, enum-replacement objects belong there beside their
-types. The placement check recognizes literal records whose member names match their string
-values, or whose values form an explicit `typeof Record[keyof typeof Record]` union. Other
-constant records, such as column widths and download metadata, remain runtime values.
+Absence is precise: `property?: T` and
+`property: T | undefined` are different contracts under `exactOptionalPropertyTypes`. A
+nullable alias gets a name only when the union is an owned domain contract. Nullability is
+added at the usage boundary where absence belongs to that contract. External empty strings,
+missing fields, and nulls are normalized at the runtime boundary.
 
-## Values, literals, and coercion
-
-Prefer explicit, unsurprising values.
-
-Rules:
-
-- Use `const` for values that do not change.
-- Avoid implicit coercion for user input, environment values, and provider
-  responses.
-- Use explicit parsing for strings, numbers, booleans, and dates that cross a
-  runtime boundary.
-- Do not use truthiness checks when `0`, `''`, `false`, `null`, and `undefined`
-  have different meanings.
-
-Use `as const` for fixed value sets when it improves type precision and does not
-make the runtime shape harder to read.
-
-## Objects, arrays, and destructuring
-
-Keep object and array handling readable and type-safe.
-
-Rules:
-
-- Use object literals for grouped data instead of positional parameter lists.
-- Add type annotations to object literals when the contract matters.
-- Prefer annotations over `as SomeType` for object literals.
-- Use destructuring when it clarifies the fields being used.
-- Use `T[]` for simple arrays.
-- Use `Array<T>` or `ReadonlyArray<T>` when the element type is complex.
-- Prefer readonly arrays or readonly properties only when immutability is part
-  of the contract, not as decoration.
-
-With `noUncheckedIndexedAccess`, indexed reads produce optional values. Narrow
-those values before use in production code.
-
-## Functions and parameters
-
-<!-- level: all -->
-
-Use TypeScript annotations to make public function contracts explicit while
-letting local implementation details rely on clear inference.
-
-Rules:
-
-- Annotate exported function return types.
-- Annotate callback parameter types when inference is unclear.
-- Avoid parameter reassignment.
-- Do not use overloads when a discriminated union or options object is clearer.
-- Keep generics minimal.
-
-Use optional parameters only for truly optional inputs. Do not make a parameter
-optional to avoid fixing a caller contract.
-
-## Classes
-
-Use `override` when overriding class members.
-
-### Class conventions
-
-<!-- level: all -->
-
-Use classes only when instance identity or encapsulated state is real.
-
-Rules:
-
-- Do not create static container classes for namespacing.
-- Prefer plain functions and objects for stateless behavior.
-- Keep constructors simple.
-- Do not use decorators unless an approved framework or toolchain requires them.
-
-If a class has no meaningful instance state, it is a module with
-named exports.
-
-## Types and inference
-
-Let TypeScript infer local details, but make public contracts explicit.
-
-Rules:
-
-- Use `unknown` plus narrowing for untrusted values.
-- Do not assert to `any`.
-- Avoid double assertions.
-- Avoid broad `as` casts.
-- Prefer runtime narrowing, typed helpers, or fixing the source type over casts.
-- Use discriminated unions for known variants.
-- Avoid type aliases that only rename another type without adding meaning.
+A non-null assertion is narrowed away in production code; a test may assert when its setup
+establishes the value.
 
 ### Type conventions
 
 <!-- level: all -->
 
-- Use `type` aliases for object shapes.
-- Avoid explicit `any` annotations.
-- Prefer literal unions and `as const` objects over enums. Do not introduce TypeScript enums.
+Object shapes are `type` aliases, and fixed value sets are literal unions or `as const`
+objects rather than enums.
 
-## Null, undefined, and optional values
+## Functions and classes
 
-Be precise about absence.
+Exported functions annotate their return types, callback parameters are annotated where
+inference is unclear, local details rely on inference, and generics stay minimal. A
+discriminated union or options object replaces overloads when clearer, and a parameter is
+optional only for a truly optional input, never to dodge fixing a caller. `override` marks
+every overridden member.
 
-Rules:
-
-- Distinguish an absent property from a present property whose value can be `undefined`.
-- Give a nullable alias a name only when that union describes an owned domain contract.
-- Add nullability at the usage boundary where absence is part of that specific
-  contract.
-- Normalize external empty strings, missing fields, and null values at runtime
-  boundaries.
-
-`exactOptionalPropertyTypes` is enabled, so `property?: T` is not the same
-contract as `property: T | undefined`. Pick the one that matches the real data.
-
-### Non-null assertion convention
+### Class conventions
 
 <!-- level: all -->
 
-Do not use non-null assertions in production code. Narrow the value where it arrives.
-Tests can use an assertion when their setup establishes the value.
+A class exists only for real instance identity or encapsulated state. Stateless behavior is
+a module of named exports. Constructors stay simple, and decorators appear only where an
+approved framework requires them.
 
 ## Runtime boundaries
 
-TypeScript types do not validate runtime input.
+Untrusted input is validated with Zod or a custom runtime check at the boundary that receives
+it. That covers HTTP bodies, query strings, route params, headers, and environment variables.
+It also covers unvalidated database rows and RPC results, provider responses, file input,
+generated data sources, webhooks, cron payloads, and Edge Function requests. Typed values pass inward; raw `unknown` or
+request-shaped values never spread through domain code.
 
-Use Zod or custom runtime validation for:
+## Errors and async work
 
-- HTTP bodies, query strings, route params, and headers.
-- environment variables.
-- database rows and RPC results when the query boundary has not validated them.
-- provider responses.
-- file input and generated data sources.
-- webhooks, cron payloads, and Edge Function requests.
+Only `Error` and its subclasses are thrown. Catches narrow from `unknown`, wrapping preserves
+the cause, and `try` blocks stay focused on the operation that can throw. A catch that only
+rethrows does not exist. Functions doing asynchronous work are `async`. Route handlers,
+middleware, startup, and shutdown paths await their work before returning, and required
+cleanup runs in `finally`.
 
-After validation, pass typed values inward. Do not spread raw `unknown` or
-request-shaped values through domain code. Keep validation close to the boundary
-that receives untrusted data.
-
-## Errors and async code
-
-Throw only `Error` subclasses.
-
-Rules:
-
-- Use `new Error(...)` or a custom `Error` subclass.
-- Do not throw strings, numbers, plain objects, or unknown provider payloads.
-- Catch as `unknown` and narrow before reading properties.
-- Preserve original causes when wrapping errors.
-- Keep `try` blocks focused around the operation that can throw.
-- Do not use catch blocks that only rethrow the same error.
-- Use `Promise.all` only for bounded fan-out.
-- Use sequential `await` when order, rate limits, or failure isolation matter.
-
-## Comments and JSDoc
-
-Document purpose and contracts, not TypeScript syntax.
-
-Rules:
-
-- Document exported public APIs when the purpose is not obvious.
-- Do not put TypeScript type annotations in JSDoc.
-- Explain non-obvious invariants, security boundaries, concurrency behavior, and
-  runtime assumptions.
-- Do not add comments that restate the code.
-- Do not include change history in comments.
-- A `TODO` is `TODO(<issue-url-or-YYYY-MM-DD>): <sentence>`; the owner is an issue link or an
-  expiry date, never a person.
-
-### Documentation coverage
-
-<!-- level: all -->
-
-Require JSDoc for exported functions, with type tags disabled because TypeScript owns types.
-
-## Tests and mocks
-
-Use tests to verify behavior, not implementation detail.
-
-Rules:
-
-- Keep shared test types beside the support module or behavior that owns their contract.
-- Use the test runner's typed mock helpers rather than casting a mock to `any`.
-- Mock external boundaries, not internal implementation details.
-- Avoid `any` in tests. Use `unknown`, typed test data, or narrow mock helpers.
-- Non-null assertions are allowed in test files only when the arrange step makes
-  the value obviously present.
-- Documentation-only TypeScript guidance changes must not update tests.
-
-## Generated code
-
-Generated TypeScript is mostly exempt from this guide.
-
-Rules:
-
-- Do not manually edit generated database type files.
-- Regenerate generated types through the owning generator when schema changes
-  require it.
-- Do not refactor generated output to satisfy style guidance.
-- Keep hand-written wrappers around generated types small and owned by the
-  boundary that needs them.
-
-If generated code violates a style preference, fix the generator or document the
-exception. Do not patch generated files by hand.
-
-## Async and promises
-
-Async code must preserve correctness, debuggability, and bounded resource use.
-Do not let promise behavior become implicit.
-
-Rules:
-
-- Mark functions `async` when they return promises from asynchronous work.
-- Use `return await` inside `try` or error-boundary functions when it preserves useful stack traces.
-- Await asynchronous work before returning from route handlers, middleware, startup, and shutdown paths.
-- Do not pass `async` callbacks to synchronous iteration APIs when the caller expects completion.
-- Use `Promise.all()` only for independent work that can safely run concurrently.
-- Use platform concurrency utilities for large fan-out, provider calls, and
-  batch work.
-- Do not leave floating promises unless they are intentionally detached, logged, and supervised.
-- Do not swallow promise rejections.
-- Prefer `async`/`await` or promise chains over callback pyramids.
-- Use `finally` for required cleanup after async work.
+`Promise.all` serves bounded independent fan-out. Order, rate limits, or failure isolation
+call for sequential `await`. Large fan-out, provider calls, and batch work use platform
+concurrency utilities. A detached promise is intentional, logged,
+and supervised, and no rejection is swallowed.
 
 ```ts
 // Bad: forEach does not wait for async callbacks.
@@ -343,59 +130,43 @@ messages.forEach(async (message) => {
 
 // Good: the caller waits for all writes to finish.
 await Promise.all(messages.map((message) => persistMessage(message)));
-```
 
-```ts
-// Good: cleanup still runs when the provider call fails.
-try {
-    return await createProviderOperation(providerRequest);
-} finally {
-    releaseOperationLock(operationId);
-}
-```
-
-```ts
 // Good: preserve the provider failure stack and cause at the boundary.
 export async function createProviderOperation(request: ProviderOperationRequest) {
     try {
         return await postProviderOperation(request);
-    } catch (error) {
-        throw new Error('Provider request failed', { cause: error });
+    } finally {
+        releaseOperationLock(request.operationId);
     }
 }
 ```
 
-## Dependencies and abstractions
+## Comments, tests, generated code, and dependencies
 
-Rules:
+Comments document purpose, invariants, security boundaries, concurrency behavior, and runtime
+assumptions, never TypeScript syntax, restated code, or change history; type tags stay out of
+JSDoc because TypeScript owns types. A `TODO` is `TODO(<issue-url-or-YYYY-MM-DD>): <sentence>`,
+owned by an issue link or an expiry date, never a person.
 
-- Use native Node and TypeScript APIs first.
-- Use approved dependencies before adding new ones.
-- Do not add lodash-style dependencies for array, object, or string helpers.
-- Keep exact dependency versions.
-- Do not add a dependency for a one-line native API or a small local helper.
+Tests verify behavior and mock external boundaries rather than internals. They use the
+runner's typed mock helpers instead of `any` and keep shared test types beside the support
+module that owns their contract. A documentation-only change to this guidance updates no tests.
+
+Generated TypeScript is exempt from style guidance. Generated database types are regenerated
+by their generator and never edited by hand. Hand-written wrappers around them
+stay small and owned by the boundary that needs them. When generated output violates a
+preference, fix the generator or document the exception.
+
+Native Node and TypeScript APIs come first, then approved dependencies, at exact versions.
+No lodash-style helper package for array, object, or string work, and no dependency for a
+one-line native API or a small local helper.
 
 ## Declaration order
 
 <!-- level: all -->
 
-Bad, public before private:
-
-```ts
-export function compareOrders(left: Order, right: Order): number {
-    const leftTotal = orderTotal(left.items);
-    const rightTotal = orderTotal(right.items);
-    return leftTotal - rightTotal;
-}
-
-function orderTotal(items: OrderItem[]): number {
-    const active = items.filter(isActiveItem);
-    const amounts = active.map((item) => item.quantity * item.price);
-    return amounts.reduce((sum, amount) => sum + amount, 0);
-}
-```
-
-Good:
+Types and private helpers precede the exported functions that use them, so a reader meets
+each name before its use:
 
 ```ts
 type OrderItem = {
@@ -421,22 +192,16 @@ function orderTotal(items: OrderItem[]): number {
  * @returns the signed difference between their totals.
  */
 export function compareOrders(left: Order, right: Order): number {
-    const leftTotal = orderTotal(left.items);
-    const rightTotal = orderTotal(right.items);
-    return leftTotal - rightTotal;
+    return orderTotal(left.items) - orderTotal(right.items);
 }
 ```
 
 ## Rules not adopted
 
-The following external-guide rules are not adopted:
-
-- Do not copy Google's full formatting rules. The formatter and the linter own formatting.
-- Do not require interfaces over type aliases.
-- Do not add Angular, Polymer, JSPB proto, or Google-internal conformance rules.
-- Do not globally ban default exports where ecosystem config files need them.
-- Do not introduce broad naming-lint policy changes as part of normal feature or docs work.
-- Do not do opportunistic code refactors to make unrelated code match this guide.
-
-These choices define the TypeScript standard. When enforcement does not match the standard, fix
-the enforcement.
+Google's full formatting rules are not adopted, because the formatter and linter own
+formatting. Interfaces over type aliases, and the Angular, Polymer, JSPB proto, and
+Google-internal conformance rules, are not adopted. A global ban on default exports where
+ecosystem configuration files need them is not adopted. Broad naming-lint changes inside
+feature or docs work, and opportunistic refactors of unrelated code to match this guide, are
+not adopted. These choices define the standard; when enforcement differs, fix the
+enforcement.

@@ -52,7 +52,7 @@ The first release needs these, in this order:
 2. A public repository.
 3. Trusted publishing set up for each package.
 4. The domain that serves the manual.
-5. Every row of [22-remaining.md](22-remaining.md) closed, and the Windows job green.
+5. The Windows job green.
 
 ## Pins
 
@@ -191,120 +191,6 @@ The install of tools reaches
 the registries. `apply` may reach registries to resolve changed tool locks and downloads Vale packages at `all`. Immutable `install` only installs recorded dependency contents; it never regenerates locks. `check` and the
 hooks never reach the network, except for a check that declares `network`, which sits at `push`
 or `manual`.
-
-## Acceptance contracts
-
-These clauses specify required behavior. [Remaining work](22-remaining.md) owns status and evidence.
-
-### Acceptance K-264
-
-`gspot install` sets up one clone. It installs the mise tools,
-`.gspot/node_modules`, `.gspot/.venv`, and the hooks, writes no tracked file, and is safe
-to run twice. Before the first release it takes its packages from the local registry that
-`GSPOT_REGISTRY` names.
-
-`tool-environment.ts` writes `.gspot/pyproject.toml` from every tool with a `pypi`
-name, and `install` runs `uv sync --locked --project .gspot`. The inspection looks under `.gspot/.venv/bin`
-after `.gspot/node_modules/.bin`. `init` call the function, and `--no-install`
-skips it. The developer runs `gspot install` explicitly; no setup or lifecycle script is injected. `apply` resolves lockfiles, while `install` uses only matching locked contents.
-
-`missing-tool.ts` prints `Run: gspot install` for a tool gspot can install, and the
-platform hint for a host tool. `check` prints the same line once when the hooks of the config do
-not run in this clone. The plan counts the binaries that need mise, and where mise is absent it
-shows the one line that installs mise and then all of them.
-
-A planted clone: `git clone` of an installed repository, then `gspot check` holds the
-line, then `gspot install`, then a commit runs the hook. A planted Python repository with no mise
-and uv alone runs `python/ruff`. The harness starts the registry and sets `GSPOT_REGISTRY` for
-every planted install.
-
-### Acceptance K-297
-
-A missing tool never blocks the setup. `init` writes the config on
-any machine, `install` installs what it is able to and lists the rest, and gspot installs no
-system software unasked.
-
-`install-tools.ts` picks the package manager in this order: the root, the
-first JavaScript project, bun or npm on the machine, then bun from the mise file of gspot.
-The tool-environment generator pins bun only in that last case, and pins uv where a Python tool is selected.
-
-Each step of the install runs even when an earlier one failed. The command ends with one list of what
-is left, each entry with its command. It exits 2 when a tool gspot installs itself is on the
-list, and a host tool such as Xcode leaves the exit code alone. `init` preserves the written
-configuration, prints the same list, and exits 2 when managed-tool installation fails. Successful initialization exits 0.
-
-Three planted machines, each a `PATH` with tools left out. A Swift repository with
-mise and no Node installs the npm tools through bun. A Python repository with no mise and no uv
-ends `install` with exit 2 and one line for uv. A repository with nothing but gspot preserves
-its configuration and reports any managed-tool installation failure with exit 2.
-
-### Acceptance K-206
-
-An installer that numbers differently carries its own version.
-
-An installer value is a name, or a table with `name` and `version`. A release test
-asks npm, PyPI, crates.io, and GitHub for every pin. It runs with the release suite, because it
-calls the network.
-
-That release test.
-
-### Acceptance K-263
-
-Use the standard filesystem boundary and verify the installed binary, unit/plugin and behavioral journeys on Windows. Include checkout paths with spaces and Unicode, LF generated output, command shims, cancellation, and process-tree cleanup. Native Windows execution is required in CI; unsupported-platform refusal is not completed native support.
-
-### Acceptance K-164
-
-A release fails before it publishes anything that is incomplete.
-
-K-305 validates all script arguments before any writes or registry operations. Both scripts throw at the first missing file. `publish.ts` verifies every package
-with `npm pack --dry-run` before it publishes the first, and each package includes
-the project license from distribution output. Platform packages also include `NOTICE.md` for bundled
-inputs. The launcher and external-dependency plugin do not inherit unrelated CLI notices.
-
-The build command is `bun packages/cli/scripts/command.ts`; publication uses
-`bun packages/cli/scripts/publish.ts`. Both consume shared validation in the authored build target
-owner. Generated input and notice caches live in `packages/cli/.build/`, and root `dist/` holds
-release payloads.
-
-The CLI build reads actual bundler inputs and embedded grammar sources. Its notice assembler
-lives in `packages/cli/scripts/notices.ts`. It reads installed license files and fetches missing
-supplemental notices from pinned upstream sources. Downloaded and cached bytes must match
-recorded SHA-256 values. Include the Bun runtime and upstream Swift parser provenance. A dependency-tree
-scanner is not a substitute: installed dependencies are not necessarily bundled inputs.
-
-`packages/cli/scripts/inputs.ts` downloads the pinned upstream Swift parser and verifies its SHA-256 before caching or embedding it. An install hint
-names Homebrew only for a tool with no pin, and a `github` installer takes the tag form its
-repository uses. The owner publishes a placeholder of `gspot` on npm before the release workflow
-first runs.
-
-Release acceptance removes one required binary, invokes the publication owner, and verifies
-failure before any registry publication. Keep that regression with the existing release
-argument and installed-consumer tests; no separate publish test file is required.
-
-### Acceptance K-280
-
-Seven targets, and an install guide that says what each system shows.
-
-The shared target definition includes Linux x64 and arm64 musl builds using the corresponding
-Bun compile targets. The launcher reads the libc of the machine before it picks a platform package.
-The macOS binaries are signed ad hoc at build, and the guide names `xattr -d` for a browser
-download. Document quarantine behavior for the verified delivery route; do not promise a host security
-policy solely from the package manager name. Recommend only published, verified install routes.
-
-The release job runs `gspot --version` in an Alpine container for both musl targets. The
-acceptance job of this repository runs on x64 and arm64 Linux runners, and each runs the musl
-binary of its own architecture in an Alpine container after the build. GitHub hosts no Intel
-macOS runner, so the macOS job runs the x64 binary under Rosetta, which is a smoke test and not
-native evidence.
-
-A dispatch of the workflow takes two more inputs for a probe. The `runner` input picks one runner
-of the matrix. The `tests` input names test files under `tests/` that run in place of the
-acceptance steps.
-A probe answers one platform question in minutes; the full matrix stays the merge evidence.
-
-### Acceptance K-281
-
-Apply the installed version without migrating policy. Dry-run is read-only. Preserve originals and recovery before publication, and update the pin last. Verify pin changes, edited outputs, lock failure, interruption, and safe retry.
 
 ## Internal build arguments
 

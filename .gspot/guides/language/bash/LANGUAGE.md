@@ -6,34 +6,34 @@ title: Bash Language
 
 # Bash Language
 
-Requirements about vocabulary, architecture, naming, documentation coverage, declaration
-order, API style, and complexity apply at `all` or when the project explicitly opts into
-them. Correctness, security, accessibility, type safety, routine formatting, and declared
-project contracts apply at both levels.
-
 Functions, variables, quoting, arrays, conditionals, arithmetic, loops, delimited data, paths,
 command substitution, and pipelines. Script structure and options are in the Bash file.
+ShellCheck reports unquoted expansions, `$*` forwarding, parsed `ls`, `for line in $(cat)`,
+`$?` gymnastics, deprecated syntax, and word-splitting bugs; this guide holds the decisions
+and the forms it cannot judge.
 
 ## Functions
 
-Rules:
-
-- Declare function-local variables with `local`.
-- Separate `local` declaration from command substitution assignment when the
-  exit code matters.
-- Return status codes with `return`. Print data to STDOUT only when the function
-  is designed as a value-producing command.
-- Do not make a function both print data and log progress to STDOUT.
-- A function that coordinates enough flags, counters, mutable state, or status
-  codes to resemble a state machine does not belong in Bash. Simplify the
-  workflow or move the domain behavior to its existing application-code owner.
-- Preserve the command's documented status contract. Predicates can use status 1 for false;
-  distinguish that result from an execution error. Report other returned data explicitly.
-
-Good:
+Declare function-local variables with `local`, and separate the declaration from a command
+substitution assignment when the exit code matters, because `local`, `declare`, `readonly`,
+and `export` report their own status rather than the substitution's:
 
 ```bash
-# Reports each unreadable input and fails if any input is unreadable.
+local output
+output="$(some_command)" || return 1
+```
+
+Return status codes with `return`, and print data to STDOUT only when the function is a
+value-producing command; a function never both prints data and logs progress to STDOUT.
+Preserve the documented status contract: a predicate may use status 1 for false, kept
+distinct from an execution error. A function that coordinates enough flags, counters, mutable
+state, or status codes to resemble a state machine does not belong in Bash. Simplify the
+workflow or move the behavior to its application-code owner. An executable keeps its entry in
+`main` when that gives argument handling and coordination an owner, and never wraps a direct
+command only to create one. A library never starts a workflow when sourced.
+
+```bash
+# report_unreadable_files - Reports each unreadable input and fails if any input is unreadable.
 report_unreadable_files() {
   local path
   local status=0
@@ -49,122 +49,48 @@ report_unreadable_files() {
 }
 ```
 
-An executable can keep its entrypoint in `main` when that gives argument handling and workflow
-coordination a useful owner. Do not wrap an otherwise direct command only to create an entrypoint.
-
-Libraries must not start an executable workflow when sourced.
-
 ### Function conventions
 
 <!-- level: all -->
 
-Use `name() { ... }` for functions that run in the caller's shell. A subshell body, `name() ( ... )`,
-can provide deliberate isolation when the function must preserve the caller's state and traps.
-Keep functions focused and within the configured statement, branch, and nesting limits. Inline wrappers that only forward a command unless their signature
-or repeated configuration has a real caller contract.
+Use `name() { ... }` for a function that runs in the caller's shell, and a subshell body,
+`name() ( ... )`, for deliberate isolation of the caller's state and traps. Keep functions
+within the configured statement, branch, and nesting limits, and inline a wrapper that only
+forwards a command unless its signature or repeated configuration is a real caller contract.
 
 ## Variables and constants
 
-Rules:
+Quote every expansion unless a specific shell mechanism requires an unquoted one. Brace
+positional parameters above nine. Mark constants `readonly` immediately after assignment, and
+`export` only what child processes need. Never casually overwrite `PATH`, `HOME`, `IFS`,
+`CDPATH`, `SHELL`, `PWD`, or `BASH_ENV`, and never export `CDPATH`.
 
-- Quote variable expansions unless a specific shell mechanism requires unquoted
-  expansion.
-- Positional parameters above 9 must be braced. Use `${10}`, not `$10`.
-- Use `readonly` for constants immediately after assignment.
-- Use `export` only for variables that child processes need.
-- Do not overwrite important environment variables casually, especially `PATH`,
-  `HOME`, `IFS`, `CDPATH`, `SHELL`, `PWD`, or `BASH_ENV`.
-- Do not export `CDPATH`.
-- A directory constant is computed with `CDPATH='' cd -- <path> && pwd -P` and has a failure
-  path (`|| exit 1` in an entrypoint, `|| return 1` in a library).
-- Do not put spaces around `=`.
-- Use `$HOME`, not quoted `~`, inside paths.
-- Assign a home-relative value before exporting it, or use `$HOME`.
-- Quote array elements passed to `unset`, and prefer `unset -v`.
-
-Good:
+A directory constant is
+computed with `CDPATH='' cd -- <path> && pwd -P` and carries a failure path, `|| exit 1` in an
+entrypoint and `|| return 1` in a library. Use `$HOME`, not a quoted `~`, inside paths, and
+assign a home-relative value before exporting it. Quote array elements passed to `unset -v`.
 
 ```bash
 script_parent="$(dirname -- "${BASH_SOURCE[0]}")" || exit 1
 PROJECT_ROOT="$(CDPATH='' cd -- "${script_parent}/.." && pwd -P)" || exit 1
 readonly PROJECT_ROOT
 export PROJECT_ROOT
-
-TOOL_HOME="${HOME%/}/.tool"
-export TOOL_HOME
-
-files=('first.sql' 'second.sql')
-unset -v 'files[0]'
-printf '%s\n' "${files[@]}"
 ```
 
-When assigning from commands:
-
-```bash
-local output
-output="$(some_command)" || return 1
-```
-
-Separate `local`, `declare`, `readonly`, and `export` from command substitution
-when the command status matters. These declarations can report their own status
-instead of the command substitution's status:
-
-```bash
-local output="$(some_command)"
-declare output="$(some_command)"
-readonly output="$(some_command)"
-export output="$(some_command)"
-```
-
-The exit code is the `local` builtin's status, not reliably the command
-substitution status.
-
-### Variable spelling
+### Variable conventions
 
 <!-- level: all -->
 
-Prefer `${name}` for named variables. Do not brace single-character positional or shell-special
-parameters unless needed to distinguish adjacent characters. Preserve required braces for
-positional parameters above nine and for parameter-expansion operations.
+Prefer `${name}` for named variables, and brace a single-character positional or special
+parameter only to separate it from adjacent characters.
 
 ## Quoting and expansion
 
-Rules:
-
-- Always quote variable expansions, command substitutions, and strings with
-  spaces or shell metacharacters.
-- Use `"$@"` when forwarding arguments.
-- Do not use `$*` except when intentionally joining arguments into one string.
-- Prefer single quotes for literal strings with no expansion.
-- Prefer double quotes when expansion is required.
-- Do not use unquoted command substitution output as an argument list.
-- Do not depend on word splitting for data parsing.
-- Do not use `eval`. Use arrays, direct validation, explicit `case` branches,
-  or fixed dispatch tables.
-- Do not use aliases in scripts. Use functions.
-- Do not rely on backslash-escaped words for readability when quotes work.
-
-Good:
-
-```bash
-source_file="${1:?Source file is required}"
-target_dir="${2:?Target directory is required}"
-cp -- "${source_file}" "${target_dir}/"
-```
-
-Quoted command substitution:
-
-```bash
-version="$(node --version)"
-```
-
-Nested quoting is normal:
-
-```bash
-script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-```
-
-Use parameter expansion instead of external tools for simple string operations:
+Forward arguments with `"$@"`, and use `$*` only to join arguments into one string on
+purpose. Single quotes hold literals and double quotes hold expansions. Command substitution
+output is never an unquoted argument list, and word splitting never parses data. `eval` does
+not exist; dispatch uses arrays, direct validation, `case`, or fixed tables. Aliases are
+functions. Parameter expansion replaces external tools for simple string work:
 
 ```bash
 filename="archive.tar.gz"
@@ -173,228 +99,66 @@ base="${filename%.tar.gz}"
 
 ## Arrays and argument lists
 
-Use arrays for command arguments.
-
-Good:
+Command arguments live in arrays, expanded with `"${array[@]}"` and never populated from raw
+`$(...)`. Bash 3.2 scripts use indexed arrays only. Read lines with a `while read` loop, or
+`readarray` where Bash 4+ is guaranteed, and read filenames from NUL-delimited streams:
 
 ```bash
-archive_path="${1:?Archive path is required}"
-source_directory="${2:?Source directory is required}"
 declare -a archive_args
 archive_args=(-czf "${archive_path}" -C "${source_directory}" .)
-
 tar "${archive_args[@]}"
-```
 
-Rules:
-
-- Expand arrays with `"${array[@]}"`.
-- Do not populate arrays with raw `$(...)`.
-- Use a `while read` loop or Bash 4+ `readarray` only when runtime support is
-  guaranteed.
-- Avoid arrays as ersatz nested data structures.
-- On Bash 3.2-compatible scripts, indexed arrays are allowed; associative arrays
-  are not.
-
-For newline-delimited text that cannot contain embedded newlines, Bash 4+ supports:
-
-```bash
-readarray -t files < <(find . -type f -name '*.sql' -print)
-```
-
-Bash 3.2-compatible line loop:
-
-```bash
-while IFS= read -r file; do
-  files+=("${file}")
-done < <(find . -type f -name '*.sql' -print)
-```
-
-For filenames, prefer NUL delimiters:
-
-```bash
 while IFS= LC_ALL=C read -r -d '' file; do
   files+=("${file}")
 done < <(find . -type f -name '*.sql' -print0)
 ```
 
-## Conditionals
+Arrays are not ersatz nested data structures; that need is the sign to leave Bash.
 
-Bash `[[ ... ]]` supports explicit string, pattern, and file tests:
+## Conditionals and arithmetic
 
-```bash
-if [[ -f "${config_file}" ]]; then
-  load_config "${config_file}"
-fi
-```
-
-Rules:
-
-- Do not use `test -a`, `test -o`, `[ ... -a ... ]`, `[ ... -o ... ]`, or
-  grouping operators inside `[ ... ]`. Use `[[ ... ]]`, explicit `if`
-  branches, or `case`.
-- Use `==` for string equality.
-- Quote the right-hand side when string equality is intended and the value may
-  contain glob characters.
-- Leave the right-hand side unquoted only when pattern matching is intended.
-- Store regular expressions in variables and use them unquoted with `=~`.
-- Use `-z` and `-n` for empty and non-empty string checks.
-- Use `(( ... ))` for trusted numeric comparisons.
-- Validate untrusted numbers before arithmetic evaluation.
-
-String equality:
-
-```bash
-if [[ "${actual}" == "${expected}" ]]; then
-  printf 'match\n'
-fi
-```
-
-Pattern matching:
-
-```bash
-if [[ "${file}" == *.sql ]]; then
-  lint_sql "${file}"
-fi
-```
-
-Regular expressions:
+`[[ ... ]]` holds string, pattern, and file tests. `==` compares for equality with a quoted
+right-hand side when the value may hold glob characters, and an unquoted right-hand side only
+when pattern matching is intended. A regular expression is stored in a variable and used
+unquoted with `=~`. `-z` and `-n` test for emptiness. `cmd1 && cmd2 || cmd3` is not an `if/else` when `cmd2` can
+fail. Numeric comparisons live in `(( ... ))` after untrusted numbers are validated; `<` and
+`>` inside `[[ ... ]]` compare strings.
 
 ```bash
 readonly version_re='^[0-9]+\.[0-9]+\.[0-9]+$'
-
 if [[ "${version}" =~ ${version_re} ]]; then
   printf 'valid version\n'
 fi
 ```
 
-Do not use `cmd1 && cmd2 || cmd3` as an `if/else` replacement when `cmd2` can
-fail:
-
-```bash
-if cmd1; then
-  cmd2
-else
-  cmd3
-fi
-```
-
-### Conditional conventions
-
-<!-- level: all -->
-
-Use `[[ ... ]]` for Bash conditionals. Keep numeric comparisons in arithmetic contexts after
-validating external numeric input.
-
-## Arithmetic
-
-Rules:
-
-- Use `$(( ... ))` for arithmetic expansion.
-- Use `(( ... ))` for trusted arithmetic comparisons and assignments.
-- Do not use `expr`, `$[ ... ]`, or `let`.
-- Do not use `<` or `>` inside `[[ ... ]]` for numeric comparisons.
-- Validate untrusted numeric input before arithmetic contexts.
-- Be careful with `(( i++ ))` under `errexit`; it returns false when the
-  expression evaluates to zero.
-- Avoid array subscripts inside arithmetic contexts unless both the array name
-  and index are trusted.
-- Do not put untrusted strings into `(( ... ))`, `$(( ... ))`, `[[ value -gt n ]]`,
-  array indices, or arithmetic `for` expressions.
-- Avoid associative arrays in arithmetic contexts. Bash 3.2 does not support them,
-  and newer Bash versions differ in their expansion behavior.
-- Convert base-10 strings with care. `10#${value}` only works for unsigned
-  numbers.
-- Call `date` one time when multiple fields must describe the same instant.
-- Compute redirection paths before a command if the path expression mutates a
-  variable.
-
-Good:
-
-```bash
-retry_count=0
-max_retries=3
-if ((retry_count < max_retries)); then
-  ((retry_count += 1))
-fi
-```
-
-Safer increment under `errexit`:
-
-```bash
-retry_count=$(( retry_count + 1 ))
-```
-
-Validate external input:
+Arithmetic uses `$(( ... ))` and `(( ... ))`. `(( i++ ))` returns false when the expression is
+zero, so under `errexit` increment with `retry_count=$(( retry_count + 1 ))`. Untrusted
+strings never enter `(( ... ))`, `$(( ... ))`, `[[ value -gt n ]]`, array indices, or
+arithmetic `for` expressions: validate with a pattern first. `10#${value}` converts unsigned
+base-10 strings; a signed value needs `$(( ${value%%[!+-]*}10#${value#[-+]} ))`. Call `date`
+once when several fields describe one instant, and compute a redirection path before the
+command when the path expression mutates a variable.
 
 ```bash
 if [[ ! "${port}" =~ ^[0-9]{1,5}$ ]]; then
   printf 'error: port must be numeric\n' >&2
   return 1
 fi
-
 if (( 10#${port} < 1 || 10#${port} > 65535 )); then
   printf 'error: port is out of range\n' >&2
   return 1
 fi
 ```
 
-Safer signed base-10 conversion:
+## Loops and delimited data
 
-```bash
-if [[ "${value}" =~ ^[+-]?[0-9]+$ ]]; then
-  value_base10=$(( ${value%%[!+-]*}10#${value#[-+]} ))
-fi
-```
-
-Safer redirection target:
-
-```bash
-output_file="result$(( index + 1 )).txt"
-index=$(( index + 1 ))
-generate_result >"${output_file}"
-```
-
-## Loops and input
-
-Rules:
-
-- Iterate over arguments with `for arg in "$@"; do`.
-- Do not use compact loop forms such as `for arg; { ...; }`.
-- Iterate over globs directly, not over `ls`.
-- Read files with `while IFS= read -r line; do ... done < file`.
-- Do not use `for line in $(cat file)`.
-- Avoid piping into `while` when variables set inside the loop must survive.
-- Use process substitution for current-shell loops.
-- Use NUL-delimited streams for filenames.
-- Use `read` with a bare variable name, not `$variable`.
-- Do not use a here-string containing command substitution as loop input.
-
-Good line reading:
-
-```bash
-input_file="${1:?Input file is required}"
-while IFS= read -r line || [[ -n ${line} ]]; do
-  printf '%s\n' "${line}"
-done <"${input_file}"
-```
-
-Good command output loop:
-
-```bash
-input_file="${1:?Input file is required}"
-line_count=0
-while IFS= read -r line || [[ -n ${line} ]]; do
-  line_count=$((line_count + 1))
-done <"${input_file}"
-printf '%s\n' "${line_count}"
-```
-
-Unlike process substitution, a here-string containing command substitution collects all output
-first, strips trailing newlines, discards NUL bytes, and adds a final newline. Neither form
-propagates the producer's failure to the loop; use a checked temporary file when that status matters.
-
-Good filename loop:
+Iterate arguments with `for arg in "$@"; do`, globs directly rather than `ls`, and files with
+`while IFS= read -r line || [[ -n ${line} ]]; do ... done <"${file}"`, which keeps the last
+unterminated line. A pipe into `while` runs the loop in a subshell, so variables set inside it
+vanish; use process substitution or a redirected file. A here-string with command
+substitution collects all output first, strips trailing newlines, and drops NUL bytes.
+Neither form propagates the producer's failure; use a checked temporary file when that status
+matters. Counter loops use `for (( index = 0; index < count; index++ ))`, not `seq`.
 
 ```bash
 root_dir="$(CDPATH='' cd -- "${1:?Root directory is required}" && pwd -P)" || exit 1
@@ -407,198 +171,73 @@ while IFS= LC_ALL=C read -r -d '' file; do
 done <"${file_list}"
 ```
 
-Counter loop:
+`IFS= read -r` prevents trimming and backslash handling. Do not save and restore `IFS` with
+`old_ifs="${IFS}"`, which loses the distinction between unset and empty; use a function-local
+`IFS` or a subshell. `read` treats `IFS` as a terminator, so a controlled delimited line
+keeps its trailing empty field only with an appended delimiter. General CSV is parsed by
+application code with a real parser, never `IFS=, read`.
 
 ```bash
-for (( index = 0; index < count; index++ )); do
-  run_case "${index}"
-done
-```
-
-Do not use `seq` for simple Bash counters.
-
-## Delimited data and IFS
-
-Rules:
-
-- Use `IFS= read -r` for line input to prevent trimming and backslash handling.
-- Use `IFS= LC_ALL=C read -r -d ''` for NUL-delimited filename streams.
-- Do not save and restore `IFS` with `old_ifs="${IFS}"`; that loses the
-  distinction between unset and empty.
-- Prefer function-local `IFS` or a subshell when a temporary separator is
-  needed.
-- Do not parse general CSV with `IFS=, read ...`; use product-owned application
-  code with a real CSV parser.
-- If a simple delimiter format is truly controlled, remember that `read` treats
-  `IFS` as a terminator. A trailing empty field is discarded unless you account
-  for it.
-- Do not populate arrays from raw command substitution.
-
-Good local `IFS`:
-
-```bash
+# join_path_parts - Joins the arguments with slashes.
 join_path_parts() {
   local IFS='/'
   printf '%s\n' "$*"
 }
 ```
 
-Controlled trailing field:
-
-```bash
-input='name,value,'
-IFS=, read -r -a fields <<< "${input},"
-```
-
-Command output into arrays:
-
-```bash
-declare -a hosts
-while IFS= read -r host; do
-  hosts+=("${host}")
-done < <(aws_command_that_prints_one_host_per_line)
-```
-
 ## Paths, globs, and file names
 
-Rules:
-
-- Quote paths.
-- Use `--` before path arguments when a command supports it.
-- Prefer globs with explicit path prefixes such as `./*.mp3`.
-- Do not parse `ls`.
-- Do not filter filenames with `grep`; use globs or `[[ ... == pattern ]]`.
-- Handle no-match glob behavior deliberately.
-- Do not assume filenames cannot contain spaces, newlines, quotes, brackets, or
-  leading dashes.
-- Do not assume the current directory. Set or compute it.
-- Check `cd` explicitly.
-- Test broken symlinks with `-e` or `-L` when existence matters.
-- Match path basenames deliberately when using globs against paths that include
-  `./`.
-- Do not use `grep` to decide whether a path has an extension.
-
-Good:
+Quote paths, put `--` before path arguments where the command supports it, prefer globs with
+an explicit prefix such as `./*.sql`, and never filter filenames with `grep`. Filenames can
+hold spaces, newlines, quotes, brackets, and leading dashes. Never assume the current
+directory; compute it, and check `cd` explicitly. A broken symlink needs `-L` beside `-e`
+when existence matters, and a basename pattern reads `"${path##*/}"`. Handle the no-match
+glob deliberately, either with `[[ -e ${file} ]] || continue` or with `nullglob` scoped to a
+subshell:
 
 ```bash
 for file in ./*.sql; do
   [[ -e ${file} ]] || continue
   printf '%s\n' "${file}"
 done
-```
 
-Broken symlink-aware conditional:
-
-```bash
-if [[ -e "${path}" || -L "${path}" ]]; then
-  process_path "${path}"
-fi
-```
-
-Basename pattern conditional:
-
-```bash
-if [[ "${path##*/}" == *.* ]]; then
-  process_file_with_extension "${path}"
-fi
-```
-
-With `nullglob`, scope the option:
-
-```bash
-list_sql_files() {
-  (
-    shopt -s nullglob
-
-    declare -a files
-    files=( ./*.sql )
-    printf '%s\n' "${files[@]}"
-  )
-}
-```
-
-If changing directories:
-
-```bash
 if ! cd -- "${target_dir}"; then
   printf 'error: cannot enter target dir: %s\n' "${target_dir}" >&2
   return 1
 fi
 ```
 
-When using `cd` in command substitution, clear `CDPATH`:
-
-```bash
-repo_root="$(CDPATH='' cd -- "${SCRIPT_DIR}/.." && pwd -P)" || return 1
-```
-
 ## Command substitution
 
-Rules:
-
-- Use `$(...)`, not backticks.
-- Quote command substitutions.
-- Remember command substitution strips trailing newlines.
-- Do not use command substitution to carry binary data.
-- Do not use command substitution to create argument lists.
-- Capture the exit status immediately when needed.
-- Use `$(<file)` only when stripping trailing newlines is acceptable.
-
-Good:
+Quote `$(...)`, capture the status at once, and remember that it strips trailing newlines,
+cannot carry binary data, and never builds an argument list. `$(<file)` is fine only when
+stripping trailing newlines is acceptable. When trailing newlines matter, keep them with a
+sentinel:
 
 ```bash
 commit_sha="$(git rev-parse HEAD)" || exit 1
-git show --no-patch --format=%s "${commit_sha}"
-```
-
-If trailing newlines matter, avoid command substitution or deliberately preserve
-them with a sentinel.
-
-Sentinel pattern:
-
-```bash
 content_with_sentinel="$(some_command || exit; printf x)" || return 1
 content="${content_with_sentinel%x}"
 ```
 
 ## Pipelines and redirection
 
-Rules:
-
-- Split long pipelines one command per line.
-- Know whether each command consumes all input before enabling `pipefail`.
-- Use `PIPESTATUS` immediately if individual pipeline statuses matter.
-- Redirect stdout and stderr in the correct order.
-- Do not use `&>file` or `>&file`. Use `>file 2>&1` so ordering is visible.
-- Do not use `cmd |& other`. Use `cmd 2>&1 | other`.
-- Do not close standard file descriptors as a shortcut for `/dev/null`.
-- Do not read from and write to the same file in a pipeline.
-- Use temp files plus atomic rename for file replacement.
-- Do not rely on parallel `xargs` jobs writing ordered, unmixed output.
-- Do not use `cmd; (( ! $? )) || die`; check the command directly or capture
-  the status in a named variable.
-
-Redirect both stdout and stderr:
-
-```bash
-some_command >>"${log_file}" 2>&1
-```
-
-Check pipeline statuses:
+Know whether each command consumes all its input before enabling `pipefail`, and read
+`PIPESTATUS` immediately when individual statuses matter. Order redirections so the intent is
+visible, `>file 2>&1`, and never close a standard descriptor as a shortcut for `/dev/null`. A
+pipeline never reads from and writes to the same file; a file is rewritten through a
+temporary file and an atomic rename. Parallel `xargs` jobs do not produce ordered, unmixed
+output: write per-job files and combine them, or use a tool that serializes. Check a command
+directly or capture its status in a named variable rather than `(( ! $? )) || die`.
 
 ```bash
 tar -cf - ./* | (cd -- "${target_dir}" && tar -xf -)
 statuses=( "${PIPESTATUS[@]}" )
-
 if (( statuses[0] != 0 || statuses[1] != 0 )); then
   printf 'error: tar copy failed\n' >&2
   return 1
 fi
-```
 
-Safe file rewrite:
-
-```bash
 tmp_file="$(mktemp "${file}.XXXXXX")" || return 1
 sed 's/foo/bar/g' "${file}" >"${tmp_file}" || {
   rm -f -- "${tmp_file}"
@@ -606,16 +245,3 @@ sed 's/foo/bar/g' "${file}" >"${tmp_file}" || {
 }
 mv -- "${tmp_file}" "${file}"
 ```
-
-Command status with cases:
-
-```bash
-if command_may_fail; then
-  handle_success
-else
-  statusCode=$?
-  handle_failure "${statusCode}"
-fi
-```
-
-When jobs run in parallel, write per-job output to separate files and combine them after every job completes, or use a tool that serializes output.

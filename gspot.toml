@@ -55,57 +55,24 @@ tool = "mise"
 [[tools.docs.paths_allowed]]
 patterns = [
     ".github/workflows/gspot.yml",
-    ".gspot/config/basedpyrightconfig.json",
-    ".gspot/config/hadolint.yaml",
-    ".gspot/config/html-validate-built.json",
-    ".gspot/config/html-validate-templates.json",
-    ".gspot/config/periphery.yml",
-    ".gspot/config/ruff.toml",
-    ".gspot/config/semgrep/workers.yml",
-    ".gspot/config/spectral.yaml",
-    ".gspot/config/sqlfluff.cfg",
-    ".gspot/config/squawk.toml",
-    ".gspot/config/stylelint.json",
-    ".gspot/config/swiftformat",
-    ".gspot/config/swiftlint.yml",
-    ".gspot/config/trivy.yaml",
     ".gspot/node_modules",
     ".gspot/node_modules/.bin",
     ".gspot/guides/framework/nextjs/NEXTJS.md",
     ".gspot/guides/framework/react/REACT.md",
     ".gspot/guides/library/zod/ZOD.md",
-    "docs/dist",
     "packages/cli/.build",
-    "packages/cli/scripts/configuration-process.js",
 ]
 reason = "These documented paths are ignored build or installation outputs, exact embedded asset identities, or outputs of optional consumer configurations. Their source manifests and build owners define them. Remove an entry when its output contract or documentation is removed."
 
 [[tools.docs.paths_allowed]]
 patterns = [
-    "../../adoption/rules.mjs",
-    "../cart/b",
-    "../outside-rules",
-    "../run/private/router.js",
-    "../user/b",
-    "api/src/a.ts",
-    "api/src/routes/turn.ts",
     "api/types/supabase.ts",
-    "features/cart/a.ts",
     "functions/_middleware.js",
-    "functions/_worker.js",
-    "hooks/use-thing.ts",
-    "plugin.cjs",
-    "private/router.js",
-    "private/router.ts",
-    "processing.mjs",
-    "rules.mjs",
     "src/app/api/checkout/route.ts",
     "src/settings.py",
     "scripts/list-archive.sh",
     "supabase/scripts/migrations.ts",
-    "supabase/seed.sql",
     "turn",
-    "typecheck/trt.json",
     "utils/common.ts",
 ]
 reason = "Architecture examples, documentation walkthroughs, and regression records use these exact consumer paths, deliberately invalid imports, and sandbox module names. They are not tracked checkout claims. Remove an entry when its example or regression record is removed."
@@ -123,7 +90,13 @@ patterns = ["packages/cli/guides/**"]
 reason = "The rule corpus is generic text installed into other repositories; it names nothing in this one."
 
 [[tools.docs.paths_allowed]]
-patterns = [".github/copilot-instructions.md", ".cursor", ".cursor/rules/gspot.mdc", ".husky", ".gitlab/ci/gspot.yml"]
+patterns = [
+    ".github/copilot-instructions.md",
+    ".cursor",
+    ".cursor/rules/gspot.mdc",
+    ".husky",
+    ".gitlab/ci/gspot.yml",
+]
 reason = "These documented integration destinations belong to consumer repositories. Their presence depends on the selected agent, hook, or CI integration."
 
 [[tools.docs.paths_allowed]]

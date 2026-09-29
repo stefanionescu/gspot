@@ -136,7 +136,9 @@ fixes (TOML keys, a JSON API, a generated type). It is exempt from the case chec
 ## Per-language tables
 
 These are the defaults for `[naming.<language>]`; a repository changes them per language and
-per category (see Extension below).
+per category (see Extension below). Where the tool of a language checks case and the template
+turns it on (TypeScript, Python, Swift, CSS), the engine leaves case to the tool. It keeps the
+ceilings, the digit and word rules, and the categories the tool does not cover.
 
 | Language   | Files                                       | Directories  | Types                                                     | Functions                  | Parameters | Variables                      | Properties                      | Other                                                       | Max chars | Max words |
 | ---------- | ------------------------------------------- | ------------ | --------------------------------------------------------- | -------------------------- | ---------- | ------------------------------ | ------------------------------- | ----------------------------------------------------------- | --------- | --------- |
@@ -158,9 +160,6 @@ snake           ^[a-z]+(?:_[a-z]+)*$
 upper-snake     ^[A-Z]+(?:_[A-Z]+)*$
 snake-migration ^\d{14}_[a-z]+(?:_[a-z]+)*\.sql$
 ```
-
-Digits are excluded from every pattern on purpose; the digit ban reports them with its own
-message.
 
 Acronyms follow the language, and the splitter knows which convention it is reading:
 
@@ -206,31 +205,17 @@ categories = ["directories"]
 names      = ["e2e"]
 allow_digits = true
 
-[[naming.rules]]
-paths      = ["supabase/src/data/**"]
-categories = ["directories"]
-names      = ["data"]
-exclude    = true
-reason     = "The Supabase CLI names this directory."
-
-[[naming.rules]]
-paths      = ["config/**/*.py"]
-categories = ["constants"]
-structural_prefix = "^(?:TRT|OTEL|WS|HF)_"
 ```
 
 A rule narrows by paths, languages and categories, and does one of: exclude the named names,
 allow digits, allow duplicate words, strip a structural prefix, or set the case list. Every
 exclusion carries a reason.
 
-The shipped policy carries the rules every repository needs:
-
-- `_` and single letters `i j k x y` excluded in loop and lambda positions;
-- `__init__` and `__main__` excluded as Python file names;
-- `.githooks` and `.mise` excluded as directory names;
-- a leading underscore stripped as a structural prefix for private Python and Bash names;
-- the same for the unused TypeScript and JavaScript parameters and variables ESLint asks to be marked that way;
-- `pre` accepted as a shared prefix in hook directories;
+The shipped policy carries the rules every repository needs. `_` and single letters are
+excluded in loop and lambda positions. `__init__` and `__main__` are excluded as Python file
+names, and `.githooks` and `.mise` as directory names. A leading underscore is stripped as a
+structural prefix for private Python and Bash names, and for the unused parameters ESLint asks
+to be marked that way. `pre` is accepted as a shared prefix in hook directories.
 
 ## Matching
 
@@ -310,5 +295,3 @@ The Vale `gspot` style bans the words of the `marketing` and `defensive` groups 
 comment cannot say what an identifier cannot say. The style holds its own lists under
 `packages/cli/kits/general/prose/styles/gspot/`, and a unit test holds each list equal to its group of
 `packages/cli/kits/general/naming/policy.json`.
-
-Names follow their behavioral owners. Do not require top-level `config` or `types` buckets, forwarding modules, or source/test directory symmetry. Rename consumers directly without aliases.
