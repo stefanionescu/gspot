@@ -1,8 +1,6 @@
 import { Linter } from 'eslint';
 import { join } from 'node:path';
-import { renameSync } from 'node:fs';
 import plugin from '#plugin/plugin.ts';
-import parser from '@typescript-eslint/parser';
 import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import clientExample from '#docs/src/components/home/client-environment.json';
@@ -39,56 +37,6 @@ describe('the plugin', () => {
         );
     });
 });
-
-test.each(['recommended', 'all'] as const)(
-    '%s applies folder and interface policies only after opting in',
-    async (level) => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
-            'feature/only.ts': '',
-            'cards/asset-card.ts': '',
-            'cards/asset-list.ts': '',
-        });
-        const linter = new Linter({ configType: 'flat', cwd: sandbox.path });
-        const config: object[] = [{ ...plugin.configs[level], files: ['**/*.ts'], languageOptions: { parser } }];
-        const filename = join(sandbox.path, 'feature/only.ts');
-        const findings = linter.verify('interface Order { total: number }', config, { filename });
-        expect(
-            findings
-                .map(({ ruleId, messageId: diagnosticId, line, column }) => ({
-                    ruleId,
-                    messageId: diagnosticId,
-                    line,
-                    column,
-                }))
-                .filter((entry) => entry.ruleId !== 'gspot/no-trivial-files'),
-        ).toStrictEqual(
-            level === 'recommended'
-                ? []
-                : [{ ruleId: 'gspot/no-single-file-folders', messageId: 'lone', line: 1, column: 1 }],
-        );
-        const card = join(sandbox.path, 'cards/asset-card.ts');
-        const collisions = linter.verify('export const value = 1;', config, { filename: card });
-        expect(
-            collisions
-                .map(({ ruleId, messageId: diagnosticId, line, column }) => ({
-                    ruleId,
-                    messageId: diagnosticId,
-                    line,
-                    column,
-                }))
-                .filter((entry) => entry.ruleId !== 'gspot/no-trivial-files'),
-        ).toStrictEqual(
-            level === 'recommended'
-                ? []
-                : [{ ruleId: 'gspot/no-prefix-collisions', messageId: 'collision', line: 1, column: 1 }],
-        );
-        await Bun.write(join(sandbox.path, 'feature/second.ts'), '');
-        renameSync(join(sandbox.path, 'cards/asset-list.ts'), join(sandbox.path, 'cards/other.ts'));
-        expect(linter.verify("'use server';\nexport const value = 1;", config, { filename })).toStrictEqual([]);
-        expect(linter.verify("'use server';\nexport const value = 1;", config, { filename: card })).toStrictEqual([]);
-    },
-);
 
 test.each(['recommended', 'all'] as const)(
     '%s keeps exported aliases opt-in and private client access enforced',

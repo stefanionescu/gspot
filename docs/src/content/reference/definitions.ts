@@ -110,6 +110,12 @@ export function kitPage(manifest: Manifest): ReferencePage {
     );
     const rules = Object.values(manifest.guides).flatMap((files) => files.map((file) => guideSelection(file)));
     const settings = manifest.settings.map((setting) => `\`${setting.name}\`: ${setting.summary}`);
+    const defaults = [
+        ...Object.entries(manifest.defaults).map(([name, value]) => `\`${name}\`: \`${JSON.stringify(value)}\``),
+        ...Object.entries(manifest.defaults_all).map(
+            ([name, value]) => `\`${name}\`: \`${JSON.stringify(value)}\` at level all`,
+        ),
+    ];
     const requires = configuration.requires.map((id) => `\`${id}\``).join(', ');
     const opening = [
         `${configuration.description}\n\nKind: ${configuration.kind}.`,
@@ -140,6 +146,7 @@ export function kitPage(manifest: Manifest): ReferencePage {
             ),
         ),
         section('Settings', settings.map((item) => `- ${item}`).join('\n')),
+        section('Defaults set for other kits', defaults.map((item) => `- ${item}`).join('\n')),
         section('Rule exclusions', ruleExclusions(manifest)),
         section('Rule files', rules.map((item) => `- ${item}`).join('\n')),
     ].join('');

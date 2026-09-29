@@ -254,6 +254,9 @@ export const manifestSchema = z.strictObject({
     configs: z.array(configSchema).default([]),
     checks: z.array(checkSchema).default([]),
     settings: z.array(settingSchema).default([]),
+    // Defaults this kit sets for settings another kit declares, by setting name; `defaults_all` applies at level all.
+    defaults: z.record(z.string().min(1), z.unknown()).default({}),
+    defaults_all: z.record(z.string().min(1), z.unknown()).default({}),
     // The naming rules of the framework or platform, merged after the shipped policy and before the repository's own.
     naming: z.strictObject({ rules: z.array(manifestNamingRule).default([]) }).optional(),
     // Files a dead-code scan starts from, relative to the scope, for the code this configuration knows.

@@ -59,6 +59,20 @@ describe('the sql configuration', () => {
             commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['sqlfluff', 'typos', 'ec']) };
             await installAtLevel(sandbox.path, SQL_INIT, environment);
+            // Init deleted the authored ignore file, so the psql script is left out through the policy.
+            const excluded = await run(
+                sandbox.path,
+                [
+                    'set',
+                    'tools.sqlfluff.exclude',
+                    JSON.stringify({
+                        paths: ['db/report.sql'],
+                        reason: 'A script for psql, which the linter cannot read.',
+                    }),
+                ],
+                environment,
+            );
+            expect(excluded.code, excluded.stdout + excluded.stderr).toBe(0);
             const outcome = await runPlanted(sandbox.path, planted, environment);
             expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
             const failedReport = reportSchema.parse(

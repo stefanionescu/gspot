@@ -131,12 +131,10 @@ Executed findings establish coverage; a fixed number of plugin rules does not.
 The following plugin exports remain available. Generated CLI configuration may select the
 listed owner to avoid duplicate findings; standalone plugin coverage remains required.
 
-| Retained plugin rule                | Enforcement owner                      | Behavior retained                                                                                     |
-| ----------------------------------- | -------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| `gspot/no-duplicate-barrel-exports` | `import-x/export`                      | Duplicate exported names, including local declarations and nested star exports                        |
-| `gspot/no-reexports-outside-index`  | `gspot/no-reexports` with `allowIndex` | Re-exports outside index files when the policy permits index barrels                                  |
-| `gspot/no-single-file-folders`      | `structure/single-file-folder`         | Leaf folders holding one code file across Swift, JavaScript, TypeScript, Python, and framework source |
-| `gspot/no-prefix-collisions`        | `structure/prefix-collisions`          | Files sharing a name prefix, with the configured threshold and allowances                             |
+| Retained plugin rule                | Enforcement owner                      | Behavior retained                                                              |
+| ----------------------------------- | -------------------------------------- | ------------------------------------------------------------------------------ |
+| `gspot/no-duplicate-barrel-exports` | `import-x/export`                      | Duplicate exported names, including local declarations and nested star exports |
+| `gspot/no-reexports-outside-index`  | `gspot/no-reexports` with `allowIndex` | Re-exports outside index files when the policy permits index barrels           |
 
 | Rule                                   | Reports                                                                                                                                                                                                                                         |
 | -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -348,8 +346,7 @@ finding.
 
 ### Acceptance K-102
 
-Preserve `no-trivial-functions`, `no-single-file-folders`,
-`no-prefix-collisions`, `no-duplicate-barrel-exports`, `no-reexports-outside-index`, and interface
+Preserve `no-trivial-functions`, `no-duplicate-barrel-exports`, `no-reexports-outside-index`, and interface
 enforcement in `types-placement`, with their public options. Retain the improved
 `no-trivial-functions` handling of every implemented function, nested statements, and expression bodies.
 Both levels enable trivial-function and trivial-file enforcement. Select one diagnostic owner for each equivalent rule; alternate exports remain usable.

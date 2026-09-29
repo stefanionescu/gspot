@@ -121,6 +121,17 @@ function assertReferences(manifest: Manifest, checks: Checks, owners: Map<string
     }
 }
 
+// Refuses a default for a setting no kit declares, or one the kit declares itself.
+function assertDefaultsDeclared(manifest: Manifest, settings: Settings): void {
+    const own = new Set(manifest.settings.map((spec) => spec.name));
+    for (const name of [...Object.keys(manifest.defaults), ...Object.keys(manifest.defaults_all)]) {
+        if (!settings.has(name))
+            throw manifestError(manifest.kit.name, [`[defaults] names ${name}, a setting no kit declares.`]);
+        if (own.has(name))
+            throw manifestError(manifest.kit.name, [`[defaults] names ${name}, which this kit declares itself.`]);
+    }
+}
+
 // Refuses a chain of replacements that returns to a check it already passed.
 function assertNoReplacementCycle(manifest: Manifest, check: Manifest['checks'][number], checks: Checks): void {
     const chain = [check.name];
@@ -242,6 +253,7 @@ export function validateManifests(manifests: Map<string, Manifest>): void {
         assertRequirementsExist(manifest, manifests);
         for (const tool of manifest.tools.filter((entry) => entry.provider !== 'host')) assertToolPin(manifest, tool);
         for (const check of manifest.checks) assertSettingWait(manifest, check, settings);
+        assertDefaultsDeclared(manifest, settings);
     }
     const owners = checkOwners(manifests);
     const checks: Checks = new Map(

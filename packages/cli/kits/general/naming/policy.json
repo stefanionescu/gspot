@@ -414,21 +414,6 @@
                 "type_aliases": {
                     "case": ["pascal"]
                 },
-                "classes": {
-                    "case": ["pascal"]
-                },
-                "exceptions": {
-                    "case": ["pascal"]
-                },
-                "functions": {
-                    "case": ["snake"]
-                },
-                "methods": {
-                    "case": ["snake"]
-                },
-                "parameters": {
-                    "case": ["snake"]
-                },
                 "variables": {
                     "case": ["snake", "upper-snake"]
                 },
@@ -454,31 +439,10 @@
                 "directories": {
                     "case": ["pascal"]
                 },
-                "types": {
-                    "case": ["pascal"]
-                },
-                "classes": {
-                    "case": ["pascal"]
-                },
                 "functions": {
                     "case": ["camel"]
                 },
                 "methods": {
-                    "case": ["camel"]
-                },
-                "parameters": {
-                    "case": ["camel"]
-                },
-                "variables": {
-                    "case": ["camel"]
-                },
-                "constants": {
-                    "case": ["camel"]
-                },
-                "properties": {
-                    "case": ["camel"]
-                },
-                "enum_cases": {
                     "case": ["camel"]
                 }
             }

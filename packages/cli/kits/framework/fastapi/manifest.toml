@@ -84,14 +84,9 @@ direction = "neutral"
 default = ""
 summary = "The command that writes the OpenAPI document from the code."
 
-[[settings]]
-name = "tools.ruff.select"
-kind = "list"
-direction = "tightening"
-default = ["FAST001", "FAST002", "FAST003"]
-default_all = ["FAST001", "FAST002", "FAST003"]
-summary = "Rule families and rules Ruff selects on top of the level's set, such as the ones a framework adds."
-
 [guides]
 framework = [{path = "framework/fastapi/FASTAPI.md"}, {path = "framework/fastapi/RUNTIME.md"}]
 shared = [{path = "shared/http/HTTP.md"}]
+
+[defaults]
+"tools.ruff.select" = ["FAST001", "FAST002", "FAST003"]

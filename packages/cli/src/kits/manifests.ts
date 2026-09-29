@@ -109,6 +109,8 @@ export function parseManifest(text: string, dir: string): Manifest {
         configs: raw.configs,
         checks: raw.checks.map((check) => toCheck(check)),
         settings: raw.settings.map((setting) => compact(setting)),
+        defaults: raw.defaults,
+        defaults_all: raw.defaults_all,
         entry_files: raw.entry_files,
         naming: raw.naming,
         coverage: raw.coverage,

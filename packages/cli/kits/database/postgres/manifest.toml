@@ -145,13 +145,6 @@ why = "A migration is read years later by someone deciding whether a table can g
 help = "Write the header, put each statement under its section, and label tables and functions with their purpose."
 
 [[settings]]
-name = "tools.sqlfluff.dialect"
-kind = "string"
-direction = "neutral"
-default = "postgres"
-summary = "The sqlfluff dialect; a database kit sets it."
-
-[[settings]]
 name = "tools.squawk.assume_in_transaction"
 kind = "boolean"
 direction = "neutral"
@@ -195,3 +188,6 @@ summary = "The section names a documented migration may box."
 
 [guides]
 database = [{path = "database/postgres/POSTGRES.md"}]
+
+[defaults]
+"tools.sqlfluff.dialect" = "postgres"

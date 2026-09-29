@@ -45,6 +45,3 @@ export const INDEX_BASENAMES = new Set([
 ]);
 export const STDIN_NAMES = new Set(['', '<input>', '<text>']);
 export const FILE_SCHEME = 'file://';
-export const DECLARATION_SUFFIX = '.d.ts';
-/** The extensions of code files the rules look at. */
-export const CODE_EXTENSIONS = ['.ts', '.tsx', '.mts', '.cts', '.js', '.jsx', '.mjs', '.cjs', '.vue', '.svelte'];

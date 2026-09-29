@@ -118,6 +118,7 @@ export const STRUCTURE_INIT = [
     '--yes',
     '--kits',
     'bash',
+    'javascript',
     '--runner',
     'npm',
     '--no-ci',

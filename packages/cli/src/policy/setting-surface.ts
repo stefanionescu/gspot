@@ -1,4 +1,5 @@
-// Settings exposed by gspot and selected manifests. Later kits override defaults.
+// Settings exposed by gspot and selected manifests. Later kits override defaults, through their own settings or
+// through a [defaults] table for settings another kit declares.
 import * as messages from '#cli/policy/messages.ts';
 import { mergeValue } from '#cli/policy/settings.ts';
 import type { Manifest, SettingSpec } from '#cli/types/kits.ts';
@@ -29,6 +30,27 @@ function addDefault(surface: ExposedSettings, manifest: Manifest, spec: SettingS
         value: isList ? mergeValue(spec, previous?.value, spec.default) : spec.default,
         kit: manifest.kit.name,
     });
+}
+
+// Adds one kit's settings and their defaults, then its [defaults] for settings other kits declare; those apply
+// only while such a kit is selected.
+function addManifest(surface: ExposedSettings, manifest: Manifest, level: 'recommended' | 'all'): void {
+    const isAll = level === 'all';
+    for (const declared of manifest.settings) {
+        const spec =
+            isAll && declared.default_all !== undefined ? { ...declared, default: declared.default_all } : declared;
+        if (!surface.specs.has(spec.name)) surface.specs.set(spec.name, spec);
+        addDefault(surface, manifest, spec);
+    }
+    const overrides = Object.entries({ ...manifest.defaults, ...(isAll ? manifest.defaults_all : {}) });
+    for (const [name, value] of overrides) addOverride(surface, manifest, name, value);
+}
+
+// One [defaults] entry, applied when a selected kit declares the setting it names.
+function addOverride(surface: ExposedSettings, manifest: Manifest, name: string, value: unknown): void {
+    const spec = surface.specs.get(name);
+    if (spec === undefined) return;
+    addDefault(surface, manifest, { ...spec, default: value });
 }
 
 // The kind of a setting from the shape of its default.
@@ -64,16 +86,6 @@ export function exposedSettings(selected: Manifest[], level: 'recommended' | 'al
         surface.specs.set(spec.name, spec);
         surface.defaults.set(spec.name, { value: spec.default, kit: 'gspot' });
     }
-    for (const manifest of selected) {
-        const settings = manifest.settings.map((declared) => {
-            if (level === 'all' && declared.default_all !== undefined)
-                return { ...declared, default: declared.default_all };
-            return declared;
-        });
-        for (const spec of settings) {
-            if (!surface.specs.has(spec.name)) surface.specs.set(spec.name, spec);
-            addDefault(surface, manifest, spec);
-        }
-    }
+    for (const manifest of selected) addManifest(surface, manifest, level);
     return surface;
 }

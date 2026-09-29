@@ -141,13 +141,6 @@ why = "Stale types let code compile against a column the database dropped."
 help = "Run supabase gen types typescript --local and write the output to the file."
 
 [[settings]]
-name = "tools.squawk.assume_in_transaction"
-kind = "boolean"
-direction = "neutral"
-default = true
-summary = "Whether the migration runner wraps every migration in a transaction; the supabase configuration turns it on."
-
-[[settings]]
 name = "tools.supabase.types_file"
 kind = "string"
 direction = "neutral"
@@ -171,3 +164,6 @@ summary = "Paths relative to the scope that may name the service role key."
 [guides]
 platform = [{path = "platform/supabase/SUPABASE.md"}]
 runtime = [{path = "runtime/deno/DENO.md"}]
+
+[defaults]
+"tools.squawk.assume_in_transaction" = true

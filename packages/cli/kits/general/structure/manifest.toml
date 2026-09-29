@@ -390,27 +390,6 @@ default = 60
 summary = "The most lines one Swift closure may have."
 
 [[settings]]
-name = "limits.duplication.min_lines"
-kind = "number"
-direction = "ceiling"
-default = 8
-summary = "The fewest lines a copied block has before it counts."
-
-[[settings]]
-name = "limits.duplication.min_tokens"
-kind = "number"
-direction = "ceiling"
-default = 40
-summary = "The fewest tokens a copied block has before it counts."
-
-[[settings]]
-name = "limits.duplication.threshold_percent"
-kind = "number"
-direction = "ceiling"
-default = 4
-summary = "The largest share of duplicated lines the check accepts, as a number out of 100."
-
-[[settings]]
 name = "limits.docs.sentence_words"
 kind = "number"
 direction = "ceiling"

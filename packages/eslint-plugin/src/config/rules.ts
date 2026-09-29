@@ -40,7 +40,6 @@ export const WHITESPACE = /[\t\n\r ]/u;
 export const SPACES = /\s+/gu;
 
 // File discovery and import resolution.
-export const DEFAULT_IGNORED = ['node_modules', '.git'];
 export const DEFAULT_TEST = String.raw`\.(?:test|spec)\.[cm]?[jt]sx?$`;
 export const CODE_EXTENSION = /\.[cm]?[jt]sx?$/u;
 export const EXTENSIONS = ['.ts', '.tsx', '.mts', '.cts', '.js', '.jsx', '.mjs', '.cjs'];
@@ -53,7 +52,6 @@ export const DEFAULT_PATTERNS = [
 
 // Barrel size and trivial statement limits.
 export const DEFAULT_MAX = 20;
-export const DEFAULT_THRESHOLD = 2;
 
 /** The statement count at or under which a function is trivial, when no option is set. */
 export const DEFAULT_TRIVIAL_STATEMENTS = 2;

@@ -4,7 +4,7 @@ import { readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 import type { RuleContextOf, DirectoryEntry } from '#plugin/types/plugin.ts';
-import { FILE_SCHEME, STDIN_NAMES, INDEX_BASENAMES, DECLARATION_SUFFIX } from '#plugin/config/plugin.ts';
+import { FILE_SCHEME, STDIN_NAMES, INDEX_BASENAMES } from '#plugin/config/plugin.ts';
 
 const globCache = new Map<string, (path: string) => boolean>();
 
@@ -51,28 +51,6 @@ export function lintedRoot(context: RuleContextOf): string {
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: True for an index module. 6 files make 6 calls; one owner keeps that behavior in one place.
 export function isIndexFile(path: string): boolean {
     return INDEX_BASENAMES.has(posix.basename(normalizePath(path)));
-}
-
-/**
- * The base name without its extension; `.d.ts` counts as one extension.
- * @param path a file path
- * @returns the stem
- */
-export function stemOf(path: string): string {
-    const base = posix.basename(path);
-    if (base.endsWith(DECLARATION_SUFFIX)) return base.slice(0, -DECLARATION_SUFFIX.length);
-    const dot = base.lastIndexOf('.');
-    return dot <= 0 ? base : base.slice(0, dot);
-}
-
-/**
- * A grouping prefix: the stem up to its first dash or dot.
- * @param stem a file stem
- * @returns the prefix, or the whole stem when it has no dash or dot
- */
-export function prefixOf(stem: string): string {
-    const cuts = [stem.indexOf('-'), stem.indexOf('.')].filter((index) => index >= 0);
-    return cuts.length === 0 ? stem : stem.slice(0, Math.min(...cuts));
 }
 
 /**

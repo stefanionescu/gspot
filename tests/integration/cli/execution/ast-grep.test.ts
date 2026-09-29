@@ -20,7 +20,7 @@ test('ast-grep batches all file arguments and retains matches from every batch',
         'source.sh': 'echo example\n',
     });
     const session = await openSession(sandbox.path);
-    const [planned] = planRun(session, { stage: 'commit', skips: [], only: ['structure/bash-branches'] });
+    const [planned] = planRun(session, { stage: 'commit', skips: [], only: ['structure/bash-limits'] });
     const input = engineInput(session, planned!);
     const inspection = spyOn(inspections, 'inspectTool').mockReturnValue({
         name: 'ast-grep',
@@ -64,7 +64,7 @@ test.each(['fatal exit', 'deadline', 'cancellation', 'malformed JSON', 'invalid 
             'source.sh': 'echo example\n',
         });
         const session = await openSession(sandbox.path);
-        const [planned] = planRun(session, { stage: 'commit', skips: [], only: ['structure/bash-branches'] });
+        const [planned] = planRun(session, { stage: 'commit', skips: [], only: ['structure/bash-limits'] });
         const input = engineInput(session, planned!);
         const inspection = spyOn(inspections, 'inspectTool').mockReturnValue({
             name: 'ast-grep',

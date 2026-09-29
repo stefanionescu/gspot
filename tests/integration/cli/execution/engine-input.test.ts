@@ -17,7 +17,8 @@ test.each([
         language: 'python',
         path: 'source.py',
         structural: 'python/trivial-function',
-        defect: 'def BadName():\n    return 1\n',
+        // Ruff owns case now, so the naming defect is a name over the word ceiling.
+        defect: 'def read_source_entries_from_files_now():\n    return 1\n',
         corrected:
             'def read_entries(source):\n    text = source.read()\n    entries = text.splitlines()\n    return entries\n',
     },
@@ -25,7 +26,7 @@ test.each([
         language: 'swift',
         path: 'Source.swift',
         structural: 'swift/trivial-function',
-        defect: 'func Bad_Name() -> Int { 1 }\n',
+        defect: 'func readSourceEntriesFromFilesNow() -> Int { 1 }\n',
         corrected:
             'func readLines(_ source: String) -> [String] {\n    let trimmed = source.trimmingCharacters(in: .whitespaces)\n    let lines = trimmed.components(separatedBy: "\\n")\n    return lines\n}\n',
     },

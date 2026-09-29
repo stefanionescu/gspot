@@ -115,7 +115,7 @@ kind = "list"
 direction = "loosening"
 languages = ["typescript", "javascript", "python", "swift", "bash", "sql"]
 categories = ["files", "directories", "types", "functions", "parameters", "variables", "properties"]
-summary = "The case patterns one identifier category accepts: camel, pascal, kebab, snake, upper-snake, pascal-plus."
+summary = "The case patterns one identifier category accepts: camel, pascal, kebab, snake, upper-snake, pascal-plus. Ruff owns the case of Python classes, functions, and parameters, and SwiftLint owns Swift types, variables, parameters, and enum cases; the policy governs every other category."
 
 [[settings]]
 name = "naming.swift.max_chars"

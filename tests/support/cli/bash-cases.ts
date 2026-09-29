@@ -121,12 +121,12 @@ export const BASH_CASES: FindingCase[] = [
         expected: { file: 'scripts/forward.sh', rule: 'trivial-function', line: 9 },
     },
     {
-        check: 'structure/file-length',
+        check: 'structure/bash-limits',
         files: { 'scripts/long.sh': `${HEAD}${LONG_FILE}\n\n${BASH_CASES_MAIN}` },
         expected: { file: 'scripts/long.sh', rule: 'file-lines', line: 1 },
     },
     {
-        check: 'structure/function-length',
+        check: 'structure/bash-limits',
         files: {
             'scripts/tall.sh': `${HEAD}# main: runs the script.\nmain() {\n    echo "$1"\n${LONG_BODY}\n}\n\nmain "$@"\n`,
         },
@@ -187,17 +187,17 @@ export const BASH_CASES: FindingCase[] = [
         expected: { file: 'scripts/reader.sh', rule: 'read-outside-owner', line: 10 },
     },
     {
-        check: 'structure/bash-branches',
+        check: 'structure/bash-limits',
         files: { 'scripts/branchy.sh': `${HEAD}# main: runs the script.\nmain() {\n${BRANCHES}\n}\n\nmain "$@"\n` },
         expected: { file: 'scripts/branchy.sh', rule: 'function-branches', line: 9 },
     },
     {
-        check: 'structure/bash-nesting',
+        check: 'structure/bash-limits',
         files: { 'scripts/deep.sh': `${HEAD}# main: runs the script.\nmain() {\n${NESTED}\n}\n\nmain "$@"\n` },
         expected: { file: 'scripts/deep.sh', rule: 'function-nesting', line: 9 },
     },
     {
-        check: 'structure/bash-mutable-assignments',
+        check: 'structure/bash-limits',
         files: {
             'scripts/mutable.sh': `${HEAD}# main: runs the script.\nmain() {\n    local total="$1"\n${ASSIGNMENTS}\n    echo "\${total}"\n}\n\nmain "$@"\n`,
         },

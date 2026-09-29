@@ -94,13 +94,6 @@ summary = "Checks that every tsconfig still turns on the strict options the conf
 why = "One tsconfig that drops strict lets untyped code back in for that whole scope."
 help = "Enable the reported compiler option in the authored TypeScript configuration."
 
-[[settings]]
-name = "tools.eslint.script_languages"
-kind = "list"
-direction = "neutral"
-default = ["ts"]
-summary = "The languages a component script block declares; empty means plain JavaScript."
-
 [coverage]
 ".ts" = ["format", "syntax", "style", "types", "structure", "naming", "prose", "spelling"]
 ".tsx" = ["format", "syntax", "style", "types", "structure", "naming", "prose", "spelling"]
@@ -113,3 +106,6 @@ language = [{path = "language/TYPESCRIPT.md"}, {path = "language/naming/TYPESCRI
 [required_rules]
 ts = ["eqeqeq", "max-lines", "sonarjs/cognitive-complexity", "gspot/private-before-public", "@typescript-eslint/no-explicit-any", "@typescript-eslint/no-floating-promises"]
 tsx = ["eqeqeq", "@typescript-eslint/no-explicit-any", "@typescript-eslint/no-floating-promises"]
+
+[defaults]
+"tools.eslint.script_languages" = ["ts"]

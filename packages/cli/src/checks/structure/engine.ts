@@ -25,13 +25,19 @@ import { scriptSourceOrder, scriptSourceComments } from '#cli/checks/structure/s
 import { scriptGuards, scriptConfigDefaults } from '#cli/checks/structure/scripts/configuration.ts';
 import { SCRIPT_TAG, COUNT_ANALYSES, GSPOT_DIRECTORY, DOCUMENT_EXTENSIONS } from '#cli/config/checks/structure.ts';
 
+// Every size ceiling of a shell script in one pass: file and function lines, then the ast-grep counts.
+const bashLimits: StructureAnalysis = async (context, scripts) => {
+    const index = await scripts();
+    const counted = await Promise.all([...COUNT_ANALYSES].map((analysis) => countFindings(analysis, context, index)));
+    return [...(await fileLength(context, scripts)), ...(await functionLength(context, scripts)), ...counted.flat()];
+};
+
 const ANALYSES: Record<string, StructureAnalysis> = {
     'single-file-folder': singleFileFolder,
     'prefix-collisions': prefixCollisions,
     'file-directory-collision': fileDirectoryCollision,
     'folder-names': folderNames,
-    'file-length': fileLength,
-    'function-length': functionLength,
+    'bash-limits': bashLimits,
     'doc-comment': docComment,
     'duplicate-functions': duplicateFunctions,
     'unused-functions': unusedFunctions,
@@ -84,10 +90,7 @@ function contextFor(input: EngineInput): StructureContext {
  */
 export function structureEngine(spec: CheckSpec): Engine {
     const name = spec.analysis ?? '';
-    const analysis: StructureAnalysis | undefined = COUNT_ANALYSES.has(name)
-        ? // eslint-disable-next-line gspot/no-trivial-functions -- reason: The count analyses share one adapter, and the ternary needs a function value for it.
-          async (context, scripts) => countFindings(name, context, await scripts())
-        : ANALYSES[name];
+    const analysis: StructureAnalysis | undefined = ANALYSES[name];
     if (analysis === undefined) throw new Error(`No structure analysis is called ${name}.`);
     return async (input) => {
         const context = contextFor(input);

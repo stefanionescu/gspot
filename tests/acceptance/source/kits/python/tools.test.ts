@@ -159,7 +159,7 @@ test.each(CASES)(
 );
 
 test(
-    'the python configuration > init preserves unsupported Pyright settings and carries exclusions after correction',
+    'the python configuration > init replaces an authored Pyright configuration with the pointer, and the check reports the type error',
     async () => {
         const typed = `${TOOLS_CLEAN}\n\nTOTAL: int = "three"\n`;
         await using sandbox = await testdir();
@@ -173,19 +173,13 @@ test(
         });
         commitAll(sandbox.path);
         const environment = { PATH: toolsPath(['ruff', 'basedpyright', 'typos', 'ec']) };
-        const refusedInit = await run(sandbox.path, STRUCTURE_INIT, environment);
-        expect(refusedInit.code, refusedInit.stdout + refusedInit.stderr).toBe(2);
-        expect(refusedInit.stdout + refusedInit.stderr).toContain('typeCheckingMode');
-        expect(await Bun.file(`${sandbox.path}/pyrightconfig.json`).text()).toContain('"basic"');
-        expect(await Bun.file(`${sandbox.path}/gspot.toml`).exists()).toBe(false);
-        await Bun.write(`${sandbox.path}/pyrightconfig.json`, '{"exclude":[".venv","planted/skipped.py"]}\n');
-        await install(sandbox.path, [...STRUCTURE_INIT, '--allow-dirty'], environment);
+        await install(sandbox.path, STRUCTURE_INIT, environment);
+        // The authored file is gone; the pointer stands in its place, and the policy carries none of its settings.
         const pointer = await Bun.file(`${sandbox.path}/pyrightconfig.json`).text();
         expect(pointer).toContain('"extends": "./.gspot/config/basedpyrightconfig.json"');
         expect(pointer).not.toContain('basic');
         const policy = await Bun.file(`${sandbox.path}/gspot.toml`).text();
-        expect(policy).toContain('planted/skipped.py');
-        expect(policy).toContain('.venv');
+        expect(policy).not.toContain('planted/skipped.py');
         const command = ['check', '--only', 'python/basedpyright', '--no-cache', '--json'];
         const refused = await run(sandbox.path, command, environment);
         expect(refused.code, refused.stdout + refused.stderr).toBe(1);

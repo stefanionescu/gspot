@@ -19,7 +19,7 @@ function relative(input: EngineInput, build: SiteBuild, absolute: string): strin
 
 async function brokenLinks(input: EngineInput, isExternal: boolean): Promise<Finding[]> {
     const build = await requireSiteBuild(input);
-    const skipped = ((input.view.tool('linkinator')['skip'] as { pattern?: string }[] | undefined) ?? []).flatMap(
+    const skipped = ((input.view.tool('linkinator')['exclude'] as { pattern?: string }[] | undefined) ?? []).flatMap(
         (entry) => (entry.pattern === undefined ? [] : [entry.pattern]),
     );
     const skips = [

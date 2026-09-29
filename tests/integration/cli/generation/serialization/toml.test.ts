@@ -96,7 +96,7 @@ test('TOML tool configurations round-trip dynamic strings and option keys', asyn
             kits: ['secrets', 'dependencies', 'files', 'docs', 'python', 'postgres'],
             format: { indent_style: 'tab' },
             tools: {
-                gitleaks: { allow: [{ description: text, paths: [path], regexes: [text], reason }] },
+                gitleaks: { allowed: [{ description: text, paths: [path], regexes: [text], reason }] },
                 osv: { ignore: [{ id: text, reason, review_by: '2026-09-20' }] },
                 taplo: { rules: { [option]: text, column_width: 88 } },
                 lychee: { exclude: [{ patterns: [text], reason }] },

@@ -68,14 +68,16 @@ test('conflicting setting definitions stop reference generation', () => {
     }
 });
 
-test('configuration-specific defaults retain distinct values and their owning configurations', () => {
-    const rows = referencePages()
+test('a setting has one owner, and a kit that sets its default says so on its own page', () => {
+    const pages = referencePages();
+    const rows = pages
         .get('settings.md')!
         .body.split('\n')
         .filter((line) => line.includes('`tools.sqlfluff.dialect`'));
-    expect(rows).toHaveLength(2);
-    expect(rows.find((line) => line.includes('`"ansi"`'))).toContain('/reference/kits/sql/');
-    expect(rows.find((line) => line.includes('`"postgres"`'))).toContain('/reference/kits/postgres/');
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toContain('`"ansi"`');
+    expect(rows[0]).toContain('/reference/kits/sql/');
+    expect(pages.get('kits/postgres.md')!.body).toContain('`tools.sqlfluff.dialect`: `"postgres"`');
 });
 
 test('generated source links resolve to their actual owner and display the current product version', () => {

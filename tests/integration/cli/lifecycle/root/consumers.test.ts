@@ -48,7 +48,7 @@ test('structural rule caching bounds writes and preserves later rule edits', asy
     const root = join(directory.path, 'project');
     const cache = join(root, '.gspot/cache');
     const session = await openSession(root);
-    const [planned] = planRun(session, { stage: 'commit', skips: [], only: ['structure/bash-branches'] });
+    const [planned] = planRun(session, { stage: 'commit', skips: [], only: ['structure/bash-limits'] });
     const input = engineInput(session, planned!);
     symlinkSync('../../outside', cache);
     expect(

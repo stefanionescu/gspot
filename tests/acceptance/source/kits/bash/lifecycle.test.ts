@@ -134,16 +134,14 @@ test(
         expect(check.stdout).toContain('shellcheck 0.11.0 is not installed');
         const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
         expect(selected.code, selected.stdout + selected.stderr).toBe(0);
-        for (const name of ['bash-branches', 'bash-nesting', 'bash-mutable-assignments']) {
-            const missing = await run(sandbox.path, ['check', '--only', `structure/${name}`, '--no-cache'], {
-                PATH: bin,
-                HOME: join(sandbox.path, 'home'),
-                MISE_DATA_DIR: join(sandbox.path, 'home', 'mise'),
-            });
-            expect(missing.code).toBe(2);
-            expect(missing.stdout).toContain('missing');
-            expect(missing.stdout).toContain('Run: gspot install');
-        }
+        const missing = await run(sandbox.path, ['check', '--only', 'structure/bash-limits', '--no-cache'], {
+            PATH: bin,
+            HOME: join(sandbox.path, 'home'),
+            MISE_DATA_DIR: join(sandbox.path, 'home', 'mise'),
+        });
+        expect(missing.code).toBe(2);
+        expect(missing.stdout).toContain('missing');
+        expect(missing.stdout).toContain('Run: gspot install');
         const available = await run(sandbox.path, ['check', '--only', 'bash/shellcheck', '--no-cache', '--json']);
         expect(available.code, available.stdout + available.stderr).toBe(0);
         expect(reportSchema.parse(JSON.parse(available.stdout)).checks).toMatchObject([

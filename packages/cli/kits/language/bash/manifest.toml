@@ -285,34 +285,18 @@ help = "Inline unnecessary functions. Required external APIs need a narrow suppr
 
 
 [[checks]]
-name = "structure/file-length"
-title = "File length"
-example = "A script whose code-line count exceeds `limits.bash.file_lines` reports the measured count and ceiling. Split independent responsibilities into their existing owners, update callers, and rerun with every resulting file below the ceiling."
+name = "structure/bash-limits"
+title = "Bash limits"
+example = "A script over `limits.bash.file_lines` reports `file-lines`; a function over `limits.bash.function_lines`, `limits.bash.function_branches`, `limits.bash.function_nesting`, or `limits.bash.mutable_assignments` reports the count and the ceiling under `function-lines`, `function-branches`, `function-nesting`, or `mutable-assignments`. Split the script or the function by the job, then rerun."
 level = "all"
 stage = "commit"
 engine = "structure"
-analysis = "file-length"
-limit = "limits.bash.file_lines"
+analysis = "bash-limits"
 coverage = ["structure"]
 searched = ["shellcheck", "shfmt"]
-summary = "Checks that no shell script has more code lines than the ceiling."
-why = "A long script holds more than one job; split it by the job."
-help = "Split the script, or raise limits.bash.file_lines with a reason."
-
-[[checks]]
-name = "structure/function-length"
-title = "Function length"
-example = "A shell function exceeding `limits.bash.function_lines` reports a length finding. Move an independent operation into its owning function and update the caller, then rerun to verify both function lengths."
-level = "all"
-stage = "commit"
-engine = "structure"
-analysis = "function-length"
-limit = "limits.bash.function_lines"
-coverage = ["structure"]
-searched = ["shellcheck", "shfmt"]
-summary = "Checks that no shell function has more code lines than the ceiling."
-why = "A long function does more than its name says."
-help = "Split the function, or raise limits.bash.function_lines with a reason."
+summary = "Checks every shell script and function against the size ceilings: code lines, branches, nesting, and reassignments."
+why = "A long script holds more than one job, and a function with many branches or reassignments is several functions with one name."
+help = "Split the script or the function, or raise the named limits.bash setting with a reason."
 
 [[checks]]
 name = "structure/bash-script-policy"
@@ -411,51 +395,6 @@ searched = ["shellcheck"]
 summary = "Checks that environment variables the owner declares are read elsewhere only through it."
 why = "When any script reads the environment, nobody can list what the program needs to run; one owner can."
 help = "Read the variable in the owner named under architecture.roles.env and pass the value in."
-
-[[checks]]
-name = "structure/bash-branches"
-title = "Bash branches"
-example = "A shell function with more decision branches than `limits.bash.function_branches` reports its count and ceiling. Separate independent decisions into their owning operations and rerun to verify the reduced branch count."
-level = "all"
-stage = "commit"
-engine = "structure"
-analysis = "bash-branches"
-limit = "limits.bash.function_branches"
-coverage = ["structure"]
-searched = ["shellcheck"]
-summary = "Counts the branches in each shell function against the ceiling."
-why = "A function with many branches is several functions with one name."
-help = "Split the function by branch, or raise limits.bash.function_branches with a reason."
-
-[[checks]]
-name = "structure/bash-nesting"
-title = "Bash nesting"
-example = "A shell function nested beyond `limits.bash.function_nesting` reports a nesting finding. Replace a surrounding conditional with an early return where behavior permits, then rerun to verify the depth."
-level = "all"
-stage = "commit"
-engine = "structure"
-analysis = "bash-nesting"
-limit = "limits.bash.function_nesting"
-coverage = ["structure"]
-searched = ["shellcheck"]
-summary = "Measures how deep control flow nests in each shell function against the ceiling."
-why = "Deep nesting is the shape of code nobody can hold in their head."
-help = "Return early or split the inner block into a function, or raise limits.bash.function_nesting with a reason."
-
-[[checks]]
-name = "structure/bash-mutable-assignments"
-title = "Bash mutable assignments"
-example = "Repeated writes to local variables beyond `limits.bash.mutable_assignments` report a mutation finding. Separate independent operations and retain only the state each operation needs, then rerun the check."
-level = "all"
-stage = "commit"
-engine = "structure"
-analysis = "bash-mutable-assignments"
-limit = "limits.bash.mutable_assignments"
-coverage = ["structure"]
-searched = ["shellcheck"]
-summary = "Counts the variable assignments in each shell function against the ceiling."
-why = "A function that reassigns many variables is tracking state a reader cannot follow."
-help = "Split the function, or raise limits.bash.mutable_assignments with a reason."
 
 [[checks]]
 name = "structure/bash-safety"

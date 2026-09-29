@@ -256,6 +256,13 @@ why = "Dead code is read, maintained, and shipped for nobody."
 help = "Delete what knip names, or add a knip entry point with gspot set tools.knip.entry if the file is loaded in a way knip cannot see."
 
 [[settings]]
+name = "tools.eslint.script_languages"
+kind = "list"
+direction = "neutral"
+default = []
+summary = "The languages a component script block declares; empty means plain JavaScript."
+
+[[settings]]
 name = "tools.eslint.rules"
 kind = "table"
 direction = "per-rule"
@@ -319,7 +326,7 @@ default = []
 summary = "Entry points knip starts from beyond the ones the framework kit declares."
 
 [[settings]]
-name = "tools.knip.ignore"
+name = "tools.knip.exclude"
 kind = "list"
 direction = "loosening"
 default = []

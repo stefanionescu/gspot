@@ -88,20 +88,6 @@ summary = "Runs svelte-check over the scope: the warnings of the Svelte compiler
 why = "The TypeScript compiler cannot read a component file, and the Svelte compiler warns about markup that no browser reports."
 help = "Read the warning or error svelte-check prints for the file and fix it there; a warning fails the check as an error does."
 
-[[settings]]
-name = "structure.single_file_folder_allowed"
-kind = "list"
-direction = "loosening"
-default = [{paths = ["src/routes/**"], reason = "SvelteKit names a route by its folder, and one page or layout file stands in it."}]
-summary = "Folders allowed to hold one file, by path, each with a reason."
-
-[[settings]]
-name = "tools.eslint.script_languages"
-kind = "list"
-direction = "neutral"
-default = []
-summary = "The languages a component script block declares; empty means plain JavaScript."
-
 [coverage]
 ".svelte" = ["format", "syntax", "style", "structure", "spelling"]
 
@@ -110,3 +96,6 @@ framework = [{path = "framework/svelte/SVELTE.md"}]
 
 [required_rules]
 svelte = ["svelte/no-at-html-tags", "svelte/require-each-key", "svelte/no-target-blank"]
+
+[defaults]
+"structure.single_file_folder_allowed" = [{paths = ["src/routes/**"], reason = "SvelteKit names a route by its folder, and one page or layout file stands in it."}]
