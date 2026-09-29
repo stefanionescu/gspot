@@ -1,8 +1,9 @@
 import { z } from 'zod';
 import ts from 'typescript';
+import { isBuiltin } from 'node:module';
 import { writeFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
-import { join, resolve } from 'node:path';
+import { join, dirname, resolve } from 'node:path';
 import { mutationPath } from '#cli/platform/safe-paths.ts';
 import type { eslintPreviewRequest, eslintPreviewResponse } from '#cli/native/protocol.ts';
 
@@ -11,8 +12,12 @@ function moduleSource(path: string, text: string): string {
     const transformed = ts.transform(source, [
         (context) => {
             const visit: ts.Visitor = (node) => {
-                if (ts.isImportDeclaration(node) && ts.isStringLiteral(node.moduleSpecifier)) {
-                    const target = import.meta.resolve(node.moduleSpecifier.text, pathToFileURL(path).href);
+                if (
+                    ts.isImportDeclaration(node) &&
+                    ts.isStringLiteral(node.moduleSpecifier) &&
+                    !isBuiltin(node.moduleSpecifier.text)
+                ) {
+                    const target = pathToFileURL(Bun.resolveSync(node.moduleSpecifier.text, dirname(path))).href;
                     return context.factory.updateImportDeclaration(
                         node,
                         node.modifiers,

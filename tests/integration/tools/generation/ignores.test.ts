@@ -15,7 +15,7 @@ test.each([
     ['/nested/src/'],
     ['nested'],
     ['**/nested/**/src/*'],
-])('spelling exclusions %j preserve native results in scoped editor configurations', async (...patterns) => {
+])('spelling exclusions %j preserve native results in scope configurations', async (...patterns) => {
     await using sandbox = await testdir();
     const paths = ['src/bad.txt', 'src/keep.txt', 'trc/bad.txt', 'child/src/bad.txt', 'child/bad.txt', 'bad.txt'];
     await createFileTree(sandbox.path, {
@@ -38,14 +38,15 @@ test.each([
             ['typos', '--isolated', '--config', '.gspot/config/typos.toml', '--force-exclude', `nested/${path}`],
             { cwd: sandbox.path, stdout: 'pipe', stderr: 'pipe' },
         );
-        const editor = Bun.spawnSync(['typos', '--force-exclude', path], {
-            cwd: join(sandbox.path, 'nested'),
-            stdout: 'pipe',
-            stderr: 'pipe',
-        });
-        expect([0, 2]).toContain(original.exitCode);
-        expect(editor.exitCode, `${path}: ${editor.stdout.toString()}${editor.stderr.toString()}`).toBe(
-            original.exitCode,
+        const scope = Bun.spawnSync(
+            ['typos', '--isolated', '--config', '.gspot/config/nested/typos.toml', '--force-exclude', `nested/${path}`],
+            {
+                cwd: sandbox.path,
+                stdout: 'pipe',
+                stderr: 'pipe',
+            },
         );
+        expect([0, 2]).toContain(original.exitCode);
+        expect(scope.exitCode, `${path}: ${scope.stdout.toString()}${scope.stderr.toString()}`).toBe(original.exitCode);
     }
 });

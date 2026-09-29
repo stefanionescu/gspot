@@ -9,14 +9,16 @@ import { initCommand } from '#cli/commands/init/command.ts';
 import { exportedProfile } from '#cli/policy/profiles/export.ts';
 import { planUninstall, applyUninstall } from '#cli/commands/uninstall.ts';
 
-test('profile tool settings survive adoption of another setting for the same tool', async () => {
+test('profile tool settings reach the generated configuration and uninstall restores the replaced file', async () => {
     await using directory = await testdir();
     const original = '[default]\nlocale = "en-gb"\n';
     const profile = exportedProfile(
         stringify({
             version: 1,
             kits: ['spelling'],
-            tools: { typos: { words: [{ word: TYPO.the, reason: 'A domain term used by the team.' }] } },
+            tools: {
+                typos: { locale: 'en-gb', words: [{ word: TYPO.the, reason: 'A domain term used by the team.' }] },
+            },
         }),
         'team.profile.toml',
     );

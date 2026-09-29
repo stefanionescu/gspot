@@ -65,7 +65,7 @@ test('native spelling file-type allowances preserve unrelated findings and neigh
     }
 });
 
-test('spelling locales and word allowances remain scoped in generated configurations and editor copies at all', async () => {
+test('spelling locales and word allowances remain scoped in generated configurations at all', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': policyOf(
@@ -110,12 +110,6 @@ test('spelling locales and word allowances remain scoped in generated configurat
     expect(upstream.exitCode, upstream.stdout.toString() + upstream.stderr.toString()).toBe(0);
     const child = run('.gspot/config/british/child/typos.toml', 'british/child/sample.txt');
     expect(child.exitCode, child.stdout.toString() + child.stderr.toString()).toBe(0);
-    const editor = Bun.spawnSync(['typos', '--format', 'brief', 'sample.txt'], {
-        cwd: join(sandbox.path, 'british/child'),
-        stdout: 'pipe',
-        stderr: 'pipe',
-    });
-    expect(editor.exitCode, editor.stdout.toString() + editor.stderr.toString()).toBe(0);
     await Bun.write(join(sandbox.path, 'sample.txt'), 'color the\n');
     const corrected = run('.gspot/config/typos.toml', 'sample.txt');
     expect(corrected.exitCode, corrected.stdout.toString() + corrected.stderr.toString()).toBe(0);

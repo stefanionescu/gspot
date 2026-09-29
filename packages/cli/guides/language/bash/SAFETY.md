@@ -39,11 +39,6 @@ require_command() {
     return 1
   fi
 }
-
-cmd=(diff -u -- "${left_file}" "${right_file}")
-"${cmd[@]}"
-
-bash -c 'printf "%s\n" "$1"' bash "${message}"
 ```
 
 ## Processes and privilege
@@ -195,7 +190,11 @@ printf '%s\n' "$$" >"${lock_dir}/pid" || {
   return 1
 }
 trap 'rm -rf "${lock_dir}"' EXIT
+```
 
+A cleanup path validated against its owner root:
+
+```bash
 # remove_build_dir - Removes the build child of the approved owner directory.
 remove_build_dir() {
   local owner_root build_dir

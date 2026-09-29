@@ -166,7 +166,9 @@ one-line native API or a small local helper.
 <!-- level: all -->
 
 Types and private helpers precede the exported functions that use them, so a reader meets
-each name before its use:
+each name before its use.
+
+Good:
 
 ```ts
 type OrderItem = {
@@ -192,7 +194,9 @@ function orderTotal(items: OrderItem[]): number {
  * @returns the signed difference between their totals.
  */
 export function compareOrders(left: Order, right: Order): number {
-    return orderTotal(left.items) - orderTotal(right.items);
+    const leftTotal = orderTotal(left.items);
+    const rightTotal = orderTotal(right.items);
+    return leftTotal - rightTotal;
 }
 ```
 
