@@ -99,6 +99,8 @@ const checkFields = z.strictObject({
     // true: the check reads git and is skipped in a folder with no .git; false: it stands in for one and runs only there.
     needs_git: z.boolean().optional(),
     requires: z.enum(['build', 'docker', 'network']).optional(),
+    // Tools the command starts through another name, such as the bash that runs Bats; each must be usable too.
+    requires_tools: z.array(z.string().min(1)).optional(),
     waits_for: z.string().optional(),
     platform: z.array(z.enum(['macos', 'linux', 'windows'])).optional(),
     tool: z.string().optional(),

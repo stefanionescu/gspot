@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 import { RUNS } from '#tests/inputs/cli.ts';
 import { test, spyOn, expect } from 'bun:test';
+import type { ToolPin } from '#cli/types/kits.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { inspectTool } from '#cli/tools/inspect.ts';
 import { openSession } from '#cli/execution/session.ts';
@@ -142,3 +143,26 @@ test.each([
         expect(state === 'ok' ? read.found : read.note).toContain(text);
     },
 );
+
+test.each([
+    ['3.2.57', 'outdated'],
+    ['5.2.0', 'host'],
+] as const)('a host bash that prints %s is %s against the 4.4 floor', async (version, state) => {
+    await using sandbox = await testdir();
+    const which = spyOn(Bun, 'which').mockReturnValue(process.execPath);
+    try {
+        const tool: ToolPin = {
+            name: 'bash',
+            kind: 'binary',
+            provider: 'host',
+            floor: '4.4',
+            installers: {},
+            version_command: ['-e', `console.log("GNU bash, version ${version}(1)-release")`],
+            version_regex: String.raw`version (\d+\.\d+(?:\.\d+)?)`,
+        };
+        const inspection = inspectTool({ root: sandbox.path, inspections: new Map() }, tool);
+        expect(inspection).toMatchObject({ state, found: version, floor: '4.4' });
+    } finally {
+        which.mockRestore();
+    }
+});

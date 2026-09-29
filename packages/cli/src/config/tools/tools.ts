@@ -28,7 +28,7 @@ export const HOST_HINTS: Record<string, string> = {
     plutil: 'install Xcode from the App Store',
     xcstringstool: 'install Xcode from the App Store',
     docker: 'install Docker Desktop or the docker engine',
-    bash: "install bash through your platform's package manager",
+    bash: 'install Bash 4.4 or newer, such as with brew install bash on macOS',
 };
 export const PLATFORM_INSTALLERS: { platform: NodeJS.Platform; installer: string; command: string }[] = [
     { platform: 'darwin', installer: 'brew', command: 'brew install' },

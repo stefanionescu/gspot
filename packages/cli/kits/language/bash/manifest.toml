@@ -41,6 +41,10 @@ github = {name = "mvdan/sh", version = "v3.12.0"}
 [[tools]]
 name = "bash"
 provider = "host"
+# The bash kit writes scripts for Bash 4.4 or newer, and Bats under Bash 3.2 passes files that do not parse.
+floor = "4.4"
+version_command = ["--version"]
+version_regex = "version (\\d+\\.\\d+(?:\\.\\d+)?)"
 
 [[tools]]
 name = "zsh"
@@ -100,6 +104,8 @@ level = "recommended"
 stage = "commit"
 runs = "per-file-list"
 command = ["bats", "--count", "{file}"]
+# Bats parses the file with the bash on PATH, and under Bash 3.2 it passes a file that does not parse.
+requires_tools = ["bash"]
 owners = {tags = ["bats"]}
 coverage = ["syntax"]
 output = {format = "regex", pattern = "^# (?<file>[^:]+): line (?<line>\\d+): (?<message>.*)$"}

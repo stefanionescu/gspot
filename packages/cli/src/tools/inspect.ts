@@ -87,12 +87,22 @@ function missingInspection(tool: ToolPin, hint: string): ToolInspection {
 }
 
 // The inspection of a host tool, or an unpinned one: present, with the version it prints when it has a version command.
+// A version below the floor the manifest names makes it outdated.
 function hostInspection(inspected: Inspected): ToolInspection {
     const { root, cwd, tool, path, hint } = inspected;
     if (tool.version_command === undefined) return { name: tool.name, state: 'host', path, hint };
     const read = versionOf(root, cwd, path, tool);
     if ('state' in read) return { name: tool.name, path, hint, ...read };
-    return { name: tool.name, state: 'host', path, hint, found: read.version };
+    if (tool.floor === undefined) return { name: tool.name, state: 'host', path, hint, found: read.version };
+    const isBelow = toolVersionState(read.version, read.version, tool.floor) === 'outdated';
+    return {
+        name: tool.name,
+        state: isBelow ? 'outdated' : 'host',
+        path,
+        hint,
+        found: read.version,
+        floor: tool.floor,
+    };
 }
 
 // The inspection of a pinned tool: its printed version against the pin and the floor.

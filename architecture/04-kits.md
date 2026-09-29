@@ -152,7 +152,8 @@ language = ["packages/cli/guides/language/TYPESCRIPT.md", "packages/cli/guides/l
   and names it. It takes `needs`, the kit whose generated files it reads. It takes `env`, a
   table of environment values that expand `{config:name}`.
 - A check takes `needs_git`. A kit takes it when every check reads Git, and `init` leaves that
-  kit out of a folder with no `.git`.
+  kit out of a folder with no `.git`. A check takes `requires_tools`, the tools its command
+  starts under another name, such as the bash that runs Bats. Each must pass its floor.
 - A command check is cached unless it takes `cached = false`; an analysis is not cached unless
   it takes `cached = true`. A check with `fix_command` names its `fix_order`. A check whose
   exit code does not reflect findings declares `count_regex`.

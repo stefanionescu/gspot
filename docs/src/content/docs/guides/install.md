@@ -93,6 +93,9 @@ Git must be on your `PATH`. gspot installs its npm and Python tools in a private
 installs the native tools, such as ShellCheck. Without mise, see
 [package managers](/guides/without-mise/).
 
+The `bash` kit needs Bash 4.4 or newer. macOS ships Bash 3.2, so install a newer one with
+`brew install bash`. With Bash 3.2, the bash checks report that Bash is too old.
+
 ## Builds for other systems
 
 `mise run build -- --all` builds every supported system:

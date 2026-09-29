@@ -180,7 +180,14 @@ function unrunnableResult(
 ): CheckResult | undefined {
     const tool = planned.tool;
     if (tool === undefined) return undefined;
-    return missingConfiguration(session, planned, command, base) ?? unavailableTool(base, tool, inspection);
+    const own = missingConfiguration(session, planned, command, base) ?? unavailableTool(base, tool, inspection);
+    if (own !== undefined) return own;
+    for (const name of planned.spec.requires_tools ?? []) {
+        const required = toolPin(session.manifests.values(), name);
+        const unavailable = unavailableTool(base, required, inspectTool(session, required));
+        if (unavailable !== undefined) return unavailable;
+    }
+    return undefined;
 }
 
 // The result of a check whose tool cannot run: the inspection failed, or the tool is missing or too old.
