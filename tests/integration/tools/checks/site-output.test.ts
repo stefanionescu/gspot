@@ -60,7 +60,7 @@ test.each([
     );
     writeFileSync(join(build.output, 'style.css'), '.unused { color: red; }');
     const command = spyOn(toolRunner, 'runCheckCommand').mockImplementation(async (_input, argv, options) =>
-        processes.run([join(import.meta.dir, '../../../../node_modules/.bin', argv[0]!), ...argv.slice(1)], {
+        processes.run([join(import.meta.dir, '../../../node_modules/.bin', argv[0]!), ...argv.slice(1)], {
             ...options,
             timeoutMs: 10_000,
         }),
