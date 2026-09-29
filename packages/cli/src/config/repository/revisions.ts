@@ -1,52 +1,5 @@
 // The literal values repository/revisions reads: names, patterns, limits, and tables.
 
-export const PARSE_TIMEOUT_MS = 30_000;
-export const EDITABLE_FINDER = /^(?:__editable__.*_finder|_editable_impl_.+)\.py$/u;
-// Only these installed bootstrap forms have relocation owners. Other executable path files require a separate installation.
-export const PYTHON_PATH_BOOTSTRAPS = [
-    /^import _virtualenv$/u,
-    /^import _editable_impl_\w+$/u,
-    /^import (__editable__\w+_finder); \1\.install\(\)$/u,
-];
-export const DISTUTILS_BOOTSTRAP =
-    "import os; var = 'SETUPTOOLS_USE_DISTUTILS'; enabled = os.environ.get(var, 'local') == 'local'; enabled and __import__('_distutils_hack').add_shim();";
-// Parse installed loader metadata without importing it or processing site packages.
-export const PYTHON_EDITABLE_PATHS = `import ast, json, sys
-source = sys.stdin.read()
-lines = source.encode("utf-8").splitlines(keepends=True)
-paths = []
-def add_path(entry):
-    if not isinstance(entry, ast.Constant) or not isinstance(entry.value, str):
-        raise ValueError("Editable paths must be literal strings")
-    paths.append({"start": sum(map(len, lines[:entry.lineno - 1])) + entry.col_offset,
-                  "end": sum(map(len, lines[:entry.end_lineno - 1])) + entry.end_col_offset,
-                  "path": entry.value})
-for statement in ast.parse(source).body:
-    if isinstance(statement, ast.Expr) and isinstance(statement.value, ast.Call):
-        call = statement.value
-        if isinstance(call.func, ast.Attribute) and isinstance(call.func.value, ast.Name) and call.func.value.id == "F" and call.func.attr == "map_module":
-            if len(call.args) != 2 or call.keywords:
-                raise ValueError("Editable module mappings must have two literal arguments")
-            add_path(call.args[1])
-        continue
-    if isinstance(statement, ast.AnnAssign):
-        targets = [statement.target]
-    elif isinstance(statement, ast.Assign):
-        targets = statement.targets
-    else:
-        continue
-    if not any(isinstance(target, ast.Name) and target.id in ("MAPPING", "NAMESPACES") for target in targets):
-        continue
-    value = statement.value
-    if not isinstance(value, ast.Dict):
-        raise ValueError("Editable path metadata must be a literal dictionary")
-    ast.literal_eval(value)
-    for item in value.values:
-        entries = item.elts if isinstance(item, (ast.List, ast.Tuple)) else [item]
-        for entry in entries:
-            add_path(entry)
-print(json.dumps(paths))
-`;
 export const MATERIALIZATION_BATCH_SIZE = 64;
 export const NEWLINE = 10;
 export const EXECUTABLE_MODE = 0o755;

@@ -99,10 +99,12 @@ function pinnedInspection(inspected: Inspected, want: string): ToolInspection {
     return { name: tool.name, state, path, want, found: read.version, hint, floor };
 }
 
-function inspectUncached(root: string, cwd: string, tool: ToolPin, runner?: string): ToolInspection {
+function inspectUncached(context: ToolContext, cwd: string, tool: ToolPin, runner?: string): ToolInspection {
+    const { root } = context;
     const isExternal = tool.provider === 'host' || (runner === 'mise' && tool.installers['mise'] !== undefined);
     const roots = isExternal ? [cwd, root] : [join(root, '.gspot'), cwd, root];
-    const [path] = locateCandidates(root, roots, tool.name, privateToolInstallation(tool, runner)?.kind);
+    const kind = privateToolInstallation(tool, runner)?.kind;
+    const [path] = locateCandidates(root, roots, tool.name, kind, context.installedRoot);
     const hint = installHint(tool);
     if (path === undefined) return missingInspection(tool, hint);
     const inspected: Inspected = { root, cwd, tool, path, hint };
@@ -192,7 +194,7 @@ export function locateTool(root: string, name: string): string | undefined {
 export function inspectTool(context: ToolContext, tool: ToolPin): ToolInspection {
     const { root, inspections } = context;
     const runner = context.policyFiles?.policy.runner?.tool;
-    if (isInstallationPending(readOwnership(root).installations, tool, runner))
+    if (isInstallationPending(readOwnership(context.installedRoot ?? root).installations, tool, runner))
         return {
             name: tool.name,
             state: 'error',
@@ -203,7 +205,8 @@ export function inspectTool(context: ToolContext, tool: ToolPin): ToolInspection
     const key = JSON.stringify([root, cwd, tool, runner]);
     const cached = inspections.get(key);
     if (cached) return cached;
-    const inspection = tool.kind === 'library' ? inspectLibrary(root, tool) : inspectUncached(root, cwd, tool, runner);
+    const inspection =
+        tool.kind === 'library' ? inspectLibrary(root, tool) : inspectUncached(context, cwd, tool, runner);
     inspections.set(key, inspection);
     return inspection;
 }

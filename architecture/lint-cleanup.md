@@ -187,9 +187,8 @@ screenshots show the original blue/orange mark aligned with the wordmark.
   Python unit run passes 17 tests and 48 assertions. The section audit and native example gate are recorded below.
 - Initialization without a generated workflow prints installation, check, and report-artifact
   guidance. Bitbucket detection and retained-provider cases have focused test coverage.
-- Unsupported executable Python path files are refused before snapshot execution. Supported
-  path declarations and Hatchling/setuptools loaders retain relocation. Ten native snapshot
-  cases pass with 186 assertions. They cover index and committed revisions.
+- Python tools run in place from the working tree's environment against a snapshot; no
+  environment is copied or relocated (phase 2).
 - Native plist tests reproduce mixed malformed/missing and malformed/inaccessible inputs.
   Both plist checks reject those execution failures while retaining syntax findings and
   corrected success. Two native tests pass.

@@ -581,4 +581,4 @@ format beside the JSON and the SARIF file ([10-hooks-ci-runners.md](10-hooks-ci-
 A planted install with `--ci gitlab`, whose file `glab ci lint` accepts in the
 `manual` job of CI.
 
-Staged snapshots copy every required dependency tree before validating links across them. Workspace links must resolve inside the complete snapshot. Fixer previews own their isolated copies separately from Git revision materialization. The remaining-work record owns required local and remote CI evidence.
+Staged snapshots copy every required package tree before validating links across them. Workspace links must resolve inside the complete snapshot. Python tools are not copied: they run from the working tree's installed environment against the snapshot's files. Fixer previews own their isolated copies separately from Git revision materialization. The remaining-work record owns required local and remote CI evidence.

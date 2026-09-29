@@ -163,7 +163,10 @@ export async function checkContent(
 ): Promise<CheckCommandResult> {
     assertPinMatches(root);
     const session = await openSession(root);
-    if (revision !== undefined) session.cacheRoot = revision.cacheRoot;
+    if (revision !== undefined) {
+        session.cacheRoot = revision.cacheRoot;
+        session.installedRoot = revision.cacheRoot;
+    }
     const unknown = unknownSelection(session, options.only);
     if (unknown !== undefined) return unknown;
     warnAboutHooks(session, root, revision);

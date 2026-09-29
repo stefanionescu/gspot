@@ -122,42 +122,30 @@ test.each(['', 'nested/'])('revision prose checks reuse verified installed packa
     );
 });
 
-test.each([false, true])(
-    'a Windows snapshot relocates a Distlib launcher with quoted path %s without changing its payload',
-    async (quoted) => {
-        await using repository = await testdir();
-        const root = join(repository.path, "Windows author's project");
-        const prefix = Buffer.from('MZ\u0000native executable bytes\u0000');
-        const payload = Buffer.from('PK\u0003\u0004binary script payload\u0000ÿ', 'latin1');
-        const interpreter = join(root, '.venv/Scripts/python.exe');
-        const program = quoted ? `"${interpreter}"` : interpreter;
-        const header = `#!${program}\n`;
-        const launcher = Buffer.concat([prefix, Buffer.from(header), payload]);
-        await createFileTree(root, {
-            '.gitignore': '.venv/\n',
-            'pyproject.toml': '[project]\nname = "fixture"\nversion = "0.0.0"\n',
-            'source.py': 'selected = True\n',
-            'uv.lock': 'version = 1\n',
-            '.venv/pyvenv.cfg': `home = ${repository.path}\nversion_info = 3.12.2\ninclude-system-site-packages = false\n`,
-            '.venv/Scripts/python.exe': 'MZinterpreter',
-            '.venv/Scripts/check.exe': launcher,
-            '.venv/Lib/site-packages/source.pth': `${root}\n`,
-        });
-        gitOutput(root, ['init', '-q']);
-        gitOutput(root, ['add', '.']);
-        await useRevision(root, { kind: 'index' }, (snapshot) => {
-            const relocated = readFileSync(join(snapshot, '.venv/Scripts/check.exe'));
-            expect(relocated).toStrictEqual(
-                Buffer.concat([prefix, Buffer.from(`#!"${join(snapshot, '.venv/Scripts/python.exe')}"\n`), payload]),
-            );
-            expect(readFileSync(join(snapshot, '.venv/Lib/site-packages/source.pth'), 'utf8')).toBe(`${snapshot}\n`);
-            expect(readFileSync(join(snapshot, '.venv/Scripts/python.exe'), 'utf8')).toBe('MZinterpreter');
-            return Promise.resolve();
-        });
-        expect(readFileSync(join(root, '.venv/Scripts/check.exe'))).toStrictEqual(launcher);
-        expect(readFileSync(join(root, '.venv/Lib/site-packages/source.pth'), 'utf8')).toBe(`${root}\n`);
-    },
-);
+test('a snapshot leaves the virtual environment in the working tree and still checks its lock', async () => {
+    await using repository = await testdir();
+    const root = join(repository.path, "an author's project");
+    await createFileTree(root, {
+        '.gitignore': '.venv/\n',
+        'pyproject.toml': '[project]\nname = "fixture"\nversion = "0.0.0"\n',
+        'source.py': 'selected = True\n',
+        'uv.lock': 'version = 1\n',
+        '.venv/pyvenv.cfg': `home = ${repository.path}\nversion_info = 3.12.2\n`,
+        '.venv/bin/python': 'interpreter',
+    });
+    gitOutput(root, ['init', '-q']);
+    gitOutput(root, ['add', '.']);
+    await useRevision(root, { kind: 'index' }, (snapshot) => {
+        expect(existsSync(join(snapshot, '.venv'))).toBe(false);
+        expect(readFileSync(join(snapshot, 'source.py'), 'utf8')).toBe('selected = True\n');
+        return Promise.resolve();
+    });
+    expect(readFileSync(join(root, '.venv/bin/python'), 'utf8')).toBe('interpreter');
+    await Bun.write(join(root, 'uv.lock'), 'version = 2\n');
+    expect(await rejection(useRevision(root, { kind: 'index' }, () => Promise.resolve(undefined)))).toContain(
+        'do not match the revision manifests',
+    );
+});
 
 test('cancellation drains dependency copies before removing the snapshot and preserves installed files', async () => {
     await using sandbox = await testdir();

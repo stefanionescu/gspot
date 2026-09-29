@@ -13,7 +13,7 @@ import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import { toolEnvironment } from '#cli/generation/tools/environment.ts';
 import { createPythonRegistry } from '#tests/support/registry/python.ts';
 import { PYTHON_PROJECTS } from '#tests/config/integration/tools/python.ts';
-import { preparePythonInstallation } from '#tests/support/cli/python/project.ts';
+import { preparePythonInstallation } from '#tests/support/cli/python-project.ts';
 import { cpSync, chmodSync, existsSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
 
 import {

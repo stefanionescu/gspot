@@ -18,6 +18,8 @@ export type ToolInspection = {
 };
 export type ToolContext = {
     root: string;
+    /** The working tree whose installed Python tools run, when root is a snapshot of it. */
+    installedRoot?: string;
     cwd?: string;
     inspections: Map<string, ToolInspection>;
     policyFiles?: PolicyFiles;

@@ -12,14 +12,20 @@ import { NODE_MODULES_DIRECTORY, PYTHON_ENVIRONMENT_DIRECTORY } from '#cli/confi
 
 const IS_WINDOWS = process.platform === 'win32';
 
-// The folders a tool of the private kind, or a host tool, is searched in.
-function searchDirectories(root: string, roots: string[], privateKind: PrivateKind | undefined): string[] {
+// The folders a tool of the private kind, or a host tool, is searched in. A snapshot has no virtual
+// environments of its own: Python tools run from the working tree the snapshot stands for.
+function searchDirectories(
+    root: string,
+    roots: string[],
+    privateKind: PrivateKind | undefined,
+    installedRoot: string,
+): string[] {
     if (privateKind === 'npm') return [join(root, NODE_MODULES_DIRECTORY, '.bin')];
-    if (privateKind === 'python') return [join(root, PYTHON_ENVIRONMENT_DIRECTORY, IS_WINDOWS ? 'Scripts' : 'bin')];
+    const binary = IS_WINDOWS ? 'Scripts' : 'bin';
+    if (privateKind === 'python') return [join(installedRoot, PYTHON_ENVIRONMENT_DIRECTORY, binary)];
     return [...new Set(roots)].flatMap((searched) => [
         join(searched, 'node_modules', '.bin'),
-        join(searched, '.venv', 'bin'),
-        join(searched, '.venv', 'Scripts'),
+        join(installedRoot, relative(root, searched), '.venv', binary),
     ]);
 }
 
@@ -89,13 +95,20 @@ function versionAbove(files: Root | undefined, root: string, start: string, name
  * @param roots the folders whose bin directories are searched, for a host tool.
  * @param name the executable name.
  * @param privateKind the private installation the tool belongs to, which restricts the search to it.
+ * @param installedRoot the working tree whose virtual environments run, when the root is a snapshot of it.
  * @returns the paths that exist.
  */
-export function locateCandidates(root: string, roots: string[], name: string, privateKind?: PrivateKind): string[] {
+export function locateCandidates(
+    root: string,
+    roots: string[],
+    name: string,
+    privateKind?: PrivateKind,
+    installedRoot = root,
+): string[] {
     // A command that names its executable by path is that file or nothing.
     if (isAbsolute(name)) return statSync(name, { throwIfNoEntry: false }) === undefined ? [] : [name];
     const names = IS_WINDOWS ? [`${name}.cmd`, `${name}.exe`, name] : [name];
-    const found = repositoryCandidates(root, searchDirectories(root, roots, privateKind), names);
+    const found = repositoryCandidates(root, searchDirectories(root, roots, privateKind, installedRoot), names);
     if (privateKind !== undefined) return found;
     return [...found, ...hostCandidates(name, names)];
 }

@@ -6,22 +6,16 @@ import { openRoot } from '#cli/platform/filesystem.ts';
 import { isValePackageFile } from '#cli/repository/kind.ts';
 import { statSync, constants, readFileSync } from 'node:fs';
 import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
+import type { Directory } from '#cli/types/repository/revisions.ts';
 import { MODE_BITS, PRIVATE_DIRECTORY } from '#cli/config/platform.ts';
 import type { OwnershipEntry } from '#cli/types/lifecycle/lifecycle.ts';
 import { sep, join, posix, dirname, basename, relative, isAbsolute } from 'node:path';
 import { LOCKS, COPY_CONCURRENCY, VALE_CONFIGURATION } from '#cli/config/repository/revisions.ts';
-import { pythonLauncher, relocateLaunchers } from '#cli/repository/revisions/virtualenv/launchers.ts';
-import type { Directory, PythonLauncher, RelocationContext } from '#cli/types/repository/revisions.ts';
 import { cp, stat, chmod, lstat, mkdir, readdir, symlink, readlink, realpath } from 'node:fs/promises';
-import { pathRelocator, relocateSitePackages } from '#cli/repository/revisions/virtualenv/site-packages.ts';
 
 const MANIFESTS = new Set(['package.json', 'pyproject.toml', 'Package.swift', ...LOCKS]);
-// Refuses a copied link that leaves the snapshot, unless it is an interpreter link the environment declared.
-async function assertInternalLink(
-    root: string,
-    path: string,
-    interpreterLinks: ReadonlyMap<string, ReadonlySet<string>>,
-): Promise<void> {
+// Refuses a copied link that leaves the snapshot.
+async function assertInternalLink(root: string, path: string): Promise<void> {
     let resolved: string;
     try {
         resolved = await realpath(path);
@@ -32,28 +26,23 @@ async function assertInternalLink(
     }
     const target = relative(root, resolved);
     const isExternal = isAbsolute(target) || target === '..' || target.startsWith(`..${sep}`);
-    if (isExternal && interpreterLinks.get(path)?.has(resolved) !== true)
+    if (isExternal)
         throw new SelectionError([
             'Installed dependencies contain an external link. Prepare isolated dependencies for the selected revision.',
         ]);
 }
 
-async function validateCopiedLinks(
-    root: string,
-    directory: string,
-    interpreterLinks: ReadonlyMap<string, ReadonlySet<string>>,
-    cancelSignal?: AbortSignal,
-): Promise<void> {
+async function validateCopiedLinks(root: string, directory: string, cancelSignal?: AbortSignal): Promise<void> {
     for (const entry of await readdir(directory, { withFileTypes: true })) {
         cancelSignal?.throwIfAborted();
         const path = join(directory, entry.name);
-        if (entry.isDirectory()) await validateCopiedLinks(root, path, interpreterLinks, cancelSignal);
-        else if (entry.isSymbolicLink()) await assertInternalLink(root, path, interpreterLinks);
+        if (entry.isDirectory()) await validateCopiedLinks(root, path, cancelSignal);
+        else if (entry.isSymbolicLink()) await assertInternalLink(root, path);
     }
 }
 
-function assertDependencyReady(revisionRoot: string, folder: string, dependency: string, pending: string[]): void {
-    if (basename(folder) === '.gspot' && pending.includes(dependency === 'node_modules' ? 'npm' : 'python'))
+function assertDependencyReady(revisionRoot: string, folder: string, pending: string[]): void {
+    if (basename(folder) === '.gspot' && pending.includes('npm'))
         throw new SelectionError([
             'Tool installation is incomplete. Run gspot install before checking staged content.',
         ]);
@@ -91,7 +80,8 @@ function copyVerifiedPackage(installed: Root, destination: Root, entry: Ownershi
     destination.write(entry.path, content, undefined);
 }
 
-// The dependency folders the snapshot's projects own, when the working tree has them installed.
+// The dependency folders the snapshot's projects own, when the working tree has them installed. Python
+// environments are not copied: their tools run in place, against the snapshot's files.
 function dependencyDirectories(installed: Root, projects: string[]): Directory[] {
     return projects.flatMap((path) => {
         const folder = dirname(path);
@@ -157,19 +147,17 @@ async function copyTree(source: string, target: string, cancelSignal?: AbortSign
     await chmod(target, sourceStat.mode & MODE_BITS);
 }
 
-// Copies one dependency folder and, for a virtual environment, reads the launcher fields the relocation needs.
+// Copies one package folder into the snapshot.
 async function copyDirectory(
-    context: RelocationContext,
+    root: string,
+    revisionRoot: string,
     { folder, dependency }: Directory,
-    interpreterLinks: Map<string, ReadonlySet<string>>,
-): Promise<PythonLauncher | undefined> {
-    const { root, destination: revisionRoot, cancelSignal } = context;
+    cancelSignal?: AbortSignal,
+): Promise<void> {
     const pending =
         basename(folder) === '.gspot' ? (readOwnership(join(root, dirname(folder))).installations ?? []) : [];
-    assertDependencyReady(revisionRoot, folder, dependency, pending);
-    const source = join(root, folder, dependency);
-    await copyTree(source, join(revisionRoot, folder, dependency), cancelSignal);
-    return dependency === '.venv' ? await pythonLauncher(context, folder, source, interpreterLinks) : undefined;
+    assertDependencyReady(revisionRoot, folder, pending);
+    await copyTree(join(root, folder, dependency), join(revisionRoot, folder, dependency), cancelSignal);
 }
 
 /**
@@ -197,7 +185,7 @@ export function copyProsePackages(root: string, revisionRoot: string, paths: str
 }
 
 /**
- * Copy matching installed dependencies and relocate their revision-specific loader paths.
+ * Copy the installed package trees the snapshot's projects own, after checking that their inputs match.
  * @param root the repository root
  * @param revisionRoot the snapshot directory the dependencies are copied into
  * @param paths the snapshot's files, among them the project manifests that own dependencies
@@ -217,28 +205,10 @@ export async function copyDependencies(
         const directories = dependencyDirectories(installed, projects);
         if (directories.length === 0) return;
         assertManifestsUnchanged(root, installed, selected, inputs);
-        const context: RelocationContext = {
-            root,
-            destination: revisionRoot,
-            selected,
-            ...(cancelSignal === undefined ? {} : { cancelSignal }),
-        };
-        const interpreterLinks = new Map<string, ReadonlySet<string>>();
-        const launchers: PythonLauncher[] = [];
-        for (const directory of directories) {
-            const launcher = await copyDirectory(context, directory, interpreterLinks);
-            if (launcher !== undefined) launchers.push(launcher);
-        }
-        for (const { folder, dependency } of directories)
-            await validateCopiedLinks(
-                revisionRoot,
-                join(revisionRoot, folder, dependency),
-                interpreterLinks,
-                cancelSignal,
-            );
-        const relocatePath = await pathRelocator(context);
-        for (const launcher of launchers) await relocateLaunchers(context, launcher);
-        for (const launcher of launchers) await relocateSitePackages(context, launcher, relocatePath);
+        const packages = directories.filter((directory) => directory.dependency === 'node_modules');
+        for (const directory of packages) await copyDirectory(root, revisionRoot, directory, cancelSignal);
+        for (const { folder, dependency } of packages)
+            await validateCopiedLinks(revisionRoot, join(revisionRoot, folder, dependency), cancelSignal);
     } finally {
         installed.close();
         selected.close();

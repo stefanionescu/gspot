@@ -24,9 +24,9 @@ Submodule contents are excluded from checks. Initialization and `gspot doctor` r
 submodule path once. Staged and pushed snapshots preserve the Git submodule references
 without checking out or reading their contents.
 
-Use Python virtual environments with manifests and locks matching the selected revision,
-and disable system site packages. Dependency symlinks must stay inside the copied package
-trees, apart from the environment's declared host interpreter.
+Python tools run from the working tree's installed environment against the snapshot, so its
+manifests and locks must match the selected revision. Package symlinks must stay inside the
+copied package trees.
 
 Existing hooks remain part of the chain. Hook arguments and stdin are forwarded to retained
 hooks. A retained hook failure still rejects the operation. See

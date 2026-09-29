@@ -132,9 +132,10 @@ configurations. A generated configuration holds data and imports. **cut** the ru
 
 ### Python environment relocation
 
-`packages/cli/src/repository/revisions/virtualenv/` (584 lines) rewrites console scripts and
-interpreter links when a snapshot is copied. `packages/cli/src/config/repository/windows-launcher.ts`
-parses PE headers to relocate Windows launchers. **decide**: run Python tools against the snapshot
+The virtualenv folder under `packages/cli/src/repository/revisions/` (584 lines) rewrote
+console scripts and interpreter links when a snapshot was copied. A Windows launcher parser
+rewrote PE headers. Both were deleted in phase 2. **decided**: run Python tools
+against the snapshot
 from their installed location instead of moving the environment.
 
 ### Existing-configuration adoption

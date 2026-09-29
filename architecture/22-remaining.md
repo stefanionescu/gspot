@@ -502,8 +502,8 @@ Verify exact staged and pushed object selection, all ref pairs, first pushes, de
 
 Owner: `repository/revisions/`. Dependencies: bounds and dependency copying. Completion evidence: Staged and all pushed objects, shallow clones, worktrees, submodules, and nested policy use immutable selected inputs.
 
-Current evidence: revision dependency copying includes POSIX and Windows launcher relocation
-and known editable Python loaders. Unsupported executable `.pth` forms are refused. Native
+Current evidence: revision snapshots copy package trees only; Python tools run in place from
+the working tree's environment (phase 2). Native
 index and committed-revision tests cover refusal, corrected path declarations, and retained
 Hatchling/setuptools support. Complete staged/pushed acceptance remains in the final gate.
 

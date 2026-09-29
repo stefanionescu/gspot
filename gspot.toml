@@ -439,12 +439,6 @@ exclude = true
 reason = "GitHub Actions names action inputs with, and GitLab CI names artifact retention when. These test types inspect those exact generated workflow keys. Remove an allowance if its workflow provider or field leaves the contract."
 
 [[naming.rules]]
-paths = ["packages/cli/src/config/repository/windows-launcher.ts"]
-names = ["PE32_MAGIC", "PE32_PLUS_MAGIC", "PE32_DIRECTORIES_OFFSET", "PE32_PLUS_DIRECTORIES_OFFSET"]
-exclude = true
-reason = "The Microsoft Portable Executable specification names these formats PE32 and PE32+. The constants identify their magic values and directory offsets. Their exact format names require digits and the term PLUS. Only these four names are excepted. Remove this allowance if the launcher stops supporting those formats."
-
-[[naming.rules]]
 paths = ["packages/cli/src/types/checks/security.ts"]
 names = ["Fingerprint", "File", "RuleID", "Commit"]
 exclude = true
@@ -733,7 +727,6 @@ paths = [
     "tests/acceptance/source/kits/typescript",
     "tests/integration/cli/checks/swift",
     "tests/integration/tools/bash",
-    "tests/support/cli/python",
     "tests/integration/tools/generation/swift",
 ]
 reason = "Each directory owns tests of that named language kit, parser, or tool integration; the files are TypeScript, not buckets grouped by implementation language."

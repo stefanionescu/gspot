@@ -15,8 +15,7 @@ command execution, Git setup, tool installation, defect fixtures, and file prese
 publication prepares disposable package directories. Binary independence is exercised from an
 isolated build whose checkout and dependencies are removed before the consumer runs.
 
-Revision selection keeps dependency copying and relocation separate from Git-object framing
-and reading. Both use the existing root boundary; neither changes the selected checkout.
+Revision selection keeps package copying separate from Git-object framing and reading. Both use the existing root boundary; neither changes the selected checkout.
 
 ## Ownership
 

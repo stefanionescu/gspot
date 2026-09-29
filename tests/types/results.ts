@@ -91,14 +91,6 @@ export type PreparePythonInstallationResult = {
     rootConfiguration: NonSharedBuffer;
     [Symbol.asyncDispose](): Promise<void>;
 };
-
-export type PrepareEditableSnapshotResult = {
-    source: { kind: 'index'; hash?: never } | { kind: 'commit'; hash: string };
-    packageDirectory: string;
-    working: string;
-    python: string;
-    siteDirectory: string;
-};
 export type CreateSecretVerifierResult = {
     firstToken: string;
     secondToken: string;
