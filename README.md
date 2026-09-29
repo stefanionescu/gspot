@@ -1,10 +1,4 @@
-# gspot
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/public/brand/readme/banner/dark.svg">
-  <source media="(prefers-color-scheme: light)" srcset="docs/public/brand/readme/banner/light.svg">
-  <img src="docs/public/brand/readme/banner/light.svg" alt="gspot" width="1200">
-</picture>
+# ![gspot](docs/public/brand/readme/banner/light.svg#gh-light-mode-only)![gspot](docs/public/brand/readme/banner/dark.svg#gh-dark-mode-only)
 
 [![npm: unreleased](docs/public/brand/badges/npm.svg)](docs/src/content/docs/guides/install.md)
 [![Documentation source](docs/public/brand/badges/docs.svg)](docs/README.md)

@@ -90,6 +90,6 @@
         "minimatch@9": "9.0.9",
         "qs": "6.16.0"
     },
-    "description": "Development workspace for the gspot repository configuration CLI.",
+    "description": "Development workspace for the gspot linting CLI.",
     "type": "module"
 }
