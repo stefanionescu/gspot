@@ -1,97 +1,104 @@
 ---
 title: Fix findings
-description: Read diagnostics, verify corrections, and inspect check reports.
+description: Read a finding, explain it, fix it, and read the reports.
 sidebar:
     order: 3
 ---
 
-Run commands from your repository root with [gspot installed](/guides/install/).
-
-A located finding identifies its file, line, check, and message. The `help:` line describes
-the correction. For example:
+A finding names the file, the line, the check, and the message. The `help:` line under it
+says what to do:
 
 ```text
 greet.sh:1  bash/syntax  syntax error near unexpected token `then'
     help: Open the file at the line bash names and fix the quoting, bracket, or keyword it complains about.
 ```
 
-## Explain and select checks
+Fix the file, then run the check again.
 
-`gspot explain <check>` prints what the check looks for, what goes wrong without it, and what to
-do. For a rule inside a tool, `gspot explain <tool>/<rule>` prints the same and the exact
-`gspot ignore` and `gspot set` lines that change it.
+## Explain a finding
 
-`gspot explain <setting>` shows the effective value, default, and source in every scope
-that exposes the setting. Its change commands name the target scope. JSON output carries
-these values in `scopes`. `gspot explain ./<path>` lists enabled checks for that file,
-including repository commands, and recorded exceptions that match the path.
+`gspot explain` prints what a check looks for, why it matters, and what to do:
 
-Run `gspot check --only typescript/eslint typescript/tsc` to select several checks.
-List all check names after one `--only` flag.
+```bash
+gspot explain bash/syntax
+```
 
-Place paths before flags, or after `--`. Positional arguments select files or folders, as in
-`gspot check src/app.ts docs`. Paths are relative to the working directory or the
-directory selected with `-C`. A selected path can trigger a project-wide check;
-that check still reports findings across the project.
+For a rule inside a tool, name the tool and the rule, such as
+`gspot explain shellcheck/SC2086`. The output also gives the exact `gspot ignore` and
+`gspot set` lines that change the rule.
 
-## Apply automatic corrections
+`gspot explain <setting>` prints the value of a setting, its default, and where the value comes
+from in each scope. `gspot explain ./<path>` lists the checks that read a file and the ignores
+that match it.
 
-`gspot check --fix` runs every fixer that can fix its own findings (formatters, import sorters,
-codemods) and then the checks again. What it changed is in the working tree, not staged.
+## Run some checks or some files
 
-A missing tool or failed correction makes the command fail even if the checks pass afterward.
-Read the fixer diagnostic and review any partial edits before running it again. A successful
-correction counts as a change only when the selected files have different bytes.
+To run a few checks, list them after one `--only` flag:
 
-For repository commands, configure [custom check corrections](/guides/custom-checks/#add-a-correction-command).
+```bash
+gspot check --only typescript/eslint typescript/tsc
+```
 
-## Ignore it with a reason
+To check some files or folders, name them before the flags, or after `--`:
 
-Follow [record one exception](/guides/customize/#record-one-exception) to disable a tool rule
-for selected paths and later remove that exception. Keep the reason specific to the affected
-code. Reports retain exceptions; an ignored finding is not a corrected defect.
+```bash
+gspot check src/app.ts docs
+```
 
-## Loosen a limit
+Paths are relative to the current folder, or to the folder you pass with `-C`. A check that
+reads the whole project still reports findings across the project, even when you name one
+file.
 
-Follow [change a limit](/guides/customize/#change-a-limit) to adjust a setting and review the
-resulting policy. When `require_reasons` is enabled, a loosening takes a reason; a tightening does not.
+## Fix findings automatically
 
-## Machine-readable reports
+```bash
+gspot check --fix
+```
 
-On a terminal, gspot prints a status line when each check finishes. A cached pass is
-`unchanged`. Redirected output prints completion lines for failures and execution errors.
-The final report lists failed, missing, errored, and skipped checks, followed by counts of
-passed, failed, and skipped checks, findings, and elapsed seconds. Skipped checks do not count
-as passes. An interrupted or otherwise incomplete run is labeled `incomplete`.
+`--fix` runs every fixer that can correct its own findings, such as formatters, import sorters,
+and codemods. Then it runs the checks again. The changes stay in your working tree, unstaged,
+so review them before you commit. If a fixer is missing or fails, the command fails, and the
+message names the fixer.
 
-`gspot check --json` prints the check report. A run also writes `.gspot/reports/report.json` and
-`.gspot/reports/report.sarif`. It writes located findings to `.gspot/reports/report.codequality.json` in
-[GitLab Code Quality format](https://docs.gitlab.com/ci/testing/code_quality/). Findings without
-file locations remain in JSON and SARIF. Repeated identical findings share a fingerprint.
+To add a fixer for your own command, see [custom checks](/guides/custom-checks/#add-a-correction-command).
 
-Check results refer to their check through
-`check`; `coverage` reports check coverage, not test coverage. Project-wide input files count
-only when the check owns them. The checked-file count uses paths confirmed by the analysis. For nginx, this includes the
-configuration files listed in a successful native configuration dump.
+## When a rule does not fit
 
-`gspot doctor` reports the check kinds configured for each source file. It uses enabled checks,
-their file owns, path exceptions, and repository commands. The unchecked
-count includes supported source files without an enabled check. `check` and `doctor` use the
-same calculation. Binary, generated, and vendored files do not enter this source coverage count.
-Tool installation problems appear separately in the doctor report.
+- To turn a rule off for some paths, [record an ignore](/guides/customize/#record-one-exception)
+  with a reason.
+- To change a limit, such as the longest function, [change the setting](/guides/customize/#change-a-limit).
 
-`gspot doctor` and `gspot list` group source endings by scope and configured check kinds:
-format, syntax, style, and types. Files with the same ending but different coverage appear
-on separate rows. An ending with none of these checks, including an unsupported ending,
-appears with an explicit absence message. JSON output includes these rows under `coverage.endings`.
+Reports list every ignore, so an ignored finding stays visible.
 
-Set `[coverage] strict = true` to fail source checks when this unchecked count is nonzero.
-The report records located policy findings under `coverage.findings`, including in SARIF
-and GitLab reports. This policy applies to the repository configuration even when you select
-a stage, path, or check. Message hooks do not enforce source coverage. `coverage.checked`
-counts files analyzed during the run, so it and the configured unchecked count do not necessarily
-sum to the repository file count.
+## Reports
 
-If a cache or report write fails, gspot prints the affected path and filesystem error on
-stderr. The findings and exit code remain available. Message-hook checks preserve the
-reports from the previous run.
+At the end of a run, gspot prints the failed, missing, errored, and skipped checks, then the
+counts and the time. A skipped check did not run, so it does not count as passed. The report
+labels an interrupted run `incomplete`.
+
+Each run also writes three reports:
+
+| File                                     | Format                                                                  |
+| ---------------------------------------- | ----------------------------------------------------------------------- |
+| `.gspot/reports/report.json`             | The gspot report. `gspot check --json` prints the same object.          |
+| `.gspot/reports/report.sarif`            | SARIF, for code scanning.                                               |
+| `.gspot/reports/report.codequality.json` | [GitLab Code Quality](https://docs.gitlab.com/ci/testing/code_quality/) |
+
+The Code Quality report holds only findings with a file location. Identical findings share
+one fingerprint.
+
+## Files no check reads
+
+`gspot doctor` lists the source files that no enabled check reads, grouped by file ending and
+scope. For each ending it shows which kinds of checks run on it: format, syntax, style, and
+types. Binary, generated, and vendored files do not count.
+
+To fail the run when any source file goes unchecked, set this in `gspot.toml`:
+
+```toml
+[coverage]
+strict = true
+```
+
+If gspot cannot write a report or a cache file, it prints the path and the error. The findings
+and the exit code stay the same.

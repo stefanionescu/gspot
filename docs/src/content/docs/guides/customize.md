@@ -1,26 +1,25 @@
 ---
-title: Configuration
-description: Select kits, adjust settings, and keep exceptions scoped and explained.
+title: The policy file
+description: Choose kits and a level, change settings, and record exceptions in gspot.toml.
 ---
 
-Run commands from the configured repository root with the [CLI available](/guides/install/).
+`gspot.toml` holds every choice gspot follows: the kits, the level, the settings, and the
+exceptions. The commands on this page edit it for you and apply the change.
 
-Choose language and framework kits, then change individual settings or record an exception.
-A kit selects checks and their required tools.
-
-## Inspect the current choices
+## See the current choices
 
 ```bash
 gspot list
 gspot list settings
 ```
 
-Use `gspot explain <check>` before changing its policy. The generated
-[settings reference](/reference/settings/) gives accepted values and defaults.
+`gspot list` shows the kits and the state of each check. `gspot list settings` shows each
+setting, its value, and where the value comes from. The [settings reference](/reference/settings/)
+lists every setting with its accepted values and defaults.
 
-## Select kits and a level
+## Kits and the level
 
-A complete policy starts with a schema version and selected kits:
+A policy starts with a schema version and the kits it selects:
 
 ```toml
 version = 1
@@ -29,67 +28,84 @@ level = "recommended"
 require_reasons = true
 ```
 
-`recommended` includes correctness, security, accessibility, type safety, dependency health,
-routine formatting, and explicitly declared project contracts. `all` adds stable vocabulary,
-architecture, naming, documentation, declaration order, API style, and complexity conventions.
-Trivial-file and trivial-function restrictions belong to `all`. Neither level enables
-experimental or preview rules. Individual check
-definitions state their selected level. Apply a manual edit with
-`gspot apply`. To change the level through the CLI:
+A kit is a bundle of checks, tool configuration, and guides for one language, framework, or
+concern. To add or remove one, run `gspot add <kit>` or `gspot remove <kit>`.
+
+The level decides which checks run:
+
+- `recommended`, the default, runs the checks that find defects: correctness, security,
+  accessibility, type safety, dependency health, formatting, and project contracts you declare.
+- `all` adds the house style: vocabulary, architecture, naming, documentation, declaration
+  order, API style, complexity, and trivial files and functions.
+
+Neither level turns on experimental or preview rules. To change the level, run:
 
 ```bash
 gspot set level all
 ```
 
-The command writes and applies the setting. Run checks separately afterward.
-
 ## Record one exception
 
-For a TypeScript repository that intentionally prints from scripts:
+This example lets scripts print to the terminal:
 
 ```bash
 gspot ignore typescript/eslint --rule no-console --paths "scripts/**" --reason "Scripts print their results to the terminal."
 ```
 
-The check must be a known shipped check or a declared repository check. The example disables one tool rule only for the
-named paths. A whole-check exception omits `--rule`. With `require_reasons = true`, missing
-reasons and unexplained weakening changes are refused.
+The ignore turns off one rule, `no-console`, for the paths under `scripts/`. Leave out `--rule`
+to turn off the whole check. With `require_reasons = true`, gspot refuses an ignore without a
+reason.
 
-Remove the matching exception after repairing its cause:
+When the cause is gone, remove the ignore and run the check again:
 
 ```bash
 gspot ignore typescript/eslint --rule no-console --paths "scripts/**" --remove
 ```
 
-Run the affected check again. Reports retain ignore information; verbose text expands entries
-and matched counts. An exception is a policy choice, not a repaired defect.
+Reports list every ignore, and `--verbose` prints each one with how many findings it matched.
 
 ## Change a limit
-
-JavaScript and TypeScript size limits also apply to test files and test functions.
 
 ```bash
 gspot set limits.function_lines 80 --reason "The parser is one state machine."
 ```
 
-Use `--scope api` for a declared `api` scope. Use `--default` instead of a value to remove a
-local override. Lists support `--replace` and `--remove`; consult the setting type before
-changing one. Review `gspot.toml` and generated changes before sharing them.
+With `require_reasons = true`, loosening a limit needs a reason. Tightening one does not. The
+JavaScript and TypeScript size limits apply to test files and test functions too.
 
-## Configure a specific integration
+More ways to write a setting:
 
-- [Tests and coverage](/guides/testing/): Jest coverage and Swift test rules.
-- [Dependency licenses](/guides/dependency-licenses/): installed packages and exact exceptions.
-- [Security checks](/guides/security/): Swift rules and CodeQL analysis.
-- [Scopes](/guides/scopes/): policy inheritance and project-local resources.
+- `--scope api` writes the setting in the scope `api`.
+- `--default` removes your value, so the inherited or default value applies.
+- For a list, `--replace` replaces the whole list, and `--remove` removes items from it.
 
-See [edit and retain repository files](/guides/generated-files/) for what to commit,
-regenerate, and keep for restoration.
+## Edit the file by hand
 
-## Upgrade tool configuration
+You can edit `gspot.toml` directly. Afterwards, apply the change and install any new tools:
 
-After upgrading gspot, preview changes with `gspot apply --dry-run`. Run `gspot apply`,
-review the generated changes and locks, then run `gspot install` and `gspot check`.
+```bash
+gspot apply
+gspot install
+```
 
-The [settings reference](/reference/settings/) lists defaults at both levels. Explicit settings
-remain effective at either level, including coverage floors, license allowances, and file-size limits.
+`gspot apply --dry-run` shows the change first, including every rule that turns on or off.
+
+## Upgrade gspot
+
+After you upgrade gspot, preview and apply the new configuration, then install and check:
+
+```bash
+gspot apply --dry-run
+gspot apply
+gspot install
+gspot check
+```
+
+Commit the changed configuration and locks, so your teammates get the same tools.
+
+## Settings for one integration
+
+- [Tests and coverage](/guides/testing/): Jest, Vitest, pytest, and Swift tests.
+- [Dependency licenses](/guides/dependency-licenses/): allowed licenses and exceptions.
+- [Security](/guides/security/): Semgrep, Swift security rules, and CodeQL.
+- [Monorepos](/guides/scopes/): settings for one project in the repository.

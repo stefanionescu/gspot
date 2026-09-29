@@ -1,68 +1,66 @@
 ---
 slug: guides/hooks-and-ci
 title: Hooks and CI
-description: Understand staged and pushed-content checks, retained hooks, and CI reports.
+description: When the checks run, which hook tools gspot supports, and the CI job it writes.
 ---
 
-Run commands from the initialized repository root with the [CLI available](/guides/install/).
-`gspot.toml` records the selected hook integration and CI provider. Read the initialization
-plan before adding either to an existing setup.
+gspot runs the checks at three points: before a commit, before a push, and in CI. Each check
+belongs to a stage, and each point runs the checks of its stage.
 
-## Commit and push
+## Before a commit
 
-The commit hook checks staged content, including the staged policy; unstaged edits do not
-replace it. Run it yourself:
+The commit hook runs:
 
 ```bash
 gspot check --staged
 ```
 
-Push checks use the objects Git supplies to the hook and can inspect several pushed
-references. Changed-path selection can trigger project-wide checks, which can report defects
-in unchanged files of an affected project. Submodule contents are excluded, and staged and
-pushed snapshots keep the submodule references without reading them. Python tools run from the
-working tree's installed environment against the snapshot, so its manifests and locks must
-match the selected revision.
+It checks what you staged, not the rest of your working tree. A finding stops the commit.
 
-Existing hooks remain part of the chain, receive their arguments and stdin, and a failure of
-theirs still rejects the operation. `git commit --no-verify` and `git push --no-verify`
-bypass local hooks, not CI or server policy: correct the defect or record a scoped exception
-with a reason. If installation reports a differing native hook, keep its authored changes in
-the hook manager configuration, regenerate the native hooks, and run `gspot install` again.
+## Before a push
 
-## Select a hook tool
+The push hook checks every commit you push. It reads the changed files of those commits, and
+runs the whole-project checks, such as type checks, for the projects they touch. A push can
+then report a finding in a file you did not change, when that file belongs to a changed project.
+The push hook skips the contents of submodules.
 
-Every integration is two commands, run from the Git root after installing the tool's own
-dependency where it has one:
+## Choose a hook tool
+
+When init finds no hook manager, gspot writes plain Git hooks. When it finds one, such as Husky,
+it uses that one. To change the tool later, set it and install:
 
 ```shell
 gspot set hooks.tool lefthook
 gspot install
 ```
 
-The tool is one of `gspot`, `husky`, `lefthook`, `pre-commit`, or `simple-git-hooks`.
+The tool is one of `gspot`, `husky`, `lefthook`, `pre-commit`, or `simple-git-hooks`:
 
-Run `gspot install` after cloning, after changing the runner, and after updating the hook
-tool. `gspot doctor` reports whether the installed hooks match the policy. `gspot uninstall`
-restores unchanged owned hooks and managed blocks and keeps authored commands.
+| Tool               | What gspot adds                                                                                |
+| ------------------ | ---------------------------------------------------------------------------------------------- |
+| `gspot`            | The Git hooks themselves. Hooks you already had stay in the chain.                             |
+| `husky`            | A gspot line in each commit, push, and message script under `.husky/`. Husky 9 or newer.       |
+| `lefthook`         | Three gspot commands and `no_auto_install` in `lefthook.yml`. Lefthook 2.0.13 or newer.        |
+| `pre-commit`       | One local `gspot` hook in `.pre-commit-config.yaml` that checks the staged files once.         |
+| `simple-git-hooks` | A gspot command after each existing command in the `simple-git-hooks` field of `package.json`. |
 
-- `gspot` writes the built-in Git hooks. Existing local hook commands stay in the chain.
-- `husky` (version 9) adds a managed invocation to each commit, push, and message script under
-  `.husky/`, and keeps `core.hooksPath` and package lifecycle scripts, including `prepare`.
-- `lefthook` (2.0.13 or newer) owns its three commands and `no_auto_install` in `lefthook.yml`
-  or `.lefthook.yml`; authored commands and inherited settings stay active.
-- `pre-commit` adds one local `gspot` hook to `.pre-commit-config.yaml` that runs the staged
-  check once, without individual filenames. Rename an authored hook named `gspot` first, and
-  stage the framework configuration before a commit. Findings exit `1`, setup failures `2`.
-- `simple-git-hooks` keeps each existing package hook command and runs it before its check.
-  Move commands from a separate `simple-git-hooks.*` file into the package field first.
+With every tool, your own hooks run first with the original Git arguments. If one of them
+fails, the chain stops. Push input reaches both your hook and gspot.
 
-In every integration the authored hooks run first with the original Git arguments. A failure
-of theirs stops the chain, an early successful `exit` or `exec` still runs gspot, and push
-input is replayed to both. Installation prepares the native runtime in a temporary repository
-and publishes the chain at the resolved Git hook location without changing `core.hooksPath`.
+Run `gspot install` after you clone the repository, change the hook tool, or update it.
+`gspot doctor` reports whether the installed hooks match the policy.
 
-## Choose a stage manually
+Before you switch to `pre-commit`, rename any hook of your own that is named `gspot`. Before
+you switch to `simple-git-hooks`, move commands from a separate `simple-git-hooks.*` file into
+the `package.json` field.
+
+## Skip a hook
+
+`git commit --no-verify` and `git push --no-verify` skip the local hooks. CI still runs. To
+accept a finding for good, record an ignore with a reason instead; see
+[the policy file](/guides/customize/#record-one-exception).
+
+## Run one stage yourself
 
 ```bash
 gspot check --stage commit
@@ -70,45 +68,39 @@ gspot check --stage push
 gspot check --stage manual
 ```
 
-A manual-stage check runs only when asked. The [check reference](/reference/commands/check/)
-lists the selectors.
+Checks at the `manual` stage, such as CodeQL, run only when you ask for them.
 
-## Generated CI
+## The CI job
 
-Select a provider with `gspot init --ci github` or `gspot init --ci gitlab`. Existing CI files
-decide the default before the remote hostname, and an authored lint job the plan finds gets no
-duplicate.
-
-For GitLab, gspot writes `.gitlab/ci/gspot.yml`. Add its include to your pipeline:
+`gspot init --ci github` writes `.github/workflows/gspot.yml`. `gspot init --ci gitlab` writes
+`.gitlab/ci/gspot.yml`. For GitLab, include it in your pipeline:
 
 ```yaml
 include:
   - local: .gitlab/ci/gspot.yml
 ```
 
-The job runs for merge requests and the default branch and retains the JSON, SARIF, and
-[Code Quality](https://docs.gitlab.com/ci/testing/code_quality/) reports after a failed check.
+The GitHub job checks pull requests, merge queues, and pushes. On pushes to the default branch,
+it also runs the manual checks and uploads the SARIF reports for code scanning. The GitLab job
+checks merge requests and the default branch. Both keep the JSON, SARIF, and Code Quality
+reports, also after a failed check.
 
-For GitHub, the workflow checks pull requests, merge queues, and pushed commits. It runs
-manual checks in separate jobs on default-branch pushes and retains each stage's and
-platform's reports. A separate code-scanning job uploads the SARIF reports after pushes:
+The job checks what changed from the comparison point, such as the pull request base. A first
+push has no base, so the job checks the whole tree. Two settings change the job:
 
 ```sh
-gspot set ci.sarif false   # when the repository does not use code scanning
-gspot set ci.run all       # to check the full tree on every run
+gspot set ci.sarif false   # the repository does not use code scanning
+gspot set ci.run all       # check the whole tree on every run
 ```
 
-CI checks changes relative to the event base; an absent base on a first push checks the full
-tree, and an invalid comparison object fails the job. CI installs tracked tool locks before
-checking. The mise integration provisions its pinned tools; without mise, provision the
-package manager, uv when Python tools are selected, and the required native tools on the
-runner.
+With mise, the job installs the pinned tools. Without mise, install the package manager, uv
+for Python tools, and the native tools on the runner.
 
-## Keep an existing pipeline
+## Keep your own pipeline
 
-When initialization detects an existing lint job or Bitbucket Pipelines, it prints setup
-instructions instead of a competing workflow. Provision the pinned gspot version and required
-runtimes on that runner, then run from the repository root, keeping nonzero exit codes:
+When init finds a lint job or Bitbucket Pipelines, it prints setup steps instead of writing a
+second workflow. On your runner, install the pinned gspot version and the runtimes, then run
+from the repository root:
 
 ```shell
 gspot install
@@ -116,5 +108,5 @@ gspot check
 gspot check --stage manual
 ```
 
-Upload `.gspot/reports/report.*` after success or failure, under a separate artifact name per
-stage and platform. Never upload `.gspot/state/`, installed dependencies, or credentials.
+Keep the nonzero exit codes, and upload `.gspot/reports/report.*` after success and failure.
+Do not upload `.gspot/state/`, installed dependencies, or credentials.

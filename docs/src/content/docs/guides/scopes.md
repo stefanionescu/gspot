@@ -1,14 +1,15 @@
 ---
 title: Monorepos
-description: Give nested projects their own kits and settings in one policy file.
+description: Give each project in a repository its own kits and settings, in one policy file.
 ---
 
-Run commands from your repository root with [gspot installed](/guides/install/).
+A scope is one project inside your repository. It has its own kits and settings. `gspot init`
+reads the workspaces your package manager declares and proposes a scope for each. Check their
+paths and kits in the plan before you accept.
 
-Start from a repository with nested projects. Initialization reads supported package-manager
-workspace declarations and proposes scopes. Review their paths and kits before accepting.
+## Declare scopes
 
-A complete example policy:
+This policy has a root with no kits and two scopes:
 
 ```toml
 version = 1
@@ -26,10 +27,10 @@ path = "ios"
 kits = ["swift", "xcode"]
 ```
 
-Use the singular `[[scope]]` array table. The `[scope.limits]` table belongs to the preceding
-scope, so the example changes the limit for `api`, not `ios`.
+Write `[[scope]]` once for each scope. A table such as `[scope.limits]` belongs to the scope
+above it, so the limit in this example applies to `api` only.
 
-## Check a project
+After you change the scopes, apply the policy, install the tools, and check one project:
 
 ```bash
 gspot apply
@@ -37,78 +38,71 @@ gspot install
 gspot check api
 ```
 
-The deepest containing scope owns a file. Files outside nested scopes belong to the root.
-A project-wide check triggered by a path can inspect other files in that project. Generated
-configuration lives under `.gspot/config/<path>/` when the owning tool needs a separate scope file.
+## Which scope owns a file
 
-`gspot explain <file>` reports the scope and owns. Use `./` for a filename that also names a
-kit or check: `gspot explain bash` explains the configuration, while `gspot explain ./bash`
-explains the file.
+The deepest scope that contains a file owns it. Files outside every scope belong to the root.
+A whole-project check, such as a type check, can read other files of the same project when you
+name one file.
 
-## Change a scoped setting
+To see the scope and the checks of a file, run `gspot explain` with the path. Start the path
+with `./` when it also names a kit or a check: `gspot explain bash` explains the kit, and
+`gspot explain ./bash` explains the file.
+
+When a tool needs its own configuration per scope, gspot writes it under
+`.gspot/config/<path>/`.
+
+## Settings in a scope
 
 ```bash
 gspot set limits.function_lines 80 --scope api --reason "The parser is one state machine."
 ```
 
-The command writes the scoped setting and applies policy. Root settings supply defaults;
-more specific scope settings override them. Keep scope paths relative to the policy root.
-PostgreSQL migration directories are also relative to their scope.
+Root settings apply to every scope. A setting in a scope replaces the root value for that scope
+and the scopes inside it. Paths in scope settings are relative to the root of the policy.
 
-The PostgreSQL kit supplies the `postgres` SQLFluff dialect. Set `tools.sqlfluff.dialect`
-at the root or in a scope to select another dialect. Each scope receives its effective dialect
-in its generated SQLFluff configuration, including inherited scope values.
-Use the tool's lowercase dialect label, such as `postgres`, `sqlite`, or `duckdb`.
-Supabase also defaults `tools.squawk.assume_in_transaction` to `true`. Set it to `false` at the
-root or in a scope when that migration runner does not wrap statements in transactions.
+A list setting adds up: a scope gets the values of its kits, the root, and every scope around
+it, without repeats. A single-value setting takes the nearest value. If two selected kits give
+different defaults for the same setting, gspot names both kits. To decide, set the value at the
+root or in a scope.
 
-Ruff also receives a configuration for each scope. A `pytest` scope enables pytest style rules
-at the `recommended` level and allows assertions in its test files. Those allowances do not
-apply to sibling projects that do not select `pytest`. Scoped Python limits remain local to
-their project.
+## Settings that differ per scope
 
-Spelling configuration and editor copies also follow scope settings. A scope can select its own
-locale and append allowed words and excluded paths without changing sibling projects.
-Set `tools.typos.locale` to `en`, `en-us`, `en-gb`, `en-ca`, or `en-au`.
-The policy file also recognizes the scoped dictionary words it declares.
+- **SQL dialect.** The `postgres` kit sets `tools.sqlfluff.dialect` to `postgres`. For another
+  dialect, set its lowercase label in the root or a scope table: `sqlite`, for example.
+- **Migrations in transactions.** The `supabase` kit sets `tools.squawk.assume_in_transaction`
+  to `true`. Set it to `false` where your migration runner does not wrap each migration in a
+  transaction.
+- **Python rules.** Each scope gets its own Ruff configuration. A scope with the `pytest` kit
+  turns on the pytest style rules and allows assertions in its test files. Its sibling scopes
+  keep their own rules.
+- **Spelling.** A scope can set its own `tools.typos.locale`: `en`, `en-us`, `en-gb`, `en-ca`,
+  or `en-au`. It can also add words with `tools.typos.words` and paths with
+  `tools.typos.exclude`. Paths in `tools.typos.exclude` stay relative to the root of the policy.
 
-Use `tools.typos.extra.type` with a reason for native filename-specific spelling options.
-Native file-type globs match basenames, so a directory path does not narrow that match.
-CLI configurations and editor copies retain these options. Other words and filenames remain checked.
+## Files a scope reads
 
-Paths in `tools.typos.exclude` remain relative to the policy root, including inside scope tables.
-Editor configuration translates those patterns to its directory. CLI checks and fixes use only
-the generated configuration, so an unowned nested typos file cannot add word allowances.
+Checks that read project files look inside the scope only. Supabase reads
+`supabase/config.toml` in each scope, and the settings `tools.supabase.functions_directory`,
+`tools.supabase.admin_key_files`, and `tools.i18n.translations.directory` are relative to the
+scope. Locale messages and static site files in a child scope do not count for the parent
+scope.
 
-List settings append values from kits, the root table, and containing scopes, and remove
-repeated values. Scalar settings replace the preceding value. If selected kits provide
-conflicting scalar defaults, the error names both kits. Set that key in the root table to
-settle the conflict for all scopes, or in a containing scope table for that scope and its
-descendants.
+With the `static-site` kit, `static-site/svg-optimized` reports an SVG file when optimizing it
+saves more than 10% of its size at `recommended`, or any bytes at `all`. To optimize the
+files, run:
 
-## Check project resources
+```bash
+gspot check --only static-site/svg-optimized --fix
+```
 
-Supabase configuration checks read `supabase/config.toml` within each policy scope.
-`tools.supabase.functions_directory`, `tools.supabase.admin_key_files`, and
-`tools.i18n.translations.directory` are relative to that scope. Locale messages, static-site
-headers, and asset references in a child scope do not satisfy checks in its parent scope.
-Project-wide checks receive their scope's source files, configuration, and binary resources.
-Coverage counts only the source kinds declared by each check.
-The dead-asset check includes binary files.
+## A policy below the Git root
 
-With `static-site`, `static-site/svg-optimized` reports SVG savings over 10% at `recommended`
-and any byte reduction at `all`. It reads the selected SVG files without rewriting them.
-Use `gspot check --only static-site/svg-optimized --fix` to apply optimization through the
-isolated fixer workflow. An optimizer execution or parse failure returns status 2.
-
-## Put policy below the Git root
-
-Run from the directory containing that policy or select it explicitly:
+The nearest `gspot.toml` above the current folder is the policy. To use a policy in a subfolder
+from anywhere, pass `-C`:
 
 ```bash
 gspot -C api check
 ```
 
-The closest enclosing `gspot.toml` determines the policy root. Path selectors are relative to
-the selected working directory. Inspect `gspot explain <file>` when a file is assigned to an
-unexpected scope; do not add duplicate root-wide checks to compensate for a wrong scope path.
+Paths you name on the command line are relative to the folder `-C` selects. When a file lands
+in the wrong scope, check its path with `gspot explain` and fix the scope path.

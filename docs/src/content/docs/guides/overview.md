@@ -1,40 +1,52 @@
 ---
 title: Overview
-description: Choose a setup, run checks, and resolve findings with gspot.
+description: What gspot does, how it enforces it, and where your choices live.
 ---
 
-gspot configures linters, runs checks, and generates instructions for coding agents from one repository configuration. It runs selected tools
-and repository checks, then reports findings with paths, check names, and correction guidance.
+gspot lints AI-generated code and installs rules for AI coding agents. Git hooks and CI run
+the checks, and a finding stops the commit.
 
-## Set up a repository
+## What gspot sets up
 
-Start with the [source installation prerequisites](/guides/install/). From your project root,
-`gspot init` proposes kits for the detected languages and tools. Each kit selects checks and their required tools.
-Review the proposed writes before accepting them. Initialization does not run checks.
+`gspot init` reads your repository and sets up four things.
 
-- For a disposable example, [run your first check](/guides/quick-start/).
-- For a repository with linter configuration already, see [existing repositories](/guides/existing-repository/).
-- After cloning a configured repository, [install its locked tools and hooks](/guides/install/#join-a-configured-repository).
+**Linters.** gspot writes the configuration for the standard tools of your languages, such as
+ESLint, Prettier, Ruff, ShellCheck, and SwiftLint. It installs them at pinned versions in a
+private folder, `.gspot/`, so your own dependencies stay as they are.
 
-## Check and correct
+**Checks for agent-written code.** Coding agents write some things again and again: functions
+that only pass their arguments on, folders that hold one file, names such as `utils`, and code
+copied between files. gspot has its own checks for these, next to the rules of the standard
+tools.
 
-From a configured repository root, run `gspot check`. Exit 0 means the executed checks passed,
-1 means findings remain, and 2 means a check cannot complete. Read skipped-check messages:
-a skip does not verify the affected files.
+**Guides for coding agents.** gspot installs Markdown guides under `.gspot/guides/` and links
+them from `AGENTS.md`. `CLAUDE.md`, `GEMINI.md`, and the GitHub Copilot instructions get the
+same link when they exist. The guides tell the agent how to write code in this repository, and
+they match the checks.
 
-A finding names its check and explains what to correct. Edit the affected file and rerun the
-check. Use [finding guidance](/guides/findings/) to inspect a check, select a narrower
-run, or use an available automatic fixer. Checks that require external tools need those tools
-installed first.
+**Enforcement.** Git hooks run the checks before each commit and push, and a finding stops the
+commit. `gspot init --ci github` or `--ci gitlab` also writes a CI job. Each finding names the
+file, the line, the rule, and what to do. The report prints the command that reruns each
+failed check.
 
-## Maintain the policy
+## Two levels
 
-`gspot.toml` owns the policy. [Choose checks and exceptions](/guides/customize/) there or through
-the `gspot` commands. Commands apply their changes; after a manual edit, run `gspot apply`
-to regenerate configuration. Review generated
-changes and share matching tool locks. Teammates run `gspot install` after receiving them.
+- `recommended`, the default, runs the checks that find defects: correctness, security,
+  accessibility, type safety, dependency health, and formatting.
+- `all` adds the house style: naming, trivial functions and files, one-file folders, copied
+  code, declaration order, and complexity.
 
-Use [scopes](/guides/scopes/) for different parts of a repository and [profiles](/guides/profiles/)
-for policy shared across repositories. Configure [hooks and CI](/guides/hooks-and-ci/) to run
-checks at the intended stages. If setup or removal conflicts with edited files, follow the
-[recovery procedure](/guides/uninstall/) before deleting anything.
+Neither level turns on experimental or preview rules. To change the level, run
+`gspot set level all`.
+
+## One policy file
+
+Your choices live in `gspot.toml`: the kits, the level, the settings, and the exceptions.
+`gspot set` and `gspot ignore` edit it and apply the change. After you edit it by hand, run
+`gspot apply`. See [the policy file](/guides/customize/).
+
+## Next steps
+
+- [Install gspot](/guides/install/).
+- Follow the [quickstart](/guides/quick-start/): an agent's commit is rejected, then fixed.
+- Add gspot to an [existing repository](/guides/existing-repository/).

@@ -1,86 +1,118 @@
 ---
 title: Install
-description: Install dependencies and run gspot from source.
+description: Build gspot from source and put it on your PATH.
 sidebar:
     order: 1
 ---
 
-**gspot is unreleased.** The supported starting point is a source checkout.
+gspot is not on npm yet, so you build it from a source checkout. You need Git, a Bash shell,
+and [mise](https://mise.jdx.dev) 2026.8.8 or newer.
 
-Use Git, a Bash-compatible shell, and mise 2026.8.8 or later to run gspot from a source checkout:
+## Build the binary
+
+1. Clone the repository and install its runtimes:
+
+    ```bash
+    git clone https://github.com/stefanionescu/gspot.git
+    cd gspot
+    mise install
+    mise run repo:setup
+    ```
+
+2. Build gspot for your system:
+
+    ```bash
+    mise run build
+    ```
+
+    The build writes one executable to `dist/`. Its name ends with your system, such as
+    `dist/gspot-darwin-arm64` on an Apple silicon Mac or `dist/gspot-linux-x64` on a 64-bit
+    Linux machine.
+
+3. Copy the executable to a folder on your `PATH`, under the name `gspot`:
+
+    ```bash
+    mkdir -p ~/.local/bin
+    cp dist/gspot-darwin-arm64 ~/.local/bin/gspot
+    ```
+
+4. Check that your shell finds it:
+
+    ```bash
+    gspot --version
+    ```
+
+    The command prints the version, such as `0.1.0`.
+
+The Git hooks that gspot installs call this executable, so keep it in place after you set up a
+repository.
+
+## Set up a repository
+
+From the root of your repository, run:
 
 ```bash
-git clone https://github.com/stefanionescu/gspot.git
-cd gspot
-mise install bun node
-mise run repo:setup
-mise exec -- bun packages/cli/src/main.ts --help
+gspot init
 ```
 
-While still in the checkout, define a command for your current shell:
-
-```bash
-gspot_source="$PWD/packages/cli/src/main.ts"
-gspot_runtime_path="$(dirname "$(mise which bun)"):$(dirname "$(mise which node)")"
-gspot() { PATH="$gspot_runtime_path:$PATH" bun "$gspot_source" "$@"; }
-```
-
-Change to the repository you want to check. The function retains the checkout's Bun and Node
-runtimes and source entry point without changing your working directory.
-Continue with [your first check](/guides/quick-start/) for a new setup.
-See [existing repositories](/guides/existing-repository/) for what init replaces.
-
-The default `recommended` level includes routine formatting and baseline correctness,
-security, accessibility, and type checks. Select `all` for additional stable conventions.
-Neither level enables experimental rules. Selected integrations determine installed tools,
-including parser and plugin dependencies for rules that are disabled.
-
-## Match the repository version
-
-`gspot init` writes `.gspot/version` and, when mise runs the repository, a pin in
-`.mise/conf.d/gspot-tools.toml`. This integration requires mise 2026.8.8 or newer. Everyone on the repository runs that version; another version
-refuses `check` and says how to install the pinned one or move the pin with
-`gspot apply`. Preview generated changes with `gspot apply --dry-run`, apply them, then run `gspot install`.
-
-## Native binaries and npm packages
-
-Local builds produce macOS binaries for arm64 and x64, Linux binaries for both architectures
-with glibc or musl, and a Windows x64 binary. The npm launcher selects the matching operating
-system, architecture, and Linux C library. It requires Node.js 18 or newer. Keep optional
-dependencies enabled: they contain the executable. Installation needs no lifecycle scripts.
-
-Git must be on `PATH`. A configured repository also needs its selected tools. `gspot install`
-installs the locked private npm and Python projects under `.gspot/`; mise manages native tools
-when selected. See [using gspot without mise](/guides/without-mise/) for native tool provisioning.
-
-Every binary distribution includes `LICENSE.md`, `NOTICE.md`, and checksums. npm packages
-include the same license and notice files. The [build guide](/guides/build/) describes local
-candidate preparation and grammar provenance.
-
-macOS builds are signed ad hoc. They are not Developer ID signed or notarized. A browser
-download can receive a quarantine attribute and be blocked by Gatekeeper. After verifying
-the binary against its release checksum, remove that attribute from the verified file:
-
-```shell
-xattr -d com.apple.quarantine ./gspot-darwin-arm64
-```
-
-Use the filename for your architecture. Windows builds are not Authenticode signed; Windows
-can display an unknown-publisher warning.
+`init` shows a plan and writes it after you accept. The [quickstart](/guides/quick-start/) goes
+through a full example.
 
 ## Join a configured repository
 
-Prepare the CLI version recorded in `.gspot/version`, then run from the configured repository:
+When a teammate already set up gspot, install the same gspot version and run:
 
 ```bash
 gspot install
 gspot check
 ```
 
-Install consumes matching tool locks and sets up selected hooks. If policy and locks disagree,
-the policy owner must run `gspot apply` and share the resulting changes. Installation does not
-regenerate policy or add a `prepare` lifecycle script. Working-tree and staged checks warn when
-hooks are missing or edited; that warning does not change the check result.
+`install` installs the tools at the versions in the committed locks and sets up the Git hooks.
+It changes no tracked file. If the policy and the locks disagree, `install` stops. The person
+who changed the policy runs `gspot apply` and commits the result.
 
-See [edit and retain repository files](/guides/generated-files/) for what to commit,
-regenerate, and keep for restoration.
+## Match the repository version
+
+`gspot init` records the gspot version in `.gspot/version`. When mise runs the repository, it
+also pins that version in `.mise/conf.d/gspot-tools.toml`. Every person on the repository runs
+that version.
+
+A different version refuses `gspot check` and prints two ways forward: install the pinned
+version, or move the pin. To move the pin, preview the change, apply it, and install:
+
+```bash
+gspot apply --dry-run
+gspot apply
+gspot install
+```
+
+## Tools gspot runs
+
+Git must be on your `PATH`. gspot installs its npm and Python tools in a private project under
+`.gspot/`, so your own dependencies do not change. When mise runs the repository, mise also
+installs the native tools, such as ShellCheck. Without mise, see
+[package managers](/guides/without-mise/).
+
+## Builds for other systems
+
+`mise run build -- --all` builds every supported system:
+
+| System  | Architectures | Executable                                       |
+| ------- | ------------- | ------------------------------------------------ |
+| macOS   | arm64, x64    | `gspot-darwin-arm64`, `gspot-darwin-x64`         |
+| Linux   | arm64, x64    | `gspot-linux-arm64`, `gspot-linux-x64`           |
+| Linux   | musl          | `gspot-linux-arm64-musl`, `gspot-linux-x64-musl` |
+| Windows | x64           | `gspot-windows-x64.exe`                          |
+
+Every build includes `LICENSE.md`, `NOTICE.md`, and checksums. The [build guide](/guides/build/)
+covers release builds.
+
+The macOS builds carry an ad hoc signature. They are not notarized, so Gatekeeper can block a
+downloaded copy. After you compare the file with its release checksum, remove the quarantine
+attribute:
+
+```shell
+xattr -d com.apple.quarantine ./gspot-darwin-arm64
+```
+
+The Windows build is not Authenticode signed, so Windows can show an unknown-publisher warning.

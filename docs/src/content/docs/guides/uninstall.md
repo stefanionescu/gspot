@@ -1,59 +1,55 @@
 ---
 title: Uninstall
-description: Preview removal, preserve later edits, and restore recorded originals.
+description: Remove what gspot wrote and restore the files it replaced.
 ---
 
-Run commands from your repository root with [gspot installed](/guides/install/).
+`gspot uninstall` removes what gspot wrote and puts back the files it replaced.
 
-Run removal from the configured repository root. Inspect the plan before applying it:
+## Remove gspot
 
-```bash
-gspot uninstall --dry-run
-```
+1. From the repository root, preview the removal:
 
-The preview is read-only. It lists recorded removals, restorations, and content that needs
-review. To accept the plan without an interactive question:
+    ```bash
+    gspot uninstall --dry-run
+    ```
 
-```bash
-gspot uninstall --yes
-```
+    The preview lists the files gspot removes, the originals it restores, and the files it
+    keeps for you to review. It changes nothing.
 
-Uninstall uses the current local ownership record under `.gspot/state/`.
-Obsolete logs and recovery layouts remain unowned data. gspot does not convert or delete them.
+2. Remove gspot:
 
-Uninstall restores an original when the destination is absent or still matches the installed bytes and permissions. Later edits and unowned files
-remain. It also keeps `gspot.toml`, exported profiles, the project rule layer, and local recovery material.
+    ```bash
+    gspot uninstall --yes
+    ```
 
-## Resolve a retained edit
+Uninstall restores an original when its place is empty, or still holds exactly what gspot
+wrote. It keeps `gspot.toml`, exported profiles, your own guides folder, and the recovery data
+under `.gspot/state/`.
 
-Uninstall reports the retained destination and its original recovery path when a backup exists.
-Compare those files before resolving the conflict. JSON output lists these pairs under `originals`.
-Choose which authored changes to retain before replacing anything. A modified hook dispatcher
-also needs review; uninstall does not assume that the current hook belongs entirely to gspot.
-Do not remove recovery material while a restoration conflict remains.
+## A file you edited
 
-Interrupted operations are recovered through the same ownership record before restoration.
-If recovery refuses a conflict, preserve both the destination and recovery data while resolving
-it. Running uninstall again cannot authorize deletion of an unrelated file.
+When you edited a file after gspot wrote it, uninstall keeps your version. It prints the path
+and, when one exists, the path of the saved original, so you can compare them. `--json` lists
+these pairs under `originals`. Decide which changes to keep before you replace anything.
 
-## A clone has different recovery history
+Keep the recovery data until you resolve every conflict. It holds the exact bytes and
+permissions of each file gspot replaced.
 
-Recovery data is local. A fresh clone does not acquire ownership records merely because Git
-tracks generated configuration. Files without those records remain during removal. Applying
-configuration in that clone records any replaced existing bytes and permissions as originals.
-Do not infer ownership from a generated header or filename.
+## A fresh clone
 
-## Remove integrations separately when required
+The record of what gspot wrote lives only on the machine where it ran, under `.gspot/state/`. A
+fresh clone has none, so uninstall leaves the files in place there. On that clone, `gspot apply`
+starts a new record.
 
-Review retained hook-manager and pipeline configuration after removal. External repository
-settings, installed global executables, and tools provisioned by another package manager are
-outside file restoration. Uninstall is not a request to disable remote checks or delete accounts.
+## Outside the repository
 
-## How preservation works
+Uninstall changes only files in the repository. Hook manager settings you added, CI jobs, tools
+installed on your system, and settings on your Git host stay as they are.
+
+## How gspot keeps the originals
 
 ![Configuration preservation and recovery](/brand/diagrams/recovery.svg)
 
-Before writing configuration, gspot observes existing bytes and permissions. Apply records
-the changes it owns. If a managed output has been edited, the conflict preserves those edits.
-Uninstall restores recorded originals where ownership still matches. Resolve reported conflicts
-before retrying; do not delete edited configuration to silence a conflict.
+Before gspot writes a file, it records the bytes and permissions of what was there. When you
+edit a file gspot wrote, gspot keeps your edit. Uninstall restores an original only while the
+file still holds what gspot wrote.

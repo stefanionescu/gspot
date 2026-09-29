@@ -1,57 +1,59 @@
 ---
 title: Security
-description: Run the Swift security rules and a configured CodeQL analysis.
+description: The security checks gspot runs, and how to run Semgrep, the Swift security rules, and CodeQL.
 ---
 
-Run commands from your repository root with [gspot installed](/guides/install/).
+Four kits carry security checks. Select the ones your repository needs:
 
-## Choose the scan
+| Kit            | Checks                                                                                                      | Stage                                             |
+| -------------- | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
+| `secrets`      | Gitleaks scans staged changes and pushed commits. TruffleHog confirms candidate secrets with their issuers. | Commit and push                                   |
+| `dependencies` | The Open Source Vulnerabilities (OSV) scanner checks your lockfiles for known vulnerable packages.          | Push                                              |
+| `security`     | Semgrep runs the shipped rules and your own.                                                                | Push                                              |
+| `security`     | Semgrep runs the public rule packs you choose, and CodeQL runs its queries.                                 | Manual                                            |
+| `docker`       | Trivy checks the container configuration and an image you name.                                             | See the [Docker checks](/reference/kits/docker/). |
 
-Security checks cover different inputs. Select the kits your repository needs:
+`gspot explain <check>` prints what a check needs to run. A check whose tool is missing fails,
+so a missing scanner never looks like a clean scan.
 
-| Configuration  | Checks                                                                                                               | When                                              |
-| -------------- | -------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
-| `secrets`      | Gitleaks scans staged changes and pushed commits; TruffleHog verifies candidate secrets with their issuing services. | Commit and push.                                  |
-| `dependencies` | Open Source Vulnerabilities (OSV) scans supported lockfiles for known vulnerable dependencies.                       | Push.                                             |
-| `security`     | Semgrep runs shipped and repository rule packs.                                                                      | Push.                                             |
-| `security`     | Configured public Semgrep packs and CodeQL queries.                                                                  | Manual.                                           |
-| `docker`       | Trivy checks container configuration and a configured image.                                                         | See the [Docker checks](/reference/kits/docker/). |
+If gspot finds a real secret, revoke or rotate it first, then remove it from the code. Deleting
+the line leaves the secret in Git history.
 
-Use `gspot explain <check>` for prerequisites and the enabled policy. A missing tool or an
-unconfigured manual scan is not a successful security scan. If a reported secret is real,
-revoke or rotate it before removing it from code; deleting the current line leaves Git history.
+## Semgrep
 
-## Semgrep rules
-
-Select `security`, then run the shipped and repository rules:
+With the `security` kit, run the shipped rules and your own:
 
 ```shell
 gspot check --stage push --only security/semgrep
 ```
 
-Add local rule paths with `tools.semgrep.rules`. Set `tools.semgrep.registry` to the public
-packs you want, then run `gspot check --stage manual --only security/semgrep-registry`.
-Registry checks require network access. Keep exceptions scoped to the affected rule and paths
-with a reason; see [customize](/guides/customize/#record-one-exception).
+Add your rule files with `tools.semgrep.rules`. To run public rule packs, list them in
+`tools.semgrep.registry` and run:
+
+```shell
+gspot check --stage manual --only security/semgrep-registry
+```
+
+The rule packs need network access. To turn a rule off for some paths, record an ignore with a
+reason; see [the policy file](/guides/customize/#record-one-exception).
 
 ## Swift security rules
 
-Select `security` with `swift` to run the iOS Semgrep pack at push. It checks Keychain
-accessibility, secret storage, credential literals, insecure network settings, and weak
-hashes. It also checks unsafe pointer operations, web views, sensitive logging, and
-JavaScript build-script injection. Plist files participate in the security check.
-The generated pack is `.gspot/config/semgrep/ios.yml`.
+With the `security` and `swift` kits, Semgrep runs an iOS rule pack at the push stage. It checks
+Keychain access, secret storage, credentials in code, network settings, and weak hashes. It also
+checks unsafe pointer operations, web views, sensitive logging, and script injection in build
+phases. Plist files are part of the check. The pack is `.gspot/config/semgrep/ios.yml`.
 
-## CodeQL analysis
+## CodeQL
 
-In a repository with the `security` kit selected, add the languages to scan in `gspot.toml`:
+With the `security` kit, name the languages to scan in `gspot.toml`:
 
 ```toml
 [tools.codeql]
 languages = ["python"]
 ```
 
-Run these commands from the repository root:
+Then apply, install, and run the scan:
 
 ```bash
 gspot apply
@@ -59,7 +61,6 @@ gspot install
 gspot check --stage manual --only security/codeql --no-cache
 ```
 
-CodeQL runs against a disposable copy of the selected sources. Findings use repository-relative
-paths. The security kit pins the CLI and its matching query packs; the first scan downloads
-missing packs. An unreadable report or failed native analysis returns status 2. Repair the
-reported tool failure before treating the scan as complete.
+CodeQL scans a copy of your sources, and the findings name paths in your repository. The
+`security` kit pins the CodeQL CLI and its query packs. The first scan downloads the packs. When
+the analysis fails or its report cannot be read, the check exits with `2`.

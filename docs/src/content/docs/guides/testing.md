@@ -1,97 +1,90 @@
 ---
 title: Tests and coverage
-description: Configure Jest coverage and Swift test checks without weakening source rules.
+description: Run your test suite with a coverage floor, and check Swift tests.
 ---
 
-Run commands from the configured repository root with the [CLI available](/guides/install/).
+gspot runs your test suite as a check at the push stage and fails it when coverage falls below
+the floor you set. Keep the test runner and its dependencies in your own project.
 
-## Jest coverage
+The default floors are 0% at `recommended` and 80% at `all`. A floor you set applies at both
+levels. For a test runner without a kit, write a [custom check](/guides/custom-checks/).
 
-Select the `jest` configuration for a project that runs Jest. Keep Jest and its test dependencies in
-the project. `gspot install` installs the ESLint plugin in the private tool directory.
-JavaScript and TypeScript lint checks report focused, disabled, and invalid tests at both levels.
+## Jest
 
-Run coverage at the push stage:
+Select the `jest` kit, then run the coverage check:
 
 ```bash
 gspot check --stage push --only jest/coverage --no-cache
 ```
 
-The check runs Jest in a disposable source copy. It preserves working-tree sources and reports.
-The [configuration reference](/reference/configuration/) lists coverage defaults.
+The check runs Jest in a copy of your sources, so your working tree and reports stay as they
+are. Failed tests and missed floors exit with `1`. A suite that cannot load, or a missing
+report, exits with `2`.
+
 To require full function coverage:
 
 ```bash
 gspot set tools.jest.coverage_functions 100
 ```
 
-Use `--scope app` when `app` is a declared scope. The selected project supplies its Jest
-configuration and tests. Failed assertions and coverage shortfalls return status 1; a suite
-that cannot load or a missing report returns status 2.
+Add `--scope app` to set it for the scope `app` only. The
+[policy reference](/reference/configuration/) lists every coverage setting.
 
-`tools.jest.global_package = "bun:test"` lets the ESLint rules recognize Bun test imports.
-It also accepts the optional failure message in Bun `expect` calls while rejecting extra arguments.
-This setting affects linting; the coverage check still runs Jest.
+The JavaScript and TypeScript lint checks report focused, disabled, and invalid tests at both
+levels. When your tests import from `bun:test`, set `tools.jest.global_package = "bun:test"`
+so the lint rules recognize them. That setting changes linting only; the coverage check still
+runs Jest.
 
-## Vitest coverage
+## Vitest
 
-Select `vitest` for a project that already has Vitest and its coverage provider installed.
-Run its suite with:
+Select the `vitest` kit, with Vitest and its coverage provider installed in your project. Then
+run:
 
 ```bash
 gspot check --stage push --only vitest/coverage --no-cache
 ```
 
-Set `tools.vitest.coverage_lines`, `coverage_branches`, `coverage_functions`, and
-`coverage_statements` to the required percentages. Use `tools.vitest.coverage_file` for a
-configuration file outside Vitest's normal discovery paths. Paths are relative to the scope.
+Set the floors with `tools.vitest.coverage_lines`, `coverage_branches`, `coverage_functions`,
+and `coverage_statements`. When your Vitest configuration lives outside the usual paths, set
+`tools.vitest.coverage_file`. Paths are relative to the scope.
 
-## Python coverage
+## Python
 
-Select `pytest` and install pytest with pytest-cov in the project's `.venv`. Keep those
-application test dependencies in the project manifest and lock. Then run:
+Select the `pytest` kit, and install pytest and pytest-cov in your project's `.venv`. Then run:
 
 ```bash
 gspot check --stage push --only pytest/coverage --no-cache
 ```
 
-`tools.pytest.coverage` sets the required line coverage. The check runs pytest with strict
-markers and configuration. Failed tests and insufficient coverage fail the check.
-The Ruff pytest rules apply to test files without relaxing rules in application source.
-
-The default coverage floors are zero at `recommended` and 80% at `all`. Explicit floors
-apply at either level. Use [custom checks](/guides/custom-checks/) for another test runner.
+`tools.pytest.coverage` sets the line coverage floor. The check runs pytest with strict markers
+and strict configuration. The Ruff rules for pytest apply to your test files, and your
+application code keeps its own rules.
 
 ## Swift tests
 
-Select `xctest` to generate a nested `.swiftlint.yml` for each owned `Tests` or `*Tests`
-folder. These files disable `force_unwrapping`, `missing_docs`, and `no_magic_numbers` in
-tests. Source files retain those rules. Nested policy scopes retain their own configuration.
+Select the `xctest` kit. gspot writes a `.swiftlint.yml` into each `Tests` or `*Tests` folder.
+It turns off `force_unwrapping`, `missing_docs`, and `no_magic_numbers` in tests, and your
+source files keep those rules.
 
-gspot runs SwiftLint from the selected scope using native configuration discovery. For an
-editor or standalone invocation, run `swiftlint lint` from that scope without `--config`:
-[SwiftLint ignores nested configuration when that argument is present](https://github.com/realm/SwiftLint/blob/0.63.2/README.md#nested-configurations).
-Run `gspot apply` to restore a missing generated pointer file.
+To run SwiftLint yourself or in an editor, run `swiftlint lint` from the scope, without
+`--config`.
+[SwiftLint ignores nested configuration when you pass `--config`](https://github.com/realm/SwiftLint/blob/0.63.2/README.md#nested-configurations).
+If a nested `.swiftlint.yml` goes missing, `gspot apply` writes it again.
 
-The `doc_comment_style` rule requires `///` documentation comments instead of block
-documentation comments. It preserves ordinary block comments and comment markers inside strings.
+The Swift test checks:
 
-Static test checks recognize imports of `XCTest` or `Testing`, and `@Test` or `@Suite`
-attributes, including files outside test folders. Imports and attributes inside strings or
-comments do not select tests. A package test target also proposes the `xctest` configuration.
-Put a skip reason in the `XCTSkip` or `.disabled` argument. Missing, empty, and whitespace-only
-literal reasons are findings. Sleep allowances apply within their declared policy scope.
+- recognize a test file by an import of `XCTest` or `Testing`, or by the `@Test` or `@Suite`
+  attributes, even outside test folders
+- require a reason in each `XCTSkip` or `.disabled` argument
+- require `///` documentation comments instead of block documentation comments
 
-Snapshot references use `tools.xctest.reference_layout`, defaulting to
-`__Snapshots__/{file}/{test}.*`, relative to the test file directory. `{file}` is the Swift
-filename without its extension, and `{test}` is the test name. `*` and `?` match characters
-within a path segment. Set a different layout in a policy scope for a custom snapshot
-directory. A Swift file in another directory does not satisfy a reference owner.
+Snapshot references follow `tools.xctest.reference_layout`, by default
+`__Snapshots__/{file}/{test}.*`, relative to the test file. `{file}` is the Swift file name
+without its extension, and `{test}` is the test name. Set another layout in a scope for a
+different snapshot folder.
 
-### Xcode source membership
+## Xcode source membership
 
-Xcode source membership follows file references through their group paths and source build
-phases. Display names do not change paths. Projects in a policy scope share the source
-membership check, and nested policy scopes are checked separately. Synchronized groups
-honor their target membership exclusions. A source path that requires unresolved build
-settings returns an execution error rather than an incomplete membership result.
+The source membership check follows the file references and build phases of each Xcode project.
+Synchronized groups keep their target exclusions. When a source path depends on a build setting
+gspot cannot resolve, the check fails with an error instead of a partial result.

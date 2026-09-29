@@ -1,50 +1,47 @@
 ---
 title: Generated files
-description: Know which files to edit, commit, regenerate, and retain for recovery.
+description: Which files gspot writes, which to commit, and which to leave alone.
 ---
 
-Edit `gspot.toml` to choose kits, checks, and exceptions. Commands such as
-`gspot set` and `gspot ignore` edit the same file. Keep exception reasons there;
-`gspot explain` shows the policy behind a check.
+You edit one file, `gspot.toml`. gspot writes the rest from it. After you change the policy,
+run `gspot apply` to write them again.
 
-## Regenerate configuration
+## What gspot writes
 
-Review and apply your choices from the configured repository root:
+| Path                             | What it holds                                                                              |
+| -------------------------------- | ------------------------------------------------------------------------------------------ |
+| `.gspot/config/`                 | The configuration of every tool. A scope gets its own folder under it.                     |
+| `.gspot/guides/`                 | The guides for coding agents.                                                              |
+| `.gspot/package.json` and lock   | The npm tools gspot installs, at pinned versions.                                          |
+| `.gspot/pyproject.toml` and lock | The Python tools gspot installs, at pinned versions.                                       |
+| `.gspot/version`                 | The gspot version of the repository.                                                       |
+| Files at the repository root     | Pointers for editors and tools that look for their configuration at the root.              |
+| Managed blocks                   | Blocks in `.gitignore`, `.gitattributes`, and `AGENTS.md`. The rest of each file is yours. |
+| Keys in shared files             | Install settings in files such as `bunfig.toml`. The other keys stay yours.                |
 
-```bash
-gspot apply --dry-run
-gspot apply
-gspot install
-```
+The root files are `eslint.config.mjs`, `.prettierrc.json`, `.prettierignore`,
+`.stylelintrc.json`, `.editorconfig`, `.semgrepignore`, `pyrightconfig.json`, and
+`.swiftlint.yml`, depending on your kits. Most point at the file under `.gspot/config/`. The
+other tools get their configuration path from gspot. To use such a tool in your editor, point
+the editor at the file under `.gspot/config/`.
 
-`apply` writes tool configuration under `.gspot/config/` and copies agent guides to
-`.gspot/guides/`. Scoped configuration mirrors the scope path under `.gspot/config/`.
-Five root files exist for editors: `eslint.config.mjs`, `.prettierrc.json`, `.prettierignore`,
-`.stylelintrc.json`, and `.editorconfig`. SwiftLint and basedpyright also get a root pointer,
-because they find their configuration by directory. Every other check names its configuration by
-path, so an editor integration for ShellCheck, markdownlint, typos, yamllint, taplo, SwiftFormat,
-commitlint, gitleaks, or osv-scanner points at the file under `.gspot/config/`.
+Do not edit a generated file. Change `gspot.toml`, then run `gspot apply`. If you do edit a
+generated file, `apply` keeps your edit and names the file, so you can move the change into the
+policy.
 
-Do not edit generated files. Init deletes the configuration files of the selected tools; see
-[existing repositories](/guides/existing-repository/). Shared configuration, including
-`bunfig.toml`, retains fields outside the policy. Bun release-age settings stricter
-than the policy remain in place.
+## What to commit
 
-## Commit reproducible inputs
+Commit `gspot.toml`, everything gspot writes under `.gspot/config/` and `.gspot/guides/`, the
+private manifests and locks at the root of `.gspot/`, the root files, and the managed blocks.
+After a teammate clones the repository, `gspot install` installs the locked tools and the hooks.
 
-Commit `gspot.toml`, generated configuration, copied agent rules, and version pins.
-Also commit the private dependency manifests and lockfiles at `.gspot/`'s root.
-After cloning, run `gspot install` to install those locked dependencies and hooks.
+The managed block in `.gitignore` keeps these out of Git: the installed tools, the downloaded
+style packages, `.gspot/state/`, `.gspot/cache/`, and `.gspot/reports/`.
 
-The generated ignore block excludes installed dependencies, downloaded style
-packages, `.gspot/state/`, `.gspot/cache/`, and `.gspot/reports/`.
+## What to keep
 
-## Retain recovery state
+`.gspot/state/` holds the copies of the files gspot replaced, and the record of what it wrote.
+`gspot uninstall` needs both, so keep the folder as long as you want a way back. Do
+not delete the whole `.gspot/` folder to clean up.
 
-`.gspot/state/` holds ownership records and original files needed for restoration.
-It is private local state. Keep it while restoration of replaced
-files remains necessary. Do not delete the whole `.gspot/` directory as a cleanup step.
-
-Reports under `.gspot/reports/` and caches under `.gspot/cache/` do not contain
-restoration records. See [uninstall and recover](/guides/uninstall/) before removing
-managed configuration. Uninstall preserves later edits and retains recovery data.
+`.gspot/reports/` and `.gspot/cache/` hold nothing gspot needs later. You can delete them.
