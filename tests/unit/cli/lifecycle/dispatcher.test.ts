@@ -12,6 +12,7 @@ import { policyOf } from '#tests/support/cli/policy/text.ts';
 import type { HookTool } from '#cli/types/lifecycle/hooks.ts';
 import { HOOK_FILES } from '#cli/config/repository/repository.ts';
 import { nativeHook } from '#cli/lifecycle/hooks/native-hooks.ts';
+import { lefthookCommand } from '#cli/generation/hooks/lefthook.ts';
 
 // What each manager generates for a hook, in the shape the dispatcher recognizes.
 function generated(tool: HookTool, name: string): Record<string, string> {
@@ -67,5 +68,17 @@ test.each(TOOLS.flatMap((tool) => HOOK_FILES.map((name) => [tool, name] as const
         } finally {
             files.close();
         }
+    },
+);
+
+// Lefthook on Windows wraps the command in a double-quoted sh command line it does not escape.
+test.each(HOOK_FILES.flatMap((name) => [undefined, 'mise', 'bun'].map((runner) => [name, runner] as const)))(
+    'the Lefthook command for %s under the %s runner holds no double quote',
+    (name, runner) => {
+        const command = lefthookCommand(name, runner, "/work/the author's tools/gspot");
+        expect(command).not.toContain('"');
+        expect(command).toContain(
+            runner === undefined ? String.raw`'/work/the author'\''s tools/gspot'` : 'gspot check',
+        );
     },
 );

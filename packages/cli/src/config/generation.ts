@@ -51,6 +51,18 @@ export const HOOK_ARGS: Record<HookName, string> = {
     'pre-push': 'check --push -- "$@"',
     'commit-msg': 'check --stage message --message-file "$1"',
 };
+/** The gspot arguments of each Lefthook command and the dispatcher variables they need, spelled without braces. */
+export const LEFTHOOK_ARGUMENTS: Record<HookName, { args: string; required: string[] }> = {
+    'pre-commit': { args: 'check --staged', required: [] },
+    'pre-push': {
+        args: 'check --push -- $GSPOT_HOOK_REMOTE_NAME $GSPOT_HOOK_REMOTE_LOCATION',
+        required: ['GSPOT_HOOK_REMOTE_NAME', 'GSPOT_HOOK_REMOTE_LOCATION'],
+    },
+    'commit-msg': {
+        args: 'check --stage message --message-file $GSPOT_HOOK_MESSAGE',
+        required: ['GSPOT_HOOK_MESSAGE'],
+    },
+};
 export const RUNNER_EXEC: Record<string, string> = {
     mise: 'mise exec -- gspot',
     bun: 'bun run --no-install gspot',

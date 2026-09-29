@@ -1,7 +1,7 @@
 import { openRoot } from '#cli/platform/filesystem.ts';
-import { RUNNER_EXEC } from '#cli/config/generation.ts';
 import { hookPrefix } from '#cli/generation/hooks/scripts.ts';
 import { HOOK_FILES } from '#cli/config/repository/repository.ts';
+import { RUNNER_EXEC, LEFTHOOK_ARGUMENTS } from '#cli/config/generation.ts';
 import type { HookName, ConfigurationOutput } from '#cli/types/generation.ts';
 /**
  * Preserve the gspot verdict before the native manager combines job results.
@@ -11,26 +11,25 @@ import type { HookName, ConfigurationOutput } from '#cli/types/generation.ts';
  * @returns the Lefthook command text
  */
 export function lefthookCommand(name: HookName, runner: string | undefined, binaryPath?: string): string {
-    // Lefthook reads braces as its own templates, so the dispatcher's variables stand without them. Its YAML
-    // writer turns a printed newline into a line break, so the lines say echo.
-    const required = name === 'pre-push' ? ['GSPOT_HOOK_REMOTE_NAME', 'GSPOT_HOOK_REMOTE_LOCATION'] : [];
-    if (name === 'commit-msg') required.push('GSPOT_HOOK_MESSAGE');
-    let args = 'check --staged';
-    if (name === 'pre-push') args = 'check --push -- "$GSPOT_HOOK_REMOTE_NAME" "$GSPOT_HOOK_REMOTE_LOCATION"';
-    else if (name === 'commit-msg') args = 'check --stage message --message-file "$GSPOT_HOOK_MESSAGE"';
+    // On Windows, Lefthook wraps this text in a double-quoted sh command line without escaping it, so the text holds
+    // no double quote. An empty IFS keeps every unquoted expansion one word, and case replaces the empty-value tests.
+    // Lefthook reads braces as its own templates, so the variables stand without them.
+    const { args, required } = LEFTHOOK_ARGUMENTS[name];
+    // A single quote in the path closes, escapes, and reopens the quoting: '\''.
+    const quoted = binaryPath?.replaceAll("'", String.raw`'\''`);
+    const executable = RUNNER_EXEC[runner ?? ''] ?? (quoted === undefined ? 'gspot' : `'${quoted}'`);
     return [
+        'IFS=',
+        'set -f',
         ...required.map(
             (variable) =>
-                `if [ -z "$${variable}" ]; then echo "Run gspot install, then use the Git hook" >&2; exit 2; fi`,
+                `case $${variable} in '') echo 'Run gspot install, then use the Git hook' >&2; exit 2 ;; esac`,
         ),
         'gspot_status=0',
-        `${
-            RUNNER_EXEC[runner ?? ''] ??
-            (binaryPath === undefined ? 'gspot' : `'${binaryPath.replaceAll("'", "'\"'\"'")}'`)
-        } ${args} || gspot_status=$?`,
-        'if [ "$gspot_status" -eq 126 ] || [ "$gspot_status" -eq 127 ]; then echo "The pinned gspot executable is unavailable. Install gspot, then run: gspot install" >&2; gspot_status=2; fi',
-        'if [ -n "$GSPOT_HOOK_RESULT" ]; then echo "$gspot_status" > "$GSPOT_HOOK_RESULT"; fi',
-        'exit "$gspot_status"',
+        `${executable} ${args} || gspot_status=$?`,
+        "case $gspot_status in 126 | 127) echo 'The pinned gspot executable is unavailable. Install gspot, then run: gspot install' >&2; gspot_status=2 ;; esac",
+        'case $GSPOT_HOOK_RESULT in ?*) echo $gspot_status > $GSPOT_HOOK_RESULT ;; esac',
+        'exit $gspot_status',
     ].join('; ');
 }
 
