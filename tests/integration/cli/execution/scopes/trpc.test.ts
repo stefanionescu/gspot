@@ -2,6 +2,7 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { reportSchema } from '#cli/execution/report.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 
 test.each([
     'import { router } from "./private/router.js";',
@@ -12,7 +13,7 @@ test.each([
     'import { router } from "#private/router";',
 ])('tRPC resolves the configured server boundary for %s and permits type-only imports', async (statement) => {
     await using sandbox = await testdir();
-    const policy = 'version = 1\nkits = ["trpc"]\n[tools.trpc]\nserver_files = ["private/**"]\n';
+    const policy = policyOf(['trpc'], '[tools.trpc]\nserver_files = ["private/**"]\n');
     const source = `// A comment mentioning import from private is not an edge.\n${statement}\n`;
     await createFileTree(sandbox.path, {
         'gspot.toml': policy,
@@ -42,8 +43,10 @@ test.each([
 
 test('tRPC architecture boundaries retain source locations, scope isolation, and failed reads', async () => {
     await using sandbox = await testdir();
-    const policy =
-        'version = 1\nkits = ["trpc"]\n[architecture]\nelements = [{name = "server", paths = ["private/**"]}]\n[[scope]]\npath = "app"\n[[scope]]\npath = "app/child"\n';
+    const policy = policyOf(
+        ['trpc'],
+        '[architecture]\nelements = [{name = "server", paths = ["private/**"]}]\n[[scope]]\npath = "app"\n[[scope]]\npath = "app/child"\n',
+    );
     const source = '// Router boundary\nimport { router } from "./private/router.js";\n';
     await createFileTree(sandbox.path, {
         'gspot.toml': policy,

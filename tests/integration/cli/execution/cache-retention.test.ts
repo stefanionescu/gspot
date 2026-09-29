@@ -3,13 +3,14 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import { cacheKey, fileHash, pruneCache, cacheInputs, writeCached } from '#cli/execution/cache.ts';
 import { chmodSync, existsSync, utimesSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
 
 test('cache pruning removes only expired unchanged owned results', async () => {
     await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'gspot.toml': 'version = 1\nkits = []\n' });
+    await createFileTree(sandbox.path, { 'gspot.toml': policyOf([]) });
     const paths = ['1', '2', '3', '4'].map((digit) => `.gspot/cache/${digit.repeat(64)}.json`);
     const [expired, recent, edited, authored] = paths as [string, string, string, string];
     for (const path of [expired, recent, edited]) {
@@ -58,7 +59,7 @@ test('cache keys cannot confuse a newline in a filename with another input recor
 
 test('full cache-enabled runs retire old results while narrowed runs retain them', async () => {
     await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'gspot.toml': 'version = 1\nkits = []\n' });
+    await createFileTree(sandbox.path, { 'gspot.toml': policyOf([]) });
     const key = 'a'.repeat(64);
     const path = join(sandbox.path, '.gspot/cache', `${key}.json`);
     writeCached(sandbox.path, key, {
@@ -100,7 +101,7 @@ test('cache inputs refuse traversal hidden in a glob alternative', async () => {
 test('a check hashes its named kit even when ignored and retains unrelated cached results', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nlevel = "all"\nkits = ["bash"]\n',
+        'gspot.toml': policyOf(['bash'], '', 'all'),
         '.gitignore': '.gspot/\n',
         'source.sh': '#!/bin/sh\necho example\n',
         '.gspot/config/ruff.toml': 'line-length = 88\n',

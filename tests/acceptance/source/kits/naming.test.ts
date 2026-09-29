@@ -5,12 +5,13 @@ import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { containing } from '#tests/support/expectations.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 
 test('the selected naming configuration rejects banned terms in declarations and paths', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nlevel = "all"\nkits = ["javascript", "naming"]\n',
+        'gspot.toml': policyOf(['javascript', 'naming'], '', 'all'),
         'shell.js': 'export const shellCommand = 1;\n',
         'shell/port.js': 'export const port = 1;\n',
     });
@@ -40,7 +41,7 @@ test('the selected naming configuration rejects banned terms in declarations and
 test('ordinary service and generation names pass the naming checks in code and paths', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nlevel = "all"\nkits = ["javascript", "naming"]\n',
+        'gspot.toml': policyOf(['javascript', 'naming'], '', 'all'),
         'service/generate.js': 'export function generate() { return "message"; }\nexport const service = generate();\n',
     });
     const result = await run(sandbox.path, [

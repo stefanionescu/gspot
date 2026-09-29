@@ -2,7 +2,7 @@ import { parse } from 'smol-toml';
 import { test, expect } from 'bun:test';
 import { parsePolicyText } from '#cli/policy/read.ts';
 import { proposeText } from '#cli/commands/init/propose.ts';
-import { CONFIGURATIONS } from '#tests/config/unit/cli/commands.ts';
+import { CONFIGURATIONS } from '#tests/inputs/unit/cli/commands.ts';
 
 test('a proposed policy holds no line over 120 characters and reads back as written', () => {
     const text = proposeText({

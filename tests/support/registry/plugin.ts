@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { run } from '#cli/platform/spawn.ts';
-import { SETUP_MS } from '#tests/config/execution.ts';
+import { SETUP_MS } from '#tests/inputs/execution.ts';
 import type { Registry } from '#tests/types/registry.ts';
 import { startRegistry, settleRegistry } from '#tests/support/registry/lifecycle.ts';
 

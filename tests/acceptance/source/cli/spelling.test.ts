@@ -5,9 +5,10 @@ import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { initArgs } from '#tests/support/cli/init.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { git, commitAll } from '#tests/support/cli/git.ts';
 import { keptMode } from '#tests/support/cli/platforms.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { containing, containingAll } from '#tests/support/expectations.ts';
 import { statSync, chmodSync, existsSync, renameSync, unlinkSync, readFileSync } from 'node:fs';
@@ -46,7 +47,7 @@ test(
     async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\nkits = ["spelling"]\n[guides]\ninstall = false\n',
+            'gspot.toml': policyOf(['spelling'], '[guides]\ninstall = false\n'),
             'sample.txt': `${TYPO.the} ${TYPO.whether}\n`,
         });
         const environment = { PATH: toolsPath(['typos']) };
@@ -80,7 +81,7 @@ test(
             ...(process.platform === 'win32' ? [] : ['name:part.txt', 'line\nbreak.txt', 'tab\tname.txt']),
         ];
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\nkits = ["spelling"]\n[guides]\ninstall = false\n',
+            'gspot.toml': policyOf(['spelling'], '[guides]\ninstall = false\n'),
             'the.txt': 'protected\n',
             ...Object.fromEntries(paths.map((path) => [path, `café ${TYPO.the}\n`])),
         });

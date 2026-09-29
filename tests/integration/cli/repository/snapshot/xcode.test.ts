@@ -5,16 +5,18 @@ import { testdir, createFileTree } from 'testdirs';
 import { gitOutput } from '#tests/support/cli/git.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { onPosix } from '#tests/support/cli/platforms.ts';
 import { containing } from '#tests/support/expectations.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { unlinkSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
 import { orphanSources, projectSymlinks } from '#cli/checks/xcode/project/checks.ts';
 
 // Windows file names cannot hold a newline or a quote.
-if (process.platform !== 'win32')
+if (onPosix)
     test('Xcode reports exact staged symlink targets before the first commit and clears corrected files', async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\nkits = ["xcode"]\n',
+            'gspot.toml': policyOf(['xcode']),
             'App.xcodeproj/project.pbxproj': '{}\n',
             'target.swift': 'let value = 1\n',
         });
@@ -68,7 +70,7 @@ if (process.platform !== 'win32')
 test('Xcode source membership does not mix independent nested projects', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nkits = ["xcode"]\n[[scope]]\npath = "nested"\nkits = ["xcode"]\n',
+        'gspot.toml': policyOf(['xcode'], '[[scope]]\npath = "nested"\nkits = ["xcode"]\n'),
         'Root.xcodeproj/project.pbxproj': `{
     rootObject = P;
     objects = {

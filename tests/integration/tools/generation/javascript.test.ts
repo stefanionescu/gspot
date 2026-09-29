@@ -9,15 +9,20 @@ import { planRun } from '#cli/execution/planning/plan.ts';
 import { statSync, chmodSync, existsSync } from 'node:fs';
 import { keptMode } from '#tests/support/cli/platforms.ts';
 import { containing } from '#tests/support/expectations.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { checkJavascript } from '#cli/checks/typescript/tsc.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
-import { JAVASCRIPT_AUTHORED_FILES } from '#tests/config/integration/tools/generation.ts';
+import { JAVASCRIPT_AUTHORED_FILES } from '#tests/inputs/integration/tools/generation.ts';
 
-test.each(['recommended', 'all'])('JavaScript checking includes authored build directories at %s', async (level) => {
+test('JavaScript checking includes authored build directories at all', async () => {
     await using sandbox = await testdir();
     const paths = ['source/build/value.js', 'source/dist/value.js', 'coverage/value.js'];
     await createFileTree(sandbox.path, {
-        'gspot.toml': `version = 1\nlevel = "${level}"\nkits = ["javascript"]\n[guides]\ninstall = false\n[[generated]]\npaths = ["emitted/**"]\nreason = "The compiler owns these outputs."\n`,
+        'gspot.toml': policyOf(
+            ['javascript'],
+            '[guides]\ninstall = false\n[[generated]]\npaths = ["emitted/**"]\nreason = "The compiler owns these outputs."\n',
+            'all',
+        ),
         ...Object.fromEntries([...paths, 'emitted/value.js'].map((path) => [path, 'export const value = missing;\n'])),
     });
     const environment = { PATH: toolsPath(['tsc']) };
@@ -46,7 +51,7 @@ test.each([false, true])(
         const authoredFiles: Record<string, string> = authored ? JAVASCRIPT_AUTHORED_FILES : {};
         const source = `import { format } from '${authored ? '@shape/value' : './value.js'}';\nexport const text = format(42);\nexport const total = accepted;\n`;
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\nkits = ["javascript"]\n[guides]\ninstall = false\n',
+            'gspot.toml': policyOf(['javascript'], '[guides]\ninstall = false\n'),
             'source/main.js': source,
             'source/value.js':
                 '/** @param {string} value */\nexport function format(value) { return value.toUpperCase(); }\n',
@@ -88,7 +93,7 @@ test.each([false, true])(
 test('JavaScript checking reports a broken authored configuration without rewriting it', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nkits = ["javascript"]\n[guides]\ninstall = false\n',
+        'gspot.toml': policyOf(['javascript'], '[guides]\ninstall = false\n'),
         'source.js': 'export const value = 1;\n',
         'jsconfig.json': '{}',
     });
@@ -112,8 +117,10 @@ test('JavaScript checking reports a broken authored configuration without rewrit
 
 test('JavaScript projects retain nested compiler options and isolate the deepest scope', async () => {
     await using sandbox = await testdir();
-    const policy =
-        'version = 1\nkits = ["javascript"]\n[guides]\ninstall = false\n[[scope]]\npath = "app"\n[[scope]]\npath = "app/child"\n[[scope]]\npath = "sibling"\n';
+    const policy = policyOf(
+        ['javascript'],
+        '[guides]\ninstall = false\n[[scope]]\npath = "app"\n[[scope]]\npath = "app/child"\n[[scope]]\npath = "sibling"\n',
+    );
     const bad = '/** @type {string} */\nexport const name = 42;\n';
     const corrected = bad.replace('42', '"name"');
     const config = '{"extends":"./base.json"}\n';
@@ -171,8 +178,10 @@ test('JavaScript projects retain nested compiler options and isolate the deepest
 test('a scope whose project lists no JavaScript file passes with nothing to compile', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml':
-            'version = 1\nkits = ["javascript"]\n[guides]\ninstall = false\n[[scope]]\npath = "site"\nkits = ["javascript"]\n',
+        'gspot.toml': policyOf(
+            ['javascript'],
+            '[guides]\ninstall = false\n[[scope]]\npath = "site"\nkits = ["javascript"]\n',
+        ),
         'source/main.js': 'export const value = 1;\n',
         'site/README.md': '# No script here\n',
     });

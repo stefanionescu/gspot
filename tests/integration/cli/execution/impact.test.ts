@@ -8,6 +8,7 @@ import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { rejection } from '#tests/support/expectations.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { mkdirSync, existsSync, readFileSync } from 'node:fs';
 import type { Session } from '#cli/types/execution/execution.ts';
 import { stagedFiles, changedFiles } from '#cli/repository/revisions/selection.ts';
@@ -157,7 +158,7 @@ test.each(['integrity', 'naming', 'structure', 'prose'] as const)(
     async (engine) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\nkits = ["typescript"]\n',
+            'gspot.toml': policyOf(['typescript']),
             'source.ts': 'export const count = 1;\n',
         });
         const session = await openSession(sandbox.path);

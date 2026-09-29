@@ -2,164 +2,121 @@
 import { join } from 'node:path';
 import { mkdirSync } from 'node:fs';
 import { test, expect } from 'bun:test';
-import { testdir, createFileTree } from 'testdirs';
+import { git } from '#tests/support/cli/git.ts';
 import { run } from '#tests/support/cli/command.ts';
-import type { FindingCase } from '#tests/types/cli.ts';
 import { reportSchema } from '#cli/execution/report.ts';
-import { toolsPath } from '#tests/support/cli/tools.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
-import { git, commitAll } from '#tests/support/cli/git.ts';
-import { script, runPlanted } from '#tests/support/cli/planted.ts';
-import { KILOBYTE, OVER_LIMIT_KB } from '#tests/config/acceptance/source/kits/kits.ts';
-import { STRUCTURE_INIT } from '#tests/config/acceptance/source/kits/init-arguments.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
+import { script, plantedCases } from '#tests/support/cli/planted.ts';
+import { KILOBYTE, OVER_LIMIT_KB } from '#tests/inputs/acceptance/source/kits/kits.ts';
 
 const CLEAN = script.replace('main() {', () => '# main: runs the script.\nmain() {');
-const CASES: FindingCase[] = [
-    {
-        check: 'structure/single-file-folder',
-        files: { 'tools/only/one.sh': CLEAN },
-        expected: { file: 'tools/only/one.sh', rule: 'lone-file', line: 1 },
-    },
-    {
-        check: 'structure/prefix-collisions',
-        files: { 'jobs/asset-card.sh': CLEAN, 'jobs/asset-list.sh': CLEAN, 'jobs/asset-row.sh': CLEAN },
-        expected: { file: 'jobs/asset-card.sh', rule: 'shared-prefix', line: 1 },
-    },
-    // JavaScript folders report through the same check; the ESLint plugin has no rule of its own for them.
-    {
-        check: 'structure/single-file-folder',
-        files: { 'feature/only.js': 'export const only = 1;\n' },
-        expected: { file: 'feature/only.js', rule: 'lone-file', line: 1 },
-    },
-    {
-        check: 'structure/prefix-collisions',
-        files: {
-            'cards/asset-card.js': 'export const card = 1;\n',
-            'cards/asset-list.js': 'export const list = 1;\n',
-            'cards/asset-row.js': 'export const row = 1;\n',
-        },
-        expected: { file: 'cards/asset-card.js', rule: 'shared-prefix', line: 1 },
-    },
-    {
-        check: 'structure/file-directory-collision',
-        files: { 'jobs/turn.sh': CLEAN, 'jobs/turn/first.sh': CLEAN, 'jobs/turn/second.sh': CLEAN },
-        expected: { file: 'jobs/turn.sh', rule: 'stem-collision', line: 1 },
-    },
-    {
-        check: 'structure/folder-names',
-        files: { 'helpers/first.sh': CLEAN, 'helpers/second.sh': CLEAN },
-        expected: { file: 'helpers/first.sh', rule: 'container-name', line: 1 },
-    },
-    {
-        check: 'integrity/suppressions',
-        files: {
-            'scripts/quiet.sh': CLEAN.replace(
-                '    echo "hello $1"',
-                () => '    # shellcheck disable=SC2086\n    echo "hello $1"',
-            ),
-        },
-        expected: { file: 'scripts/quiet.sh', rule: 'shellcheck-no-reason', line: 11 },
-    },
-    {
-        check: 'integrity/allowlists-match',
-        files: {},
-        policy: '[[ignore]]\ncheck = "bash/shellcheck"\nrule = "SC2086"\npaths = ["nowhere/**"]\nreason = "A pattern that matches no file here."\n',
-        expected: { file: 'gspot.toml', rule: 'unmatched-pattern', line: 1 },
-    },
-    {
-        check: 'integrity/large-files',
-        files: { 'notes/big.txt': 'x'.repeat(OVER_LIMIT_KB * KILOBYTE) },
-        expected: { file: 'notes/big.txt', rule: 'over-limit', line: 1 },
-    },
-    {
-        check: 'integrity/task-policy',
-        files: { 'package.json': '{"private":true,"scripts":{"gspot:check":"echo nothing"}}\n' },
-        expected: { file: 'package.json', rule: 'missing-task', line: 1 },
-    },
-];
 
-test.each(CASES)(
-    'the structure configuration > $check reports $expected.rule in $expected.file and accepts the correction',
-    async (planted) => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
-            'scripts/a.sh': CLEAN,
-            'scripts/b.sh': CLEAN,
-            'package.json': '{"private":true}\n',
-        });
-        commitAll(sandbox.path);
-        const environment = { PATH: toolsPath(['ast-grep', 'shellcheck', 'shfmt']) };
-        const initialized = await run(sandbox.path, [...STRUCTURE_INIT, '--hooks', 'gspot'], environment);
-        expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
-        const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
-        expect(selected.code, selected.stdout + selected.stderr).toBe(0);
-        const reasons = await run(sandbox.path, ['set', 'require_reasons', 'true'], environment);
-        expect(reasons.code, reasons.stdout + reasons.stderr).toBe(0);
+plantedCases(
+    'the structure configuration',
+    {
+        kits: ['bash', 'javascript'],
+        modules: false,
+        without: [],
+        init: ['--runner', 'npm', '--hooks', 'gspot', '--no-ci', '--no-guides', '--no-install'],
+        tools: ['shellcheck', 'shfmt'],
+        files: { 'scripts/a.sh': CLEAN, 'scripts/b.sh': CLEAN, 'package.json': '{"private":true}\n' },
+        prepare: async (root, environment) => {
+            const reasons = await run(root, ['set', 'require_reasons', 'true'], environment);
+            if (reasons.code !== 0) throw new Error(`Reasons were not required: ${reasons.stdout}${reasons.stderr}`);
+        },
+    },
+    [
         {
-            const clean = await run(sandbox.path, ['check', '--only', planted.check, '--no-cache'], environment);
-            expect(clean.code, `${planted.check} on the clean repository: ${clean.stdout}`).toBe(0);
-            const outcome = await runPlanted(sandbox.path, planted, environment);
-            expect(outcome.code, `${planted.check}: ${outcome.stdout}`).toBe(1);
-            const report = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
-            const result = report.checks.find((entry) => entry.check === planted.check);
-            expect(result?.status, outcome.stdout).toBe('fail');
-            const finding = result?.findings.find(
-                (entry) => entry.file === planted.expected.file && entry.rule === planted.expected.rule,
-            );
-            expect(finding).toMatchObject({ check: planted.check, ...planted.expected });
-            const correctedCheck = await run(
-                sandbox.path,
-                ['check', '--only', planted.check, '--no-cache', '--json'],
-                environment,
-            );
-            expect(correctedCheck.code, correctedCheck.stdout + correctedCheck.stderr).toBe(0);
-            expect(reportSchema.parse(JSON.parse(correctedCheck.stdout)).checks).toMatchObject([
-                { check: planted.check, status: 'ok', findings: [] },
-            ]);
-        }
-    },
-    PLANTED_TIMEOUT_MS * 2,
-);
-
-test(
-    'the structure configuration > integrity/tracked-dependencies reports a dependency folder that git tracks',
-    async () => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, { 'scripts/a.sh': CLEAN, 'scripts/b.sh': CLEAN });
-        commitAll(sandbox.path);
-        const environment = { PATH: toolsPath(['ast-grep', 'shellcheck', 'shfmt']) };
-        const initialized = await run(sandbox.path, [...STRUCTURE_INIT, '--no-hooks'], environment);
-        expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
-        const clean = await run(sandbox.path, ['check', '--only', 'integrity/tracked-dependencies'], environment);
-        expect(clean.code).toBe(0);
-        mkdirSync(join(sandbox.path, 'web', 'node_modules', 'left-pad'), { recursive: true });
-        await Bun.write(join(sandbox.path, 'web', 'node_modules', 'left-pad', 'index.js'), 'module.exports = 1;\n');
-        expect(git(sandbox.path, ['add', '-f', 'web/node_modules/left-pad/index.js']).code).toBe(0);
-        const check = await run(
-            sandbox.path,
-            ['check', '--only', 'integrity/tracked-dependencies', '--no-cache'],
-            environment,
-        );
-        expect(check.code).toBe(1);
-        expect(
-            reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json()).checks,
-        ).toMatchObject([
-            {
-                check: 'integrity/tracked-dependencies',
-                status: 'fail',
-                findings: [{ file: 'web/node_modules', rule: 'tracked-folder', line: 1 }],
+            check: 'structure/single-file-folder',
+            files: { 'tools/only/one.sh': CLEAN },
+            expected: { file: 'tools/only/one.sh', rule: 'lone-file', line: 1 },
+        },
+        {
+            check: 'structure/prefix-collisions',
+            files: { 'jobs/asset-card.sh': CLEAN, 'jobs/asset-list.sh': CLEAN, 'jobs/asset-row.sh': CLEAN },
+            expected: { file: 'jobs/asset-card.sh', rule: 'shared-prefix', line: 1 },
+        },
+        // JavaScript folders report through the same check; the ESLint plugin has no rule of its own for them.
+        {
+            check: 'structure/single-file-folder',
+            files: { 'feature/only.js': 'export const only = 1;\n' },
+            expected: { file: 'feature/only.js', rule: 'lone-file', line: 1 },
+        },
+        {
+            check: 'structure/prefix-collisions',
+            files: {
+                'cards/asset-card.js': 'export const card = 1;\n',
+                'cards/asset-list.js': 'export const list = 1;\n',
+                'cards/asset-row.js': 'export const row = 1;\n',
             },
-        ]);
-        expect(git(sandbox.path, ['rm', '--cached', 'web/node_modules/left-pad/index.js']).code).toBe(0);
-        const correctedCheck = await run(
-            sandbox.path,
-            ['check', '--only', 'integrity/tracked-dependencies', '--no-cache', '--json'],
-            environment,
+            expected: { file: 'cards/asset-card.js', rule: 'shared-prefix', line: 1 },
+        },
+        {
+            check: 'structure/file-directory-collision',
+            files: { 'jobs/turn.sh': CLEAN, 'jobs/turn/first.sh': CLEAN, 'jobs/turn/second.sh': CLEAN },
+            expected: { file: 'jobs/turn.sh', rule: 'stem-collision', line: 1 },
+        },
+        {
+            check: 'structure/folder-names',
+            files: { 'helpers/first.sh': CLEAN, 'helpers/second.sh': CLEAN },
+            expected: { file: 'helpers/first.sh', rule: 'container-name', line: 1 },
+        },
+        {
+            check: 'integrity/suppressions',
+            files: {
+                'scripts/quiet.sh': CLEAN.replace(
+                    '    echo "hello $1"',
+                    () => '    # shellcheck disable=SC2086\n    echo "hello $1"',
+                ),
+            },
+            expected: { file: 'scripts/quiet.sh', rule: 'shellcheck-no-reason', line: 11 },
+        },
+        {
+            check: 'integrity/allowlists-match',
+            files: {},
+            policy: '[[ignore]]\ncheck = "bash/shellcheck"\nrule = "SC2086"\npaths = ["nowhere/**"]\nreason = "A pattern that matches no file here."\n',
+            expected: { file: 'gspot.toml', rule: 'unmatched-pattern', line: 1 },
+            corrected: { files: {}, policy: undefined },
+        },
+        {
+            check: 'integrity/large-files',
+            files: { 'notes/big.txt': 'x'.repeat(OVER_LIMIT_KB * KILOBYTE) },
+            expected: { file: 'notes/big.txt', rule: 'over-limit', line: 1 },
+        },
+        {
+            check: 'integrity/task-policy',
+            files: { 'package.json': '{"private":true,"scripts":{"gspot:check":"echo nothing"}}\n' },
+            expected: { file: 'package.json', rule: 'missing-task', line: 1 },
+        },
+    ],
+    (planted) => {
+        test(
+            'integrity/tracked-dependencies reports a dependency folder that git tracks',
+            async () => {
+                const { root, environment } = planted();
+                const command = ['check', '--only', 'integrity/tracked-dependencies', '--no-cache', '--json'];
+                const clean = await run(root, command, environment);
+                expect(clean.code, clean.stdout + clean.stderr).toBe(0);
+                mkdirSync(join(root, 'web', 'node_modules', 'left-pad'), { recursive: true });
+                await Bun.write(join(root, 'web', 'node_modules', 'left-pad', 'index.js'), 'module.exports = 1;\n');
+                expect(git(root, ['add', '-f', 'web/node_modules/left-pad/index.js']).code).toBe(0);
+                const tracked = await run(root, command, environment);
+                expect(tracked.code).toBe(1);
+                expect(reportSchema.parse(JSON.parse(tracked.stdout)).checks).toMatchObject([
+                    {
+                        check: 'integrity/tracked-dependencies',
+                        status: 'fail',
+                        findings: [{ file: 'web/node_modules', rule: 'tracked-folder', line: 1 }],
+                    },
+                ]);
+                expect(git(root, ['rm', '-r', '--cached', '--quiet', 'web/node_modules']).code).toBe(0);
+                const corrected = await run(root, command, environment);
+                expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+                expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
+                    { check: 'integrity/tracked-dependencies', status: 'ok', findings: [] },
+                ]);
+            },
+            PLANTED_TIMEOUT_MS,
         );
-        expect(correctedCheck.code, correctedCheck.stdout + correctedCheck.stderr).toBe(0);
-        expect(reportSchema.parse(JSON.parse(correctedCheck.stdout)).checks).toMatchObject([
-            { check: 'integrity/tracked-dependencies', status: 'ok', findings: [] },
-        ]);
     },
-    PLANTED_TIMEOUT_MS,
 );

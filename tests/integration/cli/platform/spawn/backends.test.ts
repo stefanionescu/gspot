@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { chmodSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import { onPosix } from '#tests/support/cli/platforms.ts';
 import { run, runBlocking } from '#cli/platform/spawn.ts';
 
 const backends = [
@@ -56,7 +57,7 @@ process.exitCode = ${String(status)};`;
         expect(result.stderr).not.toBe('');
     });
 
-    if (process.platform !== 'win32')
+    if (onPosix)
         test(`${backend.name}: denied execution is distinct from a missing file`, async () => {
             await using sandbox = await testdir();
             await createFileTree(sandbox.path, { 'denied.sh': '#!/bin/sh\nexit 0\n' });
@@ -81,7 +82,7 @@ process.exitCode = ${String(status)};`;
     });
 
     // Windows has no signals: a process that kills itself exits with a code.
-    if (process.platform !== 'win32')
+    if (onPosix)
         test(`${backend.name}: a signal before the deadline is not a timeout`, async () => {
             await using sandbox = await testdir();
             const result = await backend.execute([process.execPath, '-e', "process.kill(process.pid, 'SIGTERM')"], {
@@ -141,7 +142,7 @@ test('preserves stdin, argument boundaries, final newlines, and the requested en
 });
 
 // Windows names environment variables without case and supplies Path itself.
-if (process.platform !== 'win32')
+if (onPosix)
     test('explicitly removes inherited environment values', async () => {
         await using sandbox = await testdir();
         for (const backend of backends) {

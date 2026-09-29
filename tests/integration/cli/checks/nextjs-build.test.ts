@@ -7,6 +7,7 @@ import type { EngineInput } from '#cli/types/checks.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { rejection } from '#tests/support/expectations.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { nextjsBuild, nextjsTypes } from '#cli/checks/nextjs/build.ts';
 import { statSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { prepareNextjsBuild, readNextjsCommands } from '#tests/support/cli/nextjs.ts';
@@ -59,7 +60,7 @@ test.each(['Generator failed', 'unknown command', 'Invalid project directory'])(
     async (diagnostic) => {
         await using directory = await testdir();
         await createFileTree(directory.path, {
-            'gspot.toml': 'version = 1\nkits = ["nextjs"]\n',
+            'gspot.toml': policyOf(['nextjs']),
             'package.json': '{"private":true}\n',
             'tsconfig.json': '{}\n',
         });

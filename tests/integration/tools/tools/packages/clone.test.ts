@@ -5,7 +5,7 @@ import { kitManifests } from '#cli/kits/manifests.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
-import { LOCKS } from '#tests/config/integration/tools/packages.ts';
+import { LOCKS } from '#tests/inputs/integration/tools/packages.ts';
 import { installPackageProject } from '#cli/tools/packages/project.ts';
 import { readPackageInputs, createPackageProject } from '#tests/support/cli/package-project.ts';
 

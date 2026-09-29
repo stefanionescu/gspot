@@ -5,6 +5,7 @@ import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { installHooks } from '#cli/lifecycle/hooks/git.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { uninstallCommand } from '#cli/commands/uninstall.ts';
 import { hookLocation } from '#cli/repository/hook-location.ts';
 import { textContaining } from '#tests/support/expectations.ts';
@@ -17,7 +18,7 @@ test.each([true, false])(
         await using directory = await testdir();
         const original = '#!/bin/sh\nexit 0\n';
         await createFileTree(directory.path, {
-            'gspot.toml': 'version = 1\nkits = []\n[hooks]\ntool = "gspot"\n[guides]\ninstall = false\n',
+            'gspot.toml': policyOf([], '[hooks]\ntool = "gspot"\n[guides]\ninstall = false\n'),
             '.custom-hooks/.keep': '',
             ...(hasOriginal ? { '.custom-hooks/pre-commit': original } : {}),
         });
@@ -56,10 +57,10 @@ test.each(['missing', 'malformed'])(
     'uninstall restores a nested installation from ownership when policy is %s',
     async (condition) => {
         await using sandbox = await testdir();
-        const rootPolicy = 'version = 1\nkits = []\n';
+        const rootPolicy = policyOf([]);
         await createFileTree(sandbox.path, {
             'gspot.toml': rootPolicy,
-            'project/gspot.toml': 'version = 1\nkits = []\n[hooks]\ntool = "gspot"\n[guides]\ninstall = false\n',
+            'project/gspot.toml': policyOf([], '[hooks]\ntool = "gspot"\n[guides]\ninstall = false\n'),
             'project/authored.txt': 'original bytes',
             'project/.gspot/unowned.json': '{"authored":true}',
             'project/child/.keep': '',
@@ -98,7 +99,7 @@ test.each(['missing', 'malformed'])(
 test('uninstall reports both restoration-conflict paths and restores the original after the edit is moved aside', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nkits = []\n[guides]\ninstall = false\n',
+        'gspot.toml': policyOf([], '[guides]\ninstall = false\n'),
         'authored.txt': 'private original bytes',
     });
     const owner = openOwner(sandbox.path);
@@ -128,7 +129,7 @@ test('uninstall reports both restoration-conflict paths and restores the origina
 test('uninstall acquires the hook boundary before removing repository outputs', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'gspot.toml': 'version = 1\nkits = []\n[hooks]\ntool = "gspot"\n[guides]\ninstall = false\n',
+        'gspot.toml': policyOf([], '[hooks]\ntool = "gspot"\n[guides]\ninstall = false\n'),
     });
     expect(processes.runBlocking(['git', 'init', '-q'], { cwd: directory.path }).code).toBe(0);
     const session = await openSession(directory.path);

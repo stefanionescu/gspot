@@ -8,15 +8,15 @@ import { emitAll } from '#cli/generation/outputs.ts';
 import { gitOutput } from '#tests/support/cli/git.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { reportSchema } from '#cli/execution/report.ts';
+import { onPosix } from '#tests/support/cli/platforms.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { installPythonProject } from '#cli/tools/python-project.ts';
 import { createPythonRegistry } from '#tests/support/registry/python.ts';
-import { preparePythonInstallation } from '#tests/support/cli/python-project.ts';
+import { preparePythonInstallation } from '#tests/support/cli/python/project.ts';
 
 // A Windows virtual environment has launchers and no interpreter links; the install tests stay POSIX-only.
-const POSIX_ENVIRONMENT = process.platform !== 'win32';
 
-if (POSIX_ENVIRONMENT)
+if (onPosix)
     test('a staged Python defect is reported by Ruff from the installed environment while the working tree differs', async () => {
         await using repository = await testdir();
         await using artifacts = await testdir();

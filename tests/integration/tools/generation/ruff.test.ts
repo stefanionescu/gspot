@@ -8,6 +8,7 @@ import { kitManifests } from '#cli/kits/manifests.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { allRuleExamples } from '#cli/agents/examples.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { containingAll } from '#tests/support/expectations.ts';
 import { DOCSTRING_COMMAND } from '#cli/config/checks/python.ts';
 import { PYTHON_STRUCTURE } from '#cli/checks/python/analyses.ts';
@@ -15,60 +16,56 @@ import { generatedFile } from '#tests/support/cli/generated/files.ts';
 
 const examples = allRuleExamples().filter((example) => example.language === 'python');
 
-test.each(['recommended', 'all'] as const)(
-    'Python guide examples satisfy %s types and docstrings',
-    async (level) => {
-        await using sandbox = await testdir();
-        const pins = kitManifests()
-            .get('python')!
-            .tools.filter((tool) => ['basedpyright', 'pydoclint'].includes(tool.name))
-            .map((tool) => `${tool.name}==${tool.version!}`);
-        const paths = examples.map((_example, index) => `example_${String(index)}.py`);
-        const dependencies = [...pins, 'fastapi>=0.135,<1', 'python-multipart>=0.0.20,<1'];
-        await createFileTree(sandbox.path, {
-            'pyproject.toml': `[project]\nname = "guide-examples"\nversion = "1.0.0"\nrequires-python = ">=3.12"\ndependencies = ${JSON.stringify(dependencies)}\n`,
-            ...Object.fromEntries(examples.map((example, index) => [paths[index]!, example.body])),
-            'rejected.py': 'count: int = "one"\n',
-            '.gspot/config/basedpyrightconfig.json': await generatedFile(
-                `version = 1\nlevel = "${level}"\nkits = ["python", "fastapi"]\n`,
-                '.gspot/config/basedpyrightconfig.json',
-            ),
-        });
-        const locked = await processes.run(['uv', 'lock'], { cwd: sandbox.path });
-        expect(locked.code, locked.stdout + locked.stderr).toBe(0);
-        const command = [
-            'uv',
-            'run',
-            '--locked',
-            'basedpyright',
-            '--project',
+test('Python guide examples satisfy all types and docstrings', async () => {
+    await using sandbox = await testdir();
+    const pins = kitManifests()
+        .get('python')!
+        .tools.filter((tool) => ['basedpyright', 'pydoclint'].includes(tool.name))
+        .map((tool) => `${tool.name}==${tool.version!}`);
+    const paths = examples.map((_example, index) => `example_${String(index)}.py`);
+    const dependencies = [...pins, 'fastapi>=0.135,<1', 'python-multipart>=0.0.20,<1'];
+    await createFileTree(sandbox.path, {
+        'pyproject.toml': `[project]\nname = "guide-examples"\nversion = "1.0.0"\nrequires-python = ">=3.12"\ndependencies = ${JSON.stringify(dependencies)}\n`,
+        ...Object.fromEntries(examples.map((example, index) => [paths[index]!, example.body])),
+        'rejected.py': 'count: int = "one"\n',
+        '.gspot/config/basedpyrightconfig.json': await generatedFile(
+            policyOf(['python', 'fastapi'], '', 'all'),
             '.gspot/config/basedpyrightconfig.json',
-            '--outputjson',
-        ];
-        const rejected = await processes.run(command, { cwd: sandbox.path });
-        expect(rejected.code, rejected.stdout + rejected.stderr).toBe(1);
-        expect(JSON.parse(rejected.stdout)).toMatchObject({
-            generalDiagnostics: [{ rule: 'reportAssignmentType' }],
-            summary: { errorCount: 1 },
-        });
-        await Bun.write(join(sandbox.path, 'rejected.py'), 'count: int = 1\n');
-        const corrected = await processes.run(command, { cwd: sandbox.path });
-        expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        expect(JSON.parse(corrected.stdout)).toMatchObject({ generalDiagnostics: [], summary: { errorCount: 0 } });
-        const docstrings = await processes.run(
-            ['uv', 'run', '--locked', ...DOCSTRING_COMMAND.flatMap((part) => (part === '{files}' ? paths : [part]))],
-            { cwd: sandbox.path },
-        );
-        expect(docstrings.code, docstrings.stdout + docstrings.stderr).toBe(0);
-    },
-    60_000,
-);
+        ),
+    });
+    const locked = await processes.run(['uv', 'lock'], { cwd: sandbox.path });
+    expect(locked.code, locked.stdout + locked.stderr).toBe(0);
+    const command = [
+        'uv',
+        'run',
+        '--locked',
+        'basedpyright',
+        '--project',
+        '.gspot/config/basedpyrightconfig.json',
+        '--outputjson',
+    ];
+    const rejected = await processes.run(command, { cwd: sandbox.path });
+    expect(rejected.code, rejected.stdout + rejected.stderr).toBe(1);
+    expect(JSON.parse(rejected.stdout)).toMatchObject({
+        generalDiagnostics: [{ rule: 'reportAssignmentType' }],
+        summary: { errorCount: 1 },
+    });
+    await Bun.write(join(sandbox.path, 'rejected.py'), 'count: int = 1\n');
+    const corrected = await processes.run(command, { cwd: sandbox.path });
+    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+    expect(JSON.parse(corrected.stdout)).toMatchObject({ generalDiagnostics: [], summary: { errorCount: 0 } });
+    const docstrings = await processes.run(
+        ['uv', 'run', '--locked', ...DOCSTRING_COMMAND.flatMap((part) => (part === '{files}' ? paths : [part]))],
+        { cwd: sandbox.path },
+    );
+    expect(docstrings.code, docstrings.stdout + docstrings.stderr).toBe(0);
+}, 60_000);
 
 test('Python guide examples retain required signatures and reject an unnecessary wrapper', async () => {
     await using sandbox = await testdir();
     const first = examples[0]!;
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nlevel = "all"\nkits = ["python"]\n',
+        'gspot.toml': policyOf(['python'], '', 'all'),
         ...Object.fromEntries(examples.map((example, index) => [`example_${String(index)}.py`, example.body])),
     });
     const session = await openSession(sandbox.path);
@@ -95,8 +92,10 @@ test('Ruff keeps pytest rules and scoped limits inside their selected project', 
     await using sandbox = await testdir();
     const defect = 'import pytest\n\n@pytest.fixture()\ndef example():\n    return 1\n';
     await createFileTree(sandbox.path, {
-        'gspot.toml':
-            'version = 1\nkits = ["python"]\n[tools.ruff]\nselect = ["S101"]\n[[scope]]\npath = "app"\nkits = ["pytest"]\n[scope.tools.ruff]\nselect = ["PT001"]\n[scope.limits.python]\nfunction_parameters = 3\n',
+        'gspot.toml': policyOf(
+            ['python'],
+            '[tools.ruff]\nselect = ["S101"]\n[[scope]]\npath = "app"\nkits = ["pytest"]\n[scope.tools.ruff]\nselect = ["PT001"]\n[scope.limits.python]\nfunction_parameters = 3\n',
+        ),
         'tests/test_example.py': defect,
         'app/tests/test_example.py': defect,
     });

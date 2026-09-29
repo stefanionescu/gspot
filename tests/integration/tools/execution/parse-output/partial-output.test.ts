@@ -6,18 +6,19 @@ import { GspotError } from '#cli/platform/errors.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { containing } from '#tests/support/expectations.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { checkedFindings } from '#cli/execution/broken-tool.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import type { PlannedCheck } from '#cli/types/execution/execution.ts';
 import { PYTHON_ENVIRONMENT_DIRECTORY } from '#cli/config/platform.ts';
 import { toolsPath, installPrivateTools } from '#tests/support/cli/tools.ts';
-import { INSTALL_TIMEOUT_MS } from '#tests/config/integration/tools/tools.ts';
+import { INSTALL_TIMEOUT_MS } from '#tests/inputs/integration/tools/tools.ts';
 
 test('ShellCheck rejects partial findings when another selected file cannot be read', async () => {
     await using sandbox = await testdir();
     const source = '#!/usr/bin/env bash\necho $unquoted\n';
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nkits = ["bash"]\n',
+        'gspot.toml': policyOf(['bash']),
         'sample.sh': source,
     });
     const session = await openSession(sandbox.path);
@@ -81,7 +82,7 @@ test.each(['def broken(:\n', 'value = "\u0000"\n'])(
         await using sandbox = await testdir();
         const source = 'import os\n';
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\nlevel = "all"\nkits = ["python"]\n',
+            'gspot.toml': policyOf(['python'], '', 'all'),
             'sample.py': source,
             'broken.py': brokenSource,
         });

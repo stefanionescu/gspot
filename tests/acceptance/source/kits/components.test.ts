@@ -9,9 +9,9 @@ import { containing } from '#tests/support/expectations.ts';
 import { installSandbox } from '#tests/support/cli/sandbox.ts';
 import vueManifest from 'vue/package.json' with { type: 'json' };
 import type { RunReport } from '#cli/types/execution/execution.ts';
-import type { ComponentShape } from '#tests/types/acceptance/source/kits/kits.ts';
-import { VUE_CLEAN, SVELTE_CLEAN } from '#tests/config/acceptance/source/kits/kits.ts';
-import { COMPONENT_SOURCE, COMPONENT_TSCONFIG, PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
+import type { ComponentShape } from '#tests/types/acceptance/source/kits.ts';
+import { VUE_CLEAN, SVELTE_CLEAN } from '#tests/inputs/acceptance/source/kits/kits.ts';
+import { COMPONENT_SOURCE, COMPONENT_TSCONFIG, PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 
 const VUE_CASES: [string, string][] = [
     [

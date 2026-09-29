@@ -1,7 +1,14 @@
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { textContaining } from '#tests/support/expectations.ts';
 import { generatedEslint } from '#tests/support/cli/generated/eslint.ts';
+
+const APP_JEST = policyOf(
+    ['javascript'],
+    '[guides]\ninstall = false\n[[scope]]\npath = "app"\nkits = ["jest"]\n[scope.tools.jest]\nglobal_package = "bun:test"\nharness_directory = "tests/fixtures"\n',
+    'all',
+);
 
 test.each([
     ['recommended', 'bun:test', 2],
@@ -11,7 +18,7 @@ test.each([
 ] as const)('generated %s lint validates the native expect arguments of %s', async (level, runtime, maximum) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': `version = 1\nlevel = "${level}"\nkits = ["jest"]\n[tools.jest]\nglobal_package = "${runtime}"\n`,
+        'gspot.toml': policyOf(['jest'], `[tools.jest]\nglobal_package = "${runtime}"\n`, level),
         'package.json': '{"private":true,"type":"module"}\n',
         'sample.test.js': '',
     });
@@ -84,7 +91,11 @@ test.each(
     async ({ level, globalPackage, rule, planted, corrected }) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': `version = 1\nlevel = "${level}"\nkits = ["jest"]\n[guides]\ninstall = false\n[tools.jest]\nglobal_package = "${globalPackage}"\n`,
+            'gspot.toml': policyOf(
+                ['jest'],
+                `[guides]\ninstall = false\n[tools.jest]\nglobal_package = "${globalPackage}"\n`,
+                level,
+            ),
             'package.json': '{"private":true,"type":"module"}\n',
             'sample.test.js': '',
         });
@@ -106,8 +117,7 @@ test.each(['js', 'jsx'])(
     async (extension) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml':
-                'version = 1\nlevel = "all"\nkits = ["javascript"]\n[guides]\ninstall = false\n[[scope]]\npath = "app"\nkits = ["jest"]\n[scope.tools.jest]\nglobal_package = "bun:test"\nharness_directory = "tests/fixtures"\n',
+            'gspot.toml': APP_JEST,
             'package.json': '{"private":true,"type":"module"}\n',
             'root.test.js': '',
             'app/sample.test.js': '',

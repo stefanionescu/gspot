@@ -2,20 +2,23 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { fileURLToPath } from 'node:url';
-import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
-import { commitAll } from '#tests/support/cli/git.ts';
 import type { FindingCase } from '#tests/types/cli.ts';
 import { reportSchema } from '#cli/execution/report.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
-import { runPlanted } from '#tests/support/cli/planted.ts';
-import { containing } from '#tests/support/expectations.ts';
-import { install, toolsPath } from '#tests/support/cli/tools.ts';
-import { cpSync, rmSync, mkdirSync, readdirSync, symlinkSync } from 'node:fs';
-import { GUIDE, README, LICENSE, OWN_STYLES, REPORTED_ELSEWHERE } from '#tests/config/acceptance/source/kits/kits.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
+import { cpSync, rmSync, mkdirSync, readdirSync } from 'node:fs';
+import { runPlanted, plantedCases } from '#tests/support/cli/planted.ts';
+import { GUIDE, README, LICENSE, OWN_STYLES, REPORTED_ELSEWHERE } from '#tests/inputs/acceptance/source/kits/kits.ts';
 
 const root = fileURLToPath(new URL('../../../..', import.meta.url));
 const STYLES = join(root, '.gspot', 'config', 'vale', 'styles');
+// What each check accepts in place of its planted document; the guide for the rest.
+const CORRECTIONS: Record<string, string> = {
+    'markdown/fences': '# A page\n\n```json\n{ "open": true }\n```\n',
+    'docs/links': '# A page\n\nRead [the guide](guide.md) first.\n',
+    'integrity/stale-paths': '# A page\n\nRead `docs/guide.md`.\n',
+    'docs/readme-shape': README,
+};
 const CASES: FindingCase[] = [
     {
         check: 'markdown/markdownlint',
@@ -79,7 +82,7 @@ function copyValePackages(target: string): void {
     const styles = join(target, '.gspot', 'config', 'vale', 'styles');
     mkdirSync(styles, { recursive: true });
     for (const name of readdirSync(STYLES))
-        if (!OWN_STYLES.has(name))
+        if (!OWN_STYLES.includes(name))
             cpSync(join(STYLES, name), join(styles, name), { recursive: true, dereference: true });
     mkdirSync(join(styles, 'config'), { recursive: true });
     cpSync(join(STYLES, 'config', 'dictionaries'), join(styles, 'config', 'dictionaries'), {
@@ -88,121 +91,63 @@ function copyValePackages(target: string): void {
     });
 }
 
-async function installedDocuments() {
-    const sandbox = await testdir();
-    try {
-        await createFileTree(sandbox.path, {
-            'README.md': README,
-            'docs/guide.md': GUIDE,
-            'docs/second.md': GUIDE,
-            '.gitignore': 'node_modules/\n',
-            LICENSE,
-        });
-        symlinkSync(join(root, 'node_modules'), join(sandbox.path, 'node_modules'), 'dir');
-        commitAll(sandbox.path);
-        copyValePackages(sandbox.path);
-        const environment = { PATH: toolsPath(['vale', 'lychee', 'markdownlint-cli2', 'typos', 'ec']) };
-        await install(
-            sandbox.path,
-            [
-                'init',
-                '--yes',
-                '--kits',
-                'markdown',
-                'prose',
-                '--no-runner',
-                '--no-ci',
-                '--no-hooks',
-                '--no-guides',
-                '--no-install',
-                '--allow-dirty',
-            ],
-            environment,
-        );
-        const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
-        expect(selected.code, selected.stdout + selected.stderr).toBe(0);
-        return { sandbox, environment };
-    } catch (error) {
-        await sandbox[Symbol.asyncDispose]();
-        throw error;
-    }
-}
-
-test.each(CASES)(
-    'the markdown, docs and prose configurations > $check reports its defect in $expected.file and accepts corrected documents',
-    async (planted) => {
-        const prepared = await installedDocuments();
-        await using sandbox = prepared.sandbox;
-        const environment = prepared.environment;
-        const outcome = await runPlanted(sandbox.path, planted, environment);
-        expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
-        const report = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
-        expect(report.checks).toMatchObject([{ check: planted.check, status: 'fail' }]);
-        expect(report.checks[0]?.findings).toContainEqual(containing({ check: planted.check, ...planted.expected }));
-        const corrections: Record<string, string> = {
-            'markdown/fences': '# A page\n\n```json\n{ "open": true }\n```\n',
-            'docs/links': '# A page\n\nRead [the guide](guide.md) first.\n',
-            'integrity/stale-paths': '# A page\n\nRead `docs/guide.md`.\n',
-            'docs/readme-shape': README,
-        };
-        for (const path of Object.keys(planted.files))
-            await Bun.write(join(sandbox.path, path), corrections[planted.check] ?? GUIDE);
-        const correctedCheck = await run(
-            sandbox.path,
-            ['check', '--only', planted.check, '--no-cache', '--json'],
-            environment,
-        );
-        expect(correctedCheck.code, correctedCheck.stdout + correctedCheck.stderr).toBe(0);
-        expect(reportSchema.parse(JSON.parse(correctedCheck.stdout)).checks).toMatchObject([
-            { check: planted.check, status: 'ok', findings: [] },
-        ]);
+plantedCases(
+    'the markdown, docs and prose configurations',
+    {
+        kits: ['markdown', 'prose'],
+        without: [],
+        tools: ['vale', 'lychee', 'markdownlint-cli2'],
+        files: { 'README.md': README, 'docs/guide.md': GUIDE, 'docs/second.md': GUIDE, LICENSE },
+        before: copyValePackages,
+        corrected: (planted) => ({
+            files: Object.fromEntries(
+                Object.keys(planted.files).map((path) => [path, CORRECTIONS[planted.check] ?? GUIDE]),
+            ),
+        }),
     },
-    PLANTED_TIMEOUT_MS * 4,
-);
-
-test(
-    'the markdown, docs and prose configurations > document selection excludes external links and recovers after missing Vale dictionaries',
-    async () => {
-        const prepared = await installedDocuments();
-        await using sandbox = prepared.sandbox;
-        const environment = prepared.environment;
-        // A check id is written like a path. A document that names one means the check, whatever folders exist.
-        const named = await runPlanted(
-            sandbox.path,
-            {
-                check: 'integrity/stale-paths',
-                files: { 'docs/checks.md': '# A page\n\nThe check `docs/links` reads every link.\n' },
+    CASES,
+    (planted) => {
+        test(
+            'document selection excludes external links and recovers after missing Vale dictionaries',
+            async () => {
+                const { root: sandbox, environment } = planted();
+                // A check id is written like a path. A document that names one means the check, whatever folders exist.
+                const named = await runPlanted(
+                    sandbox,
+                    {
+                        check: 'integrity/stale-paths',
+                        files: { 'docs/checks.md': '# A page\n\nThe check `docs/links` reads every link.\n' },
+                    },
+                    environment,
+                );
+                expect(named.code, named.stdout).toBe(0);
+                for (const id of REPORTED_ELSEWHERE) {
+                    const skipped = await run(sandbox, ['check', '--only', id], environment);
+                    expect(skipped.stdout, id).toContain('its findings come from');
+                }
+                rmSync(join(sandbox, '.gspot', 'config', 'vale', 'styles', 'config', 'dictionaries'), {
+                    recursive: true,
+                });
+                const broken = await run(sandbox, ['check', '--only', 'prose/vale', '--no-cache'], environment);
+                expect(broken.code, 'a Vale that cannot run is an error, never a pass').toBe(2);
+                expect(
+                    reportSchema.parse(await Bun.file(join(sandbox, '.gspot/reports/report.json')).json()).checks,
+                ).toMatchObject([{ check: 'prose/vale', status: 'error' }]);
+                copyValePackages(sandbox);
+                const corrected = await run(
+                    sandbox,
+                    ['check', '--only', 'prose/vale', '--no-cache', '--json'],
+                    environment,
+                );
+                expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+                expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
+                    { check: 'prose/vale', status: 'ok', findings: [] },
+                ]);
+                const checked = await run(sandbox, ['check', '--stage', 'commit', '--json'], environment);
+                const ids = reportSchema.parse(JSON.parse(checked.stdout)).checks.map((check) => check.check);
+                expect(ids).not.toContain('docs/links-external');
             },
-            environment,
+            PLANTED_TIMEOUT_MS * 4,
         );
-        expect(named.code, named.stdout).toBe(0);
-        for (const id of REPORTED_ELSEWHERE) {
-            const skipped = await run(sandbox.path, ['check', '--only', id], environment);
-            expect(skipped.stdout, id).toContain('its findings come from');
-        }
-        rmSync(join(sandbox.path, '.gspot', 'config', 'vale', 'styles', 'config', 'dictionaries'), {
-            recursive: true,
-        });
-        const broken = await run(sandbox.path, ['check', '--only', 'prose/vale', '--no-cache'], environment);
-        expect(broken.code, 'a Vale that cannot run is an error, never a pass').toBe(2);
-        expect(
-            reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json()).checks,
-        ).toMatchObject([{ check: 'prose/vale', status: 'error' }]);
-        copyValePackages(sandbox.path);
-        const correctedCheck = await run(
-            sandbox.path,
-            ['check', '--only', 'prose/vale', '--no-cache', '--json'],
-            environment,
-        );
-        expect(correctedCheck.code, correctedCheck.stdout + correctedCheck.stderr).toBe(0);
-        expect(reportSchema.parse(JSON.parse(correctedCheck.stdout)).checks).toMatchObject([
-            { check: 'prose/vale', status: 'ok', findings: [] },
-        ]);
-        const checked = await run(sandbox.path, ['check', '--stage', 'commit', '--json'], environment);
-        const record = JSON.parse(checked.stdout) as {
-            checks: { check: string }[];
-        };
-        expect(record.checks.map((check) => check.check)).not.toContain('docs/links-external');
     },
-    PLANTED_TIMEOUT_MS * 4,
 );

@@ -5,10 +5,10 @@ import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { reportSchema } from '#cli/execution/report.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
-import { WORKFLOW_HEAD } from '#tests/config/acceptance/source/kits/kits.ts';
-import { PINACT_STUB, TOOL_FAILURES_POLICY } from '#tests/config/integration/cli/checks.ts';
+import { WORKFLOW_HEAD } from '#tests/inputs/acceptance/source/kits/kits.ts';
+import { PINACT_STUB, TOOL_FAILURES_POLICY } from '#tests/inputs/integration/cli/checks.ts';
 
 test(
     'the Taplo adapter reports both output streams and its exit code',

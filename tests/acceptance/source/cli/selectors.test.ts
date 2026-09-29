@@ -5,6 +5,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { keptMode } from '#tests/support/cli/platforms.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
 import type { CommandFailureJson } from '#cli/types/commands.ts';
 import { statSync, chmodSync, existsSync, unlinkSync, readFileSync, writeFileSync } from 'node:fs';
@@ -34,7 +35,7 @@ async function expectIndexReport(
 test('an ignored folder includes descendants while a negated file remains enforced', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'gspot.toml': 'version = 1\nkits = ["bash"]\n[guides]\ninstall = false\n',
+        'gspot.toml': policyOf(['bash'], '[guides]\ninstall = false\n'),
         'legacy scripts/nested/example.sh': 'if then\n',
         'legacy scripts/required.sh': 'if then\n',
         'entry.sh': 'echo example\n',
@@ -78,7 +79,7 @@ test('an ignored folder includes descendants while a negated file remains enforc
 
 test('staged checks use index bytes and policy on an unborn branch while preserving unstaged edits', async () => {
     await using directory = await testdir();
-    const policy = 'version = 1\nkits = ["bash"]\n[guides]\ninstall = false\n';
+    const policy = policyOf(['bash'], '[guides]\ninstall = false\n');
     await createFileTree(directory.path, { 'gspot.toml': policy, 'script with spaces.sh': 'if then\n' });
     expect(git(directory.path, ['init', '-q']).code).toBe(0);
     expect(git(directory.path, ['add', '-A']).code).toBe(0);
@@ -115,7 +116,7 @@ test('staged checks use index bytes and policy on an unborn branch while preserv
 test('staged checks validate the index version pin instead of the working pin', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'gspot.toml': 'version = 1\nkits = ["bash"]\n[guides]\ninstall = false\n',
+        'gspot.toml': policyOf(['bash'], '[guides]\ninstall = false\n'),
         '.gspot/version': '0.0.0\n',
         'script.sh': 'echo valid\n',
     });

@@ -2,9 +2,10 @@ import { readFileSync } from 'node:fs';
 import { createFileTree } from 'testdirs';
 import { join, delimiter } from 'node:path';
 import { run } from '#cli/platform/spawn.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { applyCommand } from '#cli/commands/apply/command.ts';
 import { hookLocation } from '#cli/repository/hook-location.ts';
-import { VERSIONS } from '#tests/config/integration/tools/hooks.ts';
+import { VERSIONS } from '#tests/inputs/integration/tools/hooks.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import type { PrepareHookAdoptionResult } from '#tests/types/results.ts';
 import { plantLauncher, venvExecutable } from '#tests/support/cli/platforms.ts';
@@ -31,7 +32,7 @@ export async function prepareHookAdoption(
     hookTool: keyof typeof VERSIONS,
 ): Promise<PrepareHookAdoptionResult> {
     await createFileTree(root, {
-        'gspot.toml': `version = 1\nkits = []\n[guides]\ninstall = false\n[hooks]\ntool = "${hookTool}"\n`,
+        'gspot.toml': policyOf([], `[guides]\ninstall = false\n[hooks]\ntool = "${hookTool}"\n`),
         'package.json': JSON.stringify({
             private: true,
             devDependencies: hookTool === 'pre-commit' ? {} : { [hookTool]: VERSIONS[hookTool] },

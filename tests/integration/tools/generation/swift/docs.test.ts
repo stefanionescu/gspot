@@ -5,12 +5,13 @@ import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { allRuleExamples } from '#cli/agents/examples.ts';
-import { keptMode } from '#tests/support/cli/platforms.ts';
 import { run as runProcess } from '#cli/platform/spawn.ts';
 import { containing } from '#tests/support/expectations.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { writeSwiftlint } from '#tests/support/cli/swift.ts';
+import { onPosix, keptMode } from '#tests/support/cli/platforms.ts';
 import { generatedFile } from '#tests/support/cli/generated/files.ts';
-import { SWIFT_DOCS_SOURCE, SWIFT_INLINE_DOCS } from '#tests/config/integration/tools/generation.ts';
+import { SWIFT_DOCS_SOURCE, SWIFT_INLINE_DOCS } from '#tests/inputs/integration/tools/generation.ts';
 
 async function documentationFindings(root: string, code: 0 | 1) {
     const result = await run(root, ['check', '--only', 'swift/swiftlint', '--no-cache', '--json']);
@@ -22,12 +23,12 @@ async function documentationFindings(root: string, code: 0 | 1) {
 }
 
 // SwiftLint has no Windows build; Linux and macOS own these native diagnostics.
-if (process.platform !== 'win32') {
+if (onPosix) {
     test.each(['recommended', 'all'] as const)(
         'Swift guide examples pass %s while a forced cast fails',
         async (level) => {
             await using sandbox = await testdir();
-            const policy = `version = 1\nlevel = "${level}"\nkits = ["swift"]\n[guides]\ninstall = false\n`;
+            const policy = policyOf(['swift'], '[guides]\ninstall = false\n', level);
             const examples = allRuleExamples().filter((example) => example.language === 'swift');
             expect(examples.length).toBeGreaterThan(0);
             const paths = examples.map((_example, index) => `Example${String(index)}.swift`);
@@ -71,7 +72,7 @@ if (process.platform !== 'win32') {
         async (level) => {
             await using sandbox = await testdir();
             const root = sandbox.path;
-            const policy = `version = 1\nlevel = "${level}"\nkits = ["swift"]\n[guides]\ninstall = false\n`;
+            const policy = policyOf(['swift'], '[guides]\ninstall = false\n', level);
             await createFileTree(root, { 'gspot.toml': policy, 'Value.swift': SWIFT_DOCS_SOURCE });
             await writeSwiftlint(root);
             const broken = await runProcess(
@@ -118,7 +119,7 @@ if (process.platform !== 'win32') {
     test('Swift inline documentation retains native exceptions and original source positions', async () => {
         await using sandbox = await testdir();
         const root = sandbox.path;
-        const policy = 'version = 1\nlevel = "all"\nkits = ["swift"]\n[guides]\ninstall = false\n';
+        const policy = policyOf(['swift'], '[guides]\ninstall = false\n', 'all');
         const text = SWIFT_INLINE_DOCS;
         await createFileTree(root, { 'gspot.toml': policy, 'Value.swift': text });
         await writeSwiftlint(root);
@@ -154,7 +155,7 @@ if (process.platform !== 'win32') {
     test('nested Swift documentation settings retain their own native exclusions', async () => {
         await using sandbox = await testdir();
         const root = sandbox.path;
-        const policy = 'version = 1\nlevel = "all"\nkits = ["swift"]\n[guides]\ninstall = false\n';
+        const policy = policyOf(['swift'], '[guides]\ninstall = false\n', 'all');
         const policyExceptionText = SWIFT_INLINE_DOCS.replace(
             '// swiftlint:disable:next doc_comment_style - An external declaration retains its layout.\n/** A retained declaration. */',
             '/// A retained declaration.',

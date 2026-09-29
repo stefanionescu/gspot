@@ -4,14 +4,17 @@ import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { installSemgrep } from '#tests/support/cli/tools.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { toolShipsHere } from '#tests/support/cli/platforms.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
+
+const APP_SEMGREP =
+    '[guides]\ninstall = false\n[[scope]]\npath = "app"\nkits = ["express"]\n[scope.tools.semgrep]\nignore = [{ paths = ["app/**/ignored.js"], reason = "Generated fixtures are checked by their producer." }]\n[[scope]]\npath = "app/child"\n[[scope]]\npath = "sibling"\n';
 
 if (toolShipsHere('semgrep'))
     test('framework security packs stay within inherited scopes and preserve sibling input', async () => {
         await using sandbox = await testdir();
-        const policy =
-            'version = 1\nkits = ["javascript", "security"]\n[guides]\ninstall = false\n[[scope]]\npath = "app"\nkits = ["express"]\n[scope.tools.semgrep]\nignore = [{ paths = ["app/**/ignored.js"], reason = "Generated fixtures are checked by their producer." }]\n[[scope]]\npath = "app/child"\n[[scope]]\npath = "sibling"\n';
+        const policy = policyOf(['javascript', 'security'], APP_SEMGREP);
         const source = 'res.send(req.body);\n';
         await createFileTree(sandbox.path, {
             'gspot.toml': policy,
@@ -73,8 +76,10 @@ if (toolShipsHere('semgrep'))
     test('a module-loading exception preserves other security rules and neighboring module findings', async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml':
-                'version = 1\nkits = ["javascript", "security"]\n[[ignore]]\ncheck = "security/semgrep"\nrule = "node-no-configured-require"\npaths = ["configuration.js"]\nreason = "The configuration evaluator loads repository-selected modules."\n',
+            'gspot.toml': policyOf(
+                ['javascript', 'security'],
+                '[[ignore]]\ncheck = "security/semgrep"\nrule = "node-no-configured-require"\npaths = ["configuration.js"]\nreason = "The configuration evaluator loads repository-selected modules."\n',
+            ),
             'configuration.js': 'await import(modulePath);\neval(input);\n',
             'neighbor.js': 'await import(modulePath);\n',
         });

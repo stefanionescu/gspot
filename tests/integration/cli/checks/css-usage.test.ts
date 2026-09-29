@@ -3,6 +3,7 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 
 const options = {
     stage: 'all' as const,
@@ -16,7 +17,7 @@ const options = {
 test('CSS module imports and literal access bind to the selected stylesheet, and a Sass module is not read', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nlevel = "all"\nkits = ["css"]\n',
+        'gspot.toml': policyOf(['css'], '', 'all'),
         'styles.module.css': '.card-title { color: red; }\n',
         'view.tsx':
             "import styles from './styles.module.css';\nexport const card = [styles.cardTitle, styles['card-title']];\n",
@@ -45,7 +46,7 @@ test.each([
 ])('CSS usage ignores property-looking text in a $name', async ({ extra }) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nlevel = "all"\nkits = ["css"]\n',
+        'gspot.toml': policyOf(['css'], '', 'all'),
         'styles.module.css': '.card { color: red; }\n',
         'view.ts': `import styles from './styles.module.css';\nexport const card = styles.card;\n${extra}`,
     });
@@ -57,7 +58,7 @@ test.each([
 test('identically named stylesheets keep their own bindings and correct exact findings', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nlevel = "all"\nkits = ["css"]\n',
+        'gspot.toml': policyOf(['css'], '', 'all'),
         'left/styles.module.css': '.left { color: red; }\n',
         'right/styles.module.css': '.right { color: blue; }\n',
         'left/view.ts': "import styles from './styles.module.css';\nexport const value = styles.right;\n",
@@ -87,7 +88,7 @@ test('identically named stylesheets keep their own bindings and correct exact fi
 test('ignored importers cannot satisfy a selected stylesheet class', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nlevel = "all"\nkits = ["css"]\n',
+        'gspot.toml': policyOf(['css'], '', 'all'),
         '.gitignore': 'ignored.ts\n',
         'styles.module.css': '.card { color: red; }\n.unused { color: blue; }\n',
         'view.ts': "import styles from './styles.module.css';\nexport const card = styles.card;\n",
@@ -127,7 +128,7 @@ test.each([
 ])('CSS usage resolves a $name import without inferring unsupported bindings', async ({ declaration, bound }) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nlevel = "all"\nkits = ["css"]\n',
+        'gspot.toml': policyOf(['css'], '', 'all'),
         'styles.module.css': '.card { color: red; }\n',
         'view.ts': `${declaration}\nexport const value = styles.missing;\n`,
     });

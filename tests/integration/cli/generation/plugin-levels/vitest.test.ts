@@ -1,9 +1,10 @@
 import type { ESLint } from 'eslint';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { textContaining } from '#tests/support/expectations.ts';
 import { generatedEslint } from '#tests/support/cli/generated/eslint.ts';
-import { VITEST_FILES } from '#tests/config/integration/cli/generation/plugin-levels.ts';
+import { VITEST_FILES } from '#tests/inputs/integration/cli/generation/plugin-levels.ts';
 
 async function ruleReports(eslint: ESLint, file: string, rule: string): Promise<{ message: string }[]> {
     const results = await eslint.lintFiles([file]);
@@ -17,8 +18,11 @@ test('the Vitest harness folder places test support and closes it to runtime cod
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         ...VITEST_FILES,
-        'gspot.toml':
-            'version = 1\nlevel = "all"\nkits = ["vitest"]\n[guides]\ninstall = false\n[tools.vitest]\nharness_directory = "tests/fixtures"\n',
+        'gspot.toml': policyOf(
+            ['vitest'],
+            '[guides]\ninstall = false\n[tools.vitest]\nharness_directory = "tests/fixtures"\n',
+            'all',
+        ),
     });
     const eslint = await generatedEslint(sandbox.path);
     expect(await ruleReports(eslint, 'tests/unit/helpers.js', 'gspot/tests-directory-contents')).toMatchObject([
@@ -34,7 +38,7 @@ test('without a test runner no folder is the harness, so support files are place
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         ...VITEST_FILES,
-        'gspot.toml': 'version = 1\nlevel = "all"\nkits = ["javascript"]\n[guides]\ninstall = false\n',
+        'gspot.toml': policyOf(['javascript'], '[guides]\ninstall = false\n', 'all'),
     });
     const eslint = await generatedEslint(sandbox.path);
     expect(await ruleReports(eslint, 'tests/unit/helpers.js', 'gspot/tests-directory-contents')).toStrictEqual([]);

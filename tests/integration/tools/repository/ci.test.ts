@@ -7,6 +7,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { join, dirname, delimiter } from 'node:path';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { toolsPath } from '#tests/support/cli/tools.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
 
 const { version: GSPOT_VERSION } = packageManifest;
@@ -30,7 +31,10 @@ test('repository CI checks the committed change, preserves reports on invalid ba
         '{files}',
     ];
     await createFileTree(sandbox.path, {
-        'gspot.toml': `version = 1\nkits = []\n[[check]]\nname = "project/content"\nstage = "commit"\npaths = ["*.txt"]\ncommand = ${JSON.stringify(command)}\n[check.output]\nformat = "lines"\n`,
+        'gspot.toml': policyOf(
+            [],
+            `[[check]]\nname = "project/content"\nstage = "commit"\npaths = ["*.txt"]\ncommand = ${JSON.stringify(command)}\n[check.output]\nformat = "lines"\n`,
+        ),
         '.gspot/version': `${GSPOT_VERSION}\n`,
         'mise.toml': stringify({ tasks: { 'ci:affected': tasks['ci:affected']! } }),
         'changed.txt': 'valid\n',

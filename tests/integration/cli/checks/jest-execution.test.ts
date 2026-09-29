@@ -7,6 +7,7 @@ import { jestCoverage } from '#cli/checks/jest/run.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { rejection } from '#tests/support/expectations.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { writeJestReports } from '#tests/support/cli/jest.ts';
 
 const VALID = {
@@ -37,7 +38,7 @@ test.each([
 ])('Jest adapter refuses $failure, cleans isolated artifacts, and accepts a corrected report', async ({ changes }) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nkits = ["jest"]\n',
+        'gspot.toml': policyOf(['jest']),
         'sample.js': 'const authored = true;\n',
         'node_modules/.bin/jest': '#!/usr/bin/env node\n',
     });

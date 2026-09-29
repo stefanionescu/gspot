@@ -7,6 +7,7 @@ import { commitAll } from '#tests/support/cli/git.ts';
 import { initArgs } from '#tests/support/cli/init.ts';
 import { keptMode } from '#tests/support/cli/platforms.ts';
 import { containing } from '#tests/support/expectations.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { statSync, chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 
 const INIT = initArgs(['bash']);
@@ -41,7 +42,7 @@ test('apply and uninstall preserve later edits and unowned content while restori
 test('a generated plan cannot overwrite lifecycle recovery data', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'gspot.toml': 'version = 1\nkits = ["bash"]\n[guides]\ndirectory = ".gspot/state/recovery"\n',
+        'gspot.toml': policyOf(['bash'], '[guides]\ndirectory = ".gspot/state/recovery"\n'),
         '.gspot/state/recovery/authored.txt': 'preserve recovery\n',
     });
     const refused = await run(directory.path, ['apply']);
@@ -55,7 +56,7 @@ test('a generated plan cannot overwrite lifecycle recovery data', async () => {
 
 test('apply previews missing outputs without writing and rejects obsolete mutation flags', async () => {
     await using directory = await testdir();
-    const policy = 'version = 1\nkits = ["bash"]\n[guides]\ninstall = false\n';
+    const policy = policyOf(['bash'], '[guides]\ninstall = false\n');
     await createFileTree(directory.path, { 'gspot.toml': policy, 'entry.sh': 'echo example\n' });
     const preview = await run(directory.path, ['apply', '--dry-run', '--json']);
     expect(preview.code, preview.stdout + preview.stderr).toBe(0);
@@ -70,7 +71,7 @@ test('malformed authored blocks refuse apply before generated files change', asy
     await using directory = await testdir();
     const authored = '# Preserve this file\n<!-- >>> gspot managed >>> -->\nUnclosed instructions.\n';
     await createFileTree(directory.path, {
-        'gspot.toml': 'version = 1\nkits = ["bash"]\n',
+        'gspot.toml': policyOf(['bash']),
         'AGENTS.md': authored,
         'entry.sh': 'echo example\n',
     });
@@ -89,7 +90,7 @@ test('malformed shared YAML refuses apply before any generated configuration is 
     await using directory = await testdir();
     const authored = 'pre-commit: [unfinished\n';
     await createFileTree(directory.path, {
-        'gspot.toml': 'version = 1\nkits = ["bash"]\n[hooks]\ntool = "lefthook"\n[guides]\ninstall = false\n',
+        'gspot.toml': policyOf(['bash'], '[hooks]\ntool = "lefthook"\n[guides]\ninstall = false\n'),
         'lefthook.yml': authored,
         'entry.sh': 'echo example\n',
     });

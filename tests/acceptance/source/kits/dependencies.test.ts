@@ -5,129 +5,100 @@ import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
-import type { FindingCase } from '#tests/types/cli.ts';
 import { reportSchema } from '#cli/execution/report.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
-import { runPlanted } from '#tests/support/cli/planted.ts';
-import { INVALID } from '#tests/config/acceptance/source/kits/kits.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
+import { INVALID } from '#tests/inputs/acceptance/source/kits/kits.ts';
 import { toolsPath, installAtLevel } from '#tests/support/cli/tools.ts';
+import { runPlanted, plantedCases } from '#tests/support/cli/planted.ts';
 import { containing, textContaining } from '#tests/support/expectations.ts';
-import { DEPENDENCIES_INIT } from '#tests/config/acceptance/source/kits/init-arguments.ts';
+import { DEPENDENCIES_INIT } from '#tests/inputs/acceptance/source/kits/init-arguments.ts';
 
 const CLEAN = `{\n    "name": "planted",\n    "version": "1.0.0",\n    "private": true,\n    "packageManager": "bun@${Bun.version}"\n}\n`;
 const RANGED = `{\n    "name": "planted",\n    "version": "1.0.0",\n    "private": true,\n    "packageManager": "bun@${Bun.version}",\n    "dependencies": {\n        "left-pad": "^1.3.0"\n    }\n}\n`;
 const PUBLIC_ROOT = `{\n    "name": "planted",\n    "version": "1.0.0",\n    "packageManager": "bun@${Bun.version}",\n    "workspaces": ["packages/*"]\n}\n`;
-const CASES: (FindingCase & { corrected: Record<string, string> })[] = [
-    {
-        check: 'integrity/install-policy',
-        files: { 'bun.lock': '{}\n', 'bunfig.toml': '[install]\nminimumReleaseAge = 3600\n' },
-        expected: { file: 'bunfig.toml', rule: 'release-age', line: 1 },
-        corrected: { 'bun.lock': '{}\n', 'bunfig.toml': '[install]\nminimumReleaseAge = 604800\n' },
-    },
-    {
-        check: 'integrity/install-policy',
-        files: { 'bun.lock': '{}\n', 'bunfig.toml': '[install]\nminimumReleaseAge = 604800\n' },
-        policy: '[tools.install]\nsecurity_scanner = "@socketsecurity/bun-security-scanner"\n',
-        expected: { file: 'bunfig.toml', rule: 'security-scanner', line: 1 },
-        corrected: {
-            'bun.lock': '{}\n',
-            'bunfig.toml':
-                '[install]\nminimumReleaseAge = 604800\n[install.security]\nscanner = "@socketsecurity/bun-security-scanner"\n',
-        },
-    },
-    {
-        check: 'integrity/lockfile-hosts',
-        files: {
-            'package-lock.json': `{\n    "packages": { "node_modules/a": { "resolved": "https://registry.example.test/a/-/a-1.0.0.tgz" } }\n}\n`,
-        },
-        expected: { file: 'package-lock.json', rule: 'registry', line: 2 },
-        corrected: {
-            'package-lock.json':
-                `{\n    "packages": { "node_modules/a": { "resolved": "https://registry.example.test/a/-/a-1.0.0.tgz" } }\n}\n`.replace(
-                    'registry.example.test',
-                    'registry.npmjs.org',
-                ),
-        },
-    },
-    {
-        check: 'integrity/lockfile-hosts',
-        files: {
-            'package-lock.json': `{\n    "packages": { "node_modules/a": { "resolved": "https://registry.example.test/a/-/a-1.0.0.tgz" } }\n}\n`,
-        },
-        expected: { file: 'package-lock.json', rule: 'registry', line: 2 },
-        corrected: {
-            'package-lock.json':
-                `{\n    "packages": { "node_modules/a": { "resolved": "https://registry.example.test/a/-/a-1.0.0.tgz" } }\n}\n`.replace(
-                    'registry.example.test',
-                    'registry.npmjs.org',
-                ),
-        },
-    },
-    {
-        check: 'integrity/manifest-policy',
-        files: { 'package.json': RANGED },
-        expected: { file: 'package.json', rule: 'version-range', line: 1 },
-        corrected: { 'package.json': RANGED.replace('^1.3.0', '1.3.0') },
-    },
-    {
-        check: 'integrity/manifest-policy',
-        files: { 'package.json': PUBLIC_ROOT },
-        expected: { file: 'package.json', rule: 'private-root', line: 1 },
-        corrected: {
-            'package.json': PUBLIC_ROOT.replace('    "workspaces"', '    "private": true,\n    "workspaces"'),
-        },
-    },
-    {
-        check: 'integrity/manifest-policy',
-        files: { 'bun.lock': '{}\n', 'package-lock.json': '{}\n' },
-        expected: { file: 'package-lock.json', rule: 'foreign-lockfile', line: 1 },
-        corrected: { 'bun.lock': '{}\n' },
-    },
-];
+const FOREIGN_LOCK =
+    '{\n    "packages": { "node_modules/a": { "resolved": "https://registry.example.test/a/-/a-1.0.0.tgz" } }\n}\n';
 
-test.each(INVALID)(
-    'the dependencies configuration > invalid manifest $files refuses execution and accepts a valid manifest',
-    async (planted) => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, { 'package.json': CLEAN });
-        commitAll(sandbox.path);
-        const environment = { PATH: toolsPath(['typos', 'ec']) };
-        await installAtLevel(sandbox.path, DEPENDENCIES_INIT, environment);
-        const outcome = await runPlanted(sandbox.path, planted, environment);
-        expect(outcome.code, outcome.stdout + outcome.stderr).toBe(2);
-        expect(outcome.stdout + outcome.stderr).toContain(planted.expected);
-        const correctedCheck = await run(
-            sandbox.path,
-            ['check', '--only', planted.check, '--no-cache', '--json'],
-            environment,
+plantedCases(
+    'the dependencies configuration',
+    {
+        kits: ['dependencies'],
+        modules: false,
+        without: [],
+        files: { 'package.json': CLEAN },
+    },
+    [
+        {
+            check: 'integrity/install-policy',
+            files: { 'bun.lock': '{}\n', 'bunfig.toml': '[install]\nminimumReleaseAge = 3600\n' },
+            expected: { file: 'bunfig.toml', rule: 'release-age', line: 1 },
+            corrected: { files: { 'bun.lock': '{}\n', 'bunfig.toml': '[install]\nminimumReleaseAge = 604800\n' } },
+        },
+        {
+            check: 'integrity/install-policy',
+            files: { 'bun.lock': '{}\n', 'bunfig.toml': '[install]\nminimumReleaseAge = 604800\n' },
+            policy: '[tools.install]\nsecurity_scanner = "@socketsecurity/bun-security-scanner"\n',
+            expected: { file: 'bunfig.toml', rule: 'security-scanner', line: 1 },
+            corrected: {
+                files: {
+                    'bun.lock': '{}\n',
+                    'bunfig.toml':
+                        '[install]\nminimumReleaseAge = 604800\n[install.security]\nscanner = "@socketsecurity/bun-security-scanner"\n',
+                },
+            },
+        },
+        {
+            check: 'integrity/lockfile-hosts',
+            files: { 'package-lock.json': FOREIGN_LOCK },
+            expected: { file: 'package-lock.json', rule: 'registry', line: 2 },
+            corrected: {
+                files: { 'package-lock.json': FOREIGN_LOCK.replace('registry.example.test', 'registry.npmjs.org') },
+            },
+        },
+        {
+            check: 'integrity/manifest-policy',
+            files: { 'package.json': RANGED },
+            expected: { file: 'package.json', rule: 'version-range', line: 1 },
+            corrected: { files: { 'package.json': RANGED.replace('^1.3.0', '1.3.0') } },
+        },
+        {
+            check: 'integrity/manifest-policy',
+            files: { 'package.json': PUBLIC_ROOT },
+            expected: { file: 'package.json', rule: 'private-root', line: 1 },
+            corrected: {
+                files: {
+                    'package.json': PUBLIC_ROOT.replace('    "workspaces"', '    "private": true,\n    "workspaces"'),
+                },
+            },
+        },
+        {
+            check: 'integrity/manifest-policy',
+            files: { 'bun.lock': '{}\n', 'package-lock.json': '{}\n' },
+            expected: { file: 'package-lock.json', rule: 'foreign-lockfile', line: 1 },
+            corrected: { files: { 'bun.lock': '{}\n' } },
+        },
+    ],
+    (planted) => {
+        test.each(INVALID)(
+            'invalid manifest $files refuses execution and accepts a valid manifest',
+            async (invalid) => {
+                const { root, environment } = planted();
+                const outcome = await runPlanted(root, invalid, environment);
+                expect(outcome.code, outcome.stdout + outcome.stderr).toBe(2);
+                expect(outcome.stdout + outcome.stderr).toContain(invalid.expected);
+                const corrected = await run(
+                    root,
+                    ['check', '--only', invalid.check, '--no-cache', '--json'],
+                    environment,
+                );
+                expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+                expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
+                    { check: invalid.check, status: 'ok', findings: [] },
+                ]);
+            },
+            PLANTED_TIMEOUT_MS * 2,
         );
-        expect(correctedCheck.code, correctedCheck.stdout + correctedCheck.stderr).toBe(0);
-        expect(reportSchema.parse(JSON.parse(correctedCheck.stdout)).checks).toMatchObject([
-            { check: planted.check, status: 'ok', findings: [] },
-        ]);
     },
-    PLANTED_TIMEOUT_MS * 2,
-);
-
-test.each(CASES)(
-    'the dependencies configuration > $check reports $expected.rule in $expected.file and accepts corrected metadata',
-    async (planted) => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, { 'package.json': CLEAN });
-        commitAll(sandbox.path);
-        const environment = { PATH: toolsPath(['typos', 'ec']) };
-        await installAtLevel(sandbox.path, DEPENDENCIES_INIT, environment);
-        const outcome = await runPlanted(sandbox.path, planted, environment);
-        expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
-        const failed = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
-        expect(failed.checks).toMatchObject([{ check: planted.check, status: 'fail' }]);
-        expect(failed.checks[0]!.findings).toContainEqual(containing(planted.expected));
-        const corrected = await runPlanted(sandbox.path, { ...planted, files: planted.corrected }, environment);
-        expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        const accepted = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
-        expect(accepted.checks).toMatchObject([{ check: planted.check, status: 'ok', findings: [] }]);
-    },
-    PLANTED_TIMEOUT_MS * 2,
 );
 
 test(

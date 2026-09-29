@@ -6,7 +6,8 @@ import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { containing, textContaining } from '#tests/support/expectations.ts';
 
 test.each([
@@ -23,7 +24,7 @@ test.each([
     async (entry) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\nlevel = "all"\nkits = ["bash"]\n',
+            'gspot.toml': policyOf(['bash'], '', 'all'),
             'script.sh': 'echo example\n',
             launcher: '#!/usr/bin/env -S bash -e\necho example\n',
             'script.zsh': 'repeat 2 do print example; done\n',

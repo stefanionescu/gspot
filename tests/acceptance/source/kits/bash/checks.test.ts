@@ -1,65 +1,52 @@
 // Bash defects have independent diagnostics and corrected execution under the same policy.
 import { join } from 'node:path';
-import { test, expect, describe } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { chmodSync, writeFileSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
-import { commitAll } from '#tests/support/cli/git.ts';
-import { initArgs } from '#tests/support/cli/init.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { containing } from '#tests/support/expectations.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { BASH_CASES } from '#tests/support/cli/bash-cases.ts';
-import { script, runPlanted } from '#tests/support/cli/planted.ts';
-import { toolsPath, installPrivateTools } from '#tests/support/cli/tools.ts';
-import { PLANTED_TIMEOUT_MS, BASH_CASES_MAIN as MAIN } from '#tests/config/cli.ts';
+import { BASH_CASES_MAIN as MAIN } from '#tests/inputs/cli.ts';
+import { script, plantedCases } from '#tests/support/cli/planted.ts';
 
-describe('the bash configuration', () => {
-    test.each(BASH_CASES)(
-        '$check reports its defect in $expected.file and accepts corrected scripts',
-        async (planted) => {
-            await using sandbox = await testdir();
-            await createFileTree(sandbox.path, {
-                'scripts/build.sh': script.replace('# gspot-ignore', () => '# main: runs the script.\n# gspot-ignore'),
-            });
-            chmodSync(join(sandbox.path, 'scripts/build.sh'), 0o755);
-            commitAll(sandbox.path);
-            const environment = { PATH: toolsPath(['ast-grep', 'shellcheck', 'shfmt']) };
-            const initialized = await run(sandbox.path, initArgs(['bash']), environment);
-            expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
-            await installPrivateTools(sandbox.path);
-            const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
-            expect(selected.code, selected.stdout + selected.stderr).toBe(0);
-            const outcome = await runPlanted(sandbox.path, planted, environment);
-            expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
-            const failed = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
-            expect(failed.checks).toMatchObject([{ check: planted.check, status: 'fail' }]);
-            expect(failed.checks[0]!.findings).toContainEqual(containing(planted.expected));
-            const files = Object.fromEntries(
-                Object.keys(planted.files).map((path) => [
-                    path,
-                    script.replace('# gspot-ignore', '# main: runs the script.\n# gspot-ignore'),
-                ]),
-            );
-            if (planted.check === 'structure/guards')
-                files['scripts/settings.sh'] =
-                    '#!/usr/bin/env bash\n[[ -n ${_CFG_SETTINGS_READY:-} ]] && return 0\nreadonly _CFG_SETTINGS_READY=1\nreadonly PORT=8080\n';
-            if (planted.check === 'structure/bash-boundaries')
-                files['deploy/step.sh'] = files['deploy/step.sh']!.replace(
-                    '#!/usr/bin/env bash',
-                    '#!/usr/bin/env bash\n# Boundary: Owns deployment steps and their explicit input values.',
-                );
-            if (planted.check === 'structure/env-access-owner')
-                files['scripts/environment.sh'] = planted.files['scripts/environment.sh']!;
-            const corrected = await runPlanted(sandbox.path, { ...planted, files }, environment);
-            expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-            const accepted = reportSchema.parse(
-                await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json(),
-            );
-            expect(accepted.checks).toMatchObject([{ check: planted.check, status: 'ok', findings: [] }]);
+const CLEAN = script.replace('# gspot-ignore', () => '# main: runs the script.\n# gspot-ignore');
+// What a check accepts beside the clean scripts: a guarded settings file, a boundary header, the environment owner.
+const CORRECTIONS: Record<string, (planted: { files: Record<string, string> }) => Record<string, string>> = {
+    'structure/guards': () => ({
+        'scripts/settings.sh':
+            '#!/usr/bin/env bash\n[[ -n ${_CFG_SETTINGS_READY:-} ]] && return 0\nreadonly _CFG_SETTINGS_READY=1\nreadonly PORT=8080\n',
+    }),
+    'structure/bash-boundaries': () => ({
+        'deploy/step.sh': CLEAN.replace(
+            '#!/usr/bin/env bash',
+            '#!/usr/bin/env bash\n# Boundary: Owns deployment steps and their explicit input values.',
+        ),
+    }),
+    'structure/env-access-owner': (planted) => ({ 'scripts/environment.sh': planted.files['scripts/environment.sh']! }),
+};
+
+plantedCases(
+    'the bash configuration',
+    {
+        kits: ['bash'],
+        modules: false,
+        without: [],
+        tools: ['shellcheck', 'shfmt'],
+        files: { 'scripts/build.sh': CLEAN },
+        before: (root) => {
+            chmodSync(join(root, 'scripts/build.sh'), 0o755);
         },
-        PLANTED_TIMEOUT_MS * 4,
-    );
-});
+        corrected: (planted) => ({
+            files: {
+                ...Object.fromEntries(Object.keys(planted.files).map((path) => [path, CLEAN])),
+                ...CORRECTIONS[planted.check]?.(planted),
+            },
+        }),
+    },
+    BASH_CASES,
+);
 
 test.each([
     ['3.2', false],
@@ -72,7 +59,7 @@ test.each([
     const inherited = 'shopt -s inherit_errexit\n';
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nlevel = "all"\nkits = ["bash"]\n',
+        'gspot.toml': policyOf(['bash'], '', 'all'),
         'greet.sh': base + (isInherited ? inherited : '') + MAIN,
     });
     const path = join(sandbox.path, 'greet.sh');

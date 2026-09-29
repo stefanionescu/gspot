@@ -6,7 +6,7 @@ import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { test, spyOn, expect, describe } from 'bun:test';
 import { manifestPolicy } from '#cli/checks/dependencies/manifest-policy.ts';
-import { MANIFEST, DEPENDENCIES_POLICY } from '#tests/config/integration/cli/checks.ts';
+import { MANIFEST, DEPENDENCIES_POLICY } from '#tests/inputs/integration/cli/checks.ts';
 
 async function input(root: string): Promise<EngineInput> {
     const session = await openSession(root);

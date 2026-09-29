@@ -1,10 +1,11 @@
 import { join } from 'node:path';
-import { RUNS } from '#tests/config/cli.ts';
+import { RUNS } from '#tests/inputs/cli.ts';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { inspectTool } from '#cli/tools/inspect.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { chmodSync, mkdirSync, symlinkSync } from 'node:fs';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { commandPin, libraryPin } from '#tests/support/cli/pins.ts';
 
 test.each([
@@ -82,7 +83,7 @@ test('a manifest can declare its help command status without accepting other fai
 test('tool reads distinguish pins and refresh private libraries in the next session', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nkits = []\n',
+        'gspot.toml': policyOf([]),
         'api/node_modules/example/package.json': '{"name":"example","version":"1.0.0"}',
     });
     const session = await openSession(sandbox.path);
@@ -100,7 +101,7 @@ test('tool reads distinguish pins and refresh private libraries in the next sess
 test('a command shares version reads and the next session inspections again', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nkits = []\n',
+        'gspot.toml': policyOf([]),
         'inspection.ts':
             'const file = Bun.file("calls.txt"); const calls = await file.exists() ? Number(await file.text()) : 0; await Bun.write("calls.txt", String(calls + 1)); console.log("3.8.1");',
     });

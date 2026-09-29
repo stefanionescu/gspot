@@ -7,7 +7,7 @@ import * as processes from '#cli/platform/spawn.ts';
 import { gspot } from '#tests/support/cli/command.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { toolsPath } from '#tests/support/cli/tools.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { pushReportSchema } from '#cli/execution/report.ts';
 import { containing, containingAll } from '#tests/support/expectations.ts';
 

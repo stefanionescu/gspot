@@ -1,6 +1,7 @@
 import { stringify } from 'smol-toml';
 import { test, expect } from 'bun:test';
 import { Ajv2020 } from 'ajv/dist/2020.js';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { policyJsonSchema } from '#cli/policy/json-schema.ts';
 import { parsePolicyText, assertPolicyComplete } from '#cli/policy/read.ts';
 
@@ -42,7 +43,7 @@ test.each([
 });
 
 test('nested manifest settings preserve typed leaf values and reject unknown siblings', () => {
-    const source = 'version = 1\nkits = ["bash"]\n[tools.bash.safety]\nowners = ["scripts/cleanup.sh"]\n';
+    const source = policyOf(['bash'], '[tools.bash.safety]\nowners = ["scripts/cleanup.sh"]\n');
     const path = 'gspot.toml';
     const policy = parsePolicyText(source, path);
     expect(() => {

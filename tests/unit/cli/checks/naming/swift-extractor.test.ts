@@ -1,6 +1,6 @@
 import { test, expect, describe } from 'bun:test';
 import { identifiersOf } from '#cli/checks/naming/engine.ts';
-import { SWIFT_EXTRACTOR_SOURCE } from '#tests/config/unit/cli/checks/naming.ts';
+import { SWIFT_EXTRACTOR_SOURCE } from '#tests/inputs/unit/cli/checks/naming.ts';
 
 describe('swiftIdentifiers', () => {
     test('every declared name arrives with its category', async () => {

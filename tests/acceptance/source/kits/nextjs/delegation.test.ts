@@ -6,9 +6,9 @@ import { run } from '#tests/support/cli/command.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { installedNextProject } from '#tests/support/cli/nextjs.ts';
-import { NEXT_LAYOUT, PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
+import { NEXT_LAYOUT, PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { containing, textContaining } from '#tests/support/expectations.ts';
-import { OWNER_WRITES } from '#tests/config/acceptance/source/kits/nextjs.ts';
+import { OWNER_WRITES } from '#tests/inputs/acceptance/source/kits/nextjs.ts';
 
 test(
     'Next.js framework rules reject a disabled requirement and accept its restoration',

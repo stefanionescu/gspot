@@ -4,11 +4,16 @@ import { emitAll } from '#cli/generation/outputs.ts';
 import { parseManifest } from '#cli/kits/manifests.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { selectRuleFiles } from '#cli/agents/assemble.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 
 async function generatedGuides(level: string, files: Record<string, string>): Promise<Map<string, string>> {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': `version = 1\nlevel = "${level}"\nkits = ["typescript", "css", "vitest", "swift", "html", "python", "bash", "express", "nestjs", "svelte"]\n`,
+        'gspot.toml': policyOf(
+            ['typescript', 'css', 'vitest', 'swift', 'html', 'python', 'bash', 'express', 'nestjs', 'svelte'],
+            '',
+            level,
+        ),
         ...files,
     });
     const session = await openSession(sandbox.path);
@@ -67,7 +72,7 @@ test('conditional guides follow lockfile and dependency evidence', async () => {
 
 test('a selected manifest cannot silently omit a missing guide asset', async () => {
     await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'gspot.toml': 'version = 1\nkits = []\n' });
+    await createFileTree(sandbox.path, { 'gspot.toml': policyOf([]) });
     const session = await openSession(sandbox.path);
     const manifest = parseManifest(
         '[kit]\nname = "example"\nkind = "general"\ntitle = "Example"\ndescription = "Example guide selection for this test."\n[guides]\ncode = [{path = "missing.md"}]\n',

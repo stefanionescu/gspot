@@ -8,13 +8,14 @@ import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { checkSwiftlint } from '#cli/checks/swift/lint.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 
 test('Swift documentation adapter rejects malformed native output and removes its selected workspace', async () => {
     await using sandbox = await testdir();
     const root = sandbox.path;
     const text = 'public let value = 1 /** Inline documentation. */\n';
     await createFileTree(root, {
-        'gspot.toml': 'version = 1\nlevel = "all"\nkits = ["swift"]\n',
+        'gspot.toml': policyOf(['swift'], '', 'all'),
         'nested/Value.swift': text,
     });
     const configurationSession = await openSession(root);

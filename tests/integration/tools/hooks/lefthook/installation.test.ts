@@ -3,6 +3,7 @@ import { test, expect } from 'bun:test';
 import { run } from '#cli/platform/spawn.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { rejection } from '#tests/support/expectations.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { applyCommand } from '#cli/commands/apply/command.ts';
 import { uninstallCommand } from '#cli/commands/uninstall.ts';
 import { hookLocation } from '#cli/repository/hook-location.ts';
@@ -119,7 +120,7 @@ test.each(['custom', 'native'])(
 test('Lefthook versions without the supported installation controls retain existing hooks', async () => {
     await using repository = await testdir();
     await createFileTree(repository.path, {
-        'gspot.toml': 'version = 1\nkits = []\n[guides]\ninstall = false\n[hooks]\ntool = "lefthook"\n',
+        'gspot.toml': policyOf([], '[guides]\ninstall = false\n[hooks]\ntool = "lefthook"\n'),
         'package.json': '{"private":true,"devDependencies":{"lefthook":"1.11.13"}}\n',
     });
     for (const command of [

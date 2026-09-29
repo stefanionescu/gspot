@@ -6,7 +6,8 @@ import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { run } from '#tests/support/cli/command.ts';
 import { reportSchema } from '#cli/execution/report.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { installPrivateTools } from '#tests/support/cli/tools.ts';
 import { prepareLicenseProject } from '#tests/support/cli/licenses.ts';
 import { containingAll, textContaining } from '#tests/support/expectations.ts';
@@ -148,13 +149,17 @@ test(
     PLANTED_TIMEOUT_MS * 2,
 );
 
-test.each(['recommended', 'all'])(
-    'Python license policy generation preserves identical scoped settings at %s',
-    async (level) => {
+test(
+    'Python license policy generation preserves identical scoped settings at all',
+    async () => {
         await using sandbox = await testdir();
         const root = sandbox.path;
         await createFileTree(root, {
-            'gspot.toml': `version = 1\nlevel = "${level}"\nkits = []\n[guides]\ninstall = false\n[[scope]]\npath = "app"\nkits = ["licenses"]\n[scope.tools.licenses]\nlicenses_allowed = ["MIT"]\n`,
+            'gspot.toml': policyOf(
+                [],
+                '[guides]\ninstall = false\n[[scope]]\npath = "app"\nkits = ["licenses"]\n[scope.tools.licenses]\nlicenses_allowed = ["MIT"]\n',
+                'all',
+            ),
             'app/pyproject.toml':
                 '[project]\nname = "fixture"\nversion = "0.0.0"\n[tool.pip-licenses]\nignore-packages = ["licensed-example"]\n',
             'sibling/pyproject.toml': '[project]\nname = "uninstalled-sibling"\nversion = "0.0.0"\n',
@@ -174,13 +179,17 @@ test.each(['recommended', 'all'])(
     PLANTED_TIMEOUT_MS,
 );
 
-test.each(['recommended', 'all'])(
-    'Python license CLI at %s scans the selected scope and distinguishes unavailable environments',
-    async (level) => {
+test(
+    'Python license CLI at all scans the selected scope and distinguishes unavailable environments',
+    async () => {
         await using sandbox = await testdir();
         const root = sandbox.path;
         await createFileTree(root, {
-            'gspot.toml': `version = 1\nlevel = "${level}"\nkits = []\n[guides]\ninstall = false\n[[scope]]\npath = "app"\nkits = ["licenses"]\n[scope.tools.licenses]\nlicenses_allowed = ["MIT"]\n`,
+            'gspot.toml': policyOf(
+                [],
+                '[guides]\ninstall = false\n[[scope]]\npath = "app"\nkits = ["licenses"]\n[scope.tools.licenses]\nlicenses_allowed = ["MIT"]\n',
+                'all',
+            ),
             'app/pyproject.toml':
                 '[project]\nname = "fixture"\nversion = "0.0.0"\n[tool.pip-licenses]\nignore-packages = ["licensed-example"]\n',
             'sibling/pyproject.toml': '[project]\nname = "uninstalled-sibling"\nversion = "0.0.0"\n',

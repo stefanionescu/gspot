@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import { test, spyOn, expect } from 'bun:test';
 import * as childProcess from 'node:child_process';
 import { run, runBinary } from '#cli/platform/spawn.ts';
+import { onPosix } from '#tests/support/cli/platforms.ts';
 import { waitForExit } from '#tests/support/cli/process.ts';
 
 const captures = { text: run, binary: runBinary };
@@ -189,7 +190,7 @@ test.each(['text', 'binary'] as const)(
     },
 );
 
-if (process.platform !== 'win32')
+if (onPosix)
     test('preserves execution and process-group permission errors', async () => {
         await using sandbox = await testdir();
         const original = process.kill.bind(process);

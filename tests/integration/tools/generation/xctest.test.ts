@@ -8,10 +8,11 @@ import { openSession } from '#cli/execution/session.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { run as runProcess } from '#cli/platform/spawn.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { toolShipsHere } from '#tests/support/cli/platforms.ts';
 import { containing, containingAll } from '#tests/support/expectations.ts';
 import { commandConfigurations } from '#cli/execution/command-expansion.ts';
-import { DEFECT, CORRECT } from '#tests/config/integration/tools/generation.ts';
+import { DEFECT, CORRECT } from '#tests/inputs/integration/tools/generation.ts';
 
 // Configuration edits invalidate cached findings and missing inputs fail explicitly.
 async function expectConfigurationChanges(root: string, prefix: string, command: string[]): Promise<void> {
@@ -85,7 +86,7 @@ if (toolShipsHere('swiftlint'))
     )('a Swift test scope $scope has one complete native configuration at $level', async ({ scope, level }) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': `version = 1\nlevel = "${level}"\nkits = []\n[[scope]]\npath = "${scope}"\nkits = ["xctest"]\n`,
+            'gspot.toml': policyOf([], `[[scope]]\npath = "${scope}"\nkits = ["xctest"]\n`, level),
             [`${scope}/Value.swift`]: DEFECT,
         });
         const session = await openSession(sandbox.path);

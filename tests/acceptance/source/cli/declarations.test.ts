@@ -4,11 +4,12 @@ import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { reportSchema } from '#cli/execution/report.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 
 test('generated and vendored settings classify directories and removal returns files to source checks', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'gspot.toml': 'version = 1\nkits = ["bash"]\n[guides]\ninstall = false\n',
+        'gspot.toml': policyOf(['bash'], '[guides]\ninstall = false\n'),
         'entry.sh': 'echo example\n',
         'output types/broken.sh': 'if then\n',
         'upstream/broken.sh': 'if then\n',
@@ -47,7 +48,7 @@ test('generated and vendored settings classify directories and removal returns f
 test('declarations retain producer metadata and reasons while removing individual paths', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'gspot.toml': 'version = 1\nkits = ["bash"]\nrequire_reasons = true\n[guides]\ninstall = false\n',
+        'gspot.toml': policyOf(['bash'], 'require_reasons = true\n[guides]\ninstall = false\n'),
         'a.sh': 'if then\n',
         'b.sh': 'if then\n',
     });

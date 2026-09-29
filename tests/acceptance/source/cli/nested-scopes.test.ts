@@ -4,7 +4,7 @@ import { writeFileSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { reportSchema } from '#cli/execution/report.ts';
-import { NESTED_SCOPES_POLICY } from '#tests/config/acceptance/source/cli/cli.ts';
+import { NESTED_SCOPES_POLICY } from '#tests/inputs/acceptance/source/cli/cli.ts';
 
 test('nested scopes inherit parent configurations and settings and check each file in its deepest scope', async () => {
     await using directory = await testdir();

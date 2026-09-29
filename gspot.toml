@@ -359,6 +359,8 @@ paths = [
     "tests/acceptance/source/kits/swift",
     "tests/acceptance/source/kits/typescript",
     "tests/integration/cli/checks/swift",
+    "tests/support/cli/python",
+    "tests/unit/cli/checks/python",
     "tests/integration/tools/bash",
     "tests/integration/tools/generation/swift",
 ]

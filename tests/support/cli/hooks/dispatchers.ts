@@ -1,6 +1,7 @@
 import { createFileTree } from 'testdirs';
 import { join, delimiter } from 'node:path';
 import { gitOutput } from '#tests/support/cli/git.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { hookLocation } from '#cli/repository/hook-location.ts';
 import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
 import { environmentVariables } from '#cli/platform/environment.ts';
@@ -13,7 +14,7 @@ export async function prepareDispatcher(
     launcher: string,
     kind: string,
 ): Promise<PrepareDispatcherResult> {
-    const policy = 'version = 1\nkits = []\n[hooks]\ntool = "gspot"\n[guides]\ninstall = false\n';
+    const policy = policyOf([], '[hooks]\ntool = "gspot"\n[guides]\ninstall = false\n');
     await createFileTree(sandbox, { 'gspot.toml': policy });
     for (const args of [
         ['init', '-q'],

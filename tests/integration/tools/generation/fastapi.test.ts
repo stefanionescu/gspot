@@ -3,7 +3,7 @@ import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { readAsset } from '#cli/platform/assets.ts';
 import { ruleExamples } from '#cli/agents/examples.ts';
-import { FASTAPI_GUIDE_TESTS } from '#tests/config/integration/tools/generation.ts';
+import { FASTAPI_GUIDE_TESTS } from '#tests/inputs/integration/tools/generation.ts';
 
 test.each(FASTAPI_GUIDE_TESTS)(
     '$guide examples preserve their HTTP validation and response contracts',

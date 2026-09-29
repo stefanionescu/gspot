@@ -77,7 +77,7 @@ with its callers, assets, and build inputs in the same implementation batch. Upd
 
 Use `testdirs` directly for temporary test directories. Register disposal before creating files
 so setup failures are cleaned up. Test-only types live under `tests/types/` and test constants
-under `tests/config/`, mirroring the test tree; a table of cases stays with its test. Exercise
+under `tests/inputs/`, mirroring the test tree; a table of cases stays with its test. Exercise
 harness behavior through real product journeys.
 
 ## CLI ownership boundaries

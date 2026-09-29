@@ -8,6 +8,13 @@ import { missingBuild } from '#cli/execution/planning/skips.ts';
 import { PLATFORM_NAMES } from '#cli/config/execution/execution.ts';
 import { chmodSync, mkdirSync, readdirSync, symlinkSync, realpathSync } from 'node:fs';
 
+/** Whether the platform has POSIX shells, links, and modes; Windows does not. */
+export const onPosix = process.platform !== 'win32';
+/** Whether the macOS toolchain is at hand: plutil, xcodebuild, and the Swift compiler. */
+export const onMac = process.platform === 'darwin';
+/** Whether the Linux-only services of the tests, such as Docker journeys, are at hand. */
+export const onLinux = process.platform === 'linux';
+
 /**
  * Whether the pinned tool has a build for this machine.
  * @param name the tool name as its manifest pins it

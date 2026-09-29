@@ -4,13 +4,14 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { openOwner } from '#cli/lifecycle/ownership/owner.ts';
 import { hasPackages, hasOwnedPackages } from '#cli/tools/vale.ts';
 
 test('generated vocabulary combines shipped and project words without duplicates', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nkits = ["prose"]\n[prose]\nvocabulary = ["NebulaKit", "TypeScript", "NebulaKit"]\n',
+        'gspot.toml': policyOf(['prose'], '[prose]\nvocabulary = ["NebulaKit", "TypeScript", "NebulaKit"]\n'),
     });
     const session = await openSession(sandbox.path);
     const output = emitAll(session.policyFiles.policy, session.repository, session.scopes, {

@@ -4,7 +4,7 @@ import { join, dirname } from 'node:path';
 import { run } from '#cli/platform/spawn.ts';
 import * as processes from '#cli/platform/spawn.ts';
 import type { Registry } from '#tests/types/registry.ts';
-import { RELEASE_TIMEOUT_MS } from '#tests/config/release.ts';
+import { RELEASE_TIMEOUT_MS } from '#tests/inputs/release.ts';
 import { publishTo } from '#tests/support/registry/lifecycle.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { host, root, requireCli, environment, preparePackages } from '#tests/support/release/packages.ts';

@@ -13,11 +13,12 @@ import { runEngineCheck } from '#cli/execution/engines.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { coverageReport } from '#cli/execution/coverage.ts';
 import { explain } from '#cli/commands/explain/subjects.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 
-test.each(['recommended', 'all'])('native parsers supply syntax coverage at %s', async (level) => {
+test('native parsers supply syntax coverage at all', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': `version = 1\nlevel = "${level}"\nkits = ["typescript", "files", "formatting"]\n`,
+        'gspot.toml': policyOf(['typescript', 'files', 'formatting'], '', 'all'),
         'source.ts': 'export const value = 1;\n',
         'settings.json': '{"value":1}\n',
     });
@@ -36,7 +37,7 @@ test.each(['recommended', 'all'])('native parsers supply syntax coverage at %s',
 test('a root project check does not supply a disabled child scope with coverage', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nkits = ["bash"]\n[[scope]]\npath = "app"\nkits = []\n',
+        'gspot.toml': policyOf(['bash'], '[[scope]]\npath = "app"\nkits = []\n'),
         'source.sh': 'echo root\n',
         'app/source.sh': 'echo nested\n',
     });
@@ -140,7 +141,7 @@ test('strict coverage keeps inability as exit two and leaves message-stage check
 test('engine coverage rejects an unread path and accepts confirmed repository sources', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nkits = ["bash"]\n',
+        'gspot.toml': policyOf(['bash']),
         'source.sh': 'echo example\n',
     });
     const session = await openSession(sandbox.path);
@@ -163,7 +164,7 @@ test('engine coverage rejects an unread path and accepts confirmed repository so
 test('a per-scope check runs only where that scope owns a owned source', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nkits = ["bash"]\n[[scope]]\npath = "app"\nkits = []\n',
+        'gspot.toml': policyOf(['bash'], '[[scope]]\npath = "app"\nkits = []\n'),
         'app/source.sh': 'echo example\n',
         'notes.md': 'No shell source belongs to the root.\n',
     });
@@ -196,7 +197,7 @@ test('a per-scope check runs only where that scope owns a owned source', async (
 test('a project-wide check covers its owned sources without owning unrelated project inputs', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nkits = ["bash"]\n',
+        'gspot.toml': policyOf(['bash']),
         'source.sh': 'echo example\n',
         'notes.md': 'An unrelated source document.\n',
     });

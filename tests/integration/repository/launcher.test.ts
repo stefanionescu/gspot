@@ -3,9 +3,10 @@ import { fileURLToPath } from 'node:url';
 import { chmodSync, copyFileSync } from 'node:fs';
 import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import { onPosix } from '#tests/support/cli/platforms.ts';
 
 // The launcher is a Bash script for macOS and Linux; Windows runs the source CLI through mise.
-describe.if(process.platform !== 'win32')('the source launcher', () => {
+describe.if(onPosix)('the source launcher', () => {
     test('source launcher preserves directory, arguments, input, and exit status', async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {

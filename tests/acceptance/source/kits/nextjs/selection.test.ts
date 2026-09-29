@@ -6,7 +6,8 @@ import { run } from '#tests/support/cli/command.ts';
 import { symlinkSync, writeFileSync } from 'node:fs';
 import { reportSchema } from '#cli/execution/report.ts';
 import type { ReplacePlan } from '#cli/types/commands.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
 import { installPrivateTools } from '#tests/support/cli/tools.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
@@ -16,7 +17,7 @@ test.each(['none', 'index-only'])(
     async (mode) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': `version = 1\nlevel = "all"\nkits = ["nextjs"]\n[structure]\nreexports = "${mode}"\n`,
+            'gspot.toml': policyOf(['nextjs'], `[structure]\nreexports = "${mode}"\n`, 'all'),
             'package.json':
                 '{"name":"next-reexports","private":true,"type":"module","dependencies":{"react":"19.1.1","next":"16.3.5"}}',
             'tsconfig.json':
@@ -61,7 +62,7 @@ test.each(['only', 'ignore', 'flag'])(
     'the TypeScript check still finds defects when its replacement is absent through %s',
     async (selection) => {
         await using sandbox = await testdir();
-        const policy = 'version = 1\nkits = ["nextjs"]\n[guides]\ninstall = false\n';
+        const policy = policyOf(['nextjs'], '[guides]\ninstall = false\n');
         await createFileTree(sandbox.path, {
             'gspot.toml': policy + (selection === 'ignore' ? '\n[[ignore]]\ncheck = "nextjs/typecheck"\n' : ''),
             'package.json':

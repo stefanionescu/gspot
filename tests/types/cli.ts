@@ -19,11 +19,21 @@ export type CodeQualityReport = {
 }[];
 /** What a planted hook program records about the call it received. */
 export type HookCapture = { args: string[]; input?: string; cwd?: string; hook?: string };
-/** A planted case that checks a diagnostic substring. */
-export type PlantedCase = PlantedInput & { expected: string };
-/** A planted case that checks a finding at its source location. */
+/** A planted case that checks a finding at its source location, and what corrects it for the clean rerun. */
 export type FindingCase = PlantedInput & {
-    expected: Pick<Finding, 'file'> & Partial<Pick<Finding, 'rule' | 'line' | 'column' | 'message'>>;
+    expected: Partial<Pick<Finding, 'file' | 'rule' | 'line' | 'column' | 'message'>>;
+    /** What the clean rerun plants instead; the case's policy with no files unless a case says otherwise. */
+    corrected?: Correction;
+    /** The platforms the case runs on; every platform unless the tool has no build elsewhere. */
+    platforms?: NodeJS.Platform[];
+};
+/** What the clean rerun of a planted case plants: corrected files, and the case's policy unless it names another. */
+export type Correction = {
+    files: Record<string, string>;
+    policy?: string | undefined;
+    policyEdit?: [string, string] | undefined;
+    removed?: string[];
+    executable?: string[];
 };
 /** What a planted repository holds and selects. */
 export type Sandbox = {
@@ -33,11 +43,30 @@ export type Sandbox = {
     dependencies?: Record<string, string>;
     /** The source files of the repository. */
     files: Record<string, string>;
-    /** Recommended configurations left out; naming and spelling always are. */
+    /** Recommended configurations left out; naming and spelling when a fixture says nothing. */
     without?: string[];
+    /** The init flags after the kits; no runner, hooks, CI, guides, or install unless a fixture says otherwise. */
+    init?: string[];
+    /** Tools on the PATH beside typos, ec, and ast-grep. */
+    tools?: string[];
+    /** Whether this repository's node_modules is linked into the sandbox; it is unless a fixture says otherwise. */
+    modules?: boolean;
     /** The level set after init; all unless a test says otherwise. */
     level?: 'recommended' | 'all';
 };
+/** A repository the planted cases of one table share, with what happens once around its install. */
+export type PlantedRepository = Sandbox & {
+    /** The folder the repository is made under; the temporary folder unless a tool needs another drive. */
+    dirname?: string;
+    /** Runs once before init: files that are copied rather than written. */
+    before?: (root: string) => void;
+    /** Runs once after install: settings, commits, or files the cases need in place. */
+    prepare?: (root: string, environment: Record<string, string>) => void | Promise<void>;
+    /** The correction of a case that names none. */
+    corrected?: (planted: FindingCase) => Correction;
+};
+/** An installed repository and the environment its commands run with. */
+export type Planted = { root: string; environment: Record<string, string> };
 export type OriginalFile = { kind: 'file'; bytes: Uint8Array; mode: number } | { kind: 'symlink'; target: string };
 /** The files and policy needed to plant a defect for one check. */
 export type PlantedInput = {

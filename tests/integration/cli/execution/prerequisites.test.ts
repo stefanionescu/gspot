@@ -6,8 +6,9 @@ import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { checkExecution } from '#cli/execution/engines.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { textContaining } from '#tests/support/expectations.ts';
-import { WAITING, PREREQUISITES_POLICY } from '#tests/config/integration/cli/execution/execution.ts';
+import { WAITING, PREREQUISITES_POLICY } from '#tests/inputs/integration/cli/execution/execution.ts';
 
 test('disabled settings produce skipped results and enabling a setting runs the check', async () => {
     await using sandbox = await testdir();
@@ -21,18 +22,18 @@ test('disabled settings produce skipped results and enabling a setting runs the 
     const options = {
         stage: 'all' as const,
         skips: [],
-        only: WAITING.keys().toArray(),
+        only: Object.keys(WAITING),
         fix: false,
         isDryRun: false,
         noCache: true,
     };
     const session = await openSession(sandbox.path);
     const outcome = await executeRun(session, options);
-    expect(new Set(outcome.report.checks.map((check) => check.check))).toStrictEqual(new Set(WAITING.keys()));
+    expect(new Set(outcome.report.checks.map((check) => check.check))).toStrictEqual(new Set(Object.keys(WAITING)));
     expect(outcome.report.coverage.checked).toBe(0);
     for (const check of outcome.report.checks) {
         expect(check.status).toBe('skipped');
-        expect(check.note).toContain(WAITING.get(check.check));
+        expect(check.note).toContain(WAITING[check.check]);
     }
     writeFileSync(
         join(sandbox.path, 'gspot.toml'),
@@ -51,8 +52,11 @@ test('a failed site build skips every output consumer and a new session rebuilds
     await using sandbox = await testdir();
     using resources = new DisposableStack();
     await createFileTree(sandbox.path, {
-        'gspot.toml':
-            'version = 1\nlevel = "all"\nkits = ["static-site"]\n[tools.site]\nbuild = "bun build.js"\nsize_limits = [{paths = ["**/*"], kb = 100}]\n',
+        'gspot.toml': policyOf(
+            ['static-site'],
+            '[tools.site]\nbuild = "bun build.js"\nsize_limits = [{paths = ["**/*"], kb = 100}]\n',
+            'all',
+        ),
         'build.js': 'console.error("Planted build failure"); process.exitCode = 1;',
         'page.html': '<!doctype html><html lang="en"><title>Example</title></html>',
     });

@@ -9,6 +9,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { openSession } from '#cli/execution/session.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
 import { parseProfile } from '#cli/policy/profiles/read.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { runnerTaskPlan } from '#cli/generation/runner/plan.ts';
 import { exportedProfile } from '#cli/policy/profiles/export.ts';
 import type { PackageScripts } from '#tests/types/integration/cli/generation.ts';
@@ -17,7 +18,7 @@ const CLI = fileURLToPath(new URL('../../../../packages/cli/src/main.ts', import
 
 test('task mappings validate before mutation, round-trip profiles, and explain the effective names', async () => {
     await using directory = await testdir();
-    const policy = 'version = 1\nkits = []\n[runner]\ntool = "npm"\n';
+    const policy = policyOf([], '[runner]\ntool = "npm"\n');
     await createFileTree(directory.path, { 'gspot.toml': policy, 'package.json': '{"private":true}\n' });
     for (const tasks of [{ check: 'prepare' }, { check: 'gspot:fix' }, { check: 'lint', fix: 'lint' }]) {
         const rejected = await run([process.execPath, CLI, 'set', 'runner.tasks', JSON.stringify(tasks), '--json'], {

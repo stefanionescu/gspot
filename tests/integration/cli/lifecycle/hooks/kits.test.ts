@@ -6,7 +6,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { rejection } from '#tests/support/expectations.ts';
 import { applyCommand } from '#cli/commands/apply/command.ts';
 import { uninstallCommand } from '#cli/commands/uninstall.ts';
-import { PRE_COMMIT_POLICY, SIMPLE_HOOKS_POLICY } from '#tests/config/integration/cli/lifecycle.ts';
+import { PRE_COMMIT_POLICY, SIMPLE_HOOKS_POLICY } from '#tests/inputs/integration/cli/lifecycle.ts';
 import type { PackageManifest, PreCommitConfiguration } from '#tests/types/integration/cli/lifecycle/lifecycle.ts';
 
 test.each([

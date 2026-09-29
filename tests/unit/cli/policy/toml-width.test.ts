@@ -1,5 +1,6 @@
 import { parse } from 'smol-toml';
 import { test, expect } from 'bun:test';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { setKey, proposePolicy } from '#cli/policy/write.ts';
 import { policyIndent, wrapLongArrays } from '#cli/policy/toml/width.ts';
 
@@ -18,8 +19,10 @@ test('an array past the width goes one item per line, each item as written, and 
 });
 
 test('a short array, an array already on several lines, and a nested array keep their layout', () => {
-    const text =
-        'version = 1\nkits = ["bash", "typescript"]\n[[ignore]]\ncheck = "bash/shellcheck"\npaths = [\n  "a.sh",\n]\n[tools.eslint]\nrestricted_imports = [{ name = "lodash", message = "Import one function at a time.", paths = ["src/**", "tests/**"] }]\n';
+    const text = policyOf(
+        ['bash', 'typescript'],
+        '[[ignore]]\ncheck = "bash/shellcheck"\npaths = [\n  "a.sh",\n]\n[tools.eslint]\nrestricted_imports = [{ name = "lodash", message = "Import one function at a time.", paths = ["src/**", "tests/**"] }]\n',
+    );
     expect(wrapLongArrays(text)).toBe(text);
     expect(wrapLongArrays(text, '  ', 40)).toContain(
         '[[tools.eslint.restricted_imports]]\nname = "lodash"\nmessage = "Import one function at a time."',

@@ -3,7 +3,8 @@ import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { GspotError } from '#cli/platform/errors.ts';
 import { parsePolicyText } from '#cli/policy/read.ts';
-import { policyProblems } from '#tests/support/cli/policy-problems.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
+import { policyProblems } from '#tests/support/cli/policy/problems.ts';
 
 describe('configuration directory boundaries', () => {
     test.each([
@@ -44,10 +45,7 @@ for (const scoped of [false, true]) {
         (severity) => {
             const prefix = scoped ? '[[scope]]\npath = "src"\n[scope.tools.eslint.rules]' : '[tools.eslint.rules]';
             expect(() =>
-                parsePolicyText(
-                    `version = 1\nkits = ["javascript"]\n${prefix}\n"no-console" = ${severity}\n`,
-                    'gspot.toml',
-                ),
+                parsePolicyText(policyOf(['javascript'], `${prefix}\n"no-console" = ${severity}\n`), 'gspot.toml'),
             ).toThrow('gspot ignore');
         },
     );
@@ -61,7 +59,7 @@ test.each([
     'paths = ["src"]\nrulez = {eqeqeq = "error"}',
 ])('invalid ESLint override refuses configuration: %s', (entry) => {
     expect(() =>
-        parsePolicyText(`version = 1\nkits = ["javascript"]\n[[tools.eslint.overrides]]\n${entry}\n`, 'gspot.toml'),
+        parsePolicyText(policyOf(['javascript'], `[[tools.eslint.overrides]]\n${entry}\n`), 'gspot.toml'),
     ).toThrow();
 });
 

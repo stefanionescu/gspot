@@ -4,7 +4,7 @@ import { test, expect } from 'bun:test';
 import { run } from '#cli/platform/spawn.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { reportSchema } from '#cli/execution/report.ts';
-import { RELEASE_TIMEOUT_MS } from '#tests/config/release.ts';
+import { RELEASE_TIMEOUT_MS } from '#tests/inputs/release.ts';
 import type { InstalledConsumer } from '#tests/types/release.ts';
 import { createConsumer } from '#tests/support/release/consumer.ts';
 import type { SarifReport, CodeQualityReport } from '#tests/types/cli.ts';

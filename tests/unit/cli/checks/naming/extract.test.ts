@@ -1,5 +1,5 @@
 import { test, expect, describe } from 'bun:test';
-import { TS } from '#tests/config/unit/cli/checks/naming.ts';
+import { TS } from '#tests/inputs/unit/cli/checks/naming.ts';
 import { identifiersOf } from '#cli/checks/naming/engine.ts';
 
 test('property signature spelling does not establish an external contract', async () => {

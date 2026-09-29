@@ -3,6 +3,7 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { suppressionComments } from '#cli/checks/repository/suppressions.ts';
 import { inlineIgnores, applyInlineIgnores } from '#cli/execution/ignores.ts';
 
@@ -36,7 +37,7 @@ test.each([
     await using sandbox = await testdir();
     const source = `${comment}\nconsole.log(1);\n`;
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nlevel = "all"\nkits = ["javascript"]\n',
+        'gspot.toml': policyOf(['javascript'], '', 'all'),
         'source.js': source,
     });
     const session = await openSession(sandbox.path);

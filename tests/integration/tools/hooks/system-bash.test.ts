@@ -3,11 +3,12 @@ import { chmodSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { toolsPath } from '#tests/support/cli/tools.ts';
+import { onPosix } from '#tests/support/cli/platforms.ts';
 import { git, commitAll } from '#tests/support/cli/git.ts';
-import { SYSTEM_BASH } from '#tests/config/integration/tools/hooks.ts';
+import { SYSTEM_BASH } from '#tests/inputs/integration/tools/hooks.ts';
 import { hookBody, hookCommand } from '#cli/generation/hooks/scripts.ts';
 
-if (process.platform !== 'win32')
+if (onPosix)
     test('every hook body runs under the system Bash', async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'README.md': '# Hook test\n' });

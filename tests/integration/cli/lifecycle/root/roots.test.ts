@@ -2,9 +2,9 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { openRoot } from '#cli/platform/filesystem.ts';
-import { keptDirectoryMode } from '#tests/support/cli/platforms.ts';
 import { fileMode, mutationPath } from '#cli/platform/safe-paths.ts';
 import { linkSync, statSync, symlinkSync, readFileSync } from 'node:fs';
+import { onPosix, keptDirectoryMode } from '#tests/support/cli/platforms.ts';
 
 test('native replacement and removal preserve read-only identities', async () => {
     await using directory = await testdir();
@@ -28,7 +28,7 @@ test('native replacement and removal preserve read-only identities', async () =>
     }
 });
 
-if (process.platform !== 'win32') {
+if (onPosix) {
     test('files lifecycle mutations: replacements preserve expected bytes and modes and refuse subsequent edits', async () => {
         await using directory = await testdir();
         const root = openRoot(directory.path);

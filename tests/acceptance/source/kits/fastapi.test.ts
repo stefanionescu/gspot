@@ -1,17 +1,23 @@
-// Planted repositories for the pytest and fastapi configurations: coverage under the floor, a test name the prefix allows, a sleep inside an async route.
+// Planted repositories for the pytest and fastapi configurations: coverage under the floor, a sleep inside an async route, an OpenAPI document with a hole, and a stale one.
 import { join } from 'node:path';
-import { test, expect, describe } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
-import type { PlantedCase } from '#tests/types/cli.ts';
+import type { FindingCase } from '#tests/types/cli.ts';
 import { reportSchema } from '#cli/execution/report.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
-import { runPlanted } from '#tests/support/cli/planted.ts';
 import { install, toolsPath } from '#tests/support/cli/tools.ts';
+import { QUIET_INIT, PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
+import { runPlanted, plantedCases } from '#tests/support/cli/planted.ts';
 import { containing, textContaining } from '#tests/support/expectations.ts';
-import { INIT_SELECTION_QUIET } from '#tests/config/acceptance/source/cli/cli.ts';
-import { MATH, FASTAPI_TESTS } from '#tests/config/acceptance/source/kits/kits.ts';
+
+import {
+    MATH,
+    DOCUMENT,
+    FASTAPI_TESTS,
+    OPENAPI_POLICY,
+    documentWriter,
+} from '#tests/inputs/acceptance/source/kits/kits.ts';
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the line limit.
 const PROJECT = (dependency: string): string =>
@@ -45,7 +51,7 @@ test(
                 '--without',
                 'spelling',
                 'dependencies',
-                ...INIT_SELECTION_QUIET,
+                ...QUIET_INIT,
             ],
             environment,
         );
@@ -53,7 +59,7 @@ test(
             const clean = await run(sandbox.path, ['check', '--only', id, '--no-cache'], environment);
             expect(clean.code, `${id}: ${clean.stdout}${clean.stderr}`).toBe(0);
         }
-        const untested: PlantedCase = {
+        const untested: FindingCase = {
             check: 'pytest/coverage',
             files: {
                 'tests/test_math.py': FASTAPI_TESTS.replace('    assert triple(2) == 6\n', () => '').replace(
@@ -62,18 +68,14 @@ test(
                 ),
             },
             policy: '[tools.pytest]\ncoverage = 95\n',
-            expected: 'Required test coverage of 95%',
+            expected: { message: textContaining('Required test coverage of 95%') },
         };
         const outcome = await runPlanted(sandbox.path, untested, environment);
         expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
-        expect(outcome.stdout).toContain(untested.expected);
+        expect(outcome.stdout).toContain('Required test coverage of 95%');
         const failed = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
         expect(failed.checks).toMatchObject([{ check: 'pytest/coverage', status: 'fail' }]);
-        expect(failed.checks[0]!.findings).toContainEqual(
-            containing({
-                message: textContaining('Required test coverage of 95%'),
-            }),
-        );
+        expect(failed.checks[0]!.findings).toContainEqual(containing(untested.expected));
         const corrected = await runPlanted(sandbox.path, { ...untested, files: {} }, environment);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect(
@@ -83,63 +85,38 @@ test(
     PLANTED_TIMEOUT_MS * 5,
 );
 
-describe('the fastapi configuration', () => {
-    test(
-        'a sleep inside an async route is a finding, and the awaited one is not',
-        async () => {
-            await using sandbox = await testdir();
-            await createFileTree(sandbox.path, {
-                'pyproject.toml': PROJECT('fastapi'),
-                'planted/__init__.py': '"""The package."""\n',
-                'planted/health.py': ROUTE('    await asyncio.sleep(0)\n'),
-            });
-            commitAll(sandbox.path);
-            const environment = { PATH: toolsPath(['ruff', 'typos', 'ec']) };
-            await install(
-                sandbox.path,
-                [
-                    'init',
-                    '--yes',
-                    '--kits',
-                    'python',
-                    'fastapi',
-                    '--without',
-                    'spelling',
-                    'naming',
-                    'dependencies',
-                    'security',
-                    'pytest',
-                    ...INIT_SELECTION_QUIET,
-                ],
-                environment,
-            );
-            const blocked = await runPlanted(
-                sandbox.path,
-                {
-                    check: 'fastapi/no-blocking-io-in-async',
-                    files: { 'planted/health.py': ROUTE('    time.sleep(1)\n') },
-                },
-                environment,
-            );
-            expect(blocked.code, blocked.stdout + blocked.stderr).toBe(1);
-            const failed = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
-            expect(failed.checks).toMatchObject([
-                {
-                    check: 'fastapi/no-blocking-io-in-async',
-                    status: 'fail',
-                    findings: [{ file: 'planted/health.py', line: 9, rule: 'blocking-call' }],
-                },
-            ]);
-            const correctedCheck = await run(
-                sandbox.path,
-                ['check', '--only', 'fastapi/no-blocking-io-in-async', '--no-cache', '--json'],
-                environment,
-            );
-            expect(correctedCheck.code, correctedCheck.stdout + correctedCheck.stderr).toBe(0);
-            expect(reportSchema.parse(JSON.parse(correctedCheck.stdout)).checks).toMatchObject([
-                { check: 'fastapi/no-blocking-io-in-async', status: 'ok', findings: [] },
-            ]);
+plantedCases(
+    'the fastapi configuration',
+    {
+        kits: ['python', 'fastapi'],
+        modules: false,
+        without: ['spelling', 'naming', 'dependencies', 'security', 'pytest'],
+        tools: ['ruff'],
+        files: {
+            'pyproject.toml': PROJECT('fastapi'),
+            'planted/__init__.py': '"""The package."""\n',
+            'planted/health.py': ROUTE('    await asyncio.sleep(0)\n'),
+            'openapi.yaml': DOCUMENT,
+            'write-document.js': documentWriter(DOCUMENT),
         },
-        PLANTED_TIMEOUT_MS * 4,
-    );
-});
+    },
+    [
+        {
+            check: 'fastapi/no-blocking-io-in-async',
+            files: { 'planted/health.py': ROUTE('    time.sleep(1)\n') },
+            expected: { file: 'planted/health.py', line: 9, rule: 'blocking-call' },
+        },
+        {
+            check: 'fastapi/openapi-lint',
+            files: { 'openapi.yaml': DOCUMENT.replace('            operationId: readHealth\n', '') },
+            policy: OPENAPI_POLICY,
+            expected: { file: 'openapi.yaml', rule: 'operation-operationId', line: 15 },
+        },
+        {
+            check: 'fastapi/openapi-fresh',
+            files: { 'write-document.js': documentWriter(`${DOCUMENT}# later\n`) },
+            policy: OPENAPI_POLICY,
+            expected: { file: 'openapi.yaml', rule: 'stale', line: 1 },
+        },
+    ],
+);

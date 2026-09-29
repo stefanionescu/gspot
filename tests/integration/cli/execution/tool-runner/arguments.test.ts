@@ -6,6 +6,7 @@ import { run } from '#cli/platform/spawn.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { onPosix } from '#tests/support/cli/platforms.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { fileBatches } from '#cli/execution/files/batches.ts';
 import { runToolCheck, prepareCommand } from '#cli/execution/tool/runner.ts';
@@ -140,7 +141,7 @@ test('per-file failures name the selected file when expanded arguments follow it
 });
 
 // Windows has no signals: a process that kills itself exits with a code.
-if (process.platform !== 'win32')
+if (onPosix)
     test('a signaled per-file process is an execution error rather than a source finding', async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {

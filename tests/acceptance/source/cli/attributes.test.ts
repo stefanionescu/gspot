@@ -4,12 +4,13 @@ import { rmSync, readFileSync } from 'node:fs';
 import { git } from '#tests/support/cli/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 
 test('generated attributes preserve LF through autocrlf checkout and restore authored attributes', async () => {
     await using sandbox = await testdir();
     const original = '*.txt text\n';
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nkits = []\n',
+        'gspot.toml': policyOf([]),
         '.gitattributes': original,
     });
     expect(git(sandbox.path, ['init', '-q']).code).toBe(0);

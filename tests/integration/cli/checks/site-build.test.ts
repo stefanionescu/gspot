@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 import { stringify } from 'smol-toml';
-import { SITE_BUILD } from '#tests/config/cli.ts';
+import { SITE_BUILD } from '#tests/inputs/cli.ts';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { run } from '#tests/support/cli/command.ts';
@@ -12,6 +12,7 @@ import { test, spyOn, expect, describe } from 'bun:test';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { rejection } from '#tests/support/expectations.ts';
 import * as toolRunner from '#cli/execution/tool/runner.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { commitAll, gitOutput } from '#tests/support/cli/git.ts';
 import type { SiteReportCase } from '#tests/types/integration/cli/checks.ts';
 import { siteBuild, filesUnder, buildReproducible } from '#cli/checks/static-site/build.ts';
@@ -68,7 +69,7 @@ const SITE_REPORTS: SiteReportCase[] = [
 test('push builds preserve tracked dist bytes and Git status', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nlevel = "all"\nkits = ["static-site"]\n[tools.site]\nbuild = "bun build.js"\n',
+        'gspot.toml': policyOf(['static-site'], '[tools.site]\nbuild = "bun build.js"\n', 'all'),
         '.gitignore': '.gspot/\n',
         'build.js': SITE_BUILD,
         'dist/index.html': 'committed output\n',
@@ -146,7 +147,7 @@ test('a failed reproducibility build retains the first isolated output', async (
 test.each([0, 7])('a run cleans isolated site output after build exit %i', async (code) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nlevel = "all"\nkits = ["static-site"]\n[tools.site]\nbuild = "bun build.js"\n',
+        'gspot.toml': policyOf(['static-site'], '[tools.site]\nbuild = "bun build.js"\n', 'all'),
         'build.js': SITE_BUILD,
         'dist/index.html': 'authored output',
     });

@@ -4,6 +4,7 @@ import { chmodSync, writeFileSync } from 'node:fs';
 import { run } from '#tests/support/cli/command.ts';
 import { initArgs } from '#tests/support/cli/init.ts';
 import { script } from '#tests/support/cli/planted.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { commitAll, gitOutput } from '#tests/support/cli/git.ts';
 import { toolsPath, installAtLevel } from '#tests/support/cli/tools.ts';
 import type { CreateSecretVerifierResult } from '#tests/types/results.ts';
@@ -29,7 +30,7 @@ export async function prepareSecretHistory(
     files: Record<string, string>,
 ): Promise<{ base: string; tree: string; good: string; leaked: string; removed: string }> {
     await createFileTree(root, {
-        'gspot.toml': 'version = 1\nkits = ["secrets"]\n[guides]\ninstall = false\n',
+        'gspot.toml': policyOf(['secrets'], '[guides]\ninstall = false\n'),
     });
     gitOutput(root, ['init', '-q']);
     const applied = await run(root, ['apply']);

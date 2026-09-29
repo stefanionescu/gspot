@@ -6,7 +6,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { sessionInput } from '#tests/support/cli/input.ts';
 import { textContaining } from '#tests/support/expectations.ts';
 import { tsconfigOptions } from '#cli/checks/typescript/tsconfig-options.ts';
-import { TSCONFIG_OPTIONS_POLICY } from '#tests/config/integration/cli/checks.ts';
+import { TSCONFIG_OPTIONS_POLICY } from '#tests/inputs/integration/cli/checks.ts';
 
 const VALID = JSON.stringify({
     compilerOptions: {

@@ -2,10 +2,11 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { run as runProcess } from '#cli/platform/spawn.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { installSemgrep } from '#tests/support/cli/tools.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { toolShipsHere, venvExecutable } from '#tests/support/cli/platforms.ts';
 
 import {
@@ -13,7 +14,7 @@ import {
     SCRIPTS,
     SWIFT_SECURITY_ARGS,
     SWIFT_SECURITY_FINDINGS,
-} from '#tests/config/integration/tools/generation.ts';
+} from '#tests/inputs/integration/tools/generation.ts';
 
 const SWIFT =
     [
@@ -41,7 +42,7 @@ if (toolShipsHere('semgrep'))
             );
             const selectedIds = expected.map(({ rule }) => rule).toSorted((left, right) => left.localeCompare(right));
             await createFileTree(root, {
-                'gspot.toml': `version = 1\nlevel = "${level}"\nkits = ["swift", "javascript", "security"]\n[guides]\ninstall = false\n`,
+                'gspot.toml': policyOf(['swift', 'javascript', 'security'], '[guides]\ninstall = false\n', level),
                 'Value.swift': SWIFT,
                 'scripts/build.js': SCRIPTS,
                 'Info.plist': PLIST,

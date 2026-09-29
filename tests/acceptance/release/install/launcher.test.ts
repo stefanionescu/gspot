@@ -7,7 +7,8 @@ import { run } from '#cli/platform/spawn.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { keptMode } from '#tests/support/cli/platforms.ts';
 import { waitForExit } from '#tests/support/cli/process.ts';
-import { RELEASE_TIMEOUT_MS } from '#tests/config/release.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
+import { RELEASE_TIMEOUT_MS } from '#tests/inputs/release.ts';
 import { createConsumer } from '#tests/support/release/consumer.ts';
 import { lstatSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { initializeConsumer, getPublishedRelease } from '#tests/support/release/published.ts';
@@ -38,7 +39,10 @@ test.each(['SIGINT', 'SIGTERM'] as const)(
         ];
         writeFileSync(
             join(cancellation, 'gspot.toml'),
-            `version = 1\nkits = []\n[[check]]\nname = "project/slow"\nstage = "commit"\npaths = ["source.txt"]\ncommand = ${JSON.stringify(tool)}\n`,
+            policyOf(
+                [],
+                `[[check]]\nname = "project/slow"\nstage = "commit"\npaths = ["source.txt"]\ncommand = ${JSON.stringify(tool)}\n`,
+            ),
         );
         const child = Bun.spawn([...fixture.command, 'check', '--json', '--no-cache'], {
             cwd: cancellation,

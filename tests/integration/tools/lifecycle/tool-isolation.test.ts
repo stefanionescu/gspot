@@ -6,7 +6,8 @@ import { inspectTool } from '#cli/tools/inspect.ts';
 import { run } from '#tests/support/cli/command.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
 import { reportSchema } from '#cli/execution/report.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { cpSync, chmodSync, mkdirSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
 
 const MODULES = join(import.meta.dir, '../../../../node_modules');
@@ -17,7 +18,7 @@ test(
         await using repository = await testdir();
         const projectTool = '#!/bin/sh\necho "project formatter must remain separate" >&2\nexit 2\n';
         await createFileTree(repository.path, {
-            'gspot.toml': 'version = 1\nlevel = "all"\nkits = ["formatting"]\n[guides]\ninstall = false\n',
+            'gspot.toml': policyOf(['formatting'], '[guides]\ninstall = false\n', 'all'),
             'source.js': 'export const greeting="hello";',
             'node_modules/prettier/package.json': '{"name":"prettier","version":"3.8.1"}\n',
             'node_modules/prettier/cli': projectTool,

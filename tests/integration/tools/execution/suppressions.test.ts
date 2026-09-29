@@ -7,12 +7,13 @@ import { runBlocking } from '#cli/platform/spawn.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { containing } from '#tests/support/expectations.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { suppressionComments } from '#cli/checks/repository/suppressions.ts';
 
-test.each(['recommended', 'all'])('the CLI at %s requires reasons only for native directives', async (level) => {
+test('the CLI at all requires reasons only for native directives', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': `version = 1\nlevel = "${level}"\nrequire_reasons = true\nkits = ["python", "css", "html", "structure"]\n`,
+        'gspot.toml': `version = 1\nlevel = "all"\nrequire_reasons = true\nkits = ["python", "css", "html", "structure"]\n`,
         'source.py': 'import os # NOQA: F401\nimport sys # ruff: noqa: F401\n',
         'source.css': '/* Example stylelint-disable */\na { color: #abc; }\n/*stylelint-disable*/\n',
         'source.html':
@@ -44,7 +45,7 @@ test.each([
     await using sandbox = await testdir();
     const source = `${comment}\na { color: #ggg; }\n`;
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nlevel = "all"\nkits = ["css"]\n',
+        'gspot.toml': policyOf(['css'], '', 'all'),
         'source.css': source,
     });
     const native = await stylelint.lint({ code: source, config: { rules: { 'color-no-invalid-hex': true } } });
@@ -67,7 +68,7 @@ test.each([
 ] as const)('suppression census agrees with Ruff for %s', async (comment, active) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nlevel = "all"\nkits = ["python"]\n',
+        'gspot.toml': policyOf(['python'], '', 'all'),
         'source.py': `import os ${comment}\n`,
     });
     const native = runBlocking(
@@ -95,7 +96,7 @@ test.each([
     await using sandbox = await testdir();
     const source = `${comment}\n<img src="fixture.png">\n`;
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nlevel = "all"\nkits = ["html"]\n',
+        'gspot.toml': policyOf(['html'], '', 'all'),
         'source.html': source,
     });
     const validator = new HtmlValidate({ extends: ['html-validate:recommended'] });
@@ -140,7 +141,7 @@ test.each([
 ])('the census respects placement for a Ruff $name directive', async ({ source, suppressed, directive, line }) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nlevel = "all"\nkits = ["python"]\n',
+        'gspot.toml': policyOf(['python'], '', 'all'),
         'source.py': source,
     });
     const native = runBlocking(

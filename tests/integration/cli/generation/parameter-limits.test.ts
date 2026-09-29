@@ -4,6 +4,7 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { mkdirSync, symlinkSync, writeFileSync } from 'node:fs';
 
 const modules = join(import.meta.dir, '../../../../node_modules');
@@ -23,7 +24,7 @@ for (const language of ['javascript', 'typescript']) {
             .join('\n');
         const limits = maximum === 7 ? '' : `[limits.${language}]\nfunction_parameters = ${String(maximum)}\n`;
         await createFileTree(directory.path, {
-            'gspot.toml': `version = 1\nlevel = "all"\nkits = ["${language}"]\n${limits}`,
+            'gspot.toml': policyOf([language], limits, 'all'),
             'package.json': '{"private":true,"type":"module"}',
             'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["*.ts"]}',
             [`example.${extension}`]: source,

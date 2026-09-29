@@ -2,6 +2,7 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/execution/session.ts';
 import { inlineIgnores } from '#cli/execution/ignores.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { suppressionComments } from '#cli/checks/repository/suppressions.ts';
 
 test.each(['js', 'ts', 'mts', 'cts', 'tsx'])(
@@ -10,7 +11,7 @@ test.each(['js', 'ts', 'mts', 'cts', 'tsx'])(
         await using sandbox = await testdir();
         const path = `source.${extension}`;
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\nlevel = "all"\nkits = ["typescript", "structure"]\n',
+            'gspot.toml': policyOf(['typescript', 'structure'], '', 'all'),
             [path]: [
                 String.raw`const apostrophe = "I am Sid\'s example"; // eslint-disable-line no-console`,
                 'const template = `',
@@ -50,7 +51,7 @@ test.each(['js', 'ts', 'mts', 'cts', 'tsx'])(
 test('JSX text and quoted attributes do not become directives, but an empty expression comment does', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nlevel = "all"\nkits = ["typescript", "structure"]\n',
+        'gspot.toml': policyOf(['typescript', 'structure'], '', 'all'),
         'source.tsx': [
             'const element = <div title="// eslint-disable no-alert">',
             '// eslint-disable no-console',

@@ -1,41 +1,46 @@
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { generatedEslint } from '#tests/support/cli/generated/eslint.ts';
 
-test.each(['recommended', 'all'])(
-    'generated %s lint checks authored directories named after build outputs',
-    async (level) => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
-            'gspot.toml': `version = 1\nlevel = "${level}"\nkits = ["javascript"]\n[[generated]]\npaths = ["emitted/**"]\nreason = "The compiler owns these outputs."\n`,
-            'package.json': '{"private":true,"type":"module"}\n',
-            'tests/build/check.js': 'missing();',
-            'src/dist/check.js': 'missing();',
-            'coverage/check.js': 'missing();',
-            'emitted/check.js': 'missing();',
-        });
-        const eslint = await generatedEslint(sandbox.path);
-        for (const filePath of ['tests/build/check.js', 'src/dist/check.js', 'coverage/check.js']) {
-            expect(await eslint.isPathIgnored(filePath)).toBe(false);
-            const defect = await eslint.lintText('missing();', { filePath });
-            expect(defect.flatMap(({ messages }) => messages).some(({ ruleId }) => ruleId === 'no-undef')).toBe(true);
-            const corrected = await eslint.lintText('export const answer = 1;', { filePath });
-            expect(
-                corrected.flatMap(({ messages }) => messages).filter(({ ruleId }) => ruleId === 'no-undef'),
-            ).toStrictEqual([]);
-        }
-        expect(await eslint.isPathIgnored('emitted/check.js')).toBe(true);
-        const malformed = await eslint.lintText('export const value = ;', { filePath: 'tests/build/check.js' });
+const APP_KNIP =
+    '[tools.knip]\nentry = ["main.js"]\n[[scope]]\npath = "app"\nkits = []\n[scope.tools.knip]\nentry = ["main.js"]\n';
+
+test('generated all lint checks authored directories named after build outputs', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': policyOf(
+            ['javascript'],
+            '[[generated]]\npaths = ["emitted/**"]\nreason = "The compiler owns these outputs."\n',
+            'all',
+        ),
+        'package.json': '{"private":true,"type":"module"}\n',
+        'tests/build/check.js': 'missing();',
+        'src/dist/check.js': 'missing();',
+        'coverage/check.js': 'missing();',
+        'emitted/check.js': 'missing();',
+    });
+    const eslint = await generatedEslint(sandbox.path);
+    for (const filePath of ['tests/build/check.js', 'src/dist/check.js', 'coverage/check.js']) {
+        expect(await eslint.isPathIgnored(filePath)).toBe(false);
+        const defect = await eslint.lintText('missing();', { filePath });
+        expect(defect.flatMap(({ messages }) => messages).some(({ ruleId }) => ruleId === 'no-undef')).toBe(true);
+        const corrected = await eslint.lintText('export const answer = 1;', { filePath });
         expect(
-            malformed.flatMap(({ messages }) => messages).some(({ fatal, line }) => fatal === true && line === 1),
-        ).toBe(true);
-    },
-);
+            corrected.flatMap(({ messages }) => messages).filter(({ ruleId }) => ruleId === 'no-undef'),
+        ).toStrictEqual([]);
+    }
+    expect(await eslint.isPathIgnored('emitted/check.js')).toBe(true);
+    const malformed = await eslint.lintText('export const value = ;', { filePath: 'tests/build/check.js' });
+    expect(malformed.flatMap(({ messages }) => messages).some(({ fatal, line }) => fatal === true && line === 1)).toBe(
+        true,
+    );
+});
 
 test.each(['recommended', 'all'])('generated %s lint preserves JavaScript class comments', async (level) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': `version = 1\nlevel = "${level}"\nkits = ["javascript"]\n`,
+        'gspot.toml': policyOf(['javascript'], '', level),
         'package.json': '{"private":true,"type":"module"}\n',
         'counter.js': '',
     });
@@ -63,7 +68,7 @@ test.each(['recommended', 'all'])('generated %s lint preserves JavaScript class 
 test.each(['recommended', 'all'])('generated %s lint enforces size limits in test files', async (level) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': `version = 1\nlevel = "${level}"\nkits = ["javascript"]\n[limits]\nfile_lines = 8\nfunction_lines = 5\nstatements = 3\n`,
+        'gspot.toml': policyOf(['javascript'], '[limits]\nfile_lines = 8\nfunction_lines = 5\nstatements = 3\n', level),
         'package.json': '{"private":true,"type":"module"}\n',
         'sample.test.js': '',
     });
@@ -92,7 +97,7 @@ test.each(['recommended', 'all'])(
     async (level) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': `version = 1\nlevel = "${level}"\nkits = ["javascript"]\n[tools.knip]\nentry = ["main.js"]\n[[scope]]\npath = "app"\nkits = []\n[scope.tools.knip]\nentry = ["main.js"]\n`,
+            'gspot.toml': policyOf(['javascript'], APP_KNIP, level),
             'package.json': '{"private":true,"type":"module"}\n',
             'main.js': '',
             'app/main.js': '',
@@ -155,7 +160,11 @@ test.each(['recommended', 'all'])('generated %s ESLint enforces an explicit type
     await using sandbox = await testdir();
     const source = 'export type Value = string;\n';
     await createFileTree(sandbox.path, {
-        'gspot.toml': `version = 1\nlevel = "${level}"\nkits = ["typescript"]\n[architecture]\ntypes_directory = "contracts"\n[guides]\ninstall = false\n`,
+        'gspot.toml': policyOf(
+            ['typescript'],
+            '[architecture]\ntypes_directory = "contracts"\n[guides]\ninstall = false\n',
+            level,
+        ),
         'package.json': '{"private":true,"type":"module"}\n',
         'tsconfig.json': '{"compilerOptions":{"strict":true,"noEmit":true},"include":["**/*.ts"]}\n',
         'value.ts': source,

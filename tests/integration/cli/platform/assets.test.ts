@@ -9,7 +9,7 @@ import {
     CHECKOUT,
     ASSET_READER_SCRIPT,
     ASSETS_CONFIGURATION,
-} from '#tests/config/integration/cli/platform.ts';
+} from '#tests/inputs/integration/cli/platform.ts';
 
 const ROOT = fileURLToPath(new URL('../../../..', import.meta.url));
 describe('development assets', () => {

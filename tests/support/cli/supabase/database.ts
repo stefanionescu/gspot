@@ -6,6 +6,7 @@ import { createFileTree } from 'testdirs';
 import { parse, stringify } from 'smol-toml';
 import { run } from '#cli/platform/spawn.ts';
 import { tableAt } from '#cli/policy/write.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import type { PrepareSupabaseDatabaseResult } from '#tests/types/results.ts';
 
 const DATABASE_START = [
@@ -46,7 +47,7 @@ export async function prepareSupabaseDatabase(root: string): Promise<PrepareSupa
     );
     await Bun.write(configPath, stringify(config));
     await createFileTree(root, {
-        'gspot.toml': 'version = 1\nkits = ["supabase"]\n[tools.supabase]\ntypes_file = "database.ts"\n',
+        'gspot.toml': policyOf(['supabase'], '[tools.supabase]\ntypes_file = "database.ts"\n'),
         'database.ts': 'export type Database = {};\n',
     });
     const authored = readFileSync(configPath);

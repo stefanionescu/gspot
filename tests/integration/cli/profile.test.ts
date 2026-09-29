@@ -5,6 +5,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { exportCommand } from '#cli/commands/export.ts';
 import { test, spyOn, expect, describe } from 'bun:test';
 import { readProfile } from '#cli/policy/profiles/read.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { applyCommand } from '#cli/commands/apply/command.ts';
 import { exportedProfile } from '#cli/policy/profiles/export.ts';
 import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
@@ -97,7 +98,7 @@ test.each(['jest', 'vitest'])(
 test('profile publication is idempotent, preserves edits, and survives apply and uninstall', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'gspot.toml': 'version = 1\nkits = []\n[guides]\ninstall = false\n',
+        'gspot.toml': policyOf([], '[guides]\ninstall = false\n'),
     });
     expect(exportCommand(directory.path, 'shared.profile.toml').exitCode).toBe(0);
     const path = join(directory.path, 'shared.profile.toml');
@@ -126,7 +127,7 @@ test.each([
 ])('profile export refuses unsafe destination %s without changing external bytes', async (file) => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'project/gspot.toml': 'version = 1\nkits = []\n',
+        'project/gspot.toml': policyOf([]),
         'outside/profile.toml': 'original',
     });
     const root = join(directory.path, 'project');
@@ -140,7 +141,7 @@ test.each([
 test('profile export preserves an unowned destination and refuses the managed repository policy', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'gspot.toml': 'version = 1\nkits = []\n[guides]\ninstall = false\n',
+        'gspot.toml': policyOf([], '[guides]\ninstall = false\n'),
         'occupied.toml': 'original bytes',
     });
     const occupied = join(directory.path, 'occupied.toml');
@@ -157,7 +158,7 @@ test('profile export preserves an unowned destination and refuses the managed re
 
 test('profile publication recovers an interrupted write through the lifecycle log', async () => {
     await using directory = await testdir();
-    await createFileTree(directory.path, { 'gspot.toml': 'version = 1\nkits = []\n' });
+    await createFileTree(directory.path, { 'gspot.toml': policyOf([]) });
     const path = join(directory.path, 'shared.profile.toml');
     const rename = fs.renameSync;
     const failed = spyOn(fs, 'renameSync').mockImplementation((source, target) => {
@@ -183,7 +184,7 @@ test('profile publication recovers an interrupted write through the lifecycle lo
 
 test('profile publication preserves permissions when adopting identical existing bytes', async () => {
     await using directory = await testdir();
-    const policy = 'version = 1\nkits = []\n';
+    const policy = policyOf([]);
     const profile = exportedProfile(policy, 'shared.profile.toml');
     await createFileTree(directory.path, { 'gspot.toml': policy, 'shared.profile.toml': profile.text });
     const path = join(directory.path, 'shared.profile.toml');

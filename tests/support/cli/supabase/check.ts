@@ -4,6 +4,7 @@ import * as processes from '#cli/platform/spawn.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { runEngineCheck } from '#cli/execution/engines.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { typesFresh } from '#cli/checks/supabase/types-fresh.ts';
 import type { PrepareSupabaseCheckResult } from '#tests/types/results.ts';
 
@@ -17,7 +18,7 @@ export async function prepareSupabaseCheck(
     const policy =
         scope === '' ? '[tools.supabase]' : `[[scope]]\npath = "${scope}"\nkits = ["supabase"]\n[scope.tools.supabase]`;
     await createFileTree(root, {
-        'gspot.toml': `version = 1\nkits = ["supabase"]\n${policy}\ntypes_file = "database.ts"\n`,
+        'gspot.toml': policyOf(['supabase'], `${policy}\ntypes_file = "database.ts"\n`),
         [`${prefix}supabase/config.toml`]: 'project_id = "types-fixture"\n',
     });
     const execute = async () => {

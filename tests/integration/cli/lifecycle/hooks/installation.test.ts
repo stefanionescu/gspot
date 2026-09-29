@@ -8,6 +8,7 @@ import { installCommand } from '#cli/commands/install.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
 import { installHooks } from '#cli/lifecycle/hooks/git.ts';
 import { keptMode } from '#tests/support/cli/platforms.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { uninstallCommand } from '#cli/commands/uninstall.ts';
 import { hookLocation } from '#cli/repository/hook-location.ts';
 import { readHookStatus } from '#tests/support/cli/hooks/projects.ts';
@@ -22,7 +23,7 @@ test.each(['default', 'external'] as const)(
         await using external = await testdir();
         const root = join(sandbox.path, 'project');
         await createFileTree(sandbox.path, {
-            'project/gspot.toml': 'version = 1\nkits = []\n[hooks]\ntool = "gspot"\n[guides]\ninstall = false\n',
+            'project/gspot.toml': policyOf([], '[hooks]\ntool = "gspot"\n[guides]\ninstall = false\n'),
         });
         expect(processes.runBlocking(['git', 'init', '-q'], { cwd: sandbox.path }).code).toBe(0);
         if (kind === 'external') await createFileTree(external.path, { 'hooks/.keep': '' });
@@ -74,7 +75,7 @@ test.each([undefined, 'custom-hooks'])(
         const hookText = '#!/bin/sh\nprintf app-hook\n';
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\nkits = []\n[guides]\ninstall = false\n',
+            'gspot.toml': policyOf([], '[guides]\ninstall = false\n'),
             'package.json': packageText,
             'custom-hooks/pre-commit': hookText,
         });
@@ -99,7 +100,7 @@ test.each([undefined, 'custom-hooks'])(
 test('a hooks integration outside Git does not create hook files', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nkits = []\n[hooks]\ntool = "gspot"\n[guides]\ninstall = false\n',
+        'gspot.toml': policyOf([], '[hooks]\ntool = "gspot"\n[guides]\ninstall = false\n'),
     });
     await applyAll(await openSession(sandbox.path));
     const installed = await installCommand({ cwd: sandbox.path, isDryRun: false });
@@ -111,7 +112,7 @@ test('omitting hooks preserves existing managed hook files and their Git locatio
     const hook = '#!/bin/sh\nprintf kept-hook\n';
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nkits = []\n[guides]\ninstall = false\n',
+        'gspot.toml': policyOf([], '[guides]\ninstall = false\n'),
         '.gspot/hooks/pre-commit': hook,
     });
     for (const args of [
@@ -131,7 +132,7 @@ test('omitting hooks preserves existing managed hook files and their Git locatio
 test('hook sibling collisions refuse the whole installation before another hook is changed', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nkits = []\n[hooks]\ntool = "gspot"\n[guides]\ninstall = false\n',
+        'gspot.toml': policyOf([], '[hooks]\ntool = "gspot"\n[guides]\ninstall = false\n'),
     });
     const ran = await processes.run(['git', 'init', '-q'], { cwd: sandbox.path });
     expect(ran.code).toBe(0);
@@ -147,7 +148,7 @@ test('hook sibling collisions refuse the whole installation before another hook 
 test('a concurrent hook writer is refused and installation succeeds after its lock is released', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nkits = []\n[hooks]\ntool = "gspot"\n[guides]\ninstall = false\n',
+        'gspot.toml': policyOf([], '[hooks]\ntool = "gspot"\n[guides]\ninstall = false\n'),
     });
     const ran = await processes.run(['git', 'init', '-q'], { cwd: sandbox.path });
     expect(ran.code).toBe(0);
@@ -170,7 +171,7 @@ test.each(['linked-hooks', 'linked-hooks/nested'])(
         await using sandbox = await testdir();
         await using outside = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\nkits = []\n[hooks]\ntool = "gspot"\n[guides]\ninstall = false\n',
+            'gspot.toml': policyOf([], '[hooks]\ntool = "gspot"\n[guides]\ninstall = false\n'),
         });
         await createFileTree(outside.path, {
             'pre-commit': '#!/bin/sh\nexit 17\n',
@@ -201,7 +202,7 @@ test.each(['linked-hooks', 'linked-hooks/nested'])(
 test('relative Git hook paths resolve from the Git root when policy is nested', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'app/gspot.toml': 'version = 1\nkits = []\n[hooks]\ntool = "gspot"\n[guides]\ninstall = false\n',
+        'app/gspot.toml': policyOf([], '[hooks]\ntool = "gspot"\n[guides]\ninstall = false\n'),
         'shared-hooks/.keep': '',
     });
     expect(processes.runBlocking(['git', 'init', '-q'], { cwd: directory.path }).code).toBe(0);
@@ -224,7 +225,7 @@ test('a nested hook boundary keeps recovery ignored through installation and res
     await using sandbox = await testdir();
     const original = '#!/bin/sh\nexit 0\n';
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nkits = []\n[hooks]\ntool = "gspot"\n[guides]\ninstall = false\n',
+        'gspot.toml': policyOf([], '[hooks]\ntool = "gspot"\n[guides]\ninstall = false\n'),
         'custom/hooks/pre-commit': original,
     });
     chmodSync(join(sandbox.path, 'custom/hooks/pre-commit'), 0o755);
@@ -251,7 +252,7 @@ test('a nested policy preserves tracked hooks outside its own directory', async 
     await using sandbox = await testdir();
     const original = '#!/bin/sh\nexit 0\n';
     await createFileTree(sandbox.path, {
-        'project/gspot.toml': 'version = 1\nkits = []\n[hooks]\ntool = "gspot"\n[guides]\ninstall = false\n',
+        'project/gspot.toml': policyOf([], '[hooks]\ntool = "gspot"\n[guides]\ninstall = false\n'),
         'hooks/pre-commit': original,
     });
     chmodSync(join(sandbox.path, 'hooks/pre-commit'), 0o755);
@@ -272,7 +273,7 @@ test('a nested policy preserves tracked hooks outside its own directory', async 
 test('Git hooks can use the repository root without an empty files path', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'repository/gspot.toml': 'version = 1\nkits = []\n[hooks]\ntool = "gspot"\n[guides]\ninstall = false\n',
+        'repository/gspot.toml': policyOf([], '[hooks]\ntool = "gspot"\n[guides]\ninstall = false\n'),
     });
     const root = join(sandbox.path, 'repository');
     for (const args of [

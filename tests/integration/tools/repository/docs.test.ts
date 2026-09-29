@@ -7,7 +7,7 @@ import { reportSchema } from '#cli/execution/report.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';
 import { run as runCommand } from '#cli/platform/spawn.ts';
 import example from '#docs/src/components/home/repository.json';
-import { INSTALL_TIMEOUT_MS } from '#tests/config/integration/tools/tools.ts';
+import { INSTALL_TIMEOUT_MS } from '#tests/inputs/integration/tools/tools.ts';
 
 test('the quickstart supplies every policy, project, defect, and correction shown on the homepage', () => {
     const guide = readFileSync(

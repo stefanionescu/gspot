@@ -7,6 +7,7 @@ import { openSession } from '#cli/execution/session.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { rmSync, existsSync, readFileSync } from 'node:fs';
 import { containing } from '#tests/support/expectations.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { lockfileFresh } from '#cli/checks/dependencies/lockfile/fresh.ts';
 
 test.each([
@@ -23,7 +24,7 @@ test.each([
     const yarnBerry = client === 'yarn' && Number(version.stdout.trim().split('.', 1)[0]) >= 2;
     const manifest = JSON.stringify({ private: true, dependencies: { library: 'file:./library' } });
     await createFileTree(directory.path, {
-        'gspot.toml': `version = 1\nlevel = "${level}"\nkits = ["dependencies"]\n`,
+        'gspot.toml': policyOf(['dependencies'], '', level),
         'package.json': manifest,
         'library/package.json': '{"name":"library","version":"1.0.0"}\n',
         'other/package.json': '{"name":"other","version":"1.0.0"}\n',

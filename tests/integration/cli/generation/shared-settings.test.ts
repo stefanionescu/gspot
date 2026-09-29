@@ -1,5 +1,6 @@
 import { test, expect } from 'bun:test';
 import { parse as parseToml } from 'smol-toml';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { containingAll } from '#tests/support/expectations.ts';
 import { generatedFile } from '#tests/support/cli/generated/files.ts';
 
@@ -7,7 +8,7 @@ import {
     PYTHON,
     TAILWIND_AT_RULES,
     SHARED_SETTINGS_PACKAGE,
-} from '#tests/config/integration/cli/generation/generation.ts';
+} from '#tests/inputs/integration/cli/generation/generation.ts';
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Two cases read the generated knip configuration; one owner parses it.
 async function knipConfiguration(
@@ -33,25 +34,25 @@ async function ruffLint(policy: string): Promise<{ select: string[]; 'per-file-i
 }
 
 test('knip starts from the policy entries and the entry files the selected kits declare', async () => {
-    const policy =
-        'version = 1\nkits = ["javascript"]\n[tools.knip]\nentry = ["cli.js"]\n[[scope]]\npath = "api"\nkits = ["javascript"]\n[scope.tools.knip]\nentry = ["serve.js"]\n';
+    const policy = policyOf(
+        ['javascript'],
+        '[tools.knip]\nentry = ["cli.js"]\n[[scope]]\npath = "api"\nkits = ["javascript"]\n[scope.tools.knip]\nentry = ["serve.js"]\n',
+    );
     const knip = await knipConfiguration(policy);
     expect(knip.entry).toStrictEqual(containingAll(['cli.js', 'src/main.{ts,js}', 'build.ts']));
     expect(knip.entry).not.toContain('api/serve.js');
     expect(knip.workspaces['api']?.entry).toStrictEqual(containingAll(['serve.js', 'src/main.{ts,js}']));
     expect(knip.workspaces['api']?.entry).not.toContain('cli.js');
-    const withoutEntries = await knipConfiguration('version = 1\nkits = ["javascript"]\n');
+    const withoutEntries = await knipConfiguration(policyOf(['javascript']));
     expect(withoutEntries.entry).toStrictEqual(containingAll(['src/main.{ts,js}']));
     expect(withoutEntries.entry).not.toContain('cli.js');
 });
 
 test('Stylelint accepts the at-rules a selected framework declares and the ones the policy adds', async () => {
-    expect(await stylelintAtRules('version = 1\nkits = ["css"]\n')).toBe(true);
-    const frameworkRules = await stylelintAtRules('version = 1\nkits = ["css", "nextjs"]\n');
+    expect(await stylelintAtRules(policyOf(['css']))).toBe(true);
+    const frameworkRules = await stylelintAtRules(policyOf(['css', 'nextjs']));
     expect(frameworkRules).toStrictEqual([true, { ignoreAtRules: TAILWIND_AT_RULES }]);
-    const widened = await stylelintAtRules(
-        'version = 1\nkits = ["css"]\n[tools.stylelint]\nignore_at_rules = ["container"]\n',
-    );
+    const widened = await stylelintAtRules(policyOf(['css'], '[tools.stylelint]\nignore_at_rules = ["container"]\n'));
     expect(widened).toStrictEqual([true, { ignoreAtRules: ['container'] }]);
 });
 
@@ -60,7 +61,7 @@ test('Ruff selects the families the test runner and the framework declare, and i
     expect(plain.select).not.toContain('PT');
     expect(plain.select).not.toContain('FAST');
     expect(plain['per-file-ignores']).toBeUndefined();
-    const tested = await ruffLint('version = 1\nkits = ["python", "pytest"]\n');
+    const tested = await ruffLint(policyOf(['python', 'pytest']));
     expect(tested.select).toContain('PT009');
     expect(tested.select).not.toContain('PT001');
     expect(tested['per-file-ignores']).toStrictEqual({
@@ -69,14 +70,17 @@ test('Ruff selects the families the test runner and the framework declare, and i
         '**/*_test.py': ['S101', 'PLR2004'],
         '**/conftest.py': ['S101', 'PLR2004'],
     });
-    const served = await ruffLint('version = 1\nkits = ["python", "fastapi"]\n');
+    const served = await ruffLint(policyOf(['python', 'fastapi']));
     expect(served.select).toContain('FAST003');
     expect(served['per-file-ignores']).toBeUndefined();
 });
 
 test('a policy ignore joins the runner ignores of the same test path', async () => {
     const lint = await ruffLint(
-        'version = 1\nkits = ["python", "pytest"]\n[[ignore]]\ncheck = "python/ruff"\nrule = "D103"\npaths = ["**/conftest.py"]\nreason = "Fixtures document themselves through their names."\n',
+        policyOf(
+            ['python', 'pytest'],
+            '[[ignore]]\ncheck = "python/ruff"\nrule = "D103"\npaths = ["**/conftest.py"]\nreason = "Fixtures document themselves through their names."\n',
+        ),
     );
     expect(lint['per-file-ignores']?.['**/conftest.py']).toStrictEqual(['S101', 'PLR2004', 'D103']);
 });

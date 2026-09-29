@@ -6,9 +6,10 @@ import { git } from '#tests/support/cli/git.ts';
 import * as processes from '#cli/platform/spawn.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import type { SarifReport } from '#tests/types/cli.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { run, gspot } from '#tests/support/cli/command.ts';
 import { pushReportSchema } from '#cli/execution/report.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { preparePushRepository } from '#tests/support/cli/push.ts';
 
 test(
@@ -158,7 +159,7 @@ test(
         const { broken, command } = await preparePushRepository(sandbox.path);
         writeFileSync(
             join(sandbox.path, 'gspot.toml'),
-            'version = 1\nkits = ["bash"]\n[hooks]\ntool = "gspot"\n[guides]\ninstall = false\n',
+            policyOf(['bash'], '[hooks]\ntool = "gspot"\n[guides]\ninstall = false\n'),
         );
         const configured = await run(sandbox.path, ['set', 'hooks.push', 'all']);
         expect(configured.code, configured.stdout + configured.stderr).toBe(0);

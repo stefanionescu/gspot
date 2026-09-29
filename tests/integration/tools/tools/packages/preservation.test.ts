@@ -8,7 +8,7 @@ import { applyAll } from '#cli/commands/apply/workflow.ts';
 import { rejection } from '#tests/support/expectations.ts';
 import { installPackageProject } from '#cli/tools/packages/project.ts';
 import { createPackageProject } from '#tests/support/cli/package-project.ts';
-import { PACKAGE_PROJECTS } from '#tests/config/integration/tools/packages.ts';
+import { PACKAGE_PROJECTS } from '#tests/inputs/integration/tools/packages.ts';
 
 test.each(PACKAGE_PROJECTS)(
     '%s from %s with %s retains edited installed files and refreshes inspection after correction',

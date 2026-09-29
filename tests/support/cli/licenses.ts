@@ -2,9 +2,9 @@
 import { createFileTree } from 'testdirs';
 import { join, delimiter } from 'node:path';
 import { commitAll } from '#tests/support/cli/git.ts';
-import { ROOT } from '#tests/config/acceptance/source/kits/kits.ts';
+import { ROOT } from '#tests/inputs/acceptance/source/kits/kits.ts';
 import { toolsPath, installAtLevel } from '#tests/support/cli/tools.ts';
-import { LICENSES_INIT } from '#tests/config/acceptance/source/kits/init-arguments.ts';
+import { LICENSES_INIT } from '#tests/inputs/acceptance/source/kits/init-arguments.ts';
 
 const NPM_BIN = join(import.meta.dir, '../../../node_modules/.bin');
 

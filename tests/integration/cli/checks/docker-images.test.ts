@@ -7,6 +7,7 @@ import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { test, spyOn, expect, type Mock } from 'bun:test';
 import { rejection } from '#tests/support/expectations.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { trivyImage } from '#cli/checks/docker/image-scan.ts';
 
 const sources = [
@@ -89,7 +90,7 @@ test.each([
 ])('Compose image scanning $scenario', async ({ verify }) => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'gspot.toml': 'version = 1\nkits = ["docker"]\n',
+        'gspot.toml': policyOf(['docker']),
         'compose.yaml': sources.at(-1)!,
     });
     const session = await openSession(directory.path);

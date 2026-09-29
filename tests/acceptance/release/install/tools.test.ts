@@ -6,7 +6,7 @@ import { toPosix } from '#cli/platform/paths.ts';
 import { join, dirname, relative } from 'node:path';
 import { reportSchema } from '#cli/execution/report.ts';
 import type { InstallJson } from '#cli/types/commands.ts';
-import { RELEASE_TIMEOUT_MS } from '#tests/config/release.ts';
+import { RELEASE_TIMEOUT_MS } from '#tests/inputs/release.ts';
 import { environment } from '#tests/support/release/packages.ts';
 import { createConsumer } from '#tests/support/release/consumer.ts';
 import { getPublishedRelease } from '#tests/support/release/published.ts';

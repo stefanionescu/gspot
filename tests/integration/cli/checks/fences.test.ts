@@ -7,6 +7,7 @@ import { fences } from '#cli/checks/docs/fences.ts';
 import type { EngineInput } from '#cli/types/checks.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { checkInput } from '#tests/support/cli/input.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { stalePaths } from '#cli/checks/docs/stale-paths.ts';
 
 test('fences and paths > wildcard examples stay intact while emphasized literal paths remain checked', async () => {
@@ -131,7 +132,7 @@ test('fences and paths > a directory at a task configuration path is an error, n
 test('Bash examples report syntax errors, accept corrections, and stop on cancellation', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nkits = []\n',
+        'gspot.toml': policyOf([]),
         'a.md': '```bash\nif then\n```\n',
     });
     const session = await openSession(sandbox.path);

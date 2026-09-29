@@ -6,7 +6,7 @@ import { run } from '#cli/platform/spawn.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
 import { parseAlerts } from '#cli/checks/prose/vale.ts';
 import { reportSchema } from '#cli/execution/report.ts';
-import { RELEASE_TIMEOUT_MS } from '#tests/config/release.ts';
+import { RELEASE_TIMEOUT_MS } from '#tests/inputs/release.ts';
 import type { InstalledConsumer } from '#tests/types/release.ts';
 import { createConsumer } from '#tests/support/release/consumer.ts';
 import { initializeConsumer, getPublishedRelease } from '#tests/support/release/published.ts';

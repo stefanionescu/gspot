@@ -8,9 +8,10 @@ import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { rejection } from '#tests/support/expectations.ts';
 import { sessionInput } from '#tests/support/cli/input.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { migrationsOf } from '#cli/checks/postgres/migrations.ts';
 import { migrationOrder, migrationsFrozen } from '#cli/checks/postgres/history.ts';
-import { PATH, ORIGINAL, POSTGRES_HISTORY_POLICY } from '#tests/config/integration/cli/checks.ts';
+import { PATH, ORIGINAL, POSTGRES_HISTORY_POLICY } from '#tests/inputs/integration/cli/checks.ts';
 
 function git(root: string, args: string[]): string {
     const result = runBlocking(['git', ...args], { cwd: root });
@@ -61,8 +62,10 @@ test('migration history reports changed committed SQL and an earlier new version
 test('nested scopes keep migration roots and parsed reads separate', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml':
-            'version = 1\nkits = ["postgres"]\n[[scope]]\npath = "apps/one"\nkits = ["postgres"]\n[[scope]]\npath = "apps/two"\nkits = ["postgres"]\n[scope.tools.postgres]\nmigrations_directory = "schema"\n',
+        'gspot.toml': policyOf(
+            ['postgres'],
+            '[[scope]]\npath = "apps/one"\nkits = ["postgres"]\n[[scope]]\npath = "apps/two"\nkits = ["postgres"]\n[scope.tools.postgres]\nmigrations_directory = "schema"\n',
+        ),
         [PATH]: ORIGINAL,
         'apps/one/migrations/20240101_one.sql': 'SELECT 1;\n',
         'apps/two/schema/20240101_two.sql': 'SELECT 2;\n',

@@ -6,6 +6,7 @@ import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { inspectTool } from '#cli/tools/inspect.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { privateToolInstallation } from '#cli/tools/pins.ts';
 import { test, expect, afterAll, beforeAll } from 'bun:test';
 import { toolShipsHere } from '#tests/support/cli/platforms.ts';
@@ -15,7 +16,7 @@ import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import { toolEnvironment } from '#cli/generation/tools/environment.ts';
 import { installPythonProject, preparePythonProject } from '#cli/tools/python-project.ts';
 import { installPackageProject, preparePackageProject } from '#cli/tools/packages/project.ts';
-import { HELP_TIMEOUT_MS, INSTALL_TIMEOUT_MS } from '#tests/config/integration/tools/tools.ts';
+import { HELP_TIMEOUT_MS, INSTALL_TIMEOUT_MS } from '#tests/inputs/integration/tools/tools.ts';
 
 const root = fileURLToPath(new URL('../../..', import.meta.url));
 const manifests = [...kitManifests().values()];
@@ -90,7 +91,7 @@ beforeAll(async () => {
         ...manifest,
         tools: manifest.tools.filter((tool) => names.has(tool.name)),
     }));
-    await createFileTree(sandbox.path, { 'gspot.toml': 'version = 1\nkits = []\n[runner]\ntool = "mise"\n' });
+    await createFileTree(sandbox.path, { 'gspot.toml': policyOf([], '[runner]\ntool = "mise"\n') });
     privateContext.policyFiles = readPolicy(sandbox.path);
     const files = [
         ...toolEnvironment(selected),

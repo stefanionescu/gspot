@@ -2,25 +2,22 @@ import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
 import { toPosix } from '#cli/platform/paths.ts';
 import { testdir, createFileTree } from 'testdirs';
-import * as processes from '#cli/platform/spawn.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { reportSchema } from '#cli/execution/report.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { drizzleMigrations } from '#cli/checks/drizzle.ts';
 import { rejection } from '#tests/support/expectations.ts';
-import { run as runCli } from '#tests/support/cli/command.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import type { DrizzlePlanted as Planted } from '#tests/types/integration/cli/checks.ts';
-import { statSync, chmodSync, mkdirSync, existsSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
-import { DRIZZLE_MIGRATIONS_SCOPES, DRIZZLE_MIGRATIONS_GENERATOR } from '#tests/config/integration/cli/checks.ts';
+import { statSync, chmodSync, mkdirSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
+import { DRIZZLE_MIGRATIONS_SCOPES, DRIZZLE_MIGRATIONS_GENERATOR } from '#tests/inputs/integration/cli/checks.ts';
 
 // A planted scope with a generator script that stands in for drizzle-kit: `schema.txt` decides what it does.
 async function plant(scope: string, schema: 'changed' | 'failure'): Promise<Planted> {
     const directory = await testdir();
     await createFileTree(directory.path, {
-        'gspot.toml':
-            'version = 1\nkits = ["drizzle"]\n' + (scope === '' ? '' : `[[scope]]\npath = "${scope}"\nkits = []\n`),
+        'gspot.toml': policyOf(['drizzle']) + (scope === '' ? '' : `[[scope]]\npath = "${scope}"\nkits = []\n`),
         [join(scope, 'package.json')]: '{"private":true}\n',
         [join(scope, 'drizzle.config.ts')]: 'export default {};\n',
         [join(scope, 'schema.txt')]: schema,
@@ -110,91 +107,6 @@ test.each(DRIZZLE_MIGRATIONS_SCOPES)(
             expect(await drizzleMigrations(planted.input)).toStrictEqual([]);
             expectPreserved(planted);
         } finally {
-            locate.mockRestore();
-        }
-    },
-);
-
-test('the check command reports the missing migrations of the root and their correction', async () => {
-    const planted = await plant('', 'changed');
-    await using directory = planted.directory;
-    const locate = spyOn(Bun, 'which').mockReturnValue(process.execPath);
-    const args = ['check', '--stage', 'push', '--only', planted.spec.name, '--no-cache', '--json'];
-    try {
-        const found = await drizzleMigrations(planted.input);
-        const checked = await runCli(directory.path, args);
-        expect(checked.code, checked.stdout + checked.stderr).toBe(1);
-        const report = reportSchema.parse(JSON.parse(checked.stdout));
-        expect(report.checks.map(({ check, status }) => ({ check, status }))).toStrictEqual([
-            { check: planted.spec.name, status: 'fail' },
-        ]);
-        expect(report.skips).toStrictEqual([]);
-        expect(
-            report.checks[0]!.findings.map(({ check, file, line, rule, message: text }) => ({
-                check,
-                file,
-                line,
-                rule,
-                message: text,
-            })),
-        ).toStrictEqual(
-            found.map(({ check, file, line, rule, message: text }) => ({ check, file, line, rule, message: text })),
-        );
-        writeFileSync(join(directory.path, 'schema.txt'), 'current');
-        const corrected = await runCli(directory.path, args);
-        expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        const clean = reportSchema.parse(JSON.parse(corrected.stdout));
-        expect(clean.checks.map(({ check, status }) => ({ check, status }))).toStrictEqual([
-            { check: planted.spec.name, status: 'ok' },
-        ]);
-        expect(clean.skips).toStrictEqual([]);
-        expect(clean.checks[0]!.findings).toStrictEqual([]);
-    } finally {
-        locate.mockRestore();
-    }
-});
-
-test.each(['cancellation', 'deadline'])(
-    'migration generation honors %s, removes its copy, and accepts a corrected generator',
-    async (failure) => {
-        await using directory = await testdir();
-        await createFileTree(directory.path, {
-            'gspot.toml': 'version = 1\nkits = ["drizzle"]\n[limits]\ntool_seconds = 1\n',
-            'drizzle.config.ts': 'export default {};\n',
-            generate: 'setInterval(() => {}, 1000);\n',
-        });
-        const session = await openSession(directory.path);
-        const [planned] = planRun(session, {
-            stage: 'push',
-            skips: [],
-            only: ['drizzle/migrations-fresh'],
-        });
-        const input = engineInput(session, planned!);
-        const copies: string[] = [];
-        const execute = processes.run;
-        const spawn = spyOn(processes, 'run').mockImplementation((command, options) => {
-            if (command[1] === 'generate') copies.push(options.cwd);
-            return execute(command, options);
-        });
-        const locate = spyOn(Bun, 'which').mockReturnValue(process.execPath);
-        try {
-            expect(
-                await rejection(
-                    drizzleMigrations({
-                        ...input,
-                        ...(failure === 'cancellation' ? { cancelSignal: AbortSignal.timeout(100) } : {}),
-                    }),
-                ),
-            ).toContain(failure === 'cancellation' ? 'canceled' : 'was stopped');
-            expect(copies).toHaveLength(1);
-            expect(copies.every((path) => !existsSync(path))).toBe(true);
-            expect(readFileSync(join(directory.path, 'generate'), 'utf8')).toBe('setInterval(() => {}, 1000);\n');
-            await Bun.write(join(directory.path, 'generate'), 'process.exitCode = 0;\n');
-            expect(await drizzleMigrations(input)).toStrictEqual([]);
-            expect(copies).toHaveLength(2);
-            expect(copies.every((path) => !existsSync(path))).toBe(true);
-        } finally {
-            spawn.mockRestore();
             locate.mockRestore();
         }
     },

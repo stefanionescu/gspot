@@ -2,8 +2,10 @@ import { join } from 'node:path';
 import * as spawn from '#cli/platform/spawn.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
+import { onMac } from '#tests/support/cli/platforms.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { swiftBuildPlan } from '#cli/checks/swift/plan.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { test, spyOn, expect, describe, afterEach } from 'bun:test';
 import { swiftBuild, swiftAnalyze } from '#cli/checks/swift/build.ts';
 import { mkdirSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
@@ -20,7 +22,7 @@ afterEach(() => {
 if (HAS_SWIFT)
 test.each([0, 7])('a silent Swift build with exit %i retains its verdict', async (code) => {
     await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'gspot.toml': 'version = 1\nkits = ["swift"]\n' });
+    await createFileTree(sandbox.path, { 'gspot.toml': policyOf(['swift']) });
     const input = await swiftInput(sandbox.path, 'swift/build');
     const run = spyOn(spawn, 'run').mockResolvedValue({ code, stdout: '', stderr: '', missing: false, duration: 1 });
     try {
@@ -35,12 +37,12 @@ test.each([0, 7])('a silent Swift build with exit %i retains its verdict', async
     }
 });
 
-describe.if(process.platform === 'darwin')('with the macOS toolchain', () => {
+describe.if(onMac)('with the macOS toolchain', () => {
 if (HAS_SWIFT)
 test('a failed Swift build without source diagnostics returns execution exit 2 and recovers', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nkits = ["swift"]\n',
+        'gspot.toml': policyOf(['swift']),
         'Main.swift': 'let value = 1\n',
         'Package.swift':
             '// swift-tools-version: 6.0\nimport PackageDescription\nlet package = Package(name: "Example", targets: [.target(name: "Example")])\n',
@@ -87,7 +89,7 @@ test('a failed Swift build without source diagnostics returns execution exit 2 a
 if (HAS_SWIFT)
 test('a later Swift session reads a failed build after an earlier successful build', async () => {
     await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'gspot.toml': 'version = 1\nkits = ["swift"]\n' });
+    await createFileTree(sandbox.path, { 'gspot.toml': policyOf(['swift']) });
     const first = await swiftInput(sandbox.path, 'swift/build');
     const second = await swiftInput(sandbox.path, 'swift/build');
     const run = spyOn(spawn, 'run')
@@ -121,7 +123,7 @@ test('a later Swift session reads a failed build after an earlier successful bui
 if (HAS_SWIFT)
 test('Swift compiler diagnostics retain their source location on a failed build', async () => {
     await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'gspot.toml': 'version = 1\nkits = ["swift"]\n' });
+    await createFileTree(sandbox.path, { 'gspot.toml': policyOf(['swift']) });
     const input = await swiftInput(sandbox.path, 'swift/build');
     const run = spyOn(spawn, 'run').mockResolvedValue({
         code: 1,
@@ -142,7 +144,7 @@ test('Swift compiler diagnostics retain their source location on a failed build'
 if (HAS_SWIFT)
 test('canceled Swift compilation refuses to launch the compiler', async () => {
     await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'gspot.toml': 'version = 1\nkits = ["swift"]\n' });
+    await createFileTree(sandbox.path, { 'gspot.toml': policyOf(['swift']) });
     const input = await swiftInput(sandbox.path, 'swift/build');
     input.cancelSignal = AbortSignal.abort();
     expect(await rejection(swiftBuild(input))).toBe('The command was canceled.');
@@ -158,7 +160,7 @@ if (HAS_SWIFT)
 test('Swift response files stay inside the compiler cache before log publication', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nkits = ["swift"]\n',
+        'gspot.toml': policyOf(['swift']),
         'external-response': 'external bytes must not enter a compiler log',
     });
     const input = await swiftInput(sandbox.path, 'swift/build');

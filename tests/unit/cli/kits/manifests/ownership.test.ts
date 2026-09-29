@@ -1,5 +1,5 @@
 import { test, expect } from 'bun:test';
-import { PINNED_HEADER } from '#tests/config/unit/cli/kits.ts';
+import { PINNED_HEADER } from '#tests/inputs/unit/cli/kits.ts';
 import { validateManifests } from '#cli/kits/manifest-problems.ts';
 import { kitManifests, parseManifest } from '#cli/kits/manifests.ts';
 

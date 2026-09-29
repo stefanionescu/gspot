@@ -5,10 +5,10 @@ import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { reportSchema } from '#cli/execution/report.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { toolsPath, installAtLevel } from '#tests/support/cli/tools.ts';
 import { containing, textContaining } from '#tests/support/expectations.ts';
-import { DUPLICATION_INIT } from '#tests/config/acceptance/source/kits/init-arguments.ts';
+import { DUPLICATION_INIT } from '#tests/inputs/acceptance/source/kits/init-arguments.ts';
 
 const NPM_BIN = join(import.meta.dir, '../../../../node_modules/.bin');
 const STEPS = Array.from(

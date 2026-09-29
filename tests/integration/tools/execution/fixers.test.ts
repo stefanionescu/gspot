@@ -8,6 +8,7 @@ import { kitManifests } from '#cli/kits/manifests.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { explain } from '#cli/commands/explain/subjects.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { textContaining } from '#tests/support/expectations.ts';
 import type { RunOptions } from '#cli/types/execution/execution.ts';
 import { chmodSync, mkdirSync, copyFileSync, readFileSync, writeFileSync } from 'node:fs';
@@ -242,7 +243,7 @@ test.each([
     async ({ configuration, check, path, defect, partial, corrected }) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': `version = 1\nlevel = "all"\nkits = ["${configuration}"]\n`,
+            'gspot.toml': policyOf([configuration], '', 'all'),
             '.gitignore': '.gspot/\n',
             [path]: defect,
         });

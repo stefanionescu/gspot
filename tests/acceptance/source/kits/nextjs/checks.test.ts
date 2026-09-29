@@ -1,85 +1,79 @@
 // Planted repository for the nextjs and i18n configurations: a segment that serves two things, a build check turned off, versions apart, and message files with holes.
 import { join } from 'node:path';
-import { test, expect } from 'bun:test';
-import type { FindingCase } from '#tests/types/cli.ts';
-import { reportSchema } from '#cli/execution/report.ts';
-import { runPlanted } from '#tests/support/cli/planted.ts';
-import { containing } from '#tests/support/expectations.ts';
-import { installedNextProject } from '#tests/support/cli/nextjs.ts';
-import { NEXT_PAGE, NEXT_TRANSLATIONS, PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
+import { randomUUID } from 'node:crypto';
+import { plantedCases } from '#tests/support/cli/planted.ts';
+import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
+import { NEXT_PAGE, NEXT_CONFIG, NEXT_LAYOUT, NEXT_TRANSLATIONS } from '#tests/inputs/cli.ts';
 
-const CASES: FindingCase[] = [
-    {
-        check: 'integrity/route-segments',
-        files: {
-            'app/route.ts':
-                '// Answers the same address as the page.\n\n/**\n * Answers a request.\n * @returns the answer\n */\nexport function GET(): Response {\n    return new Response("ok");\n}\n',
-        },
-        expected: { file: 'app/route.ts', rule: 'route-segment', line: 1 },
-    },
-    {
-        check: 'integrity/next-config',
-        files: {
-            'next.config.mjs':
-                '// The framework kit.\nconst config = { eslint: { ignoreDuringBuilds: true } };\n\nexport default config;\n',
-        },
-        expected: { file: 'next.config.mjs', rule: 'build-check-off', line: 2 },
-    },
-    {
-        check: 'integrity/dependency-alignment',
-        files: {
-            'package.json': `{\n    "name": "planted",\n    "version": "1.0.0",\n    "private": true,\n    "type": "module",\n    "dependencies": {\n        "next": "16.3.5",\n        "next-intl": "4.3.9",\n        "react": "19.1.1",\n        "react-dom": "18.3.1"\n    }\n}\n`,
-        },
-        expected: { file: 'package.json', rule: 'version-pair', line: 1 },
-    },
-    {
-        check: 'nextjs/typecheck',
-        files: {
-            'app/count.ts':
-                '// A planted file.\n\n/** A number that holds text. */\nexport const count: number = "three";\n',
-        },
-        expected: { file: 'app/count.ts', rule: 'TS2322', line: 4 },
-    },
-    {
-        check: 'nextjs/build',
-        files: { 'app/page.tsx': NEXT_PAGE.replace('return "home";', 'return missing;') },
-        // Turbopack refuses the linked node_modules folder of a planted repository, so the sandbox builds with webpack.
-        policy: '[tools.next]\nbuild_in_gate = true\nbuild_flags = ["--webpack"]\n',
-        expected: { file: 'package.json', rule: 'build', line: 1 },
-    },
-    {
-        check: 'i18n/locales',
-        files: { 'messages/de.json': '{\n    "home": { "title": "Start" }\n}\n' },
-        policy: NEXT_TRANSLATIONS,
-        expected: { file: 'messages/de.json', rule: 'missing-key', line: 1 },
-    },
-    {
-        check: 'i18n/locales',
-        files: { 'messages/de.json': '{\n    "home": { "title": "Start", "greeting": "Hallo {name" }\n}\n' },
-        policy: NEXT_TRANSLATIONS,
-        expected: { file: 'messages/de.json', rule: 'message', line: 1 },
-    },
-];
+const ROUTE =
+    '// Answers the same address as the page.\n\n/**\n * Answers a request.\n * @returns the answer\n */\nexport function GET(): Response {\n    return new Response("ok");\n}\n';
+const COUNT = '// A planted file.\n\n/** A number that holds text. */\nexport const count: number = "three";\n';
 
-test.each(CASES)(
-    '$check reports $expected.rule in $expected.file and accepts a correction',
-    async (planted) => {
-        const prepared = await installedNextProject();
-        await using sandbox = prepared.sandbox;
-        const environment = prepared.environment;
-        const outcome = await runPlanted(sandbox.path, planted, environment);
-        expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
-        const failed = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
-        expect(failed.checks).toMatchObject([{ check: planted.check, status: 'fail' }]);
-        expect(failed.checks[0]!.findings).toContainEqual(containing(planted.expected));
-        const files: Record<string, string> = {};
-        if (planted.check === 'integrity/route-segments') files['app/api/route.ts'] = planted.files['app/route.ts']!;
-        if (planted.check === 'nextjs/typecheck')
-            files['app/count.ts'] = planted.files['app/count.ts']!.replace('"three"', '3');
-        const corrected = await runPlanted(sandbox.path, { ...planted, files }, environment);
-        expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        const accepted = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
-        expect(accepted.checks).toMatchObject([{ check: planted.check, status: 'ok', findings: [] }]);
+plantedCases(
+    'the nextjs configuration',
+    {
+        kits: ['nextjs'],
+        without: ['naming', 'spelling', 'css', 'files'],
+        // Webpack requires the linked dependencies and the sandbox to share a drive.
+        dirname: join(INSTALLED_MODULES, '../..', `gspot-test-${randomUUID()}`),
+        files: {
+            '.gitignore': 'node_modules\n.next\n',
+            'package.json': `{\n    "name": "planted",\n    "version": "1.0.0",\n    "private": true,\n    "type": "module",\n    "dependencies": {\n        "next": "16.3.5",\n        "next-intl": "4.3.9",\n        "react": "19.1.1",\n        "react-dom": "19.1.1"\n    }\n}\n`,
+            'tsconfig.json':
+                '{\n    "compilerOptions": {\n        "strict": true,\n        "noFallthroughCasesInSwitch": true,\n        "noUncheckedIndexedAccess": true,\n        "noImplicitOverride": true,\n        "exactOptionalPropertyTypes": true,\n        "target": "ES2022",\n        "module": "ESNext",\n        "moduleResolution": "Bundler",\n        "types": [],\n        "skipLibCheck": true,\n        "jsx": "react-jsx",\n        "lib": ["DOM", "DOM.Iterable", "ES2022"],\n        "noEmit": true,\n        "plugins": [{ "name": "next" }]\n    },\n    "include": ["app"]\n}\n',
+            'next.config.mjs': NEXT_CONFIG,
+            'app/page.tsx': NEXT_PAGE,
+            'app/layout.tsx': NEXT_LAYOUT,
+            'messages/en.json': '{\n    "home": { "title": "Home", "greeting": "Hello {name}" }\n}\n',
+            'messages/de.json': '{\n    "home": { "title": "Start", "greeting": "Hallo {name}" }\n}\n',
+        },
     },
-    PLANTED_TIMEOUT_MS * 6,
+    [
+        {
+            check: 'integrity/route-segments',
+            files: { 'app/route.ts': ROUTE },
+            expected: { file: 'app/route.ts', rule: 'route-segment', line: 1 },
+            corrected: { files: { 'app/api/route.ts': ROUTE } },
+        },
+        {
+            check: 'integrity/next-config',
+            files: {
+                'next.config.mjs':
+                    '// The framework kit.\nconst config = { eslint: { ignoreDuringBuilds: true } };\n\nexport default config;\n',
+            },
+            expected: { file: 'next.config.mjs', rule: 'build-check-off', line: 2 },
+        },
+        {
+            check: 'integrity/dependency-alignment',
+            files: {
+                'package.json': `{\n    "name": "planted",\n    "version": "1.0.0",\n    "private": true,\n    "type": "module",\n    "dependencies": {\n        "next": "16.3.5",\n        "next-intl": "4.3.9",\n        "react": "19.1.1",\n        "react-dom": "18.3.1"\n    }\n}\n`,
+            },
+            expected: { file: 'package.json', rule: 'version-pair', line: 1 },
+        },
+        {
+            check: 'nextjs/typecheck',
+            files: { 'app/count.ts': COUNT },
+            expected: { file: 'app/count.ts', rule: 'TS2322', line: 4 },
+            corrected: { files: { 'app/count.ts': COUNT.replace('"three"', '3') } },
+        },
+        {
+            check: 'nextjs/build',
+            files: { 'app/page.tsx': NEXT_PAGE.replace('return "home";', 'return missing;') },
+            // Turbopack refuses the linked node_modules folder of a planted repository, so the sandbox builds with webpack.
+            policy: '[tools.next]\nbuild_in_gate = true\nbuild_flags = ["--webpack"]\n',
+            expected: { file: 'package.json', rule: 'build', line: 1 },
+        },
+        {
+            check: 'i18n/locales',
+            files: { 'messages/de.json': '{\n    "home": { "title": "Start" }\n}\n' },
+            policy: NEXT_TRANSLATIONS,
+            expected: { file: 'messages/de.json', rule: 'missing-key', line: 1 },
+        },
+        {
+            check: 'i18n/locales',
+            files: { 'messages/de.json': '{\n    "home": { "title": "Start", "greeting": "Hallo {name" }\n}\n' },
+            policy: NEXT_TRANSLATIONS,
+            expected: { file: 'messages/de.json', rule: 'message', line: 1 },
+        },
+    ],
 );

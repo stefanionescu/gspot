@@ -9,8 +9,10 @@ import * as inspections from '#cli/tools/inspect.ts';
 import { readCached } from '#cli/execution/cache.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { reportSchema } from '#cli/execution/report.ts';
+import { onPosix } from '#tests/support/cli/platforms.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { git, commitAll } from '#tests/support/cli/git.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { storageSession } from '#tests/support/cli/storage.ts';
 import { runHashes, cacheKeyFor } from '#cli/execution/result-cache.ts';
 
@@ -19,7 +21,7 @@ test.each(['{', '{"status":"ok","findings":[]}'])(
     async (content) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\nkits = []\n',
+            'gspot.toml': policyOf([]),
             'source.ts': 'export {};\n',
         });
         const session = await storageSession(sandbox.path, 1);
@@ -47,11 +49,11 @@ test.each(['{', '{"status":"ok","findings":[]}'])(
 );
 
 // Windows has no read permission bit, and a running executable cannot be renamed there.
-if (process.platform !== 'win32')
+if (onPosix)
     test('a denied owned cache read reports its path and cause', async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\nkits = []\n',
+            'gspot.toml': policyOf([]),
             'source.ts': 'export {};\n',
         });
         const session = await storageSession(sandbox.path, 0);
@@ -73,7 +75,7 @@ if (process.platform !== 'win32')
 test('checks share generated-file hashes within a run and read edits in the next run', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nkits = []\n',
+        'gspot.toml': policyOf([]),
         '.gspot/shared.toml': 'value = 1\n',
         'source.ts': 'export {};\n',
     });
@@ -150,11 +152,11 @@ format = "none"
 });
 
 // Windows has no read permission bit, and a running executable cannot be renamed there.
-if (process.platform !== 'win32')
+if (onPosix)
     test('an executable replacement cannot combine old permissions with new cached bytes', async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\nkits = []\n',
+            'gspot.toml': policyOf([]),
             'source.ts': 'export {};\n',
             checker: 'original executable',
             replacement: 'replacement executable',

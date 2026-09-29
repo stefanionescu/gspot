@@ -7,11 +7,12 @@ import { denoLint } from '#cli/checks/supabase/deno.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 
 test('pinned Deno reports a lint defect and accepts its correction in a scoped edge function', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nkits = []\n[[scope]]\npath = "apps/api"\nkits = ["supabase"]\n',
+        'gspot.toml': policyOf([], '[[scope]]\npath = "apps/api"\nkits = ["supabase"]\n'),
         'apps/api/supabase/functions/hello/index.ts': 'export function greet(value: any) { return value; }\n',
     });
     const native = Bun.which('deno', { PATH: toolsPath(['deno']) });

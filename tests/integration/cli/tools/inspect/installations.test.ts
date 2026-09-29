@@ -1,17 +1,19 @@
 import { join } from 'node:path';
-import { RUNS } from '#tests/config/cli.ts';
+import { RUNS } from '#tests/inputs/cli.ts';
 import { test, spyOn, expect } from 'bun:test';
 import { readPolicy } from '#cli/policy/read.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { runToolCommand } from '#cli/tools/command.ts';
 import { failure } from '#tests/support/expectations.ts';
+import { onPosix } from '#tests/support/cli/platforms.ts';
 import * as environment from '#cli/platform/environment.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { locateTool, inspectTool } from '#cli/tools/inspect.ts';
 import { commandPin, libraryPin } from '#tests/support/cli/pins.ts';
 import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import { chmodSync, mkdirSync, existsSync, unlinkSync, symlinkSync } from 'node:fs';
 
-if (process.platform !== 'win32')
+if (onPosix)
     test('the tool inspection > version inspections and tool execution prefer helpers from the selected installation', async () => {
         await using sandbox = await testdir();
         const launcher = `#!${process.execPath}\nconst child = Bun.spawnSync(['companion'], {stdout:'pipe', stderr:'pipe'}); process.stdout.write(child.stdout); process.exitCode = child.exitCode;\n`;
@@ -174,7 +176,7 @@ test.each(['mise', 'npm'])(
     async (runner) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': `version = 1\nkits = []\n[runner]\ntool = "${runner}"\n`,
+            'gspot.toml': policyOf([], `[runner]\ntool = "${runner}"\n`),
             'node_modules/.bin/teller': '#!/bin/sh\necho 3.8.1\n',
             'node_modules/.bin/ec': '#!/bin/sh\necho 3.4.0\n',
             '.gspot/node_modules/.bin/teller': `#!/bin/sh\necho ${runner === 'mise' ? '1.0.0' : '3.8.1'}\n`,

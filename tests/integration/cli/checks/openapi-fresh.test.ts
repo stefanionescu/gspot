@@ -8,7 +8,7 @@ import { rejection } from '#tests/support/expectations.ts';
 import { openapiFresh } from '#cli/checks/express/openapi.ts';
 import { statSync, chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import type { OpenapiPlanted as Planted } from '#tests/types/integration/cli/checks.ts';
-import { OPENAPI_FRESH_POLICY, OPENAPI_FRESH_GENERATOR } from '#tests/config/integration/cli/checks.ts';
+import { OPENAPI_FRESH_POLICY, OPENAPI_FRESH_GENERATOR } from '#tests/inputs/integration/cli/checks.ts';
 
 // A planted Express project whose generator writes the document from schema.json and fails when the schema says so.
 async function plant(schema: string): Promise<Planted> {

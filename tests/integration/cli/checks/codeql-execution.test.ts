@@ -8,8 +8,15 @@ import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { test, spyOn, expect, describe } from 'bun:test';
 import { rejection } from '#tests/support/expectations.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { toolShipsHere } from '#tests/support/cli/platforms.ts';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+
+const ALIASED_POLICY = policyOf(
+    ['security'],
+    '[tools.codeql]\nlanguages = ["javascript-typescript", "javascript"]\n',
+    'all',
+);
 
 const JAVASCRIPT_LANGUAGES = JSON.stringify({
     aliases: { 'javascript-typescript': 'javascript' },
@@ -18,7 +25,7 @@ const JAVASCRIPT_LANGUAGES = JSON.stringify({
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the line limit.
 const policy = (value: string) =>
-    `version = 1\nlevel = "all"\nkits = ["security"]\n[tools.codeql]\nlanguages = [${JSON.stringify(value)}]\n`;
+    policyOf(['security'], `[tools.codeql]\nlanguages = [${JSON.stringify(value)}]\n`, 'all');
 
 // Aliases resolve to one native language and its exact query-pack version.
 function expectNativeCodeqlOptions(commands: string[][], packVersion: string): void {
@@ -92,8 +99,7 @@ async function refusesOutsideLanguage(language: string): Promise<string[]> {
 async function mapsIsolatedLocations(): Promise<Finding[]> {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'gspot.toml':
-            'version = 1\nlevel = "all"\nkits = ["security"]\n[tools.codeql]\nlanguages = ["javascript-typescript", "javascript"]\n',
+        'gspot.toml': ALIASED_POLICY,
         'source file.ts': 'export const source = true;\n',
     });
     const session = await openSession(directory.path);

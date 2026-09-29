@@ -5,7 +5,8 @@ import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { toolShipsHere } from '#tests/support/cli/platforms.ts';
 
 const python = {
@@ -38,7 +39,7 @@ describe.if(toolShipsHere('codeql'))('the pinned CodeQL', () => {
         async ({ level, language, file, unsafe, corrected, rule, line, column }) => {
             await using directory = await testdir();
             await createFileTree(directory.path, {
-                'gspot.toml': `version = 1\nlevel = "${level}"\nkits = ["security"]\n[tools.codeql]\nlanguages = ["${language}"]\n`,
+                'gspot.toml': policyOf(['security'], `[tools.codeql]\nlanguages = ["${language}"]\n`, level),
                 [file]: unsafe,
                 'authored.txt': 'Preserve this file.\n',
             });

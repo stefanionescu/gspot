@@ -8,9 +8,9 @@ import { commitAll } from '#tests/support/cli/git.ts';
 import { parsePolicyText } from '#cli/policy/read.ts';
 import { script } from '#tests/support/cli/planted.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { treeContents } from '#tests/support/cli/preservation.ts';
-import { INIT_REFUSALS_QUIET } from '#tests/config/acceptance/source/cli/cli.ts';
+import { INIT_REFUSALS_QUIET } from '#tests/inputs/acceptance/source/cli/cli.ts';
 
 test(
     'init refusals > a nonterminal preview names its accepted configuration list and keeps JSON output parseable',

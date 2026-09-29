@@ -8,6 +8,7 @@ import { valeFindings } from '#cli/checks/prose/vale.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { runEngineCheck } from '#cli/execution/engines.ts';
 import { containing } from '#tests/support/expectations.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 
 const DIAGNOSTIC = { Line: 1, Span: [3, 5], Check: 'gspot.Example', Message: 'Use a concrete example.' };
 
@@ -19,7 +20,7 @@ for (const extension of ['md', 'sh']) {
             const path = `sample.${extension}`;
             const source = '# Example text\n';
             await createFileTree(directory.path, {
-                'gspot.toml': 'version = 1\nkits = ["prose", "bash", "markdown"]\n[limits]\ntool_seconds = 1\n',
+                'gspot.toml': policyOf(['prose', 'bash', 'markdown'], '[limits]\ntool_seconds = 1\n'),
                 '.gspot/config/vale.ini': 'Packages =\n',
                 [path]: source,
             });

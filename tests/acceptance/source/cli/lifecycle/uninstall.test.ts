@@ -10,6 +10,7 @@ import { run as spawn } from '#cli/platform/spawn.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { ownershipSchema } from '#cli/lifecycle/log.ts';
 import { keptMode } from '#tests/support/cli/platforms.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { applyBlock } from '#cli/lifecycle/managed-blocks.ts';
 import { statSync, existsSync, unlinkSync, readFileSync, writeFileSync } from 'node:fs';
 
@@ -17,7 +18,7 @@ const INIT = initArgs(['bash']);
 
 test('uninstall preview does not create ownership or recovery state', async () => {
     await using directory = await testdir();
-    const policy = 'version = 1\nkits = []\n[guides]\ninstall = false\n';
+    const policy = policyOf([], '[guides]\ninstall = false\n');
     await createFileTree(directory.path, { 'gspot.toml': policy });
     const preview = await run(directory.path, ['uninstall', '--dry-run']);
     expect(preview.code, preview.stdout + preview.stderr).toBe(0);
@@ -94,7 +95,7 @@ test.each([false, true])(
     async (applyFirst) => {
         await using directory = await testdir();
         await createFileTree(directory.path, {
-            'gspot.toml': 'version = 1\nkits = ["bash"]\n',
+            'gspot.toml': policyOf(['bash']),
             'entry.sh': 'echo example\n',
         });
         const session = await openSession(directory.path);

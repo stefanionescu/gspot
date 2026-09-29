@@ -2,6 +2,7 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { ownershipSchema } from '#cli/lifecycle/log.ts';
+import { onPosix } from '#tests/support/cli/platforms.ts';
 import { openOwner } from '#cli/lifecycle/ownership/owner.ts';
 import { writeInstalled } from '#cli/tools/installed-files.ts';
 import { chmodSync, lstatSync, unlinkSync, symlinkSync, readFileSync, readlinkSync, writeFileSync } from 'node:fs';
@@ -79,7 +80,7 @@ test('installation refuses a linked output root before publication and accepts a
         owner.close();
     }
 });
-if (process.platform !== 'win32') {
+if (onPosix) {
     test('lifecycle ownership: an exactly reproduced escaping link is refused before ownership or recovery changes', async () => {
         await using directory = await testdir();
         await createFileTree(directory.path, { 'project/.keep': '', outside: 'authored' });

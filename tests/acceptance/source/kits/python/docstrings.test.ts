@@ -4,7 +4,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { reportSchema } from '#cli/execution/report.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { installAtLevel } from '#tests/support/cli/tools.ts';
 
@@ -14,7 +14,7 @@ import {
     STRUCTURE_INIT,
     NUMPY_DOCSTRING,
     STRUCTURE_PROJECT,
-} from '#tests/config/acceptance/source/kits/python.ts';
+} from '#tests/inputs/acceptance/source/kits/python.ts';
 
 test.each([
     ['Google from Ruff', '[tool.ruff.lint.pydocstyle]\nconvention = "google"\n', TOOLS_CLEAN],

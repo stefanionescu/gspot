@@ -2,6 +2,7 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 
 test.each([
     ['<a href="javascript:alert(1)">Link</a>', 4],
@@ -15,7 +16,7 @@ test.each([
 ])('HTML scripts report the executable URL in %s', async (markup, column) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nlevel = "all"\nkits = ["html"]\n',
+        'gspot.toml': policyOf(['html'], '', 'all'),
         'page.html': markup,
     });
     const options = {
@@ -48,7 +49,7 @@ test.each([
 ])('HTML scripts preserve inert markup %s', async (markup) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nlevel = "all"\nkits = ["html"]\n',
+        'gspot.toml': policyOf(['html'], '', 'all'),
         'page.html': markup,
     });
     const result = await executeRun(await openSession(sandbox.path), {

@@ -2,13 +2,16 @@ import { fileURLToPath } from 'node:url';
 import { join, dirname } from 'node:path';
 import { run } from '#cli/platform/spawn.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import type { RegistryPackage } from '#tests/types/registry.ts';
-import { LOCKS } from '#tests/config/integration/tools/packages.ts';
+import { LOCKS } from '#tests/inputs/integration/tools/packages.ts';
 import type { PackageClient } from '#tests/types/integration/tools.ts';
 import { statSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { createPackageRegistry } from '#tests/support/registry/packages.ts';
 import { environmentVariables, setEnvironmentVariable } from '#cli/platform/environment.ts';
 import type { ReadPackageInputsResult, CreatePackageProjectResult } from '#tests/types/results.ts';
+
+const QUIET_GUIDES = '[guides]\ninstall = false\n';
 
 // The authored files every package project starts from.
 const AUTHORED_FILES = {
@@ -86,7 +89,7 @@ export async function createPackageProject(
             [projectPath]: rootPackage,
             ...(projectPath === 'package.json' ? { 'pnpm-workspace.yaml': 'packages:\n  - "**"\n' } : {}),
             '.npmrc': `registry=${registry.url}/\nalways-auth=true\n${registry.url.replace('http:', '')}/:_authToken=${registry.token}\n`,
-            'gspot.toml': `version = 1\nlevel = "recommended"\nkits = ["formatting"]\n${RUNNER_POLICY[runner]}[guides]\ninstall = false\n`,
+            'gspot.toml': policyOf(['formatting'], RUNNER_POLICY[runner] + QUIET_GUIDES, 'recommended'),
             ...AUTHORED_FILES,
         });
         const yarnConfiguration =

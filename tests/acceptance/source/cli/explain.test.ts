@@ -6,7 +6,7 @@ import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { script } from '#tests/support/cli/planted.ts';
 import { containingAll } from '#tests/support/expectations.ts';
-import { EXPLAIN_POLICY } from '#tests/config/acceptance/source/cli/cli.ts';
+import { EXPLAIN_POLICY } from '#tests/inputs/acceptance/source/cli/cli.ts';
 
 test('explain > setting explanations include nested-only settings and each inherited value', async () => {
     await using sandbox = await testdir();

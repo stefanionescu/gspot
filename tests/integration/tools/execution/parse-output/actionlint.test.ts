@@ -4,6 +4,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/execution/session.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { checkExecution } from '#cli/execution/engines.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { containing, textContaining } from '#tests/support/expectations.ts';
 
 test.each([
@@ -20,7 +21,7 @@ test.each([
         const reference = `${prefix}.github/workflows/${filename}${suffix}`;
         const workflow = `name: Caller\non: workflow_dispatch\npermissions: {}\njobs:\n    caller:\n        uses: ${reference}\n        with:\n            greeting: \${{ unknown.value }}\n`;
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\nkits = ["files"]\n',
+            'gspot.toml': policyOf(['files']),
             '.github/workflows/caller.yml': workflow,
             [`.github/workflows/${filename}`]:
                 'name: Called\non:\n    workflow_call:\n        inputs:\n            greeting:\n                type: string\n                required: true\npermissions: {}\njobs:\n    greet:\n        runs-on: ubuntu-latest\n        steps:\n            - run: echo "$GREETING"\n              env:\n                  GREETING: ${{ inputs.greeting }}\n',
@@ -69,7 +70,7 @@ test.each([
     const called =
         'on:\n  workflow_call:\n    inputs:\n      greeting:\n        type: string\n        required: true\njobs:\n  greet:\n    runs-on: ubuntu-latest\n    steps:\n      - run: echo hello\n';
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nkits = ["files"]\n',
+        'gspot.toml': policyOf(['files']),
         '.github/workflows/caller.yml': workflow,
         '.github/workflows/called.yml': called,
     });
@@ -105,7 +106,7 @@ test('Actionlint resolves a self-repository alias and reports a missing workflow
     const workflow =
         'on: workflow_dispatch\nenv:\n  WORKFLOW: &workflow $/.github/workflows/called.yml\njobs:\n  caller:\n    uses: *workflow\n';
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nkits = ["files"]\n',
+        'gspot.toml': policyOf(['files']),
         '.github/workflows/caller.yml': workflow,
     });
     const session = await openSession(sandbox.path);

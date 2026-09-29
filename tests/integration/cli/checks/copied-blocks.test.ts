@@ -7,6 +7,7 @@ import * as inspections from '#cli/tools/inspect.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { runEngineCheck } from '#cli/execution/engines.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { copiedBlocks } from '#cli/checks/docs/copied-blocks.ts';
 
 const VALID = {
@@ -32,7 +33,7 @@ test.each([
 ])('duplication rejects $failure, removes temporary reports, and accepts a corrected report', async ({ changes }) => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'gspot.toml': 'version = 1\nlevel = "all"\nkits = ["bash", "duplication"]\n',
+        'gspot.toml': policyOf(['bash', 'duplication'], '', 'all'),
         'sample.sh': 'echo example\n',
         '.gspot/config/jscpd.json': '{}\n',
     });

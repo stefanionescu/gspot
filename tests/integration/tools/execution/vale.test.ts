@@ -10,6 +10,7 @@ import { valeFindings } from '#cli/checks/prose/vale.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { runEngineCheck } from '#cli/execution/engines.ts';
 import { containing } from '#tests/support/expectations.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { PROSE_FORMATS } from '#cli/generation/vale-styles.ts';
 
 for (const extension of ['md', 'sh']) {
@@ -17,7 +18,7 @@ for (const extension of ['md', 'sh']) {
         await using directory = await testdir();
         const path = `sample.${extension}`;
         await createFileTree(directory.path, {
-            'gspot.toml': 'version = 1\nkits = ["prose", "bash", "markdown"]\n',
+            'gspot.toml': policyOf(['prose', 'bash', 'markdown']),
             '.gspot/config/vale.ini': 'StylesPath = styles\nMinAlertLevel = suggestion\n[*]\nBasedOnStyles = Example\n',
             '.gspot/config/styles/Example/Concrete.yml':
                 'extends: existence\nmessage: "Use inspect."\nlevel: error\ntokens: [delve]\n',
@@ -37,7 +38,7 @@ for (const extension of ['md', 'sh']) {
 test('Vale preserves ESLint delimiters while checking punctuation inside reasons and neighboring comments', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'gspot.toml': 'version = 1\nkits = ["prose", "typescript"]\n',
+        'gspot.toml': policyOf(['prose', 'typescript']),
         '.gspot/config/vale.ini': 'StylesPath = styles\nMinAlertLevel = suggestion\n[*]\nBasedOnStyles = Example\n',
         '.gspot/config/styles/Example/Dashes.yml': readAsset('packages/cli/kits/general/prose/styles/gspot/dashes.yml'),
         'source.ts': [
@@ -77,7 +78,7 @@ test.each([
     await using directory = await testdir();
     const path = `source.${extension}`;
     await createFileTree(directory.path, {
-        'gspot.toml': 'version = 1\nkits = ["prose"]\n',
+        'gspot.toml': policyOf(['prose']),
         '.gspot/config/vale.ini': [
             'StylesPath = styles',
             '[formats]',
@@ -113,7 +114,7 @@ test.each([
 test('Vale accepts explicit minimum versions and still reports vague or redundant ranges', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'gspot.toml': 'version = 1\nkits = ["prose", "markdown"]\n',
+        'gspot.toml': policyOf(['prose', 'markdown']),
         '.gspot/config/vale.ini': 'StylesPath = styles\nMinAlertLevel = suggestion\n[*]\nBasedOnStyles = Example\n',
         '.gspot/config/styles/Example/Versions.yml': readAsset(
             'packages/cli/kits/general/prose/styles/gspot/version-range.yml',

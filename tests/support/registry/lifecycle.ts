@@ -7,7 +7,7 @@ import type { SpawnOutcome } from '#tests/types/cli.ts';
 import type { Registry } from '#tests/types/registry.ts';
 import { rmSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { environmentVariables } from '#cli/platform/environment.ts';
-import { REQUEST_MS, STARTUP_MS, SHUTDOWN_MS } from '#tests/config/registry.ts';
+import { REQUEST_MS, STARTUP_MS, SHUTDOWN_MS } from '#tests/inputs/registry.ts';
 
 const root = fileURLToPath(new URL('../../..', import.meta.url));
 const serverEntry = fileURLToPath(new URL('server.ts', import.meta.url));

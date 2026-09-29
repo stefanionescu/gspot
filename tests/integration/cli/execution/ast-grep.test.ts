@@ -6,6 +6,7 @@ import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { rejection } from '#tests/support/expectations.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { astGrepMatches } from '#cli/checks/structure/ast-grep.ts';
 
 test('ast-grep batches all file arguments and retains matches from every batch', async () => {
@@ -16,7 +17,7 @@ test('ast-grep batches all file arguments and retains matches from every batch',
     );
     const received: string[] = [];
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nlevel = "all"\nkits = ["bash"]\n',
+        'gspot.toml': policyOf(['bash'], '', 'all'),
         'source.sh': 'echo example\n',
     });
     const session = await openSession(sandbox.path);
@@ -60,7 +61,7 @@ test.each(['fatal exit', 'deadline', 'cancellation', 'malformed JSON', 'invalid 
     async (failure) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\nlevel = "all"\nkits = ["bash"]\n',
+            'gspot.toml': policyOf(['bash'], '', 'all'),
             'source.sh': 'echo example\n',
         });
         const session = await openSession(sandbox.path);

@@ -2,9 +2,10 @@ import { join } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
 import { buildFolder } from '#cli/platform/paths.ts';
 import { executeRun } from '#cli/execution/execute.ts';
+import { onMac } from '#tests/support/cli/platforms.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { test, expect, describe, afterEach } from 'bun:test';
-import { XCTEST_EXECUTION_POLICY, XCTEST_EXECUTION_OPTIONS } from '#tests/config/integration/cli/checks.ts';
+import { XCTEST_EXECUTION_POLICY, XCTEST_EXECUTION_OPTIONS } from '#tests/inputs/integration/cli/checks.ts';
 import { rmSync, chmodSync, mkdirSync, existsSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
 
 const caches = new Set<string>();
@@ -74,7 +75,7 @@ const CASES = [
     },
 ] as const;
 
-describe.if(process.platform === 'darwin')('with the macOS toolchain', () => {
+describe.if(onMac)('with the macOS toolchain', () => {
     test.each([...CASES])(
         'XCTest adapter preserves $failure and accepts a corrected run',
         async ({ policy, build, coverage, code, status, produced }) => {
@@ -108,7 +109,7 @@ describe.if(process.platform === 'darwin')('with the macOS toolchain', () => {
     );
 });
 
-describe.if(process.platform === 'darwin')('with the macOS toolchain', () => {
+describe.if(onMac)('with the macOS toolchain', () => {
     test('XCTest coverage refuses an external result link and replaces a files previous bundle', async () => {
         await using sandbox = await testdir();
         await using outside = await testdir();

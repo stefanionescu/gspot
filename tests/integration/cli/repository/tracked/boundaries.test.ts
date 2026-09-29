@@ -7,14 +7,16 @@ import { createFileTree, testdir } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { readRepository } from '#cli/repository/tree.ts';
+import { onPosix } from '#tests/support/cli/platforms.ts';
 import { head, readSource, trackedEntries } from '#cli/repository/tracked.ts';
 
 test('opening a session reads less than one megabyte with a fifty-megabyte source', async () => {
     const megabyte = 1024 * 1024;
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nkits = []\n',
+        'gspot.toml': policyOf([]),
         large: '#!/usr/bin/env bash\n# @generated\n' + 'x'.repeat(50 * megabyte),
     });
     const prefixReads = spyOn(fs, 'readSync');
@@ -92,7 +94,7 @@ test('source reads refuse an escape introduced after inventory and accept an int
 test('a managed secret baseline rejects linked bytes before evaluating entries', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'project/gspot.toml': 'version = 1\nlevel = "all"\nkits = ["secrets"]\n',
+        'project/gspot.toml': policyOf(['secrets'], '', 'all'),
         'project/.gspot/.keep': '',
         'baseline.json': '[]\n',
     });
@@ -118,8 +120,8 @@ test('a managed secret baseline rejects linked bytes before evaluating entries',
 });
 
 // Windows file names cannot hold a newline or a quote.
-if (process.platform !== 'win32')
-    test('a non-Git walk preserves newline directories, nested negations, pruning, and link boundaries', async () => {
+    if (onPosix)
+        test('a non-Git walk preserves newline directories, nested negations, pruning, and link boundaries', async () => {
         await using sandbox = await testdir();
         const root = join(sandbox.path, 'project');
         await createFileTree(sandbox.path, {
@@ -148,20 +150,22 @@ if (process.platform !== 'win32')
         expect(trackedEntries(root).map((entry) => entry.path)).toStrictEqual(entries.map((entry) => entry.path));
     });
 
-if (process.platform !== 'win32')
-    test('a non-Git walk omits named pipes from readable source files', async () => {
+    if (onPosix)
+
+        test('a non-Git walk omits named pipes from readable source files', async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'source.ts': 'export {};\n' });
         expect(processes.runBlocking(['mkfifo', 'stream.ts'], { cwd: sandbox.path }).code).toBe(0);
         expect(trackedEntries(sandbox.path).map((entry) => entry.path)).toStrictEqual(['source.ts']);
     });
 
-if (process.platform !== 'win32')
-    test('Bash findings retain newline and colon directory names without Git', async () => {
+    if (onPosix)
+
+        test('Bash findings retain newline and colon directory names without Git', async () => {
         await using sandbox = await testdir();
         const paths = ['source\nfiles/greet.sh', 'source:files/greet.sh'];
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\nkits = ["bash"]\n',
+            'gspot.toml': policyOf(['bash']),
             ...Object.fromEntries(paths.map((path) => [path, 'if then\n'])),
         });
         const options = {

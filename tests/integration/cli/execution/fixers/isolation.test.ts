@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/execution/session.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { scratchCopy } from '#cli/execution/files/workspace.ts';
 import { runFixer, applyFixers } from '#cli/execution/fixers.ts';
 import { rejection, textContaining } from '#tests/support/expectations.ts';
@@ -194,7 +195,7 @@ test('preview copies workspace dependencies and preserves executable links witho
     await using repository = await testdir();
     await using external = await testdir();
     await createFileTree(repository.path, {
-        'gspot.toml': 'version = 1\nkits = []\n',
+        'gspot.toml': policyOf([]),
         'package.json': '{"private":true,"workspaces":["packages/*"]}',
         'packages/core/package.json': '{"name":"core"}',
         'packages/core/value.js': 'export default "original";',

@@ -4,14 +4,15 @@ import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { textContaining } from '#tests/support/expectations.ts';
 import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
-import { GENERATED, GENERATED_DRIFT_OPTIONS } from '#tests/config/integration/cli/checks.ts';
+import { GENERATED, GENERATED_DRIFT_OPTIONS } from '#tests/inputs/integration/cli/checks.ts';
 
 test('an edited generated file and one holding merge markers are drift findings, and a fresh apply clears them', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nkits = ["bash"]\n[guides]\ninstall = false\n',
+        'gspot.toml': policyOf(['bash'], '[guides]\ninstall = false\n'),
         'run.sh': '#!/usr/bin/env bash\necho ok\n',
         '.gitignore': '.gspot/cache/\n',
     });

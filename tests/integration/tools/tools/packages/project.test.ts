@@ -9,7 +9,7 @@ import { applyAll } from '#cli/commands/apply/workflow.ts';
 import { statSync, existsSync, readFileSync } from 'node:fs';
 import { setEnvironmentVariable } from '#cli/platform/environment.ts';
 import { installPackageProject } from '#cli/tools/packages/project.ts';
-import { PACKAGE_PROJECTS } from '#tests/config/integration/tools/packages.ts';
+import { PACKAGE_PROJECTS } from '#tests/inputs/integration/tools/packages.ts';
 import { readPackageInputs, createPackageProject } from '#tests/support/cli/package-project.ts';
 
 test.each(PACKAGE_PROJECTS)(

@@ -4,7 +4,8 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { LINT_TIMEOUT_MS } from '#tests/config/integration/tools/tools.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
+import { LINT_TIMEOUT_MS } from '#tests/inputs/integration/tools/tools.ts';
 
 const cases = [
     {
@@ -57,7 +58,7 @@ for (const scenario of cases.filter((entry) => entry.language !== 'swift' || pro
         const { language, configName } = scenario;
         const limits = maximum === 7 ? '' : `[limits.${language}]\nfunction_parameters = ${String(maximum)}\n`;
         await createFileTree(directory.path, {
-            'gspot.toml': `version = 1\nlevel = "all"\nkits = ["${language}"]\n${limits}`,
+            'gspot.toml': policyOf([language], limits, 'all'),
             [scenario.file]: scenario.source,
         });
         const session = await openSession(directory.path);

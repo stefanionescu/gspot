@@ -7,13 +7,13 @@ import { everyManifest } from '#cli/kits/select.ts';
 import { gitOutput } from '#tests/support/cli/git.ts';
 import type { InstallJson } from '#cli/types/commands.ts';
 import { rejection } from '#tests/support/expectations.ts';
-import { venvExecutable } from '#tests/support/cli/platforms.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import { toolEnvironment } from '#cli/generation/tools/environment.ts';
 import { createPythonRegistry } from '#tests/support/registry/python.ts';
-import { PYTHON_PROJECTS } from '#tests/config/integration/tools/python.ts';
-import { preparePythonInstallation } from '#tests/support/cli/python-project.ts';
+import { onPosix, venvExecutable } from '#tests/support/cli/platforms.ts';
+import { PYTHON_PROJECTS } from '#tests/inputs/integration/tools/python.ts';
+import { preparePythonInstallation } from '#tests/support/cli/python/project.ts';
 import { cpSync, chmodSync, existsSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
 
 import {
@@ -24,9 +24,8 @@ import {
 } from '#cli/tools/python-project.ts';
 
 // A Windows virtual environment has launchers and no interpreter links; the windows-launcher tests cover it.
-const POSIX_ENVIRONMENT = process.platform !== 'win32';
 
-if (POSIX_ENVIRONMENT)
+if (onPosix)
     test.each(PYTHON_PROJECTS)(
         'private Python CLI installation preserves authored and generated inputs with %s and %s',
         async (configuration, runner) => {
@@ -84,7 +83,7 @@ if (POSIX_ENVIRONMENT)
         120_000,
     );
 
-if (POSIX_ENVIRONMENT)
+if (onPosix)
     test.each(PYTHON_PROJECTS)(
         'private Python tools relocate console scripts and reject then correct source with %s and %s',
         async (configuration, runner) => {
@@ -124,7 +123,7 @@ if (POSIX_ENVIRONMENT)
         120_000,
     );
 
-if (POSIX_ENVIRONMENT)
+if (onPosix)
     test.each([
         ['uv.toml', 'none'],
         ['pyproject.toml', 'none'],
@@ -184,7 +183,7 @@ if (POSIX_ENVIRONMENT)
         120_000,
     );
 
-if (POSIX_ENVIRONMENT)
+if (onPosix)
     test.each(PYTHON_PROJECTS)(
         'conflicted Python locks refuse installation until generated repair with %s and %s',
         async (configuration, runner) => {

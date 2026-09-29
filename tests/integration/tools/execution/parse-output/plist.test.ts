@@ -4,18 +4,20 @@ import { run } from '#cli/platform/spawn.ts';
 import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { GspotError } from '#cli/platform/errors.ts';
+import { onMac } from '#tests/support/cli/platforms.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { containing } from '#tests/support/expectations.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { checkedFindings } from '#cli/execution/broken-tool.ts';
 
-describe.if(process.platform === 'darwin')('native property lists', () => {
+describe.if(onMac)('native property lists', () => {
     test.each(['files/plist', 'xcode/plist'])(
         '%s classifies mixed native parse and input failures as execution errors',
         async (check) => {
             await using sandbox = await testdir();
             await createFileTree(sandbox.path, {
-                'gspot.toml': 'version = 1\nkits = ["files", "xcode"]\n',
+                'gspot.toml': policyOf(['files', 'xcode']),
                 'bad.plist': '<plist><dict>',
                 'private.plist': '<plist><dict/></plist>\n',
             });

@@ -3,7 +3,7 @@ import { test, expect } from 'bun:test';
 import { fileURLToPath } from 'node:url';
 import { run } from '#cli/platform/spawn.ts';
 import { buildProgram } from '#cli/commands/program.ts';
-import { COMPLETION_TIMEOUT_MS } from '#tests/config/integration/cli/cli.ts';
+import { COMPLETION_TIMEOUT_MS } from '#tests/inputs/integration/cli/cli.ts';
 
 const CLI = fileURLToPath(new URL('../../../packages/cli/src/main.ts', import.meta.url));
 async function candidates(words: string[]): Promise<string[]> {

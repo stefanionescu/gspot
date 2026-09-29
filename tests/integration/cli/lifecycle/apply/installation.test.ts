@@ -5,11 +5,12 @@ import { openSession } from '#cli/execution/session.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
 import { rejection } from '#tests/support/expectations.ts';
 import { initCommand } from '#cli/commands/init/command.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { existsSync, symlinkSync, readFileSync } from 'node:fs';
 
 test('apply refuses a plan whose policy changed after the session was read', async () => {
     await using sandbox = await testdir();
-    const initial = 'version = 1\nkits = []\n[guides]\ninstall = false\n';
+    const initial = policyOf([], '[guides]\ninstall = false\n');
     await createFileTree(sandbox.path, { 'gspot.toml': initial });
     const session = await openSession(sandbox.path);
     const edited = initial.replace('version = 1', 'version = 1\nlevel = "all"');
@@ -22,7 +23,7 @@ test('apply refuses a plan whose policy changed after the session was read', asy
 test('an npm runner preserves the authored prepare command while adding explicit check scripts', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nkits = []\n[runner]\ntool = "bun"\n[guides]\ninstall = false\n',
+        'gspot.toml': policyOf([], '[runner]\ntool = "bun"\n[guides]\ninstall = false\n'),
         'package.json': '{"private":true,"scripts":{"prepare":"build-app"}}\n',
     });
     await applyAll(await openSession(sandbox.path));

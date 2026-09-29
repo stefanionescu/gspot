@@ -4,14 +4,17 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 
 test('Squawk uses the effective transaction setting for each scope and honors false under Supabase', async () => {
     await using sandbox = await testdir();
     const defect =
         "SET lock_timeout = '5s';\nSET statement_timeout = '30s';\nALTER TABLE public.teams ADD COLUMN size BIGINT;\n";
     await createFileTree(sandbox.path, {
-        'gspot.toml':
-            'version = 1\nkits = ["supabase"]\n[tools.squawk]\nassume_in_transaction = false\n[[scope]]\npath = "transactional"\n[scope.tools.squawk]\nassume_in_transaction = true\n[[scope]]\npath = "transactional/child"\n',
+        'gspot.toml': policyOf(
+            ['supabase'],
+            '[tools.squawk]\nassume_in_transaction = false\n[[scope]]\npath = "transactional"\n[scope.tools.squawk]\nassume_in_transaction = true\n[[scope]]\npath = "transactional/child"\n',
+        ),
         'migration.sql': defect,
         'transactional/child/migration.sql': 'SELECT 1;\n',
     });

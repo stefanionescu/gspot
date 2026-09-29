@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { run as runCommand } from '#cli/platform/spawn.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import example from '#docs/src/components/home/bash-syntax.json';
 import packageManifest from '#cli-package' with { type: 'json' };
 
@@ -13,7 +14,7 @@ const { version: GSPOT_VERSION } = packageManifest;
 test('the published syntax example produces the captured finding and accepts its correction', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nkits = ["bash"]\n',
+        'gspot.toml': policyOf(['bash']),
         '.gspot/version': `${GSPOT_VERSION}\n`,
         'greet.sh': example.broken,
     });

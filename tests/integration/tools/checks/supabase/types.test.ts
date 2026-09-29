@@ -5,13 +5,13 @@ import { test, expect } from 'bun:test';
 import { run } from '#cli/platform/spawn.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { CLI_VERSION } from '#tests/config/integration/tools/checks.ts';
+import { onLinux } from '#tests/support/cli/platforms.ts';
+import { CLI_VERSION } from '#tests/inputs/integration/tools/checks.ts';
 import { prepareSupabaseDatabase } from '#tests/support/cli/supabase/database.ts';
 
 // The Linux runners own the database journeys; the other runners have no Supabase CLI.
-const DATABASE_JOURNEYS = process.platform === 'linux';
 
-if (DATABASE_JOURNEYS)
+if (onLinux)
     test('the pinned Supabase CLI generates local database types without changing authored configuration', async () => {
         await using sandbox = await testdir();
         await using database = await prepareSupabaseDatabase(sandbox.path);
@@ -22,7 +22,7 @@ if (DATABASE_JOURNEYS)
         expect(readFileSync(database.configPath)).toStrictEqual(database.authored);
     }, 600_000);
 
-if (DATABASE_JOURNEYS)
+if (onLinux)
     test('native Supabase freshness rejects drift and accepts regenerated database types', async () => {
         await using sandbox = await testdir();
         await using database = await prepareSupabaseDatabase(sandbox.path);

@@ -12,7 +12,7 @@ import { kitManifests } from '#cli/kits/manifests.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { type ParseError, parse as parseJsonc } from 'jsonc-parser';
 import type { Parser } from '#tests/types/integration/cli/generation.ts';
-import { PLANTED } from '#tests/config/integration/cli/generation/generation.ts';
+import { PLANTED } from '#tests/inputs/integration/cli/generation/generation.ts';
 
 const MODULES = fileURLToPath(new URL('../../../../node_modules', import.meta.url));
 const PARSERS: Record<string, Parser> = {

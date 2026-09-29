@@ -4,7 +4,9 @@ import { rejects } from 'node:assert/strict';
 import { testdir, createFileTree } from 'testdirs';
 import { gitOutput } from '#tests/support/cli/git.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { onPosix } from '#tests/support/cli/platforms.ts';
 import { submodulePaths } from '#cli/repository/tracked.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { doctorText, doctorReport } from '#cli/commands/doctor/report.ts';
 import { mkdirSync, readdirSync, symlinkSync, writeFileSync } from 'node:fs';
 import { pushedRevisions } from '#cli/repository/revisions/push-selection.ts';
@@ -16,7 +18,7 @@ test.each(['index', 'commit'] as const)(
         await using sandbox = await testdir();
         await using outside = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\nkits = []\n[guides]\ninstall = false\n',
+            'gspot.toml': policyOf([], '[guides]\ninstall = false\n'),
             'source.txt': 'selected source',
         });
         await createFileTree(outside.path, { 'package.json': '{', 'source.txt': 'outside source' });
@@ -93,7 +95,7 @@ test('nested policies retain repository context with policy-relative index and c
 });
 
 // Windows file names cannot hold a newline or a quote.
-if (process.platform !== 'win32')
+if (onPosix)
     test('unborn history is empty and committed blobs retain unusual filenames and bytes', async () => {
         await using sandbox = await testdir();
         gitOutput(sandbox.path, ['init']);

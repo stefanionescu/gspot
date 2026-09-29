@@ -5,10 +5,11 @@ import { existsSync, readFileSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/execution/session.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { applyBlock } from '#cli/lifecycle/managed-blocks.ts';
 import { uninstallCommand } from '#cli/commands/uninstall.ts';
 import { kitManifests, parseManifest, gitignoreBlock } from '#cli/kits/manifests.ts';
-import { MANAGED_IGNORES_CONFIGURATION } from '#tests/config/integration/cli/generation/generation.ts';
+import { MANAGED_IGNORES_CONFIGURATION } from '#tests/inputs/integration/cli/generation/generation.ts';
 
 test.each([true, false])(
     'apply waits for Git before managing ignore entries with authored file=%s',
@@ -16,7 +17,7 @@ test.each([true, false])(
         await using repository = await testdir();
         const original = '# Authored entries\nprivate.tmp\n';
         await createFileTree(repository.path, {
-            'gspot.toml': 'version = 1\nkits = []\n[guides]\ninstall = false\n',
+            'gspot.toml': policyOf([], '[guides]\ninstall = false\n'),
             ...(authored ? { '.gitignore': original } : {}),
         });
         await applyAll(await openSession(repository.path));

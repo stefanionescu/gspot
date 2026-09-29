@@ -7,16 +7,17 @@ import { commitAll } from '#tests/support/cli/git.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { rejection } from '#tests/support/expectations.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { envTypesFresh, headersSyntax } from '#cli/checks/cloudflare.ts';
 import { statSync, chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import type { CloudflarePlanted as Planted } from '#tests/types/integration/cli/checks.ts';
-import { CLOUDFLARE_TYPES_SCOPES, CLOUDFLARE_TYPES_GENERATOR } from '#tests/config/integration/cli/checks.ts';
+import { CLOUDFLARE_TYPES_SCOPES, CLOUDFLARE_TYPES_GENERATOR } from '#tests/inputs/integration/cli/checks.ts';
 
 // A planted Worker whose generator stands in for wrangler types: `bindings.txt` is what it writes, or the failure.
 async function plant(scope: string, bindings: string): Promise<Planted> {
     const directory = await testdir();
     await createFileTree(directory.path, {
-        'gspot.toml': 'version = 1\nkits = ["cloudflare"]\n',
+        'gspot.toml': policyOf(['cloudflare']),
         [join(scope, 'package.json')]: '{"private":true}\n',
         [join(scope, 'cloudflare-env.d.ts')]: '// Committed types\n',
         [join(scope, 'bindings.txt')]: bindings,
@@ -103,7 +104,7 @@ test.each(CLOUDFLARE_TYPES_SCOPES)(
 test('Cloudflare header checks report only files in their owning scope', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'gspot.toml': 'version = 1\nkits = ["cloudflare"]\n[[scope]]\npath = "workers/api"\nkits = ["cloudflare"]\n',
+        'gspot.toml': policyOf(['cloudflare'], '[[scope]]\npath = "workers/api"\nkits = ["cloudflare"]\n'),
         _headers: '  Invalid header\n',
         'workers/api/_headers': '/*\n  X-Frame-Options: DENY\n',
     });

@@ -1,5 +1,5 @@
 // Initializes named kits without installing tools. Generates only policy and configuration.
-import { QUIET_INIT } from '#tests/config/cli.ts';
+import { QUIET_INIT } from '#tests/inputs/cli.ts';
 
 /**
  * The init arguments that select the named kits and leave the named recommendations out.

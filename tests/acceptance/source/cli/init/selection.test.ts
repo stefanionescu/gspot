@@ -5,11 +5,11 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
-import { COMPONENT, SELECTION_INIT, INIT_SELECTION_QUIET } from '#tests/config/acceptance/source/cli/cli.ts';
+import { QUIET_INIT, PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
+import { COMPONENT, SELECTION_INIT } from '#tests/inputs/acceptance/source/cli/cli.ts';
 
 async function selected(root: string): Promise<string[]> {
-    const result = await run(root, [...SELECTION_INIT, ...INIT_SELECTION_QUIET]);
+    const result = await run(root, [...SELECTION_INIT, ...QUIET_INIT]);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const plan = JSON.parse(result.stdout) as { plan: { kits: { kit: string }[] } };
     return plan.plan.kits.map((entry) => entry.kit);
@@ -58,7 +58,7 @@ test(
             'tools/lint/package.json': '{"name":"lint","private":true,"devDependencies":{"eslint":"9.39.5"}}\n',
         });
         commitAll(sandbox.path);
-        const result = await run(sandbox.path, [...SELECTION_INIT, ...INIT_SELECTION_QUIET]);
+        const result = await run(sandbox.path, [...SELECTION_INIT, ...QUIET_INIT]);
         expect(result.code, result.stdout + result.stderr).toBe(0);
         const output = JSON.parse(result.stdout) as { policy: string; plan: { noLongerRuns: { path: string }[] } };
         const proposed = parse(output.policy) as { scope?: { path: string; kits: string[] }[] };
@@ -86,7 +86,7 @@ test(
                 'package.json': JSON.stringify({ name: 'api', private: true, type: 'module', dependencies }),
             });
             commitAll(sandbox.path);
-            const result = await run(sandbox.path, [...SELECTION_INIT, ...INIT_SELECTION_QUIET]);
+            const result = await run(sandbox.path, [...SELECTION_INIT, ...QUIET_INIT]);
             expect(result.code, result.stdout + result.stderr).toBe(0);
             const output = JSON.parse(result.stdout) as { policy: string };
             return parse(output.policy) as {

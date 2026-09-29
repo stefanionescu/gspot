@@ -11,6 +11,7 @@ import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { parseOutput } from '#cli/execution/output/parse.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { randomUUID, generateKeyPairSync } from 'node:crypto';
 import { trivyImage } from '#cli/checks/docker/image-scan.ts';
 import { containing, textContaining } from '#tests/support/expectations.ts';
@@ -38,7 +39,7 @@ describe.if(Bun.which('docker') !== null && process.platform !== 'win32')('with 
             format: 'pem',
         });
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\nkits = ["docker"]\n',
+            'gspot.toml': policyOf(['docker']),
             'compose.yaml': `services: {app: {image: "${tags[0]}"}}\n`,
             'payload.pem': privateKey,
             '.gspot/config/trivy.yaml': 'severity: [HIGH, CRITICAL]\n',
@@ -75,8 +76,11 @@ test('native Markdown JSON preserves filename delimiters, positions, and fixabil
     await using sandbox = await testdir();
     const paths = ['space name.md', ...(process.platform === 'win32' ? [] : ['name:5.md', 'line\nbreak.md'])];
     await createFileTree(sandbox.path, {
-        'gspot.toml':
-            'version = 1\nlevel = "all"\nkits = ["markdown"]\n[tools.markdownlint.rules]\ndefault = false\nMD009 = true\nMD033 = true\nMD041 = true\n',
+        'gspot.toml': policyOf(
+            ['markdown'],
+            '[tools.markdownlint.rules]\ndefault = false\nMD009 = true\nMD033 = true\nMD041 = true\n',
+            'all',
+        ),
         ...Object.fromEntries(paths.map((path) => [path, 'café <span>Content</span>   \n'])),
     });
     const session = await openSession(sandbox.path);

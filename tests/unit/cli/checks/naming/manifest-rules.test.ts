@@ -2,14 +2,17 @@
 import { test, expect } from 'bun:test';
 import { kitManifests } from '#cli/kits/manifests.ts';
 import { parsePolicyText } from '#cli/policy/read.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { exposedSettings } from '#cli/policy/setting-surface.ts';
 import { rulesFor, effectivePolicy } from '#cli/checks/naming/policy.ts';
 
 const manifests = kitManifests();
 const express = manifests.get('express')!;
 test('a selected framework adds its rules after the shipped ones and before the repository rules', () => {
-    const text =
-        'version = 1\nkits = ["typescript", "express"]\n[[naming.rules]]\npaths = ["src/hooks/**"]\ncategories = ["functions"]\nstructural_prefix = "^use(?=[A-Z])"\nreason = "A hook starts with use."\n';
+    const text = policyOf(
+        ['typescript', 'express'],
+        '[[naming.rules]]\npaths = ["src/hooks/**"]\ncategories = ["functions"]\nstructural_prefix = "^use(?=[A-Z])"\nreason = "A hook starts with use."\n',
+    );
     const policy = parsePolicyText(text, 'gspot.toml');
     const effective = effectivePolicy(exposedSettings([]), policy, '', [express]);
     const callback = rulesFor(effective, {
@@ -47,7 +50,7 @@ test('a selected framework adds its rules after the shipped ones and before the 
 });
 
 test('an unselected framework contributes nothing', () => {
-    const policy = parsePolicyText('version = 1\nkits = ["typescript"]\n', 'gspot.toml');
+    const policy = parsePolicyText(policyOf(['typescript']), 'gspot.toml');
     const effective = effectivePolicy(exposedSettings([]), policy, '', []);
     const rules = rulesFor(effective, {
         file: 'src/routes/auth.ts',

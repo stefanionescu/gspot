@@ -7,6 +7,7 @@ import type { EngineInput } from '#cli/types/checks.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { licensesPackages } from '#cli/checks/licenses.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { venvExecutable } from '#tests/support/cli/platforms.ts';
 import { containing, textContaining } from '#tests/support/expectations.ts';
 
@@ -32,7 +33,7 @@ test('native Python license scanning ignores project scanner exclusions and veri
     await using sandbox = await testdir();
     const root = sandbox.path;
     await createFileTree(root, {
-        'gspot.toml': 'version = 1\nlevel = "all"\nkits = ["licenses"]\n',
+        'gspot.toml': policyOf(['licenses'], '', 'all'),
         'pyproject.toml':
             '[project]\nname = "fixture"\nversion = "0.0.0"\n[tool.pip-licenses]\nignore-packages = ["licensed-example"]\n',
     });
@@ -65,14 +66,18 @@ test('native Python license scanning ignores project scanner exclusions and veri
     ]);
     await Bun.write(
         join(root, 'gspot.toml'),
-        'version = 1\nlevel = "all"\nkits = ["licenses"]\n[[tools.licenses.packages_allowed]]\npackage = "Licensed._Example@1.0.0"\nlicense = "GPL-3.0-only"\nreason = "Fixture tests exact reported license consent."\n',
+        policyOf(
+            ['licenses'],
+            '[[tools.licenses.packages_allowed]]\npackage = "Licensed._Example@1.0.0"\nlicense = "GPL-3.0-only"\nreason = "Fixture tests exact reported license consent."\n',
+            'all',
+        ),
     );
     expect(await licensesPackages(await input(root))).toStrictEqual([]);
     await Bun.write(metadata, `Metadata-Version: 2.1\nName: licensed-example\nVersion: 1.0.0\nLicense: MIT\n`);
     expect(await licensesPackages(await input(root))).toStrictEqual([
         containing({ rule: 'license', message: textContaining('exception no longer holds') }),
     ]);
-    await Bun.write(join(root, 'gspot.toml'), 'version = 1\nlevel = "all"\nkits = ["licenses"]\n');
+    await Bun.write(join(root, 'gspot.toml'), policyOf(['licenses'], '', 'all'));
     expect(await licensesPackages(await input(root))).toStrictEqual([]);
     await Bun.write(metadata, `Metadata-Version: 2.1\nName: licensed-example\nVersion: 1.0.0\nLicense: MIT-0\n`);
     expect(await licensesPackages(await input(root))).toStrictEqual([
@@ -80,7 +85,7 @@ test('native Python license scanning ignores project scanner exclusions and veri
     ]);
     await Bun.write(
         join(root, 'gspot.toml'),
-        'version = 1\nlevel = "all"\nkits = ["licenses"]\n[tools.licenses]\nlicenses_allowed = ["MIT-0"]\n',
+        policyOf(['licenses'], '[tools.licenses]\nlicenses_allowed = ["MIT-0"]\n', 'all'),
     );
     expect(await licensesPackages(await input(root))).toStrictEqual([]);
 });

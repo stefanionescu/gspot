@@ -5,6 +5,7 @@ import { run } from '#cli/platform/spawn.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { openSession } from '#cli/execution/session.ts';
 import { hookStatus } from '#cli/lifecycle/hooks/status.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { applyCommand } from '#cli/commands/apply/command.ts';
 import { hookLocation } from '#cli/repository/hook-location.ts';
 import type { Session } from '#cli/types/execution/execution.ts';
@@ -13,7 +14,7 @@ import { environmentVariables } from '#cli/platform/environment.ts';
 import { installNativeHooks } from '#cli/lifecycle/hooks/managers.ts';
 import type { HookLocation } from '#cli/types/repository/repository.ts';
 import { plantLauncher, venvExecutable } from '#tests/support/cli/platforms.ts';
-import { PRE_COMMIT_POLICY, SIMPLE_GIT_HOOKS_POLICY } from '#tests/config/integration/tools/hooks.ts';
+import { PRE_COMMIT_POLICY, SIMPLE_GIT_HOOKS_POLICY } from '#tests/inputs/integration/tools/hooks.ts';
 
 /**
  * Read hook readiness and diagnostics from a fresh sandbox session.
@@ -129,7 +130,7 @@ export async function preparePreCommit(
 export async function prepareHusky(root: string, top: string, kind: string): Promise<PrepareHuskyResult> {
     const authored = 'cat > authored-input\nprintf "%s\\n" "$@" > authored-args\nexit 0\n';
     await createFileTree(root, {
-        'gspot.toml': 'version = 1\nkits = []\n[guides]\ninstall = false\n[hooks]\ntool = "husky"\n',
+        'gspot.toml': policyOf([], '[guides]\ninstall = false\n[hooks]\ntool = "husky"\n'),
         'package.json': '{"private":true,"devDependencies":{"husky":"9.1.7"}}\n',
         '.husky/pre-commit': 'printf retained > authored-commit\nexit 0\n',
         '.husky/pre-push': authored,

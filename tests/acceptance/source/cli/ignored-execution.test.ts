@@ -5,8 +5,9 @@ import * as processes from '#cli/platform/spawn.ts';
 import { run } from '#tests/support/cli/command.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { parseProfile } from '#cli/policy/profiles/read.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { exportedProfile } from '#cli/policy/profiles/export.ts';
-import { ESLINT_OVERRIDE_POLICY } from '#tests/config/acceptance/source/cli/cli.ts';
+import { ESLINT_OVERRIDE_POLICY } from '#tests/inputs/acceptance/source/cli/cli.ts';
 import { existsSync, unlinkSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
 
 const MODULES = join(import.meta.dir, '../../../../node_modules');
@@ -22,7 +23,10 @@ test('a global ignore stops a repository check and its correction command until 
     await using directory = await testdir();
     const command = ['bash', '-c', 'printf executed > read.txt; exit 1'];
     const fix = ['bash', '-c', 'printf corrected > corrected.txt'];
-    const policy = `version = 1\nkits = []\n[guides]\ninstall = false\n[[check]]\nname = "project/quality"\ncommand = ${JSON.stringify(command)}\nfix_command = ${JSON.stringify(fix)}\nfix_order = "codemod"\npaths = ["entry.sh"]\nstage = "commit"\n`;
+    const policy = policyOf(
+        [],
+        `[guides]\ninstall = false\n[[check]]\nname = "project/quality"\ncommand = ${JSON.stringify(command)}\nfix_command = ${JSON.stringify(fix)}\nfix_order = "codemod"\npaths = ["entry.sh"]\nstage = "commit"\n`,
+    );
     await createFileTree(directory.path, { 'gspot.toml': policy, 'entry.sh': 'echo example\n' });
     const args = ['check', '--only', 'project/quality', '--no-cache', '--json'];
     const before = await run(directory.path, args);
@@ -49,8 +53,10 @@ test('a global ignore stops a repository check and its correction command until 
 
 test('generated ESLint applies explicit ignores after enabled rule settings', async () => {
     await using directory = await testdir();
-    const policy =
-        'version = 1\nkits = ["javascript"]\n[guides]\ninstall = false\n[tools.eslint.rules]\n"no-console" = "error"\n';
+    const policy = policyOf(
+        ['javascript'],
+        '[guides]\ninstall = false\n[tools.eslint.rules]\n"no-console" = "error"\n',
+    );
     await createFileTree(directory.path, {
         'gspot.toml': policy,
         'package.json': '{"private":true,"type":"module"}\n',
@@ -142,23 +148,28 @@ test('profile export preserves ESLint rules and omits repository-specific overri
     expect(exported.leftOut).toContain('tools.eslint.overrides[0]: names a repository path');
 });
 
+// A check that records what it saw and passes corrected inputs, and a fixer that corrects them.
+const QUALITY_COMMAND = [
+    'node',
+    '-e',
+    String.raw`const fs = require("node:fs"); const paths = process.argv.slice(1); fs.appendFileSync("checked.txt", JSON.stringify(paths) + "\n"); process.exit(paths.some(path => fs.readFileSync(path, "utf8") !== "corrected\n") ? 1 : 0);`,
+    '--',
+    '{files}',
+];
+const QUALITY_FIX = [
+    'node',
+    '-e',
+    String.raw`const fs = require("node:fs"); const paths = process.argv.slice(1); fs.appendFileSync("fixed.txt", JSON.stringify(paths) + "\n"); for (const path of paths) fs.writeFileSync(path, "corrected\n");`,
+    '--',
+    '{files}',
+];
+
 test('path-specific ignores prevent checker and fixer execution and report an entirely ignored selection', async () => {
     await using directory = await testdir();
-    const command = [
-        'node',
-        '-e',
-        String.raw`const fs = require("node:fs"); const paths = process.argv.slice(1); fs.appendFileSync("checked.txt", JSON.stringify(paths) + "\n"); process.exit(paths.some(path => fs.readFileSync(path, "utf8") !== "corrected\n") ? 1 : 0);`,
-        '--',
-        '{files}',
-    ];
-    const fix = [
-        'node',
-        '-e',
-        String.raw`const fs = require("node:fs"); const paths = process.argv.slice(1); fs.appendFileSync("fixed.txt", JSON.stringify(paths) + "\n"); for (const path of paths) fs.writeFileSync(path, "corrected\n");`,
-        '--',
-        '{files}',
-    ];
-    const policy = `version = 1\nkits = []\n[guides]\ninstall = false\n[[check]]\nname = "project/quality"\ncommand = ${JSON.stringify(command)}\nfix_command = ${JSON.stringify(fix)}\nfix_order = "codemod"\npaths = ["inputs/**"]\nstage = "commit"\n[[ignore]]\ncheck = "project/quality"\npaths = ["inputs/skip*", "!inputs/skip-keep.txt"]\n`;
+    const policy = policyOf(
+        [],
+        `[guides]\ninstall = false\n[[check]]\nname = "project/quality"\ncommand = ${JSON.stringify(QUALITY_COMMAND)}\nfix_command = ${JSON.stringify(QUALITY_FIX)}\nfix_order = "codemod"\npaths = ["inputs/**"]\nstage = "commit"\n[[ignore]]\ncheck = "project/quality"\npaths = ["inputs/skip*", "!inputs/skip-keep.txt"]\n`,
+    );
     await createFileTree(directory.path, {
         'gspot.toml': policy,
         'inputs/regular.txt': 'defect\n',

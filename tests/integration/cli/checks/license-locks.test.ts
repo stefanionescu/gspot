@@ -3,6 +3,7 @@ import { createFileTree, testdir } from 'testdirs';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { reportSchema } from '#cli/execution/report.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { run as runCli } from '#tests/support/cli/command.ts';
 import { lockedPackages } from '#cli/repository/locked-packages.ts';
@@ -26,7 +27,7 @@ const LOCKS: [string, string][] = [
 ];
 
 const policy = (version: string): string =>
-    `version = 1\nkits = ["structure", "licenses"]\n[[tools.licenses.packages_allowed]]\npackage = "example@${version}"\nlicense = "BSD"\nreason = "Reviewed the installed license."\n`;
+    policyOf(['structure', 'licenses'], `[[tools.licenses.packages_allowed]]\npackage = "example@${version}"\nlicense = "BSD"\nreason = "Reviewed the installed license."\n`);
 
 test.each(LOCKS)('license exceptions must match a resolved version in %s', async (filename, lock) => {
     await using repository = await testdir();
@@ -68,7 +69,7 @@ test('scoped license exceptions use ancestor workspace locks but not sibling or 
     const lock = 'version = 1\n[[package]]\nname = "Example_Package"\nversion = "1.2.3"\n';
     await createFileTree(root, {
         'gspot.toml':
-            'version = 1\nkits = ["structure", "licenses"]\n[[scope]]\npath = "app"\n[[scope.tools.licenses.packages_allowed]]\npackage = "example-package@1.2.3"\nlicense = "BSD"\nreason = "Reviewed dependency metadata."\n',
+            policyOf(['structure', 'licenses'], '[[scope]]\npath = "app"\n[[scope.tools.licenses.packages_allowed]]\npackage = "example-package@1.2.3"\nlicense = "BSD"\nreason = "Reviewed dependency metadata."\n'),
         'app/source.py': 'selected = True\n',
         'sibling/uv.lock': lock,
         '.gspot/uv.lock': lock,

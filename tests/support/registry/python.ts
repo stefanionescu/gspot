@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { run } from '#cli/platform/spawn.ts';
-import { RUFF_WHEEL } from '#tests/config/integration/tools/python.ts';
+import { RUFF_WHEEL } from '#tests/inputs/integration/tools/python.ts';
 
 /** Serves a wheel containing the pinned Ruff executable and a relocatable console entry point. */
 export async function createPythonRegistry(

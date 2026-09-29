@@ -4,57 +4,101 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { run } from '#tests/support/cli/command.ts';
-import type { FindingCase } from '#tests/types/cli.ts';
 import { reportSchema } from '#cli/execution/report.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { git, commitAll } from '#tests/support/cli/git.ts';
-import { script, runPlanted } from '#tests/support/cli/planted.ts';
+import { script, plantedCases } from '#tests/support/cli/planted.ts';
 import { containing, textContaining } from '#tests/support/expectations.ts';
-import { WORKFLOW_HEAD } from '#tests/config/acceptance/source/kits/kits.ts';
+import { WORKFLOW_HEAD } from '#tests/inputs/acceptance/source/kits/kits.ts';
 import { install, toolsPath, installAtLevel } from '#tests/support/cli/tools.ts';
-import { CONFIGS_INIT } from '#tests/config/acceptance/source/kits/init-arguments.ts';
+import { CONFIGS_INIT } from '#tests/inputs/acceptance/source/kits/init-arguments.ts';
 
-const CASES: (FindingCase & { corrected: Record<string, string> })[] = [
+plantedCases(
+    'the configs configuration',
     {
-        check: 'files/toml-format',
-        corrected: { 'settings/layout.toml': 'a = 1\nb = 2\n' },
-        files: { 'settings/layout.toml': 'a    =     1\nb=2\n' },
-        expected: {
-            file: 'settings/layout.toml',
-            message: 'The file is not formatted with the configured TOML settings.',
+        kits: ['files'],
+        modules: false,
+        without: [],
+        init: ['--no-runner', '--no-ci', '--no-guides', '--no-install', '--no-hooks'],
+        tools: ['taplo', 'yamllint', 'actionlint', 'zizmor', 'dotenv-linter'],
+        files: { 'scripts/a.sh': script, 'settings/clean.toml': 'a = 1\n' },
+    },
+    [
+        {
+            check: 'files/toml-format',
+            files: { 'settings/layout.toml': 'a    =     1\nb=2\n' },
+            expected: {
+                file: 'settings/layout.toml',
+                message: 'The file is not formatted with the configured TOML settings.',
+            },
+            corrected: { files: { 'settings/layout.toml': 'a = 1\nb = 2\n' } },
         },
-    },
-    {
-        check: 'files/actions',
-        corrected: { '.github/workflows/broken.yml': `${WORKFLOW_HEAD}            - run: echo corrected\n` },
-        files: { '.github/workflows/broken.yml': `${WORKFLOW_HEAD}            - run: echo "\${{ nothing.here }}"\n` },
-        expected: { file: '.github/workflows/broken.yml', rule: 'expression', line: 9, column: 30 },
-    },
-    {
-        check: 'files/actions-security',
-        corrected: { '.github/workflows/unpinned.yml': `${WORKFLOW_HEAD}            - run: echo corrected\n` },
-        files: {
-            '.github/workflows/unpinned.yml': `${WORKFLOW_HEAD}            - uses: actions/checkout@v4\n            - run: echo "\${{ github.event.pull_request.title }}"\n`,
+        {
+            check: 'files/actions',
+            files: {
+                '.github/workflows/broken.yml': `${WORKFLOW_HEAD}            - run: echo "\${{ nothing.here }}"\n`,
+            },
+            expected: { file: '.github/workflows/broken.yml', rule: 'expression', line: 9, column: 30 },
+            corrected: {
+                files: { '.github/workflows/broken.yml': `${WORKFLOW_HEAD}            - run: echo corrected\n` },
+            },
         },
-        expected: { file: '.github/workflows/unpinned.yml', rule: 'template-injection', line: 10 },
-    },
-    {
-        check: 'files/dotenv',
-        corrected: { '.env.example': 'PORT=3000\n' },
-        files: { '.env.example': 'PORT=3000\nport=3000\nPORT=4000\n' },
-        expected: { file: '.env.example', rule: 'LowercaseKey', line: 2 },
-    },
-    {
-        check: 'files/xml',
-        corrected: { 'settings/feed.xml': '<feed><entry /></feed>\n' },
-        files: { 'settings/feed.xml': '<feed><entry></feed>\n' },
-        expected: {
-            file: 'settings/feed.xml',
-            line: 1,
-            message: 'parser error : Opening and ending tag mismatch: entry line 1 and feed',
+        {
+            check: 'files/actions-security',
+            files: {
+                '.github/workflows/unpinned.yml': `${WORKFLOW_HEAD}            - uses: actions/checkout@v4\n            - run: echo "\${{ github.event.pull_request.title }}"\n`,
+            },
+            expected: { file: '.github/workflows/unpinned.yml', rule: 'template-injection', line: 10 },
+            corrected: {
+                files: { '.github/workflows/unpinned.yml': `${WORKFLOW_HEAD}            - run: echo corrected\n` },
+            },
         },
+        {
+            check: 'files/dotenv',
+            files: { '.env.example': 'PORT=3000\nport=3000\nPORT=4000\n' },
+            expected: { file: '.env.example', rule: 'LowercaseKey', line: 2 },
+            corrected: { files: { '.env.example': 'PORT=3000\n' } },
+        },
+        {
+            check: 'files/xml',
+            files: { 'settings/feed.xml': '<feed><entry></feed>\n' },
+            expected: {
+                file: 'settings/feed.xml',
+                line: 1,
+                message: 'parser error : Opening and ending tag mismatch: entry line 1 and feed',
+            },
+            corrected: { files: { 'settings/feed.xml': '<feed><entry /></feed>\n' } },
+        },
+        // The plist reader is the macOS plutil.
+        {
+            check: 'files/plist',
+            files: { 'app/Info.plist': '<plist><dict><key>A</key></plist>\n' },
+            expected: { file: 'app/Info.plist' },
+            platforms: ['darwin'],
+            corrected: {
+                files: {
+                    'app/Info.plist':
+                        '<?xml version="1.0"?><plist version="1.0"><dict><key>A</key><string>value</string></dict></plist>\n',
+                },
+            },
+        },
+    ],
+    (planted) => {
+        test(
+            'the JSON check reports through Prettier, and the commit stage keeps schema validation for push',
+            async () => {
+                const { root, environment } = planted();
+                const jsonCheck = await run(root, ['check', '--only', 'files/json'], environment);
+                expect(jsonCheck.stdout).toContain('its findings come from');
+                const checked = await run(root, ['check', '--stage', 'commit', '--json'], environment);
+                const ids = reportSchema.parse(JSON.parse(checked.stdout)).checks.map((check) => check.check);
+                expect(ids).not.toContain('files/schema');
+                expect(ids).toContain('files/toml');
+            },
+            PLANTED_TIMEOUT_MS * 2,
+        );
     },
-];
+);
 
 test(
     'the configs configuration: GitHub initialization writes a workflow accepted by actionlint',
@@ -75,83 +119,6 @@ test(
     },
     PLANTED_TIMEOUT_MS,
 );
-
-test.each(CASES)(
-    'the configs configuration: $check reports the defect in $expected.file and accepts corrected configuration',
-    async (planted) => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, { 'scripts/a.sh': script, 'settings/clean.toml': 'a = 1\n' });
-        commitAll(sandbox.path);
-        const environment = {
-            PATH: toolsPath(['taplo', 'yamllint', 'actionlint', 'zizmor', 'dotenv-linter', 'typos', 'ec']),
-        };
-        await install(sandbox.path, [...CONFIGS_INIT, '--no-hooks'], environment);
-        const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
-        expect(selected.code, selected.stdout + selected.stderr).toBe(0);
-        const outcome = await runPlanted(sandbox.path, planted, environment);
-        expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
-        const report = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
-        expect(report.checks).toMatchObject([{ check: planted.check, status: 'fail' }]);
-        expect(report.checks[0]?.findings).toContainEqual(containing({ check: planted.check, ...planted.expected }));
-        await createFileTree(sandbox.path, planted.corrected);
-        const correctedCheck = await run(
-            sandbox.path,
-            ['check', '--only', planted.check, '--no-cache', '--json'],
-            environment,
-        );
-        expect(correctedCheck.code, correctedCheck.stdout + correctedCheck.stderr).toBe(0);
-        expect(reportSchema.parse(JSON.parse(correctedCheck.stdout)).checks).toMatchObject([
-            { check: planted.check, status: 'ok', findings: [] },
-        ]);
-        const jsonCheck = await run(sandbox.path, ['check', '--only', 'files/json'], environment);
-        expect(jsonCheck.stdout).toContain('its findings come from');
-        const checked = await run(sandbox.path, ['check', '--stage', 'commit', '--json'], environment);
-        const record = JSON.parse(checked.stdout) as {
-            checks: { check: string }[];
-        };
-        expect(record.checks.map((check) => check.check)).not.toContain('files/schema');
-        expect(record.checks.map((check) => check.check)).toContain('files/toml');
-    },
-    PLANTED_TIMEOUT_MS * 2,
-);
-
-if (process.platform === 'darwin')
-    test(
-        'the configs configuration: files/plist reports a property list that does not parse',
-        async () => {
-            await using sandbox = await testdir();
-            await createFileTree(sandbox.path, { 'scripts/a.sh': script, 'settings/clean.toml': 'a = 1\n' });
-            commitAll(sandbox.path);
-            const environment = { PATH: toolsPath(['taplo', 'typos', 'ec']) };
-            await install(sandbox.path, [...CONFIGS_INIT, '--no-hooks'], environment);
-            const outcome = await runPlanted(
-                sandbox.path,
-                {
-                    check: 'files/plist',
-                    files: { 'app/Info.plist': '<plist><dict><key>A</key></plist>\n' },
-                },
-                environment,
-            );
-            expect(outcome.code, outcome.stdout).toBe(1);
-            const failed = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
-            expect(failed.checks).toMatchObject([{ check: 'files/plist', status: 'fail' }]);
-            expect(failed.checks[0]!.findings).toContainEqual(containing({ file: 'app/Info.plist' }));
-            await Bun.write(
-                join(sandbox.path, 'app/Info.plist'),
-                '<?xml version="1.0"?><plist version="1.0"><dict><key>A</key><string>value</string></dict></plist>\n',
-            );
-            const correctedCheck = await run(
-                sandbox.path,
-                ['check', '--only', 'files/plist', '--no-cache', '--json'],
-                environment,
-            );
-            expect(correctedCheck.code, correctedCheck.stdout + correctedCheck.stderr).toBe(0);
-            expect(reportSchema.parse(JSON.parse(correctedCheck.stdout)).checks).toMatchObject([
-                { check: 'files/plist', status: 'ok', findings: [] },
-            ]);
-        },
-        PLANTED_TIMEOUT_MS,
-    );
 
 test.each([
     {

@@ -8,11 +8,11 @@ import { run } from '#tests/support/cli/command.ts';
 import type { InitJson } from '#cli/types/commands.ts';
 import { script } from '#tests/support/cli/planted.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { keptMode } from '#tests/support/cli/platforms.ts';
 import { textContaining } from '#tests/support/expectations.ts';
 import { statSync, chmodSync, existsSync, readFileSync } from 'node:fs';
-import { PLAN_INIT } from '#tests/config/acceptance/source/cli/init-replace.ts';
+import { PLAN_INIT } from '#tests/inputs/acceptance/source/cli/init-replace.ts';
 
 test.each(['', 'hooks', '.husky'])(
     'dry-run distinguishes source hooks from configured hooks at %s',

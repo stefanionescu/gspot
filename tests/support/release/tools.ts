@@ -2,7 +2,7 @@
 import { join, delimiter } from 'node:path';
 import { run } from '#cli/platform/spawn.ts';
 import { mkdirSync, writeFileSync } from 'node:fs';
-import { RELEASE_TIMEOUT_MS } from '#tests/config/release.ts';
+import { RELEASE_TIMEOUT_MS } from '#tests/inputs/release.ts';
 import { environment } from '#tests/support/release/packages.ts';
 import type { PublishedRelease, InstalledConsumer } from '#tests/types/release.ts';
 import type { PrepareNativeConsumerResult, PrepareFormatterConsumerResult } from '#tests/types/results.ts';

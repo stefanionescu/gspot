@@ -2,19 +2,20 @@ import { createFileTree } from 'testdirs';
 import { join, delimiter } from 'node:path';
 import { run } from '#cli/platform/spawn.ts';
 import { gitOutput } from '#tests/support/cli/git.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { applyCommand } from '#cli/commands/apply/command.ts';
 import { hookLocation } from '#cli/repository/hook-location.ts';
 import { plantLauncher } from '#tests/support/cli/platforms.ts';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import type { PrepareLefthookResult } from '#tests/types/results.ts';
-import { LEFTHOOK_PUSH_ARGS } from '#tests/config/integration/tools/hooks.ts';
+import { LEFTHOOK_PUSH_ARGS } from '#tests/inputs/integration/tools/hooks.ts';
 
 /** Prepares authored Lefthook configuration and existing Git hooks for native installation. */
 export async function prepareLefthook(root: string, existing: string): Promise<PrepareLefthookResult> {
     await createFileTree(root, {
         'scratch/.keep': '',
-        'gspot.toml': 'version = 1\nkits = []\n[guides]\ninstall = false\n[hooks]\ntool = "lefthook"\n',
+        'gspot.toml': policyOf([], '[guides]\ninstall = false\n[hooks]\ntool = "lefthook"\n'),
         'package.json': '{"private":true,"devDependencies":{"lefthook":"2.0.13"}}\n',
         'hook-settings.yml': 'rc: ./hook-init.sh\n',
         'hook-init.sh': 'export GSPOT_FIXTURE_RC=retained\nprintf "%s" "$GSPOT_FIXTURE_RC" > rc-ran\n',

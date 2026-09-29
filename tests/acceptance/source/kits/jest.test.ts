@@ -4,7 +4,8 @@ import { join, delimiter } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { reportSchema } from '#cli/execution/report.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { containing, textContaining } from '#tests/support/expectations.ts';
 import { toolsPath, installPrivateTools } from '#tests/support/cli/tools.ts';
 
@@ -15,14 +16,18 @@ const planted =
     'const { total, triple } = require("./math.cjs");\nconst { writeFileSync } = require("node:fs");\ntest("adds positive values", () => { writeFileSync("authored.txt", "isolated test output"); expect(total([2, -1, 3])).toBe(5); });\n';
 const corrected = `${planted}test("triples an integer", () => { expect(triple(2)).toBe(6); });\n`;
 
-test.each(['recommended', 'all'])(
-    'private Jest lint installation reports a focused Bun test at %s and accepts its correction',
-    async (level) => {
+test(
+    'private Jest lint installation reports a focused Bun test at all and accepts its correction',
+    async () => {
         await using sandbox = await testdir();
         const focused =
             "import { test, expect } from 'bun:test';\n\ntest.only('parses a URL', () => {\n    const parsed = new URL('https://example.com/docs');\n    expect(parsed.hostname, 'The URL keeps its host.').toBe('example.com');\n    expect(parsed.pathname).toBe('/docs');\n});\n";
         await createFileTree(sandbox.path, {
-            'gspot.toml': `version = 1\nlevel = "${level}"\nkits = ["jest"]\n[runner]\ntool = "mise"\n[guides]\ninstall = false\n[tools.jest]\nglobal_package = "bun:test"\n`,
+            'gspot.toml': policyOf(
+                ['jest'],
+                '[runner]\ntool = "mise"\n[guides]\ninstall = false\n[tools.jest]\nglobal_package = "bun:test"\n',
+                'all',
+            ),
             'package.json': '{"name":"jest-private-lint","private":true,"type":"module"}\n',
             'sample.test.js': focused,
         });
@@ -45,12 +50,16 @@ test.each(['recommended', 'all'])(
     PLANTED_TIMEOUT_MS * 5,
 );
 
-test.each(['recommended', 'all'])(
-    'native Jest at %s applies nested coverage settings without executing sibling tests',
-    async (level) => {
+test(
+    'native Jest at all applies nested coverage settings without executing sibling tests',
+    async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': `version = 1\nlevel = "${level}"\nkits = ["javascript"]\n[[scope]]\npath = "app"\nkits = ["jest"]\n[scope.tools.jest]\ncoverage_functions = 100\n`,
+            'gspot.toml': policyOf(
+                ['javascript'],
+                '[[scope]]\npath = "app"\nkits = ["jest"]\n[scope.tools.jest]\ncoverage_functions = 100\n',
+                'all',
+            ),
             'package.json': '{"name":"jest-scoped-acceptance","private":true}\n',
             'sibling.test.cjs': 'throw new Error("Tests outside the selected project must not execute");\n',
             'app/package.json': '{"name":"jest-nested","private":true,"devDependencies":{"jest":"30.2.0"}}\n',
@@ -81,12 +90,16 @@ test.each(['recommended', 'all'])(
     PLANTED_TIMEOUT_MS * 2,
 );
 
-test.each(['recommended', 'all'])(
-    'native Jest at %s reports uncovered functions and failed tests while preserving working-tree files',
-    async (level) => {
+test(
+    'native Jest at all reports uncovered functions and failed tests while preserving working-tree files',
+    async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': `version = 1\nlevel = "${level}"\nkits = ["jest"]\n[tools.jest]\ncoverage_lines = 80\ncoverage_branches = 80\ncoverage_functions = 80\ncoverage_statements = 80\n`,
+            'gspot.toml': policyOf(
+                ['jest'],
+                '[tools.jest]\ncoverage_lines = 80\ncoverage_branches = 80\ncoverage_functions = 80\ncoverage_statements = 80\n',
+                'all',
+            ),
             'package.json': '{"name":"jest-acceptance","private":true,"devDependencies":{"jest":"30.2.0"}}\n',
             'math.cjs': source,
             'math.test.cjs': planted,

@@ -4,14 +4,15 @@ import { test, expect } from 'bun:test';
 import { writeFileSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { textContaining } from '#tests/support/expectations.ts';
 import type { CommandFailureJson } from '#cli/types/commands.ts';
 
 test.each([
-    { scope: 'root', policy: 'version = 1\nkits = ["bas"]\n', line: 2 },
+    { scope: 'root', policy: policyOf(['bas']), line: 2 },
     {
         scope: 'nested',
-        policy: 'version = 1\nkits = []\n[[scope]]\npath = "api"\nkits = ["bas"]\n',
+        policy: policyOf([], '[[scope]]\npath = "api"\nkits = ["bas"]\n'),
         line: 5,
     },
 ])(
@@ -31,8 +32,10 @@ test.each([
 );
 
 test('a nested unknown setting is a finding at its line, and its correction clears it', async () => {
-    const policy =
-        'version = 1\nkits = ["bash"]\n[guides]\ninstall = false\n[[scope]]\npath = "api"\n[scope.limits]\nfile_linse = 200\n';
+    const policy = policyOf(
+        ['bash'],
+        '[guides]\ninstall = false\n[[scope]]\npath = "api"\n[scope.limits]\nfile_linse = 200\n',
+    );
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': policy, 'api/source.sh': 'echo example\n' });
     const invalid = await run(sandbox.path, ['check', '--only', 'bash/syntax', '--no-cache', '--json']);
@@ -45,8 +48,10 @@ test('a nested unknown setting is a finding at its line, and its correction clea
 });
 
 test('a loosening without a reason is a finding of integrity/policy, and the rest of the policy runs', async () => {
-    const policy =
-        'version = 1\nkits = ["bash"]\nrequire_reasons = true\n[guides]\ninstall = false\n[limits]\nfile_lines = 1000\n';
+    const policy = policyOf(
+        ['bash'],
+        'require_reasons = true\n[guides]\ninstall = false\n[limits]\nfile_lines = 1000\n',
+    );
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': policy, 'source.sh': 'echo example\n' });
     const checked = await run(sandbox.path, ['check', '--only', 'bash/syntax', '--no-cache', '--json']);

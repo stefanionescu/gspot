@@ -6,6 +6,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { reportSchema } from '#cli/execution/report.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
 
 const { version: GSPOT_VERSION } = packageManifest;
@@ -83,7 +84,10 @@ test.each(['{ broken', '{}', ''])(
         await using sandbox = await testdir();
         const program = `process.stdout.write(${JSON.stringify(output)})`;
         await createFileTree(sandbox.path, {
-            'gspot.toml': `version = 1\nkits = []\n[[check]]\nname = "sandbox/json"\ncommand = ${JSON.stringify([process.execPath, '-e', program])}\npaths = ["source.txt"]\nstage = "commit"\n[check.output]\nformat = "json"\n`,
+            'gspot.toml': policyOf(
+                [],
+                `[[check]]\nname = "sandbox/json"\ncommand = ${JSON.stringify([process.execPath, '-e', program])}\npaths = ["source.txt"]\nstage = "commit"\n[check.output]\nformat = "json"\n`,
+            ),
             'source.txt': 'original',
             '.gspot/version': GSPOT_VERSION + '\n',
         });

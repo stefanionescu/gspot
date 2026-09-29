@@ -2,6 +2,7 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { commitPolicy } from '#cli/commands/policy.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { writePolicy, preparePolicy } from '#cli/lifecycle/policy.ts';
 import { statSync, chmodSync, existsSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
 
@@ -233,7 +234,7 @@ test('a prepared policy edit refuses stale bytes and accepts a fresh plan', asyn
 test('a policy command evaluates its mutation once before applying the prepared result', async () => {
     await using sandbox = await testdir();
     const path = join(sandbox.path, 'gspot.toml');
-    writeFileSync(path, 'version = 1\nkits = []\n[guides]\ninstall = false\n');
+    writeFileSync(path, policyOf([], '[guides]\ninstall = false\n'));
     let evaluations = 0;
     const result = await commitPolicy(
         sandbox.path,

@@ -10,10 +10,11 @@ import { initArgs } from '#tests/support/cli/init.ts';
 import type { EngineInput } from '#cli/types/checks.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { install, toolsPath } from '#tests/support/cli/tools.ts';
 import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
 import type { NextjsRead } from '#tests/types/integration/cli/checks.ts';
-import { NEXT_PAGE, NEXT_CONFIG, NEXT_LAYOUT } from '#tests/config/cli.ts';
+import { NEXT_PAGE, NEXT_CONFIG, NEXT_LAYOUT } from '#tests/inputs/cli.ts';
 import { chmodSync, mkdirSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
 
 /** init selecting nextjs without the recommendations the tests leave out. */
@@ -68,7 +69,7 @@ export async function installedNextProject(): Promise<{
 export async function prepareNextjsBuild(root: string, scope: string, check: string): Promise<EngineInput> {
     const scopeTable = scope === '' ? '' : `[[scope]]\npath = "${scope}"\n`;
     await createFileTree(root, {
-        'gspot.toml': `version = 1\nkits = ["nextjs"]\n${scopeTable}`,
+        'gspot.toml': policyOf(['nextjs'], scopeTable),
         [join(scope, 'package.json')]: '{"private":true,"dependencies":{"next":"16.3.5"}}\n',
         [join(scope, 'tsconfig.json')]: '{"compilerOptions":{"strict":true}}\n',
         [join(scope, 'next-env.d.ts')]: '// Authored type declaration\n',

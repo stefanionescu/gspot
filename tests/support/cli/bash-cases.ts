@@ -1,6 +1,6 @@
 // The planted Bash scripts of the bash configuration tests: one defect per check, each with a corrected script.
 import type { FindingCase } from '#tests/types/cli.ts';
-import { HEAD, NESTED, BASH_CASES_MAIN } from '#tests/config/cli.ts';
+import { HEAD, NESTED, BASH_CASES_MAIN } from '#tests/inputs/cli.ts';
 
 const BRANCHES = Array.from(
     { length: 12 },

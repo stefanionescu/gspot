@@ -3,8 +3,9 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { chmodSync, existsSync, writeFileSync } from 'node:fs';
-import { toolShipsHere } from '#tests/support/cli/platforms.ts';
+import { onPosix, toolShipsHere } from '#tests/support/cli/platforms.ts';
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the complexity limit.
 const versionScript = (version: string, slow: boolean): string => `#!${process.execPath}
@@ -20,8 +21,7 @@ if (toolShipsHere('ansible-lint'))
             const executable = join(sandbox.path, '.gspot/.venv/bin/ansible-lint');
             const version = failure === 'outdated' ? '23.0.0' : '26.8.0';
             await createFileTree(sandbox.path, {
-                'gspot.toml':
-                    'version = 1\nlevel = "all"\nkits = ["ansible", "structure"]\n[limits]\ntool_seconds = 1\n',
+                'gspot.toml': policyOf(['ansible', 'structure'], '[limits]\ntool_seconds = 1\n', 'all'),
                 'deploy/ansible.cfg': '[defaults]\n',
                 'deploy/site.yml': '---\n- hosts: all\n  tasks: []\n',
                 '.gspot/.venv/bin/ansible-lint': versionScript(version, failure !== 'outdated'),
@@ -75,7 +75,7 @@ if (toolShipsHere('ansible-lint'))
     test('an adapter reads a changed executable version on the next command instead of reusing its old success', async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\nlevel = "all"\nkits = ["ansible"]\n',
+            'gspot.toml': policyOf(['ansible'], '', 'all'),
             '.gitignore': '.gspot/\n.venv/\n',
             'ansible.cfg': '[defaults]\n',
             'site.yml': '---\n- hosts: all\n  tasks: []\n',
@@ -100,12 +100,15 @@ if (toolShipsHere('ansible-lint'))
 const exitScript = (failed: boolean): string => `#!${process.execPath}\nprocess.exitCode = ${failed ? '1' : '0'};\n`;
 
 // Windows keeps no permission bits to read back.
-if (process.platform !== 'win32')
+if (onPosix)
     test('cached results read executable replacement and permissions in a reused session', async () => {
         await using sandbox = await testdir();
         const executable = join(sandbox.path, 'checker');
         await createFileTree(sandbox.path, {
-            'gspot.toml': `version = 1\nkits = []\n[[check]]\nname = "project/cache"\nstage = "commit"\npaths = ["source.txt"]\ninputs = ["source.txt"]\ncommand = ${JSON.stringify([executable])}\n`,
+            'gspot.toml': policyOf(
+                [],
+                `[[check]]\nname = "project/cache"\nstage = "commit"\npaths = ["source.txt"]\ninputs = ["source.txt"]\ncommand = ${JSON.stringify([executable])}\n`,
+            ),
             'source.txt': 'input\n',
             checker: exitScript(false),
         });

@@ -6,13 +6,14 @@ import { emitAll } from '#cli/generation/outputs.ts';
 import type { EngineInput } from '#cli/types/checks.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { requiredRules } from '#cli/checks/typescript/required-rules.ts';
 import { mkdirSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
 
 test('required ESLint rules inspect later file overrides and accept their correction', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nlevel = "all"\nkits = ["javascript"]\n',
+        'gspot.toml': policyOf(['javascript'], '', 'all'),
         'package.json': '{"private":true,"type":"module"}\n',
         'a.js': 'export const first = 1;\n',
         'z.js': 'export const last = 2;\n',

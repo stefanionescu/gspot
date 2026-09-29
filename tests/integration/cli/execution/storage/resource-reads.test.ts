@@ -4,6 +4,7 @@ import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 
 test.each([
     ['xcode/xcstrings', 'App/Localizable.xcstrings', '{"sourceLanguage":"en","strings":{}}\n'],
@@ -17,7 +18,7 @@ test.each([
     async (check, path, content) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\nkits = ["xcode"]\n',
+            'gspot.toml': policyOf(['xcode']),
             [path]: content,
             'App/Assets.xcassets/Logo.imageset/logo.png': new Uint8Array([0, 1, 2]),
             'App/Home.swift': 'let logo = Image("Logo")\n',
@@ -58,7 +59,7 @@ test('a denied asset existence read is an execution error and a genuinely missin
     const image = 'App/Assets.xcassets/Logo.imageset/logo.png';
     const content = '{"images":[{"filename":"logo.png"}]}\n';
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nkits = ["xcode"]\n',
+        'gspot.toml': policyOf(['xcode']),
         [assetManifest]: content,
         [image]: new Uint8Array([0, 1, 2]),
         'App/Home.swift': 'let logo = Image("Logo")\n',

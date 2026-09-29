@@ -2,13 +2,14 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { containingAll } from '#tests/support/expectations.ts';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import type { CoverageReport } from '#cli/types/execution/execution.ts';
 
 test('doctor and list name unsupported endings and retain different coverage within one ending', async () => {
     await using directory = await testdir();
-    const policy = 'version = 1\nlevel = "all"\nkits = ["bash"]\n';
+    const policy = policyOf(['bash'], '', 'all');
     await createFileTree(directory.path, {
         'gspot.toml': `${policy}\n[[ignore]]\ncheck = "bash/syntax"\npaths = ["excluded.sh"]\nreason = "The fixture exercises differing coverage within one ending."\n`,
         'entry.sh': 'echo example\n',
@@ -39,8 +40,10 @@ test('doctor and list name unsupported endings and retain different coverage wit
 
 test('list shows selected policy states, detected kits, and setting values without writing', async () => {
     await using directory = await testdir();
-    const policy =
-        'version = 1\nkits = ["bash", "nextjs"]\n[[ignore]]\ncheck = "bash/syntax"\nreason = "Review this separately."\n';
+    const policy = policyOf(
+        ['bash', 'nextjs'],
+        '[[ignore]]\ncheck = "bash/syntax"\nreason = "Review this separately."\n',
+    );
     await createFileTree(directory.path, {
         'gspot.toml': policy,
         'entry.sh': 'echo example\n',

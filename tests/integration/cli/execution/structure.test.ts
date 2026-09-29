@@ -5,12 +5,17 @@ import { testdir, createFileTree } from 'testdirs';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { onPosix } from '#tests/support/cli/platforms.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 
 test('folder checks count code files and preserve allowed and nested directories', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml':
-            'version = 1\nlevel = "all"\nkits = ["typescript"]\n[structure]\nsingle_file_folder_allowed = [{ paths = ["allowed/**"], reason = "Required entry directory." }]\n',
+        'gspot.toml': policyOf(
+            ['typescript'],
+            '[structure]\nsingle_file_folder_allowed = [{ paths = ["allowed/**"], reason = "Required entry directory." }]\n',
+            'all',
+        ),
         'lone/only.ts': '',
         'typed/one.ts': '',
         'typed/one.d.ts': '',
@@ -43,7 +48,7 @@ test('folder checks count code files and preserve allowed and nested directories
 });
 
 test('prefix checks group files and directories once and honor allowances and the threshold', async () => {
-    const policy = 'version = 1\nlevel = "all"\nkits = ["typescript"]\n';
+    const policy = policyOf(['typescript'], '', 'all');
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': policy,
@@ -114,7 +119,7 @@ test.each([
     const list = `cards/asset-list.${extension}`;
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': `version = 1\nlevel = "all"\nkits = ["${configuration}", "${language}", "structure"]\n`,
+        'gspot.toml': policyOf([configuration, language, 'structure'], '', 'all'),
         [lone]: '',
         [card]: '',
         [list]: '',
@@ -141,12 +146,12 @@ test.each([
     expect(corrected.report.exitCode).toBe(0);
 });
 
-if (process.platform !== 'win32')
+if (onPosix)
     test('prefix groups remain distinct when directory and prefix contain newlines', async () => {
         await using sandbox = await testdir();
         const paths = ['a\nb/c-one.ts', 'a\nb/c-two.ts', 'a/b\nc-one.ts', 'a/b\nc-two.ts'];
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\nlevel = "all"\nkits = ["typescript"]\n',
+            'gspot.toml': policyOf(['typescript'], '', 'all'),
             ...Object.fromEntries(paths.map((path) => [path, 'export const value = 1;\n'])),
         });
         commitAll(sandbox.path);
@@ -182,7 +187,11 @@ test.each([
     const prefix = scope === '' ? '' : `${scope}/`;
     const scopePolicy = scope === '' ? '' : `\n[[scope]]\npath = "${scope}"\nkits = []\n`;
     await createFileTree(sandbox.path, {
-        'gspot.toml': `version = 1\nlevel = "all"\nkits = ["${configuration}", "typescript", "naming"]\n[tools.${configuration}]\nharness_directory = "${harness}"\n${scopePolicy}`,
+        'gspot.toml': policyOf(
+            [configuration, 'typescript', 'naming'],
+            `[tools.${configuration}]\nharness_directory = "${harness}"\n${scopePolicy}`,
+            'all',
+        ),
         [`${prefix}${harness}/startup.ts`]: '',
         [`${prefix}app/support/startup.ts`]: '',
     });
@@ -210,7 +219,11 @@ test.each(['recommended', 'all'])('structural checks classify output directories
         ]),
     );
     await createFileTree(sandbox.path, {
-        'gspot.toml': `version = 1\nlevel = "${level}"\nkits = ["typescript"]\n[[generated]]\npaths = ["emitted/**"]\nreason = "The compiler owns emitted files."\n`,
+        'gspot.toml': policyOf(
+            ['typescript'],
+            '[[generated]]\npaths = ["emitted/**"]\nreason = "The compiler owns emitted files."\n',
+            level,
+        ),
         ...authored,
         'emitted/lone/only.ts': '',
         'emitted/cards/asset-one.ts': '',

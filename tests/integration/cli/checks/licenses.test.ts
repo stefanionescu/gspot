@@ -9,6 +9,7 @@ import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { licensesPackages } from '#cli/checks/licenses.ts';
 import { rejection } from '#tests/support/expectations.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { chmodSync, existsSync, unlinkSync, symlinkSync, readFileSync } from 'node:fs';
 
 // The pinned scanner as the private environment holds it: a shell script on POSIX, a command file on Windows.
@@ -38,7 +39,7 @@ async function input(root: string): Promise<EngineInput> {
 test('license analysis refuses absent dependencies instead of reporting a successful scan', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nkits = ["licenses"]\n[tools.licenses]\nlicenses_allowed = ["MIT"]\n',
+        'gspot.toml': policyOf(['licenses'], '[tools.licenses]\nlicenses_allowed = ["MIT"]\n'),
         'package.json': '{"name":"example","private":true}',
     });
     expect(await rejection(licensesPackages(await input(sandbox.path)))).toBe(
@@ -57,7 +58,7 @@ test.each([
     async (_failure, stdout, code) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\nkits = ["licenses"]\n[tools.licenses]\nlicenses_allowed = ["MIT"]\n',
+            'gspot.toml': policyOf(['licenses'], '[tools.licenses]\nlicenses_allowed = ["MIT"]\n'),
             'pyproject.toml': '[project]\nname = "fixture"\nversion = "0.0.0"\n',
             '.venv/installed': 'fixture',
             [SCANNER.path]: SCANNER.body,
@@ -94,7 +95,7 @@ test.each(['missing', 'malformed', 'stale', 'external link'])(
         await using sandbox = await testdir();
         await using outside = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\nkits = ["licenses"]\n[tools.licenses]\nlicenses_allowed = ["MIT"]\n',
+            'gspot.toml': policyOf(['licenses'], '[tools.licenses]\nlicenses_allowed = ["MIT"]\n'),
             'pyproject.toml': '[project]\nname = "fixture"\nversion = "0.0.0"\n',
             '.venv/installed': 'fixture',
             [SCANNER.path]: SCANNER.body,
@@ -138,7 +139,7 @@ test.each(['missing', 'malformed', 'stale', 'external link'])(
 test('combined license scans preserve manifest order, license alternatives, and unknown licenses', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nkits = ["licenses"]\n[tools.licenses]\nlicenses_allowed = ["MIT"]\n',
+        'gspot.toml': policyOf(['licenses'], '[tools.licenses]\nlicenses_allowed = ["MIT"]\n'),
         'package.json': '{"name":"example","private":true}',
         'node_modules/installed': 'fixture',
         'pyproject.toml': '[project]\nname = "fixture"\nversion = "0.0.0"\n',

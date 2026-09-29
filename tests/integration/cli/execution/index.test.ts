@@ -6,6 +6,7 @@ import { runBlocking } from '#cli/platform/spawn.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { indexedPaths } from '#cli/repository/tracked.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Every git step of these tests runs and asserts success the same way.
 function git(root: string, ...args: string[]): void {
@@ -29,7 +30,7 @@ test.each(['integrity/env-files', 'integrity/tracked-dependencies'])(
     async (check) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\nkits = ["secrets", "structure"]\n',
+            'gspot.toml': policyOf(['secrets', 'structure']),
             '.env': 'TOKEN=example\n',
             'node_modules/example/source.js': 'export {};\n',
             'source.ts': 'export {};\n',

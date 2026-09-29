@@ -1,5 +1,6 @@
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { generatedEslint } from '#tests/support/cli/generated/eslint.ts';
 
 test.each([
@@ -10,7 +11,11 @@ test.each([
 ] as const)('generated %s ESLint retains client defects and makes aliases opt-in for %s', async (level, filePath) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': `version = 1\nlevel = "${level}"\nkits = ["javascript"]\n[guides]\ninstall = false\n[[scope]]\npath = "app"\nkits = []\n`,
+        'gspot.toml': policyOf(
+            ['javascript'],
+            '[guides]\ninstall = false\n[[scope]]\npath = "app"\nkits = []\n',
+            level,
+        ),
         'package.json': '{"private":true,"type":"module"}\n',
         'client.js': '',
         'other.js': '',
@@ -53,7 +58,7 @@ test.each(['recommended', 'all'])(
             '/**\n * Measure the input.\n * @param {string} value The input text.\n * @returns {number} The input length.\n */\n';
         const typescript = 'export function measure(value: string): number { return value.length; }\n';
         await createFileTree(sandbox.path, {
-            'gspot.toml': `version = 1\nlevel = "${level}"\nkits = ["typescript"]\n[guides]\ninstall = false\n`,
+            'gspot.toml': policyOf(['typescript'], '[guides]\ninstall = false\n', level),
             'package.json': '{"private":true,"type":"module"}\n',
             'tsconfig.json': '{"compilerOptions":{"strict":true,"noEmit":true},"include":["client.ts"]}\n',
             'client.ts': description + typescript,

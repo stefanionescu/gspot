@@ -2,9 +2,9 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import type { Read } from '#cli/types/platform.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { keptMode } from '#tests/support/cli/platforms.ts';
 import { openOwner } from '#cli/lifecycle/ownership/owner.ts';
 import type { Owner } from '#cli/types/lifecycle/lifecycle.ts';
+import { onPosix, keptMode } from '#tests/support/cli/platforms.ts';
 
 import {
     statSync,
@@ -29,7 +29,7 @@ function expectEditedLinkPreserved(owner: Owner, path: string, absolute: string,
     expect(readlinkSync(absolute)).toBe('../tool/original.sh');
 }
 
-if (process.platform !== 'win32') {
+if (onPosix) {
     test('lifecycle ownership: two replacements restore the first original bytes and mode and preserve unowned files', async () => {
         await using directory = await testdir();
         await createFileTree(directory.path, { '.gspot/authored.txt': 'keep\n' });

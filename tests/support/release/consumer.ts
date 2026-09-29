@@ -4,7 +4,7 @@ import { run } from '#cli/platform/spawn.ts';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { environment } from '#tests/support/release/packages.ts';
 import type { CreateConsumerResult } from '#tests/types/results.ts';
-import { RELEASE_TIMEOUT_MS, OFFLINE_ENVIRONMENT } from '#tests/config/release.ts';
+import { RELEASE_TIMEOUT_MS, OFFLINE_ENVIRONMENT } from '#tests/inputs/release.ts';
 
 // The authored configuration the consumer starts from.
 const EDITORCONFIG = 'root = true\n[*]\nindent_size = 2\n[*.json]\nindent_size = 4\n';

@@ -4,14 +4,17 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { openOwner } from '#cli/lifecycle/ownership/owner.ts';
 
 test('Bun safeguards preserve stricter age and unrelated fields across apply and restoration', async () => {
     await using repository = await testdir();
     const original = '# Authored installation choices\n[install]\nexact = true\nminimumReleaseAge = 1209600\n';
     await createFileTree(repository.path, {
-        'gspot.toml':
-            'version = 1\nkits = ["dependencies"]\n[tools.install]\nsecurity_scanner = "@socketsecurity/bun-security-scanner"\n[guides]\ninstall = false\n',
+        'gspot.toml': policyOf(
+            ['dependencies'],
+            '[tools.install]\nsecurity_scanner = "@socketsecurity/bun-security-scanner"\n[guides]\ninstall = false\n',
+        ),
         'bun.lock': '{"lockfileVersion":1,"workspaces":{},"packages":{}}',
         'bunfig.toml': original,
     });

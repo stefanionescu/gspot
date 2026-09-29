@@ -8,6 +8,7 @@ import { gitOutput } from '#tests/support/cli/git.ts';
 import { parsePolicyText } from '#cli/policy/read.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import type { HookName } from '#cli/types/generation.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import type { HookTool } from '#cli/types/lifecycle/hooks.ts';
 import { HOOK_FILES } from '#cli/config/repository/repository.ts';
 import { nativeHook } from '#cli/lifecycle/hooks/native-hooks.ts';
@@ -43,7 +44,7 @@ test.each(TOOLS.flatMap((tool) => HOOK_FILES.map((name) => [tool, name] as const
         await createFileTree(work.path, generated(tool, name));
         const files = openRoot(work.path);
         try {
-            const policy = parsePolicyText(`version = 1\nkits = []\n[hooks]\ntool = "${tool}"\n`, 'gspot.toml');
+            const policy = parsePolicyText(policyOf([], `[hooks]\ntool = "${tool}"\n`), 'gspot.toml');
             const hook = nativeHook(
                 {
                     hookTool: tool,

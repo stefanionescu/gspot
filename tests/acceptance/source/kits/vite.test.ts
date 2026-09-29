@@ -5,12 +5,12 @@ import * as processes from '#cli/platform/spawn.ts';
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { reportSchema } from '#cli/execution/report.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { installPrivateTools } from '#tests/support/cli/tools.ts';
 import { readdirSync, symlinkSync, writeFileSync } from 'node:fs';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { containing, containingAll } from '#tests/support/expectations.ts';
-import { START, VITE_POLICY } from '#tests/config/acceptance/source/kits/kits.ts';
+import { START, VITE_POLICY } from '#tests/inputs/acceptance/source/kits/kits.ts';
 
 const MODULES = join(import.meta.dir, '../../../../node_modules');
 const VITEST = dirname(Bun.resolveSync('vitest/package.json', import.meta.dir));

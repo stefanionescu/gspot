@@ -4,13 +4,14 @@ import { writeFileSync } from 'node:fs';
 import { createFileTree } from 'testdirs';
 import { gitOutput } from '#tests/support/cli/git.ts';
 import { gspot } from '#tests/support/cli/command.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 
 /** Creates reviewed and broken commits beneath conflicting working-tree bytes for push selection. */
 export async function preparePushRepository(
     root: string,
 ): Promise<{ base: string; reviewed: string; broken: string; command: string[]; zero: string }> {
     await createFileTree(root, {
-        'gspot.toml': 'version = 1\nkits = ["bash"]\n[guides]\ninstall = false\n',
+        'gspot.toml': policyOf(['bash'], '[guides]\ninstall = false\n'),
         'changed.sh': 'echo base\n',
         'legacy.sh': 'if then\n',
     });

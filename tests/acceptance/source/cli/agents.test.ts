@@ -3,6 +3,7 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import type { ReplacePlan } from '#cli/types/commands.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { currentBlock } from '#cli/lifecycle/managed-blocks.ts';
 import { statSync, chmodSync, existsSync, readFileSync } from 'node:fs';
 
@@ -11,7 +12,7 @@ test('agent instructions reach detected and configured consumers and uninstall r
     const original = '# Gemini instructions\n\nKeep this authored note.\n';
     const copilot = '# Copilot instructions\n';
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nkits = []\n',
+        'gspot.toml': policyOf([]),
         'GEMINI.md': original,
         '.github/copilot-instructions.md': copilot,
         '.cursor/.keep': '',
@@ -52,7 +53,7 @@ test('an authored Cursor rule is preserved and escaping agent destinations are r
     await using sandbox = await testdir();
     const original = '---\nalwaysApply: false\n---\n# Authored Cursor policy\n';
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nkits = []\n',
+        'gspot.toml': policyOf([]),
         '.cursor/rules/gspot.mdc': original,
     });
     const applied = await run(sandbox.path, ['apply']);

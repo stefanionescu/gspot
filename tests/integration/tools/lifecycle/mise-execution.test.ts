@@ -5,7 +5,9 @@ import { testdir, createFileTree } from 'testdirs';
 import { join, dirname, delimiter } from 'node:path';
 import { openSession } from '#cli/execution/session.ts';
 import type { InstallJson } from '#cli/types/commands.ts';
+import { onPosix } from '#tests/support/cli/platforms.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { chmodSync, existsSync, readFileSync } from 'node:fs';
 import packageManifest from '#cli-package' with { type: 'json' };
 import { environmentVariables } from '#cli/platform/environment.ts';
@@ -18,7 +20,7 @@ const CLI = fileURLToPath(new URL('../../../../packages/cli/src/main.ts', import
 
 test('runner selection preserves policy after rejection and accepts a supported correction', async () => {
     await using repository = await testdir();
-    const policy = 'version = 1\nlevel = "recommended"\nkits = []\n[guides]\ninstall = false\n';
+    const policy = policyOf([], '[guides]\ninstall = false\n', 'recommended');
     await createFileTree(repository.path, { 'gspot.toml': policy });
     const rejected = await run([process.execPath, CLI, 'set', 'runner.tool', 'unsupported', '--json'], {
         cwd: repository.path,
@@ -34,12 +36,11 @@ test('runner selection preserves policy after rejection and accepts a supported 
 });
 
 // The planted mise and gspot are POSIX shell scripts.
-if (process.platform !== 'win32')
+if (onPosix)
     test('mise executes generated tasks with their arguments, and install rejects an old runner before corrected setup succeeds', async () => {
         await using repository = await testdir();
         await using state = await testdir();
-        const policy =
-            'version = 1\nlevel = "recommended"\nkits = []\n[guides]\ninstall = false\n[runner]\ntool = "mise"\n';
+        const policy = policyOf([], '[guides]\ninstall = false\n[runner]\ntool = "mise"\n', 'recommended');
         await createFileTree(repository.path, { 'gspot.toml': policy, '.gspot/authored.txt': 'keep authored content' });
         await createFileTree(state.path, {
             'bin/gspot': '#!/bin/sh\nexec "$GSPOT_TEST_BUN" "$GSPOT_TEST_CLI" "$@"\n',

@@ -238,7 +238,7 @@ Twelve gspot-owned pointer files sit at the repository root: `.prettierrc.json`,
 ## 7. Tests
 
 The tests are 55,856 lines for 47,940 lines of source. Acceptance alone is 14,447 lines in 114
-files. `tests/config/` holds 39 files of fixture constants (1,680 lines) under a folder named
+files. `tests/inputs/` holds 39 files of fixture constants (1,680 lines) under a folder named
 config. **rename**: the word `fixtures` is banned by the policy, so a data folder under `tests`
 or a constants file beside each suite.
 
@@ -336,7 +336,7 @@ Six parts hold up, and each does one thing the rest of the code can lean on:
 
 Measured 2026-09-29 under `tests/`. Unit: 96 files, 228 tests, 6,219 lines. Integration: 245
 files, 771 tests, 29,180 lines. Acceptance: 114 files, 247 tests, 14,447 lines. Support: 59
-files, 3,934 lines. Constants under `tests/config/`: 39 files, 1,680 lines.
+files, 3,934 lines. Constants under `tests/inputs/`: 39 files, 1,680 lines.
 
 The 40 files the counts flagged were read in full; the rest is judged by the counts.
 
@@ -356,7 +356,7 @@ The 40 files the counts flagged were read in full; the rest is judged by the cou
 63 test files repeat the same 30-line body. It plants files, installs the kit, runs the check,
 and parses `.gspot/reports/report.json`. It asserts `status: 'fail'` with one finding, corrects
 the file, and asserts `status: 'ok', findings: []`. 29 of them keep it under a local `CASES`
-table and 38 call `runPlanted`, which does only the first half. `tests/acceptance/source/kits/cloudflare.test.ts`
+table and 38 call `runPlanted`, which does only the first half. `tests/acceptance/source/kits/platforms.test.ts`
 and `supabase.test.ts` are the same file with different tables. **merge**: one
 `plantedCases(fixture, cases)` owner in `tests/support/cli/planted.ts`; each kit file becomes its
 table and its fixture.
@@ -367,12 +367,12 @@ table and its fixture.
   23 times, `kits = ["swift"]` 15, `kits = ["typescript"]` 9, `kits = ["bash"]` 9. **merge**
   into a `policy(kits, extra)` helper.
 - The init argument list `init --yes --kits <kit> --no-runner --no-ci --no-guides --no-install`
-  is spelled out 27 times in 17 files while `tests/config/acceptance/source/kits/init-arguments.ts`
+  is spelled out 27 times in 17 files while `tests/inputs/acceptance/source/kits/init-arguments.ts`
   already exports 22 named argument lists. **merge**.
 - 81 helper functions are declared inside test files, most named `plant`, `input`, or
   `expect<Thing>`. 33 fixture builders carry `no-trivial-functions` suppressions. **merge** the
   recurring shapes into `tests/support`.
-- `tests/config/` is 39 files of fixture strings under a folder named config. **rename**: the
+- `tests/inputs/` is 39 files of fixture strings under a folder named config. **rename**: the
   policy bans `fixtures`, so a data folder under `tests`, or a constants file beside each suite.
 
 ### The same adapter contract, once per adapter

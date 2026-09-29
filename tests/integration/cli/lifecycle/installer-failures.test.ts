@@ -5,9 +5,11 @@ import * as processes from '#cli/platform/spawn.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { installCommand } from '#cli/commands/install.ts';
 import { installTools } from '#cli/tools/installation.ts';
+import { onPosix } from '#tests/support/cli/platforms.ts';
 import { installHooks } from '#cli/lifecycle/hooks/git.ts';
 import { rejection } from '#tests/support/expectations.ts';
 import { initCommand } from '#cli/commands/init/command.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { MISE_MIN_VERSION } from '#cli/config/tools/tools.ts';
 import { hookLocation } from '#cli/repository/hook-location.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
@@ -117,8 +119,7 @@ test('init does not report success when required Python lock resolution cannot r
 test.each([0, 1])('a hook conflict preserves independent installer execution and exit %s', async (code) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml':
-            'version = 1\nkits = []\n[hooks]\ntool = "gspot"\n[runner]\ntool = "mise"\n[guides]\ninstall = false\n',
+        'gspot.toml': policyOf([], '[hooks]\ntool = "gspot"\n[runner]\ntool = "mise"\n[guides]\ninstall = false\n'),
     });
     expect(processes.runBlocking(['git', 'init', '--quiet'], { cwd: sandbox.path }).code).toBe(0);
     const location = hookLocation(sandbox.path);
@@ -154,13 +155,13 @@ test.each([0, 1])('a hook conflict preserves independent installer execution and
 });
 
 // The hook is a POSIX shell script that a POSIX PATH runs directly.
-if (process.platform !== 'win32')
+if (onPosix) {
     test.each(['missing', 'not executable'])(
         'an installed hook reports setup failure when its gspot launcher is %s',
         async (condition) => {
             await using repository = await testdir();
             await createFileTree(repository.path, {
-                'gspot.toml': 'version = 1\nkits = []\n[hooks]\ntool = "gspot"\n[guides]\ninstall = false\n',
+                'gspot.toml': policyOf([], '[hooks]\ntool = "gspot"\n[guides]\ninstall = false\n'),
                 'bin/gspot': '#!/bin/sh\nexit 0\n',
             });
             const ran = await processes.run(['git', 'init', '-q'], { cwd: repository.path });
@@ -188,11 +189,12 @@ if (process.platform !== 'win32')
             expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         },
     );
+}
 
 test('installation attributes a non-Error rejection to its phase', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nkits = []\n[runner]\ntool = "mise"\n',
+        'gspot.toml': policyOf([], '[runner]\ntool = "mise"\n'),
     });
     const session = await openSession(sandbox.path);
     using installer = spyOn(processes, 'run').mockRejectedValue('untyped installer failure');

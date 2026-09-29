@@ -4,6 +4,7 @@ import { rmSync, writeFileSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { reportSchema } from '#cli/execution/report.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
 
 const { version: GSPOT_VERSION } = packageManifest;
@@ -11,8 +12,11 @@ const { version: GSPOT_VERSION } = packageManifest;
 test('Python dependency ownership applies only to locked scopes and accepts removal of the duplicate list', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml':
-            'version = 1\nlevel = "all"\nkits = ["python"]\n[[scope]]\npath = "locked"\nkits = ["python"]\n[[scope]]\npath = "other"\nkits = ["python"]\n',
+        'gspot.toml': policyOf(
+            ['python'],
+            '[[scope]]\npath = "locked"\nkits = ["python"]\n[[scope]]\npath = "other"\nkits = ["python"]\n',
+            'all',
+        ),
         '.gspot/version': `${GSPOT_VERSION}\n`,
         'requirements.txt': 'root-dependency\n',
         'locked/uv.lock': 'version = 1\n',
@@ -42,7 +46,7 @@ test('Python dependency ownership applies only to locked scopes and accepts remo
 test('absent Python import contracts are explicit skips and malformed project files are errors', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nkits = ["python"]\n',
+        'gspot.toml': policyOf(['python']),
         '.gspot/version': `${GSPOT_VERSION}\n`,
         'main.py': 'value = 1\n',
         'pyproject.toml': '# [tool.importlinter] is only a comment\n',

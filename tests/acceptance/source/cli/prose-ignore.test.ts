@@ -5,11 +5,12 @@ import { run } from '#tests/support/cli/command.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { reportSchema } from '#cli/execution/report.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { containing, textContaining } from '#tests/support/expectations.ts';
 
 test('a path-specific Vale ignore retains findings elsewhere and reports its actual matches', async () => {
     await using directory = await testdir();
-    const policy = 'version = 1\nkits = ["prose"]\n[guides]\ninstall = false\n';
+    const policy = policyOf(['prose'], '[guides]\ninstall = false\n');
     await createFileTree(directory.path, {
         'gspot.toml': policy,
         'guide.md': '# Schedule\n\nRelease on 03/04/2026.\n',
@@ -57,7 +58,7 @@ test('a path-specific Vale ignore retains findings elsewhere and reports its act
 
 test('an obsolete Vale switch reports a policy error without suppressing the check', async () => {
     await using directory = await testdir();
-    const policy = 'version = 1\nkits = ["prose"]\n[guides]\ninstall = false\n';
+    const policy = policyOf(['prose'], '[guides]\ninstall = false\n');
     await createFileTree(directory.path, {
         'gspot.toml': policy,
         'guide.md': '# Schedule\n\nRelease on March 4, 2026.\n',

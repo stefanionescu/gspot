@@ -1,7 +1,9 @@
 import { join } from 'node:path';
 import * as spawn from '#cli/platform/spawn.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { onMac } from '#tests/support/cli/platforms.ts';
 import { rejection } from '#tests/support/expectations.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { test, spyOn, expect, describe, afterEach } from 'bun:test';
 import { swiftBuild, swiftPeriphery } from '#cli/checks/swift/build.ts';
 import { swiftInput, removeBuildFolders } from '#tests/support/cli/swift.ts';
@@ -18,7 +20,7 @@ if (HAS_SWIFT)
 test('Swift build side effects stay in the source copy and do not become later inputs', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nkits = ["swift"]\n',
+        'gspot.toml': policyOf(['swift']),
         'Sources/Value.swift': 'let value = 1\n',
     });
     const original = join(sandbox.path, 'Sources/Value.swift');
@@ -53,12 +55,12 @@ test('Swift build side effects stay in the source copy and do not become later i
     }
 });
 
-describe.if(process.platform === 'darwin')('with the macOS toolchain', () => {
+describe.if(onMac)('with the macOS toolchain', () => {
 if (HAS_SWIFT)
 test('Periphery build side effects stay in its source copy and findings name original source paths', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nkits = ["swift"]\n',
+        'gspot.toml': policyOf(['swift']),
         'Main.swift': 'let unused = 1\n',
     });
     const input = await swiftInput(sandbox.path, 'swift/periphery');
@@ -85,11 +87,11 @@ test('Periphery build side effects stay in its source copy and findings name ori
 });
 });
 
-describe.if(process.platform === 'darwin')('with the macOS toolchain', () => {
+describe.if(onMac)('with the macOS toolchain', () => {
 if (HAS_SWIFT)
 test('concurrent Swift compilation and Periphery retain separate source and artifact directories', async () => {
     await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'gspot.toml': 'version = 1\nkits = ["swift"]\n' });
+    await createFileTree(sandbox.path, { 'gspot.toml': policyOf(['swift']) });
     const compile = await swiftInput(sandbox.path, 'swift/build');
     const periphery = await swiftInput(sandbox.path, 'swift/periphery');
     const started = Promise.withResolvers<undefined>();
@@ -111,19 +113,19 @@ test('concurrent Swift compilation and Periphery retain separate source and arti
 });
 });
 
-describe.if(process.platform === 'darwin')('with the macOS toolchain', () => {
+describe.if(onMac)('with the macOS toolchain', () => {
 if (HAS_SWIFT)
 test.each(['../External.xcodeproj', '/External.xcodeproj', 'C:External.xcodeproj', String.raw`..\External.xcodeproj`])(
     'Xcode project %s cannot redirect an isolated build outside the scope',
     async (project) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': `version = 1\nkits = ["swift", "xcode"]\n[tools.xcode]\nproject = ${JSON.stringify(project)}\nscheme = "Example"\n`,
+            'gspot.toml': policyOf(['swift', 'xcode'], `[tools.xcode]\nproject = ${JSON.stringify(project)}\nscheme = "Example"\n`),
         });
         const input = await swiftInput(sandbox.path, 'swift/build');
         writeFileSync(
             join(sandbox.path, 'gspot.toml'),
-            'version = 1\nkits = ["swift", "xcode"]\n[tools.xcode]\nproject = "Example.xcodeproj"\nscheme = "Example"\n',
+            policyOf(['swift', 'xcode'], '[tools.xcode]\nproject = "Example.xcodeproj"\nscheme = "Example"\n'),
         );
         const corrected = await swiftInput(sandbox.path, 'swift/build');
         const run = spyOn(spawn, 'run').mockResolvedValue({

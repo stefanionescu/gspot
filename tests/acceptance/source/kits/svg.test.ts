@@ -6,7 +6,7 @@ import { run } from '#tests/support/cli/command.ts';
 import { initArgs } from '#tests/support/cli/init.ts';
 import { install } from '#tests/support/cli/tools.ts';
 import { reportSchema } from '#cli/execution/report.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { containing } from '#tests/support/expectations.ts';
 
 const COMMAND = ['check', '--only', 'static-site/svg-optimized', '--no-cache', '--json'];

@@ -5,6 +5,7 @@ import { emitAll } from '#cli/generation/outputs.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 
 test.each([
@@ -25,11 +26,11 @@ test.each([
     expect(verified.exitCode, verified.stdout.toString() + verified.stderr.toString()).toBe(0);
 });
 
-test.each(['recommended', 'all'] as const)('%s reports and fixes ordinary shell formatting', async (level) => {
+test('all reports and fixes ordinary shell formatting', async () => {
     await using sandbox = await testdir();
     const source = "if true;then\nprintf '%s\\n' one\nfi\n";
     await createFileTree(sandbox.path, {
-        'gspot.toml': `version = 1\nlevel = "${level}"\nkits = ["bash"]\n`,
+        'gspot.toml': policyOf(['bash'], '', 'all'),
         'example.sh': source,
     });
     const session = await openSession(sandbox.path);

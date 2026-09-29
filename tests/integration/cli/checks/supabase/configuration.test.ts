@@ -6,6 +6,7 @@ import { testdir, createFileTree } from 'testdirs';
 import type { EngineInput } from '#cli/types/checks.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import type { Session } from '#cli/types/execution/execution.ts';
 import { functionFolders } from '#cli/checks/supabase/project.ts';
 import { projectValid, storagePolicies } from '#cli/checks/supabase/config-checks.ts';
@@ -22,8 +23,10 @@ function input(session: Session, scope: string, name: string): EngineInput {
 test('Supabase configurations and function discovery stay within nested project scopes', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml':
-            'version = 1\nkits = ["supabase"]\n[[scope]]\npath = "apps/api"\nkits = ["supabase"]\n[scope.tools.supabase]\nfunctions_directory = "edge"\n',
+        'gspot.toml': policyOf(
+            ['supabase'],
+            '[[scope]]\npath = "apps/api"\nkits = ["supabase"]\n[scope.tools.supabase]\nfunctions_directory = "edge"\n',
+        ),
         'supabase/config.toml': '[functions.missing]\nverify_jwt = true\n',
         'supabase/functions/root/index.ts': 'export {};\n',
         'apps/api/supabase/config.toml': '[functions.hello]\nverify_jwt = true\n',

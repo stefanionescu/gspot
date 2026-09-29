@@ -7,12 +7,12 @@ import { commitAll } from '#tests/support/cli/git.ts';
 import { parsePolicyText } from '#cli/policy/read.ts';
 import type { InitJson } from '#cli/types/commands.ts';
 import { reportSchema } from '#cli/execution/report.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { existsSync, symlinkSync, writeFileSync } from 'node:fs';
 import { treeContents } from '#tests/support/cli/preservation.ts';
 import { toolsPath, installAtLevel } from '#tests/support/cli/tools.ts';
-import { SCOPES_SOURCE } from '#tests/config/acceptance/source/cli/cli.ts';
+import { SCOPES_SOURCE } from '#tests/inputs/acceptance/source/cli/cli.ts';
 
 const MODULES = join(import.meta.dir, '../../../../node_modules');
 

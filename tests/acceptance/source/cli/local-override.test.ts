@@ -6,12 +6,13 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { reportSchema } from '#cli/execution/report.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';
 import { containing } from '#tests/support/expectations.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 
 test('a leftover local file cannot hide ShellCheck while an explicit skip applies only to that run', async () => {
     await using directory = await testdir();
     const local = 'skip = ["bash/shellcheck"]\n';
     await createFileTree(directory.path, {
-        'gspot.toml': 'version = 1\nkits = ["bash"]\n[guides]\ninstall = false\n',
+        'gspot.toml': policyOf(['bash'], '[guides]\ninstall = false\n'),
         'gspot.local.toml': local,
         'entry.sh': '#!/usr/bin/env bash\necho $1\n',
     });

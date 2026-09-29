@@ -3,6 +3,7 @@ import { stringify } from 'smol-toml';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 
 test('file and folder arguments intersect check lists and respect -C', async () => {
@@ -77,7 +78,7 @@ stage = "${name}"
     );
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': `version = 1\nkits = []\n${definitions.join('\n')}`,
+        'gspot.toml': policyOf([], definitions.join('\n')),
         'source.txt': 'input',
     });
     const checked = await run(sandbox.path, ['check', '--stage', stage, '--json']);

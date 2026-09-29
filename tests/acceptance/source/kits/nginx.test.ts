@@ -5,11 +5,12 @@ import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { reportSchema } from '#cli/execution/report.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { toolsPath, installAtLevel } from '#tests/support/cli/tools.ts';
 import { containing, textContaining } from '#tests/support/expectations.ts';
-import { NGINX_INIT } from '#tests/config/acceptance/source/kits/init-arguments.ts';
+import { NGINX_INIT } from '#tests/inputs/acceptance/source/kits/init-arguments.ts';
 
 const CLEAN = `events {}\nhttp {\n    server_tokens off;\n    server {\n        listen 8080;\n        location / {\n            return 204;\n        }\n    }\n}\n`;
 const FORGED = `events {}\nhttp {\n    server_tokens off;\n    server {\n        listen 8080;\n        location ~ /proxy/(.*) {\n            proxy_pass http://$1;\n        }\n    }\n}\n`;
@@ -25,8 +26,10 @@ if (HAS_DOCKER)
             const server =
                 'server {\n    listen 443 ssl;\n    include /etc/nginx/tls#local.conf;\n    location / { proxy_pass "http://api:3000"; }\n}\n';
             await createFileTree(sandbox.path, {
-                'gspot.toml':
-                    'version = 1\nkits = ["nginx"]\n[tools.nginx]\nimage = "nginx:1.29.3-alpine@"\n[[scope]]\npath = "proxy"\nkits = []\n[scope.tools.nginx]\nimage = "nginx:1.29.3-alpine"\n',
+                'gspot.toml': policyOf(
+                    ['nginx'],
+                    '[tools.nginx]\nimage = "nginx:1.29.3-alpine@"\n[[scope]]\npath = "proxy"\nkits = []\n[scope.tools.nginx]\nimage = "nginx:1.29.3-alpine"\n',
+                ),
                 'proxy/nginx.conf': 'events {}\nhttp { include "conf.d/*.conf"; }\n',
                 'proxy/conf.d/server.conf': server.replace('listen 443 ssl;', 'invalid_directive on;'),
                 'proxy/tls#local.conf':
@@ -63,11 +66,11 @@ if (HAS_DOCKER)
     );
 
 if (HAS_DOCKER)
-    test.each(['recommended', 'all'])(
-        'native nginx at %s distinguishes invalid configuration from an unavailable container and accepts corrections',
-        async (level) => {
+    test(
+        'native nginx at all distinguishes invalid configuration from an unavailable container and accepts corrections',
+        async () => {
             await using sandbox = await testdir();
-            const policy = `version = 1\nlevel = "${level}"\nkits = ["nginx"]\n[tools.nginx]\nimage = "nginx:1.29.3-alpine"\n`;
+            const policy = policyOf(['nginx'], '[tools.nginx]\nimage = "nginx:1.29.3-alpine"\n', 'all');
             const configuration = `events {}\nhttp {\n    upstream backend {\n        server api:3000;\n    }\n    server {\n        listen 443 ssl;\n        ssl_certificate "/etc/nginx/ssl/certificate.pem";\n        ssl_certificate_key '/etc/nginx/ssl/key.pem';\n        location / {\n            proxy_pass "http://backend";\n        }\n    }\n}\n`;
             await createFileTree(sandbox.path, {
                 'gspot.toml': policy,

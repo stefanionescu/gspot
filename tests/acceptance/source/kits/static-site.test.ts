@@ -1,171 +1,120 @@
 // Planted repository for the static-site configuration: a small site with a build script, broken one way for each check.
-import { join } from 'node:path';
-import { symlinkSync } from 'node:fs';
-import { test, expect, describe } from 'bun:test';
-import { testdir, createFileTree } from 'testdirs';
+import { test, expect } from 'bun:test';
 import { run } from '#tests/support/cli/command.ts';
-import { commitAll } from '#tests/support/cli/git.ts';
-import type { FindingCase } from '#tests/types/cli.ts';
 import { reportSchema } from '#cli/execution/report.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
-import { runPlanted } from '#tests/support/cli/planted.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { containing } from '#tests/support/expectations.ts';
-import { toolsPath, installAtLevel } from '#tests/support/cli/tools.ts';
-import { STATIC_SITE_INIT } from '#tests/config/acceptance/source/kits/init-arguments.ts';
-import { SVG, BUILD, STATIC_SITE_HEADERS } from '#tests/config/acceptance/source/kits/kits.ts';
+import { plantedCases } from '#tests/support/cli/planted.ts';
+import { SVG, BUILD, STATIC_SITE_HEADERS } from '#tests/inputs/acceptance/source/kits/kits.ts';
 
 const HOME = `<!doctype html>\n<html lang="en">\n    <head>\n        <meta charset="utf-8" />\n        <title>Planted</title>\n        <link rel="stylesheet" href="/site.css" />\n    </head>\n    <body>\n        <h1 class="title">Planted</h1>\n        <a href="/about.html">About</a>\n        <img src="/assets/logo.svg" alt="The logo" />\n    </body>\n</html>\n`;
 const ABOUT = `<!doctype html>\n<html lang="en">\n    <head>\n        <meta charset="utf-8" />\n        <title>Planted</title>\n        <link rel="stylesheet" href="/site.css" />\n    </head>\n    <body>\n        <h1 class="title">About</h1>\n        <a href="/">Home</a>\n    </body>\n</html>\n`;
-const FILES = {
-    '.gitignore': 'node_modules\ndist\n',
-    'package.json':
-        '{\n    "name": "planted",\n    "version": "1.0.0",\n    "private": true,\n    "type": "module",\n    "devDependencies": {"@types/node": "22.18.6"},\n    "scripts": {\n        "build": "bun build.js"\n    }\n}\n',
-    'build.js': BUILD,
-    'index.html': HOME,
-    'about.html': ABOUT,
-    'site.css': '.title {\n    color: #333;\n}\n',
-    'sitemap.xml': `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n    <url><loc>https://planted.test/</loc></url>\n    <url><loc>https://planted.test/about.html</loc></url>\n</urlset>\n`,
-    _headers: STATIC_SITE_HEADERS,
-    'site.webmanifest': '{\n    "name": "Planted",\n    "icons": [{ "src": "/assets/logo.svg" }]\n}\n',
-    'assets/logo.svg': SVG,
-};
 
-const CASES: FindingCase[] = [
+plantedCases(
+    'the static-site configuration',
     {
-        check: 'static-site/build',
-        files: { 'build.js': "throw new Error('the build is broken');\n" },
-        expected: { file: '', rule: 'build', line: 1 },
-    },
-    {
-        check: 'static-site/build-reproducible',
-        files: { 'build.js': `${BUILD}await Bun.write('dist/stamp.txt', String(performance.now()));\n` },
-        expected: { file: 'stamp.txt', rule: 'not-reproducible', line: 1 },
-    },
-    {
-        check: 'static-site/html-validate-built',
+        kits: ['static-site'],
+        without: ['spelling', 'naming'],
         files: {
-            'about.html': `<!doctype html>\n<html lang="en">\n    <head>\n        <meta charset="utf-8" />\n        <title>Planted</title>\n        <link rel="stylesheet" href="/site.css" />\n    </head>\n    <body>\n        <h1 class="title">About</h1>\n        <img src="/assets/logo.svg" />\n    </body>\n</html>\n`,
+            '.gitignore': 'node_modules\ndist\n',
+            'package.json':
+                '{\n    "name": "planted",\n    "version": "1.0.0",\n    "private": true,\n    "type": "module",\n    "devDependencies": {"@types/node": "22.18.6"},\n    "scripts": {\n        "build": "bun build.js"\n    }\n}\n',
+            'build.js': BUILD,
+            'index.html': HOME,
+            'about.html': ABOUT,
+            'site.css': '.title {\n    color: #333;\n}\n',
+            'sitemap.xml': `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n    <url><loc>https://planted.test/</loc></url>\n    <url><loc>https://planted.test/about.html</loc></url>\n</urlset>\n`,
+            _headers: STATIC_SITE_HEADERS,
+            'site.webmanifest': '{\n    "name": "Planted",\n    "icons": [{ "src": "/assets/logo.svg" }]\n}\n',
+            'assets/logo.svg': SVG,
         },
-        expected: { file: 'dist/about.html', rule: 'wcag/h37', line: 10 },
     },
-    {
-        check: 'css/dead-selectors',
-        files: { 'site.css': '.title {\n    color: #333;\n}\n\n.never-used {\n    margin: 0;\n}\n' },
-        expected: { file: 'dist/site.css', rule: 'dead-selector', line: 1 },
-    },
-    {
-        check: 'static-site/links-internal',
-        files: {
-            'about.html': `<!doctype html>\n<html lang="en">\n    <head>\n        <meta charset="utf-8" />\n        <title>Planted</title>\n        <link rel="stylesheet" href="/site.css" />\n    </head>\n    <body>\n        <h1 class="title">About</h1>\n        <a href="/gone.html">Gone</a>\n    </body>\n</html>\n`,
+    [
+        {
+            check: 'static-site/build',
+            files: { 'build.js': "throw new Error('the build is broken');\n" },
+            expected: { file: '', rule: 'build', line: 1 },
         },
-        expected: { file: 'about.html', rule: 'broken-link', line: 1 },
-    },
-    {
-        check: 'static-site/size',
-        files: {},
-        policy: '[tools.site]\nsize_limits = [{paths = ["**/*.html"], kb = 0}]\n',
-        expected: { file: '**/*.html', rule: 'size', line: 1 },
-    },
-    {
-        check: 'static-site/sitemap',
-        files: {
-            'sitemap.xml': `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n    <url><loc>https://planted.test/</loc></url>\n    <url><loc>https://planted.test/about.html</loc></url>\n    <url><loc>https://planted.test/pricing.html</loc></url>\n</urlset>\n`,
+        {
+            check: 'static-site/build-reproducible',
+            files: { 'build.js': `${BUILD}await Bun.write('dist/stamp.txt', String(performance.now()));\n` },
+            expected: { file: 'stamp.txt', rule: 'not-reproducible', line: 1 },
         },
-        expected: { file: 'sitemap.xml', rule: 'missing-page', line: 1 },
-    },
-    {
-        check: 'static-site/dead-assets',
-        files: { 'assets/unused.png': 'png' },
-        expected: { file: 'assets/unused.png', rule: 'dead-asset', line: 1 },
-    },
-    {
-        check: 'static-site/svg-optimized',
-        files: {
-            'assets/logo.svg':
-                '<?xml version="1.0"?>\n<!-- Drawn in an editor. -->\n<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8 8">\n    <path d="M 0.000 0.000 L 8.000 0.000 L 8.000 8.000 L 0.000 8.000 Z"/>\n</svg>\n',
+        {
+            check: 'static-site/html-validate-built',
+            files: {
+                'about.html': ABOUT.replace(
+                    '        <a href="/">Home</a>\n',
+                    '        <img src="/assets/logo.svg" />\n',
+                ),
+            },
+            expected: { file: 'dist/about.html', rule: 'wcag/h37', line: 10 },
         },
-        expected: { file: 'assets/logo.svg', rule: 'svg', line: 1 },
-    },
-    {
-        check: 'static-site/webmanifest',
-        files: { 'site.webmanifest': '{\n    "icons": [{ "src": "/assets/gone.png" }]\n}\n' },
-        expected: { file: 'site.webmanifest', rule: 'icon', line: 1 },
-    },
-    {
-        check: 'integrity/security-headers',
-        files: { _headers: '/*\n    Referrer-Policy: no-referrer\n' },
-        expected: { file: '_headers', rule: 'missing-header', line: 1 },
-    },
-];
-
-describe('the static-site configuration', () => {
-    test.each(CASES)(
-        '$check reports $expected.rule in $expected.file and accepts corrected source',
-        async (planted) => {
-            await using sandbox = await testdir();
-            await createFileTree(sandbox.path, FILES);
-            commitAll(sandbox.path);
-            const environment = {
-                PATH: toolsPath(['typos', 'ec', 'ast-grep']),
-            };
-            await installAtLevel(sandbox.path, STATIC_SITE_INIT, environment);
-            {
-                const clean = await run(sandbox.path, ['check', '--only', planted.check, '--no-cache'], environment);
-                expect(clean.code, `${planted.check}: ${clean.stdout}${clean.stderr}`).toBe(0);
-                const outcome = await runPlanted(sandbox.path, planted, environment);
-                expect(outcome.code, `${planted.check}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
-                const report = reportSchema.parse(
-                    await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json(),
+        {
+            check: 'css/dead-selectors',
+            files: { 'site.css': '.title {\n    color: #333;\n}\n\n.never-used {\n    margin: 0;\n}\n' },
+            expected: { file: 'dist/site.css', rule: 'dead-selector', line: 1 },
+        },
+        {
+            check: 'static-site/links-internal',
+            files: { 'about.html': ABOUT.replace('<a href="/">Home</a>', '<a href="/gone.html">Gone</a>') },
+            expected: { file: 'about.html', rule: 'broken-link', line: 1 },
+        },
+        {
+            check: 'static-site/size',
+            files: {},
+            policy: '[tools.site]\nsize_limits = [{paths = ["**/*.html"], kb = 0}]\n',
+            expected: { file: '**/*.html', rule: 'size', line: 1 },
+            corrected: { files: {}, policy: '[tools.site]\nsize_limits = [{paths = ["**/*.html"], kb = 10}]\n' },
+        },
+        {
+            check: 'static-site/sitemap',
+            files: {
+                'sitemap.xml': `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n    <url><loc>https://planted.test/</loc></url>\n    <url><loc>https://planted.test/about.html</loc></url>\n    <url><loc>https://planted.test/pricing.html</loc></url>\n</urlset>\n`,
+            },
+            expected: { file: 'sitemap.xml', rule: 'missing-page', line: 1 },
+        },
+        {
+            check: 'static-site/dead-assets',
+            files: { 'assets/unused.png': 'png' },
+            expected: { file: 'assets/unused.png', rule: 'dead-asset', line: 1 },
+        },
+        {
+            check: 'static-site/svg-optimized',
+            files: {
+                'assets/logo.svg':
+                    '<?xml version="1.0"?>\n<!-- Drawn in an editor. -->\n<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8 8">\n    <path d="M 0.000 0.000 L 8.000 0.000 L 8.000 8.000 L 0.000 8.000 Z"/>\n</svg>\n',
+            },
+            expected: { file: 'assets/logo.svg', rule: 'svg', line: 1 },
+        },
+        {
+            check: 'static-site/webmanifest',
+            files: { 'site.webmanifest': '{\n    "icons": [{ "src": "/assets/gone.png" }]\n}\n' },
+            expected: { file: 'site.webmanifest', rule: 'icon', line: 1 },
+        },
+        {
+            check: 'integrity/security-headers',
+            files: { _headers: '/*\n    Referrer-Policy: no-referrer\n' },
+            expected: { file: '_headers', rule: 'missing-header', line: 1 },
+        },
+    ],
+    (planted) => {
+        test(
+            'push checks the built site without selecting external links',
+            async () => {
+                const { root, environment } = planted();
+                const checked = await run(
+                    root,
+                    ['check', '--stage', 'push', '--json'],
+                    environment,
+                    PLANTED_TIMEOUT_MS * 4,
                 );
-                expect(report.checks).toMatchObject([{ check: planted.check, status: 'fail' }]);
-                expect(report.checks[0]?.findings).toContainEqual(
-                    containing({ check: planted.check, ...planted.expected }),
-                );
-                const corrected =
-                    planted.check === 'static-site/size'
-                        ? await runPlanted(
-                              sandbox.path,
-                              {
-                                  ...planted,
-                                  files: {},
-                                  policy: '[tools.site]\nsize_limits = [{paths = ["**/*.html"], kb = 10}]\n',
-                              },
-                              environment,
-                          )
-                        : await run(
-                              sandbox.path,
-                              ['check', '--only', planted.check, '--no-cache', '--json'],
-                              environment,
-                          );
-                expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-                expect(
-                    reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json()).checks,
-                ).toMatchObject([{ check: planted.check, status: 'ok', findings: [] }]);
-            }
-        },
-        PLANTED_TIMEOUT_MS * 3,
-    );
-});
-
-test(
-    'push checks the built site without selecting external links',
-    async () => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, FILES);
-        symlinkSync(join(import.meta.dir, '../../../../node_modules'), join(sandbox.path, 'node_modules'), 'dir');
-        commitAll(sandbox.path);
-        const environment = { PATH: toolsPath(['typos', 'ec', 'ast-grep']) };
-        await installAtLevel(sandbox.path, STATIC_SITE_INIT, environment);
-        const checked = await run(
-            sandbox.path,
-            ['check', '--stage', 'push', '--json'],
-            environment,
-            PLANTED_TIMEOUT_MS * 4,
+                expect(checked.code, checked.stdout + checked.stderr).toBe(0);
+                const report = reportSchema.parse(JSON.parse(checked.stdout));
+                expect(report.checks.map(({ check }) => check)).not.toContain('static-site/links-external');
+                expect(report.checks).toContainEqual(containing({ check: 'static-site/build', status: 'ok' }));
+            },
+            PLANTED_TIMEOUT_MS * 5,
         );
-        expect(checked.code, checked.stdout + checked.stderr).toBe(0);
-        const report = reportSchema.parse(JSON.parse(checked.stdout));
-        expect(report.checks.map(({ check }) => check)).not.toContain('static-site/links-external');
-        expect(report.checks).toContainEqual(containing({ check: 'static-site/build', status: 'ok' }));
     },
-    PLANTED_TIMEOUT_MS * 5,
 );

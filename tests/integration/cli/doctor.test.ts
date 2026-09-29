@@ -7,6 +7,7 @@ import { openSession } from '#cli/execution/session.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
 import { installHooks } from '#cli/lifecycle/hooks/git.ts';
 import { coverageReport } from '#cli/execution/coverage.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { uninstallCommand } from '#cli/commands/uninstall.ts';
 import { doctorCommand } from '#cli/commands/doctor/command.ts';
 import { hookLocation } from '#cli/repository/hook-location.ts';
@@ -14,7 +15,7 @@ import { containing, containingAll } from '#tests/support/expectations.ts';
 
 test('doctor coverage honors path exceptions and does not borrow syntax from another shell dialect', async () => {
     await using sandbox = await testdir();
-    const policy = 'version = 1\nlevel = "all"\nkits = ["bash"]\n';
+    const policy = policyOf(['bash'], '', 'all');
     await createFileTree(sandbox.path, {
         'gspot.toml': `${policy}\n[[ignore]]\ncheck = "bash/syntax"\npaths = ["source.sh"]\nreason = "The fixture exercises a path exception."\n`,
         'source.sh': 'echo example\n',
@@ -30,7 +31,7 @@ test('doctor coverage honors path exceptions and does not borrow syntax from ano
 
 test('doctor coverage excludes binary files and counts routine formatting at both levels', async () => {
     await using sandbox = await testdir();
-    const policy = 'version = 1\nlevel = "recommended"\nkits = ["bash"]\n';
+    const policy = policyOf(['bash'], '', 'recommended');
     await createFileTree(sandbox.path, {
         'gspot.toml': policy,
         'source.sh': 'echo example\n',
@@ -46,7 +47,7 @@ test('doctor coverage excludes binary files and counts routine formatting at bot
 
 test('doctor coverage applies nested exceptions only to their owning scope', async () => {
     await using sandbox = await testdir();
-    const policy = 'version = 1\nlevel = "all"\nkits = ["bash"]\n';
+    const policy = policyOf(['bash'], '', 'all');
     await createFileTree(sandbox.path, {
         'gspot.toml': `${policy}\n[[scope]]\npath = "app"\nkits = []\n[[ignore]]\ncheck = "bash/syntax"\npaths = ["app"]\nreason = "The nested fixture exercises a check exception."\n`,
         'source.sh': 'echo root\n',
@@ -88,7 +89,7 @@ stage = "commit"
 test('doctor reports local configuration and version', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nkits = []\n',
+        'gspot.toml': policyOf([]),
         'README.md': '# Example\n',
     });
     const result = await doctorCommand({ cwd: sandbox.path });
@@ -100,7 +101,7 @@ test('doctor identifies unowned generated-directory files that apply and uninsta
     await using sandbox = await testdir();
     const original = '{"authored": true}\n';
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nkits = []\n[guides]\ninstall = false\n',
+        'gspot.toml': policyOf([], '[guides]\ninstall = false\n'),
         '.gspot/authored.json': original,
     });
     await applyAll(await openSession(sandbox.path));
@@ -117,7 +118,7 @@ test('doctor identifies unowned generated-directory files that apply and uninsta
 test('doctor fails missing and edited hook integration and accepts installed hooks', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nkits = []\n[hooks]\ntool = "gspot"\n',
+        'gspot.toml': policyOf([], '[hooks]\ntool = "gspot"\n'),
     });
     expect(runBlocking(['git', 'init', '-q'], { cwd: sandbox.path }).code).toBe(0);
     const missing = await doctorCommand({ cwd: sandbox.path });
@@ -141,7 +142,7 @@ test('doctor excludes private tool manifests from language detection and detects
     await using sandbox = await testdir();
     const python = '[project]\nname = "example"\nversion = "1.0.0"\ndependencies = ["pytest==8.4.2"]\n';
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nkits = []\n[guides]\ninstall = false\n',
+        'gspot.toml': policyOf([], '[guides]\ninstall = false\n'),
         '.gspot/pyproject.toml': python,
         'nested/.gspot/package.json': '{"dependencies":{"react":"19.1.1"}}',
     });

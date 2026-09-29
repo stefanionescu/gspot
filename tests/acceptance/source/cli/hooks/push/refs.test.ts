@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { git } from '#tests/support/cli/git.ts';
 import * as processes from '#cli/platform/spawn.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { pushReportSchema } from '#cli/execution/report.ts';
 import type { CommandFailureJson } from '#cli/types/commands.ts';
 import { preparePushRepository } from '#tests/support/cli/push.ts';

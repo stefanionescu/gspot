@@ -7,6 +7,7 @@ import { planRun } from '#cli/execution/planning/plan.ts';
 import { checkExecution } from '#cli/execution/engines.ts';
 import { keptMode } from '#tests/support/cli/platforms.ts';
 import { containing } from '#tests/support/expectations.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { runToolCheck } from '#cli/execution/tool/runner.ts';
 import { statSync, chmodSync, existsSync, writeFileSync } from 'node:fs';
 
@@ -64,7 +65,7 @@ test.each([0, 1, 3] as const)(
         const executable = join(sandbox.path, 'actionlint');
         const workflow = 'on: workflow_dispatch\njobs:\n  caller:\n    uses: $/.github/workflows/called.yml\n';
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\nkits = ["files"]\n',
+            'gspot.toml': policyOf(['files']),
             '.github/workflows/caller.yml': workflow,
             actionlint: `#!${process.execPath}\nif (process.argv.includes('--version')) console.log('1.7.12'); else { await Bun.write(${JSON.stringify(record)}, process.cwd()); if (${String(code)} !== 0) console.log('.github/workflows/caller.yml:4:11: located defect [workflow-call]'); process.exitCode = ${String(code)}; }\n`,
         });

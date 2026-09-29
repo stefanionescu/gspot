@@ -4,7 +4,8 @@ import type { Finding } from '#cli/types/checks.ts';
 import { run } from '#tests/support/cli/command.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { containing } from '#tests/support/expectations.ts';
-import { READERS_HEADERS } from '#tests/config/integration/cli/execution/scopes.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
+import { READERS_HEADERS } from '#tests/inputs/integration/cli/execution/scopes.ts';
 
 const EXPECTED_READERS: { check: string; root: Finding[]; nested: Finding[] }[] = [
     {
@@ -40,8 +41,10 @@ const EXPECTED_READERS: { check: string; root: Finding[]; nested: Finding[] }[] 
 test('scoped readers receive their own files and preserve binary asset inputs', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml':
-            'version = 1\nkits = ["static-site", "supabase", "i18n"]\n[tools.i18n]\ntranslations = { directory = "messages", base = "en" }\n[[scope]]\npath = "apps/backend"\n',
+        'gspot.toml': policyOf(
+            ['static-site', 'supabase', 'i18n'],
+            '[tools.i18n]\ntranslations = { directory = "messages", base = "en" }\n[[scope]]\npath = "apps/backend"\n',
+        ),
         _headers: READERS_HEADERS,
         'messages/en.json': '{"title":"Home"}',
         'messages/de.json': '{"title":"Start"}',
@@ -85,8 +88,10 @@ test('scoped readers receive their own files and preserve binary asset inputs', 
 
 test('nested Bash safety settings merge root and scoped owners without leaking to siblings', async () => {
     await using sandbox = await testdir();
-    const policy =
-        'version = 1\nkits = ["bash"]\n[tools.bash.safety]\nowners = ["root.sh"]\n[[scope]]\npath = "app"\n[scope.tools.bash.safety]\nowners = ["app/cleanup.sh"]\n[[scope]]\npath = "app/child"\n[[scope]]\npath = "sibling"\n';
+    const policy = policyOf(
+        ['bash'],
+        '[tools.bash.safety]\nowners = ["root.sh"]\n[[scope]]\npath = "app"\n[scope.tools.bash.safety]\nowners = ["app/cleanup.sh"]\n[[scope]]\npath = "app/child"\n[[scope]]\npath = "sibling"\n',
+    );
     const source = '#!/usr/bin/env bash\nrm -rf "$target"\n';
     await createFileTree(sandbox.path, {
         'gspot.toml': policy,
@@ -135,7 +140,7 @@ test.each([
     '$check applies canonical path settings without excluding unrelated files',
     async ({ configuration, check, setting, path, source, correction, rule }) => {
         await using sandbox = await testdir();
-        const policy = `version = 1\nlevel = "all"\nkits = ["${configuration}"]\n${setting}`;
+        const policy = policyOf([configuration], setting, 'all');
         const untrusted = path.replace('trusted/', 'public/');
         await createFileTree(sandbox.path, { 'gspot.toml': policy, [path]: source, [untrusted]: source });
         const command = ['check', '--only', check, '--no-cache', '--json'];

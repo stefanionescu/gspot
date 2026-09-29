@@ -4,7 +4,7 @@ import type { ToolPin } from '#cli/types/kits.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
 import type { Pin } from '#tests/types/acceptance/release.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
-import { REGISTRY_TIMEOUT_MS } from '#tests/config/acceptance/release.ts';
+import { REGISTRY_TIMEOUT_MS } from '#tests/inputs/acceptance/release.ts';
 
 function pinsOf(tool: ToolPin): Pin[] {
     return Object.entries(tool.installers).flatMap(([installer, entry]) => {

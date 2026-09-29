@@ -6,7 +6,9 @@ import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { readSource } from '#cli/repository/tracked.ts';
+import { onPosix } from '#tests/support/cli/platforms.ts';
 import { containing } from '#tests/support/expectations.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { scratchCopy } from '#cli/execution/files/workspace.ts';
 import { planRun, ownedInputs } from '#cli/execution/planning/plan.ts';
 import { engineInput, runEngineCheck } from '#cli/execution/engines.ts';
@@ -43,7 +45,7 @@ test.each([
     async ({ language, path, structural, defect, corrected }) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': `version = 1\nlevel = "all"\nkits = ["${language}", "naming"]\n`,
+            'gspot.toml': policyOf([language, 'naming'], '', 'all'),
             [path]: defect,
         });
         const session = await openSession(sandbox.path);
@@ -75,7 +77,7 @@ test.each([
 test('engine inputs expose selected files and reserve the repository inventory for once-only checks', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nkits = ["jest", "docs"]\n[[scope]]\npath = "apps/web"\n',
+        'gspot.toml': policyOf(['jest', 'docs'], '[[scope]]\npath = "apps/web"\n'),
         'README.md': '# Repository\n',
         'apps/web/value.test.js': 'test("value", () => expect(1).toBe(1));\n',
         'apps/web/fixture.bin': new Uint8Array([0, 255, 0]),
@@ -123,12 +125,12 @@ test('engine inputs expose selected files and reserve the repository inventory f
 });
 
 // Windows file names cannot hold a newline or a quote.
-if (process.platform !== 'win32')
+if (onPosix)
     test('shell reads distinguish filename lists containing newlines', async () => {
         await using sandbox = await testdir();
         const names = ['a.sh', 'b.sh\nc.sh', 'a.sh\nb.sh', 'c.sh'];
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\nkits = ["bash"]\n',
+            'gspot.toml': policyOf(['bash']),
             ...Object.fromEntries(
                 names.map((name, index) => [name, `function name${String(index)}() { echo ${String(index)}; }\n`]),
             ),
@@ -159,7 +161,7 @@ test.each([
     async (configuration, check, path, source) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': `version = 1\nkits = ["${configuration}"]\n`,
+            'gspot.toml': policyOf([configuration]),
             [path]: source,
         });
         const session = await openSession(sandbox.path);
@@ -174,12 +176,12 @@ test.each([
 );
 
 // Windows file names cannot hold a newline or a quote.
-if (process.platform !== 'win32')
+if (onPosix)
     test('engines share source bytes within a run and refresh reused sessions after corrections', async () => {
         await using sandbox = await testdir();
         const path = 'app/café\nquery.sql';
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\nlevel = "all"\nkits = ["sql"]\n[[scope]]\npath = "app"\n',
+            'gspot.toml': policyOf(['sql'], '[[scope]]\npath = "app"\n', 'all'),
             [path]: 'select 1;\n',
         });
         const session = await openSession(sandbox.path);

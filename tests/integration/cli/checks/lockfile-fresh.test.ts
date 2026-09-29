@@ -5,6 +5,7 @@ import * as processes from '#cli/platform/spawn.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { runEngineCheck } from '#cli/execution/engines.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { lockfileFresh } from '#cli/checks/dependencies/lockfile/fresh.ts';
 import { mkdirSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 
@@ -13,7 +14,7 @@ test.each(['missing', 'deadline', 'cancellation', 'registry', 'authentication', 
     async (failure) => {
         await using directory = await testdir();
         await createFileTree(directory.path, {
-            'gspot.toml': 'version = 1\nkits = ["dependencies"]\n',
+            'gspot.toml': policyOf(['dependencies']),
             'package.json': '{"name":"example","private":true}\n',
             'bun.lock': 'original lock\n',
             'node_modules/protected.txt': 'installed dependency\n',

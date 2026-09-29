@@ -5,6 +5,7 @@ import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { installCommand } from '#cli/commands/install.ts';
 import { keptMode } from '#tests/support/cli/platforms.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { uninstallCommand } from '#cli/commands/uninstall.ts';
 import { hookLocation } from '#cli/repository/hook-location.ts';
 import { statSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
@@ -14,7 +15,7 @@ test.each(['before', 'after'] as const)(
     async (point) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\nkits = []\n[hooks]\ntool = "gspot"\n[guides]\ninstall = false\n',
+            'gspot.toml': policyOf([], '[hooks]\ntool = "gspot"\n[guides]\ninstall = false\n'),
         });
         const ran = await processes.run(['git', 'init', '-q'], { cwd: sandbox.path });
         expect(ran.code).toBe(0);
@@ -59,7 +60,7 @@ test.each(['before', 'after'] as const)(
 test('uninstall recovers after restoring an original hook and before removing its retained sibling', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nkits = []\n[hooks]\ntool = "gspot"\n[guides]\ninstall = false\n',
+        'gspot.toml': policyOf([], '[hooks]\ntool = "gspot"\n[guides]\ninstall = false\n'),
     });
     const ran = await processes.run(['git', 'init', '-q'], { cwd: sandbox.path });
     expect(ran.code).toBe(0);

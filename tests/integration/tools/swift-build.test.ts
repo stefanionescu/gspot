@@ -3,9 +3,11 @@ import { test, expect, afterEach } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { buildFolder } from '#cli/platform/paths.ts';
 import type { EngineInput } from '#cli/types/checks.ts';
+import { onMac } from '#tests/support/cli/platforms.ts';
 import { swiftBuild } from '#cli/checks/swift/build.ts';
 import { sessionInput } from '#tests/support/cli/input.ts';
 import { swiftBuildPlan } from '#cli/checks/swift/plan.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { rmSync, statSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 
 const caches = new Set<string>();
@@ -22,30 +24,25 @@ async function inputFor(root: string, check: string): Promise<EngineInput> {
 }
 
 // The manifest assigns compiler-backed Swift checks to macOS.
-if (process.platform === 'darwin') {
+if (onMac) {
     test('incremental Swift builds preserve compiler state and still detect a changed source', async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\nkits = ["swift"]\n',
+            'gspot.toml': policyOf(['swift']),
             'Package.swift':
                 '// swift-tools-version: 6.0\nimport PackageDescription\nlet package = Package(name: "Example", targets: [.target(name: "Example")])\n',
             'Sources/Example/Value.swift': 'public let value: Int = 1\n',
         });
         const first = await inputFor(sandbox.path, 'swift/build');
-        const start = performance.now();
         expect(await swiftBuild(first)).toStrictEqual([]);
-        const initialMs = performance.now() - start;
         const plan = swiftBuildPlan(first);
         const files = [...new Bun.Glob('**/Value.swift.o').scanSync({ cwd: plan.folder })];
         expect(files).toHaveLength(1);
         const compiledFile = join(plan.folder, files[0]!);
         const modified = statSync(compiledFile).mtimeMs;
         const again = await inputFor(sandbox.path, 'swift/build');
-        const repeatedStart = performance.now();
         expect(await swiftBuild(again)).toStrictEqual([]);
-        const repeatedMs = performance.now() - repeatedStart;
         expect(statSync(compiledFile).mtimeMs).toBe(modified);
-        console.log(`Swift compile: initial ${initialMs.toFixed(0)} ms; unchanged ${repeatedMs.toFixed(0)} ms`);
         writeFileSync(join(sandbox.path, 'Sources/Example/Value.swift'), 'public let value: Int = "wrong"\n');
         expect(await swiftBuild(await inputFor(sandbox.path, 'swift/build'))).toMatchObject([
             { file: 'Sources/Example/Value.swift', line: 1, rule: 'compiler' },
@@ -79,8 +76,10 @@ if (process.platform === 'darwin') {
 `;
         const source = 'let value: Int = 1\nprint(value)\n';
         await createFileTree(sandbox.path, {
-            'gspot.toml':
-                'version = 1\nkits = ["swift", "xcode"]\n[tools.xcode]\nproject = "Example.xcodeproj"\nscheme = "Example"\ndestination = "platform=macOS"\n',
+            'gspot.toml': policyOf(
+                ['swift', 'xcode'],
+                '[tools.xcode]\nproject = "Example.xcodeproj"\nscheme = "Example"\ndestination = "platform=macOS"\n',
+            ),
             'Example.xcodeproj/project.pbxproj': project,
             'Example.xcodeproj/xcshareddata/xcschemes/Example.xcscheme':
                 '<Scheme version="1.3"><BuildAction><BuildActionEntries><BuildActionEntry buildForTesting="YES" buildForRunning="YES"><BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="T1" BuildableName="Example" BlueprintName="Example" ReferencedContainer="container:Example.xcodeproj"/></BuildActionEntry></BuildActionEntries></BuildAction><TestAction buildConfiguration="Debug"/></Scheme>\n',

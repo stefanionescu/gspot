@@ -8,6 +8,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { RUFF_PREVIEW_RULES } from '#cli/config/checks/python.ts';
 import { generatedFile } from '#tests/support/cli/generated/files.ts';
 import { generatedEslint } from '#tests/support/cli/generated/eslint.ts';
@@ -45,7 +46,11 @@ test.each(['recommended', 'all'] as const)(
     async (level) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': `version = 1\nlevel = "${level}"\nkits = ["python", "pytest"]\n[[scope]]\npath = "app"\nkits = []\n[scope.tools.pytest]\ncoverage = 91\n[scope.tools.vulture]\nmin_confidence = 95\n`,
+            'gspot.toml': policyOf(
+                ['python', 'pytest'],
+                '[[scope]]\npath = "app"\nkits = []\n[scope.tools.pytest]\ncoverage = 91\n[scope.tools.vulture]\nmin_confidence = 95\n',
+                level,
+            ),
             'app/main.py': 'value = 1\n',
         });
         const session = await openSession(sandbox.path);
@@ -59,10 +64,7 @@ test.each(['recommended', 'all'] as const)(
 );
 
 test.each(['recommended', 'all'] as const)('%s Ruff selects stable rules with preview disabled', async (level) => {
-    const text = await generatedFile(
-        `version = 1\nlevel = "${level}"\nkits = ["python", "fastapi", "pytest"]\n`,
-        '.gspot/config/ruff.toml',
-    );
+    const text = await generatedFile(policyOf(['python', 'fastapi', 'pytest'], '', level), '.gspot/config/ruff.toml');
     const config = parseToml(text) as { lint: { select: string[]; preview: boolean }; format: { preview: boolean } };
     expect(config.lint.preview).toBe(false);
     expect(config.format.preview).toBe(false);
@@ -76,7 +78,7 @@ test.each(['recommended', 'all'] as const)('%s rejects experimental activation b
         '[tools.ruff.extra]\npreview = true\nreason = "Project preference"',
         `[tools.ruff]\nselect = ["${String([...RUFF_PREVIEW_RULES][0])}"]`,
     ]) {
-        const text = `version = 1\nlevel = "${level}"\nkits = ["python"]\n${settings}`;
+        const text = policyOf(['python'], settings, level);
         expect(() => {
             assertPolicyComplete({ policy: parsePolicyText(text, 'gspot.toml'), text, path: 'gspot.toml' });
         }).toThrow('preview');
@@ -88,7 +90,7 @@ test.each(['recommended', 'all'] as const)(
     async (level) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': `version = 1\nlevel = "${level}"\nkits = ["javascript"]\n[[scope]]\npath = "app"\nkits = ["react", "drizzle"]\n`,
+            'gspot.toml': policyOf(['javascript'], '[[scope]]\npath = "app"\nkits = ["react", "drizzle"]\n', level),
             'package.json': '{"private":true,"type":"module"}',
             'root.jsx': '',
             'app/client.jsx': '',
@@ -116,7 +118,7 @@ test('all retains the effective recommended rules for the same applicable React 
     for (const level of ['recommended', 'all']) {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': `version = 1\nlevel = "${level}"\nkits = ["react"]\n`,
+            'gspot.toml': policyOf(['react'], '', level),
             'package.json': '{"private":true,"type":"module"}',
             'client.jsx': '',
         });
@@ -132,7 +134,7 @@ test('switching levels restores generated defaults and agent instructions', asyn
     await using sandbox = await testdir();
     const outputs: string[] = [];
     for (const level of ['recommended', 'all', 'recommended']) {
-        const policy = `version = 1\nlevel = "${level}"\nkits = ["javascript"]\n`;
+        const policy = policyOf(['javascript'], '', level);
         await Bun.write(join(sandbox.path, 'gspot.toml'), policy);
         const session = await openSession(sandbox.path);
         const output = emitAll(session.policyFiles.policy, session.repository, session.scopes, {

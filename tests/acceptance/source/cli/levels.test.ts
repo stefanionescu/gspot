@@ -3,7 +3,8 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { reportSchema } from '#cli/execution/report.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 
 // Recommended keeps syntax enforcement while leaving naming preferences inactive.
 async function expectRecommendedLevel(root: string, command: string[]): Promise<void> {
@@ -50,7 +51,7 @@ test(
     async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\nkits = ["bash", "naming"]\n[guides]\ninstall = false\n',
+            'gspot.toml': policyOf(['bash', 'naming'], '[guides]\ninstall = false\n'),
             'entry.sh': 'shell_command=example\n',
         });
         const command = ['check', '--only', 'bash/syntax', 'naming/identifiers', '--no-cache', '--json'];
@@ -97,7 +98,7 @@ test.each([
 ])('invalid %s value %s preserves the policy', async (key, value) => {
     await using sandbox = await testdir();
     const policyPath = join(sandbox.path, 'gspot.toml');
-    const policy = 'version = 1\nkits = ["bash", "naming"]\nextra_checks = ["naming/identifiers"]\n';
+    const policy = policyOf(['bash', 'naming'], 'extra_checks = ["naming/identifiers"]\n');
     await Bun.write(policyPath, policy);
     const refused = await run(sandbox.path, ['set', key, value]);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);

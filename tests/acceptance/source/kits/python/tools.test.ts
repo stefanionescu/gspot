@@ -6,20 +6,30 @@ import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import type { FindingCase } from '#tests/types/cli.ts';
 import { reportSchema } from '#cli/execution/report.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { run as runCommand } from '#cli/platform/spawn.ts';
-import { runPlanted } from '#tests/support/cli/planted.ts';
 import { containing } from '#tests/support/expectations.ts';
+import { plantedCases } from '#tests/support/cli/planted.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
+import { install, toolsPath } from '#tests/support/cli/tools.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
-import { install, toolsPath, installAtLevel } from '#tests/support/cli/tools.ts';
 
 import {
     TOOLS_CLEAN,
     TOOLS_MODULE,
     TOOLS_PROJECT,
     STRUCTURE_INIT,
-} from '#tests/config/acceptance/source/kits/python.ts';
+} from '#tests/inputs/acceptance/source/kits/python.ts';
 
+// What each check accepts beside the clean module.
+const CORRECTIONS: Record<string, Record<string, string>> = {
+    'python/vulture': { 'planted/unused.py': '"""No unused imports."""\n' },
+    'integrity/dependency-ownership': {
+        'uv.lock': 'version = 1\n',
+        'scripts/setup.sh': '#!/usr/bin/env bash\nprintf "Dependencies are owned by pyproject.toml\\n"\n',
+    },
+    'integrity/typecheck-membership': { 'planted/gone.py': '"""A file with a separate dependency set."""\n' },
+};
 const CASES: FindingCase[] = [
     {
         check: 'python/ruff',
@@ -83,7 +93,7 @@ test(
         const project = '[project]\nname = "dependency-example"\nversion = "1.0.0"\ndependencies = []\n';
         const exclusions = '\n[tool.deptry]\nexclude = ["^generated/"]\nextend_exclude = ["^vendor/"]\n';
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\nkits = ["python"]\n',
+            'gspot.toml': policyOf(['python']),
             'pyproject.toml': project + exclusions,
             'src/main.py': 'import undeclared_example\n',
             'generated/client.py': 'import generated_dependency\n',
@@ -125,37 +135,21 @@ test(
     PLANTED_TIMEOUT_MS * 3,
 );
 
-test.each(CASES)(
-    'the python configuration > $check reports its defect in $expected.file and accepts a correction',
-    async (planted) => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
+plantedCases(
+    'the python configuration',
+    {
+        kits: ['python'],
+        modules: false,
+        without: ['naming', 'spelling', 'dependencies'],
+        tools: ['ruff', 'basedpyright'],
+        files: {
             'pyproject.toml': TOOLS_PROJECT,
             'planted/__init__.py': '"""The planted package."""\n',
             [TOOLS_MODULE]: TOOLS_CLEAN,
-        });
-        commitAll(sandbox.path);
-        const environment = { PATH: toolsPath(['ruff', 'basedpyright', 'typos', 'ec']) };
-        await installAtLevel(sandbox.path, STRUCTURE_INIT, environment);
-        const outcome = await runPlanted(sandbox.path, planted, environment);
-        expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
-        const failed = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
-        expect(failed.checks).toMatchObject([{ check: planted.check, status: 'fail' }]);
-        expect(failed.checks[0]!.findings).toContainEqual(containing(planted.expected));
-        const files: Record<string, string> = { [TOOLS_MODULE]: TOOLS_CLEAN };
-        if (planted.check === 'python/vulture') files['planted/unused.py'] = '"""No unused imports."""\n';
-        if (planted.check === 'integrity/dependency-ownership') {
-            files['uv.lock'] = 'version = 1\n';
-            files['scripts/setup.sh'] = '#!/usr/bin/env bash\nprintf "Dependencies are owned by pyproject.toml\\n"\n';
-        }
-        if (planted.check === 'integrity/typecheck-membership')
-            files['planted/gone.py'] = '"""A file with a separate dependency set."""\n';
-        const corrected = await runPlanted(sandbox.path, { ...planted, files }, environment);
-        expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        const accepted = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
-        expect(accepted.checks).toMatchObject([{ check: planted.check, status: 'ok', findings: [] }]);
+        },
+        corrected: (planted) => ({ files: { ...CORRECTIONS[planted.check], [TOOLS_MODULE]: TOOLS_CLEAN } }),
     },
-    PLANTED_TIMEOUT_MS * 6,
+    CASES,
 );
 
 test(
