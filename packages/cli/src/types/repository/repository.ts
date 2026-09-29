@@ -1,7 +1,6 @@
 // The types of repository in this package.
 import type { z } from 'zod';
 import type { Ignore } from 'ignore';
-import type { ToolPin } from '#cli/types/kits.ts';
 import type { Policy } from '#cli/types/policy/policy.ts';
 import type { packageManifestSchema } from '#cli/repository/manifests.ts';
 
@@ -50,8 +49,6 @@ export type ExistingTool = {
     shared?: boolean;
     table?: string;
     key?: string;
-    keeps: NonNullable<ToolPin['replace']>[number]['keeps'];
-    check?: string;
 };
 export type ExistingTooling = {
     configs: ExistingTool[];

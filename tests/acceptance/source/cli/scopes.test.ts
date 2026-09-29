@@ -3,13 +3,13 @@ import { test, expect } from 'bun:test';
 import { join, delimiter } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
-import { symlinkSync, writeFileSync } from 'node:fs';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { parsePolicyText } from '#cli/policy/read.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
 import { containing } from '#tests/support/expectations.ts';
+import { existsSync, symlinkSync, writeFileSync } from 'node:fs';
 import { treeContents } from '#tests/support/cli/preservation.ts';
 import { toolsPath, installAtLevel } from '#tests/support/cli/tools.ts';
 import { SCOPES_SOURCE } from '#tests/config/acceptance/source/cli/cli.ts';
@@ -77,7 +77,7 @@ test(
 );
 
 test(
-    'typescript in a scope > an ignore file inside a scope travels into the policy, and a one-word comment stays a reason the policy accepts',
+    'typescript in a scope > an ignore file inside a scope is replaced at init, and the scoped check runs',
     async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
@@ -105,8 +105,8 @@ test(
         ];
         await installAtLevel(sandbox.path, argv, environment);
         const policy = await Bun.file(join(sandbox.path, 'gspot.toml')).text();
-        expect(policy).toContain('db/**/templates/**');
-        expect(policy).toContain('kept from db/.sqlfluffignore at init: Templates');
+        expect(policy).not.toContain('templates');
+        expect(existsSync(join(sandbox.path, 'db/.sqlfluffignore'))).toBe(false);
         const syntax = await run(sandbox.path, ['check', '--only', 'sql/syntax', '--no-cache'], environment);
         expect(syntax.code).toBe(0);
     },

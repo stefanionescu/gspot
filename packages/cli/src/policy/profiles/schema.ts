@@ -20,8 +20,6 @@ export const profileSchema = policySchema
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Export and read both ask it; one owner keeps the path test.
 export function isRepositoryPath(key: string, value: unknown): boolean {
     return (
-        (key === 'adopted' && typeof value === 'object' && value !== null && 'sections' in value) ||
-        PATH_KEYS.has(key) ||
-        (key === 'module' && typeof value === 'string' && /^(?:\.|\/|\\|[A-Za-z]:)/u.test(value))
+        PATH_KEYS.has(key) || (key === 'module' && typeof value === 'string' && /^(?:\.|\/|\\|[A-Za-z]:)/u.test(value))
     );
 }

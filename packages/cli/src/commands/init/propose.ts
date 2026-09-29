@@ -1,9 +1,8 @@
 import { stringify } from 'smol-toml';
 import { patch } from '@decimalturn/toml-patch';
+import { asRaw } from '#cli/policy/normalize.ts';
 import { policySchema } from '#cli/policy/schema.ts';
-import { asRaw } from '#cli/policy/adoption/source.ts';
 import type { InitPlan } from '#cli/types/commands/init.ts';
-import type { AdoptionResult } from '#cli/types/policy/adoption.ts';
 import type { TomlTable } from '#cli/types/repository/repository.ts';
 import { SCHEMA_LINE, PROFILE_HEAD } from '#cli/config/commands/init.ts';
 import { policyIndent, wrapLongArrays } from '#cli/policy/toml/width.ts';
@@ -22,21 +21,13 @@ function xcodeTable(xcode: InitPlan['xcode']): TomlTable | undefined {
     return xcode.scheme === undefined ? { project: xcode.project } : { project: xcode.project, scheme: xcode.scheme };
 }
 
-function toolTables(
-    kept: AdoptionResult,
-    commitScopes: string[] | undefined,
-    xcode?: InitPlan['xcode'],
-): Record<string, TomlTable | undefined> {
-    const tables: Record<string, TomlTable | undefined> = Object.fromEntries(
-        [...kept.tools]
-            .filter(([, entry]) => Object.keys(entry.settings).length > 0)
-            .map(([tool, entry]) => [tool, entry.settings]),
-    );
-    if (kept.formatter?.ignorePatterns !== undefined)
-        tables['prettier'] = { ...tables['prettier'], ignore_patterns: kept.formatter.ignorePatterns };
-    if (commitScopes !== undefined && commitScopes.length > 0)
-        tables['commitlint'] = { ...tables['commitlint'], scopes: commitScopes };
-    if (xcode?.scope === '') tables['xcode'] = xcodeTable(xcode);
+function toolTables(plan: InitPlan): Record<string, TomlTable | undefined> {
+    const tables: Record<string, TomlTable | undefined> = {};
+    const install = plan.install?.find((entry) => entry.path === '');
+    if (install !== undefined) tables['install'] = { ...install.settings };
+    if (plan.commitScopes !== undefined && plan.commitScopes.length > 0)
+        tables['commitlint'] = { ...tables['commitlint'], scopes: plan.commitScopes };
+    if (plan.xcode?.scope === '') tables['xcode'] = xcodeTable(plan.xcode);
     return Object.fromEntries(Object.entries(tables).filter(([, table]) => table !== undefined));
 }
 
@@ -46,29 +37,15 @@ function headTables(plan: InitPlan): TomlTable {
         level: policySchema.shape.level.parse(undefined),
         kits: plan.kits,
     };
-    const scopes = new Map<string, { path: string; kits: string[]; tools: TomlTable }>(
-        plan.scopes.map((scope) => [
-            scope.path,
-            {
-                path: scope.path,
-                kits: scope.kits,
-                tools: plan.xcode?.scope === scope.path ? { xcode: xcodeTable(plan.xcode) } : {},
-            },
-        ]),
-    );
-    for (const [path, adopted] of plan.kept.scopes) {
-        const scope = scopes.get(path) ?? { path, kits: [], tools: {} };
-        scope.kits = [...new Set([...scope.kits, ...adopted.kits])];
-        scope.tools = { ...scope.tools, ...adopted.tools };
-        scopes.set(path, scope);
-    }
-    if (scopes.size > 0)
-        document['scope'] = [...scopes.values()].map(({ tools, ...scope }) => ({
-            ...scope,
-            ...(Object.keys(tools).length === 0 ? {} : { tools }),
-        }));
-    if (plan.formatter !== undefined && Object.keys(plan.formatter.format).length > 0)
-        document['format'] = plan.formatter.format;
+    const scopes = plan.scopes.map((scope) => {
+        const install = plan.install?.find((entry) => entry.path === scope.path);
+        const tools: TomlTable = {
+            ...(plan.xcode?.scope === scope.path ? { xcode: xcodeTable(plan.xcode) } : {}),
+            ...(install === undefined ? {} : { install: { ...install.settings } }),
+        };
+        return { path: scope.path, kits: scope.kits, ...(Object.keys(tools).length === 0 ? {} : { tools }) };
+    });
+    if (scopes.length > 0) document['scope'] = scopes;
     return document;
 }
 
@@ -78,13 +55,6 @@ function mergeToolSettings(base: unknown, overrides: unknown): TomlTable {
     for (const [tool, settings] of Object.entries(asRaw(overrides) ?? {}))
         tools[tool] = { ...asRaw(tools[tool]), ...asRaw(settings) };
     return tools;
-}
-
-function applyFormatter(tools: Record<string, TomlTable | undefined>, formatter: InitPlan['formatter']): void {
-    if (formatter === undefined) return;
-    if (formatter.extra !== undefined) tools['prettier'] = { ...tools['prettier'], extra: formatter.extra };
-    if (formatter.nativeDefaults === true) tools['prettier'] = { ...tools['prettier'], native_defaults: true };
-    if (formatter.editorconfig !== undefined) tools['editorconfig'] = { adopted: formatter.editorconfig };
 }
 
 function applyDetectedTools(tools: Record<string, TomlTable | undefined>, detected: InitPlan['detected']): void {
@@ -162,22 +132,11 @@ function bodyText(document: TomlTable): string {
  */
 export function proposeText(plan: InitPlan): string {
     const document = headTables(plan);
-    const tools = toolTables(plan.kept, plan.commitScopes, plan.xcode);
-    applyFormatter(tools, plan.formatter);
+    const tools = toolTables(plan);
     applyDetectedTools(tools, plan.detected);
     applyDetectedArchitecture(document, plan.detected);
     if (Object.keys(tools).length > 0) document['tools'] = tools;
     mergeProfile(document, plan.profileTables);
-    const ignores = [...plan.kept.tools.values()]
-        .flatMap((tool) => tool.ignores)
-        .map((entry) => ({
-            check: entry.check,
-            ...(entry.rule === undefined ? {} : { rule: entry.rule }),
-            ...(entry.paths === undefined ? {} : { paths: entry.paths }),
-            reason: entry.reason,
-        }));
-    if (ignores.length > 0)
-        document['ignore'] = [...((document['ignore'] as TomlTable[] | undefined) ?? []), ...ignores];
     applyIntegrations(document, plan);
     return `${PREFACE}${bodyText(document)}`;
 }

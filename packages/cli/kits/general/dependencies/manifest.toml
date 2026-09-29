@@ -24,7 +24,6 @@ scoop = "osv-scanner"
 
 [[tools.replace]]
 file = "osv-scanner.toml"
-keeps = "advisories"
 
 [[tools]]
 name = "syncpack"
@@ -34,31 +33,24 @@ mise = "npm:syncpack"
 
 [[tools.replace]]
 file = ".syncpackrc"
-keeps = "rules-table"
 
 [[tools.replace]]
 file = ".syncpackrc.json"
-keeps = "rules-table"
 
 [[tools.replace]]
 file = ".syncpackrc.js"
-keeps = "rules-table"
 
 [[tools.replace]]
 file = ".syncpackrc.cjs"
-keeps = "rules-table"
 
 [[tools.replace]]
 file = "syncpack.config.js"
-keeps = "rules-table"
 
 [[tools.replace]]
 file = "syncpack.config.cjs"
-keeps = "rules-table"
 
 [[tools.replace]]
 file = "syncpack.config.mjs"
-keeps = "rules-table"
 
 [[configs]]
 template = "osv-scanner.toml.tmpl"

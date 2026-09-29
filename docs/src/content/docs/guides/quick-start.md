@@ -122,8 +122,7 @@ gspot check --only python/ruff bash/shellcheck
 
 ## Use it in your project
 
-Follow [existing repositories](/guides/existing-repository/) to preview adoption without
-losing existing settings. Add [Git hooks or CI](/guides/hooks-and-ci/) to run checks before
+Follow [existing repositories](/guides/existing-repository/) to preview what init replaces. Add [Git hooks or CI](/guides/hooks-and-ci/) to run checks before
 changes reach the default branch.
 
 The disposable example is stored at `example_root`. Leave it before removing it when you

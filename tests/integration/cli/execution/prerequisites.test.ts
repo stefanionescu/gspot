@@ -67,14 +67,12 @@ test('a failed site build skips every output consumer and a new session rebuilds
     ]);
     const session = await openSession(sandbox.path);
     session.resources = resources;
-    const stages = await Promise.all(
-        ['push', 'manual'].map((stage) =>
-            planRun(session, {
-                stage: stage as 'push' | 'manual',
-                skips: [],
-                only: ['static-site/build', ...consumers],
-            }),
-        ),
+    const stages = ['push', 'manual'].map((stage) =>
+        planRun(session, {
+            stage: stage as 'push' | 'manual',
+            skips: [],
+            only: ['static-site/build', ...consumers],
+        }),
     );
     const planned = stages.flat();
     expect(planned).toHaveLength(consumers.size + 1);
@@ -103,7 +101,7 @@ test('a failed site build skips every output consumer and a new session rebuilds
     );
     const next = await openSession(sandbox.path);
     next.resources = resources;
-    const [build] = await planRun(next, { stage: 'push', skips: [], only: ['static-site/build'] });
+    const [build] = planRun(next, { stage: 'push', skips: [], only: ['static-site/build'] });
     const rebuilt = await checkExecution(build!.spec)(next, build!);
     expect(rebuilt.status).toBe('ok');
 });

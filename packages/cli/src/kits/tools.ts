@@ -74,8 +74,6 @@ export const toolSchema = z.strictObject({
                     table: z.string().min(1).optional(),
                     key: z.string().min(1).optional(),
                     shared: z.boolean().default(false),
-                    check: z.string().min(1).optional(),
-                    keeps: z.enum(['ignore-paths', 'rules-table', 'words', 'advisories', 'licenses', 'eslint-config']),
                 })
                 .superRefine((row, context) => {
                     if (row.key !== undefined && row.table !== undefined)

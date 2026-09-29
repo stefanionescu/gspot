@@ -21,7 +21,7 @@ test('ShellCheck rejects partial findings when another selected file cannot be r
         'sample.sh': source,
     });
     const session = await openSession(sandbox.path);
-    const plans = await planRun(session, { stage: 'commit', skips: [], only: ['bash/shellcheck'] });
+    const plans = planRun(session, { stage: 'commit', skips: [], only: ['bash/shellcheck'] });
     const planned = plans[0]!;
     const command = ['shellcheck', '--norc', '--format=gcc', 'sample.sh'];
     const roots: [string, string] = [sandbox.path, sandbox.path];
@@ -70,7 +70,7 @@ async function preparedVulture(root: string): Promise<{ planned: PlannedCheck; e
     if (applied.code !== 0) throw new Error(`The sandbox apply failed: ${applied.stdout}${applied.stderr}`);
     await installPrivateTools(root);
     const session = await openSession(root);
-    const plans = await planRun(session, { stage: 'push', skips: [], only: ['python/vulture'] });
+    const plans = planRun(session, { stage: 'push', skips: [], only: ['python/vulture'] });
     const bin = join(root, PYTHON_ENVIRONMENT_DIRECTORY, process.platform === 'win32' ? 'Scripts' : 'bin');
     return { planned: plans[0]!, env: { ...environmentVariables(), PATH: [bin, toolsPath([])].join(delimiter) } };
 }

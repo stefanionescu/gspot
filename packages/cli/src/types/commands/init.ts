@@ -2,7 +2,6 @@
 import type { Read } from '#cli/types/platform.ts';
 import type { Profile } from '#cli/types/policy/profiles.ts';
 import type { Policy, RawPolicy } from '#cli/types/policy/policy.ts';
-import type { AdoptionResult, AdoptedFormatting } from '#cli/types/policy/adoption.ts';
 import type { Manifest, SettingSpec, UnknownLanguage, KitEvidence as Plan } from '#cli/types/kits.ts';
 
 import type {
@@ -21,7 +20,14 @@ export type Planning = {
     selection: InitSelection;
     everySelected: Manifest[];
     answers: InitAnswers;
-    kept: AdoptionResult;
+    replaced: Replaced;
+};
+/** The authored configuration init replaces: what it read, what it deletes, and what stays for the developer. */
+export type Replaced = {
+    read: Map<string, Read>;
+    removed: { path: string; note: string }[];
+    unread: { path: string; note: string }[];
+    retained: { path: string; note: string }[];
 };
 export type DetectionSummary = {
     files: TrackedFile[];
@@ -48,7 +54,6 @@ export type InitOptions = {
     hooks?: NonNullable<Policy['hooks']>['tool'] | 'none';
     ci?: NonNullable<Policy['ci']>['provider'] | 'none';
     rules?: 'yes' | 'no';
-    format?: 'keep' | 'shipped';
     runner?: NonNullable<Policy['runner']>['tool'] | 'none';
     from?: string;
     profile?: Profile;
@@ -82,7 +87,6 @@ export type InitAnswers = {
     ci: NonNullable<Policy['ci']>['provider'] | 'none';
     isRules: boolean;
     runner: NonNullable<Policy['runner']>['tool'] | 'none';
-    formatter?: AdoptedFormatting;
 };
 /** Everything init computes before it asks to continue. */
 export type InitPrepared = {
@@ -114,13 +118,13 @@ export type InitPlan = {
     profileTables?: TomlTable;
     kits: string[];
     scopes: { path: string; kits: string[] }[];
-    kept: AdoptionResult;
     hooks: NonNullable<RawPolicy['hooks']>['tool'] | 'none';
     ci: NonNullable<RawPolicy['ci']>['provider'] | 'none';
     rules: boolean;
     runner: NonNullable<RawPolicy['runner']>['tool'] | 'none';
     runnerTasks?: NonNullable<RawPolicy['runner']>['tasks'];
-    formatter?: AdoptedFormatting;
+    /** The Bun install safeguards found in each bunfig.toml, by scope path ('' for the root). */
+    install?: { path: string; settings: InstallSettings }[];
     /** The Xcode project and scheme init found, for the tools.xcode table. */
     xcode?: { scope: string; project: string; scheme?: string };
     /** The settings init filled from the repository through their detect tables. */
@@ -138,8 +142,6 @@ export type ReplacePlan = {
     remove: { path: string; note: string }[];
     unread: { path: string; note: string }[];
     retained: { path: string; note: string }[];
-    kept: { from: string; count: number; into: string }[];
     change: { path: string; note: string }[];
     noLongerRuns: { path: string; note: string }[];
-    ignores: { check: string; rule?: string; reason: string }[];
 };

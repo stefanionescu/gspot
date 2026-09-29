@@ -84,22 +84,6 @@ test('manifest collection refuses circular replacement before either check can s
     }).toThrow('project/first -> project/second -> project/first');
 });
 
-test.each(['missing/check', 'bash/shfmt'])(
-    'replace refuses destination %s and accepts the check that executes its tool',
-    (destination) => {
-        const manifests = structuredClone(kitManifests());
-        const row = manifests.get('bash')!.tools.find((tool) => tool.name === 'shellcheck')!.replace![0]!;
-        row.check = destination;
-        expect(() => {
-            validateManifests(manifests);
-        }).toThrow('must execute shellcheck');
-        row.check = 'bash/shellcheck';
-        expect(() => {
-            validateManifests(manifests);
-        }).not.toThrow();
-    },
-);
-
 test('check references require one standalone built-in owner and preserve its definition', () => {
     const owner = parseManifest(
         `[kit]\nname = "owner"\nkind = "language"\ntitle = "owner"\nrequires = ${JSON.stringify([])}\ndescription = "A configuration for the tests, long enough."\n`,

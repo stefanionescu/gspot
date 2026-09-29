@@ -8,7 +8,6 @@ import { commitAll } from '#tests/support/cli/git.ts';
 import { script } from '#tests/support/cli/planted.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
-import { containing } from '#tests/support/expectations.ts';
 import { treeContents } from '#tests/support/cli/preservation.ts';
 
 const TOOLS = { PATH: toolsPath(['ast-grep', 'shellcheck', 'shfmt', 'typos']) };
@@ -110,12 +109,11 @@ test(
                 rule: 'SC2034',
                 reason: 'The shell exports these variables to another process.',
             },
-            containing({ check: 'bash/shellcheck', rule: 'SC2154' }),
         ]);
-        await Bun.write(
-            join(second.path, 'tools/b.sh'),
-            '#!/usr/bin/env bash\nunused_variable=hello\nprintf \'%s\\n\' "${exported_env}"\n',
-        );
+        // The second repository's .shellcheckrc is replaced by the generated pointer, not carried.
+        expect(await Bun.file(join(second.path, '.shellcheckrc')).text()).toContain('gspot');
+        // The profile's ignore covers the unused variable; nothing else in the script reports.
+        await Bun.write(join(second.path, 'tools/b.sh'), '#!/usr/bin/env bash\nunused_variable=hello\n');
         const checked = await run(second.path, ['check', '--only', 'bash/shellcheck', '--no-cache'], TOOLS);
         expect(checked.code, checked.stdout + checked.stderr).toBe(0);
         await Bun.write(join(second.path, 'tools/b.sh'), '#!/usr/bin/env bash\necho $unquoted\n');

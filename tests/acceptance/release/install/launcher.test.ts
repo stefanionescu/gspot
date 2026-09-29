@@ -1,4 +1,4 @@
-// Installs built packages from an isolated registry: the launcher stops its owned process on a signal and uninstall restores adopted files.
+// Installs built packages from an isolated registry: the launcher stops its owned process on a signal and uninstall restores replaced files.
 import prettier from 'prettier';
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
@@ -75,7 +75,7 @@ test.each(['SIGINT', 'SIGTERM'] as const)(
 );
 
 test(
-    'installed adoption restores original formatter bytes and EditorConfig modes',
+    'init replaces the formatter files and uninstall restores their bytes and modes',
     async () => {
         await using fixture = await createConsumer(release.registry, release.version);
         expect(fixture.installed.code, fixture.installed.stdout + fixture.installed.stderr).toBe(0);
@@ -96,7 +96,7 @@ test(
             useCache: false,
         });
         expect(await prettier.format(readFileSync(filepath, 'utf8'), { ...formatting, filepath })).toBe(
-            'const greeting = "hello"\n',
+            "const greeting = 'hello';\n",
         );
         const futureJson = await prettier.resolveConfig(join(consumer, 'nested/future.json'), {
             config: join(consumer, '.gspot/config/prettier.json'),

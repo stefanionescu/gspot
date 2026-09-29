@@ -18,7 +18,6 @@ import type { Repository } from '#cli/types/repository/repository.ts';
 import { agentFiles, managedBlock } from '#cli/agents/instructions.ts';
 import { gitlabFile, workflowFile } from '#cli/generation/workflow.ts';
 import { toolEnvironment } from '#cli/generation/tools/environment.ts';
-import { withdrawRetained } from '#cli/generation/retained/outputs.ts';
 import { lefthookConfiguration } from '#cli/generation/hooks/lefthook.ts';
 import type { Generated, GenerationOptions } from '#cli/types/generation.ts';
 import { preCommitConfiguration } from '#cli/generation/hooks/pre-commit.ts';
@@ -137,7 +136,7 @@ function validatePlan(plan: Generated): void {
  * @param policy the repository policy
  * @param repository the repository with its tracked files
  * @param scopes every resolved scope
- * @param options the version, the package manager, and the replace originals
+ * @param options the version and the package manager
  * @returns the files, blocks, merges, and package edits
  */
 export function emitAll(
@@ -147,7 +146,7 @@ export function emitAll(
     options: GenerationOptions,
 ): Generated {
     const { root, files } = repository;
-    const { version, packageClient, replace } = options;
+    const { version, packageClient } = options;
     const manifests = everyManifest(scopes);
     const binary = binaryPath();
     const out: Generated = { notes: [], files: [], blocks: [], merges: [], configurations: [] };
@@ -157,7 +156,6 @@ export function emitAll(
         for (const manifest of selection.selected)
             emitConfigurations({ root, files, scopes, inputs, selection, manifest }, out, seen);
     }
-    withdrawRetained({ root, policy, files, replace }, out);
     out.configurations.push(...bunConfiguration(root, scopes));
     hookOutputs(root, policy, out, binary);
     out.files.push(...toolPackages(manifests, packageClient, policy.runner?.tool), ...toolEnvironment(manifests));

@@ -18,7 +18,7 @@ test('nested configuration inputs stop at the declared scope and reject linked a
         'app/Other/.swiftlint.yml': 'disabled_rules: []\n',
     });
     const session = await openSession(sandbox.path);
-    const plans = await planRun(session, { stage: 'commit', skips: [], only: ['swift/swiftlint'] });
+    const plans = planRun(session, { stage: 'commit', skips: [], only: ['swift/swiftlint'] });
     const planned = plans.find((plan) => plan.scope.scope.path === 'app')!;
     expect(commandConfigurations(session, planned)).toStrictEqual([
         '.gspot/config/app/swiftlint.yml',
@@ -45,7 +45,7 @@ test.each([
         'source/Example.swift': 'let source = 2\n',
     });
     const session = await openSession(sandbox.path);
-    const plans = await planRun(session, { stage: 'commit', skips: [], only: ['swift/swiftlint'] });
+    const plans = planRun(session, { stage: 'commit', skips: [], only: ['swift/swiftlint'] });
     expect(
         substitute(session, plans[0]!, ['before', '{workspace:--workspace}', 'after'], {
             files: [],

@@ -18,13 +18,10 @@ export type PolicyFinding = PolicyProblem & { line: number; column: number };
 export type Defined<T> = { [K in keyof T]: Exclude<T[K], undefined> };
 /** gspot.toml as the schema accepts it, before normalization. */
 export type RawPolicy = z.infer<typeof policySchema>;
-export type EslintAdoption = NonNullable<NonNullable<NonNullable<RawPolicy['tools']>['eslint']>['adopted']>[number];
 /** One [[scope]] entry as written. */
 export type RawScope = z.infer<typeof scopeSchema>;
 /** ESLint settings retain the validation shape of their policy owner. */
 export type EslintSettings = NonNullable<NonNullable<RawPolicy['tools']>['eslint']>;
-export type EslintRegistration = NonNullable<EslintAdoption['plugins']>[string];
-export type EditorconfigAdoption = NonNullable<NonNullable<NonNullable<RawPolicy['tools']>['editorconfig']>['adopted']>;
 export type TomlBlock = ReturnType<typeof parseDocument>['cst'][number];
 export type KeyValue = Extract<TomlBlock, { type: 'KeyValue' }>;
 export type Value = KeyValue['value'];
@@ -212,5 +209,3 @@ export type MergedView = {
     rulesOff: (check: string) => string[];
     extra: (name: string) => Record<string, unknown> | undefined;
 };
-export type Located<T> = { value: T; path: PathSegment[] };
-export type ModuleReference = { module: string };

@@ -22,8 +22,8 @@ gspot install
 Some tools require a root file for discovery. gspot writes a pointer where the tool
 supports one, or writes the native configuration file directly.
 
-Do not edit generated files. To preserve existing authored settings, use the
-[adoption workflow](/guides/existing-repository/). Shared configuration, including
+Do not edit generated files. Init deletes the configuration files of the selected tools; see
+[existing repositories](/guides/existing-repository/). Shared configuration, including
 `bunfig.toml`, retains fields outside the policy. Bun release-age settings stricter
 than the policy remain in place.
 
@@ -39,7 +39,7 @@ packages, `.gspot/state/`, `.gspot/cache/`, and `.gspot/reports/`.
 ## Retain recovery state
 
 `.gspot/state/` holds ownership records and original files needed for restoration.
-It is private local state. Keep it while restoration of adopted
+It is private local state. Keep it while restoration of replaced
 files remains necessary. Do not delete the whole `.gspot/` directory as a cleanup step.
 
 Reports under `.gspot/reports/` and caches under `.gspot/cache/` do not contain

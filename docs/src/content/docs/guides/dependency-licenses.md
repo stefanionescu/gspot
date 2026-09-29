@@ -39,7 +39,5 @@ verifies that each package exception names a version in the project or workspace
 It runs once even when another selected kit includes it. It does not select the other
 checks or tools from `structure`.
 
-Adoption keeps nested license configuration in its directory scope. It retains original
-configuration when an `onlyAllow` list excludes shipped allowances, or when overlapping
-configuration requires explicit conversion. Package exclusions need installed dependencies
-so adoption can record their exact versions and reported licenses.
+Init deletes an existing license configuration file and writes the generated one; move the
+exceptions you still need into `tools.licenses.packages_allowed` with their exact versions.

@@ -3,7 +3,8 @@
 # Runtime: Bash 3.2+, macOS, Linux, and Git for Windows.
 set -euo pipefail
 gspot_message=$1
-if [[ ${gspot_message} != /* && ${gspot_message} != [[:alpha:]]:* ]]; then gspot_message="${PWD}/${gspot_message}"; fi
+case "$gspot_message" in /*|[[:alpha:]]:*) ;; *) gspot_message="$PWD/$gspot_message" ;; esac
+if command -v cygpath >/dev/null 2>&1; then gspot_message=$(cygpath -w "$gspot_message"); fi
 status=0
 (export GSPOT_HOOK=commit-msg; { gspot_executable=$(command -v 'mise') && [ -x "$gspot_executable" ] || { printf "%s\n" "The pinned gspot executable is unavailable. Install gspot, then run: gspot install" >&2; exit 2; }; mise exec -- gspot check --stage message --message-file "${gspot_message}"; }) || status=$?
 if [[ ${status} -eq 126 || ${status} -eq 127 ]]; then

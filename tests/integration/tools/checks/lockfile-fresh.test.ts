@@ -49,7 +49,7 @@ test.each([
     const changed = JSON.stringify({ private: true, dependencies: { other: 'file:./other' } });
     await Bun.write(join(directory.path, 'package.json'), changed);
     const session = await openSession(directory.path);
-    const [planned] = await planRun(session, {
+    const [planned] = planRun(session, {
         stage: 'push',
         skips: [],
         only: ['integrity/lockfile-fresh'],

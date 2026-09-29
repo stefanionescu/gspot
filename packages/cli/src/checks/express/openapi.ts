@@ -1,7 +1,6 @@
 import { join } from 'node:path';
 import { rm } from 'node:fs/promises';
 import { openRoot } from '#cli/platform/filesystem.ts';
-import { asText } from '#cli/policy/adoption/source.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { SPECTRAL_LINE } from '#cli/config/checks/express.ts';
 import { commandArguments } from '#cli/platform/arguments.ts';
@@ -16,7 +15,8 @@ import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
  * @returns the findings
  */
 export async function openapiLint(input: EngineInput): Promise<Finding[]> {
-    const document = asText(input.view.tool('openapi')['document']) ?? '';
+    const named = input.view.tool('openapi')['document'];
+    const document = typeof named === 'string' ? named : '';
     if (document === '') return [];
     const files = openRoot(input.root, 'native');
     try {
@@ -62,8 +62,9 @@ export async function openapiLint(input: EngineInput): Promise<Finding[]> {
  * @returns the findings
  */
 export async function openapiFresh(input: EngineInput): Promise<Finding[]> {
-    const document = asText(input.view.tool('openapi')['document']) ?? '';
-    const command = asText(input.view.tool('openapi')['produced_by']) ?? '';
+    const { document: named, produced_by: producer } = input.view.tool('openapi');
+    const document = typeof named === 'string' ? named : '';
+    const command = typeof producer === 'string' ? producer : '';
     if (document === '' || command === '') return [];
     const before = readSource(input.root, document, input.reads);
     const scratch = await scratchCopy(

@@ -1,6 +1,4 @@
-import { createRequire, isBuiltin } from 'node:module';
-import { pathToFileURL } from 'node:url';
-import { relative, resolve, sep } from 'node:path';
+import { relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import eslint from '@eslint/js';
 import gspot from '@gspot/eslint-plugin';
@@ -386,58 +384,6 @@ const policyRules = <%= json(eslintPolicy) %>.flatMap(({ scope, includes, exclud
     ];
 });
 
-const requireProject = createRequire(`${root}/package.json`);
-const adopted = <%= json(eslintTool.adopted ?? []) %>;
-async function loadRegistration(reference) {
-    const resolved = requireProject.resolve(reference.module);
-    const imported = await import(isBuiltin(resolved) ? resolved : pathToFileURL(resolved).href);
-    const exported = reference.export === '*' ? imported : imported[reference.export];
-    return (reference.members ?? []).reduce((value, key) => value[key], exported);
-}
-const legacy = adopted.some((entry) => entry.legacyCriteria || entry.legacyIgnores || entry.legacyScope)
-    ? (await import(pathToFileURL(createRequire(createRequire(import.meta.url).resolve('eslint')).resolve('@eslint/eslintrc')).href)).Legacy
-    : undefined;
-function restoreCriteria(specification) {
-    return specification.patterns.map(({includes, excludes}) =>
-        legacy.OverrideTester.create(includes, excludes, resolve(root, specification.basePath)))
-        .reduce((left, right) => legacy.OverrideTester.and(left, right), null);
-}
-for (const entry of adopted) {
-    const legacyScope = entry.legacyScope;
-    const scope = entry.legacyScope ? restoreCriteria(entry.legacyScope) : undefined;
-    delete entry.legacyScope;
-    if (scope && !entry.legacyIgnores) {
-        const matches = (path) => scope.test(path);
-        Object.defineProperty(matches, Symbol.for('gspot.eslint.scope'), { value: { legacyScope } });
-        entry.files = entry.files ? entry.files.map((pattern) => [...(Array.isArray(pattern) ? pattern : [pattern]), matches]) : [matches];
-    }
-    if (entry.legacyCriteria) {
-        const criteria = restoreCriteria(entry.legacyCriteria);
-        const matches = (path) => criteria.test(path);
-        Object.defineProperty(matches, Symbol.for('gspot.eslint.scope'), { value: { legacyCriteria: entry.legacyCriteria } });
-        entry.files = entry.files ? entry.files.map((pattern) => [...(Array.isArray(pattern) ? pattern : [pattern]), matches]) : [matches];
-        delete entry.legacyCriteria;
-    }
-    if (entry.legacyIgnores) {
-        const configuration = new legacy.ConfigArray(...entry.legacyIgnores.map((specification) => {
-            const ignorePattern = new legacy.IgnorePattern(specification.patterns, resolve(root, specification.basePath));
-            ignorePattern.loose = specification.loose;
-            return { type: 'config', criteria: specification.criteria ? restoreCriteria(specification.criteria) : null, ignorePattern };
-        }));
-        const ignored = (path) => (!scope || scope.test(path)) && Boolean(configuration.extractConfig(path).ignores?.(path));
-        Object.defineProperty(ignored, Symbol.for('gspot.eslint.scope'), { value: { legacyScope, legacyIgnores: entry.legacyIgnores } });
-        entry.ignores = [ignored];
-        delete entry.legacyIgnores;
-    }
-    if (entry.basePath !== undefined) entry.basePath = resolve(root, entry.basePath);
-    for (const [name, reference] of Object.entries(entry.plugins ?? {}))
-        entry.plugins[name] = await loadRegistration(reference);
-    if (entry.processor && typeof entry.processor !== 'string')
-        entry.processor = await loadRegistration(entry.processor);
-    if (entry.languageOptions?.parser)
-        entry.languageOptions.parser = await loadRegistration(entry.languageOptions.parser);
-}
-
 const defaults = [
     { ignores: <%= json(ignoredPaths) %> },
     { files: CODE, ...eslint.configs.recommended },
@@ -484,22 +430,7 @@ const defaults = [
     { files: ['**/*.{js,mjs,cjs,jsx}'], rules: { 'max-params': ['error', <%= limitOf('function_parameters', 'javascript') %>], 'gspot/no-trivial-functions': ['error', { maxStatements: <%= limitOf('trivial_statements', 'javascript') %> }], 'gspot/no-trivial-files': ['error', { maxStatements: <%= limitOf('trivial_statements', 'javascript') %> }] } },
 ];
 const ruleLevels = <%~ json(eslintRuleLevels) %>;
-// A global project registration chooses the instance of the same named and versioned plugin.
-// Scoped registrations and different versions retain ESLint's conflicting-plugin diagnostic.
-const globalPlugins = Object.assign({}, ...adopted
-    .filter((entry) => !entry.files && !entry.ignores && entry.basePath === undefined)
-    .map((entry) => entry.plugins ?? {}));
-const registeredDefaults = defaults.map((entry) => {
-    if (entry.plugins === undefined) return entry;
-    const plugins = Object.fromEntries(Object.entries(entry.plugins).map(([name, plugin]) => {
-        const candidate = globalPlugins[name];
-        const matches = plugin.meta?.name && plugin.meta?.version &&
-            candidate?.meta?.name === plugin.meta.name && candidate.meta.version === plugin.meta.version;
-        return [name, matches ? candidate : plugin];
-    }));
-    return { ...entry, plugins };
-});
-const selectedDefaults = registeredDefaults.map((entry) => entry.rules === undefined ? entry : {
+const selectedDefaults = defaults.map((entry) => entry.rules === undefined ? entry : {
     ...entry,
     rules: Object.fromEntries(Object.entries(entry.rules).map(([name, value]) =>
         [name, !<%= isAll %> && ruleLevels[name] === 'all' ? 'off' : value])),
@@ -508,4 +439,4 @@ export default [...selectedDefaults,
 <% const extras = extra('eslint'); if (extras) { const entries = Object.fromEntries(Object.entries(extras).filter(([key]) => key !== 'reason')); if (Object.keys(entries).length > 0) { %>    // [tools.eslint.extra]: <%= json(extras.reason, 0) %>
     <%= json(entries) %>,
 <% } } %>
-...adopted, ...policyRules];
+...policyRules];

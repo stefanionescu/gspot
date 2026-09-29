@@ -21,7 +21,6 @@ mise = "npm:license-checker-rseidelsohn"
 
 [[tools.replace]]
 file = ".license-checker.json"
-keeps = "licenses"
 
 [[tools]]
 name = "pip-licenses"

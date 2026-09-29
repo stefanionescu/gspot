@@ -22,48 +22,30 @@ npm = "stylelint"
 
 [[tools.replace]]
 file = ".stylelintrc"
-keeps = "rules-table"
-check = "css/stylelint"
 
 [[tools.replace]]
 file = ".stylelintrc.json"
-keeps = "rules-table"
-check = "css/stylelint"
 
 [[tools.replace]]
 file = ".stylelintrc.js"
-keeps = "rules-table"
-check = "css/stylelint"
 
 [[tools.replace]]
 file = ".stylelintrc.cjs"
-keeps = "rules-table"
-check = "css/stylelint"
 
 [[tools.replace]]
 file = ".stylelintrc.yml"
-keeps = "rules-table"
-check = "css/stylelint"
 
 [[tools.replace]]
 file = ".stylelintrc.yaml"
-keeps = "rules-table"
-check = "css/stylelint"
 
 [[tools.replace]]
 file = "stylelint.config.js"
-keeps = "rules-table"
-check = "css/stylelint"
 
 [[tools.replace]]
 file = "stylelint.config.cjs"
-keeps = "rules-table"
-check = "css/stylelint"
 
 [[tools.replace]]
 file = "stylelint.config.mjs"
-keeps = "rules-table"
-check = "css/stylelint"
 
 [[tools]]
 name = "stylelint-config-standard"

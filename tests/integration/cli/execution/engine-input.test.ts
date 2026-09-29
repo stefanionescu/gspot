@@ -82,7 +82,7 @@ test('engine inputs expose selected files and reserve the repository inventory f
         'unrelated/private.txt': 'Sibling input\n',
     });
     const session = await openSession(sandbox.path);
-    const planned = await planRun(session, {
+    const planned = planRun(session, {
         stage: 'all',
         skips: [],
         only: ['jest/coverage', 'integrity/stale-paths'],
@@ -162,10 +162,10 @@ test.each([
             [path]: source,
         });
         const session = await openSession(sandbox.path);
-        const commit = await planRun(session, { stage: 'commit', skips: [], only: [check] });
+        const commit = planRun(session, { stage: 'commit', skips: [], only: [check] });
         expect(commit.map((entry) => entry.check)).not.toContain(check);
         for (const stage of ['push', 'all'] as const) {
-            const planned = await planRun(session, { stage, skips: [], only: [check] });
+            const planned = planRun(session, { stage, skips: [], only: [check] });
             expect(planned.map((entry) => entry.check)).toContain(check);
             expect(planned.find((entry) => entry.check === check)?.spec.stage).toBe('push');
         }

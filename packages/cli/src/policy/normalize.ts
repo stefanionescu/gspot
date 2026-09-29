@@ -217,3 +217,13 @@ export function normalize(raw: RawPolicy): Policy {
         scopeTables,
     };
 }
+
+/**
+ * A parsed value as a table.
+ * @param value the parsed value
+ * @returns the table, or undefined when the value is not one
+ */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The init proposal reads twelve TOML values as tables; one owner keeps the table test in one place.
+export function asRaw(value: unknown): Record<string, unknown> | undefined {
+    return isTable(value) ? value : undefined;
+}

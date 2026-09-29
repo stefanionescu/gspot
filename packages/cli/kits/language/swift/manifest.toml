@@ -29,13 +29,9 @@ version_command = ["version"]
 
 [[tools.replace]]
 file = ".swiftlint.yml"
-keeps = "rules-table"
-check = "swift/swiftlint"
 
 [[tools.replace]]
 file = ".swiftlint.yaml"
-keeps = "rules-table"
-check = "swift/swiftlint"
 
 [[tools]]
 name = "swiftformat"
@@ -47,7 +43,6 @@ github = {name = "nicklockwood/SwiftFormat", version = "0.61.1"}
 
 [[tools.replace]]
 file = ".swiftformat"
-keeps = "rules-table"
 
 [[tools]]
 name = "periphery"
@@ -61,11 +56,9 @@ version_command = ["version"]
 
 [[tools.replace]]
 file = ".periphery.yml"
-keeps = "rules-table"
 
 [[tools.replace]]
 file = ".periphery.yaml"
-keeps = "rules-table"
 
 [[tools]]
 name = "xcodebuild"

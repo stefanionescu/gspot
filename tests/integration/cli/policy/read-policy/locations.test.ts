@@ -5,17 +5,6 @@ import { symlinkSync, readFileSync } from 'node:fs';
 import { MINIMAL_POLICY } from '#tests/config/cli.ts';
 import { policyProblems } from '#tests/support/cli/policy-problems.ts';
 
-test('parsePolicyText > missing adopted executables identify the module value and accept a repository file', async () => {
-    await using sandbox = await testdir();
-    const text =
-        'version = 1\n[[tools.eslint.adopted]]\n[tools.eslint.adopted.processor]\nmodule = "./processing.mjs"\nexport = "default"\n';
-    const found = policyProblems(text, sandbox.path);
-    expect(found).toHaveLength(1);
-    expect(found[0]).toStartWith('gspot.toml:4:');
-    expect(found[0]).toContain('executable module is missing');
-    await createFileTree(sandbox.path, { 'processing.mjs': 'export default {};\n' });
-    expect(policyProblems(text, sandbox.path)).toStrictEqual([]);
-});
 test.each([
     {
         name: 'a missing ignore reason',

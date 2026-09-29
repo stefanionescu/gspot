@@ -247,7 +247,7 @@ test('site builds receive quoted script names and empty arguments', async () => 
     });
     const session = await openSession(sandbox.path);
     session.resources = resources;
-    const [planned] = await planRun(session, { stage: 'push', skips: [], only: ['static-site/build'] });
+    const [planned] = planRun(session, { stage: 'push', skips: [], only: ['static-site/build'] });
     const request = engineInput(session, planned!);
     const built = await siteBuild(request);
     expect(built.isBuilt).toBe(true);

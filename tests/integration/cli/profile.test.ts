@@ -94,67 +94,6 @@ test.each(['jest', 'vitest'])(
     },
 );
 
-test('profile export omits local ESLint registrations and selector bases while preserving reusable processors', async () => {
-    await using directory = await testdir();
-    const sharedSettings = {
-        name: 'package processor',
-        processor: { module: 'eslint-plugin-example', export: 'default', members: ['processors', 'source'] },
-    };
-    const source = stringify({
-        version: 1,
-        kits: ['javascript'],
-        tools: {
-            eslint: {
-                adopted: [
-                    { name: 'local selector', basePath: 'src', rules: { eqeqeq: 'error' } },
-                    { name: 'local processor', processor: { module: './processing.mjs', export: 'default' } },
-                    sharedSettings,
-                ],
-            },
-        },
-    });
-    const exported = exportedProfile(source, 'shared.profile.toml');
-    expect(exported.leftOut).toHaveLength(2);
-    await createFileTree(directory.path, { 'shared.profile.toml': exported.text });
-    const restored = await readProfile('shared.profile.toml', directory.path);
-    expect(restored.tables.tools?.eslint?.adopted).toStrictEqual([sharedSettings]);
-    await createFileTree(directory.path, {
-        'invalid.profile.toml': stringify({
-            version: 1,
-            profile: 'local',
-            selection: 'exact',
-            kits: ['javascript'],
-            tools: { eslint: { adopted: [{ processor: { module: './processing.mjs', export: 'default' } }] } },
-        }),
-    });
-    expect(await rejection(readProfile('invalid.profile.toml', directory.path))).toContain('a profile carries no path');
-});
-
-test('profile export omits complete EditorConfig documents and preserves reusable formatting options', async () => {
-    await using directory = await testdir();
-    const adopted = {
-        preamble: { root: 'true' },
-        sections: [{ glob: '*.js', properties: { indent_size: '3' } }],
-        directories: [
-            { basePath: 'nested', preamble: {}, sections: [{ glob: '*', properties: { indent_size: '4' } }] },
-        ],
-    };
-    const exported = exportedProfile(
-        stringify({
-            version: 1,
-            kits: ['formatting'],
-            format: { quotes: 'single' },
-            tools: { editorconfig: { adopted } },
-        }),
-        'shared.profile.toml',
-    );
-    await createFileTree(directory.path, { 'shared.profile.toml': exported.text });
-    const restored = await readProfile('shared.profile.toml', directory.path);
-    expect(restored.tables.tools?.editorconfig?.adopted).toBeUndefined();
-    expect(restored.tables.format?.quotes).toBe('single');
-    expect(exported.leftOut.some((entry) => entry.includes('tools.editorconfig.adopted'))).toBe(true);
-});
-
 test('profile publication is idempotent, preserves edits, and survives apply and uninstall', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {

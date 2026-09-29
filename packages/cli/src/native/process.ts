@@ -1,50 +1,16 @@
 import { z } from 'zod';
 import { dirname, basename } from 'node:path';
-import { runLicenses } from '#cli/native/license.ts';
 import { PRIVATE_FILE } from '#cli/config/platform.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
-import { runStylelint } from '#cli/native/stylelint.ts';
-import type { EvaluationRequest } from '#cli/types/native.ts';
+import { runRuleCoverage } from '#cli/native/eslint.ts';
 import { runEslintPreview } from '#cli/native/eslint-preview.ts';
-import { runEslint, runRuleCoverage } from '#cli/native/eslint.ts';
-import { runFormat, runIgnoredPaths } from '#cli/native/format.ts';
-
-import {
-    eslintResponse,
-    formatResponse,
-    licenseResponse,
-    stylelintResponse,
-    configurationRequest,
-    ignoredPathsResponse,
-    eslintPreviewResponse,
-    eslintCoverageResponse,
-} from '#cli/native/protocol.ts';
+import { configurationRequest, eslintPreviewResponse, eslintCoverageResponse } from '#cli/native/protocol.ts';
 
 // Evaluates the operation the request names and checks the answer against its response shape.
-async function evaluate(request: EvaluationRequest, output: string): Promise<unknown> {
-    switch (request.operation) {
-        case 'preview-rules': {
-            return eslintPreviewResponse.parse(await runEslintPreview(request, dirname(output)));
-        }
-        case 'stylelint': {
-            return stylelintResponse.parse(await runStylelint(request));
-        }
-        case 'licenses': {
-            return licenseResponse.parse(await runLicenses(request));
-        }
-        case 'coverage': {
-            return eslintCoverageResponse.parse(await runRuleCoverage(request));
-        }
-        case 'ignore': {
-            return ignoredPathsResponse.parse(await runIgnoredPaths(request));
-        }
-        case 'format': {
-            return formatResponse.parse(await runFormat(request));
-        }
-        default: {
-            return eslintResponse.parse(await runEslint(request));
-        }
-    }
+async function evaluate(request: z.infer<typeof configurationRequest>, output: string): Promise<unknown> {
+    if (request.operation === 'preview-rules')
+        return eslintPreviewResponse.parse(await runEslintPreview(request, dirname(output)));
+    return eslintCoverageResponse.parse(await runRuleCoverage(request));
 }
 
 try {

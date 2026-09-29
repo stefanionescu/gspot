@@ -22,15 +22,12 @@ npm = "html-validate"
 
 [[tools.replace]]
 file = ".htmlvalidate.json"
-keeps = "rules-table"
 
 [[tools.replace]]
 file = ".htmlvalidate.js"
-keeps = "rules-table"
 
 [[tools.replace]]
 file = ".htmlvalidate.cjs"
-keeps = "rules-table"
 
 [[configs]]
 template = "templates.json.tmpl"

@@ -3,7 +3,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { MINIMAL_POLICY } from '#tests/config/cli.ts';
 import { textContaining } from '#tests/support/expectations.ts';
 import { readPolicyText, parsePolicyText } from '#cli/policy/read.ts';
-import { GOOD_IGNORE } from '#tests/config/integration/cli/policy/read-policy.ts';
+import { GOOD_IGNORE } from '#tests/config/integration/cli/read-policy.ts';
 
 describe('readPolicyText', () => {
     test('an ignore without a reason is a finding on its line, and the other ignore stands', () => {

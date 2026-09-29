@@ -22,13 +22,9 @@ github = {name = "sbdchd/squawk", version = "v2.64.0"}
 
 [[tools.replace]]
 file = ".squawk.toml"
-keeps = "rules-table"
-check = "postgres/squawk"
 
 [[tools.replace]]
 file = "squawk.toml"
-keeps = "rules-table"
-check = "postgres/squawk"
 
 [[configs]]
 template = "squawk.toml.tmpl"

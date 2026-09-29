@@ -37,7 +37,7 @@ test.each([
         '.gspot/config/jscpd.json': '{}\n',
     });
     const session = await openSession(directory.path);
-    const [planned] = await planRun(session, { stage: 'push', skips: [], only: ['duplication/jscpd'] });
+    const [planned] = planRun(session, { stage: 'push', skips: [], only: ['duplication/jscpd'] });
     const directories: string[] = [];
     let isCorrected = false;
     const inspection = spyOn(inspections, 'inspectTool').mockReturnValue({

@@ -149,8 +149,6 @@ function replaceTools(
             tool,
             path,
             shared: replace.shared,
-            keeps: replace.keeps,
-            ...(replace.check === undefined ? {} : { check: replace.check }),
             ...(replace.table === undefined ? {} : { table: replace.table }),
             ...(replace.key === undefined ? {} : { key: replace.key }),
         }));
@@ -179,6 +177,19 @@ export function declaredKits(root: string, paths: Iterable<string>, selected?: s
     } finally {
         files.close();
     }
+}
+
+/**
+ * Whether a selected kit declares that the generated configuration replaces the tool's own file.
+ * @param tool the tool a configuration file belongs to
+ * @param selected the ids of the selected kits
+ * @returns whether init replaces the tool's configuration
+ */
+export function isOwned(tool: string, selected: Set<string>): boolean {
+    const manifests = kitManifests();
+    return [...selected].some(
+        (id) => manifests.get(id)?.tools.some((entry) => entry.name === tool && entry.replace !== undefined) === true,
+    );
 }
 
 /**

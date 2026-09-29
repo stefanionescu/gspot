@@ -58,7 +58,7 @@ test.each([false, true].flatMap((preview) => [false, true].map((isolated) => ({ 
         await createFileTree(sandbox.path, { 'gspot.toml': CORRECTION_POLICY, 'source.txt': 'original' });
         await createFileTree(external.path, { 'source.txt': 'external original' });
         const session = await openSession(sandbox.path);
-        const planned = await plannedCorrection(session, "await Bun.write('source.txt', 'changed')");
+        const planned = plannedCorrection(session, "await Bun.write('source.txt', 'changed')");
         planned.spec.isolated_files = isolated;
         rmSync(join(sandbox.path, 'source.txt'));
         symlinkSync(join(external.path, 'source.txt'), join(sandbox.path, 'source.txt'));
@@ -84,7 +84,7 @@ test.each([false, true])(
         });
         const session = await openSession(sandbox.path);
         const trace = join(sandbox.path, 'workspace-path');
-        const planned = await plannedCorrection(
+        const planned = plannedCorrection(
             session,
             `
             if (require('node:fs').existsSync('unowned.json')) throw new Error('Unowned configuration was copied.');
@@ -115,7 +115,7 @@ test('isolated correction refuses to overwrite source changed during execution a
     });
     const session = await openSession(sandbox.path);
     const trace = join(sandbox.path, 'workspace-path');
-    const planned = await plannedCorrection(
+    const planned = plannedCorrection(
         session,
         `
             await Bun.write(${JSON.stringify(trace)}, process.cwd());
@@ -131,7 +131,7 @@ test('isolated correction refuses to overwrite source changed during execution a
     expect(readFileSync(join(sandbox.path, 'source.txt'), 'utf8')).toBe('original');
     expect(readFileSync(join(sandbox.path, 'z-last.txt'), 'utf8')).toBe('new working content');
     expect(existsSync(readFileSync(trace, 'utf8'))).toBe(false);
-    const corrected = await plannedCorrection(session, "await Bun.write('source.txt', 'corrected')");
+    const corrected = plannedCorrection(session, "await Bun.write('source.txt', 'corrected')");
     corrected.spec.isolated_files = true;
     expect(await runFixer(session, corrected, sandbox.path)).toMatchObject({
         status: 'changed',
@@ -143,7 +143,7 @@ test('removes the scratch directory after a failed correction and preserves sour
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': CORRECTION_POLICY, 'source.txt': 'original' });
     const session = await openSession(sandbox.path);
-    const planned = await plannedCorrection(
+    const planned = plannedCorrection(
         session,
         "await Bun.write('source.txt', 'partial'); process.stdout.write(process.cwd()); process.exitCode = 3",
     );
@@ -163,7 +163,7 @@ test.each(['copy', 'read'])('cleans the scratch directory after a failed %s', as
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': CORRECTION_POLICY, 'source.txt': 'original' });
     const session = await openSession(sandbox.path);
-    const planned = await plannedCorrection(
+    const planned = plannedCorrection(
         session,
         "const fs = require('node:fs'); fs.unlinkSync('source.txt'); fs.mkdirSync('source.txt');",
     );

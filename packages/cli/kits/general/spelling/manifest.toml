@@ -21,15 +21,12 @@ github = {name = "crate-ci/typos", version = "v1.43.5"}
 
 [[tools.replace]]
 file = "typos.toml"
-keeps = "words"
 
 [[tools.replace]]
 file = ".typos.toml"
-keeps = "words"
 
 [[tools.replace]]
 file = "_typos.toml"
-keeps = "words"
 
 [[configs]]
 template = "typos.toml.tmpl"

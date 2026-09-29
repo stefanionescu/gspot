@@ -1,9 +1,3 @@
-<% const adopted = tool('editorconfig').adopted; if (adopted !== undefined) { %>
-<% for (const [key, value] of Object.entries(adopted.preamble)) { %><%= key %> = <%= value %>
-<% } for (const section of adopted.sections) { %>
-[<%= section.glob %>]
-<% for (const [key, value] of Object.entries(section.properties)) { %><%= key %> = <%= value %>
-<% } } } else { %>
 root = true
 
 [*]
@@ -32,4 +26,3 @@ indent_style = tab
 [<%= entry.path %>]
 <% for (const [key, value] of Object.entries(entry.options)) { %><%= key %> = <%= value %>
 <% } } %>
-<% } %>

@@ -28,8 +28,6 @@ github = {name = "koalaman/shellcheck", version = "v0.11.0"}
 
 [[tools.replace]]
 file = ".shellcheckrc"
-keeps = "rules-table"
-check = "bash/shellcheck"
 
 [[tools]]
 name = "shfmt"

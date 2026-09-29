@@ -29,7 +29,7 @@ test.each([2, 6])('format width %i reaches editors and generated tool configurat
             packageClient: session.packageClient,
         }).files.map((file) => [file.path, file.content]),
     );
-    const [bashCheck] = await planRun(session, { stage: 'all', skips: [], only: ['bash/shfmt'] });
+    const [bashCheck] = planRun(session, { stage: 'all', skips: [], only: ['bash/shfmt'] });
     const command = prepareCommand(session, bashCheck!, bashCheck!.spec.command!);
     expect(command.argv[command.argv.indexOf('-i') + 1]).toBe(String(width));
     await Bun.write(join(directory.path, '.editorconfig'), generated.get('.editorconfig')!);

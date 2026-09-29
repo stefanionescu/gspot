@@ -26,11 +26,9 @@ github = {name = "tamasfe/taplo", version = "0.10.0"}
 
 [[tools.replace]]
 file = "taplo.toml"
-keeps = "rules-table"
 
 [[tools.replace]]
 file = ".taplo.toml"
-keeps = "rules-table"
 
 [[tools]]
 name = "yamllint"
@@ -41,15 +39,12 @@ brew = "yamllint"
 
 [[tools.replace]]
 file = ".yamllint"
-keeps = "rules-table"
 
 [[tools.replace]]
 file = ".yamllint.yml"
-keeps = "rules-table"
 
 [[tools.replace]]
 file = ".yamllint.yaml"
-keeps = "rules-table"
 
 [[tools]]
 name = "v8r"

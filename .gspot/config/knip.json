@@ -31,7 +31,6 @@
         "@ast-grep/cli",
         "@commitlint/cli",
         "@eslint-community/eslint-plugin-eslint-comments",
-        "@eslint/eslintrc",
         "@eslint/js",
         "@gspot/eslint-plugin",
         "@taplo/cli",
@@ -110,7 +109,6 @@
     ],
     "ignoreBinaries": [
         "@eslint-community/eslint-plugin-eslint-comments",
-        "@eslint/eslintrc",
         "@eslint/js",
         "@gspot/eslint-plugin",
         "actionlint",

@@ -26,35 +26,27 @@ version_regex = "markdownlint-cli2 v(\\d+\\.\\d+\\.\\d+)"
 
 [[tools.replace]]
 file = ".markdownlint-cli2.jsonc"
-keeps = "rules-table"
 
 [[tools.replace]]
 file = ".markdownlint-cli2.yaml"
-keeps = "rules-table"
 
 [[tools.replace]]
 file = ".markdownlint-cli2.cjs"
-keeps = "rules-table"
 
 [[tools.replace]]
 file = ".markdownlint-cli2.mjs"
-keeps = "rules-table"
 
 [[tools.replace]]
 file = ".markdownlint.json"
-keeps = "rules-table"
 
 [[tools.replace]]
 file = ".markdownlint.jsonc"
-keeps = "rules-table"
 
 [[tools.replace]]
 file = ".markdownlint.yaml"
-keeps = "rules-table"
 
 [[tools.replace]]
 file = ".markdownlint.yml"
-keeps = "rules-table"
 
 [[configs]]
 template = "configuration.jsonc.tmpl"

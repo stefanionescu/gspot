@@ -20,7 +20,6 @@ npm = "linkinator"
 
 [[tools.replace]]
 file = "linkinator.config.json"
-keeps = "rules-table"
 
 [[tools]]
 name = "svgo"

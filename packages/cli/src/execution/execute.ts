@@ -30,8 +30,8 @@ import type {
 } from '#cli/types/execution/execution.ts';
 
 // The plan and, for each planned check, the function that runs it.
-async function planExecutables(session: Session, options: RunOptions): Promise<Executable[]> {
-    const planned = await planRun(session, options);
+function planExecutables(session: Session, options: RunOptions): Executable[] {
+    const planned = planRun(session, options);
     return planned.map((check) => ({ check, run: checkExecution(check.spec) }));
 }
 
@@ -158,7 +158,7 @@ async function planCorrections(
     opened: Session,
     options: RunOptions,
 ): Promise<{ executables: Executable[]; fixes: FixReport | undefined }> {
-    const executables = await planExecutables(session, options);
+    const executables = planExecutables(session, options);
     if (!options.fix) return { executables, fixes: undefined };
     const fixes = await applyFixers(
         session,
@@ -167,7 +167,7 @@ async function planCorrections(
     );
     if (options.isDryRun) return { executables, fixes };
     await refreshAfterFixes(session, opened);
-    return { executables: await planExecutables(session, options), fixes };
+    return { executables: planExecutables(session, options), fixes };
 }
 
 // Whether a run covered the whole repository with live results, so stale cache entries can go.

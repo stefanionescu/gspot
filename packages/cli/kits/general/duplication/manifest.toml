@@ -16,7 +16,6 @@ mise = "npm:jscpd"
 
 [[tools.replace]]
 file = ".jscpd.json"
-keeps = "rules-table"
 
 [[configs]]
 template = "jscpd.json.tmpl"

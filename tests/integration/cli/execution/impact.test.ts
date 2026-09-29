@@ -102,11 +102,11 @@ test.each([
         selection === 'staged'
             ? await stagedFiles(sandbox.path).then(({ staged }) => ({ staged }))
             : await changedFiles(sandbox.path, 'HEAD').then(({ paths }) => ({ changed: paths }));
-    const planned = await planRun(session, { ...options, ...revision });
+    const planned = planRun(session, { ...options, ...revision });
     const api = planned.find((check) => check.scope.scope.path === 'api')!;
     expect(api.files).toStrictEqual([]);
     expect(api.triggerPaths).toContain('api/source.ts');
-    const fileChecks = await planRun(session, { ...options, only: ['sandbox/files'], ...revision });
+    const fileChecks = planRun(session, { ...options, only: ['sandbox/files'], ...revision });
     expect(fileChecks.flatMap((check) => check.triggerPaths)).toStrictEqual([]);
     expect(fileChecks.flatMap((check) => check.files.map((file) => file.path))).toStrictEqual(
         operation === 'delete' ? [] : ['web/source.ts'],
@@ -137,7 +137,7 @@ test('a positional file trigger preserves project-wide input and findings', asyn
     });
     const session = await openSession(sandbox.path);
     projectChecks(session);
-    const planned = await planRun(session, { ...options, paths: ['api/source.ts'] });
+    const planned = planRun(session, { ...options, paths: ['api/source.ts'] });
     const affected = planned.filter((check) => check.files.length > 0);
     expect(affected.map((check) => check.scope.scope.path)).toStrictEqual(['api']);
     expect(affected[0]?.files.map((file) => file.path)).toStrictEqual(['api/caller.ts', 'api/source.ts']);

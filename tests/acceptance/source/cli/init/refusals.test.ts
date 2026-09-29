@@ -18,7 +18,7 @@ test(
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'scripts/a.sh': script });
         commitAll(sandbox.path);
-        const flags = ['init', '--dry-run', '--no-hooks', '--format', 'shipped', ...INIT_REFUSALS_QUIET];
+        const flags = ['init', '--dry-run', '--no-hooks', ...INIT_REFUSALS_QUIET];
         const result = await run(sandbox.path, flags);
         expect(result.code, result.stdout + result.stderr).toBe(0);
         expect(result.stdout + result.stderr).toMatch(/Selected: [^\n]*bash[^\n]*Change with --kits <ids>\./u);
@@ -134,7 +134,7 @@ test(
     PLANTED_TIMEOUT_MS,
 );
 
-test('initialization flags control integrations and formatter keep in the plan', async () => {
+test('initialization flags control integrations, and the plan names the formatter file init deletes', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'source.js': 'export const port = 8080;\n',
@@ -153,19 +153,18 @@ test('initialization flags control integrations and formatter keep in the plan',
         '--dry-run',
         '--json',
     ];
-    const kept = await run(sandbox.path, [...command, '--format', 'keep']);
-    expect(kept.code, kept.stdout + kept.stderr).toBe(0);
-    const keptPlan = JSON.parse(kept.stdout) as { policy: string };
-    const keptPolicy = parsePolicyText(keptPlan.policy, 'gspot.toml');
-    expect(keptPolicy).not.toHaveProperty('hooks');
-    expect(keptPolicy).not.toHaveProperty('ci');
-    expect(keptPolicy).not.toHaveProperty('runner');
-    expect(keptPolicy.format.semicolons).toBe(false);
-    const shipped = await run(sandbox.path, [...command, '--format', 'shipped']);
-    expect(shipped.code, shipped.stdout + shipped.stderr).toBe(0);
-    const shippedPlan = JSON.parse(shipped.stdout) as { policy: string };
-    const shippedPolicy = parsePolicyText(shippedPlan.policy, 'gspot.toml');
-    expect(shippedPolicy.format).toStrictEqual({});
+    const preview = await run(sandbox.path, command);
+    expect(preview.code, preview.stdout + preview.stderr).toBe(0);
+    const plan = JSON.parse(preview.stdout) as { policy: string; plan: { remove: { path: string; note: string }[] } };
+    const policy = parsePolicyText(plan.policy, 'gspot.toml');
+    expect(policy).not.toHaveProperty('hooks');
+    expect(policy).not.toHaveProperty('ci');
+    expect(policy).not.toHaveProperty('runner');
+    expect(policy.format).toStrictEqual({});
+    expect(plan.plan.remove).toContainEqual({
+        path: '.prettierrc.json',
+        note: 'replaced by the generated prettier configuration',
+    });
     expect(existsSync(join(sandbox.path, 'gspot.toml'))).toBe(false);
     expect(await Bun.file(join(sandbox.path, '.prettierrc.json')).text()).toBe('{"semi":false,"tabWidth":8}\n');
 });

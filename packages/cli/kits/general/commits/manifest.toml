@@ -18,43 +18,33 @@ mise = "npm:@commitlint/cli"
 
 [[tools.replace]]
 file = ".commitlintrc"
-keeps = "rules-table"
 
 [[tools.replace]]
 file = ".commitlintrc.json"
-keeps = "rules-table"
 
 [[tools.replace]]
 file = ".commitlintrc.yml"
-keeps = "rules-table"
 
 [[tools.replace]]
 file = ".commitlintrc.yaml"
-keeps = "rules-table"
 
 [[tools.replace]]
 file = ".commitlintrc.js"
-keeps = "rules-table"
 
 [[tools.replace]]
 file = ".commitlintrc.cjs"
-keeps = "rules-table"
 
 [[tools.replace]]
 file = "commitlint.config.js"
-keeps = "rules-table"
 
 [[tools.replace]]
 file = "commitlint.config.cjs"
-keeps = "rules-table"
 
 [[tools.replace]]
 file = "commitlint.config.mjs"
-keeps = "rules-table"
 
 [[tools.replace]]
 file = "commitlint.config.ts"
-keeps = "rules-table"
 
 [[configs]]
 template = "commitlint.config.cjs.tmpl"

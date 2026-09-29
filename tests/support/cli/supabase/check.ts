@@ -22,7 +22,7 @@ export async function prepareSupabaseCheck(
     });
     const execute = async () => {
         const session = await openSession(root);
-        const plans = await planRun(session, { stage: 'push', only: ['supabase/types-fresh'], skips: [] });
+        const plans = planRun(session, { stage: 'push', only: ['supabase/types-fresh'], skips: [] });
         const planned = plans.find((check) => check.scope.scope.path === scope)!;
         return await runEngineCheck(session, typesFresh, planned);
     };

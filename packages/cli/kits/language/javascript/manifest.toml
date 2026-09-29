@@ -29,63 +29,44 @@ floor = "9.38.0"
 
 [[tools.replace]]
 file = ".whitelizard"
-keeps = "rules-table"
 
 [[tools.replace]]
 file = "eslint.config.js"
-keeps = "eslint-config"
 
 [[tools.replace]]
 file = "eslint.config.mjs"
-keeps = "eslint-config"
 
 [[tools.replace]]
 file = "eslint.config.cjs"
-keeps = "eslint-config"
 
 [[tools.replace]]
 file = "eslint.config.ts"
-keeps = "eslint-config"
 
 [[tools.replace]]
 file = ".eslintrc"
-keeps = "eslint-config"
 
 [[tools.replace]]
 file = ".eslintrc.js"
-keeps = "eslint-config"
 
 [[tools.replace]]
 file = ".eslintrc.cjs"
-keeps = "eslint-config"
 
 [[tools.replace]]
 file = ".eslintrc.json"
-keeps = "eslint-config"
 
 [[tools.replace]]
 file = ".eslintrc.yml"
-keeps = "eslint-config"
 
 [[tools.replace]]
 file = ".eslintrc.yaml"
-keeps = "eslint-config"
 
 [[tools.replace]]
 file = "package.json"
 key = "eslintConfig"
 shared = true
-keeps = "eslint-config"
 
 [[tools.replace]]
 file = ".eslintignore"
-keeps = "eslint-config"
-
-[[tools]]
-name = "@eslint/eslintrc"
-kind = "library"
-version = "3.3.7"
-npm = "@eslint/eslintrc"
 
 [[tools]]
 name = "@eslint/js"
@@ -185,27 +166,21 @@ floor = "5.85.0"
 
 [[tools.replace]]
 file = "knip.json"
-keeps = "rules-table"
 
 [[tools.replace]]
 file = "knip.jsonc"
-keeps = "rules-table"
 
 [[tools.replace]]
 file = ".knip.json"
-keeps = "rules-table"
 
 [[tools.replace]]
 file = "knip.config.js"
-keeps = "rules-table"
 
 [[tools.replace]]
 file = "knip.config.ts"
-keeps = "rules-table"
 
 [[tools.replace]]
 file = "knip.config.mjs"
-keeps = "rules-table"
 
 [[tools]]
 name = "typescript"
@@ -384,10 +359,3 @@ runtime = [{path = "runtime/node/NODE.md"}, {path = "runtime/bun/BUN.md", when =
 [required_rules]
 js = ["eqeqeq", "no-restricted-syntax", "max-lines", "sonarjs/cognitive-complexity", "gspot/private-before-public"]
 mjs = ["eqeqeq", "no-restricted-syntax", "max-lines", "sonarjs/cognitive-complexity"]
-
-[[settings]]
-name = "tools.eslint.adopted"
-kind = "list"
-direction = "per-rule"
-default = []
-summary = "Ordered ESLint configuration with selector bases and registered plugin, parser, and processor modules."

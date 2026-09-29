@@ -35,7 +35,7 @@ test.each(['{file}', '{files}'])(
                 'const fs = require("node:fs"); const file = process.argv[2]; const status = Number(fs.readFileSync(file, "utf8")); if (status !== 0) console.log(`${file}:1: Located defect before exit`); process.exitCode = status;',
         });
         const session = await openSession(sandbox.path);
-        const plans = await planRun(session, { stage: 'all', skips: [] });
+        const plans = planRun(session, { stage: 'all', skips: [] });
         const planned = plans[0]!;
         planned.tool = { name: process.execPath, installers: {} };
         const finding = await runToolCheck(session, planned);
@@ -71,7 +71,7 @@ test.each([0, 1, 3] as const)(
         chmodSync(executable, 0o755);
         chmodSync(join(sandbox.path, '.github/workflows/caller.yml'), 0o444);
         const session = await openSession(sandbox.path);
-        const plans = await planRun(session, { stage: 'commit', skips: [], only: ['files/actions'] });
+        const plans = planRun(session, { stage: 'commit', skips: [], only: ['files/actions'] });
         const planned = plans[0]!;
         planned.tool = { ...planned.tool!, name: executable };
         const result = await checkExecution(planned.spec)(session, planned);

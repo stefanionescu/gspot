@@ -6,7 +6,6 @@ import { head } from '#cli/repository/tracked.ts';
 import { everyManifest } from '#cli/kits/select.ts';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { hasHeader } from '#cli/generation/headers.ts';
-import { isOwned } from '#cli/policy/adoption/collect.ts';
 import { readManifests } from '#cli/repository/manifests.ts';
 import type { GeneratedFile } from '#cli/types/generation.ts';
 import { MISE_CONFIG_PATH } from '#cli/config/tools/tools.ts';
@@ -15,8 +14,8 @@ import type { Session } from '#cli/types/execution/execution.ts';
 import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import { CHANGE_HEAD_BYTES } from '#cli/config/commands/doctor.ts';
 import type { ChangeRow, ChangeReport } from '#cli/types/commands/doctor.ts';
-import { ciLintJobs, existingTooling } from '#cli/repository/existing-tooling.ts';
 import type { ExistingTool, ExistingTooling } from '#cli/types/repository/repository.ts';
+import { isOwned, ciLintJobs, existingTooling } from '#cli/repository/existing-tooling.ts';
 
 function recommendedNotSelected(session: Session, selected: Set<string>): ChangeReport['recommendedNotSelected'] {
     const rows = new Map<string, ChangeReport['recommendedNotSelected'][number]>();
@@ -35,8 +34,8 @@ function configurationRow(session: Session, config: ExistingTool, selected: Set<
     if (isOwned(config.tool, selected))
         return {
             path: config.path,
-            note: `beside gspot's ${config.tool} configuration`,
-            command: 'review gspot.toml and keep settings before removing the authored configuration',
+            note: `beside the generated ${config.tool} configuration`,
+            command: 'move any setting you still need into gspot.toml, then delete the file',
         };
     const owner = session.manifests
         .values()

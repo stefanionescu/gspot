@@ -19,7 +19,7 @@ test.each(['missing', 'deadline', 'cancellation', 'registry', 'authentication', 
             'node_modules/protected.txt': 'installed dependency\n',
         });
         const session = await openSession(directory.path);
-        const [planned] = await planRun(session, {
+        const [planned] = planRun(session, {
             stage: 'push',
             skips: [],
             only: ['integrity/lockfile-fresh'],

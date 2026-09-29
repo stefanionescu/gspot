@@ -15,91 +15,70 @@ npm = "prettier"
 
 [[tools.replace]]
 file = ".prettierrc"
-keeps = "rules-table"
 
 [[tools.replace]]
 file = ".prettierrc.json"
-keeps = "rules-table"
 
 [[tools.replace]]
 file = ".prettierrc.yml"
-keeps = "rules-table"
 
 [[tools.replace]]
 file = ".prettierrc.yaml"
-keeps = "rules-table"
 
 [[tools.replace]]
 file = ".prettierrc.json5"
-keeps = "rules-table"
 
 [[tools.replace]]
 file = ".prettierrc.js"
-keeps = "rules-table"
 
 [[tools.replace]]
 file = "prettier.config.js"
-keeps = "rules-table"
 
 [[tools.replace]]
 file = ".prettierrc.ts"
-keeps = "rules-table"
 
 [[tools.replace]]
 file = "prettier.config.ts"
-keeps = "rules-table"
 
 [[tools.replace]]
 file = ".prettierrc.mjs"
-keeps = "rules-table"
 
 [[tools.replace]]
 file = "prettier.config.mjs"
-keeps = "rules-table"
 
 [[tools.replace]]
 file = ".prettierrc.mts"
-keeps = "rules-table"
 
 [[tools.replace]]
 file = "prettier.config.mts"
-keeps = "rules-table"
 
 [[tools.replace]]
 file = ".prettierrc.cjs"
-keeps = "rules-table"
 
 [[tools.replace]]
 file = "prettier.config.cjs"
-keeps = "rules-table"
 
 [[tools.replace]]
 file = ".prettierrc.cts"
-keeps = "rules-table"
 
 [[tools.replace]]
 file = "prettier.config.cts"
-keeps = "rules-table"
 
 [[tools.replace]]
 file = ".prettierrc.toml"
-keeps = "rules-table"
 
 [[tools.replace]]
 file = ".prettierignore"
-keeps = "ignore-paths"
 
 [[tools.replace]]
 file = "package.json"
 key = "prettier"
 shared = true
-keeps = "rules-table"
 
 [[tools.replace]]
 file = "package.yaml"
 key = "prettier"
 shared = true
-keeps = "rules-table"
 
 [[tools]]
 name = "ec"
@@ -112,7 +91,6 @@ github = {name = "editorconfig-checker/editorconfig-checker", version = "v3.4.0"
 
 [[tools.replace]]
 file = ".editorconfig"
-keeps = "rules-table"
 
 [[configs]]
 template = "editorconfig.tmpl"
@@ -235,17 +213,4 @@ summary = "Ordered formatting options for config-root paths, bounded by their de
 name = "tools.prettier.ignore_patterns"
 kind = "list"
 direction = "neutral"
-summary = "Ordered native Prettier ignore lines, including negations, preserved during adoption."
-
-[[settings]]
-name = "tools.prettier.native_defaults"
-kind = "boolean"
-direction = "neutral"
-default = false
-summary = "Use native Prettier defaults and EditorConfig values for options not explicitly set in policy."
-
-[[settings]]
-name = "tools.editorconfig.adopted"
-kind = "table"
-direction = "neutral"
-summary = "Ordered native EditorConfig sections and preambles, including nested directory documents, retained as data during adoption."
+summary = "Ordered Prettier ignore lines, including negations, written to .prettierignore."

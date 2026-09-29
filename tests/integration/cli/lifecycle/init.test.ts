@@ -58,12 +58,11 @@ test.each([
             rules: 'no',
         },
         { ...PRETTIER_TOOLING, ci: [...ci] },
-        undefined,
     );
     expect(answers).toStrictEqual({ hooks: 'none', runner: 'none', isRules: false, ci: expected });
 });
 
-test('init plans scoped spelling settings and uninstall restores the original nested configuration', async () => {
+test('init replaces a nested spelling configuration and uninstall restores the original', async () => {
     await using directory = await testdir();
     const original = '[default]\nlocale = "en-gb"\n[default.extend-words]\nteh = "teh"\n';
     await createFileTree(directory.path, { 'nested/typos.toml': original, 'nested/sample.txt': 'colour teh\n' });
@@ -85,8 +84,8 @@ test('init plans scoped spelling settings and uninstall restores the original ne
     expect(preview.exitCode).toBe(0);
     expect(preview.json).toMatchObject({
         plan: {
-            kept: containingAll([
-                { from: 'nested: typos locale', count: 1, into: '[[scope]] nested: tools.typos.locale' },
+            remove: containingAll([
+                { path: 'nested/typos.toml', note: 'replaced by the generated typos configuration' },
             ]),
         },
     });
@@ -95,8 +94,8 @@ test('init plans scoped spelling settings and uninstall restores the original ne
     const installed = await initCommand({ ...options, kits: [...options.kits], isDryRun: false });
     expect(installed.exitCode).toBe(0);
     expect(existsSync(join(directory.path, '.gitignore'))).toBe(false);
-    expect(readFileSync(join(directory.path, 'gspot.toml'), 'utf8')).toContain('en-gb');
-    expect(readFileSync(join(directory.path, 'nested/typos.toml'), 'utf8')).not.toBe(original);
+    expect(readFileSync(join(directory.path, 'gspot.toml'), 'utf8')).not.toContain('en-gb');
+    expect(existsSync(join(directory.path, 'nested/typos.toml'))).toBe(false);
     await uninstallCommand({ cwd: directory.path, yes: true, isDryRun: false });
     expect(readFileSync(join(directory.path, 'nested/typos.toml'), 'utf8')).toBe(original);
 });

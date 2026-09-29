@@ -124,11 +124,7 @@ export type SelectorGroup = {
     files?: string[];
     selectors: { selector: string; message: string }[];
 };
-export type GenerationOptions = {
-    version: string;
-    packageClient: PackageTool | undefined;
-    replace?: ReadonlyMap<string, Read> | undefined;
-};
+export type GenerationOptions = { version: string; packageClient: PackageTool | undefined };
 export type JsonFormat = { width: number; indent: number };
 export type HookName = (typeof HOOK_FILES)[number];
 export type Pointer = NonNullable<ConfigurationTarget['pointer']>;
@@ -140,12 +136,6 @@ export type EmitContext = {
     inputs: TemplateInputs;
     selection: ScopeSelection;
     manifest: Manifest;
-};
-export type Retention = {
-    root: string;
-    policy: Policy;
-    files: TrackedFile[];
-    replace: ReadonlyMap<string, Read> | undefined;
 };
 
 export type RunnerPlan = { tasks: RunnerTask[]; configuration?: ConfigurationOutput; notes: string[] };

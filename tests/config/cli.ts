@@ -28,7 +28,7 @@ writeFileSync('dist/index.html', hadOutput ? 'second' : 'first');
 `;
 /** One discovered root Stylelint configuration and nothing else. */
 export const STYLELINT_TOOLING: ExistingTooling = {
-    configs: [{ tool: 'stylelint', path: '.stylelintrc.json', keeps: 'rules-table', check: 'css/stylelint' }],
+    configs: [{ tool: 'stylelint', path: '.stylelintrc.json' }],
     hooks: [],
     ci: [],
     agentFiles: [],

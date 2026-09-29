@@ -2,13 +2,12 @@ import { parse } from 'smol-toml';
 import { test, expect } from 'bun:test';
 import { parsePolicyText } from '#cli/policy/read.ts';
 import { proposeText } from '#cli/commands/init/propose.ts';
-import { CONFIGURATIONS, NOTHING_CARRIED } from '#tests/config/unit/cli/commands.ts';
+import { CONFIGURATIONS } from '#tests/config/unit/cli/commands.ts';
 
 test('a proposed policy holds no line over 120 characters and reads back as written', () => {
     const text = proposeText({
         kits: CONFIGURATIONS,
         scopes: [{ path: 'apps/site', kits: CONFIGURATIONS.slice(0, 12) }],
-        kept: NOTHING_CARRIED,
         hooks: 'gspot',
         ci: 'none',
         rules: true,
@@ -22,11 +21,10 @@ test('a proposed policy holds no line over 120 characters and reads back as writ
     expect(policy.scopes[0]?.kits).toStrictEqual(CONFIGURATIONS.slice(0, 12));
 });
 
-test('detected settings override kept and profile values while unrelated profile settings survive', () => {
+test('detected settings override profile values while unrelated profile settings survive', () => {
     const text = proposeText({
         kits: ['python'],
         scopes: [],
-        kept: { ...NOTHING_CARRIED, tools: new Map([['ruff', { settings: { select: ['F'] }, ignores: [] }]]) },
         profileTables: {
             tools: { ruff: { select: ['E'], exclude: ['generated'] } },
             architecture: { types_directory: 'types', config_directory: 'constants' },
@@ -49,12 +47,10 @@ test('detected settings override kept and profile values while unrelated profile
     });
 });
 
-test('initialization preserves formatter overrides and profile runner tasks while honoring disabled integrations', () => {
+test('initialization keeps profile runner tasks while honoring disabled integrations', () => {
     const text = proposeText({
         kits: ['formatting'],
         scopes: [],
-        kept: NOTHING_CARRIED,
-        formatter: { format: { print_width: 90 }, extra: { bracketSpacing: false }, nativeDefaults: true },
         profileTables: {
             hooks: { tool: 'husky' },
             ci: { provider: 'github' },
@@ -69,8 +65,6 @@ test('initialization preserves formatter overrides and profile runner tasks whil
     });
     const document = parse(text);
     expect(document).toMatchObject({
-        format: { print_width: 90 },
-        tools: { prettier: { extra: { bracketSpacing: false }, native_defaults: true } },
         runner: { tool: 'mise', tasks: { check: 'profile-check', apply: 'profile-apply', fix: 'detected-fix' } },
         coverage: { strict: true },
         guides: { directory: '.gspot/guides', install: false },
@@ -79,28 +73,27 @@ test('initialization preserves formatter overrides and profile runner tasks whil
     expect(document).not.toHaveProperty('ci');
 });
 
-test('initialization writes scoped reasoned allowances as table arrays', () => {
-    const words = [
-        {
-            word: 'ProtocolName',
-            reason: 'The protocol requires this exact spelling in every exported operation and in each generated client interface.',
-        },
-    ];
+test('initialization writes scoped install safeguards as scope tables', () => {
     const text = proposeText({
-        kits: ['spelling'],
+        kits: ['dependencies'],
         scopes: [
-            { path: 'api', kits: ['spelling'] },
-            { path: 'web', kits: ['spelling'] },
+            { path: 'api', kits: ['dependencies'] },
+            { path: 'web', kits: ['dependencies'] },
         ],
-        kept: {
-            ...NOTHING_CARRIED,
-            scopes: new Map([['api', { kits: ['spelling'], tools: { typos: { words } } }]]),
-        },
+        install: [
+            { path: '', settings: { min_release_age_days: 14 } },
+            { path: 'api', settings: { min_release_age_days: 21, security_scanner: 'scope-scanner' } },
+        ],
         hooks: 'none',
         ci: 'none',
         rules: true,
         runner: 'none',
     });
-    expect(text).toContain('[[scope.tools.typos.words]]');
-    expect(parse(text)).toMatchObject({ scope: [{ path: 'api', tools: { typos: { words } } }, { path: 'web' }] });
+    expect(parse(text)).toMatchObject({
+        tools: { install: { min_release_age_days: 14 } },
+        scope: [
+            { path: 'api', tools: { install: { min_release_age_days: 21, security_scanner: 'scope-scanner' } } },
+            { path: 'web' },
+        ],
+    });
 });

@@ -23,13 +23,9 @@ scoop = "hadolint"
 
 [[tools.replace]]
 file = ".hadolint.yaml"
-keeps = "rules-table"
-check = "docker/hadolint"
 
 [[tools.replace]]
 file = ".hadolint.yml"
-keeps = "rules-table"
-check = "docker/hadolint"
 
 [[tools]]
 name = "trivy"
@@ -40,11 +36,9 @@ github = {name = "aquasecurity/trivy", version = "v0.69.3"}
 
 [[tools.replace]]
 file = "trivy.yaml"
-keeps = "rules-table"
 
 [[tools.replace]]
 file = ".trivyignore"
-keeps = "rules-table"
 
 [[tools]]
 name = "docker"

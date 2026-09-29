@@ -4,10 +4,9 @@ This document decides the one file a person edits, the files gspot writes, and h
 merge.
 
 Configuration-document editing owns parsing and field edits for shared JSON, YAML, and TOML.
-The owner retains locking, reads, logs, writes, and recovery. Static
-configuration reading captures the bytes and permissions that authorize adoption; tool-specific
-keeping converts those read settings without acquiring a separate mutation owner. Formatter
-and ESLint adoption own their conversion rules; replacement coordinates reads and retirement.
+The owner retains locking, reads, logs, writes, and recovery. Init reads the bytes and
+permissions of each file it deletes, so the write refuses a file that changed after the plan,
+and uninstall restores it byte for byte. Init reads no settings out of those files.
 
 ## Ownership boundaries
 
@@ -383,42 +382,6 @@ requires an absent destination or an unchanged gspot-installed value. Otherwise,
 versions and print their paths. Interrupted operations resume from the ownership record;
 serialize mutations with one lock per config root, and refuse a concurrent writer.
 
-## Carrying configuration
-
-Load flat ESLint configuration through the repository's native ESLint API. Preserve ordered
-`files`, `ignores`, rule options and severities, language options, settings, plugins, and
-parsers in `tools.eslint.adopted`. Keep selectors as selectors so they govern future files.
-Repository-owned executable rules remain imported code registered by module and export.
-Never serialize an executable rule into TOML.
-
-Unsupported eslintrc configuration, processors,
-inline executable selectors, and unregistered implementations fail conversion and leave the
-original configuration intact. Validate effective configurations with ESLint before adoption.
-
-Use the native Prettier loader for executable root kits and format parsers for static
-configuration. Shared base options belong in `[format]`; ordered native overrides belong in
-`tools.prettier.extra.overrides`, including `files`, `excludeFiles`, and options. Preserve native
-ignore lines, including negations, in `tools.prettier.ignore_patterns`. These selectors apply to
-future files without consulting the current filename inventory.
-
-A nested `.prettierignore`
-converts with Git precedence: each line is rebased onto its folder and follows the lines of every
-ancestor file. A negated override selector keeps its negation when it moves. Below the root, a
-negated `files` selector becomes an entry of its own for the folder less that selector, because
-Prettier applies an entry when any one of its selectors matches.
-
-Shared format overrides emit
-EditorConfig sections only when that syntax can represent their selectors; otherwise fail with
-the exact selector and direct the user to native tool configuration. Unsupported EditorConfig,
-nested formatter configuration, and JSON5 inputs currently fail conversion before replacement.
-Package metadata remains intact when its formatter settings are adopted.
-
-Validate value types at input and serialize each value for its output language. Quote TOML
-keys and strings, serialize JSON and JavaScript data, and escape comments for their delimiter.
-One line of printable text is not a substitute for escaping. Reject control characters where
-the field contract prohibits them; accept legitimate quotes, backslashes, and Unicode through
-the proper serializer. Remote profiles use the same validation and emission path.
-
 ## Tool lockfiles
 
 `apply` owns resolution and tracked tool lockfile changes. It resolves only when manifests and
@@ -659,7 +622,7 @@ This table, held in the manifests by a `pointer` key, and tested for each row:
 A config in a manifest takes `pointer = { path, form }`. `pointers.ts` writes one
 small file for each, with the mark. A pointer is never written over a file the developer keeps.
 
-An existing `.editorconfig` is replaced only after its full behavior is represented. Unsupported section conversion currently fails adoption and preserves the original. Prettier base options and native selectors use the configuration owners described above. Saved recovery precedes any accepted replacement.
+An existing `.editorconfig` or Prettier file is deleted at init and the generated one takes its place. Saved recovery precedes the deletion.
 
 It leaves the shared-file list of
 K-36. The guide on editors names, for each tool with no pointer, the editor setting that reads
@@ -747,34 +710,19 @@ Parse every generated format after inputs containing quotes, backslashes, commen
 
 ### Acceptance K-193
 
-Replacement carries a rule in both directions, with the paths it held for. A rule turned
-off becomes an `[[ignore]]` with `rule` and `paths`. A rule turned on, with its options, becomes
-an entry of `tools.<tool>.rules`, or a path-specific override when applicability differs. The plan lists, for each replaced file, every setting that was
-not carried.
+Init reads no rule out of a replaced file. A rule the repository still needs is written by
+hand: a rule turned off becomes `gspot ignore <check> --rule <rule>`, a rule turned on becomes
+an entry of `tools.<tool>.rules`. The plan lists each replaced file in its delete section and
+each shared section in its kept-active section.
 
-A flat ESLint config is a module, so gspot loads it through ESLint itself.
-Resolve the config for every governed file using the repository's installed ESLint. Group equal
-kits and preserve path-specific differences in `[[tools.eslint.overrides]]`.
-
-Compare against proposed output for those same paths. An extension is not a configuration class.
-Preserve enabled rules, options, disabled rules, and ignores.
-
-Unsupported plugins, processors, dynamic selectors, or options keep the original file active.
-A warning alone is not permission to delete it. New-file applicability and ordering follow
-[03-configuration.md](03-configuration.md). An `.eslintrc` file is read the same way. `disabledFromRulesTable` stays for
-markdownlint and stylelint, whose files are plain JSON.
-
-`replacement.test.ts` plants a config with `no-var: error`, a rule off for `tests/**`, and
-a plugin gspot does not ship. It holds separate source, test, and package overrides; the unsupported plugin keeps its original configuration active and out of the deletion plan.
+`plan.test.ts` under the replace acceptance folder plants an `.eslintrc.json`, a `.prettierrc`,
+a `typos.toml`, a `.shellcheckrc`, and a `.markdownlint.jsonc`. It holds that the plan names
+each file, that init deletes each, that the policy carries nothing from them, and that
+uninstall restores every byte and mode.
 
 ### Acceptance K-120
 
-`init` learns the format the repository has, and proposes it.
-
-Use the native Prettier API and format parsers to preserve base options and ordered override
-selectors as described above. Exercise files created after adoption. Unsupported constructs
-produce a specific conversion failure, leave original bytes intact, and prevent successful
-adoption; they never become a sampled filename list or a global approximation.
+`init` proposes the shipped format; the developer changes `[format]` afterwards.
 
 `replacement.test.ts` plants each of the five forms with tabs, and holds
 `indent_style = "tab"` in the written config.

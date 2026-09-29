@@ -40,7 +40,7 @@ it. Running uninstall again cannot authorize deletion of an unrelated file.
 
 Recovery data is local. A fresh clone does not acquire ownership records merely because Git
 tracks generated configuration. Files without those records remain during removal. Applying
-configuration in that clone records any adopted existing bytes and permissions as originals.
+configuration in that clone records any replaced existing bytes and permissions as originals.
 Do not infer ownership from a generated header or filename.
 
 ## Remove integrations separately when required

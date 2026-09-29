@@ -24,7 +24,7 @@ for (const extension of ['md', 'sh']) {
             [path]: '# We delve into the records.\n',
         });
         const session = await openSession(directory.path);
-        const [planned] = await planRun(session, { stage: 'commit', skips: [], only: ['prose/vale'] });
+        const [planned] = planRun(session, { stage: 'commit', skips: [], only: ['prose/vale'] });
         const defect = await runEngineCheck(session, valeFindings, planned!);
         expect(defect.status, defect.note).toBe('fail');
         expect(defect.findings).toStrictEqual([containing({ file: path, line: 1, rule: 'Example.Concrete' })]);
@@ -50,7 +50,7 @@ test('Vale preserves ESLint delimiters while checking punctuation inside reasons
         ].join('\n'),
     });
     const session = await openSession(directory.path);
-    const [planned] = await planRun(session, { stage: 'commit', skips: [], only: ['prose/vale'] });
+    const [planned] = planRun(session, { stage: 'commit', skips: [], only: ['prose/vale'] });
     const defect = await runEngineCheck(session, valeFindings, planned!);
     expect(defect.status, defect.note).toBe('fail');
     expect(defect.findings).toStrictEqual([
@@ -100,7 +100,7 @@ test.each([
         ].join('\n'),
     });
     const session = await openSession(directory.path);
-    const [planned] = await planRun(session, { stage: 'commit', skips: [], only: ['prose/vale'] });
+    const [planned] = planRun(session, { stage: 'commit', skips: [], only: ['prose/vale'] });
     const result = await runEngineCheck(session, valeFindings, planned!);
     expect(result.status, result.note).toBe('fail');
     expect(result.findings).toStrictEqual([
@@ -132,7 +132,7 @@ test('Vale accepts explicit minimum versions and still reports vague or redundan
         ].join('\n'),
     });
     const session = await openSession(directory.path);
-    const [planned] = await planRun(session, { stage: 'commit', skips: [], only: ['prose/vale'] });
+    const [planned] = planRun(session, { stage: 'commit', skips: [], only: ['prose/vale'] });
     const result = await runEngineCheck(session, valeFindings, planned!);
     expect(result.status, result.note).toBe('fail');
     expect(result.findings).toStrictEqual([

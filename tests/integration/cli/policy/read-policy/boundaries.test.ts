@@ -1,8 +1,6 @@
-import { join } from 'node:path';
 import { stringify } from 'smol-toml';
 import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { symlinkSync, readFileSync } from 'node:fs';
 import { PolicyError, parsePolicyText } from '#cli/policy/read.ts';
 import { policyProblems } from '#tests/support/cli/policy-problems.ts';
 
@@ -54,10 +52,6 @@ for (const scoped of [false, true]) {
     );
 }
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the line limit.
-const configured = (adopted: unknown[]) =>
-    stringify({ version: 1, kits: ['javascript'], tools: { eslint: { adopted } } });
-
 test.each([
     'paths = []\nrules = {eqeqeq = "error"}',
     'paths = ["src"]\nrules = {eqeqeq = 0}',
@@ -68,36 +62,6 @@ test.each([
     expect(() =>
         parsePolicyText(`version = 1\nkits = ["javascript"]\n[[tools.eslint.overrides]]\n${entry}\n`, 'gspot.toml'),
     ).toThrow();
-});
-
-test('ESLint selector bases and local registrations reject links while future selector directories remain valid', async () => {
-    await using directory = await testdir();
-    await createFileTree(directory.path, {
-        'project/README.md': 'inside\n',
-        'outside/processing.mjs': 'export default {};\n',
-    });
-    const root = join(directory.path, 'project');
-    symlinkSync('../outside', join(root, 'linked'));
-    expect(() => parsePolicyText(configured([{ basePath: 'linked' }]), 'gspot.toml', root)).toThrow('Unsafe lifecycle');
-    expect(() =>
-        parsePolicyText(
-            configured([{ processor: { module: './linked/processing.mjs', export: 'default' } }]),
-            'gspot.toml',
-            root,
-        ),
-    ).toThrow('Unsafe lifecycle');
-    expect(() => parsePolicyText(configured([{ basePath: '../outside' }]), 'gspot.toml', root)).toThrow(
-        'relative path',
-    );
-    expect(() =>
-        parsePolicyText(
-            configured([{ processor: { module: '../outside/processing.mjs', export: 'default' } }]),
-            'gspot.toml',
-            root,
-        ),
-    ).toThrow('must belong to the repository');
-    expect(() => parsePolicyText(configured([{ basePath: 'future/source' }]), 'gspot.toml', root)).not.toThrow();
-    expect(readFileSync(join(directory.path, 'outside/processing.mjs'), 'utf8')).toBe('export default {};\n');
 });
 
 test.each(["author's name", 'two words', '$(printf injected); *', 'line\nbreak'])(

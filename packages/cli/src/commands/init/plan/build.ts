@@ -6,14 +6,12 @@ import { npmPins, pythonPins } from '#cli/tools/pins.ts';
 import { misePins, pinnedTwice } from '#cli/tools/mise.ts';
 import { submodulePaths } from '#cli/repository/tracked.ts';
 import { MISE_CONFIG_PATH } from '#cli/config/tools/tools.ts';
-import { noLongerRuns } from '#cli/policy/adoption/collect.ts';
 import { runnerTaskPlan } from '#cli/generation/runner/plan.ts';
 import { ciLintJobs } from '#cli/repository/existing-tooling.ts';
-import type { AdoptionResult } from '#cli/types/policy/adoption.ts';
-import type { ScopeEntry } from '#cli/types/repository/repository.ts';
 import type { Policy, RunnerTaskNames } from '#cli/types/policy/policy.ts';
 import { CI_SETUP, HOOKS_ROW, CURSOR_RULE } from '#cli/config/commands/init.ts';
 import { SECONDS_PER_DAY, DEFAULT_RELEASE_AGE_DAYS } from '#cli/config/generation.ts';
+import type { ScopeEntry, ExistingTooling } from '#cli/types/repository/repository.ts';
 
 import type {
     Planning,
@@ -24,40 +22,6 @@ import type {
     InstallSettings,
     InitPlan as Plan,
 } from '#cli/types/commands/init.ts';
-
-// How many values a carried setting holds: the entries of a list or table, or one scalar.
-function carriedCount(value: unknown): number {
-    if (Array.isArray(value)) return value.length;
-    if (typeof value === 'object' && value !== null) return Object.keys(value).length;
-    return 1;
-}
-
-function carriedRows(kept: AdoptionResult): ReplacePlan['kept'] {
-    const rows = [...kept.tools].flatMap(([tool, entries]) => {
-        const settings = Object.entries(entries.settings).map(([key, value]) => ({
-            from: `${tool} ${key}`,
-            count: carriedCount(value),
-            into: `tools.${tool}.${key}`,
-        }));
-        if (entries.ignores.length > 0)
-            settings.push({
-                from: `${tool} rules turned off`,
-                count: entries.ignores.length,
-                into: '[[ignore]] entries',
-            });
-        return settings.filter((row) => row.count > 0);
-    });
-    const scopeSettings = [...kept.scopes].flatMap(([scope, entry]) =>
-        Object.entries(entry.tools).flatMap(([tool, settings]) =>
-            Object.entries(settings).map(([key, value]) => ({
-                from: `${scope}: ${tool} ${key}`,
-                count: Array.isArray(value) ? value.length : 1,
-                into: `[[scope]] ${scope}: tools.${tool}.${key}`,
-            })),
-        ),
-    );
-    return [...rows, ...scopeSettings];
-}
 
 function runnerRows(
     root: string,
@@ -108,34 +72,41 @@ function bunfigSettings(text: string): InstallSettings {
     };
 }
 
-// Records the install settings of one scope, merged over what the scope already carries.
-function carryInstallSettings(kept: AdoptionResult, path: string, settings: InstallSettings): void {
-    if (path === '') {
-        const existing = kept.tools.get('install');
-        kept.tools.set('install', {
-            settings: { ...existing?.settings, ...settings },
-            ignores: existing?.ignores ?? [],
-        });
-        return;
-    }
-    const scope = kept.scopes.get(path) ?? { kits: [], tools: {} };
-    scope.tools['install'] = { ...scope.tools['install'], ...settings };
-    kept.scopes.set(path, scope);
-}
-
-// Carries the install settings of every scope's bunfig.toml into the plan.
-function carryBunfigSettings(root: string, selection: InitSelection, kept: AdoptionResult): void {
+// The install settings of every scope's bunfig.toml, for the policy's install tables.
+function bunfigInstall(root: string, selection: InitSelection): NonNullable<Plan['install']> {
     const files = openRoot(root);
     try {
-        for (const path of new Set(['', ...selection.scopes.map((scope) => scope.path)])) {
+        return [...new Set(['', ...selection.scopes.map((scope) => scope.path)])].flatMap((path) => {
             const source = files.read(path === '' ? 'bunfig.toml' : `${path}/bunfig.toml`);
-            if (source === undefined) continue;
+            if (source === undefined) return [];
             const settings = bunfigSettings(source.bytes.toString('utf8'));
-            if (Object.keys(settings).length > 0) carryInstallSettings(kept, path, settings);
-        }
+            return Object.keys(settings).length === 0 ? [] : [{ path, settings }];
+        });
     } finally {
         files.close();
     }
+}
+
+// What stops running once gspot runs the same tools: lint folders, lint-only manifests, and duplicate pins.
+function noLongerRuns(
+    tooling: ExistingTooling,
+    duplicatePins: { tool: string; version: string; place: string }[],
+): { path: string; note: string }[] {
+    const list = tooling.lintFolders.map((folder) => ({
+        path: `${folder}/`,
+        note: 'a folder of lint scripts; check remaining references before deleting it',
+    }));
+    for (const manifest of tooling.lintOnlyManifests)
+        list.push({ path: manifest, note: 'a manifest whose dependencies are all tools gspot now pins' });
+    const [first] = duplicatePins;
+    if (first) {
+        const noun = duplicatePins.length === 1 ? 'pin' : 'pins';
+        list.push({
+            path: first.place,
+            note: `${String(duplicatePins.length)} ${noun} gspot also pins (gspot doctor lists them)`,
+        });
+    }
+    return list;
 }
 
 // The commit scopes a scoped repository with the commits configuration accepts, or undefined for none.
@@ -188,7 +159,6 @@ function retainedCiRows(ci: InitAnswers['ci'], ciFiles: string[], lintJobs: stri
  * @param root the repository root
  * @param selection what init selected
  * @param answers the answers to the init questions
- * @param kept the lists kept from old configuration files
  * @param detected the settings init filled from the repository
  * @returns the plan
  */
@@ -196,10 +166,9 @@ export function plan(
     root: string,
     selection: InitSelection,
     answers: InitAnswers,
-    kept: AdoptionResult,
     detected: DetectedSetting[] = [],
 ): Plan {
-    if (selection.selectedIds.has('dependencies')) carryBunfigSettings(root, selection, kept);
+    const install = selection.selectedIds.has('dependencies') ? bunfigInstall(root, selection) : [];
     const scopes: ScopeEntry[] = selection.scopes.filter((scope) => scope.path !== '');
     const commitScopes = commitScopeNames(scopes, selection);
     const xcode = xcodeRow(root, selection);
@@ -209,12 +178,11 @@ export function plan(
             path: scope.path,
             kits: selection.scopePlans.get(scope.path) ?? [],
         })),
-        kept,
         hooks: answers.hooks,
         ci: answers.ci,
         rules: answers.isRules,
         runner: answers.runner,
-        ...(answers.formatter === undefined ? {} : { formatter: answers.formatter }),
+        ...(install.length === 0 ? {} : { install }),
         ...(commitScopes ? { commitScopes } : {}),
         ...(xcode ? { xcode } : {}),
         ...(detected.length === 0 ? {} : { detected }),
@@ -223,13 +191,13 @@ export function plan(
 
 /**
  * Builds the plan init prints before asking to continue.
- * @param planning the selected kit and adoption reads
+ * @param planning the selection, the answers, and the replaced configuration
  * @param policy the validated proposed policy
  * @param policyText the proposed policy text
  * @returns the plan
  */
 export function buildInitPlan(planning: Planning, policy: Policy, policyText: string): ReplacePlan {
-    const { root, tooling, everySelected, selection, answers, kept, options } = planning;
+    const { root, tooling, everySelected, selection, answers, replaced, options } = planning;
     const profile =
         options.profile === undefined
             ? undefined
@@ -261,14 +229,13 @@ export function buildInitPlan(planning: Planning, policy: Policy, policyText: st
             ...agentRows(agents),
             ...ciRows(answers.ci),
         ],
-        remove: kept.removed,
-        unread: kept.unread,
+        remove: replaced.removed,
+        unread: replaced.unread,
         retained: [
-            ...kept.retained,
+            ...replaced.retained,
             ...submodulePaths(root).map((path) => ({ path, note: 'submodule; contents are not read' })),
             ...retainedCiRows(answers.ci, tooling.ci, lintJobs),
         ],
-        kept: carriedRows(kept),
         change: [
             { path: '.gitignore', note: 'one managed block' },
             { path: '.gitattributes', note: 'managed generated-file classification and LF line endings' },
@@ -276,6 +243,5 @@ export function buildInitPlan(planning: Planning, policy: Policy, policyText: st
             ...(answers.hooks === 'gspot' ? [HOOKS_ROW] : []),
         ],
         noLongerRuns: noLongerRuns(tooling, pinnedTwice(root, everySelected)),
-        ignores: [...kept.tools.values()].flatMap((tool) => tool.ignores),
     };
 }

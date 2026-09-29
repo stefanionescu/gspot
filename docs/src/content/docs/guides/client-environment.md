@@ -90,4 +90,4 @@ configuration there. This example does not implement or test that route.
 The example directory path is stored in `example_root`. After inspection, leave that directory
 and remove it after finishing the example. Your source checkout remains available.
 
-For checks in an existing application, follow [adopt an existing repository](/guides/existing-repository/).
+For checks in an existing application, follow [existing repositories](/guides/existing-repository/).

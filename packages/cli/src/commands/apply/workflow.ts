@@ -57,7 +57,6 @@ export async function applyAll(session: Session, replace?: ReadonlyMap<string, R
         const rendered = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
             version: session.version,
             packageClient: session.packageClient,
-            replace: replace,
         });
         await preparePackageProject(session.root, rendered.files, owner);
         await preparePythonProject(session.root, rendered.files, owner);

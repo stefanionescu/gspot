@@ -33,15 +33,12 @@ github = {name = "errata-ai/vale", version = "v3.21.0"}
 
 [[tools.replace]]
 file = ".vale.ini"
-keeps = "rules-table"
 
 [[tools.replace]]
 file = "_vale.ini"
-keeps = "rules-table"
 
 [[tools.replace]]
 file = "vale.ini"
-keeps = "rules-table"
 
 [[configs]]
 template = "vale.ini.tmpl"

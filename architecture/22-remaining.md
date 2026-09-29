@@ -87,7 +87,7 @@ Decide which nested ignore and relocated selector forms must be supported under
 forms. Record that decision in the owning contract before conversion changes in phase 5.
 
 Decision, 2026-09-25: nested `.prettierignore` files and negated override selectors become
-supported conversions. [Carrying configuration](03-configuration.md#carrying-configuration)
+supported conversions. Carrying configuration (removed in phase 1)
 records their meaning. Other refused forms keep their originals active.
 
 Exit: the dependency scope and conversion boundary are explicit. Acceptance: `K-193`, `K-211`,
@@ -107,7 +107,7 @@ Step 2.1. Confirmed defect.
 Test moves changed paths inside fixture source strings. In
 [scoped execution](../tests/integration/cli/execution/scopes/trpc.test.ts), imports point to
 `../run/private/router.js` although the fixture creates local `private/router.ts`.
-[Flat ESLint adoption](../tests/integration/cli/policy/adoption/eslint-flat.test.ts) imports
+Flat ESLint adoption (removed in phase 1) imports
 `../../adoption/rules.mjs` although the module is created at the fixture root. The same pattern
 appears in adoption isolation and evaluation fixtures. These paths can fail module resolution
 or bypass the behavior the scenario intends to exercise.
@@ -398,7 +398,7 @@ Use the verified publication contracts before changing adoption or command consu
 
 Step 5.1. Scoped conversion implementation.
 
-[Formatter adoption](../packages/cli/src/policy/adoption/formatting.ts) refuses nested ignore
+Formatter adoption (removed in phase 1) refuses nested ignore
 files; [formatter generation](../packages/cli/src/generation/formatting/settings.ts) refuses some relocated
 negated override selectors. These are unsupported conversion forms. Safe refusal with preserved
 originals complies with the preservation contract; it is not evidence of data loss. Root Prettier

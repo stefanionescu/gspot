@@ -109,12 +109,6 @@ function isStandalone(check: Manifest['checks'][number] | undefined): boolean {
     return check.engine !== undefined && check.runs === 'once' && check.tool === undefined;
 }
 
-// Whether a check runs a tool itself, not through the check that reports it.
-function runsTool(check: Manifest['checks'][number] | undefined, tool: string): boolean {
-    if (check === undefined || check.reported_by !== undefined) return false;
-    return (check.tool ?? check.command?.[0]) === tool;
-}
-
 // Refuses a check reference that does not name another kit's standalone built-in check.
 function assertReferences(manifest: Manifest, checks: Checks, owners: Map<string, string>): void {
     for (const reference of manifest.kit.check_references ?? []) {
@@ -124,15 +118,6 @@ function assertReferences(manifest: Manifest, checks: Checks, owners: Map<string
                 `Referenced check ${reference} must name another kit's standalone built-in check that runs once.`,
             ]);
     }
-}
-
-// Refuses a replace row whose check does not run the tool that declares it.
-function assertReplaces(manifest: Manifest, checks: Checks): void {
-    for (const tool of manifest.tools)
-        for (const replace of tool.replace ?? []) {
-            if (replace.check === undefined || runsTool(checks.get(replace.check), tool.name)) continue;
-            throw new ManifestError(manifest.kit.name, [`replace check ${replace.check} must execute ${tool.name}.`]);
-        }
 }
 
 // Refuses a chain of replacements that returns to a check it already passed.
@@ -264,7 +249,6 @@ export function validateManifests(manifests: Map<string, Manifest>): void {
     );
     for (const manifest of manifests.values()) {
         assertReferences(manifest, checks, owners);
-        assertReplaces(manifest, checks);
         for (const check of manifest.checks) assertReporting(manifest, check, checks);
     }
 }

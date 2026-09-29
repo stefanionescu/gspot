@@ -144,7 +144,7 @@ test('engine coverage rejects an unread path and accepts confirmed repository so
         'source.sh': 'echo example\n',
     });
     const session = await openSession(sandbox.path);
-    const [planned] = await planRun(session, { stage: 'all', only: ['bash/syntax'], skips: [] });
+    const [planned] = planRun(session, { stage: 'all', only: ['bash/syntax'], skips: [] });
     const failed = await runEngineCheck(
         session,
         () => Promise.resolve({ findings: [], checkedFiles: ['../outside.sh'] }),

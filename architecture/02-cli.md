@@ -10,7 +10,7 @@ command exists when nothing else answers its question.
 ```text
 gspot init       [--yes] [--dry-run] [--from <profile>] [--kits <names...>] [--without <names...>] [--scope <path=names...>]
                  [--hooks gspot|husky|lefthook|pre-commit|simple-git-hooks|existing] [--no-hooks] [--ci github|gitlab] [--no-ci]
-                 [--runner mise|npm|pnpm|yarn|bun] [--no-runner] [--format keep|shipped]
+                 [--runner mise|npm|pnpm|yarn|bun] [--no-runner]
                  [--no-guides] [--no-checks] [--no-install] [--allow-dirty]
 gspot check      [<path>...] [--staged] [--changed[=<ref>]] [--fix] [--dry-run]
                  [--only <checks...>] [--skip <checks...>] [--stage commit|push|manual] [--no-cache]
@@ -122,7 +122,6 @@ Asked in a terminal, in three groups. Each has a flag, and `--yes` takes every p
 | Write a CI job?                        | yes where no lint job exists                                | `--ci`, `--no-ci`         |
 | Install rule files for agents?         | yes                                                         | `--no-guides`             |
 | Which task names call gspot            | a new body for `lint` and `format` where they exist         | `--runner`, `--no-runner` |
-| Keep your formatting?                  | keep, asked only where it differs from the shipped format   | `--format keep`           |
 
 The level is not asked. `init` writes `level = "recommended"`.
 
@@ -527,7 +526,7 @@ the owning tool's loading contract and lifecycle preservation rules.
 
 Verify that the pinned consumer loads the generated configuration, that required native root
 integration works, and that unrelated files remain unchanged. Do not require a fixed root-file
-inventory or forbid the root integrations the adoption contract explicitly supports.
+inventory or forbid the root integrations the init contract explicitly supports.
 
 ### Acceptance K-111
 

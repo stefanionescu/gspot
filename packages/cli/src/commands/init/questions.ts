@@ -1,12 +1,9 @@
 import type { Manifest } from '#cli/types/kits.ts';
-import { shippedFormat } from '#cli/kits/listing.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { MISE_CONFIG_PATH } from '#cli/config/tools/tools.ts';
 import { readGitSetting } from '#cli/repository/git-config.ts';
 import { ciLintJobs } from '#cli/repository/existing-tooling.ts';
-import type { AdoptedFormatting } from '#cli/types/policy/adoption.ts';
 import { CI_CHOICES, HOOK_CHOICES } from '#cli/config/commands/init.ts';
-import type { Policy, FormatSettings } from '#cli/types/policy/policy.ts';
 import type { ExistingTooling } from '#cli/types/repository/repository.ts';
 import { askMany, askChoice, askConfirmation } from '#cli/commands/prompts.ts';
 import type { InitAnswers, InitOptions, InitSelection } from '#cli/types/commands/init.ts';
@@ -71,33 +68,6 @@ async function askRunner(options: InitOptions, tooling: ExistingTooling): Promis
     return askChoice('Task runner?', '--runner', RUNNER_CHOICES, tooling.runner, options.yes);
 }
 
-async function askFormat(
-    options: InitOptions,
-    differing: AdoptedFormatting | undefined,
-): Promise<AdoptedFormatting | undefined> {
-    if (!differing) return undefined;
-    const shown = Object.entries({ ...differing.format, ...differing.extra })
-        .filter(([key]) => key !== 'reason')
-        .map(([key, value]) => {
-            if (key === 'overrides' && Array.isArray(value)) return `${String(value.length)} current path overrides`;
-            return `${key} ${typeof value === 'object' ? JSON.stringify(value) : String(value)}`;
-        })
-        .join(', ');
-    const keep =
-        options.format ??
-        (await askChoice<'keep' | 'shipped'>(
-            'Your formatter settings differ from the shipped ones. Keep yours?',
-            '--format keep or --format shipped',
-            [
-                { value: 'keep', label: `keep (${shown})` },
-                { value: 'shipped', label: 'take the shipped values' },
-            ],
-            'keep',
-            options.yes,
-        ));
-    return keep === 'keep' ? differing : undefined;
-}
-
 /**
  * Asks which kits to install: what init selected starts selected, every other shipped configuration is offered.
  * @param options the init flags
@@ -126,38 +96,20 @@ export async function askKits(
 }
 
 /**
- * Asks the init questions that flags left open: hooks, CI, guides, task runner, and formatter settings.
+ * Asks the init questions that flags left open: hooks, CI, guides, and the task runner.
  * @param root the repository root
  * @param options the init flags
  * @param tooling the configuration files, hooks and runner found
- * @param keptFormat the validated formatter choices captured during replace read
  * @returns the answers
  */
 export async function askInitQuestions(
     root: string,
     options: InitOptions,
     tooling: ExistingTooling,
-    keptFormat: AdoptedFormatting | undefined,
 ): Promise<InitAnswers> {
     const hooks = await askHooks(options, tooling);
     const ci = await askCi(root, options, tooling);
     const isRules = await askRuleFiles(options);
     const runner = await askRunner(options, tooling);
-    const answers = { hooks, ci, isRules, runner };
-    if (keptFormat === undefined) return answers;
-    const shipped = shippedFormat();
-    const differences =
-        keptFormat.nativeDefaults === true
-            ? keptFormat.format
-            : (Object.fromEntries(
-                  Object.entries(keptFormat.format).filter(
-                      ([key, value]) => value !== shipped[key as keyof FormatSettings],
-                  ),
-              ) as Policy['format']);
-    const differing =
-        Object.keys(differences).length === 0 && keptFormat.extra === undefined && keptFormat.nativeDefaults !== true
-            ? undefined
-            : { ...keptFormat, format: differences };
-    const formatter = await askFormat(options, differing);
-    return { ...answers, ...(formatter ? { formatter } : {}) };
+    return { hooks, ci, isRules, runner };
 }

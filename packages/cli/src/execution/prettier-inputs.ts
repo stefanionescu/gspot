@@ -1,39 +1,20 @@
-import { isDeepStrictEqual } from 'node:util';
+import ignore from 'ignore';
 import { openRoot } from '#cli/platform/filesystem.ts';
-import { ignoredPathsResponse } from '#cli/native/protocol.ts';
-import { runConfiguration } from '#cli/native/configuration.ts';
 import type { Session, PlannedCheck } from '#cli/types/execution/execution.ts';
 
 /**
- * Resolve native ignore patterns before either the checker or its fixer receives file arguments.
+ * Leave out the files .prettierignore names before either the checker or its fixer receives file arguments.
  * @param session the open session
  * @param check the active native Prettier check with selected files
  * @returns the check with the ignored files left out
  */
-export async function prettierInputs(session: Session, check: PlannedCheck): Promise<PlannedCheck> {
-    const ignorePath = '.prettierignore';
+export function prettierInputs(session: Session, check: PlannedCheck): PlannedCheck {
     const tree = openRoot(session.root);
     try {
-        const read = tree.read(ignorePath);
+        const read = tree.read('.prettierignore');
         if (read === undefined) return check;
-        const ignored = new Set(
-            ignoredPathsResponse.parse(
-                await runConfiguration(
-                    {
-                        tool: 'prettier',
-                        operation: 'ignore',
-                        root: session.root,
-                        paths: check.files.map((file) => file.path),
-                        ignorePath,
-                    },
-                    check.scope.view,
-                    session.cancelSignal,
-                ),
-            ),
-        );
-        if (!isDeepStrictEqual(tree.read(ignorePath), read))
-            throw new Error('.prettierignore changed while check inputs were resolved. Run gspot check again.');
-        const files = check.files.filter((file) => !ignored.has(file.path));
+        const matcher = ignore().add(read.bytes.toString('utf8'));
+        const files = check.files.filter((file) => !matcher.ignores(file.path));
         return files.length === 0
             ? { ...check, skip: { source: 'ignore', note: 'all selected paths are ignored by .prettierignore' } }
             : { ...check, files };

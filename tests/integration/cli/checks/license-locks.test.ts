@@ -151,7 +151,7 @@ test.each(['root', 'nested', 'combined'])(
             'uv.lock': 'version = 1\n[[package]]\nname = "example"\nversion = "1.2.3"\n',
         });
         const session = await openSession(root);
-        const plan = await planRun(session, { stage: 'commit', only: ['integrity/allowlists-match'], skips: [] });
+        const plan = planRun(session, { stage: 'commit', only: ['integrity/allowlists-match'], skips: [] });
         expect(plan).toHaveLength(1);
         const selectsStructure = session.scopes
             .flatMap((scope) => scope.selected)

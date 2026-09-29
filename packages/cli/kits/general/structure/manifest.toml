@@ -18,7 +18,6 @@ github = {name = "ast-grep/ast-grep", version = "0.45.3"}
 
 [[tools.replace]]
 file = ".qlty"
-keeps = "rules-table"
 
 [[checks]]
 name = "structure/single-file-folder"

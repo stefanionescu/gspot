@@ -13,7 +13,7 @@ Start with the [source installation prerequisites](/guides/install/). From your 
 Review the proposed writes before accepting them. Initialization does not run checks.
 
 - For a disposable example, [run your first check](/guides/quick-start/).
-- To retain existing configuration, [adopt gspot in an existing repository](/guides/existing-repository/).
+- For a repository with linter configuration already, see [existing repositories](/guides/existing-repository/).
 - After cloning a configured repository, [install its locked tools and hooks](/guides/install/#join-a-configured-repository).
 
 ## Check and correct

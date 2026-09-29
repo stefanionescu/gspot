@@ -1,11 +1,11 @@
-// What the adoption and selection tests start from: a discovery result naming configurations, and a minimal manifest.
+// What the init and selection tests start from: a discovery result naming configurations, and a minimal manifest.
 import type { Manifest } from '#cli/types/kits.ts';
 import { parseManifest } from '#cli/kits/manifests.ts';
 import type { ExistingTooling } from '#cli/types/repository/repository.ts';
 
 /** One discovered root Prettier configuration. */
 export const PRETTIER_TOOLING: ExistingTooling = {
-    configs: [{ tool: 'prettier', path: '.prettierrc.json', keeps: 'rules-table' }],
+    configs: [{ tool: 'prettier', path: '.prettierrc.json' }],
     hooks: [],
     ci: [],
     agentFiles: [],

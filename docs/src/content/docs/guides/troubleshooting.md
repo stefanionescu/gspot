@@ -20,7 +20,7 @@ TOML syntax and schema errors name the file, line, and column. Correct the named
 table, then rerun the command. For a missing required value, the location identifies its
 nearest authored table. Syntax diagnostics do not print neighboring configuration lines.
 
-Missing scopes, invalid adopted tool paths, missing reasons, and disabled-rule errors also
+Missing scopes, missing reasons, and disabled-rule errors also
 identify their policy declarations.
 Unknown configurations and unsupported settings name their source entries. A refused loosening
 points to the configured value and includes the command for recording its reason.

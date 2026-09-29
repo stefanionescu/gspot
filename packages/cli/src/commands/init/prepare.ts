@@ -14,10 +14,10 @@ import { selectForInit } from '#cli/commands/init/selection.ts';
 import { detectedSettings } from '#cli/commands/init/settings.ts';
 import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import { proposedRunnerTasks } from '#cli/generation/runner/plan.ts';
-import { existingTooling } from '#cli/repository/existing-tooling.ts';
-import { isOwned, collectKept } from '#cli/policy/adoption/collect.ts';
 import { plan, buildInitPlan } from '#cli/commands/init/plan/build.ts';
+import { replacedConfiguration } from '#cli/commands/init/replaced.ts';
 import { askKits, askInitQuestions } from '#cli/commands/init/questions.ts';
+import { isOwned, existingTooling } from '#cli/repository/existing-tooling.ts';
 import type { TomlTable, ExistingTooling } from '#cli/types/repository/repository.ts';
 import { PolicyError, parsePolicyText, assertPolicyComplete } from '#cli/policy/read.ts';
 import type { Planning, InitInputs, InitOptions, InitPrepared, InitSelection } from '#cli/types/commands/init.ts';
@@ -81,7 +81,7 @@ function policyTextFor(
  * Reads the repository, asks the questions, and builds the plan init shows before writing.
  * @param root the repository root
  * @param options the init options, with a profile's answers folded in
- * @returns the plan, the policy text, and what the replace read
+ * @returns the plan, the policy text, and the files it read
  */
 export async function prepare(root: string, options: InitOptions): Promise<InitPrepared> {
     const manifests = kitManifests();
@@ -97,22 +97,21 @@ export async function prepare(root: string, options: InitOptions): Promise<InitP
     const tooling = existingTooling(root, repo.files, fields);
     if (!options.json) printDetection(inputs, detected, tooling);
     const selection = await chosenSelection(inputs, options, detected);
-    const sources = repo.files.filter((file) => file.kind === 'source').map((file) => file.path);
-    const kept = await collectKept(root, tooling, selection.selectedIds, sources);
-    const answers = await askInitQuestions(root, options, tooling, kept.formatter);
+    const replaced = replacedConfiguration(root, tooling, selection.selectedIds);
+    const answers = await askInitQuestions(root, options, tooling);
     const tasks = proposedRunnerTasks(root, answers.runner);
     const everySelected = [...selection.selectedIds]
         .map((id) => manifests.get(id))
         .filter((manifest) => manifest !== undefined);
-    const planning: Planning = { root, options, tooling, selection, everySelected, answers, kept };
+    const planning: Planning = { root, options, tooling, selection, everySelected, answers, replaced };
     const settings = detectedSettings(everySelected, fields, repo.files);
-    const proposed = { ...plan(root, selection, answers, kept, settings), runnerTasks: tasks.names };
+    const proposed = { ...plan(root, selection, answers, settings), runnerTasks: tasks.names };
     const { policyText, policy } = policyTextFor(planning, proposed);
     return {
         plan: buildInitPlan(planning, policy, policyText),
         policyText,
         runner: answers.runner,
-        removed: kept.removed,
-        read: new Map([...kept.read, ...tasks.read]),
+        removed: replaced.removed,
+        read: new Map([...replaced.read, ...tasks.read]),
     };
 }

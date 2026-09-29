@@ -13,39 +13,17 @@ test.each(['copy = true', 'body = "include target"', 'merge = { extends = "targe
 );
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the line limit.
-const replaceDefinition = (reader: string) => `
-[kit]
-name = "example"
-kind = "language"
-title = "Example"
-description = "Configuration adoption for the example language."
-[[tools]]
-name = "example"
-version = "1.0.0"
-[[tools.replace]]
-file = ".example"
-keeps = "${reader}"
-`;
-
-test('replace declarations reject unknown readers and accept every declared reader', () => {
-    expect(() => parseManifest(replaceDefinition('executable-script'), 'configurations/example')).toThrow();
-    for (const reader of ['ignore-paths', 'rules-table', 'words', 'advisories', 'licenses', 'eslint-config'])
-        expect(() => parseManifest(replaceDefinition(reader), 'configurations/example')).not.toThrow();
-});
-
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the line limit.
 const selectorDefinition = (selection: string) => `
 [kit]
 name = "example"
 kind = "language"
 title = "Example"
-description = "Configuration adoption for the example language."
+description = "Configuration replacement for the example language."
 [[tools]]
 name = "example"
 version = "1.0.0"
 [[tools.replace]]
 file = "package.json"
-keeps = "eslint-config"
 ${selection}
 `;
 

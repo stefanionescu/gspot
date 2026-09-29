@@ -2,7 +2,6 @@ import { createHash } from 'node:crypto';
 import { join, relative } from 'node:path';
 import { rmSync, statSync } from 'node:fs';
 import { openRoot } from '#cli/platform/filesystem.ts';
-import { asText } from '#cli/policy/adoption/source.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { SkippedCheckError } from '#cli/checks/result.ts';
 import { mutationTarget } from '#cli/platform/safe-paths.ts';
@@ -16,7 +15,9 @@ import { DEFAULT_BUILD, SHOWN_DIFFERENCES, DEFAULT_BUILD_OUTPUT } from '#cli/con
 const builds = new WeakMap<object, Map<string, Promise<SiteBuild>>>();
 
 async function built(input: EngineInput): Promise<SiteBuild> {
-    const outputPath = (asText(input.view.tool('site')['output']) ?? '') || DEFAULT_BUILD_OUTPUT;
+    const site = input.view.tool('site');
+    const outputPath =
+        typeof site['output'] === 'string' && site['output'] !== '' ? site['output'] : DEFAULT_BUILD_OUTPUT;
     mutationTarget(outputPath);
     if (input.resources === undefined) throw new Error('Site builds require run-owned temporary resources.');
     const scratch = await scratchCopy(
@@ -28,7 +29,7 @@ async function built(input: EngineInput): Promise<SiteBuild> {
         rmSync(scratch, { recursive: true, force: true });
     });
     const cwd = join(scratch, input.scope);
-    const command = (asText(input.view.tool('site')['build']) ?? '') || DEFAULT_BUILD;
+    const command = typeof site['build'] === 'string' && site['build'] !== '' ? site['build'] : DEFAULT_BUILD;
     const result = await runCheckCommand(input, commandArguments(command), { cwd });
     const output = join(cwd, outputPath);
     const files = openRoot(scratch);

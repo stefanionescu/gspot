@@ -29,7 +29,7 @@ test('Swift documentation adapter rejects malformed native output and removes it
     ).files.filter(({ path }) => path.endsWith('swiftlint.yml')))
         await Bun.write(join(root, file.path), file.content);
     const session = await openSession(root);
-    const plans = await planRun(session, { stage: 'all', only: ['swift/swiftlint'], skips: [] });
+    const plans = planRun(session, { stage: 'all', only: ['swift/swiftlint'], skips: [] });
     const planned = plans[0]!;
     const inspection = spyOn(inspections, 'inspectTool').mockReturnValue({
         name: 'swiftlint',

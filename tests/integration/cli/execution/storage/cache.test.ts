@@ -165,7 +165,7 @@ if (process.platform !== 'win32')
         fs.chmodSync(replacement, 0o600);
         const inode = fs.statSync(executable).ino;
         const session = await storageSession(sandbox.path, 0);
-        const [planned] = await planRun(session, { stage: 'commit', skips: [] });
+        const [planned] = planRun(session, { stage: 'commit', skips: [] });
         planned!.tool = { name: 'fixture-checker', installers: {} };
         const inspection = spyOn(inspections, 'inspectTool').mockReturnValue({
             name: 'fixture-checker',

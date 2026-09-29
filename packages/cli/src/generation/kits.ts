@@ -6,10 +6,10 @@ import { pathMatcher } from '#cli/repository/paths.ts';
 import { emitTarget } from '#cli/generation/templates.ts';
 import type { ConfigurationTarget } from '#cli/types/kits.ts';
 import { fragmentInputs } from '#cli/generation/fragments.ts';
+import type { ScopeSelection } from '#cli/types/policy/policy.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
 import { bodyPointer, mergePointer } from '#cli/generation/pointers.ts';
 import { GENERATED_JSON_KEY, PACKAGE_JSON_INDENT } from '#cli/config/generation.ts';
-import type { ScopeSelection, EditorconfigAdoption } from '#cli/types/policy/policy.ts';
 import type { Pointer, Generated, EmitContext, GeneratedFile } from '#cli/types/generation.ts';
 
 // A copied JSON pointer without the generated marker the body carries.
@@ -113,34 +113,6 @@ function isWanted(configuration: ConfigurationTarget, scopes: ScopeSelection[], 
     return selectedScopes.some((entry) => entry.selected.some((manifest) => manifest.kit.name === wanted));
 }
 
-// One .editorconfig per adopted directory, rendered as if that directory's adoption were the whole one.
-function nestedEditorconfigs(
-    context: EmitContext,
-    configuration: ConfigurationTarget,
-    file: GeneratedFile,
-): GeneratedFile[] {
-    const { manifest, selection, inputs } = context;
-    if (manifest.kit.name !== 'formatting' || configuration.target !== '.editorconfig') return [];
-    const adopted = selection.view.tool('editorconfig')['adopted'] as EditorconfigAdoption | undefined;
-    return (adopted?.directories ?? []).map((directory) => {
-        const path = `${directory.basePath}/.editorconfig`;
-        const nestedInputs = {
-            ...inputs,
-            tool: (name: string) => (name === 'editorconfig' ? { adopted: directory } : inputs.tool(name)),
-        };
-        return {
-            ...file,
-            path,
-            content: emitTarget(
-                `${manifest.dir}/${configuration.template ?? ''}`,
-                path,
-                nestedInputs,
-                configuration.header,
-            ),
-        };
-    });
-}
-
 // Emits one configuration target: its file, its nested copies, and its pointer.
 function emitConfiguration(
     context: EmitContext,
@@ -158,9 +130,8 @@ function emitConfiguration(
         kit: manifest.kit.name,
         ...(configuration.rules_path === undefined ? {} : { rulesPath: configuration.rules_path }),
     };
-    const templateContext = { ...context, inputs };
-    plan.files.push(file, ...nestedEditorconfigs(templateContext, configuration, file));
-    pointerFor(templateContext, configuration, file, plan);
+    plan.files.push(file);
+    pointerFor({ ...context, inputs }, configuration, file, plan);
 }
 
 /**

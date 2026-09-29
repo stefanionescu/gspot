@@ -24,7 +24,7 @@ for (const extension of ['md', 'sh']) {
                 [path]: source,
             });
             const session = await openSession(directory.path);
-            const [planned] = await planRun(session, { stage: 'commit', skips: [], only: ['prose/vale'] });
+            const [planned] = planRun(session, { stage: 'commit', skips: [], only: ['prose/vale'] });
             const inspection = spyOn(inspections, 'inspectTool').mockReturnValue({
                 name: 'vale',
                 state: failure === 'outdated' ? 'outdated' : 'ok',

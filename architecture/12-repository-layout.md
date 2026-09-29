@@ -157,7 +157,7 @@ Parsers accept source reads and disposable resources without importing check inp
 Repository discovery receives log-owned runtime paths from command composition. The source
 reader owns the byte reads used by parsers, suppression readers, and result caching.
 
-Foreign configuration readers belong to adoption. Lifecycle retires explicitly selected files
+Lifecycle retires explicitly selected files
 against their read bytes and permissions. Initialization owns its policy plan and Xcode
 scheme discovery. Writing commands prepare a policy mutation once, then publish that plan
 under the lifecycle lock before applying generated configuration.
@@ -172,11 +172,11 @@ repository fields, and tool reads rather than the execution session. Lifecycle h
 package-manager operations, revision materialization, and diagnostic parsing each form a local
 group. Pin selection remains separate from installation; prerequisite skips belong to results.
 
-Tests group generation, execution, policy adoption, lifecycle, commands, parsers, checks, and
+Tests group generation, execution, policy, lifecycle, commands, parsers, checks, and
 tools by behavior. Native-tool tests stay under `tests/integration/tools/`. The source acceptance
 runner is `tests/support/acceptance.ts`. Release support owns package staging and consumer setup;
 journey assertions remain in the release suite with one registry lifecycle. Mixed installation,
-ESLint adoption, preservation, and native selection suites separate their distinct contracts.
+preservation, and native selection suites separate their distinct contracts.
 
 ## Native configuration and packaging
 
@@ -507,7 +507,7 @@ behavior still needs defect and correction evidence at both levels.
 
 ### Acceptance T-3
 
-Exercise adoption defects with focused product journeys: preserved hooks and tasks, lossless configuration keeping, local ownership and recovery, readable scopes, fresh clone installation, strictness choices, and generated-file handling. Integrate cases with the behavior they verify, without a separate scenario inventory.
+Exercise init defects with focused product journeys: preserved hooks and tasks, replaced configuration, local ownership and recovery, readable scopes, fresh clone installation, strictness choices, and generated-file handling. Integrate cases with the behavior they verify, without a separate scenario inventory.
 
 ### Acceptance T-28
 

@@ -30,7 +30,7 @@ trees, apart from the environment's declared host interpreter.
 
 Existing hooks remain part of the chain. Hook arguments and stdin are forwarded to retained
 hooks. A retained hook failure still rejects the operation. See
-[adoption and restoration](/guides/existing-repository/) before replacing hook-manager setup.
+[existing repositories](/guides/existing-repository/) before replacing hook-manager setup.
 
 `git commit --no-verify` and `git push --no-verify` bypass local hooks. They do not disable
 CI or server policy. Correct the defect or record a scoped exception with a reason.

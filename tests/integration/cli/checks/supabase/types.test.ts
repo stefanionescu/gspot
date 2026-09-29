@@ -70,7 +70,7 @@ test.each(['', 'apps/api'])(
             note: textContaining('Database is unavailable'),
         });
         const session = await openSession(sandbox.path);
-        const plans = await planRun(session, { stage: 'push', only: ['supabase/types-fresh'], skips: [] });
+        const plans = planRun(session, { stage: 'push', only: ['supabase/types-fresh'], skips: [] });
         const planned = plans.find((check) => check.scope.scope.path === scope)!;
         const input = engineInput(session, planned);
         input.cancelSignal = AbortSignal.abort();

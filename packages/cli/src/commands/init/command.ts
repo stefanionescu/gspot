@@ -51,7 +51,6 @@ function optionsFrom(flags: Record<string, unknown>, global: Record<string, unkn
         runner:
             flags['runner'] === false ? 'none' : runnerSchema.shape.tool.optional().parse(textFlag(flags, 'runner')),
         rules: flags['guides'] === false ? ('no' as const) : undefined,
-        format: textFlag(flags, 'format') as InitOptions['format'],
     };
     const given: Partial<InitOptions> = Object.fromEntries(
         [...Object.entries(lists), ...Object.entries(choices)].filter(([, value]) => value !== undefined),
@@ -68,7 +67,7 @@ function optionsFrom(flags: Record<string, unknown>, global: Record<string, unkn
     };
 }
 
-// The result of an init that writes nothing: a preview or a replace with unreadable configuration.
+// The result of an init that writes nothing: a preview, or an unreadable configuration file.
 function unwritten(root: string, options: InitOptions, prepared: InitPrepared): InitResult | undefined {
     const { plan, policyText } = prepared;
     if (options.isDryRun) {
@@ -77,7 +76,7 @@ function unwritten(root: string, options: InitOptions, prepared: InitPrepared): 
     }
     if (plan.unread.length === 0) return undefined;
     return {
-        text: 'Cannot apply replace because configuration could not be read. Fix the listed files and run gspot init again.\n',
+        text: 'A configuration file is unreadable. Fix the listed files and run gspot init again.\n',
         json: { root, plan, error: 'unread-configuration', written: false },
         exitCode: UNREADABLE_EXIT,
     };
@@ -126,7 +125,7 @@ export function registerInit(program: Command): void {
         .description('Read this repository, propose a policy, and write it after a yes')
         .addHelpText(
             'after',
-            '\nEffects:\nReads the repository and proposes gspot.toml, generated configuration, selected integrations, and private tool installation. Confirmation or --yes applies the plan. --dry-run writes nothing. Existing authored configuration is adopted or retained according to ownership rules. Run from the repository you want to configure.\n\nExit codes:\n0: the request completed, including a preview or declined confirmation. 2: invalid input or inability to complete the request.\n\nExample:\ngspot init --yes --configurations bash',
+            '\nEffects:\nReads the repository and proposes gspot.toml, generated configuration, selected integrations, and private tool installation. Confirmation or --yes applies the plan. --dry-run writes nothing. The configuration files of the selected tools are deleted and the generated ones take over; git keeps the originals. Run from the repository you want to configure.\n\nExit codes:\n0: the request completed, including a preview or declined confirmation. 2: invalid input or inability to complete the request.\n\nExample:\ngspot init --yes --configurations bash',
         )
         .option('--yes', 'Take every plan without asking')
         .option('--from <profile>', 'Install from a profile: a path, an https URL or github:owner/repo')
@@ -140,12 +139,6 @@ export function registerInit(program: Command): void {
         .option('--no-hooks', 'Do not install hooks')
         .option('--no-ci', 'Write no CI workflow')
         .option('--no-guides', 'Leave the agent guides out')
-        .addOption(
-            new Option('--format <choice>', 'Keep existing or use shipped formatter settings').choices([
-                'keep',
-                'shipped',
-            ]),
-        )
         .addOption(new Option('--runner <tool>', 'The task runner').choices(runnerSchema.shape.tool.options))
         .option('--no-runner', 'Write no task-runner configuration')
         .option('--dry-run', 'Print the plan and write nothing')

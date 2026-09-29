@@ -43,7 +43,6 @@ export const REFUSED_REASONS = [
     '.',
 ];
 export const MINIMUM_REASON_WORDS = 2;
-export const KEPT_REASON = 'kept from {{file}} at init';
 export const LIMITS_PREFIX = 'limits.';
 export const PACKAGE_LIFECYCLE: readonly string[] = [
     'preinstall',
@@ -75,7 +74,5 @@ export const RUNNER_TASKS: (RunnerTask & { key: keyof RunnerTaskNames })[] = [
 ];
 export const TOOL_PREFIX = 'tools.';
 export const RESERVED_SLOTS = new Set(['extra']);
-// A module specifier that names a location on disk rather than a package, unless it is repository-relative.
-export const LOCATION_SPECIFIER = /^(?:\.|\/|\\|[A-Za-z]:)/u;
 /** A tool setting key is tools.<tool>.<slot>: two segments before the slot. */
 export const TOOL_KEY_DEPTH = 2;

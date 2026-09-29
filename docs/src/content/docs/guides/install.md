@@ -28,7 +28,7 @@ gspot() { PATH="$gspot_runtime_path:$PATH" bun "$gspot_source" "$@"; }
 Change to the repository you want to check. The function retains the checkout's Bun and Node
 runtimes and source entry point without changing your working directory.
 Continue with [your first check](/guides/quick-start/) for a new setup.
-Use [adopt an existing repository](/guides/existing-repository/) to preserve existing configuration.
+See [existing repositories](/guides/existing-repository/) for what init replaces.
 
 The default `recommended` level includes routine formatting and baseline correctness,
 security, accessibility, and type checks. Select `all` for additional stable conventions.

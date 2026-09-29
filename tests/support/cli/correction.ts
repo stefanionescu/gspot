@@ -20,8 +20,8 @@ stage = "commit"
  * @param script the JavaScript the correction runs
  * @returns the planned check
  */
-export async function plannedCorrection(session: Session, script: string): Promise<PlannedCheck> {
-    const [planned] = await planRun(session, { stage: 'all', skips: [] });
+export function plannedCorrection(session: Session, script: string): PlannedCheck {
+    const [planned] = planRun(session, { stage: 'all', skips: [] });
     if (planned === undefined) throw new Error('The sandbox has no planned correction.');
     return { ...planned, spec: { ...planned.spec, fix_command: [process.execPath, '-e', script] } };
 }

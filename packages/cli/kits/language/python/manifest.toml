@@ -28,20 +28,14 @@ brew = "ruff"
 
 [[tools.replace]]
 file = "ruff.toml"
-keeps = "rules-table"
-check = "python/ruff"
 
 [[tools.replace]]
 file = ".ruff.toml"
-keeps = "rules-table"
-check = "python/ruff"
 
 [[tools.replace]]
 file = "pyproject.toml"
 table = "tool.ruff"
 shared = true
-keeps = "rules-table"
-check = "python/ruff"
 
 [[tools]]
 name = "basedpyright"
@@ -53,7 +47,6 @@ pypi = "basedpyright"
 
 [[tools.replace]]
 file = "pyrightconfig.json"
-keeps = "ignore-paths"
 
 [[tools]]
 name = "lint-imports"

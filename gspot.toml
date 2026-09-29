@@ -330,13 +330,6 @@ extend-ignore-re = ["The word `teh` in selected text reports a spelling finding[
 
 
 [[naming.rules]]
-paths = ["packages/cli/src/policy/adoption/gitleaks.ts"]
-categories = ["properties"]
-names = ["regex_target"]
-case = ["snake"]
-reason = "The public Gitleaks allowlist policy names its matching mode regex_target. Preserve this serialized key until that policy contract changes."
-
-[[naming.rules]]
 paths = ["packages/cli/src/types/commands/init.ts"]
 categories = ["properties"]
 names = ["min_release_age_days", "security_scanner"]
@@ -488,22 +481,6 @@ exclude = true
 reason = "Xcode writes this key in a string file, and the type spells it as the file does."
 
 [[naming.rules]]
-paths = ["packages/cli/src/types/native.ts"]
-names = [
-    "Legacy",
-    "ConfigArrayFactory",
-    "loadFile",
-    "loadInDirectory",
-    "loadDefaultESLintIgnore",
-    "IgnorePattern",
-    "DefaultPatterns",
-    "FlatCompat",
-    "config",
-]
-exclude = true
-reason = "These members are the exact @eslint/eslintrc API consumed by evaluation. Renaming them breaks native adoption. Internal translation types retain repository naming rules. Remove an allowance when its API member is no longer consumed."
-
-[[naming.rules]]
 paths = ["packages/cli/src/types/checks/checks.ts"]
 names = ["DefElem", "String", "List"]
 exclude = true
@@ -520,12 +497,6 @@ paths = ["packages/cli/src/repository/scopes.ts", "packages/cli/src/execution/ca
 names = ["withFileTypes"]
 exclude = true
 reason = "The filesystem implementation must accept Node readdir options through the globby filesystem contract. This exact option selects directory entries. Remove the allowance when the filesystem implementation is removed."
-
-[[naming.rules]]
-paths = ["tests/integration/cli/policy/adoption/advisory.test.ts"]
-names = ["IgnoredVulns"]
-exclude = true
-reason = "The test inspects the exact OSV Scanner TOML table after adoption to verify preservation. Remove the allowance when the upstream table changes."
 
 [[naming.rules]]
 paths = ["packages/cli/src/repository/configuration/vale-rules.ts"]
@@ -840,12 +811,8 @@ reason = "This repository runs Bun tests. tests/unit runs unit and integration t
 check = "security/semgrep"
 rule = "node-no-configured-require"
 paths = [
-    "packages/cli/src/native/eslintrc.ts",
-    "packages/cli/src/native/eslint-modules.ts",
     "packages/cli/src/native/eslint-preview.ts",
     "packages/cli/src/native/eslint.ts",
-    "packages/cli/src/native/format.ts",
-    "packages/cli/src/native/stylelint.ts",
 ]
 reason = "These configuration evaluators intentionally execute repository-selected modules and installed tool APIs in the configuration subprocess. Static imports select the CLI dependencies instead of the repository dependencies and cannot preserve executable configuration. Other security rules remain active for these exact files."
 

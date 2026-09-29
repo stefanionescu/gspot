@@ -39,7 +39,7 @@ async function plant(scope: string, schema: 'changed' | 'failure'): Promise<Plan
     symlinkSync(process.execPath, join(bin, process.platform === 'win32' ? 'drizzle-kit.exe' : 'drizzle-kit'), 'file');
     const session = await openSession(directory.path);
     const spec = session.manifests.get('drizzle')!.checks.find((entry) => entry.analysis === 'drizzle-migrations')!;
-    const planned = await planRun(session, { stage: 'push', skips: [], only: [spec.name] });
+    const planned = planRun(session, { stage: 'push', skips: [], only: [spec.name] });
     const input = engineInput(session, planned.find((entry) => entry.scope.scope.path === scope)!);
     return {
         directory,
@@ -163,7 +163,7 @@ test.each(['cancellation', 'deadline'])(
             generate: 'setInterval(() => {}, 1000);\n',
         });
         const session = await openSession(directory.path);
-        const [planned] = await planRun(session, {
+        const [planned] = planRun(session, {
             stage: 'push',
             skips: [],
             only: ['drizzle/migrations-fresh'],

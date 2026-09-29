@@ -25,26 +25,19 @@ brew = "sqlfluff"
 
 [[tools.replace]]
 file = ".sqlfluff"
-keeps = "rules-table"
-check = "sql/sqlfluff"
 
 [[tools.replace]]
 file = ".sqlfluffignore"
-keeps = "ignore-paths"
 
 [[tools.replace]]
 file = "setup.cfg"
 table = "sqlfluff"
 shared = true
-keeps = "rules-table"
-check = "sql/sqlfluff"
 
 [[tools.replace]]
 file = "tox.ini"
 table = "sqlfluff"
 shared = true
-keeps = "rules-table"
-check = "sql/sqlfluff"
 
 [[configs]]
 template = "sqlfluff.cfg.tmpl"

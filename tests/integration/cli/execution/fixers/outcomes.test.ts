@@ -12,7 +12,7 @@ test.each([0, 3])('a declared fatal diagnostic overrides correction exit %s', as
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': CORRECTION_POLICY, 'source.txt': 'original' });
     const session = await openSession(sandbox.path);
-    const planned = await plannedCorrection(
+    const planned = plannedCorrection(
         session,
         `console.error('Fatal: cannot write'); process.exitCode = ${String(code)}`,
     );
@@ -24,7 +24,7 @@ test.each([0, 3])('a declared fatal diagnostic overrides correction exit %s', as
         changed: [],
         note: textContaining('Fatal: cannot write'),
     });
-    const corrected = await plannedCorrection(session, "await Bun.write('source.txt', 'corrected')");
+    const corrected = plannedCorrection(session, "await Bun.write('source.txt', 'corrected')");
     corrected.spec.tool_errors = planned.spec.tool_errors;
     expect(await runFixer(session, corrected, sandbox.path)).toMatchObject({
         status: 'changed',
@@ -40,7 +40,7 @@ test.each([
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': CORRECTION_POLICY, 'source.txt': 'original' });
     const session = await openSession(sandbox.path);
-    const planned = await plannedCorrection(
+    const planned = plannedCorrection(
         session,
         `await Bun.write('source.txt', ${JSON.stringify(content)}); process.exitCode = ${String(code)}`,
     );
@@ -63,7 +63,7 @@ test.each([
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': CORRECTION_POLICY, 'source.txt': 'original' });
     const session = await openSession(sandbox.path);
-    const result = await runFixer(session, await plannedCorrection(session, script), sandbox.path);
+    const result = await runFixer(session, plannedCorrection(session, script), sandbox.path);
     expect(result.status).toBe(status);
     expect(readFileSync(join(sandbox.path, 'source.txt'), 'utf8')).toBe(after);
     expect(result.changed).toStrictEqual(after === 'original' ? [] : ['source.txt']);
@@ -75,7 +75,7 @@ test('compares bytes that decode to the same replacement character', async () =>
     await createFileTree(sandbox.path, { 'gspot.toml': CORRECTION_POLICY, 'source.txt': 'original' });
     const session = await openSession(sandbox.path);
     writeFileSync(join(sandbox.path, 'source.txt'), Buffer.from([0xff]));
-    const planned = await plannedCorrection(session, "await Bun.write('source.txt', new Uint8Array([0xfe]))");
+    const planned = plannedCorrection(session, "await Bun.write('source.txt', new Uint8Array([0xfe]))");
     const result = await runFixer(session, planned, sandbox.path);
     expect(result.status).toBe('changed');
     expect(result.changed).toStrictEqual(['source.txt']);
@@ -86,7 +86,7 @@ test('counts deletion of an empty file as a change', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': CORRECTION_POLICY, 'source.txt': '' });
     const session = await openSession(sandbox.path);
-    const planned = await plannedCorrection(session, "require('node:fs').unlinkSync('source.txt')");
+    const planned = plannedCorrection(session, "require('node:fs').unlinkSync('source.txt')");
     const result = await runFixer(session, planned, sandbox.path);
     expect(result.status).toBe('changed');
     expect(result.changed).toStrictEqual(['source.txt']);
@@ -97,7 +97,7 @@ test('distinguishes a skipped correction from an unavailable tool', async () => 
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': CORRECTION_POLICY, 'source.txt': 'original' });
     const session = await openSession(sandbox.path);
-    const planned = await plannedCorrection(session, "await Bun.write('source.txt', 'wrong')");
+    const planned = plannedCorrection(session, "await Bun.write('source.txt', 'wrong')");
     const skipped = await runFixer(
         session,
         { ...planned, skip: { source: 'flag', note: 'Not selected.' } },
@@ -117,7 +117,7 @@ test('runs the correction executable when it differs from the check executable',
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': CORRECTION_POLICY, 'source.txt': 'original' });
     const session = await openSession(sandbox.path);
-    const planned = await plannedCorrection(session, "await Bun.write('source.txt', 'corrected')");
+    const planned = plannedCorrection(session, "await Bun.write('source.txt', 'corrected')");
     const result = await runFixer(
         session,
         { ...planned, tool: { name: join(sandbox.path, 'absent-check-tool'), installers: {} } },

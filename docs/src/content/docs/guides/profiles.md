@@ -19,7 +19,7 @@ Read the resulting TOML and the list of omitted entries. A profile excludes repo
 scope definitions, custom checks, generated/vendored declarations, and path-based entries.
 It is not a backup of hooks, original files, or installation state.
 
-## Preview adoption
+## Preview the plan
 
 Copy the reviewed profile into the new repository. Change to its root, then preview initialization:
 

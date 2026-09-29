@@ -110,11 +110,11 @@ export function prettierConfiguration(
         ...policyOverrides(policy, fromConfig),
         ...rebaseOverrides(nativeOverrides as NativeOverride<Record<string, unknown>>[], '', prefix),
     ];
-    const nativeDefaults = policy.tools['prettier']?.['native_defaults'] === true;
-    const format = { ...(nativeDefaults ? {} : shippedFormat()), ...policy.format };
+    const format = { ...shippedFormat(), ...policy.format };
     return {
         ...prettierOptions(format),
-        ...(nativeDefaults ? {} : { arrowParens: 'always', embeddedLanguageFormatting: 'off' }),
+        arrowParens: 'always',
+        embeddedLanguageFormatting: 'off',
         ...extras,
         ...pluginEntries(plugins, prefix, extras),
         ...(overrides.length === 0 ? {} : { overrides }),

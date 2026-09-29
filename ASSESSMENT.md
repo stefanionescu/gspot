@@ -139,9 +139,10 @@ from their installed location instead of moving the environment.
 
 ### Existing-configuration adoption
 
-`packages/cli/src/policy/adoption/` (14 files, 1,444 lines),
-`packages/cli/src/repository/configuration/` (8 files, 522 lines), and `packages/cli/src/native/`
-(10 files, 1,237 lines) read a repository's existing linter configuration and carry it into the
+The adoption folder under `packages/cli/src/policy/` (14 files, 1,444 lines) was deleted in
+phase 1. It, `packages/cli/src/repository/configuration/` (8 files, 522 lines), and
+`packages/cli/src/native/` (10 files, 1,237 lines) read a repository's existing linter
+configuration and carry it into the
 generated output. The readers cover ESLint, Ruff, Stylelint, Vale, SQLFluff, typos, markdownlint,
 gitleaks, and Open Source Vulnerabilities (OSV) scanner files. This is the largest single feature
 by weight, and it exists for repositories that already have linters. **decide** whether init
@@ -155,7 +156,7 @@ repository writes. **merge** under the lifecycle owner.
 
 ## 4. Compatibility weight and dead paths
 
-- eslintrc support in `packages/cli/src/native/eslintrc.ts` (215 lines), with `FlatCompat`,
+- eslintrc support in the native folder (215 lines, deleted in phase 1), with `FlatCompat`,
   `legacyIgnores`, and `legacyCriteria`, exists for ESLint 8 configurations. **cut** with the
   adoption decision above.
 - A stale `rules` folder under `.gspot` still exists locally after the rename to `guides`.
@@ -465,8 +466,8 @@ Six parts hold up, and each asserts exact findings, lines, bytes, or exit codes:
 ## First cuts, in order
 
 1. Decide adoption: keep existing configuration, or report and replace. Everything in
-   `packages/cli/src/policy/adoption/`, `packages/cli/src/repository/configuration/`,
-   `packages/cli/src/native/eslintrc.ts`, and the ESLint runtime follows from it.
+   the adoption folder, `packages/cli/src/repository/configuration/`, the eslintrc reader,
+   and the ESLint runtime follows from it. Decided: report and replace (phase 1).
 2. One spawn implementation for product and tests.
 3. One hook dispatcher script with the tool as data.
 4. One TOML parser, one JSON-with-comments parser, one glob library, one output library.

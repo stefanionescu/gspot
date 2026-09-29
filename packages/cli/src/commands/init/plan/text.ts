@@ -26,16 +26,6 @@ function profileSection(profile: ReplacePlan['profile']): string[] {
     return [`profile    ${profile.name}  sha256 ${profile.digest}  selection ${profile.selection}`, ...detected, ''];
 }
 
-function keptSection(rows: ReplacePlan['kept']): string[] {
-    if (rows.length === 0) return [];
-    const width = Math.max(...rows.map((row) => row.from.length)) + COLUMN_GAP;
-    return [
-        'kept in gspot.toml',
-        ...rows.map((row) => `  ${row.from.padEnd(width)}${String(row.count)} ${row.into}`),
-        '',
-    ];
-}
-
 /**
  * The plan init prints before writing anything.
  * @param plan the plan
@@ -49,8 +39,7 @@ export function initPlanText(plan: ReplacePlan): string {
         ...section('write', plan.write),
         ...section(`delete ${dim('(git keeps them: git show HEAD:<path>)')}`, plan.remove),
         ...section('kept active', plan.retained),
-        ...section('could not read; fix the file and keep its exceptions by hand', plan.unread),
-        ...keptSection(plan.kept),
+        ...section('could not read; fix the file', plan.unread),
         ...section('change', plan.change),
         ...section('no longer runs; delete when ready', plan.noLongerRuns),
         ...(plan.ci === undefined

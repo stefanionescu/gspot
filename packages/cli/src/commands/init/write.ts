@@ -55,11 +55,10 @@ function assertReadUnchanged(owner: Owner, read: ReadonlyMap<string, Read>): voi
 }
 
 // The paths every generated output lands on.
-function generatedPaths(session: Session, replace: ReadonlyMap<string, Read>): Set<string> {
+function generatedPaths(session: Session): Set<string> {
     const outputs = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
         version: session.version,
         packageClient: session.packageClient,
-        replace,
     });
     const every = [...outputs.files, ...outputs.blocks, ...outputs.merges, ...outputs.configurations];
     return new Set(every.map((output) => output.path));
@@ -104,7 +103,7 @@ export async function write(root: string, options: InitOptions, prepared: InitPr
         );
         if (isGitRepository(root)) owner.replaceBlock('.gitignore', gitignoreBlock(), 'hash');
         const session = await openSession(root);
-        const generated = generatedPaths(session, replace);
+        const generated = generatedPaths(session);
         const synced = await applyAll(session, replace);
         const retired = retireReplaced(
             root,

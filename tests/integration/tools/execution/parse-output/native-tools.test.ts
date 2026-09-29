@@ -84,7 +84,7 @@ test('native Markdown JSON preserves filename delimiters, positions, and fixabil
         packageClient: session.packageClient,
     }).files.find(({ path }) => path === '.gspot/config/markdownlint-cli2.mjs')!;
     await Bun.write(join(sandbox.path, configuration.path), configuration.content);
-    const plans = await planRun(session, { stage: 'all', only: ['markdown/markdownlint'], skips: [] });
+    const plans = planRun(session, { stage: 'all', only: ['markdown/markdownlint'], skips: [] });
     const planned = plans[0]!;
     const command = [
         'markdownlint-cli2',

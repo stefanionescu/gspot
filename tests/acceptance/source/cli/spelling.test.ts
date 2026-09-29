@@ -9,7 +9,7 @@ import { git, commitAll } from '#tests/support/cli/git.ts';
 import { keptMode } from '#tests/support/cli/platforms.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { containing, containingAll } from '#tests/support/expectations.ts';
-import { statSync, chmodSync, renameSync, unlinkSync, readFileSync } from 'node:fs';
+import { statSync, chmodSync, existsSync, renameSync, unlinkSync, readFileSync } from 'node:fs';
 
 // Edited generated configuration is preserved; recovery restores the authored source and mode.
 async function expectSpellingRestoration(
@@ -19,21 +19,21 @@ async function expectSpellingRestoration(
     original: string,
 ): Promise<void> {
     const args = ['check', '--only', 'spelling/typos', '--no-cache', '--json'];
-    chmodSync(join(root, '.gspot/config/nested/typos.toml'), 0o644);
-    await Bun.write(join(root, '.gspot/config/nested/typos.toml'), '[default]\nlocale = "unknown"\n');
+    chmodSync(join(root, '.gspot/config/typos.toml'), 0o644);
+    await Bun.write(join(root, '.gspot/config/typos.toml'), '[default]\nlocale = "unknown"\n');
     const broken = await run(root, args, environment);
     expect(broken.code, broken.stdout + broken.stderr).toBe(2);
     const brokenReport = JSON.parse(broken.stdout) as RunReport;
     expect(brokenReport.checks).toStrictEqual(
-        containingAll([containing({ check: 'spelling/typos', scope: 'nested', status: 'error', findings: [] })]),
+        containingAll([containing({ check: 'spelling/typos', status: 'error', findings: [] })]),
     );
     const preserved = await run(root, ['apply'], environment);
     expect(preserved.code, preserved.stdout + preserved.stderr).toBe(2);
-    expect(readFileSync(join(root, '.gspot/config/nested/typos.toml'), 'utf8')).toContain('unknown');
-    unlinkSync(join(root, '.gspot/config/nested/typos.toml'));
+    expect(readFileSync(join(root, '.gspot/config/typos.toml'), 'utf8')).toContain('unknown');
+    unlinkSync(join(root, '.gspot/config/typos.toml'));
     const restored = await run(root, ['apply'], environment);
     expect(restored.code, restored.stdout + restored.stderr).toBe(0);
-    expect(readFileSync(join(root, '.gspot/config/nested/typos.toml'), 'utf8')).toBe(configuration);
+    expect(readFileSync(join(root, '.gspot/config/typos.toml'), 'utf8')).toBe(configuration);
     const removed = await run(root, ['uninstall', '--yes'], environment);
     expect(removed.code, removed.stdout + removed.stderr).toBe(0);
     expect(readFileSync(join(root, 'nested/typos.toml'), 'utf8')).toBe(original);
@@ -120,33 +120,22 @@ test(
 );
 
 test(
-    'scoped spelling adoption preserves exclusions and CLI checks ignore unowned native overrides',
+    'init deletes a nested spelling configuration, checks ignore rogue native files, and uninstall restores it',
     async () => {
         await using sandbox = await testdir();
         const original =
-            '[default]\nlocale = "en-gb"\n[default.extend-words]\nteh = "teh"\n[files]\nextend-exclude = ["src/**", "*.skip", "!keep.skip"]\n';
+            '[default]\nlocale = "en-gb"\n[default.extend-words]\nteh = "teh"\n[files]\nextend-exclude = ["src/**"]\n';
         await createFileTree(sandbox.path, {
             'sample.txt': 'teh\n',
             'nested/typos.toml': original,
-            'nested/sample.txt': 'colour teh\n',
             'nested/src/ignored.txt': 'recieve\n',
-            'nested/ignored.skip': 'recieve\n',
-            'nested/keep.skip': 'recieve\n',
         });
         chmodSync(join(sandbox.path, 'nested/typos.toml'), 0o640);
         const environment = { PATH: toolsPath(['typos']) };
         const initialized = await run(sandbox.path, initArgs(['spelling']), environment);
         expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
-        const policy = readFileSync(join(sandbox.path, 'gspot.toml'), 'utf8');
-        const configuration = readFileSync(join(sandbox.path, '.gspot/config/nested/typos.toml'), 'utf8');
-        const invalid = await run(
-            sandbox.path,
-            ['set', 'tools.typos.locale', 'en_US', '--scope', 'nested'],
-            environment,
-        );
-        expect(invalid.code, invalid.stdout + invalid.stderr).toBe(2);
-        expect(readFileSync(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(policy);
-        expect(readFileSync(join(sandbox.path, '.gspot/config/nested/typos.toml'), 'utf8')).toBe(configuration);
+        expect(existsSync(join(sandbox.path, 'nested/typos.toml'))).toBe(false);
+        const configuration = readFileSync(join(sandbox.path, '.gspot/config/typos.toml'), 'utf8');
         await createFileTree(sandbox.path, {
             'nested/rogue/typos.toml': '[default]\ncheck-file = false\n',
             'nested/rogue/sample.txt': 'recieve\n',
@@ -156,25 +145,20 @@ test(
         const checked = await run(sandbox.path, args, environment);
         expect(checked.code, checked.stdout + checked.stderr).toBe(1);
         const report = JSON.parse(checked.stdout) as RunReport;
-        const findings = report.checks.flatMap((check) => check.findings);
-        expect(findings).toStrictEqual(
+        // The deleted file's exclusions and words are gone, and the rogue native file does not turn checking off.
+        expect(report.checks.flatMap((check) => check.findings)).toStrictEqual(
             containingAll([
                 containing({ file: 'sample.txt' }),
-                containing({ file: 'nested/keep.skip' }),
+                containing({ file: 'nested/src/ignored.txt' }),
                 containing({ file: 'nested/rogue/sample.txt' }),
             ]),
-        );
-        expect(findings, JSON.stringify(report.checks)).not.toStrictEqual(
-            containingAll([containing({ file: 'nested/src/ignored.txt' })]),
         );
         const fixed = await run(sandbox.path, [...args, '--fix'], environment);
         expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
         for (const [path, text] of Object.entries({
             'sample.txt': 'the\n',
-            'nested/keep.skip': 'receive\n',
+            'nested/src/ignored.txt': 'receive\n',
             'nested/rogue/sample.txt': 'receive\n',
-            'nested/src/ignored.txt': 'recieve\n',
-            'nested/sample.txt': 'colour teh\n',
         }))
             expect(readFileSync(join(sandbox.path, path), 'utf8')).toBe(text);
         const corrected = await run(sandbox.path, args, environment);

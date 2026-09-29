@@ -21,15 +21,12 @@ platforms = ["macos", "linux"]
 
 [[tools.replace]]
 file = "bearer.yml"
-keeps = "rules-table"
 
 [[tools.replace]]
 file = "bearer.ignore"
-keeps = "rules-table"
 
 [[tools.replace]]
 file = ".semgrepignore"
-keeps = "ignore-paths"
 
 [[tools]]
 name = "codeql"

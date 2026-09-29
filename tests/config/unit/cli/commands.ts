@@ -1,6 +1,4 @@
 // The literal values unit/cli/commands reads: names, patterns, limits, and tables.
-import type { AdoptionResult } from '#cli/types/policy/adoption.ts';
-
 export const CONFIGURATIONS = [
     'typescript',
     'javascript',
@@ -20,11 +18,3 @@ export const CONFIGURATIONS = [
     'dependencies',
     'licenses',
 ];
-export const NOTHING_CARRIED: AdoptionResult = {
-    tools: new Map(),
-    scopes: new Map(),
-    read: new Map(),
-    removed: [],
-    unread: [],
-    retained: [],
-};

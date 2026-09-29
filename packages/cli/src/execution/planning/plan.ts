@@ -205,21 +205,17 @@ export function ownedInputs(session: Session, check: PlannedCheck): TrackedFile[
  * @param options stage, paths, only, skips, and the staged or ref-relative file sets
  * @returns the planned checks in scope order
  */
-export async function planRun(session: Session, options: PlanOptions): Promise<PlannedCheck[]> {
+export function planRun(session: Session, options: PlanOptions): PlannedCheck[] {
     const planned = planScopes(session, options);
-    const resolved = await Promise.all(
-        planned.map(async (checks) =>
-            yielded(
-                await Promise.all(
-                    checks.map(async (check) =>
-                        check.manifest?.kit.name === 'formatting' &&
-                        check.check === 'formatting/prettier' &&
-                        check.skip === undefined &&
-                        check.files.length > 0
-                            ? prettierInputs(session, check)
-                            : check,
-                    ),
-                ),
+    const resolved = planned.map((checks) =>
+        yielded(
+            checks.map((check) =>
+                check.manifest?.kit.name === 'formatting' &&
+                check.check === 'formatting/prettier' &&
+                check.skip === undefined &&
+                check.files.length > 0
+                    ? prettierInputs(session, check)
+                    : check,
             ),
         ),
     );

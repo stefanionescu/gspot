@@ -20,7 +20,7 @@ describe.if(process.platform === 'darwin')('native property lists', () => {
                 'private.plist': '<plist><dict/></plist>\n',
             });
             const session = await openSession(sandbox.path);
-            const [planned] = await planRun(session, { stage: 'commit', skips: [], only: [check] });
+            const [planned] = planRun(session, { stage: 'commit', skips: [], only: [check] });
             const roots: [string, string] = [sandbox.path, sandbox.path];
             chmodSync(join(sandbox.path, 'private.plist'), 0);
             try {

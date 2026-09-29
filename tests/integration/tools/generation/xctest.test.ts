@@ -58,7 +58,7 @@ if (toolShipsHere('swiftlint'))
         }).files.filter(({ path }) => path.endsWith('swiftlint.yml'));
         expect(outputs.map(({ path }) => path)).toContain(`${prefix}AppTests/.swiftlint.yml`);
         for (const output of outputs) await Bun.write(join(root, output.path), output.content);
-        const planned = await planRun(session, { stage: 'commit', only: ['swift/swiftlint'], skips: [] });
+        const planned = planRun(session, { stage: 'commit', only: ['swift/swiftlint'], skips: [] });
         expect(planned).toHaveLength(1);
         expect(commandConfigurations(session, planned[0]!)).toContain(`${prefix}AppTests/.swiftlint.yml`);
         const command = ['check', '--only', 'swift/swiftlint', '--no-cache', '--json'];
