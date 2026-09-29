@@ -17,15 +17,15 @@ export function huskyLines(
         path: `.husky/${name}`,
         line: [
             '(gspot_status=0',
-            'cd "${GSPOT_HUSKY_ROOT:-$(git rev-parse --show-toplevel)}" || exit 2',
+            'cd "${GSPOT_HOOK_ROOT:-$(git rev-parse --show-toplevel)}" || exit 2',
             ...(name === 'pre-push'
-                ? ['set -- "${GSPOT_HUSKY_REMOTE_NAME-$1}" "${GSPOT_HUSKY_REMOTE_LOCATION-$2}"']
+                ? ['set -- "${GSPOT_HOOK_REMOTE_NAME-$1}" "${GSPOT_HOOK_REMOTE_LOCATION-$2}"']
                 : []),
             ...(name === 'commit-msg'
-                ? ['gspot_message=${GSPOT_HUSKY_MESSAGE-$1}', ...commitPathLines('gspot_message', true)]
+                ? ['gspot_message=${GSPOT_HOOK_MESSAGE-$1}', ...commitPathLines('gspot_message', true)]
                 : []),
-            `(${hookCommand(name, runner, binaryPath, prefix)})${name === 'pre-push' ? ' < "${GSPOT_HUSKY_INPUT:-/dev/stdin}"' : ''} || gspot_status=$?`,
-            'if [ -n "${GSPOT_HUSKY_RESULT:-}" ]; then printf "%s\\n" "$gspot_status" > "$GSPOT_HUSKY_RESULT"; fi',
+            `(${hookCommand(name, runner, binaryPath, prefix)})${name === 'pre-push' ? ' < "${GSPOT_HOOK_INPUT:-/dev/stdin}"' : ''} || gspot_status=$?`,
+            'if [ -n "${GSPOT_HOOK_RESULT:-}" ]; then echo "$gspot_status" > "$GSPOT_HOOK_RESULT"; fi',
             'exit "$gspot_status")',
         ].join('; '),
     }));

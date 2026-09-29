@@ -25,6 +25,23 @@ export type Preparation = {
     work: string;
     files: Root;
 };
+/** What one manager's dispatcher needs: the lines around the native run, the run itself, and what follows it. */
+export type Dispatch = {
+    tool: HookTool;
+    /** Lines before the work directory: presence checks and the manager's own exports. */
+    preamble: string[];
+    /** Lines after the exports: the configuration checks the manager needs before it runs. */
+    checks: string[];
+    /** The command that runs the manager's hook with the Git arguments; the dispatcher adds the push input. */
+    native: string;
+    /** The exit statuses that mean the manager or its runtime is missing. */
+    unavailable: string[];
+    unavailableNote?: string;
+    /** Whether the manager's hook must run gspot, so silence is an error. */
+    isRunRequired: boolean;
+    /** The command that runs gspot when the manager's hook did not, or undefined when the hook then exits clean. */
+    direct: string | undefined;
+};
 /** A hook a native manager generated, and the text gspot installs in its place. */
 export type PreparedHook = { generated: string; installed: string };
 export type Installation = {

@@ -490,7 +490,7 @@ runs.
 
 ### Acceptance K-72
 
-One managed block in `.gitattributes`: `.gspot/** linguist-generated`.
+One managed block in `.gitattributes`: `.gspot/** linguist-generated`, and `text eol=lf` for every path gspot writes, so a CRLF checkout leaves them unchanged.
 
 The block uses the `#` comment markers, as the `.gitignore` block does. `uninstall`
 removes it, and deletes the file when the block was all it held.

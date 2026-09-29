@@ -51,8 +51,8 @@ export async function prepareLefthook(root: string, existing: string): Promise<P
         env: {
             TMPDIR: join(root, 'scratch'),
             PATH: `${join(root, 'bin')}${delimiter}${environmentVariables()['PATH'] ?? ''}`,
-            GSPOT_LEFTHOOK_REMOTE_NAME: 'origin',
-            GSPOT_LEFTHOOK_REMOTE_LOCATION: 'remote',
+            GSPOT_HOOK_REMOTE_NAME: 'origin',
+            GSPOT_HOOK_REMOTE_LOCATION: 'remote',
         },
     };
     const location = hookLocation(root);

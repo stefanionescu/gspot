@@ -478,8 +478,13 @@ filename or fixed case count is required.
 
 ### Acceptance K-273
 
-The managed `.gitattributes` block holds two lines: `.gspot/** linguist-generated`
-and `.gspot/** text eol=lf`.
+The managed `.gitattributes` block marks `.gspot/**` as generated and declares `text eol=lf`
+for every path gspot writes: `.gspot/**`, `.gitignore`, `.gitattributes`, `lefthook.yml`,
+`.lefthook.yml`, `.husky/**`, and `.pre-commit-config.yaml`. The four hook managers share one
+dispatcher shape and one variable family: `GSPOT_HOOK_RESULT`, `GSPOT_HOOK_INPUT`,
+`GSPOT_HOOK_MESSAGE`, `GSPOT_HOOK_REMOTE_NAME`, `GSPOT_HOOK_REMOTE_LOCATION`, and
+`GSPOT_HOOK_ROOT`. The manager's own hook writes the gspot status into the result file. The
+dispatcher runs gspot itself when that file stays empty.
 
 One more line in the block.
 

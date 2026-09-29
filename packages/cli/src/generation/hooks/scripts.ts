@@ -92,6 +92,7 @@ export function hookBody(name: HookName, original: boolean, commands: string[]):
             String.raw`    printf "%s\n" "The pinned gspot executable is unavailable. Install gspot, then run: gspot install" >&2`,
             '    status=2',
             'fi',
+            'if [[ -n ${GSPOT_HOOK_RESULT:-} ]]; then echo "${status}" > "${GSPOT_HOOK_RESULT}"; fi',
             'if [[ ${status} -ne 0 ]]; then exit "${status}"; fi',
         ]),
         'exit 0',

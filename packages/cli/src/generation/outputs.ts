@@ -13,6 +13,7 @@ import { mutationTarget } from '#cli/platform/safe-paths.ts';
 import { applyBlock } from '#cli/lifecycle/managed-blocks.ts';
 import { templateInputs } from '#cli/generation/templates.ts';
 import { runnerTaskPlan } from '#cli/generation/runner/plan.ts';
+import { GIT_ATTRIBUTES_BLOCK } from '#cli/config/generation.ts';
 import { toolPackages } from '#cli/generation/tools/packages.ts';
 import type { Repository } from '#cli/types/repository/repository.ts';
 import { agentFiles, managedBlock } from '#cli/agents/instructions.ts';
@@ -86,11 +87,7 @@ function rootView(scopes: ScopeSelection[]): MergedView {
 function blockOutputs(repository: Repository, policy: Policy, manifests: Manifest[], out: Generated): void {
     const { root, hasGit } = repository;
     if (hasGit) out.blocks.push({ path: '.gitignore', block: gitignoreBlock(), style: 'hash' });
-    out.blocks.push({
-        path: '.gitattributes',
-        block: '.gspot/** linguist-generated\n.gspot/** text eol=lf',
-        style: 'hash',
-    });
+    out.blocks.push({ path: '.gitattributes', block: GIT_ATTRIBUTES_BLOCK, style: 'hash' });
     if (!policy.guides.install) return;
     const block = managedBlock(policy.guides, manifests, policy.level, repository);
     for (const path of agentFiles(root, policy.guides.agents)) {

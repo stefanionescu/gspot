@@ -39,7 +39,7 @@ export function preCommitConfiguration(
     const command = [
         'gspot_status=0',
         `(${hookCommand('pre-commit', runner, binary, prefix)}) || gspot_status=$?`,
-        'if [ -n "${GSPOT_PRE_COMMIT_RESULT:-}" ]; then printf "%s\\n" "$gspot_status" > "$GSPOT_PRE_COMMIT_RESULT"; fi',
+        'if [ -n "${GSPOT_HOOK_RESULT:-}" ]; then echo "$gspot_status" > "$GSPOT_HOOK_RESULT"; fi',
         'exit "$gspot_status"',
     ].join('; ');
     const value = {

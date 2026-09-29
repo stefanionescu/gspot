@@ -35,6 +35,17 @@ export const PATH = '.pre-commit-config.yaml';
 export const GENERATED_JSON_KEY = '_gspot';
 export const TARGET_PLACEHOLDER = /\{target(?:_json)?\}/gu;
 export const HOOK_HEADER = '# Written by gspot. Run `gspot uninstall` to remove.';
+// Every file gspot writes keeps LF, so a CRLF checkout does not mark the generated files and hooks as changed.
+export const GIT_ATTRIBUTES_BLOCK = [
+    '.gspot/** linguist-generated',
+    '.gspot/** text eol=lf',
+    '.gitignore text eol=lf',
+    '.gitattributes text eol=lf',
+    'lefthook.yml text eol=lf',
+    '.lefthook.yml text eol=lf',
+    '.husky/** text eol=lf',
+    '.pre-commit-config.yaml text eol=lf',
+].join('\n');
 export const HOOK_ARGS: Record<HookName, string> = {
     'pre-commit': 'check --staged',
     'pre-push': 'check --push -- "$@"',
