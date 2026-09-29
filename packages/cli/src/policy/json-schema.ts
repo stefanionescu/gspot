@@ -23,8 +23,8 @@ function addSetting(root: SchemaNode, segments: string[], leaf: SchemaNode): voi
     }
 }
 
-// Manifest settings own the exposed tool keys. Keep the richer schemas for rule tables and
-// adoption records, and close the surrounding tables so removed settings cannot remain valid.
+// Manifest settings own the exposed tool keys. Keep the richer schemas for rule tables, and close
+// the surrounding tables so removed settings cannot remain valid.
 function toolSettings(schema: SchemaNode): void {
     const tools = schema.properties?.['tools'];
     if (tools === undefined) return;

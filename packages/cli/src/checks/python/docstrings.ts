@@ -25,15 +25,15 @@ const projectSchema = z.object({
 });
 
 /**
- * Carries compatible Ruff conventions only when pydoclint has no explicit style.
+ * Carries the Ruff docstring convention only when pydoclint has no explicit style.
  * @param text the scoped Python project configuration.
- * @param adopted the convention preserved by Ruff configuration adoption.
+ * @param convention the tools.ruff.docstring_convention setting of the scope.
  * @returns a supported style, or undefined to preserve native configuration and defaults.
  */
-export function docstringStyle(text: string, adopted?: unknown): 'google' | 'numpy' | undefined {
+export function docstringStyle(text: string, convention?: unknown): 'google' | 'numpy' | undefined {
     const { tool } = projectSchema.parse(parse(text));
     if ('style' in tool.pydoclint) return undefined;
-    const style = tool.ruff.lint.pydocstyle.convention ?? adopted;
+    const style = tool.ruff.lint.pydocstyle.convention ?? convention;
     return style === 'google' || style === 'numpy' ? style : undefined;
 }
 

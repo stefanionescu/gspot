@@ -58,8 +58,6 @@ export const REPORT_DIRECTORY = '.gspot/reports';
 export const CACHE_DIRECTORY = '.gspot/cache';
 export const NODE_MODULES_DIRECTORY = '.gspot/node_modules';
 export const PYTHON_ENVIRONMENT_DIRECTORY = '.gspot/.venv';
-// Where an older layout copied the guides; apply removes it once nothing is generated there.
-export const RULES_FOLDER = '.gspot/rules';
 export const PRIVATE_PATHS = [
     `${NODE_MODULES_DIRECTORY}/`,
     `${PYTHON_ENVIRONMENT_DIRECTORY}/`,

@@ -74,7 +74,7 @@ function unownedGeneratedFiles(session: Session): ChangeRow[] {
         .map((file) => ({
             path: file.path,
             note: 'not recorded as owned; lifecycle commands preserve this file',
-            command: 'review the file before moving or adopting it',
+            command: 'review the file, then move it into your own files or delete it',
         }));
 }
 
