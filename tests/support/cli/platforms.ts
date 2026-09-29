@@ -2,6 +2,7 @@
 import { join } from 'node:path';
 import { createFileTree } from 'testdirs';
 import { toolPin } from '#cli/tools/inspect.ts';
+import { toPosix } from '#cli/platform/paths.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
 import { missingBuild } from '#cli/tools/platforms.ts';
 import { PLATFORM_NAMES } from '#cli/config/execution/execution.ts';
@@ -64,7 +65,7 @@ export async function plantLauncher(root: string, path: string, script: string):
         chmodSync(join(root, path), 0o755);
         return;
     }
-    const bun = process.execPath.replaceAll('\\', '/');
+    const bun = toPosix(process.execPath);
     const name = path.slice(path.lastIndexOf('/') + 1);
     await createFileTree(root, {
         [`${path}.mjs`]: script,

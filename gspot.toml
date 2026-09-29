@@ -708,10 +708,6 @@ name = "tree-sitter-ruby"
 reason = "The suppression parser reads and embeds the package WASM grammar as an asset."
 
 [[tools.knip.ignore_dependencies]]
-name = "@tree-sitter-grammars/tree-sitter-toml"
-reason = "The suppression parser reads and embeds the package WASM grammar as an asset."
-
-[[tools.knip.ignore_dependencies]]
 name = "tree-sitter-typescript"
 reason = "The grammar WASM file is read from the package, not imported."
 [structure]

@@ -1,13 +1,11 @@
 // Writing what init prepared: the policy, the generated files, the retirements, and the tool installation.
 import { isDeepStrictEqual } from 'node:util';
 import { colors } from '#cli/output/messages.ts';
-import { PolicyError } from '#cli/policy/read.ts';
 import type { Read } from '#cli/types/platform.ts';
+import { GspotError } from '#cli/platform/errors.ts';
 import { emitAll } from '#cli/generation/outputs.ts';
-import { InstallationError } from '#cli/tools/pins.ts';
 import { gitignoreBlock } from '#cli/kits/manifests.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { MissingToolError } from '#cli/tools/inspect.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
 import packageManifest from '#package' with { type: 'json' };
 import { isGitRepository } from '#cli/repository/tracked.ts';
@@ -51,7 +49,9 @@ function retireReplaced(
 function assertReadUnchanged(owner: Owner, read: ReadonlyMap<string, Read>): void {
     for (const [path, original] of read)
         if (!isDeepStrictEqual(owner.read(path), original))
-            throw new PolicyError([`Configuration changed after replace was planned: ${path}. Run gspot init again.`]);
+            throw new GspotError('policy', [
+                `Configuration changed after replace was planned: ${path}. Run gspot init again.`,
+            ]);
 }
 
 // The paths every generated output lands on.
@@ -68,7 +68,7 @@ function generatedPaths(session: Session): Set<string> {
 function isRepairable(error: unknown): error is AggregateError {
     if (!(error instanceof AggregateError)) return false;
     return error.errors.every(
-        (failure: unknown) => failure instanceof MissingToolError || failure instanceof InstallationError,
+        (failure: unknown) => failure instanceof GspotError && ['missing-tool', 'installation'].includes(failure.code),
     );
 }
 

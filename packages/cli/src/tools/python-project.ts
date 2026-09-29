@@ -2,11 +2,10 @@ import { z } from 'zod';
 import { tmpdir } from 'node:os';
 import { parse, stringify } from 'smol-toml';
 import { isDeepStrictEqual } from 'node:util';
+import { GspotError } from '#cli/platform/errors.ts';
 import { join, resolve, isAbsolute } from 'node:path';
-import { InstallationError } from '#cli/tools/pins.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { runToolCommand } from '#cli/tools/command.ts';
-import { MissingToolError } from '#cli/tools/inspect.ts';
 import type { GeneratedFile } from '#cli/types/generation.ts';
 import type { Owner } from '#cli/types/lifecycle/lifecycle.ts';
 import { writeInstalled } from '#cli/tools/installed-files.ts';
@@ -133,10 +132,10 @@ async function uv(root: string, owner: Owner, work: string, args: string[], exec
             env: { UV_PROJECT_ENVIRONMENT: join(work, '.venv'), UV_VENV_RELOCATABLE: 'true', UV_LINK_MODE: 'copy' },
         },
     );
-    if (result.missing) throw new MissingToolError(`Install uv, then run: gspot install. ${SETUP}`);
+    if (result.missing) throw new GspotError('missing-tool', `Install uv, then run: gspot install. ${SETUP}`);
     if (result.code !== 0) {
         const text = `uv ${args[0] ?? ''} failed (exit ${String(result.code)}). Check uv, Python, and index settings. ${SETUP}`;
-        if (args[0] === 'sync') throw new InstallationError(text);
+        if (args[0] === 'sync') throw new GspotError('installation', text);
         throw new Error(text);
     }
     const lock = readFileSync(join(work, 'uv.lock'), 'utf8');

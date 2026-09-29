@@ -1,4 +1,3 @@
-import JSON5 from 'json5';
 import { extname } from 'node:path';
 import { parse as parseYaml } from 'yaml';
 import { parse as parseToml } from 'smol-toml';
@@ -8,7 +7,7 @@ import { iniSection } from '#cli/repository/configuration/ini.ts';
 const PARSERS: Record<string, (text: string) => unknown> = {
     '.json': (text) => JSON.parse(text) as unknown,
     '.jsonc': parseJsonc,
-    '.json5': (text) => JSON5.parse(text),
+    '.json5': parseJsonc,
     '.yaml': parseYaml,
     '.yml': parseYaml,
     '.toml': parseToml,

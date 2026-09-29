@@ -1,9 +1,10 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import * as processes from '#cli/platform/spawn.ts';
+import { run } from '#tests/support/cli/command.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { parseProfile } from '#cli/policy/profiles/read.ts';
-import { run, runProcess } from '#tests/support/cli/command.ts';
 import { exportedProfile } from '#cli/policy/profiles/export.ts';
 import { ESLINT_OVERRIDE_POLICY } from '#tests/config/acceptance/source/cli/cli.ts';
 import { existsSync, unlinkSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
@@ -63,7 +64,7 @@ test('generated ESLint applies explicit ignores after enabled rule settings', as
         );
         const applied = await run(directory.path, ['apply']);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-        const lint = await runProcess([...ESLINT_COMMAND, 'source.js'], { cwd: directory.path });
+        const lint = await processes.run([...ESLINT_COMMAND, 'source.js'], { cwd: directory.path });
         expect(lint.code, lint.stdout + lint.stderr).toBe(ignored ? 0 : 1);
         const findings = JSON.parse(lint.stdout) as {
             messages: { ruleId: string; line: number; column: number }[];
@@ -102,7 +103,7 @@ test('ESLint overrides preserve order, nested scope bounds, future files, and pa
         );
         const updated = await run(directory.path, ['apply']);
         expect(updated.code, updated.stdout + updated.stderr).toBe(0);
-        const lint = await runProcess([...ESLINT_COMMAND, 'source.js', 'tests', 'apps'], { cwd: directory.path });
+        const lint = await processes.run([...ESLINT_COMMAND, 'source.js', 'tests', 'apps'], { cwd: directory.path });
         expect(lint.code, lint.stdout + lint.stderr).toBe(1);
         const findings = JSON.parse(lint.stdout) as {
             filePath: string;

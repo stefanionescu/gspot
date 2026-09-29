@@ -1,5 +1,6 @@
 import { rmSync } from 'node:fs';
 import { join, relative } from 'node:path';
+import { toPosix } from '#cli/platform/paths.ts';
 import type { Root } from '#cli/types/platform.ts';
 import { swiftBuildPlan } from '#cli/checks/swift/plan.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
@@ -41,7 +42,7 @@ function diagnostics(input: EngineInput, output: string, levels: Set<string>, na
 function sourcesWritten(line: string, folder: string, files: Root): string {
     if (!line.includes('swiftc ')) return line;
     return line.replaceAll(RESPONSE_FILE, (token, path: string) => {
-        const content = files.read(relative(folder, path).replaceAll('\\', '/'));
+        const content = files.read(toPosix(relative(folder, path)));
         return content === undefined ? token : content.bytes.toString('utf8').trim().replaceAll('\n', ' ');
     });
 }
@@ -51,7 +52,7 @@ async function ranBuild(input: EngineInput, plan: SwiftBuildPlan): Promise<Swift
     const files = openBuildCache(plan.folder);
     try {
         if (plan.scratch !== undefined) {
-            files.stat(relative(plan.folder, plan.scratch).replaceAll('\\', '/'));
+            files.stat(toPosix(relative(plan.folder, plan.scratch)));
             rmSync(plan.scratch, { recursive: true, force: true });
         }
         const source = prepareBuildSources(
@@ -67,7 +68,7 @@ async function ranBuild(input: EngineInput, plan: SwiftBuildPlan): Promise<Swift
             .split('\n')
             .map((line) => sourcesWritten(line, plan.folder, files).replaceAll(PRIVATE_PREFIX, '$<before>/$<folder>/'))
             .join('\n');
-        const log = relative(plan.folder, plan.log).replaceAll('\\', '/');
+        const log = toPosix(relative(plan.folder, plan.log));
         files.write(log, { bytes: Buffer.from(output), mode: 0o600 }, files.read(log));
         return { output, code: result.code };
     } finally {

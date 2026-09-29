@@ -1,5 +1,6 @@
 import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
+import { toPosix } from '#cli/platform/paths.ts';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
@@ -89,12 +90,12 @@ test.each(DRIZZLE_MIGRATIONS_SCOPES)(
             expect(found.map(({ check, file, rule }) => ({ check, file, rule }))).toStrictEqual([
                 {
                     check: planted.spec.name,
-                    file: planted.path('migrations/0001_change.sql').replaceAll('\\', '/'),
+                    file: toPosix(planted.path('migrations/0001_change.sql')),
                     rule: 'missing-migration',
                 },
                 {
                     check: planted.spec.name,
-                    file: planted.path('migrations/meta/log.json').replaceAll('\\', '/'),
+                    file: toPosix(planted.path('migrations/meta/log.json')),
                     rule: 'missing-migration',
                 },
             ]);

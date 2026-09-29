@@ -1,11 +1,10 @@
 // .gspot/cache/: a recorded verdict keyed on the tool version, the configuration hash and the content hash of every file read.
-import { globbySync } from 'globby';
-import { join, relative } from 'node:path';
+import { join } from 'node:path';
+import { globPaths } from '#cli/platform/paths.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { CACHE_DIRECTORY } from '#cli/config/platform.ts';
 import { checkResultSchema } from '#cli/checks/result.ts';
-import { statSync, readdirSync, type Dirent } from 'node:fs';
 import type { CheckResult } from '#cli/types/checks/checks.ts';
 import { reportStorageFailure } from '#cli/output/messages.ts';
 import type { CacheKeyInput } from '#cli/types/execution/execution.ts';
@@ -42,32 +41,16 @@ export function fileHash(root: string, path: string, reads?: SourceReads): strin
  */
 export function cacheInputs(root: string, patterns: string[]): string[] {
     const files = openRoot(root, 'native');
-    function readDirectory(path: string): string[];
-    function readDirectory(path: string, options: { withFileTypes: true }): Dirent[];
-    function readDirectory(path: string, options?: { withFileTypes: true }): string[] | Dirent[] {
-        const local = relative(root, path).replaceAll('\\', '/');
-        if (local !== '') files.stat(local);
-        return options === undefined ? readdirSync(path) : readdirSync(path, options);
-    }
     try {
-        return globbySync(patterns, {
-            cwd: root,
+        const paths = globPaths(root, patterns, {
             dot: true,
             onlyFiles: true,
-            followSymbolicLinks: true,
-            throwErrorOnBrokenSymbolicLink: true,
-            gitignore: false,
-            expandDirectories: false,
-            fs: {
-                readdirSync: readDirectory,
-                statSync: (path) =>
-                    statSync(
-                        relative(root, path).replaceAll('\\', '/') === ''
-                            ? root
-                            : files.source(relative(root, path).replaceAll('\\', '/')),
-                    ),
-            },
+            followSymlinks: true,
+            refuseBrokenLinks: true,
         });
+        // Every named file resolves through the root boundary, which refuses a link that leaves the repository.
+        for (const path of paths) files.source(path);
+        return paths;
     } finally {
         files.close();
     }

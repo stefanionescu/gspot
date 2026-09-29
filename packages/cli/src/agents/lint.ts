@@ -1,5 +1,5 @@
-import { globby } from 'globby';
 import { fileURLToPath } from 'node:url';
+import { globPaths } from '#cli/platform/paths.ts';
 import { guideSections } from '#cli/agents/sections.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { ESLINT_RULE_LEVELS } from '#cli/config/checks/eslint-levels.ts';
@@ -163,7 +163,7 @@ function sizeFindings(file: string, lines: string[]): RuleFinding[] {
 
 if (import.meta.main) {
     const rulesFolder = fileURLToPath(new URL('../../guides/', import.meta.url));
-    const paths = await globby(['**/*.md'], { cwd: rulesFolder });
+    const paths = globPaths(rulesFolder, '**/*.md');
     const files = paths
         .filter((path) => isRulePath(path))
         .toSorted((a, b) => a.localeCompare(b))

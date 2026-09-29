@@ -1,6 +1,7 @@
 import * as fs from 'node:fs';
 import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
+import { toPosix } from '#cli/platform/paths.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { sessionInput } from '#tests/support/cli/input.ts';
 import { textContaining } from '#tests/support/expectations.ts';
@@ -55,9 +56,7 @@ test('a missing inherited configuration cannot be replaced by empty compiler opt
     });
     const input = await sessionInput(sandbox.path, 'integrity/tsconfig-options');
     // TypeScript prints the inherited path with forward slashes on every platform.
-    expect(() => tsconfigOptions(input)).toThrow(
-        `Cannot read file '${join(sandbox.path, 'missing.json').replaceAll('\\', '/')}'`,
-    );
+    expect(() => tsconfigOptions(input)).toThrow(`Cannot read file '${toPosix(join(sandbox.path, 'missing.json'))}'`);
     fs.writeFileSync(join(sandbox.path, 'missing.json'), VALID);
     expect(tsconfigOptions(await sessionInput(sandbox.path, 'integrity/tsconfig-options'))).toStrictEqual([]);
 });

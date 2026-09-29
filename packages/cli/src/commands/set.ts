@@ -2,8 +2,8 @@
 
 import type { Command } from 'commander';
 import { parse as parseToml } from 'smol-toml';
-import { PolicyError } from '#cli/policy/read.ts';
 import * as messages from '#cli/policy/messages.ts';
+import { GspotError } from '#cli/platform/errors.ts';
 import type { SettingSpec } from '#cli/types/kits.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
 import { openSession } from '#cli/execution/session.ts';
@@ -30,7 +30,7 @@ function parseStructured(text: string): unknown {
     try {
         return parseToml(`value = ${text}`)['value'];
     } catch {
-        throw new PolicyError([messages.unreadableValue(text)]);
+        throw new GspotError('policy', [messages.unreadableValue(text)]);
     }
 }
 
@@ -42,15 +42,17 @@ function parseValue(text: string): unknown {
     return isStructured ? parseStructured(text) : text;
 }
 
-function unknownSetting(session: Session, selection: ScopeSelection, key: string): PolicyError {
+function unknownSetting(session: Session, selection: ScopeSelection, key: string): GspotError {
     // A setting of a configuration that lives in a scope is set in that scope; say which one.
     const holder = session.scopes.find((entry) => specFor(entry.surface, key) !== undefined);
-    if (holder !== undefined) return new PolicyError([messages.settingInScope(key, holder.scope.path)]);
+    if (holder !== undefined) return new GspotError('policy', [messages.settingInScope(key, holder.scope.path)]);
     const depth = key.startsWith('tools.') ? TOOL_KEY_DEPTH : 1;
     const prefix = key.split('.').slice(0, depth).join('.');
     const all = selection.surface.specs.keys().toArray();
     const known = all.filter((entry) => entry.startsWith(`${prefix}.`)).map((entry) => entry.slice(prefix.length + 1));
-    return new PolicyError([messages.settingNotExposed(key, known.length > 0 ? known : all.slice(0, SET_NEAR_LIMIT))]);
+    return new GspotError('policy', [
+        messages.settingNotExposed(key, known.length > 0 ? known : all.slice(0, SET_NEAR_LIMIT)),
+    ]);
 }
 
 function shaped(parsed: unknown[], isList: boolean): unknown {
@@ -123,12 +125,12 @@ function refuseRuleOff(spec: SettingSpec, o: SetOptions): void {
     if (spec.direction !== 'per-rule' || !o.items.includes('off')) return;
     const tool = o.key.split('.', TOOL_KEY_DEPTH)[1] ?? '';
     const rule = o.key.split('.').slice(RULE_KEY_DEPTH).join('.');
-    throw new PolicyError([messages.ruleOffRefused(`<the check that runs ${tool}>`, rule)]);
+    throw new GspotError('policy', [messages.ruleOffRefused(`<the check that runs ${tool}>`, rule)]);
 }
 
 function selectionFor(session: Session, scope: string | undefined): ScopeSelection {
     const selection = session.scopes.find((entry) => entry.scope.path === (scope ?? '')) ?? session.scopes[0];
-    if (!selection) throw new PolicyError([messages.scopeMissing(scope ?? '')]);
+    if (!selection) throw new GspotError('policy', [messages.scopeMissing(scope ?? '')]);
     return selection;
 }
 
@@ -154,7 +156,7 @@ function validateSetReason(
     const where = `gspot set ${o.key}`;
     if (isReasonOwed(spec, o, value, shipped)) requireReason(o.reason, where, setReasonCommand(o));
     else if (o.reason !== undefined && !isReasonAccepted(o.reason))
-        throw new PolicyError([messages.refusedReason(where, o.reason)]);
+        throw new GspotError('policy', [messages.refusedReason(where, o.reason)]);
 }
 
 function writeValue(
@@ -165,7 +167,7 @@ function writeValue(
     spec: SettingSpec,
 ): Promise<CommandResult> {
     if (o.items.length === 0)
-        throw new PolicyError([`gspot set ${o.key} needs a value, or --default to remove yours.`]);
+        throw new GspotError('policy', [`The setting ${o.key} needs a value; pass one, or --default to remove yours.`]);
     const isList = spec.kind === 'list';
     const parsed = shaped(
         o.items.map((item) => parseValue(item)),

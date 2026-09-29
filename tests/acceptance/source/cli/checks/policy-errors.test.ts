@@ -85,7 +85,7 @@ test.each(['\n', '\r\n'])(
         const json = await run(sandbox.path, ['check', '--json']);
         expect(json.code).toBe(2);
         expect(JSON.parse(json.stdout)).toMatchObject({
-            error: 'PolicyError',
+            error: 'policy',
             message: textContaining('gspot.toml:3:19:'),
         });
         writeFileSync(join(sandbox.path, 'gspot.toml'), policy.replace('"wrong"', 'true'));

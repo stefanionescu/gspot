@@ -1,16 +1,16 @@
 // Runs external tools with explicit file lists and configuration, and turns their output into findings.
 import { join } from 'node:path';
+import { GspotError } from '#cli/platform/errors.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import type { ToolPin, CheckSpec } from '#cli/types/kits.ts';
+import { toolPin, inspectTool } from '#cli/tools/inspect.ts';
 import { fileBatches } from '#cli/execution/files/batches.ts';
 import type { ToolInspection } from '#cli/types/tools/tools.ts';
 import { FILES_PLACEHOLDER } from '#cli/config/execution/execution.ts';
 import { collect, missingNote } from '#cli/execution/tool/findings.ts';
 import type { SpawnResult, SpawnOptions } from '#cli/types/platform.ts';
-import { ToolOutputError } from '#cli/execution/output/tool-formats.ts';
 import { createFileWorkspace } from '#cli/execution/files/workspace.ts';
 import { runToolCommand, toolDeadlineSeconds } from '#cli/tools/command.ts';
-import { toolPin, inspectTool, MissingToolError } from '#cli/tools/inspect.ts';
 import { checkedFindings, executionFailure } from '#cli/execution/broken-tool.ts';
 import type { Finding, CheckResult, EngineInput } from '#cli/types/checks/checks.ts';
 
@@ -72,6 +72,20 @@ function finished(
     return { ...base, status, duration: performance.now() - started, findings, command: argv };
 }
 
+// The findings a tool's output holds, or the note about output the adapter refused.
+function parsedFindings(
+    planned: PlannedCheck,
+    result: SpawnResult,
+    roots: [string, string],
+): { findings: Finding[]; note?: undefined } | { findings?: undefined; note: string } {
+    try {
+        return { findings: checkedFindings(planned, result, roots) };
+    } catch (error) {
+        if (error instanceof GspotError && error.code === 'tool-output') return { note: error.message };
+        throw error;
+    }
+}
+
 async function runCommands(
     session: Session,
     planned: PlannedCheck,
@@ -88,20 +102,16 @@ async function runCommands(
         const result = await runToolCommand(planned.scope.view, invocation.argv, prepared, session.cancelSignal);
         const failure = executionFailure(result, tool.name, seconds);
         if (failure !== undefined) return { ...base, ...failure, duration: performance.now() - started, command: argv };
-        let parsed: Finding[];
-        try {
-            parsed = checkedFindings(planned, result, [cwd, state.root]);
-        } catch (error) {
-            if (!(error instanceof ToolOutputError)) throw error;
+        const parsed = parsedFindings(planned, result, [cwd, state.root]);
+        if (parsed.findings === undefined)
             return {
                 ...base,
                 status: 'error',
                 duration: performance.now() - started,
-                note: error.message,
+                note: parsed.note,
                 command: argv,
             };
-        }
-        collect(planned, invocation, result, state, parsed);
+        collect(planned, invocation, result, state, parsed.findings);
     }
     return finished(base, spec, state, argv, started);
 }
@@ -119,7 +129,7 @@ function adapterTool(
     const inspection = inspectTool({ ...input, cwd: options.cwd }, { ...tool, env });
     if (inspection.state === 'error') throw new Error(inspection.note ?? `${name} version inspection failed.`);
     if (inspection.state === 'missing' || inspection.state === 'outdated' || inspection.path === undefined) {
-        throw new MissingToolError(missingNote(tool, inspection, inspection.state));
+        throw new GspotError('missing-tool', missingNote(tool, inspection, inspection.state));
     }
     return { path: inspection.path, env };
 }
@@ -285,7 +295,7 @@ export async function runCheckCommand(
         input.cancelSignal,
     );
     const failure = executionFailure(result, name, toolDeadlineSeconds(input.view));
-    if (failure?.status === 'missing') throw new MissingToolError(failure.note);
+    if (failure?.status === 'missing') throw new GspotError('missing-tool', failure.note);
     if (failure !== undefined) throw new Error(failure.note);
     return result;
 }

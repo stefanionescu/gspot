@@ -1,7 +1,7 @@
 import { tmpdir } from 'node:os';
 import { join, relative } from 'node:path';
 import type { Root } from '#cli/types/platform.ts';
-import { SelectionError } from '#cli/kits/select.ts';
+import { GspotError } from '#cli/platform/errors.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { run, runBinary } from '#cli/platform/spawn.ts';
 import { rmSync, mkdtempSync, realpathSync } from 'node:fs';
@@ -30,7 +30,7 @@ async function gitOutput(root: string, args: string[], cancelSignal?: AbortSigna
         ...(stdin === undefined ? {} : { stdin }),
     });
     if (result.code !== 0)
-        throw new SelectionError([
+        throw new GspotError('selection', [
             `Cannot prepare the revision snapshot: git ${args.join(' ')} failed. ${result.stderr.trim()}`,
         ]);
     return result.stdout;
@@ -43,7 +43,7 @@ function writeEntry(files: Root, entry: GitEntry, objects: Map<string, Buffer>):
         return;
     }
     const bytes = objects.get(entry.hash);
-    if (bytes === undefined) throw new SelectionError(['A requested Git blob was not returned.']);
+    if (bytes === undefined) throw new GspotError('selection', ['A requested Git blob was not returned.']);
     const mode = ENTRY_MODES[entry.mode] ?? FILE_MODE;
     const content = entry.mode === '120000' ? { bytes, mode, isLink: true as const } : { bytes, mode };
     files.write(entry.path, content, undefined);
@@ -86,7 +86,7 @@ function blobFrame(output: Buffer, cursor: number, gitHash: string): { end: numb
         end + size + 1 >= output.length ||
         output[end + size + 1] !== NEWLINE
     )
-        throw new SelectionError(['The Git object stream is incomplete or invalid.']);
+        throw new GspotError('selection', ['The Git object stream is incomplete or invalid.']);
     return { end, size };
 }
 
@@ -97,7 +97,7 @@ function parseEntry(line: string, kind: RevisionSource['kind']): GitEntry {
             : /^(100644|100755|120000|160000) (?:blob|commit) ([a-f0-9]{40}|[a-f0-9]{64})\t([\s\S]+)$/u;
     const [, mode = '', gitHash = '', path = ''] = pattern.exec(line) ?? [];
     if ([mode, gitHash, path].includes(''))
-        throw new SelectionError([
+        throw new GspotError('selection', [
             'The Git entry is unsupported or conflicted. Resolve index conflicts before checking staged content.',
         ]);
     return { mode, hash: gitHash, path };
@@ -119,11 +119,13 @@ async function readEntries(root: string, source: RevisionSource, cancelSignal?: 
         ...(cancelSignal === undefined ? {} : { cancelSignal }),
     });
     if (read.code !== 0)
-        throw new SelectionError(['Cannot read the Git index. Resolve Git errors before checking staged content.']);
+        throw new GspotError('selection', [
+            'Cannot read the Git index. Resolve Git errors before checking staged content.',
+        ]);
     const bytes = Buffer.from(read.stdout);
     const text = bytes.toString('utf8');
-    if (!Buffer.from(text).equals(bytes)) throw new SelectionError(['Revision paths must be valid UTF-8.']);
-    if (text !== '' && !text.endsWith('\0')) throw new SelectionError(['The Git entry stream is incomplete.']);
+    if (!Buffer.from(text).equals(bytes)) throw new GspotError('selection', ['Revision paths must be valid UTF-8.']);
+    if (text !== '' && !text.endsWith('\0')) throw new GspotError('selection', ['The Git entry stream is incomplete.']);
     return text
         .split('\0')
         .filter(Boolean)
@@ -145,7 +147,7 @@ export async function gitBlobs(
     const objects = [...new Set(requested)];
     if (objects.length === 0) return new Map();
     if (objects.some((gitHash) => !/^(?:[a-f0-9]{40}|[a-f0-9]{64})$/u.test(gitHash)))
-        throw new SelectionError(['Git blob requests require full object IDs.']);
+        throw new GspotError('selection', ['Git blob requests require full object IDs.']);
     const result = await runBinary(['git', 'cat-file', '--batch'], {
         cwd: root,
         stdin: objects.join('\n') + '\n',
@@ -153,7 +155,7 @@ export async function gitBlobs(
         ...(cancelSignal === undefined ? {} : { cancelSignal }),
     });
     if (result.code !== 0)
-        throw new SelectionError([
+        throw new GspotError('selection', [
             'Cannot read Git objects. Restore missing objects or resolve cancellation before checking.',
         ]);
     const output = Buffer.from(result.stdout);
@@ -164,7 +166,8 @@ export async function gitBlobs(
         blobs.set(gitHash, output.subarray(end + 1, end + size + 1));
         cursor = end + size + FRAME_NEWLINES;
     }
-    if (cursor !== output.length) throw new SelectionError(['The Git object stream contains unexpected data.']);
+    if (cursor !== output.length)
+        throw new GspotError('selection', ['The Git object stream contains unexpected data.']);
     return blobs;
 }
 
@@ -207,7 +210,9 @@ export async function committedEntries(root: string, cancelSignal?: AbortSignal)
     const options = { cwd: root, timeoutMs: 30_000, ...(cancelSignal === undefined ? {} : { cancelSignal }) };
     const head = await run(['git', 'rev-parse', '--verify', '--quiet', 'HEAD'], options);
     if (head.code === 0) return gitEntries(root, { kind: 'commit', hash: head.stdout.trim() }, cancelSignal);
-    const failure = new SelectionError(['Cannot read committed Git history. Restore HEAD before checking migrations.']);
+    const failure = new GspotError('selection', [
+        'Cannot read committed Git history. Restore HEAD before checking migrations.',
+    ]);
     if (head.code !== 1) throw failure;
     const symbolic = await run(['git', 'symbolic-ref', '--quiet', 'HEAD'], options);
     if (symbolic.code !== 0) throw failure;

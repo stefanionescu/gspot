@@ -1,10 +1,11 @@
 import { patch } from '@decimalturn/toml-patch';
 import * as messages from '#cli/policy/messages.ts';
+import { GspotError } from '#cli/platform/errors.ts';
 import { stringify as stringifyToml } from 'smol-toml';
 import type { TomlTable } from '#cli/types/repository/repository.ts';
 import type { Mutation, WriteResult } from '#cli/types/policy/policy.ts';
 import { policyIndent, wrapLongArrays } from '#cli/policy/toml/width.ts';
-import { PolicyError, parseTomlText, parsePolicyText, assertPolicyComplete } from '#cli/policy/read.ts';
+import { parseTomlText, parsePolicyText, assertPolicyComplete } from '#cli/policy/read.ts';
 
 function isTable(value: unknown): value is TomlTable {
     return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -219,6 +220,6 @@ export function scopeHolder(raw: TomlTable, scope: string | undefined): TomlTabl
     if (scope === undefined) return raw;
     const scopes = (raw['scope'] as TomlTable[] | undefined) ?? [];
     const holder = scopes.find((entry) => entry['path'] === scope);
-    if (holder === undefined) throw new PolicyError([messages.scopeMissing(scope)]);
+    if (holder === undefined) throw new GspotError('policy', [messages.scopeMissing(scope)]);
     return holder;
 }

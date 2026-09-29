@@ -2,8 +2,8 @@
 import { writeFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { run } from '#cli/platform/spawn.ts';
+import * as processes from '#cli/platform/spawn.ts';
 import type { Registry } from '#tests/types/registry.ts';
-import { runProcess } from '#tests/support/cli/command.ts';
 import { RELEASE_TIMEOUT_MS } from '#tests/config/release.ts';
 import { publishTo } from '#tests/support/registry/lifecycle.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
@@ -71,7 +71,7 @@ export async function initializeConsumer(
 ): Promise<ConsumerInitialization> {
     const { registry, toolNpmrc } = release;
     const { command, setupOptions } = installation;
-    const initialized = await runProcess(
+    const initialized = await processes.run(
         [
             ...command,
             'init',
@@ -93,7 +93,7 @@ export async function initializeConsumer(
     );
     if (initialized.code !== 0)
         throw new Error(`Consumer initialization failed: ${initialized.stdout}${initialized.stderr}`);
-    const installedTools = await runProcess([...command, 'install', '--json'], {
+    const installedTools = await processes.run([...command, 'install', '--json'], {
         ...setupOptions,
         env: {
             ...setupOptions.env,

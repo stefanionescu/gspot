@@ -1,7 +1,7 @@
 import { registerSet } from '#cli/commands/set.ts';
 import { Command, CommanderError } from 'commander';
+import { GspotError } from '#cli/platform/errors.ts';
 import { registerList } from '#cli/commands/list.ts';
-import { PromptError } from '#cli/commands/prompts.ts';
 import { registerExport } from '#cli/commands/export.ts';
 import { registerIgnore } from '#cli/commands/ignore.ts';
 import type { OutputOptions } from '#cli/types/output.ts';
@@ -45,7 +45,7 @@ function verbosityOf(options: Record<string, unknown>): OutputOptions['verbosity
 
 function exitCodeFor(error: unknown): number {
     if (error instanceof CommanderError) return HELP_CODES.has(error.code) ? 0 : ERROR_EXIT;
-    if (error instanceof PromptError) fail(error.message);
+    if (error instanceof GspotError && error.code === 'prompt') fail(error.message);
     else fail(`gspot did not run: ${error instanceof Error ? error.message : String(error)}`);
     return ERROR_EXIT;
 }

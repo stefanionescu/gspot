@@ -1,5 +1,6 @@
 import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
+import { toPosix } from '#cli/platform/paths.ts';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { engineInput } from '#cli/execution/engines.ts';
@@ -26,7 +27,7 @@ for (const scope of ['', 'apps/web'])
             expect(found).toHaveLength(1);
             expect(found[0]).toMatchObject({
                 check,
-                file: join(scope, check === 'nextjs/typecheck' ? 'src/page.ts' : 'package.json').replaceAll('\\', '/'),
+                file: toPosix(join(scope, check === 'nextjs/typecheck' ? 'src/page.ts' : 'package.json')),
                 line: 1,
             });
             expect(found[0]!.message).toBe(

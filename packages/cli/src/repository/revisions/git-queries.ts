@@ -1,6 +1,6 @@
 // Questions the revision code asks Git, each answered by one command whose failure names the command.
 import { run } from '#cli/platform/spawn.ts';
-import { SelectionError } from '#cli/kits/select.ts';
+import { GspotError } from '#cli/platform/errors.ts';
 import { GIT_TIMEOUT_MS } from '#cli/config/checks/secrets.ts';
 
 /**
@@ -17,7 +17,7 @@ export async function gitText(root: string, argv: string[], cancelSignal?: Abort
         ...(cancelSignal === undefined ? {} : { cancelSignal }),
     });
     if (result.code !== 0)
-        throw new SelectionError([
+        throw new GspotError('selection', [
             `Git ${argv[0] ?? ''} failed in ${root} (exit ${String(result.code)}): ${result.stderr.trim()}`,
         ]);
     return result.stdout;

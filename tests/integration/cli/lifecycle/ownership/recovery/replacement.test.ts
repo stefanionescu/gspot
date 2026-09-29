@@ -1,10 +1,10 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import * as processes from '#cli/platform/spawn.ts';
 import { ownershipSchema } from '#cli/lifecycle/log.ts';
 import { cliSource } from '#tests/support/cli/process.ts';
 import { keptMode } from '#tests/support/cli/platforms.ts';
-import { runProcess } from '#tests/support/cli/command.ts';
 import { statSync, readFileSync, writeFileSync } from 'node:fs';
 import { openOwner, readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import type { Point, Published } from '#tests/types/integration/cli/lifecycle/ownership.ts';
@@ -208,7 +208,9 @@ try {
     console.log(JSON.stringify({ code: error.code }));
 } finally { owner.close(); }
 `;
-        const { stdout, stderr, code } = await runProcess([process.execPath, '-e', program], { cwd: directory.path });
+        const { stdout, stderr, code } = await processes.run([process.execPath, '-e', program], {
+            cwd: directory.path,
+        });
         expect(code, stderr).toBe(0);
         expect(JSON.parse(stdout)).toStrictEqual({ code: 'ENOSPC' });
         for (const name of ['first.bin', 'second.bin']) {

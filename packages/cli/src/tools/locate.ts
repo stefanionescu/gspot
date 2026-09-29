@@ -1,5 +1,6 @@
 // Where an executable and its installed package version are found: repository bin folders, PATH, and mise shims.
 import { homedir } from 'node:os';
+import { toPosix } from '#cli/platform/paths.ts';
 import type { ToolPin } from '#cli/types/kits.ts';
 import type { Root } from '#cli/types/platform.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
@@ -31,7 +32,7 @@ function searchDirectories(
 
 // Whether a candidate exists: a managed path must resolve through the files root, any other is read from disk.
 function candidateExists(files: Root, root: string, path: string): boolean {
-    const local = relative(root, path).replaceAll('\\', '/');
+    const local = toPosix(relative(root, path));
     if (!local.startsWith(MANAGED_PREFIX)) return statSync(path, { throwIfNoEntry: false }) !== undefined;
     try {
         files.source(local);
@@ -73,7 +74,7 @@ function packageFacts(files: Root | undefined, root: string, manifest: string): 
             throw error;
         }
     }
-    const text = files.read(relative(root, manifest).replaceAll('\\', '/'))?.bytes.toString('utf8');
+    const text = files.read(toPosix(relative(root, manifest)))?.bytes.toString('utf8');
     return text === undefined ? undefined : (JSON.parse(text) as Package);
 }
 
@@ -81,8 +82,7 @@ function packageFacts(files: Root | undefined, root: string, manifest: string): 
 function versionAbove(files: Root | undefined, root: string, start: string, name: string): string | undefined {
     for (let folder = start; folder !== dirname(folder); folder = dirname(folder)) {
         const manifest = join(folder, 'package.json');
-        if (files !== undefined && !relative(root, manifest).replaceAll('\\', '/').startsWith(MANAGED_PREFIX))
-            return undefined;
+        if (files !== undefined && !toPosix(relative(root, manifest)).startsWith(MANAGED_PREFIX)) return undefined;
         const parsed = packageFacts(files, root, manifest);
         if (parsed?.name === name) return parsed.version;
     }
@@ -122,14 +122,12 @@ export function locateCandidates(
  */
 export function packageVersion(root: string, path: string, name: string | undefined): string | undefined {
     if (name === undefined) return undefined;
-    const files = relative(root, path).replaceAll('\\', '/').startsWith(MANAGED_PREFIX) ? openRoot(root) : undefined;
+    const files = toPosix(relative(root, path)).startsWith(MANAGED_PREFIX) ? openRoot(root) : undefined;
     try {
         return versionAbove(
             files,
             root,
-            dirname(
-                files === undefined ? realpathSync(path) : files.source(relative(root, path).replaceAll('\\', '/')),
-            ),
+            dirname(files === undefined ? realpathSync(path) : files.source(toPosix(relative(root, path)))),
             name,
         );
     } finally {

@@ -1,12 +1,13 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import * as processes from '#cli/platform/spawn.ts';
+import { run } from '#tests/support/cli/command.ts';
 import { initArgs } from '#tests/support/cli/init.ts';
 import { install } from '#tests/support/cli/tools.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
 import { containing } from '#tests/support/expectations.ts';
-import { run, runProcess } from '#tests/support/cli/command.ts';
 
 const COMMAND = ['check', '--only', 'static-site/svg-optimized', '--no-cache', '--json'];
 
@@ -65,7 +66,7 @@ test.each([
             'icon.svg': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8 8"><path d="M0 0h8v8H0z"/></svg>\n',
         });
         await install(root, initArgs(['static-site'], ['spelling', 'naming']));
-        const native = await runProcess(
+        const native = await processes.run(
             [join(root, '.gspot/node_modules/.bin/svgo'), '--input', 'icon.svg', '--output', '-'],
             { cwd: root },
         );

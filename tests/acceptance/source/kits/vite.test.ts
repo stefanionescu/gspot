@@ -1,10 +1,11 @@
 import { test, expect } from 'bun:test';
 import { join, dirname } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
+import * as processes from '#cli/platform/spawn.ts';
+import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
-import { run, runProcess } from '#tests/support/cli/command.ts';
 import { installPrivateTools } from '#tests/support/cli/tools.ts';
 import { readdirSync, symlinkSync, writeFileSync } from 'node:fs';
 import type { RunReport } from '#cli/types/execution/execution.ts';
@@ -59,7 +60,7 @@ test(
         for (const entry of readdirSync(MODULES))
             symlinkSync(join(MODULES, entry), join(sandbox.path, 'node_modules', entry));
         symlinkSync(VITE, join(sandbox.path, 'node_modules/vite'));
-        const build = await runProcess([process.execPath, join(VITE, 'bin/vite.js'), 'build'], {
+        const build = await processes.run([process.execPath, join(VITE, 'bin/vite.js'), 'build'], {
             cwd: sandbox.path,
             timeoutMs: PLANTED_TIMEOUT_MS,
         });

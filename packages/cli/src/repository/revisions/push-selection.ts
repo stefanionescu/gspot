@@ -1,7 +1,7 @@
 // The revisions a push sends, resolved from the ref and object pairs Git hands the pre-push hook.
 import { resolve } from 'node:path';
 import { readFile } from 'node:fs/promises';
-import { SelectionError } from '#cli/kits/select.ts';
+import { GspotError } from '#cli/platform/errors.ts';
 import { fetchedRevisions } from '#cli/repository/revisions/refspecs.ts';
 import { GIT_HASH, LOG_PATHS, DIFF_PATHS, ABSENT_HASH } from '#cli/config/repository/revisions.ts';
 import { gitLines, gitPaths, gitValue, isShallow } from '#cli/repository/revisions/git-queries.ts';
@@ -26,7 +26,9 @@ function parsePushLine(line: string): PushLine {
     const [localRef, localHash, remoteRef, remoteHash, ...extra] = line.trim().split(/\s+/u);
     const hasRefs = extra.length === 0 && localRef !== undefined && remoteRef !== undefined;
     if (!hasRefs || localHash === undefined || remoteHash === undefined || !isHashPair(localHash, remoteHash))
-        throw new SelectionError(['Invalid Git pre-push input. Supply every local and remote ref/object pair.']);
+        throw new GspotError('selection', [
+            'Invalid Git pre-push input. Supply every local and remote ref/object pair.',
+        ]);
     return { localRef, localHash, remoteRef, remoteHash };
 }
 

@@ -1,6 +1,6 @@
 // What a check run refuses or narrows before it starts: staged secrets, unreadable messages, unknown checks, paths.
 import { readFileSync } from 'node:fs';
-import { SelectionError } from '#cli/kits/select.ts';
+import { GspotError } from '#cli/platform/errors.ts';
 import { isEnvironmentFile } from '#cli/repository/kind.ts';
 import { sep, resolve, relative, isAbsolute } from 'node:path';
 import type { CheckOptions } from '#cli/types/commands/check.ts';
@@ -23,11 +23,11 @@ function isReadable(path: string): boolean {
 function matchingFiles(session: Session, options: CheckOptions, path: string, candidates: string[]): string[] {
     const selector = relative(session.root, resolve(options.cwd, path)).split(sep).join('/');
     if (selector === '..' || selector.startsWith('../') || isAbsolute(selector))
-        throw new SelectionError([`Path ${path} is outside this repository.`]);
+        throw new GspotError('selection', [`Path ${path} is outside this repository.`]);
     const matches = candidates.filter(
         (file) => selector === '' || file === selector || file.startsWith(`${selector}/`),
     );
-    if (matches.length === 0) throw new SelectionError([`Path ${path} matches no repository files.`]);
+    if (matches.length === 0) throw new GspotError('selection', [`Path ${path} matches no repository files.`]);
     return matches;
 }
 
@@ -108,6 +108,6 @@ export async function revisionSelection(
     signal: AbortSignal,
 ): Promise<ChangedSet | undefined> {
     if ((options.staged || options.changed !== undefined) && !session.repository.hasGit)
-        throw new SelectionError(['Revision selection requires a Git repository.']);
+        throw new GspotError('selection', ['Revision selection requires a Git repository.']);
     return options.changed === undefined ? undefined : changedFiles(session.root, options.changed, signal);
 }

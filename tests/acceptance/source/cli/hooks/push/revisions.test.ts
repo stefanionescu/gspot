@@ -3,19 +3,20 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { git } from '#tests/support/cli/git.ts';
+import * as processes from '#cli/platform/spawn.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import type { SarifReport } from '#tests/types/cli.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
+import { run, gspot } from '#tests/support/cli/command.ts';
 import { pushReportSchema } from '#cli/execution/report.ts';
 import { preparePushRepository } from '#tests/support/cli/push.ts';
-import { run, gspot, runProcess } from '#tests/support/cli/command.ts';
 
 test(
     'pre-push checks exact supplied objects despite conflicting working-tree repairs',
     async () => {
         await using sandbox = await testdir();
         const { base, reviewed, broken, command } = await preparePushRepository(sandbox.path);
-        const passing = await runProcess(command, {
+        const passing = await processes.run(command, {
             cwd: sandbox.path,
             stdin: `refs/heads/reviewed ${reviewed} refs/heads/reviewed ${base}\n`,
         });
@@ -26,7 +27,7 @@ test(
         expect(firstReport.comparison).toStrictEqual({ content: 'commit', reference: reviewed });
         expect(firstReport.checks[0]?.status).toBe('ok');
         expect(firstReport.checks[0]?.files).toBe(1);
-        const failing = await runProcess(command, {
+        const failing = await processes.run(command, {
             cwd: sandbox.path,
             stdin: `refs/heads/main ${broken} refs/heads/main ${base}\n`,
         });
@@ -54,11 +55,11 @@ test(
     async () => {
         await using sandbox = await testdir();
         const { base, broken, command } = await preparePushRepository(sandbox.path);
-        const failing = await runProcess(command, {
+        const failing = await processes.run(command, {
             cwd: sandbox.path,
             stdin: `refs/heads/main ${broken} refs/heads/main ${base}\n`,
         });
-        const pushText = await runProcess(
+        const pushText = await processes.run(
             command.filter((argument) => argument !== '--json'),
             {
                 cwd: sandbox.path,
@@ -72,7 +73,7 @@ test(
         const failedReport = pushReportSchema.parse(JSON.parse(failing.stdout)).revisions[0]!.report;
         const reproduction = failedReport.checks[0]?.reproduce;
         expect(reproduction).toBeDefined();
-        const repeated = await runProcess(
+        const repeated = await processes.run(
             [
                 'bash',
                 '-c',
@@ -106,7 +107,7 @@ test(
     async () => {
         await using sandbox = await testdir();
         const { base, reviewed, broken, command } = await preparePushRepository(sandbox.path);
-        const multiple = await runProcess(command, {
+        const multiple = await processes.run(command, {
             cwd: sandbox.path,
             stdin: `refs/heads/broken ${broken} refs/heads/one ${base}\nrefs/heads/reviewed ${reviewed} refs/heads/two ${base}\n`,
         });
@@ -123,7 +124,7 @@ test(
         expect(sarif.runs.map((entry) => entry.properties?.comparison?.reference)).toStrictEqual([broken, reviewed]);
         expect(sarif.runs[0]!.results).toHaveLength(2);
         expect(sarif.runs[1]!.results).toHaveLength(0);
-        const duplicated = await runProcess(command, {
+        const duplicated = await processes.run(command, {
             cwd: sandbox.path,
             stdin: `refs/heads/reviewed ${reviewed} refs/heads/one ${base}\nrefs/heads/also-reviewed ${reviewed} refs/heads/two ${base}\n`,
         });
@@ -131,7 +132,7 @@ test(
         const merged = pushReportSchema.parse(JSON.parse(duplicated.stdout));
         expect(merged.revisions).toHaveLength(1);
         expect(merged.revisions[0]!.refs).toHaveLength(2);
-        const forced = await runProcess(command, {
+        const forced = await processes.run(command, {
             cwd: sandbox.path,
             stdin: `refs/heads/rewound ${base} refs/heads/main ${broken}\n`,
         });
@@ -164,7 +165,7 @@ test(
         expect(git(sandbox.path, ['add', 'gspot.toml', 'changed.sh']).code).toBe(0);
         expect(git(sandbox.path, ['commit', '-qm', 'full pushed tree']).code).toBe(0);
         const pushedCommit = git(sandbox.path, ['rev-parse', 'HEAD']).stdout.trim();
-        const all = await runProcess(command, {
+        const all = await processes.run(command, {
             cwd: sandbox.path,
             stdin: `refs/heads/main ${pushedCommit} refs/heads/main ${broken}\n`,
         });

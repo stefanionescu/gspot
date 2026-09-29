@@ -1,9 +1,10 @@
 import { createHash } from 'node:crypto';
 import { join, relative } from 'node:path';
 import { rmSync, statSync } from 'node:fs';
+import { toPosix } from '#cli/platform/paths.ts';
+import { GspotError } from '#cli/platform/errors.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { readSource } from '#cli/repository/tracked.ts';
-import { SkippedCheckError } from '#cli/checks/result.ts';
 import { mutationTarget } from '#cli/platform/safe-paths.ts';
 import { commandArguments } from '#cli/platform/arguments.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
@@ -35,8 +36,7 @@ async function built(input: EngineInput): Promise<SiteBuild> {
     const files = openRoot(scratch);
     let isBuilt: boolean;
     try {
-        isBuilt =
-            result.code === 0 && files.stat(relative(scratch, output).replaceAll('\\', '/'))?.isDirectory() === true;
+        isBuilt = result.code === 0 && files.stat(toPosix(relative(scratch, output)))?.isDirectory() === true;
     } finally {
         files.close();
     }
@@ -90,7 +90,7 @@ export function siteBuild(input: EngineInput): Promise<SiteBuild> {
  */
 export async function requireSiteBuild(input: EngineInput): Promise<SiteBuild> {
     const build = await siteBuild(input);
-    if (!build.isBuilt) throw new SkippedCheckError('The site did not build.');
+    if (!build.isBuilt) throw new GspotError('skipped', 'The site did not build.');
     return build;
 }
 

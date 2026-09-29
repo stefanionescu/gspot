@@ -1,4 +1,5 @@
 import { isDeepStrictEqual } from 'node:util';
+import { toPosix } from '#cli/platform/paths.ts';
 import type { Read } from '#cli/types/platform.ts';
 import { binaryPath } from '#cli/platform/assets.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
@@ -226,7 +227,7 @@ export function installHooks(
                 nativeHooks,
                 recorded: new Set(owner.paths()),
                 nativeMarker: nativeHooks === undefined ? undefined : NATIVE_HOOK_MARKERS[policy.hooks?.tool ?? ''],
-                directory: relative(location.gitRoot, repository.root).replaceAll('\\', '/'),
+                directory: toPosix(relative(location.gitRoot, repository.root)),
             };
             const plans = [
                 ...gitignorePlans(installation),

@@ -1,11 +1,11 @@
 // Installs built packages from an isolated registry: syntax findings reach every report format and naming is opt-in.
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { run } from '#cli/platform/spawn.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { reportSchema } from '#cli/execution/report.ts';
 import { RELEASE_TIMEOUT_MS } from '#tests/config/release.ts';
 import type { InstalledConsumer } from '#tests/types/release.ts';
-import { runProcess as run } from '#tests/support/cli/command.ts';
 import { createConsumer } from '#tests/support/release/consumer.ts';
 import type { SarifReport, CodeQualityReport } from '#tests/types/cli.ts';
 import { initializeConsumer, getPublishedRelease } from '#tests/support/release/published.ts';

@@ -2,14 +2,15 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import { run } from '#tests/support/cli/command.ts';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { initArgs } from '#tests/support/cli/init.ts';
+import { run as spawn } from '#cli/platform/spawn.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { ownershipSchema } from '#cli/lifecycle/log.ts';
 import { keptMode } from '#tests/support/cli/platforms.ts';
 import { applyBlock } from '#cli/lifecycle/managed-blocks.ts';
-import { run, runProcess as spawn } from '#tests/support/cli/command.ts';
 import { statSync, existsSync, unlinkSync, readFileSync, writeFileSync } from 'node:fs';
 
 const INIT = initArgs(['bash']);

@@ -2,19 +2,15 @@
 import { z } from 'zod';
 import { isAbsolute } from 'node:path';
 import { realpathSync } from 'node:fs';
-import { toPosix } from '#cli/platform/paths.ts';
+import { GspotError } from '#cli/platform/errors.ts';
 import { parseJson } from '#cli/execution/output/json.ts';
 import type { Finding } from '#cli/types/checks/checks.ts';
+import { toPosix, toolPath } from '#cli/platform/paths.ts';
 import type { CheckSpec, OutputFormat } from '#cli/types/kits.ts';
 import { ESLINT_WARN, ESLINT_ERROR } from '#cli/config/native.ts';
 import type { Parsing, RegexParser } from '#cli/types/execution/output.ts';
+import { typosFindings, trufflehogFindings, markdownlintFindings } from '#cli/execution/output/tool-formats.ts';
 
-import {
-    typosFindings,
-    ToolOutputError,
-    trufflehogFindings,
-    markdownlintFindings,
-} from '#cli/execution/output/tool-formats.ts';
 import {
     DEFAULT_PATTERN,
     TRAILING_PAREN_RULE,
@@ -138,11 +134,11 @@ function parseEslintJson(check: string, text: string, help: string, root: string
     try {
         files = eslintFiles.parse(JSON.parse(text));
     } catch (error) {
-        throw new ToolOutputError('ESLint returned invalid structured findings.', { cause: error });
+        throw new GspotError('tool-output', 'ESLint returned invalid structured findings.', { cause: error });
     }
-    const prefix = `${root.replaceAll('\\', '/').replace(/\/$/u, '')}/`;
+    const prefix = `${toolPath(root).replace(/\/$/u, '')}/`;
     return files.flatMap((file) => {
-        const path = file.filePath.replaceAll('\\', '/');
+        const path = toolPath(file.filePath);
         const relative = path.startsWith(prefix) ? path.slice(prefix.length) : path;
         return file.messages.map((entry) => eslintFinding(check, relative, entry, help));
     });
@@ -153,7 +149,7 @@ function jsonFindings(parsing: Parsing, output: OutputFormat): Finding[] {
     try {
         return parseJson(parsing.spec.name, output, parsing.stdout, parsing.spec.help);
     } catch (error) {
-        throw new ToolOutputError('The tool returned an invalid JSON report.', { cause: error });
+        throw new GspotError('tool-output', 'The tool returned an invalid JSON report.', { cause: error });
     }
 }
 
@@ -211,6 +207,6 @@ export function parseOutput(spec: CheckSpec, stdout: string, stderr: string, roo
     return parseRaw(spec, stdout, stderr, root, cwd).map((finding) => ({
         ...finding,
         fixable: spec.fix_command !== undefined && finding.fixable,
-        file: relativeTo(toPosix(root), toPosix(finding.file)),
+        file: relativeTo(toolPath(root), toPosix(finding.file)),
     }));
 }

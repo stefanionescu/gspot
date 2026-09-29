@@ -2,10 +2,11 @@ import { detectKits } from '#cli/kits/detect.ts';
 import { similar } from '#cli/policy/similar.ts';
 import type { Manifest } from '#cli/types/kits.ts';
 import * as messages from '#cli/policy/messages.ts';
+import { GspotError } from '#cli/platform/errors.ts';
 import { NO_KITS } from '#cli/config/commands/init.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
+import { selectKits, requireChain } from '#cli/kits/select.ts';
 import type { ScopeEntry } from '#cli/types/repository/repository.ts';
-import { selectKits, requireChain, SelectionError } from '#cli/kits/select.ts';
 import type { KitReason, InitInputs, InitContext, InitSelection } from '#cli/types/commands/init.ts';
 
 function parseScopeFlags(flags: string[] | undefined): Map<string, string[]> {
@@ -32,7 +33,7 @@ function initScopes(root: string, workspace: ScopeEntry[], scopeFlags: Map<strin
         for (const path of new Set([...scopes.map((scope) => scope.path), ...scopeFlags.keys()])) {
             if (path === '') continue;
             if (files.stat(path)?.isDirectory() !== true)
-                throw new SelectionError([`Scope directory does not exist: ${path}`]);
+                throw new GspotError('selection', [`Scope directory does not exist: ${path}`]);
             if (scopes.every((scope) => scope.path !== path))
                 scopes.push({ name: path.split('/').pop() ?? path, path, kits: [], source: 'gspot.toml' });
         }
@@ -118,7 +119,7 @@ function assertKnown(
     const unknown = [...configurations, ...without, ...scopeFlags.values().toArray().flat()]
         .filter((id) => !manifests.has(id))
         .map((id) => messages.unknownKit(id, similar(id, known)));
-    if (unknown.length > 0) throw new SelectionError(unknown);
+    if (unknown.length > 0) throw new GspotError('selection', unknown);
 }
 
 function assertNoneRequired(options: InitInputs['options'], named: string[], manifests: Map<string, Manifest>): void {
@@ -129,7 +130,7 @@ function assertNoneRequired(options: InitInputs['options'], named: string[], man
             .find((found) => found !== undefined);
         return chain ? [messages.withoutRequired(id, chain)] : [];
     });
-    if (left.length > 0) throw new SelectionError(left);
+    if (left.length > 0) throw new GspotError('selection', left);
 }
 
 // Exact selections retain their list. Other selections gain one level of detected recommendations.

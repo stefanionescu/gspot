@@ -5,10 +5,11 @@ import { join, delimiter } from 'node:path';
 import { git } from '#tests/support/cli/git.ts';
 import { chmodSync, readFileSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
+import * as processes from '#cli/platform/spawn.ts';
 import { script } from '#tests/support/cli/planted.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
+import { run, gspot } from '#tests/support/cli/command.ts';
 import { pushReportSchema } from '#cli/execution/report.ts';
-import { run, gspot, runProcess } from '#tests/support/cli/command.ts';
 import type { CommandFailureJson } from '#cli/types/commands/commands.ts';
 import { COMMITS_INIT } from '#tests/config/acceptance/source/cli/cli.ts';
 import { toolsPath, installPrivateTools } from '#tests/support/cli/tools.ts';
@@ -62,10 +63,10 @@ test(
             expect(prepared.code, prepared.stdout + prepared.stderr).toBe(0);
         }
         const command = ['node', join(sandbox.path, '.gspot/node_modules/@commitlint/cli/cli.js')];
-        const failed = await runProcess(command, { cwd: sandbox.path, stdin: 'Changed files.\n' });
+        const failed = await processes.run(command, { cwd: sandbox.path, stdin: 'Changed files.\n' });
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
         expect(failed.stdout + failed.stderr).toContain('type-empty');
-        const corrected = await runProcess(command, { cwd: sandbox.path, stdin: 'fix: validate configuration\n' });
+        const corrected = await processes.run(command, { cwd: sandbox.path, stdin: 'fix: validate configuration\n' });
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     },
     PLANTED_TIMEOUT_MS,
@@ -131,7 +132,7 @@ test(
         const bad = git(sandbox.path, ['commit-tree', tree, '-p', base, '-m', 'Bad message.']).stdout.trim();
         const command = [process.execPath, gspot, 'check', '--push', '--only', 'commits/range', '--json'];
         const options = { cwd: sandbox.path, env: { PATH: toolsPath(['commitlint']) } };
-        const rejected = await runProcess(command, {
+        const rejected = await processes.run(command, {
             ...options,
             stdin: `refs/heads/good ${good} refs/heads/good ${base}\nrefs/heads/bad ${bad} refs/heads/bad ${base}\n`,
         });
@@ -144,7 +145,7 @@ test(
                 (finding) => finding.rule === 'type-empty' && finding.message.includes(bad),
             ),
         ).toBe(true);
-        const corrected = await runProcess(command, {
+        const corrected = await processes.run(command, {
             ...options,
             stdin: `refs/heads/good ${good} refs/heads/good ${base}\n`,
         });
@@ -182,20 +183,20 @@ test(
             stdin: `refs/heads/main ${selected} refs/heads/main ${'0'.repeat(40)}\n`,
         };
         const command = [process.execPath, gspot, 'check', '--push', '--json', '--only'];
-        const content = await runProcess([...command, 'bash/syntax'], options);
+        const content = await processes.run([...command, 'bash/syntax'], options);
         expect(content.code, content.stdout + content.stderr).toBe(0);
         expect(pushReportSchema.parse(JSON.parse(content.stdout)).revisions[0]).toMatchObject({
             historyComplete: false,
             report: { checks: [{ status: 'ok' }] },
         });
-        const refused = await runProcess([...command, 'commits/range'], options);
+        const refused = await processes.run([...command, 'commits/range'], options);
         expect(refused.code, refused.stdout + refused.stderr).toBe(2);
         expect((JSON.parse(refused.stdout) as CommandFailureJson).message).toContain(
             'Pushed history is incomplete for commits/range',
         );
         expect((JSON.parse(refused.stdout) as CommandFailureJson).message).toContain('git fetch --unshallow');
         expect(git(checkout, ['fetch', '--unshallow']).code).toBe(0);
-        const completed = await runProcess([...command, 'commits/range'], options);
+        const completed = await processes.run([...command, 'commits/range'], options);
         expect(completed.code, completed.stdout + completed.stderr).toBe(0);
         expectCompleteHistory(completed.stdout, [base, selected]);
         expect(git(checkout, ['rev-parse', 'HEAD']).stdout.trim()).toBe(selected);

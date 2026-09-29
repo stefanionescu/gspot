@@ -36,7 +36,7 @@ test('a profile removed during reading retains the missing-profile diagnostic', 
     try {
         const read = await readProfile('house.toml', sandbox.path).catch((error: unknown) => error);
         expect(read).toMatchObject({
-            name: 'ProfileError',
+            name: 'GspotError',
             problems: ['There is no profile at house.toml.'],
         });
     } finally {

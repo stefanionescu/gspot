@@ -1,3 +1,4 @@
+import { GspotError } from '#cli/platform/errors.ts';
 import { fail, print } from '#cli/output/messages.ts';
 import { OUTPUT_JSON_INDENT } from '#cli/config/output.ts';
 import { KNOWN_ERRORS } from '#cli/config/commands/commands.ts';
@@ -9,10 +10,10 @@ function printResult(result: CommandResult, isJson: boolean): void {
     process.exitCode = result.exitCode;
 }
 
-function printError(error: Error, isJson: boolean): void {
+function printError(error: GspotError, isJson: boolean): void {
     if (isJson)
         process.stdout.write(
-            `${JSON.stringify({ error: error.name, message: error.message } satisfies CommandFailureJson, null, OUTPUT_JSON_INDENT)}\n`,
+            `${JSON.stringify({ error: error.code, message: error.message } satisfies CommandFailureJson, null, OUTPUT_JSON_INDENT)}\n`,
         );
     else fail(error.message);
     process.exitCode = 2;
@@ -31,7 +32,7 @@ export async function printCommand(
     try {
         printResult(await command(), isJson);
     } catch (error) {
-        if (error instanceof Error && KNOWN_ERRORS.has(error.name)) printError(error, isJson);
+        if (error instanceof GspotError && KNOWN_ERRORS.has(error.code)) printError(error, isJson);
         else throw error;
     }
 }

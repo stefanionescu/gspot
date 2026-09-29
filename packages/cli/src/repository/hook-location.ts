@@ -1,4 +1,5 @@
 // Where Git keeps this clone's hooks, and which root bounds and records them.
+import { toPosix } from '#cli/platform/paths.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { STATE_DIRECTORY } from '#cli/config/platform.ts';
@@ -34,7 +35,7 @@ function assertHooksDirectory(top: string, local: string | undefined, location: 
  * @returns the relative path with forward slashes
  */
 export function relativeInside(from: string, to: string): string | undefined {
-    const path = relative(from, to).replaceAll('\\', '/');
+    const path = toPosix(relative(from, to));
     const isOutside = path === '..' || path.startsWith('../') || isAbsolute(path);
     return isOutside ? undefined : path;
 }
@@ -59,7 +60,7 @@ export function hookLocation(root: string): HookLocation {
     assertHooksDirectory(top, local, location);
     if (local !== undefined && local !== '.git' && !local.startsWith('.git/')) {
         const ownerRoot = relativeInside(root, absolute) === undefined ? top : root;
-        return { ...location, root: ownerRoot, directory: relative(ownerRoot, absolute).replaceAll('\\', '/') };
+        return { ...location, root: ownerRoot, directory: toPosix(relative(ownerRoot, absolute)) };
     }
     const gitDirectory = resolve(top, gitOutput(top, ['rev-parse', '--git-common-dir'], 'Git state'));
     const internal = relativeInside(gitDirectory, absolute);

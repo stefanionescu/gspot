@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 import * as tools from '#cli/tools/inspect.ts';
 import { test, spyOn, expect } from 'bun:test';
+import { toPosix } from '#cli/platform/paths.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { engineInput } from '#cli/execution/engines.ts';
@@ -83,7 +84,7 @@ test.each(CLOUDFLARE_TYPES_SCOPES)(
             expect(await envTypesFresh(planted.input)).toStrictEqual([
                 {
                     check: planted.spec.name,
-                    file: planted.path('cloudflare-env.d.ts').replaceAll('\\', '/'),
+                    file: toPosix(planted.path('cloudflare-env.d.ts')),
                     line: 1,
                     rule: 'stale-types',
                     message: 'wrangler types writes this file differently. Run it and commit the result.',

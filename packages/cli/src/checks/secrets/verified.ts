@@ -2,7 +2,7 @@
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { runBinary } from '#cli/platform/spawn.ts';
-import { SelectionError } from '#cli/kits/select.ts';
+import { GspotError } from '#cli/platform/errors.ts';
 import { PRIVATE_FILE } from '#cli/config/platform.ts';
 import { runToolCommand } from '#cli/tools/command.ts';
 import { runToolCheck } from '#cli/execution/tool/runner.ts';
@@ -37,12 +37,13 @@ async function changeFields(session: Session, commit: string): Promise<string[]>
         timeoutMs: GIT_TIMEOUT_MS,
         ...(session.cancelSignal === undefined ? {} : { cancelSignal: session.cancelSignal }),
     });
-    if (read.code !== 0) throw new SelectionError(['Cannot read the changed objects for verified secret scanning.']);
+    if (read.code !== 0)
+        throw new GspotError('selection', ['Cannot read the changed objects for verified secret scanning.']);
     const bytes = Buffer.from(read.stdout);
     const text = bytes.toString('utf8');
-    if (!Buffer.from(text).equals(bytes)) throw new SelectionError(['History paths must be valid UTF-8.']);
+    if (!Buffer.from(text).equals(bytes)) throw new GspotError('selection', ['History paths must be valid UTF-8.']);
     const fields = text.split('\0');
-    if (fields.pop() !== '') throw new SelectionError(['Git returned an incomplete history change list.']);
+    if (fields.pop() !== '') throw new GspotError('selection', ['Git returned an incomplete history change list.']);
     return fields;
 }
 
@@ -53,7 +54,7 @@ function changedObjects(fields: string[]): Map<string, string> {
         const blobId = CHANGE_LINE.exec(fields[position] ?? '')?.[2];
         const file = fields[position + 1];
         if (blobId === undefined || file === undefined)
-            throw new SelectionError(['Git returned an unsupported history object.']);
+            throw new GspotError('selection', ['Git returned an unsupported history object.']);
         entries.set(file, blobId);
     }
     return entries;
@@ -65,7 +66,7 @@ async function appendBlobs(scan: SecretScan, commit: string): Promise<void> {
     const blobs = await gitBlobs(scan.session.root, [...entries.values()], scan.session.cancelSignal);
     for (const [file, blobId] of entries) {
         const blob = blobs.get(blobId);
-        if (blob === undefined) throw new SelectionError(['A selected history blob is missing.']);
+        if (blob === undefined) throw new GspotError('selection', ['A selected history blob is missing.']);
         appendFileSync(
             scan.input,
             `${JSON.stringify({ metadata: { commit, file }, data_b64: blob.toString('base64') })}\n`,
@@ -83,7 +84,7 @@ async function appendMetadata(scan: SecretScan, commit: string): Promise<void> {
         session.cancelSignal,
     );
     if (commitResult.code !== 0)
-        throw new SelectionError(['Cannot read selected commit metadata for verified secret scanning.']);
+        throw new GspotError('selection', ['Cannot read selected commit metadata for verified secret scanning.']);
     appendFileSync(scan.input, `${JSON.stringify({ metadata: { commit, file: '' }, data: commitResult.stdout })}\n`);
 }
 

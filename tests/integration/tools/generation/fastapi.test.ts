@@ -1,8 +1,8 @@
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import * as processes from '#cli/platform/spawn.ts';
 import { readAsset } from '#cli/platform/assets.ts';
 import { ruleExamples } from '#cli/agents/examples.ts';
-import { runProcess } from '#tests/support/cli/command.ts';
 import { FASTAPI_GUIDE_TESTS } from '#tests/config/integration/tools/generation.ts';
 
 test.each(FASTAPI_GUIDE_TESTS)(
@@ -19,9 +19,9 @@ test.each(FASTAPI_GUIDE_TESTS)(
             ...Object.fromEntries(examples.map((example, index) => [`example_${String(index)}.py`, example.body])),
             'verify.py': scenario.program,
         });
-        const locked = await runProcess(['uv', 'lock'], { cwd: sandbox.path });
+        const locked = await processes.run(['uv', 'lock'], { cwd: sandbox.path });
         expect(locked.code, locked.stdout + locked.stderr).toBe(0);
-        const responses = await runProcess(['uv', 'run', '--locked', 'python', 'verify.py'], { cwd: sandbox.path });
+        const responses = await processes.run(['uv', 'run', '--locked', 'python', 'verify.py'], { cwd: sandbox.path });
         expect(responses.code, responses.stdout + responses.stderr).toBe(0);
         expect(JSON.parse(responses.stdout)).toStrictEqual(scenario.responses);
     },

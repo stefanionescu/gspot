@@ -1,11 +1,11 @@
 import semver from 'semver';
+import { pythonPins } from '#cli/tools/pins.ts';
 import { everyManifest } from '#cli/kits/select.ts';
+import { GspotError } from '#cli/platform/errors.ts';
 import { runToolCommand } from '#cli/tools/command.ts';
-import { MissingToolError } from '#cli/tools/inspect.ts';
 import { installHooks } from '#cli/lifecycle/hooks/git.ts';
 import type { Session } from '#cli/types/execution/execution.ts';
 import type { InstallationStep } from '#cli/types/tools/tools.ts';
-import { pythonPins, InstallationError } from '#cli/tools/pins.ts';
 import { installPythonProject } from '#cli/tools/python-project.ts';
 import { installNativeHooks } from '#cli/lifecycle/hooks/managers.ts';
 import { installPackageProject } from '#cli/tools/packages/project.ts';
@@ -33,7 +33,10 @@ const installations: InstallationStep[] = [
             const read = await runToolCommand(undefined, ['mise', '--version'], { cwd: session.root });
             const version = semver.coerce(read.stdout);
             if (read.code !== 0 || version === null || semver.lt(version, MISE_MIN_VERSION))
-                throw new MissingToolError(`Install mise ${MISE_MIN_VERSION} or newer to load ${MISE_CONFIG_PATH}.`);
+                throw new GspotError(
+                    'missing-tool',
+                    `Install mise ${MISE_MIN_VERSION} or newer to load ${MISE_CONFIG_PATH}.`,
+                );
             return runInstall(session.root, [
                 ['mise', 'trust', MISE_CONFIG_PATH],
                 ['mise', 'install'],
@@ -62,7 +65,7 @@ const installations: InstallationStep[] = [
                     { cwd: session.root },
                 );
                 if (located.code !== 0 || located.stdout.trim() === '')
-                    throw new MissingToolError('The pinned uv installer is unavailable. Run: gspot install');
+                    throw new GspotError('missing-tool', 'The pinned uv installer is unavailable. Run: gspot install');
                 executable = located.stdout.trim();
             }
             return installPythonProject(session.root, executable);
@@ -77,7 +80,8 @@ async function runInstall(root: string, commands: string[][]): Promise<string> {
         const result = await runToolCommand(undefined, command, { cwd: root, env });
         const shown = command.join(' ');
         if (result.code !== 0)
-            throw new InstallationError(
+            throw new GspotError(
+                'installation',
                 `The installation command ${shown} failed (exit ${String(result.code)}): check the package manager and registry settings.`,
             );
         notes.push(`ran ${shown}`);

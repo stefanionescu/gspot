@@ -104,7 +104,6 @@
         "tree-sitter-javascript",
         "tree-sitter-python",
         "tree-sitter-ruby",
-        "@tree-sitter-grammars/tree-sitter-toml",
         "tree-sitter-typescript"
     ],
     "ignoreBinaries": [

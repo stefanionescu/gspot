@@ -1,7 +1,7 @@
 // The check graph for a run: stage, scope, file sets, requirements, skips.
 import { ownedBy } from '#cli/kits/owners.ts';
 import { toolPin } from '#cli/tools/inspect.ts';
-import { SelectionError } from '#cli/kits/select.ts';
+import { GspotError } from '#cli/platform/errors.ts';
 import type { ScopeSelection } from '#cli/types/policy/policy.ts';
 import { prettierInputs } from '#cli/execution/prettier-inputs.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
@@ -225,7 +225,7 @@ export function planRun(session: Session, options: PlanOptions): PlannedCheck[] 
             (check) => check.skip === undefined && HISTORY_ANALYSES.has(check.spec.analysis ?? ''),
         );
         if (historyChecks.length > 0)
-            throw new SelectionError([
+            throw new GspotError('selection', [
                 `Pushed history is incomplete for ${historyChecks.map((check) => check.check).join(', ')}. Run git fetch --unshallow and retry.`,
             ]);
     }

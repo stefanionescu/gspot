@@ -2,10 +2,10 @@ import { join } from 'node:path';
 import { symlinkSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import * as processes from '#cli/platform/spawn.ts';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { allRuleExamples } from '#cli/agents/examples.ts';
-import { runProcess } from '#tests/support/cli/command.ts';
 
 test.each(['recommended', 'all'] as const)(
     'TypeScript guide examples pass %s while an unused declaration fails',
@@ -42,13 +42,13 @@ test.each(['recommended', 'all'] as const)(
             'json',
             ...examples.map((_example, index) => `example-${String(index)}.ts`),
         ];
-        const rejected = await runProcess(command, { cwd: sandbox.path });
+        const rejected = await processes.run(command, { cwd: sandbox.path });
         expect(rejected.code, rejected.stdout + rejected.stderr).toBe(1);
         expect(JSON.parse(rejected.stdout)).toMatchObject([
             { messages: [{ ruleId: '@typescript-eslint/no-unused-vars' }] },
         ]);
         await Bun.write(target, first.body);
-        const corrected = await runProcess(command, { cwd: sandbox.path });
+        const corrected = await processes.run(command, { cwd: sandbox.path });
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect(JSON.parse(corrected.stdout)).toMatchObject(examples.map(() => ({ messages: [] })));
     },

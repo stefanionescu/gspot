@@ -2,13 +2,14 @@
 import { test, expect } from 'bun:test';
 import { join, delimiter } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
+import * as processes from '#cli/platform/spawn.ts';
+import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import type { FindingCase } from '#tests/types/cli.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
 import { keptMode } from '#tests/support/cli/platforms.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
-import { run, runProcess } from '#tests/support/cli/command.ts';
 import { statSync, chmodSync, symlinkSync, readFileSync } from 'node:fs';
 import { CODE, SHEET } from '#tests/config/acceptance/source/kits/kits.ts';
 import { containing, containingAll } from '#tests/support/expectations.ts';
@@ -57,7 +58,7 @@ test(
             containing({ check: 'css/stylelint', status: 'ok', findings: [] }),
         );
         for (const folder of ['', 'app']) {
-            const native = await runProcess([join(sandbox.path, '.gspot/node_modules/.bin/stylelint'), 'site.css'], {
+            const native = await processes.run([join(sandbox.path, '.gspot/node_modules/.bin/stylelint'), 'site.css'], {
                 cwd: join(sandbox.path, folder),
             });
             expect(native.code, native.stdout + native.stderr).toBe(0);
@@ -115,7 +116,7 @@ test.each([
         expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toContainEqual(
             containing({ check: 'css/stylelint', status: 'ok', findings: [] }),
         );
-        const native = await runProcess(
+        const native = await processes.run(
             [join(sandbox.path, '.gspot/node_modules/.bin/stylelint'), 'empty.css', 'future.css'],
             {
                 cwd: join(sandbox.path, scope),

@@ -1,10 +1,11 @@
 import type { Command } from 'commander';
 import { allChecks } from '#cli/kits/listing.ts';
+import { readPolicy } from '#cli/policy/read.ts';
 import { similar } from '#cli/policy/similar.ts';
 import * as messages from '#cli/policy/messages.ts';
+import { GspotError } from '#cli/platform/errors.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
-import { readPolicy, PolicyError } from '#cli/policy/read.ts';
 import { assertPinMatches } from '#cli/lifecycle/version-pin.ts';
 import { appendIgnore, removeEntries } from '#cli/policy/write.ts';
 import type { TomlTable } from '#cli/types/repository/repository.ts';
@@ -18,7 +19,7 @@ function knownCheck(checkName: string, repositoryChecks: string[]): void {
     }
 
     const known = [...allChecks().keys(), ...repositoryChecks];
-    throw new PolicyError([messages.unknownCheck(checkName, similar(checkName, known))]);
+    throw new GspotError('policy', [messages.unknownCheck(checkName, similar(checkName, known))]);
 }
 
 function ignoreCommandLine(o: IgnoreOptions): string {

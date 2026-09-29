@@ -1,24 +1,9 @@
 // Messages about the run on stderr, with levels for --quiet and --verbose.
 import pc from 'picocolors';
-import { createConsola } from 'consola';
-import type { ConsolaInstance } from 'consola';
-import { LEVELS } from '#cli/config/output.ts';
 import type { OutputOptions } from '#cli/types/output.ts';
 import { isCi, environmentVariables } from '#cli/platform/environment.ts';
 
-const state: { options: OutputOptions; instance: ConsolaInstance | undefined } = {
-    options: { verbosity: 'normal', json: false, color: false },
-    instance: undefined,
-};
-
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The instance is created once, on first use; the state object owns it.
-function consola(): ConsolaInstance {
-    state.instance ??= createConsola({
-        level: LEVELS.normal,
-        formatOptions: { colors: false, date: false, compact: true },
-    });
-    return state.instance;
-}
+const state: { options: OutputOptions } = { options: { verbosity: 'normal', json: false, color: false } };
 
 export const colors = pc.createColors(false);
 
@@ -37,31 +22,28 @@ export function isColorAllowed(isNoColor: boolean): boolean {
  * Sets the output mode for the process.
  * @param next verbosity, JSON, and color
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The mode and the palette change together, once per process; the state object owns both.
 export function configureOutput(next: OutputOptions): void {
     state.options = next;
     Object.assign(colors, pc.createColors(next.color));
-    state.instance = createConsola({
-        level: LEVELS[next.verbosity],
-        formatOptions: { colors: next.color, date: false, compact: true },
-    });
 }
 
 /**
- * A line about the run: hints, warnings, progress. Goes to stderr.
+ * A line about the run: hints, warnings, progress. Goes to stderr, and stays quiet under --quiet.
  * @param text the line
  */
 export function note(text: string): void {
-    if (state.options.json) return;
-    consola().info(text);
+    if (state.options.json || state.options.verbosity === 'quiet') return;
+    process.stderr.write(`${colors.cyan('[info]')} ${text}\n`);
 }
 
 /**
- * A warning about the run.
+ * A warning about the run. Goes to stderr at every verbosity.
  * @param text the line
  */
 export function warn(text: string): void {
     if (state.options.json) return;
-    consola().warn(text);
+    process.stderr.write(`${colors.yellow('[warn]')} ${text}\n`);
 }
 
 /**

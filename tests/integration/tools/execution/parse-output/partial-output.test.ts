@@ -2,6 +2,7 @@ import { test, expect } from 'bun:test';
 import { join, delimiter } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
+import { GspotError } from '#cli/platform/errors.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { containing } from '#tests/support/expectations.ts';
@@ -9,7 +10,6 @@ import { checkedFindings } from '#cli/execution/broken-tool.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import type { PlannedCheck } from '#cli/types/execution/execution.ts';
 import { PYTHON_ENVIRONMENT_DIRECTORY } from '#cli/config/platform.ts';
-import { ToolOutputError } from '#cli/execution/output/tool-formats.ts';
 import { toolsPath, installPrivateTools } from '#tests/support/cli/tools.ts';
 import { INSTALL_TIMEOUT_MS } from '#tests/config/integration/tools/tools.ts';
 
@@ -35,7 +35,7 @@ test('ShellCheck rejects partial findings when another selected file cannot be r
         missing: false,
         duration: 1,
     };
-    expect(() => checkedFindings(planned, result, roots)).toThrow(ToolOutputError);
+    expect(() => checkedFindings(planned, result, roots)).toThrow(GspotError);
     const defect = Bun.spawnSync(command, { cwd: sandbox.path });
     expect(defect.exitCode).toBe(1);
     expect(
@@ -98,7 +98,7 @@ test.each(['def broken(:\n', 'value = "\u0000"\n'])(
             missing: false,
             duration: 1,
         };
-        expect(() => checkedFindings(planned, result, roots)).toThrow(ToolOutputError);
+        expect(() => checkedFindings(planned, result, roots)).toThrow(GspotError);
         expect(await Bun.file(join(sandbox.path, 'broken.py')).text()).toBe(brokenSource);
         await Bun.write(join(sandbox.path, 'broken.py'), 'print("Ready")\n');
         const defect = Bun.spawnSync(command, { cwd: sandbox.path, env });

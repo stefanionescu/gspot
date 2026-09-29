@@ -3,10 +3,10 @@ import { parse } from 'smol-toml';
 import { statSync } from 'node:fs';
 import { join, posix } from 'node:path';
 import { scopeOf } from '#cli/repository/scopes.ts';
+import { GspotError } from '#cli/platform/errors.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
 import { readSource } from '#cli/repository/tracked.ts';
-import { SkippedCheckError } from '#cli/checks/result.ts';
 import { runToolCheck, runCheckCommand } from '#cli/execution/tool/runner.ts';
 import type { Session, PlannedCheck } from '#cli/types/execution/execution.ts';
 import type { Finding, CheckResult, EngineInput } from '#cli/types/checks/checks.ts';
@@ -66,10 +66,10 @@ export async function checkDependencies(session: Session, planned: PlannedCheck)
 export async function importLinter(input: EngineInput): Promise<Finding[]> {
     const manifest = input.scope === '' ? PYTHON_MANIFEST : `${input.scope}/${PYTHON_MANIFEST}`;
     if (statSync(join(input.root, manifest), { throwIfNoEntry: false }) === undefined)
-        throw new SkippedCheckError('This scope has no pyproject.toml import contracts.');
+        throw new GspotError('skipped', 'This scope has no pyproject.toml import contracts.');
     const project = importConfiguration.parse(parse(readSource(input.root, manifest, input.reads).toString('utf8')));
     if (project.tool?.importlinter === undefined)
-        throw new SkippedCheckError('This scope has no tool.importlinter configuration.');
+        throw new GspotError('skipped', 'This scope has no tool.importlinter configuration.');
     const result = await runCheckCommand(input, ['lint-imports', '--no-cache'], {
         cwd: join(input.root, input.scope),
     });
@@ -96,7 +96,10 @@ export function dependencyOwnership(input: EngineInput): Finding[] {
             (name) => statSync(join(input.root, input.scope, name), { throwIfNoEntry: false }) !== undefined,
         )
     )
-        throw new SkippedCheckError('Dependency ownership requires uv.lock, poetry.lock, or pdm.lock in this scope.');
+        throw new GspotError(
+            'skipped',
+            'Dependency ownership requires uv.lock, poetry.lock, or pdm.lock in this scope.',
+        );
     const allowed = (input.view.tool('dependencies')['pip_install_allowed'] as { paths: string[] }[] | undefined) ?? [];
     const isAllowed = pathMatcher(allowed.flatMap((entry) => entry.paths));
     const files = input.files.filter(

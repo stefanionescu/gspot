@@ -1,6 +1,6 @@
 // Staged files for the commit stage, and the honest note about unstaged changes.
 import { run } from '#cli/platform/spawn.ts';
-import { SelectionError } from '#cli/kits/select.ts';
+import { GspotError } from '#cli/platform/errors.ts';
 import { GIT_TIMEOUT_MS } from '#cli/config/checks/secrets.ts';
 import { CHANGED_PATHS } from '#cli/config/repository/revisions.ts';
 import type { StagedSet, ChangedSet } from '#cli/types/repository/revisions.ts';
@@ -40,7 +40,7 @@ async function mergeBase(root: string, compared: string, cancelSignal?: AbortSig
     });
     if (base.code === 0) return base.stdout.trim();
     const help = (await isShallow(root, cancelSignal)) ? ' History is cut; run git fetch --unshallow.' : '';
-    throw new SelectionError([`Git merge-base failed for ${compared}: ${base.stderr.trim()}.${help}`]);
+    throw new GspotError('selection', [`Git merge-base failed for ${compared}: ${base.stderr.trim()}.${help}`]);
 }
 
 /**
@@ -70,7 +70,7 @@ export async function stagedFiles(root: string, cancelSignal?: AbortSignal): Pro
 export async function changedFiles(root: string, reference: string, cancelSignal?: AbortSignal): Promise<ChangedSet> {
     const compared = reference === '' ? await defaultReference(root, cancelSignal) : reference;
     if (compared === '') {
-        throw new SelectionError(['No upstream or default branch is available; use --changed=<ref>.']);
+        throw new GspotError('selection', ['No upstream or default branch is available; use --changed=<ref>.']);
     }
     const merged = await mergeBase(root, compared, cancelSignal);
     const committed = await gitPaths(root, [...CHANGED_PATHS, merged, '--'], cancelSignal);

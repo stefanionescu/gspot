@@ -2,6 +2,25 @@
 import type { Result } from 'execa';
 import type { Stats } from 'node:fs';
 
+/** What kind of failure a GspotError reports; the command layer maps it to output and an exit code. */
+export type ErrorCode =
+    | 'policy'
+    | 'manifest'
+    | 'selection'
+    | 'installation'
+    | 'missing-tool'
+    | 'tool-output'
+    | 'skipped'
+    | 'version-pin'
+    | 'profile'
+    | 'prompt';
+/** What a glob scan includes: dot files, folders beside files, and how links are treated. */
+export type GlobOptions = {
+    dot?: boolean;
+    onlyFiles?: boolean;
+    followSymlinks?: boolean;
+    refuseBrokenLinks?: boolean;
+};
 export type Read = { bytes: Buffer; mode: number; isLink?: true };
 export type Staging = { bounds: Bounds; path: string; target: string; temporary: string };
 export type SpawnResult = {

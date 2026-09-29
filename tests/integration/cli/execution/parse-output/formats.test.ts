@@ -2,10 +2,10 @@ import { join, win32 } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import type { CheckSpec } from '#cli/types/kits.ts';
+import { GspotError } from '#cli/platform/errors.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
 import { isToolBroken } from '#cli/execution/broken-tool.ts';
 import { parseOutput } from '#cli/execution/output/parse.ts';
-import { ToolOutputError } from '#cli/execution/output/tool-formats.ts';
 
 test('invalid Markdown records remain execution errors and valid records parse', async () => {
     await using sandbox = await testdir();
@@ -34,7 +34,7 @@ test('invalid Markdown records remain execution errors and valid records parse',
         JSON.stringify([{ ...valid, fileName: '../outside.md' }]),
         JSON.stringify([{ ...valid, fixInfo: [] }]),
     ])
-        expect(() => parseOutput(spec, stdout, '', sandbox.path)).toThrow(ToolOutputError);
+        expect(() => parseOutput(spec, stdout, '', sandbox.path)).toThrow(GspotError);
     expect(parseOutput(spec, JSON.stringify([valid]), '', sandbox.path)).toMatchObject([
         { file: 'sample.md', rule: 'MD033', fixable: false },
     ]);
@@ -66,7 +66,7 @@ test.each([
     const spec = kitManifests()
         .get('spelling')!
         .checks.find((check) => check.name === 'spelling/typos')!;
-    expect(() => parseOutput(spec, stdout, '', sandbox.path)).toThrow(ToolOutputError);
+    expect(() => parseOutput(spec, stdout, '', sandbox.path)).toThrow(GspotError);
     const corrected = JSON.stringify({
         type: 'typo',
         path: 'sample.txt',
@@ -174,7 +174,7 @@ test.each([
     const spec = kitManifests()
         .get('javascript')!
         .checks.find((check) => check.name === 'javascript/eslint')!;
-    expect(() => parseOutput(spec, text, '', '/repo')).toThrow(ToolOutputError);
+    expect(() => parseOutput(spec, text, '', '/repo')).toThrow(GspotError);
     expect(parseOutput(spec, '[]', '', '/repo')).toStrictEqual([]);
 });
 

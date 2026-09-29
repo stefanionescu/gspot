@@ -1,9 +1,9 @@
 // Package publication and installation retain target completeness, version identity, and legal payloads.
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { run } from '#cli/platform/spawn.ts';
 import { RELEASE_TIMEOUT_MS } from '#tests/config/release.ts';
 import type { PublishedManifest } from '#tests/types/release.ts';
-import { runProcess as run } from '#tests/support/cli/command.ts';
 import { createConsumer } from '#tests/support/release/consumer.ts';
 import { rmSync, lstatSync, copyFileSync, readFileSync } from 'node:fs';
 import { getPublishedRelease } from '#tests/support/release/published.ts';

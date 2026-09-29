@@ -1,5 +1,5 @@
 import { isDeepStrictEqual } from 'node:util';
-import { PolicyError } from '#cli/policy/read.ts';
+import { GspotError } from '#cli/platform/errors.ts';
 import { proposePolicy } from '#cli/policy/write.ts';
 import { fileMissing } from '#cli/policy/messages.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
@@ -15,7 +15,7 @@ import type { Mutation, WriteResult } from '#cli/types/policy/policy.ts';
  */
 export function preparePolicy(root: string, mutate: Mutation): PreparedPolicy {
     const original = openRoot(root).read('gspot.toml');
-    if (original === undefined) throw new PolicyError([fileMissing('gspot.toml')]);
+    if (original === undefined) throw new GspotError('policy', [fileMissing('gspot.toml')]);
     const text = original.bytes.toString('utf8');
     if (!Buffer.from(text).equals(original.bytes))
         throw new Error('The policy file gspot.toml must contain valid UTF-8 text.');

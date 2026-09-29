@@ -2,6 +2,7 @@ import { statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { detectKits } from '#cli/kits/detect.ts';
 import { pinnedTwice } from '#cli/tools/mise.ts';
+import { toPosix } from '#cli/platform/paths.ts';
 import { head } from '#cli/repository/tracked.ts';
 import { everyManifest } from '#cli/kits/select.ts';
 import { emitAll } from '#cli/generation/outputs.ts';
@@ -66,7 +67,7 @@ function unownedGeneratedFiles(session: Session): ChangeRow[] {
     if (session.repository.hasGit) {
         const location = hookLocation(session.root);
         for (const entry of readOwnership(location.root, location.stateDirectory).files)
-            recorded.add(relative(session.root, join(location.root, entry.path)).replaceAll('\\', '/'));
+            recorded.add(toPosix(relative(session.root, join(location.root, entry.path))));
     }
     return session.repository.files
         .filter((file) => file.path.startsWith('.gspot/') && !recorded.has(file.path))

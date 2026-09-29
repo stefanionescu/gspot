@@ -3,11 +3,11 @@ import { chmodSync } from 'node:fs';
 import { run } from '#cli/platform/spawn.ts';
 import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import { GspotError } from '#cli/platform/errors.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { checkedFindings } from '#cli/execution/broken-tool.ts';
-import { ToolOutputError } from '#cli/execution/output/tool-formats.ts';
 
 describe.if(process.platform === 'darwin')('native property lists', () => {
     test.each(['files/plist', 'xcode/plist'])(
@@ -28,7 +28,7 @@ describe.if(process.platform === 'darwin')('native property lists', () => {
                     const mixed = await run(['plutil', '-lint', 'bad.plist', path], { cwd: sandbox.path });
                     expect(mixed.code).toBe(1);
                     expect(mixed.stdout + mixed.stderr).toContain('Encountered unexpected EOF');
-                    expect(() => checkedFindings(planned!, mixed, roots)).toThrow(ToolOutputError);
+                    expect(() => checkedFindings(planned!, mixed, roots)).toThrow(GspotError);
                 }
             } finally {
                 chmodSync(join(sandbox.path, 'private.plist'), 0o600);

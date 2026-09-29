@@ -2,12 +2,12 @@ import { join } from 'node:path';
 import { parse } from 'smol-toml';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import * as processes from '#cli/platform/spawn.ts';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { allRuleExamples } from '#cli/agents/examples.ts';
-import { runProcess } from '#tests/support/cli/command.ts';
 import { containingAll } from '#tests/support/expectations.ts';
 import { DOCSTRING_COMMAND } from '#cli/config/checks/python.ts';
 import { PYTHON_STRUCTURE } from '#cli/checks/python/analyses.ts';
@@ -34,7 +34,7 @@ test.each(['recommended', 'all'] as const)(
                 '.gspot/config/basedpyrightconfig.json',
             ),
         });
-        const locked = await runProcess(['uv', 'lock'], { cwd: sandbox.path });
+        const locked = await processes.run(['uv', 'lock'], { cwd: sandbox.path });
         expect(locked.code, locked.stdout + locked.stderr).toBe(0);
         const command = [
             'uv',
@@ -45,17 +45,17 @@ test.each(['recommended', 'all'] as const)(
             '.gspot/config/basedpyrightconfig.json',
             '--outputjson',
         ];
-        const rejected = await runProcess(command, { cwd: sandbox.path });
+        const rejected = await processes.run(command, { cwd: sandbox.path });
         expect(rejected.code, rejected.stdout + rejected.stderr).toBe(1);
         expect(JSON.parse(rejected.stdout)).toMatchObject({
             generalDiagnostics: [{ rule: 'reportAssignmentType' }],
             summary: { errorCount: 1 },
         });
         await Bun.write(join(sandbox.path, 'rejected.py'), 'count: int = 1\n');
-        const corrected = await runProcess(command, { cwd: sandbox.path });
+        const corrected = await processes.run(command, { cwd: sandbox.path });
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect(JSON.parse(corrected.stdout)).toMatchObject({ generalDiagnostics: [], summary: { errorCount: 0 } });
-        const docstrings = await runProcess(
+        const docstrings = await processes.run(
             ['uv', 'run', '--locked', ...DOCSTRING_COMMAND.flatMap((part) => (part === '{files}' ? paths : [part]))],
             { cwd: sandbox.path },
         );

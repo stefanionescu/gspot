@@ -1,5 +1,6 @@
 import { similar } from '#cli/policy/similar.ts';
 import * as messages from '#cli/policy/messages.ts';
+import { GspotError } from '#cli/platform/errors.ts';
 import type { Policy } from '#cli/types/policy/policy.ts';
 import { scopeAncestors } from '#cli/repository/scopes.ts';
 import type { Manifest, SelectionWalk } from '#cli/types/kits.ts';
@@ -43,21 +44,6 @@ function chainFrom(
     return undefined;
 }
 
-/** Every problem a selection has, as one error with one line per problem. */
-export class SelectionError extends Error {
-    readonly problems: string[];
-
-    /**
-     * Joins the problems into the message and keeps them as a list.
-     * @param problems the problems in plain English
-     */
-    constructor(problems: string[]) {
-        super(problems.join('\n'));
-        this.name = 'SelectionError';
-        this.problems = problems;
-    }
-}
-
 /**
  * The chain of requires from one kit to another, or undefined when the first does not need the second.
  * @param target the configuration that is required
@@ -80,7 +66,7 @@ export function selectKits(kitNames: string[], manifests: Map<string, Manifest>)
     const walk: SelectionWalk = { manifests, problems: [], order: [], seen: new Set(), visiting: [] };
     for (const kitName of kitNames) visit(walk, kitName);
     const { problems } = walk;
-    if (problems.length > 0) throw new SelectionError([...new Set(problems)]);
+    if (problems.length > 0) throw new GspotError('selection', [...new Set(problems)]);
     return walk.order;
 }
 

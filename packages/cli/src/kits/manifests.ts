@@ -7,7 +7,7 @@ import { PRIVATE_PATHS } from '#cli/config/platform.ts';
 import { OPTIONAL_TOOL_KEYS } from '#cli/config/kits.ts';
 import { readAsset, listAssets } from '#cli/platform/assets.ts';
 import type { RawTool, ToolPin, Manifest, RawCheck, CheckSpec } from '#cli/types/kits.ts';
-import { ManifestError, manifestProblems, validateManifests } from '#cli/kits/manifest-problems.ts';
+import { manifestError, manifestProblems, validateManifests } from '#cli/kits/manifest-problems.ts';
 
 const state: { cache: Map<string, Manifest> | undefined } = { cache: undefined };
 
@@ -57,11 +57,11 @@ function registerManifest(manifests: Map<string, Manifest>, path: string): void 
     const manifest = parseManifest(readAsset(path), dir);
     const folder = dir.slice(dir.lastIndexOf('/') + 1);
     if (folder !== manifest.kit.name)
-        throw new ManifestError(manifest.kit.name, [
+        throw manifestError(manifest.kit.name, [
             `the folder is \`${folder}\` and the name is \`${manifest.kit.name}\`; they must match.`,
         ]);
     if (manifests.has(manifest.kit.name))
-        throw new ManifestError(manifest.kit.name, ['The configuration name is already registered.']);
+        throw manifestError(manifest.kit.name, ['The configuration name is already registered.']);
     manifests.set(manifest.kit.name, manifest);
 }
 
@@ -76,7 +76,7 @@ export function parseManifest(text: string, dir: string): Manifest {
     const result = manifestSchema.safeParse(parsed);
     const kitName = result.success ? result.data.kit.name : dir;
     if (!result.success)
-        throw new ManifestError(kitName, [...new Set(result.error.issues.flatMap((issue) => issueLines(issue)))]);
+        throw manifestError(kitName, [...new Set(result.error.issues.flatMap((issue) => issueLines(issue)))]);
     const raw = result.data;
     const problems = [
         ...manifestProblems(raw),
@@ -89,7 +89,7 @@ export function parseManifest(text: string, dir: string): Manifest {
     ];
     if (raw.checks.some((check) => raw.kit.check_references.includes(check.name)))
         problems.push('A configuration cannot both declare and reference the same check.');
-    if (problems.length > 0) throw new ManifestError(raw.kit.name, problems);
+    if (problems.length > 0) throw manifestError(raw.kit.name, problems);
     return {
         kit: raw.kit,
         untracked: raw.untracked,

@@ -2,11 +2,12 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import * as processes from '#cli/platform/spawn.ts';
+import { run } from '#tests/support/cli/command.ts';
 import type { FindingCase } from '#tests/types/cli.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
 import { git, commitAll } from '#tests/support/cli/git.ts';
-import { run, runProcess } from '#tests/support/cli/command.ts';
 import { script, runPlanted } from '#tests/support/cli/planted.ts';
 import { containing, textContaining } from '#tests/support/expectations.ts';
 import { WORKFLOW_HEAD } from '#tests/config/acceptance/source/kits/kits.ts';
@@ -66,7 +67,7 @@ test(
         const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
         expect(selected.code, selected.stdout + selected.stderr).toBe(0);
         expect(await Bun.file(join(sandbox.path, '.github/workflows/gspot.yml')).exists()).toBe(true);
-        const result = await runProcess(['actionlint', '-no-color', '.github/workflows/gspot.yml'], {
+        const result = await processes.run(['actionlint', '-no-color', '.github/workflows/gspot.yml'], {
             cwd: sandbox.path,
             env: environment,
         });

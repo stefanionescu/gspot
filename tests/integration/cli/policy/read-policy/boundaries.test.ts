@@ -1,7 +1,8 @@
 import { stringify } from 'smol-toml';
 import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { PolicyError, parsePolicyText } from '#cli/policy/read.ts';
+import { GspotError } from '#cli/platform/errors.ts';
+import { parsePolicyText } from '#cli/policy/read.ts';
 import { policyProblems } from '#tests/support/cli/policy-problems.ts';
 
 describe('configuration directory boundaries', () => {
@@ -19,7 +20,7 @@ describe('configuration directory boundaries', () => {
         '',
     ])('refuses escaping directory %j before filesystem discovery', (path) => {
         for (const settings of [{ scope: [{ path }] }, { guides: { directory: path } }]) {
-            expect(() => parsePolicyText(stringify({ version: 1, ...settings }), 'gspot.toml')).toThrow(PolicyError);
+            expect(() => parsePolicyText(stringify({ version: 1, ...settings }), 'gspot.toml')).toThrow(GspotError);
         }
     });
 

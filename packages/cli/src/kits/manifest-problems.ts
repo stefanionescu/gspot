@@ -2,6 +2,7 @@
 // between manifests that do not hold.
 import semver from 'semver';
 import { kitName } from '#cli/kits/targets.ts';
+import { GspotError } from '#cli/platform/errors.ts';
 import { MANIFEST_CONFIG_PLACEHOLDER } from '#cli/config/kits.ts';
 import { SETTING_PLACEHOLDER } from '#cli/config/execution/execution.ts';
 import type { Checks, Manifest, RawCheck, Settings, CheckRule, RawManifest } from '#cli/types/kits.ts';
@@ -81,14 +82,14 @@ function configurationReaders(checks: RawCheck[]): Set<string> {
 function assertRequirementsExist(manifest: Manifest, manifests: Map<string, Manifest>): void {
     for (const required of manifest.kit.requires)
         if (!manifests.has(required))
-            throw new ManifestError(manifest.kit.name, [`it requires \`${required}\`, which does not exist.`]);
+            throw manifestError(manifest.kit.name, [`it requires \`${required}\`, which does not exist.`]);
 }
 
 // Records the manifest as the owner of a check name, refusing a name another manifest already owns.
 function claimOwner(owners: Map<string, string>, manifest: Manifest, check: Manifest['checks'][number]): void {
     const previous = owners.get(check.name);
     if (previous !== undefined)
-        throw new ManifestError(manifest.kit.name, [`check ${check.name} is already owned by ${previous}.`]);
+        throw manifestError(manifest.kit.name, [`check ${check.name} is already owned by ${previous}.`]);
     owners.set(check.name, manifest.kit.name);
 }
 
@@ -114,7 +115,7 @@ function assertReferences(manifest: Manifest, checks: Checks, owners: Map<string
     for (const reference of manifest.kit.check_references ?? []) {
         const owner = owners.get(reference);
         if (owner === undefined || owner === manifest.kit.name || !isStandalone(checks.get(reference)))
-            throw new ManifestError(manifest.kit.name, [
+            throw manifestError(manifest.kit.name, [
                 `Referenced check ${reference} must name another kit's standalone built-in check that runs once.`,
             ]);
     }
@@ -125,7 +126,7 @@ function assertNoReplacementCycle(manifest: Manifest, check: Manifest['checks'][
     const chain = [check.name];
     for (let next = check.replaces; next !== undefined; next = checks.get(next)?.replaces) {
         if (chain.includes(next))
-            throw new ManifestError(manifest.kit.name, [`Check replacement cycle: ${[...chain, next].join(' -> ')}.`]);
+            throw manifestError(manifest.kit.name, [`Check replacement cycle: ${[...chain, next].join(' -> ')}.`]);
         chain.push(next);
     }
 }
@@ -137,7 +138,7 @@ function assertReporting(manifest: Manifest, check: Manifest['checks'][number], 
         if (target === undefined) continue;
         const owner = checks.get(target);
         if (owner === undefined || target === check.name || owner.reported_by !== undefined)
-            throw new ManifestError(manifest.kit.name, [
+            throw manifestError(manifest.kit.name, [
                 `check ${check.name} ${field} must name a different executable check; received ${target}.`,
             ]);
     }
@@ -155,9 +156,9 @@ function assertToolPin(manifest: Manifest, tool: Manifest['tools'][number]): voi
     const isUnpinned =
         tool.version === undefined && Object.values(tool.installers).some((entry) => entry.version === undefined);
     if (isUnpinned && tool.floor === undefined)
-        throw new ManifestError(manifest.kit.name, [`tool ${tool.name} has no version and no floor.`]);
+        throw manifestError(manifest.kit.name, [`tool ${tool.name} has no version and no floor.`]);
     if (isBelowFloor(tool))
-        throw new ManifestError(manifest.kit.name, [
+        throw manifestError(manifest.kit.name, [
             `tool ${tool.name} pins ${tool.version ?? ''}, below its floor ${tool.floor ?? ''}.`,
         ]);
 }
@@ -174,7 +175,7 @@ function settingsRead(check: Manifest['checks'][number]): string[] {
 // Refuses a check that reads a setting with an empty default without waiting for it, or waits for a setting nobody declares.
 function assertSettingWait(manifest: Manifest, check: Manifest['checks'][number], settings: Settings): void {
     if (check.waits_for !== undefined && !settings.has(check.waits_for))
-        throw new ManifestError(manifest.kit.name, [
+        throw manifestError(manifest.kit.name, [
             `check ${check.name} waits for ${check.waits_for}, which no configuration declares.`,
         ]);
     const missing = settingsRead(check).filter((name) => {
@@ -185,21 +186,20 @@ function assertSettingWait(manifest: Manifest, check: Manifest['checks'][number]
         return value === undefined || value === '' || value === false || (Array.isArray(value) && value.length === 0);
     });
     for (const name of missing)
-        throw new ManifestError(manifest.kit.name, [
+        throw manifestError(manifest.kit.name, [
             `check ${check.name} reads ${name}, whose default is empty, and must wait for it.`,
         ]);
 }
 
-export class ManifestError extends Error {
-    /**
-     * Names the configuration and lists its problems.
-     * @param configuration the configuration name
-     * @param problems the problems in plain English
-     */
-    constructor(configuration: string, problems: string[]) {
-        super(`The kit manifest for \`${configuration}\` is not valid:\n${problems.join('\n')}`);
-        this.name = 'ManifestError';
-    }
+/**
+ * The error of a kit manifest that is not valid.
+ * @param configuration the configuration name
+ * @param problems the problems in plain English
+ * @returns the error to throw
+ */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Twelve refusals name the manifest the same way; one owner keeps the wording.
+export function manifestError(configuration: string, problems: string[]): GspotError {
+    return new GspotError('manifest', [`The kit manifest for \`${configuration}\` is not valid:`, ...problems]);
 }
 
 /**

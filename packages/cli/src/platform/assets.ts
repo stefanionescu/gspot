@@ -1,10 +1,9 @@
 // Where the gspot data lives: the repository during development, embedded files in the binary.
-import { globbySync } from 'globby';
 import { fileURLToPath } from 'node:url';
 import { join, dirname } from 'node:path';
 import { statSync, readFileSync } from 'node:fs';
-import { toPosix } from '#cli/platform/paths.ts';
 import type { EmbeddedIndex } from '#cli/types/platform.ts';
+import { toPosix, globPaths } from '#cli/platform/paths.ts';
 import { GRAMMAR_SOURCES, ROOT_SEARCH_DEPTH } from '#cli/config/platform.ts';
 
 const state: { embedded: EmbeddedIndex | null | undefined; developmentRoot: string | undefined } = {
@@ -113,7 +112,7 @@ export function listAssets(prefix: string): string[] {
             .toSorted((a, b) => a.localeCompare(b));
     const dir = join(developmentRoot(), prefix);
     if (statSync(dir, { throwIfNoEntry: false }) === undefined) return [];
-    return globbySync('**/*', { cwd: dir, dot: true })
+    return globPaths(dir, '**/*', { dot: true })
         .map((path) => toPosix(join(prefix, path)))
         .toSorted((a, b) => a.localeCompare(b));
 }

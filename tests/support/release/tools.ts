@@ -1,9 +1,9 @@
 // Installs built packages from an isolated registry: private tool installation preserves authored metadata and native wrappers run.
 import { join, delimiter } from 'node:path';
+import { run } from '#cli/platform/spawn.ts';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { RELEASE_TIMEOUT_MS } from '#tests/config/release.ts';
 import { environment } from '#tests/support/release/packages.ts';
-import { runProcess as run } from '#tests/support/cli/command.ts';
 import type { PublishedRelease, InstalledConsumer } from '#tests/types/release.ts';
 import type { PrepareNativeConsumerResult, PrepareFormatterConsumerResult } from '#tests/types/results.ts';
 

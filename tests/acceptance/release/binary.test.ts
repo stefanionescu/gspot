@@ -5,12 +5,12 @@ import { createRequire } from 'node:module';
 import type * as DetectLibc from 'detect-libc';
 import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import * as processes from '#cli/platform/spawn.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { script } from '#tests/support/cli/planted.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
-import { runProcess } from '#tests/support/cli/command.ts';
 import releaseTargets from '#npm-targets' with { type: 'json' };
 import packageManifest from '#cli-package' with { type: 'json' };
 import { environmentVariables } from '#cli/platform/environment.ts';
@@ -34,7 +34,7 @@ const BINARY = join(root, 'dist', host.binary);
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Five runs of the installed binary share the environment and the tool PATH; one owner keeps them.
 async function binary(cwd: string, argv: string[]) {
     const environment = Object.fromEntries(Object.entries(environmentVariables()));
-    return await runProcess([BINARY, ...argv], {
+    return await processes.run([BINARY, ...argv], {
         cwd,
         env: { ...environment, NO_COLOR: '1', CI: '1', PATH: toolsPath(['ast-grep', 'shellcheck', 'shfmt']) },
         timeoutMs: PLANTED_TIMEOUT_MS,
@@ -103,9 +103,12 @@ test('host binary reads embedded assets after its isolated build checkout is rem
         });
     }
     const options = { cwd: checkout, timeoutMs: 180_000 };
-    const installed = await runProcess([process.execPath, 'install', '--frozen-lockfile', '--ignore-scripts'], options);
+    const installed = await processes.run(
+        [process.execPath, 'install', '--frozen-lockfile', '--ignore-scripts'],
+        options,
+    );
     expect(installed.code, installed.stdout + installed.stderr).toBe(0);
-    const built = await runProcess([process.execPath, 'packages/cli/scripts/command.ts'], options);
+    const built = await processes.run([process.execPath, 'packages/cli/scripts/command.ts'], options);
     expect(built.code, built.stdout + built.stderr).toBe(0);
     const executable = join(sandbox.path, 'gspot');
     copyFileSync(join(checkout, 'dist', host.binary), executable);
@@ -118,7 +121,7 @@ test('host binary reads embedded assets after its isolated build checkout is rem
         timeoutMs: 60_000,
         env: { NODE_PATH: undefined, NODE_OPTIONS: undefined },
     };
-    const initialized = await runProcess([executable, ...EMBEDDED_INIT_ARGS], consumerOptions);
+    const initialized = await processes.run([executable, ...EMBEDDED_INIT_ARGS], consumerOptions);
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
     expect(existsSync(join(consumer, 'gspot.toml'))).toBe(true);
     expect(existsSync(checkout)).toBe(false);
@@ -127,7 +130,10 @@ test('host binary reads embedded assets after its isolated build checkout is rem
         'gspot.toml':
             'version = 1\nlevel = "all"\nkits = ["bash", "python", "swift", "javascript", "typescript", "sql", "naming"]\n',
     });
-    const checked = await runProcess([executable, 'check', '--only', 'naming/identifiers', '--json'], consumerOptions);
+    const checked = await processes.run(
+        [executable, 'check', '--only', 'naming/identifiers', '--json'],
+        consumerOptions,
+    );
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
     const report = JSON.parse(checked.stdout) as { checks: { status: string; findings: { file: string }[] }[] };
     expect(report.checks.map((check) => check.status)).toStrictEqual(['fail']);

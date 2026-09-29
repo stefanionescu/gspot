@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
+import { run } from '#cli/platform/spawn.ts';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { environment } from '#tests/support/release/packages.ts';
-import { runProcess as run } from '#tests/support/cli/command.ts';
 import type { CreateConsumerResult } from '#tests/types/results.ts';
 import { RELEASE_TIMEOUT_MS, OFFLINE_ENVIRONMENT } from '#tests/config/release.ts';
 

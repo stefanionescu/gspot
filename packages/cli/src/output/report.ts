@@ -1,5 +1,6 @@
 // JSON, SARIF, and GitLab Code Quality reports.
 import { join } from 'node:path';
+import { toolPath } from '#cli/platform/paths.ts';
 import type { Finding } from '#cli/types/checks/checks.ts';
 import { REPORT_DIRECTORY } from '#cli/config/platform.ts';
 import packageManifest from '#package' with { type: 'json' };
@@ -33,7 +34,7 @@ function codeQualityText(report: RunReport | PushReport): string {
     ]);
     const seen = new Set<string>();
     const entries = findings
-        .map((finding) => ({ finding, path: finding.file.replaceAll('\\', '/').replace(/^\.\//u, '') }))
+        .map((finding) => ({ finding, path: toolPath(finding.file).replace(/^\.\//u, '') }))
         .filter(
             ({ path }) =>
                 path !== '' && !path.startsWith('/') && !/^[a-zA-Z]:/u.test(path) && !path.split('/').includes('..'),

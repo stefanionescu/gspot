@@ -1,6 +1,6 @@
 import { join } from 'node:path';
-import { PolicyError } from '#cli/policy/read.ts';
 import * as messages from '#cli/policy/messages.ts';
+import { GspotError } from '#cli/platform/errors.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { isReasonAccepted } from '#cli/policy/weaker.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
@@ -57,6 +57,6 @@ export async function commitPolicy(
  * @param command the full command line that carries the reason
  */
 export function requireReason(reason: string | undefined, where: string, command: string): void {
-    if (reason === undefined) throw new PolicyError([messages.missingReason(where, command)]);
-    if (!isReasonAccepted(reason)) throw new PolicyError([messages.refusedReason(where, reason)]);
+    if (reason === undefined) throw new GspotError('policy', [messages.missingReason(where, command)]);
+    if (!isReasonAccepted(reason)) throw new GspotError('policy', [messages.refusedReason(where, reason)]);
 }

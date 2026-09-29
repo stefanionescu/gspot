@@ -1,13 +1,12 @@
 // Dispatch to the built-in engines by `engine =` in the manifest.
 import { join } from 'node:path';
 import type { CheckSpec } from '#cli/types/kits.ts';
+import { GspotError } from '#cli/platform/errors.ts';
 import { banned } from '#cli/checks/prose/banned.ts';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { checkActions } from '#cli/checks/actions.ts';
 import { computeDrift } from '#cli/lifecycle/drift.ts';
-import { MissingToolError } from '#cli/tools/inspect.ts';
 import { valeFindings } from '#cli/checks/prose/vale.ts';
-import { SkippedCheckError } from '#cli/checks/result.ts';
 import { integrityEngine } from '#cli/checks/dispatch.ts';
 import { checkSwiftlint } from '#cli/checks/swift/lint.ts';
 import { namingEngine } from '#cli/checks/naming/engine.ts';
@@ -98,8 +97,8 @@ function engineResult(
 
 // Classify missing tools and unmet prerequisites separately from engine errors.
 function failureOf(name: string, error: unknown): Pick<CheckResult, 'status' | 'note'> {
-    if (error instanceof SkippedCheckError) return { status: 'skipped', note: error.message };
-    if (error instanceof MissingToolError) return { status: 'missing', note: error.message };
+    if (error instanceof GspotError && error.code === 'skipped') return { status: 'skipped', note: error.message };
+    if (error instanceof GspotError && error.code === 'missing-tool') return { status: 'missing', note: error.message };
     return { status: 'error', note: `the ${name} engine failed: ${(error as Error).message}` };
 }
 

@@ -1,7 +1,7 @@
 import pLimit from 'p-limit';
 import { createHash } from 'node:crypto';
 import type { Root } from '#cli/types/platform.ts';
-import { SelectionError } from '#cli/kits/select.ts';
+import { GspotError } from '#cli/platform/errors.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { isValePackageFile } from '#cli/repository/kind.ts';
 import { statSync, constants, readFileSync } from 'node:fs';
@@ -20,14 +20,14 @@ async function assertInternalLink(root: string, path: string): Promise<void> {
     try {
         resolved = await realpath(path);
     } catch (error) {
-        throw new SelectionError([
+        throw new GspotError('selection', [
             `Installed dependency link ${relative(root, path)} cannot be resolved: ${(error as Error).message}. Repair the dependency installation before checking this revision.`,
         ]);
     }
     const target = relative(root, resolved);
     const isExternal = isAbsolute(target) || target === '..' || target.startsWith(`..${sep}`);
     if (isExternal)
-        throw new SelectionError([
+        throw new GspotError('selection', [
             'Installed dependencies contain an external link. Prepare isolated dependencies for the selected revision.',
         ]);
 }
@@ -43,14 +43,14 @@ async function validateCopiedLinks(root: string, directory: string, cancelSignal
 
 function assertDependencyReady(revisionRoot: string, folder: string, pending: string[]): void {
     if (basename(folder) === '.gspot' && pending.includes('npm'))
-        throw new SelectionError([
+        throw new GspotError('selection', [
             'Tool installation is incomplete. Run gspot install before checking staged content.',
         ]);
     if (
         !LOCKS.some((lock) => statSync(join(revisionRoot, folder, lock), { throwIfNoEntry: false }) !== undefined) &&
         !LOCKS.some((lock) => statSync(join(revisionRoot, lock), { throwIfNoEntry: false }) !== undefined)
     )
-        throw new SelectionError([
+        throw new GspotError('selection', [
             'A revision dependency project has no lock to verify its installed environment. Prepare locked dependencies for this revision.',
         ]);
 }
@@ -60,7 +60,7 @@ function assertSameValeConfiguration(installed: Root, destination: Root): void {
     const current = installed.read(VALE_CONFIGURATION);
     const selected = destination.read(VALE_CONFIGURATION);
     if (current === undefined || selected === undefined || !current.bytes.equals(selected.bytes))
-        throw new SelectionError([
+        throw new GspotError('selection', [
             'Installed Vale packages do not match the revision configuration. Prepare this revision separately and run gspot apply.',
         ]);
 }
@@ -74,7 +74,7 @@ function copyVerifiedPackage(installed: Root, destination: Root, entry: Ownershi
         createHash('sha256').update(content.bytes).digest('hex') !== entry.installed.hash ||
         content.mode !== entry.installed.mode
     )
-        throw new SelectionError([
+        throw new GspotError('selection', [
             `Installed Vale package ${entry.path} is missing or edited. Repair it before checking this revision.`,
         ]);
     destination.write(entry.path, content, undefined);
@@ -98,7 +98,7 @@ function assertManifestsUnchanged(root: string, installed: Root, selected: Root,
             !readFileSync(installed.source(path)).equals(readFileSync(selected.source(path))),
     );
     if (changed)
-        throw new SelectionError([
+        throw new GspotError('selection', [
             'Installed dependencies do not match the revision manifests and locks. Prepare this revision in a separate worktree and run gspot install.',
         ]);
 }
@@ -118,7 +118,7 @@ async function copyDirectoryLink(source: string, target: string): Promise<boolea
 
 async function copyTree(source: string, target: string, cancelSignal?: AbortSignal): Promise<void> {
     if (statSync(target, { throwIfNoEntry: false }) !== undefined)
-        throw new SelectionError([
+        throw new GspotError('selection', [
             'Installed dependencies are tracked in the selected revision. Untrack them before checking the index.',
         ]);
     const sourceStat = await stat(source);

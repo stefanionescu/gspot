@@ -1,6 +1,7 @@
 // The compiler directory a Swift build reuses between runs: locked, free of links, and holding only the sources wanted.
 import { join, relative } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
+import { toPosix } from '#cli/platform/paths.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import type { Read, Root } from '#cli/types/platform.ts';
@@ -92,7 +93,7 @@ export function openBuildCache(folder: string): Root {
     mkdirSync(home, { recursive: true });
     const boundary = openRoot(home);
     try {
-        boundary.mkdir(relative(home, folder).replaceAll('\\', '/'), PRIVATE_DIRECTORY);
+        boundary.mkdir(toPosix(relative(home, folder)), PRIVATE_DIRECTORY);
     } finally {
         boundary.close();
     }

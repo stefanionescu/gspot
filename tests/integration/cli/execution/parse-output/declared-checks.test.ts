@@ -1,11 +1,11 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import { GspotError } from '#cli/platform/errors.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { checkedFindings } from '#cli/execution/broken-tool.ts';
-import { ToolOutputError } from '#cli/execution/output/tool-formats.ts';
 
 test.each([
     '403 API rate limit exceeded',
@@ -29,7 +29,7 @@ test.each([
         missing: false,
         duration: 1,
     };
-    expect(() => checkedFindings(planned, result, [sandbox.path, sandbox.path])).toThrow(ToolOutputError);
+    expect(() => checkedFindings(planned, result, [sandbox.path, sandbox.path])).toThrow(GspotError);
     expect(
         checkedFindings(planned, { ...result, stderr: 'invalid action pin: .github/workflows/check.yml:4' }, [
             sandbox.path,
@@ -74,9 +74,9 @@ test('spelling distinguishes native findings from fatal exits for configuration 
                 sandbox.path,
                 sandbox.path,
             ]),
-        ).toThrow(ToolOutputError);
+        ).toThrow(GspotError);
         expect(() => checkedFindings(check, { ...result, stdout: '' }, [sandbox.path, sandbox.path])).toThrow(
-            ToolOutputError,
+            GspotError,
         );
         expect(checkedFindings(check, { ...result, stdout: '', code: 0 }, [sandbox.path, sandbox.path])).toStrictEqual(
             [],
@@ -117,7 +117,7 @@ test.each(
                 sandbox.path,
                 sandbox.path,
             ]),
-        ).toThrow(ToolOutputError);
+        ).toThrow(GspotError);
         expect(() =>
             checkedFindings(
                 planned,

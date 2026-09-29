@@ -1,6 +1,7 @@
 // What init proposes before anything is written: the detection, the selection, the policy text, and the plan.
 import { print } from '#cli/output/messages.ts';
 import * as messages from '#cli/policy/messages.ts';
+import { GspotError } from '#cli/platform/errors.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
 import { unknownLanguages } from '#cli/kits/detect.ts';
@@ -17,9 +18,9 @@ import { proposedRunnerTasks } from '#cli/generation/runner/plan.ts';
 import { plan, buildInitPlan } from '#cli/commands/init/plan/build.ts';
 import { replacedConfiguration } from '#cli/commands/init/replaced.ts';
 import { askKits, askInitQuestions } from '#cli/commands/init/questions.ts';
+import { parsePolicyText, assertPolicyComplete } from '#cli/policy/read.ts';
 import { isOwned, existingTooling } from '#cli/repository/existing-tooling.ts';
 import type { TomlTable, ExistingTooling } from '#cli/types/repository/repository.ts';
-import { PolicyError, parsePolicyText, assertPolicyComplete } from '#cli/policy/read.ts';
 import type { Planning, InitInputs, InitOptions, InitPrepared, InitSelection } from '#cli/types/commands/init.ts';
 
 function assertCleanTree(root: string, options: InitOptions): void {
@@ -27,7 +28,7 @@ function assertCleanTree(root: string, options: InitOptions): void {
     const status = runBlocking(['git', 'status', '--porcelain'], { cwd: root });
     if (status.code !== 0) throw new Error(`Git status failed (exit ${String(status.code)}): ${status.stderr.trim()}`);
     const changed = status.stdout.split('\n').filter((line) => line.trim() !== '');
-    if (changed.length > 0) throw new PolicyError([messages.dirtyTree(changed.length)]);
+    if (changed.length > 0) throw new GspotError('policy', [messages.dirtyTree(changed.length)]);
 }
 
 // Asks which kits to keep, and selects again when the person changed the list.

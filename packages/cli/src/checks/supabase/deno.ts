@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { statSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { toPosix } from '#cli/platform/paths.ts';
 import { CHECK_LOCATION } from '#cli/config/checks/supabase.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import { join, isAbsolute, relative as relativePath } from 'node:path';
@@ -26,7 +27,7 @@ function denoFileArguments(root: string, folder: string): string[] {
 
 function relative(root: string, locator: string): string {
     const path = locator.startsWith('file://') ? fileURLToPath(locator) : locator;
-    const local = relativePath(root, path).replaceAll('\\', '/');
+    const local = toPosix(relativePath(root, path));
     return local === '' || local.startsWith('../') || isAbsolute(local) ? path : local;
 }
 

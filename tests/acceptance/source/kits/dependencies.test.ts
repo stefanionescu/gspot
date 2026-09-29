@@ -2,12 +2,13 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import * as processes from '#cli/platform/spawn.ts';
+import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import type { FindingCase } from '#tests/types/cli.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
-import { run, runProcess } from '#tests/support/cli/command.ts';
 import { INVALID } from '#tests/config/acceptance/source/kits/kits.ts';
 import { toolsPath, installAtLevel } from '#tests/support/cli/tools.ts';
 import { containing, textContaining } from '#tests/support/expectations.ts';
@@ -166,7 +167,7 @@ test(
                 ],
             },
         ]);
-        const locked = await runProcess([process.execPath, 'install', '--lockfile-only', '--ignore-scripts'], {
+        const locked = await processes.run([process.execPath, 'install', '--lockfile-only', '--ignore-scripts'], {
             cwd: sandbox.path,
             env: environment,
         });

@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import { parse as parseToml } from 'smol-toml';
 import { similar } from '#cli/policy/similar.ts';
 import * as messages from '#cli/policy/messages.ts';
+import { GspotError } from '#cli/platform/errors.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
 import type { Profile } from '#cli/types/policy/profiles.ts';
 import { profileSchema, isRepositoryPath } from '#cli/policy/profiles/schema.ts';
@@ -18,20 +19,20 @@ function githubUrl(reference: string): string {
 
 async function fetched(url: string): Promise<string> {
     const response = await fetch(url, { signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) });
-    if (!response.ok) throw new ProfileError([`The profile at ${url} answered ${String(response.status)}.`]);
+    if (!response.ok) throw new GspotError('profile', [`The profile at ${url} answered ${String(response.status)}.`]);
     return response.text();
 }
 
 async function profileText(source: string, cwd: string): Promise<string> {
     if (source.startsWith(GITHUB_PREFIX)) return fetched(githubUrl(source));
     if (source.startsWith('https://')) return fetched(source);
-    if (source.startsWith('http://')) throw new ProfileError(['A profile is fetched over https, not http.']);
+    if (source.startsWith('http://')) throw new GspotError('profile', ['A profile is fetched over https, not http.']);
     const path = resolve(cwd, source);
     try {
         return readFileSync(path, 'utf8');
     } catch (error) {
         if (error instanceof Error && 'code' in error && error.code === 'ENOENT')
-            throw new ProfileError([`There is no profile at ${source}.`]);
+            throw new GspotError('profile', [`There is no profile at ${source}.`]);
         throw error;
     }
 }
@@ -48,21 +49,6 @@ function pathProblems(value: unknown, where: string): string[] {
     });
 }
 
-/** Every problem a profile has, as one error with one line per problem. */
-export class ProfileError extends Error {
-    readonly problems: string[];
-
-    /**
-     * Joins the problems into the message and keeps them as a list.
-     * @param problems the problems in plain English
-     */
-    constructor(problems: string[]) {
-        super(problems.join('\n'));
-        this.name = 'ProfileError';
-        this.problems = problems;
-    }
-}
-
 /**
  * Parses and validates the text of a profile. Throws ProfileError with every problem found.
  * @param text the TOML text
@@ -74,7 +60,7 @@ export function parseProfile(text: string, source: string): Profile {
     try {
         raw = parseToml(text);
     } catch (error) {
-        throw new ProfileError([messages.tomlSyntax(source, (error as Error).message)]);
+        throw new GspotError('profile', [messages.tomlSyntax(source, (error as Error).message)]);
     }
     const result = profileSchema.safeParse(raw);
     const shape = result.success
@@ -89,7 +75,7 @@ export function parseProfile(text: string, source: string): Profile {
         .filter((id) => !known.includes(id))
         .map((id) => messages.unknownKit(id, similar(id, known)));
     const problems = [...shape, ...configurations, ...pathProblems(raw, '')];
-    if (!result.success || problems.length > 0) throw new ProfileError(problems);
+    if (!result.success || problems.length > 0) throw new GspotError('profile', problems);
     return { source, digest: new Bun.CryptoHasher('sha256').update(text).digest('hex'), tables: result.data };
 }
 

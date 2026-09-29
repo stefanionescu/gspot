@@ -3,9 +3,10 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { rmSync, readFileSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
+import * as processes from '#cli/platform/spawn.ts';
+import { run } from '#tests/support/cli/command.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
-import { run, runProcess } from '#tests/support/cli/command.ts';
 import { installPrivateTools } from '#tests/support/cli/tools.ts';
 import { prepareLicenseProject } from '#tests/support/cli/licenses.ts';
 import { containingAll, textContaining } from '#tests/support/expectations.ts';
@@ -190,12 +191,12 @@ test.each(['recommended', 'all'])(
         const command = ['check', '--stage', 'push', '--only', 'licenses/packages', '--no-cache', '--json'];
         const unavailable = await run(root, command);
         expect(unavailable.code, unavailable.stdout + unavailable.stderr).toBe(2);
-        const created = await runProcess(['uv', 'venv', 'app/.venv'], { cwd: root });
+        const created = await processes.run(['uv', 'venv', 'app/.venv'], { cwd: root });
         expect(created.code, created.stderr).toBe(0);
         const empty = await run(root, command);
         expect(empty.code, empty.stdout + empty.stderr).toBe(2);
         const python = join(root, 'app/.venv', process.platform === 'win32' ? 'Scripts/python.exe' : 'bin/python');
-        const located = await runProcess(
+        const located = await processes.run(
             [python, '-I', '-c', 'import sysconfig; print(sysconfig.get_path("purelib"))'],
             { cwd: root },
         );

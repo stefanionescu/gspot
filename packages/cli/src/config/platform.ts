@@ -41,7 +41,6 @@ export const GRAMMAR_SOURCES: Record<string, string> = {
     'javascript.wasm': 'tree-sitter-javascript/tree-sitter-javascript.wasm',
     'python.wasm': 'tree-sitter-python/tree-sitter-python.wasm',
     'ruby.wasm': 'tree-sitter-ruby/tree-sitter-ruby.wasm',
-    'toml.wasm': '@tree-sitter-grammars/tree-sitter-toml/tree-sitter-toml.wasm',
     'tsx.wasm': 'tree-sitter-typescript/tree-sitter-tsx.wasm',
     'typescript.wasm': 'tree-sitter-typescript/tree-sitter-typescript.wasm',
     'web-tree-sitter.wasm': 'web-tree-sitter/web-tree-sitter.wasm',

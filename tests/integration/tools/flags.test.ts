@@ -3,9 +3,9 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readPolicy } from '#cli/policy/read.ts';
 import { testdir, createFileTree } from 'testdirs';
+import * as processes from '#cli/platform/spawn.ts';
 import { inspectTool } from '#cli/tools/inspect.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
-import { runProcess } from '#tests/support/cli/command.ts';
 import { privateToolInstallation } from '#cli/tools/pins.ts';
 import { test, expect, afterAll, beforeAll } from 'bun:test';
 import { toolShipsHere } from '#tests/support/cli/platforms.ts';
@@ -50,7 +50,7 @@ async function helpText(executable: string, subcommands: string[], flags: string
     const groups = [...new Set(flags.filter((flag) => flag.includes('.')).map((flag) => flag.split('.', 1)[0]!))];
     const pages = await Promise.all(
         [[], ...groups.map((group) => [group])].map((extra) =>
-            runProcess([executable, ...subcommands, '--help', ...extra], { cwd: root, timeoutMs: HELP_TIMEOUT_MS }),
+            processes.run([executable, ...subcommands, '--help', ...extra], { cwd: root, timeoutMs: HELP_TIMEOUT_MS }),
         ),
     );
     const text = pages.map((page) => `${page.stdout}\n${page.stderr}`).join('\n');

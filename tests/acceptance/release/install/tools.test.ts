@@ -1,11 +1,12 @@
 // Installs built packages from an isolated registry: private tool installation preserves authored metadata and native wrappers run.
 import { test, expect } from 'bun:test';
 import { fileURLToPath } from 'node:url';
+import { run } from '#cli/platform/spawn.ts';
+import { toPosix } from '#cli/platform/paths.ts';
 import { join, dirname, relative } from 'node:path';
 import { reportSchema } from '#cli/execution/report.ts';
 import { RELEASE_TIMEOUT_MS } from '#tests/config/release.ts';
 import { environment } from '#tests/support/release/packages.ts';
-import { runProcess as run } from '#tests/support/cli/command.ts';
 import type { InstallJson } from '#cli/types/commands/commands.ts';
 import { createConsumer } from '#tests/support/release/consumer.ts';
 import { getPublishedRelease } from '#tests/support/release/published.ts';
@@ -135,9 +136,9 @@ test(
                 fixable: true,
             },
         ]);
-        expect(
-            relative(realpathSync(nativeConsumer), tomlReport.checks[0]!.command![0]!).replaceAll('\\', '/'),
-        ).toStartWith('.gspot/node_modules/');
+        expect(toPosix(relative(realpathSync(nativeConsumer), tomlReport.checks[0]!.command![0]!))).toStartWith(
+            '.gspot/node_modules/',
+        );
         const fixedToml = await run([...tomlFormat, '--fix'], nativeOptions);
         expect(fixedToml.code, fixedToml.stdout + fixedToml.stderr).toBe(0);
         expect(readFileSync(join(nativeConsumer, 'settings.toml'), 'utf8')).toBe('a = 1\n');
@@ -239,9 +240,9 @@ test(
                 fixable: false,
             },
         ]);
-        expect(
-            relative(realpathSync(nativeConsumer), whitespaceReport.checks[0]!.command![0]!).replaceAll('\\', '/'),
-        ).toStartWith('.gspot/node_modules/');
+        expect(toPosix(relative(realpathSync(nativeConsumer), whitespaceReport.checks[0]!.command![0]!))).toStartWith(
+            '.gspot/node_modules/',
+        );
         writeFileSync(join(nativeConsumer, 'notes.json'), '"text"\n');
         const cleanWhitespace = await run(whitespaceCommand, nativeOptions);
         expect(cleanWhitespace.code, cleanWhitespace.stdout + cleanWhitespace.stderr).toBe(0);

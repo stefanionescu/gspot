@@ -4,8 +4,8 @@ import { testdir } from 'testdirs';
 import { readFileSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { git } from '#tests/support/cli/git.ts';
+import * as processes from '#cli/platform/spawn.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
-import { runProcess } from '#tests/support/cli/command.ts';
 import { pushReportSchema } from '#cli/execution/report.ts';
 import { preparePushRepository } from '#tests/support/cli/push.ts';
 import type { CommandFailureJson } from '#cli/types/commands/commands.ts';
@@ -17,7 +17,7 @@ test(
         const { base, reviewed, broken, command, zero } = await preparePushRepository(sandbox.path);
         expect(git(sandbox.path, ['remote', 'add', 'origin', 'unused']).code).toBe(0);
         expect(git(sandbox.path, ['update-ref', 'refs/remotes/origin/main', base]).code).toBe(0);
-        const createdRef = await runProcess(command, {
+        const createdRef = await processes.run(command, {
             cwd: sandbox.path,
             stdin: `refs/heads/reviewed ${reviewed} refs/heads/new ${zero}\n`,
         });
@@ -28,7 +28,7 @@ test(
         );
         expect(git(sandbox.path, ['update-ref', '-d', 'refs/remotes/origin/main']).code).toBe(0);
         expect(git(sandbox.path, ['update-ref', 'refs/fetched/origin/main', base]).code).toBe(0);
-        const mapped = await runProcess(command, {
+        const mapped = await processes.run(command, {
             cwd: sandbox.path,
             stdin: `refs/heads/reviewed ${reviewed} refs/heads/new ${zero}\n`,
         });
@@ -58,7 +58,7 @@ test(
         );
         expect(git(sandbox.path, ['update-ref', 'refs/fetched/origin/main', base]).code).toBe(0);
         expect(git(sandbox.path, ['config', '--add', 'remote.origin.fetch', '^refs/heads/main']).code).toBe(0);
-        const excluded = await runProcess(command, {
+        const excluded = await processes.run(command, {
             cwd: sandbox.path,
             stdin: `refs/heads/reviewed ${reviewed} refs/heads/new ${zero}\n`,
         });
@@ -72,7 +72,7 @@ test(
         expect(
             git(sandbox.path, ['config', 'remote.origin.fetch', '+refs/heads/main:refs/fetched/origin/main']).code,
         ).toBe(0);
-        const exact = await runProcess(command, {
+        const exact = await processes.run(command, {
             cwd: sandbox.path,
             stdin: `refs/heads/reviewed ${reviewed} refs/heads/new ${zero}\n`,
         });
@@ -96,7 +96,7 @@ test(
     async () => {
         await using sandbox = await testdir();
         const { reviewed, broken, command, zero } = await preparePushRepository(sandbox.path);
-        const noFetched = await runProcess(command.slice(0, -2).concat('unseen', 'unused'), {
+        const noFetched = await processes.run(command.slice(0, -2).concat('unseen', 'unused'), {
             cwd: sandbox.path,
             stdin: `refs/heads/reviewed ${reviewed} refs/heads/new ${zero}\n`,
         });
@@ -126,13 +126,13 @@ test(
         const { base, reviewed, broken, command, zero } = await preparePushRepository(sandbox.path);
         expect(git(sandbox.path, ['tag', '-a', '-m', 'reviewed tag', 'reviewed-tag', reviewed]).code).toBe(0);
         const tag = git(sandbox.path, ['rev-parse', 'reviewed-tag']).stdout.trim();
-        const tagged = await runProcess(command, {
+        const tagged = await processes.run(command, {
             cwd: sandbox.path,
             stdin: `refs/tags/reviewed-tag ${tag} refs/tags/reviewed-tag ${base}\n`,
         });
         expect(tagged.code, tagged.stdout + tagged.stderr).toBe(0);
         expect(pushReportSchema.parse(JSON.parse(tagged.stdout)).revisions[0]!.object).toBe(reviewed);
-        const deleted = await runProcess(command, {
+        const deleted = await processes.run(command, {
             cwd: sandbox.path,
             stdin: `(delete) ${zero} refs/heads/main ${broken}\n`,
         });
@@ -141,7 +141,7 @@ test(
         expect(skipped.revisions).toStrictEqual([]);
         expect(skipped.notApplicable[0]!.reason).toBe('deleted ref');
         const blob = git(sandbox.path, ['hash-object', '-w', 'changed.sh']).stdout.trim();
-        const nonCommit = await runProcess(command, {
+        const nonCommit = await processes.run(command, {
             cwd: sandbox.path,
             stdin: `refs/tags/data ${blob} refs/tags/data ${zero}\n`,
         });
@@ -165,12 +165,12 @@ test(
     async () => {
         await using sandbox = await testdir();
         const { base, reviewed, broken, command } = await preparePushRepository(sandbox.path);
-        const missing = await runProcess(command, {
+        const missing = await processes.run(command, {
             cwd: sandbox.path,
             stdin: `refs/heads/reviewed ${reviewed} refs/heads/main ${'f'.repeat(base.length)}\n`,
         });
         expect(missing.code, missing.stdout + missing.stderr).toBe(2);
-        expect((JSON.parse(missing.stdout) as CommandFailureJson).error).toBe('SelectionError');
+        expect((JSON.parse(missing.stdout) as CommandFailureJson).error).toBe('selection');
         expect({
             head: git(sandbox.path, ['rev-parse', 'HEAD']).stdout.trim(),
             policy: readFileSync(join(sandbox.path, 'gspot.toml'), 'utf8'),

@@ -1,6 +1,6 @@
 // Checking every revision a push sends, each in its own snapshot, with one report for the push.
 import { writeReport } from '#cli/output/report.ts';
-import { SelectionError } from '#cli/kits/select.ts';
+import { GspotError } from '#cli/platform/errors.ts';
 import { CANCELED_EXIT } from '#cli/config/commands/check.ts';
 import { checkContent } from '#cli/commands/check/content.ts';
 import type { PushReport } from '#cli/types/execution/execution.ts';
@@ -19,7 +19,7 @@ function assertPushOptions(options: CheckOptions): void {
         options.stage !== undefined ||
         options.messageFile !== undefined;
     if (hasConflictingOptions)
-        throw new SelectionError([
+        throw new GspotError('selection', [
             'Pre-push object checks cannot be combined with staged, changed, fix, stage, or message-file options.',
         ]);
 }

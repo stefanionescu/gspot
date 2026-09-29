@@ -1,6 +1,6 @@
-import { globbySync } from 'globby';
 import { fileURLToPath } from 'node:url';
 import { join, relative } from 'node:path';
+import { globPaths } from '#cli/platform/paths.ts';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { grammarPath, GRAMMAR_NAMES } from '#cli/platform/assets.ts';
 
@@ -21,10 +21,13 @@ export const grammarAssets: Record<string, string> = Object.fromEntries(
  */
 export function writeEntry(): string {
     const assets = [
-        ...globbySync(
+        ...globPaths(
+            root,
             ASSET_FOLDERS.map((folder) => `${folder}/**/*`),
-            { cwd: root, absolute: true, dot: true },
-        ).toSorted((left, right) => left.localeCompare(right)),
+            { dot: true },
+        )
+            .map((path) => join(root, path))
+            .toSorted((left, right) => left.localeCompare(right)),
         ...Object.keys(grammarAssets),
         join(here, '.build/configuration-process.js'),
     ];

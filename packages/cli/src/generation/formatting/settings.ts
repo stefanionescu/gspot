@@ -1,5 +1,6 @@
 // The Prettier and EditorConfig settings a policy generates, with authored overrides carried along.
 import { dirname, relative } from 'node:path';
+import { toPosix } from '#cli/platform/paths.ts';
 import { compact } from '#cli/policy/normalize.ts';
 import { shippedFormat } from '#cli/kits/listing.ts';
 import { expandedPaths } from '#cli/repository/paths.ts';
@@ -99,7 +100,7 @@ export function prettierConfiguration(
     extra: Record<string, unknown> | undefined,
     plugins: PrettierPlugin[],
 ): Record<string, unknown> {
-    const prefix = relative(dirname(targetPath), '.').replaceAll('\\', '/');
+    const prefix = toPosix(relative(dirname(targetPath), '.'));
     // eslint-disable-next-line gspot/no-trivial-functions -- reason: Builds a template; inlining it nests a template inside a template.
     const fromConfig = (pattern: string): string => (prefix === '' ? pattern : `${prefix}/${pattern}`);
     // The reason documents the policy override; it is not a Prettier option.

@@ -1,13 +1,14 @@
 import { createHash } from 'node:crypto';
 import { createFileTree } from 'testdirs';
 import { join, delimiter } from 'node:path';
+import * as processes from '#cli/platform/spawn.ts';
 import { gitOutput } from '#tests/support/cli/git.ts';
 import type { SpawnOutcome } from '#tests/types/cli.ts';
+import { run, gspot } from '#tests/support/cli/command.ts';
 import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import type { PrepareCiProjectResult } from '#tests/types/results.ts';
 import type { Generated } from '#tests/types/acceptance/source/cli.ts';
-import { run, gspot, runProcess } from '#tests/support/cli/command.ts';
 
 /** Commits authored CI inputs and returns the exact object checked by the generated job. */
 export function commitCiSource(root: string, text: string): string {
@@ -119,7 +120,7 @@ export async function runCiJob(
         provider === 'gitlab'
             ? generated.gspot.script
             : generated.jobs['check-ubuntu']!.steps.flatMap((step) => (step.run === undefined ? [] : [step.run]));
-    return await runProcess(['/bin/bash', '-e', '-c', script.join('\n')], {
+    return await processes.run(['/bin/bash', '-e', '-c', script.join('\n')], {
         cwd: root,
         env: {
             PATH: `${directory}${delimiter}${environmentVariables()['PATH'] ?? ''}`,

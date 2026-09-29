@@ -2,6 +2,7 @@
 import { z } from 'zod';
 import { resolve, relative } from 'node:path';
 import { toPosix } from '#cli/platform/paths.ts';
+import { GspotError } from '#cli/platform/errors.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { codePoints } from '#cli/platform/code-points.ts';
 import type { Finding } from '#cli/types/checks/checks.ts';
@@ -144,9 +145,13 @@ export function markdownlintFindings(
             return markdownlintFinding(check, help, entry, file, lines);
         });
     } catch (error) {
-        throw new ToolOutputError('Markdownlint returned invalid structured findings or unavailable source.', {
-            cause: error,
-        });
+        throw new GspotError(
+            'tool-output',
+            'Markdownlint returned invalid structured findings or unavailable source.',
+            {
+                cause: error,
+            },
+        );
     }
 }
 
@@ -172,9 +177,13 @@ export function typosFindings(check: string, stdout: string, help: string, root:
                 return typoFinding(check, help, entry, path, typoPosition(root, path, entry, linesByPath));
             });
     } catch (error) {
-        throw new ToolOutputError('The typos output holds invalid structured findings or an unavailable source.', {
-            cause: error,
-        });
+        throw new GspotError(
+            'tool-output',
+            'The typos output holds invalid structured findings or an unavailable source.',
+            {
+                cause: error,
+            },
+        );
     }
 }
 
@@ -200,13 +209,11 @@ export function trufflehogFindings(check: string, stdout: string, help: string):
                 fixable: false,
             });
         } catch {
-            throw new ToolOutputError('TruffleHog returned invalid structured findings; raw output was withheld.');
+            throw new GspotError(
+                'tool-output',
+                'TruffleHog returned invalid structured findings; raw output was withheld.',
+            );
         }
     }
     return findings;
-}
-
-/** A tool response that cannot be interpreted safely as findings. */
-export class ToolOutputError extends Error {
-    override name = 'ToolOutputError';
 }

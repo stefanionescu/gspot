@@ -1,20 +1,10 @@
 // The clack questions, asked only in a terminal and never under --yes.
 import { note } from '#cli/output/messages.ts';
 import { isCi } from '#cli/platform/environment.ts';
+import { GspotError } from '#cli/platform/errors.ts';
 import type { Choice } from '#cli/types/commands/commands.ts';
 import { select, confirm, multiselect } from '@clack/prompts';
 
-/** Thrown when a question cannot be answered: no terminal to ask in, or the person cancelled. The command exits 2. */
-export class PromptError extends Error {
-    /**
-     * Wraps the message.
-     * @param text the message
-     */
-    constructor(text: string) {
-        super(text);
-        this.name = 'PromptError';
-    }
-}
 /**
  * A yes or no question.
  * @param question the question
@@ -31,9 +21,12 @@ export async function askConfirmation(
 ): Promise<boolean> {
     if (useDefaults) return defaultAnswer;
     if (!(process.stdin.isTTY && process.stdout.isTTY && !isCi()))
-        throw new PromptError(`${question} There is no terminal to ask in. Pass ${flag}, or --yes to take every plan.`);
+        throw new GspotError(
+            'prompt',
+            `${question} There is no terminal to ask in. Pass ${flag}, or --yes to take every plan.`,
+        );
     const answer = await confirm({ message: question, initialValue: defaultAnswer });
-    if (typeof answer !== 'boolean') throw new PromptError(`${question} Cancelled; nothing written.`);
+    if (typeof answer !== 'boolean') throw new GspotError('prompt', `${question} Cancelled; nothing written.`);
     return answer;
 }
 
@@ -55,14 +48,17 @@ export async function askChoice<T extends string>(
 ): Promise<T> {
     if (useDefaults) return initial;
     if (!(process.stdin.isTTY && process.stdout.isTTY && !isCi()))
-        throw new PromptError(`${question} There is no terminal to ask in. Pass ${flag}, or --yes to take every plan.`);
+        throw new GspotError(
+            'prompt',
+            `${question} There is no terminal to ask in. Pass ${flag}, or --yes to take every plan.`,
+        );
     const options = choices.map((choice) => ({
         value: choice.value,
         label: choice.label,
         ...(choice.hint === undefined ? {} : { hint: choice.hint }),
     })) as Parameters<typeof select<T>>[0]['options'];
     const answer = await select<T>({ message: question, options, initialValue: initial });
-    if (typeof answer === 'symbol') throw new PromptError(`${question} Cancelled; nothing written.`);
+    if (typeof answer === 'symbol') throw new GspotError('prompt', `${question} Cancelled; nothing written.`);
     return answer;
 }
 
@@ -92,7 +88,7 @@ export async function askMany<T extends string>(
         ...(choice.hint === undefined ? {} : { hint: choice.hint }),
     })) as Parameters<typeof multiselect<T>>[0]['options'];
     const answer = await multiselect<T>({ message: question, options, initialValues: initial, required: false });
-    if (typeof answer === 'symbol') throw new PromptError(`${question} Cancelled; nothing written.`);
+    if (typeof answer === 'symbol') throw new GspotError('prompt', `${question} Cancelled; nothing written.`);
     note(`Selected: ${answer.length === 0 ? 'none' : answer.join(', ')}. Change with ${flag}.`);
     return answer;
 }

@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { gzipSync } from 'node:zlib';
+import { toPosix } from '#cli/platform/paths.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { mutationPath } from '#cli/platform/safe-paths.ts';
@@ -11,7 +12,7 @@ import { filesUnder, requireSiteBuild } from '#cli/checks/static-site/build.ts';
 import { BYTES_PER_KB, SITEMAP_LOCATION } from '#cli/config/checks/static-site.ts';
 
 function relative(input: EngineInput, build: SiteBuild, absolute: string): string {
-    const path = relativePath(build.cwd, absolute).replaceAll('\\', '/');
+    const path = toPosix(relativePath(build.cwd, absolute));
     mutationPath(path);
     return input.scope === '' ? path : `${input.scope}/${path}`;
 }
@@ -55,7 +56,7 @@ async function brokenLinks(input: EngineInput, isExternal: boolean): Promise<Fin
         .filter((link) => link.state === 'BROKEN')
         .map((link) => ({
             check: input.spec.name,
-            file: (link.parent ?? '').replaceAll('\\', '/'),
+            file: toPosix(link.parent ?? ''),
             line: 1,
             rule: 'broken-link',
             message: `${link.url} answers ${String(link.status ?? 0)}.`,

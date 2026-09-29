@@ -59,15 +59,3 @@ export function pythonPins(manifests: Manifest[]): string[] {
         return installation?.kind === 'python' ? [`${installation.name}==${installation.version}`] : [];
     });
 }
-
-/** Installation failure for validated, locked tools. */
-export class InstallationError extends Error {
-    /**
-     * Names the installation that failed.
-     * @param text what the installer reported
-     */
-    constructor(text: string) {
-        super(text);
-        this.name = 'InstallationError';
-    }
-}

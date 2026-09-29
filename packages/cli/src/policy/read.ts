@@ -1,6 +1,7 @@
 import type { z } from 'zod';
 import { join } from 'node:path';
 import * as messages from '#cli/policy/messages.ts';
+import { GspotError } from '#cli/platform/errors.ts';
 import { normalize } from '#cli/policy/normalize.ts';
 import { policySchema } from '#cli/policy/schema.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
@@ -45,10 +46,10 @@ function validatedRaw(text: string, path: string): RawPolicy {
                   )
                 : [`${path}:${policyLocation(locations, segments)}: ${issueText(issue)}`];
         });
-        throw new PolicyError(problems);
+        throw new GspotError('policy', problems);
     }
     if (result.data.version !== 1)
-        throw new PolicyError([
+        throw new GspotError('policy', [
             `${path}:${policyLocation(sourceLocations(text), ['version'])}: ${messages.versionUnsupported(result.data.version)}`,
         ]);
     return result.data;
@@ -57,7 +58,7 @@ function validatedRaw(text: string, path: string): RawPolicy {
 function completePolicy(text: string, path: string, raw: RawPolicy): Policy {
     const policy = normalize(raw);
     const unknown = unknownKitProblems(policy);
-    if (unknown.length > 0) throw new PolicyError(problemLines(text, path, unknown));
+    if (unknown.length > 0) throw new GspotError('policy', problemLines(text, path, unknown));
     return policy;
 }
 
@@ -114,22 +115,9 @@ export function parseTomlText(text: string, path: string): Record<string, unknow
     } catch (error) {
         if (!(error instanceof TomlError)) throw error;
         const detail = error.message.split('\n', 1).join('').replace('Invalid TOML document: ', '');
-        throw new PolicyError([messages.tomlSyntax(`${path}:${String(error.line)}:${String(error.column)}`, detail)]);
-    }
-}
-
-/** Every problem a policy file has, as one error with one line per problem. */
-export class PolicyError extends Error {
-    readonly problems: string[];
-
-    /**
-     * Joins the problems into the message and keeps them as a list.
-     * @param problems the problems in plain English
-     */
-    constructor(problems: string[]) {
-        super(problems.join('\n'));
-        this.name = 'PolicyError';
-        this.problems = problems;
+        throw new GspotError('policy', [
+            messages.tomlSyntax(`${path}:${String(error.line)}:${String(error.column)}`, detail),
+        ]);
     }
 }
 
@@ -144,7 +132,7 @@ export class PolicyError extends Error {
 export function parsePolicyText(text: string, path: string, root?: string): Policy {
     const policy = normalize(validatedRaw(text, path));
     const problems = [...reasonProblems(policy), ...(root === undefined ? [] : pathProblems(root, policy))];
-    if (problems.length > 0) throw new PolicyError(problemLines(text, path, problems));
+    if (problems.length > 0) throw new GspotError('policy', problemLines(text, path, problems));
     return policy;
 }
 
@@ -178,7 +166,7 @@ export function readPolicyText(
     if (found.length === 0) return { policy: complete, problems: [] };
     // A configurations list is settled by a root value, never by dropping the list.
     if (found.some((problem) => ownerOf(problem.path).at(-1) === 'kits'))
-        throw new PolicyError(problemLines(text, path, found));
+        throw new GspotError('policy', problemLines(text, path, found));
     const locations = sourceLocations(text);
     const problems = found.map((problem) => ({ ...problem, ...policyPosition(locations, problem.path) }));
     const owners = new Map(found.map((problem) => [JSON.stringify(ownerOf(problem.path)), ownerOf(problem.path)]));
@@ -189,7 +177,7 @@ export function readPolicyText(
         ...(root === undefined ? [] : pathProblems(root, policy)),
         ...completenessProblems(policy),
     ];
-    if (remaining.length > 0) throw new PolicyError(problemLines(text, path, remaining));
+    if (remaining.length > 0) throw new GspotError('policy', problemLines(text, path, remaining));
     return { policy, problems };
 }
 
@@ -199,9 +187,10 @@ export function readPolicyText(
  */
 export function assertPolicyComplete(source: Pick<PolicyFiles, 'policy' | 'text' | 'path'>): void {
     const unknown = unknownKitProblems(source.policy);
-    if (unknown.length > 0) throw new PolicyError(problemLines(source.text, source.path, unknown));
+    if (unknown.length > 0) throw new GspotError('policy', problemLines(source.text, source.path, unknown));
     const problems = completenessProblems(source.policy);
-    if (problems.length > 0) throw new PolicyError([...new Set(problemLines(source.text, source.path, problems))]);
+    if (problems.length > 0)
+        throw new GspotError('policy', [...new Set(problemLines(source.text, source.path, problems))]);
 }
 
 /**
@@ -210,7 +199,8 @@ export function assertPolicyComplete(source: Pick<PolicyFiles, 'policy' | 'text'
  */
 export function assertNoProblems(files: PolicyFiles): void {
     if (files.problems.length === 0) return;
-    throw new PolicyError(
+    throw new GspotError(
+        'policy',
         files.problems.map(
             (problem) => `gspot.toml:${String(problem.line)}:${String(problem.column)}: ${problem.message}`,
         ),
@@ -235,7 +225,7 @@ export function hasPolicy(root: string): boolean {
 export function readPolicy(root: string): PolicyFiles {
     const path = join(root, 'gspot.toml');
     const current = openRoot(root).read('gspot.toml');
-    if (current === undefined) throw new PolicyError([messages.fileMissing('gspot.toml')]);
+    if (current === undefined) throw new GspotError('policy', [messages.fileMissing('gspot.toml')]);
     const text = current.bytes.toString('utf8');
     const { policy, problems } = readPolicyText(text, 'gspot.toml', root);
     return { policy, path, text, problems };

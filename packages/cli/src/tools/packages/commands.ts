@@ -3,17 +3,17 @@ import semver from 'semver';
 import { join } from 'node:path';
 import type { ToolPin } from '#cli/types/kits.ts';
 import { SETUP } from '#cli/config/tools/tools.ts';
-import { InstallationError } from '#cli/tools/pins.ts';
+import { GspotError } from '#cli/platform/errors.ts';
 import { PRIVATE_FILE } from '#cli/config/platform.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { runToolCommand } from '#cli/tools/command.ts';
 import { yarnSettings } from '#cli/tools/packages/yarn.ts';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { acquisitionNote } from '#cli/tools/packages/acquisition.ts';
+import { readVersion, toolVersionState } from '#cli/tools/inspect.ts';
 import { packageEnvironment } from '#cli/tools/packages/environment.ts';
 import { portableBunLock, relativeYarnLock } from '#cli/tools/packages/locks.ts';
 import type { PackageTool, PackageExecution } from '#cli/types/tools/packages.ts';
-import { readVersion, MissingToolError, toolVersionState } from '#cli/tools/inspect.ts';
 import { LOCKS, CREDENTIAL_KEY, YARN_BERRY_MAJOR, NPM_SETTING_PREFIX } from '#cli/config/tools/packages.ts';
 
 // The resolve or install command of each manager that has one form, by whether the lock is frozen.
@@ -72,7 +72,8 @@ async function assertPackageToolVersion(execution: PackageExecution): Promise<vo
     const { client, work, env } = execution;
     const version = await runToolCommand(undefined, [client.name, '--version'], { cwd: work, env });
     if (version.code !== 0 || version.stdout.trim() !== client.version)
-        throw new MissingToolError(
+        throw new GspotError(
+            'missing-tool',
             `The tool project requires ${client.name}@${client.version}. Install that package manager version first.`,
         );
 }
@@ -86,7 +87,7 @@ async function runPackageTool(execution: PackageExecution): Promise<void> {
     const causeNote = cause === undefined ? '' : ` ${cause}`;
     const step = frozen ? 'immutable installation' : 'lock resolution';
     const text = `${client.name} ${step} failed (exit ${String(result.code)}). ${SETUP}. Registry credentials and package-manager output are not included.${causeNote}`;
-    if (frozen) throw new InstallationError(text);
+    if (frozen) throw new GspotError('installation', text);
     throw new Error(text);
 }
 
@@ -116,11 +117,12 @@ async function assertNativeVersion(work: string, executable: string, tool: ToolP
         ...(tool.env === undefined ? {} : { env: tool.env }),
     });
     const read = readVersion(tool, result, npm?.version);
-    if (!('version' in read)) throw new InstallationError(read.note);
+    if (!('version' in read)) throw new GspotError('installation', read.note);
     const want = tool.version ?? read.version;
     const floor = tool.floor ?? want;
     if (toolVersionState(read.version, want, floor) === 'outdated')
-        throw new InstallationError(
+        throw new GspotError(
+            'installation',
             `${tool.name} reported ${read.version}, below ${floor}. No installed files were published.`,
         );
 }

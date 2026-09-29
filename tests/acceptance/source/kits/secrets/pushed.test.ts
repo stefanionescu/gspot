@@ -3,11 +3,12 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { join, delimiter } from 'node:path';
 import { git } from '#tests/support/cli/git.ts';
+import * as processes from '#cli/platform/spawn.ts';
+import { gspot } from '#tests/support/cli/command.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { toolsPath } from '#tests/support/cli/tools.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
 import { pushReportSchema } from '#cli/execution/report.ts';
-import { gspot, runProcess } from '#tests/support/cli/command.ts';
 import { containing, containingAll } from '#tests/support/expectations.ts';
 
 import {
@@ -27,7 +28,7 @@ test(
         expect(git(sandbox.path, ['rev-parse', 'HEAD^{tree}']).stdout.trim()).toBe(tree);
         const command = [process.execPath, gspot, 'check', '--push', '--only', 'secrets/gitleaks', '--json'];
         const options = { cwd: sandbox.path, env: { PATH: toolsPath(['gitleaks']) } };
-        const rejected = await runProcess(command, {
+        const rejected = await processes.run(command, {
             ...options,
             stdin: `refs/heads/good ${good} refs/heads/good ${base}\nrefs/heads/removed ${removed} refs/heads/removed ${base}\n`,
         });
@@ -41,13 +42,13 @@ test(
         );
         expect(rejected.stdout).not.toContain(PLANTED_KEY_ID);
         await Bun.write(join(sandbox.path, 'settings.py'), PLANTED_SETTINGS);
-        const corrected = await runProcess(command, {
+        const corrected = await processes.run(command, {
             ...options,
             stdin: `refs/heads/good ${good} refs/heads/good ${base}\n`,
         });
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect(pushReportSchema.parse(JSON.parse(corrected.stdout)).revisions[0]?.report.checks[0]?.status).toBe('ok');
-        const alreadyRemote = await runProcess(command, {
+        const alreadyRemote = await processes.run(command, {
             ...options,
             stdin: `refs/heads/removed ${removed} refs/heads/removed ${leaked}\n`,
         });
@@ -74,7 +75,7 @@ test(
             env: { PATH: `${launcher.path}${delimiter}${toolsPath(['trufflehog'])}` },
         };
         const input = `refs/heads/good ${good} refs/heads/good ${base}\nrefs/heads/removed ${removed} refs/heads/removed ${base}\n`;
-        const rejected = await runProcess(command, { ...options, stdin: input });
+        const rejected = await processes.run(command, { ...options, stdin: input });
         expect(rejected.code, rejected.stdout + rejected.stderr).toBe(1);
         const report = pushReportSchema.parse(JSON.parse(rejected.stdout));
         const findings = report.revisions[0]?.report.checks[0]?.findings ?? [];
@@ -92,7 +93,7 @@ test(
             expect(rejected.stdout + rejected.stderr + saved).not.toContain(token);
         writeFileSync(mode, 'native');
         requests.length = 0;
-        const corrected = await runProcess(command, {
+        const corrected = await processes.run(command, {
             ...options,
             stdin: `refs/heads/good ${good} refs/heads/good ${base}\n`,
         });
@@ -122,13 +123,13 @@ test.each(['malformed', 'crashed'])(
         };
         const input = `refs/heads/good ${good} refs/heads/good ${base}\nrefs/heads/removed ${removed} refs/heads/removed ${base}\n`;
         writeFileSync(mode, failure);
-        const broken = await runProcess(command, { ...options, stdin: input });
+        const broken = await processes.run(command, { ...options, stdin: input });
         expect(broken.code, broken.stdout + broken.stderr).toBe(2);
         expect(pushReportSchema.parse(JSON.parse(broken.stdout)).revisions[0]?.report.checks[0]?.status).toBe('error');
         for (const token of [firstToken, secondToken]) expect(broken.stdout + broken.stderr).not.toContain(token);
         writeFileSync(mode, 'native');
         requests.length = 0;
-        const corrected = await runProcess(command, {
+        const corrected = await processes.run(command, {
             ...options,
             stdin: `refs/heads/good ${good} refs/heads/good ${base}\n`,
         });

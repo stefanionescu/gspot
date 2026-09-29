@@ -2,12 +2,12 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { writeFileSync } from 'node:fs';
+import { run } from '#cli/platform/spawn.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
 import { parseAlerts } from '#cli/checks/prose/vale.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { RELEASE_TIMEOUT_MS } from '#tests/config/release.ts';
 import type { InstalledConsumer } from '#tests/types/release.ts';
-import { runProcess as run } from '#tests/support/cli/command.ts';
 import { createConsumer } from '#tests/support/release/consumer.ts';
 import { initializeConsumer, getPublishedRelease } from '#tests/support/release/published.ts';
 

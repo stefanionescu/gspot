@@ -3,6 +3,7 @@ import { rejects } from 'node:assert/strict';
 import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { renameSync, writeFileSync } from 'node:fs';
+import { GspotError } from '#cli/platform/errors.ts';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
 import { engineInput } from '#cli/execution/engines.ts';
@@ -11,7 +12,6 @@ import { planRun } from '#cli/execution/planning/plan.ts';
 import { parseOutput } from '#cli/execution/output/parse.ts';
 import { randomUUID, generateKeyPairSync } from 'node:crypto';
 import { trivyImage } from '#cli/checks/docker/image-scan.ts';
-import { ToolOutputError } from '#cli/execution/output/tool-formats.ts';
 import { containing, textContaining } from '#tests/support/expectations.ts';
 import { isToolBroken, checkedFindings } from '#cli/execution/broken-tool.ts';
 
@@ -106,11 +106,9 @@ test('native Markdown JSON preserves filename delimiters, positions, and fixabil
     const result = { stdout: failed.stdout.toString(), stderr: '', code: 1, missing: false, duration: 1 };
     for (const check of [planned, declared]) {
         expect(checkedFindings(check, result, [sandbox.path, sandbox.path])).toStrictEqual(findings);
-        expect(() => checkedFindings(check, { ...result, code: 2 }, [sandbox.path, sandbox.path])).toThrow(
-            ToolOutputError,
-        );
+        expect(() => checkedFindings(check, { ...result, code: 2 }, [sandbox.path, sandbox.path])).toThrow(GspotError);
         expect(() => checkedFindings(check, { ...result, stdout: '[]' }, [sandbox.path, sandbox.path])).toThrow(
-            ToolOutputError,
+            GspotError,
         );
     }
     for (const path of paths) await Bun.write(join(sandbox.path, path), '# Title\n');

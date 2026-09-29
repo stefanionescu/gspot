@@ -1,8 +1,17 @@
 // Path handling: forward slashes in selectors, the platform form for tools.
+import picomatch from 'picomatch';
 import { sep, join } from 'node:path';
 import { realpathSync } from 'node:fs';
 import { cacheHome } from '#cli/platform/environment.ts';
+import type { GlobOptions } from '#cli/types/platform.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/platform.ts';
+
+// Refuses a pattern that climbs out of the folder it scans, in plain form, or hidden in a brace alternative.
+function assertInsideFolder(pattern: string): void {
+    const bare = pattern.startsWith('!') ? pattern.slice(1) : pattern;
+    const climbs = bare.startsWith('/') || /(?:^|[/{,])\.\.(?=[/},]|$)/u.test(bare);
+    if (climbs) throw new Error(`A path pattern cannot leave its folder: ${pattern}`);
+}
 
 /**
  * Forward slashes on every platform, for selectors, records, and output.
@@ -12,6 +21,17 @@ import { DECLARATION_EXTENSIONS } from '#cli/config/platform.ts';
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Forward slashes on every platform, for selectors, records, and output. 11 files make 18 calls; one owner keeps that behavior in one place.
 export function toPosix(path: string): string {
     return sep === '/' ? path : path.split(sep).join('/');
+}
+
+/**
+ * A path a tool printed, with forward slashes whatever platform wrote it: fixtures and Windows tools spell
+ * backslashes on every platform.
+ * @param path the path as the tool printed it
+ * @returns the path with forward slashes
+ */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Four output readers normalize tool paths the same way; one owner keeps the contract distinct from toPosix.
+export function toolPath(path: string): string {
+    return path.replaceAll('\\', '/');
 }
 
 /**
@@ -57,4 +77,34 @@ export function extensionOf(path: string): string {
 export function buildFolder(root: string): string {
     const identity = new Bun.CryptoHasher('sha256').update(realpathSync(root)).digest('hex');
     return join(cacheHome(), 'gspot', identity);
+}
+
+/**
+ * The paths under a folder that the globs name, relative to it, with forward slashes. A `!` pattern leaves
+ * its matches out. A pattern that climbs out of the folder is refused.
+ * @param cwd the folder to scan
+ * @param patterns one glob or several
+ * @param options what to include: dot files, folders, and how links are followed
+ * @returns the matching paths, each once, in scan order
+ */
+export function globPaths(cwd: string, patterns: string | string[], options: GlobOptions = {}): string[] {
+    const list = [patterns].flat();
+    for (const pattern of list) assertInsideFolder(pattern);
+    const excluded = list.filter((pattern) => pattern.startsWith('!')).map((pattern) => pattern.slice(1));
+    const isExcluded = excluded.length === 0 ? undefined : picomatch(excluded, { dot: true });
+    const scan = {
+        cwd,
+        dot: false,
+        onlyFiles: true,
+        followSymlinks: false,
+        ...options,
+        throwErrorOnBrokenSymlink: options.refuseBrokenLinks === true,
+    };
+    const found = new Set<string>();
+    for (const pattern of list.filter((entry) => !entry.startsWith('!')))
+        for (const path of new Bun.Glob(pattern).scanSync(scan)) {
+            const posix = toPosix(path);
+            if (isExcluded?.(posix) !== true) found.add(posix);
+        }
+    return [...found];
 }

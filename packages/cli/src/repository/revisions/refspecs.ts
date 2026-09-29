@@ -1,6 +1,6 @@
 // The objects a remote's fetch mappings already brought into the repository, which a push need not re-check.
 import { run } from '#cli/platform/spawn.ts';
-import { SelectionError } from '#cli/kits/select.ts';
+import { GspotError } from '#cli/platform/errors.ts';
 import { GIT_TIMEOUT_MS } from '#cli/config/checks/secrets.ts';
 import { gitText, gitLines } from '#cli/repository/revisions/git-queries.ts';
 import type { RefRules, ParsedMapping } from '#cli/types/repository/revisions.ts';
@@ -51,7 +51,7 @@ async function addMapping(
     await gitText(root, ['check-ref-format', '--refspec-pattern', parsed.source], cancelSignal);
     await gitText(root, ['check-ref-format', '--refspec-pattern', parsed.destination], cancelSignal);
     if (parsed.source.includes('*') !== parsed.destination.includes('*'))
-        throw new SelectionError([`Invalid fetch mapping for ${remote}: ${raw}`]);
+        throw new GspotError('selection', [`Invalid fetch mapping for ${remote}: ${raw}`]);
     rules.mappings.push({ source: parsed.source, destination: parsed.destination });
     return true;
 }
@@ -96,7 +96,7 @@ async function remoteRefEntries(
     });
     if (configured.code === 1) return undefined;
     if (configured.code !== 0)
-        throw new SelectionError([`Cannot read fetch mappings for ${remote}: ${configured.stderr.trim()}`]);
+        throw new GspotError('selection', [`Cannot read fetch mappings for ${remote}: ${configured.stderr.trim()}`]);
     return configured.stdout.split('\0').filter(Boolean);
 }
 

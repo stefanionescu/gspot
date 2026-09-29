@@ -1,9 +1,9 @@
 import type { Command } from 'commander';
 import { similar } from '#cli/policy/similar.ts';
-import { PolicyError } from '#cli/policy/read.ts';
 import { requireChain } from '#cli/kits/select.ts';
 import { scopeHolder } from '#cli/policy/write.ts';
 import * as messages from '#cli/policy/messages.ts';
+import { GspotError } from '#cli/platform/errors.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
 import { commitPolicy } from '#cli/commands/policy.ts';
@@ -39,7 +39,7 @@ export async function addCommand(o: AddOptions): Promise<CommandResult> {
     for (const id of o.kits)
         if (!manifests.has(id)) {
             const known = manifests.keys().toArray();
-            throw new PolicyError([messages.unknownKit(id, similar(id, known))]);
+            throw new GspotError('policy', [messages.unknownKit(id, similar(id, known))]);
         }
     const mutation: Mutation = (raw) => {
         const holder = scopeHolder(raw, o.scope);
@@ -67,8 +67,8 @@ export async function removeCommand(o: RemoveOptions): Promise<CommandResult> {
         const rootList = (raw['kits'] as string[] | undefined) ?? [];
         const kept = [...new Set([...rootList, ...list])].filter((id) => id !== o.kit);
         const chain = kept.map((id) => requireChain(o.kit, id, manifests)).find((found) => found !== undefined);
-        if (chain) throw new PolicyError([messages.withoutRequired(o.kit, chain)]);
-        if (!list.includes(o.kit)) throw new PolicyError([messages.kitNotListed(o.kit, o.scope)]);
+        if (chain) throw new GspotError('policy', [messages.withoutRequired(o.kit, chain)]);
+        if (!list.includes(o.kit)) throw new GspotError('policy', [messages.kitNotListed(o.kit, o.scope)]);
         holder['kits'] = list.filter((id) => id !== o.kit);
     };
     const where = o.scope === undefined ? '' : ` from scope ${o.scope}`;

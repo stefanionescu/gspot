@@ -1,11 +1,12 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import * as processes from '#cli/platform/spawn.ts';
 import { inspectTool } from '#cli/tools/inspect.ts';
+import { run } from '#tests/support/cli/command.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/config/cli.ts';
-import { run, runProcess } from '#tests/support/cli/command.ts';
 import { cpSync, chmodSync, mkdirSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
 
 const MODULES = join(import.meta.dir, '../../../../node_modules');
@@ -78,11 +79,11 @@ test(
         expect(inspection.state).toBe('host');
         expect(inspection.found).toMatch(/^\d+\.\d+\.\d+/u);
         const command = [inspection.path!, '--pretty', 'false', '--noEmit', '--strict', 'source.ts'];
-        const invalid = await runProcess(command, { cwd: repository.path });
+        const invalid = await processes.run(command, { cwd: repository.path });
         expect(invalid.code, invalid.stdout + invalid.stderr).toBe(2);
         expect(invalid.stdout).toContain('TS2322');
         writeFileSync(join(repository.path, 'source.ts'), 'export const port: number = 8080;\n');
-        const corrected = await runProcess(command, { cwd: repository.path });
+        const corrected = await processes.run(command, { cwd: repository.path });
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect(readFileSync(join(repository.path, '.gspot/node_modules/.bin/tsc'), 'utf8')).toBe(managed);
     },

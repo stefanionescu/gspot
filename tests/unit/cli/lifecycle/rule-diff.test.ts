@@ -68,7 +68,7 @@ test('JavaScript comparison reads static exports and rejects executable rule val
     expect(ruleDiff(file, file.content)).toStrictEqual({ rules: [] });
     expect(
         ruleDiff(file, "module.exports = {rules: (() => { throw new Error('Executed fixture'); })()};").ruleError,
-    ).toContain('JSON5');
+    ).toContain('literal keys and values');
     expect(ruleDiff(file, `${file.content}\nthrow new Error('Executed fixture');`)).toStrictEqual({
         ruleError: 'Rule comparison failed: JavaScript rule comparison requires a single static configuration export.',
     });

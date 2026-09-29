@@ -1,16 +1,13 @@
 // Scopes: from [[scope]] in gspot.toml, or from workspace declarations at init.
 import { z } from 'zod';
-import JSON5 from 'json5';
 import picomatch from 'picomatch';
-import { globbySync } from 'globby';
-import { relative } from 'node:path';
 import { parse as parseYaml } from 'yaml';
 import type { Package } from '@manypkg/tools';
-import { toPosix } from '#cli/platform/paths.ts';
 import type { Manifest } from '#cli/types/kits.ts';
-import { readdirSync, type Dirent } from 'node:fs';
+import { parseJsonc } from '#cli/repository/jsonc.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { mutationPath } from '#cli/platform/safe-paths.ts';
+import { toPosix, globPaths } from '#cli/platform/paths.ts';
 import { packageManifestSchema } from '#cli/repository/manifests.ts';
 import { PnpmTool, RushTool, YarnTool, LernaTool } from '@manypkg/tools';
 import { LINT_TOOL_PACKAGE_PREFIXES } from '#cli/config/repository/patterns.ts';
@@ -62,22 +59,11 @@ function inspectWorkspacePaths(root: string, patterns: string[]): void {
             const parts = pattern.split('/');
             return parts.map((_part, index) => parts.slice(0, index + 1).join('/'));
         });
-        function readDirectory(path: string): string[];
-        function readDirectory(path: string, options: { withFileTypes: true }): Dirent[];
-        function readDirectory(path: string, options?: { withFileTypes: true }): string[] | Dirent[] {
-            const local = toPosix(relative(root, path));
-            if (local !== '') files.stat(local);
-            return options === undefined ? readdirSync(path) : readdirSync(path, options);
-        }
-        const paths = globbySync(ancestors, {
-            cwd: root,
-            onlyFiles: false,
-            followSymbolicLinks: false,
-            expandDirectories: false,
+        const paths = globPaths(root, [...ancestors, '!**/node_modules/**', '!**/.git/**'], {
             dot: true,
-            ignore: ['**/node_modules/**', '**/.git/**'],
-            fs: { readdirSync: readDirectory },
+            onlyFiles: false,
         });
+        // Every visited path is read through the root boundary, which refuses a link that leaves the repository.
         for (const path of paths) {
             if (files.stat(path)?.isDirectory() === true) files.read(`${path}/package.json`);
         }
@@ -109,7 +95,7 @@ function workspacePackages(root: string): Package[] {
             {
                 tool: RushTool,
                 path: 'rush.json',
-                parse: JSON5.parse,
+                parse: parseJsonc,
                 schema: z
                     .object({ projects: z.array(z.object({ projectFolder: z.string() })) })
                     .transform((value) => value.projects.map((project) => project.projectFolder)),

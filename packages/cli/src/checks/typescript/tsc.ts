@@ -1,5 +1,6 @@
 import ts from 'typescript';
 import { rm } from 'node:fs/promises';
+import { toPosix } from '#cli/platform/paths.ts';
 import type { Root } from '#cli/types/platform.ts';
 import { join, dirname, relative } from 'node:path';
 import { scopeOf } from '#cli/repository/scopes.ts';
@@ -17,13 +18,13 @@ import type { Session, PlannedCheck } from '#cli/types/execution/execution.ts';
 // Both source reads and emitted paths must stay inside the disposable project tree.
 function validateOutputs(root: string, config: ts.ParsedCommandLine, files: Root): void {
     for (const file of config.fileNames) {
-        files.source(relative(root, file).replaceAll('\\', '/'));
+        files.source(toPosix(relative(root, file)));
         if (config.options.noEmit === true) continue;
         for (const output of ts.getOutputFileNames(config, file, !ts.sys.useCaseSensitiveFileNames))
-            files.stat(relative(root, output).replaceAll('\\', '/'));
+            files.stat(toPosix(relative(root, output)));
     }
     const metadata = ts.getTsBuildInfoEmitOutputFilePath(config.options);
-    if (metadata !== undefined) files.stat(relative(root, metadata).replaceAll('\\', '/'));
+    if (metadata !== undefined) files.stat(toPosix(relative(root, metadata)));
 }
 
 // Incremental checks write metadata only inside their disposable copy.
@@ -58,7 +59,7 @@ function writeScopeProject(session: Session, scratch: string, scope: string, tar
     const generated = getTsconfig(scratch, generatedPath);
     if (generated === undefined) throw new Error(`Missing JavaScript configuration: ${target}`);
     const scopeFiles = generated.fileNames.filter(
-        (path) => scopeOf(relative(scratch, path).replaceAll('\\', '/'), session.repository.scopes).path === scope,
+        (path) => scopeOf(toPosix(relative(scratch, path)), session.repository.scopes).path === scope,
     );
     if (scopeFiles.length === 0) return 0;
     const authored = JSON.parse(readFileSync(generatedPath, 'utf8')) as Record<string, unknown>;
@@ -68,7 +69,7 @@ function writeScopeProject(session: Session, scratch: string, scope: string, tar
         generatedPath,
         JSON.stringify({
             ...authored,
-            files: scopeFiles.map((path) => relative(dirname(generatedPath), path).replaceAll('\\', '/')),
+            files: scopeFiles.map((path) => toPosix(relative(dirname(generatedPath), path))),
             include: [],
             exclude: [],
         }),

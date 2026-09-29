@@ -5,8 +5,8 @@ import { extensionOf } from '#cli/platform/paths.ts';
 import { sqlTokens } from '#cli/parsers/sql/source.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
-import { COMMENT_GRAMMARS } from '#cli/config/parsers/parsers.ts';
 import type { SourceComment } from '#cli/types/parsers/parsers.ts';
+import { TOML_TOKENS, COMMENT_GRAMMARS } from '#cli/config/parsers/parsers.ts';
 import { COMMENT_OPENERS, COMMENT_STYLE_BY_EXTENSION } from '#cli/config/execution/execution.ts';
 
 // Only token-leading trivia is eligible: string, template, regular-expression, and JSX text stay source values.
@@ -129,7 +129,25 @@ function markdownHtml(text: string): string {
     return pieces.join('');
 }
 
+// TOML: a `#` outside a string opens a comment to the end of the line. The token pattern reads strings whole,
+// including the triple-quoted ones that span lines, so a `#` inside a value never becomes a comment.
+function tomlComments(text: string): SourceComment[] {
+    const comments: SourceComment[] = [];
+    for (const match of text.matchAll(TOML_TOKENS)) {
+        if (!match[0].startsWith('#')) continue;
+        const at = match.index;
+        const lineStart = text.lastIndexOf('\n', at - 1) + 1;
+        comments.push({
+            line: text.slice(0, at).split('\n').length,
+            text: match[0],
+            standalone: text.slice(lineStart, at).trim() === '',
+        });
+    }
+    return comments;
+}
+
 const COMMENT_READERS = new Map<string, (text: string) => SourceComment[]>([
+    ['.toml', tomlComments],
     ['.yaml', yamlComments],
     ['.yml', yamlComments],
     ['.sql', sqlComments],

@@ -1,23 +1,11 @@
 // .gspot/version against the running binary; the exit-2 refusal with its two remedies.
 import * as messages from '#cli/policy/messages.ts';
+import { GspotError } from '#cli/platform/errors.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import packageManifest from '#package' with { type: 'json' };
 import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 
 const { version: GSPOT_VERSION } = packageManifest;
-
-/** Thrown when the repository pins another version than the running binary. */
-export class VersionPinError extends Error {
-    /**
-     * Names both versions and the two ways forward.
-     * @param pinned the version the repository pins
-     * @param running the version of this binary
-     */
-    constructor(pinned: string, running: string) {
-        super(messages.versionMismatch(pinned, running));
-        this.name = 'VersionPinError';
-    }
-}
 
 /**
  * The pinned version, or undefined when the repository has none.
@@ -55,5 +43,6 @@ export function writePin(root: string, version = GSPOT_VERSION): void {
  */
 export function assertPinMatches(root: string): void {
     const pinned = pinnedVersion(root);
-    if (pinned !== undefined && pinned !== GSPOT_VERSION) throw new VersionPinError(pinned, GSPOT_VERSION);
+    if (pinned !== undefined && pinned !== GSPOT_VERSION)
+        throw new GspotError('version-pin', messages.versionMismatch(pinned, GSPOT_VERSION));
 }

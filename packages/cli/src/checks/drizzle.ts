@@ -1,5 +1,5 @@
-import { globbySync } from 'globby';
 import { rm } from 'node:fs/promises';
+import { globPaths } from '#cli/platform/paths.ts';
 import { join, dirname, basename } from 'node:path';
 import { TABLE } from '#cli/config/checks/checks.ts';
 import { readSource } from '#cli/repository/tracked.ts';
@@ -8,11 +8,7 @@ import { scratchCopy } from '#cli/execution/files/workspace.ts';
 import type { Finding, EngineInput } from '#cli/types/checks/checks.ts';
 
 function generatedContents(cwd: string): Map<string, Buffer> {
-    const paths = globbySync(['**/*', '!**/node_modules/**', '!**/.venv/**', '!**/.gspot/**'], {
-        cwd,
-        dot: true,
-        followSymbolicLinks: false,
-    });
+    const paths = globPaths(cwd, ['**/*', '!**/node_modules/**', '!**/.venv/**', '!**/.gspot/**'], { dot: true });
     return new Map(paths.map((path) => [path, readSource(cwd, path)]));
 }
 

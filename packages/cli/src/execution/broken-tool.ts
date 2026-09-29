@@ -1,11 +1,11 @@
 // Telling a tool that found something from a tool that fell over: a crash must never pass for a finding.
 import { statSync } from 'node:fs';
 import { join, isAbsolute } from 'node:path';
+import { GspotError } from '#cli/platform/errors.ts';
 import type { SpawnResult } from '#cli/types/platform.ts';
 import type { Finding } from '#cli/types/checks/checks.ts';
 import { parseOutput } from '#cli/execution/output/parse.ts';
 import type { PlannedCheck } from '#cli/types/execution/execution.ts';
-import { ToolOutputError } from '#cli/execution/output/tool-formats.ts';
 import type { ToolPin, CheckSpec, OutputFormat } from '#cli/types/kits.ts';
 
 import {
@@ -32,10 +32,14 @@ function isOnDisk(file: string, roots: string[]): boolean {
 
 function redactedFindings(spec: CheckSpec, result: SpawnResult, root: string, broken: boolean): Finding[] {
     if ((result.code !== 0 && result.code !== TRUFFLEHOG_FINDINGS) || broken)
-        throw new ToolOutputError(`TruffleHog failed with exit ${String(result.code)}; raw output was withheld.`);
+        throw new GspotError(
+            'tool-output',
+            `TruffleHog failed with exit ${String(result.code)}; raw output was withheld.`,
+        );
     const findings = parseOutput(spec, result.stdout, result.stderr, root);
     if (result.code === TRUFFLEHOG_FINDINGS && findings.length === 0)
-        throw new ToolOutputError(
+        throw new GspotError(
+            'tool-output',
             'TruffleHog reported findings without valid structured data; raw output was withheld.',
         );
     return findings;
@@ -50,7 +54,7 @@ function parsedFindings(spec: CheckSpec, result: SpawnResult, roots: [string, st
 function outputFailure(planned: PlannedCheck, result: SpawnResult): never {
     const name = planned.tool?.name ?? planned.spec.name;
     const detail = toolOutputDetail(result, `${name} exited ${String(result.code)}`);
-    throw new ToolOutputError(`${name} broke: exit ${String(result.code)}\n${detail}`);
+    throw new GspotError('tool-output', `${name} broke: exit ${String(result.code)}\n${detail}`);
 }
 
 /**

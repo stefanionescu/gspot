@@ -1,7 +1,7 @@
 import { posix } from 'node:path';
-import { globbySync } from 'globby';
 import { visit } from 'unist-util-visit';
 import { parse as parseToml } from 'smol-toml';
+import { globPaths } from '#cli/platform/paths.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { readSource } from '#cli/repository/tracked.ts';
@@ -158,9 +158,9 @@ export function stalePaths(input: EngineInput): Finding[] {
     const index: PathIndex = {
         known: knownPaths(input),
         tasks: new Set([
-            ...[
-                ...new Set([...MISE_FILES, ...globbySync('.mise/conf.d/*.toml', { cwd: input.root, dot: true })]),
-            ].flatMap((file) => miseTasks(input, file)),
+            ...[...new Set([...MISE_FILES, ...globPaths(input.root, '.mise/conf.d/*.toml', { dot: true })])].flatMap(
+                (file) => miseTasks(input, file),
+            ),
             ...packageScripts(input),
         ]),
         isException,
