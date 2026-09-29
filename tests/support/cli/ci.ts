@@ -120,7 +120,8 @@ export async function runCiJob(
         provider === 'gitlab'
             ? generated.gspot.script
             : generated.jobs['check-ubuntu']!.steps.flatMap((step) => (step.run === undefined ? [] : [step.run]));
-    return await processes.run(['/bin/bash', '-e', '-c', script.join('\n')], {
+    // An absolute executable puts its own folder first on PATH, and Ubuntu has a curl in /bin, so bash is named bare.
+    return await processes.run(['bash', '-e', '-c', script.join('\n')], {
         cwd: root,
         env: {
             PATH: `${directory}${delimiter}${environmentVariables()['PATH'] ?? ''}`,
