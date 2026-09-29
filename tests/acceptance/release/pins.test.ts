@@ -15,11 +15,7 @@ function pinsOf(tool: ToolPin): Pin[] {
 }
 
 const tools = [...kitManifests().values()].flatMap((manifest) => manifest.tools);
-// The gspot packages reach the registry with the first release (D-158). Lookups wait until publication.
-const pins = tools
-    .filter((tool) => tool.provider !== 'host')
-    .flatMap((tool) => pinsOf(tool))
-    .filter((pin) => !pin.name.startsWith('@gspot/'));
+const pins = tools.filter((tool) => tool.provider !== 'host').flatMap((tool) => pinsOf(tool));
 const eslintPin = tools.find((tool) => tool.name === 'eslint')?.version;
 
 async function registryJson(url: string): Promise<Record<string, unknown> | undefined> {

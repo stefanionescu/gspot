@@ -11,7 +11,7 @@ import { lstatSync, mkdirSync, existsSync, readFileSync, writeFileSync } from 'n
 const root = fileURLToPath(new URL('../../..', import.meta.url));
 
 function expectPluginPayload(consumer: string): void {
-    const installedPlugin = join(consumer, 'node_modules', '@gspot', 'eslint-plugin');
+    const installedPlugin = join(consumer, 'node_modules', 'eslint-plugin-gspot');
     expect(readFileSync(join(installedPlugin, 'dist/LICENSE.md'), 'utf8')).toBe(
         readFileSync(join(root, 'LICENSE.md'), 'utf8'),
     );
@@ -22,7 +22,7 @@ function expectPluginPayload(consumer: string): void {
 }
 
 async function expectPluginExports(consumer: string): Promise<void> {
-    const installedPlugin = join(consumer, 'node_modules', '@gspot', 'eslint-plugin');
+    const installedPlugin = join(consumer, 'node_modules', 'eslint-plugin-gspot');
     const documentation = readFileSync(join(installedPlugin, 'README.md'), 'utf8');
     for (const [index, match] of [...documentation.matchAll(/```javascript\n([\s\S]*?)```/gu)].entries()) {
         writeFileSync(join(consumer, `readme-${String(index)}.mjs`), match[1]!);
@@ -82,17 +82,14 @@ test.each([
                 join(consumer, 'package.json'),
                 '{"name":"plugin-consumer","private":true,"type":"module"}\n',
             );
-            // Route only the candidate scope to the owned registry. Tool dependencies use npm.
-            writeFileSync(
-                join(consumer, '.npmrc'),
-                `registry=https://registry.npmjs.org/\n@gspot:registry=${registry.url}\n`,
-            );
+            // The owned registry serves the candidate packages and proxies every other package to npm.
+            writeFileSync(join(consumer, '.npmrc'), `registry=${registry.url}\n`);
             registry.assertRunning();
             const installed = await run(
                 [
                     'npm',
                     'install',
-                    `@gspot/eslint-plugin@${pluginPackage.version}`,
+                    `eslint-plugin-gspot@${pluginPackage.version}`,
                     `eslint@${pluginPackage.devDependencies.eslint}`,
                     '--ignore-scripts',
                     '--no-audit',
@@ -101,7 +98,7 @@ test.each([
                 { cwd: consumer, timeoutMs: RELEASE_TIMEOUT_MS },
             );
             expect(installed.code, installed.stdout + installed.stderr).toBe(0);
-            expect(lstatSync(join(consumer, 'node_modules', '@gspot', 'eslint-plugin')).isSymbolicLink()).toBe(false);
+            expect(lstatSync(join(consumer, 'node_modules', 'eslint-plugin-gspot')).isSymbolicLink()).toBe(false);
             await verify(consumer);
         } finally {
             await registry.stop();

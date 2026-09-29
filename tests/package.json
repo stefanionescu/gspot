@@ -1,12 +1,12 @@
 {
-    "name": "@gspot/tests",
+    "name": "gspot-tests",
     "private": true,
     "description": "The test suites and the packages the planted repositories install.",
     "type": "module",
     "dependencies": {
-        "@gspot/cli": "workspace:*",
-        "@gspot/docs": "workspace:*",
-        "@gspot/eslint-plugin": "workspace:*"
+        "gspot-cli": "workspace:*",
+        "gspot-docs": "workspace:*",
+        "eslint-plugin-gspot": "workspace:*"
     },
     "devDependencies": {
         "@nestjs/common": "11.2.3",

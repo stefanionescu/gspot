@@ -32,11 +32,11 @@ config. It prints the two ways forward: install the pinned version, or move the 
 
 All three places carry the same version from one release run:
 
-| Place          | Holds                                                                                    | Used by                                                |
-| -------------- | ---------------------------------------------------------------------------------------- | ------------------------------------------------------ |
-| GitHub release | the seven binaries and `checksums.txt`, each binary attested                             | mise, and the CI job without mise                      |
-| npm            | `gspot`, one `@gspot/cli-<os>-<cpu>` package for each target, and `@gspot/eslint-plugin` | `npx gspot`, and `.gspot/package.json`                 |
-| `gspot.dev`    | the manual and `gspot.schema.json`                                                       | the `#:schema` line of every `gspot.toml`, and editors |
+| Place          | Holds                                                                              | Used by                                                |
+| -------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| GitHub release | the seven binaries and `checksums.txt`, each binary attested                       | mise, and the CI job without mise                      |
+| npm            | `gspot`, one `gspot-<os>-<cpu>` package for each target, and `eslint-plugin-gspot` | `npx gspot`, and `.gspot/package.json`                 |
+| `gspot.dev`    | the manual and `gspot.schema.json`                                                 | the `#:schema` line of every `gspot.toml`, and editors |
 
 The seven targets include `linux-x64-musl` and `linux-arm64-musl`, for Alpine images. Every
 published package ships `LICENSE.md` and `NOTICE.md`. The release fails before it

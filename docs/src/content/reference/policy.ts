@@ -2,9 +2,9 @@ import type { JSONSchema } from 'zod/v4/core';
 import { isDeepStrictEqual } from 'node:util';
 import { cell, table, referencePage } from './page.ts';
 import type { ReferencePage } from '../../types/reference.ts';
-import { policyJsonSchema } from '@gspot/cli/src/policy/json-schema.ts';
-import type { Manifest, SettingSpec } from '@gspot/cli/src/types/kits.ts';
-import { exposedSettings } from '@gspot/cli/src/policy/setting-surface.ts';
+import { policyJsonSchema } from 'gspot-cli/src/policy/json-schema.ts';
+import type { Manifest, SettingSpec } from 'gspot-cli/src/types/kits.ts';
+import { exposedSettings } from 'gspot-cli/src/policy/setting-surface.ts';
 
 const SETTINGS_INTRO = `Every key \`gspot set\` writes and \`gspot list settings\` prints. Reasons are optional unless the repository enables \`require_reasons\`.
 

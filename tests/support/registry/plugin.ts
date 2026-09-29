@@ -36,11 +36,9 @@ async function executePublishedCommand(
         process.exitCode ||= published.code;
         return;
     }
-    writeFileSync(
-        registry.npmrc,
-        `@gspot:registry=${registry.url}\n${registry.url.replace('http:', '')}/:_authToken=fake\n`,
-        { mode: 0o600 },
-    );
+    writeFileSync(registry.npmrc, `registry=${registry.url}\n${registry.url.replace('http:', '')}/:_authToken=fake\n`, {
+        mode: 0o600,
+    });
     const executed = await run(command, {
         cwd,
         env: {

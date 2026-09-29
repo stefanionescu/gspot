@@ -29,7 +29,7 @@ bun add --dev "$plugin_source" eslint@9.39.5
 Save this complete configuration as `eslint.config.mjs`:
 
 ```javascript
-import gspot from '@gspot/eslint-plugin';
+import gspot from 'eslint-plugin-gspot';
 
 export default [{
     files: ['search.js'],

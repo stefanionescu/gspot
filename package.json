@@ -17,7 +17,7 @@
         "@clack/prompts": "1.8.0",
         "@eslint-community/eslint-plugin-eslint-comments": "4.8.0",
         "@eslint/js": "9.39.5",
-        "@gspot/eslint-plugin": "0.1.0",
+        "eslint-plugin-gspot": "0.1.0",
         "@socketsecurity/bun-security-scanner": "1.1.2",
         "@types/bun": "1.4.2",
         "@types/node": "22.18.6",

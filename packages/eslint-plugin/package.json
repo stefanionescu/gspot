@@ -1,5 +1,5 @@
 {
-    "name": "@gspot/eslint-plugin",
+    "name": "eslint-plugin-gspot",
     "version": "0.1.0",
     "description": "ESLint rules for private environment reads, duplicate exports, trivial code, and file organization in JavaScript and TypeScript.",
     "license": "Apache-2.0",

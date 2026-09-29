@@ -75,10 +75,10 @@ version = "9.39.5"
 npm = "@eslint/js"
 
 [[tools]]
-name = "@gspot/eslint-plugin"
+name = "eslint-plugin-gspot"
 kind = "library"
 version = "0.1.0"
-npm = "@gspot/eslint-plugin"
+npm = "eslint-plugin-gspot"
 
 [[tools]]
 name = "eslint-plugin-sonarjs"

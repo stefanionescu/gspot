@@ -3,9 +3,9 @@ import { commandPages } from './commands.ts';
 import { section, referencePage } from './page.ts';
 import { docsLoader } from '@astrojs/starlight/loaders';
 import { kitReference, settingsPage } from './policy.ts';
-import { allChecks } from '@gspot/cli/src/kits/listing.ts';
+import { allChecks } from 'gspot-cli/src/kits/listing.ts';
 import type { ReferencePage } from '../../types/reference.ts';
-import { kitManifests } from '@gspot/cli/src/kits/manifests.ts';
+import { kitManifests } from 'gspot-cli/src/kits/manifests.ts';
 import { kitPage, rulePage, enginesPage, pluginReferencePages } from './definitions.ts';
 
 /**

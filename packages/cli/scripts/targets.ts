@@ -7,7 +7,7 @@ const targetSchema = z.object({
     libc: z.enum(['glibc', 'musl']).nullable(),
     target: z.string().startsWith('bun-'),
     binary: z.string().regex(/^gspot-[a-z0-9.-]+$/u),
-    package: z.string().startsWith('@gspot/cli-'),
+    package: z.string().startsWith('gspot-'),
 });
 
 // The npm launcher owns the target table and ships it, so the build reads that file rather than a copy.

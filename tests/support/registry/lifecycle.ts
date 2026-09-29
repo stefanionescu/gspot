@@ -36,8 +36,10 @@ async function ping(url: string, signal: AbortSignal): Promise<void> {
 function launch(config: string, port: number, signal: AbortSignal) {
     signal.throwIfAborted();
     const address = Promise.withResolvers<number>();
-    const server = Bun.spawn([process.execPath, serverEntry, config, String(port)], {
+    // Verdaccio's proxy fails TLS under Bun, so the registry runs under Node.
+    const server = Bun.spawn(['node', serverEntry, config, String(port)], {
         cwd: root,
+        serialization: 'json',
         stdout: 'pipe',
         stderr: 'pipe',
         ipc(packet: unknown) {

@@ -84,7 +84,7 @@ Runs external tools. Owns nothing about what they find.
 - **Snapshots.** A staged or pushed run copies the selected revision to a snapshot, and the
   tools run there from the working tree's installed environment; nothing is relocated.
 
-## 2. The `@gspot/eslint-plugin` package
+## 2. The `eslint-plugin-gspot` package
 
 An ESLint plugin published from the gspot repository and imported by the generated flat config.
 Editors run it. The plugin owns the structural policies that the pinned tools do not enforce.

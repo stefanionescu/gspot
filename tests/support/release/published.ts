@@ -51,11 +51,9 @@ export async function publishRelease(registry: Registry, signal: AbortSignal): P
     const published = await publishTo(registry, version, checkout, signal);
     if (published.code !== 0) throw new Error(`Release publication failed: ${published.stdout}${published.stderr}`);
     const toolNpmrc = join(registry.work, 'tools.npmrc');
-    writeFileSync(
-        toolNpmrc,
-        `@gspot:registry=${registry.url}\n${registry.url.replace('http:', '')}/:_authToken=fake\n`,
-        { mode: 0o600 },
-    );
+    writeFileSync(toolNpmrc, `registry=${registry.url}\n${registry.url.replace('http:', '')}/:_authToken=fake\n`, {
+        mode: 0o600,
+    });
     return { registry, version, toolNpmrc };
 }
 

@@ -1,13 +1,16 @@
-# A throwaway registry for the launcher test: packages are published here and installed back with --ignore-scripts.
+# A throwaway registry: the gspot packages are published here, and every other package comes from npm through it.
 storage: ./storage
 # Compiled binaries exceed Verdaccio's default 10 MB request limit.
 max_body_size: 200mb
 auth:
     htpasswd:
         file: ./htpasswd
-uplinks: {}
+uplinks:
+    npmjs:
+        url: https://registry.npmjs.org/
+        timeout: 60s
 packages:
-    '@gspot/*':
+    'eslint-plugin-gspot':
         access: $all
         publish: $anonymous
         unpublish: $anonymous
@@ -15,7 +18,12 @@ packages:
         access: $all
         publish: $anonymous
         unpublish: $anonymous
+    'gspot-*':
+        access: $all
+        publish: $anonymous
+        unpublish: $anonymous
     '**':
         access: $all
         publish: $anonymous
+        proxy: npmjs
 log: { type: stdout, format: pretty, level: error }

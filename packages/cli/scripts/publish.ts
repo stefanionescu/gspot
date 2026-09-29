@@ -41,7 +41,7 @@ function stampPackages(version: string, distribution: string): string[] {
             files: [executable, 'README.md', 'LICENSE.md', 'NOTICE.md'],
         };
         const source = join(distribution, platform.binary);
-        const dir = join(distribution, 'npm', platform.package.slice('@gspot/'.length));
+        const dir = join(distribution, 'npm', platform.package);
         mkdirSync(dir, { recursive: true });
         writeFileSync(join(dir, 'package.json'), `${JSON.stringify(manifest, null, JSON_INDENT)}\n`);
         writeFileSync(join(dir, 'README.md'), readme);

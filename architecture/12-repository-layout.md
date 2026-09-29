@@ -5,8 +5,8 @@ itself. Local checks, normal hooks, and full CI against the exact task-branch co
 required before a merge.
 
 Two published artifacts: the binary (GitHub Releases, one asset per platform) and
-`@gspot/eslint-plugin` (npm). Kits, guides, and prose ship inside the binary. On npm the binary ships the way Biome and ast-grep ship theirs. One package per platform
-(`@gspot/cli-darwin-arm64`, `@gspot/cli-linux-x64` and the rest) holds the executable, gated
+`eslint-plugin-gspot` (npm). Kits, guides, and prose ship inside the binary. On npm the binary ships the way Biome and ast-grep ship theirs. One package per platform
+(`gspot-darwin-arm64`, `gspot-linux-x64` and the rest) holds the executable, gated
 by the `os` and `cpu` fields. A thin `gspot` package lists them as `optionalDependencies`, and
 its `bin` launcher runs the one that installed. Nothing downloads at install time and no install script runs.
 
@@ -160,7 +160,7 @@ and prose embedded through the file embedding of Bun, produces `gspot-darwin-arm
 `gspot-darwin-x64`, `gspot-linux-x64`, `gspot-linux-arm64`, `gspot-windows-x64.exe`, and the
 Linux musl targets from the same platform definition. Generated inputs and evaluator bundles
 live in `packages/cli/.build/`, release artifacts in root `dist/`. Every downloaded or cached
-build input matches its pinned SHA-256. `@gspot/eslint-plugin` builds with `bun build` to ESM
+build input matches its pinned SHA-256. `eslint-plugin-gspot` builds with `bun build` to ESM
 and CommonJS, versioned with the binary.
 
 The version has one source, `version` in `packages/cli/package.json`: the binary reads it

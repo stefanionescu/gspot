@@ -9,7 +9,7 @@ await runSourceCommand([process.execPath, 'packages/cli/src/main.ts', 'install']
 if (process.exitCode === undefined || process.exitCode === 0) {
     for (const file of ['plugin.js', 'plugin.cjs', 'plugin.d.ts']) {
         const built = readFileSync(join(ROOT, 'packages/eslint-plugin/dist', file));
-        const installed = readFileSync(join(ROOT, '.gspot/node_modules/@gspot/eslint-plugin/dist', file));
+        const installed = readFileSync(join(ROOT, '.gspot/node_modules/eslint-plugin-gspot/dist', file));
         if (!built.equals(installed)) throw new Error(`Installed workspace plugin differs from the build: ${file}.`);
     }
     console.log('Installed workspace plugin matches the build.');
