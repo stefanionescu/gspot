@@ -8,7 +8,7 @@ import { parsePolicyText, assertPolicyComplete } from '#cli/policy/read.ts';
 test.each([
     { kit: 'docs', tool: 'docs', key: 'contents_threshold', bad: 'many', good: 6 },
     { kit: 'docs', tool: 'docs', key: 'require_license', bad: 'false', good: true },
-    { kit: 'xcode', tool: 'xcode', key: 'project', bad: 42, good: 'App.xcodeproj' },
+    { kit: 'swift', tool: 'xcode', key: 'project', bad: 42, good: 'App.xcodeproj' },
     { kit: 'xcode', tool: 'xcode', key: 'entitlements_allowed', bad: 'one', good: [] },
     { kit: 'i18n', tool: 'i18n', key: 'translations', bad: [], good: { directory: 'messages', base: 'en' } },
 ])('manifest settings validate $tool.$key kinds in root and scope tables', ({ kit, tool, key, bad, good }) => {

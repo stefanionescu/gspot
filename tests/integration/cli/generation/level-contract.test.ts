@@ -26,9 +26,9 @@ test('the accepted inventory assigns every check and public plugin rule', () => 
         .split('\n')
         .filter((row) => row.startsWith('Check,'))
         .map((row) => row.split(','));
-    expect(checks.size).toBe(210);
-    expect(rows).toHaveLength(210);
-    expect(rows.filter((row) => row[2] === 'recommended')).toHaveLength(144);
+    expect(checks.size).toBe(208);
+    expect(rows).toHaveLength(208);
+    expect(rows.filter((row) => row[2] === 'recommended')).toHaveLength(142);
     for (const row of rows) expect(String(checks.get(row[1]!))).toBe(row[2]!);
     const rules = Object.entries(plugin.rules);
     expect(rules).toHaveLength(25);

@@ -41,11 +41,11 @@ test('command reference includes inherited options and nested usage while omitti
     }
 });
 
-test('identical setting definitions list every kit owner and global settings remain visible', () => {
+test('a shared setting names its one owner and global settings remain visible', () => {
     const settings = referencePages().get('settings.md')!.body;
     const shared = settings.split('\n').find((line) => line.includes('`tools.openapi.produced_by`'))!;
-    expect(shared).toContain('/reference/kits/express/');
-    expect(shared).toContain('/reference/kits/fastapi/');
+    expect(shared).toContain('/reference/kits/openapi/');
+    expect(shared).not.toContain('/reference/kits/express/');
     expect(settings).toContain('`require_reasons`');
     const javascript = referencePages().get('kits/javascript.md')!.body;
     expect(javascript).toContain('`runtime/node/NODE.md`\n');
@@ -57,8 +57,11 @@ test('identical setting definitions list every kit owner and global settings rem
 test('conflicting setting definitions stop reference generation', () => {
     const manifests = new Map(manifestDefinitions.kitManifests());
     const fastapi = structuredClone(manifests.get('fastapi')!);
-    const setting = fastapi.settings.find((entry) => entry.name === 'tools.openapi.produced_by')!;
+    const setting = structuredClone(
+        manifests.get('openapi')!.settings.find((entry) => entry.name === 'tools.openapi.produced_by')!,
+    );
     setting.kind = 'boolean';
+    fastapi.settings.push(setting);
     manifests.set('fastapi', fastapi);
     const definitions = spyOn(manifestDefinitions, 'kitManifests').mockReturnValue(manifests);
     try {

@@ -6,7 +6,24 @@ import { toPosix } from '#cli/platform/paths.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
 import { missingBuild } from '#cli/execution/planning/skips.ts';
 import { PLATFORM_NAMES } from '#cli/config/execution/execution.ts';
-import { chmodSync, mkdirSync, readdirSync, symlinkSync, realpathSync } from 'node:fs';
+import { chmodSync, mkdirSync, existsSync, readdirSync, symlinkSync, realpathSync } from 'node:fs';
+
+function linkStore(store: string, target: string): void {
+    const kind = process.platform === 'win32' ? 'junction' : 'dir';
+    const link = (name: string): void => {
+        const destination = join(target, name);
+        if (!existsSync(destination)) symlinkSync(realpathSync(join(store, name)), destination, kind);
+    };
+    for (const entry of readdirSync(store)) {
+        if (entry.startsWith('.')) continue;
+        if (!entry.startsWith('@')) {
+            link(entry);
+            continue;
+        }
+        mkdirSync(join(target, entry), { recursive: true });
+        for (const child of readdirSync(join(store, entry))) link(join(entry, child));
+    }
+}
 
 /** Whether the platform has POSIX shells, links, and modes; Windows does not. */
 export const onPosix = process.platform !== 'win32';
@@ -87,17 +104,8 @@ export async function plantLauncher(root: string, path: string, script: string):
  * @param target the node_modules directory to create
  */
 export function linkInstalledModules(target: string): void {
-    const store = join(import.meta.dir, '../../../node_modules');
-    const kind = process.platform === 'win32' ? 'junction' : 'dir';
+    // The planted packages belong to the tests workspace, so a fresh install keeps some of them out of the root store.
+    const stores = ['../../../node_modules', '../../node_modules'].map((store) => join(import.meta.dir, store));
     mkdirSync(target, { recursive: true });
-    for (const entry of readdirSync(store)) {
-        if (entry.startsWith('.')) continue;
-        if (!entry.startsWith('@')) {
-            symlinkSync(realpathSync(join(store, entry)), join(target, entry), kind);
-            continue;
-        }
-        mkdirSync(join(target, entry), { recursive: true });
-        for (const child of readdirSync(join(store, entry)))
-            symlinkSync(realpathSync(join(store, entry, child)), join(target, entry, child), kind);
-    }
+    for (const store of stores.filter((path) => existsSync(path))) linkStore(store, target);
 }

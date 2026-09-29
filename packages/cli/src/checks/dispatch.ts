@@ -20,6 +20,7 @@ import { NEXTJS_ANALYSES } from '#cli/checks/nextjs/analyses.ts';
 import { PYTHON_ANALYSES } from '#cli/checks/python/analyses.ts';
 import { XCTEST_ANALYSES } from '#cli/checks/xctest/analyses.ts';
 import { EXPRESS_ANALYSES } from '#cli/checks/express/analyses.ts';
+import { OPENAPI_ANALYSES } from '#cli/checks/openapi/analyses.ts';
 import { POSTGRES_ANALYSES } from '#cli/checks/postgres/analyses.ts';
 import { SECURITY_ANALYSES } from '#cli/checks/security/analyses.ts';
 import { SUPABASE_ANALYSES } from '#cli/checks/supabase/analyses.ts';
@@ -53,6 +54,7 @@ const checks: Record<string, Engine> = {
     ...XCODE_ANALYSES,
     ...SWIFT_ANALYSES,
     ...EXPRESS_ANALYSES,
+    ...OPENAPI_ANALYSES,
     ...SUPABASE_ANALYSES,
     ...POSTGRES_ANALYSES,
     ...SQL_ANALYSES,

@@ -5,7 +5,7 @@ import { commitAll } from '#tests/support/cli/git.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { rejection } from '#tests/support/expectations.ts';
-import { openapiFresh } from '#cli/checks/express/openapi.ts';
+import { openapiFresh } from '#cli/checks/openapi/openapi.ts';
 import { statSync, chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import type { OpenapiPlanted as Planted } from '#tests/types/integration/cli/checks.ts';
 import { OPENAPI_FRESH_POLICY, OPENAPI_FRESH_GENERATOR } from '#tests/inputs/integration/cli/checks.ts';
@@ -27,7 +27,7 @@ async function plant(schema: string): Promise<Planted> {
     chmodSync(document, 0o640);
     writeFileSync(join(directory.path, '0009_manual.sql'), '-- Untracked manual migration\n');
     const session = await openSession(directory.path);
-    const spec = session.manifests.get('express')!.checks.find((entry) => entry.analysis === 'openapi-fresh')!;
+    const spec = session.manifests.get('openapi')!.checks.find((entry) => entry.analysis === 'openapi-fresh')!;
     const input = engineInput(session, {
         scope: session.scopes.find((entry) => entry.scope.path === '')!,
         spec: spec,

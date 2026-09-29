@@ -489,6 +489,29 @@ Six parts hold up, and each asserts exact findings, lines, bytes, or exit codes:
 14. Unit tests for the Bash and Python analyzers, the workflow generator, and the hook scripts
     (rendered and checked with `sh -n`).
 
+## Closing numbers
+
+The same commands, run on the branch after the eleven phases, on 2026-09-29.
+
+| Measure                                        | Before              | After          |
+| ---------------------------------------------- | ------------------- | -------------- |
+| `packages/cli/src`, files and lines            | 479, 47,940         | 416, 43,958    |
+| Source files under 40 lines                    | 109                 | 81             |
+| `eslint-disable` directives                    | 264                 | 232            |
+| `no-trivial-functions` suppressions            | 221                 | 198            |
+| `gspot.toml` lines                             | 986                 | 515            |
+| Settings declared in two manifests             | 17                  | 0              |
+| Checks                                         | 215                 | 208            |
+| Kits                                           | 49                  | 50             |
+| Registries of check analyses                   | 2 (65 + 26 imports) | 1 (29 imports) |
+| Libraries per job (TOML, JSONC, globs, output) | 2 or 3 each         | 1 each         |
+| `tests`, files and lines                       | 568, 55,856         | 530, 49,860    |
+| Acceptance tests, files and lines              | 114, 14,447         | 103, 12,504    |
+| `architecture`, files and lines                | 21, 15,027          | 13, 6,701      |
+| `packages/cli/guides`, lines                   | 19,168              | 11,593         |
+| Guides over 250 lines                          | 28                  | 0              |
+| Tracked files under `.gspot`                   | 137                 | 137            |
+
 ## How the numbers were taken
 
 ```sh

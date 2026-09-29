@@ -25,13 +25,13 @@ plantedCases(
     },
     [
         {
-            check: 'express/openapi-lint',
+            check: 'openapi/lint',
             files: { 'openapi.yaml': DOCUMENT.replace('            operationId: readHealth\n', '') },
             policy: EXPRESS_POLICY,
             expected: { file: 'openapi.yaml', rule: 'operation-operationId', line: 15 },
         },
         {
-            check: 'express/openapi-fresh',
+            check: 'openapi/fresh',
             files: { 'write-document.js': documentWriter(`${DOCUMENT}# later\n`) },
             policy: EXPRESS_POLICY,
             expected: { file: 'openapi.yaml', rule: 'stale', line: 1 },

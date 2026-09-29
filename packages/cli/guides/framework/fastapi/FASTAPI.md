@@ -9,7 +9,7 @@ title: FastAPI
 Structure, routers, parameters, schemas, responses, and errors for a Python project that uses
 FastAPI. Runtime covers forms and files, encoding, async, dependencies, security, streaming,
 background tasks, middleware, documentation exposure, and tests. Ruff reports the annotation,
-import, and docstring rules; the `fastapi/openapi-lint` check reports a schema that drifts
+import, and docstring rules; the `openapi/lint` check reports a schema that drifts
 from the routes. Examples are complete modules on FastAPI and Pydantic v2.
 
 ## Source decisions
