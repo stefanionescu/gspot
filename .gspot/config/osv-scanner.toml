@@ -30,6 +30,16 @@ ignoreUntil = 2026-10-13
 reason = "semgrep 1.178.0, the newest release, pins pyjwt below 2.14.0, which holds the fix. The private semgrep scans local files and never decodes a JSON Web Token."
 
 [[IgnoredVulns]]
+id = "GHSA-42vr-xj54-vc7v"
+ignoreUntil = 2026-10-13
+reason = "semgrep 1.178.0, the newest release, pins pyjwt below 2.15.0, which holds the fix. The private semgrep scans local files and never decodes a JSON Web Token."
+
+[[IgnoredVulns]]
+id = "GHSA-jwrc-g2q2-pq5p"
+ignoreUntil = 2026-10-13
+reason = "semgrep 1.178.0, the newest release, pins pyjwt below 2.14.0, which holds the fix. The private semgrep scans local files and never reads a PEM key."
+
+[[IgnoredVulns]]
 id = "GHSA-hxm8-2xgr-2p9m"
 ignoreUntil = 2026-10-13
 reason = "semgrep 1.178.0, the newest release, pins pyjwt below 2.14.0, which holds the fix. The private semgrep scans local files and never decodes a JSON Web Token."

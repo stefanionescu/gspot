@@ -358,6 +358,16 @@ reason = "semgrep 1.178.0, the newest release, pins pyjwt below 2.14.0, which ho
 review_by = "2026-10-13"
 
 [[tools.osv.ignore]]
+id = "GHSA-42vr-xj54-vc7v"
+reason = "semgrep 1.178.0, the newest release, pins pyjwt below 2.15.0, which holds the fix. The private semgrep scans local files and never decodes a JSON Web Token."
+review_by = "2026-10-13"
+
+[[tools.osv.ignore]]
+id = "GHSA-jwrc-g2q2-pq5p"
+reason = "semgrep 1.178.0, the newest release, pins pyjwt below 2.14.0, which holds the fix. The private semgrep scans local files and never reads a PEM key."
+review_by = "2026-10-13"
+
+[[tools.osv.ignore]]
 id = "GHSA-hxm8-2xgr-2p9m"
 reason = "semgrep 1.178.0, the newest release, pins pyjwt below 2.14.0, which holds the fix. The private semgrep scans local files and never decodes a JSON Web Token."
 review_by = "2026-10-13"
