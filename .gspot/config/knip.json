@@ -23,7 +23,7 @@
         "publish.ts"
     ],
     "project": ["**/*.{ts,tsx,mts,cts,js,mjs,cjs}"],
-    "ignore": [".gspot/**", "eslint.config.{js,mjs,cjs}"],
+    "ignore": [".gspot/**", "eslint.config.{js,mjs,cjs}", "tests/timings/*.json"],
     "ignoreDependencies": [
         "@gspothq/cli",
         "@gspothq/eslint-plugin",

@@ -22,7 +22,10 @@ test('CLI installation records the npm tools as one install with the native wrap
     expect(readFileSync(join(root, '.gspot/package.json'))).toStrictEqual(manifest);
     expect(readFileSync(join(root, 'package.json'), 'utf8')).toBe(rootPackage);
     expect(readOwnership(root).installs).toStrictEqual(['npm']);
-    const binaries = readdirSync(join(root, '.gspot/node_modules/editorconfig-checker/bin'), { recursive: true });
+    const binaries = readdirSync(join(root, '.gspot/node_modules/editorconfig-checker/bin'), {
+        encoding: 'utf8',
+        recursive: true,
+    });
     expect(binaries.some((path) => /(?:^|[/\\])editorconfig-checker(?:\.exe)?$/u.test(path))).toBe(true);
     const checker = kitManifests()
         .get('formatting')!

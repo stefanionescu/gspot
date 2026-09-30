@@ -16,7 +16,8 @@
         "../../../../packages/cli/.gspot/**",
         "../../../../packages/cli/**/eslint.config.mjs",
         "../../../../packages/cli/**/eslint.config.js",
-        "../../../../packages/cli/**/eslint.config.cjs"
+        "../../../../packages/cli/**/eslint.config.cjs",
+        "../../../../packages/cli/tests/timings/*.json"
     ],
     "include": [
         "../../../../packages/cli/**/*.js",

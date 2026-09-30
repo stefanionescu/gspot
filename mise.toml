@@ -93,12 +93,6 @@ description = "Run native compatibility tests with the selected tools installed.
 dir = "{{config_root}}/tests"
 run = "bun test --timeout 60000 ./integration/tools"
 
-[tasks."test:probe"]
-depends = ["prepare:grammar", "build:plugin"]
-description = "Run the named test files, for one platform of the CI matrix."
-dir = "{{config_root}}/tests"
-run = "bun test --timeout 60000"
-
 [tasks."guides:lint"]
 depends = ["prepare:grammar", "build:plugin"]
 description = "Validate guide structure and native Good examples at both levels."
@@ -153,24 +147,6 @@ run = "bun docs/scripts/verify-release.ts"
 [tasks."prepare:grammar"]
 description = "Copy the grammar files into packages/cli/grammars, and download and verify the Swift parser."
 run = "bun packages/cli/scripts/inputs.ts"
-
-[tasks."ci:affected"]
-description = "Check committed changes against GSPOT_CI_BASE, or all inputs for a first push."
-shell = "bash -euo pipefail -c"
-run = '''
-base="${GSPOT_CI_BASE:-}"
-case "${base}" in
-    '' | 0000000000000000000000000000000000000000 | 0000000000000000000000000000000000000000000000000000000000000000)
-        gspot check ;;
-    *)
-        if [[ ! ${base} =~ ^[0-9a-fA-F]{40}([0-9a-fA-F]{24})?$ ]]; then
-            echo 'Invalid CI comparison object.' >&2
-            exit 2
-        fi
-        gspot check --changed="${base}"
-        ;;
-esac
-'''
 
 [tasks."release:verify-version"]
 description = "Require TAG to match the gspot package version before publishing."

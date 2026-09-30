@@ -61,7 +61,8 @@ The commit hook runs `gspot check --staged`, which reads only what you staged.
 
 ## CI results
 
-The repository variable `GSPOT_CI_ENABLED` turns CI on. To test every platform, run the `ci`
-workflow on your branch with `full = true`. The check jobs upload `.gspot/reports/report.json`
+CI runs on every pull request, on Linux, macOS, and Windows. To run it on a branch without a
+pull request, start the `ci` workflow by hand. The check job uploads `.gspot/reports/report.json`
 and the SARIF reports of the commit. A failed job names its task. Run that task locally with
-the same arguments to reproduce the failure.
+the same arguments to reproduce the failure. A failed shard of the suite runs the same files
+again with `mise run test:acceptance -- --shard=<k>/<n> --timings=timings/<system>.json`.

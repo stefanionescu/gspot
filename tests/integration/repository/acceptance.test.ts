@@ -46,8 +46,21 @@ test('source acceptance keeps explicit paths and ordered name filters', () => {
     ]);
 });
 
+test('source acceptance passes the options that shard a CI run to Bun', () => {
+    expect(acceptanceArguments(['--shard=2/6', '--timings=timings/linux.json', '--update-timings'])).toStrictEqual([
+        '--timeout',
+        '60000',
+        '--shard=2/6',
+        '--timings=timings/linux.json',
+        '--update-timings',
+        join(ROOT, 'tests/acceptance/source'),
+    ]);
+});
+
 test.each([
     { args: ['-t'], error: '-t requires a pattern.' },
+    { args: ['--shard=0/6'], error: 'Unsupported acceptance option: --shard=0/6.' },
+    { args: ['--timings='], error: 'Unsupported acceptance option: --timings=.' },
     { args: ['--test-name-pattern', ''], error: '--test-name-pattern requires a pattern.' },
     { args: ['--unknown'], error: 'Unsupported acceptance option: --unknown.' },
     { args: [ROOT], error: 'Select a source test under tests/acceptance/source.' },
