@@ -1,4 +1,5 @@
 import { isOwned } from '#cli/kits/owners.ts';
+import { findingAt } from '#cli/checks/result.ts';
 import type { CheckSpec } from '#cli/types/kits.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { roleFolders } from '#cli/policy/settings.ts';
@@ -35,15 +36,12 @@ function findingsFor(input: EngineInput, policy: EffectivePolicy, identifiers: I
     return identifiers.flatMap((identifier) =>
         nameProblems(identifier, context).map((problem) => {
             const source = problem.source === undefined ? '' : ` (${problem.source})`;
-            return {
-                check: input.spec.name,
-                file: identifier.file,
-                line: identifier.line,
-                column: identifier.column,
-                rule: problem.rule,
-                message: `${identifier.kind} "${identifier.name}": ${problem.message}${source}.`,
-                fixable: false,
-            };
+            return findingAt(
+                input,
+                { file: identifier.file, line: identifier.line, column: identifier.column },
+                problem.rule,
+                `${identifier.kind} "${identifier.name}": ${problem.message}${source}.`,
+            );
         }),
     );
 }
@@ -142,12 +140,9 @@ async function schemaFindings(input: EngineInput): Promise<Finding[]> {
         const groups = naming.remove_groups
             .filter((entry) => !removable.has(entry.group))
             .map((entry) => `naming.remove_groups names "${entry.group}", which is not a removable group.`);
-        return [...unused, ...dead, ...groups, ...cases].map((text) => ({
-            check: input.spec.name,
-            file: 'gspot.toml',
-            message: scope === '' ? text : `${text} (scope ${scope})`,
-            fixable: false,
-        }));
+        return [...unused, ...dead, ...groups, ...cases].map((text) =>
+            findingAt(input, { file: 'gspot.toml' }, 'configuration', scope === '' ? text : `${text} (scope ${scope})`),
+        );
     });
 }
 

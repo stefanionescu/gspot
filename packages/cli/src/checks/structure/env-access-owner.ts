@@ -1,3 +1,4 @@
+import { findingAt } from '#cli/checks/result.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
 import { withoutComment } from '#cli/checks/structure/code-lines.ts';
 import type { StructureAnalysis as Analysis } from '#cli/types/checks.ts';
@@ -26,9 +27,9 @@ export const envAccessOwner: Analysis = async (context, scripts) => {
             const match = read.exec(withoutComment(line));
             if (match?.[1] === undefined) return [];
             return [
-                context.report(
-                    file.path,
-                    position + 1,
+                findingAt(
+                    context.input,
+                    { file: file.path, line: position + 1 },
                     'read-outside-owner',
                     `${match[1]} is read here but declared by the environment owner; read it there and pass the value in.`,
                 ),

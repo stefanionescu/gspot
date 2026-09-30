@@ -1,3 +1,4 @@
+import { findingAt } from '#cli/checks/result.ts';
 import { trivialFile } from '#cli/checks/structure/statements.ts';
 import { functionsOf, pythonModules } from '#cli/checks/python/modules.ts';
 import { pythonBlockingCalls } from '#cli/checks/python/blocking-calls.ts';
@@ -26,14 +27,9 @@ function analysis(read: StructureReader): (input: EngineInput) => Promise<Findin
         const modules = await pythonModules(input);
         try {
             const problems = read({ modules, functions: modules.flatMap((module) => functionsOf(module)) }, input);
-            return problems.map((entry) => ({
-                check: input.spec.name,
-                file: entry.file,
-                line: entry.line,
-                rule: entry.rule,
-                message: entry.text,
-                fixable: false,
-            }));
+            return problems.map((entry) =>
+                findingAt(input, { file: entry.file, line: entry.line }, entry.rule, entry.text),
+            );
         } finally {
             for (const module of modules) module.tree.delete();
         }

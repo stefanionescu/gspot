@@ -1,6 +1,7 @@
 import { parseAllDocuments } from 'yaml';
 import { visit } from 'unist-util-visit';
 import { parse as parseToml } from 'smol-toml';
+import { findingAt } from '#cli/checks/result.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { parserFor } from '#cli/parsers/tree-sitter.ts';
 import { readSource } from '#cli/repository/tracked.ts';
@@ -81,14 +82,14 @@ async function fileFindings(input: EngineInput, path: string): Promise<Finding[]
             .replaceAll(ANGLE_PLACEHOLDER, 'PLACEHOLDER');
         const problem = await problemFor(input, parser, body);
         if (problem !== undefined)
-            findings.push({
-                check: input.spec.name,
-                file: path,
-                line: fence.line,
-                rule: fence.language,
-                message: `This ${fence.language} block does not parse: ${problem}.`,
-                fixable: false,
-            });
+            findings.push(
+                findingAt(
+                    input,
+                    { file: path, line: fence.line },
+                    fence.language,
+                    `This ${fence.language} block does not parse: ${problem}.`,
+                ),
+            );
     }
     return findings;
 }

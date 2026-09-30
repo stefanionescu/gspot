@@ -1,3 +1,4 @@
+import { findingAt } from '#cli/checks/result.ts';
 import { withoutComment } from '#cli/checks/structure/code-lines.ts';
 import type { ScriptIndex, StructureAnalysis as Analysis } from '#cli/types/checks.ts';
 
@@ -68,9 +69,9 @@ export const deadParameters: Analysis = async (context, scripts) => {
             const unread = Array.from({ length: width - highest }, (_, offset) => String(highest + offset + 1));
             const read = highest === 0 ? 'reads no positional parameter' : `reads none past $${String(highest)}`;
             return [
-                context.report(
-                    file.path,
-                    entry.start,
+                findingAt(
+                    context.input,
+                    { file: file.path, line: entry.start },
                     'unread-arguments',
                     `${entry.name} is called with up to ${String(width)} argument(s) but ${read}: position ${unread.join(', ')} is never read.`,
                 ),

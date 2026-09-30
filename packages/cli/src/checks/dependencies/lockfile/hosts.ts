@@ -1,3 +1,4 @@
+import { findingAt } from '#cli/checks/result.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import type { Finding, EngineInput } from '#cli/types/checks.ts';
 import { LOCKFILES } from '#cli/config/repository/repository.ts';
@@ -20,16 +21,7 @@ function fileFindings(input: EngineInput, path: string, hosts: Set<string>): Fin
             .flatMap((url) => {
                 const said = URL.canParse(url) ? problem(new URL(url), hosts) : undefined;
                 if (said === undefined) return [];
-                return [
-                    {
-                        check: input.spec.name,
-                        file: path,
-                        line: index + 1,
-                        rule: 'registry',
-                        message: said,
-                        fixable: false,
-                    },
-                ];
+                return [findingAt(input, { file: path, line: index + 1 }, 'registry', said)];
             })
             .toArray(),
     );

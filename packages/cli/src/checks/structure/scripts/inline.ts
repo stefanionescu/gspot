@@ -1,3 +1,4 @@
+import { findingAt } from '#cli/checks/result.ts';
 import { RUNTIME_EMBEDS } from '#cli/config/checks/structure.ts';
 import type { StructureAnalysis as Analysis } from '#cli/types/checks.ts';
 
@@ -15,9 +16,9 @@ export const scriptInline: Analysis = async (context, scripts) => {
             const embed = RUNTIME_EMBEDS.find(([pattern]) => pattern.test(line));
             if (embed === undefined) return [];
             return [
-                context.report(
-                    file.path,
-                    position + 1,
+                findingAt(
+                    context.input,
+                    { file: file.path, line: position + 1 },
                     'runtime-embed',
                     `This line carries ${embed[1]}; put it in its own file.`,
                 ),

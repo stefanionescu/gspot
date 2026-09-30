@@ -1,4 +1,5 @@
 import { rm } from 'node:fs/promises';
+import { findingAt } from '#cli/checks/result.ts';
 import { globPaths } from '#cli/platform/paths.ts';
 import { join, dirname, basename } from 'node:path';
 import { readSource } from '#cli/repository/tracked.ts';
@@ -37,14 +38,14 @@ export function drizzleRelations(input: EngineInput): Finding[] {
                     !new RegExp(String.raw`relations\(\s*${name}\b`, 'u').test(everything)
                 );
             })
-            .map((match) => ({
-                check: input.spec.name,
-                file: file.path,
-                line: file.text.slice(0, match.index).split('\n').length,
-                rule: 'relations',
-                message: `${match.groups?.['name'] ?? ''} references another table and has no relations entry.`,
-                fixable: false,
-            }))
+            .map((match) =>
+                findingAt(
+                    input,
+                    { file: file.path, line: file.text.slice(0, match.index).split('\n').length },
+                    'relations',
+                    `${match.groups?.['name'] ?? ''} references another table and has no relations entry.`,
+                ),
+            )
             .toArray(),
     );
 }
@@ -82,15 +83,14 @@ export async function drizzleMigrations(input: EngineInput): Promise<Finding[]> 
                 return was === undefined || now === undefined || !was.equals(now);
             })
             .toSorted((left, right) => left.localeCompare(right));
-        return changed.map((path) => ({
-            check: input.spec.name,
-            file: input.scope === '' ? path : `${input.scope}/${path}`,
-            line: 1,
-            rule: 'missing-migration',
-            message:
+        return changed.map((path) =>
+            findingAt(
+                input,
+                { file: input.scope === '' ? path : `${input.scope}/${path}`, line: 1 },
+                'missing-migration',
                 'drizzle-kit changes this file when generating migrations; regenerate and commit the migration output.',
-            fixable: false,
-        }));
+            ),
+        );
     } finally {
         await rm(scratch, { recursive: true, force: true });
     }

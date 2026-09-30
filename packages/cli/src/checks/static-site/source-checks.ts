@@ -1,5 +1,6 @@
 import { join } from 'node:path';
 import { statSync } from 'node:fs';
+import { findingAt } from '#cli/checks/result.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import type { Finding, EngineInput } from '#cli/types/checks.ts';
@@ -17,16 +18,7 @@ async function svgFinding(input: EngineInput, path: string): Promise<Finding[]> 
     const exceeds =
         input.policyFiles.policy.level === 'all' ? saved > 0 : saved * REPORTED_SAVINGS_SHARE > originalBytes;
     return exceeds
-        ? [
-              {
-                  check: input.spec.name,
-                  file: path,
-                  line: 1,
-                  rule: 'svg',
-                  message: `svgo makes this file ${String(saved)} bytes smaller.`,
-                  fixable: false,
-              },
-          ]
+        ? [findingAt(input, { file: path, line: 1 }, 'svg', `svgo makes this file ${String(saved)} bytes smaller.`)]
         : [];
 }
 
@@ -46,14 +38,14 @@ export function deadAssets(input: EngineInput): Finding[] {
             const name = file.path.slice(file.path.lastIndexOf('/') + 1);
             return texts.every((text) => !text.includes(name));
         })
-        .map((file) => ({
-            check: input.spec.name,
-            file: file.path,
-            line: 1,
-            rule: 'dead-asset',
-            message: 'No page, stylesheet or script names this file.',
-            fixable: false,
-        }));
+        .map((file) =>
+            findingAt(
+                input,
+                { file: file.path, line: 1 },
+                'dead-asset',
+                'No page, stylesheet or script names this file.',
+            ),
+        );
 }
 
 /**
@@ -86,30 +78,19 @@ export function webManifest(input: EngineInput): Finding[] {
             parsed = JSON.parse(text) as typeof parsed;
         } catch (error) {
             return [
-                {
-                    check: input.spec.name,
-                    file: file.path,
-                    line: 1,
-                    rule: 'parse',
-                    message: error instanceof Error ? error.message : 'The manifest is not JSON.',
-                    fixable: false,
-                },
+                findingAt(
+                    input,
+                    { file: file.path, line: 1 },
+                    'parse',
+                    error instanceof Error ? error.message : 'The manifest is not JSON.',
+                ),
             ];
         }
         const folder = file.path.includes('/') ? file.path.slice(0, file.path.lastIndexOf('/')) : '';
         const unnamed =
             typeof parsed.name === 'string' && parsed.name !== ''
                 ? []
-                : [
-                      {
-                          check: input.spec.name,
-                          file: file.path,
-                          line: 1,
-                          rule: 'name',
-                          message: 'The manifest has no name.',
-                          fixable: false,
-                      },
-                  ];
+                : [findingAt(input, { file: file.path, line: 1 }, 'name', 'The manifest has no name.')];
         const icons = (parsed.icons ?? []).flatMap((icon) => (icon.src === undefined ? [] : [icon.src]));
         const missing = icons
             .filter(
@@ -118,14 +99,7 @@ export function webManifest(input: EngineInput): Finding[] {
                     statSync(join(input.root, folder, src.replace(/^\//u, '')), { throwIfNoEntry: false }) ===
                         undefined,
             )
-            .map((src) => ({
-                check: input.spec.name,
-                file: file.path,
-                line: 1,
-                rule: 'icon',
-                message: `The icon ${src} does not exist.`,
-                fixable: false,
-            }));
+            .map((src) => findingAt(input, { file: file.path, line: 1 }, 'icon', `The icon ${src} does not exist.`));
         return [...unnamed, ...missing];
     });
 }
@@ -163,13 +137,13 @@ export function securityHeaders(input: EngineInput): Finding[] {
                 ([name, pattern]) =>
                     !pattern.test(held.get(name) ?? '') && !(name === 'x-frame-options' && hasFrameRule),
             )
-            .map(([name]) => ({
-                check: input.spec.name,
-                file: file.path,
-                line: 1,
-                rule: 'missing-header',
-                message: `The block for /* sets no valid ${name} header.`,
-                fixable: false,
-            }));
+            .map(([name]) =>
+                findingAt(
+                    input,
+                    { file: file.path, line: 1 },
+                    'missing-header',
+                    `The block for /* sets no valid ${name} header.`,
+                ),
+            );
     });
 }

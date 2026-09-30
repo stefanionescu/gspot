@@ -1,5 +1,6 @@
 // Validate suppression comments against the repository reason policy; reporting owns the census.
 import { ownedBy } from '#cli/kits/owners.ts';
+import { findingAt } from '#cli/checks/result.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { extensionOf } from '#cli/platform/paths.ts';
 import { readSource } from '#cli/repository/tracked.ts';
@@ -113,23 +114,25 @@ export async function suppressionComments(
 export function suppressions(input: EngineInput): Finding[] {
     if (input.suppressions === undefined) throw new Error('Suppression validation requires once-only execution.');
     return input.suppressions.flatMap((entry): Finding[] => {
-        const base = { check: input.spec.name, file: entry.file, line: entry.line, fixable: false };
+        const at = { file: entry.file, line: entry.line };
         if (entry.forbidden && input.policyFiles.policy.level === 'all')
             return [
-                {
-                    ...base,
-                    rule: entry.form,
-                    message: `${entry.form} suppression is not allowed; fix the finding or configure an explicit ignore.`,
-                },
+                findingAt(
+                    input,
+                    at,
+                    entry.form,
+                    `${entry.form} suppression is not allowed; fix the finding or configure an explicit ignore.`,
+                ),
             ];
         if (!input.policyFiles.policy.requireReasons) return [];
         if (isReasonAccepted(entry.reason)) return [];
         return [
-            {
-                ...base,
-                rule: `${entry.form}-no-reason`,
-                message: `This ${entry.form} suppression needs a meaningful reason.`,
-            },
+            findingAt(
+                input,
+                at,
+                `${entry.form}-no-reason`,
+                `This ${entry.form} suppression needs a meaningful reason.`,
+            ),
         ];
     });
 }

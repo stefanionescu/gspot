@@ -1,4 +1,5 @@
 import { join, dirname } from 'node:path';
+import { findingAt } from '#cli/checks/result.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import type { SpawnResult } from '#cli/types/platform.ts';
 import { SHOWN_LINES } from '#cli/config/checks/platforms.ts';
@@ -50,14 +51,7 @@ export async function lockfileFresh(input: EngineInput): Promise<Finding[]> {
         });
         if (result.code === 0) continue;
         const refusal = lockfileRefusal(command, result);
-        findings.push({
-            check: input.spec.name,
-            file: file.path,
-            line: 1,
-            rule: 'stale-lockfile',
-            message: refusal,
-            fixable: false,
-        });
+        findings.push(findingAt(input, { file: file.path, line: 1 }, 'stale-lockfile', refusal));
     }
     return findings;
 }

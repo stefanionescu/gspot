@@ -1,3 +1,4 @@
+import { findingAt } from '#cli/checks/result.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
 import { scopeImports } from '#cli/checks/structure/imports.ts';
 import type { Finding, EngineInput } from '#cli/types/checks.ts';
@@ -23,12 +24,12 @@ export async function routesTested(input: EngineInput): Promise<Finding[]> {
                 (importer) => !isTest(input.scope === '' ? importer : importer.slice(input.scope.length + 1)),
             ),
     );
-    return untested.map((path) => ({
-        check: input.spec.name,
-        file: path,
-        line: 1,
-        rule: 'untested-route',
-        message: `No test in this scope imports ${input.scope === '' ? path : path.slice(input.scope.length + 1)}.`,
-        fixable: false,
-    }));
+    return untested.map((path) =>
+        findingAt(
+            input,
+            { file: path, line: 1 },
+            'untested-route',
+            `No test in this scope imports ${input.scope === '' ? path : path.slice(input.scope.length + 1)}.`,
+        ),
+    );
 }

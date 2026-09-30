@@ -1,5 +1,6 @@
 // NestJS names a file for its feature and its kind, as its generator writes it: cats.controller.ts beside cats.service.ts.
 
+import { findingAt } from '#cli/checks/result.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
 import type { StructureAnalysis as Analysis } from '#cli/types/checks.ts';
 import { stemOf, prefixOf, directoryOf, directoryTree } from '#cli/checks/structure/directories.ts';
@@ -79,9 +80,9 @@ export const prefixCollisions: Analysis = (context) => {
         seen.add(key);
         const names = peers.map((entry) => (entry.kind === 'dir' ? `${entry.name}/` : entry.name)).join(', ');
         return [
-            context.report(
-                file.path,
-                1,
+            findingAt(
+                context.input,
+                { file: file.path, line: 1 },
                 'shared-prefix',
                 `${names} share the prefix "${prefix}". Group them in a folder named ${prefix} and drop the prefix, or allow the set with a reason.`,
             ),

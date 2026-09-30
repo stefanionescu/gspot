@@ -1,4 +1,5 @@
 import { posix } from 'node:path';
+import { findingAt } from '#cli/checks/result.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { parse } from '@formatjs/icu-messageformat-parser';
 import type { Finding, EngineInput, Translations } from '#cli/types/checks.ts';
@@ -55,37 +56,28 @@ export function localeFiles(input: EngineInput): Finding[] {
                 const problem = textProblem(text);
                 return problem === undefined
                     ? []
-                    : [
-                          {
-                              check: input.spec.name,
-                              file: path,
-                              line: 1,
-                              rule: 'message',
-                              message: `${key}: ${problem}`,
-                              fixable: false,
-                          },
-                      ];
+                    : [findingAt(input, { file: path, line: 1 }, 'message', `${key}: ${problem}`)];
             });
             const missing = wanted
                 .keys()
                 .filter((key) => !messages.has(key))
-                .map((key) => ({
-                    check: input.spec.name,
-                    file: path,
-                    line: 1,
-                    rule: 'missing-key',
-                    message: `The key ${key} of ${base} has no message here.`,
-                    fixable: false,
-                }))
+                .map((key) =>
+                    findingAt(
+                        input,
+                        { file: path, line: 1 },
+                        'missing-key',
+                        `The key ${key} of ${base} has no message here.`,
+                    ),
+                )
                 .toArray();
-            const dotted = dottedKeys(raw.get(path)).map((key) => ({
-                check: input.spec.name,
-                file: path,
-                line: 1,
-                rule: 'dotted-key',
-                message: `The key ${key} holds a dot, which is how a nested key is written.`,
-                fixable: false,
-            }));
+            const dotted = dottedKeys(raw.get(path)).map((key) =>
+                findingAt(
+                    input,
+                    { file: path, line: 1 },
+                    'dotted-key',
+                    `The key ${key} holds a dot, which is how a nested key is written.`,
+                ),
+            );
             return [...broken, ...missing, ...dotted];
         })
         .toArray();

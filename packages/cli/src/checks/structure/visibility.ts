@@ -1,3 +1,4 @@
+import { findingAt } from '#cli/checks/result.ts';
 import { ENTRY_FUNCTIONS } from '#cli/config/checks/structure.ts';
 import type { StructureAnalysis as Analysis } from '#cli/types/checks.ts';
 
@@ -22,18 +23,18 @@ export const privatePrefix: Analysis = async (context, scripts) => {
             const isPrivate = entry.name.startsWith('_');
             if (isPrivate && callers.length > 0)
                 return [
-                    context.report(
-                        file.path,
-                        entry.start,
+                    findingAt(
+                        context.input,
+                        { file: file.path, line: entry.start },
                         'private-called-outside',
                         `${entry.name} is private but ${callers.join(', ')} calls it.`,
                     ),
                 ];
             if (!isPrivate && callers.length === 0)
                 return [
-                    context.report(
-                        file.path,
-                        entry.start,
+                    findingAt(
+                        context.input,
+                        { file: file.path, line: entry.start },
                         'file-local',
                         `${entry.name} is called from no other file; name it _${entry.name}.`,
                     ),
@@ -58,9 +59,9 @@ export const privateBeforePublic: Analysis = async (context, scripts) => {
             const isPrivate = entry.name.startsWith('_');
             if (isPrivate && isPublicSeen)
                 findings.push(
-                    context.report(
-                        file.path,
-                        entry.start,
+                    findingAt(
+                        context.input,
+                        { file: file.path, line: entry.start },
                         'private-below-public',
                         `${entry.name} is private and sits below a public function.`,
                     ),
@@ -70,7 +71,14 @@ export const privateBeforePublic: Analysis = async (context, scripts) => {
         const main = file.functions.find((entry) => entry.name === 'main');
         const last = file.functions.at(-1);
         if (main !== undefined && last !== undefined && last.name !== 'main')
-            findings.push(context.report(file.path, main.start, 'main-not-last', 'main is not the last function.'));
+            findings.push(
+                findingAt(
+                    context.input,
+                    { file: file.path, line: main.start },
+                    'main-not-last',
+                    'main is not the last function.',
+                ),
+            );
         return findings;
     });
 };

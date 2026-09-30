@@ -1,23 +1,12 @@
 // The checks that read the schema the migrations build: row security, grants, definer functions, and foreign key indexes.
+import { findingAt } from '#cli/checks/result.ts';
 import { nodesOf } from '#cli/parsers/sql/parser.ts';
 import { positionAt } from '#cli/parsers/sql/statements.ts';
 import { schema } from '#cli/checks/postgres/schema/fields.ts';
+import type { Finding, EngineInput } from '#cli/types/checks.ts';
 import { DEFAULT_SCHEMA } from '#cli/config/checks/platforms.ts';
 import { migrationsOf } from '#cli/checks/postgres/migrations.ts';
-import type { Finding, Declared, EngineInput } from '#cli/types/checks.ts';
 import type { SqlNode, SqlStatementView } from '#cli/types/parsers/sql.ts';
-
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Four checks build the finding with its statement position; one owner keeps that shape.
-function finding(input: EngineInput, at: Declared, rule: string, text: string): Finding {
-    return {
-        check: input.spec.name,
-        file: at.path,
-        ...positionAt(at.text, at.offset),
-        rule,
-        message: text,
-        fixable: false,
-    };
-}
 
 function isLooseDefiner(statement: SqlStatementView): boolean {
     if (statement.kind !== 'CreateFunctionStmt') return false;
@@ -47,7 +36,7 @@ async function statementFindings(
         migration.statements
             .filter((statement) => isWrong(statement))
             .map((statement) =>
-                finding(input, { path: migration.path, offset: statement.start, text: migration.text }, rule, text),
+                findingAt(input, { file: migration.path, ...positionAt(migration.text, statement.start) }, rule, text),
             ),
     );
 }
@@ -66,10 +55,11 @@ export async function rlsPresent(input: EngineInput): Promise<Finding[]> {
         .entries()
         .filter(([table]) => schemas.has(table.slice(0, table.indexOf('.'))))
         .flatMap(([table, at]): Finding[] => {
+            const place = { file: at.path, ...positionAt(at.text, at.offset) };
             if (!fields.secured.has(table))
-                return [finding(input, at, 'row-security', `${table} does not have row level security enabled.`)];
+                return [findingAt(input, place, 'row-security', `${table} does not have row level security enabled.`)];
             if (fields.policed.has(table)) return [];
-            return [finding(input, at, 'policy', `${table} enables row level security and has no policy.`)];
+            return [findingAt(input, place, 'policy', `${table} enables row level security and has no policy.`)];
         })
         .toArray();
 }
@@ -84,9 +74,9 @@ export async function foreignKeyIndexes(input: EngineInput): Promise<Finding[]> 
     return fields.foreignKeys
         .filter((key) => fields.indexed.get(key.table)?.has(key.column) !== true)
         .map((key) =>
-            finding(
+            findingAt(
                 input,
-                key,
+                { file: key.path, ...positionAt(key.text, key.offset) },
                 'foreign-key-index',
                 `${key.table}.${key.column} is a foreign key and no index leads with it.`,
             ),

@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { join } from 'node:path';
+import { findingAt } from '#cli/checks/result.ts';
 import type { Root } from '#cli/types/platform.ts';
 import { PERCENT } from '#cli/config/checks/swift.ts';
 import { swiftBuildPlan } from '#cli/checks/swift/plan.ts';
@@ -95,14 +96,7 @@ export async function testCoverage(input: EngineInput): Promise<Finding[]> {
         removePreviousBundle(files);
         const viewed = await measureCoverage(input, plan.argv, bundle, cwd);
         const report = coverageReportSchema.parse(JSON.parse(viewed.stdout));
-        return underFloor(report, floors).map((text) => ({
-            check: input.spec.name,
-            file: '',
-            line: 1,
-            rule: 'coverage',
-            message: text,
-            fixable: false,
-        }));
+        return underFloor(report, floors).map((text) => findingAt(input, { file: '', line: 1 }, 'coverage', text));
     } finally {
         files.close();
     }

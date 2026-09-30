@@ -1,3 +1,4 @@
+import { findingAt } from '#cli/checks/result.ts';
 import { trivialFile } from '#cli/checks/structure/statements.ts';
 import { DEFAULT_DUPLICATE_LINES } from '#cli/config/checks/swift.ts';
 import { functionsOf, swiftSources } from '#cli/checks/swift/sources.ts';
@@ -18,14 +19,9 @@ function analysis(read: SwiftReader): (input: EngineInput) => Promise<Finding[]>
         const sources = await swiftSources(input);
         try {
             const problems = read({ sources, functions: sources.flatMap((source) => functionsOf(source)) }, input);
-            return problems.map((entry) => ({
-                check: input.spec.name,
-                file: entry.file,
-                line: entry.line,
-                rule: entry.rule,
-                message: entry.text,
-                fixable: false,
-            }));
+            return problems.map((entry) =>
+                findingAt(input, { file: entry.file, line: entry.line }, entry.rule, entry.text),
+            );
         } finally {
             for (const source of sources) source.tree.delete();
         }

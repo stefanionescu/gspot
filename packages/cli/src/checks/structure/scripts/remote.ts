@@ -1,3 +1,4 @@
+import { findingAt } from '#cli/checks/result.ts';
 import { functionAt } from '#cli/checks/structure/parser.ts';
 import type { ScriptFile, StructureAnalysis as Analysis } from '#cli/types/checks.ts';
 import { SSH_HEREDOC, RUN_SSH_START, CLOSING_QUOTE_LINE, SSH_BLOCK_MIN_LINES } from '#cli/config/checks/structure.ts';
@@ -52,9 +53,9 @@ export const scriptRemote: Analysis = async (context, scripts) => {
                 (block) => block.length >= SSH_BLOCK_MIN_LINES && functionAt(file.functions, block.start) === undefined,
             )
             .map((block) =>
-                context.report(
-                    file.path,
-                    block.start,
+                findingAt(
+                    context.input,
+                    { file: file.path, line: block.start },
                     'unnamed-block',
                     `A ${String(block.length)}-line run_ssh block sits outside a named function.`,
                 ),
@@ -64,9 +65,9 @@ export const scriptRemote: Analysis = async (context, scripts) => {
             const previous = (file.lines[position - 1] ?? '').trim();
             if (previous.startsWith('# ') && previous.includes(' - ')) return [];
             return [
-                context.report(
-                    file.path,
-                    position + 1,
+                findingAt(
+                    context.input,
+                    { file: file.path, line: position + 1 },
                     'undocumented-heredoc',
                     'An ssh heredoc carries a "# name - what it does" line above it.',
                 ),

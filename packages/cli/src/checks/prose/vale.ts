@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { hasPackages } from '#cli/tools/vale.ts';
+import { findingAt } from '#cli/checks/result.ts';
 import { join, relative, isAbsolute } from 'node:path';
 import { readSource } from '#cli/repository/tracked.ts';
 import type { SpawnResult } from '#cli/types/platform.ts';
@@ -92,15 +93,14 @@ export async function valeFindings(input: EngineInput): Promise<Finding[]> {
     for (const group of groups) {
         const alerts = await alertsFor(input, group);
         findings.push(
-            ...alerts.map((alert) => ({
-                check: input.spec.name,
-                file: alert.file,
-                line: alert.line,
-                column: alert.column,
-                rule: alert.check,
-                message: alert.message,
-                fixable: false,
-            })),
+            ...alerts.map((alert) =>
+                findingAt(
+                    input,
+                    { file: alert.file, line: alert.line, column: alert.column },
+                    alert.check,
+                    alert.message,
+                ),
+            ),
         );
     }
     return findings;

@@ -1,3 +1,4 @@
+import { findingAt } from '#cli/checks/result.ts';
 import { codeLines } from '#cli/checks/structure/code-lines.ts';
 import { CONFIG_GUARD, DEFAULT_EXPANSION } from '#cli/config/checks/structure.ts';
 
@@ -21,11 +22,23 @@ function markProblems(
     const expected = `readonly ${name}=1`;
     if (second?.code !== expected)
         findings.push(
-            context.report(file.path, first.number, 'guard-mark', `The line after the guard is ${expected}.`),
+            findingAt(
+                context.input,
+                { file: file.path, line: first.number },
+                'guard-mark',
+                `The line after the guard is ${expected}.`,
+            ),
         );
     const other = seen.get(name);
     if (other !== undefined)
-        findings.push(context.report(file.path, first.number, 'guard-shared', `${name} already guards ${other}.`));
+        findings.push(
+            findingAt(
+                context.input,
+                { file: file.path, line: first.number },
+                'guard-shared',
+                `${name} already guards ${other}.`,
+            ),
+        );
     seen.set(name, file.path);
     return findings;
 }
@@ -35,9 +48,9 @@ function guardFindings(file: ScriptFile, seen: Map<string, string>, context: Str
     const name = first === undefined ? undefined : CONFIG_GUARD.exec(first.code)?.groups?.['name'];
     if (first === undefined || name === undefined)
         return [
-            context.report(
-                file.path,
-                first?.number ?? 1,
+            findingAt(
+                context.input,
+                { file: file.path, line: first?.number ?? 1 },
                 'guard-first',
                 'A configuration owner opens with [[ -n ${_CFG_<NAME>_READY:-} ]] && return 0.',
             ),
@@ -63,9 +76,9 @@ export const scriptConfigDefaults: Analysis = async (context, scripts) => {
             return match === null
                 ? []
                 : [
-                      context.report(
-                          file.path,
-                          position + 1,
+                      findingAt(
+                          context.input,
+                          { file: file.path, line: position + 1 },
                           'default-outside-owner',
                           `${match[0]} sets a default outside the configuration owners.`,
                       ),

@@ -71,7 +71,8 @@ export type Importer = { path: string; read: string[] };
 export type MarkupProblem = { node: Node; rule: string; text: string };
 export type MarkupAttribute = { name: string; value: string; element: string; node: Node };
 
-export type Reporter = (file: string, rule: string, text: string) => Finding;
+/** Where a finding points: the file, and the line and column when the check knows them. */
+export type FindingPlace = Pick<Finding, 'file' | 'line' | 'column'>;
 
 export type PathIndex = { known: Set<string>; tasks: Set<string>; isException: (path: string) => boolean };
 export type ProseLine = { number: number; line: string };
@@ -279,8 +280,6 @@ export type StructureInput = {
     bashList: (slot: string) => string[];
     /** A `[tools.bash]` slot as written. */
     bashSetting: (slot: string) => unknown;
-    /** A finding for this check. */
-    report: (file: string, line: number, rule: string, text: string) => Finding;
 };
 export type StructureProblem = { file: string; line: number; rule: string; text: string };
 /** One shell function: its name, its declaration line and closing line (one-based), and the lines between the braces. */

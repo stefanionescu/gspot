@@ -1,3 +1,4 @@
+import { findingAt } from '#cli/checks/result.ts';
 import { codeLines } from '#cli/checks/structure/code-lines.ts';
 import type { StructureAnalysis as Analysis } from '#cli/types/checks.ts';
 import { stemOf, directoryOf, directoryTree } from '#cli/checks/structure/directories.ts';
@@ -16,9 +17,9 @@ export const fileLength: Analysis = async (context, scripts) => {
         const count = codeLines(file.lines).length;
         if (count <= ceiling) return [];
         return [
-            context.report(
-                file.path,
-                1,
+            findingAt(
+                context.input,
+                { file: file.path, line: 1 },
                 'file-lines',
                 `${String(count)} code lines is over the ceiling of ${String(ceiling)}.`,
             ),
@@ -38,9 +39,9 @@ export const fileDirectoryCollision: Analysis = (context) => {
         const siblings = tree.get(directoryOf(file.path)) ?? [];
         if (siblings.every((entry) => !(entry.kind === 'dir' && entry.name === stem))) return [];
         return [
-            context.report(
-                file.path,
-                1,
+            findingAt(
+                context.input,
+                { file: file.path, line: 1 },
                 'stem-collision',
                 `${file.path} sits beside a folder named ${stem}/, so an import of ./${stem} names both.`,
             ),

@@ -1,5 +1,6 @@
 import { join } from 'node:path';
 import { rm } from 'node:fs/promises';
+import { findingAt } from '#cli/checks/result.ts';
 import { stripVTControlCharacters } from 'node:util';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import { scratchCopy } from '#cli/execution/files/workspace.ts';
@@ -38,15 +39,16 @@ function typeFinding(input: EngineInput, line: string): Finding[] {
     const text = groups['text'];
     if (text === undefined) return [];
     return [
-        {
-            check: input.spec.name,
-            file: input.scope === '' ? file : `${input.scope}/${file}`,
-            line: Number(groups['line']),
-            column: Number(groups['column']),
+        findingAt(
+            input,
+            {
+                file: input.scope === '' ? file : `${input.scope}/${file}`,
+                line: Number(groups['line']),
+                column: Number(groups['column']),
+            },
             rule,
-            message: text,
-            fixable: false,
-        },
+            text,
+        ),
     ];
 }
 
@@ -96,14 +98,12 @@ export async function nextjsBuild(input: EngineInput): Promise<Finding[]> {
         if (result.code === 0) return [];
         const said = lastLines(`${result.stdout}${result.stderr}`);
         return [
-            {
-                check: input.spec.name,
-                file: input.scope === '' ? 'package.json' : `${input.scope}/package.json`,
-                line: 1,
-                rule: 'build',
-                message: `next build failed: ${said}`,
-                fixable: false,
-            },
+            findingAt(
+                input,
+                { file: input.scope === '' ? 'package.json' : `${input.scope}/package.json`, line: 1 },
+                'build',
+                `next build failed: ${said}`,
+            ),
         ];
     } finally {
         await rm(scratch, { recursive: true, force: true });

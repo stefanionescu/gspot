@@ -1,6 +1,7 @@
+import { findingAt } from '#cli/checks/result.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import type { Finding, EngineInput } from '#cli/types/checks.ts';
-import { xcodeFinding, trackedEnding } from '#cli/checks/xcode/project/checks.ts';
+import { trackedEnding } from '#cli/checks/xcode/project/checks.ts';
 import { PLIST_KEY, INCLUDE_LINE, SETTING_NAME, ARBITRARY_LOADS } from '#cli/config/checks/swift.ts';
 
 /**
@@ -22,7 +23,7 @@ export function xcconfigLines(input: EngineInput): Finding[] {
                 return isFine
                     ? []
                     : [
-                          xcodeFinding(
+                          findingAt(
                               input,
                               { file: path, line: index + 1 },
                               'xcconfig-line',
@@ -47,7 +48,7 @@ export function entitlementsPolicy(input: EngineInput): Finding[] {
             .filter((match) => !allowed.has(match.groups?.['name'] ?? ''))
             .map((match) => {
                 const line = text.slice(0, match.index).split('\n').length;
-                return xcodeFinding(
+                return findingAt(
                     input,
                     { file: path, line },
                     'entitlement',
@@ -70,7 +71,7 @@ export function transportSecurity(input: EngineInput): Finding[] {
         if (found === null) return [];
         const line = text.slice(0, found.index).split('\n').length;
         return [
-            xcodeFinding(
+            findingAt(
                 input,
                 { file: path, line },
                 'arbitrary-loads',

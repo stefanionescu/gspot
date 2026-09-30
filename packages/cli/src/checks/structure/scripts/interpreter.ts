@@ -1,5 +1,6 @@
 // The interpreter contract of a Bash script: the header, strict mode, the entry point, the library shape, the directory constants, mktemp cleanup.
 import semver from 'semver';
+import { findingAt } from '#cli/checks/result.ts';
 import { functionAt } from '#cli/checks/structure/parser.ts';
 
 import {
@@ -171,30 +172,30 @@ function cleanupProblems(code: CodeLine[], report: ScriptReport): void {
 function fileProblems(context: StructureInput, file: ScriptFile, platforms: string, isConfigOwner: boolean): Finding[] {
     const findings: Finding[] = [];
     headerProblems(file, (line, rule, text) => {
-        findings.push(context.report(file.path, line, rule, text));
+        findings.push(findingAt(context.input, { file: file.path, line: line }, rule, text));
     });
     const version = runtimeVersion(file, platforms, (line, rule, text) => {
-        findings.push(context.report(file.path, line, rule, text));
+        findings.push(findingAt(context.input, { file: file.path, line: line }, rule, text));
     });
     versionProblems(file, version, (line, rule, text) => {
-        findings.push(context.report(file.path, line, rule, text));
+        findings.push(findingAt(context.input, { file: file.path, line: line }, rule, text));
     });
     const code = codeLines(file.lines).filter((line) => !line.code.startsWith('#!'));
     directoryProblems(code, (line, rule, text) => {
-        findings.push(context.report(file.path, line, rule, text));
+        findings.push(findingAt(context.input, { file: file.path, line: line }, rule, text));
     });
     readonlyProblems(file, code, (line, rule, text) => {
-        findings.push(context.report(file.path, line, rule, text));
+        findings.push(findingAt(context.input, { file: file.path, line: line }, rule, text));
     });
     if (file.isExecutable)
         strictModeProblems(code, version, (line, rule, text) => {
-            findings.push(context.report(file.path, line, rule, text));
+            findings.push(findingAt(context.input, { file: file.path, line: line }, rule, text));
         });
     roleProblems(file, code, isConfigOwner, (line, rule, text) => {
-        findings.push(context.report(file.path, line, rule, text));
+        findings.push(findingAt(context.input, { file: file.path, line: line }, rule, text));
     });
     cleanupProblems(code, (line, rule, text) => {
-        findings.push(context.report(file.path, line, rule, text));
+        findings.push(findingAt(context.input, { file: file.path, line: line }, rule, text));
     });
     return findings;
 }

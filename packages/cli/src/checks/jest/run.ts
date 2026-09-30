@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { tmpdir } from 'node:os';
 import { mkdtempSync } from 'node:fs';
 import { rm } from 'node:fs/promises';
+import { findingAt } from '#cli/checks/result.ts';
 import type { Root } from '#cli/types/platform.ts';
 import { stripVTControlCharacters } from 'node:util';
 import { openRoot } from '#cli/platform/filesystem.ts';
@@ -51,14 +52,12 @@ function coverageFindings(run: JestRun, reports: Root, settings: z.infer<typeof 
         const floor = settings[`coverage_${name}`];
         if (covered[name].pct >= floor) return [];
         return [
-            {
-                check: run.input.spec.name,
-                file: '',
-                line: 1,
-                rule: `coverage-${name}`,
-                message: `Jest covers ${String(covered[name].pct)}% of ${name}, below the ${String(floor)}% floor.`,
-                fixable: false,
-            },
+            findingAt(
+                run.input,
+                { file: '', line: 1 },
+                `coverage-${name}`,
+                `Jest covers ${String(covered[name].pct)}% of ${name}, below the ${String(floor)}% floor.`,
+            ),
         ];
     });
 }
@@ -96,17 +95,20 @@ async function runJest(
             const file = suitePath(run.source, suite);
             return suite.assertionResults
                 .filter((assertion) => assertion.status === 'failed')
-                .map((assertion) => ({
-                    check: run.input.spec.name,
-                    file,
-                    line: assertion.location?.line ?? 1,
-                    ...(assertion.location === undefined || assertion.location === null
-                        ? {}
-                        : { column: assertion.location.column + 1 }),
-                    rule: 'test-failure',
-                    message: stripVTControlCharacters(assertion.failureMessages.join('\n')) || assertion.fullName,
-                    fixable: false,
-                }));
+                .map((assertion) =>
+                    findingAt(
+                        run.input,
+                        {
+                            file,
+                            line: assertion.location?.line ?? 1,
+                            ...(assertion.location === undefined || assertion.location === null
+                                ? {}
+                                : { column: assertion.location.column + 1 }),
+                        },
+                        'test-failure',
+                        stripVTControlCharacters(assertion.failureMessages.join('\n')) || assertion.fullName,
+                    ),
+                );
         }),
         ...coverageFindings(run, reports, settings),
     ];

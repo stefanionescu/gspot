@@ -1,3 +1,4 @@
+import { findingAt } from '#cli/checks/result.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { runConfiguration } from '#cli/native/configuration.ts';
 import type { Finding, EngineInput } from '#cli/types/checks.ts';
@@ -51,14 +52,14 @@ export async function requiredRules(input: EngineInput): Promise<Finding[]> {
         const enabled = new Set(resolved[file.path]);
         const off = [...(required.get(ending) ?? [])].filter((rule) => !decided.has(rule) && !enabled.has(rule));
         findings.push(
-            ...off.map((rule) => ({
-                check: input.spec.name,
-                file: ESLINT_FILE,
-                line: 1,
-                rule: 'rule-off',
-                message: `${rule} is off for ${file.path}, and the configurations require it for every .${ending} file.`,
-                fixable: false,
-            })),
+            ...off.map((rule) =>
+                findingAt(
+                    input,
+                    { file: ESLINT_FILE, line: 1 },
+                    'rule-off',
+                    `${rule} is off for ${file.path}, and the configurations require it for every .${ending} file.`,
+                ),
+            ),
         );
     }
     return findings;

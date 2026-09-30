@@ -1,7 +1,7 @@
+import { findingAt } from '#cli/checks/result.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import type { Finding, EngineInput } from '#cli/types/checks.ts';
-import { supabaseFinding } from '#cli/checks/supabase/project.ts';
 import { DEFAULT_PATHS, ADMIN_KEY_NAMES, CODE_EXTENSIONS } from '#cli/config/checks/platforms.ts';
 
 /**
@@ -26,7 +26,7 @@ export function adminKey(input: EngineInput): Finding[] {
                 if (ADMIN_KEY_NAMES.every((name) => !text.includes(name))) return [];
                 const said =
                     'This file names the service role key, which bypasses row level security, outside the paths allowed to hold it.';
-                return [supabaseFinding(input, { file: file.path, line: index + 1 }, 'admin-key', said)];
+                return [findingAt(input, { file: file.path, line: index + 1 }, 'admin-key', said)];
             }),
     );
 }

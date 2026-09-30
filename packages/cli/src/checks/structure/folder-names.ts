@@ -1,3 +1,4 @@
+import { findingAt } from '#cli/checks/result.ts';
 import { roleFolders } from '#cli/policy/settings.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
 import { directoryOf } from '#cli/checks/structure/directories.ts';
@@ -36,9 +37,9 @@ export const folderNames: Analysis = (context) => {
             if (allowed(folder) || allowed(`${folder}/`)) return [];
             seen.add(folder);
             return [
-                context.report(
-                    file.path,
-                    1,
+                findingAt(
+                    context.input,
+                    { file: file.path, line: 1 },
                     'container-name',
                     `The folder ${folder}/ is named ${segment}, which says nothing about what it holds.`,
                 ),

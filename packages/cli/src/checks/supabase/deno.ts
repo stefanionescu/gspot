@@ -2,12 +2,13 @@ import { z } from 'zod';
 import { statSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { toPosix } from '#cli/platform/paths.ts';
+import { findingAt } from '#cli/checks/result.ts';
 import { stripVTControlCharacters } from 'node:util';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import type { Finding, EngineInput } from '#cli/types/checks.ts';
 import { CHECK_LOCATION } from '#cli/config/checks/platforms.ts';
+import { functionFolders } from '#cli/checks/supabase/project.ts';
 import { join, isAbsolute, relative as relativePath } from 'node:path';
-import { functionFolders, supabaseFinding } from '#cli/checks/supabase/project.ts';
 
 const lintReport = z.object({
     diagnostics: z.array(
@@ -39,10 +40,10 @@ async function linted(input: EngineInput, folder: string): Promise<Finding[]> {
     if (result.code !== 0 && report.diagnostics.length === 0 && report.errors.length === 0)
         throw new Error(`Deno lint failed without diagnostics: ${result.stderr.trim()}`);
     const broken = report.errors.map((entry) =>
-        supabaseFinding(input, { file: relative(input.root, entry.file_path), line: 1 }, 'parse', entry.message),
+        findingAt(input, { file: relative(input.root, entry.file_path), line: 1 }, 'parse', entry.message),
     );
     const found = report.diagnostics.map((entry) =>
-        supabaseFinding(
+        findingAt(
             input,
             { file: relative(input.root, entry.filename), line: entry.range.start.line },
             entry.code,
@@ -58,7 +59,7 @@ function firstError(input: EngineInput, folder: string, stderr: string): Finding
     const place = CHECK_LOCATION.exec(said)?.groups;
     const file = place?.['file'] === undefined ? `${folder}/index.ts` : relative(input.root, place['file']);
     const first = said.split('\n').find((line) => line.trim() !== '') ?? 'The deno check command failed.';
-    return supabaseFinding(input, { file, line: Number(place?.['line'] ?? 1) }, 'deno-check', first.trim());
+    return findingAt(input, { file, line: Number(place?.['line'] ?? 1) }, 'deno-check', first.trim());
 }
 
 async function typed(input: EngineInput, folder: string): Promise<Finding[]> {

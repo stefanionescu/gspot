@@ -1,6 +1,7 @@
 import { posix } from 'node:path';
 import { visit } from 'unist-util-visit';
 import { parse as parseToml } from 'smol-toml';
+import { findingAt } from '#cli/checks/result.ts';
 import { globPaths } from '#cli/platform/paths.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
@@ -107,25 +108,15 @@ function lineFindings(input: EngineInput, file: string, prose: ProseLine, index:
     const { number, line } = prose;
     const paths = pathTokens(line)
         .filter((token) => isMissing(token, file, index))
-        .map((token) => ({
-            check: input.spec.name,
-            file,
-            line: number,
-            rule: 'missing-path',
-            message: `${token} names no tracked file or folder.`,
-            fixable: false,
-        }));
+        .map((token) =>
+            findingAt(input, { file, line: number }, 'missing-path', `${token} names no tracked file or folder.`),
+        );
     const runs = line
         .matchAll(RUN_TOKEN)
         .filter((match) => !index.tasks.has(match.groups?.['task'] ?? ''))
-        .map((match) => ({
-            check: input.spec.name,
-            file,
-            line: number,
-            rule: 'missing-task',
-            message: `${match[0]} names no task or script.`,
-            fixable: false,
-        }))
+        .map((match) =>
+            findingAt(input, { file, line: number }, 'missing-task', `${match[0]} names no task or script.`),
+        )
         .toArray();
     return [...paths, ...runs];
 }

@@ -1,3 +1,4 @@
+import { findingAt } from '#cli/checks/result.ts';
 import { functionAt } from '#cli/checks/structure/parser.ts';
 import type { ScriptFile, StructureAnalysis as Analysis } from '#cli/types/checks.ts';
 import { SOURCE_STATEMENT, SHELLCHECK_DIRECTIVE } from '#cli/config/checks/structure.ts';
@@ -31,9 +32,9 @@ export const scriptSourceComments: Analysis = async (context, scripts) => {
                 const text = line.trim();
                 if (!text.startsWith('#') || SHELLCHECK_DIRECTIVE.test(text)) return [];
                 return [
-                    context.report(
-                        file.path,
-                        first + offset + 1,
+                    findingAt(
+                        context.input,
+                        { file: file.path, line: first + offset + 1 },
                         'source-comment',
                         'No comments among source statements. Say it where the sourced file is used, or above the block.',
                     ),
@@ -60,9 +61,9 @@ export const scriptSourceOrder: Analysis = async (context, scripts) => {
             const misplaced = statements.find((entry, order) => entry.position !== sorted[order]?.position);
             if (misplaced === undefined) return [];
             return [
-                context.report(
-                    file.path,
-                    misplaced.position + 1,
+                findingAt(
+                    context.input,
+                    { file: file.path, line: misplaced.position + 1 },
                     'source-order',
                     `Source statements go shortest first: ${sorted.map((entry) => entry.text).join(', ')}.`,
                 ),

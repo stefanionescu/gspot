@@ -2,8 +2,8 @@ import { z } from 'zod';
 import { parse } from 'smol-toml';
 import { statSync } from 'node:fs';
 import { join, posix } from 'node:path';
+import type { EngineInput } from '#cli/types/checks.ts';
 import { readSource } from '#cli/repository/tracked.ts';
-import type { Finding, EngineInput } from '#cli/types/checks.ts';
 import { SHARED_PREFIX, SUPABASE_CONFIG, DEFAULT_FUNCTIONS } from '#cli/config/checks/platforms.ts';
 
 const projectSchema = z.object({
@@ -43,24 +43,4 @@ export function functionFolders(input: EngineInput): string[] {
         .filter((folder) => folder.split('/').length === base.split('/').length + 1)
         .filter((folder) => !folder.slice(folder.lastIndexOf('/') + 1).startsWith(SHARED_PREFIX));
     return [...new Set(folders)];
-}
-
-/**
- * One finding of a supabase check.
- * @param input the engine input
- * @param at the file and the line
- * @param at.file the file
- * @param at.line the line
- * @param rule the rule
- * @param text the message
- * @returns the finding
- */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: One finding of a supabase check. 4 files make 10 calls; one owner keeps that behavior in one place.
-export function supabaseFinding(
-    input: EngineInput,
-    at: { file: string; line: number },
-    rule: string,
-    text: string,
-): Finding {
-    return { check: input.spec.name, file: at.file, line: at.line, rule, message: text, fixable: false };
 }

@@ -1,4 +1,5 @@
 import { posix } from 'node:path';
+import { findingAt } from '#cli/checks/result.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import type { Finding, TestPlan, EngineInput } from '#cli/types/checks.ts';
@@ -49,12 +50,12 @@ export function orphanSources(input: EngineInput): Finding[] {
                 synced.every(({ prefix, excluded }) => !file.startsWith(prefix) || excluded.has(file)),
         )
         .map((file) =>
-            xcodeFinding(input, { file, line: 1 }, 'no-target', 'This Swift file is in no target of the project.'),
+            findingAt(input, { file, line: 1 }, 'no-target', 'This Swift file is in no target of the project.'),
         );
     const gone = references
         .filter(({ path }) => !inTree.has(path))
         .map(({ path: name, project }) =>
-            xcodeFinding(
+            findingAt(
                 input,
                 { file: project, line: 1 },
                 'missing-file',
@@ -81,23 +82,13 @@ export function testPlans(input: EngineInput): Finding[] {
             return text.includes('<TestableReference') && !text.includes('<TestPlanReference');
         })
         .map((path) =>
-            xcodeFinding(
-                input,
-                { file: path, line: 1 },
-                'scheme-plan',
-                'This scheme runs tests and names no test plan.',
-            ),
+            findingAt(input, { file: path, line: 1 }, 'scheme-plan', 'This scheme runs tests and names no test plan.'),
         );
     const targets = trackedEnding(input, [XCODE_PROJECT_FILE]).flatMap((path) =>
         projectTestTargets(readSource(input.root, path, input.reads).toString('utf8'))
             .filter((name) => !planned.has(name))
             .map((name) =>
-                xcodeFinding(
-                    input,
-                    { file: path, line: 1 },
-                    'target-plan',
-                    `The test target ${name} is in no test plan.`,
-                ),
+                findingAt(input, { file: path, line: 1 }, 'target-plan', `The test target ${name} is in no test plan.`),
             ),
     );
     return [...schemes, ...targets];
@@ -126,7 +117,7 @@ export async function projectSymlinks(input: EngineInput): Promise<Finding[]> {
     return links.map((entry) => {
         const target = targets.get(entry.hash);
         if (target === undefined) throw new Error('A requested Git blob was not returned.');
-        return xcodeFinding(
+        return findingAt(
             input,
             { file: entry.path, line: 1 },
             'symlink',
@@ -150,24 +141,4 @@ export function trackedEnding(input: EngineInput, endings: string[]): string[] {
                 endings.some((ending) => file.path.endsWith(ending)),
         )
         .map((file) => file.path);
-}
-
-/**
- * One finding of an xcode check.
- * @param input the engine input
- * @param at the file and the line
- * @param at.file the file
- * @param at.line the line
- * @param rule the rule
- * @param text the message
- * @returns the finding
- */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: One finding of an xcode check. 4 files make 11 calls; one owner keeps that behavior in one place.
-export function xcodeFinding(
-    input: EngineInput,
-    at: { file: string; line: number },
-    rule: string,
-    text: string,
-): Finding {
-    return { check: input.spec.name, file: at.file, line: at.line, rule, message: text, fixable: false };
 }

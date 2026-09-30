@@ -1,4 +1,5 @@
 import { dirname, basename } from 'node:path';
+import { findingAt } from '#cli/checks/result.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { POLICY_FILE } from '#cli/config/checks/repository.ts';
@@ -100,14 +101,12 @@ function licenseFindings(input: EngineInput): Finding[] {
             const pythonIdentity = exception.package.replace(/^[^@]+(?=@)/u, normalizedPythonPackage);
             if (packages.some(({ names, python }) => names.has(python ? pythonIdentity : exception.package))) return [];
             return [
-                {
-                    check: input.spec.name,
-                    file: POLICY_FILE,
-                    line: 1,
-                    rule: 'unlocked-package',
-                    message: `${exception.package} under ${where} is absent from its dependency lockfiles. Remove the exception or correct its exact version.`,
-                    fixable: false,
-                },
+                findingAt(
+                    input,
+                    { file: POLICY_FILE, line: 1 },
+                    'unlocked-package',
+                    `${exception.package} under ${where} is absent from its dependency lockfiles. Remove the exception or correct its exact version.`,
+                ),
             ];
         });
     });
@@ -127,13 +126,13 @@ export function allowlistsMatch(input: EngineInput): Finding[] {
             if (candidates.some((path) => matches(path))) return false;
             return entry.where !== 'tools.docs.paths_allowed' || ![...references].some((path) => matches(path));
         })
-        .map((entry) => ({
-            check: input.spec.name,
-            file: POLICY_FILE,
-            line: 1,
-            rule: 'unmatched-pattern',
-            message: `${entry.pattern} under ${entry.where} matches no tracked file or folder.`,
-            fixable: false,
-        }));
+        .map((entry) =>
+            findingAt(
+                input,
+                { file: POLICY_FILE, line: 1 },
+                'unmatched-pattern',
+                `${entry.pattern} under ${entry.where} matches no tracked file or folder.`,
+            ),
+        );
     return [...findings, ...licenseFindings(input)];
 }

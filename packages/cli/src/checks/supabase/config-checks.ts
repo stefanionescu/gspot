@@ -1,8 +1,9 @@
 import { posix } from 'node:path';
+import { findingAt } from '#cli/checks/result.ts';
 import type { Finding, EngineInput } from '#cli/types/checks.ts';
 import { migrationsOf } from '#cli/checks/postgres/migrations.ts';
+import { readProject, functionFolders } from '#cli/checks/supabase/project.ts';
 import { MIGRATION_NAME, SUPABASE_CONFIG } from '#cli/config/checks/platforms.ts';
-import { readProject, functionFolders, supabaseFinding } from '#cli/checks/supabase/project.ts';
 
 /**
  * The project file parses, and every function it configures has a folder.
@@ -13,11 +14,11 @@ export function projectValid(input: EngineInput): Finding[] {
     const config = readProject(input);
     const at = { file: posix.join(input.scope, SUPABASE_CONFIG), line: 1 };
     if (config === undefined) return [];
-    if (typeof config === 'string') return [supabaseFinding(input, at, 'parse', config)];
+    if (typeof config === 'string') return [findingAt(input, at, 'parse', config)];
     const folders = new Set(functionFolders(input).map((folder) => folder.slice(folder.lastIndexOf('/') + 1)));
     const missing = Object.keys(config.functions ?? {}).filter((name) => !folders.has(name));
     return missing.map((name) =>
-        supabaseFinding(
+        findingAt(
             input,
             at,
             'function',
@@ -43,7 +44,7 @@ export async function storagePolicies(input: EngineInput): Promise<Finding[]> {
     return Object.keys(config.storage?.buckets ?? {})
         .filter((bucket) => policed.every((text) => !text.includes(`'${bucket}'`)))
         .map((bucket) =>
-            supabaseFinding(
+            findingAt(
                 input,
                 at,
                 'bucket-policy',
@@ -62,7 +63,7 @@ export async function migrationNames(input: EngineInput): Promise<Finding[]> {
     return migrations
         .filter((migration) => !MIGRATION_NAME.test(migration.name))
         .map((migration) =>
-            supabaseFinding(
+            findingAt(
                 input,
                 { file: migration.path, line: 1 },
                 'migration-name',

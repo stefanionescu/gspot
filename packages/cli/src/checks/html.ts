@@ -1,5 +1,6 @@
 import type { Node } from 'web-tree-sitter';
 import { decodeHTMLAttribute } from 'entities';
+import { findingAt } from '#cli/checks/result.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
@@ -154,15 +155,18 @@ async function findings(
         if (tree === null) throw new Error('The source parser returned no tree.');
         try {
             for (const problem of read(tree.rootNode))
-                found.push({
-                    check: input.spec.name,
-                    file: path,
-                    line: problem.node.startPosition.row + 1,
-                    column: problem.node.startPosition.column + 1,
-                    rule: problem.rule,
-                    message: problem.text,
-                    fixable: false,
-                });
+                found.push(
+                    findingAt(
+                        input,
+                        {
+                            file: path,
+                            line: problem.node.startPosition.row + 1,
+                            column: problem.node.startPosition.column + 1,
+                        },
+                        problem.rule,
+                        problem.text,
+                    ),
+                );
         } finally {
             tree.delete();
         }

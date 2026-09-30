@@ -1,3 +1,4 @@
+import { findingAt } from '#cli/checks/result.ts';
 import { functionAt } from '#cli/checks/structure/parser.ts';
 import { astGrepMatches } from '#cli/checks/structure/ast-grep.ts';
 import { RULES, OUTER_LEVELS } from '#cli/config/checks/structure.ts';
@@ -43,9 +44,9 @@ export async function countFindings(analysis: string, context: StructureInput, i
             const score = scoreFor(own, rule.isDepth);
             if (score <= ceiling) return [];
             return [
-                context.report(
-                    file.path,
-                    entry.start,
+                findingAt(
+                    context.input,
+                    { file: file.path, line: entry.start },
                     rule.limit.replaceAll('_', '-'),
                     `${entry.name} has ${String(score)} ${rule.noun}, over the ceiling of ${String(ceiling)}.`,
                 ),

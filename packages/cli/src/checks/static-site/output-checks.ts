@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { gzipSync } from 'node:zlib';
 import { toPosix } from '#cli/platform/paths.ts';
+import { findingAt } from '#cli/checks/result.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { mutationPath } from '#cli/platform/safe-paths.ts';
@@ -53,14 +54,14 @@ async function brokenLinks(input: EngineInput, isExternal: boolean): Promise<Fin
         throw new Error(`Linkinator failed without reporting broken links: ${result.stderr}`);
     return report.links
         .filter((link) => link.state === 'BROKEN')
-        .map((link) => ({
-            check: input.spec.name,
-            file: toPosix(link.parent ?? ''),
-            line: 1,
-            rule: 'broken-link',
-            message: `${link.url} answers ${String(link.status ?? 0)}.`,
-            fixable: false,
-        }));
+        .map((link) =>
+            findingAt(
+                input,
+                { file: toPosix(link.parent ?? ''), line: 1 },
+                'broken-link',
+                `${link.url} answers ${String(link.status ?? 0)}.`,
+            ),
+        );
 }
 
 function pageOf(url: string): string[] {
@@ -100,14 +101,14 @@ export async function builtMarkup(input: EngineInput): Promise<Finding[]> {
     if (result.code === 1 && files.every((file) => file.messages.length === 0))
         throw new Error(`HTML validation failed without diagnostics: ${result.stderr}`);
     return files.flatMap((file) =>
-        file.messages.map((entry) => ({
-            check: input.spec.name,
-            file: relative(input, build, file.filePath),
-            line: entry.line,
-            rule: entry.ruleId,
-            message: entry.message,
-            fixable: false,
-        })),
+        file.messages.map((entry) =>
+            findingAt(
+                input,
+                { file: relative(input, build, file.filePath), line: entry.line },
+                entry.ruleId,
+                entry.message,
+            ),
+        ),
     );
 }
 
@@ -140,14 +141,17 @@ export async function deadSelectors(input: EngineInput): Promise<Finding[]> {
         .parse(JSON.parse(result.stdout));
     if (report.length !== sheets.length) throw new Error('Unused CSS analysis returned an incomplete report.');
     return report.flatMap((sheet) =>
-        sheet.rejected.map((selector) => ({
-            check: input.spec.name,
-            file: relative(input, build, isAbsolute(sheet.file) ? sheet.file : join(build.output, sheet.file)),
-            line: 1,
-            rule: 'dead-selector',
-            message: `No built page uses the selector ${selector.trim()}.`,
-            fixable: false,
-        })),
+        sheet.rejected.map((selector) =>
+            findingAt(
+                input,
+                {
+                    file: relative(input, build, isAbsolute(sheet.file) ? sheet.file : join(build.output, sheet.file)),
+                    line: 1,
+                },
+                'dead-selector',
+                `No built page uses the selector ${selector.trim()}.`,
+            ),
+        ),
     );
 }
 
@@ -189,14 +193,12 @@ export async function sizeLimits(input: EngineInput): Promise<Finding[]> {
         return weight <= limit.kb
             ? []
             : [
-                  {
-                      check: input.spec.name,
-                      file: limit.paths.join(', '),
-                      line: 1,
-                      rule: 'size',
-                      message: `${String(weight)} kB compressed is over the ceiling of ${String(limit.kb)} kB.`,
-                      fixable: false,
-                  },
+                  findingAt(
+                      input,
+                      { file: limit.paths.join(', '), line: 1 },
+                      'size',
+                      `${String(weight)} kB compressed is over the ceiling of ${String(limit.kb)} kB.`,
+                  ),
               ];
     });
 }
@@ -220,23 +222,23 @@ export async function sitemapMatches(input: EngineInput): Promise<Finding[]> {
     const isLeftOut = pathMatcher((input.view.tool('site')['sitemap_allowed'] as string[] | undefined) ?? ['404.html']);
     const missing = urls
         .filter((url) => pageOf(url).every((page) => !files.has(page)))
-        .map((url) => ({
-            check: input.spec.name,
-            file: 'sitemap.xml',
-            line: 1,
-            rule: 'missing-page',
-            message: `The sitemap lists ${url}, and the build wrote no such page.`,
-            fixable: false,
-        }));
+        .map((url) =>
+            findingAt(
+                input,
+                { file: 'sitemap.xml', line: 1 },
+                'missing-page',
+                `The sitemap lists ${url}, and the build wrote no such page.`,
+            ),
+        );
     const unlisted = [...files]
         .filter((path) => path.endsWith('.html') && !listed.has(path) && !isLeftOut(path))
-        .map((path) => ({
-            check: input.spec.name,
-            file: path,
-            line: 1,
-            rule: 'unlisted-page',
-            message: 'The build wrote this page, and the sitemap does not list it.',
-            fixable: false,
-        }));
+        .map((path) =>
+            findingAt(
+                input,
+                { file: path, line: 1 },
+                'unlisted-page',
+                'The build wrote this page, and the sitemap does not list it.',
+            ),
+        );
     return [...missing, ...unlisted];
 }

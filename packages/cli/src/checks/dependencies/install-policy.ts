@@ -1,10 +1,11 @@
 import { join } from 'node:path';
 import { statSync } from 'node:fs';
 import { parse as parseToml } from 'smol-toml';
+import { findingAt } from '#cli/checks/result.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { SECONDS_PER_DAY } from '#cli/config/generation.ts';
+import type { Finding, EngineInput } from '#cli/types/checks.ts';
 import { LOCKFILES } from '#cli/config/repository/repository.ts';
-import type { Finding, Reporter, EngineInput } from '#cli/types/checks.ts';
 import { BUNFIG, DEFAULT_AGE_DAYS } from '#cli/config/checks/repository.ts';
 
 function installTable(root: string): Record<string, unknown> | undefined {
@@ -14,25 +15,33 @@ function installTable(root: string): Record<string, unknown> | undefined {
     return parsed.install ?? {};
 }
 
-function ageFindings(report: Reporter, install: Record<string, unknown>, days: number): Finding[] {
+function ageFindings(input: EngineInput, install: Record<string, unknown>, days: number): Finding[] {
     const seconds = install['minimumReleaseAge'];
     const wanted = days * SECONDS_PER_DAY;
     if (typeof seconds === 'number' && seconds >= wanted) return [];
     const found = typeof seconds === 'number' ? String(seconds) : 'nothing';
     return [
-        report(
-            BUNFIG,
+        findingAt(
+            input,
+            { file: BUNFIG, line: 1 },
             'release-age',
             `[install] minimumReleaseAge is ${found}; the policy asks for ${String(wanted)} seconds (${String(days)} days).`,
         ),
     ];
 }
 
-function scannerFindings(report: Reporter, install: Record<string, unknown>, scanner: string): Finding[] {
+function scannerFindings(input: EngineInput, install: Record<string, unknown>, scanner: string): Finding[] {
     if (scanner === '') return [];
     const security = install['security'] as { scanner?: unknown } | undefined;
     if (security?.scanner === scanner) return [];
-    return [report(BUNFIG, 'security-scanner', `[install.security] scanner is not ${scanner}.`)];
+    return [
+        findingAt(
+            input,
+            { file: BUNFIG, line: 1 },
+            'security-scanner',
+            `[install.security] scanner is not ${scanner}.`,
+        ),
+    ];
 }
 
 /**
@@ -49,39 +58,12 @@ export function installPolicy(input: EngineInput): Finding[] {
     const install = installTable(input.root);
     if (install === undefined)
         return [
-            {
-                check: input.spec.name,
-                file: 'bun.lock',
-                line: 1,
-                rule: 'release-age',
-                message: `No ${BUNFIG} sets [install] minimumReleaseAge.`,
-                fixable: false,
-            },
+            findingAt(
+                input,
+                { file: 'bun.lock', line: 1 },
+                'release-age',
+                `No ${BUNFIG} sets [install] minimumReleaseAge.`,
+            ),
         ];
-    return [
-        ...ageFindings(
-            (file, rule, text) => ({
-                check: input.spec.name,
-                file,
-                line: 1,
-                rule,
-                message: text,
-                fixable: false,
-            }),
-            install,
-            days,
-        ),
-        ...scannerFindings(
-            (file, rule, text) => ({
-                check: input.spec.name,
-                file,
-                line: 1,
-                rule,
-                message: text,
-                fixable: false,
-            }),
-            install,
-            scanner,
-        ),
-    ];
+    return [...ageFindings(input, install, days), ...scannerFindings(input, install, scanner)];
 }

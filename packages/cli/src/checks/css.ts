@@ -1,6 +1,7 @@
 import ts from 'typescript';
 import { parse } from 'postcss';
 import { posix } from 'node:path';
+import { findingAt } from '#cli/checks/result.ts';
 import selectorParser from 'postcss-selector-parser';
 import { readSource } from '#cli/repository/tracked.ts';
 import type { Finding, Importer, EngineInput } from '#cli/types/checks.ts';
@@ -96,28 +97,21 @@ function sheetFindings(input: EngineInput, sheet: string, defined: string[], imp
         ]),
     );
     const read = new Set(importers.flatMap((file) => file.read));
-    const base = { check: input.spec.name, line: 1, fixable: false };
     const unused = defined
         .filter(
             (entry) =>
                 !read.has(entry) &&
                 !read.has(entry.replaceAll(/-(?<letter>[a-z\d])/gu, (_match, letter: string) => letter.toUpperCase())),
         )
-        .map((entry) => ({
-            ...base,
-            file: sheet,
-            rule: 'unused-class',
-            message: `No importer reads the class ${entry}.`,
-        }));
+        .map((entry) =>
+            findingAt(input, { file: sheet, line: 1 }, 'unused-class', `No importer reads the class ${entry}.`),
+        );
     const missing = importers.flatMap((file) =>
         file.read
             .filter((entry) => !known.has(entry))
-            .map((entry) => ({
-                ...base,
-                file: file.path,
-                rule: 'undefined-class',
-                message: `${name} defines no class ${entry}.`,
-            })),
+            .map((entry) =>
+                findingAt(input, { file: file.path, line: 1 }, 'undefined-class', `${name} defines no class ${entry}.`),
+            ),
     );
     return [...unused, ...missing];
 }

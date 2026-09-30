@@ -1,5 +1,5 @@
+import { findingAt } from '#cli/checks/result.ts';
 import type { Finding, EngineInput } from '#cli/types/checks.ts';
-import { xcodeFinding } from '#cli/checks/xcode/project/checks.ts';
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The file part and the planted name escape regular expression characters by one rule.
 function escapePattern(text: string): string {
@@ -40,7 +40,7 @@ export function referenceOwners(input: EngineInput): Finding[] {
         if (owners.get(base)?.some((owner) => owner.test(path.slice(base.length))) === true) return [];
         const owner = `${base}${match.groups['file'] ?? ''}.swift`;
         return [
-            xcodeFinding(
+            findingAt(
                 input,
                 { file: path, line: 1 },
                 'orphan-reference',

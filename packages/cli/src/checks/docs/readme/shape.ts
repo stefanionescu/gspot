@@ -2,6 +2,7 @@ import { join } from 'node:path';
 import { statSync } from 'node:fs';
 import type { RootContent } from 'mdast';
 import { toString } from 'mdast-util-to-string';
+import { findingAt } from '#cli/checks/result.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { readSource } from '#cli/repository/tracked.ts';
 import type { Finding, EngineInput, ShapeProblem } from '#cli/types/checks.ts';
@@ -71,13 +72,6 @@ export function readmeShape(input: EngineInput): Finding[] {
                     ? []
                     : [[titles[0]?.position?.start.line ?? 1, 'one-h1', 'A README has exactly one H1.']];
             problems.push(...openingProblem(nodes), ...sectionProblems(nodes, threshold, roots.has(file.path)));
-            return problems.map(([line, rule, text]) => ({
-                check: input.spec.name,
-                file: file.path,
-                line,
-                rule,
-                message: text,
-                fixable: false,
-            }));
+            return problems.map(([line, rule, text]) => findingAt(input, { file: file.path, line }, rule, text));
         });
 }

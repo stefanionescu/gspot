@@ -1,4 +1,5 @@
 import type { Node } from 'web-tree-sitter';
+import { findingAt } from '#cli/checks/result.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import type { Finding, EngineInput } from '#cli/types/checks.ts';
@@ -72,14 +73,14 @@ async function fileFindings(input: EngineInput, file: TrackedFile, language: str
     const tree = await parseSource(grammar, readSource(input.root, file.path, input.reads).toString('utf8'), input);
     if (tree === null) throw new Error('The source parser returned no tree.');
     try {
-        return problemsOf(tree.rootNode).map((problem) => ({
-            check: input.spec.name,
-            file: file.path,
-            line: problem.line,
-            rule: 'logic-in-config',
-            message: `${problem.message}; a configuration module holds literals only.`,
-            fixable: false,
-        }));
+        return problemsOf(tree.rootNode).map((problem) =>
+            findingAt(
+                input,
+                { file: file.path, line: problem.line },
+                'logic-in-config',
+                `${problem.message}; a configuration module holds literals only.`,
+            ),
+        );
     } finally {
         tree.delete();
     }

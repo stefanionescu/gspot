@@ -1,3 +1,4 @@
+import { findingAt } from '#cli/checks/result.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { KEY_GROUP } from '#cli/config/checks/security.ts';
 import type { Finding, EngineInput } from '#cli/types/checks.ts';
@@ -51,14 +52,14 @@ export function envExample(input: EngineInput): Finding[] {
                     const key = match[KEY_GROUP];
                     if (key === undefined || known.has(key) || seen.has(key)) continue;
                     seen.add(key);
-                    findings.push({
-                        check: input.spec.name,
-                        file: file.path,
-                        line: index + 1,
-                        rule: 'missing-key',
-                        message: `${key} is read here and appears in no environment template.`,
-                        fixable: false,
-                    });
+                    findings.push(
+                        findingAt(
+                            input,
+                            { file: file.path, line: index + 1 },
+                            'missing-key',
+                            `${key} is read here and appears in no environment template.`,
+                        ),
+                    );
                 }
             }
             return findings;

@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { join, relative } from 'node:path';
 import { rmSync, statSync } from 'node:fs';
 import { toPosix } from '#cli/platform/paths.ts';
+import { findingAt } from '#cli/checks/result.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { readSource } from '#cli/repository/tracked.ts';
@@ -101,16 +102,7 @@ export async function requireSiteBuild(input: EngineInput): Promise<SiteBuild> {
 export async function siteBuilds(input: EngineInput): Promise<Finding[]> {
     const build = await siteBuild(input);
     if (build.isBuilt) return [];
-    return [
-        {
-            check: input.spec.name,
-            file: '',
-            line: 1,
-            rule: 'build',
-            message: `${build.command} did not build the site: ${build.said}`,
-            fixable: false,
-        },
-    ];
+    return [findingAt(input, { file: '', line: 1 }, 'build', `${build.command} did not build the site: ${build.said}`)];
 }
 
 /**
@@ -137,13 +129,14 @@ export async function buildReproducible(input: EngineInput): Promise<Finding[]> 
     const differences = [...new Set([...before.keys(), ...after.keys()])].filter(
         (path) => before.get(path) !== after.get(path),
     );
-    return differences.slice(0, SHOWN_DIFFERENCES).map((path) => ({
-        check: input.spec.name,
-        file: path,
-        line: 1,
-        rule: 'not-reproducible',
-        message:
-            'Two builds of the same tree wrote this file differently. Look for a timestamp, a random value, or an unordered list.',
-        fixable: false,
-    }));
+    return differences
+        .slice(0, SHOWN_DIFFERENCES)
+        .map((path) =>
+            findingAt(
+                input,
+                { file: path, line: 1 },
+                'not-reproducible',
+                'Two builds of the same tree wrote this file differently. Look for a timestamp, a random value, or an unordered list.',
+            ),
+        );
 }

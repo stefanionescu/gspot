@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import satisfies from 'spdx-satisfies';
 import { isDeepStrictEqual } from 'node:util';
+import { findingAt } from '#cli/checks/result.ts';
 import parseExpression from 'spdx-expression-parse';
 import { targetInScope } from '#cli/kits/targets.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
@@ -160,9 +161,7 @@ export async function licensesPackages(input: EngineInput): Promise<Finding[]> {
             if (exception === undefined && isAllowed(license, allow)) return [];
             const text = verdict(name, license, exception);
             if (text === undefined) return [];
-            return [
-                { check: input.spec.name, file: manifest, line: 1, rule: 'license', message: text, fixable: false },
-            ];
+            return [findingAt(input, { file: manifest, line: 1 }, 'license', text)];
         });
     });
 }

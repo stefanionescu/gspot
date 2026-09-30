@@ -1,5 +1,6 @@
 import { statSync } from 'node:fs';
 import { join, posix } from 'node:path';
+import { findingAt } from '#cli/checks/result.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import type { Finding, EngineInput } from '#cli/types/checks.ts';
 import { DOCKERIGNORE_ENTRIES } from '#cli/config/checks/platforms.ts';
@@ -17,9 +18,10 @@ export function dockerignore(input: EngineInput): Finding[] {
     const folders = new Map(dockerfiles.map((file) => [posix.dirname(file.path), file.path]));
     const findings = folders.entries().flatMap(([folder, dockerfile]): Finding[] => {
         const path = folder === '.' ? '.dockerignore' : `${folder}/.dockerignore`;
-        const base = { check: input.spec.name, line: 1, fixable: false };
         if (statSync(join(input.root, path), { throwIfNoEntry: false }) === undefined)
-            return [{ ...base, file: dockerfile, rule: 'missing', message: `No ${path} sits beside this Dockerfile.` }];
+            return [
+                findingAt(input, { file: dockerfile, line: 1 }, 'missing', `No ${path} sits beside this Dockerfile.`),
+            ];
         const text = readSource(input.root, path, input.reads).toString('utf8');
         const lines = new Set(text.split('\n').map((line) => line.trim().replaceAll(/^\/|\/$/gu, '')));
         const missing = DOCKERIGNORE_ENTRIES.filter((entry) =>
@@ -27,7 +29,12 @@ export function dockerignore(input: EngineInput): Finding[] {
         );
         if (missing.length === 0) return [];
         return [
-            { ...base, file: path, rule: 'entries', message: `The ignore file lets through: ${missing.join(', ')}.` },
+            findingAt(
+                input,
+                { file: path, line: 1 },
+                'entries',
+                `The ignore file lets through: ${missing.join(', ')}.`,
+            ),
         ];
     });
     return findings.toArray();

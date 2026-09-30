@@ -17,7 +17,7 @@ plantedCases(
         kits: ['bash', 'javascript'],
         modules: false,
         without: [],
-        init: ['--runner', 'npm', '--hooks', 'gspot', '--no-ci', '--no-guides', '--no-install'],
+        init: ['--runner', 'npm', '--no-ci', '--no-guides', '--no-install'],
         tools: ['shellcheck', 'shfmt'],
         files: { 'scripts/a.sh': CLEAN, 'scripts/b.sh': CLEAN, 'package.json': '{"private":true}\n' },
         prepare: async (root, environment) => {

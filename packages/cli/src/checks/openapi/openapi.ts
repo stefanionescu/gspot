@@ -1,5 +1,6 @@
 import { join } from 'node:path';
 import { rm } from 'node:fs/promises';
+import { findingAt } from '#cli/checks/result.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { commandArguments } from '#cli/platform/arguments.ts';
@@ -41,16 +42,7 @@ export async function openapiLint(input: EngineInput): Promise<Finding[]> {
         if (rule === undefined) return [];
         const text = groups['text'];
         if (text === undefined) return [];
-        return [
-            {
-                check: input.spec.name,
-                file: document,
-                line: Number(groups['line']),
-                rule,
-                message: text,
-                fixable: false,
-            },
-        ];
+        return [findingAt(input, { file: document, line: Number(groups['line']) }, rule, text)];
     });
     if (result.code !== 0 && found.length === 0) throw new Error(toolOutputDetail(result, 'Spectral failed'));
     return found;
@@ -81,14 +73,12 @@ export async function openapiFresh(input: EngineInput): Promise<Finding[]> {
         const after = readSource(scratch, document);
         if (before.equals(after)) return [];
         return [
-            {
-                check: input.spec.name,
-                file: document,
-                line: 1,
-                rule: 'stale',
-                message: `Running ${command} changes this document; commit what it writes.`,
-                fixable: false,
-            },
+            findingAt(
+                input,
+                { file: document, line: 1 },
+                'stale',
+                `Running ${command} changes this document; commit what it writes.`,
+            ),
         ];
     } finally {
         await rm(scratch, { recursive: true, force: true });

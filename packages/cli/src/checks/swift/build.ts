@@ -1,6 +1,7 @@
 import { rmSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { toPosix } from '#cli/platform/paths.ts';
+import { findingAt } from '#cli/checks/result.ts';
 import type { Root } from '#cli/types/platform.ts';
 import { swiftBuildPlan } from '#cli/checks/swift/plan.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
@@ -24,15 +25,16 @@ function diagnostics(input: EngineInput, output: string, levels: Set<string>, na
             const suffix = RULE_SUFFIX.exec(text)?.groups ?? {};
             const file = groups['file'] ?? '';
             const normalized = file.replace(/^\/private\/(?=tmp\/|var\/)/u, '/');
-            return {
-                check: input.spec.name,
-                file: normalized.startsWith(`${root}/`) ? normalized.slice(root.length + 1) : file,
-                line: Number(groups['line']),
-                column: Number(groups['column']),
-                rule: suffix['rule'] ?? named,
-                message: suffix['text'] ?? text,
-                fixable: false,
-            };
+            return findingAt(
+                input,
+                {
+                    file: normalized.startsWith(`${root}/`) ? normalized.slice(root.length + 1) : file,
+                    line: Number(groups['line']),
+                    column: Number(groups['column']),
+                },
+                suffix['rule'] ?? named,
+                suffix['text'] ?? text,
+            );
         });
 }
 

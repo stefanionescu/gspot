@@ -1,3 +1,4 @@
+import { findingAt } from '#cli/checks/result.ts';
 import { codeLines } from '#cli/checks/structure/code-lines.ts';
 import { DEFAULT_MIN_LINES } from '#cli/config/checks/structure.ts';
 import type { ScriptFunction, StructureAnalysis as Analysis } from '#cli/types/checks.ts';
@@ -27,9 +28,9 @@ export const duplicateFunctions: Analysis = async (context, scripts) => {
         .map((group) => {
             const [first] = group;
             const places = group.map((entry) => `${entry.file}:${String(entry.line)} (${entry.name})`).join(', ');
-            return context.report(
-                first?.file ?? '',
-                first?.line ?? 1,
+            return findingAt(
+                context.input,
+                { file: first?.file ?? '', line: first?.line ?? 1 },
                 'same-body',
                 `These functions have the same body: ${places}.`,
             );

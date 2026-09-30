@@ -1,4 +1,5 @@
 import { posix } from 'node:path';
+import { findingAt } from '#cli/checks/result.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
 
 import type {
@@ -29,9 +30,9 @@ function annotatedSources(file: ScriptFile, context: StructureInput): { sources:
         const annotation = SOURCE_ANNOTATION.exec((file.lines[position - 1] ?? '').trim())?.groups?.['path'];
         if (annotation === undefined)
             return [
-                context.report(
-                    file.path,
-                    position + 1,
+                findingAt(
+                    context.input,
+                    { file: file.path, line: position + 1 },
                     'source-annotation',
                     'A source statement carries "# shellcheck source=<path>" on the line above it.',
                 ),
@@ -54,9 +55,9 @@ function dependencyFindings(
             const owner = index.owners.get(name);
             if (owner === undefined || owner === file.path || sources.has(owner)) return [];
             return [
-                context.report(
-                    file.path,
-                    lines[0] ?? 1,
+                findingAt(
+                    context.input,
+                    { file: file.path, line: lines[0] ?? 1 },
                     'implicit-dependency',
                     `${name} lives in ${owner}, which this script does not source directly.`,
                 ),
@@ -86,9 +87,9 @@ export const scriptBoundaries: Analysis = async (context, scripts) => {
             const findings = hasBoundary
                 ? []
                 : [
-                      context.report(
-                          file.path,
-                          1,
+                      findingAt(
+                          context.input,
+                          { file: file.path, line: 1 },
                           'boundary-header',
                           `A script under an architecture root opens with "# Boundary: <at least ${String(BOUNDARY_MIN_WORDS)} words>".`,
                       ),
@@ -96,9 +97,9 @@ export const scriptBoundaries: Analysis = async (context, scripts) => {
             const { sources, findings: sourceFindings } = annotatedSources(file, context);
             if (!file.isExecutable && sources.size > 0 && file.functions.length === 0)
                 findings.push(
-                    context.report(
-                        file.path,
-                        1,
+                    findingAt(
+                        context.input,
+                        { file: file.path, line: 1 },
                         'source-barrel',
                         'A sourced library owns behavior; this one only sources other files.',
                     ),

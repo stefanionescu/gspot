@@ -1,4 +1,5 @@
 // The documented migration layout: a boxed header with the file name and a purpose, boxed sections, and a labeled block above each table and function.
+import { findingAt } from '#cli/checks/result.ts';
 import { positionAt } from '#cli/parsers/sql/statements.ts';
 import { HEADER_LINES } from '#cli/config/checks/structure.ts';
 import { migrationsOf } from '#cli/checks/postgres/migrations.ts';
@@ -114,13 +115,8 @@ export async function migrationDocs(input: EngineInput): Promise<Finding[]> {
     const sections = (tool['doc_sections'] as string[] | undefined) ?? Object.values(MIGRATION_DOC_SECTIONS);
     const migrations = await migrationsOf(input);
     return migrations.flatMap((migration) =>
-        docProblems(migration, sections).map((problem) => ({
-            check: input.spec.name,
-            file: migration.path,
-            line: problem.line,
-            rule: problem.rule,
-            message: problem.text,
-            fixable: false,
-        })),
+        docProblems(migration, sections).map((problem) =>
+            findingAt(input, { file: migration.path, line: problem.line }, problem.rule, problem.text),
+        ),
     );
 }

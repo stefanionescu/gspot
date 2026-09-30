@@ -1,18 +1,31 @@
+import { findingAt } from '#cli/checks/result.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
+import type { Finding, EngineInput } from '#cli/types/checks.ts';
 import { LOCKFILES } from '#cli/config/repository/repository.ts';
 import { readPackageManifest } from '#cli/repository/manifests.ts';
-import type { Finding, Reporter, EngineInput } from '#cli/types/checks.ts';
 import type { PackageManifest } from '#cli/types/repository/repository.ts';
 import { NPM_MANIFEST, EXACT_VERSION, DEPENDENCY_TABLES, NON_REGISTRY_VERSION } from '#cli/config/checks/repository.ts';
 
-function rootFindings(report: Reporter, root: PackageManifest | undefined): Finding[] {
+function rootFindings(input: EngineInput, root: PackageManifest | undefined): Finding[] {
     if (root === undefined) return [];
     const findings: Finding[] = [];
     if (root.packageManager === undefined)
-        findings.push(report(NPM_MANIFEST, 'package-manager', 'The root package.json names no packageManager.'));
+        findings.push(
+            findingAt(
+                input,
+                { file: NPM_MANIFEST, line: 1 },
+                'package-manager',
+                'The root package.json names no packageManager.',
+            ),
+        );
     if (root.workspaces !== undefined && root.private !== true)
         findings.push(
-            report(NPM_MANIFEST, 'private-root', 'A workspace root is private, so nobody publishes it by accident.'),
+            findingAt(
+                input,
+                { file: NPM_MANIFEST, line: 1 },
+                'private-root',
+                'A workspace root is private, so nobody publishes it by accident.',
+            ),
         );
     return findings;
 }
@@ -25,25 +38,15 @@ function installerFindings(input: EngineInput, manifests: Map<string, PackageMan
         .filter(([, manifest]) => wanted !== undefined && (manifest.packageManager ?? wanted) !== wanted)
         .toArray();
     return [
-        ...rootFindings(
-            (file, rule, text) => ({
-                check: input.spec.name,
-                file,
-                line: 1,
-                rule,
-                message: text,
-                fixable: false,
-            }),
-            root,
+        ...rootFindings(input, root),
+        ...differing.map(([path, manifest]) =>
+            findingAt(
+                input,
+                { file: path, line: 1 },
+                'package-manager',
+                `This package names ${manifest.packageManager ?? ''}; the root names ${wanted ?? ''}.`,
+            ),
         ),
-        ...differing.map(([path, manifest]) => ({
-            check: input.spec.name,
-            file: path,
-            line: 1,
-            rule: 'package-manager',
-            message: `This package names ${manifest.packageManager ?? ''}; the root names ${wanted ?? ''}.`,
-            fixable: false,
-        })),
     ];
 }
 
@@ -59,14 +62,14 @@ function lockfileFindings(input: EngineInput): Finding[] {
         .values()
         .toArray()
         .slice(1)
-        .map((path) => ({
-            check: input.spec.name,
-            file: path,
-            line: 1,
-            rule: 'foreign-lockfile',
-            message: `The repository holds lockfiles of ${String(kinds.size)} package managers: ${listed}. Keep one.`,
-            fixable: false,
-        }));
+        .map((path) =>
+            findingAt(
+                input,
+                { file: path, line: 1 },
+                'foreign-lockfile',
+                `The repository holds lockfiles of ${String(kinds.size)} package managers: ${listed}. Keep one.`,
+            ),
+        );
 }
 
 /**
@@ -88,14 +91,14 @@ export function manifestPolicy(input: EngineInput): Finding[] {
         return DEPENDENCY_TABLES.flatMap((table) =>
             Object.entries(manifest[table] ?? {})
                 .filter(([, version]) => !EXACT_VERSION.test(version) && !NON_REGISTRY_VERSION.test(version))
-                .map(([name, version]) => ({
-                    check: input.spec.name,
-                    file: path,
-                    line: 1,
-                    rule: 'version-range',
-                    message: `${name} is "${version}" under ${table}; pin the exact version the lockfile holds.`,
-                    fixable: false,
-                })),
+                .map(([name, version]) =>
+                    findingAt(
+                        input,
+                        { file: path, line: 1 },
+                        'version-range',
+                        `${name} is "${version}" under ${table}; pin the exact version the lockfile holds.`,
+                    ),
+                ),
         );
     });
     return [...ranges, ...installerFindings(input, manifests), ...lockfileFindings(input)];

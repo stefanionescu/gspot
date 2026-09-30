@@ -8,6 +8,7 @@ import { script } from '#tests/support/cli/planted.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { containing } from '#tests/support/expectations.ts';
+import { readGitSetting } from '#cli/repository/git-config.ts';
 import { existsSync, symlinkSync, readFileSync } from 'node:fs';
 
 test(
@@ -25,14 +26,13 @@ test(
             '--no-ci',
             '--no-guides',
             '--no-install',
-            '--hooks',
-            'gspot',
         ]);
         expect(init.code, init.stdout + init.stderr).toBe(0);
         expect(init.stdout).toContain('write');
         expect(existsSync(join(sandbox.path, 'gspot.toml'))).toBe(true);
         expect(existsSync(join(sandbox.path, '.gspot', 'version'))).toBe(true);
-        expect(existsSync(join(sandbox.path, '.gspot', 'hooks', 'pre-commit'))).toBe(false);
+        expect(existsSync(join(sandbox.path, '.gspot', 'hooks', 'pre-commit'))).toBe(true);
+        expect(readGitSetting(sandbox.path, 'core.hooksPath')).toBeUndefined();
         expect(readFileSync(join(sandbox.path, '.gitignore'), 'utf8')).toContain('>>> gspot managed >>>');
         const check = await run(sandbox.path, ['check', '--only', 'bash/shellcheck', '--json']);
         expect(check.code).toBe(0);

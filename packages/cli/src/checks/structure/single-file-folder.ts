@@ -1,4 +1,5 @@
 import { sourceKits } from '#cli/kits/select.ts';
+import { findingAt } from '#cli/checks/result.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
 import { IGNORED_FOLDERS } from '#cli/config/checks/structure.ts';
 import type { StructureAnalysis as Analysis } from '#cli/types/checks.ts';
@@ -34,9 +35,9 @@ export const singleFileFolder: Analysis = (context) => {
         if (only === undefined || siblings.length !== 1) return [];
         if (!extensions.some((extension) => only.name.endsWith(extension))) return [];
         return [
-            context.report(
-                `${directory}/${only.name}`,
-                1,
+            findingAt(
+                context.input,
+                { file: `${directory}/${only.name}`, line: 1 },
                 'lone-file',
                 `The folder ${directory}/ holds only ${only.name}.`,
             ),

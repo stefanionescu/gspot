@@ -1,3 +1,4 @@
+import { findingAt } from '#cli/checks/result.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import type { Finding, EngineInput } from '#cli/types/checks.ts';
 import { PAIRS, SECRET_KEY, CONFIG_FILE, SEGMENT_NAME, SWITCHED_OFF } from '#cli/config/checks/platforms.ts';
@@ -23,14 +24,14 @@ export function routeSegments(input: EngineInput): Finding[] {
     return kinds
         .entries()
         .filter(([, held]) => held.has('page') && held.has('route'))
-        .map(([folder, held]) => ({
-            check: input.spec.name,
-            file: held.get('route') ?? folder,
-            line: 1,
-            rule: 'route-segment',
-            message: `${folder} holds a page and a route handler, and the framework serves one address from one of them.`,
-            fixable: false,
-        }))
+        .map(([folder, held]) =>
+            findingAt(
+                input,
+                { file: held.get('route') ?? folder, line: 1 },
+                'route-segment',
+                `${folder} holds a page and a route handler, and the framework serves one address from one of them.`,
+            ),
+        )
         .toArray();
 }
 
@@ -44,24 +45,28 @@ export function nextjsConfiguration(input: EngineInput): Finding[] {
         .filter((path) => CONFIG_FILE.test(path))
         .flatMap((path) => {
             const text = readSource(input.root, path, input.reads).toString('utf8');
-            const off = text.matchAll(SWITCHED_OFF).map((match) => ({
-                check: input.spec.name,
-                file: path,
-                line: text.slice(0, match.index).split('\n').length,
-                rule: 'build-check-off',
-                message: `${match.groups?.['name'] ?? ''} lets a build pass with findings the gate stops.`,
-                fixable: false,
-            }));
+            const off = text
+                .matchAll(SWITCHED_OFF)
+                .map((match) =>
+                    findingAt(
+                        input,
+                        { file: path, line: text.slice(0, match.index).split('\n').length },
+                        'build-check-off',
+                        `${match.groups?.['name'] ?? ''} lets a build pass with findings the gate stops.`,
+                    ),
+                );
             const env = text.indexOf('env:');
             const block = env === -1 ? '' : text.slice(env, text.indexOf('}', env) + 1);
-            const secrets = block.matchAll(SECRET_KEY).map((match) => ({
-                check: input.spec.name,
-                file: path,
-                line: text.slice(0, env + match.index).split('\n').length,
-                rule: 'secret-in-env',
-                message: `${match.groups?.['name'] ?? ''} under env is written into the client bundle. Read it on the server.`,
-                fixable: false,
-            }));
+            const secrets = block
+                .matchAll(SECRET_KEY)
+                .map((match) =>
+                    findingAt(
+                        input,
+                        { file: path, line: text.slice(0, env + match.index).split('\n').length },
+                        'secret-in-env',
+                        `${match.groups?.['name'] ?? ''} under env is written into the client bundle. Read it on the server.`,
+                    ),
+                );
             return [...off, ...secrets];
         });
 }
@@ -82,13 +87,13 @@ export function dependencyAlignment(input: EngineInput): Finding[] {
         return PAIRS.filter(
             ([left, right]) =>
                 versions[left] !== undefined && versions[right] !== undefined && versions[left] !== versions[right],
-        ).map(([left, right]) => ({
-            check: input.spec.name,
-            file: path,
-            line: 1,
-            rule: 'version-pair',
-            message: `${left} is ${versions[left] ?? ''} and ${right} is ${versions[right] ?? ''}. They ship together, so they sit on one version.`,
-            fixable: false,
-        }));
+        ).map(([left, right]) =>
+            findingAt(
+                input,
+                { file: path, line: 1 },
+                'version-pair',
+                `${left} is ${versions[left] ?? ''} and ${right} is ${versions[right] ?? ''}. They ship together, so they sit on one version.`,
+            ),
+        );
     });
 }

@@ -1,3 +1,4 @@
+import { findingAt } from '#cli/checks/result.ts';
 import { extensionOf } from '#cli/platform/paths.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import type { Finding, EngineInput } from '#cli/types/checks.ts';
@@ -8,26 +9,21 @@ function lineFindings(input: EngineInput, path: string, lines: string[]): Findin
     return lines.flatMap((line, index) => {
         if (MARKDOWN.has(extension) && VALE_DIRECTIVE.test(line.replaceAll(CODE_SPAN, '')))
             return [
-                {
-                    check: input.spec.name,
-                    file: path,
-                    line: index + 1,
-                    rule: 'vale-directive',
-                    message:
-                        'A Vale directive turns a rule off in the text; change the text or record an exception with gspot ignore prose/vale --rule <rule>.',
-                    fixable: false,
-                },
+                findingAt(
+                    input,
+                    { file: path, line: index + 1 },
+                    'vale-directive',
+                    'A Vale directive turns a rule off in the text; change the text or record an exception with gspot ignore prose/vale --rule <rule>.',
+                ),
             ];
         if (SQL.has(extension) && line.includes(SQL_BLOCK_COMMENT))
             return [
-                {
-                    check: input.spec.name,
-                    file: path,
-                    line: index + 1,
-                    rule: 'block-comment',
-                    message: 'SQL comments are -- lines, which Vale reads; a /* */ block is invisible to it.',
-                    fixable: false,
-                },
+                findingAt(
+                    input,
+                    { file: path, line: index + 1 },
+                    'block-comment',
+                    'SQL comments are -- lines, which Vale reads; a /* */ block is invisible to it.',
+                ),
             ];
         return [];
     });

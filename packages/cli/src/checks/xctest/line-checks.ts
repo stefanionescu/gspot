@@ -1,9 +1,9 @@
 import type { Node } from 'web-tree-sitter';
+import { findingAt } from '#cli/checks/result.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
 import type { Finding, EngineInput } from '#cli/types/checks.ts';
-import { xcodeFinding } from '#cli/checks/xcode/project/checks.ts';
 import { SLEEP_CALLS, SWIFT_COMMENT_LINE } from '#cli/config/checks/swift.ts';
 
 function hasReason(value: Node | undefined): boolean {
@@ -29,7 +29,7 @@ async function testFindings(
         if (tree === null) throw new Error('Swift test analysis could not parse the source.');
         try {
             for (const node of matching(tree.rootNode, source.split('\n')))
-                findings.push(xcodeFinding(input, { file: file.path, line: node.startPosition.row + 1 }, rule, text));
+                findings.push(findingAt(input, { file: file.path, line: node.startPosition.row + 1 }, rule, text));
         } finally {
             tree.delete();
         }

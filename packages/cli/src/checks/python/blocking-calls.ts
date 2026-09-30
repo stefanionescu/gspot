@@ -1,4 +1,5 @@
 import type { Node } from 'web-tree-sitter';
+import { findingAt } from '#cli/checks/result.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
 import type { Finding, EngineInput } from '#cli/types/checks.ts';
@@ -45,14 +46,14 @@ export async function pythonBlockingCalls(input: EngineInput): Promise<Finding[]
                         BLOCKING_MODULES.some((module) => call.callee.startsWith(module)),
                 );
             for (const call of calls)
-                findings.push({
-                    check: input.spec.name,
-                    file: file.path,
-                    line: call.line,
-                    rule: 'blocking-call',
-                    message: `${call.callee} blocks the event loop inside an async function.`,
-                    fixable: false,
-                });
+                findings.push(
+                    findingAt(
+                        input,
+                        { file: file.path, line: call.line },
+                        'blocking-call',
+                        `${call.callee} blocks the event loop inside an async function.`,
+                    ),
+                );
         } finally {
             tree.delete();
         }

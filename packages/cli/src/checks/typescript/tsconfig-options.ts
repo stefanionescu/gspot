@@ -1,4 +1,5 @@
 import { join } from 'node:path';
+import { findingAt } from '#cli/checks/result.ts';
 import { getTsconfig } from '#cli/repository/tsconfig.ts';
 import type { Finding, EngineInput } from '#cli/types/checks.ts';
 import { DECORATOR_OPTIONS } from '#cli/config/checks/typescript.ts';
@@ -29,22 +30,17 @@ export function tsconfigOptions(input: EngineInput): Finding[] {
             return Object.keys(required)
                 .filter((option) => parsed.options[option] !== true)
                 .map((option) => ({
-                    check: input.spec.name,
-                    file: path,
-                    rule: option,
-                    message: `${option} is not on in this tsconfig.`,
+                    ...findingAt(input, { file: path }, option, `${option} is not on in this tsconfig.`),
                     help: 'Enable this compiler option in the authored TypeScript configuration.',
-                    fixable: false,
                 }));
         if (path !== scopeTsconfig) return [];
         return [
-            {
-                check: input.spec.name,
-                file: path,
-                message:
-                    'This scope has no tsconfig.json. Add an authored TypeScript configuration for its source files.',
-                fixable: false,
-            },
+            findingAt(
+                input,
+                { file: path },
+                'missing-tsconfig',
+                'This scope has no tsconfig.json. Add an authored TypeScript configuration for its source files.',
+            ),
         ];
     });
 }

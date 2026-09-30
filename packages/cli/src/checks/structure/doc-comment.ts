@@ -1,3 +1,4 @@
+import { findingAt } from '#cli/checks/result.ts';
 import type { ScriptFunction, StructureAnalysis as Analysis } from '#cli/types/checks.ts';
 
 import {
@@ -76,7 +77,9 @@ export const docComment: Analysis = async (context, scripts) => {
         return file.functions.flatMap((entry) => {
             if (ENTRY_FUNCTIONS.includes(entry.name)) return [];
             const found = problem(entry, blockAbove(file.lines, entry.start), style);
-            return found === undefined ? [] : [context.report(file.path, entry.start, found.rule, found.message)];
+            return found === undefined
+                ? []
+                : [findingAt(context.input, { file: file.path, line: entry.start }, found.rule, found.message)];
         });
     });
 };

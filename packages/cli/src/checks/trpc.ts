@@ -1,3 +1,4 @@
+import { findingAt } from '#cli/checks/result.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
 import { scopeImports } from '#cli/checks/structure/imports.ts';
 import type { Finding, EngineInput } from '#cli/types/checks.ts';
@@ -19,13 +20,12 @@ export async function trpcBoundaries(input: EngineInput): Promise<Finding[]> {
                 !isServer(input.scope === '' ? edge.from : edge.from.slice(input.scope.length + 1)) &&
                 isServer(input.scope === '' ? edge.to : edge.to.slice(input.scope.length + 1)),
         )
-        .map((edge) => ({
-            check: input.spec.name,
-            file: edge.from,
-            line: edge.line,
-            rule: 'server-import',
-            message: `${edge.source} is server code. Import its types with import type.`,
-            fixable: false,
-            column: edge.column,
-        }));
+        .map((edge) =>
+            findingAt(
+                input,
+                { file: edge.from, line: edge.line, column: edge.column },
+                'server-import',
+                `${edge.source} is server code. Import its types with import type.`,
+            ),
+        );
 }

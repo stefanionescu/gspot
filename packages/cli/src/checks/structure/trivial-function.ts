@@ -1,3 +1,4 @@
+import { findingAt } from '#cli/checks/result.ts';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
 import type { StructureAnalysis as Analysis } from '#cli/types/checks.ts';
 import { DEFAULT_TRIVIAL_STATEMENTS } from '#cli/config/checks/structure.ts';
@@ -16,9 +17,9 @@ export const trivialFunction: Analysis = async (context, scripts) => {
         file.functions.flatMap((entry) =>
             entry.statements <= threshold
                 ? [
-                      context.report(
-                          file.path,
-                          entry.start,
+                      findingAt(
+                          context.input,
+                          { file: file.path, line: entry.start },
                           'trivial-function',
                           trivialFunctionText(entry.name, entry.statements, threshold),
                       ),
@@ -32,9 +33,9 @@ export const trivialFunction: Analysis = async (context, scripts) => {
         try {
             if (trivialFile(tree.rootNode, 'bash', threshold))
                 findings.push(
-                    context.report(
-                        file.path,
-                        1,
+                    findingAt(
+                        context.input,
+                        { file: file.path, line: 1 },
                         'trivial-file',
                         'This file contains only imports, aliases, forwarding, or trivial functions. Move them to their owner.',
                     ),

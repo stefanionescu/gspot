@@ -1,3 +1,4 @@
+import { findingAt } from '#cli/checks/result.ts';
 import { ENTRY_FUNCTIONS } from '#cli/config/checks/structure.ts';
 import type { StructureAnalysis as Analysis } from '#cli/types/checks.ts';
 
@@ -14,7 +15,12 @@ export const unusedFunctions: Analysis = async (context, scripts) => {
         return file.functions
             .filter((entry) => !ENTRY_FUNCTIONS.includes(entry.name) && !referenced.has(entry.name))
             .map((entry) =>
-                context.report(file.path, entry.start, 'never-called', `${entry.name} is called from no script.`),
+                findingAt(
+                    context.input,
+                    { file: file.path, line: entry.start },
+                    'never-called',
+                    `${entry.name} is called from no script.`,
+                ),
             );
     });
 };

@@ -1,3 +1,4 @@
+import { findingAt } from '#cli/checks/result.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
 import { KILOBYTE } from '#cli/config/checks/repository.ts';
 import type { Finding, EngineInput } from '#cli/types/checks.ts';
@@ -23,12 +24,12 @@ export function largeFiles(input: EngineInput): Finding[] {
                         rule.attributes.some((attribute) => attribute.startsWith('filter=lfs')),
                 ),
         )
-        .map((file) => ({
-            check: input.spec.name,
-            file: file.path,
-            line: 1,
-            rule: 'over-limit',
-            message: `${String(Math.round(file.size / KILOBYTE))} KB is over the ${String(limitKb)} KB limit; move it to LFS or declare it with a reason.`,
-            fixable: false,
-        }));
+        .map((file) =>
+            findingAt(
+                input,
+                { file: file.path, line: 1 },
+                'over-limit',
+                `${String(Math.round(file.size / KILOBYTE))} KB is over the ${String(limitKb)} KB limit; move it to LFS or declare it with a reason.`,
+            ),
+        );
 }

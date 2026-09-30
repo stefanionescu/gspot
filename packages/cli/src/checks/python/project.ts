@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { parse } from 'smol-toml';
 import { statSync } from 'node:fs';
 import { join, posix } from 'node:path';
+import { findingAt } from '#cli/checks/result.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
@@ -29,11 +30,6 @@ const dependencyConfiguration = z.object({
         })
         .default({ deptry: { extend_exclude: [] } }),
 });
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Four checks build the finding record; one owner keeps its shape.
-function finding(input: EngineInput, at: { file: string; line: number }, rule: string, text: string): Finding {
-    return { check: input.spec.name, file: at.file, line: at.line, rule, message: text, fixable: false };
-}
-
 /**
  * Exclude private tool installations while preserving native dependency scan settings.
  * @param session the repository and native execution boundaries.
@@ -81,7 +77,7 @@ export async function importLinter(input: EngineInput): Promise<Finding[]> {
     if (result.code !== 0 && broken.length === 0) throw new Error(`The lint-imports command failed: ${said}`);
     const at = { file: manifest, line: 1 };
     return broken.map((name) =>
-        finding(input, at, 'contract', `The import contract "${name}" is broken; lint-imports prints the chain.`),
+        findingAt(input, at, 'contract', `The import contract "${name}" is broken; lint-imports prints the chain.`),
     );
 }
 
@@ -108,7 +104,7 @@ export function dependencyOwnership(input: EngineInput): Finding[] {
     const requirements = files
         .filter((file) => REQUIREMENTS_FILE.test(file.path))
         .map((file) =>
-            finding(
+            findingAt(
                 input,
                 { file: file.path, line: 1 },
                 'requirements-file',
@@ -124,7 +120,7 @@ export function dependencyOwnership(input: EngineInput): Finding[] {
                 .flatMap((text, index): Finding[] =>
                     PIP_INSTALL.test(text) && !text.trimStart().startsWith('#')
                         ? [
-                              finding(
+                              findingAt(
                                   input,
                                   { file: file.path, line: index + 1 },
                                   'pip-install',
@@ -152,7 +148,7 @@ export function typecheckMembership(input: EngineInput): Finding[] {
             return paths.every((path) => !isMatch(path));
         });
     return stale.map((pattern) =>
-        finding(
+        findingAt(
             input,
             { file: 'gspot.toml', line: 1 },
             'stale-exclusion',

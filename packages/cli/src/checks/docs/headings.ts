@@ -1,5 +1,6 @@
 import { visit } from 'unist-util-visit';
 import { toString } from 'mdast-util-to-string';
+import { findingAt } from '#cli/checks/result.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { readSource } from '#cli/repository/tracked.ts';
 import { BANNED_HEADINGS } from '#cli/config/checks/docs.ts';
@@ -20,14 +21,14 @@ export function docsHeadings(input: EngineInput): Finding[] {
         visit(tree, 'heading', (heading) => {
             const text = toString(heading).trim().toLowerCase();
             if (banned.has(text))
-                findings.push({
-                    check: input.spec.name,
-                    file: file.path,
-                    line: heading.position?.start.line ?? 1,
-                    rule: 'banned-heading',
-                    message: `The heading "${text}" promises an inventory; explain the thing instead.`,
-                    fixable: false,
-                });
+                findings.push(
+                    findingAt(
+                        input,
+                        { file: file.path, line: heading.position?.start.line ?? 1 },
+                        'banned-heading',
+                        `The heading "${text}" promises an inventory; explain the thing instead.`,
+                    ),
+                );
         });
     }
     return findings;

@@ -1,3 +1,4 @@
+import { findingAt } from '#cli/checks/result.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { parseSql, parsePlpgsql } from '#cli/parsers/sql/parser.ts';
 import { sqlFile, positionAt } from '#cli/parsers/sql/statements.ts';
@@ -78,27 +79,14 @@ async function bodyStatements(
     return language === 'sql' ? sqlBodyStatements(statement) : undefined;
 }
 
-// A finding at a statement of the source.
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Two function checks build the finding with its statement position; one owner keeps that shape.
-function functionFinding(analysis: SqlAnalysis, statement: SqlStatementView, rule: string, text: string): Finding {
-    const { input, source } = analysis;
-    return {
-        check: input.spec.name,
-        file: source.path,
-        ...positionAt(source.text, statement.start),
-        rule,
-        message: text,
-        fixable: false,
-    };
-}
-
 // The findings of one `CREATE FUNCTION` statement, and whether the function is trivial.
 async function functionFindings(
     analysis: SqlAnalysis,
     statement: SqlStatementView,
     index: number,
 ): Promise<{ findings: Finding[]; isTrivial: boolean }> {
-    const { threshold, maximum, parsed } = analysis;
+    const { input, source, threshold, maximum, parsed } = analysis;
+    const at = { file: source.path, ...positionAt(source.text, statement.start) };
     const findings: Finding[] = [];
     const parameters = (statement.fields['parameters'] ?? []) as { FunctionParameter: { mode: string } }[];
     const count = parameters.filter(
@@ -106,9 +94,9 @@ async function functionFindings(
     ).length;
     if (count > maximum)
         findings.push(
-            functionFinding(
-                analysis,
-                statement,
+            findingAt(
+                input,
+                at,
                 'function-parameters',
                 `${String(count)} declared input parameters exceeds ${String(maximum)}.`,
             ),
@@ -117,12 +105,7 @@ async function functionFindings(
     const isTrivial = statements !== undefined && statements <= threshold;
     if (isTrivial)
         findings.push(
-            functionFinding(
-                analysis,
-                statement,
-                'trivial-function',
-                trivialFunctionText('This function', statements, threshold),
-            ),
+            findingAt(input, at, 'trivial-function', trivialFunctionText('This function', statements, threshold)),
         );
     return { findings, isTrivial };
 }
@@ -139,14 +122,14 @@ async function fileFunctionFindings(analysis: SqlAnalysis): Promise<Finding[]> {
         if (found.isTrivial) trivial += 1;
     }
     if (trivial > 0 && trivial === parsed.statements.length)
-        findings.push({
-            check: input.spec.name,
-            file: source.path,
-            line: 1,
-            rule: 'trivial-file',
-            message: 'This file contains only trivial functions. Move them to their owner.',
-            fixable: false,
-        });
+        findings.push(
+            findingAt(
+                input,
+                { file: source.path, line: 1 },
+                'trivial-file',
+                'This file contains only trivial functions. Move them to their owner.',
+            ),
+        );
     return findings;
 }
 
@@ -163,15 +146,7 @@ export async function sqlSyntax(input: EngineInput): Promise<Finding[]> {
         const parsed = await sqlFile(source.text, input.reads);
         if (parsed.error === undefined) continue;
         const { text, line, column } = parsed.error;
-        findings.push({
-            check: input.spec.name,
-            file: source.path,
-            line,
-            column,
-            rule: 'syntax',
-            message: text,
-            fixable: false,
-        });
+        findings.push(findingAt(input, { file: source.path, line, column }, 'syntax', text));
     }
     return findings;
 }
@@ -186,14 +161,12 @@ export function sqlBlockComments(input: EngineInput): Finding[] {
         const found = source.text.matchAll(SQL_TOKENS).find((match) => match[0] === BLOCK_COMMENT);
         if (found === undefined) return [];
         return [
-            {
-                check: input.spec.name,
-                file: source.path,
-                ...positionAt(source.text, found.index),
-                rule: 'block-comment',
-                message: 'A block comment; write line comments, which the prose checks read.',
-                fixable: false,
-            },
+            findingAt(
+                input,
+                { file: source.path, ...positionAt(source.text, found.index) },
+                'block-comment',
+                'A block comment; write line comments, which the prose checks read.',
+            ),
         ];
     });
 }
@@ -211,9 +184,7 @@ export function sqlFileLength(input: EngineInput): Finding[] {
         const count = lines.filter((line) => line !== '' && !line.startsWith(LINE_COMMENT)).length;
         if (count <= ceiling) return [];
         const said = `${String(count)} code lines is over the ceiling of ${String(ceiling)}.`;
-        return [
-            { check: input.spec.name, file: source.path, line: 1, rule: 'file-lines', message: said, fixable: false },
-        ];
+        return [findingAt(input, { file: source.path, line: 1 }, 'file-lines', said)];
     });
 }
 

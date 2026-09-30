@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { parse } from 'yaml';
 import { join } from 'node:path';
 import { scopeFile } from '#cli/kits/targets.ts';
+import { findingAt } from '#cli/checks/result.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
 import { readSource } from '#cli/repository/tracked.ts';
@@ -103,14 +104,14 @@ export async function trivyImage(input: EngineInput): Promise<Finding[]> {
         for (const image of composeImages(input, file.path)) {
             const messages = await scanImage(input, image);
             if (messages.length === 0) continue;
-            findings.push({
-                check: input.spec.name,
-                file: file.path,
-                line: 1,
-                rule: 'image',
-                message: `${image}: ${messages.slice(0, SHOWN_FINDINGS).join(' | ')}`,
-                fixable: false,
-            });
+            findings.push(
+                findingAt(
+                    input,
+                    { file: file.path, line: 1 },
+                    'image',
+                    `${image}: ${messages.slice(0, SHOWN_FINDINGS).join(' | ')}`,
+                ),
+            );
         }
     }
     return findings;
