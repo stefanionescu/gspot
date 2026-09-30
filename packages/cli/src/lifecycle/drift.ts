@@ -12,7 +12,7 @@ import { packageLockDrift } from '#cli/tools/packages/project.ts';
 import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import type { DriftEntry } from '#cli/types/lifecycle/lifecycle.ts';
 import { hasConfiguration } from '#cli/lifecycle/configuration/document.ts';
-import { NEVER_STRAY, CONFLICT_MARKERS, DRIFT_DIFF_CONTEXT } from '#cli/config/lifecycle/lifecycle.ts';
+import { NEVER_STRAY, CONFLICT_MARKERS, DRIFT_DIFF_CONTEXT } from '#cli/config/lifecycle.ts';
 
 function isStrayCandidate(path: string, policy: Policy): boolean {
     if (path.startsWith('.gspot/state/')) return false;

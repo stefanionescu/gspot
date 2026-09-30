@@ -20,13 +20,6 @@ export type SourceReads = {
 // Reading vale.ini without Vale: the styles and rule levels of each file-pattern section.
 export type Reader = { lines: string[]; index: number };
 export type Section = Map<string, string[]>;
-export type HookLocation = {
-    root: string;
-    directory: string;
-    absolute: string;
-    gitRoot: string;
-    stateDirectory: string;
-};
 export type Kind = 'source' | 'generated' | 'vendored' | 'binary';
 export type TrackedFile = {
     path: string;

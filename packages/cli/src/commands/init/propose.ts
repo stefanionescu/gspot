@@ -91,7 +91,7 @@ function mergeProfile(document: TomlTable, tables: TomlTable | undefined): void 
 // Initialization selects enabled integrations.
 function applyIntegrations(document: TomlTable, plan: InitPlan): void {
     if (plan.hooks === 'none') delete document['hooks'];
-    else document['hooks'] = { ...asRaw(document['hooks']), tool: plan.hooks };
+    else document['hooks'] = { ...asRaw(document['hooks']) };
     if (plan.ci === 'none') delete document['ci'];
     else document['ci'] = { ...asRaw(document['ci']), provider: plan.ci };
     document['guides'] = { directory: '.gspot/guides', ...asRaw(document['guides']), install: plan.rules };

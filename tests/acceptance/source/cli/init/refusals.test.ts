@@ -37,9 +37,9 @@ test(
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'scripts/a.sh': script });
         commitAll(sandbox.path);
-        const result = await run(sandbox.path, ['init', '--yes', '--hooks', 'foo']);
+        const result = await run(sandbox.path, ['init', '--yes', '--ci', 'foo']);
         expect(result.code).toBe(2);
-        expect(result.stderr).toContain('Allowed choices are gspot, lefthook, husky');
+        expect(result.stderr).toContain('Allowed choices are github, gitlab');
         expect(existsSync(join(sandbox.path, 'gspot.toml'))).toBe(false);
         const invalidStage = await run(sandbox.path, ['check', '--stage', 'later']);
         expect(invalidStage.code).toBe(2);

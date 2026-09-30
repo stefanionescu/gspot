@@ -1,7 +1,7 @@
 ---
 slug: guides/hooks-and-ci
 title: Hooks and CI
-description: When the checks run, which hook tools gspot supports, and the CI job it writes.
+description: When the checks run, how the Git hooks run them, and the CI job gspot writes.
 ---
 
 gspot runs the checks at three points: before a commit, before a push, and in CI. Each check
@@ -24,35 +24,25 @@ runs the whole-project checks, such as type checks, for the projects they touch.
 then report a finding in a file you did not change, when that file belongs to a changed project.
 The push hook skips the contents of submodules.
 
-## Choose a hook tool
+## How the hooks run
 
-When init finds no hook manager, gspot writes plain Git hooks. When it finds one, such as Husky,
-it uses that one. To change the tool later, set it and install:
+gspot writes three short scripts to `.gspot/hooks/`: `pre-commit`, `commit-msg`, and `pre-push`.
+Each one runs one gspot check. `gspot install` points Git at them:
 
 ```shell
-gspot set hooks.tool lefthook
-gspot install
+git config core.hooksPath .gspot/hooks
 ```
 
-The tool is one of `gspot`, `husky`, `lefthook`, `pre-commit`, or `simple-git-hooks`:
+Run `gspot install` after you clone the repository. `gspot doctor` reports whether this clone
+runs the hooks.
 
-| Tool               | What gspot adds                                                                                |
-| ------------------ | ---------------------------------------------------------------------------------------------- |
-| `gspot`            | The Git hooks themselves. Hooks you already had stay in the chain.                             |
-| `husky`            | A gspot line in each commit, push, and message script under `.husky/`. Husky 9 or newer.       |
-| `lefthook`         | Three gspot commands and `no_auto_install` in `lefthook.yml`. Lefthook 2.0.13 or newer.        |
-| `pre-commit`       | One local `gspot` hook in `.pre-commit-config.yaml` that checks the staged files once.         |
-| `simple-git-hooks` | A gspot command after each existing command in the `simple-git-hooks` field of `package.json`. |
+When the repository already runs hooks, gspot keeps them. This covers another `core.hooksPath`,
+a Husky or Lefthook setup, a pre-commit configuration, and scripts in `.git/hooks`. In that
+case `gspot install` prints the line to add to each of your hooks, such as:
 
-With every tool, your own hooks run first with the original Git arguments. If one of them
-fails, the chain stops. Push input reaches both your hook and gspot.
-
-Run `gspot install` after you clone the repository, change the hook tool, or update it.
-`gspot doctor` reports whether the installed hooks match the policy.
-
-Before you switch to `pre-commit`, rename any hook of your own that is named `gspot`. Before
-you switch to `simple-git-hooks`, move commands from a separate `simple-git-hooks.*` file into
-the `package.json` field.
+```text
+pre-commit: npm exec --no -- gspot check --staged
+```
 
 ## Skip a hook
 

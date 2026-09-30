@@ -8,7 +8,6 @@ import { write } from '#cli/commands/init/write.ts';
 import { runnerSchema } from '#cli/policy/runner.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
 import { note, print } from '#cli/output/messages.ts';
-import { hooksSchema } from '#cli/repository/hooks.ts';
 import { prepare } from '#cli/commands/init/prepare.ts';
 import { askConfirmation } from '#cli/commands/prompts.ts';
 import { readProfile } from '#cli/policy/profiles/read.ts';
@@ -32,7 +31,7 @@ function profileAnswers(profile: Profile): Partial<InitOptions> {
     const install = tables.guides?.install;
     return compact({
         kits: configurations.length === 0 ? ['none'] : configurations,
-        hooks: tables.hooks === undefined ? 'none' : tables.hooks.tool,
+        hooks: tables.hooks === undefined ? 'none' : 'gspot',
         ci: tables.ci === undefined ? 'none' : tables.ci.provider,
         runner: tables.runner === undefined ? 'none' : tables.runner.tool,
         rules: ruleAnswer(install),
@@ -46,7 +45,7 @@ function optionsFrom(flags: Record<string, unknown>, global: Record<string, unkn
         scopes: listFlag(flags, 'scope'),
     };
     const choices = {
-        hooks: flags['hooks'] === false ? 'none' : hooksSchema.shape.tool.optional().parse(textFlag(flags, 'hooks')),
+        hooks: flags['hooks'] === false ? ('none' as const) : undefined,
         ci: flags['ci'] === false ? 'none' : ciSchema.shape.provider.optional().parse(textFlag(flags, 'ci')),
         runner:
             flags['runner'] === false ? 'none' : runnerSchema.shape.tool.optional().parse(textFlag(flags, 'runner')),
@@ -134,11 +133,6 @@ export function registerInit(program: Command): void {
         .option('--scope <path=kits...>', 'Add scopes, each as a path and its comma-separated kits')
         .option('--no-install', 'Skip installing the tools and print the install command')
         .option('--allow-dirty', 'Run even when the working tree has uncommitted changes')
-        .addOption(
-            new Option('--hooks <tool>', 'Install the Git hooks through this tool').choices(
-                hooksSchema.shape.tool.options,
-            ),
-        )
         .addOption(
             new Option('--ci <provider>', 'Write a CI workflow for this provider').choices(
                 ciSchema.shape.provider.options,

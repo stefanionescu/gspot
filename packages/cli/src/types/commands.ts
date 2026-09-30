@@ -186,7 +186,7 @@ export type InitOptions = {
     kits?: string[];
     without?: string[];
     scopes?: string[];
-    hooks?: NonNullable<Policy['hooks']>['tool'] | 'none';
+    hooks?: 'gspot' | 'none';
     ci?: NonNullable<Policy['ci']>['provider'] | 'none';
     rules?: 'yes' | 'no';
     runner?: NonNullable<Policy['runner']>['tool'] | 'none';
@@ -218,7 +218,7 @@ export type InitSelection = {
 };
 /** The answers init collects from flags or the terminal. */
 export type InitAnswers = {
-    hooks: NonNullable<Policy['hooks']>['tool'] | 'none';
+    hooks: 'gspot' | 'none';
     ci: NonNullable<Policy['ci']>['provider'] | 'none';
     isRules: boolean;
     runner: NonNullable<Policy['runner']>['tool'] | 'none';
@@ -253,7 +253,7 @@ export type InitPlan = {
     profileTables?: TomlTable;
     kits: string[];
     scopes: { path: string; kits: string[] }[];
-    hooks: NonNullable<RawPolicy['hooks']>['tool'] | 'none';
+    hooks: 'gspot' | 'none';
     ci: NonNullable<RawPolicy['ci']>['provider'] | 'none';
     rules: boolean;
     runner: NonNullable<RawPolicy['runner']>['tool'] | 'none';

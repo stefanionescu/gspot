@@ -6,12 +6,11 @@ import { openSession } from '#cli/execution/session.ts';
 import { installCommand } from '#cli/commands/install.ts';
 import { installTools } from '#cli/tools/installation.ts';
 import { onPosix } from '#tests/support/cli/platforms.ts';
-import { installHooks } from '#cli/lifecycle/hooks/git.ts';
+import { applyAll } from '#cli/commands/apply/workflow.ts';
 import { rejection } from '#tests/support/expectations.ts';
 import { initCommand } from '#cli/commands/init/command.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { MISE_MIN_VERSION } from '#cli/config/tools/tools.ts';
-import { hookLocation } from '#cli/repository/hook-location.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
 import { rmSync, chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 
@@ -116,21 +115,21 @@ test('init does not report success when required Python lock resolution cannot r
     }
 });
 
-test.each([0, 1])('a hook conflict preserves independent installer execution and exit %s', async (code) => {
+test('a repository that already runs hooks keeps them, gets the gspot lines, and the other installers still run', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': policyOf([], '[hooks]\ntool = "gspot"\n[runner]\ntool = "mise"\n[guides]\ninstall = false\n'),
+        'gspot.toml': policyOf([], '[hooks]\n[runner]\ntool = "mise"\n[guides]\ninstall = false\n'),
+        '.githooks/pre-commit': '#!/bin/sh\nexit 0\n',
     });
     expect(processes.runBlocking(['git', 'init', '--quiet'], { cwd: sandbox.path }).code).toBe(0);
-    const location = hookLocation(sandbox.path);
-    writeFileSync(join(location.absolute, 'pre-push.gspot-original'), 'authored sibling');
+    expect(processes.runBlocking(['git', 'config', 'core.hooksPath', '.githooks'], { cwd: sandbox.path }).code).toBe(0);
     const read: string[][] = [];
     const run = processes.run;
     const installer = spyOn(processes, 'run').mockImplementation((command, options) => {
         if (command[0] !== 'mise') return run(command, options);
         read.push([...command]);
         return Promise.resolve({
-            code: command[1] === 'install' ? code : 0,
+            code: 0,
             missing: false,
             duration: 0,
             stdout: `mise ${MISE_MIN_VERSION}`,
@@ -139,16 +138,13 @@ test.each([0, 1])('a hook conflict preserves independent installer execution and
     });
     try {
         const result = await installCommand({ cwd: sandbox.path, isDryRun: false });
-        expect(result.exitCode).toBe(2);
-        expect(result.text).toContain('Hook sibling already exists');
-        expect(result.text.includes('installation command mise install failed')).toBe(code !== 0);
-        expect(
-            result.text.indexOf('Hook sibling already exists') <
-                result.text.indexOf('installation command mise install failed'),
-        ).toBe(code !== 0);
+        expect(result.exitCode, result.text).toBe(0);
+        expect(result.text).toContain('add these gspot lines');
+        expect(result.text).toContain('pre-commit: mise exec -- gspot check --staged');
         expect(read).toContainEqual(['mise', 'install']);
-        expect(readFileSync(join(location.absolute, 'pre-push.gspot-original'), 'utf8')).toBe('authored sibling');
-        expect(existsSync(join(location.absolute, 'pre-commit'))).toBe(false);
+        expect(processes.runBlocking(['git', 'config', 'core.hooksPath'], { cwd: sandbox.path }).stdout.trim()).toBe(
+            '.githooks',
+        );
     } finally {
         installer.mockRestore();
     }
@@ -161,21 +157,16 @@ if (onPosix) {
         async (condition) => {
             await using repository = await testdir();
             await createFileTree(repository.path, {
-                'gspot.toml': policyOf([], '[hooks]\ntool = "gspot"\n[guides]\ninstall = false\n'),
+                'gspot.toml': policyOf([], '[hooks]\n[guides]\ninstall = false\n'),
                 'bin/gspot': '#!/bin/sh\nexit 0\n',
             });
             const ran = await processes.run(['git', 'init', '-q'], { cwd: repository.path });
             expect(ran.code).toBe(0);
-            installHooks(
-                await openSession(repository.path).then((session) => ({
-                    policy: session.policyFiles.policy,
-                    repository: session.repository,
-                })),
-            );
+            await applyAll(await openSession(repository.path));
             const launcher = join(repository.path, 'bin/gspot');
             if (condition === 'missing') rmSync(launcher);
             else chmodSync(launcher, 0o644);
-            const hook = join(hookLocation(repository.path).absolute, 'pre-commit');
+            const hook = join(repository.path, '.gspot/hooks/pre-commit');
             const options = {
                 cwd: repository.path,
                 env: { PATH: `${join(repository.path, 'bin')}${delimiter}/usr/bin${delimiter}/bin` },

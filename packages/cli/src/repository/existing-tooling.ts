@@ -1,14 +1,16 @@
 // What init lists: configuration at conventional paths, hooks, CI, agent files, home-grown lint folders, the runner.
 import picomatch from 'picomatch';
+import { existsSync } from 'node:fs';
 import { parse as parseYaml } from 'yaml';
 import type { ToolPin } from '#cli/types/kits.ts';
 import type { Root } from '#cli/types/platform.ts';
+import { join, dirname, basename } from 'node:path';
 import { kitManifests } from '#cli/kits/manifests.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
 import { isLintOnlyManifest } from '#cli/repository/scopes.ts';
 import { readGitSetting } from '#cli/repository/git-config.ts';
-import { hookLocation } from '#cli/repository/hook-location.ts';
+import { hooksDirectory } from '#cli/repository/hook-location.ts';
 import { kitSection } from '#cli/repository/configuration/configuration-section.ts';
 import type { Fields, TrackedFile, ExistingTool, ExistingTooling } from '#cli/types/repository/repository.ts';
 import { AGENT_FILE_NAMES, LINT_FOLDER_NAMES, RULES_DIRECTORY_NAMES } from '#cli/config/repository/patterns.ts';
@@ -39,7 +41,9 @@ function runsLint(command: string): boolean {
     });
 }
 
+// The files in a folder under a root, without dot files; none when the folder does not exist.
 function listDir(root: string, rel: string): string[] {
+    if (!existsSync(join(root, rel))) return [];
     const files = openRoot(root);
     try {
         if (files.stat(rel)?.isDirectory() !== true) return [];
@@ -54,24 +58,6 @@ function hookDirectory(root: string, dir: string, hooksPath: string): ExistingTo
     const files = listDir(root, dir);
     if (files.length === 0) return undefined;
     return { kind: dir === '.husky' ? 'husky' : 'githooks', path: dir, files };
-}
-
-function hooksFound(root: string, paths: Set<string>): ExistingTooling['hooks'] {
-    const hooksPath = readGitSetting(root, 'core.hooksPath') ?? '';
-    const location = hooksPath === '' ? undefined : hookLocation(root);
-    const lefthook = ['lefthook.yml', '.lefthook.yml'].find((name) => paths.has(name));
-    const simple = hasPackageHooks(root);
-    return [
-        ...(location === undefined
-            ? []
-            : [{ kind: 'hooksPath' as const, path: hooksPath, files: listDir(location.root, location.directory) }]),
-        ...HOOK_DIRECTORIES.map((dir) => hookDirectory(root, dir, hooksPath)).filter((hook) => hook !== undefined),
-        ...(lefthook === undefined ? [] : [{ kind: 'lefthook' as const, path: lefthook, files: [] }]),
-        ...(paths.has('.pre-commit-config.yaml')
-            ? [{ kind: 'pre-commit' as const, path: '.pre-commit-config.yaml', files: [] }]
-            : []),
-        ...(simple ? [{ kind: 'simple-git-hooks' as const, path: 'package.json', files: [] }] : []),
-    ];
 }
 
 function runnerFound(paths: Set<string>): { runner: ExistingTooling['runner']; runnerFile?: string } {
@@ -155,6 +141,37 @@ function replaceTools(
 }
 
 /**
+ * The hooks a clone already runs: another hooks folder, a hook folder a tool keeps, and hook manager settings.
+ * @param root the repository root
+ * @returns each set of hooks with where it lives
+ */
+export function existingHooks(root: string): ExistingTooling['hooks'] {
+    const hooksPath = readGitSetting(root, 'core.hooksPath') ?? '';
+    const location = hooksPath === '' ? undefined : hooksDirectory(root);
+    const files = openRoot(root);
+    let present: string[];
+    try {
+        present = ['lefthook.yml', '.lefthook.yml', '.pre-commit-config.yaml'].filter(
+            (name) => files.stat(name) !== undefined,
+        );
+    } finally {
+        files.close();
+    }
+    const lefthook = present.find((name) => name !== '.pre-commit-config.yaml');
+    return [
+        ...(location === undefined
+            ? []
+            : [{ kind: 'hooksPath' as const, path: hooksPath, files: listDir(dirname(location), basename(location)) }]),
+        ...HOOK_DIRECTORIES.map((dir) => hookDirectory(root, dir, hooksPath)).filter((hook) => hook !== undefined),
+        ...(lefthook === undefined ? [] : [{ kind: 'lefthook' as const, path: lefthook, files: [] }]),
+        ...(present.includes('.pre-commit-config.yaml')
+            ? [{ kind: 'pre-commit' as const, path: '.pre-commit-config.yaml', files: [] }]
+            : []),
+        ...(hasPackageHooks(root) ? [{ kind: 'simple-git-hooks' as const, path: 'package.json', files: [] }] : []),
+    ];
+}
+
+/**
  * Discover configuration sections declared by the tools that own them.
  * @param root the repository root
  * @param paths the tracked file paths
@@ -218,7 +235,7 @@ export function existingTooling(root: string, files: TrackedFile[], fields: Fiel
                 ]),
             ).values(),
         ],
-        hooks: hooksFound(root, paths),
+        hooks: existingHooks(root),
         ci: [...paths]
             .filter(
                 (path) =>

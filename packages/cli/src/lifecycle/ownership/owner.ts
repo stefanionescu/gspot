@@ -83,14 +83,13 @@ export function written(proposed: Read, current: Read | undefined): Read {
 /**
  * Serialize local lifecycle writers and recover their durable ownership log before mutation.
  * @param root the root the owner bounds its writes to
- * @param stateDirectory the directory under the root that holds the log and lock
  * @returns the owner, which the caller closes
  */
-export function openOwner(root: string, stateDirectory = STATE_DIRECTORY): Owner {
+export function openOwner(root: string): Owner {
     const files = openRoot(root);
     try {
-        files.lock(`${stateDirectory}/writer.lock`);
-        return lifecycleOwner(openLog(files, stateDirectory));
+        files.lock(`${STATE_DIRECTORY}/writer.lock`);
+        return lifecycleOwner(openLog(files, STATE_DIRECTORY));
     } catch (error) {
         files.close();
         throw error;
@@ -98,25 +97,19 @@ export function openOwner(root: string, stateDirectory = STATE_DIRECTORY): Owner
 }
 
 /**
- * Reuse active mutation owners and serialize each repository or Git-resolved root.
+ * Reuse active mutation owners and serialize the writers of each repository root.
  * @param root the root the owner bounds its writes to.
  * @param action the work to do with the owner open.
- * @param stateDirectory the directory under the root that holds the log and lock.
  * @returns what the action returns.
  */
-export function runOwnedLifecycle<Result>(
-    root: string,
-    action: (owner: Owner) => Result,
-    stateDirectory = STATE_DIRECTORY,
-): Result {
+export function runOwnedLifecycle<Result>(root: string, action: (owner: Owner) => Result): Result {
     const canonical = realpathSync(root);
-    const key = `${canonical}\0${stateDirectory}`;
     const active = activeMutation.getStore();
-    const existing = active?.get(key);
+    const existing = active?.get(canonical);
     if (existing !== undefined) return action(existing);
-    const owner = openOwner(canonical, stateDirectory);
+    const owner = openOwner(canonical);
     try {
-        const result = activeMutation.run(new Map([...(active ?? []), [key, owner]]), () => action(owner));
+        const result = activeMutation.run(new Map([...(active ?? []), [canonical, owner]]), () => action(owner));
         if (result instanceof Promise)
             return result.finally(() => {
                 owner.close();

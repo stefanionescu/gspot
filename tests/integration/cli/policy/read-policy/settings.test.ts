@@ -32,10 +32,10 @@ test('parsePolicyText > normalizes per-language naming tables and categories', (
 });
 
 test('parsePolicyText > an unknown key names the keys that exist under that table', () => {
-    const found = policyProblems(`${MINIMAL_POLICY}[hooks]\ntool = "gspot"\ntol = "gspot"\n`);
+    const found = policyProblems(`${MINIMAL_POLICY}[hooks]\npush = "all"\npsh = "all"\n`);
     expect(found).toHaveLength(1);
-    expect(found[0]).toContain('`tol` is not a setting gspot knows under [hooks]');
-    expect(found[0]).toContain('`tool`');
+    expect(found[0]).toContain('`psh` is not a setting gspot knows under [hooks]');
+    expect(found[0]).toContain('`push`');
 });
 
 test('parsePolicyText > an unknown top-level key is refused', () => {

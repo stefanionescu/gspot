@@ -127,37 +127,34 @@ test('leaving JSON keys restores their original values and preserves authored ch
     }
 });
 
-test('Lefthook YAML ownership preserves authored commands and comments through updates and removal', async () => {
+test('YAML ownership preserves authored entries and comments through updates and removal', async () => {
     await using directory = await testdir();
-    const original = '# Keep this hook.\npre-commit:\n  commands:\n    authored:\n      run: echo original\n';
-    await createFileTree(directory.path, { 'lefthook.yml': original });
+    const original = '# Keep this entry.\nchecks:\n  commands:\n    authored:\n      run: echo original\n';
+    await createFileTree(directory.path, { 'tool.yml': original });
     const owner = openOwner(directory.path);
     try {
         expect(
             owner.applyPlan(
                 owner.proposeConfiguration(
-                    'lefthook.yml',
+                    'tool.yml',
                     'yaml',
-                    [{ path: ['pre-commit', 'commands', 'gspot'], value: { run: 'gspot check --staged' } }],
+                    [{ path: ['checks', 'commands', 'gspot'], value: { run: 'gspot check --staged' } }],
                     true,
                 ),
             ),
         ).toBe('changed');
-        const edited = owner
-            .read('lefthook.yml')!
-            .bytes.toString('utf8')
-            .replace('echo original', 'echo authored-later');
-        writeFileSync(join(directory.path, 'lefthook.yml'), edited);
+        const edited = owner.read('tool.yml')!.bytes.toString('utf8').replace('echo original', 'echo authored-later');
+        writeFileSync(join(directory.path, 'tool.yml'), edited);
         expect(
             owner.applyPlan(
-                owner.proposeConfiguration('lefthook.yml', 'yaml', [
-                    { path: ['pre-commit', 'commands', 'gspot'], value: { run: 'gspot check --staged --no-cache' } },
+                owner.proposeConfiguration('tool.yml', 'yaml', [
+                    { path: ['checks', 'commands', 'gspot'], value: { run: 'gspot check --staged --no-cache' } },
                 ]),
             ),
         ).toBe('changed');
-        expect(owner.read('lefthook.yml')!.bytes.toString('utf8')).toContain('echo authored-later');
-        expect(owner.restore('lefthook.yml')).toBe('changed');
-        expect(owner.read('lefthook.yml')!.bytes.toString('utf8')).toBe(
+        expect(owner.read('tool.yml')!.bytes.toString('utf8')).toContain('echo authored-later');
+        expect(owner.restore('tool.yml')).toBe('changed');
+        expect(owner.read('tool.yml')!.bytes.toString('utf8')).toBe(
             original.replace('echo original', 'echo authored-later'),
         );
     } finally {

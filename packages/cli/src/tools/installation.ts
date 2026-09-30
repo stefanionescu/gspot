@@ -2,12 +2,11 @@ import semver from 'semver';
 import { pythonPins } from '#cli/tools/pins.ts';
 import { everyManifest } from '#cli/kits/select.ts';
 import { GspotError } from '#cli/platform/errors.ts';
+import { installHooks } from '#cli/lifecycle/hooks.ts';
 import { runToolCommand } from '#cli/tools/command.ts';
-import { installHooks } from '#cli/lifecycle/hooks/git.ts';
 import type { Session } from '#cli/types/execution/execution.ts';
 import type { InstallationStep } from '#cli/types/tools/tools.ts';
 import { installPythonProject } from '#cli/tools/python-project.ts';
-import { installNativeHooks } from '#cli/lifecycle/hooks/managers.ts';
 import { installPackageProject } from '#cli/tools/packages/project.ts';
 import { packageEnvironment } from '#cli/tools/packages/environment.ts';
 import { UV_INSTALLER, MISE_CONFIG_PATH, MISE_MIN_VERSION } from '#cli/config/tools/tools.ts';
@@ -15,16 +14,7 @@ import { UV_INSTALLER, MISE_CONFIG_PATH, MISE_MIN_VERSION } from '#cli/config/to
 const installations: InstallationStep[] = [
     {
         failure: 'Hook installation failed.',
-        run: (session) =>
-            ['simple-git-hooks', 'pre-commit', 'lefthook', 'husky'].includes(
-                session.policyFiles.policy.hooks?.tool ?? '',
-            )
-                ? installNativeHooks({
-                      policy: session.policyFiles.policy,
-                      repository: session.repository,
-                      tools: session,
-                  })
-                : installHooks({ policy: session.policyFiles.policy, repository: session.repository }),
+        run: (session) => installHooks({ policy: session.policyFiles.policy, repository: session.repository }),
     },
     {
         failure: 'Native tool installation failed.',

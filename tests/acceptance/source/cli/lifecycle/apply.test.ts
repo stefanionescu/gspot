@@ -85,24 +85,3 @@ test('malformed authored blocks refuse apply before generated files change', asy
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect(existsSync(join(directory.path, '.gspot/config/shellcheckrc'))).toBe(true);
 });
-
-test('malformed shared YAML refuses apply before any generated configuration is published', async () => {
-    await using directory = await testdir();
-    const authored = 'pre-commit: [unfinished\n';
-    await createFileTree(directory.path, {
-        'gspot.toml': policyOf(['bash'], '[hooks]\ntool = "lefthook"\n[guides]\ninstall = false\n'),
-        'lefthook.yml': authored,
-        'entry.sh': 'echo example\n',
-    });
-    const refused = await run(directory.path, ['apply']);
-    expect(refused.code, refused.stdout + refused.stderr).toBe(2);
-    expect(refused.stdout + refused.stderr).toContain('valid YAML mapping');
-    expect(readFileSync(join(directory.path, 'lefthook.yml'), 'utf8')).toBe(authored);
-    expect(existsSync(join(directory.path, '.gspot/config/shellcheckrc'))).toBe(false);
-    expect(existsSync(join(directory.path, '.gitignore'))).toBe(false);
-    writeFileSync(join(directory.path, 'lefthook.yml'), '# Authored hook settings\npre-commit:\n  parallel: true\n');
-    const corrected = await run(directory.path, ['apply']);
-    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect(existsSync(join(directory.path, '.gspot/config/shellcheckrc'))).toBe(true);
-    expect(readFileSync(join(directory.path, 'lefthook.yml'), 'utf8')).toContain('parallel: true');
-});

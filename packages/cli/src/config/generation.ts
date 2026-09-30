@@ -37,33 +37,19 @@ export const PATH = '.pre-commit-config.yaml';
 export const GENERATED_JSON_KEY = '_gspot';
 export const TARGET_PLACEHOLDER = /\{target(?:_json)?\}/gu;
 export const HOOK_HEADER = '# Written by gspot. Run `gspot uninstall` to remove.';
+/** What a hook prints when the command that runs gspot is missing. */
+export const HOOK_UNAVAILABLE = 'The command that runs gspot is not installed. Install gspot, then run: gspot install';
 // Every file gspot writes keeps LF, so a CRLF checkout does not mark the generated files and hooks as changed.
 export const GIT_ATTRIBUTES_BLOCK = [
     '.gspot/** linguist-generated',
     '.gspot/** text eol=lf',
     '.gitignore text eol=lf',
     '.gitattributes text eol=lf',
-    'lefthook.yml text eol=lf',
-    '.lefthook.yml text eol=lf',
-    '.husky/** text eol=lf',
-    '.pre-commit-config.yaml text eol=lf',
 ].join('\n');
 export const HOOK_ARGS: Record<HookName, string> = {
     'pre-commit': 'check --staged',
     'pre-push': 'check --push -- "$@"',
     'commit-msg': 'check --stage message --message-file "$1"',
-};
-/** The gspot arguments of each Lefthook command and the dispatcher variables they need, spelled without braces. */
-export const LEFTHOOK_ARGUMENTS: Record<HookName, { args: string; required: string[] }> = {
-    'pre-commit': { args: 'check --staged', required: [] },
-    'pre-push': {
-        args: 'check --push -- $GSPOT_HOOK_REMOTE_NAME $GSPOT_HOOK_REMOTE_LOCATION',
-        required: ['GSPOT_HOOK_REMOTE_NAME', 'GSPOT_HOOK_REMOTE_LOCATION'],
-    },
-    'commit-msg': {
-        args: 'check --stage message --message-file $GSPOT_HOOK_MESSAGE',
-        required: ['GSPOT_HOOK_MESSAGE'],
-    },
 };
 export const RUNNER_EXEC: Record<string, string> = {
     mise: 'mise exec -- gspot',

@@ -17,7 +17,7 @@ import {
 } from '#cli/policy/write.ts';
 
 const text =
-    '#:schema x\n\n# Comment on version.\nversion = 1\nkits = ["bash"]\n\n[hooks]\n# gspot writes the hooks.\ntool = "gspot"\n';
+    '#:schema x\n\n# Comment on version.\nversion = 1\nkits = ["bash"]\n\n[hooks]\n# gspot checks the changed paths of a push.\npush = "changed"\n';
 
 test('writePolicy > policy edits retain invalid UTF-8 bytes and refuse a mode change after read', async () => {
     await using sandbox = await testdir();
@@ -86,7 +86,7 @@ test('writePolicy > appends an ignore entry and keeps comments and order', async
     );
     const written = readFileSync(join(sandbox.path, 'gspot.toml'), 'utf8');
     expect(written).toContain('# Comment on version.');
-    expect(written).toContain('# gspot writes the hooks.');
+    expect(written).toContain('# gspot checks the changed paths of a push.');
     expect(written).toContain('[[ignore]]');
     expect(result.policy.ignores[0]?.rule).toBe('SC2312');
     expect(written.indexOf('[hooks]')).toBeLessThan(written.indexOf('[[ignore]]'));

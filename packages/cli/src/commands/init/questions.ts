@@ -17,13 +17,6 @@ const RUNNER_CHOICES: { value: InitAnswers['runner']; label: string }[] = [
     { value: 'none', label: 'none' },
 ];
 
-function hooksDefault(tooling: ExistingTooling): InitAnswers['hooks'] {
-    if (tooling.hooks.some((hook) => hook.kind === 'husky')) return 'husky';
-    if (tooling.hooks.some((hook) => hook.kind === 'lefthook')) return 'lefthook';
-    if (tooling.hooks.some((hook) => hook.kind === 'pre-commit')) return 'pre-commit';
-    return tooling.hooks.some((hook) => hook.kind === 'simple-git-hooks') ? 'simple-git-hooks' : 'gspot';
-}
-
 function existingCi(root: string, tooling: ExistingTooling): InitAnswers['ci'] | undefined {
     if (tooling.ci.includes('.gitlab-ci.yml')) return 'gitlab';
     if (tooling.ci.some((path) => path.startsWith('.github/workflows/'))) return 'github';
@@ -47,9 +40,9 @@ function ciDefault(root: string, tooling: ExistingTooling): InitAnswers['ci'] {
     return /^gitlab\.com[:/]/u.test(host) ? 'gitlab' : 'none';
 }
 
-async function askHooks(options: InitOptions, tooling: ExistingTooling): Promise<InitAnswers['hooks']> {
+async function askHooks(options: InitOptions): Promise<InitAnswers['hooks']> {
     if (options.hooks !== undefined) return options.hooks;
-    return askChoice('Install git hooks?', '--hooks', HOOK_CHOICES, hooksDefault(tooling), options.yes);
+    return askChoice('Install Git hooks?', '--no-hooks', HOOK_CHOICES, 'gspot', options.yes);
 }
 
 async function askCi(root: string, options: InitOptions, tooling: ExistingTooling): Promise<InitAnswers['ci']> {
@@ -107,7 +100,7 @@ export async function askInitQuestions(
     options: InitOptions,
     tooling: ExistingTooling,
 ): Promise<InitAnswers> {
-    const hooks = await askHooks(options, tooling);
+    const hooks = await askHooks(options);
     const ci = await askCi(root, options, tooling);
     const isRules = await askRuleFiles(options);
     const runner = await askRunner(options, tooling);

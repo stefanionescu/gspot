@@ -1,10 +1,10 @@
 // Every generated output of a repository: configuration files, pointers, blocks, hooks, tool pins, and rules.
 import type { Manifest } from '#cli/types/kits.ts';
 import { everyManifest } from '#cli/kits/select.ts';
+import { hookFiles } from '#cli/generation/hooks.ts';
 import { assembleRules } from '#cli/agents/assemble.ts';
 import { gitignoreBlock } from '#cli/kits/manifests.ts';
 import { bunConfiguration } from '#cli/generation/bun.ts';
-import { huskyLines } from '#cli/generation/hooks/husky.ts';
 import { styleFiles } from '#cli/generation/vale-styles.ts';
 import { emitConfigurations } from '#cli/generation/kits.ts';
 import { mutationTarget } from '#cli/platform/safe-paths.ts';
@@ -17,29 +17,10 @@ import type { Repository } from '#cli/types/repository/repository.ts';
 import { agentFiles, managedBlock } from '#cli/agents/instructions.ts';
 import { gitlabFile, workflowFile } from '#cli/generation/workflow.ts';
 import { toolEnvironment } from '#cli/generation/tools/environment.ts';
-import { lefthookConfiguration } from '#cli/generation/hooks/lefthook.ts';
 import type { Generated, GenerationOptions } from '#cli/types/generation.ts';
-import { preCommitConfiguration } from '#cli/generation/hooks/pre-commit.ts';
-import { simpleGitHookOutputs } from '#cli/generation/hooks/simple-git-hooks.ts';
 import type { Policy, MergedView, ScopeSelection } from '#cli/types/policy/policy.ts';
 
 // Integrations for the selected hook tool. Native gspot hooks need no integration.
-const HOOK_OUTPUTS: Record<string, (root: string, runner: string | undefined, out: Generated) => void> = {
-    'pre-commit': (root, runner, out) => out.configurations.push(preCommitConfiguration(root, runner)),
-    'simple-git-hooks': simpleGitHookOutputs,
-    husky: (root, runner, out) => {
-        for (const line of huskyLines(root, runner))
-            out.blocks.push({ path: line.path, block: line.line, style: 'hash' });
-    },
-    lefthook: (root, runner, out) => out.configurations.push(lefthookConfiguration(root, runner)),
-};
-
-function hookOutputs(root: string, policy: Policy, out: Generated): void {
-    const tool = policy.hooks?.tool;
-    if (tool === undefined) return;
-    HOOK_OUTPUTS[tool]?.(root, policy.runner?.tool, out);
-}
-
 function workflowOutput(policy: Policy, scopes: ScopeSelection[], version: string, out: Generated): void {
     if (policy.ci === undefined) return;
     const swiftScope = scopes.find((selection) => selection.selected.some((manifest) => manifest.kit.name === 'swift'));
@@ -130,8 +111,11 @@ export function emitAll(
             emitConfigurations({ root, files, scopes, inputs, selection, manifest }, out, seen);
     }
     out.configurations.push(...bunConfiguration(root, scopes));
-    hookOutputs(root, policy, out);
-    out.files.push(...toolPackages(manifests, packageClient, policy.runner?.tool), ...toolEnvironment(manifests));
+    out.files.push(
+        ...hookFiles(root, policy),
+        ...toolPackages(manifests, packageClient, policy.runner?.tool),
+        ...toolEnvironment(manifests),
+    );
     if (policy.runner?.tool === 'mise') out.files.push(miseToolsFile(manifests, version, packageClient !== undefined));
     workflowOutput(policy, scopes, version, out);
     out.files.push(...assembleRules(policy.guides, manifests, policy.level, repository));

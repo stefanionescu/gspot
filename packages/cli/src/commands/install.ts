@@ -7,11 +7,11 @@ import { directoryOf } from '#cli/platform/arguments.ts';
 import { installTools } from '#cli/tools/installation.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import { MISE_CONFIG_PATH } from '#cli/config/tools/tools.ts';
-import { hookLocation } from '#cli/repository/hook-location.ts';
 import type { Session } from '#cli/types/execution/execution.ts';
 import { assertPinMatches } from '#cli/lifecycle/version-pin.ts';
 import { pythonInstallSteps } from '#cli/tools/python-project.ts';
 import { packageInstallSteps } from '#cli/tools/packages/project.ts';
+import { HOOKS_DIRECTORY } from '#cli/config/repository/repository.ts';
 import { toolEnvironment } from '#cli/generation/tools/environment.ts';
 import type { InstallJson, CommandResult, InstallOptions } from '#cli/types/commands.ts';
 
@@ -36,10 +36,7 @@ function preparation(session: Session): { steps: string[][]; failures: string[];
     const runner = session.policyFiles.policy.runner?.tool;
     if (runner === 'mise') steps.unshift(['mise', 'trust', MISE_CONFIG_PATH], ['mise', 'install']);
     const hooks =
-        session.repository.hasGit &&
-        ['gspot', 'simple-git-hooks', 'pre-commit'].includes(session.policyFiles.policy.hooks?.tool ?? '')
-            ? hookLocation(session.root).absolute
-            : undefined;
+        session.repository.hasGit && session.policyFiles.policy.hooks !== undefined ? HOOKS_DIRECTORY : undefined;
     return { steps, failures, hooks };
 }
 
@@ -49,7 +46,7 @@ function previewInstallation(steps: string[][], failures: string[], hooks: strin
         ...steps.map((step) => step.join(' ')),
         ...(hooks === undefined
             ? []
-            : [`install hook dispatchers in ${hooks}; retain original executables as siblings`]),
+            : [`git config core.hooksPath ${hooks}, unless the repository already runs other hooks`]),
     ];
     return {
         text: lines.length === 0 ? 'No managed tools or hooks to install.\n' : `${lines.join('\n')}\n`,

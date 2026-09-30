@@ -2,47 +2,8 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { keptMode } from '#tests/support/cli/platforms.ts';
-import { statSync, chmodSync, existsSync, readFileSync } from 'node:fs';
+import { statSync, chmodSync, readFileSync } from 'node:fs';
 import { openOwner, readOwnership } from '#cli/lifecycle/ownership/owner.ts';
-
-test.each(['.automation/hooks', '.gspot/hooks', '.git/hooks', 'external', 'project/.automation/hooks'])(
-    'hook destination %s restores current ownership under the shared writer boundary',
-    async (destination) => {
-        const { runBlocking } = await import('#cli/platform/spawn.ts');
-        const { hookLocation } = await import('#cli/repository/hook-location.ts');
-        await using repository = await testdir();
-        await using external = await testdir();
-        expect(runBlocking(['git', 'init'], { cwd: repository.path }).code).toBe(0);
-        const hooks = destination === 'external' ? join(external.path, 'hooks') : destination;
-        expect(runBlocking(['git', 'config', 'core.hooksPath', hooks], { cwd: repository.path }).code).toBe(0);
-        const installed = 'managed hook\n';
-        const original = 'authored hook\n';
-        if (destination.startsWith('project/'))
-            await createFileTree(repository.path, { 'project/authored.txt': 'project' });
-        const location = hookLocation(
-            destination.startsWith('project/') ? join(repository.path, 'project') : repository.path,
-        );
-        const path = `${location.directory}/pre-commit`;
-        await createFileTree(location.root, { [path]: original });
-        chmodSync(join(location.root, path), 0o750);
-        const initial = openOwner(location.root, location.stateDirectory);
-        try {
-            initial.replace(path, { bytes: Buffer.from(installed), mode: 0o644 }, 'hook', true);
-        } finally {
-            initial.close();
-        }
-        const owner = openOwner(location.root, location.stateDirectory);
-        try {
-            expect(() => openOwner(location.root, location.stateDirectory)).toThrow();
-            expect(owner.restore(path)).toBe('changed');
-        } finally {
-            owner.close();
-        }
-        expect(readFileSync(join(location.absolute, 'pre-commit'), 'utf8')).toBe(original);
-        expect(statSync(join(location.absolute, 'pre-commit')).mode & 0o777).toBe(keptMode(0o750));
-        expect(existsSync(join(location.root, location.stateDirectory, 'ownership.json'))).toBe(true);
-    },
-);
 
 test.each(['.gspot', '.gspot/.gspot', '.automation/.gspot'])(
     'obsolete ownership in %s remains unowned and unchanged',

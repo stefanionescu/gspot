@@ -95,7 +95,6 @@ kits = []
 [guides]
 install = false
 [hooks]
-tool = "gspot"
 [[check]]
 name = "project/content"
 stage = "commit"
@@ -105,6 +104,8 @@ command = ${JSON.stringify([process.execPath, '-e', 'if ((await Bun.file("source
         'nested config/source.txt': 'invalid\n',
     });
     expect(git(sandbox.path, ['init', '-q']).code).toBe(0);
+    const applied = await run(project, ['apply']);
+    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     expect(git(sandbox.path, ['add', '-A']).code).toBe(0);
     const installed = await run(project, ['install']);
     expect(installed.code, installed.stdout + installed.stderr).toBe(0);

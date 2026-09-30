@@ -1,12 +1,11 @@
+import { resolve } from 'node:path';
 import type { Command } from 'commander';
-import { resolve, relative } from 'node:path';
 import { directoryOf } from '#cli/platform/arguments.ts';
 import { askConfirmation } from '#cli/commands/prompts.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
-import { hookLocation } from '#cli/repository/hook-location.ts';
-import { proposeHookRestorations } from '#cli/lifecycle/hooks/git.ts';
 import { findRoot, isGitRepository } from '#cli/repository/tracked.ts';
 import type { OwnershipState } from '#cli/types/lifecycle/lifecycle.ts';
+import { hooksInstalled, uninstallHooks } from '#cli/lifecycle/hooks.ts';
 import { OWNERSHIP_FILE, STATE_DIRECTORY } from '#cli/config/platform.ts';
 import { readOwnership, runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import type { CommandResult, UninstallPlan, UninstallOptions } from '#cli/types/commands.ts';
@@ -33,15 +32,8 @@ export function planUninstall(root: string): UninstallPlan {
     const blockSet = new Set(blocks);
     const remove = new Set(recorded.map((entry) => entry.path));
     for (const path of ['gspot.toml', '.gitignore', ...blocks]) remove.delete(path);
-    for (const entry of recorded) if (entry.kind === 'hook' || entry.kind === 'export') remove.delete(entry.path);
-    const location = isGitRepository(root) ? hookLocation(root) : undefined;
-    const hooks =
-        location !== undefined &&
-        restorationCandidates(readOwnership(location.root, location.stateDirectory)).some(
-            (entry) =>
-                entry.kind === 'hook' &&
-                entry.path.startsWith(location.directory === '' ? '' : `${location.directory}/`),
-        );
+    for (const entry of recorded) if (entry.kind === 'export') remove.delete(entry.path);
+    const hooks = isGitRepository(root) && hooksInstalled(root);
     return {
         remove: [...remove].toSorted((left, right) => left.localeCompare(right)),
         blocks: [...blockSet].toSorted((left, right) => left.localeCompare(right)),
@@ -61,24 +53,9 @@ export function applyUninstall(root: string, plan: UninstallPlan): string[] {
         const plans = [...proposed].map((path) => owner.proposeRestoration(path));
         const preserved = plans.filter((plan) => plan.status === 'preserved').map((plan) => plan.path);
         const restorations = plans.filter((plan) => plan.status !== 'preserved');
-        if (!plan.hooks) {
-            owner.applyPlans(restorations);
-            return preserved;
-        }
-        const location = hookLocation(root);
-        return runOwnedLifecycle(
-            location.root,
-            (hooks) => {
-                const planned = proposeHookRestorations(hooks, location);
-                if (hooks === owner) owner.applyPlans([...restorations, ...planned.plans]);
-                else {
-                    owner.applyPlans(restorations);
-                    hooks.applyPlans(planned.plans);
-                }
-                return [...preserved, ...planned.preserved.map((path) => relative(root, resolve(location.root, path)))];
-            },
-            location.stateDirectory,
-        );
+        owner.applyPlans(restorations);
+        if (plan.hooks) uninstallHooks(root);
+        return preserved;
     });
 }
 
@@ -93,7 +70,7 @@ export async function uninstallCommand(options: UninstallOptions): Promise<Comma
     const text = [
         'restore originals or remove unchanged installed files',
         ...[...plan.remove, ...plan.blocks].map((path) => `  ${path}`),
-        ...(plan.hooks ? ['restore or remove unchanged dispatchers in the Git-resolved hooks directory'] : []),
+        ...(plan.hooks ? ['unset core.hooksPath, so Git stops running the gspot hooks'] : []),
         'kept: gspot.toml, exported profiles, recovery data, ignore entries, unowned files, and subsequent edits',
         '',
     ].join('\n');
@@ -105,18 +82,11 @@ export async function uninstallCommand(options: UninstallOptions): Promise<Comma
     if (!isGo) return { text: 'Nothing removed.\n', json: { plan, applied: false }, exitCode: 0 };
     const preserved = applyUninstall(root, plan);
     const retained = preserved.map((path) => `preserved edited or unowned ${path}\n`).join('');
-    const roots = new Map([[root, STATE_DIRECTORY]]);
-    if (plan.hooks) {
-        const location = hookLocation(root);
-        roots.set(location.root, location.stateDirectory);
-    }
     const destinations = new Set(preserved.map((path) => resolve(root, path)));
-    const originals = [...roots].flatMap(([root, stateDirectory]) =>
-        readOwnership(root, stateDirectory).files.flatMap((entry) =>
-            entry.original !== undefined && destinations.has(resolve(root, entry.path))
-                ? [{ path: resolve(root, entry.path), backup: resolve(root, entry.original.backup) }]
-                : [],
-        ),
+    const originals = readOwnership(root, STATE_DIRECTORY).files.flatMap((entry) =>
+        entry.original !== undefined && destinations.has(resolve(root, entry.path))
+            ? [{ path: resolve(root, entry.path), backup: resolve(root, entry.original.backup) }]
+            : [],
     );
     const recovery = originals.map(({ path, backup }) => `original for ${path} retained at ${backup}\n`).join('');
     return {

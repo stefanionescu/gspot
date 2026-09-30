@@ -85,74 +85,30 @@ bypass the local hook, and CI still judges the submitted tree.
 
 ## Hooks
 
-gspot goes where the hook already points. `init` reads what each hook calls and proposes the
-gspot line in a fixed order. The task the hook calls comes first, then the hook file, then
-hooks of its own where none exist.
+gspot writes three scripts to `.gspot/hooks/`, as generated files: `pre-commit`, `commit-msg`,
+and `pre-push`. Each is a short POSIX shell script. It enters the gspot root when that sits
+below the Git top level, and checks that the command that runs gspot exists. Then it runs one
+check: `check --staged`, `check --stage message --message-file "$1"`, or `check --push -- "$@"`.
+The commit message path becomes absolute first, in the Windows spelling under Git for Windows.
+Each script sets `GSPOT_HOOK` to its stage, so a failing run ends with the command that
+reproduces it and `git commit --no-verify` as the way past it.
 
-| `[hooks] tool`     | gspot writes                                                                             | Proposed when                     |
-| ------------------ | ---------------------------------------------------------------------------------------- | --------------------------------- |
-| `existing`         | one managed block in the task or the hook file that git already runs                     | the repository has hooks          |
-| `husky`            | one line in each `.husky/` hook                                                          | `.husky/` exists                  |
-| `lefthook`         | a `gspot` block in `lefthook.yml`                                                        | `lefthook.yml` exists             |
-| `pre-commit`       | one `repo: local` hook in `.pre-commit-config.yaml`, as a managed block                  | that file exists                  |
-| `simple-git-hooks` | the gspot line in its key of `package.json`, after a yes                                 | that key exists                   |
-| `gspot`            | a dispatcher or new hook in the Git-resolved hooks directory, written by `gspot install` | no hook tool and no tracked hooks |
-| no table           | nothing                                                                                  | the person passes `--no-hooks`    |
+The command comes from the runner. Under mise it is `mise exec -- gspot`. Under npm, pnpm,
+yarn, or Bun it is the local exec form of the package manager, which cannot download a missing
+package. Without a runner it is the `gspot` on `PATH`. A hook that cannot find it prints the install command and
+exits 2.
 
-A repository with hooks keeps their behavior, arguments, input, and failure status. gspot
-never sets `core.hooksPath`, because that setting turns every hook under `.git/hooks/` off,
-including the hooks git-lfs installs. Where a husky hook calls lint-staged, the gspot line goes
-into the hook, and the plan lists the lint-staged entries that run a tool gspot runs too. A
-folder named `hooks` is no sign of git hooks: gspot asks `git config core.hooksPath` first.
+`gspot install` sets `core.hooksPath` to `.gspot/hooks` in the clone; `gspot uninstall` unsets
+it. A repository that already runs hooks keeps them: another `core.hooksPath`, a Husky, Lefthook,
+pre-commit, or simple-git-hooks setup, or scripts in `.git/hooks`. There `install` sets nothing
+and prints the line to add to each hook. `doctor` reports whether the clone runs the hooks.
 
-A hook under `.git/hooks/` belongs to one clone. `gspot install` writes the gspot block of a
-clone, the developer runs it explicitly after cloning, and `doctor` asks git whether the hooks
-run in this clone.
-
-Every hook tool gets the same dispatcher script, rendered from one template by one function,
-under the Bash 3.2 that macOS ships. Its data per tool is the native command, whether the stage reads a result file, and how the
-message path arrives. The script exports one environment family: `GSPOT_HOOK_RESULT`,
-`GSPOT_HOOK_INPUT`, `GSPOT_HOOK_MESSAGE`, `GSPOT_HOOK_REMOTE_NAME`,
-`GSPOT_HOOK_REMOTE_LOCATION`, and `GSPOT_HOOK_ROOT`. The reporter reads them to end a failing
-hook run with two lines: the command that reproduces it, and `git commit --no-verify` as the
-way past it. A unit test renders every dispatcher for
-every tool and stage and runs `sh -n` on it. Lefthook lines use `echo`, never `printf "%s\n"`,
-because the YAML writer turns `\n` into a line break that Lefthook on Windows splits.
-
-`init` writes how gspot is found into the line. Under mise it is `mise exec -- gspot`.
-Under an npm runner it is a package-manager local-exec form that cannot download a missing
-package. Without a runner it is the `gspot` on `PATH`. Each finds the version the repository pins, and a
-hook that cannot find gspot prints the install command and fails. The line asks the developer
-for no environment variable.
-
-On Windows, git runs hooks through the Bash that Git for Windows installs. The generated
+On Windows, Git runs hooks through the shell that Git for Windows installs. The generated
 `.gitattributes` block declares `text eol=lf` for every gspot-owned path, so a CRLF checkout
-does not mark them, and gspot marks tracked hooks executable through
-`git update-index --chmod=+x`; clone-local hooks use filesystem permissions.
+does not change them.
 
 One skip exists: `--skip` for one run, and it prints. No file and no environment variable turns
 a check off on one machine. A hook never runs `--fix`.
-
-### Hook chaining
-
-A hook manager's supported composition mechanism comes first. A recognized tracked task can
-receive a managed gspot invocation only where its control flow reaches it and its non-lint
-behavior remains intact. A hook body is not assumed to be shell merely because it is
-executable.
-
-For an unmanaged local hook, the original is preserved as an executable sibling in the
-Git-resolved hooks directory and a marked dispatcher is installed. It runs the original as a
-subprocess, then gspot, with the same arguments, working directory, and environment. A nonzero
-original status stops the chain and is preserved, and a successful `exec` or `exit` in the
-original cannot skip gspot. For pre-push, the buffered stdin is replayed to both commands.
-Installing twice produces one chain. Recovery stores the original path, bytes, mode, and
-installed dispatcher hash, and an existing sibling collision is rejected rather than
-overwritten.
-
-The init plan describes the dispatcher and retained original; an unsupported hook manager or
-unapproved replacement leaves the hook intact and reports the explicit installation step. Git
-LFS, non-shell hooks, spaces in paths, linked worktrees, and `core.hooksPath` are integration
-cases. Uninstall restores only an unchanged dispatcher and leaves edited originals intact.
 
 ## Tasks of the runner
 

@@ -5,8 +5,4 @@
 .gspot/** text eol=lf
 .gitignore text eol=lf
 .gitattributes text eol=lf
-lefthook.yml text eol=lf
-.lefthook.yml text eol=lf
-.husky/** text eol=lf
-.pre-commit-config.yaml text eol=lf
 # <<< gspot managed <<<

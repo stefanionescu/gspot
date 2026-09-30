@@ -112,10 +112,10 @@ test.each(['{"extends":"./.gspot/tsconfig.json", invalid}', 'null', '[]'])(
     },
 );
 
-test('malformed hook and package configuration fails inspection instead of returning empty drift', async () => {
+test('malformed YAML and package configuration fails inspection instead of returning empty drift', async () => {
     await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'lefthook.yml': 'pre-commit: [\n', 'package.json': '{"scripts":' });
-    expect(() => hasConfiguration(sandbox.path, { path: 'lefthook.yml', format: 'yaml', changes: [] })).toThrow(
+    await createFileTree(sandbox.path, { 'tool.yml': 'checks: [\n', 'package.json': '{"scripts":' });
+    expect(() => hasConfiguration(sandbox.path, { path: 'tool.yml', format: 'yaml', changes: [] })).toThrow(
         'valid YAML mapping',
     );
     expect(() =>
@@ -125,6 +125,6 @@ test('malformed hook and package configuration fails inspection instead of retur
             changes: [{ path: ['scripts', 'check'], value: 'gspot check' }],
         }),
     ).toThrow();
-    expect(readFileSync(join(sandbox.path, 'lefthook.yml'), 'utf8')).toBe('pre-commit: [\n');
+    expect(readFileSync(join(sandbox.path, 'tool.yml'), 'utf8')).toBe('checks: [\n');
     expect(readFileSync(join(sandbox.path, 'package.json'), 'utf8')).toBe('{"scripts":');
 });

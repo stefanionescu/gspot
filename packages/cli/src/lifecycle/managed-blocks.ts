@@ -1,11 +1,5 @@
 import type { BlockSpan, BlockStyle } from '#cli/types/lifecycle/lifecycle.ts';
-
-import {
-    HASH_BLOCK_END,
-    HASH_BLOCK_START,
-    MANAGED_BLOCK_END,
-    MANAGED_BLOCK_START,
-} from '#cli/config/lifecycle/lifecycle.ts';
+import { HASH_BLOCK_END, HASH_BLOCK_START, MANAGED_BLOCK_END, MANAGED_BLOCK_START } from '#cli/config/lifecycle.ts';
 
 const MARKERS: Record<BlockStyle, { start: string; end: string }> = {
     markdown: { start: MANAGED_BLOCK_START, end: MANAGED_BLOCK_END },

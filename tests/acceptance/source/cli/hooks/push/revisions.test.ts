@@ -157,10 +157,7 @@ test(
     async () => {
         await using sandbox = await testdir();
         const { broken, command } = await preparePushRepository(sandbox.path);
-        writeFileSync(
-            join(sandbox.path, 'gspot.toml'),
-            policyOf(['bash'], '[hooks]\ntool = "gspot"\n[guides]\ninstall = false\n'),
-        );
+        writeFileSync(join(sandbox.path, 'gspot.toml'), policyOf(['bash'], '[hooks]\n[guides]\ninstall = false\n'));
         const configured = await run(sandbox.path, ['set', 'hooks.push', 'all']);
         expect(configured.code, configured.stdout + configured.stderr).toBe(0);
         expect(git(sandbox.path, ['add', 'gspot.toml', 'changed.sh']).code).toBe(0);

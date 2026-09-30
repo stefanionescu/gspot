@@ -1,8 +1,7 @@
+import { join } from 'node:path';
 import { statSync } from 'node:fs';
-import { join, relative } from 'node:path';
 import { detectKits } from '#cli/kits/detect.ts';
 import { pinnedTwice } from '#cli/tools/mise.ts';
-import { toPosix } from '#cli/platform/paths.ts';
 import { head } from '#cli/repository/tracked.ts';
 import { everyManifest } from '#cli/kits/select.ts';
 import { emitAll } from '#cli/generation/outputs.ts';
@@ -10,7 +9,6 @@ import { hasHeader } from '#cli/generation/headers.ts';
 import { readManifests } from '#cli/repository/manifests.ts';
 import type { GeneratedFile } from '#cli/types/generation.ts';
 import { MISE_CONFIG_PATH } from '#cli/config/tools/tools.ts';
-import { hookLocation } from '#cli/repository/hook-location.ts';
 import type { Session } from '#cli/types/execution/execution.ts';
 import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import { CHANGE_HEAD_BYTES } from '#cli/config/commands/doctor.ts';
@@ -64,11 +62,6 @@ function configurationNotOwned(
 
 function unownedGeneratedFiles(session: Session): ChangeRow[] {
     const recorded = new Set(readOwnership(session.root).files.map((entry) => entry.path));
-    if (session.repository.hasGit) {
-        const location = hookLocation(session.root);
-        for (const entry of readOwnership(location.root, location.stateDirectory).files)
-            recorded.add(toPosix(relative(session.root, join(location.root, entry.path))));
-    }
     return session.repository.files
         .filter((file) => file.path.startsWith('.gspot/') && !recorded.has(file.path))
         .map((file) => ({
@@ -76,16 +69,6 @@ function unownedGeneratedFiles(session: Session): ChangeRow[] {
             note: 'not recorded as owned; lifecycle commands preserve this file',
             command: 'review the file, then move it into your own files or delete it',
         }));
-}
-
-function hookRows(session: Session, tooling: ExistingTooling): ChangeRow[] {
-    const tool = session.policyFiles.policy.hooks?.tool;
-    if (tool === undefined) return [];
-    return tooling.hooks.flatMap((hook) => {
-        if (tool !== 'husky' && hook.kind === 'husky')
-            return [{ path: `${hook.path}/`, note: 'hooks added by hand', command: 'gspot apply' }];
-        return [];
-    });
 }
 
 /**
@@ -129,7 +112,6 @@ export function changeReport(session: Session): ChangeReport {
                   ]),
         ],
         changedOutsideGspot: [
-            ...hookRows(session, tooling),
             ...ciLintJobs(
                 session.root,
                 tooling.ci.filter((path) => !generated.has(path)),

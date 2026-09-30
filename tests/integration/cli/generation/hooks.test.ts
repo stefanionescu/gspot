@@ -1,0 +1,50 @@
+// The hook scripts: one per stage, each a shell script that enters the gspot root and runs one check.
+import { join } from 'node:path';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
+import { hookFiles } from '#cli/generation/hooks.ts';
+import { runBlocking } from '#cli/platform/spawn.ts';
+import { gitOutput } from '#tests/support/cli/git.ts';
+import { parsePolicyText } from '#cli/policy/read.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
+
+test.each([undefined, 'npm', 'mise'])(
+    'the hook scripts under the %s runner parse and run one check each',
+    async (runner) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, { "app's dir/gspot.toml": 'version = 1\n' });
+        gitOutput(sandbox.path, ['init', '-q']);
+        const tables = runner === undefined ? '[hooks]\n' : `[hooks]\n[runner]\ntool = "${runner}"\n`;
+        const files = hookFiles(join(sandbox.path, "app's dir"), parsePolicyText(policyOf([], tables), 'gspot.toml'));
+        expect(files.map((file) => file.path)).toStrictEqual([
+            '.gspot/hooks/pre-commit',
+            '.gspot/hooks/pre-push',
+            '.gspot/hooks/commit-msg',
+        ]);
+        const commands: Record<string, string> = { npm: 'npm exec --no -- gspot', mise: 'mise exec -- gspot' };
+        const command = commands[runner ?? ''] ?? 'gspot';
+        for (const file of files) {
+            expect(file).toMatchObject({ readOnly: true, executable: true, kind: 'hook' });
+            expect(file.content).toStartWith('#!/bin/sh\n');
+            expect(file.content).toContain(String.raw`cd 'app'\''s dir/' || exit 2`);
+            const name = file.path.slice(file.path.lastIndexOf('/') + 1);
+            expect(file.content).toContain(`GSPOT_HOOK=${name} exec ${command} check`);
+            const path = join(sandbox.path, name);
+            await Bun.write(path, file.content);
+            const parsed = runBlocking(['sh', '-n', path], { cwd: sandbox.path });
+            expect(parsed.code, parsed.stderr).toBe(0);
+        }
+        const commitHook = files.find((file) => file.path.endsWith('commit-msg'))!.content;
+        expect(commitHook).toContain('cygpath -w');
+        expect(commitHook).toContain('--message-file "$1"');
+        expect(files.find((file) => file.path.endsWith('pre-push'))!.content).toContain('check --push -- "$@"');
+    },
+);
+
+test('a repository at the Git top level enters no folder', async () => {
+    await using sandbox = await testdir();
+    gitOutput(sandbox.path, ['init', '-q']);
+    const policy = parsePolicyText(policyOf([], '[hooks]\n'), 'gspot.toml');
+    expect(hookFiles(sandbox.path, policy)).toHaveLength(3);
+    for (const file of hookFiles(sandbox.path, policy)) expect(file.content).not.toContain('\ncd ');
+});

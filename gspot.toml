@@ -36,7 +36,6 @@ path = "docs"
 kits = ["typescript", "css"]
 
 [hooks]
-tool = "gspot"
 
 [guides]
 install = true
@@ -98,7 +97,6 @@ patterns = [
     ".github/copilot-instructions.md",
     ".cursor",
     ".cursor/rules/gspot.mdc",
-    ".husky",
     ".gitlab/ci/gspot.yml",
 ]
 reason = "These documented integration destinations belong to consumer repositories. Their presence depends on the selected agent, hook, or CI integration."

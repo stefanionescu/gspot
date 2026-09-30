@@ -4,7 +4,6 @@ import type { SpawnOutcome } from '#tests/types/cli.ts';
 import type { GeneratedFile } from '#cli/types/generation.ts';
 import type { Session } from '#cli/types/execution/execution.ts';
 import type { Generated } from '#tests/types/acceptance/source/cli.ts';
-import type { HookLocation } from '#cli/types/repository/repository.ts';
 
 export type PrepareCiProjectResult = {
     base: string;
@@ -12,58 +11,6 @@ export type PrepareCiProjectResult = {
     pipeline: string;
     pipelinePath: string;
     workflowPath: string;
-};
-export type PrepareHookAdoptionResult = {
-    options: {
-        cwd: string;
-        timeoutMs: number;
-        env: Record<string, string>;
-    };
-    prepare: string[];
-    location: HookLocation;
-    names: string[];
-    original: NonSharedBuffer[];
-};
-export type PrepareHookCloneResult = {
-    main: string;
-    options: {
-        cwd: string;
-        timeoutMs: number;
-        env: { PATH: string; [name: string]: string };
-    };
-    clonePath: string;
-    hookTool: 'pre-commit' | 'lefthook' | 'husky' | 'simple-git-hooks';
-};
-export type PrepareDispatcherResult = {
-    root: string;
-    directory: string;
-    hook: string;
-    original: string;
-    config: NonSharedBuffer;
-    before: NonSharedBuffer;
-    env: Record<string, string>;
-};
-export type PrepareLefthookResult = {
-    configuration: string;
-    command: string[];
-    input: string;
-    options: {
-        cwd: string;
-        stdin: string;
-        timeoutMs: number;
-        env: Record<string, string>;
-    };
-    location: HookLocation;
-    original: string;
-    scriptPath: string;
-    originalScript: NonSharedBuffer | undefined;
-};
-export type PrepareHuskyResult = {
-    authored: string;
-    original: NonSharedBuffer;
-    location: HookLocation;
-    config: NonSharedBuffer;
-    options: { cwd: string; timeoutMs: number; env: Record<string, string> };
 };
 export type ReadPackageInputsResult = {
     manifest: NonSharedBuffer;

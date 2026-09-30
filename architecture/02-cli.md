@@ -9,7 +9,7 @@ answers its question.
 
 ```text
 gspot init       [--yes] [--dry-run] [--from <profile>] [--kits <names...>] [--without <names...>] [--scope <path=names...>]
-                 [--hooks gspot|husky|lefthook|pre-commit|simple-git-hooks|existing] [--no-hooks] [--ci github|gitlab] [--no-ci]
+                 [--no-hooks] [--ci github|gitlab] [--no-ci]
                  [--runner mise|npm|pnpm|yarn|bun] [--no-runner]
                  [--no-guides] [--no-checks] [--no-install] [--allow-dirty]
 gspot check      [<path>...] [--staged] [--changed[=<ref>]] [--fix] [--dry-run]
@@ -28,7 +28,7 @@ gspot export     <file>
 gspot completion <bash|zsh|fish|powershell>
 
 global: --help  --version  --json  --quiet  --verbose  --no-color  -C <dir>
-env:    NO_COLOR  CI  GSPOT_JOBS  GSPOT_HOOK_* (set by the hooks gspot writes)
+env:    NO_COLOR  CI  GSPOT_JOBS  GSPOT_HOOK (set by the hooks gspot writes)
 exit:   0 passed   1 findings   2 gspot did not run
 ```
 
@@ -88,7 +88,7 @@ proposed` list ends it, with the `gspot add` line for each entry.
 Asked in a terminal, in three groups. Each has a flag that answers it, and `--yes` takes every
 plan. The first group asks about the projects found in a monorepo (`--scope`, `--without`) and the
 languages, frameworks, tools, and general checks found (`--kits`, `--without`). The second
-asks where the gspot line of the hooks goes (`--hooks`, `--no-hooks`) and whether to write a
+asks whether to install the Git hooks (`--no-hooks`) and whether to write a
 CI job (`--ci`, `--no-ci`). The third asks whether to install guides (`--no-guides`) and
 which task names call gspot (`--runner`, `--no-runner`). The level is not asked: `init` writes `level = "recommended"`.
 

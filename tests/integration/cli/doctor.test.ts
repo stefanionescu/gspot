@@ -5,12 +5,11 @@ import { runBlocking } from '#cli/platform/spawn.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { openSession } from '#cli/execution/session.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
-import { installHooks } from '#cli/lifecycle/hooks/git.ts';
 import { coverageReport } from '#cli/execution/coverage.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { uninstallCommand } from '#cli/commands/uninstall.ts';
 import { doctorCommand } from '#cli/commands/doctor/command.ts';
-import { hookLocation } from '#cli/repository/hook-location.ts';
+import { installHooks, uninstallHooks } from '#cli/lifecycle/hooks.ts';
 import { containing, containingAll } from '#tests/support/expectations.ts';
 
 test('doctor coverage honors path exceptions and does not borrow syntax from another shell dialect', async () => {
@@ -115,27 +114,21 @@ test('doctor identifies unowned generated-directory files that apply and uninsta
     expect(readFileSync(join(sandbox.path, '.gspot/authored.json'), 'utf8')).toBe(original);
 });
 
-test('doctor fails missing and edited hook integration and accepts installed hooks', async () => {
+test('doctor fails hooks this clone does not run and accepts them once installed', async () => {
     await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': policyOf([], '[hooks]\ntool = "gspot"\n'),
-    });
+    await createFileTree(sandbox.path, { 'gspot.toml': policyOf([], '[hooks]\n') });
     expect(runBlocking(['git', 'init', '-q'], { cwd: sandbox.path }).code).toBe(0);
     const missing = await doctorCommand({ cwd: sandbox.path });
     expect(missing.exitCode).toBe(1);
-    expect(missing.text).toContain('missing or edited pre-commit');
-    installHooks(
-        await openSession(sandbox.path).then((session) => ({
-            policy: session.policyFiles.policy,
-            repository: session.repository,
-        })),
-    );
+    expect(missing.text).toContain('not installed; run gspot install');
+    const session = await openSession(sandbox.path);
+    installHooks({ policy: session.policyFiles.policy, repository: session.repository });
     const diagnosed = await doctorCommand({ cwd: sandbox.path });
-    expect(diagnosed.exitCode).toBe(0);
-    writeFileSync(join(hookLocation(sandbox.path).absolute, 'pre-commit'), '#!/bin/sh\nexit 0\n');
-    const edited = await doctorCommand({ cwd: sandbox.path });
-    expect(edited.exitCode).toBe(1);
-    expect(edited.text).toContain('missing or edited pre-commit');
+    expect(diagnosed.exitCode, diagnosed.text).toBe(0);
+    expect(diagnosed.text).toContain('.gspot/hooks: installed');
+    uninstallHooks(sandbox.path);
+    const removed = await doctorCommand({ cwd: sandbox.path });
+    expect(removed.exitCode).toBe(1);
 });
 
 test('doctor excludes private tool manifests from language detection and detects an authored Python project', async () => {

@@ -6,11 +6,7 @@ export const NO_KITS = 'none';
 export const SCHEMA_LINE = '#:schema https://gspot.dev/schema/gspot.schema.json';
 export const PROFILE_HEAD = new Set(['version', 'profile', 'selection', 'kits']);
 export const HOOK_CHOICES: { value: InitAnswers['hooks']; label: string }[] = [
-    { value: 'gspot', label: 'gspot installs hooks in the Git-resolved directory' },
-    { value: 'lefthook', label: 'a block in lefthook.yml' },
-    { value: 'husky', label: 'lines in .husky/' },
-    { value: 'pre-commit', label: 'a local hook in .pre-commit-config.yaml' },
-    { value: 'simple-git-hooks', label: 'commands in package.json simple-git-hooks' },
+    { value: 'gspot', label: 'hook scripts in .gspot/hooks' },
     { value: 'none', label: 'no hooks' },
 ];
 export const CI_CHOICES: { value: InitAnswers['ci']; label: string }[] = [
@@ -32,8 +28,8 @@ export const CURSOR_RULE = '.cursor/rules/gspot.mdc';
 /** The setting init fills from a detected Xcode project; only a kit that declares it may carry it. */
 export const XCODE_PROJECT_SETTING = 'tools.xcode.project';
 export const HOOKS_ROW = {
-    path: 'Git-resolved hooks directory',
-    note: 'gspot install creates dispatchers; existing executables are retained as .gspot-original siblings; tracked hooks require hook-manager integration',
+    path: '.gspot/hooks',
+    note: 'gspot install points core.hooksPath here; a repository that already runs hooks gets the lines to add instead',
 };
 export const GAP_WIDTH = 3;
 export const KIND_ROWS: { label: string; kind: string }[] = [

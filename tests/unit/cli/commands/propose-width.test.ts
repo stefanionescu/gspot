@@ -52,7 +52,7 @@ test('initialization keeps the profile runner while honoring disabled integratio
         kits: ['formatting'],
         scopes: [],
         profileTables: {
-            hooks: { tool: 'husky' },
+            hooks: { push: 'all' },
             ci: { provider: 'github' },
             runner: { tool: 'mise' },
             coverage: { strict: true },

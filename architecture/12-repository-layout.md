@@ -49,7 +49,7 @@ with it, in the same change; nothing is relocated, aliased, or wrapped in a new 
 | `packages/cli/src/checks/<family>/` | the analyses of one check family, each exporting one `analyses` registry that the dispatch module spreads             |
 | `packages/cli/src/execution/`       | planning, scheduling, cancellation, the tool runner, output parsing, the cache, and reports                           |
 | `packages/cli/src/generation/`      | template rendering, managed blocks, hooks, runners, workflows; `outputs.ts` orchestrates                              |
-| `packages/cli/src/lifecycle/`       | ownership, recovery, hook dispatchers, and apply and uninstall publication                                            |
+| `packages/cli/src/lifecycle/`       | ownership, recovery, the hooks path, and apply and uninstall publication                                              |
 | `packages/cli/src/policy/`          | `gspot.toml` schema, reading, validation, merge, writing, and profiles                                                |
 | `packages/cli/src/kits/`            | manifest schema, loading, and selection; the assets stay under `packages/cli/kits/`                                   |
 | `packages/cli/src/repository/`      | discovery, file classification, existing tooling, revisions, and snapshots                                            |
@@ -129,7 +129,7 @@ interactive input is available.
 | Schemas for `gspot.toml`, manifests, the report       | zod                                                                    | error messages rewritten into plain English; `z.toJSONSchema` publishes `gspot.schema.json`                          |
 | Read TOML; write `gspot.toml` keeping comments        | smol-toml; `@decimalturn/toml-patch`                                   | comments are found by scanning `#` outside strings                                                                   |
 | Read and write JSON with comments                     | `jsonc-parser`                                                         | `tsconfig.json` pointers and `package.json` edits, without losing a comment or the indent                            |
-| Read and write YAML keeping comments                  | `yaml` (the `Document` API)                                            | the `lefthook.yml` block, workflow rendering                                                                         |
+| Read and write YAML keeping comments                  | `yaml` (the `Document` API)                                            | YAML configuration merges, workflow rendering                                                                        |
 | Detect the package manager; find workspace packages   | `nypm`; `@manypkg/tools`                                               | installation remains owned by the runner; workspace failures remain errors                                           |
 | `.gitignore` semantics without Git                    | `ignore`                                                               | nested exclusions, negations, pruning, and symlink boundaries in native traversal                                    |
 | Name a language gspot has no kit for                  | `linguist-languages`                                                   | GitHub Linguist's extension data, offline                                                                            |

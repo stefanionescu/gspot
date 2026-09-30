@@ -124,10 +124,8 @@ paths   = ["supabase/migrations/**/*.sql"]       # when it runs
 inputs  = ["supabase/migrations/**/*.sql", "supabase/scripts/migrations.ts"]   # what it reads
 stage   = "commit"
 
-[hooks]
-tool = "existing"                 # gspot | husky | lefthook | pre-commit | simple-git-hooks | existing
-pre_commit = "mise task lint"     # where the commit hook calls gspot, for "existing"
-push = "changed"                  # selection mode, not a hook location; or "all"
+[hooks]                           # present: gspot writes the hooks in .gspot/hooks
+push = "changed"                  # what a push checks: the changed paths, or "all"
 
 [ci]
 provider = "github"               # github | gitlab

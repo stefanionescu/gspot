@@ -17,8 +17,6 @@ export type CodeQualityReport = {
     severity: string;
     location: { path: string; lines: { begin: number } };
 }[];
-/** What a planted hook program records about the call it received. */
-export type HookCapture = { args: string[]; input?: string; cwd?: string; hook?: string };
 /** A planted case that checks a finding at its source location, and what corrects it for the clean rerun. */
 export type FindingCase = PlantedInput & {
     expected: Partial<Pick<Finding, 'file' | 'rule' | 'line' | 'column' | 'message'>>;
