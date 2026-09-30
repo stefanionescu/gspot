@@ -1680,6 +1680,8 @@ const defaults = [
         },
     },
     ...(RESTRICTED.length === 0 ? [] : [{ files: CODE, rules: { 'no-restricted-imports': ['error', { paths: RESTRICTED }] } }]),
+    // package-json/sort-collections keeps dependency lists alphabetical, unlike the shortest-first order of code:
+    // npm, pnpm, Yarn, and Bun rewrite them alphabetically on every install.
     { files: ['**/package.json'], ...packageJson.configs.recommended },
     { files: CODE, ...prettierConfig },
     {

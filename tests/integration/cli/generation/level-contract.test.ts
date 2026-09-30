@@ -46,6 +46,8 @@ test.each(['recommended', 'all'] as const)('%s Ruff selects stable rules with pr
     expect(config.lint.select.filter((code) => RUFF_PREVIEW_RULES.has(code))).toStrictEqual([]);
     expect(config.lint.select).toContain('F821');
     expect(config.lint.select.includes('N802')).toBe(level === 'all');
+    // gspot orders __all__ and __slots__ shortest first, so the alphabetical Ruff sorts stay off.
+    expect(config.lint.select.filter((code) => ['RUF022', 'RUF023'].includes(code))).toStrictEqual([]);
 });
 
 test.each(['recommended', 'all'] as const)('%s rejects experimental activation before generation', (level) => {
