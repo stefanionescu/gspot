@@ -50,7 +50,6 @@ export async function packageEnvironment(root: string): Promise<Record<string, s
                 return [[`npm_config_${key}`, text]];
             }),
     );
-    if (inherited['GSPOT_REGISTRY'] !== undefined) env['npm_config_registry'] = inherited['GSPOT_REGISTRY'];
     const registry = env['npm_config_registry'];
     if (registry !== undefined) {
         env['BUN_CONFIG_REGISTRY'] = registry;

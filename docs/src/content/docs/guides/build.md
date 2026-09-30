@@ -72,7 +72,6 @@ mise run test:acceptance -- ./acceptance/source/kits/vite.test.ts
 The acceptance runner builds the ESLint plugin and serves it from a local registry, which it
 removes when the run ends. The Supabase tests need Supabase CLI 2.72.7 and a running Docker
 daemon. The XCTest coverage tests need macOS with Xcode selected by `xcode-select`.
-`mise run test:coverage` writes coverage to `coverage/lcov.info` and sets no floor.
 
 ## Prepare the grammars
 

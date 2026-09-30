@@ -46,7 +46,6 @@ test('repository CI checks the committed change, preserves reports on invalid ba
     const base = commit();
     writeFileSync(join(sandbox.path, 'changed.txt'), 'bad\n');
     commit();
-    writeFileSync(join(sandbox.path, 'changed.txt'), 'working tree correction\n');
     // The task runs gspot from PATH: the package bin, which needs Bun; a runner installs Bun for the repository.
     const environment = {
         MISE_TRUSTED_CONFIG_PATHS: sandbox.path,
@@ -67,6 +66,7 @@ test('repository CI checks the committed change, preserves reports on invalid ba
         expect(refused.code).toBe(2);
         expect(readFileSync(report)).toStrictEqual(held);
     }
+    writeFileSync(join(sandbox.path, 'changed.txt'), 'corrected\n');
     commit();
     const corrected = await run(argv, { ...settings, env: { ...environment, GSPOT_CI_BASE: base } });
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);

@@ -29,7 +29,6 @@ gspot completion <bash|zsh|fish|powershell>
 
 global: --help  --version  --json  --quiet  --verbose  --no-color  -C <dir>
 env:    NO_COLOR  CI  GSPOT_JOBS  GSPOT_HOOK_* (set by the hooks gspot writes)
-        GSPOT_BIN  GSPOT_REGISTRY (both only until the first release)
 exit:   0 passed   1 findings   2 gspot did not run
 ```
 

@@ -8,7 +8,6 @@ import type { HookLocation } from '#cli/types/repository/repository.ts';
 
 export type PrepareCiProjectResult = {
     base: string;
-    target: string;
     generated: Generated;
     pipeline: string;
     pipelinePath: string;

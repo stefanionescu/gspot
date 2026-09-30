@@ -41,10 +41,6 @@ Both places carry the same version from one release run:
 The `gspot` package holds the bundle in `dist/`, the kits, the guides, and the grammar files
 with their licenses. The GitHub release carries notes only.
 
-Before the first release, a repository installs from the local `verdaccio` registry of the test
-harness, which `GSPOT_REGISTRY` names. The redo of yap-swift-app runs that way, and no
-tracked file holds the address.
-
 The first release needs these, in this order:
 
 1. The unscoped npm names `gspot` and `eslint-plugin-gspot`, and an `NPM_TOKEN` secret that

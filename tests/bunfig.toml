@@ -1,6 +1,3 @@
 [test]
 root = "."
 preload = ["./support/runtime.ts"]
-coverageReporter = ["text", "lcov"]
-coverageDir = "../coverage"
-coveragePathIgnorePatterns = ["**/testdirs-*/**", "**/tests/**", "**/.gspot/**", "**/node_modules/**", "../packages/eslint-plugin/dist/**", "../packages/cli/.build/**", "../docs/dist/**"]

@@ -4,7 +4,7 @@ import { git } from '#tests/support/cli/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
-import { pushReportSchema } from '#cli/execution/report.ts';
+import { reportSchema } from '#cli/execution/report.ts';
 import type { Generated, Retention } from '#tests/types/acceptance/source/cli.ts';
 import { RETENTION, CODEQUALITY_REPORT } from '#tests/inputs/acceptance/source/cli/cli.ts';
 import { runCiJob, commitCiSource, createCiInstall, prepareCiProject } from '#tests/support/cli/ci.ts';
@@ -34,16 +34,15 @@ test.each(['gitlab', 'github'] as const)(
     async (provider) => {
         await using repository = await testdir();
         await using executables = await testdir();
-        const { base, target, generated } = await prepareCiProject(repository.path, provider);
+        const { base, generated } = await prepareCiProject(repository.path, provider);
         const install = createCiInstall(executables.path);
         const invalid = await runCiJob(repository.path, generated, install.directory, base, provider);
         expect(invalid.code, invalid.stdout + invalid.stderr).toBe(1);
         const reportPath = join(repository.path, '.gspot/reports/report.json');
-        const failed = pushReportSchema.parse(JSON.parse(readFileSync(reportPath, 'utf8')));
-        expect(failed.revisions[0]!.object).toBe(target);
-        expect(failed.revisions[0]!.report.checks[0]!.status).toBe('fail');
+        const failed = reportSchema.parse(JSON.parse(readFileSync(reportPath, 'utf8')));
+        expect(failed.checks.find((check) => check.check === 'project/syntax')?.status).toBe('fail');
         expect(invalid.stdout).toContain('changed.sh');
-        expect(JSON.stringify(failed.revisions[0]!.report.checks[0]!.findings)).not.toContain('legacy.sh');
+        expect(JSON.stringify(failed.checks.flatMap((check) => check.findings))).not.toContain('legacy.sh');
         for (const path of [
             '.gspot/reports/report.json',
             '.gspot/reports/report.sarif',
@@ -52,12 +51,10 @@ test.each(['gitlab', 'github'] as const)(
             expect(readFileSync(join(repository.path, path)).length).toBeGreaterThan(0);
         expect(retention(provider, generated)).toMatchObject(RETENTION[provider]);
         writeFileSync(join(repository.path, 'changed.sh'), 'echo corrected\n');
-        const corrected = commitCiSource(repository.path, 'correct syntax');
+        commitCiSource(repository.path, 'correct syntax');
         const valid = await runCiJob(repository.path, generated, install.directory, base, provider);
         expect(valid.code, valid.stdout + valid.stderr).toBe(0);
-        expect(pushReportSchema.parse(JSON.parse(readFileSync(reportPath, 'utf8'))).revisions[0]!.object).toBe(
-            corrected,
-        );
+        expect(reportSchema.parse(JSON.parse(readFileSync(reportPath, 'utf8'))).exitCode).toBe(0);
         const firstPush = await runCiJob(repository.path, generated, install.directory, '0'.repeat(40), provider);
         expect(firstPush.code, firstPush.stdout + firstPush.stderr).toBe(1);
         expect(firstPush.stdout).toContain('legacy.sh');

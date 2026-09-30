@@ -264,8 +264,6 @@
         "MACHTYPE",
         "COLUMNS",
         "LINES",
-        "GSPOT_BIN",
-        "GSPOT_LOG",
         "__init__",
         "__main__",
         "__all__",

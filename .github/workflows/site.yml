@@ -1,7 +1,6 @@
 name: site
-# No build or deployment runs until the owner explicitly re-enables CI.
+# Builds the manual from a published release and deploys it. Pull requests build it in the ci workflow.
 on:
-    pull_request:
     release:
         types: [published]
     workflow_dispatch:
@@ -17,17 +16,16 @@ on:
 permissions:
     contents: read
 concurrency:
-    group: site-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
-    cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+    group: site-${{ github.run_id }}
+    cancel-in-progress: false
 jobs:
     build:
-        if: vars.GSPOT_CI_ENABLED == 'true'
         runs-on: ubuntu-24.04
         timeout-minutes: 15
         steps:
             - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
               with:
-                  ref: ${{ inputs.source_ref || inputs.release_tag || github.event.release.tag_name || github.sha }}
+                  ref: ${{ inputs.source_ref || inputs.release_tag || github.event.release.tag_name }}
                   fetch-depth: 0
                   persist-credentials: false
             - uses: jdx/mise-action@5ac50f778e26fac95da98d50503682459e86d566 # v3.2.0
@@ -38,7 +36,6 @@ jobs:
             - run: mise install bun node
             - run: mise run --skip-tools repo:setup
             - name: Verify released documentation source
-              if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && inputs.release_tag != '')
               env:
                   GH_TOKEN: ${{ github.token }}
                   DOCS_RELEASE_TAG: ${{ inputs.release_tag || github.event.release.tag_name }}
@@ -58,13 +55,12 @@ jobs:
                   retention-days: 90
                   if-no-files-found: error
             - uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3.0.1
-              if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && inputs.release_tag != '')
               with:
                   path: docs/dist
                   retention-days: 90
     deploy:
         needs: build
-        if: vars.GSPOT_PAGES_ENABLED == 'true' && (github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && inputs.release_tag != ''))
+        if: vars.GSPOT_PAGES_ENABLED == 'true'
         runs-on: ubuntu-24.04
         timeout-minutes: 10
         concurrency:

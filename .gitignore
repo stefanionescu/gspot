@@ -11,9 +11,6 @@ node_modules/
 # Build output
 *.tsbuildinfo
 
-# Test coverage
-coverage/
-
 # Local environment
 .env
 .env.*

@@ -48,10 +48,10 @@ format = "lines"
     if (applied.code !== 0) throw new Error(`CI fixture apply failed: ${applied.stdout}${applied.stderr}`);
     const base = commitCiSource(root, 'base');
     writeFileSync(join(root, 'changed.sh'), 'if then\n');
-    const target = commitCiSource(root, 'invalid change');
+    commitCiSource(root, 'invalid change');
     const workflowPath = provider === 'gitlab' ? '.gitlab/ci/gspot.yml' : '.github/workflows/gspot.yml';
     const generated = Bun.YAML.parse(readFileSync(join(root, workflowPath), 'utf8')) as Generated;
-    return { base, target, generated, pipeline, pipelinePath, workflowPath };
+    return { base, generated, pipeline, pipelinePath, workflowPath };
 }
 
 /** A fake npm on the job's PATH: its global install of gspot writes a launcher of the source CLI, or fails on request. */

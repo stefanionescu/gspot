@@ -81,12 +81,6 @@ description = "Run CLI unit and standalone plugin tests."
 dir = "{{config_root}}/tests"
 run = "bun test --timeout 60000 ./unit"
 
-[tasks."test:coverage"]
-depends = ["prepare:grammar", "build:plugin"]
-description = "Run unit and integration tests with coverage."
-dir = "{{config_root}}/tests"
-run = "bun test --timeout 60000 --coverage ./unit ./integration/cli ./integration/docs ./integration/repository"
-
 [tasks."test:integration"]
 depends = ["prepare:grammar", "build:plugin"]
 description = "Run integration tests."
@@ -173,10 +167,7 @@ case "${base}" in
             echo 'Invalid CI comparison object.' >&2
             exit 2
         fi
-        git cat-file -e "${base}^{commit}" || exit 2
-        target="$(git rev-parse --verify HEAD)" || exit 2
-        printf 'refs/heads/ci %s refs/heads/ci %s\n' "${target}" "${base}" |
-            gspot check --push -- origin ''
+        gspot check --changed="${base}"
         ;;
 esac
 '''

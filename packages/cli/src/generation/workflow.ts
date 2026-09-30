@@ -23,6 +23,7 @@ function setupSteps(shape: WorkflowShape): string[] {
     ];
 }
 
+// A first push has no base, so the job checks everything; otherwise it checks what changed after the base commit.
 function comparisonCheck(command: string, isFull: boolean): string {
     if (isFull) return command;
     return [
@@ -34,9 +35,7 @@ function comparisonCheck(command: string, isFull: boolean): string {
         '            echo "Invalid CI comparison object" >&2',
         '            exit 2',
         '        fi',
-        '        git cat-file -e "${base}^{commit}"',
-        '        target="$(git rev-parse --verify HEAD)"',
-        `        printf 'refs/heads/ci %s refs/heads/ci %s\\n' "\${target}" "\${base}" | ${command} --push -- origin ''`,
+        `        ${command} --changed="\${base}"`,
         '        ;;',
         'esac',
     ].join('\n');

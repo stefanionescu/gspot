@@ -106,7 +106,6 @@ reason = "These documented integration destinations belong to consumer repositor
 [[tools.docs.paths_allowed]]
 patterns = [
     "packages/eslint-plugin/dist",
-    "coverage/lcov.info",
     "packages/cli/dist",
     "packages/cli/dist/gspot.js",
     "packages/cli/dist/configuration.js",
@@ -455,7 +454,7 @@ global_package = "bun:test"
 
 [[ignore]]
 check = "jest/coverage"
-reason = "This repository runs Bun tests. tests/unit runs unit and integration tests at push; tests/coverage measures their coverage with Bun instead of invoking Jest."
+reason = "This repository runs Bun tests, not Jest. tests/unit runs the unit and integration suites at push."
 
 [[ignore]]
 check = "security/semgrep"
@@ -495,27 +494,6 @@ paths = [
 ]
 stage = "push"
 summary = "Runs the routine unit and integration suites, including CLI, plugin, and documentation tests."
-
-[check.output]
-format = "none"
-
-[[check]]
-name = "tests/coverage"
-command = ["mise", "run", "test:coverage"]
-paths = [
-    "packages/cli/**",
-    "packages/eslint-plugin/**",
-    "tests/**",
-    "packages/cli/kits/**",
-    "packages/cli/guides/**",
-    "package.json",
-    "bun.lock",
-    "tsconfig.json",
-    "mise.toml",
-    "docs/**",
-]
-stage = "manual"
-summary = "Measures unit and integration coverage with Bun without imposing a percentage quota."
 
 [check.output]
 format = "none"

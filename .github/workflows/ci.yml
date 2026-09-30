@@ -108,7 +108,7 @@ jobs:
                   read -ra files <<< "$PROBE_TESTS"
                   mise run --skip-tools test:probe -- "${files[@]}"
             - if: inputs.tests == ''
-              run: mise run --skip-tools test:coverage
+              run: mise run --skip-tools test
             - if: inputs.tests == ''
               run: mise run --skip-tools test:tools
             - if: inputs.tests == ''
