@@ -54,8 +54,7 @@ guidance out of schema dumps and internal module inventories.
 ## Describe implemented behavior
 
 Trace commands and settings to the source before documenting them. Distinguish a generated
-configuration from an executed tool, a compiled artifact from native platform acceptance, and
-a configured deployment from a live service. Document a user-visible limitation beside the
+configuration from an executed tool, and a configured deployment from a live service. Document a user-visible limitation beside the
 affected procedure. Audit counts, unfinished work, and history belong in the issue tracker and
 in Git, not in the manual.
 
@@ -64,10 +63,12 @@ their destination. State required tools and working directories. Pair diagnostic
 a correction and the command that verifies it. Never invent successful output or imply a
 manual correction is automatic.
 
-The landing page uses the captured repository example in `src/components/home/repository.json`.
-The quickstart supplies every input and runs the same Python and Bash checks through the CLI.
-Native tests verify the findings, corrected result, and example behavior. The standalone plugin
-example remains in the client-environment guide.
+The landing page and the README show one captured example, stored in
+`src/components/home/example.json`: an agent commits a TypeScript wrapper, the commit hook
+rejects it, and the fixed commit passes. The quickstart supplies every input.
+`tests/acceptance/source/cli/example.test.ts` replays it and checks the recorded findings, and
+`tests/integration/docs/example.test.ts` checks that the pages hold it.
+The ESLint plugin keeps its own example in `packages/eslint-plugin/README.md`.
 
 Use short, direct headings and consistent terms: configuration, check, tool rule, finding, stage,
 level, scope, and profile. Remove repeated claims, vague assurances, self-referential openings,
@@ -88,7 +89,7 @@ heading hierarchy, mobile width, keyboard access, and both themes when layout ch
 Preserve published routes unless the content itself is retired; changing a title does not
 require renaming its URL. Keep navigation labels aligned with page titles.
 
-For release builds, use the [site release procedure](src/content/docs/guides/build.md#released-documentation-and-rollback).
+For release builds, use the [site release procedure](src/content/docs/guides/build.md#publish-the-documentation).
 The source version and revision identify the generated references. A local preview is not a
 published release.
 

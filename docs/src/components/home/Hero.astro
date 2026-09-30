@@ -1,43 +1,44 @@
 ---
 import { Code } from '@astrojs/starlight/components';
-import example from './repository.json';
+import example from './example.json';
+
+const agentFile = example.agent.files.find((file) => file.path === 'src/utils.ts')!;
+const summary = example.rejected.trimEnd().split('\n').at(-1)!;
 ---
 <section class="home-hero" aria-labelledby="_top">
     <div class="hero-copy">
-        <p class="release">Source preview · Unreleased</p>
-        <h1 id="_top">Lint AI generated code</h1>
-        <p class="purpose">gspot configures linters, runs checks, and generates instructions for coding agents from one configuration file.</p>
+        <p class="release">gspot {example.version}</p>
+        <h1 id="_top">Lint AI-generated code</h1>
+        <p class="purpose">gspot is a command-line tool that lints AI-generated code and installs rules for AI coding agents. Git hooks run the checks on every commit.</p>
         <nav class="hero-actions" aria-label="Start using gspot">
             <a class="primary" href="/guides/install/">Get started <span aria-hidden="true">↗</span></a>
             <a href="/reference/commands/check/">View commands</a>
         </nav>
-        <div class="setup-command"><p>From your source checkout</p><Code code="mise run repo:setup" lang="sh" frame="none" /></div>
+        <div class="setup-command"><p>In your repository</p><Code code="npx gspot init" lang="sh" frame="none" /></div>
     </div>
     <section class="hero-demo" aria-labelledby="hero-example" data-example-root>
-        <div class="demo-heading"><h2 id="hero-example">Two languages. One check.</h2><span>Recorded local run · Python + Bash</span></div>
+        <div class="demo-heading"><h2 id="hero-example">An agent commits a wrapper</h2><span>Recorded run · TypeScript · level all</span></div>
         <div class="demo-steps" role="group" aria-label="Repository example">
-            <button type="button" data-example="policy" aria-controls="demo-policy" aria-pressed="false">1. Configure</button>
-            <button type="button" data-example="before" aria-controls="demo-before" aria-pressed="true">2. Check</button>
-            <button type="button" data-example="after" aria-controls="demo-after" aria-pressed="false">3. Correct</button>
+            <button type="button" data-example="policy" aria-controls="demo-policy" aria-pressed="false">1. Set up</button>
+            <button type="button" data-example="before" aria-controls="demo-before" aria-pressed="true">2. Commit</button>
+            <button type="button" data-example="after" aria-controls="demo-after" aria-pressed="false">3. Fix</button>
         </div>
         <div class="demo-panels" aria-live="polite">
             <div id="demo-policy" data-example-panel="policy" hidden>
-                <Code code={example.policy.trimEnd()} lang="toml" title="gspot.toml" wrap />
-                <Code code="gspot apply
-gspot install" lang="sh" frame="none" />
-                <p class="demo-note">Generate tool configuration and install its locked dependencies.</p>
+                <Code code={`${example.commands.install}\n${example.commands.init}\n${example.commands.level}`} lang="sh" frame="none" />
+                <p class="demo-note">Install gspot, accept the plan, and turn on the house style.</p>
             </div>
             <div id="demo-before" data-example-panel="before">
-                <Code code="gspot check" lang="sh" frame="none" />
+                <Code code={agentFile.content.trimEnd()} lang="typescript" title={agentFile.path} wrap />
+                <Code code={`git commit -m "${example.agent.message}"`} lang="sh" frame="none" />
                 <ul class="demo-findings">{example.findings.map((finding) => <li><code>{finding.file}:{finding.line}</code><p>{finding.message}</p><span>{finding.rule} · {finding.check}</span></li>)}</ul>
-                <p class="demo-status">{example.failedChecks} checks failed · {example.findings.length} findings · exit 1</p>
+                <p class="demo-status">{summary}</p>
             </div>
             <div id="demo-after" data-example-panel="after" hidden>
-                <ul class="demo-corrections"><li>Parse JSON instead of executing input.</li><li>Quote the archive path to preserve spaces.</li></ul>
-                <Code code="gspot check" lang="sh" frame="none" />
-                <p class="demo-status">{example.passedChecks} checks passed · 0 findings · exit 0</p>
-                <p class="demo-note">{example.skippedChecks} check skipped: no Python import contract configured.</p>
-                <a href="#finding">See both code changes ↓</a>
+                <ul class="demo-corrections"><li>Delete <code>src/utils.ts</code>.</li><li>Call <code>calculateTotal</code> directly.</li></ul>
+                <Code code={`git commit -m "${example.agent.message}"`} lang="sh" frame="none" />
+                <p class="demo-status">{example.passed}</p>
+                <a href="#finding">See the code change ↓</a>
             </div>
         </div>
         <a class="demo-guide" href="/guides/quick-start/">Run the complete example <span aria-hidden="true">→</span></a>

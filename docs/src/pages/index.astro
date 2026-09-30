@@ -7,20 +7,20 @@ import Features from '../components/home/Features.astro';
 import ThemeSelect from '../components/starlight/ThemeSelect.astro';
 
 const workflow = [
-    { title: 'Choose your checks', description: 'Choose kits and settings in gspot.toml. Apply those choices to generate configuration for the selected tools.', image: '/brand/home/policy.svg', href: '/guides/customize/', link: 'Choose checks and exceptions' },
-    { title: 'Run pinned tool versions', description: 'Run selected tools with pinned versions. ESLint, Ruff, Prettier, and other tools keep their own diagnostic rules.', image: '/brand/home/toolchain.svg', href: '/reference/kits/', link: 'Browse the configuration reference' },
-    { title: 'Find the code to fix', description: 'Find the file, check, and correction advice in the report. Rerun the check after correcting the code.', image: '/brand/home/finding.svg', href: '/guides/findings/', link: 'Read and resolve findings' },
+    { title: 'Configure the linters', description: 'gspot writes the configuration for ESLint, Prettier, Ruff, ShellCheck, and the other tools your languages need, and pins their versions.', image: '/brand/home/toolchain.svg', href: '/reference/kits/', link: 'Browse the kits' },
+    { title: 'Catch what agents write', description: 'gspot adds checks for patterns that agents write: functions that only forward, catch-all file names, and loose types.', image: '/brand/home/finding.svg', href: '/guides/findings/', link: 'Read and fix findings' },
+    { title: 'Stop bad commits', description: 'Git hooks run the checks on every commit and push. A finding stops the commit and says what to fix.', image: '/brand/home/policy.svg', href: '/guides/hooks-and-ci/', link: 'Set up hooks and CI' },
 ];
 const repository = [
-    { title: 'Generate agent instructions', description: 'Generate rule guides and agent entry points from your selected kits. Keep instructions aligned with repository choices.', image: '/brand/home/agents.svg', href: '/guides/agents/', link: 'Configure agent instructions' },
-    { title: 'Configure nested projects', description: 'Use scopes for projects with different languages and settings. Run staged or changed-file checks for the work you are reviewing.', image: '/brand/home/scopes.svg', href: '/guides/scopes/', link: 'Work with scopes' },
-    { title: 'Review configuration changes', description: 'Preview configuration changes, adopt supported existing settings, and inspect recovery copies when generated files have local edits.', image: '/brand/home/preservation.svg', href: '/guides/existing-repository/', link: 'Adopt an existing repository' },
+    { title: 'Install guides for agents', description: 'gspot installs guides that tell an agent how to write code in your repository, linked from AGENTS.md and CLAUDE.md.', image: '/brand/home/agents.svg', href: '/guides/agents/', link: 'Set up coding agents' },
+    { title: 'Keep one policy file', description: 'Choose kits, levels, limits, and exceptions in gspot.toml. One command writes every tool configuration from it.', image: '/brand/home/preservation.svg', href: '/guides/customize/', link: 'Edit the policy file' },
+    { title: 'Work in monorepos', description: 'Give each project its own kits and settings, and check only the files you changed.', image: '/brand/home/scopes.svg', href: '/guides/scopes/', link: 'Set up monorepos' },
 ];
 ---
 <StarlightPage frontmatter={{
-    title: 'Lint AI generated code',
-    description: 'gspot configures linters, runs checks, and generates instructions for coding agents from one configuration file.',
-    hero: { title: 'Lint AI generated code' },
+    title: 'Lint AI-generated code',
+    description: 'gspot is a command-line tool that lints AI-generated code and installs rules for AI coding agents.',
+    hero: { title: 'Lint AI-generated code' },
     template: 'splash', editUrl: false, lastUpdated: false,
 }}>
     <div class="landing">
@@ -32,21 +32,21 @@ const repository = [
             ].map(([icon, name]) => <li><img src={`/tools/${icon}.${icon === 'shellcheck' ? 'png' : 'svg'}`} alt="" width="24" height="24" /><span>{name}</span></li>)}</ul>
             <a class="tool-directory" href="/reference/kits/">Also configure TypeScript, Python, Swift, React, Next.js, and more →</a>
         </section>
-        <Features title="Configure tools and check code" description="Choose checks in gspot.toml, generate tool configuration, and run them against your code." features={workflow} />
+        <Features title="Lint AI-generated code" description="gspot picks the linters for your languages, configures them, and runs them on every commit." features={workflow} />
         <section class="demonstration" aria-labelledby="finding">
-            <div class="section-heading"><div><p class="eyebrow">Repository example</p><h2 id="finding">Fix the code behind the findings</h2></div><a class="pill" href="/guides/quick-start/">Run this example ↗</a></div>
-            <p>Ruff catches executable input in Python. ShellCheck catches an unquoted path in Bash. Make these two changes, then rerun <code>gspot check</code>.</p>
+            <div class="section-heading"><div><p class="eyebrow">Recorded example</p><h2 id="finding">An agent's wrapper, rejected and fixed</h2></div><a class="pill" href="/guides/quick-start/">Run this example ↗</a></div>
+            <p>The agent wrapped <code>calculateTotal</code> in a helper typed <code>any</code>, in a file named <code>utils</code>. The commit hook rejected it. The fixed commit deletes the helper and calls the function directly.</p>
             <Example />
         </section>
-        <Features title="Configure the whole repository" description="Use the same configuration for agent instructions, nested projects, and generated files." features={repository} />
+        <Features title="Install rules for coding agents" description="Agents read the same rules that the checks enforce." features={repository} />
         <section class="setup" aria-labelledby="setup">
-            <div class="section-heading"><div><h2 id="setup">Set up a repository</h2><p>Install from source, select the JavaScript configuration, and run your first checks.</p></div><a class="pill" href="/guides/install/">Get started ↗</a></div>
+            <div class="section-heading"><div><h2 id="setup">Set up a repository</h2><p>Install gspot, accept the plan, and commit as usual.</p></div><a class="pill" href="/guides/install/">Get started ↗</a></div>
             <div class="setup-grid">
-                <div><Code code={'version = 1\nkits = ["javascript"]\nlevel = "recommended"'} lang="toml" title="gspot.toml" /><p>1. Select a configuration in your repository policy.</p></div>
-                <div><Code code={'gspot apply --dry-run\ngspot apply\ngspot install'} lang="sh" title="Repository root" /><p>2. Preview, generate, and install selected tools.</p></div>
-                <div><Code code={'gspot check\ngspot explain javascript/eslint\ngspot doctor'} lang="sh" title="Repository root" /><p>3. Check code and diagnose findings or setup.</p></div>
+                <div><Code code={'npm install --save-dev gspot\nnpx gspot init'} lang="sh" title="Repository root" /><p>1. Install gspot and accept the plan.</p></div>
+                <div><Code code={'git add .\ngit commit -m "feat: Add receipts"'} lang="sh" title="Repository root" /><p>2. Commit. The hook checks the staged files.</p></div>
+                <div><Code code={'npx gspot check\nnpx gspot explain typescript/eslint'} lang="sh" title="Repository root" /><p>3. Check the whole repository, and read what a check does.</p></div>
             </div>
-            <p class="setup-note">For a new configuration, <code>gspot init</code> proposes kits and integrations before applying them. Initialization runs no checks.</p>
+            <p class="setup-note"><code>gspot init</code> shows its plan before it writes anything, and it runs no checks.</p>
         </section>
         <section class="closing" aria-label="Next steps"><h2>Start linting your code.</h2><nav><a class="pill primary" href="/guides/install/">Get started ↗</a><a class="pill" href="/reference/commands/check/">View commands</a></nav></section>
         <footer class="home-footer">

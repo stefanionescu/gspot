@@ -1,129 +1,236 @@
 ---
 title: Quickstart
-description: Check Python and Bash together, correct two defects, and rerun the same command.
+description: Set up gspot in a small TypeScript project, and see it reject an agent's commit.
 ---
 
-Check a Python settings parser and a shell archive script in one repository. Ruff reports
-executable input; ShellCheck reports a path that breaks when its filename contains spaces.
+In this example, a coding agent adds a helper that only forwards to another function. The
+commit hook rejects the commit, and the fixed commit passes. You need Git and Node.js 22 or
+newer.
 
-Complete [source installation](/guides/install/), including the `gspot` shell function.
-Use Bash on macOS or Linux, Git, and network access for tool installation.
+## Create the project
 
-## Create the repository
+1. Create a folder with a Git repository:
 
-In the same shell, create a disposable directory and provision the native tools:
+    ```bash
+    mkdir orders && cd orders
+    git init
+    ```
 
-```bash
-example_root="$(mktemp -d)"
-cd "$example_root"
-git init -q
-mise use uv@0.12.13 shellcheck@0.11.0 shfmt@3.12.0
-eval "$(mise env --shell bash)"
-mkdir src scripts
-```
+2. Add these files:
 
-Save this complete policy as `gspot.toml`:
+    ```json title="package.json"
+    {
+        "name": "orders",
+        "private": true,
+        "type": "module",
+        "exports": {
+            "./*": "./src/*.ts"
+        },
+        "packageManager": "npm@11.19.0"
+    }
+    ```
 
-```toml
-version = 1
-kits = ["python", "bash"]
-level = "recommended"
-```
+    ```json title="tsconfig.json"
+    {
+        "compilerOptions": {
+            "strict": true,
+            "noUncheckedIndexedAccess": true,
+            "exactOptionalPropertyTypes": true,
+            "noImplicitOverride": true,
+            "noFallthroughCasesInSwitch": true,
+            "module": "nodenext",
+            "target": "es2022",
+            "noEmit": true
+        },
+        "include": ["src"]
+    }
+    ```
 
-Save this Python project metadata as `pyproject.toml`:
+    ```markdown title="README.md"
+    # Orders
 
-```toml
-[project]
-name = "settings-example"
-version = "0.1.0"
-requires-python = ">=3.12"
-dependencies = []
-```
+    Order totals and discounts for the shop.
 
-Save the parser as `src/settings.py`:
+    ## Setup
 
-```python
-import json
+    Run `npm install`, then `npx gspot install`.
+    ```
 
+    ```text title="LICENSE"
+    Copyright 2026 The Orders authors. All rights reserved.
+    ```
 
-def normalize_settings(source: str) -> str:
-    return json.dumps(eval(source), sort_keys=True)
-```
+    ```text title=".gitignore"
+    node_modules/
+    ```
 
-Save the script as `scripts/list-archive.sh`:
+    ```typescript title="src/orders.ts"
+    export type Order = { items: { price: number; quantity: number }[] };
 
-```bash
-#!/usr/bin/env bash
-set -euo pipefail
+    /**
+     * The total price of an order.
+     * @param order the order
+     * @returns the sum of price times quantity over its items
+     */
+    export function calculateTotal(order: Order): number {
+        let total = 0;
+        for (const item of order.items) total += item.price * item.quantity;
+        return total;
+    }
+    ```
 
-archive=$1
-tar -tf $archive
-```
+    ```typescript title="src/discounts.ts"
+    import type { Order } from './orders.js';
 
-## Generate, install, and check
+    /**
+     * The order with every price lowered by a rate.
+     * @param order the order
+     * @param rate the share taken off each price, from 0 to 1
+     * @returns the discounted order
+     */
+    export function applyDiscount(order: Order, rate: number): Order {
+        const factor = 1 - rate;
+        const items = order.items.map((item) => ({ ...item, price: item.price * factor }));
+        return { items };
+    }
+    ```
 
-From the example directory, run:
+3. Commit them:
 
-```bash
-gspot apply
-gspot install
-gspot check
-```
+    ```bash
+    git add -A
+    git commit -m "feat: Add order totals and discounts"
+    ```
 
-Apply generates configuration and tool locks. Install prepares the locked tools. Check runs
-them and exits `1` with these findings:
+## Set up gspot
 
-| File                          | Check             | Finding                                 |
-| ----------------------------- | ----------------- | --------------------------------------- |
-| `src/settings.py:5:23`        | `python/ruff`     | `S307`: input reaches `eval`.           |
-| `scripts/list-archive.sh:5:9` | `bash/shellcheck` | `SC2086`: the archive path is unquoted. |
+1. Install gspot and commit the change:
 
-For the check's explanation and correction guidance, run:
+    ```bash
+    npm install --save-dev --save-exact gspot
+    git add -A
+    git commit -m "build: Add gspot"
+    ```
 
-```bash
-gspot explain python/ruff
-gspot explain shellcheck/SC2086
-```
+2. Run `init`, and set the level to `all`:
 
-The report also names skipped checks. This example configures no Python import contract,
-so `python/import-linter` is skipped.
+    ```bash
+    npx gspot init --yes
+    npx gspot set level all
+    ```
 
-## Correct both files
+    `init` detects TypeScript, Markdown, and npm, writes `gspot.toml` and the configuration
+    under `.gspot/`, installs the tools, and installs the Git hooks. The level `all` adds the
+    house style, which includes the checks for trivial functions and files.
 
-Replace `src/settings.py` with a parser for JSON values:
+3. Commit the setup. The pre-commit hook checks it and lets it through:
 
-```python
-import json
+    ```bash
+    git add -A
+    git commit -m "chore: Set up gspot"
+    ```
 
+## Commit what an agent wrote
 
-def normalize_settings(source: str) -> str:
-    return json.dumps(json.loads(source), sort_keys=True)
-```
+1. Add the two files an agent wrote: a helper in `src/utils.ts`, and receipt lines that call it.
 
-Replace `scripts/list-archive.sh` with:
+    ```typescript title="src/utils.ts"
+    import { calculateTotal } from './orders.js';
 
-```bash
-#!/usr/bin/env bash
-set -euo pipefail
+    /**
+     * The total of an order.
+     * @param order the order
+     * @returns the total
+     */
+    export function getOrderTotal(order: any): number {
+        return calculateTotal(order);
+    }
+    ```
 
-archive=$1
-tar -tf "$archive"
-```
+    ```typescript title="src/receipt.ts"
+    import type { Order } from './orders.js';
+    import { getOrderTotal } from './utils.js';
 
-Run `gspot check` again. With gspot 0.1.0 and the generated tool pins, the same repository
-reports 22 checks passed, one check skipped, and no findings. The command exits `0`.
-These corrections are manual; a formatter cannot choose the intended input format for you.
+    /**
+     * The receipt lines of an order: one line per item, then the total.
+     * @param order the order
+     * @returns the lines
+     */
+    export function receiptLines(order: Order): string[] {
+        const lines = order.items.map((item) => `${String(item.quantity)} x ${String(item.price)}`);
+        lines.push(`Total: ${String(getOrderTotal(order))}`);
+        return lines;
+    }
+    ```
 
-Reports are saved under `.gspot/reports/`. To inspect only the two affected checks later:
+2. Commit them:
 
-```bash
-gspot check --only python/ruff bash/shellcheck
-```
+    ```bash
+    git add -A
+    git commit -m "feat: Add receipt lines"
+    ```
 
-## Use it in your project
+    The hook rejects the commit:
 
-Follow [existing repositories](/guides/existing-repository/) to preview what init replaces. Add [Git hooks or CI](/guides/hooks-and-ci/) to run checks before
-changes reach the default branch.
+    ```text
+    root  typescript/eslint                   fail       2 files     1.0s
+      src/utils.ts:1:1  gspot/no-trivial-files  This file contains only forwarding, aliases, re-exports, or trivial functions. Move them to their owner.
+      src/utils.ts:8:8  gspot/no-trivial-functions  This function has 1 statement. Functions with 2 or fewer are reported. Inline it into its callers, or explain the API it serves in a narrow suppression.
+      src/utils.ts:8:31  @typescript-eslint/explicit-module-boundary-types  Argument 'order' should be typed with a non-any type.
+      src/utils.ts:8:38  @typescript-eslint/no-explicit-any  Unexpected any. Specify a different type.
+      src/utils.ts:9:27  @typescript-eslint/no-unsafe-argument  Unsafe argument of type `any` assigned to a parameter of type `Order`.
+        help: Run gspot check --fix for the rules that fix themselves, then read each remaining line; gspot explain <rule> says what it means.
+      reproduce: gspot check --only typescript/eslint --staged
+    root  naming/paths                        fail       2 files     0.0s
+      src/utils.ts:1:1  banned-term  typescript file "utils": "utils" is banned (roles group).
+        help: Rename the file or folder, or add a path rule under [[naming.rules]] with a reason.
+      reproduce: gspot check --only naming/paths --staged
 
-The disposable example is stored at `example_root`. Leave it before removing it when you
-have finished inspecting the files and reports.
+    23 checks passed, 2 checks failed, 1 check skipped, 6 findings, 2.4s (failed)
+    ```
+
+`getOrderTotal` only forwards to `calculateTotal`, its parameter is typed `any`, and
+`utils` names no role. The checks agree: the helper has no reason to exist.
+
+## Fix the commit
+
+1. Delete the helper, and call `calculateTotal` directly:
+
+    ```bash
+    git rm --cached src/utils.ts
+    rm src/utils.ts
+    ```
+
+    ```typescript title="src/receipt.ts"
+    import { type Order, calculateTotal } from './orders.js';
+
+    /**
+     * The receipt lines of an order: one line per item, then the total.
+     * @param order the order
+     * @returns the lines
+     */
+    export function receiptLines(order: Order): string[] {
+        const lines = order.items.map((item) => `${String(item.quantity)} x ${String(item.price)}`);
+        lines.push(`Total: ${String(calculateTotal(order))}`);
+        return lines;
+    }
+    ```
+
+2. Commit again:
+
+    ```bash
+    git add -A
+    git commit -m "feat: Add receipt lines"
+    ```
+
+    The hook passes:
+
+    ```text
+    25 checks passed, 0 checks failed, 1 check skipped, 0 findings, 2.4s
+    ```
+
+## Next steps
+
+- [Fix findings](/guides/findings/): read a finding and run one check alone.
+- [The policy file](/guides/customize/): change the level, limits, and exceptions.
+- [Coding agents](/guides/agents/): the guides that `init` linked from `AGENTS.md`.

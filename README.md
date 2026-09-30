@@ -4,57 +4,111 @@
 [![Documentation source](docs/public/brand/badges/docs.svg)](docs/README.md)
 [![License: Apache-2.0](docs/public/brand/badges/license.svg)](LICENSE.md)
 
-gspot configures the linters a repository needs, runs them, and installs instructions for
-coding agents, all from one policy file, `gspot.toml`.
+gspot is a command-line tool that lints AI-generated code and installs rules for AI coding
+agents. Git hooks run the checks on every commit and push, and a finding stops the commit.
+Your choices live in one policy file, `gspot.toml`.
 
 ## Install
 
-gspot is unreleased: complete the [source installation](docs/src/content/docs/guides/install.md),
-then run it in the repository you want to configure.
+gspot runs on Node.js 22 or newer, or on Bun. In a JavaScript or TypeScript repository:
 
 ```shell
-gspot init --dry-run
-gspot init
-gspot check
+npm install --save-dev --save-exact gspot
+npx gspot init
 ```
 
-`init` proposes a policy from what the repository holds and installs the tools after a yes.
-`check` runs the selected checks and prints each finding with the command that reproduces it.
+In any other repository, install it once with `npm install --global gspot`, then run
+`gspot init`.
 
-## One example
+`init` reads the repository and shows a plan before it writes anything:
 
-A client module reads private configuration:
+- the checks for your languages and frameworks
+- the linter configuration it writes under `.gspot/`
+- the guides for coding agents, linked from `AGENTS.md`
+- the Git hooks that run the checks
 
-```javascript
-"use client";
-export const endpoint = process.env.PRIVATE_API_URL;
+Accept the plan, and gspot writes the files and installs the tools.
+
+## What it catches
+
+An agent adds this file to a TypeScript project that runs gspot at level `all`, and calls it
+from a new `src/receipt.ts`:
+
+```typescript
+import { calculateTotal } from './orders.js';
+
+/**
+ * The total of an order.
+ * @param order the order
+ * @returns the total
+ */
+export function getOrderTotal(order: any): number {
+    return calculateTotal(order);
+}
 ```
 
-`gspot check` reports the read through the `gspot/no-client-environment` rule, at line 2. Keep
-the private work on the server and let the client name a public route:
+The commit hook runs `gspot check --staged` and rejects the commit:
 
-```javascript
-"use client";
-export const endpoint = "/api/search";
+```text
+root  typescript/eslint                   fail       2 files     1.0s
+  src/utils.ts:1:1  gspot/no-trivial-files  This file contains only forwarding, aliases, re-exports, or trivial functions. Move them to their owner.
+  src/utils.ts:8:8  gspot/no-trivial-functions  This function has 1 statement. Functions with 2 or fewer are reported. Inline it into its callers, or explain the API it serves in a narrow suppression.
+  src/utils.ts:8:31  @typescript-eslint/explicit-module-boundary-types  Argument 'order' should be typed with a non-any type.
+  src/utils.ts:8:38  @typescript-eslint/no-explicit-any  Unexpected any. Specify a different type.
+  src/utils.ts:9:27  @typescript-eslint/no-unsafe-argument  Unsafe argument of type `any` assigned to a parameter of type `Order`.
+    help: Run gspot check --fix for the rules that fix themselves, then read each remaining line; gspot explain <rule> says what it means.
+  reproduce: gspot check --only typescript/eslint --staged
+root  naming/paths                        fail       2 files     0.0s
+  src/utils.ts:1:1  banned-term  typescript file "utils": "utils" is banned (roles group).
+    help: Rename the file or folder, or add a path rule under [[naming.rules]] with a reason.
+  reproduce: gspot check --only naming/paths --staged
+
+23 checks passed, 2 checks failed, 1 check skipped, 6 findings, 2.4s (failed)
 ```
 
-The corrected module produces no finding. The
-[executable example](docs/src/content/docs/guides/client-environment.md) has the setup, the
-captured diagnostic, and the verification.
+Each finding names the file, the line, the rule, and what to do. The agent deletes
+`src/utils.ts` and calls `calculateTotal` directly:
 
-## Read on
+```typescript
+import { type Order, calculateTotal } from './orders.js';
 
-- [Your first check](docs/src/content/docs/guides/quick-start.md), a disposable walkthrough.
-- [Customize the policy](docs/src/content/docs/guides/customize.md).
-  [Scopes](docs/src/content/docs/guides/scopes.md) cover nested projects, and
-  [profiles](docs/src/content/docs/guides/profiles.md) share a policy.
-- [Generated files](docs/src/content/docs/guides/generated-files.md): what to commit, and
-  how to get an original back.
-- [CI](docs/src/content/docs/guides/check-automation.md), [troubleshooting](docs/src/content/docs/guides/troubleshooting.md),
-  and [uninstall](docs/src/content/docs/guides/uninstall.md).
-- [Kit reference](https://gspot.dev/reference/kits/) for the supported technologies, and the
-  [standalone ESLint plugin](packages/eslint-plugin/README.md).
-- [Build and test](docs/src/content/docs/guides/build.md) and the
-  [documentation conventions](docs/README.md) for contributors.
+/**
+ * The receipt lines of an order: one line per item, then the total.
+ * @param order the order
+ * @returns the lines
+ */
+export function receiptLines(order: Order): string[] {
+    const lines = order.items.map((item) => `${String(item.quantity)} x ${String(item.price)}`);
+    lines.push(`Total: ${String(calculateTotal(order))}`);
+    return lines;
+}
+```
 
-[Apache-2.0](LICENSE.md).
+The next commit passes:
+
+```text
+25 checks passed, 0 checks failed, 1 check skipped, 0 findings, 2.4s
+```
+
+The [quickstart](docs/src/content/docs/guides/quick-start.md) runs this example from an empty
+folder.
+
+## Documentation
+
+- [Quickstart](docs/src/content/docs/guides/quick-start.md): run the example above.
+- [Install](docs/src/content/docs/guides/install.md): npm, Bun, and global installs.
+- [The policy file](docs/src/content/docs/guides/customize.md): choose checks, change limits,
+  and record exceptions.
+- [Coding agents](docs/src/content/docs/guides/agents.md): the guides gspot installs.
+- [Hooks and CI](docs/src/content/docs/guides/check-automation.md): when the checks run.
+- [Existing repositories](docs/src/content/docs/guides/existing-repository.md): what init
+  replaces and how to get the originals back.
+- [Troubleshooting](docs/src/content/docs/guides/troubleshooting.md) and
+  [uninstall](docs/src/content/docs/guides/uninstall.md).
+- [Kit reference](https://gspot.dev/reference/kits/): supported languages, frameworks, and tools.
+- [ESLint plugin](packages/eslint-plugin/README.md): the gspot ESLint rules on their own.
+- [Build and contribute](docs/src/content/docs/guides/build.md), for contributors.
+
+## License
+
+[Apache-2.0](LICENSE.md)

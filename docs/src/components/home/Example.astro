@@ -1,13 +1,23 @@
 ---
 import { Code } from '@astrojs/starlight/components';
-import example from './repository.json';
+import example from './example.json';
+
+// Each file the agent wrote, beside what the fixed commit holds.
+const files = example.agent.files.map((file) => {
+    const fixed = example.fix.files.find((entry) => entry.path === file.path);
+    return {
+        ...file,
+        after: fixed?.content ?? '',
+        correction: fixed === undefined ? 'Deleted: the function only forwarded its argument.' : example.fix.correction,
+    };
+});
 ---
 <div class="comparison">
-    {example.files.map((file) => <section aria-label={file.path}>
+    {files.map((file) => <section aria-label={file.path}>
         <div class="file-heading"><h3>{file.path}</h3><p>{file.correction}</p></div>
         <div class="code-pair">
-            <div><Code code={file.before.trimEnd()} lang={file.language} title="Before" wrap /></div>
-            <div><Code code={file.after.trimEnd()} lang={file.language} title="After" wrap /></div>
+            <div><Code code={file.content.trimEnd()} lang={file.language} title="The agent's commit" wrap /></div>
+            <div>{file.after === '' ? <p class="deleted">The fixed commit deletes this file.</p> : <Code code={file.after.trimEnd()} lang={file.language} title="The fixed commit" wrap />}</div>
         </div>
     </section>)}
 </div>
@@ -19,6 +29,7 @@ import example from './repository.json';
     .file-heading p { margin: 0; color: var(--sl-color-gray-2); font-size: 0.9375rem; }
     .code-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
     .code-pair > div { min-width: 0; margin: 0; }
+    .deleted { margin: 0; color: var(--sl-color-gray-2); }
     .comparison :global(.expressive-code) { min-width: 0; margin: 0; }
     @media (max-width: 49.99rem) { .code-pair { grid-template-columns: minmax(0, 1fr); gap: 20px; }.comparison section { padding: 16px; } }
 </style>
