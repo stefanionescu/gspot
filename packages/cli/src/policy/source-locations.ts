@@ -74,7 +74,7 @@ export function sourceLocations(text: string): Map<string, Position> {
  * @param path the key path
  * @returns the position as line:column
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Locate a value or, for an absent required value, its nearest authored container. 1 files make 4 calls; one owner keeps that behavior in one place.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Every policy problem line prints its position as line:column through this.
 export function policyLocation(locations: Map<string, Position>, path: PathSegment[]): string {
     const { line, column } = policyPosition(locations, path);
     return `${String(line)}:${String(column)}`;

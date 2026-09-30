@@ -4,20 +4,10 @@ import { directoryOf } from '#cli/platform/arguments.ts';
 import { askConfirmation } from '#cli/commands/prompts.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import { findRoot, isGitRepository } from '#cli/repository/tracked.ts';
-import type { OwnershipState } from '#cli/types/lifecycle/lifecycle.ts';
 import { hooksInstalled, uninstallHooks } from '#cli/lifecycle/hooks.ts';
 import { OWNERSHIP_FILE, STATE_DIRECTORY } from '#cli/config/platform.ts';
 import { readOwnership, runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import type { CommandResult, UninstallPlan, UninstallOptions } from '#cli/types/commands.ts';
-
-// Pending entries are candidates; the lifecycle owner confirms their state before mutation.
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Uninstall and its preview list the same candidates; one owner keeps the pending entries in the list.
-function restorationCandidates(state: OwnershipState) {
-    return [
-        ...state.files,
-        ...(state.pending ?? []).flatMap((pending) => (pending.entry === undefined ? [] : [pending.entry])),
-    ];
-}
 
 /**
  * Preview only recorded ownership; matching templates do not authorize deletion.
@@ -25,7 +15,12 @@ function restorationCandidates(state: OwnershipState) {
  * @returns the recorded restoration and removal candidates
  */
 export function planUninstall(root: string): UninstallPlan {
-    const recorded = restorationCandidates(readOwnership(root));
+    const state = readOwnership(root);
+    // Pending entries are candidates; the lifecycle owner confirms their state before mutation.
+    const recorded = [
+        ...state.files,
+        ...(state.pending ?? []).flatMap((pending) => (pending.entry === undefined ? [] : [pending.entry])),
+    ];
     const blocks = recorded
         .filter((entry) => entry.kind === 'block' && entry.path !== '.gitignore')
         .map((entry) => entry.path);

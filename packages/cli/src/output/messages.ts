@@ -50,7 +50,7 @@ export function warn(text: string): void {
  * An error message on stderr. Always printed.
  * @param text the message
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: An error message on stderr. Always printed. 4 files make 3 calls; one owner keeps that behavior in one place.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Every error line goes to stderr with one final newline through this.
 export function fail(text: string): void {
     process.stderr.write(text.endsWith('\n') ? text : `${text}\n`);
 }
@@ -60,7 +60,7 @@ export function fail(text: string): void {
  * @param path the output that was not saved
  * @param error the filesystem error
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Reports an operational storage failure without changing the established check verdict. 2 files make 3 calls; one owner keeps that behavior in one place.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The cache and the reports say a failed write the same way, without changing the verdict.
 export function reportStorageFailure(path: string, error: unknown): void {
     const detail = (error instanceof Error ? error.message : String(error)).replaceAll(/[\r\n]+/gu, ' ');
     fail(`Could not write ${JSON.stringify(path)}: ${detail}`);
@@ -70,7 +70,7 @@ export function reportStorageFailure(path: string, error: unknown): void {
  * Output that is the command's record: stdout.
  * @param text the text
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Output that is the command's record: stdout. 5 files make 4 calls; one owner keeps that behavior in one place.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Every record line goes to stdout with one final newline through this.
 export function print(text: string): void {
     process.stdout.write(text.endsWith('\n') ? text : `${text}\n`);
 }

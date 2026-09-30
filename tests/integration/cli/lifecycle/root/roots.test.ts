@@ -2,9 +2,9 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { openRoot } from '#cli/platform/filesystem.ts';
+import { onPosix } from '#tests/support/cli/platforms.ts';
 import { fileMode, mutationPath } from '#cli/platform/safe-paths.ts';
 import { linkSync, statSync, symlinkSync, readFileSync } from 'node:fs';
-import { onPosix, keptDirectoryMode } from '#tests/support/cli/platforms.ts';
 
 test('native replacement and removal preserve read-only identities', async () => {
     await using directory = await testdir();
@@ -75,7 +75,9 @@ if (onPosix) {
                     expect(readFileSync(join(outside, 'sentinel'), 'utf8')).toBe('authored\n');
                 }
                 root.mkdir('.gspot/state/recovery', 0o700);
-                expect(statSync(join(project, '.gspot/state/recovery')).mode & 0o777).toBe(keptDirectoryMode(0o700));
+                expect(statSync(join(project, '.gspot/state/recovery')).mode & 0o777).toBe(
+                    process.platform === 'win32' ? 0o777 : 0o700,
+                );
             } finally {
                 root.close();
             }

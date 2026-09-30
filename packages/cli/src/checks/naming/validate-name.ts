@@ -1,6 +1,6 @@
 import { hasCase } from '#cli/checks/naming/cases.ts';
+import { splitParts, repeatedPart } from '#cli/checks/naming/split.ts';
 import { rulesFor, limitsUnderRules } from '#cli/checks/naming/policy.ts';
-import { wordsOf, splitParts, repeatedPart } from '#cli/checks/naming/split.ts';
 import { isExempt, bannedTerm, isReservedUseAllowed } from '#cli/checks/naming/match.ts';
 import { DIGIT, TEST_GROUP, CALLBACK_VERB, VERB_CATEGORIES } from '#cli/config/checks/naming.ts';
 
@@ -97,7 +97,7 @@ export function nameProblems(identifier: Identifier, context: NamingInputs): Nam
     const limits = limitsUnderRules(policy, identifier, rules);
     const name = stripped(identifier.name, rules);
     const parts = splitParts(name);
-    const words = wordsOf(name.split('.', 1)[0] ?? name);
+    const words = splitParts(name.split('.', 1)[0] ?? name).filter((part) => !DIGIT.test(part));
     const isFileName = identifier.category === 'files';
     const problems = [
         caseProblem(name, limits, isFileName),

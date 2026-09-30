@@ -86,7 +86,7 @@ export function parseProfile(text: string, source: string): Profile {
  * @param cwd the directory a relative path starts from
  * @returns the validated profile
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Its callers sit at the complexity or length limit; inlining the expression pushes them over.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Init and the profile tests read a profile from a path or a URL through this one entry.
 export async function readProfile(source: string, cwd: string): Promise<Profile> {
     return parseProfile(await profileText(source, cwd), source);
 }

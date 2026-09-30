@@ -212,7 +212,7 @@ export function assertNoProblems(files: PolicyFiles): void {
  * @param root the repository root
  * @returns whether the file is there
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: True when a root has a gspot.toml. 3 files make 3 calls; one owner keeps that behavior in one place.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Explain, init, and tool inspection decide that a folder has a policy the same way.
 export function hasPolicy(root: string): boolean {
     return openRoot(root).read('gspot.toml') !== undefined;
 }

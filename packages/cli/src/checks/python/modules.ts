@@ -50,7 +50,7 @@ export async function pythonModules(input: EngineInput): Promise<PythonModule[]>
  * @param statement the module statement
  * @returns the assignment, or undefined for other statements
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Read an assignment from an expression statement. 1 files make 1 calls; one owner keeps that behavior in one place.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The module and import readers read a top-level assignment the same way.
 export function assignmentOf(statement: Node): Node | undefined {
     const first = statement.type === 'expression_statement' ? statement.namedChildren[0] : undefined;
     return first?.type === 'assignment' ? first : undefined;

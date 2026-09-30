@@ -7,7 +7,7 @@ import { shebangInterpreter } from '#cli/repository/tags.ts';
 import { detectKits, unknownLanguages } from '#cli/kits/detect.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the line limit.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The cases build a tracked file with the same fields.
 const file = (path: string, tags: string[] = ['text']): TrackedFile => ({
     path,
     prefix: Buffer.alloc(0),

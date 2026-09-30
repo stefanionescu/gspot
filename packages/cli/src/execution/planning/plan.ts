@@ -3,6 +3,7 @@ import ignore from 'ignore';
 import { ownedBy } from '#cli/kits/owners.ts';
 import { toolPin } from '#cli/tools/inspect.ts';
 import { GspotError } from '#cli/platform/errors.ts';
+import { isInScope } from '#cli/repository/paths.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import type { ScopeSelection } from '#cli/types/policy/policy.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
@@ -10,7 +11,7 @@ import { checkState, repositoryCheckSpec } from '#cli/policy/check-state.ts';
 import type { Stage, ToolPin, Manifest, CheckSpec } from '#cli/types/kits.ts';
 import { skipFor, restrictIgnoredPaths } from '#cli/execution/planning/skips.ts';
 import { PLATFORM_NAMES, HISTORY_ANALYSES } from '#cli/config/execution/execution.ts';
-import { filesFor, childScopes, isOutsideChildren, isRepositoryPolicy } from '#cli/execution/planning/files.ts';
+import { filesFor, childScopes, isRepositoryPolicy } from '#cli/execution/planning/files.ts';
 
 import type {
     Session,
@@ -160,7 +161,7 @@ function planScopes(session: Session, options: PlanOptions): PlannedCheck[][] {
  * @param check the planned check
  * @returns whether the check has something to run over
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Its callers sit at the complexity or length limit; inlining the expression pushes them over.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Replacement and the run list decide whether a check has work by the same four conditions.
 export function isActive(check: PlannedCheck): boolean {
     return (
         check.files.length > 0 ||
@@ -196,7 +197,7 @@ export function configuredChecks(session: Session): PlannedCheck[] {
 export function ownedInputs(session: Session, check: PlannedCheck): TrackedFile[] {
     const owners = check.spec.owners ?? check.manifest?.owners;
     const children = check.spec.runs === 'per-scope' ? childScopes(session, check.scope) : [];
-    const files = check.files.filter((file) => isOutsideChildren(file, children));
+    const files = check.files.filter((file) => children.every((child) => !isInScope(file.path, child)));
     return owners === undefined ? [] : ownedBy(owners, check.scope.selected, files, check.scope.scope.path);
 }
 

@@ -10,7 +10,7 @@ import packageManifest from 'gspot/package.json' with { type: 'json' };
  * @param owner the source file the page is generated from
  * @returns the page with its edit link
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Preserve definition attribution and build provenance without serializing metadata into Markdown. 4 files make 8 calls; one owner keeps that behavior in one place.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Every reference page links its source definition at the build revision; this spells that link once.
 export function referencePage(
     title: string,
     description: string,
@@ -29,7 +29,7 @@ export function referencePage(
  * @param body the Markdown body
  * @returns the section
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: A level-two section, or nothing when the body is empty. 3 files make 11 calls; one owner keeps that behavior in one place.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Every reference page drops an empty section and spells a heading this one way.
 export function section(title: string, body: string): string {
     return body === '' ? '' : `\n## ${title}\n\n${body}\n`;
 }
@@ -49,7 +49,7 @@ export function table(header: string[], rows: string[][]): string {
  * @param text the cell text
  * @returns the escaped text
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Text safe inside a table cell: pipes escaped and line breaks flattened. 3 files make 7 calls; one owner keeps that behavior in one place.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Every reference table escapes pipes and line breaks in its cells by this one rule.
 export function cell(text: string): string {
     return text.replaceAll('|', String.raw`\|`).replaceAll('\n', ' ');
 }

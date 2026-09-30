@@ -1,7 +1,7 @@
 import type { Finding, EngineInput } from '#cli/types/checks.ts';
 import { xcodeFinding } from '#cli/checks/xcode/project/checks.ts';
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Builds a template; inlining it nests a template inside a template.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The file part and the planted name escape regular expression characters by one rule.
 function escapePattern(text: string): string {
     return text.replaceAll(/[.*+?^${}()|[\]\\]/gu, String.raw`\$&`);
 }

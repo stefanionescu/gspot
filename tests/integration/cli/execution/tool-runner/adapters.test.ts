@@ -7,7 +7,7 @@ import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { chmodSync, existsSync, writeFileSync } from 'node:fs';
 import { onPosix, toolShipsHere } from '#tests/support/cli/platforms.ts';
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the complexity limit.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Two cases plant the same version script at a different speed.
 const versionScript = (version: string, slow: boolean): string => `#!${process.execPath}
 if (process.argv.includes('--version')) { console.log(${JSON.stringify(version)}); }
 else { await Bun.write('started.txt', 'started'); ${slow ? 'await Bun.sleep(10_000);' : ''} }
@@ -67,7 +67,7 @@ if (toolShipsHere('ansible-lint'))
         },
     );
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the complexity limit.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Three cases plant the same version command with a different version.
 const versionCommand = (version: string): string =>
     `#!${process.execPath}\nif (process.argv.includes('--version')) console.log(${JSON.stringify(version)});\n`;
 
@@ -96,7 +96,7 @@ if (toolShipsHere('ansible-lint'))
         expect(executed.report.exitCode).toBe(0);
     });
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the complexity limit.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Three cases plant the same checker with a different exit code.
 const exitScript = (failed: boolean): string => `#!${process.execPath}\nprocess.exitCode = ${failed ? '1' : '0'};\n`;
 
 // Windows keeps no permission bits to read back.

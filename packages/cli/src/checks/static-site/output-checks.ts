@@ -156,7 +156,7 @@ export async function deadSelectors(input: EngineInput): Promise<Finding[]> {
  * @param input the engine input
  * @returns one finding for each broken link
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The links between the built pages, their stylesheets, and their fragments. 3 files make 0 calls; one owner keeps that behavior in one place.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The entry point of the site-links-internal check, which the analysis table and the tests name.
 export function internalLinks(input: EngineInput): Promise<Finding[]> {
     return brokenLinks(input, false);
 }
@@ -166,7 +166,7 @@ export function internalLinks(input: EngineInput): Promise<Finding[]> {
  * @param input the engine input
  * @returns one finding for each broken link
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Every link of the built pages, the ones that leave the site included. 1 files make 0 calls; one owner keeps that behavior in one place.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The entry point of the site-links-external check, which the analysis table names.
 export function externalLinks(input: EngineInput): Promise<Finding[]> {
     return brokenLinks(input, true);
 }

@@ -90,7 +90,7 @@ test('spelling locales and word allowances remain scoped in generated configurat
         '.gspot/config/typos.toml',
     ]);
     for (const config of configs) await Bun.write(join(sandbox.path, config.path), config.content);
-    // eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the line limit.
+    // eslint-disable-next-line gspot/no-trivial-functions -- reason: The runs call typos with the same flags on a different configuration and file.
     const run = (config: string, path: string) =>
         Bun.spawnSync(['typos', '--config', config, '--format', 'brief', '--color', 'never', path], {
             cwd: sandbox.path,

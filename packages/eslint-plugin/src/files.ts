@@ -48,7 +48,7 @@ export function lintedRoot(context: RuleReporter): string {
  * @param path a file path
  * @returns whether the base name is an index file
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: True for an index module. 6 files make 6 calls; one owner keeps that behavior in one place.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The barrel rules decide what an index module is by this one list of names.
 export function isIndexFile(path: string): boolean {
     return INDEX_BASENAMES.has(posix.basename(normalizePath(path)));
 }
@@ -98,7 +98,7 @@ export function isAnyGlobMatch(path: string, globs: readonly string[]): boolean 
  * @param path an absolute path
  * @returns the relative path
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The path relative to the root, or the path itself when outside it. 10 files make 10 calls; one owner keeps that behavior in one place.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Import rules make a path relative to the lint root the same way.
 export function relativeToRoot(root: string, path: string): string {
     return path.startsWith(`${root}/`) ? path.slice(root.length + 1) : path;
 }
@@ -108,7 +108,7 @@ export function relativeToRoot(root: string, path: string): string {
  * @param node any node
  * @returns the string when the node is a string literal
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The static string of a literal node, or undefined. 7 files make 7 calls; one owner keeps that behavior in one place.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Import rules read a literal import source the same way.
 export function staticString(node: unknown): string | undefined {
     const literal = node as { type?: string; value?: unknown } | null | undefined;
     return literal?.type === AST_NODE_TYPES.Literal && typeof literal.value === 'string' ? literal.value : undefined;

@@ -73,7 +73,7 @@ function editorconfigSelector(pattern: string, scope: string): string {
  * @param format the format settings, each optional
  * @returns the options Prettier reads, only for the settings given
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Builds a template; inlining it nests a template inside a template.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The root options and each override map format settings to the option names of Prettier the same way.
 export function prettierOptions(format: Partial<FormatSettings>): Record<string, unknown> {
     return {
         ...(format.indent_width === undefined ? {} : { tabWidth: format.indent_width }),
@@ -101,7 +101,7 @@ export function prettierConfiguration(
     plugins: PrettierPlugin[],
 ): Record<string, unknown> {
     const prefix = toPosix(relative(dirname(targetPath), '.'));
-    // eslint-disable-next-line gspot/no-trivial-functions -- reason: Builds a template; inlining it nests a template inside a template.
+    // eslint-disable-next-line gspot/no-trivial-functions -- reason: Every override path gets the scope folder prefix the same way.
     const fromConfig = (pattern: string): string => (prefix === '' ? pattern : `${prefix}/${pattern}`);
     // The reason documents the policy override; it is not a Prettier option.
     const { overrides: nativeOverrides = [], ...extras } = extra ?? {};

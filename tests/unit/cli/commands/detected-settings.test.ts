@@ -5,9 +5,9 @@ import { detectedSettings } from '#cli/commands/init/settings.ts';
 import type { Fields, TrackedFile } from '#cli/types/repository/repository.ts';
 
 const manifests = kitManifests();
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the line limit.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The cases pick manifests by name the same way.
 const selected = (...names: string[]) => names.map((name) => manifests.get(name)!);
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the line limit.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The cases build a tracked file with the same fields.
 const file = (path: string): TrackedFile => ({
     path,
     prefix: Buffer.alloc(0),
@@ -16,7 +16,7 @@ const file = (path: string): TrackedFile => ({
     executable: false,
     size: 1,
 });
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the line limit.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The cases build package fields with the same shape.
 const fields = (dependencies: Record<string, string>): Fields => ({
     path: 'package.json',
     kind: 'package.json',

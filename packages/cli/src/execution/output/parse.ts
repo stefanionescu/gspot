@@ -14,6 +14,7 @@ import { typosFindings, trufflehogFindings, markdownlintFindings } from '#cli/ex
 
 import {
     DEFAULT_PATTERN,
+    LEADING_DOT_SLASH,
     TRAILING_PAREN_RULE,
     DEFAULT_FILE_PATTERN,
     DEFAULT_OUTPUT_FORMAT,
@@ -31,14 +32,9 @@ const eslintEntry = z.object({
 });
 const eslintFiles = z.array(z.object({ filePath: z.string().min(1), messages: z.array(eslintEntry) }));
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Its callers sit at the complexity or length limit; inlining the expression pushes them over.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Four output patterns fall back to their default the same way, and inlining the fallback puts parseGrouped over the complexity limit.
 function compiled(source: string | undefined, standard: string): RegExp {
     return new RegExp(source ?? standard, 'u');
-}
-
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Its callers sit at the complexity or length limit; inlining the expression pushes them over.
-function stripDotSlash(path: string): string {
-    return path.startsWith('./') ? path.slice('./'.length) : path;
 }
 
 function positioned(finding: Finding, groups: Record<string, string | undefined>): Finding {
@@ -76,7 +72,7 @@ function regexFinding(
     const finding = positioned(
         {
             check,
-            file: stripDotSlash(groups['file'] ?? ''),
+            file: (groups['file'] ?? '').replace(LEADING_DOT_SLASH, ''),
             message: (groups['message'] ?? output.message ?? line).trim(),
             help,
             fixable: isFixable(output, fixable, line),
@@ -110,7 +106,7 @@ function parseGrouped(check: string, output: OutputFormat, text: string, help: s
     for (const line of text.split('\n')) {
         const header = filePattern.exec(line)?.groups?.['file'];
         if (header !== undefined) {
-            file = stripDotSlash(header);
+            file = header.replace(LEADING_DOT_SLASH, '');
             continue;
         }
         const groups = pattern.exec(line)?.groups;
@@ -203,7 +199,7 @@ function relativeTo(root: string, file: string): string {
  * @param cwd the tool working directory, for native relative source paths.
  * @returns the findings.
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Its callers sit at the complexity or length limit; inlining the expression pushes them over.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Every tool check turns output into findings here, so the fixable flag and the path rules apply once.
 export function parseOutput(spec: CheckSpec, stdout: string, stderr: string, root: string, cwd = root): Finding[] {
     return parseRaw(spec, stdout, stderr, root, cwd).map((finding) => ({
         ...finding,

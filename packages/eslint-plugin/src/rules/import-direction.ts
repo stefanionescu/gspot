@@ -23,7 +23,7 @@ import type {
     ImportDirectionMessages,
 } from '#plugin/types/rules.ts';
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Its callers sit at the complexity or length limit; inlining the expression pushes them over.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The importer and the imported file get their role by the same glob lookup.
 function roleOf(path: string, roles: Required<ImportDirectionRoles>): ImportDirectionRole {
     return ROLE_ORDER.find((role) => role !== 'other' && isAnyGlobMatch(path, roles[role])) ?? 'other';
 }
@@ -107,7 +107,7 @@ export const importDirection = createRule<ImportDirectionOptions, ImportDirectio
         const root = lintedRoot(context);
         const scope = (options.scope ?? '').replace(/\/$/u, '');
         const prefix = scope === '' ? '' : `${scope}/`;
-        // eslint-disable-next-line gspot/no-trivial-functions -- reason: Its callers sit at the complexity or length limit; inlining the expression pushes them over.
+        // eslint-disable-next-line gspot/no-trivial-functions -- reason: The importer and the import target are made relative to the scope the same way.
         const relativeOf = (absolute: string): string => {
             const rel = relativeToRoot(root, absolute);
             return prefix !== '' && rel.startsWith(prefix) ? rel.slice(prefix.length) : rel;

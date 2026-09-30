@@ -13,7 +13,7 @@ function folderNames(files: TrackedFile[]): Set<string> {
 }
 
 // Ordered mappings can select a false or undefined value, so retain the matching entry itself.
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Its callers sit at the complexity or length limit; inlining the expression pushes them over.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Dependencies and folder values both take the first entry whose name a kit lists.
 function firstMatch(mapping: Record<string, unknown> | undefined, names: Set<string>): [string, unknown] | undefined {
     return Object.entries(mapping ?? {}).find(([name]) => names.has(name));
 }

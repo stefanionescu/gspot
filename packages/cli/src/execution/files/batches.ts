@@ -6,7 +6,7 @@ import {
     WINDOWS_ARGUMENT_OVERHEAD,
 } from '#cli/config/execution/execution.ts';
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Its callers sit at the complexity or length limit; inlining the expression pushes them over.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The fixed arguments and each file count against the command-line budget by one platform rule.
 function argumentSize(argument: string, platform: NodeJS.Platform): number {
     return platform === 'win32'
         ? argument.length * WINDOWS_ESCAPE_EXPANSION + WINDOWS_ARGUMENT_OVERHEAD

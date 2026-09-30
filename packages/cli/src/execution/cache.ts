@@ -17,7 +17,7 @@ import { CACHE_ENTRY, CACHE_FORMAT, RETENTION_MS } from '#cli/config/execution/e
  * @param input the check name, scope, tool version, configuration hash and file hashes
  * @returns the key
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The cache key for one check run. 2 files make 3 calls; one owner keeps that behavior in one place.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The result cache and its tests key a run by this one hash of its inputs and the cache format.
 export function cacheKey(input: CacheKeyInput): string {
     return createHash('sha256')
         .update(JSON.stringify({ format: CACHE_FORMAT, ...input }))
@@ -31,7 +31,7 @@ export function cacheKey(input: CacheKeyInput): string {
  * @param reads the source bytes read during the run, when there are any
  * @returns the digest
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The content hash of a required file. 3 files make 3 calls; one owner keeps that behavior in one place.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The result cache and its tests hash a file's bytes the same way.
 export function fileHash(root: string, path: string, reads?: SourceReads): string {
     return createHash('sha256')
         .update(readSource(root, path, reads))

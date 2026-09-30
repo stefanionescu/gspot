@@ -67,7 +67,7 @@ function managedKind(path: string): Verdict | undefined {
  * @param path the file, relative to the root
  * @returns true for a package file
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Whether a path is a Vale package file: under the styles folder and not the gspot style or vocabulary. 4 files make 7 calls; one owner keeps that behavior in one place.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Apply, drift, file kinds, and dependencies tell Vale package files from the gspot style by this one rule.
 export function isValePackageFile(path: string): boolean {
     return path.startsWith(VALE_STYLES_PREFIX) && VALE_OWN_PREFIXES.every((prefix) => !path.startsWith(prefix));
 }
@@ -130,7 +130,7 @@ export function readAttributes(root: string): Attribute[] {
  * @param path the repository-relative path.
  * @returns whether the file contains environment values.
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Identify environment files that contain machine values rather than templates. 2 files make 0 calls; one owner keeps that behavior in one place.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The env check and the staged selection find machine environment files by this one rule.
 export function isEnvironmentFile(path: string): boolean {
     return matchesEnvironmentFile(path) && !ENV_TEMPLATE_NAMES.includes(path.slice(path.lastIndexOf('/') + 1));
 }

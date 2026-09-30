@@ -110,7 +110,7 @@ export function executionFailure(
  * @param result the completed process.
  * @returns true when the output says the tool fell over.
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Match declared fatal diagnostics from a check or its tool during checks and corrections. 2 files make 6 calls; one owner keeps that behavior in one place.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Checks and fixes decide that a tool crashed by the same declared pattern.
 export function hasToolError(spec: CheckSpec, tool: ToolPin | undefined, result: SpawnResult): boolean {
     const pattern = spec.tool_errors ?? tool?.crash_pattern;
     return pattern !== undefined && new RegExp(pattern, 'mu').test(`${result.stdout}\n${result.stderr}`);

@@ -51,7 +51,7 @@ function chainFrom(
  * @param manifests every kit manifest
  * @returns the configuration names from `from` to `target`
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The chain of requires from one kit to another, or undefined when the first does not need the second. 2 files make 2 calls; one owner keeps that behavior in one place.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Init and the kits command explain a required kit by the same chain search.
 export function requireChain(target: string, from: string, manifests: Map<string, Manifest>): string[] | undefined {
     return chainFrom(target, from, manifests, new Set());
 }
@@ -77,7 +77,7 @@ export function selectKits(kitNames: string[], manifests: Map<string, Manifest>)
  * @param manifests every kit manifest
  * @returns the manifests in order
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The root selection and each ancestor scope selection, deduplicated in order. 3 files make 5 calls; one owner keeps that behavior in one place.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The session, validation, and naming inherit the kits of a scope by one rule.
 export function selectForScope(
     policy: Pick<Policy, 'kits' | 'scopes'>,
     scope: string,
@@ -94,7 +94,7 @@ export function selectForScope(
  * @param selected the selected manifests
  * @returns the manifests whose kind is language
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The language kits in a selection. 1 files make 2 calls; one owner keeps that behavior in one place.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The naming engine picks the language kits of a selection in two places the same way.
 export function languageKits(selected: Manifest[]): Manifest[] {
     return selected.filter((manifest) => manifest.kit.kind === 'language');
 }
@@ -104,7 +104,7 @@ export function languageKits(selected: Manifest[]): Manifest[] {
  * @param selected the selected manifests
  * @returns the source policy owners
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Language and framework kits that contribute source to shared checks. 2 files make 3 calls; one owner keeps that behavior in one place.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Kit owners and the single-file-folder check count the same kits as source.
 export function sourceKits(selected: Manifest[]): Manifest[] {
     return selected.filter((manifest) => manifest.kit.kind === 'language' || manifest.kit.kind === 'framework');
 }

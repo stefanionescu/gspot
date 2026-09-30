@@ -98,7 +98,7 @@ export async function foreignKeyIndexes(input: EngineInput): Promise<Finding[]> 
  * @param input the engine input
  * @returns the findings
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: One finding for each grant of every privilege. 1 files make 0 calls; one owner keeps that behavior in one place.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The entry point of the postgres-grants check, which the analysis table names.
 export function explicitGrants(input: EngineInput): Promise<Finding[]> {
     return statementFindings(
         input,
@@ -119,7 +119,7 @@ export function explicitGrants(input: EngineInput): Promise<Finding[]> {
  * @param input the engine input
  * @returns the findings
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: One finding for each SECURITY DEFINER function that sets no search_path. 1 files make 0 calls; one owner keeps that behavior in one place.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The entry point of the postgres-definer check, which the analysis table names.
 export function definerSearchPath(input: EngineInput): Promise<Finding[]> {
     const text =
         'A SECURITY DEFINER function sets no search_path, so a caller chooses which objects its names resolve to.';

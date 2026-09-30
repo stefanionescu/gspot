@@ -22,9 +22,9 @@ import { checkJavascript, checkTypescript } from '#cli/checks/typescript/tsc.ts'
 import type { Session, Executable, PlannedCheck } from '#cli/types/execution/execution.ts';
 import type { Engine, Finding, CheckResult, EngineInput, EngineOutcome } from '#cli/types/checks.ts';
 
-// The executable contract includes staged state, while native commands use the check definition.
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Its callers sit at the complexity or length limit; inlining the expression pushes them over.
-const nativeCheck: Executable['run'] = (session, planned) => runToolCheck(session, planned);
+// A tool check runs the command of its definition; staged state does not change the command.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Executable.run passes the staged set third, where runToolCheck takes a command, so the tool check drops it here.
+const toolCheck: Executable['run'] = (session, planned) => runToolCheck(session, planned);
 
 const engines: Record<NonNullable<CheckSpec['engine']>, (spec: CheckSpec) => Engine> = {
     integrity: integrityEngine,
@@ -207,5 +207,5 @@ export function checkExecution(spec: CheckSpec): Executable['run'] {
                 duration: 0,
                 findings: [],
             });
-    return nativeCheck;
+    return toolCheck;
 }

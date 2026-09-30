@@ -19,10 +19,10 @@ import {
     documentWriter,
 } from '#tests/inputs/acceptance/source/kits/kits.ts';
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the line limit.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Two cases plant the same pyproject.toml with a different dependency.
 const PROJECT = (dependency: string): string =>
     `[project]\nname = "planted"\nversion = "1.0.0"\nrequires-python = ">=3.12"\ndependencies = ["${dependency}"]\n\n[tool.pytest.ini_options]\npythonpath = ["."]\n`;
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the line limit.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Two cases plant the same route with a different body.
 const ROUTE = (body: string): string =>
     `"""The health route."""\n\nimport asyncio\nimport time\n\n\nasync def health() -> dict[str, str]:\n    """Say the service is up."""\n${body}    return {"status": "up"}\n\n\n__all__ = ["asyncio", "health", "time"]\n`;
 

@@ -67,7 +67,7 @@ const policy: EffectivePolicy = {
 
 const plain = { policy, isReactFile: false, isTestFile: false };
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the line limit.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The cases build an identifier with the same position and kind.
 function identifier(name: string, category = 'functions', file = 'src/a.ts', language = 'typescript'): Identifier {
     return { file, line: 1, column: 1, language, category, kind: `${language} ${category}`, name };
 }

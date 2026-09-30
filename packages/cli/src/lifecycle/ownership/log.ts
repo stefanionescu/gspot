@@ -105,7 +105,7 @@ function backupWriter(files: Root, recovery: string): Log['backup'] {
  * @param file the snapshot
  * @returns its hash, mode, and whether it is a link
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The identity a snapshot is recorded and compared by. 3 files make 9 calls; one owner keeps that behavior in one place.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The ownership log records and compares a file by this one identity: hash, mode, and link flag.
 export function identity(file: Read): Identity {
     return {
         hash: createHash('sha256').update(file.bytes).digest('hex'),

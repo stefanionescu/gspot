@@ -200,7 +200,7 @@ const workspacePackages = z.object({ packages: stringList });
  * @param name the name as written
  * @returns the name in lower case with one hyphen between words
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Normalize a Python distribution name for package identity comparisons. 4 files make 3 calls; one owner keeps that behavior in one place.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: License, allowlist, and lock readers compare Python package names by this one normalization.
 export function normalizedPythonPackage(name: string): string {
     return name.toLowerCase().replaceAll(/[._-]+/gu, '-');
 }

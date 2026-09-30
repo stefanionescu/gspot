@@ -53,7 +53,7 @@ function rulePage(check: CheckSpec, tool: string, rule: string): string | undefi
 }
 
 // The tool a check runs: the declared tool, or the first word of its command.
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Its callers sit at the complexity or length limit; inlining the expression pushes them over.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Four lookups name the tool of a check, which falls back to the first word of its command.
 function toolOf(check: CheckSpec): string | undefined {
     return check.tool ?? check.command?.[0];
 }

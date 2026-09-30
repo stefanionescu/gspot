@@ -40,7 +40,7 @@ test('site release validation accepts a published tag and docs correction but re
     };
     const base = commit();
     expect(git(sandbox.path, ['tag', `v${GSPOT_VERSION}`]).code).toBe(0);
-    // eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the line limit.
+    // eslint-disable-next-line gspot/no-trivial-functions -- reason: Four runs call the release script with the same environment and a different source.
     const execute = (source: string) =>
         run([process.execPath, entry], {
             cwd: sandbox.path,

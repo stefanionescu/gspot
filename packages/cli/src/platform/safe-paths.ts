@@ -72,7 +72,7 @@ export function nativePath(path: string): string[] {
  * Refuses a path inside the lifecycle's own metadata.
  * @param path the proposed path
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Refuses a path inside the lifecycle's own metadata. 1 files make 1 calls; one owner keeps that behavior in one place.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Reads and writes both refuse lifecycle metadata by this one pattern.
 export function privateTarget(path: string): void {
     if (LIFECYCLE_PRIVATE_PATH.test(path.normalize('NFC')))
         throw new Error(`Lifecycle metadata is not a generated target: ${path}`);
@@ -82,7 +82,7 @@ export function privateTarget(path: string): void {
  * Public mutation plans cannot target the owner's log, lock, or recovery files.
  * @param path the proposed path
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Public mutation plans cannot target the owner's log, lock, or recovery files. 9 files make 11 calls; one owner keeps that behavior in one place.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Every mutation plan checks its target by the same two rules.
 export function mutationTarget(path: string): void {
     mutationPath(path);
     privateTarget(path);

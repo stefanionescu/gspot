@@ -12,7 +12,7 @@ test.each(['copy = true', 'body = "include target"', 'merge = { extends = "targe
     },
 );
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the line limit.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Two cases parse the same manifest with a different selector.
 const selectorDefinition = (selection: string) => `
 [kit]
 name = "example"
@@ -39,7 +39,7 @@ test('shared replace selectors cannot authorize retiring the containing file', (
     ).not.toThrow();
 });
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the line limit.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Two cases parse the same security manifest with a different pin.
 const pinnedSecurity = (pin: string) => `
 [kit]
 name = "security"
@@ -60,7 +60,7 @@ test.each(['latest', '^1.2.3', '../pack'])(
     },
 );
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the line limit.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Two cases parse the same manifest with a different role.
 const roleDefinition = (role: string) =>
     `entry_files = ["src/main.js"]\n[kit]\nname = "example"\nkind = "tool"\ntitle = "Example"\ndescription = "A configuration for the tests, long enough."\n[[settings]]\nname = "tools.example.support_directory"\nkind = "string"\ndirection = "neutral"\nrole = "${role}"\ndefault = "tests/support"\nsummary = "The folder that holds test support code."\n`;
 
@@ -71,7 +71,7 @@ test('a setting names the architecture role of its folder, and only a known role
     expect(() => parseManifest(roleDefinition('helpers'), 'configurations/example')).toThrow('role');
 });
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the line limit.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Three cases parse the same manifest with a different rule page and crash pattern.
 const toolPageDefinition = (page: string, crash: string) =>
     `[kit]\nname = "example"\nkind = "tool"\ntitle = "Example"\ndescription = "A configuration for the tests, long enough."\n[[tools]]\nname = "example"\nversion = "1.0.0"\nrule_page = "${page}"\ncrash_pattern = '${crash}'\n`;
 
@@ -92,7 +92,7 @@ test('a tool names its rule page with the rule placeholder and its crash pattern
     ).toThrow('regular expression');
 });
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the line limit.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Three cases parse the same manifest with a different suppression marker.
 const suppressionDefinition = (inline: string) => `
 [kit]
 name = "example"

@@ -7,7 +7,7 @@ import { QUIET_INIT } from '#tests/inputs/cli.ts';
  * @param without the recommended kits left out
  * @returns the argument list
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The init arguments that select the named kits and leave the named recommendations out. 19 files make 23 calls; one owner keeps that behavior in one place.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build init arguments that select kits and leave recommendations out this one way.
 export function initArgs(configurations: string[], without: string[] = []): string[] {
     return [
         'init',

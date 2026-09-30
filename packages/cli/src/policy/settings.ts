@@ -193,7 +193,7 @@ export function policyTables(policy: Policy, scope: string | undefined): PolicyL
  * @param value anything
  * @returns the value as a record, or undefined for primitives and null
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Narrows a value to a plain object. 3 files make 6 calls; one owner keeps that behavior in one place.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Policy readers narrow an unknown value to a plain object by this one test.
 export function asRecord(value: unknown): Record<string, unknown> | undefined {
     return typeof value === 'object' && value !== null ? (value as Record<string, unknown>) : undefined;
 }

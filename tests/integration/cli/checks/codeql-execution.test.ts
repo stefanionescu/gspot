@@ -23,7 +23,7 @@ const JAVASCRIPT_LANGUAGES = JSON.stringify({
     extractors: { javascript: [{}] },
 });
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the line limit.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Two cases write the same policy with a different CodeQL language.
 const policy = (value: string) =>
     policyOf(['security'], `[tools.codeql]\nlanguages = [${JSON.stringify(value)}]\n`, 'all');
 

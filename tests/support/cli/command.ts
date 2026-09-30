@@ -18,7 +18,7 @@ export const gspot = join(root, 'packages', 'cli', 'src', 'main.ts');
  * @param timeoutMs how long the command may run. A push stage on a slow runner passes the planted default.
  * @returns the exit code and both streams
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Runs gspot in a directory with color off and CI set. 143 files make 779 calls; one owner keeps that behavior in one place.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Every CLI test runs gspot with color off and CI set through this.
 export async function run(
     cwd: string,
     argv: string[],

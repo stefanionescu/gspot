@@ -19,12 +19,12 @@ import type {
 
 const state: { shipped: ShippedPolicy | undefined } = { shipped: undefined };
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Its callers sit at the complexity or length limit; inlining the expression pushes them over.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Three rule lists treat an empty list as no filter.
 function toSet(names: string[] | undefined): Set<string> | undefined {
     return names === undefined || names.length === 0 ? undefined : new Set(names);
 }
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Its callers sit at the complexity or length limit; inlining the expression pushes them over.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Shipped and written naming rules compile to one matcher shape.
 function compileRule(rule: ShippedRule, source: string): PathRule {
     return {
         isPath: pathMatcher(rule.paths),
@@ -40,7 +40,7 @@ function compileRule(rule: ShippedRule, source: string): PathRule {
     };
 }
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Its callers sit at the complexity or length limit; inlining the expression pushes them over.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Kit and policy naming rules use snake_case keys and rename to the shipped shape the same way.
 function writtenRule(rule: NamingRule, source: string): PathRule {
     const shaped: ShippedRule = {
         paths: rule.paths,
@@ -63,7 +63,7 @@ function reservedTerms(shipped: ShippedPolicy, naming: NamingSettings): Map<stri
     return reserved;
 }
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Its callers sit at the complexity or length limit; inlining the expression pushes them over.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The ceiling reads a scoped and then a general number setting the same way.
 function numberSetting(surface: ExposedSettings, policy: Policy, scope: string, key: string): number | undefined {
     const found = settingValue(surface, policy, key, scope);
     return typeof found?.value === 'number' ? found.value : undefined;
@@ -79,7 +79,7 @@ function limitsReader(
         const table: ShippedLanguage | undefined = shipped.languages[language];
         const parent = CATEGORY_PARENTS[category] ?? category;
         const prefix = `naming.${language}`;
-        // eslint-disable-next-line gspot/no-trivial-functions -- reason: Its callers sit at the complexity or length limit; inlining the expression pushes them over.
+        // eslint-disable-next-line gspot/no-trivial-functions -- reason: Character and word ceilings fall back through the same three steps.
         const ceiling = (slot: string, defaultLimit: number | undefined): number =>
             numberSetting(surface, policy, scope, `${prefix}.${parent}.${slot}`) ??
             numberSetting(surface, policy, scope, `${prefix}.${slot}`) ??
@@ -103,7 +103,7 @@ function shippedCase(table: ShippedLanguage | undefined, category: string, paren
  * The shipped policy, read once.
  * @returns the parsed bundled naming policy
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Its callers sit at the complexity or length limit; inlining the expression pushes them over.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Four readers share the shipped naming policy, which is parsed once and cached.
 export function shippedPolicy(): ShippedPolicy {
     state.shipped ??= JSON.parse(readAsset(POLICY_ASSET)) as ShippedPolicy;
     return state.shipped;

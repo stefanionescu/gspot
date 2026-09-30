@@ -28,7 +28,7 @@ function childNodes(node: TSESTree.Node, visitorKeys: Readonly<Record<string, re
  * @param visitorKeys the child keys of each node type, from the parser
  * @returns the count
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Count the executable statements of a function, including those of the functions written inside it. 2 files make 2 calls; one owner keeps that behavior in one place.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Both trivial rules count statements, those of nested functions included, through this one entry.
 export function totalStatements(
     node: ImplementedFunction,
     visitorKeys: Readonly<Record<string, readonly string[]>>,

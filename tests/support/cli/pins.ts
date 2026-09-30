@@ -7,7 +7,7 @@ import type { ToolPin } from '#cli/types/kits.ts';
  * @param version the pinned version
  * @returns the pin
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: A library pin installed through npm. 3 files make 9 calls; one owner keeps that behavior in one place.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Inspection tests build a library pin that npm installs this one way.
 export function libraryPin(name: string, version: string): ToolPin {
     return { name, kind: 'library', version, installers: { npm: { name, version } } };
 }
@@ -19,7 +19,7 @@ export function libraryPin(name: string, version: string): ToolPin {
  * @param npm the npm package that ships it
  * @returns the pin
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: A binary pin, installed through npm when a package name is given. 3 files make 18 calls; one owner keeps that behavior in one place.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Inspection tests build a binary pin, with an optional npm package, this one way.
 export function commandPin(name: string, version: string, npm?: string): ToolPin {
     return {
         name,

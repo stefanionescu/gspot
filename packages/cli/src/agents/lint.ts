@@ -163,7 +163,7 @@ function sizeFindings(file: string, lines: string[]): RuleFinding[] {
  * @param path the path relative to rules/
  * @returns whether the lint reads it
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: True when a path under rules/ is a guide: Markdown in a known layer folder. 1 files make 3 calls; one owner keeps that behavior in one place.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The guides-lint script and its tests share this one definition of a guide path.
 export function isRulePath(path: string): boolean {
     const top = path.split('/', 1)[0] ?? '';
     return path.endsWith('.md') && (top === 'general' || top === 'templates' || layerNames.has(top));

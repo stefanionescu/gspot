@@ -21,7 +21,7 @@ export function targetInScope(scope: string, config: ConfigurationTarget): strin
  * @param name the file's path under the configuration directory
  * @returns the repository-relative path
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The path of a generated file of a scope: the one place that spells where a scope's files sit. 1 files make 1 calls; one owner keeps that behavior in one place.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The one place that spells where the generated files of a scope sit.
 export function scopeFile(scope: string, name: string): string {
     return scope === '' ? `${GSPOT_DIRECTORY}${name}` : `${GSPOT_DIRECTORY}${scope}/${name}`;
 }

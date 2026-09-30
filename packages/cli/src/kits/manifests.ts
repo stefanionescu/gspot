@@ -140,7 +140,7 @@ export function kitManifests(): Map<string, Manifest> {
  * @param manifests the manifests whose untracked paths count, every one by default
  * @returns the block body
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The .gitignore block: the paths gspot writes that git never tracks. 5 files make 5 calls; one owner keeps that behavior in one place.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Init and apply write the same .gitignore block of the untracked gspot paths.
 export function gitignoreBlock(manifests: Iterable<Pick<Manifest, 'untracked'>> = kitManifests().values()): string {
     return [...new Set([...PRIVATE_PATHS, ...[...manifests].flatMap((manifest) => manifest.untracked)])].join('\n');
 }

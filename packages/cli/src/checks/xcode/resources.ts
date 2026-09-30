@@ -80,7 +80,7 @@ function orphanFindings(input: EngineInput, sets: string[]): Finding[] {
  * @param input the engine input
  * @returns the findings
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The findings of every string catalog: it parses, and every string has every locale the catalog uses. 1 files make 0 calls; one owner keeps that behavior in one place.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The entry point of the xcode-xcstrings check, which the analysis table names.
 export function stringFiles(input: EngineInput): Finding[] {
     return trackedEnding(input, ['.xcstrings']).flatMap((path) => stringFindings(input, path));
 }

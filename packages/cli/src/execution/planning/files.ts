@@ -143,14 +143,3 @@ export function filesFor(
     const selected = withoutExcluded(files, spec, scope);
     return { files: triggerPaths.length === 0 ? narrowed(context, entry, selected) : selected, triggerPaths };
 }
-
-/**
- * Whether a file lies outside every child scope.
- * @param file the tracked file
- * @param children the child scope paths
- * @returns true when no child scope holds the file
- */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The planner and the scope walker both read it; one owner keeps the containment test.
-export function isOutsideChildren(file: TrackedFile, children: string[]): boolean {
-    return children.every((child) => file.path !== child && !file.path.startsWith(`${child}/`));
-}

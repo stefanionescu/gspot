@@ -20,7 +20,7 @@ import {
     NATIVE_DEPENDENCIES,
 } from '#tests/inputs/acceptance/source/kits/react.ts';
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the line limit.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Every planted component opens with the same header comment and import.
 const head = (text: string): string => `// A planted component.\nimport type { ReactNode } from 'react';\n\n${text}`;
 const CLEAN = head(
     '/**\n * Greets one person.\n * @param props the person\n * @param props.name the name\n * @returns the greeting\n */\n// eslint-disable-next-line gspot/no-trivial-functions -- reason: React calls this component through its rendering API.\nexport function Greeting({ name }: Readonly<{ name: string }>): ReactNode {\n    return <p>{name}</p>;\n}\n',

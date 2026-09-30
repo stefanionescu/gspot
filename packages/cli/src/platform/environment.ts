@@ -6,7 +6,7 @@ import { join, isAbsolute } from 'node:path';
  * True under a CI runner, which sets CI.
  * @returns whether CI is set
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: True under a CI runner, which sets CI. 3 files make 2 calls; one owner keeps that behavior in one place.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Prompts and colors decide that they run under CI by the same variable.
 export function isCi(): boolean {
     return (process.env['CI'] ?? '') !== '';
 }

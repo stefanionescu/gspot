@@ -88,7 +88,7 @@ function tokens(text: string): Token[] {
 function parse(text: string): Plist {
     const input = tokens(text);
     let at = 0;
-    // eslint-disable-next-line gspot/no-trivial-functions -- reason: Its callers sit at the complexity or length limit; inlining the expression pushes them over.
+    // eslint-disable-next-line gspot/no-trivial-functions -- reason: The tokenizer tests the current bare word in six places.
     const is = (value: string): boolean => input[at]?.quoted === false && input[at]?.text === value;
     const take = (value: string): void => {
         if (!is(value))

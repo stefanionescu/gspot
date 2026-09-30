@@ -280,7 +280,7 @@ export function readPrefix(root: string, path: string, bytes: number): Buffer {
  * @returns the text
  * @throws when required content cannot be read
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Required file prefixes decoded as text for shebang and banner checks. 3 files make 6 calls; one owner keeps that behavior in one place.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Doctor and the tracked-file tests read the opening bytes of a file as text through this.
 export function head(root: string, path: string, bytes = NATURE_HEAD_BYTES): string {
     return readPrefix(root, path, bytes).toString('utf8');
 }

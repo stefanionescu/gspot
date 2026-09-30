@@ -35,7 +35,7 @@ Files outside app use 200 lines. Files in app inherit the JavaScript configurati
 
 `;
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Its callers sit at the complexity or length limit; inlining the expression pushes them over.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Three cells of the schema table escape HTML and pipes by this one rule.
 function schemaCell(value: string): string {
     return value
         .replaceAll('&', '&amp;')
@@ -80,7 +80,7 @@ function schemaRows(node: JSONSchema.JSONSchema | boolean, path: string, require
     ];
 }
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Its callers sit at the complexity or length limit; inlining the expression pushes them over.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Both sides of the setting comparison drop the same default keys.
 function comparable(setting: SettingSpec): Record<string, unknown> {
     return Object.fromEntries(
         Object.entries(setting).filter(([key]) => key !== 'default' && key !== 'default_all' && key !== 'detect'),

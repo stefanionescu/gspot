@@ -113,7 +113,7 @@ test('Ruff keeps pytest rules and scoped limits inside their selected project', 
     const app = parse(configs.find(({ path }) => path === '.gspot/config/app/ruff.toml')!.content);
     expect(root).toMatchObject({ lint: { pylint: { 'max-args': 7 } } });
     expect(app).toMatchObject({ lint: { pylint: { 'max-args': 3 }, select: containingAll(['PT001']) } });
-    // eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the line limit.
+    // eslint-disable-next-line gspot/no-trivial-functions -- reason: The runs call Ruff with the same flags on a different configuration and file.
     const run = (config: string, path: string) =>
         Bun.spawnSync(['ruff', 'check', '--config', config, '--no-cache', '--output-format', 'json', path], {
             cwd: sandbox.path,

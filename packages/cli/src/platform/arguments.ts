@@ -40,7 +40,7 @@ export function commandArguments(source: string): string[] {
  * @param name the camel-cased flag name
  * @returns the text
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: A text flag that returns undefined when absent or empty. 2 files make 5 calls; one owner keeps that behavior in one place.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Commands read a text flag the same way: absent and empty are both undefined.
 export function textFlag(flags: Record<string, unknown>, name: string): string | undefined {
     const value = flags[name];
     return typeof value === 'string' && value !== '' ? value : undefined;
@@ -52,7 +52,7 @@ export function textFlag(flags: Record<string, unknown>, name: string): string |
  * @param name the camel-cased flag name
  * @returns the items
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: A list flag that returns undefined when absent or empty. 3 files make 6 calls; one owner keeps that behavior in one place.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Commands read a list flag the same way: absent and empty are both undefined.
 export function listFlag(flags: Record<string, unknown>, name: string): string[] | undefined {
     const value = flags[name];
     return Array.isArray(value) && value.length > 0 ? value.map(String) : undefined;
@@ -63,7 +63,7 @@ export function listFlag(flags: Record<string, unknown>, name: string): string[]
  * @param global the global flags
  * @returns the directory
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The directory the global -C flag names, or the working directory. 12 files make 13 calls; one owner keeps that behavior in one place.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Every command resolves the folder of the global -C flag the same way.
 export function directoryOf(global: Record<string, unknown>): string {
     return resolve(textFlag(global, 'C') ?? process.cwd());
 }
@@ -75,7 +75,7 @@ export function directoryOf(global: Record<string, unknown>): string {
  * @param key the option key to set
  * @returns the object, empty when the flag is absent
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: A text flag as a single-key object when present, so it spreads into an options object with exact optional types. 5 files make 8 calls; one owner keeps that behavior in one place.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Commands spread an optional text flag into their options with exact optional types through this.
 export function textEntry<K extends string>(
     flags: Record<string, unknown>,
     name: string,

@@ -1,7 +1,7 @@
 import { test, expect, describe } from 'bun:test';
 import { lintRules, isRulePath } from '#cli/agents/lint.ts';
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Tests build this fixture; inlining it puts a test over the line limit.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The cases build a guide with the same front matter.
 function file(path: string, body: string): { path: string; text: string } {
     return { path, text: `---\nlayer: code\nkit: naming\ntitle: T\n---\n\n# T\n\n${body}` };
 }

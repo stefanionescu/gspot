@@ -91,7 +91,7 @@ function walkPattern(
  * @param path a path in the platform's form
  * @returns the path with forward slashes
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Forward slashes on every platform, for selectors, records, and output. 11 files make 18 calls; one owner keeps that behavior in one place.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Selectors, records, and output spell paths with forward slashes through this one conversion.
 export function toPosix(path: string): string {
     return sep === '/' ? path : path.split(sep).join('/');
 }
@@ -112,7 +112,7 @@ export function toolPath(path: string): string {
  * @param path a posix path
  * @returns the path in the platform's form
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The platform's form, for arguments handed to tools. 2 files make 6 calls; one owner keeps that behavior in one place.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Paths handed to tools take the separator of the platform through this one conversion.
 export function toPlatform(path: string): string {
     return sep === '/' ? path : path.split('/').join(sep);
 }
@@ -122,7 +122,7 @@ export function toPlatform(path: string): string {
  * @param path a posix path
  * @returns the base name
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The last segment of a posix path. 4 files make 8 calls; one owner keeps that behavior in one place.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Detection and the checks take the last segment of a repository path, which has forward slashes on every platform.
 export function baseName(path: string): string {
     const index = path.lastIndexOf('/');
     return index === -1 ? path : path.slice(index + 1);
@@ -146,7 +146,7 @@ export function extensionOf(path: string): string {
  * @param root the repository root
  * @returns the cache folder for this repository
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The private build cache for the canonical repository path. 6 files make 14 calls; one owner keeps that behavior in one place.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The Swift build and its tests locate the private build cache by this one hash of the real root path.
 export function buildFolder(root: string): string {
     const identity = createHash('sha256').update(realpathSync(root)).digest('hex');
     return join(cacheHome(), 'gspot', identity);

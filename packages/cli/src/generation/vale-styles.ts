@@ -19,21 +19,19 @@ function renderedRule(stem: string, text: string, view: MergedView): string {
  * @returns the generated files
  */
 export function styleFiles(policy: Policy, view: MergedView): GeneratedFile[] {
-    const rules = listAssets(STYLE_ASSETS)
-        .map((asset) => asset.slice(STYLE_ASSETS.length).replace(/\.yml$/u, ''))
-        .map((stem): GeneratedFile => {
-            const name = `${stem}.yml`;
-            const asset = `${STYLE_ASSETS}${name}`;
-            return {
-                path: `${STYLES_DIRECTORY}/${GSPOT_STYLE}/${name}`,
-                content:
-                    renderedRule(stem, readAsset(asset), view) +
-                    (stem === 'alt-text' && policy.level === 'all' ? "    - '!\\[(?:Image|Graphic|Picture) of'\n" : ''),
-                readOnly: true,
-                kind: 'config',
-                kit: 'prose',
-            };
-        });
+    const rules = styleNames().map((stem): GeneratedFile => {
+        const name = `${stem}.yml`;
+        const asset = `${STYLE_ASSETS}${name}`;
+        return {
+            path: `${STYLES_DIRECTORY}/${GSPOT_STYLE}/${name}`,
+            content:
+                renderedRule(stem, readAsset(asset), view) +
+                (stem === 'alt-text' && policy.level === 'all' ? "    - '!\\[(?:Image|Graphic|Picture) of'\n" : ''),
+            readOnly: true,
+            kind: 'config',
+            kit: 'prose',
+        };
+    });
     const shipped = readAsset('kits/general/prose/vocabularies/gspot/accept.txt').trim().split(/\r?\n/u);
     const vocabulary = [...new Set([...shipped, ...policy.prose.vocabulary])].toSorted((a, b) => a.localeCompare(b));
     const base = `${STYLES_DIRECTORY}/config/vocabularies/${GSPOT_STYLE}`;
@@ -53,7 +51,7 @@ export function styleFiles(policy: Policy, view: MergedView): GeneratedFile[] {
  * Bundled Vale style names shared by configuration and asset generation.
  * @returns the style names
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The template inputs read the style names through it; one owner keeps the asset listing.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The style files and the Vale configuration list the bundled styles the same way.
 export function styleNames(): string[] {
     return listAssets(STYLE_ASSETS).map((asset) => asset.slice(STYLE_ASSETS.length).replace(/\.yml$/u, ''));
 }

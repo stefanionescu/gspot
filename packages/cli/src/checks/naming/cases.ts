@@ -34,7 +34,7 @@ export const CASE_NAMES = [...CHECKS.keys()];
  * @param caseName one of camel, pascal, pascal-plus, kebab, snake, upper-snake, snake-migration.
  * @returns whether it matches; an unknown case name never matches.
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: True when the name has the case. 2 files make 5 calls; one owner keeps that behavior in one place.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Validation and its tests look up a case checker by name, and an unknown case never matches.
 export function hasCase(name: string, caseName: string): boolean {
     return CHECKS.get(caseName)?.(name) ?? false;
 }

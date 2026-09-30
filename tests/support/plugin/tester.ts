@@ -18,7 +18,7 @@ RuleTester.describeSkip = describe.skip;
  * @param root the repository root the rules resolve paths against
  * @returns the tester
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: A rule tester using the TypeScript parser and a fixed repository root. 27 files make 28 calls; one owner keeps that behavior in one place.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Every plugin rule test uses the TypeScript parser and a fixed repository root through this.
 export function tester(root = '/repo'): RuleTester {
     return new RuleTester({
         languageOptions: {

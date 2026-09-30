@@ -85,7 +85,7 @@ export function nodesOf(list: unknown, kind: string): SqlNode[] {
  * @param field the field
  * @returns the text
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The text of a field, or an empty string when the field holds something else. 2 files make 18 calls; one owner keeps that behavior in one place.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: SQL readers take the text of a field, or '' for any other value, by this one rule.
 export function textOf(field: unknown): string {
     return typeof field === 'string' ? field : '';
 }
@@ -95,7 +95,7 @@ export function textOf(field: unknown): string {
  * @param list the field
  * @returns each part
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The texts of a list of String nodes, such as a qualified name. 2 files make 4 calls; one owner keeps that behavior in one place.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Names, keys, and grants read a list of String nodes the same way.
 export function partsOf(list: unknown): string[] {
     return nodesOf(list, 'String').map((node) => textOf(node['sval']));
 }

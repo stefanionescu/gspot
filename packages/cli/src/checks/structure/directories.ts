@@ -6,7 +6,7 @@ import type { TrackedFile } from '#cli/types/repository/repository.ts';
  * @param path the path
  * @returns the directory
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The directory of a path, '' at the root. 5 files make 6 calls; one owner keeps that behavior in one place.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Structure checks key folders by '' at the root, where posix.dirname gives '.'.
 export function directoryOf(path: string): string {
     const slash = path.lastIndexOf('/');
     return slash === -1 ? '' : path.slice(0, slash);

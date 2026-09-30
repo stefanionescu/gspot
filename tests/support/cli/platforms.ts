@@ -37,16 +37,6 @@ export function keptMode(mode: number): number {
 }
 
 /**
- * The permission bits a directory keeps on this machine; Windows reports every directory as 0o777.
- * @param mode the mode a test requested on a POSIX system
- * @returns the mode the directory reports here
- */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Directory modes have one owner beside the file modes, so a test never spells the Windows value.
-export function keptDirectoryMode(mode: number): number {
-    return process.platform === 'win32' ? 0o777 : mode;
-}
-
-/**
  * An executable of a Python virtual environment: Scripts/<name>.exe on Windows, bin/<name> elsewhere.
  * @param environment the environment directory, absolute or relative
  * @param name the console script or interpreter name
