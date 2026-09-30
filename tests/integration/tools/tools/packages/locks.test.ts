@@ -10,7 +10,7 @@ import { applyAll } from '#cli/commands/apply/workflow.ts';
 import { rejection } from '#tests/support/expectations.ts';
 import { gspot as CLI } from '#tests/support/cli/command.ts';
 import { installPackageProject } from '#cli/tools/packages/project.ts';
-import { chmodSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { LOCKS, PACKAGE_PROJECTS } from '#tests/inputs/integration/tools/packages.ts';
 import { readPackageInputs, createPackageProject } from '#tests/support/cli/package-project.ts';
 
@@ -62,7 +62,7 @@ test.each(PACKAGE_PROJECTS)(
     120_000,
 );
 test.each(PACKAGE_PROJECTS)(
-    '%s from %s with %s preserves lock conflicts until the package manager pin is corrected',
+    '%s from %s with %s leaves a lock conflict until the package manager pin is corrected, then regenerates the lock',
     async (client, projectPath, runner) => {
         await using fixture = await createPackageProject(client, projectPath, runner);
         const { root, rootPackage } = fixture;
@@ -92,12 +92,9 @@ ${lock.toString('utf8')}
         const repaired = await applyAll(await openSession(root));
         expect(repaired.written).toContain(`.gspot/${LOCKS[client]}`);
         expect(repaired.notes.filter((note) => note.startsWith('preserved'))).toStrictEqual([]);
-        const recovery = join(root, '.gspot/state/recovery');
-        expect(
-            readdirSync(recovery, { recursive: true })
-                .filter((path) => String(path).endsWith('.original'))
-                .some((path) => readFileSync(join(recovery, String(path)), 'utf8') === conflict),
-        ).toBe(true);
+        expect(readFileSync(lockPath, 'utf8')).not.toContain('<<<<<<<');
+        // The conflicted lock was a generated file, so no copy of it is kept.
+        expect(existsSync(join(root, '.gspot/state/recovery'))).toBe(false);
     },
     120_000,
 );
