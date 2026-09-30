@@ -6,7 +6,7 @@ pinned, installed, verified, and upgraded. gspot pins, the package managers inst
 
 ## Installing gspot
 
-gspot is one npm package named `gspot`. It is written in TypeScript and bundled to plain
+gspot is one npm package, `@gspothq/cli`, whose command is `gspot`. It is written in TypeScript and bundled to plain
 JavaScript. It runs on Node.js 22 or newer and on Bun, on every system those run on. It has no per-system
 builds and no install script. Three ways to get it:
 
@@ -38,13 +38,15 @@ Both places carry the same version from one release run:
 | npm         | `@gspothq/cli` and `@gspothq/eslint-plugin` | `npx gspot`, mise, CI, and `.gspot/package.json`       |
 | `gspot.dev` | the manual and `gspot.schema.json`          | the `#:schema` line of every `gspot.toml`, and editors |
 
-The `gspot` package holds the bundle in `dist/`, the kits, the guides, and the grammar files
+The `@gspothq/cli` package holds the bundle in `dist/`, the kits, the guides, and the grammar files
 with their licenses. The GitHub release carries notes only.
 
 The first release needs these, in this order:
 
-1. The npm org `gspothq` for `@gspothq/cli` and `@gspothq/eslint-plugin`, and an `NPM_TOKEN`
-   secret that can publish them. The `@gspot` scope belongs to another npm account.
+1. The npm org `gspothq` for `@gspothq/cli` and `@gspothq/eslint-plugin`, a first version of each
+   published by hand, and `release.yml` added to each as its trusted publisher. The release job
+   then publishes through OpenID Connect, with no stored token. The `@gspot` scope belongs to
+   another npm account.
 2. A public repository.
 3. The domain that serves the manual.
 4. The Windows job green.

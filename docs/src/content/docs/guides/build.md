@@ -95,12 +95,24 @@ Then it installs them into new projects and runs real findings and fixes under N
 ## Release
 
 The release workflow runs the full CI, builds both packages, and runs `test:package`. Then it
-publishes `@gspothq/eslint-plugin` and `@gspothq/cli` to npm with the `NPM_TOKEN` secret, and creates a
-GitHub release with notes. The Git tag must match the version in `packages/cli/package.json`.
+publishes `@gspothq/eslint-plugin` and `@gspothq/cli` to npm, and creates a GitHub release with
+notes. The Git tag must match the version in `packages/cli/package.json`.
 
-The README badge says **unreleased** until the `gspot` package is on npm. After the first
-release, confirm the package, then replace the badge with
-`https://img.shields.io/npm/v/gspot.svg` linked to `https://www.npmjs.com/package/gspot`:
+The workflow publishes through npm trusted publishing: npm trades the OpenID Connect token of the
+job for a publish token that lasts one run, and records provenance. No npm token is stored as a
+secret. npm links a trusted publisher only to a package that exists, so the first version of
+each package is published by hand:
+
+1. Sign in with `npm login` as a member of the `gspothq` org.
+2. Run `mise run build`. Then run `npm publish --access public` in `packages/eslint-plugin`,
+   and again in `packages/cli`.
+3. On npmjs.com, open the settings of each package and add a trusted publisher: GitHub Actions,
+   the repository `stefanionescu/gspot`, the workflow `release.yml`, and the environment
+   `release`.
+
+The README badge says **unreleased** until `@gspothq/cli` is on npm. After the first release,
+confirm the package, then replace the badge with `https://img.shields.io/npm/v/@gspothq/cli.svg`
+linked to `https://www.npmjs.com/package/@gspothq/cli`:
 
 ```shell
 npm view @gspothq/cli@0.1.0 name version repository --registry=https://registry.npmjs.org

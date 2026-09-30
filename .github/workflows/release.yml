@@ -41,17 +41,15 @@ jobs:
                   TAG: ${{ github.ref_name }}
             - run: mise run --skip-tools build
             - run: mise run --skip-tools test:package
+            # npm trusted publishing: npm trades this job's OIDC token for a publish token that lasts one run, and
+            # records provenance. Each package names this workflow and the release environment as its trusted
+            # publisher on npmjs.com, so no token is stored anywhere.
             - name: Publish the packages to npm
               shell: bash
               run: |
-                  npmrc="${RUNNER_TEMP}/publish.npmrc"
-                  printf '//registry.npmjs.org/:_authToken=%s\n' "${NPM_TOKEN}" > "${npmrc}"
                   for package in packages/eslint-plugin packages/cli; do
-                      npm publish "./${package}" --provenance --access public --userconfig "${npmrc}"
+                      npm publish "./${package}" --access public
                   done
-                  rm -f "${npmrc}"
-              env:
-                  NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
             - name: Create the GitHub release
               shell: bash
               run: gh release create "${TAG}" --title "${TAG}" --generate-notes

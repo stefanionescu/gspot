@@ -164,12 +164,12 @@ the package manifest import, and the plugin exposes it in `meta.version`. The re
 fails when the tag differs. It runs the `test:package` task before publishing: both packages
 are published to a local registry, installed into new projects, and run under Node.
 
-| Step           | Tool                                                                                                              |
-| -------------- | ----------------------------------------------------------------------------------------------------------------- |
-| Build          | `mise run build` and `mise run build:plugin`                                                                      |
-| npm            | `npm publish --provenance` for `@gspothq/eslint-plugin`, then `@gspothq/cli`, in one job at one version           |
-| GitHub release | `gh release create` with generated notes and no files                                                             |
-| Docs           | Astro Starlight; `starlight-llms-txt` writes `llms.txt`, `llms-full.txt` and `llms-small.txt` from the same pages |
+| Step           | Tool                                                                                                                  |
+| -------------- | --------------------------------------------------------------------------------------------------------------------- |
+| Build          | `mise run build` and `mise run build:plugin`                                                                          |
+| npm            | `npm publish` through trusted publishing for `@gspothq/eslint-plugin`, then `@gspothq/cli`, in one job at one version |
+| GitHub release | `gh release create` with generated notes and no files                                                                 |
+| Docs           | Astro Starlight; `starlight-llms-txt` writes `llms.txt`, `llms-full.txt` and `llms-small.txt` from the same pages     |
 
 ## Tests
 
