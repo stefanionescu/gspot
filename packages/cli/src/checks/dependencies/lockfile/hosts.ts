@@ -1,7 +1,7 @@
 import { readSource } from '#cli/repository/tracked.ts';
-import { LOCKFILE_URL } from '#cli/config/checks/repository.ts';
 import type { Finding, EngineInput } from '#cli/types/checks.ts';
 import { LOCKFILES } from '#cli/config/repository/repository.ts';
+import { LOCKFILE_URL, NPM_DOWNLOAD, NPM_LOCKFILES } from '#cli/config/checks/repository.ts';
 
 function problem(url: URL, hosts: Set<string>): string | undefined {
     if (url.protocol !== 'https:') return `${url.href} is not HTTPS.`;
@@ -10,11 +10,15 @@ function problem(url: URL, hosts: Set<string>): string | undefined {
 
 function fileFindings(input: EngineInput, path: string, hosts: Set<string>): Finding[] {
     const lines = readSource(input.root, path, input.reads).toString('utf8').split('\n');
+    // An npm lockfile also holds funding pages and deprecation notes; only its resolved field names a download.
+    const isNpm = NPM_LOCKFILES.has(path.slice(path.lastIndexOf('/') + 1));
     return lines.flatMap((text, index) =>
-        text
-            .matchAll(LOCKFILE_URL)
-            .flatMap((match) => {
-                const said = URL.canParse(match[0]) ? problem(new URL(match[0]), hosts) : undefined;
+        (isNpm
+            ? text.matchAll(NPM_DOWNLOAD).map((match) => match[1] ?? '')
+            : text.matchAll(LOCKFILE_URL).map((match) => match[0])
+        )
+            .flatMap((url) => {
+                const said = URL.canParse(url) ? problem(new URL(url), hosts) : undefined;
                 if (said === undefined) return [];
                 return [
                     {

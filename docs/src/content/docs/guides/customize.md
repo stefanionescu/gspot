@@ -73,6 +73,16 @@ gspot set limits.function_lines 80 --reason "The parser is one state machine."
 With `require_reasons = true`, loosening a limit needs a reason. Tightening one does not. The
 JavaScript and TypeScript size limits apply to test files and test functions too.
 
+At level `all`, gspot reports functions with 2 statements or fewer, in every language it
+checks. To change the number for every language, or for one language:
+
+```bash
+gspot set limits.trivial_statements 1
+gspot set limits.python.trivial_statements 4
+```
+
+Any whole number of 1 or more works. A higher number reports more functions.
+
 More ways to write a setting:
 
 - `--scope api` writes the setting in the scope `api`.

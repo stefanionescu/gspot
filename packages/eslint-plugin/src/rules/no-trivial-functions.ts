@@ -35,6 +35,18 @@ function hasInheritedContract(node: ImplementedFunction, source: TSESLint.Source
     return isMethodDeclaration(implementation) && implementsMember(implementation, program.getTypeChecker());
 }
 
+// The language forces these functions to exist: nothing can take their place at the call site.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The exit handler sits at the complexity limit; inlining these five conditions pushes it over.
+function isRequired(node: ImplementedFunction, source: TSESLint.SourceCode): boolean {
+    return (
+        node.returnType?.typeAnnotation.type === AST_NODE_TYPES.TSTypePredicate ||
+        isInlineValue(node) ||
+        isRecursive(node, source) ||
+        hasDeclaredSignature(node) ||
+        hasInheritedContract(node, source)
+    );
+}
+
 export const noTrivialFunctions = createRule<NoTrivialFunctionsOptions, 'trivial'>({
     name: 'no-trivial-functions',
     meta: {
@@ -52,7 +64,7 @@ export const noTrivialFunctions = createRule<NoTrivialFunctionsOptions, 'trivial
         schema: [optionsSchema({ maxStatements: { type: 'integer', minimum: 1 } })],
         messages: {
             trivial:
-                'This function has {{count}} executable statements, at most {{max}}. Inline it or explain its required API with a narrow suppression.',
+                'This function has {{statements}}. Functions with {{max}} or fewer are reported. Inline it into its callers, or explain the API it serves in a narrow suppression.',
         },
     },
     defaultOptions: [{ maxStatements: 2 }],
@@ -63,15 +75,12 @@ export const noTrivialFunctions = createRule<NoTrivialFunctionsOptions, 'trivial
                 node: ImplementedFunction,
             ) {
                 const count = totalStatements(node, context.sourceCode.visitorKeys);
-                // The language forces these functions to exist: nothing can take their place at the call site.
-                const required =
-                    node.returnType?.typeAnnotation.type === AST_NODE_TYPES.TSTypePredicate ||
-                    isInlineValue(node) ||
-                    isRecursive(node, context.sourceCode) ||
-                    hasDeclaredSignature(node) ||
-                    hasInheritedContract(node, context.sourceCode);
-                if (count > max || required) return;
-                context.report({ node, messageId: 'trivial', data: { count, max } });
+                if (count > max || isRequired(node, context.sourceCode)) return;
+                context.report({
+                    node,
+                    messageId: 'trivial',
+                    data: { statements: count === 1 ? '1 statement' : `${String(count)} statements`, max },
+                });
             },
         };
     },

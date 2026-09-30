@@ -102,6 +102,26 @@ describe('the reporter', () => {
     });
 });
 
+test('findings that share a help print it once, after the last of them', () => {
+    const [shellcheck] = report.checks;
+    const [finding] = shellcheck!.findings;
+    const shared: RunReport = {
+        ...report,
+        checks: [
+            {
+                ...shellcheck!,
+                findings: [finding!, { ...finding!, line: 9 }, { ...finding!, line: 12, help: 'Quote the path.' }],
+            },
+        ],
+    };
+    const lines = stripVTControlCharacters(runText(shared, { quiet: false, verbose: false })).split('\n');
+    expect(lines.filter((line) => line === '    help: Quote it.')).toHaveLength(1);
+    expect(lines.indexOf('    help: Quote it.')).toBe(
+        lines.indexOf('  a.sh:9:3  SC2086  Double quote to prevent globbing.') + 1,
+    );
+    expect(lines).toContain('    help: Quote the path.');
+});
+
 describe('the program', () => {
     test('an unknown command exits 2', async () => {
         const original = process.stderr.write.bind(process.stderr);

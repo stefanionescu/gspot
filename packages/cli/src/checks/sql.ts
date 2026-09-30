@@ -1,6 +1,7 @@
 import { readSource } from '#cli/repository/tracked.ts';
 import { parseSql, parsePlpgsql } from '#cli/parsers/sql/parser.ts';
 import { sqlFile, positionAt } from '#cli/parsers/sql/statements.ts';
+import { trivialFunctionText } from '#cli/checks/structure/statements.ts';
 import type { SqlFile, SqlStatementView } from '#cli/types/parsers/sql.ts';
 import { DEFAULT_TRIVIAL_STATEMENTS } from '#cli/config/checks/structure.ts';
 import type { Engine, Finding, SqlSource, EngineInput, SqlAnalysis, FunctionOption } from '#cli/types/checks.ts';
@@ -120,7 +121,7 @@ async function functionFindings(
                 analysis,
                 statement,
                 'trivial-function',
-                `This function has ${String(statements)} executable statements, at most ${String(threshold)}. Inline it or suppress its required API with a reason.`,
+                trivialFunctionText('This function', statements, threshold),
             ),
         );
     return { findings, isTrivial };

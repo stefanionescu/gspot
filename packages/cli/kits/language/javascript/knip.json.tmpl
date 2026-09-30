@@ -20,7 +20,7 @@ const workspaces = Object.fromEntries(paths.map((path) => [path === '' ? '.' : p
     "entry": <%= json(entryFiles('')) %>,
     "project": ["**/*.{ts,tsx,mts,cts,js,mjs,cjs}"],
     "ignore": <%= json(['.gspot/**', 'eslint.config.{js,mjs,cjs}', ...(tool('knip').exclude ?? []).flatMap((entry) => entry.paths ?? []), ...policy.declarations.flatMap((entry) => entry.paths)]) %>,
-    "ignoreDependencies": <%= json(["eslint-plugin-gspot", "eslint-config-prettier", "prettier", "@socketsecurity/bun-security-scanner", ...toolPackages, ...ignoredNames(undefined)]) %>,
+    "ignoreDependencies": <%= json(["gspot", "eslint-plugin-gspot", "eslint-config-prettier", "prettier", "@socketsecurity/bun-security-scanner", ...toolPackages, ...ignoredNames(undefined)]) %>,
     "ignoreBinaries": <%= json([...tools, "vale", "git", "mise", "bunx", "npx"]) %>,
     "ignoreExportsUsedInFile": true,
     "workspaces": <%= json(workspaces) %><% const extras = extra('knip'); if (extras) { for (const [key, value] of Object.entries(extras)) { if (key !== 'reason') { %>,

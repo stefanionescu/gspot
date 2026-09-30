@@ -137,3 +137,16 @@ export function trivialFile(root: Node, language: Language, threshold: number): 
     });
     return statements.length > 0 && !statements.some((child) => isSubstantial(child, language, threshold));
 }
+
+/**
+ * The message for a function at or under the statement limit.
+ * @param name what the message calls the function, such as its name or "This function"
+ * @param count the executable statements it holds
+ * @param threshold the statement limit
+ * @returns the message
+ */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Five engines report trivial functions; one owner keeps their wording the same.
+export function trivialFunctionText(name: string, count: number, threshold: number): string {
+    const statements = count === 1 ? '1 statement' : `${String(count)} statements`;
+    return `${name} has ${statements}. Functions with ${String(threshold)} or fewer are reported. Inline it into its callers, or explain the API it serves in a narrow suppression.`;
+}

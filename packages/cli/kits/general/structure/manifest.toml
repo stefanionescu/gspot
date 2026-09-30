@@ -303,7 +303,7 @@ kind = "number"
 direction = "floor"
 default = 2
 languages = ["typescript", "javascript", "python", "swift", "bash", "sql"]
-summary = "Every implemented function with this many executable statements or fewer is reported. Increasing this positive integer tightens enforcement."
+summary = "Functions with this many statements or fewer are reported. Any whole number of 1 or more works, and a higher number reports more functions. Set it for one language under limits.<language>."
 
 [[settings]]
 name = "limits.file_size_kb"

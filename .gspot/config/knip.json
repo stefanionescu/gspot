@@ -24,6 +24,7 @@
     "project": ["**/*.{ts,tsx,mts,cts,js,mjs,cjs}"],
     "ignore": [".gspot/**", "eslint.config.{js,mjs,cjs}"],
     "ignoreDependencies": [
+        "gspot",
         "eslint-plugin-gspot",
         "eslint-config-prettier",
         "prettier",

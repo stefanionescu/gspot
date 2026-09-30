@@ -1,7 +1,7 @@
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
-import { trivialFile } from '#cli/checks/structure/statements.ts';
 import type { StructureAnalysis as Analysis } from '#cli/types/checks.ts';
 import { DEFAULT_TRIVIAL_STATEMENTS } from '#cli/config/checks/structure.ts';
+import { trivialFile, trivialFunctionText } from '#cli/checks/structure/statements.ts';
 
 /**
  * Report shell functions and files at or below the executable statement threshold.
@@ -20,7 +20,7 @@ export const trivialFunction: Analysis = async (context, scripts) => {
                           file.path,
                           entry.start,
                           'trivial-function',
-                          `${entry.name} has ${String(entry.statements)} executable statements, at most ${String(threshold)}. Inline it or suppress its required API with a reason.`,
+                          trivialFunctionText(entry.name, entry.statements, threshold),
                       ),
                   ]
                 : [],

@@ -66,6 +66,9 @@ export const DEPENDENCY_TABLES = ['dependencies', 'devDependencies', 'optionalDe
 export const EXACT_VERSION = /^\d+\.\d+\.\d+$|^\d+\.\d+\.\d+[-+][\w.+-]+$/u;
 export const NON_REGISTRY_VERSION = /^(?:workspace:|file:|link:|git\+|github:|https?:|catalog:|npm:)/u;
 export const LOCKFILE_URL = /\b(?:https?|git\+https?|git\+ssh|git):\/\/[^\s"',)\]]+/gu;
+/** The npm lockfiles, and the one field of theirs that names where a package downloads from. */
+export const NPM_LOCKFILES = new Set(['package-lock.json', 'npm-shrinkwrap.json']);
+export const NPM_DOWNLOAD = /"resolved"\s*:\s*"([^"]+)"/gu;
 export const STALE_LOCK_DIAGNOSTICS: Record<string, RegExp> = {
     bun: /lockfile had changes, but lockfile is frozen/u,
     npm: /can only install packages when your package\.json and package-lock\.json or npm-shrinkwrap\.json are in sync/u,

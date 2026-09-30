@@ -8,9 +8,9 @@ import { openRoot } from '#cli/platform/filesystem.ts';
 import { miseHome } from '#cli/platform/environment.ts';
 import { MANAGED_PREFIX } from '#cli/config/tools/tools.ts';
 import { statSync, readFileSync, realpathSync } from 'node:fs';
-import { join, dirname, relative, isAbsolute } from 'node:path';
 import type { Package, PrivateKind } from '#cli/types/tools/tools.ts';
-import { NODE_MODULES_DIRECTORY, PYTHON_ENVIRONMENT_DIRECTORY } from '#cli/config/platform.ts';
+import { join, dirname, basename, relative, isAbsolute } from 'node:path';
+import { GSPOT_FOLDER, NODE_MODULES_DIRECTORY, PYTHON_ENVIRONMENT_DIRECTORY } from '#cli/config/platform.ts';
 
 const IS_WINDOWS = process.platform === 'win32';
 
@@ -25,8 +25,13 @@ function searchDirectories(
     if (privateKind === 'npm') return [join(installedRoot, NODE_MODULES_DIRECTORY, '.bin')];
     const binary = IS_WINDOWS ? 'Scripts' : 'bin';
     if (privateKind === 'python') return [join(installedRoot, PYTHON_ENVIRONMENT_DIRECTORY, binary)];
+    // A snapshot links the private tools of gspot instead of copying them, so they are searched in the working tree.
     return [...new Set(roots)].flatMap((searched) => [
-        join(searched, 'node_modules', '.bin'),
+        join(
+            basename(searched) === GSPOT_FOLDER ? join(installedRoot, relative(root, searched)) : searched,
+            'node_modules',
+            '.bin',
+        ),
         join(installedRoot, relative(root, searched), '.venv', binary),
     ]);
 }

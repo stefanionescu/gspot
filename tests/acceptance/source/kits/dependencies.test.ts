@@ -17,7 +17,7 @@ const CLEAN = `{\n    "name": "planted",\n    "version": "1.0.0",\n    "private"
 const RANGED = `{\n    "name": "planted",\n    "version": "1.0.0",\n    "private": true,\n    "packageManager": "bun@${Bun.version}",\n    "dependencies": {\n        "left-pad": "^1.3.0"\n    }\n}\n`;
 const PUBLIC_ROOT = `{\n    "name": "planted",\n    "version": "1.0.0",\n    "packageManager": "bun@${Bun.version}",\n    "workspaces": ["packages/*"]\n}\n`;
 const FOREIGN_LOCK =
-    '{\n    "packages": { "node_modules/a": { "resolved": "https://registry.example.test/a/-/a-1.0.0.tgz" } }\n}\n';
+    '{\n    "packages": { "node_modules/a": { "resolved": "https://registry.example.test/a/-/a-1.0.0.tgz", "funding": { "url": "https://opencollective.com/a" } } }\n}\n';
 
 plantedCases(
     'the dependencies configuration',

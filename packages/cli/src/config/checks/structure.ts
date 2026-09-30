@@ -141,7 +141,17 @@ export const NEST_KINDS = new Set([
 export const SCRIPT_ENDING = /\.[cm]?[jt]s$/u;
 export const INDEX_STEMS = new Set(['index', 'mod', '__init__']);
 // A tool names these files and finds them by that name, so a folder holds several of them by design.
-export const TOOL_PREFIXES = new Set(['tsconfig', 'jsconfig', 'vitest', 'vite', 'docker', 'eslint', 'playwright']);
+export const TOOL_PREFIXES = new Set([
+    'tsconfig',
+    'jsconfig',
+    'vitest',
+    'vite',
+    'docker',
+    'eslint',
+    'playwright',
+    'package',
+    'pnpm',
+]);
 /** The statement count at or under which a function is trivial, when no limit is set. */
 export const DEFAULT_TRIVIAL_STATEMENTS = 2;
 

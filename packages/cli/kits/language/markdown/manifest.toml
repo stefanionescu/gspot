@@ -17,7 +17,7 @@ kinds = ["source"]
 name = "markdownlint-cli2"
 rule_page = "https://github.com/DavidAnson/markdownlint/blob/main/doc/{rule}.md"
 suppression = {marker = "\\bmarkdownlint-disable(?:-line|-next-line|-file)?\\b", reason = " -- (?<reason>\\S.*)"}
-version = "0.23.2"
+version = "0.23.3"
 npm = "markdownlint-cli2"
 mise = "npm:markdownlint-cli2"
 version_command = ["--help"]

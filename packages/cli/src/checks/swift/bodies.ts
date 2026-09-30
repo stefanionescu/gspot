@@ -1,5 +1,5 @@
-import { executableStatements } from '#cli/checks/structure/statements.ts';
 import type { SwiftFunction, StructureProblem } from '#cli/types/checks.ts';
+import { trivialFunctionText, executableStatements } from '#cli/checks/structure/statements.ts';
 /**
  * Report every implemented function at or below the configured statement threshold.
  * @param functions the functions of a file
@@ -15,7 +15,7 @@ export function trivialFunctions(functions: SwiftFunction[], threshold: number):
                       file: fn.path,
                       line: fn.node.startPosition.row + 1,
                       rule: 'trivial-function',
-                      text: `${fn.name} has ${String(count)} executable statements, at most ${String(threshold)}. Inline it or suppress its required API with a reason.`,
+                      text: trivialFunctionText(fn.name, count, threshold),
                   },
               ]
             : [];

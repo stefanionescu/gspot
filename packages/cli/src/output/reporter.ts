@@ -65,11 +65,14 @@ function location(finding: Finding): string {
     return `${finding.file}${line}${column}  `;
 }
 
-function findingLines(finding: Finding, colors: Colors): string[] {
+// The lines of one finding. Its help follows unless the next finding shares it, so a run of findings with the same
+// help prints it once, after the last of them.
+function findingLines(finding: Finding, colors: Colors, next?: Finding): string[] {
     const { dim, cyan } = colors;
     const rule = cyan(finding.rule ?? finding.check);
     const lines = [`  ${location(finding)}${rule}  ${finding.message}`];
-    if (finding.help !== undefined && finding.help !== '') lines.push(`    ${dim('help:')} ${finding.help}`);
+    if (finding.help !== undefined && finding.help !== '' && next?.help !== finding.help)
+        lines.push(`    ${dim('help:')} ${finding.help}`);
     return lines;
 }
 
@@ -81,7 +84,7 @@ function checkTail(check: CheckResult): string {
 
 function failureLines(check: CheckResult, options: ReporterOptions, colors: Colors): string[] {
     const shown = options.verbose ? check.findings : check.findings.slice(0, FINDINGS_SHOWN);
-    const lines = shown.flatMap((finding) => findingLines(finding, colors));
+    const lines = shown.flatMap((finding, index) => findingLines(finding, colors, shown[index + 1]));
     const hidden = check.findings.length - shown.length;
     if (hidden > 0) {
         const more = `and ${String(hidden)} more (--verbose prints every finding)`;

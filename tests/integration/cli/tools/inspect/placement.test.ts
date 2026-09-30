@@ -121,3 +121,16 @@ test('a private Python pin refuses a project executable and uses its own environ
     });
     expect(existsSync(join(sandbox.path, 'fallback-ran'))).toBe(false);
 });
+
+test('a snapshot finds a missing native tool missing, through the private tools it links from the working tree', async () => {
+    await using directory = await testdir();
+    await createFileTree(directory.path, {
+        'work/.gspot/node_modules/.bin/.keep': '',
+        'snapshot/.gspot/package.json': '{}',
+    });
+    const working = join(directory.path, 'work');
+    const root = join(directory.path, 'snapshot');
+    symlinkSync(join(working, '.gspot/node_modules'), join(root, '.gspot/node_modules'), 'dir');
+    const context = { root, inspections: new Map(), installedRoot: working };
+    expect(inspectTool(context, commandPin('absent-native-tool', '1.0.0')).state).toBe('missing');
+});

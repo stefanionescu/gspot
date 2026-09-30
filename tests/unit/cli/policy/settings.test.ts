@@ -29,6 +29,21 @@ test.each(['sqlite\nexclude_rules = ALL', 'postgres\rtemplater = jinja', '', '[s
     },
 );
 
+test('the trivial statement limit takes any whole number of 1 or more, for all languages or for one', () => {
+    for (const limits of ['[limits]\ntrivial_statements = 0\n', '[limits.python]\ntrivial_statements = 0\n'])
+        expect(() => parsePolicyText(policyOf([], limits), 'gspot.toml')).toThrow('must be 1 or more');
+    for (const value of [1, 2, 50, 1000])
+        expect(() =>
+            parsePolicyText(
+                policyOf(
+                    [],
+                    `[limits]\ntrivial_statements = ${String(value)}\n[limits.swift]\ntrivial_statements = ${String(value)}\n`,
+                ),
+                'gspot.toml',
+            ),
+        ).not.toThrow();
+});
+
 describe('conflicting configuration defaults', () => {
     const sql = kitManifests().get('sql')!;
     const settings = exposedSettings([

@@ -67,6 +67,11 @@ test('prefix checks group files and directories once and honor allowances and th
         'paired/api.d.ts': '',
         'paired/social.png': '',
         'paired/social.svg': '',
+        // The package managers fix these names.
+        'npm/package.json': '{}',
+        'npm/package-lock.json': '{}',
+        'pnpm/pnpm-lock.yaml': '',
+        'pnpm/pnpm-workspace.yaml': '',
     });
     const options = {
         stage: 'all' as const,

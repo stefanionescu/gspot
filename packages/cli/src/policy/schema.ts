@@ -21,14 +21,18 @@ const reasonedNumber = reasoned(z.number());
 
 const reasonedTextList = reasoned(textList);
 
-const limitTable = z
-    .object({ trivial_statements: reasoned(z.number().int().positive()).optional() })
-    .catchall(reasonedNumber);
+// A function with this many statements or fewer is trivial. Any whole number of 1 or more is allowed.
+const statementLimit = reasoned(
+    z
+        .number()
+        .int('must be a whole number of statements')
+        .min(1, 'must be 1 or more: a function with 0 statements does nothing'),
+);
+
+const limitTable = z.object({ trivial_statements: statementLimit.optional() }).catchall(reasonedNumber);
 
 const limitValue = z.union([reasonedNumber, limitTable]);
-const limitsTable = z
-    .object({ trivial_statements: reasoned(z.number().int().positive()).optional() })
-    .catchall(limitValue);
+const limitsTable = z.object({ trivial_statements: statementLimit.optional() }).catchall(limitValue);
 
 const namingCategoryShape = {
     max_chars: reasonedNumber.optional(),

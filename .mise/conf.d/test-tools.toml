@@ -15,7 +15,7 @@ hadolint = "2.14.0"
 "npm:jscpd" = "5.2.0"
 "npm:license-checker-rseidelsohn" = "5.0.1"
 lychee = "0.24.2"
-"npm:markdownlint-cli2" = "0.23.2"
+"npm:markdownlint-cli2" = "0.23.3"
 osv-scanner = "2.6.0"
 periphery = {version = "3.6.0", os = ["macos"]}
 pinact = "5.0.0"
