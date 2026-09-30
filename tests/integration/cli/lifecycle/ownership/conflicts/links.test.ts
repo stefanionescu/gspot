@@ -4,7 +4,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { ownershipSchema } from '#cli/lifecycle/log.ts';
 import { onPosix } from '#tests/support/cli/platforms.ts';
 import { openOwner } from '#cli/lifecycle/ownership/owner.ts';
-import { writeInstalled } from '#cli/tools/installed-files.ts';
+import { installedOutputs } from '#cli/tools/installed-files.ts';
 import { chmodSync, lstatSync, unlinkSync, symlinkSync, readFileSync, readlinkSync, writeFileSync } from 'node:fs';
 
 test('installation publishes internal directory aliases as owned files without following external links', async () => {
@@ -16,14 +16,14 @@ test('installation publishes internal directory aliases as owned files without f
     symlinkSync('lib', join(installation.path, 'lib64'), 'dir');
     const owner = openOwner(repository.path);
     try {
-        writeInstalled(owner, installation.path, 'python');
+        owner.installTree('python', installedOutputs(installation.path, 'python'));
         expect(owner.read('.gspot/.venv/lib64/package.py')?.bytes.toString()).toBe('value = 7\n');
         expect(lstatSync(join(repository.path, '.gspot/.venv/lib64')).isSymbolicLink()).toBe(false);
-        writeInstalled(owner, installation.path, 'python');
+        owner.installTree('python', installedOutputs(installation.path, 'python'));
         expect(owner.read('.gspot/.venv/lib/package.py')?.bytes.toString()).toBe('value = 7\n');
         symlinkSync(outside.path, join(installation.path, 'external'), 'dir');
         expect(() => {
-            writeInstalled(owner, installation.path, 'python');
+            owner.installTree('python', installedOutputs(installation.path, 'python'));
         }).toThrow('Source link leaves the repository');
         expect(owner.read('.gspot/.venv/external/secret.py')).toBeUndefined();
         expect(readFileSync(join(outside.path, 'secret.py'), 'utf8')).toBe('external bytes');
@@ -44,14 +44,14 @@ test('installation resolves nested directory aliases and rejects cycles before p
     symlinkSync('../lib', join(installation.path, 'nested/library'), 'dir');
     const owner = openOwner(repository.path);
     try {
-        writeInstalled(owner, installation.path, 'python');
+        owner.installTree('python', installedOutputs(installation.path, 'python'));
         expect(owner.read('.gspot/.venv/nested/library/alias.py')?.bytes.toString()).toBe('value = 9\n');
         expect(owner.read('.gspot/.venv/nested/library/__pycache__/package.pyc')).toBeUndefined();
         expect(readlinkSync(join(repository.path, '.gspot/.venv/lib/alias.py'))).toBe('package.py');
         symlinkSync('..', join(installation.path, 'lib/cycle'), 'dir');
         writeFileSync(join(installation.path, 'lib/package.py'), 'unpublished change');
         expect(() => {
-            writeInstalled(owner, installation.path, 'python');
+            owner.installTree('python', installedOutputs(installation.path, 'python'));
         }).toThrow('Installed directory link forms a cycle');
         expect(owner.read('.gspot/.venv/lib/package.py')?.bytes.toString()).toBe('value = 9\n');
     } finally {
@@ -68,13 +68,13 @@ test('installation refuses a linked output root before publication and accepts a
     const owner = openOwner(repository.path);
     try {
         expect(() => {
-            writeInstalled(owner, join(installation.path, 'node_modules'), 'npm');
+            owner.installTree('npm', installedOutputs(join(installation.path, 'node_modules'), 'npm'));
         }).toThrow('Unsafe lifecycle destination');
         expect(owner.read('.gspot/node_modules/package/file.js')).toBeUndefined();
         expect(readFileSync(join(outside.path, 'package/file.js'), 'utf8')).toBe('external bytes');
         unlinkSync(join(installation.path, 'node_modules'));
         await createFileTree(installation.path, { 'node_modules/package/file.js': 'installed bytes' });
-        writeInstalled(owner, join(installation.path, 'node_modules'), 'npm');
+        owner.installTree('npm', installedOutputs(join(installation.path, 'node_modules'), 'npm'));
         expect(owner.read('.gspot/node_modules/package/file.js')?.bytes.toString()).toBe('installed bytes');
     } finally {
         owner.close();

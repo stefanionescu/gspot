@@ -85,6 +85,8 @@ export type Root = {
     remove(path: string, expected: Read): void;
     mkdir(path: string, mode: number): void;
     rmdir(path: string): void;
+    rename(from: string, to: string): void;
+    removeTree(path: string): void;
     lock(path: string): void;
     close(): void;
 };

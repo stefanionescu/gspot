@@ -59,14 +59,14 @@ if (onPosix) {
     test('lifecycle ownership: installed executable links run, restore authored links and modes, and preserve later edits', async () => {
         await using directory = await testdir();
         await createFileTree(directory.path, {
-            '.gspot/node_modules/tool/bin.sh': '#!/bin/sh\nprintf installed',
-            '.gspot/node_modules/tool/original.sh': '#!/bin/sh\nprintf original',
-            '.gspot/node_modules/.bin/.keep': '',
+            'vendor/tools/tool/bin.sh': '#!/bin/sh\nprintf installed',
+            'vendor/tools/tool/original.sh': '#!/bin/sh\nprintf original',
+            'vendor/tools/.bin/.keep': '',
         });
-        const path = '.gspot/node_modules/.bin/tool';
+        const path = 'vendor/tools/.bin/tool';
         const absolute = join(directory.path, path);
-        chmodSync(join(directory.path, '.gspot/node_modules/tool/bin.sh'), 0o755);
-        chmodSync(join(directory.path, '.gspot/node_modules/tool/original.sh'), 0o755);
+        chmodSync(join(directory.path, 'vendor/tools/tool/bin.sh'), 0o755);
+        chmodSync(join(directory.path, 'vendor/tools/tool/original.sh'), 0o755);
         symlinkSync('../tool/original.sh', absolute);
         // eslint-disable-next-line @typescript-eslint/no-deprecated, sonarjs/deprecation -- reason: The `lchmod` API sets a symbolic link's own mode on macOS.
         if (process.platform === 'darwin') lchmodSync(absolute, 0o700);
@@ -86,9 +86,7 @@ if (onPosix) {
             expect(owner.restore(path)).toBe('changed');
             expect(readlinkSync(absolute)).toBe('../tool/original.sh');
             expect(lstatSync(absolute).mode & 0o7777).toBe(originalMode);
-            expect(statSync(join(directory.path, '.gspot/node_modules/tool/original.sh')).mode & 0o777).toBe(
-                keptMode(0o755),
-            );
+            expect(statSync(join(directory.path, 'vendor/tools/tool/original.sh')).mode & 0o777).toBe(keptMode(0o755));
             expectEditedLinkPreserved(owner, path, absolute, next);
         } finally {
             owner.close();

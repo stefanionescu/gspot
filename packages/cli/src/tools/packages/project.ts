@@ -11,7 +11,7 @@ import { openRoot } from '#cli/platform/filesystem.ts';
 import { lockMatches } from '#cli/tools/packages/locks.ts';
 import type { GeneratedFile } from '#cli/types/generation.ts';
 import type { Owner } from '#cli/types/lifecycle/lifecycle.ts';
-import { writeInstalled } from '#cli/tools/installed-files.ts';
+import { installedOutputs } from '#cli/tools/installed-files.ts';
 import { parsePackageTool } from '#cli/tools/packages/identity.ts';
 import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import type { Inputs, ToolProject } from '#cli/types/tools/packages.ts';
@@ -102,7 +102,7 @@ async function installFromInputs(
         await packageCommand(root, work, project.client, true);
         await prepareNativeWrappers(work, project.dependencies, tools);
         assertInputsUnchanged(owner, work, project, inputs);
-        writeInstalled(owner, join(work, 'node_modules'), 'npm');
+        owner.installTree('npm', installedOutputs(join(work, 'node_modules'), 'npm'));
     } finally {
         rmSync(work, { recursive: true, force: true });
     }

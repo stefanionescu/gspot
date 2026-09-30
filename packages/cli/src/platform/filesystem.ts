@@ -5,7 +5,19 @@ import { sameEntry } from '#cli/platform/safe-paths.ts';
 import { afterWrite, acquireLock } from '#cli/platform/root/writes.ts';
 import type { Read, Root, Bounds, PathFormat } from '#cli/types/platform.ts';
 import { boundsOf, readEntry, parentPath, validateRead } from '#cli/platform/root/reads.ts';
-import { chmodSync, lstatSync, mkdirSync, rmdirSync, type Stats, unlinkSync, readdirSync, realpathSync } from 'node:fs';
+
+import {
+    rmSync,
+    chmodSync,
+    lstatSync,
+    mkdirSync,
+    rmdirSync,
+    renameSync,
+    type Stats,
+    unlinkSync,
+    readdirSync,
+    realpathSync,
+} from 'node:fs';
 
 // The real path of a files entry, refusing one whose link chain leaves the root.
 function sourceOf(bounds: Bounds, path: string): string {
@@ -38,6 +50,21 @@ function statOf(bounds: Bounds, path: string): Stats | undefined {
         if ((error as NodeJS.ErrnoException).code === 'ENOENT') return undefined;
         throw error;
     }
+}
+
+// Moves a directory that is not a link to a path of the same root where nothing is yet.
+function renameDirectory(bounds: Bounds, from: string, to: string): void {
+    if (statOf(bounds, from)?.isDirectory() !== true) throw new Error(`Unsafe lifecycle directory: ${from}`);
+    if (statOf(bounds, to) !== undefined) throw new Error(`Lifecycle destination exists: ${to}`);
+    renameSync(parentPath(bounds, from), parentPath(bounds, to, true));
+}
+
+// Deletes a directory that is not a link, with everything in it. A link inside is removed, never followed.
+function removeTree(bounds: Bounds, path: string): void {
+    const stat = statOf(bounds, path);
+    if (stat === undefined) return;
+    if (!stat.isDirectory()) throw new Error(`Unsafe lifecycle directory: ${path}`);
+    rmSync(parentPath(bounds, path), { recursive: true, force: true });
 }
 
 // Removes a files file after checking that it is still the one the caller last saw.
@@ -77,6 +104,12 @@ export function openRoot(root: string, pathFormat: PathFormat = 'portable'): Roo
     return {
         rmdir: (path) => {
             rmdirSync(parentPath(bounds, path));
+        },
+        rename: (from, to) => {
+            renameDirectory(bounds, from, to);
+        },
+        removeTree: (path) => {
+            removeTree(bounds, path);
         },
         source: (path) => sourceOf(bounds, path),
         list: (path) => listOf(bounds, path),

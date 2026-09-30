@@ -8,7 +8,7 @@ import { openRoot } from '#cli/platform/filesystem.ts';
 import { runToolCommand } from '#cli/tools/command.ts';
 import type { GeneratedFile } from '#cli/types/generation.ts';
 import type { Owner } from '#cli/types/lifecycle/lifecycle.ts';
-import { writeInstalled } from '#cli/tools/installed-files.ts';
+import { installedOutputs } from '#cli/tools/installed-files.ts';
 import { MODE_BITS, PRIVATE_FILE } from '#cli/config/platform.ts';
 import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import { normalizedPythonPackage } from '#cli/repository/manifests.ts';
@@ -271,7 +271,7 @@ export async function installPythonProject(root: string, executable = 'uv'): Pro
                 !isDeepStrictEqual(owner.read(LOCK), lock)
             )
                 throw new Error('Python tool inputs changed during installation. Retry the command.');
-            writeInstalled(owner, join(work, '.venv'), 'python');
+            owner.installTree('python', installedOutputs(join(work, '.venv'), 'python'));
             return 'installed locked Python tools under .gspot/.venv';
         } finally {
             rmSync(work, { recursive: true, force: true });

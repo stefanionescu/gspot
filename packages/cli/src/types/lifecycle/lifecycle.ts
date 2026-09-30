@@ -57,6 +57,10 @@ export type OwnershipState = z.infer<typeof ownershipSchema>;
 export type OwnershipEntry = OwnershipState['files'][number];
 export type Identity = z.infer<typeof identitySchema>;
 export type Original = z.infer<typeof originalSchema>;
+/** A private tool installation gspot writes whole: the npm tools or the Python environment. */
+export type InstallationKind = 'npm' | 'python';
+/** One file of a finished installation, at its path under the installation folder. */
+export type InstalledOutput = { path: string; file: Read };
 /** The open log: the locked root, the recorded state, and the operations that read and write it. */
 export type Log = {
     files: Root;
@@ -64,6 +68,7 @@ export type Log = {
     save(): void;
     backup(path: string, file: Read): Original;
     entryFor(path: string): OwnershipEntry | undefined;
+    forget(path: string): void;
     finish(): void;
 };
 /** What one operation proposes for one file: the file now, its record, the outcome, and what to write. */
@@ -77,8 +82,10 @@ export type Planned = {
     saveOriginal?: boolean;
 };
 export type Owner = {
-    beginInstallation(kind: 'npm' | 'python'): void;
-    finishInstallation(kind: 'npm' | 'python'): void;
+    beginInstallation(kind: InstallationKind): void;
+    finishInstallation(kind: InstallationKind): void;
+    installTree(kind: InstallationKind, outputs: InstalledOutput[]): void;
+    removeInstallation(kind: InstallationKind): void;
     proposeConfiguration(
         path: string,
         format: ConfigurationFormat,

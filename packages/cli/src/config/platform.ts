@@ -62,6 +62,8 @@ export const REPORT_DIRECTORY = '.gspot/reports';
 export const CACHE_DIRECTORY = '.gspot/cache';
 export const NODE_MODULES_DIRECTORY = '.gspot/node_modules';
 export const PYTHON_ENVIRONMENT_DIRECTORY = '.gspot/.venv';
+/** The folder each private installation kind is written to. */
+export const INSTALLATION_FOLDERS = { npm: NODE_MODULES_DIRECTORY, python: PYTHON_ENVIRONMENT_DIRECTORY } as const;
 export const PRIVATE_PATHS = [
     `${NODE_MODULES_DIRECTORY}/`,
     `${PYTHON_ENVIRONMENT_DIRECTORY}/`,

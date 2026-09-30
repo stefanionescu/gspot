@@ -9,6 +9,7 @@ import { applyPlan, applyPlans } from '#cli/lifecycle/ownership/apply.ts';
 import { proposeRestoration } from '#cli/lifecycle/ownership/restoration.ts';
 import type { Log, Owner, OwnershipState } from '#cli/types/lifecycle/lifecycle.ts';
 import { READ_ONLY_FILE, STATE_DIRECTORY, OWNER_WRITABLE_FILE } from '#cli/config/platform.ts';
+import { installTree, removeInstallation, recoverInstallations } from '#cli/lifecycle/ownership/installs.ts';
 
 import {
     proposeBlock,
@@ -32,6 +33,12 @@ function lifecycleOwner(log: Log): Owner {
             state.installations = state.installations.filter((entry) => entry !== kind);
             if (state.installations.length === 0) delete state.installations;
             log.save();
+        },
+        installTree: (kind, outputs) => {
+            installTree(log, kind, outputs);
+        },
+        removeInstallation: (kind) => {
+            removeInstallation(log, kind);
         },
         proposeConfiguration: (path, format, changes, replace) =>
             proposeConfiguration(log, path, format, changes, replace),
@@ -89,7 +96,9 @@ export function openOwner(root: string): Owner {
     const files = openRoot(root);
     try {
         files.lock(`${STATE_DIRECTORY}/writer.lock`);
-        return lifecycleOwner(openLog(files, STATE_DIRECTORY));
+        const log = openLog(files, STATE_DIRECTORY);
+        recoverInstallations(log);
+        return lifecycleOwner(log);
     } catch (error) {
         files.close();
         throw error;

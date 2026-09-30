@@ -5,9 +5,9 @@ import { askConfirmation } from '#cli/commands/prompts.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import { findRoot, isGitRepository } from '#cli/repository/tracked.ts';
 import { hooksInstalled, uninstallHooks } from '#cli/lifecycle/hooks.ts';
-import { OWNERSHIP_FILE, STATE_DIRECTORY } from '#cli/config/platform.ts';
 import { readOwnership, runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import type { CommandResult, UninstallPlan, UninstallOptions } from '#cli/types/commands.ts';
+import { OWNERSHIP_FILE, STATE_DIRECTORY, INSTALLATION_FOLDERS } from '#cli/config/platform.ts';
 
 /**
  * Preview only recorded ownership; matching templates do not authorize deletion.
@@ -32,6 +32,7 @@ export function planUninstall(root: string): UninstallPlan {
     return {
         remove: [...remove].toSorted((left, right) => left.localeCompare(right)),
         blocks: [...blockSet].toSorted((left, right) => left.localeCompare(right)),
+        installs: state.installs ?? [],
         hooks,
     };
 }
@@ -49,6 +50,7 @@ export function applyUninstall(root: string, plan: UninstallPlan): string[] {
         const preserved = plans.filter((plan) => plan.status === 'preserved').map((plan) => plan.path);
         const restorations = plans.filter((plan) => plan.status !== 'preserved');
         owner.applyPlans(restorations);
+        for (const kind of plan.installs) owner.removeInstallation(kind);
         if (plan.hooks) uninstallHooks(root);
         return preserved;
     });
@@ -65,6 +67,7 @@ export async function uninstallCommand(options: UninstallOptions): Promise<Comma
     const text = [
         'restore originals or remove unchanged installed files',
         ...[...plan.remove, ...plan.blocks].map((path) => `  ${path}`),
+        ...plan.installs.map((kind) => `  ${INSTALLATION_FOLDERS[kind]}/ (the private ${kind} tools)`),
         ...(plan.hooks ? ['unset core.hooksPath, so Git stops running the gspot hooks'] : []),
         'kept: gspot.toml, exported profiles, recovery data, ignore entries, unowned files, and subsequent edits',
         '',

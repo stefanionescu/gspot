@@ -1,7 +1,7 @@
 import type { Read } from '#cli/types/platform.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { mutationTarget } from '#cli/platform/safe-paths.ts';
-import type { Owner } from '#cli/types/lifecycle/lifecycle.ts';
+import type { InstalledOutput } from '#cli/types/lifecycle/lifecycle.ts';
 import { sep, join, posix, dirname, basename, relative } from 'node:path';
 import { MODE_BITS, NODE_MODULES_DIRECTORY, PYTHON_ENVIRONMENT_DIRECTORY } from '#cli/config/platform.ts';
 
@@ -44,13 +44,15 @@ function installedFile(directory: string, local: string, target: string, source:
     }
 }
 
-// Read the complete isolated installation before opening a write transaction.
-function installationFiles(
-    directory: string,
-    kind: 'npm' | 'python',
-): { destination: string; outputs: { path: string; file: Read }[] } {
+/**
+ * Reads a complete isolated installation before the owner swaps it in. A link cycle or a link that leaves it is refused.
+ * @param directory the isolated installation
+ * @param kind whether the installation is the npm project or the Python environment
+ * @returns every file at its path under the installation folder
+ */
+export function installedOutputs(directory: string, kind: 'npm' | 'python'): InstalledOutput[] {
     const destination = kind === 'npm' ? NODE_MODULES_DIRECTORY : PYTHON_ENVIRONMENT_DIRECTORY;
-    const outputs: { path: string; file: Read }[] = [];
+    const outputs: InstalledOutput[] = [];
     const parent = openRoot(dirname(directory), 'native');
     try {
         if (parent.stat(basename(directory))?.isDirectory() !== true)
@@ -81,36 +83,5 @@ function installationFiles(
     } finally {
         files.close();
     }
-    return { destination, outputs };
-}
-
-/**
- * Publish an isolated native installation through the shared ownership log.
- * @param owner the lifecycle owner of the repository
- * @param directory the isolated installation to write
- * @param kind whether the installation is the npm project or the Python environment
- */
-export function writeInstalled(owner: Owner, directory: string, kind: 'npm' | 'python'): void {
-    const { destination, outputs } = installationFiles(directory, kind);
-    owner.beginInstallation(kind);
-    const proposed = new Map(outputs.map(({ path, file }) => [path, file]));
-    const plans = outputs.map((output) =>
-        owner.proposeReplacement(output.path, output.file, 'dependency', false, undefined, proposed),
-    );
-    const wanted = new Set(outputs.map((output) => output.path));
-    const pruning = owner
-        .installedPaths()
-        .filter(
-            (path) =>
-                path.startsWith(`${destination}/`) &&
-                !wanted.has(path) &&
-                !(kind === 'python' && path.includes('/__pycache__/')),
-        )
-        .map((path) => owner.proposeRestoration(path));
-    const writes = [...plans, ...pruning];
-    const conflict = writes.find((plan) => plan.status === 'preserved');
-    if (conflict !== undefined)
-        throw new Error(`Preserved edited or unowned ${conflict.path}. Move it aside before installing.`);
-    owner.applyPlans(writes);
-    owner.finishInstallation(kind);
+    return outputs;
 }

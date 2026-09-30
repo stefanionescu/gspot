@@ -33,6 +33,12 @@ function recordPreserved(report: ApplyReport, plans: Planned[]): void {
     }
 }
 
+// An installation no selected kit needs any more goes whole.
+function pruneInstallations(owner: Owner, hasPackages: boolean, hasPython: boolean): void {
+    if (!hasPackages) owner.removeInstallation('npm');
+    if (!hasPython) owner.removeInstallation('python');
+}
+
 // Every plan is prepared before the owner writes the batch.
 /**
  * Publish and prune generated files using recorded ownership and current snapshots.
@@ -81,6 +87,7 @@ export function writeGenerated(owner: Owner, request: WriteRequest): void {
             `Setup preserved conflicting outputs: ${conflicts.join(', ')}. Move them aside and run gspot apply; old tool configuration was retained.`,
         );
     owner.applyPlans(plans.filter((plan) => plan.status !== 'preserved'));
+    pruneInstallations(owner, retained.packages, expected.has('.gspot/pyproject.toml'));
     recordPreserved(report, plans);
     report.written.push(...replacements.filter((plan) => plan.status === 'changed').map((plan) => plan.path));
     report.unchanged.push(...replacements.filter((plan) => plan.status === 'unchanged').map((plan) => plan.path));

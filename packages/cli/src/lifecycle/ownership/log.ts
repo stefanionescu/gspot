@@ -5,7 +5,7 @@ import { ownershipSchema } from '#cli/lifecycle/log.ts';
 import type { Read, Root } from '#cli/types/platform.ts';
 import { OUTPUT_JSON_INDENT } from '#cli/config/output.ts';
 import { fileMode, mutationTarget } from '#cli/platform/safe-paths.ts';
-import { PRIVATE_FILE, PRIVATE_DIRECTORY } from '#cli/config/platform.ts';
+import { GSPOT_FOLDER, PRIVATE_FILE, PRIVATE_DIRECTORY } from '#cli/config/platform.ts';
 
 import type {
     Log,
@@ -49,6 +49,29 @@ function recoverPending(
         throw new Error(
             `Interrupted lifecycle operation conflicts with edited ${pending.path}. Preserve ${recovery} and resolve that file before retrying.`,
         );
+}
+
+// Deletes the backups of one operation folder that no entry keeps, and the folder once it is empty.
+function pruneOperation(files: Root, folder: string, kept: Set<string>): void {
+    for (const name of files.list(folder)) {
+        const path = `${folder}/${name}`;
+        const current = kept.has(path.replace(/\.json$/u, '')) ? undefined : files.read(path);
+        if (current !== undefined) files.remove(path, current);
+    }
+    if (files.list(folder).length === 0) files.rmdir(folder);
+}
+
+// Deletes every backup no entry keeps as its original. A finished operation needs none of its own backups: they
+// only guard an interrupted one.
+function pruneRecovery(files: Root, recovery: string, entries: Iterable<OwnershipEntry>): void {
+    if (files.stat(recovery)?.isDirectory() !== true) return;
+    const kept = new Set(
+        [...entries].flatMap((entry) => (entry.original === undefined ? [] : [entry.original.backup])),
+    );
+    for (const operation of files.list(recovery)) {
+        const folder = `${recovery}/${operation}`;
+        if (files.stat(folder)?.isDirectory() === true) pruneOperation(files, folder, kept);
+    }
 }
 
 // The recorded ownership state, or an empty one when nothing was recorded yet.
@@ -156,6 +179,14 @@ export function openLog(files: Root, stateDirectory: string): Log {
         delete state.pending;
         save();
     }
+    // A retired file of the .gspot folder keeps only an original, an older gspot output: nothing authored lives
+    // there, so uninstall must not bring it back.
+    const retired = [...entries.entries()].filter(
+        ([, entry]) => entry.installed === undefined && entry.path.startsWith(`${GSPOT_FOLDER}/`),
+    );
+    for (const [key] of retired) entries.delete(key);
+    if (retired.length > 0) save();
+    pruneRecovery(files, recovery, entries.values());
     const backups = backupWriter(files, recovery);
     return {
         files,
@@ -170,10 +201,14 @@ export function openLog(files: Root, stateDirectory: string): Log {
             mutationTarget(path);
             return recordedEntry(entries, path);
         },
+        forget(path) {
+            entries.delete(path.normalize('NFC').toLowerCase());
+        },
         finish() {
             for (const pending of state.pending ?? []) accept(pending);
             delete state.pending;
             save();
+            pruneRecovery(files, recovery, entries.values());
         },
     };
 }

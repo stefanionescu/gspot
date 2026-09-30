@@ -94,6 +94,8 @@ export const ownershipSchema = z
         version: z.literal(1),
         files: z.array(entrySchema),
         installations: z.array(z.enum(['npm', 'python'])).optional(),
+        // The private tool folders gspot installed whole, by kind.
+        installs: z.array(z.enum(['npm', 'python'])).optional(),
         pending: z
             .array(
                 z

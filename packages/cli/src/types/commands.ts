@@ -3,7 +3,7 @@ import type { Read } from '#cli/types/platform.ts';
 import type { CheckResult } from '#cli/types/checks.ts';
 import type { Profile } from '#cli/types/policy/profiles.ts';
 import type { ToolInspection } from '#cli/types/tools/tools.ts';
-import type { DriftEntry } from '#cli/types/lifecycle/lifecycle.ts';
+import type { DriftEntry, InstallationKind } from '#cli/types/lifecycle/lifecycle.ts';
 import type { Policy, RawPolicy, ResolvedSetting } from '#cli/types/policy/policy.ts';
 import type { StagedSet, ChangedSet, PushSelection } from '#cli/types/repository/revisions.ts';
 import type { Manifest, CheckSpec, SettingSpec, UnknownLanguage, KitEvidence as Plan } from '#cli/types/kits.ts';
@@ -34,7 +34,7 @@ export type InstallJson = { isDryRun?: true; installed?: boolean; steps?: string
 export type CommandResult = { text: string; json: unknown; exitCode: number };
 /** The JSON a failed command prints: the error's name and message. */
 export type CommandFailureJson = { error: string; message: string };
-export type UninstallPlan = { remove: string[]; blocks: string[]; hooks: boolean };
+export type UninstallPlan = { remove: string[]; blocks: string[]; installs: InstallationKind[]; hooks: boolean };
 /** gspot uninstall. */
 export type UninstallOptions = { cwd: string; yes: boolean; isDryRun: boolean };
 export type IgnoreOptions = {

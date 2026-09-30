@@ -2,6 +2,7 @@
 import type { z } from 'zod';
 import { isDeepStrictEqual } from 'node:util';
 import type { Read } from '#cli/types/platform.ts';
+import { GSPOT_FOLDER } from '#cli/config/platform.ts';
 import type { originalSchema } from '#cli/lifecycle/log.ts';
 import { matches, identity } from '#cli/lifecycle/ownership/log.ts';
 import type { Log, Outcome, Planned, PreparedWrite } from '#cli/types/lifecycle/lifecycle.ts';
@@ -47,7 +48,9 @@ function prepareRecord(log: Log, plan: Planned): PreparedWrite | undefined {
     const { path, current, next, entry } = plan;
     if (entry === undefined && plan.status !== 'changed') return undefined;
     const recovery = backupFor(log, plan);
-    const original = plan.saveOriginal === true ? recovery : entry?.original;
+    // The .gspot folder holds nothing authored, so no original there is kept for uninstall.
+    const keepsOriginal = plan.saveOriginal === true && !path.startsWith(`${GSPOT_FOLDER}/`);
+    const original = keepsOriginal ? recovery : entry?.original;
     const recordedEntry =
         entry === undefined ? undefined : { ...entry, ...(original === undefined ? {} : { original }) };
     return { path, current, next, entry: recordedEntry, recovery };
