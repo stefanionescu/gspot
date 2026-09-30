@@ -26,7 +26,7 @@ checks span languages.
 | Kind      | Selected by                                    | Owners files by                           | Examples                                                                                                                        |
 | --------- | ---------------------------------------------- | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
 | language  | an extension in the tree                       | extension, filename, shebang              | typescript, python, swift, bash, sql, css, html, markdown                                                                       |
-| framework | a dependency                                   | path convention the framework dictates    | nextjs, express, fastapi, nestjs, react, react-native, vue, svelte                                                              |
+| framework | a dependency                                   | path convention the framework dictates    | nextjs, express, fastapi, nestjs, react, react-native, vue, svelte, astro                                                       |
 | platform  | the platform's config file                     | the platform's layout                     | supabase, cloudflare                                                                                                            |
 | tool      | the tool's own file                            | the tool's files                          | docker, nginx, xcode, xctest, vitest, pytest                                                                                    |
 | library   | a dependency                                   | none; adds rules to the language's checks | zod, drizzle, trpc, tanstack-query, zustand, react-hook-form, i18n                                                              |
@@ -246,7 +246,7 @@ guess a framework.
 
 A framework changes which plugins run. It does not change the rules of the language under it.
 Every shared rule reads every code file, including the component endings a framework kit owns
-(`.vue`, `.svelte`, `.svelte.ts`). A limit is the same number in every framework.
+(`.vue`, `.svelte`, `.svelte.ts`, `.astro`). A limit is the same number in every framework.
 
 A framework
 turns a shared rule off only in its manifest, with a reason. A test compares the final ESLint
@@ -262,12 +262,13 @@ plugin, the type checker that reads its files, and the test rules of its runner.
 | nestjs       | `@darraghor/eslint-plugin-nestjs-typed`                                                                 | none: a server                        | `tsc` with decorators | jest                            | `no-extraneous-class` for a decorated class; `class-methods-use-this`, for handlers |
 | vue          | `eslint-plugin-vue`                                                                                     | `eslint-plugin-vuejs-accessibility`   | `vue-tsc`             | vitest, testing-library         | nothing                                                                             |
 | svelte       | `eslint-plugin-svelte`                                                                                  | `svelte-check`                        | `svelte-check`        | vitest, testing-library         | the one-file-folder rule, for SvelteKit route files                                 |
+| astro        | `eslint-plugin-astro`                                                                                   | `eslint-plugin-jsx-a11y`, through it  | `astro check`         | vitest                          | the one-file-folder rule, for Astro page files                                      |
 
 ## Available kits
 
 The set is every kit under `packages/cli/kits/`, and `gspot list` prints it. It covers a Python
-API, a Swift app, an Express or Nest API, a Supabase project, a static site on Cloudflare, and
-a Next.js, React, Vue, or Svelte app. `levels/inventory.csv` and `levels/native.csv` hold
+API, a Swift app, an Express or Nest API, a Supabase project, and a static site on Cloudflare.
+It also covers a Next.js, React, Vue, Svelte, or Astro app. `levels/inventory.csv` and `levels/native.csv` hold
 every rule with its level.
 
 ## What a kit never does

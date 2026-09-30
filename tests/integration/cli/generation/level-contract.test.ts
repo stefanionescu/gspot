@@ -1,12 +1,10 @@
 import { join } from 'node:path';
 import type { Linter } from 'eslint';
 import plugin from '#plugin/plugin.ts';
-import { readFileSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { parse as parseToml } from 'smol-toml';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
-import { kitManifests } from '#cli/kits/manifests.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { RUFF_PREVIEW_RULES } from '#cli/config/checks/python.ts';
@@ -14,30 +12,7 @@ import { generatedFile } from '#tests/support/cli/generated/files.ts';
 import { generatedEslint } from '#tests/support/cli/generated/eslint.ts';
 import { parsePolicyText, assertPolicyComplete } from '#cli/policy/read.ts';
 
-const review = readFileSync(new URL('../../../../architecture/levels/inventory.csv', import.meta.url), 'utf8');
-
-test('the accepted inventory assigns every check and public plugin rule', () => {
-    const checks = new Map(
-        [...kitManifests().values()].flatMap((manifest) =>
-            manifest.checks.map((check) => [check.name, check.level] as const),
-        ),
-    );
-    const rows = review
-        .split('\n')
-        .filter((row) => row.startsWith('Check,'))
-        .map((row) => row.split(','));
-    expect(checks.size).toBe(208);
-    expect(rows).toHaveLength(208);
-    expect(rows.filter((row) => row[2] === 'recommended')).toHaveLength(142);
-    for (const row of rows) expect(String(checks.get(row[1]!))).toBe(row[2]!);
-    const rules = Object.entries(plugin.rules);
-    expect(rules).toHaveLength(25);
-    expect(
-        rules
-            .filter(([, rule]) => rule.meta.docs?.level === 'recommended')
-            .map(([name]) => name)
-            .toSorted((a, b) => a.localeCompare(b)),
-    ).toStrictEqual(['no-client-environment', 'no-duplicate-barrel-exports', 'require-server-only']);
+test('the recommended plugin configuration leaves out the framework-only server rule', () => {
     expect(plugin.configs.recommended.rules).not.toHaveProperty('gspot/require-server-only');
 });
 

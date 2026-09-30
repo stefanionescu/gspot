@@ -62,7 +62,7 @@ export function structuralRuleBlocks(scopes: ScopeSelection[], policy: Policy): 
     for (const selection of scopes.toSorted((a, b) => a.scope.path.length - b.scope.path.length)) {
         for (const [language, pattern] of [
             ['javascript', '**/*.{js,mjs,cjs,jsx}'],
-            ['typescript', '**/*.{ts,tsx,mts,cts,vue,svelte}'],
+            ['typescript', '**/*.{ts,tsx,mts,cts,vue,svelte,astro}'],
         ] as const) {
             if (policy.level !== 'all') continue;
             const maxStatements =

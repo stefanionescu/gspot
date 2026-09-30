@@ -19,7 +19,8 @@ import jest from 'eslint-plugin-jest';
 import tseslint from 'typescript-eslint';
 import { createTypeScriptImportResolver } from 'eslint-import-resolver-typescript';
 
-const root = fileURLToPath(new URL('../..', import.meta.url));
+// The root without a closing separator: typescript-eslint stops its tsconfig search one folder short of a root that ends in one.
+const root = fileURLToPath(new URL('../..', import.meta.url)).replace(/[\\/]$/u, '');
 // The component files a selected framework adds to the code and type-checked file sets.
 const FRAGMENT_FILES = [];
 const CODE = ['**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}', ...FRAGMENT_FILES];
@@ -678,7 +679,7 @@ const policyRules = [
     {
         "scope": "",
         "includes": [
-            "^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(ts|tsx|mts|cts|vue|svelte))$"
+            "^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(ts|tsx|mts|cts|vue|svelte|astro))$"
         ],
         "excludes": [],
         "rules": {
@@ -720,7 +721,7 @@ const policyRules = [
     {
         "scope": "docs",
         "includes": [
-            "^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(ts|tsx|mts|cts|vue|svelte))$"
+            "^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(ts|tsx|mts|cts|vue|svelte|astro))$"
         ],
         "excludes": [],
         "rules": {
@@ -762,7 +763,7 @@ const policyRules = [
     {
         "scope": "packages/cli",
         "includes": [
-            "^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(ts|tsx|mts|cts|vue|svelte))$"
+            "^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(ts|tsx|mts|cts|vue|svelte|astro))$"
         ],
         "excludes": [],
         "rules": {
@@ -804,7 +805,7 @@ const policyRules = [
     {
         "scope": "packages/eslint-plugin",
         "includes": [
-            "^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(ts|tsx|mts|cts|vue|svelte))$"
+            "^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(ts|tsx|mts|cts|vue|svelte|astro))$"
         ],
         "excludes": [],
         "rules": {
@@ -3222,7 +3223,55 @@ const ruleLevels = {
     "zod/prefer-meta-last": "all",
     "zod/prefer-strict-object": "all",
     "zod/prefer-top-level-string-formats": "recommended",
-    "zod/require-brand-type-parameter": "recommended"
+    "zod/require-brand-type-parameter": "recommended",
+    "astro/missing-client-only-directive-value": "recommended",
+    "astro/no-conflict-set-directives": "recommended",
+    "astro/no-deprecated-astro-canonicalurl": "recommended",
+    "astro/no-deprecated-astro-fetchcontent": "recommended",
+    "astro/no-deprecated-astro-resolve": "recommended",
+    "astro/no-deprecated-getentrybyslug": "recommended",
+    "astro/no-unused-define-vars-in-style": "recommended",
+    "astro/valid-compile": "recommended",
+    "astro/jsx-a11y/alt-text": "recommended",
+    "astro/jsx-a11y/anchor-ambiguous-text": "recommended",
+    "astro/jsx-a11y/anchor-has-content": "recommended",
+    "astro/jsx-a11y/anchor-is-valid": "recommended",
+    "astro/jsx-a11y/aria-activedescendant-has-tabindex": "recommended",
+    "astro/jsx-a11y/aria-props": "recommended",
+    "astro/jsx-a11y/aria-proptypes": "recommended",
+    "astro/jsx-a11y/aria-role": "recommended",
+    "astro/jsx-a11y/aria-unsupported-elements": "recommended",
+    "astro/jsx-a11y/autocomplete-valid": "recommended",
+    "astro/jsx-a11y/click-events-have-key-events": "recommended",
+    "astro/jsx-a11y/control-has-associated-label": "recommended",
+    "astro/jsx-a11y/heading-has-content": "recommended",
+    "astro/jsx-a11y/html-has-lang": "recommended",
+    "astro/jsx-a11y/iframe-has-title": "recommended",
+    "astro/jsx-a11y/img-redundant-alt": "recommended",
+    "astro/jsx-a11y/interactive-supports-focus": "recommended",
+    "astro/jsx-a11y/label-has-associated-control": "recommended",
+    "astro/jsx-a11y/media-has-caption": "recommended",
+    "astro/jsx-a11y/mouse-events-have-key-events": "recommended",
+    "astro/jsx-a11y/no-access-key": "recommended",
+    "astro/jsx-a11y/no-autofocus": "recommended",
+    "astro/jsx-a11y/no-distracting-elements": "recommended",
+    "astro/jsx-a11y/no-interactive-element-to-noninteractive-role": "recommended",
+    "astro/jsx-a11y/no-noninteractive-element-interactions": "recommended",
+    "astro/jsx-a11y/no-noninteractive-element-to-interactive-role": "recommended",
+    "astro/jsx-a11y/no-noninteractive-tabindex": "recommended",
+    "astro/jsx-a11y/no-redundant-roles": "recommended",
+    "astro/jsx-a11y/no-static-element-interactions": "recommended",
+    "astro/jsx-a11y/role-has-required-aria-props": "recommended",
+    "astro/jsx-a11y/role-supports-aria-props": "recommended",
+    "astro/jsx-a11y/scope": "recommended",
+    "astro/jsx-a11y/tabindex-no-positive": "recommended",
+    "astro/no-set-html-directive": "all",
+    "astro/no-exports-from-components": "recommended",
+    "astro/no-prerender-export-outside-pages": "recommended",
+    "astro/no-unused-css-selector": "all",
+    "astro/prefer-class-list-directive": "all",
+    "astro/prefer-object-class-list": "all",
+    "astro/prefer-split-class-list": "all"
 };
 const selectedDefaults = defaults.map((entry) => entry.rules === undefined ? entry : {
     ...entry,

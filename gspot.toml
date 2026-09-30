@@ -189,12 +189,36 @@ reason = "Installer settings keep their public TOML keys."
 
 [[naming.contract_properties]]
 file = "packages/cli/src/types/kits.ts"
-names = ["check_references", "crash_pattern", "query_packs", "rule_page", "version_command", "version_exit_code", "version_regex"]
+names = [
+    "check_references",
+    "crash_pattern",
+    "query_packs",
+    "rule_page",
+    "version_command",
+    "version_exit_code",
+    "version_regex",
+]
 reason = "Kit manifests declare these keys, and the normalized types keep their spelling."
 
 [[naming.contract_properties]]
 file = "packages/cli/src/types/policy/policy.ts"
-names = ["allow_digits", "allow_duplicate_words", "allowed_for", "banned_terms", "config_directory", "contract_properties", "edges_allowed", "folder_name_allowed", "max_chars", "max_words", "prefix_collision_allowed", "remove_groups", "single_file_folder_allowed", "structural_prefix", "types_directory"]
+names = [
+    "allow_digits",
+    "allow_duplicate_words",
+    "allowed_for",
+    "banned_terms",
+    "config_directory",
+    "contract_properties",
+    "edges_allowed",
+    "folder_name_allowed",
+    "max_chars",
+    "max_words",
+    "prefix_collision_allowed",
+    "remove_groups",
+    "single_file_folder_allowed",
+    "structural_prefix",
+    "types_directory",
+]
 reason = "Public gspot.toml keys."
 
 [[naming.contract_properties]]
@@ -209,7 +233,19 @@ reason = "gitleaks reports, libpg-query AST tags, and Xcode string files spell t
 
 [[naming.contract_properties]]
 file = "packages/cli/src/types/parsers/sql.ts"
-names = ["lengthBytesUTF8", "stringToUTF8", "UTF8ToString", "_malloc", "_free", "_wasm_parse_query_raw", "_wasm_parse_plpgsql", "_wasm_free_string", "_wasm_free_parse_result", "stmt_location", "stmt_len"]
+names = [
+    "lengthBytesUTF8",
+    "stringToUTF8",
+    "UTF8ToString",
+    "_malloc",
+    "_free",
+    "_wasm_parse_query_raw",
+    "_wasm_parse_plpgsql",
+    "_wasm_free_string",
+    "_wasm_free_parse_result",
+    "stmt_location",
+    "stmt_len",
+]
 reason = "Emscripten and libpg-query export these members."
 
 [[naming.contract_properties]]
@@ -410,7 +446,14 @@ reason = "Astro fixes the name of the content configuration file beside the cont
 [[check]]
 name = "guides/lint"
 command = ["mise", "run", "guides:lint"]
-paths = ["packages/cli/guides/**", "packages/cli/src/agents/**", "packages/cli/kits/**", "tests/integration/tools/generation/**", "tests/unit/cli/agents/**", "mise.toml"]
+paths = [
+    "packages/cli/guides/**",
+    "packages/cli/src/agents/**",
+    "packages/cli/kits/**",
+    "tests/integration/tools/generation/**",
+    "tests/unit/cli/agents/**",
+    "mise.toml",
+]
 stage = "push"
 summary = "Validates guide structure and runs Good examples through their native linters."
 
@@ -479,6 +522,11 @@ check = "typescript/eslint"
 rule = "package-json/require-exports"
 paths = ["packages/cli/package.json"]
 reason = "The gspot package exposes a command through bin and has no importable module API. Remove this exception if the package gains a module API."
+
+[[ignore]]
+check = "integrity/large-files"
+paths = ["architecture/levels/inventory.csv"]
+reason = "The level inventory holds one reviewed row per check, tool, and rule. It is plain text that diffs by line, and splitting it would split one review table."
 
 [[check]]
 name = "tests/unit"

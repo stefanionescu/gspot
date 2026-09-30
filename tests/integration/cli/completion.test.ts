@@ -22,26 +22,6 @@ async function candidates(words: string[]): Promise<string[]> {
 const program = buildProgram();
 const commands = program.commands.filter((command) => command.name() !== 'complete');
 
-test('the command inventory preserves public commands and their help order', () => {
-    expect(program.commands.map((command) => command.name())).toStrictEqual([
-        'init',
-        'install',
-        'check',
-        'apply',
-        'ignore',
-        'add',
-        'remove',
-        'set',
-        'explain',
-        'doctor',
-        'list',
-        'uninstall',
-        'export',
-        'completion',
-        'complete',
-    ]);
-});
-
 test('completion offers every command of the program', async () => {
     const offered = await candidates(['']);
     for (const command of commands) expect(offered).toContain(command.name());

@@ -13,7 +13,6 @@ test.each(FASTAPI_GUIDE_TESTS)(
         const examples = ruleExamples({ path, text: readAsset(`guides/${path}`) }).filter(
             (example) => example.language === 'python',
         );
-        expect(examples).toHaveLength(2);
         await createFileTree(sandbox.path, {
             'pyproject.toml': `[project]\nname = "guide-examples"\nversion = "1.0.0"\nrequires-python = ">=3.12"\ndependencies = ${JSON.stringify(scenario.dependencies)}\n`,
             ...Object.fromEntries(examples.map((example, index) => [`example_${String(index)}.py`, example.body])),

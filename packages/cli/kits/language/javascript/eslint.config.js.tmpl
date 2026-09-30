@@ -16,7 +16,8 @@ import prettierConfig from 'eslint-config-prettier';
 import globals from 'globals';
 <%~ fragmentImports %>
 <% const config = eslint(); %>
-const root = fileURLToPath(new URL('../..', import.meta.url));
+// The root without a closing separator: typescript-eslint stops its tsconfig search one folder short of a root that ends in one.
+const root = fileURLToPath(new URL('../..', import.meta.url)).replace(/[\\/]$/u, '');
 // The component files a selected framework adds to the code and type-checked file sets.
 const FRAGMENT_FILES = <%~ json(fragmentFiles, 0) %>;
 const CODE = ['**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}', ...FRAGMENT_FILES];

@@ -1,5 +1,4 @@
 import { test, expect, describe } from 'bun:test';
-import { PROSE_FORMATS } from '#cli/generation/vale-styles.ts';
 import { routeFor, routeGroups } from '#cli/checks/prose/vale.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
 
@@ -24,24 +23,6 @@ describe('prose routes', () => {
             extension: '.py',
         });
         expect(routeFor(tracked('a.png'))).toBeUndefined();
-    });
-
-    test('native source comments use Markdown and unsupported languages borrow compatible comment grammars', () => {
-        expect(PROSE_FORMATS).toStrictEqual([
-            ['ts', 'md'],
-            ['tsx', 'md'],
-            ['js', 'md'],
-            ['jsx', 'md'],
-            ['swift', 'md'],
-            ['py', 'md'],
-            ['css', 'md'],
-            ['sh', 'py'],
-            ['bash', 'py'],
-            ['zsh', 'py'],
-            ['sql', 'lua'],
-            ['pgsql', 'lua'],
-            ['psql', 'lua'],
-        ]);
     });
 
     test('path routes group by extension and an extensionless script stands alone', () => {

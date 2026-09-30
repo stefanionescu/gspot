@@ -100,6 +100,7 @@ export const EXTENSION_TAGS: Record<string, string[]> = {
     '.tsx': ['typescript', 'tsx', 'text'],
     '.vue': ['vue', 'source', 'text'],
     '.svelte': ['svelte', 'source', 'text'],
+    '.astro': ['astro', 'source', 'text'],
     '.swift': ['swift', 'text'],
     '.sql': ['sql', 'text'],
     '.pgsql': ['sql', 'text'],
