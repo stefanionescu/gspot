@@ -67,9 +67,10 @@ export const configurationFieldsSchema = z.array(configurationFieldSchema).super
 
 export const entrySchema = z.strictObject({
     path: pathSchema,
-    kind: z.enum(['config', 'block', 'merge', 'policy', 'pin', 'hook', 'lock', 'dependency', 'runtime', 'export']),
+    kind: z.enum(['config', 'block', 'merge', 'policy', 'pin', 'hook', 'lock', 'export']),
     installed: identitySchema.optional(),
-    original: originalSchema.optional(),
+    // Without a backup, the original bytes are the installed ones: the file already held them when gspot adopted it.
+    original: originalSchema.partial({ backup: true }).optional(),
     configuration: z
         .strictObject({
             format: z.enum(['json', 'yaml', 'toml']),
@@ -85,6 +86,8 @@ export const entrySchema = z.strictObject({
             installed: z.string().min(1),
             original: z.string(),
             prefix: z.string(),
+            // Whether the block created its file, which removing the block then deletes.
+            created: z.boolean(),
         })
         .optional(),
 });

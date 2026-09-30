@@ -4,8 +4,6 @@ import { openRoot } from '#cli/platform/filesystem.ts';
 import { ruleDiff } from '#cli/lifecycle/rules/diff.ts';
 import type { Generated } from '#cli/types/generation.ts';
 import type { Policy } from '#cli/types/policy/policy.ts';
-import { CACHE_DIRECTORY } from '#cli/config/platform.ts';
-import { isValePackageFile } from '#cli/repository/kind.ts';
 import { pythonLockDrift } from '#cli/tools/python-project.ts';
 import { currentBlock } from '#cli/lifecycle/managed-blocks.ts';
 import { packageLockDrift } from '#cli/tools/packages/project.ts';
@@ -15,10 +13,9 @@ import { hasConfiguration } from '#cli/lifecycle/configuration/document.ts';
 import { NEVER_STRAY, CONFLICT_MARKERS, DRIFT_DIFF_CONTEXT } from '#cli/config/lifecycle.ts';
 
 function isStrayCandidate(path: string, policy: Policy): boolean {
-    if (path.startsWith('.gspot/state/')) return false;
     if (path.startsWith('.gspot/guides/') && !policy.guides.install) return false;
     if (path.startsWith('.gspot/hooks/') && policy.hooks === undefined) return false;
-    return !(path.startsWith(`${CACHE_DIRECTORY}/`) || NEVER_STRAY.has(path));
+    return !NEVER_STRAY.has(path);
 }
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Two drift entries carry a patch; the caller sits at the complexity limit.
@@ -87,16 +84,10 @@ function otherDrift(root: string, rendered: Generated): DriftEntry[] {
  * Every generated file that differs from its render, is missing, or is a stray gspot file. Blocks and merges count too.
  * @param root the repository root
  * @param policy the repository policy
- * @param hasPackageClient whether generated tools use a package manager
  * @param rendered the generated files as rendered now
  * @returns the drift entries in path order
  */
-export function computeDrift(
-    root: string,
-    policy: Policy,
-    hasPackageClient: boolean,
-    rendered: Generated,
-): DriftEntry[] {
+export function computeDrift(root: string, policy: Policy, rendered: Generated): DriftEntry[] {
     const known = new Set([
         ...rendered.files.map((file) => file.path),
         ...rendered.blocks.map((block) => block.path),
@@ -110,10 +101,7 @@ export function computeDrift(
     const strays = readOwnership(root)
         .files.filter(
             (entry) =>
-                !['runtime', 'hook', 'export'].includes(entry.kind) &&
-                !isValePackageFile(entry.path) &&
-                (entry.kind !== 'dependency' ||
-                    (entry.path.startsWith('.gspot/.venv/') ? python === undefined : !hasPackageClient)) &&
+                !['hook', 'export'].includes(entry.kind) &&
                 entry.installed !== undefined &&
                 !known.has(entry.path) &&
                 isStrayCandidate(entry.path, policy),

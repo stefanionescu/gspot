@@ -10,8 +10,8 @@ import { applyCommand } from '#cli/commands/apply/command.ts';
 import { exportedProfile } from '#cli/policy/profiles/export.ts';
 import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import { failure, rejection } from '#tests/support/expectations.ts';
-import { statSync, chmodSync, symlinkSync, readFileSync } from 'node:fs';
 import { planUninstall, applyUninstall } from '#cli/commands/uninstall.ts';
+import { statSync, chmodSync, existsSync, symlinkSync, readFileSync } from 'node:fs';
 
 describe('profile file paths', () => {
     test('an absolute profile loads from a different working directory', async () => {
@@ -182,7 +182,7 @@ test('profile publication recovers an interrupted write through the lifecycle lo
     expect(reread.tables.kits).toStrictEqual([]);
 });
 
-test('profile publication preserves permissions when adopting identical existing bytes', async () => {
+test('profile publication preserves permissions when adopting identical existing bytes, and copies nothing', async () => {
     await using directory = await testdir();
     const policy = policyOf([]);
     const profile = exportedProfile(policy, 'shared.profile.toml');
@@ -192,7 +192,8 @@ test('profile publication preserves permissions when adopting identical existing
     expect(exportCommand(directory.path, 'shared.profile.toml').exitCode).toBe(0);
     expect(readFileSync(path, 'utf8')).toBe(profile.text);
     expect(statSync(path).mode & 0o200).toBe(0);
-    expect(readOwnership(directory.path).files[0]?.original).toBeDefined();
+    expect(readOwnership(directory.path).files[0]?.original).toBeUndefined();
+    expect(existsSync(join(directory.path, '.gspot/state/recovery'))).toBe(false);
 });
 
 test('profiles round-trip license allowances and exact-version exceptions', async () => {

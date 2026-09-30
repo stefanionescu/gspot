@@ -68,7 +68,6 @@ export type Log = {
     save(): void;
     backup(path: string, file: Read): Original;
     entryFor(path: string): OwnershipEntry | undefined;
-    forget(path: string): void;
     finish(): void;
 };
 /** What one operation proposes for one file: the file now, its record, the outcome, and what to write. */

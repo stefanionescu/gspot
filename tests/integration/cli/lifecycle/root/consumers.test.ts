@@ -10,7 +10,7 @@ import { rejection } from '#tests/support/expectations.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { astGrepMatches } from '#cli/checks/bash/ast-grep.ts';
 import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
-import { chmodSync, existsSync, unlinkSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, unlinkSync, readdirSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
 
 describe.if(onPosix)('files discovery', () => {
     test.each(['project', 'configuration', 'schemes'] as const)(
@@ -36,7 +36,7 @@ describe.if(onPosix)('files discovery', () => {
     );
 });
 
-test('structural rule caching bounds writes and preserves later rule edits', async () => {
+test('the structural rule file stays inside the repository and an edited copy is written again', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
         'project/gspot.toml': policyOf(['bash'], '[runner]\ntool = "mise"\n', 'all'),
@@ -53,18 +53,18 @@ test('structural rule caching bounds writes and preserves later rule edits', asy
     expect(await rejection(astGrepMatches(input, 'kits/language/bash/rules/branches.yml', ['example.sh']))).toContain(
         'Unsafe lifecycle parent',
     );
-    expect(readFileSync(join(directory.path, 'outside/ast-grep/branches.yml'), 'utf8')).toBe('external rule\n');
+    expect(readdirSync(join(directory.path, 'outside'), { recursive: true })).toStrictEqual([
+        'ast-grep',
+        join('ast-grep', 'branches.yml'),
+    ]);
     unlinkSync(cache);
     expect(await astGrepMatches(input, 'kits/language/bash/rules/branches.yml', ['example.sh'])).toHaveLength(1);
+    const [rule] = readdirSync(cache);
+    writeFileSync(join(cache, rule!), 'id: edited\n');
     expect(await astGrepMatches(input, 'kits/language/bash/rules/branches.yml', ['example.sh'])).toHaveLength(1);
-    const rule = '.gspot/cache/ast-grep/branches.yml';
-    expect(readOwnership(root).files.find((entry) => entry.path === rule)?.kind).toBe('runtime');
-    chmodSync(join(root, rule), 0o644);
-    writeFileSync(join(root, rule), 'edited rule\n');
-    expect(await rejection(astGrepMatches(input, 'kits/language/bash/rules/branches.yml', ['example.sh']))).toContain(
-        `Retained edited or unowned structural rule: ${rule}`,
-    );
-    expect(readFileSync(join(root, rule), 'utf8')).toBe('edited rule\n');
+    expect(readdirSync(cache)).toStrictEqual([rule!]);
+    expect(readFileSync(join(cache, rule!), 'utf8')).not.toBe('id: edited\n');
+    expect(readOwnership(root).files).toStrictEqual([]);
 });
 
 test.each([

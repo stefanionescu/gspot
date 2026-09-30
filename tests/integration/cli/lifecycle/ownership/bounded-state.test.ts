@@ -3,8 +3,8 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { planUninstall } from '#cli/commands/uninstall.ts';
 import { installedOutputs } from '#cli/tools/installed-files.ts';
+import { planUninstall, applyUninstall } from '#cli/commands/uninstall.ts';
 import { openOwner, readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 
@@ -112,4 +112,99 @@ test('a retired file of the gspot folder is forgotten with its original, and uni
     expect(readOwnership(directory.path).files).toStrictEqual([]);
     expect(recoveryFiles(directory.path)).toStrictEqual([]);
     expect(planUninstall(directory.path).remove).toStrictEqual([]);
+});
+
+test.each([true, false])(
+    'a managed block keeps no backup and removing it deletes the file only when the block created it (%s)',
+    async (isCreated) => {
+        await using directory = await testdir();
+        if (!isCreated) await createFileTree(directory.path, { 'NOTES.md': 'Authored.\n' });
+        const owner = openOwner(directory.path);
+        try {
+            owner.applyPlan(owner.proposeBlock('NOTES.md', 'managed text', 'markdown'));
+            expect(readOwnership(directory.path).files[0]).toMatchObject({ block: { created: isCreated } });
+            expect(readOwnership(directory.path).files[0]?.original).toBeUndefined();
+            expect(recoveryFiles(directory.path)).toStrictEqual([]);
+            expect(owner.restore('NOTES.md')).toBe('changed');
+        } finally {
+            owner.close();
+        }
+        const path = join(directory.path, 'NOTES.md');
+        expect(existsSync(path) ? readFileSync(path, 'utf8') : undefined).toBe(isCreated ? undefined : 'Authored.\n');
+    },
+);
+
+test('uninstall deletes the folders gspot keeps for itself and the .gspot folder with them', async () => {
+    await using directory = await testdir();
+    await createFileTree(directory.path, {
+        '.gspot/cache/result.json': '{}\n',
+        '.gspot/reports/report.json': '{}\n',
+        '.gspot/config/vale.ini': 'Packages = Google\n',
+        '.gspot/config/vale/styles/Google/terms.yml': 'extends: existence\n',
+    });
+    const owner = openOwner(directory.path);
+    try {
+        owner.replace('.gspot/config/generated.json', { bytes: Buffer.from('{}\n'), mode: 0o644 }, 'config');
+    } finally {
+        owner.close();
+    }
+    const plan = planUninstall(directory.path);
+    expect(plan.folders.toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
+        '.gspot/cache',
+        '.gspot/config/vale/styles/Google',
+        '.gspot/reports',
+    ]);
+    expect(applyUninstall(directory.path, plan)).toStrictEqual([]);
+    expect(readdirSync(join(directory.path, '.gspot'), { recursive: true })).toStrictEqual([
+        'config',
+        join('config', 'vale.ini'),
+    ]);
+});
+
+test('uninstall keeps the recovery data while an edited file still has its original there', async () => {
+    await using directory = await testdir();
+    await createFileTree(directory.path, { 'config.txt': 'authored\n' });
+    const owner = openOwner(directory.path);
+    try {
+        owner.replace('config.txt', { bytes: Buffer.from('installed\n'), mode: 0o644 }, 'config', true);
+    } finally {
+        owner.close();
+    }
+    writeFileSync(join(directory.path, 'config.txt'), 'edited later\n');
+    expect(applyUninstall(directory.path, planUninstall(directory.path))).toStrictEqual(['config.txt']);
+    const original = readOwnership(directory.path).files[0]?.original?.backup;
+    expect(readFileSync(join(directory.path, original!), 'utf8')).toBe('authored\n');
+});
+
+test('an adopted file keeps no copy until gspot first changes it, and that change saves the original', async () => {
+    await using directory = await testdir();
+    await createFileTree(directory.path, { '.gspot/config/tool.json': '{"v":1}\n' });
+    const path = '.gspot/config/tool.json';
+    const owner = openOwner(directory.path);
+    try {
+        const mode = owner.read(path)!.mode;
+        expect(owner.replace(path, { bytes: Buffer.from('{"v":1}\n'), mode }, 'config')).toBe('unchanged');
+        expect(readOwnership(directory.path).files[0]?.original?.backup).toBeUndefined();
+        expect(recoveryFiles(directory.path)).toStrictEqual([]);
+        expect(owner.replace(path, { bytes: Buffer.from('{"v":2}\n'), mode }, 'config')).toBe('changed');
+        const backup = readOwnership(directory.path).files[0]?.original?.backup;
+        expect(readFileSync(join(directory.path, backup!), 'utf8')).toBe('{"v":1}\n');
+        expect(owner.restore(path)).toBe('changed');
+    } finally {
+        owner.close();
+    }
+    expect(readFileSync(join(directory.path, path), 'utf8')).toBe('{"v":1}\n');
+});
+
+test('a finished operation that keeps no original leaves no recovery folder', async () => {
+    await using directory = await testdir();
+    await createFileTree(directory.path, { 'config.txt': 'authored\n' });
+    const owner = openOwner(directory.path);
+    try {
+        owner.replace('config.txt', { bytes: Buffer.from('installed\n'), mode: 0o644 }, 'config', true);
+        expect(owner.restore('config.txt')).toBe('changed');
+    } finally {
+        owner.close();
+    }
+    expect(readdirSync(join(directory.path, '.gspot/state'))).toStrictEqual(['ownership.json']);
 });

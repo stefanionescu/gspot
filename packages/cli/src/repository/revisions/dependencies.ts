@@ -1,13 +1,12 @@
 import pLimit from 'p-limit';
-import { createHash } from 'node:crypto';
 import { run } from '#cli/platform/spawn.ts';
 import { statSync, constants } from 'node:fs';
+import { styleFiles } from '#cli/tools/vale.ts';
 import type { Root } from '#cli/types/platform.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { isValePackageFile } from '#cli/repository/kind.ts';
 import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
-import type { OwnershipEntry } from '#cli/types/lifecycle/lifecycle.ts';
 import type { GitEntry, Directory } from '#cli/types/repository/revisions.ts';
 import { MODE_BITS, GSPOT_FOLDER, PRIVATE_DIRECTORY } from '#cli/config/platform.ts';
 import { sep, join, posix, dirname, basename, relative, isAbsolute } from 'node:path';
@@ -72,19 +71,13 @@ function assertSameValeConfiguration(installed: Root, destination: Root): void {
         ]);
 }
 
-// Copies one log-owned package file the snapshot lacks, after checking it still matches its record.
-function copyVerifiedPackage(installed: Root, destination: Root, entry: OwnershipEntry): void {
-    if (entry.installed === undefined || destination.read(entry.path) !== undefined) return;
-    const content = installed.read(entry.path);
-    if (
-        content === undefined ||
-        createHash('sha256').update(content.bytes).digest('hex') !== entry.installed.hash ||
-        content.mode !== entry.installed.mode
-    )
-        throw new GspotError('selection', [
-            `Installed Vale package ${entry.path} is missing or edited. Repair it before checking this revision.`,
-        ]);
-    destination.write(entry.path, content, undefined);
+// Copies one package file the snapshot lacks.
+function copyPackageFile(installed: Root, destination: Root, path: string): void {
+    if (destination.read(path) !== undefined) return;
+    const content = installed.read(path);
+    if (content === undefined)
+        throw new GspotError('selection', [`Installed Vale package file ${path} disappeared. Run gspot apply.`]);
+    destination.write(path, content, undefined);
 }
 
 // The dependency folders the snapshot's projects own, when the working tree has them installed. Python
@@ -188,7 +181,7 @@ async function copyDirectory(
 }
 
 /**
- * Copy verified log-owned Vale packages matching the selected kit.
+ * Copy the installed Vale packages into a snapshot whose Vale configuration matches the one they were synced for.
  * @param root the repository root
  * @param revisionRoot the snapshot directory the packages are copied into
  * @param paths the snapshot's files, among them the Vale configurations that name packages
@@ -200,10 +193,10 @@ export function copyProsePackages(root: string, revisionRoot: string, paths: str
         const installed = openRoot(join(root, folder));
         const destination = openRoot(join(revisionRoot, folder));
         try {
-            const packages = readOwnership(join(root, folder)).files.filter((entry) => isValePackageFile(entry.path));
+            const packages = styleFiles(installed).filter((path) => isValePackageFile(path));
             if (packages.length === 0) continue;
             assertSameValeConfiguration(installed, destination);
-            for (const entry of packages) copyVerifiedPackage(installed, destination, entry);
+            for (const path of packages) copyPackageFile(installed, destination, path);
         } finally {
             installed.close();
             destination.close();

@@ -153,8 +153,6 @@ test.each(['before', 'after'] as const)(
         const removed = await run(directory.path, ['uninstall', '--yes']);
         expect(removed.code, removed.stdout + removed.stderr).toBe(0);
         expect(existsSync(join(directory.path, path))).toBe(false);
-        const recovered = ownershipSchema.parse(JSON.parse(readFileSync(recordPath, 'utf8')));
-        expect(recovered.pending).toBeUndefined();
-        expect(recovered.files.map((file) => file.path)).not.toContain(path);
+        expect(existsSync(join(directory.path, '.gspot/state'))).toBe(false);
     },
 );

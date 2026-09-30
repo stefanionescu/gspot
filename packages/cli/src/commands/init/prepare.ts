@@ -13,7 +13,6 @@ import { readManifests } from '#cli/repository/manifests.ts';
 import { detectionText } from '#cli/commands/init/detection.ts';
 import { selectForInit } from '#cli/commands/init/selection.ts';
 import { detectedSettings } from '#cli/commands/init/settings.ts';
-import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import { plan, buildInitPlan } from '#cli/commands/init/plan/build.ts';
 import { replacedConfiguration } from '#cli/commands/init/replaced.ts';
 import { askKits, askInitQuestions } from '#cli/commands/init/questions.ts';
@@ -85,10 +84,7 @@ function policyTextFor(
  */
 export async function prepare(root: string, options: InitOptions): Promise<InitPrepared> {
     const manifests = kitManifests();
-    const runtime = readOwnership(root)
-        .files.filter((entry) => entry.kind === 'runtime')
-        .map((entry) => entry.path);
-    const repo = await readRepository(root, [], [], [], new Set(runtime));
+    const repo = await readRepository(root, [], [], []);
     if (repo.hasGit) assertCleanTree(root, options);
     const fields = readManifests(root, repo.files);
     const workspace = proposedScopes(root, repo.files, fields, manifests.values());

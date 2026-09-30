@@ -1,5 +1,8 @@
 import { resolve } from 'node:path';
 import type { Command } from 'commander';
+import type { Root } from '#cli/types/platform.ts';
+import { packageFolders } from '#cli/tools/vale.ts';
+import { openRoot } from '#cli/platform/filesystem.ts';
 import { directoryOf } from '#cli/platform/arguments.ts';
 import { askConfirmation } from '#cli/commands/prompts.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
@@ -7,7 +10,36 @@ import { findRoot, isGitRepository } from '#cli/repository/tracked.ts';
 import { hooksInstalled, uninstallHooks } from '#cli/lifecycle/hooks.ts';
 import { readOwnership, runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import type { CommandResult, UninstallPlan, UninstallOptions } from '#cli/types/commands.ts';
-import { OWNERSHIP_FILE, STATE_DIRECTORY, INSTALLATION_FOLDERS } from '#cli/config/platform.ts';
+
+import {
+    GSPOT_FOLDER,
+    OWNERSHIP_FILE,
+    CACHE_DIRECTORY,
+    STATE_DIRECTORY,
+    REPORT_DIRECTORY,
+    INSTALLATION_FOLDERS,
+} from '#cli/config/platform.ts';
+
+// The folders of downloads and results gspot keeps for itself: the cache, the reports, and the Vale packages.
+function scratchFolders(root: string): string[] {
+    const files = openRoot(root);
+    try {
+        const own = [CACHE_DIRECTORY, REPORT_DIRECTORY].filter((path) => files.stat(path)?.isDirectory() === true);
+        return [...own, ...packageFolders(files)];
+    } finally {
+        files.close();
+    }
+}
+
+// Deletes the folders under the .gspot folder that uninstall left empty, deepest first, and the .gspot folder itself.
+function removeEmptyFolders(files: Root, path: string): boolean {
+    if (files.stat(path)?.isDirectory() !== true) return false;
+    const children = files.list(path);
+    const kept = children.filter((name) => !removeEmptyFolders(files, `${path}/${name}`));
+    if (kept.length > 0) return false;
+    files.rmdir(path);
+    return true;
+}
 
 /**
  * Preview only recorded ownership; matching templates do not authorize deletion.
@@ -21,39 +53,47 @@ export function planUninstall(root: string): UninstallPlan {
         ...state.files,
         ...(state.pending ?? []).flatMap((pending) => (pending.entry === undefined ? [] : [pending.entry])),
     ];
-    const blocks = recorded
-        .filter((entry) => entry.kind === 'block' && entry.path !== '.gitignore')
-        .map((entry) => entry.path);
-    const blockSet = new Set(blocks);
+    const blocks = [...new Set(recorded.filter((entry) => entry.kind === 'block').map((entry) => entry.path))];
     const remove = new Set(recorded.map((entry) => entry.path));
-    for (const path of ['gspot.toml', '.gitignore', ...blocks]) remove.delete(path);
+    for (const path of ['gspot.toml', ...blocks]) remove.delete(path);
     for (const entry of recorded) if (entry.kind === 'export') remove.delete(entry.path);
     const hooks = isGitRepository(root) && hooksInstalled(root);
     return {
         remove: [...remove].toSorted((left, right) => left.localeCompare(right)),
-        blocks: [...blockSet].toSorted((left, right) => left.localeCompare(right)),
+        blocks: blocks.toSorted((left, right) => left.localeCompare(right)),
         installs: state.installs ?? [],
+        folders: scratchFolders(root),
         hooks,
     };
 }
 
 /**
- * Restore unchanged or absent destinations. Preserve recovery records and subsequent edits.
+ * Restore unchanged or absent destinations and delete what gspot keeps for itself. The recovery data stays only while
+ * a file kept for its edits still has an original in it.
  * @param root the repository being removed
  * @param plan the reviewed restoration and removal candidates
  * @returns paths preserved because they were edited or unowned
  */
 export function applyUninstall(root: string, plan: UninstallPlan): string[] {
-    return runOwnedLifecycle(root, (owner) => {
+    const preserved = runOwnedLifecycle(root, (owner) => {
         const proposed = new Set([...plan.remove, ...plan.blocks]);
         const plans = [...proposed].map((path) => owner.proposeRestoration(path));
-        const preserved = plans.filter((plan) => plan.status === 'preserved').map((plan) => plan.path);
-        const restorations = plans.filter((plan) => plan.status !== 'preserved');
-        owner.applyPlans(restorations);
+        const kept = plans.filter((plan) => plan.status === 'preserved').map((plan) => plan.path);
+        owner.applyPlans(plans.filter((plan) => plan.status !== 'preserved'));
         for (const kind of plan.installs) owner.removeInstallation(kind);
         if (plan.hooks) uninstallHooks(root);
-        return preserved;
+        return kept;
     });
+    const hasOriginals = readOwnership(root).files.some((entry) => entry.original?.backup !== undefined);
+    const files = openRoot(root);
+    try {
+        for (const folder of plan.folders) files.removeTree(folder);
+        if (!hasOriginals) files.removeTree(STATE_DIRECTORY);
+        removeEmptyFolders(files, GSPOT_FOLDER);
+    } finally {
+        files.close();
+    }
+    return preserved;
 }
 
 /**
@@ -68,8 +108,9 @@ export async function uninstallCommand(options: UninstallOptions): Promise<Comma
         'restore originals or remove unchanged installed files',
         ...[...plan.remove, ...plan.blocks].map((path) => `  ${path}`),
         ...plan.installs.map((kind) => `  ${INSTALLATION_FOLDERS[kind]}/ (the private ${kind} tools)`),
+        ...plan.folders.map((folder) => `  ${folder}/`),
         ...(plan.hooks ? ['unset core.hooksPath, so Git stops running the gspot hooks'] : []),
-        'kept: gspot.toml, exported profiles, recovery data, ignore entries, unowned files, and subsequent edits',
+        'kept: gspot.toml, exported profiles, unowned files, and files edited after gspot wrote them',
         '',
     ].join('\n');
     if (options.isDryRun)
@@ -81,14 +122,15 @@ export async function uninstallCommand(options: UninstallOptions): Promise<Comma
     const preserved = applyUninstall(root, plan);
     const retained = preserved.map((path) => `preserved edited or unowned ${path}\n`).join('');
     const destinations = new Set(preserved.map((path) => resolve(root, path)));
-    const originals = readOwnership(root, STATE_DIRECTORY).files.flatMap((entry) =>
-        entry.original !== undefined && destinations.has(resolve(root, entry.path))
+    const originals = readOwnership(root).files.flatMap((entry) =>
+        entry.original?.backup !== undefined && destinations.has(resolve(root, entry.path))
             ? [{ path: resolve(root, entry.path), backup: resolve(root, entry.original.backup) }]
             : [],
     );
     const recovery = originals.map(({ path, backup }) => `original for ${path} retained at ${backup}\n`).join('');
+    const remains = originals.length === 0 ? 'gspot.toml remains' : 'gspot.toml and the recovery data remain';
     return {
-        text: `${retained}${recovery}Uninstall complete. Recovery data and gspot.toml remain.\n`,
+        text: `${retained}${recovery}Uninstall complete. ${remains}.\n`,
         json: { plan, applied: true, preserved, originals },
         exitCode: 0,
     };
@@ -105,7 +147,7 @@ export function registerUninstall(program: Command): void {
         .description('Remove what gspot wrote, and keep gspot.toml and your own guides')
         .addHelpText(
             'after',
-            '\nEffects:\nShows what gspot removes and which original files it restores, then does it after you confirm or pass --yes. A file you edited after gspot wrote it stays. gspot.toml and the recovery data stay too. --dry-run changes nothing.\n\nExit codes:\n- 0: the removal finished, was shown, or was declined.\n- 2: the input was invalid, or uninstall could not finish.\n\nExample:\ngspot uninstall --dry-run',
+            '\nEffects:\nShows what gspot removes and which original files it restores, then does it after you confirm or pass --yes. A file you edited after gspot wrote it stays, with its original in .gspot/state. gspot.toml stays too. --dry-run changes nothing.\n\nExit codes:\n- 0: the removal finished, was shown, or was declined.\n- 2: the input was invalid, or uninstall could not finish.\n\nExample:\ngspot uninstall --dry-run',
         )
         .option('--yes', 'Remove without asking')
         .option('--dry-run', 'Print the plan and remove nothing')

@@ -134,7 +134,6 @@ export function engineInput(session: Session, planned: Pick<PlannedCheck, 'scope
                 computeDrift(
                     session.root,
                     session.policyFiles.policy,
-                    session.packageClient !== undefined,
                     emitAll(session.policyFiles.policy, session.repository, session.scopes, {
                         version: session.version,
                         packageClient: session.packageClient,

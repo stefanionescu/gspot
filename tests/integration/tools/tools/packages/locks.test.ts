@@ -49,7 +49,6 @@ test.each(PACKAGE_PROJECTS)(
             computeDrift(
                 read.root,
                 read.policyFiles.policy,
-                read.packageClient !== undefined,
                 emitAll(read.policyFiles.policy, read.repository, read.scopes, {
                     version: read.version,
                     packageClient: read.packageClient,

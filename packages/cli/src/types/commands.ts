@@ -34,7 +34,14 @@ export type InstallJson = { isDryRun?: true; installed?: boolean; steps?: string
 export type CommandResult = { text: string; json: unknown; exitCode: number };
 /** The JSON a failed command prints: the error's name and message. */
 export type CommandFailureJson = { error: string; message: string };
-export type UninstallPlan = { remove: string[]; blocks: string[]; installs: InstallationKind[]; hooks: boolean };
+export type UninstallPlan = {
+    remove: string[];
+    blocks: string[];
+    installs: InstallationKind[];
+    // Folders of downloads and results gspot keeps for itself, deleted whole.
+    folders: string[];
+    hooks: boolean;
+};
 /** gspot uninstall. */
 export type UninstallOptions = { cwd: string; yes: boolean; isDryRun: boolean };
 export type IgnoreOptions = {

@@ -77,6 +77,8 @@ Runs external tools. Owns nothing about what they find.
 - **Result cache.** Each check's verdict is stored under `.gspot/cache/` keyed on the tool
   version, the generated configuration hash and the content hash of every file it read. A
   project-wide check still depends on all its project inputs. The cache is per machine.
+- **Cache retention.** Cache entries are plain files, and a run deletes those written more than
+  seven days ago.
 - **Platforms.** Commands are spawned without a shell. Paths are joined with `node:path` and
   passed to tools in the platform's form; on Windows, `cross-spawn` resolves `.cmd` shims.
 - **Missing tool.** The check reports `missing` with the install hint and fails. A `docker`

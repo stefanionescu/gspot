@@ -35,7 +35,6 @@ function trackedFile(entry: RawEntry, prefix: Buffer, tagged: Tagged, verdict: V
  * @param declarations the generated and vendored declarations
  * @param scopeEntries the [[scope]] entries
  * @param exclude paths and directory patterns excluded before reading content
- * @param runtimeFiles log-owned runtime outputs supplied by command composition
  * @returns the repository record
  */
 export async function readRepository(
@@ -43,7 +42,6 @@ export async function readRepository(
     declarations: FileDeclaration[],
     scopeEntries: { path: string; kits: string[] }[],
     exclude: string[],
-    runtimeFiles: ReadonlySet<string> = new Set(),
 ): Promise<Repository> {
     const entries = trackedEntries(root, exclude);
     const files: TrackedFile[] = [];
@@ -51,9 +49,7 @@ export async function readRepository(
     for (const entry of entries) {
         const prefix = entry.symlink ? Buffer.alloc(0) : readPrefix(root, entry.path, FILE_PREFIX_BYTES);
         const tagged = tagEntry(entry, prefix);
-        const verdict = runtimeFiles.has(entry.path)
-            ? { kind: 'generated' as const, source: 'gspot', producedBy: 'gspot check' }
-            : kindOf(entry.path, declarations, tagged.binary, prefix, attributes);
+        const verdict = kindOf(entry.path, declarations, tagged.binary, prefix, attributes);
         const file = trackedFile(entry, prefix, tagged, verdict);
         if (!entry.symlink && file.kind === 'source' && file.path.endsWith('.swift')) {
             const tags = await swiftSourceTags(readSource(root, file.path).toString('utf8'));

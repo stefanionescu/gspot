@@ -73,16 +73,18 @@ test('an unreadable attributes file cannot become an empty rule set', async () =
     });
 });
 
-test('runtime identities classify only the supplied repository files as generated', async () => {
+test('the results gspot keeps for itself are generated files', async () => {
     await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'runtime.yml': 'key: value\n', 'source.yml': 'key: value\n' });
-    const repository = await readRepository(sandbox.path, [], [], [], new Set(['runtime.yml']));
-    expect(repository.files.find((file) => file.path === 'runtime.yml')).toMatchObject({
-        kind: 'generated',
-        kindSource: 'gspot',
-        producedBy: 'gspot check',
+    await createFileTree(sandbox.path, {
+        '.gspot/cache/result.json': '{}\n',
+        '.gspot/reports/report.json': '{}\n',
+        'source.yml': 'key: value\n',
     });
-    expect(repository.files.find((file) => file.path === 'source.yml')?.kind).toBe('source');
-    const unowned = await readRepository(sandbox.path, [], [], []);
-    expect(unowned.files.find((file) => file.path === 'runtime.yml')?.kind).toBe('source');
+    const repository = await readRepository(sandbox.path, [], [], []);
+    const kinds = Object.fromEntries(repository.files.map((file) => [file.path, [file.kind, file.kindSource]]));
+    expect(kinds).toMatchObject({
+        '.gspot/cache/result.json': ['generated', 'gspot'],
+        '.gspot/reports/report.json': ['generated', 'gspot'],
+        'source.yml': ['source', 'default'],
+    });
 });

@@ -1,6 +1,7 @@
 // Every tracked path has one kind: source, generated, vendored, binary.
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
+import { PRIVATE_PATHS } from '#cli/config/platform.ts';
 import type { FileDeclaration } from '#cli/types/policy/policy.ts';
 import type { Verdict, Attribute } from '#cli/types/repository/repository.ts';
 
@@ -57,7 +58,8 @@ function attributeKind(attributes: string[]): Verdict | undefined {
 
 function managedKind(path: string): Verdict | undefined {
     if (LICENSE_FILE.test(path.slice(path.lastIndexOf('/') + 1))) return { kind: 'vendored', source: 'license' };
-    if (INSTALLED_PREFIXES.some((prefix) => path.startsWith(prefix))) return { kind: 'generated', source: 'gspot' };
+    if ([...INSTALLED_PREFIXES, ...PRIVATE_PATHS].some((prefix) => path.startsWith(prefix)))
+        return { kind: 'generated', source: 'gspot' };
     if (isValePackageFile(path)) return { kind: 'vendored', source: 'gspot' };
     return undefined;
 }

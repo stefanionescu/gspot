@@ -22,10 +22,7 @@ function fieldRestoration(
 ): { current: Read; configuration: ConfigurationOwnership } | undefined {
     const { configuration } = existing;
     if (current === undefined || configuration === undefined) return undefined;
-    const applies =
-        configuration.edited ||
-        !matches(current, existing.installed) ||
-        (existing.original === undefined && !configuration.created);
+    const applies = configuration.edited || !configuration.created || !matches(current, existing.installed);
     return applies ? { current, configuration } : undefined;
 }
 
@@ -42,12 +39,9 @@ function restoreConfiguration(current: Read, configuration: ConfigurationOwnersh
     return { bytes: Buffer.from(document.text()), mode: current.mode };
 }
 
-// Puts back the text a managed block replaced, or undefined when the block was edited away.
-function restoreBlock(
-    current: Read,
-    block: NonNullable<OwnershipEntry['block']>,
-    hasOriginal: boolean,
-): Restoration | undefined {
+// Puts back the text a managed block replaced, or undefined when the block was edited away. A file the block
+// created is deleted when nothing else was written to it.
+function restoreBlock(current: Read, block: NonNullable<OwnershipEntry['block']>): Restoration | undefined {
     const text = current.bytes.toString('utf8');
     if (!Buffer.from(text).equals(current.bytes)) return undefined;
     const span = blockSpan(text, block.style);
@@ -55,14 +49,14 @@ function restoreBlock(
     const start = span.start - block.prefix.length;
     if (start < 0 || text.slice(start, span.end) !== block.installed) return undefined;
     const next = text.slice(0, start) + block.original + text.slice(span.end);
-    return next === '' && !hasOriginal ? {} : { next: { bytes: Buffer.from(next), mode: current.mode } };
+    return next === '' && block.created ? {} : { next: { bytes: Buffer.from(next), mode: current.mode } };
 }
 
-// The original bytes the log backed up when the file was first owned.
-function originalRead(log: Log, path: string, original: NonNullable<OwnershipEntry['original']>): Read {
-    const saved = log.files.read(original.backup);
+// The original bytes the log backed up when gspot first changed the file.
+function originalRead(log: Log, path: string, original: NonNullable<OwnershipEntry['original']>, backup: string): Read {
+    const saved = log.files.read(backup);
     if (saved === undefined || identity(saved).hash !== original.hash)
-        throw new Error(`Original recovery bytes are missing or changed for ${path}: ${original.backup}`);
+        throw new Error(`Original recovery bytes are missing or changed for ${path}: ${backup}`);
     return { bytes: saved.bytes, mode: original.mode, ...(original.isLink ? { isLink: true } : {}) };
 }
 
@@ -75,7 +69,10 @@ function originalRestoration(
     original: Read | undefined,
 ): Restoration | undefined {
     if (current !== undefined && !matches(current, existing.installed)) return undefined;
-    const saved = existing.original === undefined ? undefined : originalRead(log, path, existing.original);
+    const kept = existing.original;
+    // An adopted file without a backup still holds its original bytes, because they match what gspot installed.
+    let saved = kept === undefined ? undefined : current;
+    if (kept?.backup !== undefined) saved = originalRead(log, path, kept, kept.backup);
     const next = original ?? saved;
     return next === undefined ? {} : { next };
 }
@@ -93,8 +90,7 @@ function restorationFor(
         const next = restoreConfiguration(fields.current, fields.configuration);
         return next === undefined ? undefined : { next };
     }
-    if (current !== undefined && existing.block !== undefined)
-        return restoreBlock(current, existing.block, existing.original !== undefined);
+    if (current !== undefined && existing.block !== undefined) return restoreBlock(current, existing.block);
     return originalRestoration(log, path, existing, current, original);
 }
 

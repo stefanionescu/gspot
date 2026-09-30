@@ -10,6 +10,7 @@ import {
     statSync,
     chmodSync,
     lstatSync,
+    existsSync,
     // eslint-disable-next-line sonarjs/deprecation, n/no-deprecated-api -- reason: The `lchmod` API sets a symbolic link's own mode on macOS.
     lchmodSync,
     unlinkSync,
@@ -43,6 +44,7 @@ if (onPosix) {
             expect(owner.replace('config.txt', { bytes: Buffer.from('second'), mode: 0o444 }, 'config')).toBe(
                 'changed',
             );
+            expect(statSync(join(directory.path, '.gspot/state/recovery')).mode & 0o777).toBe(keptMode(0o700));
             owner.close();
             owner = openOwner(directory.path);
             expect(owner.restore('config.txt')).toBe('changed');
@@ -50,7 +52,7 @@ if (onPosix) {
             expect(readFileSync(join(directory.path, '.gspot/authored.txt'), 'utf8')).toBe('keep\n');
             expect(owner.paths()).toStrictEqual([]);
             expect(statSync(join(directory.path, '.gspot/state/ownership.json')).mode & 0o777).toBe(keptMode(0o600));
-            expect(statSync(join(directory.path, '.gspot/state/recovery')).mode & 0o777).toBe(keptMode(0o700));
+            expect(existsSync(join(directory.path, '.gspot/state/recovery'))).toBe(false);
         } finally {
             owner.close();
         }

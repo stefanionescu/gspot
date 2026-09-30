@@ -4,7 +4,6 @@ import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import type { SarifReport } from '#tests/types/cli.ts';
-import { ownershipSchema } from '#cli/lifecycle/log.ts';
 import { onPosix } from '#tests/support/cli/platforms.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
@@ -14,7 +13,6 @@ import {
     chmodSync,
     mkdirSync,
     existsSync,
-    unlinkSync,
     readdirSync,
     symlinkSync,
     readFileSync,
@@ -127,7 +125,7 @@ test.each([
     },
 );
 
-test('runtime ownership preserves authored reports and edited cache results through apply and uninstall', async () => {
+test('a run replaces stale reports and edited cache results, and uninstall deletes both folders', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': policyOf(
@@ -135,54 +133,54 @@ test('runtime ownership preserves authored reports and edited cache results thro
             `[guides]\ninstall = false\n[[check]]\nname = "project/storage"\npaths = ["source.txt"]\ninputs = ["source.txt"]\nstage = "commit"\ncommand = ${JSON.stringify([process.execPath, '-e', 'process.exitCode=0'])}\n`,
         ),
         'source.txt': 'input\n',
-        '.gspot/reports/report.json': 'authored report\n',
+        '.gspot/reports/report.json': 'stale report\n',
     });
     const command = ['check', '--json'];
     const initial = await run(sandbox.path, command);
     expect(initial.code, initial.stdout + initial.stderr).toBe(0);
-    expect(initial.stderr).toContain('Preserved edited or unowned report');
-    expect(readFileSync(join(sandbox.path, '.gspot/reports/report.json'), 'utf8')).toBe('authored report\n');
-    unlinkSync(join(sandbox.path, '.gspot/reports/report.json'));
+    expect(initial.stderr).toBe('');
+    expect(JSON.parse(readFileSync(join(sandbox.path, '.gspot/reports/report.json'), 'utf8'))).toStrictEqual(
+        JSON.parse(initial.stdout),
+    );
     const cached = await run(sandbox.path, command);
     expect(cached.code, cached.stdout + cached.stderr).toBe(0);
     expect((JSON.parse(cached.stdout) as RunReport).checks[0]?.status).toBe('cache');
     const cache = join(sandbox.path, '.gspot/cache', readdirSync(join(sandbox.path, '.gspot/cache'))[0]!);
-    const edited = 'edited cache result\n';
-    writeFileSync(cache, edited);
+    writeFileSync(cache, 'edited cache result\n');
     const repeated = await run(sandbox.path, command);
     expect(repeated.code, repeated.stdout + repeated.stderr).toBe(0);
     expect((JSON.parse(repeated.stdout) as RunReport).checks[0]?.status).toBe('ok');
-    expect(readFileSync(cache, 'utf8')).toBe(edited);
+    expect(readFileSync(cache, 'utf8')).not.toBe('edited cache result\n');
     const report = readFileSync(join(sandbox.path, '.gspot/reports/report.json'), 'utf8');
     const applied = await run(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     expect(readFileSync(join(sandbox.path, '.gspot/reports/report.json'), 'utf8')).toBe(report);
     const removed = await run(sandbox.path, ['uninstall', '--yes']);
     expect(removed.code, removed.stdout + removed.stderr).toBe(0);
-    expect(existsSync(join(sandbox.path, '.gspot/reports/report.json'))).toBe(false);
-    expect(existsSync(join(sandbox.path, '.gspot/reports/report.sarif'))).toBe(false);
-    expect(existsSync(join(sandbox.path, '.gspot/reports/report.codequality.json'))).toBe(false);
-    expect(readFileSync(cache, 'utf8')).toBe(edited);
+    expect(existsSync(join(sandbox.path, '.gspot/reports'))).toBe(false);
+    expect(existsSync(join(sandbox.path, '.gspot/cache'))).toBe(false);
     expect(readFileSync(join(sandbox.path, 'source.txt'), 'utf8')).toBe('input\n');
 });
 
-test.each(['before', 'after'])('an interrupted report %s publication recovers on the next check', async (point) => {
-    await using sandbox = await testdir();
-    const correction = String.raw`process.exitCode=(await Bun.file("source.txt").text()) === "corrected\n" ? 0 : 1`;
-    await createFileTree(sandbox.path, {
-        'gspot.toml': policyOf(
-            [],
-            `[[check]]\nname = "project/storage"\npaths = ["source.txt"]\nstage = "commit"\ncommand = ${JSON.stringify([process.execPath, '-e', correction])}\n`,
-        ),
-        'source.txt': 'defect\n',
-    });
-    const first = await run(sandbox.path, ['check', '--json']);
-    expect(first.code, first.stdout + first.stderr).toBe(1);
-    const previous = readFileSync(join(sandbox.path, '.gspot/reports/report.json'), 'utf8');
-    writeFileSync(join(sandbox.path, 'source.txt'), 'corrected\n');
-    const boundary = join(import.meta.dir, '../../../../packages/cli/src/platform/filesystem.ts');
-    const cli = join(import.meta.dir, '../../../../packages/cli/src/main.ts');
-    const program = `
+test.each(['before', 'after'])(
+    'a report write stopped %s publication leaves whole files and the next check replaces them',
+    async (point) => {
+        await using sandbox = await testdir();
+        const correction = String.raw`process.exitCode=(await Bun.file("source.txt").text()) === "corrected\n" ? 0 : 1`;
+        await createFileTree(sandbox.path, {
+            'gspot.toml': policyOf(
+                [],
+                `[[check]]\nname = "project/storage"\npaths = ["source.txt"]\nstage = "commit"\ncommand = ${JSON.stringify([process.execPath, '-e', correction])}\n`,
+            ),
+            'source.txt': 'defect\n',
+        });
+        const first = await run(sandbox.path, ['check', '--json']);
+        expect(first.code, first.stdout + first.stderr).toBe(1);
+        const previous = readFileSync(join(sandbox.path, '.gspot/reports/report.json'), 'utf8');
+        writeFileSync(join(sandbox.path, 'source.txt'), 'corrected\n');
+        const boundary = join(import.meta.dir, '../../../../packages/cli/src/platform/filesystem.ts');
+        const cli = join(import.meta.dir, '../../../../packages/cli/src/main.ts');
+        const program = `
 import { mock } from 'bun:test';
 const boundary=await import(${JSON.stringify(boundary)});
 const open=boundary.openRoot;
@@ -197,33 +195,31 @@ if(path==='.gspot/reports/report.json' && ${JSON.stringify(point)}==='after') pr
 process.argv=[process.execPath,${JSON.stringify(cli)},'check','--json'];
 await import(${JSON.stringify(cli)});
 `;
-    const child = Bun.spawn([process.execPath, '-e', program], { cwd: sandbox.path, stdout: 'pipe', stderr: 'pipe' });
-    const output = new Response(child.stdout).text();
-    const errors = new Response(child.stderr).text();
-    expect(await child.exited, (await output) + (await errors)).toBe(73);
-    const published = readFileSync(join(sandbox.path, '.gspot/reports/report.json'), 'utf8');
-    // Stopped before the write, the previous report stands; stopped after it, the new passing report is on disk.
-    const state = published === previous ? 'previous report' : (JSON.parse(published) as RunReport).exitCode;
-    expect(state).toBe(point === 'before' ? 'previous report' : 0);
-    const pending = ownershipSchema.parse(
-        JSON.parse(readFileSync(join(sandbox.path, '.gspot/state/ownership.json'), 'utf8')),
-    );
-    expect(pending.pending?.[0]?.path).toBe('.gspot/reports/report.json');
-    expect(pending.pending?.map((entry) => entry.path)).toStrictEqual([
-        '.gspot/reports/report.json',
-        '.gspot/reports/report.sarif',
-    ]);
-    const retry = await run(sandbox.path, ['check', '--json']);
-    expect(retry.code, retry.stdout + retry.stderr).toBe(0);
-    expect(JSON.parse(readFileSync(join(sandbox.path, '.gspot/reports/report.json'), 'utf8'))).toStrictEqual(
-        JSON.parse(retry.stdout),
-    );
-    expect(
-        ownershipSchema.parse(JSON.parse(readFileSync(join(sandbox.path, '.gspot/state/ownership.json'), 'utf8')))
-            .pending,
-    ).toBeUndefined();
-    expect(readFileSync(join(sandbox.path, 'source.txt'), 'utf8')).toBe('corrected\n');
-});
+        const child = Bun.spawn([process.execPath, '-e', program], {
+            cwd: sandbox.path,
+            stdout: 'pipe',
+            stderr: 'pipe',
+        });
+        const output = new Response(child.stdout).text();
+        const errors = new Response(child.stderr).text();
+        expect(await child.exited, (await output) + (await errors)).toBe(73);
+        const published = readFileSync(join(sandbox.path, '.gspot/reports/report.json'), 'utf8');
+        // Stopped before the write, the previous report stands; stopped after it, the new passing report is on disk.
+        const state = published === previous ? 'previous report' : (JSON.parse(published) as RunReport).exitCode;
+        expect(state).toBe(point === 'before' ? 'previous report' : 0);
+        // A report is written to a temporary file and renamed in, so no partial file or record is left behind.
+        expect(
+            readdirSync(join(sandbox.path, '.gspot/reports')).toSorted((left, right) => left.localeCompare(right)),
+        ).toStrictEqual(['report.codequality.json', 'report.json', 'report.sarif']);
+        expect(existsSync(join(sandbox.path, '.gspot/state'))).toBe(false);
+        const retry = await run(sandbox.path, ['check', '--json']);
+        expect(retry.code, retry.stdout + retry.stderr).toBe(0);
+        expect(JSON.parse(readFileSync(join(sandbox.path, '.gspot/reports/report.json'), 'utf8'))).toStrictEqual(
+            JSON.parse(retry.stdout),
+        );
+        expect(readFileSync(join(sandbox.path, 'source.txt'), 'utf8')).toBe('corrected\n');
+    },
+);
 
 test('GitLab reports retain located findings, stable fingerprints, and corrections alongside complete JSON and SARIF', async () => {
     await using sandbox = await testdir();

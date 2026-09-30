@@ -34,17 +34,9 @@ test.each([true, false])(
         expect(readFileSync(path, 'utf8')).toBe(installed);
         const removed = await uninstallCommand({ cwd: repository.path, yes: true, isDryRun: false });
         expect(removed.exitCode).toBe(0);
-        expect(existsSync(join(repository.path, '.gspot/state/ownership.json'))).toBe(true);
-        expect(readFileSync(path, 'utf8')).toBe(installed);
-        const retained = await run(['git', 'check-ignore', '--stdin', '-z'], {
-            cwd: repository.path,
-            stdin: '.gspot/state/ownership.json\0.gspot/state/recovery/original\0.gspot/authored.json\0source.md\0',
-        });
-        expect(retained.code, retained.stderr).toBe(0);
-        expect(retained.stdout.split('\0').filter(Boolean)).toStrictEqual([
-            '.gspot/state/ownership.json',
-            '.gspot/state/recovery/original',
-        ]);
+        // Nothing was kept for its edits, so the recovery data and the ignore block leave with the .gspot folder.
+        expect(existsSync(join(repository.path, '.gspot'))).toBe(false);
+        expect(existsSync(path) ? readFileSync(path, 'utf8') : undefined).toBe(authored ? original : undefined);
     },
 );
 

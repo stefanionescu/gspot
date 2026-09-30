@@ -42,7 +42,7 @@ async function previewApply(session: Session): Promise<CommandResult> {
         version: session.version,
         packageClient: session.packageClient,
     });
-    const drift = computeDrift(session.root, session.policyFiles.policy, session.packageClient !== undefined, plan);
+    const drift = computeDrift(session.root, session.policyFiles.policy, plan);
     await eslintRuleDiff(
         session.root,
         session.scopes.find((selection) => selection.scope.path === '')?.view,

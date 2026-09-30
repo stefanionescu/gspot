@@ -1,22 +1,29 @@
 import { z } from 'zod';
+import { createHash } from 'node:crypto';
 import { toPosix } from '#cli/platform/paths.ts';
 import { readAsset } from '#cli/platform/assets.ts';
 import { join, relative, isAbsolute } from 'node:path';
-import { CACHE_DIRECTORY } from '#cli/config/platform.ts';
+import { openRoot } from '#cli/platform/filesystem.ts';
 import { fileBatches } from '#cli/execution/files/batches.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import type { EngineInput, AstGrepMatch } from '#cli/types/checks.ts';
-import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
+import { PRIVATE_FILE, CACHE_DIRECTORY } from '#cli/config/platform.ts';
 
-const RULE_CACHE = `${CACHE_DIRECTORY}/ast-grep`;
 const positionSchema = z.object({ line: z.number().int().nonnegative() });
+
+// The rule file ast-grep reads, named by the hash of its text. It is written when missing or edited, and the cache
+// prune ages it out.
 function ruleFile(root: string, asset: string): string {
-    const path = `${RULE_CACHE}/${asset.slice(asset.lastIndexOf('/') + 1)}`;
-    return runOwnedLifecycle(root, (owner) => {
-        const result = owner.replace(path, { bytes: Buffer.from(readAsset(asset)), mode: 0o444 }, 'runtime');
-        if (result === 'preserved') throw new Error(`Retained edited or unowned structural rule: ${path}`);
-        return join(root, path);
-    });
+    const bytes = Buffer.from(readAsset(asset));
+    const path = `${CACHE_DIRECTORY}/${createHash('sha256').update(bytes).digest('hex')}.yml`;
+    const files = openRoot(root);
+    try {
+        const current = files.read(path);
+        if (current?.bytes.equals(bytes) !== true) files.write(path, { bytes, mode: PRIVATE_FILE }, current);
+    } finally {
+        files.close();
+    }
+    return join(root, path);
 }
 
 export const matchSchema = z.object({

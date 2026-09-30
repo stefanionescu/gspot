@@ -58,7 +58,6 @@ test.each(PACKAGE_PROJECTS)(
             computeDrift(
                 root,
                 session.policyFiles.policy,
-                session.packageClient !== undefined,
                 emitAll(session.policyFiles.policy, session.repository, session.scopes, {
                     version: session.version,
                     packageClient: session.packageClient,

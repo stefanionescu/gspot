@@ -6,7 +6,7 @@ import { cliSource } from '#tests/support/cli/process.ts';
 import { onPosix } from '#tests/support/cli/platforms.ts';
 import { installedOutputs } from '#cli/tools/installed-files.ts';
 import { openOwner, readOwnership } from '#cli/lifecycle/ownership/owner.ts';
-import { existsSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
+import { rmSync, existsSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
 
 const implementation = cliSource('lifecycle/ownership/owner.ts');
 
@@ -76,11 +76,10 @@ try {
     expect(readFileSync(join(directory.path, 'config.txt'), 'utf8')).toBe('authored bytes');
 });
 
-test('a Python installation replaces the whole environment and drops the per-file records of an older gspot', async () => {
+test('a Python installation replaces the whole environment, runtime caches included, as one record', async () => {
     await using directory = await testdir();
     await using staged = await testdir();
     const cache = '.gspot/.venv/lib/__pycache__';
-    await createFileTree(directory.path, { [`${cache}/unowned.pyc`]: 'runtime bytes' });
     await createFileTree(staged.path, {
         'lib/package.py': 'value = 2\n',
         'lib/package.pyc': 'packaged legacy bytecode',
@@ -88,17 +87,15 @@ test('a Python installation replaces the whole environment and drops the per-fil
     });
     const owner = openOwner(directory.path);
     try {
-        owner.replace(`${cache}/recorded.pyc`, { bytes: Buffer.from('previous cache'), mode: 0o644 }, 'dependency');
+        owner.installTree('python', installedOutputs(staged.path, 'python'));
+        await createFileTree(directory.path, { [`${cache}/unowned.pyc`]: 'runtime bytes' });
         owner.installTree('python', installedOutputs(staged.path, 'python'));
         expect(owner.read('.gspot/.venv/lib/package.py')?.bytes.toString()).toBe('value = 2\n');
         expect(owner.read('.gspot/.venv/lib/package.pyc')?.bytes.toString()).toBe('packaged legacy bytecode');
         // Runtime caches leave with the old environment; the staged caches are never published.
         expect(existsSync(join(directory.path, `${cache}/unowned.pyc`))).toBe(false);
         expect(existsSync(join(directory.path, `${cache}/new.pyc`))).toBe(false);
-        const state = readOwnership(directory.path);
-        expect(state.files.filter((entry) => entry.path.startsWith('.gspot/.venv/'))).toStrictEqual([]);
-        expect(state.installs).toStrictEqual(['python']);
-        expect(state.installations).toBeUndefined();
+        expect(readOwnership(directory.path)).toStrictEqual({ version: 1, files: [], installs: ['python'] });
     } finally {
         owner.close();
     }
@@ -107,16 +104,13 @@ describe.if(onPosix)('lifecycle ownership', () => {
     test('an installation replaces the folder it owns whole, edits and obsolete files included', async () => {
         await using directory = await testdir();
         await using staged = await testdir();
-        await createFileTree(staged.path, { 'package/bin/tool': 'new executable', '.bin/.keep': '' });
+        await createFileTree(staged.path, { 'package/bin/tool': 'new executable', '.bin/.keep': '', obsolete: 'old' });
         symlinkSync('../package/bin/tool', join(staged.path, '.bin/tool'));
         const owner = openOwner(directory.path);
         try {
-            owner.replace(
-                '.gspot/node_modules/obsolete',
-                { bytes: Buffer.from('installed'), mode: 0o644 },
-                'dependency',
-            );
+            owner.installTree('npm', installedOutputs(staged.path, 'npm'));
             writeFileSync(join(directory.path, '.gspot/node_modules/obsolete'), 'hand edit');
+            rmSync(join(staged.path, 'obsolete'));
             owner.installTree('npm', installedOutputs(staged.path, 'npm'));
             expect(readFileSync(join(directory.path, '.gspot/node_modules/.bin/tool'), 'utf8')).toBe('new executable');
             expect(existsSync(join(directory.path, '.gspot/node_modules/obsolete'))).toBe(false);

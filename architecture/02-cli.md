@@ -185,8 +185,8 @@ with the install hint. A check whose file set is empty does not run and does not
 words are lowercase: `ok`, `unchanged`, `fail`, `missing`, `error`, and `skipped`.
 
 Results are cached in `.gspot/cache/`. The key holds the tool version, the config files the
-check names, and the content of every file it read. A cached pass prints `unchanged`. Entries
-older than 30 days are dropped.
+check names, and the content of every file it read. A cached pass prints `unchanged`. Every run
+deletes the entries written more than seven days ago.
 
 In a folder with no git, `gspot check` runs every check that needs no history; `--staged` and
 `--changed` exit 2 there with one sentence that says why. With no upstream, `--changed` uses a
@@ -307,9 +307,12 @@ through a temporary file and a rename, then runs `apply` and prints the lines it
 
 Removes only recorded, unchanged gspot-owned outputs and its managed blocks, and restores
 replaced files and task bodies when the current value still matches what gspot installed. A
-developer edit is preserved and reported for manual recovery. It never removes `.gspot/`
-recursively: unmarked files, modified outputs, and recovery entries remain, and the command
-prints the path of each. It leaves `gspot.toml`.
+developer edit is preserved and reported for manual recovery. It leaves `gspot.toml`.
+
+It deletes the folders gspot keeps for itself whole: the installed tools, the cache, the reports,
+and the Vale packages. Unmarked files and modified outputs remain, and the command prints the
+path of each. The recovery data remains while one of them has an original there. Empty folders
+under `.gspot/` go, and so does `.gspot/` once nothing is left.
 
 ## `export`
 

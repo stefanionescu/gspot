@@ -2,10 +2,9 @@
 import type { z } from 'zod';
 import { isDeepStrictEqual } from 'node:util';
 import type { Read } from '#cli/types/platform.ts';
-import { GSPOT_FOLDER } from '#cli/config/platform.ts';
 import type { originalSchema } from '#cli/lifecycle/log.ts';
 import { matches, identity } from '#cli/lifecycle/ownership/log.ts';
-import type { Log, Outcome, Planned, PreparedWrite } from '#cli/types/lifecycle/lifecycle.ts';
+import type { Log, Outcome, Planned, Original, PreparedWrite, OwnershipEntry } from '#cli/types/lifecycle/lifecycle.ts';
 
 // The file as it is now, read as a link entry when either side of the plan is a link.
 function foundRead(log: Log, path: string, current: Read | undefined, next: Read | undefined): Read | undefined {
@@ -35,12 +34,28 @@ function assertPlansCurrent(log: Log, plans: Planned[], proposed: ReadonlyMap<st
     }
 }
 
-// The backup of the current bytes, taken when they leave: the first ownership, a removal, or a change.
+// The backup of the current bytes, taken when they leave: a removal or a change.
 function backupFor(log: Log, plan: Planned): z.infer<typeof originalSchema> | undefined {
     const { path, current, next } = plan;
     if (current === undefined) return undefined;
-    const isReplaced = plan.saveOriginal === true || next === undefined || !matches(current, identity(next));
+    const isReplaced = next === undefined || !matches(current, identity(next));
     return isReplaced ? log.backup(path, current) : undefined;
+}
+
+// The original an entry carries into a write. The first change gspot makes to an adopted file backs up the bytes it
+// held, and that backup becomes the original.
+function carriedOriginal(kept: OwnershipEntry['original'], recovery: Original | undefined): OwnershipEntry['original'] {
+    if (kept === undefined || kept.backup !== undefined || recovery === undefined) return kept;
+    const isSameBytes = recovery.hash === kept.hash && recovery.mode === kept.mode;
+    return isSameBytes ? recovery : kept;
+}
+
+// The original an entry records: the backup of the file gspot first replaced, or, for a file that already held the
+// exact bytes, their identity alone.
+function recordedOriginal(plan: Planned, recovery: Original | undefined): OwnershipEntry['original'] {
+    const { current, entry, saveOriginal } = plan;
+    if (saveOriginal === true) return recovery ?? (current === undefined ? undefined : identity(current));
+    return carriedOriginal(entry?.original, recovery);
 }
 
 // The record a changed plan writes, with the original its entry keeps.
@@ -48,9 +63,7 @@ function prepareRecord(log: Log, plan: Planned): PreparedWrite | undefined {
     const { path, current, next, entry } = plan;
     if (entry === undefined && plan.status !== 'changed') return undefined;
     const recovery = backupFor(log, plan);
-    // The .gspot folder holds nothing authored, so no original there is kept for uninstall.
-    const keepsOriginal = plan.saveOriginal === true && !path.startsWith(`${GSPOT_FOLDER}/`);
-    const original = keepsOriginal ? recovery : entry?.original;
+    const original = recordedOriginal(plan, recovery);
     const recordedEntry =
         entry === undefined ? undefined : { ...entry, ...(original === undefined ? {} : { original }) };
     return { path, current, next, entry: recordedEntry, recovery };

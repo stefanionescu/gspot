@@ -61,17 +61,18 @@ function pruneOperation(files: Root, folder: string, kept: Set<string>): void {
     if (files.list(folder).length === 0) files.rmdir(folder);
 }
 
-// Deletes every backup no entry keeps as its original. A finished operation needs none of its own backups: they
-// only guard an interrupted one.
+// Deletes every backup no entry keeps as its original, and the recovery folder once it is empty. A finished
+// operation needs none of its own backups: they only guard an interrupted one.
 function pruneRecovery(files: Root, recovery: string, entries: Iterable<OwnershipEntry>): void {
     if (files.stat(recovery)?.isDirectory() !== true) return;
     const kept = new Set(
-        [...entries].flatMap((entry) => (entry.original === undefined ? [] : [entry.original.backup])),
+        [...entries].flatMap((entry) => (entry.original?.backup === undefined ? [] : [entry.original.backup])),
     );
     for (const operation of files.list(recovery)) {
         const folder = `${recovery}/${operation}`;
         if (files.stat(folder)?.isDirectory() === true) pruneOperation(files, folder, kept);
     }
+    if (files.list(recovery).length === 0) files.rmdir(recovery);
 }
 
 // The recorded ownership state, or an empty one when nothing was recorded yet.
@@ -200,9 +201,6 @@ export function openLog(files: Root, stateDirectory: string): Log {
                 );
             mutationTarget(path);
             return recordedEntry(entries, path);
-        },
-        forget(path) {
-            entries.delete(path.normalize('NFC').toLowerCase());
         },
         finish() {
             for (const pending of state.pending ?? []) accept(pending);

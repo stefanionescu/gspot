@@ -6,9 +6,9 @@ import { writePin } from '#cli/lifecycle/version-pin.ts';
 import type { Generated } from '#cli/types/generation.ts';
 import { CONFLICT_MARKERS } from '#cli/config/lifecycle.ts';
 import type { Session } from '#cli/types/execution/execution.ts';
+import { hasPackages, installPackages } from '#cli/tools/vale.ts';
 import { preparePythonProject } from '#cli/tools/python-project.ts';
 import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
-import { installPackages, hasOwnedPackages } from '#cli/tools/vale.ts';
 import { preparePackageProject } from '#cli/tools/packages/project.ts';
 import type { Owner, ApplyReport } from '#cli/types/lifecycle/lifecycle.ts';
 
@@ -16,7 +16,7 @@ async function installProsePackages(session: Session, report: ApplyReport): Prom
     const isProse = session.scopes.some((selection) =>
         selection.selected.some((manifest) => manifest.kit.name === 'prose'),
     );
-    if (!isProse || hasOwnedPackages(session.root)) return;
+    if (!isProse || hasPackages(session.root)) return;
     const problem = await installPackages(session.root);
     if (problem === undefined) report.notes.push('synced the Vale packages into .gspot/config/vale/styles');
     else report.notes.push(`the Vale packages are not synced (${problem}); run gspot apply with the network on`);

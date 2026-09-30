@@ -36,7 +36,9 @@ test('apply and uninstall preserve later edits and unowned content while restori
     expect(readFileSync(join(directory.path, '.gspot/authored.txt'), 'utf8')).toBe('Preserve this file.\n');
     expect(readFileSync(join(directory.path, '.shellcheckrc'), 'utf8')).toBe(original);
     expect(statSync(join(directory.path, '.shellcheckrc')).mode & 0o777).toBe(keptMode(0o640));
-    expect(readFileSync(join(directory.path, '.gitignore'), 'utf8')).toContain('.gspot/state/');
+    // No original waits for a kept file, so the recovery data and the ignore block that init created go.
+    expect(existsSync(join(directory.path, '.gspot/state'))).toBe(false);
+    expect(existsSync(join(directory.path, '.gitignore'))).toBe(false);
 });
 
 test('a generated plan cannot overwrite lifecycle recovery data', async () => {

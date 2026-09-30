@@ -9,7 +9,6 @@ import packageManifest from '#package' with { type: 'json' };
 import { packageTool } from '#cli/tools/packages/identity.ts';
 import type { Session } from '#cli/types/execution/execution.ts';
 import { exposedSettings } from '#cli/policy/setting-surface.ts';
-import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import type { ScopeEntry } from '#cli/types/repository/repository.ts';
 import { readPolicy, assertPolicyComplete } from '#cli/policy/read.ts';
 import type { Policy, PolicyFiles, ScopeSelection } from '#cli/types/policy/policy.ts';
@@ -40,11 +39,6 @@ export async function openSession(root: string, policyFiles: PolicyFiles = readP
         policyFiles.policy.declarations,
         policyFiles.policy.scopes,
         policyFiles.policy.exclude,
-        new Set(
-            readOwnership(root)
-                .files.filter((entry) => entry.kind === 'runtime')
-                .map((entry) => entry.path),
-        ),
     );
     const scopes = scopeSelections(policyFiles.policy, repo.scopes, manifests);
     const runner = policyFiles.policy.runner?.tool;

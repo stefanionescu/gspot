@@ -118,20 +118,18 @@ test('a nested revision refuses its incomplete managed dependency installation',
     });
 });
 
-test.each(['', 'nested/'])('revision prose checks reuse verified installed packages under %s', async (prefix) => {
+test.each(['', 'nested/'])('revision prose checks reuse the installed packages under %s', async (prefix) => {
     await using sandbox = await testdir();
     const config = `${prefix}.gspot/config/vale.ini`;
+    const packagePath = '.gspot/config/vale/styles/Example/rule.yml';
     await createFileTree(sandbox.path, {
         [config]: 'StylesPath = vale/styles\nPackages = Example\n',
-        '.gitignore': '.gspot/state/ownership.json\n.gspot/state/recovery/\n.gspot/config/vale/styles/Example/\n',
+        [`${prefix}${packagePath}`]: 'extends: existence\n',
+        '.gitignore': '.gspot/config/vale/styles/Example/\n',
     });
     gitOutput(sandbox.path, ['init']);
     gitOutput(sandbox.path, ['add', '.']);
     const project = join(sandbox.path, prefix);
-    const packagePath = '.gspot/config/vale/styles/Example/rule.yml';
-    runOwnedLifecycle(project, (owner) => {
-        owner.replace(packagePath, { bytes: Buffer.from('extends: existence\n'), mode: 0o644 }, 'config');
-    });
     await useRevision(sandbox.path, { kind: 'index' }, async (snapshot) => {
         const copied = join(snapshot, prefix, packagePath);
         expect(await Bun.file(copied).text()).toBe('extends: existence\n');
@@ -141,11 +139,6 @@ test.each(['', 'nested/'])('revision prose checks reuse verified installed packa
     await Bun.write(join(sandbox.path, config), 'Packages = Different\n');
     expect(await rejection(useRevision(sandbox.path, { kind: 'index' }, () => Promise.resolve(undefined)))).toContain(
         'do not match the revision configuration',
-    );
-    await Bun.write(join(sandbox.path, config), 'StylesPath = vale/styles\nPackages = Example\n');
-    await Bun.write(join(project, packagePath), 'edited package');
-    expect(await rejection(useRevision(sandbox.path, { kind: 'index' }, () => Promise.resolve(undefined)))).toContain(
-        'missing or edited',
     );
 });
 

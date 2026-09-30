@@ -17,9 +17,8 @@ export const RAN_STATUSES = new Set(['ok', 'cache', 'fail']);
 export const FILES_PLACEHOLDER = '{files}';
 export const SOURCE_COVERAGE_KINDS = new Set(['format', 'syntax', 'style', 'types']);
 export const CACHE_FORMAT = 5;
-// Thirty days in milliseconds.
-export const RETENTION_MS = 2_592_000_000;
-export const CACHE_ENTRY = /^\.gspot\/cache\/[a-f0-9]{64}\.json$/u;
+// Seven days in milliseconds: a cache entry written longer ago is deleted.
+export const CACHE_RETENTION_MS = 604_800_000;
 export const FAILED_STATUSES = new Set(['fail', 'missing', 'error']);
 export const DOCKER = { name: 'docker', provider: 'host' as const, installers: {} };
 // Each pattern captures the check identifier. The reason follows `--` after the match.

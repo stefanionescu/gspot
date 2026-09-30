@@ -1,5 +1,5 @@
+import { removePackages } from '#cli/tools/vale.ts';
 import type { Generated } from '#cli/types/generation.ts';
-import { isValePackageFile } from '#cli/repository/kind.ts';
 import type { WriteRequest } from '#cli/types/lifecycle/apply.ts';
 import { written, readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import type { Owner, Planned, ApplyReport } from '#cli/types/lifecycle/lifecycle.ts';
@@ -28,15 +28,16 @@ function recordPreserved(report: ApplyReport, plans: Planned[]): void {
     report.preserved.push(...preserved.map((plan) => plan.path));
     for (const plan of preserved) {
         report.notes.push(`preserved edited or unowned ${plan.path}`);
-        if (plan.previous?.original !== undefined)
+        if (plan.previous?.original?.backup !== undefined)
             report.notes.push(`original for ${plan.path} retained at ${plan.previous.original.backup}`);
     }
 }
 
-// An installation no selected kit needs any more goes whole.
-function pruneInstallations(owner: Owner, hasPackages: boolean, hasPython: boolean): void {
-    if (!hasPackages) owner.removeInstallation('npm');
+// An installation no selected kit needs any more goes whole, and so do the Vale packages once nothing checks prose.
+function pruneInstallations(owner: Owner, root: string, retained: WriteRequest['retained'], hasPython: boolean): void {
+    if (!retained.packages) owner.removeInstallation('npm');
     if (!hasPython) owner.removeInstallation('python');
+    if (!retained.prose) removePackages(root);
 }
 
 // Every plan is prepared before the owner writes the batch.
@@ -64,21 +65,12 @@ export function writeGenerated(owner: Owner, request: WriteRequest): void {
     // Pruning restores only recorded outputs that no selected owner still needs.
     const recorded = new Set(
         readOwnership(root)
-            .files.filter((entry) => ['hook', 'runtime', 'export'].includes(entry.kind))
+            .files.filter((entry) => ['hook', 'export'].includes(entry.kind))
             .map((entry) => entry.path),
     );
     const pruning = owner
         .installedPaths()
-        .filter(
-            (path) =>
-                !(
-                    expected.has(path) ||
-                    recorded.has(path) ||
-                    (retained.prose && isValePackageFile(path)) ||
-                    (retained.packages && path.startsWith('.gspot/node_modules/')) ||
-                    (expected.has('.gspot/pyproject.toml') && path.startsWith('.gspot/.venv/'))
-                ),
-        )
+        .filter((path) => !(expected.has(path) || recorded.has(path)))
         .map((path) => owner.proposeRestoration(path));
     const plans = [...generated, ...pruning];
     const conflicts = plans.filter((plan) => plan.status === 'preserved').map((plan) => plan.path);
@@ -87,7 +79,7 @@ export function writeGenerated(owner: Owner, request: WriteRequest): void {
             `Setup preserved conflicting outputs: ${conflicts.join(', ')}. Move them aside and run gspot apply; old tool configuration was retained.`,
         );
     owner.applyPlans(plans.filter((plan) => plan.status !== 'preserved'));
-    pruneInstallations(owner, retained.packages, expected.has('.gspot/pyproject.toml'));
+    pruneInstallations(owner, root, retained, expected.has('.gspot/pyproject.toml'));
     recordPreserved(report, plans);
     report.written.push(...replacements.filter((plan) => plan.status === 'changed').map((plan) => plan.path));
     report.unchanged.push(...replacements.filter((plan) => plan.status === 'unchanged').map((plan) => plan.path));

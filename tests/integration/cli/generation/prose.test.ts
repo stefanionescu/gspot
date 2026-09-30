@@ -1,12 +1,11 @@
 import { join } from 'node:path';
+import { mkdirSync } from 'node:fs';
 import { test, expect } from 'bun:test';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { hasPackages } from '#cli/tools/vale.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
-import { openOwner } from '#cli/lifecycle/ownership/owner.ts';
-import { hasPackages, hasOwnedPackages } from '#cli/tools/vale.ts';
 
 test('generated vocabulary combines shipped and project words without duplicates', async () => {
     await using sandbox = await testdir();
@@ -35,20 +34,6 @@ test('package readiness follows the generated Vale configuration', async () => {
     expect(hasPackages(sandbox.path)).toBe(false);
     mkdirSync(join(sandbox.path, '.gspot/config/vale/styles/Google'), { recursive: true });
     expect(hasPackages(sandbox.path)).toBe(true);
-    expect(hasOwnedPackages(sandbox.path)).toBe(false);
-    const owner = openOwner(sandbox.path);
-    try {
-        owner.replace(
-            '.gspot/config/vale/styles/Google/terms.yml',
-            { bytes: Buffer.from('extends: existence\n'), mode: 0o644 },
-            'config',
-        );
-    } finally {
-        owner.close();
-    }
-    expect(hasOwnedPackages(sandbox.path)).toBe(true);
-    writeFileSync(join(sandbox.path, '.gspot/config/vale/styles/Google/terms.yml'), 'edited\n');
-    expect(hasOwnedPackages(sandbox.path)).toBe(false);
 });
 
 test('a Vale configuration without external packages needs no downloaded styles', async () => {

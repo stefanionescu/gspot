@@ -23,8 +23,9 @@ description: Remove what gspot wrote and restore the files it replaced.
     ```
 
 Uninstall restores an original when its place is empty, or still holds exactly what gspot
-wrote. It keeps `gspot.toml`, exported profiles, your own guides folder, and the recovery data
-under `.gspot/state/`.
+wrote. It deletes the installed tools, the cache, the reports, the downloaded style packages, and
+the ignore block, then `.gspot/` itself once nothing of yours is left in it. It keeps
+`gspot.toml`, exported profiles, and your own guides folder.
 
 ## A file you edited
 
@@ -32,8 +33,9 @@ When you edited a file after gspot wrote it, uninstall keeps your version. It pr
 and, when one exists, the path of the saved original, so you can compare them. `--json` lists
 these pairs under `originals`. Decide which changes to keep before you replace anything.
 
-Keep the recovery data until you resolve every conflict. It holds the exact bytes and
-permissions of each file gspot replaced.
+While such a file has an original, uninstall keeps the recovery data under `.gspot/state/`. Keep
+it until you resolve every conflict. It holds the exact bytes and permissions of each file gspot
+replaced.
 
 ## A fresh clone
 

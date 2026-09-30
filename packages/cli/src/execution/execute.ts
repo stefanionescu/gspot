@@ -22,7 +22,6 @@ import type {
     Session,
     FixReport,
     IgnoreUse,
-    RunReport,
     Executable,
     RunOptions,
     RunOutcome,
@@ -170,12 +169,6 @@ async function planCorrections(
     return { executables: planExecutables(session, options), fixes };
 }
 
-// Whether a run covered the whole repository with live results, so stale cache entries can go.
-function isPruneWorthy(options: RunOptions, report: RunReport): boolean {
-    if (options.isDryRun || options.noCache === true) return false;
-    return options.stage === 'all' && !report.narrowed;
-}
-
 /**
  * Runs the checks and returns the report. Writes `.gspot/reports/report.json`.
  * @param opened the session
@@ -214,6 +207,6 @@ export async function executeRun(opened: Session, options: RunOptions): Promise<
         uses: pass.uses,
         fixes,
     });
-    if (isPruneWorthy(options, report)) pruneCache(session.cacheRoot ?? session.root);
+    if (!options.isDryRun && options.noCache !== true) pruneCache(session.cacheRoot ?? session.root);
     return fixes ? { report, planned, fixes } : { report, planned };
 }

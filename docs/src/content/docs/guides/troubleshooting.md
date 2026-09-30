@@ -70,7 +70,7 @@ repository:
 - Linux: `XDG_CACHE_HOME`, or `~/.cache` when it is not set
 - Windows: `LOCALAPPDATA`, or `~/AppData/Local` when it is not set
 
-A full check with the cache on removes cached results older than 30 days.
+Every check with the cache on deletes the cached results written more than seven days ago.
 
 ## A Windows path is refused
 

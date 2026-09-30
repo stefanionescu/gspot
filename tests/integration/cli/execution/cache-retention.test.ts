@@ -4,17 +4,17 @@ import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
-import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import { cacheKey, fileHash, pruneCache, cacheInputs, writeCached } from '#cli/execution/cache.ts';
-import { chmodSync, existsSync, utimesSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, utimesSync, readdirSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
 
-test('cache pruning removes only expired unchanged owned results', async () => {
+const DAY = 24 * 60 * 60 * 1000;
+
+test('cache pruning deletes every cache file written more than a week ago and records nothing', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': policyOf([]) });
-    const paths = ['1', '2', '3', '4'].map((digit) => `.gspot/cache/${digit.repeat(64)}.json`);
-    const [expired, recent, edited, authored] = paths as [string, string, string, string];
-    for (const path of [expired, recent, edited]) {
-        writeCached(sandbox.path, path.slice('.gspot/cache/'.length, -'.json'.length), {
+    const [expired, recent] = ['1', '2'].map((digit) => digit.repeat(64));
+    for (const key of [expired!, recent!]) {
+        writeCached(sandbox.path, key, {
             check: 'project/example',
             scope: '',
             status: 'ok',
@@ -23,17 +23,16 @@ test('cache pruning removes only expired unchanged owned results', async () => {
             findings: [],
         });
     }
-    writeFileSync(join(sandbox.path, edited), 'authored edit\n');
-    writeFileSync(join(sandbox.path, authored), 'unowned\n');
-    const expiredAt = new Date(Date.now() - 31 * 24 * 60 * 60 * 1000);
-    for (const path of [expired, edited, authored]) utimesSync(join(sandbox.path, path), expiredAt, expiredAt);
+    const stray = join(sandbox.path, '.gspot/cache/stray.yml');
+    writeFileSync(stray, 'left by an older run\n');
+    const eightDaysAgo = new Date(Date.now() - 8 * DAY);
+    const sixDaysAgo = new Date(Date.now() - 6 * DAY);
+    utimesSync(join(sandbox.path, `.gspot/cache/${expired!}.json`), eightDaysAgo, eightDaysAgo);
+    utimesSync(stray, eightDaysAgo, eightDaysAgo);
+    utimesSync(join(sandbox.path, `.gspot/cache/${recent!}.json`), sixDaysAgo, sixDaysAgo);
     pruneCache(sandbox.path);
-    expect(existsSync(join(sandbox.path, expired))).toBe(false);
-    expect(existsSync(join(sandbox.path, recent))).toBe(true);
-    expect(readFileSync(join(sandbox.path, edited), 'utf8')).toBe('authored edit\n');
-    expect(readFileSync(join(sandbox.path, authored), 'utf8')).toBe('unowned\n');
-    expect(readOwnership(sandbox.path).files.map((entry) => entry.path)).not.toContain(expired);
-    expect(readOwnership(sandbox.path).pending).toBeUndefined();
+    expect(readdirSync(join(sandbox.path, '.gspot/cache'))).toStrictEqual([`${recent!}.json`]);
+    expect(existsSync(join(sandbox.path, '.gspot/state'))).toBe(false);
 });
 
 test('file cache hashes distinguish binary bytes that decode to the same replacement text', async () => {
@@ -57,7 +56,7 @@ test('cache keys cannot confuse a newline in a filename with another input recor
     );
 });
 
-test('full cache-enabled runs retire old results while narrowed runs retain them', async () => {
+test('every real run prunes the cache, and a dry run or a run without the cache leaves it', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': policyOf([]) });
     const key = 'a'.repeat(64);
@@ -70,15 +69,15 @@ test('full cache-enabled runs retire old results while narrowed runs retain them
         duration: 0,
         findings: [],
     });
-    const expiredAt = new Date(Date.now() - 31 * 24 * 60 * 60 * 1000);
+    const expiredAt = new Date(Date.now() - 8 * DAY);
     utimesSync(path, expiredAt, expiredAt);
     const session = await openSession(sandbox.path);
-    const options = { stage: 'all' as const, skips: [], fix: false, isDryRun: false };
-    await executeRun(session, { ...options, paths: [] });
-    expect(existsSync(path)).toBe(true);
+    const options = { stage: 'commit' as const, skips: [], fix: false, isDryRun: false };
     await executeRun(session, { ...options, noCache: true });
     expect(existsSync(path)).toBe(true);
-    await executeRun(session, options);
+    await executeRun(session, { ...options, isDryRun: true });
+    expect(existsSync(path)).toBe(true);
+    await executeRun(session, { ...options, paths: [] });
     expect(existsSync(path)).toBe(false);
 });
 

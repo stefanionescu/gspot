@@ -162,7 +162,7 @@ test('YAML ownership preserves authored entries and comments through updates and
     }
 });
 
-test('adopting identical authored configuration retains original recovery bytes and permissions', async () => {
+test('adopting identical authored configuration restores its bytes and permissions without a backup', async () => {
     await using directory = await testdir();
     const content = '{\n    "scripts": {"check": "gspot check"},\n    "authored": true\n}\n';
     await createFileTree(directory.path, { 'package.json': content });
@@ -180,9 +180,7 @@ test('adopting identical authored configuration retains original recovery bytes 
         const state = ownershipSchema.parse(
             JSON.parse(readFileSync(join(directory.path, '.gspot/state/ownership.json'), 'utf8')),
         );
-        const original = state.files[0]!.original;
-        expect(original).toBeDefined();
-        expect(readFileSync(join(directory.path, original!.backup), 'utf8')).toBe(content);
+        expect(state.files[0]!.original).toBeUndefined();
         expect(owner.restore('package.json')).toBe('changed');
         expect(readFileSync(join(directory.path, 'package.json'), 'utf8')).toBe(content);
         expect(statSync(join(directory.path, 'package.json')).mode & 0o777).toBe(keptMode(0o640));

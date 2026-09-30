@@ -127,7 +127,7 @@ if (onPosix) {
             const state = ownershipSchema.parse(
                 JSON.parse(readFileSync(join(directory.path, '.gspot/state/ownership.json'), 'utf8')),
             );
-            expect(readFileSync(join(directory.path, state.files[0]!.original!.backup), 'utf8')).toBe(
+            expect(readFileSync(join(directory.path, state.files[0]!.original!.backup!), 'utf8')).toBe(
                 'authored original\n',
             );
             expect(owner.restore('.gspot/unowned')).toBe('preserved');

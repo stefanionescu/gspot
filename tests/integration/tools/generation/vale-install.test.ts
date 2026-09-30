@@ -5,9 +5,9 @@ import { testdir, createFileTree } from 'testdirs';
 import { kitManifests } from '#cli/kits/manifests.ts';
 import { parseAlerts } from '#cli/checks/prose/vale.ts';
 import { containing } from '#tests/support/expectations.ts';
-import { installPackages, hasOwnedPackages } from '#cli/tools/vale.ts';
 import { chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { openOwner, readOwnership } from '#cli/lifecycle/ownership/owner.ts';
+import { hasPackages, removePackages, installPackages } from '#cli/tools/vale.ts';
 
 // A Zip archive containing LocalStyle/terms.yml, an existence rule rejecting ambiguousword.
 const PACKAGE = Buffer.from(
@@ -21,14 +21,10 @@ async function expectPublishedRules(root: string): Promise<void> {
     await using clone = await testdir();
     await createFileTree(clone.path, {
         '.gspot/config/vale.ini': readFileSync(join(root, '.gspot/config/vale.ini'), 'utf8'),
-        [INSTALLED]: readFileSync(join(root, INSTALLED), 'utf8'),
+        [INSTALLED]: 'cloned bytes\n',
     });
-    const original = readFileSync(join(clone.path, INSTALLED));
     expect(await installPackages(clone.path)).toBeUndefined();
-    const adopted = readOwnership(clone.path).files.find((file) => file.path === INSTALLED)!;
-    expect(adopted.installed).toBeDefined();
-    expect(adopted.original).toBeDefined();
-    expect(readFileSync(join(clone.path, INSTALLED))).toStrictEqual(original);
+    expect(readFileSync(join(clone.path, INSTALLED))).toStrictEqual(readFileSync(join(root, INSTALLED)));
     const command = ['vale', '--config', '.gspot/config/vale.ini', '--output', 'JSON', '--no-exit', 'guide.md'];
     const checked = await run(command, { cwd: root });
     expect(checked.code, checked.stdout + checked.stderr).toBe(0);
@@ -47,38 +43,28 @@ async function expectPublishedRules(root: string): Promise<void> {
 }
 
 async function expectPrunedRules(root: string): Promise<void> {
-    const stale = '.gspot/config/vale/styles/Retired/terms.yml';
-    const staleOwner = openOwner(root);
-    try {
-        staleOwner.replace(stale, { bytes: Buffer.from('installed old rule\n'), mode: 0o644 }, 'config');
-    } finally {
-        staleOwner.close();
-    }
-    writeFileSync(join(root, stale), 'edited old rule\n');
-    const beforeRefresh = readFileSync(join(root, INSTALLED));
-    expect(await installPackages(root)).toContain(`preserved edited or unowned ${stale}`);
-    expect(readFileSync(join(root, stale), 'utf8')).toBe('edited old rule\n');
-    expect(readFileSync(join(root, INSTALLED))).toStrictEqual(beforeRefresh);
-    writeFileSync(join(root, stale), 'installed old rule\n');
+    await createFileTree(root, { '.gspot/config/vale/styles/Retired/terms.yml': 'old rule\n' });
     expect(await installPackages(root)).toBeUndefined();
-    expect(existsSync(join(root, stale))).toBe(false);
-    expect(await installPackages(root)).toBeUndefined();
-    expect(hasOwnedPackages(root)).toBe(true);
+    expect(existsSync(join(root, '.gspot/config/vale/styles/Retired'))).toBe(false);
+    expect(existsSync(join(root, INSTALLED))).toBe(true);
+    removePackages(root);
+    expect(existsSync(join(root, '.gspot/config/vale/styles/LocalStyle'))).toBe(false);
+    expect(readFileSync(join(root, 'authored.txt'), 'utf8')).toBe('keep\n');
 }
 
 async function expectEditedRules(root: string): Promise<void> {
-    const edited = `${readFileSync(join(root, INSTALLED), 'utf8')}# Authored later.\n`;
+    const synced = readFileSync(join(root, INSTALLED));
     chmodSync(join(root, INSTALLED), 0o644);
-    writeFileSync(join(root, INSTALLED), edited);
-    expect(await installPackages(root)).toContain(`preserved edited or unowned ${INSTALLED}`);
-    expect(readFileSync(join(root, INSTALLED), 'utf8')).toBe(edited);
+    writeFileSync(join(root, INSTALLED), 'edited\n');
+    expect(await installPackages(root)).toBeUndefined();
+    expect(readFileSync(join(root, INSTALLED))).toStrictEqual(synced);
     expect(readFileSync(join(root, 'authored.txt'), 'utf8')).toBe('keep\n');
 }
 
 test.each([
-    { name: 'publishes owned rules, adopts cloned bytes, and checks corrections', verify: expectPublishedRules },
-    { name: 'preserves edited retired rules and prunes restored rules', verify: expectPrunedRules },
-    { name: 'preserves edited installed rules and unrelated authored files', verify: expectEditedRules },
+    { name: 'replaces cloned bytes and checks corrections', verify: expectPublishedRules },
+    { name: 'deletes a package the configuration no longer names', verify: expectPrunedRules },
+    { name: 'replaces an edited package and leaves authored files', verify: expectEditedRules },
 ])(
     'pinned Vale $name',
     async ({ verify }) => {
@@ -108,12 +94,10 @@ test.each([
                 owner.close();
             }
             expect(await installPackages(directory.path)).toBeUndefined();
-            expect(hasOwnedPackages(directory.path)).toBe(true);
-            expect(
-                readOwnership(directory.path).files.some(
-                    (file) => file.path === INSTALLED && file.installed !== undefined,
-                ),
-            ).toBe(true);
+            expect(hasPackages(directory.path)).toBe(true);
+            expect(readOwnership(directory.path).files.map((file) => file.path)).toStrictEqual([
+                '.gspot/config/vale.ini',
+            ]);
             await verify(directory.path);
         } finally {
             await server.stop(true);

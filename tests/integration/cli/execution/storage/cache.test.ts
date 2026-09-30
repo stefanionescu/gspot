@@ -17,7 +17,7 @@ import { storageSession } from '#tests/support/cli/storage.ts';
 import { runHashes, cacheKeyFor } from '#cli/execution/result-cache.ts';
 
 test.each(['{', '{"status":"ok","findings":[]}'])(
-    'an edited cached result %s is preserved and the check runs again',
+    'an edited cached result %s is a miss: the check runs again and its result replaces the entry',
     async (content) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
@@ -32,25 +32,21 @@ test.each(['{', '{"status":"ok","findings":[]}'])(
         const cache = join(sandbox.path, '.gspot/cache');
         const [entry] = fs.readdirSync(cache);
         fs.writeFileSync(join(cache, entry!), content);
-        const stderr = spyOn(process.stderr, 'write').mockImplementation(() => true);
-        try {
-            const repeated = await executeRun(session, options);
-            expect(repeated.report.exitCode).toBe(1);
-            expect(repeated.report.checks[0]?.findings[0]?.message).toBe('Retained finding');
-            expect(fs.readFileSync(join(cache, entry!), 'utf8')).toBe(content);
-            expect(JSON.parse(fs.readFileSync(reportPath, 'utf8'))).toStrictEqual(repeated.report);
-            expect(stderr.mock.calls.map((call) => String(call[0])).join('')).toContain(
-                'Preserved edited or unowned cache',
-            );
-        } finally {
-            stderr.mockRestore();
-        }
+        const repeated = await executeRun(session, options);
+        expect(repeated.report.exitCode).toBe(1);
+        expect(repeated.report.checks[0]?.status).toBe('fail');
+        expect(repeated.report.checks[0]?.findings[0]?.message).toBe('Retained finding');
+        expect(JSON.parse(fs.readFileSync(join(cache, entry!), 'utf8'))).toMatchObject({
+            status: 'fail',
+            findings: [{ message: 'Retained finding' }],
+        });
+        expect(JSON.parse(fs.readFileSync(reportPath, 'utf8'))).toStrictEqual(repeated.report);
     },
 );
 
 // Windows has no read permission bit, and a running executable cannot be renamed there.
 if (onPosix)
-    test('a denied owned cache read reports its path and cause', async () => {
+    test('a denied cache read reports its path and cause', async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
             'gspot.toml': policyOf([]),

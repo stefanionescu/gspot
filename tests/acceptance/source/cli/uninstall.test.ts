@@ -10,7 +10,7 @@ import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 
 describe('uninstall', () => {
     test(
-        'removes the generated files, its package.json entries and its hook scripts, and keeps the rest',
+        'removes the generated files, its package.json entries, its hook scripts, and the .gspot folder, and keeps the rest',
         async () => {
             await using sandbox = await testdir();
             await createFileTree(sandbox.path, {
@@ -44,10 +44,9 @@ describe('uninstall', () => {
             };
             expect(manifest.scripts).toStrictEqual({ build: 'true' });
             expect(manifest.devDependencies).toStrictEqual({ 'left-pad': '1.3.0' });
-            expect(existsSync(join(sandbox.path, '.gspot/hooks/pre-commit'))).toBe(false);
-            expect(existsSync(join(sandbox.path, '.gspot/state/recovery'))).toBe(true);
-            expect(readFileSync(join(sandbox.path, '.gitignore'), 'utf8')).toContain('.gspot/state/');
-            expect(existsSync(join(sandbox.path, '.gspot/config/shellcheckrc'))).toBe(false);
+            // Nothing was kept for its edits, so no recovery data stays, and the ignore block goes with the folder.
+            expect(existsSync(join(sandbox.path, '.gspot'))).toBe(false);
+            expect(existsSync(join(sandbox.path, '.gitignore'))).toBe(false);
             expect(existsSync(join(sandbox.path, 'gspot.toml'))).toBe(true);
         },
         PLANTED_TIMEOUT_MS,

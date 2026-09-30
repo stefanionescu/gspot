@@ -44,8 +44,7 @@ export function recoverInstallations(log: Log): void {
 }
 
 /**
- * Writes a finished installation beside its folder and swaps it in. A folder gspot did not install is refused, and
- * the per-file records an older gspot kept for the folder are dropped.
+ * Writes a finished installation beside its folder and swaps it in. A folder gspot did not install is refused.
  * @param log the open log
  * @param kind the installation
  * @param outputs every file of the installation, at its path under the installation folder
@@ -53,9 +52,7 @@ export function recoverInstallations(log: Log): void {
 export function installTree(log: Log, kind: InstallationKind, outputs: InstalledOutput[]): void {
     const { files, state } = log;
     const { folder, staging, previous } = sideFolders(kind);
-    const perFile = state.files.filter((entry) => entry.path.startsWith(`${folder}/`)).map((entry) => entry.path);
-    const isOwned = state.installs?.includes(kind) === true || perFile.length > 0;
-    if (!isOwned && files.list(folder).length > 0)
+    if (state.installs?.includes(kind) !== true && files.list(folder).length > 0)
         throw new Error(`Preserved unowned ${folder}. Move it aside before installing.`);
     setInProgress(log, kind, true);
     files.removeTree(staging);
@@ -69,7 +66,6 @@ export function installTree(log: Log, kind: InstallationKind, outputs: Installed
     if (files.stat(folder) !== undefined) files.rename(folder, previous);
     files.rename(staging, folder);
     files.removeTree(previous);
-    for (const path of perFile) log.forget(path);
     setInstalled(log, kind, true);
     setInProgress(log, kind, false);
 }

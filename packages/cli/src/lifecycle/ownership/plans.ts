@@ -1,6 +1,7 @@
 // What the owner proposes for one file: a replacement, a managed block, a merged configuration, or a retirement.
 import { isDeepStrictEqual } from 'node:util';
 import type { Read } from '#cli/types/platform.ts';
+import { ORIGINAL_KINDS } from '#cli/config/lifecycle.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/platform.ts';
 import { matches, identity } from '#cli/lifecycle/ownership/log.ts';
 import { blockSpan, applyBlock } from '#cli/lifecycle/managed-blocks.ts';
@@ -54,7 +55,7 @@ function changedReplacement(
         previous: existing,
         next,
         entry,
-        saveOriginal: existing === undefined && current !== undefined,
+        saveOriginal: existing === undefined && current !== undefined && ORIGINAL_KINDS.has(kind),
         status,
     };
 }
@@ -83,12 +84,19 @@ function updatedBlock(
 }
 
 // The next text and record for a file whose block is not recorded yet.
-function insertedBlock(text: string, span: BlockSpan | undefined, style: BlockStyle, body: string): PlannedBlock {
+function insertedBlock(
+    current: Read | undefined,
+    span: BlockSpan | undefined,
+    style: BlockStyle,
+    body: string,
+): PlannedBlock {
+    const text = current?.bytes.toString('utf8') ?? '';
     const nextText = applyBlock(text, body, style);
     let prefix = '';
     if (span === undefined && text !== '') prefix = text.endsWith('\n') ? '\n' : '\n\n';
     const original = span === undefined ? '' : text.slice(span.start, span.end);
-    return { nextText, block: { style, installed: prefix + applyBlock('', body, style), original, prefix } };
+    const installed = prefix + applyBlock('', body, style);
+    return { nextText, block: { style, installed, original, prefix, created: current === undefined } };
 }
 
 // The plan a planned block yields: unchanged when the bytes already stand, otherwise the new record.
@@ -104,24 +112,6 @@ function blockPlan(
     const plan = changedReplacement(path, current, existing, next, 'block');
     plan.entry.block = planned.block;
     return plan;
-}
-
-// The plan that records a merged configuration file.
-function mergePlan(
-    path: string,
-    current: Read | undefined,
-    existing: OwnershipEntry | undefined,
-    plan: NonNullable<ReturnType<typeof planConfiguration>>,
-): Planned {
-    const entry: OwnershipEntry = {
-        path,
-        kind: 'merge',
-        installed: identity(plan.next),
-        configuration: plan.configuration,
-        ...(existing?.original === undefined ? {} : { original: existing.original }),
-    };
-    const saveOriginal = existing === undefined && current !== undefined;
-    return { path, current, previous: existing, next: plan.next, entry, saveOriginal, status: plan.status };
 }
 
 // The plan that retires a file: its record loses the installed identity and keeps the original.
@@ -196,7 +186,7 @@ export function proposeBlock(log: Log, path: string, body: string, style: BlockS
     }
     if (existing !== undefined && current !== undefined && !matches(current, existing.installed))
         return { path, current, previous: existing, status: 'preserved' };
-    return blockPlan(path, current, existing, insertedBlock(text, span, style, body));
+    return blockPlan(path, current, existing, insertedBlock(current, span, style, body));
 }
 
 /**
@@ -230,7 +220,13 @@ export function proposeConfiguration(
     if (plan === undefined) return { path, current, previous: existing, status: 'preserved' };
     if (plan.status === 'unchanged' && existing?.configuration !== undefined)
         return { path, current, previous: existing, status: 'unchanged' };
-    return mergePlan(path, current, existing, plan);
+    const entry: OwnershipEntry = {
+        path,
+        kind: 'merge',
+        installed: identity(plan.next),
+        configuration: plan.configuration,
+    };
+    return { path, current, previous: existing, next: plan.next, entry, status: plan.status };
 }
 
 /**

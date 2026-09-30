@@ -14,25 +14,25 @@ field lists; a normalized type exists only for a real transformation.
 
 ## Files
 
-| Path                                                      | Owner                         | Tracked | Purpose                                                                                                 |
-| --------------------------------------------------------- | ----------------------------- | ------- | ------------------------------------------------------------------------------------------------------- |
-| `gspot.toml`                                              | the repository                | yes     | the config, written by `init` and changed by the four writing commands or by hand                       |
-| `.gspot/config/<tool-file>`                               | gspot                         | yes     | the generated configuration of each tool, with the mark of gspot                                        |
-| `.gspot/package.json`, its lockfile                       | gspot                         | yes     | the npm lint tools gspot pins                                                                           |
-| `.gspot/pyproject.toml`, `uv.lock`                        | gspot                         | yes     | the Python lint tools gspot pins                                                                        |
-| `.gspot/node_modules/`, `.gspot/.venv/`                   | gspot                         | no      | where those tools install                                                                               |
-| `.gspot/version`                                          | gspot                         | yes     | the gspot version this repository runs, one line                                                        |
-| `.gspot/guides/**`                                        | gspot                         | yes     | the installed guides                                                                                    |
-| `.gspot/state/recovery/**`, `.gspot/state/ownership.json` | gspot, local recovery data    | no      | exact originals, installed hashes, and completed operations; retained through uninstall                 |
-| `.gspot/cache/**`                                         | gspot                         | no      | verdicts keyed on their inputs, dropped after 30 days                                                   |
-| `.gspot/reports/report.*`                                 | gspot                         | no      | the last run, as JSON, SARIF, and Code Quality                                                          |
-| `.mise/conf.d/gspot-tools.toml`                           | gspot                         | yes     | tool pins under the mise runner                                                                         |
-| `.editorconfig`                                           | gspot                         | yes     | written whole from `[format]`, because editors read no other place                                      |
-| a root pointer                                            | gspot                         | yes     | for a tool an editor reads from the root: ESLint, Prettier, Stylelint, SwiftLint, Pyright               |
-| `.gitignore`, `.gitattributes`                            | gspot, one managed block each | yes     | the untracked paths of gspot alone; generated-file classification and LF endings for gspot-owned paths  |
-| `AGENTS.md`, and the agent files the repository holds     | gspot, one managed block each | yes     | the index of guides: `CLAUDE.md`, `GEMINI.md`, Copilot instructions, a Cursor rule                      |
-| the hook or task a hook calls                             | gspot, one managed block      | yes     | the gspot line: in the hook tool, the task, or the tracked hook file, or in `.git/hooks/` of each clone |
-| `.github/workflows/gspot.yml` or `.gitlab/ci/gspot.yml`   | gspot                         | yes     | the CI job, when enabled                                                                                |
+| Path                                                      | Owner                         | Tracked | Purpose                                                                                                   |
+| --------------------------------------------------------- | ----------------------------- | ------- | --------------------------------------------------------------------------------------------------------- |
+| `gspot.toml`                                              | the repository                | yes     | the config, written by `init` and changed by the four writing commands or by hand                         |
+| `.gspot/config/<tool-file>`                               | gspot                         | yes     | the generated configuration of each tool, with the mark of gspot                                          |
+| `.gspot/package.json`, its lockfile                       | gspot                         | yes     | the npm lint tools gspot pins                                                                             |
+| `.gspot/pyproject.toml`, `uv.lock`                        | gspot                         | yes     | the Python lint tools gspot pins                                                                          |
+| `.gspot/node_modules/`, `.gspot/.venv/`                   | gspot                         | no      | where those tools install                                                                                 |
+| `.gspot/version`                                          | gspot                         | yes     | the gspot version this repository runs, one line                                                          |
+| `.gspot/guides/**`                                        | gspot                         | yes     | the installed guides                                                                                      |
+| `.gspot/state/recovery/**`, `.gspot/state/ownership.json` | gspot, local recovery data    | no      | the originals of files that were there first, and installed hashes; kept while a preserved file needs one |
+| `.gspot/cache/**`                                         | gspot                         | no      | verdicts keyed on their inputs, deleted seven days after they were written                                |
+| `.gspot/reports/report.*`                                 | gspot                         | no      | the last run, as JSON, SARIF, and Code Quality                                                            |
+| `.mise/conf.d/gspot-tools.toml`                           | gspot                         | yes     | tool pins under the mise runner                                                                           |
+| `.editorconfig`                                           | gspot                         | yes     | written whole from `[format]`, because editors read no other place                                        |
+| a root pointer                                            | gspot                         | yes     | for a tool an editor reads from the root: ESLint, Prettier, Stylelint, SwiftLint, Pyright                 |
+| `.gitignore`, `.gitattributes`                            | gspot, one managed block each | yes     | the untracked paths of gspot alone; generated-file classification and LF endings for gspot-owned paths    |
+| `AGENTS.md`, and the agent files the repository holds     | gspot, one managed block each | yes     | the index of guides: `CLAUDE.md`, `GEMINI.md`, Copilot instructions, a Cursor rule                        |
+| the hook or task a hook calls                             | gspot, one managed block      | yes     | the gspot line: in the hook tool, the task, or the tracked hook file, or in `.git/hooks/` of each clone   |
+| `.github/workflows/gspot.yml` or `.gitlab/ci/gspot.yml`   | gspot                         | yes     | the CI job, when enabled                                                                                  |
 
 The only shared-manifest write is the `gspot` launcher under an npm runner. gspot never writes tool dependencies or package lifecycle scripts into the developer's
 `package.json`, and never writes a table into their `pyproject.toml`.
@@ -275,8 +275,9 @@ and hash under `.gspot/state/recovery/<operation>/`. That folder is owner-only, 
 originals can hold credentials. The installed hash and ownership kind go into
 `.gspot/state/ownership.json`.
 
-Recovery is local and untracked, never a cache, and never removed by eviction or uninstall. If
-recovery cannot be written, the replacement is refused. A second operation never overwrites an
+Recovery is local and untracked, and never a cache. A finished operation deletes its backups
+except the originals, and uninstall deletes the folder once no preserved file needs an original.
+If recovery cannot be written, the replacement is refused. A second operation never overwrites an
 earlier original.
 
 A fresh clone has no local record, so its files are preserved, including tracked files that
