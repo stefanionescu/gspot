@@ -2,35 +2,42 @@ import { parseArgs } from 'node:util';
 import { fileURLToPath } from 'node:url';
 import { join, dirname } from 'node:path';
 import packageManifest from '#plugin-package' with { type: 'json' };
-import { rmSync, mkdirSync, copyFileSync, writeFileSync } from 'node:fs';
+import { rmSync, mkdirSync, renameSync, mkdtempSync, readdirSync, copyFileSync, writeFileSync } from 'node:fs';
 
 const here = dirname(fileURLToPath(new URL(import.meta.url)));
 const distribution = join(here, 'dist');
 
+// Builds into a folder of its own, then renames each file over its copy in dist. When two checks in one run build at
+// once, dist is never empty and never half written.
 async function build(): Promise<void> {
-    rmSync(distribution, { recursive: true, force: true });
-    mkdirSync(distribution, { recursive: true });
-    for (const [format, name] of [
-        ['esm', 'plugin.js'],
-        ['cjs', 'plugin.cjs'],
-    ] as const) {
-        const result = await Bun.build({
-            entrypoints: [join(here, 'src', 'plugin.ts')],
-            outdir: distribution,
-            naming: name,
-            format,
-            target: 'node',
-            external: Object.keys(packageManifest.dependencies),
-            minify: false,
-            sourcemap: 'none',
-        });
-        if (!result.success) throw new Error(result.logs.map((log) => log.message).join('\n'));
+    const staging = mkdtempSync(join(here, '.dist-'));
+    try {
+        for (const [format, name] of [
+            ['esm', 'plugin.js'],
+            ['cjs', 'plugin.cjs'],
+        ] as const) {
+            const result = await Bun.build({
+                entrypoints: [join(here, 'src', 'plugin.ts')],
+                outdir: staging,
+                naming: name,
+                format,
+                target: 'node',
+                external: Object.keys(packageManifest.dependencies),
+                minify: false,
+                sourcemap: 'none',
+            });
+            if (!result.success) throw new Error(result.logs.map((log) => log.message).join('\n'));
+        }
+        writeFileSync(
+            join(staging, 'plugin.d.ts'),
+            "import type { TSESLint } from '@typescript-eslint/utils';\n\ndeclare const plugin: { meta: { name: string; version: string }; rules: Record<string, TSESLint.RuleModule<string, readonly unknown[]>>; configs: { recommended: TSESLint.FlatConfig.Config; all: TSESLint.FlatConfig.Config } };\nexport default plugin;\n",
+        );
+        copyFileSync(join(here, '../..', 'LICENSE.md'), join(staging, 'LICENSE.md'));
+        mkdirSync(distribution, { recursive: true });
+        for (const name of readdirSync(staging)) renameSync(join(staging, name), join(distribution, name));
+    } finally {
+        rmSync(staging, { recursive: true, force: true });
     }
-    writeFileSync(
-        join(distribution, 'plugin.d.ts'),
-        "import type { TSESLint } from '@typescript-eslint/utils';\n\ndeclare const plugin: { meta: { name: string; version: string }; rules: Record<string, TSESLint.RuleModule<string, readonly unknown[]>>; configs: { recommended: TSESLint.FlatConfig.Config; all: TSESLint.FlatConfig.Config } };\nexport default plugin;\n",
-    );
-    copyFileSync(join(here, '../..', 'LICENSE.md'), join(distribution, 'LICENSE.md'));
     console.log('built packages/eslint-plugin/dist/plugin.js and plugin.cjs');
 }
 

@@ -34,6 +34,7 @@ bun-debug.log*
 
 # Build output of the workspace packages
 /packages/*/dist/
+/packages/eslint-plugin/.dist-*/
 /docs/dist/
 /docs/.astro/
 /docs/src/content/docs/reference/
