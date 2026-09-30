@@ -33,7 +33,7 @@ kits = []
 
 [[scope]]
 path = "docs"
-kits = ["typescript", "css"]
+kits = ["typescript", "css", "astro"]
 
 [hooks]
 

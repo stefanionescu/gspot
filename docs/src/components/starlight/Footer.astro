@@ -1,5 +1,5 @@
 ---
-import DefaultFooter from '@astrojs/starlight/components/Footer.astro';
 import ThemeSelect from './ThemeSelect.astro';
+import DefaultFooter from '@astrojs/starlight/components/Footer.astro';
 ---
 {Astro.url.pathname !== '/' && <><DefaultFooter /><div class="mobile-theme"><ThemeSelect /></div></>}

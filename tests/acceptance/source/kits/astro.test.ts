@@ -25,6 +25,13 @@ async function astroSandbox(root: string, kits: string[] = []): Promise<Record<s
 test.each([
     ['astro/jsx-a11y/alt-text', CLEAN.replace(' alt="The logo"', ''), 6],
     ['astro/no-set-html-directive', `${CLEAN}<div set:html={title} />\n`, 7],
+    // Astro types the markup a template callback returns as any, and a script that only imports a module is how
+    // Astro bundles client code: neither is reported.
+    [
+        'astro/no-set-html-directive',
+        `${CLEAN}{[title].map((text) => <b>{text}</b>)}\n<div set:html={title} />\n<script>\n    import '../answer.ts';\n</script>\n`,
+        8,
+    ],
 ])(
     'astro/eslint reports %s and accepts the clean component',
     async (rule, planted, line) => {
@@ -38,6 +45,10 @@ test.each([
         expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
         const report = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
         expect(report.checks[0]!.findings).toContainEqual(containing({ rule, file: PAGE, line }));
+        const rules = new Set(report.checks[0]!.findings.map((finding) => finding.rule));
+        expect(
+            ['@typescript-eslint/no-unsafe-return', 'gspot/no-trivial-files'].filter((name) => rules.has(name)),
+        ).toStrictEqual([]);
         const clean = await run(sandbox.path, ['check', '--only', 'astro/eslint', '--no-cache', '--json'], environment);
         expect(clean.code, clean.stdout + clean.stderr).toBe(0);
         expect(reportSchema.parse(JSON.parse(clean.stdout)).checks).toMatchObject([

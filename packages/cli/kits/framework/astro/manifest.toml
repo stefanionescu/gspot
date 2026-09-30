@@ -48,6 +48,12 @@ imports = "eslint.imports.js.tmpl"
 fragment = true
 code_files = ["**/*.astro"]
 
+[[rules_off]]
+tool = "eslint"
+rules = ["gspot/no-trivial-files", "gspot/types-placement"]
+files = ["**/*.astro", "**/*.astro/*.ts", "**/*.astro/*.js"]
+reason = "A component is markup, never a file that only forwards: a script that only imports a module is how Astro bundles client code, and Astro reads the props of a component from the Props type in its own frontmatter."
+
 [[checks]]
 name = "astro/eslint"
 title = "ESLint"

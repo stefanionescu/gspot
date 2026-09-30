@@ -18,11 +18,12 @@ import globals from 'globals';
 import jest from 'eslint-plugin-jest';
 import tseslint from 'typescript-eslint';
 import { createTypeScriptImportResolver } from 'eslint-import-resolver-typescript';
+import astroPlugin from 'eslint-plugin-astro';
 
 // The root without a closing separator: typescript-eslint stops its tsconfig search one folder short of a root that ends in one.
 const root = fileURLToPath(new URL('../..', import.meta.url)).replace(/[\\/]$/u, '');
 // The component files a selected framework adds to the code and type-checked file sets.
-const FRAGMENT_FILES = [];
+const FRAGMENT_FILES = ["**/*.astro"];
 const CODE = ['**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}', ...FRAGMENT_FILES];
 const TYPESCRIPT_SOURCE = ['**/*.{ts,tsx,mts,cts}'];
 const TYPESCRIPT = [...TYPESCRIPT_SOURCE, ...FRAGMENT_FILES];
@@ -821,6 +822,19 @@ const policyRules = [
                     "maxStatements": 2
                 }
             ]
+        }
+    },
+    {
+        "scope": "docs",
+        "includes": [
+            "^(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)?(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.astro\\/?)$",
+            "^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.astro\\/(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.ts)$",
+            "^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.astro\\/(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.js)$"
+        ],
+        "excludes": [],
+        "rules": {
+            "gspot/no-trivial-files": "off",
+            "gspot/types-placement": "off"
         }
     },
     {
@@ -1649,6 +1663,35 @@ const defaults = [
     // A test asserts on literal values, and it asserts presence with a non-null assertion that fails loudly; the
     // optional chain the rule suggests would let a missing value pass. Every other rule holds in tests.
     { files: TEST_CODE, rules: { '@typescript-eslint/no-magic-numbers': 'off', '@typescript-eslint/no-non-null-assertion': 'off' } },
+].map((entry) => ({ ...entry, files: (entry.files ?? CODE).map((files) => [...(Array.isArray(files) ? files : [files]), "docs/**/*"]), ignores: [...(entry.ignores ?? []), ...[]] })),
+...[    // The plugin ships its recommended and accessibility sets as blocks; every rule in them is an error, and a block
+    // that names no files reads .astro files only.
+    ...[...astroPlugin.configs['flat/recommended'], ...astroPlugin.configs['flat/jsx-a11y-recommended']].map((block) => ({
+        ...block,
+        ...(block.files === undefined ? { files: ['**/*.astro'] } : {}),
+        ...(block.rules === undefined ? {} : { rules: errorLevels(block.rules) }),
+    })),
+    {
+        files: ['**/*.astro'],
+        rules: {
+            'astro/no-set-html-directive': 'error',
+            'astro/no-exports-from-components': 'error',
+            'astro/no-prerender-export-outside-pages': 'error',
+            'astro/no-unused-css-selector': 'error',
+            'astro/prefer-class-list-directive': 'error',
+            'astro/prefer-object-class-list': 'error',
+            'astro/prefer-split-class-list': 'error',
+        },
+    },
+    // The Astro parser reads the frontmatter through a TypeScript program; it has no project service.
+    { files: ['**/*.astro'], languageOptions: { parserOptions: { projectService: false, project: true } } },
+    // Astro types every element of a template as any, so a callback that returns markup, such as the one a .map()
+    // renders, always reports an unsafe return. The frontmatter keeps every other type-aware rule.
+    { files: ['**/*.astro'], rules: { '@typescript-eslint/no-unsafe-return': 'off' } },
+    // A <script> of a component reaches ESLint as a file inside the component, which no tsconfig holds: it takes every
+    // rule except the type-aware ones.
+    { files: ['**/*.astro/*.ts', '**/*.astro/*.js'], ...tseslint.configs.disableTypeChecked },
+
 ].map((entry) => ({ ...entry, files: (entry.files ?? CODE).map((files) => [...(Array.isArray(files) ? files : [files]), "docs/**/*"]), ignores: [...(entry.ignores ?? []), ...[]] })),
     ...librarySelectorBlocks,
     { files: CODE, ignores: [...TESTS, ...SCRIPTS], rules: { 'no-console': 'error' } },

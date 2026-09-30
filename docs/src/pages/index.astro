@@ -1,11 +1,19 @@
 ---
 // Homepage composition adapted from Turborepo. See /licenses/turborepo.txt.
-import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
 import { Code } from '@astrojs/starlight/components';
 import Example from '../components/home/Example.astro';
 import Features from '../components/home/Features.astro';
 import ThemeSelect from '../components/starlight/ThemeSelect.astro';
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
 
+const tools = [
+    { icon: 'eslint', name: 'ESLint' },
+    { icon: 'prettier', name: 'Prettier' },
+    { icon: 'ruff', name: 'Ruff' },
+    { icon: 'stylelint', name: 'Stylelint' },
+    { icon: 'shellcheck', name: 'ShellCheck' },
+    { icon: 'semgrep', name: 'Semgrep' },
+];
 const workflow = [
     { title: 'Configure the linters', description: 'gspot writes the configuration for ESLint, Prettier, Ruff, ShellCheck, and the other tools your languages need, and pins their versions.', image: '/brand/home/toolchain.svg', href: '/reference/kits/', link: 'Browse the kits' },
     { title: 'Catch what agents write', description: 'gspot adds checks for patterns that agents write: functions that only forward, catch-all file names, and loose types.', image: '/brand/home/finding.svg', href: '/guides/findings/', link: 'Read and fix findings' },
@@ -26,10 +34,7 @@ const repository = [
     <div class="landing">
         <section class="tool-strip" aria-label="Selected tools supported by gspot">
             <p>Works with these tools</p>
-            <ul>{[
-                ['eslint', 'ESLint'], ['prettier', 'Prettier'], ['ruff', 'Ruff'],
-                ['stylelint', 'Stylelint'], ['shellcheck', 'ShellCheck'], ['semgrep', 'Semgrep'],
-            ].map(([icon, name]) => <li><img src={`/tools/${icon}.${icon === 'shellcheck' ? 'png' : 'svg'}`} alt="" width="24" height="24" /><span>{name}</span></li>)}</ul>
+            <ul>{tools.map(({ icon, name }) => <li><img src={`/tools/${icon}.${icon === 'shellcheck' ? 'png' : 'svg'}`} alt="" width="24" height="24" /><span>{name}</span></li>)}</ul>
             <a class="tool-directory" href="/reference/kits/">Also configure TypeScript, Python, Swift, React, Next.js, and more →</a>
         </section>
         <Features title="Lint AI-generated code" description="gspot picks the linters for your languages, configures them, and runs them on every commit." features={workflow} />

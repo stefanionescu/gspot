@@ -68,6 +68,10 @@ Tools:
 - `.gspot/guides/tool/tasks/TASKS.md`
 - `.gspot/guides/tool/github-actions/GITHUB-ACTIONS.md`
 
+Frameworks:
+
+- `.gspot/guides/framework/astro/ASTRO.md`
+
 Run `gspot check --staged` before committing. Change policy with `gspot set` or `gspot ignore` (or by editing `gspot.toml`), then `gspot apply`; never edit files under `.gspot/`.
 
 <!-- <<< gspot managed <<< -->

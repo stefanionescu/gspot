@@ -19,6 +19,9 @@
     },
 <% if (kits.includes('typescript')) { %>    // The Astro parser reads the frontmatter through a TypeScript program; it has no project service.
     { files: ['**/*.astro'], languageOptions: { parserOptions: { projectService: false, project: true } } },
+    // Astro types every element of a template as any, so a callback that returns markup, such as the one a .map()
+    // renders, always reports an unsafe return. The frontmatter keeps every other type-aware rule.
+    { files: ['**/*.astro'], rules: { '@typescript-eslint/no-unsafe-return': 'off' } },
     // A <script> of a component reaches ESLint as a file inside the component, which no tsconfig holds: it takes every
     // rule except the type-aware ones.
     { files: ['**/*.astro/*.ts', '**/*.astro/*.js'], ...tseslint.configs.disableTypeChecked },

@@ -1,9 +1,10 @@
 ---
-import { Code } from '@astrojs/starlight/components';
 import example from './example.json';
+import { Code } from '@astrojs/starlight/components';
 
-const agentFile = example.agent.files.find((file) => file.path === 'src/utils.ts')!;
-const summary = example.rejected.trimEnd().split('\n').at(-1)!;
+const agentFile = example.agent.files.find((file) => file.path === 'src/utils.ts');
+if (agentFile === undefined) throw new Error('The homepage example has no src/utils.ts.');
+const summary = example.rejected.trimEnd().split('\n').at(-1) ?? '';
 ---
 <section class="home-hero" aria-labelledby="_top">
     <div class="hero-copy">
