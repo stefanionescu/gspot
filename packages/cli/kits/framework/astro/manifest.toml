@@ -39,7 +39,7 @@ name = "prettier-plugin-astro"
 kind = "library"
 version = "1.0.1"
 npm = "prettier-plugin-astro"
-prettier = {entry = "dist/index.js", overrides = [{files = "*.astro", options = {parser = "astro"}}]}
+prettier = {entry = "dist/index.js", extensions = [".astro"], overrides = [{files = "*.astro", options = {parser = "astro"}}]}
 
 [[configs]]
 template = "eslint.fragment.js.tmpl"

@@ -59,7 +59,7 @@ export async function installPrivateTools(cwd: string): Promise<void> {
     // No release of gspot exists yet, so a sandbox with a mise runner skips its own pin as this repository does.
     const outcome = await processes.run([process.execPath, gspot, 'install'], {
         cwd,
-        env: { NO_COLOR: '1', CI: '1', MISE_DISABLE_TOOLS: 'npm:gspot' },
+        env: { NO_COLOR: '1', CI: '1', MISE_DISABLE_TOOLS: 'npm:@gspothq/cli' },
         timeoutMs: INSTALL_TIMEOUT_MS,
     });
     if (outcome.code !== 0)

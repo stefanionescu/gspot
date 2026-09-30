@@ -4,8 +4,8 @@
     "description": "The test suites and the packages the planted repositories install.",
     "type": "module",
     "dependencies": {
-        "eslint-plugin-gspot": "workspace:*",
-        "gspot": "workspace:*",
+        "@gspothq/cli": "workspace:*",
+        "@gspothq/eslint-plugin": "workspace:*",
         "gspot-docs": "workspace:*"
     },
     "devDependencies": {

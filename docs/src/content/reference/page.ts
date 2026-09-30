@@ -1,6 +1,6 @@
 import { sourceRevision } from '../revision.ts';
 import type { ReferencePage } from '../../types/reference.ts';
-import packageManifest from 'gspot/package.json' with { type: 'json' };
+import packageManifest from '@gspothq/cli/package.json' with { type: 'json' };
 
 /**
  * Preserve definition attribution and build provenance without serializing metadata into Markdown.

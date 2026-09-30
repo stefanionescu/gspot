@@ -10,11 +10,11 @@ uplinks:
         url: https://registry.npmjs.org/
         timeout: 60s
 packages:
-    'eslint-plugin-gspot':
+    '@gspothq/eslint-plugin':
         access: $all
         publish: $anonymous
         unpublish: $anonymous
-    'gspot':
+    '@gspothq/cli':
         access: $all
         publish: $anonymous
         unpublish: $anonymous

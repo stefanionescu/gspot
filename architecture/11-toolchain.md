@@ -10,11 +10,11 @@ gspot is one npm package named `gspot`. It is written in TypeScript and bundled 
 JavaScript. It runs on Node.js 22 or newer and on Bun, on every system those run on. It has no per-system
 builds and no install script. Three ways to get it:
 
-| Way                  | Command                                                                     |
-| -------------------- | --------------------------------------------------------------------------- |
-| npm, pnpm, yarn, bun | `npm install --save-dev gspot`, then `npx gspot init`; or `bunx gspot init` |
-| global npm           | `npm install --global gspot`, for a repository without `package.json`       |
-| mise                 | `mise use -g npm:gspot` for a global copy                                   |
+| Way                  | Command                                                                            |
+| -------------------- | ---------------------------------------------------------------------------------- |
+| npm, pnpm, yarn, bun | `npm install --save-dev @gspothq/cli`, then `npx gspot init`; or `bunx gspot init` |
+| global npm           | `npm install --global @gspothq/cli`, for a repository without `package.json`       |
+| mise                 | `mise use -g npm:@gspothq/cli` for a global copy                                   |
 
 A `curl | sh` installer is never offered, because the rule files ban the pattern.
 
@@ -33,18 +33,18 @@ config. It prints the two ways forward: install the pinned version, or move the 
 
 Both places carry the same version from one release run:
 
-| Place       | Holds                              | Used by                                                |
-| ----------- | ---------------------------------- | ------------------------------------------------------ |
-| npm         | `gspot` and `eslint-plugin-gspot`  | `npx gspot`, mise, CI, and `.gspot/package.json`       |
-| `gspot.dev` | the manual and `gspot.schema.json` | the `#:schema` line of every `gspot.toml`, and editors |
+| Place       | Holds                                       | Used by                                                |
+| ----------- | ------------------------------------------- | ------------------------------------------------------ |
+| npm         | `@gspothq/cli` and `@gspothq/eslint-plugin` | `npx gspot`, mise, CI, and `.gspot/package.json`       |
+| `gspot.dev` | the manual and `gspot.schema.json`          | the `#:schema` line of every `gspot.toml`, and editors |
 
 The `gspot` package holds the bundle in `dist/`, the kits, the guides, and the grammar files
 with their licenses. The GitHub release carries notes only.
 
 The first release needs these, in this order:
 
-1. The unscoped npm names `gspot` and `eslint-plugin-gspot`, and an `NPM_TOKEN` secret that
-   can publish them. The `@gspot` scope belongs to another npm account.
+1. The npm org `gspothq` for `@gspothq/cli` and `@gspothq/eslint-plugin`, and an `NPM_TOKEN`
+   secret that can publish them. The `@gspot` scope belongs to another npm account.
 2. A public repository.
 3. The domain that serves the manual.
 4. The Windows job green.

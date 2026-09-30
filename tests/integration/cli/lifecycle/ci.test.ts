@@ -25,7 +25,7 @@ test.each(['bitbucket-pipelines.yml', 'Jenkinsfile', ''])(
         expect(result.exitCode).toBe(0);
         const { plan } = result.json as { plan: ReplacePlan };
         expect(plan.ci?.commands).toStrictEqual([
-            'npm install --global "gspot@$(cat .gspot/version)"',
+            'npm install --global "@gspothq/cli@$(cat .gspot/version)"',
             'gspot install',
             'gspot check',
         ]);

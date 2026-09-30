@@ -5,9 +5,9 @@ import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 import { writeFileSync } from 'node:fs';
 import { ESLint } from 'eslint';
-import plugin from 'eslint-plugin-gspot';
+import plugin from '@gspothq/eslint-plugin';
 const require = createRequire(import.meta.url);
-const commonjs = require('eslint-plugin-gspot');
+const commonjs = require('@gspothq/eslint-plugin');
 writeFileSync('exports.ts', 'export const first = 1, second = 2; export const {nested: [deep]} = value;');
 for (const published of [plugin, commonjs.default ?? commonjs]) {
     for (const level of ['recommended', 'all']) {
@@ -67,7 +67,7 @@ for (const example of readmeCases) {
 }
 `;
 export const DECLARATIONS = `
-import plugin from 'eslint-plugin-gspot';
+import plugin from '@gspothq/eslint-plugin';
 import type { TSESLint } from '@typescript-eslint/utils';
 const configs: TSESLint.FlatConfig.Config[] = [plugin.configs.recommended, plugin.configs.all];
 const rule: TSESLint.RuleModule<string, readonly unknown[]> | undefined = plugin.rules['no-trivial-functions'];

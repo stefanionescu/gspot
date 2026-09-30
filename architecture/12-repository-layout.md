@@ -4,7 +4,7 @@ This document decides the gspot repository: packages, folders, tests, and how gs
 itself. Local checks, normal hooks, and full CI against the exact task-branch commit are
 required before a merge.
 
-Two published npm packages: `gspot` and `eslint-plugin-gspot`. `gspot` is TypeScript bundled
+Two published npm packages: `@gspothq/cli` and `@gspothq/eslint-plugin`. The CLI is TypeScript bundled
 to plain JavaScript that runs on Node.js 22 or newer and on Bun. Kits, guides, prose styles, and
 grammar files ship inside it. It has no per-system builds, and no install script runs.
 
@@ -156,7 +156,7 @@ framework, or dependency-injection container.
 and the configuration process to `packages/cli/dist/configuration.js`, for Node, with every npm dependency left external. The
 package ships `dist/`, `kits/`, `guides/`, and `grammars/`. `prepare:grammar` fills
 `grammars/`: it copies the tree-sitter grammar files and downloads the Swift grammar, which
-must match its pinned SHA-256. `eslint-plugin-gspot` builds with `bun build` to ESM and
+must match its pinned SHA-256. `@gspothq/eslint-plugin` builds with `bun build` to ESM and
 CommonJS, versioned with `gspot`.
 
 The version has one source, `version` in `packages/cli/package.json`: the CLI reads it through
@@ -167,7 +167,7 @@ are published to a local registry, installed into new projects, and run under No
 | Step           | Tool                                                                                                              |
 | -------------- | ----------------------------------------------------------------------------------------------------------------- |
 | Build          | `mise run build` and `mise run build:plugin`                                                                      |
-| npm            | `npm publish --provenance` for `eslint-plugin-gspot`, then `gspot`, in one job at one version                     |
+| npm            | `npm publish --provenance` for `@gspothq/eslint-plugin`, then `@gspothq/cli`, in one job at one version           |
 | GitHub release | `gh release create` with generated notes and no files                                                             |
 | Docs           | Astro Starlight; `starlight-llms-txt` writes `llms.txt`, `llms-full.txt` and `llms-small.txt` from the same pages |
 

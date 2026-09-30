@@ -3,7 +3,7 @@
 min_version = "2026.8.8"
 
 [tools]
-"npm:gspot" = "0.1.0"
+"npm:@gspothq/cli" = "0.1.0"
 actionlint = "1.7.12"
 ast-grep = "0.45.3"
 "github:github/codeql-cli-binaries" = "v2.24.3"

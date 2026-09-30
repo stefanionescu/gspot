@@ -1,6 +1,9 @@
 {
-    "name": "gspot",
+    "name": "@gspothq/cli",
     "version": "0.1.0",
+    "publishConfig": {
+        "access": "public"
+    },
     "description": "Lint AI-generated code and install rules for AI coding agents.",
     "license": "Apache-2.0",
     "author": "Stefan Ionescu",

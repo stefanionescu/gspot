@@ -27,7 +27,7 @@ function nearestPackage(): string | undefined {
 // into another build, such as the documentation site, finds the package through module resolution instead.
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The package root is found once; the state object owns the answer.
 function packageRoot(): string {
-    state.root ??= nearestPackage() ?? dirname(createRequire(import.meta.url).resolve('gspot/package.json'));
+    state.root ??= nearestPackage() ?? dirname(createRequire(import.meta.url).resolve('@gspothq/cli/package.json'));
     return state.root;
 }
 

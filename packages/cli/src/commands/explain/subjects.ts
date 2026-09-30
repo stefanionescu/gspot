@@ -51,6 +51,7 @@ function kitExplanation(kitName: string): Explanation | { error: string } {
         ]),
         ...listLine('Owners', [...owners.extensions, ...owners.filenames, ...owners.paths]),
         ...(owners.from_languages ? ['Owners: every file a language kit owners'] : []),
+        ...(owners.from_prettier_plugins ? ['Owners: the file types of the selected Prettier plugins'] : []),
         ...listLine('Requires', row.requires),
         ...listLine('Tools it pins', row.tools),
         ...STAGES.flatMap((stage) =>

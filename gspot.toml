@@ -388,7 +388,7 @@ entry = [
     "docs/src/content.config.ts",
     "docs/src/route-metadata.ts",
     "tests/support/cli/swiftformat.ts",
-    "tests/support/registry/install.ts",
+    "tests/support/registry/workspace-command.ts",
     "tests/support/package/run.ts",
 ]
 

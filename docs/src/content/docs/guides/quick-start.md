@@ -107,7 +107,7 @@ newer.
 1. Install gspot and commit the change:
 
     ```bash
-    npm install --save-dev --save-exact gspot
+    npm install --save-dev --save-exact @gspothq/cli
     git add -A
     git commit -m "build: Add gspot"
     ```

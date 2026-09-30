@@ -178,7 +178,7 @@ host name, so a self-hosted host works. For every other system gspot writes no f
 prints the lines to paste: install gspot at the pinned version, `gspot install`, and
 `gspot check`, keeping `.gspot/reports/report.*` as artifacts.
 
-Without mise, the GitHub job sets up Node 22 and runs `npm install --global gspot@<version>`,
+Without mise, the GitHub job sets up Node 22 and runs `npm install --global @gspothq/cli@<version>`,
 then `gspot doctor`. The GitLab job runs the same install, so its image needs Node 22.
 
 ## Reproduce lines and the report

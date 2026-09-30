@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { execa } from 'execa';
-import manifest from 'gspot/package.json' with { type: 'json' };
-import { environmentVariables } from 'gspot/src/platform/environment.ts';
+import manifest from '@gspothq/cli/package.json' with { type: 'json' };
+import { environmentVariables } from '@gspothq/cli/src/platform/environment.ts';
 
 const variables = environmentVariables();
 const tag = variables['DOCS_RELEASE_TAG'] ?? '';

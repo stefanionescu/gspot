@@ -29,7 +29,7 @@ export async function createConsumer(
             [
                 'npm',
                 'install',
-                `gspot@${version}`,
+                `@gspothq/cli@${version}`,
                 '--ignore-scripts',
                 '--registry',
                 registry.url,
@@ -42,7 +42,7 @@ export async function createConsumer(
                 timeoutMs: RELEASE_TIMEOUT_MS,
             },
         );
-        const command = ['node', join(consumer, 'node_modules', 'gspot', 'dist', 'gspot.js')];
+        const command = ['node', join(consumer, 'node_modules', '@gspothq/cli', 'dist', 'gspot.js')];
         const options = {
             cwd: consumer,
             env: {

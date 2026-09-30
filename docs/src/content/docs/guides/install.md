@@ -13,16 +13,16 @@ Windows. You also need Git.
 In a JavaScript or TypeScript repository, add gspot as a development dependency:
 
 ```bash
-npm install --save-dev gspot
+npm install --save-dev @gspothq/cli
 ```
 
-With another package manager, use its add command: `pnpm add -D gspot`, `yarn add -D gspot`,
-or `bun add -d gspot`.
+With another package manager, use its add command: `pnpm add -D @gspothq/cli`, `yarn add -D @gspothq/cli`,
+or `bun add -d @gspothq/cli`.
 
 In a repository without `package.json`, install gspot once for your user:
 
 ```bash
-npm install --global gspot
+npm install --global @gspothq/cli
 ```
 
 Check that it runs:

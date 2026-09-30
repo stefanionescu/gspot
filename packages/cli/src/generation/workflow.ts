@@ -17,7 +17,7 @@ function setupSteps(shape: WorkflowShape): string[] {
         `      - uses: ${NODE} # v7.0.0`,
         '        with:',
         `          node-version: "${NODE_VERSION}"`,
-        `      - run: npm install --global gspot@${shape.version}`,
+        `      - run: npm install --global @gspothq/cli@${shape.version}`,
         '      - run: gspot install',
         '      - run: gspot doctor',
     ];
@@ -171,7 +171,7 @@ export function gitlabFile(shape: WorkflowShape): GeneratedFile {
     const command = shape.isMise ? 'mise exec -- gspot' : 'gspot';
     const setup = shape.isMise
         ? [`mise trust ${MISE_CONFIG_PATH}`, 'mise install']
-        : [`npm install --global gspot@${shape.version}`];
+        : [`npm install --global @gspothq/cli@${shape.version}`];
     const check = [
         'GSPOT_CI_BASE="${CI_MERGE_REQUEST_DIFF_BASE_SHA:-${CI_COMMIT_BEFORE_SHA:-}}"',
         comparisonCheck(`${command} check`, shape.run === 'all'),

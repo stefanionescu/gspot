@@ -19,7 +19,7 @@ const tools = [...kitManifests().values()].flatMap((manifest) => manifest.tools)
 const pins = tools
     .filter((tool) => tool.provider !== 'host')
     .flatMap((tool) => pinsOf(tool))
-    .filter((pin) => pin.name !== 'eslint-plugin-gspot');
+    .filter((pin) => pin.name !== '@gspothq/eslint-plugin');
 const eslintPin = tools.find((tool) => tool.name === 'eslint')?.version;
 
 async function registryJson(url: string): Promise<Record<string, unknown> | undefined> {

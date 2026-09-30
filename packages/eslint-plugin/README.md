@@ -8,7 +8,7 @@ use it on its own with ESLint 9.38.0 or newer.
 ## Install
 
 ```shell
-npm install --save-dev eslint-plugin-gspot
+npm install --save-dev @gspothq/eslint-plugin
 ```
 
 ## Configure
@@ -16,7 +16,7 @@ npm install --save-dev eslint-plugin-gspot
 Add the recommended configuration to `eslint.config.mjs`:
 
 ```javascript
-import gspot from 'eslint-plugin-gspot';
+import gspot from '@gspothq/eslint-plugin';
 
 export default [gspot.configs.recommended];
 ```
@@ -55,7 +55,7 @@ The corrected module has no finding. Your server still needs to answer `/api/sea
 `require-server-only` needs to know which files hold server code, so select them yourself:
 
 ```javascript
-import gspot from 'eslint-plugin-gspot';
+import gspot from '@gspothq/eslint-plugin';
 
 export default [{
     files: ['server/**/*.js'],
@@ -73,7 +73,7 @@ The plugin brings no TypeScript parser. Install `@typescript-eslint/parser`, the
 TypeScript files:
 
 ```javascript
-import gspot from 'eslint-plugin-gspot';
+import gspot from '@gspothq/eslint-plugin';
 import tsParser from '@typescript-eslint/parser';
 
 export default [{

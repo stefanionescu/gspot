@@ -25,9 +25,9 @@ test(
         expect(await Promise.all(files.map(async (path) => await Bun.file(join(root, path)).text()))).toStrictEqual(
             before,
         );
-        expect(await Bun.file(join(root, '.gspot/node_modules/eslint-plugin-gspot/package.json')).json()).toMatchObject(
-            { name: 'eslint-plugin-gspot' },
-        );
+        expect(
+            await Bun.file(join(root, '.gspot/node_modules/@gspothq/eslint-plugin/package.json')).json(),
+        ).toMatchObject({ name: '@gspothq/eslint-plugin' });
         const command = ['check', '--only', 'security/semgrep', '--no-cache', '--json'];
         const broken = await run(root, command);
         expect(broken.code, broken.stdout + broken.stderr).toBe(1);

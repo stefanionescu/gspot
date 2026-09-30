@@ -11,7 +11,7 @@ import { lstatSync, mkdirSync, existsSync, readFileSync, writeFileSync } from 'n
 const root = fileURLToPath(new URL('../../..', import.meta.url));
 
 function expectPluginPayload(consumer: string): void {
-    const installedPlugin = join(consumer, 'node_modules', 'eslint-plugin-gspot');
+    const installedPlugin = join(consumer, 'node_modules', '@gspothq/eslint-plugin');
     expect(readFileSync(join(installedPlugin, 'dist/LICENSE.md'), 'utf8')).toBe(
         readFileSync(join(root, 'LICENSE.md'), 'utf8'),
     );
@@ -22,7 +22,7 @@ function expectPluginPayload(consumer: string): void {
 }
 
 async function expectPluginExports(consumer: string): Promise<void> {
-    const installedPlugin = join(consumer, 'node_modules', 'eslint-plugin-gspot');
+    const installedPlugin = join(consumer, 'node_modules', '@gspothq/eslint-plugin');
     const documentation = readFileSync(join(installedPlugin, 'README.md'), 'utf8');
     for (const [index, match] of [...documentation.matchAll(/```javascript\n([\s\S]*?)```/gu)].entries()) {
         writeFileSync(join(consumer, `readme-${String(index)}.mjs`), match[1]!);
@@ -89,7 +89,7 @@ test.each([
                 [
                     'npm',
                     'install',
-                    `eslint-plugin-gspot@${pluginPackage.version}`,
+                    `@gspothq/eslint-plugin@${pluginPackage.version}`,
                     `eslint@${pluginPackage.devDependencies.eslint}`,
                     '--ignore-scripts',
                     '--no-audit',
@@ -98,7 +98,7 @@ test.each([
                 { cwd: consumer, timeoutMs: RELEASE_TIMEOUT_MS },
             );
             expect(installed.code, installed.stdout + installed.stderr).toBe(0);
-            expect(lstatSync(join(consumer, 'node_modules', 'eslint-plugin-gspot')).isSymbolicLink()).toBe(false);
+            expect(lstatSync(join(consumer, 'node_modules', '@gspothq/eslint-plugin')).isSymbolicLink()).toBe(false);
             await verify(consumer);
         } finally {
             await registry.stop();

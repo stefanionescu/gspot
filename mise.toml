@@ -2,7 +2,7 @@ min_version = "2026.8.8"
 
 [settings]
 # Repository tasks run the CLI source, so mise does not install the published package.
-disable_tools = ["npm:gspot"]
+disable_tools = ["npm:@gspothq/cli"]
 
 # Tasks use installed tools; native provisioning is an explicit development step.
 [settings.task]
@@ -38,9 +38,9 @@ dir = "{{config_root}}"
 run = "bun packages/cli/src/main.ts check"
 
 [tasks.apply]
-description = "Generate repository configuration using gspot source."
+description = "Generate repository configuration using gspot source and the workspace plugin."
 dir = "{{config_root}}"
-run = "bun packages/cli/src/main.ts apply"
+run = "bun tests/support/registry/workspace-command.ts apply"
 
 [tasks.doctor]
 description = "Diagnose the repository using gspot source."
@@ -58,7 +58,7 @@ depends_post = ["docs:sync", "build:plugin"]
 
 [tasks."repo:install-checks"]
 description = "Install locked repository checks with the current workspace plugin."
-run = "bun tests/support/registry/install.ts"
+run = "bun tests/support/registry/workspace-command.ts install"
 
 [tasks.build]
 depends = ["prepare:grammar"]

@@ -77,24 +77,22 @@ async function preparePlugin(command: string[], cwd: string, timeoutMs: number, 
 /** Builds and serves the workspace plugin for a command, then removes the registry. */
 export async function runSourceCommand(command: string[], cwd: string, timeoutMs: number): Promise<void> {
     const controller = new AbortController();
-    process.on('SIGINT', () => {
+    // eslint-disable-next-line gspot/no-trivial-functions -- reason: process.removeListener needs the same function object that process.on received.
+    const interrupted = (): void => {
         process.exitCode = 130;
         controller.abort();
-    });
-    process.on('SIGTERM', () => {
+    };
+    // eslint-disable-next-line gspot/no-trivial-functions -- reason: process.removeListener needs the same function object that process.on received.
+    const terminated = (): void => {
         process.exitCode = 143;
         controller.abort();
-    });
+    };
+    process.on('SIGINT', interrupted);
+    process.on('SIGTERM', terminated);
     try {
         await preparePlugin(command, cwd, timeoutMs, controller.signal);
     } finally {
-        process.removeListener('SIGINT', () => {
-            process.exitCode = 130;
-            controller.abort();
-        });
-        process.removeListener('SIGTERM', () => {
-            process.exitCode = 143;
-            controller.abort();
-        });
+        process.removeListener('SIGINT', interrupted);
+        process.removeListener('SIGTERM', terminated);
     }
 }

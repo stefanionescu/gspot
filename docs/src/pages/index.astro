@@ -42,7 +42,7 @@ const repository = [
         <section class="setup" aria-labelledby="setup">
             <div class="section-heading"><div><h2 id="setup">Set up a repository</h2><p>Install gspot, accept the plan, and commit as usual.</p></div><a class="pill" href="/guides/install/">Get started ↗</a></div>
             <div class="setup-grid">
-                <div><Code code={'npm install --save-dev gspot\nnpx gspot init'} lang="sh" title="Repository root" /><p>1. Install gspot and accept the plan.</p></div>
+                <div><Code code={'npm install --save-dev @gspothq/cli\nnpx gspot init'} lang="sh" title="Repository root" /><p>1. Install gspot and accept the plan.</p></div>
                 <div><Code code={'git add .\ngit commit -m "feat: Add receipts"'} lang="sh" title="Repository root" /><p>2. Commit. The hook checks the staged files.</p></div>
                 <div><Code code={'npx gspot check\nnpx gspot explain typescript/eslint'} lang="sh" title="Repository root" /><p>3. Check the whole repository, and read what a check does.</p></div>
             </div>

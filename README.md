@@ -13,11 +13,11 @@ Your choices live in one policy file, `gspot.toml`.
 gspot runs on Node.js 22 or newer, or on Bun. In a JavaScript or TypeScript repository:
 
 ```shell
-npm install --save-dev --save-exact gspot
+npm install --save-dev --save-exact @gspothq/cli
 npx gspot init
 ```
 
-In any other repository, install it once with `npm install --global gspot`, then run
+In any other repository, install it once with `npm install --global @gspothq/cli`, then run
 `gspot init`.
 
 `init` reads the repository and shows a plan before it writes anything:

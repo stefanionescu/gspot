@@ -33,8 +33,7 @@ function toCheck(raw: RawCheck): CheckSpec {
     const { owners, ...rest } = raw;
     const check = compact(rest) as CheckSpec;
     if (owners) {
-        const { extensions, filenames, tags, paths, from_languages: isFromLanguages, kinds } = owners;
-        check.owners = { extensions, filenames, tags, paths, from_languages: isFromLanguages, kinds };
+        check.owners = { ...owners };
     }
     return check;
 }

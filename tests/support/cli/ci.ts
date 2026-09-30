@@ -70,7 +70,7 @@ if (existsSync(${JSON.stringify(failure)})) {
     console.error('npm error 404 Not Found - GET https://registry.npmjs.org/gspot');
     process.exit(1);
 }
-if (command !== 'install' || flag !== '--global' || !spec?.startsWith('gspot@')) process.exit(2);
+if (command !== 'install' || flag !== '--global' || !spec?.startsWith('@gspothq/cli@')) process.exit(2);
 writeFileSync(${JSON.stringify(join(directory, 'gspot'))}, ${JSON.stringify(launcher)}, { mode: 0o755 });
 `,
     );

@@ -1,7 +1,7 @@
 {
     "version": "0.1.0",
     "commands": {
-        "install": "npm install --save-dev --save-exact gspot",
+        "install": "npm install --save-dev --save-exact @gspothq/cli",
         "init": "npx gspot init --yes",
         "level": "npx gspot set level all"
     },

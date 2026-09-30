@@ -32,6 +32,7 @@ describe('owners', () => {
                     tags: [],
                     paths: [],
                     from_languages: false,
+                    from_prettier_plugins: false,
                     kinds: ['source'],
                 },
                 file('public/_headers'),
@@ -112,4 +113,23 @@ test('security combines language owners with plist inputs', () => {
     const security = manifests.get('security')!;
     const owned = ownedBy(security.owners, selected, [file('App.swift'), file('Info.plist'), file('notes.md')], '');
     expect(owned.map((entry) => entry.path)).toStrictEqual(['App.swift', 'Info.plist']);
+});
+
+test('owners > Prettier formats a plugin file type only while the kit with that plugin is selected', () => {
+    const formatting = manifests.get('formatting')!.owners;
+    const files = [file('src/Page.astro'), file('src/App.svelte'), file('src/index.ts')];
+    for (const [kits, expected] of [
+        [['formatting', 'typescript'], ['src/index.ts']],
+        [
+            ['formatting', 'typescript', 'astro'],
+            ['src/Page.astro', 'src/index.ts'],
+        ],
+        [
+            ['formatting', 'typescript', 'svelte'],
+            ['src/App.svelte', 'src/index.ts'],
+        ],
+    ] as const)
+        expect(
+            ownedBy(formatting, selectKits([...kits], manifests), files, '').map((entry) => entry.path),
+        ).toStrictEqual([...expected]);
 });
