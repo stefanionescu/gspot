@@ -303,11 +303,57 @@ id = "GHSA-w6j9-cwv2-h6wq"
 reason = "semgrep 1.178.0, the newest release, pins pyjwt below 2.14.0, which holds the fix. The private semgrep scans local files and never parses a JSON Web Key Set."
 review_by = "2026-10-13"
 
+[[tools.osv.ignore]]
+id = "GHSA-2gx3-rcp4-g85q"
+reason = "semgrep 1.178.0, the newest release, pins pyjwt below 2.14.0, which holds the fix. The private semgrep scans local files and never decodes a JSON Web Token."
+review_by = "2026-10-13"
+
+[[tools.osv.ignore]]
+id = "GHSA-8wjv-2p76-3863"
+reason = "semgrep 1.178.0, the newest release, pins pyjwt below 2.14.0, which holds the fix. The private semgrep scans local files and never decodes a JSON Web Token."
+review_by = "2026-10-13"
+
+[[tools.osv.ignore]]
+id = "GHSA-9j54-fg26-wv3r"
+reason = "semgrep 1.178.0, the newest release, pins pyjwt below 2.14.0, which holds the fix. The private semgrep scans local files and never decodes a JSON Web Token."
+review_by = "2026-10-13"
+
+[[tools.osv.ignore]]
+id = "GHSA-9v7f-9g4p-ffgj"
+reason = "semgrep 1.178.0, the newest release, pins pyjwt below 2.14.0, which holds the fix. The private semgrep scans local files and never decodes a JSON Web Token."
+review_by = "2026-10-13"
+
+[[tools.osv.ignore]]
+id = "GHSA-ffc3-869f-jxw9"
+reason = "semgrep 1.178.0, the newest release, pins pyjwt below 2.14.0, which holds the fix. The private semgrep scans local files and never decodes a JSON Web Token."
+review_by = "2026-10-13"
+
+[[tools.osv.ignore]]
+id = "GHSA-hxm8-2xgr-2p9m"
+reason = "semgrep 1.178.0, the newest release, pins pyjwt below 2.14.0, which holds the fix. The private semgrep scans local files and never decodes a JSON Web Token."
+review_by = "2026-10-13"
+
+[[tools.osv.ignore]]
+id = "GHSA-p4g4-x82p-q773"
+reason = "semgrep 1.178.0, the newest release, pins pyjwt below 2.14.0, which holds the fix. The private semgrep scans local files and never decodes a JSON Web Token."
+review_by = "2026-10-13"
+
+[[tools.osv.ignore]]
+id = "GHSA-r6x4-923q-g947"
+reason = "semgrep 1.178.0, the newest release, pins pyjwt below 2.14.0, which holds the fix. The private semgrep scans local files and never decodes a JSON Web Token."
+review_by = "2026-10-13"
+
+[[tools.osv.ignore]]
+id = "GHSA-w2cx-738m-mc7w"
+reason = "semgrep 1.178.0, the newest release, pins pyjwt below 2.14.0, which holds the fix. The private semgrep scans local files and never decodes a JSON Web Token."
+review_by = "2026-10-13"
+
 [tools.knip]
 entry = [
     "**/build.ts",
     "packages/cli/scripts/inputs.ts",
     "packages/cli/scripts/guides-lint.ts",
+    "packages/cli/src/native/process.ts",
     "docs/src/content/reference/collection.ts",
     "docs/astro.config.ts",
     "docs/src/content.config.ts",
