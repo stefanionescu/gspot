@@ -1,6 +1,6 @@
 import { splitParts } from '#cli/checks/naming/split.ts';
-import { RESERVED_USES } from '#cli/constants/checks/naming.ts';
-import type { EffectivePolicy, Identifier, Term } from '#cli/types/checks/naming.ts';
+import { RESERVED_USES } from '#cli/config/checks/naming.ts';
+import type { Term, Identifier, EffectivePolicy } from '#cli/types/checks.ts';
 
 function isConsecutive(parts: string[], termParts: string[]): boolean {
     if (termParts.length > parts.length) return false;
@@ -8,11 +8,6 @@ function isConsecutive(parts: string[], termParts: string[]): boolean {
         if (termParts.every((part, index) => parts[start + index] === part)) return true;
     }
     return false;
-}
-
-function categoriesFor(allowedFor: string): string[] {
-    const found = Object.entries(RESERVED_USES).find(([use]) => allowedFor.endsWith(use));
-    return found?.[1] ?? [];
 }
 
 /**
@@ -48,7 +43,7 @@ export function bannedTerm(parts: string[], terms: Term[]): Term | undefined {
  */
 export function isReservedUseAllowed(allowedFor: string[], category: string): boolean {
     return allowedFor.some((use) => {
-        const categories = categoriesFor(use);
+        const categories = Object.entries(RESERVED_USES).find(([suffix]) => use.endsWith(suffix))?.[1] ?? [];
         return categories.includes('*') || categories.includes(category);
     });
 }

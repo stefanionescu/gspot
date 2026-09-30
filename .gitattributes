@@ -3,4 +3,6 @@
 # >>> gspot managed >>>
 .gspot/** linguist-generated
 .gspot/** text eol=lf
+.gitignore text eol=lf
+.gitattributes text eol=lf
 # <<< gspot managed <<<

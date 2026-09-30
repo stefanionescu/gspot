@@ -1,20 +1,17 @@
 import { join } from 'node:path';
 import { stringify } from 'smol-toml';
+import type { EngineInput } from '#cli/types/checks.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
-import type { EngineInput } from '#cli/types/checks/checks.ts';
 
-/** Construct a check input from validated policy and the observed fixture inventory. */
+/** Construct a check input from validated policy and the read fixture inventory. */
 export async function checkInput(
     root: string,
     check: string,
     paths: string[],
     policy: Record<string, unknown> = {},
 ): Promise<EngineInput> {
-    await Bun.write(
-        join(root, 'gspot.toml'),
-        stringify({ version: 1, level: 'all', configurations: ['docs'], ...policy }),
-    );
+    await Bun.write(join(root, 'gspot.toml'), stringify({ version: 1, level: 'all', kits: ['docs'], ...policy }));
     const session = await openSession(root);
     const scope = session.scopes[0]!;
     const spec = [...session.manifests.values()]

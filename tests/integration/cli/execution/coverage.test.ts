@@ -1,29 +1,49 @@
 import { join } from 'node:path';
 import { stringify } from 'smol-toml';
-import { expect, test } from 'bun:test';
-import { planRun } from '#cli/execution/planning/plan.ts';
+import { test, expect } from 'bun:test';
 import { runText } from '#cli/output/reporter.ts';
 import { sarifText } from '#cli/output/report.ts';
-import { createFileTree, testdir } from 'testdirs';
+import { testdir, createFileTree } from 'testdirs';
 import { settingRows } from '#cli/commands/list.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { planRun } from '#cli/execution/planning/plan.ts';
 import { runEngineCheck } from '#cli/execution/engines.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { coverageReport } from '#cli/execution/coverage.ts';
 import { explain } from '#cli/commands/explain/subjects.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
+
+test('native parsers supply syntax coverage at all', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': policyOf(['typescript', 'files', 'formatting'], '', 'all'),
+        'source.ts': 'export const value = 1;\n',
+        'settings.json': '{"value":1}\n',
+    });
+    const session = await openSession(sandbox.path);
+    for (const ending of ['.ts', '.json']) {
+        expect(coverageReport(session).endings.find((entry) => entry.ending === ending)?.kinds).toContain('syntax');
+    }
+    for (const scope of session.scopes)
+        scope.selected = scope.selected.map((manifest) => ({
+            ...manifest,
+            checks: manifest.checks.filter((check) => check.name === 'formatting/editorconfig-checker'),
+        }));
+    expect(coverageReport(session).endings.some(({ kinds }) => kinds.includes('syntax'))).toBe(false);
+});
 
 test('a root project check does not supply a disabled child scope with coverage', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nconfigurations = ["bash"]\n[[scope]]\npath = "app"\nconfigurations = []\n',
+        'gspot.toml': policyOf(['bash'], '[[scope]]\npath = "app"\nkits = []\n'),
         'source.sh': 'echo root\n',
         'app/source.sh': 'echo nested\n',
     });
     const session = await openSession(sandbox.path);
     for (const scope of session.scopes) {
-        const manifest = scope.selected.find((entry) => entry.configuration.name === 'bash')!;
+        const manifest = scope.selected.find((entry) => entry.kit.name === 'bash')!;
         const syntax = manifest.checks.find((entry) => entry.name === 'bash/syntax')!;
         scope.selected = [{ ...manifest, checks: scope.scope.path === '' ? [{ ...syntax, runs: 'per-scope' }] : [] }];
     }
@@ -41,7 +61,7 @@ test('strict coverage fails uncovered supported sources and accepts enabled chec
     await using sandbox = await testdir();
     const policy = {
         version: 1,
-        configurations: [],
+        kits: [],
         coverage: { strict: true },
         check: [
             {
@@ -74,21 +94,13 @@ test('strict coverage fails uncovered supported sources and accepts enabled chec
     expect(
         JSON.parse(readFileSync(join(sandbox.path, '.gspot/reports/report.codequality.json'), 'utf8')),
     ).toMatchObject([{ check_name: 'coverage.strict', location: { path: 'source.sh' } }]);
-    writeFileSync(
-        join(sandbox.path, 'gspot.toml'),
-        stringify({
-            ...policy,
-            check: [
-                ...policy.check,
-                {
-                    name: 'project/syntax',
-                    command: ['bash', '-n', '{files}'],
-                    paths: ['source.sh'],
-                    stage: 'manual',
-                },
-            ],
-        }),
-    );
+    policy.check.push({
+        name: 'project/syntax',
+        command: ['bash', '-n', '{files}'],
+        paths: ['source.sh'],
+        stage: 'manual',
+    });
+    writeFileSync(join(sandbox.path, 'gspot.toml'), stringify(policy));
     const corrected = await executeRun(await openSession(sandbox.path), {
         ...options,
         stage: 'manual',
@@ -104,7 +116,7 @@ test('strict coverage keeps inability as exit two and leaves message-stage check
     await createFileTree(sandbox.path, {
         'gspot.toml': stringify({
             version: 1,
-            configurations: [],
+            kits: [],
             coverage: { strict: true },
             check: [
                 {
@@ -121,19 +133,19 @@ test('strict coverage keeps inability as exit two and leaves message-stage check
     const failed = await executeRun(session, { stage: 'all', skips: [], fix: false, isDryRun: true, noCache: true });
     expect(failed.report.exitCode).toBe(2);
     expect(failed.report.coverage.findings.map((entry) => entry.file)).toContain('gspot.toml');
-    const message = await executeRun(session, { stage: 'message', skips: [], fix: false, isDryRun: true });
-    expect(message.report.exitCode).toBe(0);
-    expect(message.report.coverage.findings).toStrictEqual([]);
+    const commitRun = await executeRun(session, { stage: 'message', skips: [], fix: false, isDryRun: true });
+    expect(commitRun.report.exitCode).toBe(0);
+    expect(commitRun.report.coverage.findings).toStrictEqual([]);
 });
 
-test('engine coverage rejects an unobserved path and accepts confirmed repository sources', async () => {
+test('engine coverage rejects an unread path and accepts confirmed repository sources', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nconfigurations = ["bash"]\n',
+        'gspot.toml': policyOf(['bash']),
         'source.sh': 'echo example\n',
     });
     const session = await openSession(sandbox.path);
-    const [planned] = await planRun(session, { stage: 'all', only: ['bash/syntax'], skips: [] });
+    const [planned] = planRun(session, { stage: 'all', only: ['bash/syntax'], skips: [] });
     const failed = await runEngineCheck(
         session,
         () => Promise.resolve({ findings: [], checkedFiles: ['../outside.sh'] }),
@@ -149,16 +161,16 @@ test('engine coverage rejects an unobserved path and accepts confirmed repositor
     expect(corrected).toMatchObject({ status: 'ok', files: 1, checkedFiles: ['source.sh'] });
 });
 
-test('a per-scope check runs only where that scope owns a claimed source', async () => {
+test('a per-scope check runs only where that scope owns a owned source', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nconfigurations = ["bash"]\n[[scope]]\npath = "app"\nconfigurations = []\n',
+        'gspot.toml': policyOf(['bash'], '[[scope]]\npath = "app"\nkits = []\n'),
         'app/source.sh': 'echo example\n',
         'notes.md': 'No shell source belongs to the root.\n',
     });
     const session = await openSession(sandbox.path);
     for (const scope of session.scopes) {
-        const manifest = scope.selected.find((entry) => entry.configuration.name === 'bash')!;
+        const manifest = scope.selected.find((entry) => entry.kit.name === 'bash')!;
         const syntax = manifest.checks.find((entry) => entry.name === 'bash/syntax')!;
         if (syntax.engine !== undefined || syntax.analysis !== undefined || syntax.reported_by !== undefined)
             throw new Error('The fixture requires the shell syntax command.');
@@ -182,16 +194,16 @@ test('a per-scope check runs only where that scope owns a claimed source', async
     expect(outcome.report.coverage).toStrictEqual({ checked: 1, unchecked: 2, findings: [] });
 });
 
-test('a project-wide check covers its claimed sources without claiming unrelated project inputs', async () => {
+test('a project-wide check covers its owned sources without owning unrelated project inputs', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nconfigurations = ["bash"]\n',
+        'gspot.toml': policyOf(['bash']),
         'source.sh': 'echo example\n',
         'notes.md': 'An unrelated source document.\n',
     });
     const session = await openSession(sandbox.path);
     const scope = session.scopes[0]!;
-    const manifest = scope.selected.find((entry) => entry.configuration.name === 'bash')!;
+    const manifest = scope.selected.find((entry) => entry.kit.name === 'bash')!;
     const syntax = manifest.checks.find((entry) => entry.name === 'bash/syntax')!;
     if (syntax.engine !== undefined || syntax.analysis !== undefined || syntax.reported_by !== undefined)
         throw new Error('The fixture requires the shell syntax command.');
@@ -222,7 +234,7 @@ test.each([
     await createFileTree(sandbox.path, {
         'gspot.toml': stringify({
             version: 1,
-            configurations: [],
+            kits: [],
             ...(scenario === 'ignore' ? { ignore: [{ check }] } : {}),
             check: [
                 {

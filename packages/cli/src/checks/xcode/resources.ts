@@ -1,14 +1,14 @@
 import { join } from 'node:path';
 import { statSync } from 'node:fs';
+import { findingAt } from '#cli/checks/result.ts';
 import { readSource } from '#cli/repository/tracked.ts';
-import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
-import { trackedEnding, xcodeFinding } from '#cli/checks/xcode/project.ts';
-import type { AssetContents, StringsFile } from '#cli/types/checks/xcode.ts';
-import { IMAGE_SET, NAMED_SETS, NOT_WORD } from '#cli/constants/checks/xcode.ts';
+import { trackedEnding } from '#cli/checks/xcode/project/checks.ts';
+import { NOT_WORD, IMAGE_SET, NAMED_SETS } from '#cli/config/checks/swift.ts';
+import type { Finding, EngineInput, StringsFile, AssetContents } from '#cli/types/checks.ts';
 
 // The parsed JSON of a file, or the parse error under the key error.
 function parsed(input: EngineInput, path: string): { value: unknown; error: string | undefined } {
-    const text = readSource(input.root, path, input.observations).toString('utf8');
+    const text = readSource(input.root, path, input.reads).toString('utf8');
     try {
         return { value: JSON.parse(text) as unknown, error: undefined };
     } catch (error) {
@@ -19,7 +19,7 @@ function parsed(input: EngineInput, path: string): { value: unknown; error: stri
 function stringFindings(input: EngineInput, path: string): Finding[] {
     const read = parsed(input, path);
     const at = { file: path, line: 1 };
-    if (read.error !== undefined) return [xcodeFinding(input, at, 'parse', read.error)];
+    if (read.error !== undefined) return [findingAt(input, at, 'parse', read.error)];
     const strings = read.value as StringsFile;
     const entries = Object.entries(strings.strings ?? {}).filter(([, entry]) => entry.shouldTranslate !== false);
     const locales = new Set(entries.flatMap(([, entry]) => Object.keys(entry.localizations ?? {})));
@@ -27,9 +27,7 @@ function stringFindings(input: EngineInput, path: string): Finding[] {
     return entries.flatMap(([key, entry]) => {
         const missing = [...locales].filter((locale) => entry.localizations?.[locale] === undefined);
         if (missing.length === 0) return [];
-        return [
-            xcodeFinding(input, at, 'missing-translation', `"${key}" has no translation for ${missing.join(', ')}.`),
-        ];
+        return [findingAt(input, at, 'missing-translation', `"${key}" has no translation for ${missing.join(', ')}.`)];
     });
 }
 
@@ -49,21 +47,21 @@ function symbolOf(name: string): string {
 function imageFindings(input: EngineInput, path: string): Finding[] {
     const read = parsed(input, path);
     const at = { file: path, line: 1 };
-    if (read.error !== undefined) return [xcodeFinding(input, at, 'parse', read.error)];
+    if (read.error !== undefined) return [findingAt(input, at, 'parse', read.error)];
     if (!path.endsWith(IMAGE_SET)) return [];
     const contents = read.value as AssetContents;
     const names = (contents.images ?? []).flatMap((image) => (image.filename === undefined ? [] : [image.filename]));
-    if (names.length === 0) return [xcodeFinding(input, at, 'empty-set', 'This image set names no image file.')];
+    if (names.length === 0) return [findingAt(input, at, 'empty-set', 'This image set names no image file.')];
     const folder = path.slice(0, path.lastIndexOf('/'));
     return names
         .filter((name) => statSync(join(input.root, folder, name), { throwIfNoEntry: false }) === undefined)
-        .map((name) => xcodeFinding(input, at, 'missing-image', `The image ${name} is not in the set.`));
+        .map((name) => findingAt(input, at, 'missing-image', `The image ${name} is not in the set.`));
 }
 
 function orphanFindings(input: EngineInput, sets: string[]): Finding[] {
     if (input.policyFiles.policy.level !== 'all') return [];
     const swift = trackedEnding(input, ['.swift', '.storyboard', '.xib', '.plist']).map((path) =>
-        readSource(input.root, path, input.observations).toString('utf8'),
+        readSource(input.root, path, input.reads).toString('utf8'),
     );
     return sets
         .filter((path) => NAMED_SETS.some((ending) => path.endsWith(ending)))
@@ -72,7 +70,7 @@ function orphanFindings(input: EngineInput, sets: string[]): Finding[] {
             return swift.every((text) => !text.includes(`"${name}"`) && !text.includes(`.${symbolOf(name)}`));
         })
         .map((path) =>
-            xcodeFinding(input, { file: path, line: 1 }, 'orphan-asset', `No source names the asset ${setName(path)}.`),
+            findingAt(input, { file: path, line: 1 }, 'orphan-asset', `No source names the asset ${setName(path)}.`),
         );
 }
 
@@ -81,6 +79,7 @@ function orphanFindings(input: EngineInput, sets: string[]): Finding[] {
  * @param input the engine input
  * @returns the findings
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The entry point of the xcode-xcstrings check, which the analysis table names.
 export function stringFiles(input: EngineInput): Finding[] {
     return trackedEnding(input, ['.xcstrings']).flatMap((path) => stringFindings(input, path));
 }

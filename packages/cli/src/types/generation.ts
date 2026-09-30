@@ -1,11 +1,11 @@
 // The types of generation in this package.
-import type { FileSnapshot } from '#cli/types/platform.ts';
-import type { ToolPackageManager } from '#cli/types/tools/packages.ts';
-import type { HOOK_FILES } from '#cli/constants/repository/repository.ts';
+import type { Read } from '#cli/types/platform.ts';
+import type { PackageTool } from '#cli/types/tools/packages.ts';
+import type { HOOK_FILES } from '#cli/config/repository/repository.ts';
 import type { ConfigurationFormat } from '#cli/types/lifecycle/lifecycle.ts';
-import type { PathExpressions, TrackedFile } from '#cli/types/repository/repository.ts';
-import type { ConfigurationTarget, FragmentSelector, Manifest } from '#cli/types/configurations.ts';
-import type { FormatSettings, MergedView, Policy, ScopeSelection } from '#cli/types/policy/policy.ts';
+import type { TrackedFile, PathExpressions } from '#cli/types/repository/repository.ts';
+import type { Manifest, FragmentSelector, ConfigurationTarget } from '#cli/types/kits.ts';
+import type { Policy, MergedView, FormatSettings, ScopeSelection } from '#cli/types/policy/policy.ts';
 
 export type Fragment = { manifest: Manifest; config: ConfigurationTarget };
 export type WorkflowShape = {
@@ -18,6 +18,8 @@ export type WorkflowShape = {
     isMise: boolean;
 };
 export type TemplateInputs = {
+    /** The parts of the ESLint configuration the policy decides, computed when that template renders. */
+    eslint: () => EslintConfiguration;
     markdownlintRules: Record<string, unknown>;
     targetPath?: string;
     scopeIgnorePatterns: (patterns: string[], scope: string) => string[];
@@ -31,13 +33,13 @@ export type TemplateInputs = {
     prose: { blockIgnores: string[]; tokenIgnores: string[]; styles: string[]; formats: [string, string][] };
     version: string;
     scope: string;
-    scopes: { path: string; configurations: string[] }[];
-    configurationScopes: (configuration: string) => { path: string; settings: Record<string, unknown> }[];
+    scopes: { path: string; kits: string[] }[];
+    kitScopes: (kit: string) => { path: string; settings: Record<string, unknown>; extra: MergedView['extra'] }[];
     /** The folders the selected settings with this role name, for the scope being rendered. */
     roleFolders: (role: string) => string[];
     /** The same per scope, shallowest first, for the scopes where a selected setting carries the role. */
     roleScopes: (role: string) => { path: string; folders: string[] }[];
-    configurations: string[];
+    kits: string[];
     policy: Policy;
     view: MergedView;
     format: MergedView['format'];
@@ -70,9 +72,9 @@ export type GeneratedFile = {
     content: string;
     readOnly: boolean;
     executable?: boolean;
-    observed?: FileSnapshot;
+    read?: Read;
     kind: 'lock' | 'config' | 'pointer' | 'hook' | 'runner' | 'workflow' | 'rules' | 'managed-block';
-    configuration?: string;
+    kit?: string;
 };
 export type BlockOutput = { path: string; block: string; style: 'markdown' | 'hash' };
 export type ConfigurationOutput = {
@@ -80,30 +82,34 @@ export type ConfigurationOutput = {
     format: ConfigurationFormat;
     changes: { path: (string | number)[]; value: unknown }[];
 };
-export type GeneratedProposal = {
+export type Generated = {
     notes: string[];
     files: GeneratedFile[];
     blocks: BlockOutput[];
     merges: ConfigurationOutput[];
     configurations: ConfigurationOutput[];
 };
-export type FormatOverride = { files: string[]; excludeFiles: string[]; options: Record<string, unknown> };
+export type FormatOverride<Options = Record<string, unknown>> = {
+    files: string[];
+    excludeFiles: string[];
+    options: Options;
+};
 /** A Prettier plugin a selected manifest ships: its npm name, its entry file, and the overrides its files need. */
 export type PrettierPlugin = {
     name: string;
     entry: string;
     overrides: { files: string; options: Record<string, unknown> }[];
 };
-export type ScopedFormat = { scope: string; paths: string[]; format: Partial<FormatSettings> };
+export type ScopeFormat = { scope: string; paths: string[]; format: Partial<FormatSettings> };
 export type EditorconfigOverride = { path: string; options: Record<string, string | number | boolean> };
-export type Basename = { isNegated: boolean; basename: string };
-export type Group<Options> = {
+export type ExcludedBasename = { isNegated: boolean; basename: string };
+export type FormatSelectorGroup<Options> = {
     patterns: string[];
     excluded: string[];
     options: Options;
     hasSlash: boolean;
-    base: string;
-    fromConfig: (pattern: string) => string;
+    sourceDirectory: string;
+    fromGeneratedFile: (pattern: string) => string;
 };
 export type NativeOverride<Options> = {
     files: string | string[];
@@ -111,6 +117,35 @@ export type NativeOverride<Options> = {
     options: Options;
 };
 export type EslintRuleBlock = PathExpressions & { scope: string; rules: Record<string, unknown> };
+/** One block of the generated ESLint configuration: the files it covers and what it sets for them. */
+export type EslintBlock = {
+    files: (string | string[])[];
+    ignores?: string[];
+    settings?: Record<string, unknown>;
+    rules?: Record<string, unknown>;
+};
+/** What the ESLint configuration reads: the repository root, the policy, every scope, and the scope being rendered. */
+export type EslintContext = { root: string; policy: Policy; scopes: ScopeSelection[]; selection: ScopeSelection };
+/** The parts of the ESLint configuration that the policy and the rendered scope decide. */
+export type EslintConfiguration = {
+    aliases: Record<string, string>;
+    testFiles: string[];
+    scriptFiles: string[];
+    nodeVersion: string;
+    limits: Record<string, number | undefined>;
+    javascriptLimits: Record<string, number | undefined>;
+    gspotRules: Record<string, unknown>;
+    importLayoutRules: Record<string, unknown>;
+    commentLevel: 'error' | 'off';
+    testRules: Record<string, unknown>;
+    importStyleBlocks: EslintBlock[];
+    runtimes: { files: string[]; runtime: string }[];
+    boundaryBlocks: EslintBlock[];
+    scopeBlocks: EslintBlock[];
+    ignoredPaths: string[];
+    restrictedImports: unknown[];
+    extra: { reason: unknown; entries: Record<string, unknown> } | undefined;
+};
 /** A fragment selector with the allowed setting replaced by the paths it holds. */
 export type ResolvedSelector = Pick<FragmentSelector, 'selector' | 'message' | 'files'> & { except?: string[] };
 /** One no-restricted-syntax rule: its file set, or every code file when absent, and the selectors it holds. */
@@ -120,27 +155,16 @@ export type SelectorGroup = {
     files?: string[];
     selectors: { selector: string; message: string }[];
 };
-export type GenerationOptions = {
-    version: string;
-    packageManager: ToolPackageManager | undefined;
-    takeover?: ReadonlyMap<string, FileSnapshot> | undefined;
-};
+export type GenerationOptions = { version: string; packageClient: PackageTool | undefined };
 export type JsonFormat = { width: number; indent: number };
 export type HookName = (typeof HOOK_FILES)[number];
-export type LefthookBlock = Record<string, { commands: Record<string, unknown> }>;
 export type Pointer = NonNullable<ConfigurationTarget['pointer']>;
 /** What emitting one manifest in one scope needs. */
-export type EmitContext = {
+export type EmitInputs = {
     root: string;
     files: TrackedFile[];
     scopes: ScopeSelection[];
     inputs: TemplateInputs;
     selection: ScopeSelection;
     manifest: Manifest;
-};
-export type Retention = {
-    root: string;
-    policy: Policy;
-    files: TrackedFile[];
-    takeover: ReadonlyMap<string, FileSnapshot> | undefined;
 };

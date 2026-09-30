@@ -1,32 +1,44 @@
+import { resolve } from 'node:path';
 import type { Command } from 'commander';
-import { relative, resolve } from 'node:path';
+import type { Root } from '#cli/types/platform.ts';
+import { packageFolders } from '#cli/tools/vale.ts';
+import { openRoot } from '#cli/platform/filesystem.ts';
 import { directoryOf } from '#cli/platform/arguments.ts';
 import { askConfirmation } from '#cli/commands/prompts.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
-import { hookLocation } from '#cli/repository/hook-location.ts';
-import { proposeHookRestorations } from '#cli/lifecycle/hooks/git.ts';
 import { findRoot, isGitRepository } from '#cli/repository/tracked.ts';
-import type { OwnershipState } from '#cli/types/lifecycle/lifecycle.ts';
-import { OWNERSHIP_FILE, STATE_DIRECTORY } from '#cli/constants/platform.ts';
-import { readOwnership, withLifecycleOwner } from '#cli/lifecycle/ownership/owner.ts';
-import type { CommandResult, UninstallOptions, UninstallPlan } from '#cli/types/commands/commands.ts';
+import { hooksInstalled, uninstallHooks } from '#cli/lifecycle/hooks.ts';
+import { readOwnership, runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
+import type { CommandResult, UninstallPlan, UninstallOptions } from '#cli/types/commands.ts';
 
-function planText(plan: UninstallPlan): string {
-    return [
-        'restore originals or remove unchanged installed files',
-        ...[...plan.remove, ...plan.blocks].map((path) => `  ${path}`),
-        ...(plan.hooks ? ['restore or remove unchanged dispatchers in the Git-resolved hooks directory'] : []),
-        'kept: gspot.toml, exported profiles, recovery data, ignore entries, unowned files, and subsequent edits',
-        '',
-    ].join('\n');
+import {
+    GSPOT_FOLDER,
+    OWNERSHIP_FILE,
+    CACHE_DIRECTORY,
+    STATE_DIRECTORY,
+    REPORT_DIRECTORY,
+    INSTALLATION_FOLDERS,
+} from '#cli/config/platform.ts';
+
+// The folders of downloads and results gspot keeps for itself: the cache, the reports, and the Vale packages.
+function scratchFolders(root: string): string[] {
+    const files = openRoot(root);
+    try {
+        const own = [CACHE_DIRECTORY, REPORT_DIRECTORY].filter((path) => files.stat(path)?.isDirectory() === true);
+        return [...own, ...packageFolders(files)];
+    } finally {
+        files.close();
+    }
 }
 
-// Pending entries are candidates; the lifecycle owner confirms their state before mutation.
-function restorationCandidates(state: OwnershipState) {
-    return [
-        ...state.files,
-        ...(state.pending ?? []).flatMap((pending) => (pending.entry === undefined ? [] : [pending.entry])),
-    ];
+// Deletes the folders under the .gspot folder that uninstall left empty, deepest first, and the .gspot folder itself.
+function removeEmptyFolders(files: Root, path: string): boolean {
+    if (files.stat(path)?.isDirectory() !== true) return false;
+    const children = files.list(path);
+    const kept = children.filter((name) => !removeEmptyFolders(files, `${path}/${name}`));
+    if (kept.length > 0) return false;
+    files.rmdir(path);
+    return true;
 }
 
 /**
@@ -35,62 +47,53 @@ function restorationCandidates(state: OwnershipState) {
  * @returns the recorded restoration and removal candidates
  */
 export function planUninstall(root: string): UninstallPlan {
-    const recorded = restorationCandidates(readOwnership(root));
-    const blocks = recorded
-        .filter((entry) => entry.kind === 'block' && entry.path !== '.gitignore')
-        .map((entry) => entry.path);
-    const blockSet = new Set(blocks);
+    const state = readOwnership(root);
+    // Pending entries are candidates; the lifecycle owner confirms their state before mutation.
+    const recorded = [
+        ...state.files,
+        ...(state.pending ?? []).flatMap((pending) => (pending.entry === undefined ? [] : [pending.entry])),
+    ];
+    const blocks = [...new Set(recorded.filter((entry) => entry.kind === 'block').map((entry) => entry.path))];
     const remove = new Set(recorded.map((entry) => entry.path));
-    for (const path of ['gspot.toml', '.gitignore', ...blocks]) remove.delete(path);
-    for (const entry of recorded) if (entry.kind === 'hook' || entry.kind === 'export') remove.delete(entry.path);
-    const location = isGitRepository(root) ? hookLocation(root) : undefined;
-    const hooks =
-        location !== undefined &&
-        restorationCandidates(readOwnership(location.root, location.stateDirectory)).some(
-            (entry) =>
-                entry.kind === 'hook' &&
-                entry.path.startsWith(location.directory === '' ? '' : `${location.directory}/`),
-        );
+    for (const path of ['gspot.toml', ...blocks]) remove.delete(path);
+    for (const entry of recorded) if (entry.kind === 'export') remove.delete(entry.path);
+    const hooks = isGitRepository(root) && hooksInstalled(root);
     return {
         remove: [...remove].toSorted((left, right) => left.localeCompare(right)),
-        blocks: [...blockSet].toSorted((left, right) => left.localeCompare(right)),
+        blocks: blocks.toSorted((left, right) => left.localeCompare(right)),
+        installs: state.installs ?? [],
+        folders: scratchFolders(root),
         hooks,
     };
 }
 
 /**
- * Restore only unchanged or absent destinations, retaining recovery and subsequent edits.
+ * Restore unchanged or absent destinations and delete what gspot keeps for itself. The recovery data stays only while
+ * a file kept for its edits still has an original in it.
  * @param root the repository being removed
  * @param plan the reviewed restoration and removal candidates
  * @returns paths preserved because they were edited or unowned
  */
 export function applyUninstall(root: string, plan: UninstallPlan): string[] {
-    return withLifecycleOwner(root, (owner) => {
+    const preserved = runOwnedLifecycle(root, (owner) => {
         const proposed = new Set([...plan.remove, ...plan.blocks]);
-        const proposals = [...proposed].map((path) => owner.proposeRestoration(path));
-        const preserved = proposals
-            .filter((proposal) => proposal.status === 'preserved')
-            .map((proposal) => proposal.path);
-        const restorations = proposals.filter((proposal) => proposal.status !== 'preserved');
-        if (!plan.hooks) {
-            owner.applyProposals(restorations);
-            return preserved;
-        }
-        const location = hookLocation(root);
-        return withLifecycleOwner(
-            location.root,
-            (hooks) => {
-                const planned = proposeHookRestorations(hooks, location);
-                if (hooks === owner) owner.applyProposals([...restorations, ...planned.proposals]);
-                else {
-                    owner.applyProposals(restorations);
-                    hooks.applyProposals(planned.proposals);
-                }
-                return [...preserved, ...planned.preserved.map((path) => relative(root, resolve(location.root, path)))];
-            },
-            location.stateDirectory,
-        );
+        const plans = [...proposed].map((path) => owner.proposeRestoration(path));
+        const kept = plans.filter((plan) => plan.status === 'preserved').map((plan) => plan.path);
+        owner.applyPlans(plans.filter((plan) => plan.status !== 'preserved'));
+        for (const kind of plan.installs) owner.removeInstallation(kind);
+        if (plan.hooks) uninstallHooks(root);
+        return kept;
     });
+    const hasOriginals = readOwnership(root).files.some((entry) => entry.original?.backup !== undefined);
+    const files = openRoot(root);
+    try {
+        for (const folder of plan.folders) files.removeTree(folder);
+        if (!hasOriginals) files.removeTree(STATE_DIRECTORY);
+        removeEmptyFolders(files, GSPOT_FOLDER);
+    } finally {
+        files.close();
+    }
+    return preserved;
 }
 
 /**
@@ -101,7 +104,15 @@ export function applyUninstall(root: string, plan: UninstallPlan): string[] {
 export async function uninstallCommand(options: UninstallOptions): Promise<CommandResult> {
     const root = findRoot(options.cwd, ['gspot.toml', OWNERSHIP_FILE]);
     const plan = planUninstall(root);
-    const text = planText(plan);
+    const text = [
+        'restore originals or remove unchanged installed files',
+        ...[...plan.remove, ...plan.blocks].map((path) => `  ${path}`),
+        ...plan.installs.map((kind) => `  ${INSTALLATION_FOLDERS[kind]}/ (the private ${kind} tools)`),
+        ...plan.folders.map((folder) => `  ${folder}/`),
+        ...(plan.hooks ? ['unset core.hooksPath, so Git stops running the gspot hooks'] : []),
+        'kept: gspot.toml, exported profiles, unowned files, and files edited after gspot wrote them',
+        '',
+    ].join('\n');
     if (options.isDryRun)
         return { text: `${text}--dry-run: nothing removed.\n`, json: { plan, isDryRun: true }, exitCode: 0 };
     process.stderr.write(text);
@@ -110,22 +121,16 @@ export async function uninstallCommand(options: UninstallOptions): Promise<Comma
     if (!isGo) return { text: 'Nothing removed.\n', json: { plan, applied: false }, exitCode: 0 };
     const preserved = applyUninstall(root, plan);
     const retained = preserved.map((path) => `preserved edited or unowned ${path}\n`).join('');
-    const roots = new Map([[root, STATE_DIRECTORY]]);
-    if (plan.hooks) {
-        const location = hookLocation(root);
-        roots.set(location.root, location.stateDirectory);
-    }
     const destinations = new Set(preserved.map((path) => resolve(root, path)));
-    const originals = [...roots].flatMap(([root, stateDirectory]) =>
-        readOwnership(root, stateDirectory).files.flatMap((entry) =>
-            entry.original !== undefined && destinations.has(resolve(root, entry.path))
-                ? [{ path: resolve(root, entry.path), backup: resolve(root, entry.original.backup) }]
-                : [],
-        ),
+    const originals = readOwnership(root).files.flatMap((entry) =>
+        entry.original?.backup !== undefined && destinations.has(resolve(root, entry.path))
+            ? [{ path: resolve(root, entry.path), backup: resolve(root, entry.original.backup) }]
+            : [],
     );
     const recovery = originals.map(({ path, backup }) => `original for ${path} retained at ${backup}\n`).join('');
+    const remains = originals.length === 0 ? 'gspot.toml remains' : 'gspot.toml and the recovery data remain';
     return {
-        text: `${retained}${recovery}Uninstall complete. Recovery data and gspot.toml remain.\n`,
+        text: `${retained}${recovery}Uninstall complete. ${remains}.\n`,
         json: { plan, applied: true, preserved, originals },
         exitCode: 0,
     };
@@ -138,13 +143,13 @@ export async function uninstallCommand(options: UninstallOptions): Promise<Comma
 export function registerUninstall(program: Command): void {
     program
         .command('uninstall')
-        .summary('Uninstall gspot')
-        .description('Remove what init wrote; keep gspot.toml and the project rule layer')
+        .summary('Remove gspot from the repository')
+        .description('Remove what gspot wrote, and keep gspot.toml and your own guides')
         .addHelpText(
             'after',
-            '\nEffects:\nShows managed removals and restorations, then applies them after confirmation or --yes. --dry-run writes nothing. Edited or unowned files are preserved. gspot.toml and recovery data remain available.\n\nExit codes:\n0: the request completed, including a preview or declined confirmation. 2: invalid input or inability to complete the request.\n\nExample:\ngspot uninstall --dry-run',
+            '\nEffects:\nShows what gspot removes and which original files it restores, then does it after you confirm or pass --yes. A file you edited after gspot wrote it stays, with its original in .gspot/state. gspot.toml stays too. --dry-run changes nothing.\n\nExit codes:\n- 0: the removal finished, was shown, or was declined.\n- 2: the input was invalid, or uninstall could not finish.\n\nExample:\ngspot uninstall --dry-run',
         )
-        .option('--yes', 'Skip the question')
+        .option('--yes', 'Remove without asking')
         .option('--dry-run', 'Print the plan and remove nothing')
         .action(async (flags: Record<string, unknown>, command: Command) => {
             const global = command.optsWithGlobals();

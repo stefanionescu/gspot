@@ -1,4 +1,4 @@
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { underFloor } from '#cli/checks/xctest/coverage.ts';
 
 test('the coverage check compares each named target with its floor', () => {

@@ -1,11 +1,23 @@
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { runToolCommand } from '#cli/tools/command.ts';
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
-import { runToolCheck } from '#cli/execution/tool-runner.ts';
-import type { CheckResult } from '#cli/types/checks/checks.ts';
+import type { CheckResult } from '#cli/types/checks.ts';
+import { rmSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { runToolCheck } from '#cli/execution/tool/runner.ts';
 import { pushBase } from '#cli/repository/revisions/selection.ts';
-import type { PlannedCheck, Session } from '#cli/types/execution/execution.ts';
+import type { Session, PlannedCheck } from '#cli/types/execution/execution.ts';
+
+async function selectedCommits(session: Session, planned: PlannedCheck): Promise<string[] | { error: string }> {
+    if (planned.commits !== undefined) return planned.commits;
+    const listed = await runToolCommand(
+        planned.scope.view,
+        ['git', 'rev-list', `${await pushBase(session.root, session.cancelSignal)}..HEAD`, '--'],
+        { cwd: session.root },
+        session.cancelSignal,
+    );
+    if (listed.code !== 0) return { error: `Cannot select commit messages: ${listed.stderr.trim()}` };
+    return listed.stdout.split('\n').filter(Boolean);
+}
 
 /**
  * Check every selected commit message, including empty commits with identical source trees.
@@ -25,22 +37,13 @@ export async function checkCommitMessages(session: Session, planned: PlannedChec
     };
     if (!session.repository.hasGit)
         return { ...result, status: 'skipped', note: 'Commit messages require a Git repository.' };
-    let commits = planned.commits;
-    if (commits === undefined) {
-        const listed = await runToolCommand(
-            planned.scope.view,
-            ['git', 'rev-list', `${await pushBase(session.root, session.cancelSignal)}..HEAD`, '--'],
-            { cwd: session.root },
-            session.cancelSignal,
-        );
-        if (listed.code !== 0)
-            return { ...result, status: 'error', note: `Cannot select commit messages: ${listed.stderr.trim()}` };
-        commits = listed.stdout.split('\n').filter(Boolean);
-    }
+    const commits = await selectedCommits(session, planned);
+    if (!Array.isArray(commits)) return { ...result, status: 'error', note: commits.error };
     const scratch = mkdtempSync(join(tmpdir(), 'gspot-messages-'));
     let checked = 0;
+    const statuses = new Set<CheckResult['status']>();
     try {
-        const message = join(scratch, 'message.txt');
+        const commitFile = join(scratch, 'message.txt');
         for (const object of commits) {
             const read = await runToolCommand(
                 planned.scope.view,
@@ -55,8 +58,8 @@ export async function checkCommitMessages(session: Session, planned: PlannedChec
                     duration: performance.now() - started,
                     note: `Cannot read commit ${object}: ${read.stderr.trim()}`,
                 };
-            writeFileSync(message, read.stdout, { mode: 0o600 });
-            const current = await runToolCheck(session, { ...planned, messageFile: message }, [
+            writeFileSync(commitFile, read.stdout, { mode: 0o600 });
+            const current = await runToolCheck(session, { ...planned, messageFile: commitFile }, [
                 'commitlint',
                 '--config',
                 '{config:commitlint}',
@@ -67,12 +70,13 @@ export async function checkCommitMessages(session: Session, planned: PlannedChec
                 ...current.findings.map((finding) => ({ ...finding, message: `${object}: ${finding.message}` })),
             );
             checked++;
-            if (current.status === 'missing' || current.status === 'error')
+            if (['missing', 'error'].includes(current.status))
                 return { ...current, findings: result.findings, duration: performance.now() - started };
-            if (current.status === 'fail') result.status = 'fail';
+            statuses.add(current.status);
         }
         return {
             ...result,
+            status: statuses.has('fail') ? 'fail' : 'ok',
             duration: performance.now() - started,
             note: `Checked ${String(checked)} commit messages.`,
         };

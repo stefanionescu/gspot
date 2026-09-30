@@ -1,23 +1,25 @@
 // The check graph for a run: stage, scope, file sets, requirements, skips.
+import ignore from 'ignore';
+import { ownedBy } from '#cli/kits/owners.ts';
 import { toolPin } from '#cli/tools/inspect.ts';
-import { SelectionError } from '#cli/configurations/select.ts';
-import { claimedByClaims } from '#cli/configurations/claims.ts';
+import { GspotError } from '#cli/platform/errors.ts';
+import { isInScope } from '#cli/repository/paths.ts';
+import { openRoot } from '#cli/platform/filesystem.ts';
 import type { ScopeSelection } from '#cli/types/policy/policy.ts';
-import { prettierInputs } from '#cli/execution/prettier-inputs.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
 import { checkState, repositoryCheckSpec } from '#cli/policy/check-state.ts';
-import { restrictIgnoredPaths, skipFor } from '#cli/execution/planning/skips.ts';
-import type { CheckSpec, Manifest, Stage, ToolPin } from '#cli/types/configurations.ts';
-import { HISTORY_ANALYSES, PLATFORM_NAMES } from '#cli/constants/execution/execution.ts';
-import { childScopes, filesFor, isOutsideChildren, isRepositoryPolicy } from '#cli/execution/planning/files.ts';
+import type { Stage, ToolPin, Manifest, CheckSpec } from '#cli/types/kits.ts';
+import { skipFor, restrictIgnoredPaths } from '#cli/execution/planning/skips.ts';
+import { PLATFORM_NAMES, HISTORY_ANALYSES } from '#cli/config/execution/execution.ts';
+import { filesFor, childScopes, isRepositoryPolicy } from '#cli/execution/planning/files.ts';
 
 import type {
     Session,
-    PlanContext,
     PlanEntry,
+    PlanInputs,
     PlanOptions,
-    PlannedCheck,
     StageFilter,
+    PlannedCheck,
 } from '#cli/types/execution/execution.ts';
 
 function isStageWanted(filter: StageFilter, stage: Stage): boolean {
@@ -26,6 +28,7 @@ function isStageWanted(filter: StageFilter, stage: Stage): boolean {
 }
 
 function toolFor(spec: CheckSpec, manifest: Manifest | undefined, session: Session): ToolPin | undefined {
+    if (spec.engine !== undefined) return undefined;
     const name = spec.tool ?? spec.command?.[0];
     if (name === undefined) return undefined;
     const own = manifest?.tools.find((tool) => tool.name === name);
@@ -41,18 +44,15 @@ function manifestEntries(manifest: Manifest, seenRepoChecks: Set<string>): PlanE
     return fresh.map((spec) => ({ spec, manifest }));
 }
 
-// The checks a manifest references from another configuration.
-function referencedChecks(manifest: Manifest): PlanEntry[] {
-    const references = manifest.configuration.check_references ?? [];
-    return manifest.checks.filter((spec) => references.includes(spec.name)).map((spec) => ({ spec, manifest }));
-}
-
 // The checks any scope references from another configuration, once each, unless the root already plans them.
 function referencedEntries(session: Session, planned: PlanEntry[]): PlanEntry[] {
     const seen = new Set(planned.map((entry) => entry.spec.name));
     const referenced: PlanEntry[] = [];
     const candidates = session.scopes.flatMap((selected) =>
-        selected.selected.flatMap((manifest) => referencedChecks(manifest)),
+        selected.selected.flatMap((manifest) => {
+            const references = manifest.kit.check_references ?? [];
+            return manifest.checks.filter((spec) => references.includes(spec.name)).map((spec) => ({ spec, manifest }));
+        }),
     );
     for (const entry of candidates) {
         if (seen.has(entry.spec.name)) continue;
@@ -81,19 +81,11 @@ function isWanted(spec: CheckSpec, options: PlanOptions): boolean {
     return (options.only !== undefined && options.stage === 'all') || isStageWanted(options.stage, spec.stage);
 }
 
-// The commit range and message file the run supplies, when it has them.
-function runInputs(options: PlanOptions): Pick<PlannedCheck, 'commits' | 'messageFile'> {
-    return {
-        ...(options.commits === undefined ? {} : { commits: options.commits }),
-        ...(options.messageFile === undefined ? {} : { messageFile: options.messageFile }),
-    };
-}
-
-function planOne(context: PlanContext, entry: PlanEntry, isWholeCheck: boolean): PlannedCheck {
+function planOne(context: PlanInputs, entry: PlanEntry, isWholeCheck: boolean): PlannedCheck {
     const { session, scope, options, platform } = context;
     const { spec, manifest } = entry;
     const rootScope = session.scopes[0] ?? scope;
-    const tool = spec.engine === undefined ? toolFor(spec, manifest, session) : undefined;
+    const tool = toolFor(spec, manifest, session);
     const check: PlannedCheck = {
         check: spec.name,
         scope: isWholeCheck ? rootScope : scope,
@@ -102,9 +94,10 @@ function planOne(context: PlanContext, entry: PlanEntry, isWholeCheck: boolean):
         projectWide: spec.runs !== 'per-file-list',
         ...(manifest === undefined ? {} : { manifest }),
         ...(tool === undefined ? {} : { tool }),
-        ...runInputs(options),
+        ...(options.commits === undefined ? {} : { commits: options.commits }),
+        ...(options.messageFile === undefined ? {} : { messageFile: options.messageFile }),
     };
-    const skip = skipFor(check, options, platform, session.repository.hasGit);
+    const skip = skipFor(check, options, { platform, arch: process.arch }, session.repository.hasGit);
     return restrictIgnoredPaths(skip === undefined ? check : { ...check, skip });
 }
 
@@ -118,9 +111,9 @@ function narrowSet(options: PlanOptions): Set<string> | undefined {
 function yielded(planned: PlannedCheck[]): PlannedCheck[] {
     const takers = new Map(
         planned.flatMap((check): [string, string][] =>
-            check.spec.takes_over === undefined || check.skip !== undefined || !isActive(check)
+            check.spec.replaces === undefined || check.skip !== undefined || !isActive(check)
                 ? []
-                : [[check.spec.takes_over, check.check]],
+                : [[check.spec.replaces, check.check]],
         ),
     );
     return planned.map((check) => {
@@ -130,7 +123,7 @@ function yielded(planned: PlannedCheck[]): PlannedCheck[] {
     });
 }
 
-function planScope(context: PlanContext, seenRepoChecks: Set<string>, wholeSeen: Set<string>): PlannedCheck[] {
+function planScope(context: PlanInputs, seenRepoChecks: Set<string>, wholeSeen: Set<string>): PlannedCheck[] {
     const planned: PlannedCheck[] = [];
     const entries = entriesFor(context.session, context.scope, seenRepoChecks).filter(
         ({ spec }) => checkState(context.session.policyFiles.policy, context.scope, spec) !== 'off (level)',
@@ -151,7 +144,7 @@ function planScopes(session: Session, options: PlanOptions): PlannedCheck[][] {
     const platform = PLATFORM_NAMES[process.platform] ?? process.platform;
     const narrow = narrowSet(options);
     return session.scopes.map((scope) => {
-        const context: PlanContext = {
+        const context: PlanInputs = {
             session,
             scope,
             options,
@@ -168,6 +161,7 @@ function planScopes(session: Session, options: PlanOptions): PlannedCheck[][] {
  * @param check the planned check
  * @returns whether the check has something to run over
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Replacement and the run list decide whether a check has work by the same four conditions.
 export function isActive(check: PlannedCheck): boolean {
     return (
         check.files.length > 0 ||
@@ -195,16 +189,16 @@ export function configuredChecks(session: Session): PlannedCheck[] {
 }
 
 /**
- * Source claims of a planned check, separate from inputs supplied to project-wide analysis.
+ * Source owners of a planned check, separate from inputs supplied to project-wide analysis.
  * @param session the open session
  * @param check the planned check
- * @returns the files the check's claims select
+ * @returns the files the check's owners select
  */
-export function claimedInputs(session: Session, check: PlannedCheck): TrackedFile[] {
-    const claims = check.spec.claims ?? check.manifest?.claims;
+export function ownedInputs(session: Session, check: PlannedCheck): TrackedFile[] {
+    const owners = check.spec.owners ?? check.manifest?.owners;
     const children = check.spec.runs === 'per-scope' ? childScopes(session, check.scope) : [];
-    const files = check.files.filter((file) => isOutsideChildren(file, children));
-    return claims === undefined ? [] : claimedByClaims(claims, check.scope.selected, files, check.scope.scope.path);
+    const files = check.files.filter((file) => children.every((child) => !isInScope(file.path, child)));
+    return owners === undefined ? [] : ownedBy(owners, check.scope.selected, files, check.scope.scope.path);
 }
 
 /**
@@ -213,11 +207,18 @@ export function claimedInputs(session: Session, check: PlannedCheck): TrackedFil
  * @param options stage, paths, only, skips, and the staged or ref-relative file sets
  * @returns the planned checks in scope order
  */
-export async function planRun(session: Session, options: PlanOptions): Promise<PlannedCheck[]> {
+export function planRun(session: Session, options: PlanOptions): PlannedCheck[] {
     const planned = planScopes(session, options);
-    const resolved = await Promise.all(
-        planned.map(async (checks) =>
-            yielded(await Promise.all(checks.map((check) => prettierInputs(session, check)))),
+    const resolved = planned.map((checks) =>
+        yielded(
+            checks.map((check) =>
+                check.manifest?.kit.name === 'formatting' &&
+                check.check === 'formatting/prettier' &&
+                check.skip === undefined &&
+                check.files.length > 0
+                    ? prettierInputs(session, check)
+                    : check,
+            ),
         ),
     );
     const checks = resolved.flat();
@@ -226,9 +227,30 @@ export async function planRun(session: Session, options: PlanOptions): Promise<P
             (check) => check.skip === undefined && HISTORY_ANALYSES.has(check.spec.analysis ?? ''),
         );
         if (historyChecks.length > 0)
-            throw new SelectionError([
+            throw new GspotError('selection', [
                 `Pushed history is incomplete for ${historyChecks.map((check) => check.check).join(', ')}. Run git fetch --unshallow and retry.`,
             ]);
     }
     return checks;
+}
+
+/**
+ * Leave out the files .prettierignore names before either the checker or its fixer receives file arguments.
+ * @param session the open session
+ * @param check the active native Prettier check with selected files
+ * @returns the check with the ignored files left out
+ */
+export function prettierInputs(session: Session, check: PlannedCheck): PlannedCheck {
+    const tree = openRoot(session.root);
+    try {
+        const read = tree.read('.prettierignore');
+        if (read === undefined) return check;
+        const matcher = ignore().add(read.bytes.toString('utf8'));
+        const files = check.files.filter((file) => !matcher.ignores(file.path));
+        return files.length === 0
+            ? { ...check, skip: { source: 'ignore', note: 'all selected paths are ignored by .prettierignore' } }
+            : { ...check, files };
+    } finally {
+        tree.close();
+    }
 }

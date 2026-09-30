@@ -1,127 +1,130 @@
-// Applying proposals: each batch is journaled before a byte moves, so an interruption can be recovered.
+// Applying plans: each batch is logged before a byte moves, so an interruption can be recovered.
 import type { z } from 'zod';
 import { isDeepStrictEqual } from 'node:util';
-import type { FileSnapshot } from '#cli/types/platform.ts';
-import type { originalSchema } from '#cli/lifecycle/journal.ts';
-import { identity, matches } from '#cli/lifecycle/ownership/journal.ts';
-import type { Outcome, PreparedWrite, FileProposal, Journal } from '#cli/types/lifecycle/lifecycle.ts';
+import type { Read } from '#cli/types/platform.ts';
+import type { originalSchema } from '#cli/lifecycle/log.ts';
+import { matches, identity } from '#cli/lifecycle/ownership/log.ts';
+import type { Log, Outcome, Planned, Original, PreparedWrite, OwnershipEntry } from '#cli/types/lifecycle/lifecycle.ts';
 
-// The file as it is now, read as a link entry when either side of the proposal is a link.
-function foundSnapshot(
-    journal: Journal,
-    path: string,
-    current: FileSnapshot | undefined,
-    next: FileSnapshot | undefined,
-): FileSnapshot | undefined {
+// The file as it is now, read as a link entry when either side of the plan is a link.
+function foundRead(log: Log, path: string, current: Read | undefined, next: Read | undefined): Read | undefined {
     const isLink = current?.isLink === true || next?.isLink === true;
-    if (isLink) return journal.confined.readEntry(path);
-    return journal.confined.read(path);
+    if (isLink) return log.files.readEntry(path);
+    return log.files.read(path);
 }
 
-// Refuses a proposal whose file or record changed since it was made.
-function assertProposalCurrent(
-    journal: Journal,
-    proposal: FileProposal,
-    proposed: ReadonlyMap<string, FileSnapshot | undefined>,
-): void {
-    const { path, current, previous, next } = proposal;
-    const existing = journal.entryFor(path);
-    if (next !== undefined) journal.confined.validate(path, next, proposed);
-    const found = foundSnapshot(journal, path, current, next);
+// Refuses a plan whose file or record changed after it was made.
+function assertPlanCurrent(log: Log, plan: Planned, proposed: ReadonlyMap<string, Read | undefined>): void {
+    const { path, current, previous, next } = plan;
+    const existing = log.entryFor(path);
+    if (next !== undefined) log.files.validate(path, next, proposed);
+    const found = foundRead(log, path, current, next);
     if (!isDeepStrictEqual(existing, previous) || !isDeepStrictEqual(found, current))
-        throw new Error(`File changed after its proposal: ${path}`);
+        throw new Error(`File changed after its plan: ${path}`);
 }
 
-// Refuses a batch that repeats a destination or holds a proposal whose file changed.
-function assertProposalsCurrent(
-    journal: Journal,
-    proposals: FileProposal[],
-    proposed: ReadonlyMap<string, FileSnapshot | undefined>,
-): void {
+// Refuses a batch that repeats a destination or holds a plan whose file changed.
+function assertPlansCurrent(log: Log, plans: Planned[], proposed: ReadonlyMap<string, Read | undefined>): void {
     const destinations = new Set<string>();
-    for (const proposal of proposals) {
-        const key = proposal.path.normalize('NFC').toLowerCase();
-        if (destinations.has(key)) throw new Error(`Duplicate proposal destination: ${proposal.path}`);
+    for (const plan of plans) {
+        const key = plan.path.normalize('NFC').toLowerCase();
+        if (destinations.has(key)) throw new Error(`Duplicate plan destination: ${plan.path}`);
         destinations.add(key);
-        assertProposalCurrent(journal, proposal, proposed);
+        assertPlanCurrent(log, plan, proposed);
     }
 }
 
-// The backup of the current bytes, taken when they leave: the first ownership, a removal, or a change.
-function backupFor(journal: Journal, proposal: FileProposal): z.infer<typeof originalSchema> | undefined {
-    const { path, current, next } = proposal;
+// The backup of the current bytes, taken when they leave: a removal or a change.
+function backupFor(log: Log, plan: Planned): z.infer<typeof originalSchema> | undefined {
+    const { path, current, next } = plan;
     if (current === undefined) return undefined;
-    const isReplaced = proposal.saveOriginal === true || next === undefined || !matches(current, identity(next));
-    return isReplaced ? journal.backup(path, current) : undefined;
+    const isReplaced = next === undefined || !matches(current, identity(next));
+    return isReplaced ? log.backup(path, current) : undefined;
 }
 
-// The record a changed proposal writes, with the original its entry keeps.
-function prepareRecord(journal: Journal, proposal: FileProposal): PreparedWrite | undefined {
-    const { path, current, next, entry } = proposal;
-    if (entry === undefined && proposal.status !== 'changed') return undefined;
-    const recovery = backupFor(journal, proposal);
-    const original = proposal.saveOriginal === true ? recovery : entry?.original;
+// The original an entry carries into a write. The first change gspot makes to an adopted file backs up the bytes it
+// held, and that backup becomes the original.
+function carriedOriginal(kept: OwnershipEntry['original'], recovery: Original | undefined): OwnershipEntry['original'] {
+    if (kept === undefined || kept.backup !== undefined || recovery === undefined) return kept;
+    const isSameBytes = recovery.hash === kept.hash && recovery.mode === kept.mode;
+    return isSameBytes ? recovery : kept;
+}
+
+// The original an entry records: the backup of the file gspot first replaced, or, for a file that already held the
+// exact bytes, their identity alone.
+function recordedOriginal(plan: Planned, recovery: Original | undefined): OwnershipEntry['original'] {
+    const { current, entry, saveOriginal } = plan;
+    if (saveOriginal === true) return recovery ?? (current === undefined ? undefined : identity(current));
+    return carriedOriginal(entry?.original, recovery);
+}
+
+// The record a changed plan writes, with the original its entry keeps.
+function prepareRecord(log: Log, plan: Planned): PreparedWrite | undefined {
+    const { path, current, next, entry } = plan;
+    if (entry === undefined && plan.status !== 'changed') return undefined;
+    const recovery = backupFor(log, plan);
+    const original = recordedOriginal(plan, recovery);
     const recordedEntry =
         entry === undefined ? undefined : { ...entry, ...(original === undefined ? {} : { original }) };
     return { path, current, next, entry: recordedEntry, recovery };
 }
 
-// Writes the pending records, publishes every file, and settles the journal.
-function publish(journal: Journal, prepared: PreparedWrite[]): void {
-    journal.state.pending = prepared.map(({ path, current, next, entry, recovery }) => ({
+// Writes the pending records, writes every file, and settles the log.
+function write(log: Log, prepared: PreparedWrite[]): void {
+    log.state.pending = prepared.map(({ path, current, next, entry, recovery }) => ({
         path,
         ...(current === undefined ? {} : { before: identity(current) }),
         ...(recovery === undefined ? {} : { beforeBackup: recovery }),
         ...(next === undefined ? {} : { after: identity(next) }),
         ...(entry === undefined ? {} : { entry }),
     }));
-    journal.save();
+    log.save();
     // Publish regular targets before links, including original targets restored in this batch.
     const ordered = prepared.toSorted(
         (left, right) => Number(left.next?.isLink === true) - Number(right.next?.isLink === true),
     );
     for (const { path, current, next } of ordered) {
         if (next === undefined) {
-            if (current !== undefined) journal.confined.remove(path, current);
-        } else if (!matches(current, identity(next))) journal.confined.write(path, next, current);
+            if (current !== undefined) log.files.remove(path, current);
+        } else if (!matches(current, identity(next))) log.files.write(path, next, current);
     }
-    journal.finish();
+    log.finish();
 }
 
 /**
- * Applies a batch of proposals as one journaled mutation, refusing any that preserves a file.
- * @param journal the open journal
- * @param proposals the proposals, each for a distinct file
- * @returns the outcome of each proposal, in order
+ * Applies a batch of plans as one logged mutation, refusing any that preserves a file.
+ * @param log the open log
+ * @param plans the plans, each for a distinct file
+ * @returns the outcome of each plan, in order
  */
-export function applyProposals(journal: Journal, proposals: FileProposal[]): Outcome[] {
+export function applyPlans(log: Log, plans: Planned[]): Outcome[] {
     const proposed = new Map(
-        proposals.map(({ path, next, current, status }) => [
+        plans.map(({ path, next, current, status }) => [
             path,
             status === 'preserved' || (status === 'unchanged' && next === undefined) ? current : next,
         ]),
     );
-    assertProposalsCurrent(journal, proposals, proposed);
-    const conflict = proposals.find((proposal) => proposal.status === 'preserved');
+    assertPlansCurrent(log, plans, proposed);
+    const conflict = plans.find((plan) => plan.status === 'preserved');
     if (conflict !== undefined)
         throw new Error(`Preserved edited or unowned ${conflict.path}. Review that file before applying.`);
-    const prepared = proposals.flatMap((proposal) => {
-        const record = prepareRecord(journal, proposal);
+    const prepared = plans.flatMap((plan) => {
+        const record = prepareRecord(log, plan);
         return record === undefined ? [] : [record];
     });
-    if (prepared.length > 0) publish(journal, prepared);
-    return proposals.map((proposal) => proposal.status);
+    if (prepared.length > 0) write(log, prepared);
+    return plans.map((plan) => plan.status);
 }
 
 /**
- * Applies one proposal, which yields its outcome or is preserved without a write.
- * @param journal the open journal
- * @param proposal the proposal
+ * Applies one plan, which yields its outcome or is preserved without a write.
+ * @param log the open log
+ * @param plan the plan
  * @returns its outcome
  */
-export function applyProposal(journal: Journal, proposal: FileProposal): Outcome {
-    if (proposal.status === 'preserved') return 'preserved';
-    const [status] = applyProposals(journal, [proposal]);
-    if (status === undefined) throw new Error(`Applying ${proposal.path} produced no status.`);
+export function applyPlan(log: Log, plan: Planned): Outcome {
+    if (plan.status === 'preserved') return 'preserved';
+    const [status] = applyPlans(log, [plan]);
+    if (status === undefined) throw new Error(`Applying ${plan.path} produced no status.`);
     return status;
 }

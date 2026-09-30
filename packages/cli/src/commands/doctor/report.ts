@@ -1,19 +1,18 @@
 import type { Colors } from 'picocolors/types';
 import { collectPins } from '#cli/tools/pins.ts';
 import { colors } from '#cli/output/messages.ts';
+import { everyManifest } from '#cli/kits/select.ts';
 import { inspectTool } from '#cli/tools/inspect.ts';
+import { hookStatus } from '#cli/lifecycle/hooks.ts';
 import { coverageLines } from '#cli/output/coverage.ts';
 import { selectRuleFiles } from '#cli/agents/assemble.ts';
 import { coverageReport } from '#cli/execution/coverage.ts';
-import { hookStatus } from '#cli/lifecycle/hooks/status.ts';
 import { submodulePaths } from '#cli/repository/tracked.ts';
-import { everyManifest } from '#cli/configurations/select.ts';
 import { changeReport } from '#cli/commands/doctor/changes.ts';
 import type { ToolInspection } from '#cli/types/tools/tools.ts';
 import type { Session } from '#cli/types/execution/execution.ts';
-import type { ChangeReport, DoctorReport } from '#cli/types/commands/doctor.ts';
-
-import { CHANGE_SECTIONS, COLUMN_WIDTHS, DISPLAY_LIMITS, VERSION_GAP } from '#cli/constants/commands/doctor.ts';
+import type { ChangeReport, DoctorReport } from '#cli/types/commands.ts';
+import { VERSION_GAP, COLUMN_WIDTHS, DISPLAY_LIMITS, CHANGE_SECTIONS } from '#cli/config/commands/doctor.ts';
 
 function stateLabel(tool: ToolInspection, colors: Colors): string {
     const { red, green, dim } = colors;
@@ -84,32 +83,20 @@ function partialLines(report: DoctorReport): string[] {
     return [`partly checked files     ${String(partial.length)}`, ...lines, ''];
 }
 
-function changeRow(first: string, second: string, command: string): string {
-    return `  ${first.padEnd(COLUMN_WIDTHS.name)} ${second.padEnd(COLUMN_WIDTHS.note)} ${command}`;
-}
-
-function sectionLines(title: string, rows: string[]): string[] {
-    return rows.length === 0 ? [] : [title, ...rows, ''];
-}
-
 function changeLines(changes: ChangeReport): string[] {
-    const sections = CHANGE_SECTIONS.map(({ key, title }) =>
-        sectionLines(
-            title,
-            changes[key].map((entry) =>
-                changeRow(
-                    'configuration' in entry ? entry.configuration : entry.path,
-                    'evidence' in entry ? entry.evidence : entry.note,
-                    entry.command,
-                ),
-            ),
-        ),
-    );
+    const sections = CHANGE_SECTIONS.map(({ key, title }) => {
+        const rows = changes[key].map((entry) => {
+            const name = ('kit' in entry ? entry.kit : entry.path).padEnd(COLUMN_WIDTHS.name);
+            const detail = ('evidence' in entry ? entry.evidence : entry.note).padEnd(COLUMN_WIDTHS.note);
+            return `  ${name} ${detail} ${entry.command}`;
+        });
+        return rows.length === 0 ? [] : [title, ...rows, ''];
+    });
     const pinned = changes.pinnedTwice.map((entry) => {
         const name = `${entry.tool} ${entry.version}`.padEnd(COLUMN_WIDTHS.name);
         return `  ${name} ${entry.places.join(' and ').padEnd(COLUMN_WIDTHS.path)} ${entry.command}`;
     });
-    return [...sections.flat(), ...sectionLines('pinned twice', pinned)];
+    return [...sections.flat(), ...(pinned.length === 0 ? [] : ['pinned twice', ...pinned, ''])];
 }
 
 function versionLine(report: DoctorReport): string {
@@ -120,7 +107,7 @@ function versionLine(report: DoctorReport): string {
 }
 
 /**
- * Builds the report: tool inspections, coverage, changes after the install, hooks, CI, rules and versions.
+ * Builds the report: tool inspections, coverage, changes after the install, hooks, CI, rules, and versions.
  * @param session the session
  * @param pinned the version `.gspot/version` pins, if any
  * @returns the report, with exit code 1 when tools or hook integration need correction
@@ -130,21 +117,23 @@ export function doctorReport(session: Session, pinned: string | undefined): Doct
     const { policy } = session.policyFiles;
     const hooks = hookStatus({ policy: session.policyFiles.policy, repository: session.repository });
     const isBroken = !hooks.ready || tools.some((tool) => tool.state !== 'ok' && tool.state !== 'host');
+    let ci = 'none';
+    if (policy.ci !== undefined)
+        ci =
+            policy.ci.provider === 'github'
+                ? '.github/workflows/gspot.yml'
+                : '.gitlab/ci/gspot.yml (include from .gitlab-ci.yml)';
     return {
         submodules: submodulePaths(session.root),
         tools,
         coverage: coverageReport(session),
         changes: changeReport(session),
         hooks: hooks.text,
-        ci:
-            policy.ci === undefined
-                ? 'none'
-                : policy.ci.provider === 'github'
-                  ? '.github/workflows/gspot.yml'
-                  : '.gitlab/ci/gspot.yml (include from .gitlab-ci.yml)',
+        ci,
         rules: {
-            files: policy.rules.install
-                ? selectRuleFiles(session.policyFiles.policy.rules, everyManifest(session.scopes)).length
+            files: policy.guides.install
+                ? selectRuleFiles(session.policyFiles.policy.guides, everyManifest(session.scopes), session.repository)
+                      .length
                 : 0,
         },
         version: {

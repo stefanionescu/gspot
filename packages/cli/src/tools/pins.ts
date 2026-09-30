@@ -1,4 +1,4 @@
-import type { Manifest, ToolPin } from '#cli/types/configurations.ts';
+import type { ToolPin, Manifest } from '#cli/types/kits.ts';
 
 /**
  * Select the private installation used by both generated projects and tool resolution.
@@ -58,16 +58,4 @@ export function pythonPins(manifests: Manifest[]): string[] {
         const installation = privateToolInstallation(tool);
         return installation?.kind === 'python' ? [`${installation.name}==${installation.version}`] : [];
     });
-}
-
-/** An installer could not make the already validated, locked tools available. */
-export class InstallationError extends Error {
-    /**
-     * Names the installation that failed.
-     * @param message what the installer reported
-     */
-    constructor(message: string) {
-        super(message);
-        this.name = 'InstallationError';
-    }
 }

@@ -1,22 +1,23 @@
-import { globbySync } from 'globby';
+import { posix } from 'node:path';
 import { visit } from 'unist-util-visit';
 import { parse as parseToml } from 'smol-toml';
+import { findingAt } from '#cli/checks/result.ts';
+import { globPaths } from '#cli/platform/paths.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { readSource } from '#cli/repository/tracked.ts';
-import { MISE_CONFIG_PATH } from '#cli/constants/tools/tools.ts';
-import type { PathIndex, ProseLine } from '#cli/types/checks/docs.ts';
-import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
+import { MISE_CONFIG_PATH } from '#cli/config/tools/tools.ts';
+import type { Finding, PathIndex, ProseLine, EngineInput } from '#cli/types/checks.ts';
 
 import {
+    RUN_TOKEN,
+    PATH_CHARS,
     FILE_EXTENSION,
     FREE_TEXT_FENCES,
-    PATH_CHARS,
     PATH_TOKEN_SKIPS,
-    RUN_TOKEN,
     TOKEN_SEPARATORS,
     TRAILING_PUNCTUATION,
-} from '#cli/constants/checks/docs.ts';
+} from '#cli/config/checks/docs.ts';
 
 const MISE_FILES = ['mise.toml', '.mise.toml', '.config/mise/config.toml', MISE_CONFIG_PATH];
 function knownPaths(input: EngineInput): Set<string> {
@@ -30,15 +31,16 @@ function knownPaths(input: EngineInput): Set<string> {
     }
     // A check id is written like a path, and a document that names supabase/config means the check, not a file.
     for (const manifest of input.manifests.values()) for (const check of manifest.checks) known.add(check.name);
+    for (const check of input.policyFiles.policy.checks) known.add(check.name);
     return known;
 }
 
 function miseTasks(input: EngineInput, file: string): string[] {
     try {
-        const parsed = parseToml(readSource(input.root, file, input.observations).toString('utf8')) as {
-            tasks?: Record<string, unknown>;
+        const parsed = parseToml(readSource(input.root, file, input.reads).toString('utf8')) as {
+            tasks?: Record<string, { alias?: string | string[] }>;
         };
-        return Object.keys(parsed.tasks ?? {});
+        return Object.entries(parsed.tasks ?? {}).flatMap(([name, task]) => [name, ...[task.alias ?? []].flat()]);
     } catch (error) {
         if ((error as NodeJS.ErrnoException).code === 'ENOENT') return [];
         throw new Error(`Cannot read task definitions from ${file}.`, { cause: error });
@@ -47,7 +49,7 @@ function miseTasks(input: EngineInput, file: string): string[] {
 
 function packageScripts(input: EngineInput): string[] {
     try {
-        const manifest = JSON.parse(readSource(input.root, 'package.json', input.observations).toString('utf8')) as {
+        const manifest = JSON.parse(readSource(input.root, 'package.json', input.reads).toString('utf8')) as {
             scripts?: Record<string, unknown>;
         };
         return Object.keys(manifest.scripts ?? {});
@@ -55,15 +57,6 @@ function packageScripts(input: EngineInput): string[] {
         if ((error as NodeJS.ErrnoException).code === 'ENOENT') return [];
         throw new Error('Cannot read task definitions from package.json.', { cause: error });
     }
-}
-
-function tasksOf(input: EngineInput): Set<string> {
-    return new Set([
-        ...[...new Set([...MISE_FILES, ...globbySync('.mise/conf.d/*.toml', { cwd: input.root, dot: true })])].flatMap(
-            (file) => miseTasks(input, file),
-        ),
-        ...packageScripts(input),
-    ]);
 }
 
 function proseLines(text: string): ProseLine[] {
@@ -85,49 +78,63 @@ function pathTokens(line: string): string[] {
     return line
         .split(TOKEN_SEPARATORS)
         .map((token) => withoutTrailingPunctuation(token))
+        .map((token) => {
+            const marker = token.startsWith('**') ? '**' : '*';
+            if (token.startsWith(marker) && token.endsWith(marker)) return token.slice(marker.length, -marker.length);
+            return token;
+        })
         .filter(
             (token) =>
                 token.includes('/') && PATH_CHARS.test(token) && PATH_TOKEN_SKIPS.every((skip) => !skip.test(token)),
         );
 }
 
-// A token claims to be a path when it starts at a tracked top-level entry or ends in a file extension; `feat/order-export` is a branch, not a path.
+// A token owners to be a path when it starts at a tracked top-level entry or ends in a file extension; `feat/order-export` is a branch, not a path.
 function isPathClaim(token: string, index: PathIndex): boolean {
     const clean = token.replace(/^\.\//u, '').replace(/\/$/u, '');
     const first = clean.split('/', 1)[0] ?? '';
-    return index.known.has(first) || FILE_EXTENSION.test(clean);
+    return token.startsWith('./') || token.startsWith('../') || index.known.has(first) || FILE_EXTENSION.test(clean);
 }
 
-function isMissing(token: string, index: PathIndex): boolean {
+function isMissing(token: string, file: string, index: PathIndex): boolean {
     const clean = token.replace(/^\.\//u, '').replace(/\/$/u, '');
-    return isPathClaim(token, index) && !index.known.has(clean) && !index.isException(clean);
+    const relative = posix.normalize(posix.join(posix.dirname(file), clean));
+    if (index.isException(clean) || index.known.has(relative)) return false;
+    if (token.startsWith('./') || token.startsWith('../')) return true;
+    return isPathClaim(token, index) && !index.known.has(clean);
 }
 
 function lineFindings(input: EngineInput, file: string, prose: ProseLine, index: PathIndex): Finding[] {
     const { number, line } = prose;
     const paths = pathTokens(line)
-        .filter((token) => isMissing(token, index))
-        .map((token) => ({
-            check: input.spec.name,
-            file,
-            line: number,
-            rule: 'missing-path',
-            message: `${token} names no tracked file or folder.`,
-            fixable: false,
-        }));
+        .filter((token) => isMissing(token, file, index))
+        .map((token) =>
+            findingAt(input, { file, line: number }, 'missing-path', `${token} names no tracked file or folder.`),
+        );
     const runs = line
         .matchAll(RUN_TOKEN)
         .filter((match) => !index.tasks.has(match.groups?.['task'] ?? ''))
-        .map((match) => ({
-            check: input.spec.name,
-            file,
-            line: number,
-            rule: 'missing-task',
-            message: `${match[0]} names no task or script.`,
-            fixable: false,
-        }))
+        .map((match) =>
+            findingAt(input, { file, line: number }, 'missing-task', `${match[0]} names no task or script.`),
+        )
         .toArray();
     return [...paths, ...runs];
+}
+
+/**
+ * Documentation references that can justify an exception for an untracked output or external path.
+ * @param input the repository inventory and source reader.
+ * @returns the distinct path tokens in tracked Markdown prose.
+ */
+export function referencedPaths(input: EngineInput): Set<string> {
+    const referenced = new Set<string>();
+    const files = input.files.filter((file) => file.kind === 'source' && file.path.endsWith('.md'));
+    for (const file of files) {
+        const prose = proseLines(readSource(input.root, file.path, input.reads).toString('utf8'));
+        for (const { line } of prose)
+            for (const token of pathTokens(line)) referenced.add(token.replace(/^\.\//u, '').replace(/\/$/u, ''));
+    }
+    return referenced;
 }
 
 /**
@@ -138,11 +145,20 @@ function lineFindings(input: EngineInput, file: string, prose: ProseLine, index:
 export function stalePaths(input: EngineInput): Finding[] {
     const exceptions = (input.view.tool('docs')['paths_allowed'] as { patterns: string[] }[] | undefined) ?? [];
     const isException = pathMatcher(exceptions.flatMap((entry) => entry.patterns));
-    const index: PathIndex = { known: knownPaths(input), tasks: tasksOf(input), isException };
+    const index: PathIndex = {
+        known: knownPaths(input),
+        tasks: new Set([
+            ...[...new Set([...MISE_FILES, ...globPaths(input.root, '.mise/conf.d/*.toml', { dot: true })])].flatMap(
+                (file) => miseTasks(input, file),
+            ),
+            ...packageScripts(input),
+        ]),
+        isException,
+    };
     return input.files
-        .filter((file) => file.nature === 'source' && file.path.endsWith('.md') && !isException(file.path))
+        .filter((file) => file.kind === 'source' && file.path.endsWith('.md') && !isException(file.path))
         .flatMap((file) =>
-            proseLines(readSource(input.root, file.path, input.observations).toString('utf8')).flatMap((prose) =>
+            proseLines(readSource(input.root, file.path, input.reads).toString('utf8')).flatMap((prose) =>
                 lineFindings(input, file.path, prose, index),
             ),
         );

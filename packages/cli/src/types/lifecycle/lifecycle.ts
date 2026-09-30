@@ -1,24 +1,18 @@
 // The types of lifecycle in this package.
 import type { z } from 'zod';
+import type { Read, Root } from '#cli/types/platform.ts';
 import type { WriteResult } from '#cli/types/policy/policy.ts';
-import type { ConfinedRoot, FileSnapshot } from '#cli/types/platform.ts';
-
-import type {
-    configurationFieldsSchema,
-    identitySchema,
-    originalSchema,
-    ownershipSchema,
-} from '#cli/lifecycle/journal.ts';
+import type { identitySchema, originalSchema, ownershipSchema, configurationFieldsSchema } from '#cli/lifecycle/log.ts';
 
 export type OwnedBlock = NonNullable<OwnershipEntry['block']>;
 export type ConfigurationWriteRequest = {
     changes: { path: KeyPath; value: unknown }[];
     path: string;
     format: ConfigurationFormat;
-    current: FileSnapshot | undefined;
+    current: Read | undefined;
     existing: OwnershipEntry | undefined;
     matchesInstalled: boolean;
-    takeover: boolean;
+    replace: boolean;
 };
 export type PendingOwnership = NonNullable<OwnershipState['pending']>[number];
 export type ApplyReport = {
@@ -33,20 +27,20 @@ export type ApplyReport = {
 export type KeyPath = (string | number)[];
 export type Field = z.infer<typeof configurationFieldsSchema>[number];
 export type ConfigurationOwnership = NonNullable<OwnershipEntry['configuration']>;
-export type ConfigurationPlan = {
-    next: FileSnapshot;
+export type KitPlan = {
+    next: Read;
     configuration: ConfigurationOwnership;
     status: 'changed' | 'unchanged';
 };
 export type Outcome = 'changed' | 'unchanged' | 'preserved';
 export type PreparedWrite = {
     path: string;
-    current: FileSnapshot | undefined;
-    next: FileSnapshot | undefined;
+    current: Read | undefined;
+    next: Read | undefined;
     entry: OwnershipEntry | undefined;
     recovery: z.infer<typeof originalSchema> | undefined;
 };
-export type PreparedPolicy = WriteResult & { original: FileSnapshot };
+export type PreparedPolicy = WriteResult & { original: Read };
 export type DriftEntry = {
     path: string;
     kind: 'changed' | 'missing' | 'stray' | 'conflict';
@@ -54,73 +48,73 @@ export type DriftEntry = {
     rules?: { path: string; added: string[]; removed: string[]; changed: string[] }[];
     ruleError?: string;
 };
-export type Restoration = { next?: FileSnapshot };
+export type Restoration = { next?: Read };
 export type BlockStyle = 'markdown' | 'hash';
 export type BlockSpan = { start: number; end: number };
 export type PlannedBlock = { nextText: string; block: OwnedBlock };
-export type TakeoverRemovalResult = { removed: string[]; preserved: string[] };
+export type ReplaceRemovalResult = { removed: string[]; preserved: string[] };
 export type OwnershipState = z.infer<typeof ownershipSchema>;
 export type OwnershipEntry = OwnershipState['files'][number];
 export type Identity = z.infer<typeof identitySchema>;
 export type Original = z.infer<typeof originalSchema>;
-/** The open journal: the locked root, the recorded state, and the operations that read and write it. */
-export type Journal = {
-    confined: ConfinedRoot;
+/** A private tool installation gspot writes whole: the npm tools or the Python environment. */
+export type InstallationKind = 'npm' | 'python';
+/** One file of a finished installation, at its path under the installation folder. */
+export type InstalledOutput = { path: string; file: Read };
+/** The open log: the locked root, the recorded state, and the operations that read and write it. */
+export type Log = {
+    files: Root;
     state: OwnershipState;
     save(): void;
-    backup(path: string, file: FileSnapshot): Original;
+    backup(path: string, file: Read): Original;
     entryFor(path: string): OwnershipEntry | undefined;
     finish(): void;
 };
 /** What one operation proposes for one file: the file now, its record, the outcome, and what to write. */
-export type FileProposal = {
+export type Planned = {
     path: string;
-    current: FileSnapshot | undefined;
+    current: Read | undefined;
     previous: OwnershipEntry | undefined;
     status: 'changed' | 'unchanged' | 'preserved';
-    next?: FileSnapshot;
+    next?: Read;
     entry?: OwnershipEntry;
     saveOriginal?: boolean;
 };
-export type LifecycleOwner = {
-    beginInstallation(kind: 'npm' | 'python'): void;
-    finishInstallation(kind: 'npm' | 'python'): void;
+export type Owner = {
+    beginInstallation(kind: InstallationKind): void;
+    finishInstallation(kind: InstallationKind): void;
+    installTree(kind: InstallationKind, outputs: InstalledOutput[]): void;
+    removeInstallation(kind: InstallationKind): void;
     proposeConfiguration(
         path: string,
         format: ConfigurationFormat,
         changes: { path: (string | number)[]; value: unknown }[],
-        takeover?: boolean,
-    ): FileProposal;
+        replace?: boolean,
+    ): Planned;
     proposeReplacement(
         path: string,
-        next: FileSnapshot,
+        next: Read,
         kind: OwnershipEntry['kind'],
-        takeover?: boolean,
-        expected?: FileSnapshot,
-        proposed?: ReadonlyMap<string, FileSnapshot | undefined>,
-    ): FileProposal;
-    proposeBlock(path: string, body: string, style: BlockStyle): FileProposal;
-    applyProposal(proposal: FileProposal): Outcome;
-    applyProposals(proposals: FileProposal[]): Outcome[];
+        replace?: boolean,
+        expected?: Read,
+        proposed?: ReadonlyMap<string, Read | undefined>,
+    ): Planned;
+    proposeBlock(path: string, body: string, style: BlockStyle): Planned;
+    applyPlan(plan: Planned): Outcome;
+    applyPlans(plans: Planned[]): Outcome[];
     replaceBlock(path: string, body: string, style: BlockStyle): Outcome;
-    read(path: string): FileSnapshot | undefined;
+    read(path: string): Read | undefined;
     paths(): string[];
     installedPaths(): string[];
-    proposeRetirement(path: string, expected: FileSnapshot): FileProposal;
-    replace(
-        path: string,
-        next: FileSnapshot,
-        kind: OwnershipEntry['kind'],
-        takeover?: boolean,
-        expected?: FileSnapshot,
-    ): Outcome;
-    proposeRestoration(path: string, original?: FileSnapshot): FileProposal;
-    restore(path: string, original?: FileSnapshot): 'changed' | 'preserved';
+    proposeRetirement(path: string, expected: Read): Planned;
+    replace(path: string, next: Read, kind: OwnershipEntry['kind'], replace?: boolean, expected?: Read): Outcome;
+    proposeRestoration(path: string, original?: Read): Planned;
+    restore(path: string, original?: Read): 'changed' | 'preserved';
     close(): void;
 };
 export type ConfigurationFormat = 'json' | 'yaml' | 'toml';
-/** A configuration file read and edited by key path, keeping its comments and layout. */
-export type ConfigurationDocument = {
+/** A configuration document that preserves comments and layout when reading and editing keys. */
+export type KitDocument = {
     value(path: KeyPath): unknown;
     set(path: KeyPath, value: unknown): void;
     text(): string;
@@ -128,9 +122,9 @@ export type ConfigurationDocument = {
 
 export type ReplacementRequest = {
     path: string;
-    next: FileSnapshot;
+    next: Read;
     kind: OwnershipEntry['kind'];
-    takeover?: boolean | undefined;
-    expected?: FileSnapshot | undefined;
-    proposed?: ReadonlyMap<string, FileSnapshot | undefined> | undefined;
+    replace?: boolean | undefined;
+    expected?: Read | undefined;
+    proposed?: ReadonlyMap<string, Read | undefined> | undefined;
 };

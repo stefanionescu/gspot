@@ -1,9 +1,10 @@
-import { describe, expect, test } from 'bun:test';
+import { test, expect, describe } from 'bun:test';
+import { hasCase } from '#cli/checks/naming/cases.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
 import { compileTerms } from '#cli/checks/naming/match.ts';
 import { shippedPolicy } from '#cli/checks/naming/policy.ts';
 import { nameProblems } from '#cli/checks/naming/validate-name.ts';
-import type { EffectivePolicy, Identifier } from '#cli/types/checks/naming.ts';
+import type { Identifier, EffectivePolicy } from '#cli/types/checks.ts';
 
 function caseFor(language: string, category: string): string[] {
     if (category === 'types') return ['pascal'];
@@ -66,6 +67,7 @@ const policy: EffectivePolicy = {
 
 const plain = { policy, isReactFile: false, isTestFile: false };
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The cases build an identifier with the same position and kind.
 function identifier(name: string, category = 'functions', file = 'src/a.ts', language = 'typescript'): Identifier {
     return { file, line: 1, column: 1, language, category, kind: `${language} ${category}`, name };
 }
@@ -131,3 +133,12 @@ test('the shipped terminology ban applies inside tests', () => {
         });
     }
 });
+
+test.each(['unknown', 'constructor', 'toString', '__proto__'])(
+    'unknown case %s never matches an identifier or invokes inherited object members',
+    (caseName) => {
+        expect(hasCase('bad_name', caseName)).toBe(false);
+        expect(hasCase('bad_name', 'camel')).toBe(false);
+        expect(hasCase('goodName', 'camel')).toBe(true);
+    },
+);

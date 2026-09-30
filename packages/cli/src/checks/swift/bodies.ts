@@ -1,20 +1,5 @@
-import type { SwiftFunction } from '#cli/types/checks/swift.ts';
-import type { StructureProblem } from '#cli/types/checks/structure.ts';
-import { executableStatements } from '#cli/checks/structure/statements.ts';
-
-function problem(fn: SwiftFunction, rule: string, text: string): StructureProblem {
-    return { file: fn.path, line: fn.node.startPosition.row + 1, rule, text };
-}
-
-function normalized(fn: SwiftFunction): string[] {
-    return fn.body.flatMap((statement) =>
-        statement.text
-            .split('\n')
-            .map((line) => line.trim().replaceAll(/\s+/gu, ' '))
-            .filter((line) => line !== '' && !line.startsWith('//')),
-    );
-}
-
+import type { SwiftFunction, StructureProblem } from '#cli/types/checks.ts';
+import { trivialFunctionText, executableStatements } from '#cli/checks/structure/statements.ts';
 /**
  * Report every implemented function at or below the configured statement threshold.
  * @param functions the functions of a file
@@ -26,18 +11,19 @@ export function trivialFunctions(functions: SwiftFunction[], threshold: number):
         const count = fn.node.type === 'lambda' ? 1 : executableStatements(fn.body, 'swift');
         return count <= threshold
             ? [
-                  problem(
-                      fn,
-                      'trivial-function',
-                      `${fn.name} has ${String(count)} executable statements, at most ${String(threshold)}. Inline it or suppress its required API with a reason.`,
-                  ),
+                  {
+                      file: fn.path,
+                      line: fn.node.startPosition.row + 1,
+                      rule: 'trivial-function',
+                      text: trivialFunctionText(fn.name, count, threshold),
+                  },
               ]
             : [];
     });
 }
 
 /**
- * Groups of functions whose bodies match line for line, at or above a number of lines.
+ * Groups of matching function bodies that meet the minimum line count.
  * @param functions every function of the run
  * @param minimum the fewest body lines a repeated body holds
  * @returns one problem for each group
@@ -45,7 +31,12 @@ export function trivialFunctions(functions: SwiftFunction[], threshold: number):
 export function duplicateFunctions(functions: SwiftFunction[], minimum: number): StructureProblem[] {
     const groups = new Map<string, SwiftFunction[]>();
     for (const fn of functions) {
-        const lines = normalized(fn);
+        const lines = fn.body.flatMap((statement) =>
+            statement.text
+                .split('\n')
+                .map((line) => line.trim().replaceAll(/\s+/gu, ' '))
+                .filter((line) => line !== '' && !line.startsWith('//')),
+        );
         if (lines.length < minimum) continue;
         const key = lines.join('\n');
         groups.set(key, [...(groups.get(key) ?? []), fn]);
@@ -57,7 +48,14 @@ export function duplicateFunctions(functions: SwiftFunction[], minimum: number):
             const [first] = group;
             if (first === undefined) return [];
             const places = group.map((fn) => `${fn.path}:${String(fn.node.startPosition.row + 1)} (${fn.name})`);
-            return [problem(first, 'same-body', `These functions have the same body: ${places.join(', ')}.`)];
+            return [
+                {
+                    file: first.path,
+                    line: first.node.startPosition.row + 1,
+                    rule: 'same-body',
+                    text: `These functions have the same body: ${places.join(', ')}.`,
+                },
+            ];
         })
         .toArray();
 }

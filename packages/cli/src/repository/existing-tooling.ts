@@ -1,27 +1,32 @@
-import picomatch from 'picomatch';
-import { parse as parseYaml } from 'yaml';
-import { pathMatcher } from '#cli/repository/paths.ts';
-import type { ConfinedRoot } from '#cli/types/platform.ts';
-import type { ToolPin } from '#cli/types/configurations.ts';
-import { isLintOnlyManifest } from '#cli/repository/scopes.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import { readGitSetting } from '#cli/repository/git-config.ts';
 // What init lists: configuration at conventional paths, hooks, CI, agent files, home-grown lint folders, the runner.
-import { hookLocation } from '#cli/repository/hook-location.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { configurationSection } from '#cli/repository/configuration/configuration-section.ts';
-import { AGENT_FILE_NAMES, LINT_FOLDER_NAMES, RULES_DIRECTORY_NAMES } from '#cli/constants/repository/patterns.ts';
-import type { ManifestFacts, TrackedFile, ExistingTool, ExistingTooling } from '#cli/types/repository/repository.ts';
+import picomatch from 'picomatch';
+import { existsSync } from 'node:fs';
+import { parse as parseYaml } from 'yaml';
+import type { ToolPin } from '#cli/types/kits.ts';
+import type { Root } from '#cli/types/platform.ts';
+import { join, dirname, basename } from 'node:path';
+import { kitManifests } from '#cli/kits/manifests.ts';
+import { openRoot } from '#cli/platform/filesystem.ts';
+import { pathMatcher } from '#cli/repository/paths.ts';
+import { isLintOnlyManifest } from '#cli/repository/scopes.ts';
+import { readGitSetting } from '#cli/repository/git-config.ts';
+import { hooksDirectory } from '#cli/repository/hook-location.ts';
+import { kitSection } from '#cli/repository/configuration-section.ts';
+import type { Fields, TrackedFile, ExistingTool, ExistingTooling } from '#cli/types/repository/repository.ts';
+import { AGENT_FILE_NAMES, LINT_FOLDER_NAMES, RULES_DIRECTORY_NAMES } from '#cli/config/repository/patterns.ts';
 
 import {
-    FOREIGN_HOOK_DIRECTORIES as HOOK_DIRECTORIES,
     LINT_PAIRS,
     LINT_WORDS,
     MISE_FILES,
-    OTHER_CI_FILES,
     RUNNER_LOCKS,
     TASK_RUNNERS,
-} from '#cli/constants/repository/repository.ts';
+    OTHER_CI_FILES,
+    FOREIGN_HOOK_DIRECTORIES as HOOK_DIRECTORIES,
+} from '#cli/config/repository/repository.ts';
+
+// In "<runner> run <task>", the task sits two words after the runner.
+const TASK_AFTER_RUN = 2;
 
 // Whether a CI command line runs a linter: eslint, a two-word lint command, or a runner's lint task.
 function runsLint(command: string): boolean {
@@ -31,13 +36,15 @@ function runsLint(command: string): boolean {
         const next = words[index + 1];
         if (next !== undefined && LINT_PAIRS.has(`${word} ${next}`)) return true;
         if (!TASK_RUNNERS.has(word)) return false;
-        const task = next === 'run' ? words[index + 2] : next;
-        return task === 'lint' || task === 'gspot:check';
+        const task = next === 'run' ? words[index + TASK_AFTER_RUN] : next;
+        return task === 'lint';
     });
 }
 
+// The files in a folder under a root, without dot files; none when the folder does not exist.
 function listDir(root: string, rel: string): string[] {
-    const files = openConfinedRoot(root);
+    if (!existsSync(join(root, rel))) return [];
+    const files = openRoot(root);
     try {
         if (files.stat(rel)?.isDirectory() !== true) return [];
         return files.list(rel).filter((entry) => !entry.startsWith('.') || entry === '.gitkeep');
@@ -53,27 +60,6 @@ function hookDirectory(root: string, dir: string, hooksPath: string): ExistingTo
     return { kind: dir === '.husky' ? 'husky' : 'githooks', path: dir, files };
 }
 
-function hooksFound(root: string, paths: Set<string>): ExistingTooling['hooks'] {
-    const hooksPath = readGitSetting(root, 'core.hooksPath') ?? '';
-    const location = hooksPath === '' ? undefined : hookLocation(root);
-    const lefthook = ['lefthook.yml', '.lefthook.yml'].find((name) => paths.has(name));
-    const files = openConfinedRoot(root);
-    const manifest = files.read('package.json');
-    files.close();
-    const simple = manifest !== undefined && declaresSimpleGitHooks(JSON.parse(manifest.bytes.toString('utf8')));
-    return [
-        ...(location === undefined
-            ? []
-            : [{ kind: 'hooksPath' as const, path: hooksPath, files: listDir(location.root, location.directory) }]),
-        ...HOOK_DIRECTORIES.map((dir) => hookDirectory(root, dir, hooksPath)).filter((hook) => hook !== undefined),
-        ...(lefthook === undefined ? [] : [{ kind: 'lefthook' as const, path: lefthook, files: [] }]),
-        ...(paths.has('.pre-commit-config.yaml')
-            ? [{ kind: 'pre-commit' as const, path: '.pre-commit-config.yaml', files: [] }]
-            : []),
-        ...(simple ? [{ kind: 'simple-git-hooks' as const, path: 'package.json', files: [] }] : []),
-    ];
-}
-
 function runnerFound(paths: Set<string>): { runner: ExistingTooling['runner']; runnerFile?: string } {
     const mise = MISE_FILES.find((name) => paths.has(name));
     if (mise !== undefined) return { runner: 'mise', runnerFile: mise };
@@ -82,72 +68,127 @@ function runnerFound(paths: Set<string>): { runner: ExistingTooling['runner']; r
     return { runner: lock.runner, runnerFile: lock.runner === 'none' ? 'pyproject.toml' : 'package.json' };
 }
 
-// Whether a parsed package manifest carries a simple-git-hooks table.
-function declaresSimpleGitHooks(manifest: unknown): boolean {
-    return typeof manifest === 'object' && manifest !== null && Object.hasOwn(manifest, 'simple-git-hooks');
+function hasPackageHooks(root: string): boolean {
+    const files = openRoot(root);
+    try {
+        const source = files.read('package.json');
+        if (source === undefined) return false;
+        const manifest: unknown = JSON.parse(source.bytes.toString('utf8'));
+        return typeof manifest === 'object' && manifest !== null && Object.hasOwn(manifest, 'simple-git-hooks');
+    } finally {
+        files.close();
+    }
 }
 
-// The tool configurations one takeover row finds among the tracked files.
-function takeoverTools(
-    files: ConfinedRoot,
+function hasConfigurationSection(files: Root, path: string, replace: NonNullable<ToolPin['replace']>[number]): boolean {
+    if (replace.table === undefined && replace.key === undefined) return true;
+    const source = files.read(path);
+    if (source === undefined) return false;
+    return (
+        kitSection(source.bytes.toString('utf8'), path, {
+            ...(replace.table === undefined ? {} : { table: replace.table }),
+            ...(replace.key === undefined ? {} : { key: replace.key }),
+        }) !== undefined
+    );
+}
+
+function jobCommands(job: object): string[] {
+    let commands: unknown = [];
+    if ('script' in job) commands = job.script;
+    else if ('steps' in job && Array.isArray(job.steps)) {
+        commands = job.steps.flatMap((step: unknown) =>
+            typeof step === 'object' && step !== null && 'run' in step ? [step.run] : [],
+        );
+    }
+    return (Array.isArray(commands) ? commands : [commands]).filter(
+        (command): command is string => typeof command === 'string',
+    );
+}
+
+function isLintJob(name: string, job: unknown): boolean {
+    if (typeof job !== 'object' || job === null || Array.isArray(job)) return false;
+    if (!('steps' in job) && !('script' in job) && !('extends' in job)) return false;
+    const commands = jobCommands(job);
+    return (
+        name
+            .toLowerCase()
+            .split(/[-_: ]/u)
+            .some((word) => LINT_WORDS.has(word)) || commands.some((command) => runsLint(command))
+    );
+}
+
+// The tool configurations one replace row finds among the tracked files.
+function replaceTools(
+    files: Root,
     inventory: Set<string>,
     tool: string,
-    takeover: NonNullable<ToolPin['takeover']>[number],
+    replace: NonNullable<ToolPin['replace']>[number],
 ): ExistingTool[] {
-    const matches = pathMatcher([takeover.file, `**/${takeover.file}`]);
+    const matches = pathMatcher([replace.file, `**/${replace.file}`]);
     const candidates = new Set(inventory);
-    if (
-        !picomatch.scan(takeover.file).isGlob &&
-        !candidates.has(takeover.file) &&
-        files.stat(takeover.file) !== undefined
-    )
-        candidates.add(takeover.file);
+    if (!picomatch.scan(replace.file).isGlob && !candidates.has(replace.file) && files.stat(replace.file) !== undefined)
+        candidates.add(replace.file);
     return [...candidates]
         .filter((candidate) => matches(candidate))
-        .flatMap((path): ExistingTool[] => {
-            if (takeover.table !== undefined || takeover.key !== undefined) {
-                const source = files.read(path);
-                if (
-                    source === undefined ||
-                    configurationSection(source.bytes.toString('utf8'), path, {
-                        ...(takeover.table === undefined ? {} : { table: takeover.table }),
-                        ...(takeover.key === undefined ? {} : { key: takeover.key }),
-                    }) === undefined
-                )
-                    return [];
-            }
-            return [
-                {
-                    tool,
-                    path,
-                    shared: takeover.shared,
-                    carries: takeover.carries,
-                    ...(takeover.check === undefined ? {} : { check: takeover.check }),
-                    ...(takeover.table === undefined ? {} : { table: takeover.table }),
-                    ...(takeover.key === undefined ? {} : { key: takeover.key }),
-                },
-            ];
-        });
+        .filter((path) => hasConfigurationSection(files, path, replace))
+        .map((path) => ({
+            tool,
+            path,
+            shared: replace.shared,
+            ...(replace.table === undefined ? {} : { table: replace.table }),
+            ...(replace.key === undefined ? {} : { key: replace.key }),
+        }));
+}
+
+/**
+ * The hooks a clone already runs: another hooks folder, a hook folder a tool keeps, and hook manager settings.
+ * @param root the repository root
+ * @returns each set of hooks with where it lives
+ */
+export function existingHooks(root: string): ExistingTooling['hooks'] {
+    const hooksPath = readGitSetting(root, 'core.hooksPath') ?? '';
+    const location = hooksPath === '' ? undefined : hooksDirectory(root);
+    const files = openRoot(root);
+    let present: string[];
+    try {
+        present = ['lefthook.yml', '.lefthook.yml', '.pre-commit-config.yaml'].filter(
+            (name) => files.stat(name) !== undefined,
+        );
+    } finally {
+        files.close();
+    }
+    const lefthook = present.find((name) => name !== '.pre-commit-config.yaml');
+    return [
+        ...(location === undefined
+            ? []
+            : [{ kind: 'hooksPath' as const, path: hooksPath, files: listDir(dirname(location), basename(location)) }]),
+        ...HOOK_DIRECTORIES.map((dir) => hookDirectory(root, dir, hooksPath)).filter((hook) => hook !== undefined),
+        ...(lefthook === undefined ? [] : [{ kind: 'lefthook' as const, path: lefthook, files: [] }]),
+        ...(present.includes('.pre-commit-config.yaml')
+            ? [{ kind: 'pre-commit' as const, path: '.pre-commit-config.yaml', files: [] }]
+            : []),
+        ...(hasPackageHooks(root) ? [{ kind: 'simple-git-hooks' as const, path: 'package.json', files: [] }] : []),
+    ];
 }
 
 /**
  * Discover configuration sections declared by the tools that own them.
  * @param root the repository root
  * @param paths the tracked file paths
- * @param selected the selected configurations, when only their tools count
- * @returns the tool configurations found, with the file and section each lives in
+ * @param selected the selected kits, when only their tools count
+ * @returns tool configurations with their containing files and sections
  */
-export function declaredConfigurations(root: string, paths: Iterable<string>, selected?: string[]): ExistingTool[] {
+export function declaredKits(root: string, paths: Iterable<string>, selected?: string[]): ExistingTool[] {
     const inventory = new Set(
         [...paths].filter((path) => !path.split('/').some((part) => part.toLowerCase() === '.gspot')),
     );
-    const files = openConfinedRoot(root);
+    const files = openRoot(root);
     try {
-        return [...configurationManifests().values()].flatMap((manifest) =>
+        return [...kitManifests().values()].flatMap((manifest) =>
             manifest.tools
                 .filter((tool) => selected === undefined || selected.includes(tool.name))
                 .flatMap((tool) =>
-                    (tool.takeover ?? []).flatMap((takeover) => takeoverTools(files, inventory, tool.name, takeover)),
+                    (tool.replace ?? []).flatMap((replace) => replaceTools(files, inventory, tool.name, replace)),
                 ),
         );
     } finally {
@@ -156,21 +197,34 @@ export function declaredConfigurations(root: string, paths: Iterable<string>, se
 }
 
 /**
+ * Whether a selected kit declares that the generated configuration replaces the tool's own file.
+ * @param tool the tool a configuration file belongs to
+ * @param selected the ids of the selected kits
+ * @returns whether init replaces the tool's configuration
+ */
+export function isOwned(tool: string, selected: Set<string>): boolean {
+    const manifests = kitManifests();
+    return [...selected].some(
+        (id) => manifests.get(id)?.tools.some((entry) => entry.name === tool && entry.replace !== undefined) === true,
+    );
+}
+
+/**
  * Find declared tool configuration, hooks, CI, and repository-owned lint infrastructure.
  * @param root the repository root
  * @param files the tracked files
- * @param facts the manifests read from the tree
- * @returns the configuration files, hooks, CI, agent files, lint folders and runner found
+ * @param fields the manifests read from the tree
+ * @returns the configuration files, hooks, CI, agent files, lint folders, and runner found
  */
-export function existingTooling(root: string, files: TrackedFile[], facts: ManifestFacts[]): ExistingTooling {
+export function existingTooling(root: string, files: TrackedFile[], fields: Fields[]): ExistingTooling {
     const paths = new Set(files.map((file) => file.path));
-    const lintOnlyManifests = facts
+    const lintOnlyManifests = fields
         .filter((fact) => fact.kind === 'package.json' && isLintOnlyManifest(fact))
         .map((fact) => fact.path)
         .toSorted((a, b) => Number(a === 'package.json') - Number(b === 'package.json'));
-    const configurations = declaredConfigurations(
+    const configurations = declaredKits(
         root,
-        files.filter((file) => file.nature === 'source').map((file) => file.path),
+        files.filter((file) => file.kind === 'source').map((file) => file.path),
     );
     return {
         configs: [
@@ -181,7 +235,7 @@ export function existingTooling(root: string, files: TrackedFile[], facts: Manif
                 ]),
             ).values(),
         ],
-        hooks: hooksFound(root, paths),
+        hooks: existingHooks(root),
         ci: [...paths]
             .filter(
                 (path) =>
@@ -208,7 +262,7 @@ export function existingTooling(root: string, files: TrackedFile[], facts: Manif
  * @returns the names of the jobs that already run a linter
  */
 export function ciLintJobs(root: string, paths: string[]): string[] {
-    const files = openConfinedRoot(root);
+    const files = openRoot(root);
     try {
         return paths
             .filter((path) => !OTHER_CI_FILES.has(path))
@@ -221,25 +275,7 @@ export function ciLintJobs(root: string, paths: string[]): string[] {
                 if (typeof jobs !== 'object' || jobs === null) return [];
                 return Object.entries(jobs as Record<string, unknown>).flatMap(([name, job]) => {
                     if (name.startsWith('.')) return [];
-                    if (typeof job !== 'object' || job === null || Array.isArray(job)) return [];
-                    if (!('steps' in job) && !('script' in job) && !('extends' in job)) return [];
-                    const commands =
-                        'script' in job
-                            ? job.script
-                            : 'steps' in job && Array.isArray(job.steps)
-                              ? job.steps.flatMap((step: unknown) =>
-                                    typeof step === 'object' && step !== null && 'run' in step ? [step.run] : [],
-                                )
-                              : [];
-                    const texts = (Array.isArray(commands) ? commands : [commands]).filter(
-                        (command): command is string => typeof command === 'string',
-                    );
-                    const lint =
-                        name
-                            .toLowerCase()
-                            .split(/[-_: ]/u)
-                            .some((word) => LINT_WORDS.has(word)) || texts.some((command) => runsLint(command));
-                    return lint ? [`${path}: ${name}`] : [];
+                    return isLintJob(name, job) ? [`${path}: ${name}`] : [];
                 });
             });
     } finally {

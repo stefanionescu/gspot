@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { describe, expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect, describe } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { parsePolicyText } from '#cli/policy/read.ts';
 import { reportSchema } from '#cli/execution/report.ts';
@@ -31,19 +31,19 @@ describe('documented examples', () => {
 });
 
 test('the documented custom check reports its defect and accepts its correction', async () => {
-    const source = readFileSync(join(guides, 'custom-checks.md'), 'utf8');
+    const source = readFileSync(join(guides, 'project-checks.md'), 'utf8');
     const script = [...source.matchAll(/```typescript\n([\s\S]*?)```/gu)][0]?.[1];
     const policy = [...source.matchAll(/```toml\n([\s\S]*?)```/gu)][0]?.[1];
-    const examples = [...source.matchAll(/```text\n([\s\S]*?)```/gu)].map((match) => match[1]!);
+    const [defect, correction] = [...source.matchAll(/```text\n([\s\S]*?)```/gu)].map((match) => match[1]!);
     expect(script?.trim()).toBeTruthy();
     expect(policy?.trim()).toBeTruthy();
-    expect(examples).toHaveLength(2);
-    for (const example of examples) expect(example.trim()).not.toBe('');
+    expect(defect?.trim()).toBeTruthy();
+    expect(correction?.trim()).toBeTruthy();
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': policy!,
         'scripts/check-notes.ts': script!,
-        'notes/deploy.txt': examples[0]!,
+        'notes/deploy.txt': defect!,
     });
     const applied = await run(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
@@ -51,9 +51,9 @@ test('the documented custom check reports its defect and accepts its correction'
     const failed = await run(sandbox.path, args);
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
     expect(reportSchema.parse(JSON.parse(failed.stdout)).checks[0]!.findings).toMatchObject([
-        { check: 'project/notes', file: 'notes/deploy.txt', line: 1, message: examples[0]!.trim() },
+        { check: 'project/notes', file: 'notes/deploy.txt', line: 1, message: defect!.trim() },
     ]);
-    await Bun.write(join(sandbox.path, 'notes/deploy.txt'), examples[1]!);
+    await Bun.write(join(sandbox.path, 'notes/deploy.txt'), correction!);
     const corrected = await run(sandbox.path, args);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks[0]).toMatchObject({ status: 'ok', findings: [] });

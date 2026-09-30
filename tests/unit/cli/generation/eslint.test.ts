@@ -1,5 +1,5 @@
-import { expect, test } from 'bun:test';
-import { selectorGroups } from '#cli/generation/eslint.ts';
+import { test, expect } from 'bun:test';
+import { selectorGroups } from '#cli/generation/eslint/blocks.ts';
 
 const store = { selector: 'CallExpression[callee.name=/Store$/]', message: 'Pass a selector to the store hook.' };
 const rawSql = { selector: "TaggedTemplateExpression[tag.name='sql']", message: 'Use the query builder.' };

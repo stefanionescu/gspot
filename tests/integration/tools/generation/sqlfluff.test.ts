@@ -1,21 +1,24 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
-import { emitAll } from '#cli/generation/render.ts';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
+import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 
 test('SQLFluff honors root and nested dialect settings over the database default', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml':
-            'version = 1\nconfigurations = ["postgres"]\n[tools.sqlfluff]\ndialect = "sqlite"\n[[scope]]\npath = "warehouse"\n[scope.tools.sqlfluff]\ndialect = "duckdb"\n[[scope]]\npath = "warehouse/child"\n',
+        'gspot.toml': policyOf(
+            ['postgres'],
+            '[tools.sqlfluff]\ndialect = "sqlite"\n[[scope]]\npath = "warehouse"\n[scope.tools.sqlfluff]\ndialect = "duckdb"\n[[scope]]\npath = "warehouse/child"\n',
+        ),
         'query.sql': 'PRAGMA table_info (users);\n',
         'warehouse/child/query.sql': 'SELECT 1;\n',
     });
     const session = await openSession(sandbox.path);
     const configs = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
         version: session.version,
-        packageManager: session.packageManager,
+        packageClient: session.packageClient,
     }).files.filter((file) => file.path.endsWith('sqlfluff.cfg'));
     expect(
         Object.fromEntries(configs.map(({ path, content }) => [path, /^dialect = (.+)$/mu.exec(content)?.[1]])),
@@ -26,6 +29,7 @@ test('SQLFluff honors root and nested dialect settings over the database default
     });
     const config = configs.find((file) => file.path === '.gspot/config/sqlfluff.cfg')!;
     await Bun.write(join(sandbox.path, config.path), config.content);
+    // eslint-disable-next-line gspot/no-trivial-functions -- reason: Two native runs differ only in the dialect flag; one owner keeps the command line.
     const run = (dialect?: string) =>
         Bun.spawnSync(
             [

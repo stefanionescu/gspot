@@ -1,4 +1,4 @@
-import type { DirectoryEntry } from '#cli/types/checks/structure.ts';
+import type { DirectoryEntry } from '#cli/types/checks.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
 
 /**
@@ -6,6 +6,7 @@ import type { TrackedFile } from '#cli/types/repository/repository.ts';
  * @param path the path
  * @returns the directory
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Structure checks key folders by '' at the root, where posix.dirname gives '.'.
 export function directoryOf(path: string): string {
     const slash = path.lastIndexOf('/');
     return slash === -1 ? '' : path.slice(0, slash);

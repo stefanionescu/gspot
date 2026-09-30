@@ -1,5 +1,5 @@
-import { describe, expect, test } from 'bun:test';
-import type { CheckSpec } from '#cli/types/configurations.ts';
+import { test, expect, describe } from 'bun:test';
+import type { CheckSpec } from '#cli/types/kits.ts';
 import { hasToolError, isToolBroken, toolOutputDetail } from '#cli/execution/broken-tool.ts';
 
 const base = {
@@ -65,7 +65,7 @@ describe('isToolBroken', () => {
 
 describe('hasToolError', () => {
     const output = { code: 1, stdout: '', stderr: 'Oops! Something went wrong\n', missing: false, duration: 1 };
-    const eslint = { name: 'eslint', windows: true, installers: {}, crash_pattern: '^Oops! Something went wrong' };
+    const eslint = { name: 'eslint', installers: {}, crash_pattern: '^Oops! Something went wrong' };
 
     test("the tool's crash pattern reads a fall-over for every check that runs it", () => {
         expect(hasToolError(base, eslint, output)).toBe(true);

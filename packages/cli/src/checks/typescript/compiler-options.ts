@@ -1,4 +1,4 @@
-import { RECOMMENDED_COMPILER_OPTIONS } from '#cli/constants/checks/typescript.ts';
+import { RECOMMENDED_COMPILER_OPTIONS } from '#cli/config/checks/typescript.ts';
 /** Additional compiler diagnostics required at all. */
 export const ALL_COMPILER_OPTIONS = {
     ...RECOMMENDED_COMPILER_OPTIONS,

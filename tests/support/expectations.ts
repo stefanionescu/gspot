@@ -40,7 +40,7 @@ export function failure(action: () => unknown): Error | undefined {
  * @param shape the properties the compared object must hold
  * @returns the matcher
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- Bun types its matcher as any; this names the type the comparison expects
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Bun 1.4.2 exposes asymmetric matchers as `any`. This function fixes the comparison type.
 export function containing<T>(shape: NoInfer<Partial<T>>): T {
     return expect.objectContaining(shape) as T;
 }
@@ -50,7 +50,7 @@ export function containing<T>(shape: NoInfer<Partial<T>>): T {
  * @param items the items the compared array must hold
  * @returns the matcher
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- Bun types its matcher as any; this names the type the comparison expects
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Bun 1.4.2 exposes asymmetric matchers as `any`. This function fixes the comparison type.
 export function containingAll<T>(items: NoInfer<T[]>): T[] {
     return expect.arrayContaining(items) as T[];
 }
@@ -60,7 +60,7 @@ export function containingAll<T>(items: NoInfer<T[]>): T[] {
  * @param part the text the compared string must hold
  * @returns the matcher
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- Bun types its matcher as any; this names the type the comparison expects
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Bun 1.4.2 exposes asymmetric matchers as `any`. This function fixes the comparison type.
 export function textContaining(part: string): string {
     return expect.stringContaining(part) as string;
 }

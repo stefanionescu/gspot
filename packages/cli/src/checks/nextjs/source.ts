@@ -1,19 +1,11 @@
+import { findingAt } from '#cli/checks/result.ts';
 import { readSource } from '#cli/repository/tracked.ts';
-import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
-import { CONFIG_FILE, PAIRS, SECRET_KEY, SEGMENT_NAME, SWITCHED_OFF } from '#cli/constants/checks/nextjs.ts';
-
-function finding(input: EngineInput, file: string, line: number, rule: string, text: string): Finding {
-    return { check: input.spec.name, file, line, rule, message: text, fixable: false };
-}
+import type { Finding, EngineInput } from '#cli/types/checks.ts';
+import { PAIRS, SECRET_KEY, CONFIG_FILE, SEGMENT_NAME, SWITCHED_OFF } from '#cli/config/checks/platforms.ts';
 
 function paths(input: EngineInput): string[] {
-    return input.files.filter((file) => file.nature === 'source').map((file) => file.path);
+    return input.files.filter((file) => file.kind === 'source').map((file) => file.path);
 }
-
-function lineOf(text: string, offset: number): number {
-    return text.slice(0, offset).split('\n').length;
-}
-
 /**
  * One finding for each route segment that holds a page and a route handler.
  * @param input the engine input
@@ -33,10 +25,9 @@ export function routeSegments(input: EngineInput): Finding[] {
         .entries()
         .filter(([, held]) => held.has('page') && held.has('route'))
         .map(([folder, held]) =>
-            finding(
+            findingAt(
                 input,
-                held.get('route') ?? folder,
-                1,
+                { file: held.get('route') ?? folder, line: 1 },
                 'route-segment',
                 `${folder} holds a page and a route handler, and the framework serves one address from one of them.`,
             ),
@@ -45,7 +36,7 @@ export function routeSegments(input: EngineInput): Finding[] {
 }
 
 /**
- * The framework configuration turns no build check off, and puts no secret into the client environment.
+ * The framework kit turns no build check off, and puts no secret into the client environment.
  * @param input the engine input
  * @returns the findings
  */
@@ -53,14 +44,13 @@ export function nextjsConfiguration(input: EngineInput): Finding[] {
     return paths(input)
         .filter((path) => CONFIG_FILE.test(path))
         .flatMap((path) => {
-            const text = readSource(input.root, path, input.observations).toString('utf8');
+            const text = readSource(input.root, path, input.reads).toString('utf8');
             const off = text
                 .matchAll(SWITCHED_OFF)
                 .map((match) =>
-                    finding(
+                    findingAt(
                         input,
-                        path,
-                        lineOf(text, match.index),
+                        { file: path, line: text.slice(0, match.index).split('\n').length },
                         'build-check-off',
                         `${match.groups?.['name'] ?? ''} lets a build pass with findings the gate stops.`,
                     ),
@@ -70,10 +60,9 @@ export function nextjsConfiguration(input: EngineInput): Finding[] {
             const secrets = block
                 .matchAll(SECRET_KEY)
                 .map((match) =>
-                    finding(
+                    findingAt(
                         input,
-                        path,
-                        lineOf(text, env + match.index),
+                        { file: path, line: text.slice(0, env + match.index).split('\n').length },
                         'secret-in-env',
                         `${match.groups?.['name'] ?? ''} under env is written into the client bundle. Read it on the server.`,
                     ),
@@ -90,7 +79,7 @@ export function nextjsConfiguration(input: EngineInput): Finding[] {
 export function dependencyAlignment(input: EngineInput): Finding[] {
     const manifests = paths(input).filter((path) => path === 'package.json' || path.endsWith('/package.json'));
     return manifests.flatMap((path) => {
-        const parsed = JSON.parse(readSource(input.root, path, input.observations).toString('utf8')) as {
+        const parsed = JSON.parse(readSource(input.root, path, input.reads).toString('utf8')) as {
             dependencies?: Record<string, string>;
             devDependencies?: Record<string, string>;
         };
@@ -99,10 +88,9 @@ export function dependencyAlignment(input: EngineInput): Finding[] {
             ([left, right]) =>
                 versions[left] !== undefined && versions[right] !== undefined && versions[left] !== versions[right],
         ).map(([left, right]) =>
-            finding(
+            findingAt(
                 input,
-                path,
-                1,
+                { file: path, line: 1 },
                 'version-pair',
                 `${left} is ${versions[left] ?? ''} and ${right} is ${versions[right] ?? ''}. They ship together, so they sit on one version.`,
             ),

@@ -4,35 +4,24 @@ import semver from 'semver';
 import { join } from 'node:path';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { stripVTControlCharacters } from 'node:util';
+import { kitManifests } from '#cli/kits/manifests.ts';
+import { openRoot } from '#cli/platform/filesystem.ts';
 import type { SpawnResult } from '#cli/types/platform.ts';
-import { installHint } from '#cli/tools/install-hints.ts';
+import type { ToolPin, Manifest } from '#cli/types/kits.ts';
 import { hasPolicy, readPolicy } from '#cli/policy/read.ts';
-import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import { privateToolInstallation } from '#cli/tools/pins.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import { NODE_MODULES_DIRECTORY } from '#cli/constants/platform.ts';
-import type { Manifest, ToolPin } from '#cli/types/configurations.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { NO_VERSION, VERSION_TIMEOUT_MS } from '#cli/constants/tools/tools.ts';
-import { locateCandidates, miseVersion, packageVersion } from '#cli/tools/locate.ts';
+import { NODE_MODULES_DIRECTORY } from '#cli/config/platform.ts';
+import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
+import { miseVersion, packageVersion, locateCandidates } from '#cli/tools/locate.ts';
+import type { Package, Inspected, ToolSearch, VersionRead, ToolInspection } from '#cli/types/tools/tools.ts';
 
-import type {
-    PackageFacts,
-    Inspected,
-    ToolContext,
-    ToolInspection,
-    VersionObservation,
-} from '#cli/types/tools/tools.ts';
-
-// A mise shim answers for the folder it runs in, so the command runs in the repository.
-function printedVersion(root: string, path: string, tool: ToolPin): SpawnResult {
-    const command = tool.version_command ?? ['--version'];
-    return runBlocking([path, ...command], {
-        cwd: root,
-        timeoutMs: VERSION_TIMEOUT_MS,
-        env: { NO_COLOR: '1', ...tool.env },
-    });
-}
+import {
+    HOST_HINTS,
+    NO_VERSION,
+    MISE_BACKENDS,
+    VERSION_TIMEOUT_MS,
+    PLATFORM_INSTALLERS,
+} from '#cli/config/tools/tools.ts';
 
 function parsedVersion(text: string, tool: ToolPin): string | undefined {
     if (tool.version_regex === undefined) return semver.coerce(text)?.version;
@@ -45,7 +34,7 @@ function versionFailure(
     tool: ToolPin,
     text: string,
     expectedExit: number,
-): VersionObservation | undefined {
+): VersionRead | undefined {
     if (result.isTimedOut === true) return { state: 'error', note: `${tool.name} version inspection timed out.` };
     if (result.missing || text.includes(NO_VERSION)) return { state: 'missing', note: text };
     if (result.code !== expectedExit)
@@ -53,12 +42,17 @@ function versionFailure(
     return undefined;
 }
 
-// An npm tool is the version its package says. Some print another one: license-checker-rseidelsohn 5.0.1 prints 4.4.2.
+// An npm tool is the version its package says. For example, `license-checker-rseidelsohn@5.0.1` prints `4.4.2`.
 // A shim that no configuration gives a version starts nothing, whatever mise keeps installed for other repositories.
-function readVersion(root: string, cwd: string, path: string, tool: ToolPin): VersionObservation {
+function versionOf(root: string, cwd: string, path: string, tool: ToolPin): VersionRead {
     const npm = tool.installers['npm'];
     const installedPackage = packageVersion(root, path, npm?.name);
-    return observeToolVersion(tool, printedVersion(cwd, path, tool), installedPackage, miseVersion(path, tool));
+    const result = runBlocking([path, ...(tool.version_command ?? ['--version'])], {
+        cwd,
+        timeoutMs: VERSION_TIMEOUT_MS,
+        env: { NO_COLOR: '1', ...tool.env },
+    });
+    return readVersion(tool, result, installedPackage, miseVersion(path, tool));
 }
 
 // The inspection of a library whose private package.json declares a version.
@@ -71,13 +65,13 @@ function libraryInspection(root: string, tool: ToolPin, path: string, found: str
 
 // Read library versions from the private installation used by generated configurations.
 function inspectLibrary(root: string, tool: ToolPin): ToolInspection {
-    const files = openConfinedRoot(root);
+    const files = openRoot(root);
     const hint = installHint(tool);
     const name = tool.installers['npm']?.name ?? tool.name;
     const path = `${NODE_MODULES_DIRECTORY}/${name}/package.json`;
     try {
         const file = files.read(path);
-        const parsed = file === undefined ? undefined : (JSON.parse(file.bytes.toString('utf8')) as PackageFacts);
+        const parsed = file === undefined ? undefined : (JSON.parse(file.bytes.toString('utf8')) as Package);
         if (parsed?.version === undefined) return missingInspection(tool, hint);
         return libraryInspection(root, tool, path, parsed.version, hint);
     } finally {
@@ -86,33 +80,47 @@ function inspectLibrary(root: string, tool: ToolPin): ToolInspection {
 }
 
 // The inspection of a tool that is not installed anywhere gspot looks.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Two inspections report a missing tool; the caller sits at the complexity limit.
 function missingInspection(tool: ToolPin, hint: string): ToolInspection {
     const want = tool.version === undefined ? {} : { want: tool.version };
     return { name: tool.name, state: 'missing', hint, ...want };
 }
 
 // The inspection of a host tool, or an unpinned one: present, with the version it prints when it has a version command.
+// A version below the floor the manifest names makes it outdated.
 function hostInspection(inspected: Inspected): ToolInspection {
     const { root, cwd, tool, path, hint } = inspected;
     if (tool.version_command === undefined) return { name: tool.name, state: 'host', path, hint };
-    const observed = readVersion(root, cwd, path, tool);
-    if ('state' in observed) return { name: tool.name, path, hint, ...observed };
-    return { name: tool.name, state: 'host', path, hint, found: observed.version };
+    const read = versionOf(root, cwd, path, tool);
+    if ('state' in read) return { name: tool.name, path, hint, ...read };
+    if (tool.floor === undefined) return { name: tool.name, state: 'host', path, hint, found: read.version };
+    const isBelow = toolVersionState(read.version, read.version, tool.floor) === 'outdated';
+    return {
+        name: tool.name,
+        state: isBelow ? 'outdated' : 'host',
+        path,
+        hint,
+        found: read.version,
+        floor: tool.floor,
+    };
 }
 
 // The inspection of a pinned tool: its printed version against the pin and the floor.
 function pinnedInspection(inspected: Inspected, want: string): ToolInspection {
     const { root, cwd, tool, path, hint } = inspected;
-    const observed = readVersion(root, cwd, path, tool);
-    if ('state' in observed) return { name: tool.name, path, hint, want, ...observed };
+    const read = versionOf(root, cwd, path, tool);
+    if ('state' in read) return { name: tool.name, path, hint, want, ...read };
     const floor = tool.floor ?? want;
-    const state = toolVersionState(observed.version, want, floor);
-    return { name: tool.name, state, path, want, found: observed.version, hint, floor };
+    const state = toolVersionState(read.version, want, floor);
+    return { name: tool.name, state, path, want, found: read.version, hint, floor };
 }
 
-function inspectUncached(root: string, cwd: string, tool: ToolPin, runner?: string): ToolInspection {
-    const roots = tool.provider === 'host' ? [cwd, root] : [join(root, '.gspot'), cwd, root];
-    const [path] = locateCandidates(root, roots, tool.name, privateToolInstallation(tool, runner)?.kind);
+function inspectUncached(context: ToolSearch, cwd: string, tool: ToolPin, runner?: string): ToolInspection {
+    const { root } = context;
+    const isExternal = tool.provider === 'host' || (runner === 'mise' && tool.installers['mise'] !== undefined);
+    const roots = isExternal ? [cwd, root] : [join(root, '.gspot'), cwd, root];
+    const kind = privateToolInstallation(tool, runner)?.kind;
+    const [path] = locateCandidates(root, roots, tool.name, kind, context.installedRoot);
     const hint = installHint(tool);
     if (path === undefined) return missingInspection(tool, hint);
     const inspected: Inspected = { root, cwd, tool, path, hint };
@@ -120,12 +128,11 @@ function inspectUncached(root: string, cwd: string, tool: ToolPin, runner?: stri
     return pinnedInspection(inspected, tool.version);
 }
 
-// Whether a pending private installation covers the tool, so a inspection cannot say anything true about it.
-function isInstallationPending(pending: string[] | undefined, tool: ToolPin): boolean {
-    if (tool.provider === 'host' || pending === undefined) return false;
-    const npmPending = pending.includes('npm') && tool.installers['npm'] !== undefined;
-    const pythonPending = pending.includes('python') && tool.installers['pypi'] !== undefined;
-    return npmPending || pythonPending;
+// Only the selected private installation can make its tool unavailable while installation is pending.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Two inspections ask whether the private installation of a tool is still pending; one owner keeps the kind lookup.
+function isInstallationPending(pending: string[] | undefined, tool: ToolPin, runner?: string): boolean {
+    const installation = privateToolInstallation(tool, runner);
+    return installation !== undefined && pending?.includes(installation.kind) === true;
 }
 
 // The exit code the version command is expected to end with: the package's own when the package is installed.
@@ -137,18 +144,18 @@ function expectedExitCode(tool: ToolPin, installedPackage: string | undefined): 
 
 /**
  * Interpret an executable version response for both installation and later inspections.
- * @param tool the pin
- * @param result what the version command printed and how it exited
- * @param installedPackage the version the private npm package declares, when the tool is one
- * @param installedMiseVersion the version mise installed, when the tool is a mise tool
- * @returns the version, or the state and note of a tool that gave none
+ * @param tool the pin.
+ * @param result what the version command printed and how it exited.
+ * @param installedPackage the version the private npm package declares, when the tool is one.
+ * @param installedMiseVersion the version mise installed, when the tool is a mise tool.
+ * @returns the version, or the state and note of a tool that gave none.
  */
-export function observeToolVersion(
+export function readVersion(
     tool: ToolPin,
     result: SpawnResult,
     installedPackage?: string,
     installedMiseVersion?: string,
-): VersionObservation {
+): VersionRead {
     const npm = tool.installers['npm'];
     const text = stripVTControlCharacters(`${result.stdout}\n${result.stderr}`).trim();
     const failure = versionFailure(result, tool, text, expectedExitCode(tool, installedPackage));
@@ -185,23 +192,25 @@ export function toolVersionState(found: string, want: string, floor: string): To
  * @returns the first path found
  */
 export function locateTool(root: string, name: string): string | undefined {
-    if ((readOwnership(root).installations?.length ?? 0) > 0)
-        throw new Error('Tool installation is incomplete. Run: gspot install');
     const runner = hasPolicy(root) ? readPolicy(root).policy.runner?.tool : undefined;
-    const tool = toolPin(configurationManifests().values(), name);
-    const roots = tool.provider === 'host' ? [root] : [join(root, '.gspot'), root];
+    const tool = toolPin(kitManifests().values(), name);
+    if (isInstallationPending(readOwnership(root).installations, tool, runner))
+        throw new Error('Tool installation is incomplete. Run: gspot install');
+    const isExternal = tool.provider === 'host' || (runner === 'mise' && tool.installers['mise'] !== undefined);
+    const roots = isExternal ? [root] : [join(root, '.gspot'), root];
     return locateCandidates(root, roots, name, privateToolInstallation(tool, runner)?.kind)[0];
 }
 
 /**
- * Inspections one tool, sharing identical observations within its command session.
- * @param context the repository root and session observations
+ * Inspections one tool, sharing identical reads within its command session.
+ * @param context the repository root and session reads
  * @param tool the pin
- * @returns where the tool is, its version and its state
+ * @returns where the tool is, its version, and its state
  */
-export function inspectTool(context: ToolContext, tool: ToolPin): ToolInspection {
+export function inspectTool(context: ToolSearch, tool: ToolPin): ToolInspection {
     const { root, inspections } = context;
-    if (isInstallationPending(readOwnership(root).installations, tool))
+    const runner = context.policyFiles?.policy.runner?.tool;
+    if (isInstallationPending(readOwnership(context.installedRoot ?? root).installations, tool, runner))
         return {
             name: tool.name,
             state: 'error',
@@ -209,11 +218,11 @@ export function inspectTool(context: ToolContext, tool: ToolPin): ToolInspection
             note: 'Tool installation is incomplete. Run: gspot install',
         };
     const cwd = context.cwd ?? root;
-    const runner = context.policyFiles?.policy.runner?.tool;
     const key = JSON.stringify([root, cwd, tool, runner]);
     const cached = inspections.get(key);
     if (cached) return cached;
-    const inspection = tool.kind === 'library' ? inspectLibrary(root, tool) : inspectUncached(root, cwd, tool, runner);
+    const inspection =
+        tool.kind === 'library' ? inspectLibrary(root, tool) : inspectUncached(context, cwd, tool, runner);
     inspections.set(key, inspection);
     return inspection;
 }
@@ -229,17 +238,20 @@ export function toolPin(manifests: Iterable<Manifest>, name: string): ToolPin {
         const pin = manifest.tools.find((tool) => tool.name === name);
         if (pin !== undefined) return pin;
     }
-    return { name, provider: 'host', windows: true, installers: {} };
+    return { name, provider: 'host', installers: {} };
 }
 
-/** Thrown by an analysis when the command it runs is not installed. */
-export class MissingToolError extends Error {
-    /**
-     * Names the command that is absent.
-     * @param text what is missing and, where the analysis knows it, how to install it
-     */
-    constructor(text: string) {
-        super(text);
-        this.name = 'MissingToolError';
-    }
+/**
+ * The installation command for managed tools, or platform guidance for a host tool.
+ * @param tool the pin
+ * @returns the hint
+ */
+export function installHint(tool: ToolPin): string {
+    if (tool.provider === 'host') return HOST_HINTS[tool.name] ?? `install ${tool.name}`;
+    if (MISE_BACKENDS.some(({ installer }) => tool.installers[installer] !== undefined)) return 'Run: gspot install';
+    const match = PLATFORM_INSTALLERS.find(
+        ({ platform, installer }) => platform === process.platform && tool.installers[installer] !== undefined,
+    );
+    if (match !== undefined) return `${match.command} ${tool.installers[match.installer]?.name ?? ''}`;
+    return tool.version === undefined ? `install ${tool.name}` : `install ${tool.name} ${tool.version}`;
 }

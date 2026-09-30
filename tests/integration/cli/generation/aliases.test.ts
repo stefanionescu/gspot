@@ -1,17 +1,18 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
-import { emitAll } from '#cli/generation/render.ts';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
+import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { templateInputs } from '#cli/generation/templates.ts';
-import { mkdirSync, rmSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
+import { rmSync, mkdirSync, unlinkSync, symlinkSync, writeFileSync } from 'node:fs';
 
 test.each(['package.json', 'tsconfig.json'])(
     'generation reports malformed %s instead of dropping aliases',
     async (path) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\nconfigurations = ["typescript"]\n',
+            'gspot.toml': policyOf(['typescript']),
             [path]: '{}',
         });
         const session = await openSession(sandbox.path);
@@ -19,7 +20,7 @@ test.each(['package.json', 'tsconfig.json'])(
         expect(() =>
             emitAll(session.policyFiles.policy, session.repository, session.scopes, {
                 version: session.version,
-                packageManager: session.packageManager,
+                packageClient: session.packageClient,
             }),
         ).toThrow(
             path === 'tsconfig.json'
@@ -51,7 +52,7 @@ test.each(['package.json', 'tsconfig.json'])(
     async (path) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\nconfigurations = ["typescript"]\n',
+            'gspot.toml': policyOf(['typescript']),
             [path]: '{}',
         });
         const session = await openSession(sandbox.path);
@@ -60,7 +61,7 @@ test.each(['package.json', 'tsconfig.json'])(
         expect(() =>
             emitAll(session.policyFiles.policy, session.repository, session.scopes, {
                 version: session.version,
-                packageManager: session.packageManager,
+                packageClient: session.packageClient,
             }),
         ).toThrow(
             path === 'tsconfig.json'
@@ -91,7 +92,7 @@ test('alias generation rejects a package manifest link planted after inventory a
     await using sandbox = await testdir();
     await using outside = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nconfigurations = ["typescript"]\n',
+        'gspot.toml': policyOf(['typescript']),
         'package.json': '{}',
     });
     await createFileTree(outside.path, { 'package.json': '{"imports":{"#private/*":"./private/*"}}' });
@@ -118,7 +119,7 @@ test.each(['tsconfig.json', 'base.json'])('TypeScript alias reads refuse a linke
     await using sandbox = await testdir();
     await using outside = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nconfigurations = ["typescript"]\n',
+        'gspot.toml': policyOf(['typescript']),
         'tsconfig.json': '{"extends":"./base.json"}',
         'base.json': '{}',
     });
@@ -147,7 +148,7 @@ test('TypeScript alias reads retain a declared external dependency configuration
     await using sandbox = await testdir();
     await using dependency = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nconfigurations = ["typescript"]\n',
+        'gspot.toml': policyOf(['typescript']),
         'package.json': '{"devDependencies":{"shared-config":"1.0.0"}}',
         'tsconfig.json': '{"extends":"./node_modules/shared-config/tsconfig.json"}',
     });
@@ -171,7 +172,7 @@ test('TypeScript alias reads retain a declared external dependency configuration
 test('alias discovery accepts absent files and valid TypeScript comments and trailing commas', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nconfigurations = ["typescript"]\n',
+        'gspot.toml': policyOf(['typescript']),
     });
     const session = await openSession(sandbox.path);
     const inputs = templateInputs(
@@ -193,10 +194,10 @@ test('alias discovery accepts absent files and valid TypeScript comments and tra
     expect(inputs.importAliases('')).toStrictEqual({ '@app/': 'src/' });
 });
 
-test('inherited aliases resolve from the configuration that declares them', async () => {
+test('inherited aliases resolve from the kit that declares them', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nconfigurations = ["typescript"]\n',
+        'gspot.toml': policyOf(['typescript']),
         'tsconfig.json': '{"extends":"./configs/tsconfig.json"}',
         'configs/tsconfig.json': '{"compilerOptions":{"paths":{"@app/*":["../src/*"]}}}',
     });
@@ -220,7 +221,7 @@ test('inherited aliases resolve from the configuration that declares them', asyn
 test('generation preserves authored aliases and reports missing authored bases', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nconfigurations = ["typescript"]\n',
+        'gspot.toml': policyOf(['typescript']),
         'tsconfig.json': '{"compilerOptions":{"paths":{"@app/*":["./src/*"]}}}',
     });
     const session = await openSession(sandbox.path);
@@ -236,7 +237,7 @@ test('generation preserves authored aliases and reports missing authored bases',
     expect(
         emitAll(session.policyFiles.policy, session.repository, session.scopes, {
             version: session.version,
-            packageManager: session.packageManager,
+            packageClient: session.packageClient,
         }).files.some((file) => file.path === '.gspot/config/tsconfig.check.json'),
     ).toBe(true);
     expect(await Bun.file(join(sandbox.path, '.gspot/config/tsconfig.check.json')).exists()).toBe(false);

@@ -1,23 +1,13 @@
 import { join } from 'node:path';
 import { statSync } from 'node:fs';
+import { findingAt } from '#cli/checks/result.ts';
 import { readSource } from '#cli/repository/tracked.ts';
-import { runCheckCommand } from '#cli/execution/tool-runner.ts';
-import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
-
-import {
-    ASSET_FOLDER,
-    REPORTED_SAVINGS_SHARE,
-    REQUIRED_HEADERS,
-    TEXT_SUFFIX,
-} from '#cli/constants/checks/static-site.ts';
-
-function finding(input: EngineInput, file: string, rule: string, text: string, line = 1): Finding {
-    return { check: input.spec.name, file, line, rule, message: text, fixable: false };
-}
-
+import { runCheckCommand } from '#cli/execution/tool/runner.ts';
+import type { Finding, EngineInput } from '#cli/types/checks.ts';
+import { TEXT_SUFFIX, ASSET_FOLDER, REQUIRED_HEADERS, REPORTED_SAVINGS_SHARE } from '#cli/config/checks/platforms.ts';
 // What svgo says about one file: it cannot read it, it makes it smaller, or nothing.
 async function svgFinding(input: EngineInput, path: string): Promise<Finding[]> {
-    const original = readSource(input.root, path, input.observations).toString('utf8');
+    const original = readSource(input.root, path, input.reads).toString('utf8');
     const result = await runCheckCommand(input, ['svgo', '--input', '-', '--output', '-'], {
         cwd: input.root,
         stdin: original,
@@ -27,7 +17,9 @@ async function svgFinding(input: EngineInput, path: string): Promise<Finding[]> 
     const saved = originalBytes - Buffer.byteLength(result.stdout);
     const exceeds =
         input.policyFiles.policy.level === 'all' ? saved > 0 : saved * REPORTED_SAVINGS_SHARE > originalBytes;
-    return exceeds ? [finding(input, path, 'svg', `svgo makes this file ${String(saved)} bytes smaller.`)] : [];
+    return exceeds
+        ? [findingAt(input, { file: path, line: 1 }, 'svg', `svgo makes this file ${String(saved)} bytes smaller.`)]
+        : [];
 }
 
 /**
@@ -39,14 +31,21 @@ export function deadAssets(input: EngineInput): Finding[] {
     const files = input.files;
     const texts = files
         .filter((file) => TEXT_SUFFIX.test(file.path))
-        .map((file) => readSource(input.root, file.path, input.observations).toString('utf8'));
+        .map((file) => readSource(input.root, file.path, input.reads).toString('utf8'));
     return files
         .filter((file) => ASSET_FOLDER.test(file.path) && !TEXT_SUFFIX.test(file.path))
         .filter((file) => {
             const name = file.path.slice(file.path.lastIndexOf('/') + 1);
             return texts.every((text) => !text.includes(name));
         })
-        .map((file) => finding(input, file.path, 'dead-asset', 'No page, stylesheet or script names this file.'));
+        .map((file) =>
+            findingAt(
+                input,
+                { file: file.path, line: 1 },
+                'dead-asset',
+                'No page, stylesheet or script names this file.',
+            ),
+        );
 }
 
 /**
@@ -56,7 +55,7 @@ export function deadAssets(input: EngineInput): Finding[] {
  */
 export async function svgCompressed(input: EngineInput): Promise<Finding[]> {
     const paths = input.files
-        .filter((file) => file.nature === 'source' && file.path.endsWith('.svg'))
+        .filter((file) => file.kind === 'source' && file.path.endsWith('.svg'))
         .map((file) => file.path);
     const findings: Finding[] = [];
     for (const path of paths) findings.push(...(await svgFinding(input, path)));
@@ -73,15 +72,15 @@ export function webManifest(input: EngineInput): Finding[] {
         (file) => file.path.endsWith('.webmanifest') || file.path.endsWith('/manifest.json'),
     );
     return manifests.flatMap((file): Finding[] => {
-        const text = readSource(input.root, file.path, input.observations).toString('utf8');
+        const text = readSource(input.root, file.path, input.reads).toString('utf8');
         let parsed: { name?: unknown; icons?: { src?: string }[] };
         try {
             parsed = JSON.parse(text) as typeof parsed;
         } catch (error) {
             return [
-                finding(
+                findingAt(
                     input,
-                    file.path,
+                    { file: file.path, line: 1 },
                     'parse',
                     error instanceof Error ? error.message : 'The manifest is not JSON.',
                 ),
@@ -91,7 +90,7 @@ export function webManifest(input: EngineInput): Finding[] {
         const unnamed =
             typeof parsed.name === 'string' && parsed.name !== ''
                 ? []
-                : [finding(input, file.path, 'name', 'The manifest has no name.')];
+                : [findingAt(input, { file: file.path, line: 1 }, 'name', 'The manifest has no name.')];
         const icons = (parsed.icons ?? []).flatMap((icon) => (icon.src === undefined ? [] : [icon.src]));
         const missing = icons
             .filter(
@@ -100,7 +99,7 @@ export function webManifest(input: EngineInput): Finding[] {
                     statSync(join(input.root, folder, src.replace(/^\//u, '')), { throwIfNoEntry: false }) ===
                         undefined,
             )
-            .map((src) => finding(input, file.path, 'icon', `The icon ${src} does not exist.`));
+            .map((src) => findingAt(input, { file: file.path, line: 1 }, 'icon', `The icon ${src} does not exist.`));
         return [...unnamed, ...missing];
     });
 }
@@ -131,7 +130,7 @@ export function siteWideHeaders(text: string): Map<string, string> {
 export function securityHeaders(input: EngineInput): Finding[] {
     const files = input.files.filter((file) => file.path === '_headers' || file.path.endsWith('/_headers'));
     return files.flatMap((file) => {
-        const held = siteWideHeaders(readSource(input.root, file.path, input.observations).toString('utf8'));
+        const held = siteWideHeaders(readSource(input.root, file.path, input.reads).toString('utf8'));
         const hasFrameRule = /frame-ancestors/iu.test(held.get('content-security-policy') ?? '');
         return Object.entries(REQUIRED_HEADERS)
             .filter(
@@ -139,7 +138,12 @@ export function securityHeaders(input: EngineInput): Finding[] {
                     !pattern.test(held.get(name) ?? '') && !(name === 'x-frame-options' && hasFrameRule),
             )
             .map(([name]) =>
-                finding(input, file.path, 'missing-header', `The block for /* sets no valid ${name} header.`),
+                findingAt(
+                    input,
+                    { file: file.path, line: 1 },
+                    'missing-header',
+                    `The block for /* sets no valid ${name} header.`,
+                ),
             );
     });
 }

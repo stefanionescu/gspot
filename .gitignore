@@ -11,9 +11,6 @@ node_modules/
 # Build output
 *.tsbuildinfo
 
-# Test coverage
-coverage/
-
 # Local environment
 .env
 .env.*
@@ -33,10 +30,11 @@ bun-debug.log*
 
 # Build output and files copied from packages at build time
 /dist/
-/packages/cli/.build/
+/packages/cli/grammars/
 
 # Build output of the workspace packages
 /packages/*/dist/
+/packages/eslint-plugin/.dist-*/
 /docs/dist/
 /docs/.astro/
 /docs/src/content/docs/reference/

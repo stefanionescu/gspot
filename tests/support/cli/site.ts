@@ -1,13 +1,13 @@
 import { createFileTree } from 'testdirs';
+import type { EngineInput } from '#cli/types/checks.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
-import type { EngineInput } from '#cli/types/checks/checks.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 
 /** Select source files for an isolated site build owned by the test resource stack. */
 export async function siteInput(root: string, paths: string[], resources: DisposableStack): Promise<EngineInput> {
     await createFileTree(root, {
-        'gspot.toml':
-            'version = 1\nlevel = "all"\nconfigurations = ["static-site"]\n[tools.site]\nbuild = "bun build.js"\n',
+        'gspot.toml': policyOf(['static-site'], '[tools.site]\nbuild = "bun build.js"\n', 'all'),
     });
     const session = await openSession(root);
     session.resources = resources;

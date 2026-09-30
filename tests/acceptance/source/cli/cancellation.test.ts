@@ -1,58 +1,60 @@
-import { expect, test } from 'bun:test';
-import { dirname, join } from 'node:path';
-import { git } from '#tests/support/cli/git.ts';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
-import { waitForExit } from '#tests/support/cli/process.ts';
-import type { SarifReport } from '#tests/types/support/cli.ts';
+import { join, dirname, delimiter } from 'node:path';
+import type { SarifReport } from '#tests/types/cli.ts';
+import { git, gitOutput } from '#tests/support/cli/git.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
-import { pushReportSchema, reportSchema } from '#cli/execution/report.ts';
-import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { reportSchema, pushReportSchema } from '#cli/execution/report.ts';
+import { waitForExit, waitForFile, captureChild } from '#tests/support/cli/process.ts';
+import { mkdirSync, existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 
 const CLI = join(import.meta.dir, '../../../../packages/cli/src/main.ts');
+const CHILD_OPTIONS = { stdout: 'pipe', stderr: 'pipe', timeout: 12_000, killSignal: 'SIGKILL' } as const;
+const CANCELED_PUSH_SARIF = {
+    runs: [
+        { invocations: [{ executionSuccessful: true }] },
+        {
+            invocations: [{ executionSuccessful: false }],
+            properties: { canceled: { pendingRefs: ['refs/heads/second'] } },
+        },
+    ],
+};
 
 test.each(['SIGINT', 'SIGTERM'] as const)(
     'check propagates %s to an active tool and reports cancellation',
     async (signal) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': `version = 1\nconfigurations = []\n[[check]]\nname = "project/slow"\nstage = "commit"\npaths = ["source.txt"]\ncommand = ${JSON.stringify([process.execPath, '-e', 'await Bun.write("started.pid", String(process.pid)); await Bun.sleep(60_000);'])}\n`,
+            'gspot.toml': policyOf(
+                [],
+                `[[check]]\nname = "project/slow"\nstage = "commit"\npaths = ["source.txt"]\ncommand = ${JSON.stringify([process.execPath, '-e', 'await Bun.write("started.pid", String(process.pid)); await Bun.sleep(60_000);'])}\n`,
+            ),
             'source.txt': 'input\n',
         });
         const child = Bun.spawn([process.execPath, CLI, 'check', '--json', '--no-cache'], {
             cwd: sandbox.path,
-            stdout: 'pipe',
-            stderr: 'pipe',
-            timeout: 12_000,
-            killSignal: 'SIGKILL',
+            ...CHILD_OPTIONS,
         });
-        const output = new Response(child.stdout).text();
-        const errors = new Response(child.stderr).text();
-        try {
-            const started = join(sandbox.path, 'started.pid');
-            const deadline = performance.now() + 10_000;
-            while (!existsSync(started) && performance.now() < deadline) await Bun.sleep(20);
-            expect(existsSync(started)).toBe(true);
-            const toolPid = Number(readFileSync(started, 'utf8'));
-            child.kill(signal);
-            expect(await child.exited, await errors).toBe(2);
-            const report = JSON.parse(await output) as RunReport;
-            expect(report.checks).toHaveLength(1);
-            expect(report.checks[0]!.status).toBe('error');
-            expect(report.checks[0]!.note).toContain('canceled');
-            expect(report.coverage.checked).toBe(0);
-            expect(
-                (JSON.parse(readFileSync(join(sandbox.path, '.gspot/reports/report.sarif'), 'utf8')) as SarifReport)
-                    .runs[0]!.invocations[0]!.executionSuccessful,
-            ).toBe(false);
-            await waitForExit(toolPid);
-        } finally {
-            if (child.exitCode === null) child.kill('SIGKILL');
-            await child.exited;
-            await output;
-            await errors;
-        }
+        await using capture = captureChild(child);
+        const { output, errors } = capture;
+        const started = join(sandbox.path, 'started.pid');
+        expect(await waitForFile(started)).toBe(true);
+        const toolPid = Number(readFileSync(started, 'utf8'));
+        child.kill(signal);
+        expect(await child.exited, await errors).toBe(2);
+        const report = JSON.parse(await output) as RunReport;
+        expect(report.checks).toHaveLength(1);
+        expect(report.checks[0]!.status).toBe('error');
+        expect(report.checks[0]!.note).toContain('canceled');
+        expect(report.coverage.checked).toBe(0);
+        expect(
+            (JSON.parse(readFileSync(join(sandbox.path, '.gspot/reports/report.sarif'), 'utf8')) as SarifReport)
+                .runs[0]!.invocations[0]!.executionSuccessful,
+        ).toBe(false);
+        await waitForExit(toolPid);
     },
     15_000,
 );
@@ -62,7 +64,7 @@ test.each(['diff', 'clone', 'cat-file'])(
     async (operation) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\nconfigurations = ["bash"]\n[rules]\ninstall = false\n',
+            'gspot.toml': policyOf(['bash'], '[guides]\ninstall = false\n'),
             'source.sh': 'echo indexed\n',
         });
         expect(git(sandbox.path, ['init', '-q']).code).toBe(0);
@@ -72,45 +74,36 @@ test.each(['diff', 'clone', 'cat-file'])(
         const nativeGit = Bun.which('git');
         expect(nativeGit).not.toBeNull();
         const marker = join(sandbox.path, 'started.json');
-        const shim = join(sandbox.path, 'bin');
-        mkdirSync(shim);
+        const binaryDirectory = join(sandbox.path, 'bin');
+        mkdirSync(binaryDirectory);
         writeFileSync(
-            join(shim, 'git'),
+            join(binaryDirectory, 'git'),
             `#!${process.execPath}\nconst args = process.argv.slice(2);\nif (args[0] === ${JSON.stringify(operation)}) {\nawait Bun.write(${JSON.stringify(marker)}, JSON.stringify({pid:process.pid,snapshot:args[0] === 'clone' ? args.at(-1) : args[0] === 'cat-file' ? process.cwd() : undefined}));\nawait Bun.sleep(60_000);\n} else {\nconst child=Bun.spawn([${JSON.stringify(nativeGit)}, ...args], {stdin:'inherit',stdout:'inherit',stderr:'inherit'});\nprocess.exit(await child.exited);\n}\n`,
             { mode: 0o755 },
         );
         const child = Bun.spawn([process.execPath, CLI, 'check', '--staged', '--only', 'bash/syntax', '--json'], {
             cwd: sandbox.path,
-            env: { ...environmentVariables(), PATH: `${shim}:${environmentVariables()['PATH'] ?? ''}` },
-            stdout: 'pipe',
-            stderr: 'pipe',
-            timeout: 12_000,
-            killSignal: 'SIGKILL',
+            env: {
+                ...environmentVariables(),
+                PATH: `${binaryDirectory}${delimiter}${environmentVariables()['PATH'] ?? ''}`,
+            },
+            ...CHILD_OPTIONS,
         });
-        const output = new Response(child.stdout).text();
-        const errors = new Response(child.stderr).text();
-        try {
-            const deadline = performance.now() + 10_000;
-            while (!existsSync(marker) && performance.now() < deadline) await Bun.sleep(20);
-            expect(existsSync(marker)).toBe(true);
-            const started = JSON.parse(readFileSync(marker, 'utf8')) as { pid: number; snapshot?: string };
-            child.kill(operation === 'clone' ? 'SIGINT' : 'SIGTERM');
-            expect(await child.exited, await errors).toBe(2);
-            expect(JSON.parse(await output)).toStrictEqual({ error: 'canceled', exitCode: 2 });
-            await waitForExit(started.pid);
-            // A snapshot the run had started is gone with it.
-            expect(started.snapshot !== undefined && existsSync(started.snapshot)).toBe(false);
-            expect(git(sandbox.path, ['ls-files', '--stage', '-z']).stdout).toBe(indexed);
-            expect(readFileSync(join(sandbox.path, 'source.sh'), 'utf8')).toBe('echo authored\n');
-            const retry = await run(sandbox.path, ['check', '--staged', '--only', 'bash/syntax', '--json']);
-            expect(retry.code, retry.stdout + retry.stderr).toBe(0);
-            expect(reportSchema.parse(JSON.parse(retry.stdout)).checks[0]!.status).toBe('ok');
-        } finally {
-            if (child.exitCode === null) child.kill('SIGKILL');
-            await child.exited;
-            await output;
-            await errors;
-        }
+        await using capture = captureChild(child);
+        const { output, errors } = capture;
+        expect(await waitForFile(marker)).toBe(true);
+        const started = JSON.parse(readFileSync(marker, 'utf8')) as { pid: number; snapshot?: string };
+        child.kill(operation === 'clone' ? 'SIGINT' : 'SIGTERM');
+        expect(await child.exited, await errors).toBe(2);
+        expect(JSON.parse(await output)).toStrictEqual({ error: 'canceled', exitCode: 2 });
+        await waitForExit(started.pid);
+        // A snapshot the run had started is gone with it.
+        expect(started.snapshot !== undefined && existsSync(started.snapshot)).toBe(false);
+        expect(git(sandbox.path, ['ls-files', '--stage', '-z']).stdout).toBe(indexed);
+        expect(readFileSync(join(sandbox.path, 'source.sh'), 'utf8')).toBe('echo authored\n');
+        const retry = await run(sandbox.path, ['check', '--staged', '--only', 'bash/syntax', '--json']);
+        expect(retry.code, retry.stdout + retry.stderr).toBe(0);
+        expect(reportSchema.parse(JSON.parse(retry.stdout)).checks[0]!.status).toBe('ok');
     },
     20_000,
 );
@@ -118,14 +111,15 @@ test.each(['diff', 'clone', 'cat-file'])(
 test('push cancellation retains completed reports and names references not checked', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nconfigurations = ["bash"]\n[rules]\ninstall = false\n',
+        'gspot.toml': policyOf(['bash'], '[guides]\ninstall = false\n'),
         'source.sh': 'echo first\n',
     });
-    expect(git(sandbox.path, ['init', '-q']).code).toBe(0);
-    expect(git(sandbox.path, ['config', 'user.name', 'Alex Garcia']).code).toBe(0);
-    expect(git(sandbox.path, ['config', 'user.email', 'alex.garcia@example.com']).code).toBe(0);
-    expect(git(sandbox.path, ['add', '-A']).code).toBe(0);
-    expect(git(sandbox.path, ['commit', '-qm', 'feat: first']).code).toBe(0);
+    for (const args of [
+        ['init', '-q'],
+        ['add', '-A'],
+        ['commit', '-qm', 'feat: first'],
+    ])
+        gitOutput(sandbox.path, args);
     const first = git(sandbox.path, ['rev-parse', 'HEAD']).stdout.trim();
     writeFileSync(join(sandbox.path, 'source.sh'), 'echo second\n');
     expect(git(sandbox.path, ['commit', '-qam', 'feat: second']).code).toBe(0);
@@ -134,56 +128,42 @@ test('push cancellation retains completed reports and names references not check
     const counter = join(sandbox.path, 'clones.txt');
     const nativeGit = Bun.which('git');
     expect(nativeGit).not.toBeNull();
-    const shim = join(sandbox.path, 'bin');
-    mkdirSync(shim);
+    const binaryDirectory = join(sandbox.path, 'bin');
+    mkdirSync(binaryDirectory);
     writeFileSync(
-        join(shim, 'git'),
+        join(binaryDirectory, 'git'),
         `#!${process.execPath}\nconst args=process.argv.slice(2);\nif(args[0]==='clone'){\nconst file=Bun.file(${JSON.stringify(counter)});\nconst count=await file.exists()?Number(await file.text()):0;\nawait Bun.write(file,String(count+1));\nif(count===1){await Bun.write(${JSON.stringify(marker)},JSON.stringify({pid:process.pid,snapshot:args.at(-1)}));await Bun.sleep(60_000);}\n}\nconst child=Bun.spawn([${JSON.stringify(nativeGit)},...args],{stdin:'inherit',stdout:'inherit',stderr:'inherit'});\nprocess.exit(await child.exited);\n`,
         { mode: 0o755 },
     );
     const protocol = `refs/heads/first ${first} refs/heads/first ${'0'.repeat(40)}\nrefs/heads/second ${second} refs/heads/second ${'0'.repeat(40)}\n`;
     const child = Bun.spawn([process.execPath, CLI, 'check', '--push', '--only', 'bash/syntax', '--json'], {
         cwd: sandbox.path,
-        env: { ...environmentVariables(), PATH: `${shim}:${environmentVariables()['PATH'] ?? ''}` },
+        env: {
+            ...environmentVariables(),
+            PATH: `${binaryDirectory}${delimiter}${environmentVariables()['PATH'] ?? ''}`,
+        },
         stdin: Buffer.from(protocol),
-        stdout: 'pipe',
-        stderr: 'pipe',
-        timeout: 12_000,
-        killSignal: 'SIGKILL',
+        ...CHILD_OPTIONS,
     });
-    const output = new Response(child.stdout).text();
-    const errors = new Response(child.stderr).text();
-    try {
-        const deadline = performance.now() + 10_000;
-        while (!existsSync(marker) && performance.now() < deadline) await Bun.sleep(20);
-        expect(existsSync(marker)).toBe(true);
-        const started = JSON.parse(readFileSync(marker, 'utf8')) as { pid: number; snapshot: string };
-        child.kill('SIGINT');
-        expect(await child.exited, await errors).toBe(2);
-        const report = pushReportSchema.parse(JSON.parse(await output));
-        expect(report.revisions).toHaveLength(1);
-        expect(report.revisions[0]?.object).toBe(first);
-        expect(report.revisions[0]?.report.checks[0]?.status).toBe('ok');
-        expect(report.canceled?.pendingRefs).toStrictEqual(['refs/heads/second']);
-        const sarif = JSON.parse(
-            readFileSync(join(sandbox.path, '.gspot/reports/report.sarif'), 'utf8'),
-        ) as SarifReport;
-        expect(sarif.runs[0]!.invocations[0]!.executionSuccessful).toBe(true);
-        expect(sarif.runs[1]!.invocations[0]!.executionSuccessful).toBe(false);
-        expect(sarif.runs[1]!.properties?.canceled?.pendingRefs).toStrictEqual(['refs/heads/second']);
-        expect(report.exitCode).toBe(2);
-        expect(JSON.parse(readFileSync(join(sandbox.path, '.gspot/reports/report.json'), 'utf8'))).toStrictEqual(
-            report,
-        );
-        expect(existsSync(started.snapshot)).toBe(false);
-        await waitForExit(started.pid);
-        expect(git(sandbox.path, ['rev-parse', 'HEAD']).stdout.trim()).toBe(second);
-    } finally {
-        if (child.exitCode === null) child.kill('SIGKILL');
-        await child.exited;
-        await output;
-        await errors;
-    }
+    await using capture = captureChild(child);
+    const { output, errors } = capture;
+    expect(await waitForFile(marker)).toBe(true);
+    const started = JSON.parse(readFileSync(marker, 'utf8')) as { pid: number; snapshot: string };
+    child.kill('SIGINT');
+    expect(await child.exited, await errors).toBe(2);
+    const report = pushReportSchema.parse(JSON.parse(await output));
+    expect(report).toMatchObject({
+        revisions: [{ object: first, report: { checks: [{ status: 'ok' }] } }],
+        canceled: { pendingRefs: ['refs/heads/second'] },
+        exitCode: 2,
+    });
+    expect(JSON.parse(readFileSync(join(sandbox.path, '.gspot/reports/report.sarif'), 'utf8'))).toMatchObject(
+        CANCELED_PUSH_SARIF,
+    );
+    expect(JSON.parse(readFileSync(join(sandbox.path, '.gspot/reports/report.json'), 'utf8'))).toStrictEqual(report);
+    expect(existsSync(started.snapshot)).toBe(false);
+    await waitForExit(started.pid);
+    expect(git(sandbox.path, ['rev-parse', 'HEAD']).stdout.trim()).toBe(second);
 }, 20_000);
 
 test.each(['SIGINT', 'SIGTERM'] as const)(
@@ -191,7 +171,7 @@ test.each(['SIGINT', 'SIGTERM'] as const)(
     async (signal) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\nconfigurations = ["bash"]\n[rules]\ninstall = false\n',
+            'gspot.toml': policyOf(['bash'], '[guides]\ninstall = false\n'),
             'source.sh': 'echo indexed\n',
         });
         expect(git(sandbox.path, ['init', '-q']).code).toBe(0);
@@ -206,19 +186,14 @@ await import(${JSON.stringify(CLI)});
         const child = Bun.spawn([process.execPath, '-e', program], {
             cwd: sandbox.path,
             stdin: 'pipe',
-            stdout: 'pipe',
-            stderr: 'pipe',
-            timeout: 12_000,
-            killSignal: 'SIGKILL',
+            ...CHILD_OPTIONS,
         });
-        const output = new Response(child.stdout).text();
-        const errors = new Response(child.stderr).text();
+        await using capture = captureChild(child);
+        const { output, errors } = capture;
         try {
             await child.stdin.write('refs/heads/incomplete ');
             await child.stdin.flush();
-            const deadline = performance.now() + 10_000;
-            while (!existsSync(started) && performance.now() < deadline) await Bun.sleep(20);
-            expect(existsSync(started)).toBe(true);
+            expect(await waitForFile(started)).toBe(true);
             child.kill(signal);
             expect(await child.exited, await errors).toBe(2);
             expect(JSON.parse(await output)).toStrictEqual({ error: 'canceled', exitCode: 2 });
@@ -229,10 +204,6 @@ await import(${JSON.stringify(CLI)});
             expect(reportSchema.parse(JSON.parse(retry.stdout)).checks[0]!.status).toBe('ok');
         } finally {
             await child.stdin.end();
-            if (child.exitCode === null) child.kill('SIGKILL');
-            await child.exited;
-            await output;
-            await errors;
         }
     },
     15_000,
@@ -241,7 +212,7 @@ await import(${JSON.stringify(CLI)});
 test('staged cancellation during dependency copying removes partial output and preserves the installed source', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nconfigurations = ["bash"]\n[rules]\ninstall = false\n',
+        'gspot.toml': policyOf(['bash'], '[guides]\ninstall = false\n'),
         '.gitignore': 'node_modules/\n',
         'package.json': '{"name":"snapshot-consumer","private":true}\n',
         'package-lock.json': '{"name":"snapshot-consumer","lockfileVersion":3,"packages":{}}\n',
@@ -268,33 +239,21 @@ await import(${JSON.stringify(CLI)});
 `;
     const child = Bun.spawn([process.execPath, '-e', program], {
         cwd: sandbox.path,
-        stdout: 'pipe',
-        stderr: 'pipe',
-        timeout: 12_000,
-        killSignal: 'SIGKILL',
+        ...CHILD_OPTIONS,
     });
-    const output = new Response(child.stdout).text();
-    const errors = new Response(child.stderr).text();
-    try {
-        const deadline = performance.now() + 10_000;
-        while (!existsSync(marker) && performance.now() < deadline) await Bun.sleep(5);
-        expect(existsSync(marker)).toBe(true);
-        const observed = JSON.parse(readFileSync(marker, 'utf8')) as { destination: string };
-        child.kill('SIGTERM');
-        expect(await child.exited, await errors).toBe(2);
-        expect(JSON.parse(await output)).toStrictEqual({ error: 'canceled', exitCode: 2 });
-        expect(existsSync(dirname(observed.destination))).toBe(false);
-        expect(git(sandbox.path, ['ls-files', '--stage', '-z']).stdout).toBe(indexed);
-        expect(readdirSync(dependencies)).toHaveLength(4000);
-        expect(readFileSync(join(dependencies, '0.js'), 'utf8')).toBe('export const value=0;\n');
-        expect(readFileSync(join(dependencies, '3999.js'), 'utf8')).toBe('export const value=3999;\n');
-        const retry = await run(sandbox.path, ['check', '--staged', '--only', 'bash/syntax', '--json']);
-        expect(retry.code, retry.stdout + retry.stderr).toBe(0);
-        expect(reportSchema.parse(JSON.parse(retry.stdout)).checks[0]!.status).toBe('ok');
-    } finally {
-        if (child.exitCode === null) child.kill('SIGKILL');
-        await child.exited;
-        await output;
-        await errors;
-    }
+    await using capture = captureChild(child);
+    const { output, errors } = capture;
+    expect(await waitForFile(marker)).toBe(true);
+    const read = JSON.parse(readFileSync(marker, 'utf8')) as { destination: string };
+    child.kill('SIGTERM');
+    expect(await child.exited, await errors).toBe(2);
+    expect(JSON.parse(await output)).toStrictEqual({ error: 'canceled', exitCode: 2 });
+    expect(existsSync(dirname(read.destination))).toBe(false);
+    expect(git(sandbox.path, ['ls-files', '--stage', '-z']).stdout).toBe(indexed);
+    expect(readdirSync(dependencies)).toHaveLength(4000);
+    expect(readFileSync(join(dependencies, '0.js'), 'utf8')).toBe('export const value=0;\n');
+    expect(readFileSync(join(dependencies, '3999.js'), 'utf8')).toBe('export const value=3999;\n');
+    const retry = await run(sandbox.path, ['check', '--staged', '--only', 'bash/syntax', '--json']);
+    expect(retry.code, retry.stdout + retry.stderr).toBe(0);
+    expect(reportSchema.parse(JSON.parse(retry.stdout)).checks[0]!.status).toBe('ok');
 }, 20_000);

@@ -1,27 +1,26 @@
+// Findings from a tool's output: one parser per output format a manifest can declare.
 import { z } from 'zod';
 import { isAbsolute } from 'node:path';
 import { realpathSync } from 'node:fs';
-import { toPosix } from '#cli/platform/paths.ts';
-// Findings from a tool's output: one parser per output format a manifest can declare.
+import type { Finding } from '#cli/types/checks.ts';
+import { GspotError } from '#cli/platform/errors.ts';
+import { stripVTControlCharacters } from 'node:util';
 import { parseJson } from '#cli/execution/output/json.ts';
-import type { Finding } from '#cli/types/checks/checks.ts';
+import { toPosix, toolPath } from '#cli/platform/paths.ts';
+import type { CheckSpec, OutputFormat } from '#cli/types/kits.ts';
+import { ESLINT_WARN, ESLINT_ERROR } from '#cli/config/native.ts';
 import type { Parsing, RegexParser } from '#cli/types/execution/output.ts';
-import type { CheckSpec, OutputFormat } from '#cli/types/configurations.ts';
+import { typosFindings, trufflehogFindings, markdownlintFindings } from '#cli/execution/output/tool-formats.ts';
 
 import {
-    markdownlintFindings,
-    ToolOutputError,
-    trufflehogFindings,
-    typosFindings,
-} from '#cli/execution/output/tool-formats.ts';
-import {
-    DEFAULT_FILE_PATTERN,
-    DEFAULT_GROUPED_PATTERN,
-    DEFAULT_OUTPUT_FORMAT,
     DEFAULT_PATTERN,
-    TRAILING_BRACKET_RULE,
+    LEADING_DOT_SLASH,
     TRAILING_PAREN_RULE,
-} from '#cli/constants/execution/output.ts';
+    DEFAULT_FILE_PATTERN,
+    DEFAULT_OUTPUT_FORMAT,
+    TRAILING_BRACKET_RULE,
+    DEFAULT_GROUPED_PATTERN,
+} from '#cli/config/execution/output.ts';
 
 const eslintEntry = z.object({
     ruleId: z.string().nullable(),
@@ -29,16 +28,13 @@ const eslintEntry = z.object({
     column: z.number().int().positive().optional(),
     message: z.string(),
     fix: z.unknown().optional(),
-    severity: z.union([z.literal(1), z.literal(2)]),
+    severity: z.union([z.literal(ESLINT_WARN), z.literal(ESLINT_ERROR)]),
 });
 const eslintFiles = z.array(z.object({ filePath: z.string().min(1), messages: z.array(eslintEntry) }));
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Four output patterns fall back to their default the same way, and inlining the fallback puts parseGrouped over the complexity limit.
 function compiled(source: string | undefined, standard: string): RegExp {
     return new RegExp(source ?? standard, 'u');
-}
-
-function stripDotSlash(path: string): string {
-    return path.startsWith('./') ? path.slice(2) : path;
 }
 
 function positioned(finding: Finding, groups: Record<string, string | undefined>): Finding {
@@ -76,7 +72,7 @@ function regexFinding(
     const finding = positioned(
         {
             check,
-            file: stripDotSlash(groups['file'] ?? ''),
+            file: (groups['file'] ?? '').replace(LEADING_DOT_SLASH, ''),
             message: (groups['message'] ?? output.message ?? line).trim(),
             help,
             fixable: isFixable(output, fixable, line),
@@ -102,17 +98,6 @@ function parseRegex(check: string, output: OutputFormat, text: string, help: str
     return findings.values().toArray();
 }
 
-function groupedFinding(
-    check: string,
-    file: string,
-    help: string,
-    line: string,
-    groups: Record<string, string | undefined>,
-): Finding {
-    const text = (groups['message'] ?? line).trim();
-    return positioned({ check, file, message: text, help, fixable: false }, groups);
-}
-
 function parseGrouped(check: string, output: OutputFormat, text: string, help: string): Finding[] {
     const filePattern = compiled(output.file_pattern, DEFAULT_FILE_PATTERN);
     const pattern = compiled(output.pattern, DEFAULT_GROUPED_PATTERN);
@@ -121,11 +106,14 @@ function parseGrouped(check: string, output: OutputFormat, text: string, help: s
     for (const line of text.split('\n')) {
         const header = filePattern.exec(line)?.groups?.['file'];
         if (header !== undefined) {
-            file = stripDotSlash(header);
+            file = header.replace(LEADING_DOT_SLASH, '');
             continue;
         }
         const groups = pattern.exec(line)?.groups;
-        if (groups) findings.push(groupedFinding(check, file, help, line, groups));
+        if (groups) {
+            const text = (groups['message'] ?? line).trim();
+            findings.push(positioned({ check, file, message: text, help, fixable: false }, groups));
+        }
     }
     return findings;
 }
@@ -143,30 +131,22 @@ function parseEslintJson(check: string, text: string, help: string, root: string
     try {
         files = eslintFiles.parse(JSON.parse(text));
     } catch (error) {
-        throw new ToolOutputError('ESLint returned invalid structured findings.', { cause: error });
+        throw new GspotError('tool-output', 'ESLint returned invalid structured findings.', { cause: error });
     }
-    const prefix = `${root.replaceAll('\\', '/').replace(/\/$/u, '')}/`;
+    const prefix = `${toolPath(root).replace(/\/$/u, '')}/`;
     return files.flatMap((file) => {
-        const path = file.filePath.replaceAll('\\', '/');
+        const path = toolPath(file.filePath);
         const relative = path.startsWith(prefix) ? path.slice(prefix.length) : path;
         return file.messages.map((entry) => eslintFinding(check, relative, entry, help));
     });
 }
 
-function parseLines(check: string, text: string, help: string): Finding[] {
-    return text
-        .split('\n')
-        .map((line) => line.trim())
-        .filter((line) => line !== '')
-        .map((line) => ({ check, file: '', message: line, help, fixable: false }));
-}
-
-// The findings of a JSON report, or the error that says the report could not be read.
+// Findings from a JSON report, or an error for an unreadable report.
 function jsonFindings(parsing: Parsing, output: OutputFormat): Finding[] {
     try {
         return parseJson(parsing.spec.name, output, parsing.stdout, parsing.spec.help);
     } catch (error) {
-        throw new ToolOutputError('The tool returned an invalid JSON report.', { cause: error });
+        throw new GspotError('tool-output', 'The tool returned an invalid JSON report.', { cause: error });
     }
 }
 
@@ -178,7 +158,12 @@ const FORMAT_READERS: Record<OutputFormat['format'], (parsing: Parsing, output: 
     'typos-json': ({ spec, stdout, root, cwd }) => typosFindings(spec.name, stdout, spec.help, root, cwd),
     'markdownlint-json': ({ spec, stdout, root, cwd }) => markdownlintFindings(spec.name, stdout, spec.help, root, cwd),
     'eslint-json': ({ spec, stdout, root }) => parseEslintJson(spec.name, stdout, spec.help, root),
-    lines: ({ spec, text }) => parseLines(spec.name, text, spec.help),
+    lines: ({ spec, text }) =>
+        text
+            .split('\n')
+            .map((line) => line.trim())
+            .filter((line) => line !== '')
+            .map((line) => ({ check: spec.name, file: '', message: line, help: spec.help, fixable: false })),
     regex: ({ spec, text }, output) => parseRegex(spec.name, output, text, spec.help),
     grouped: ({ spec, text }, output) => parseGrouped(spec.name, output, text, spec.help),
 };
@@ -187,7 +172,7 @@ const FORMAT_READERS: Record<OutputFormat['format'], (parsing: Parsing, output: 
 function parseRaw(spec: CheckSpec, stdout: string, stderr: string, root: string, cwd: string): Finding[] {
     const output = spec.output ?? DEFAULT_OUTPUT_FORMAT;
     // A tool that colors its output although nothing reads colors still yields clean paths and messages.
-    const text = Bun.stripANSI(`${stdout}\n${stderr}`).replaceAll('\r\n', '\n');
+    const text = stripVTControlCharacters(`${stdout}\n${stderr}`).replaceAll('\r\n', '\n');
     return FORMAT_READERS[output.format]({ spec, stdout, text, root, cwd }, output);
 }
 
@@ -207,17 +192,18 @@ function relativeTo(root: string, file: string): string {
 
 /**
  * The findings a tool's output holds, with every path relative to the root.
- * @param spec the check
- * @param stdout the tool's standard output
- * @param stderr the tool's standard error
- * @param root the repository root, to make absolute paths relative
- * @param cwd the tool working directory, for native relative source paths
- * @returns the findings
+ * @param spec the check.
+ * @param stdout the tool's standard output.
+ * @param stderr the tool's standard error.
+ * @param root the repository root, to make absolute paths relative.
+ * @param cwd the tool working directory, for native relative source paths.
+ * @returns the findings.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Every tool check turns output into findings here, so the fixable flag and the path rules apply once.
 export function parseOutput(spec: CheckSpec, stdout: string, stderr: string, root: string, cwd = root): Finding[] {
     return parseRaw(spec, stdout, stderr, root, cwd).map((finding) => ({
         ...finding,
         fixable: spec.fix_command !== undefined && finding.fixable,
-        file: relativeTo(toPosix(root), toPosix(finding.file)),
+        file: relativeTo(toolPath(root), toPosix(finding.file)),
     }));
 }

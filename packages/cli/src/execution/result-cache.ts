@@ -1,13 +1,14 @@
 // Which planned checks may reuse a stored result, the key that identifies one, and how a result is stored.
+import { createHash } from 'node:crypto';
 import { inspectTool } from '#cli/tools/inspect.ts';
-import { isAbsolute, join, relative, sep } from 'node:path';
-import type { CheckResult } from '#cli/types/checks/checks.ts';
-import { prepareCommand } from '#cli/execution/tool-runner.ts';
-import { readFileSync, realpathSync, statSync } from 'node:fs';
-import { RAN_STATUSES } from '#cli/constants/execution/execution.ts';
+import type { CheckResult } from '#cli/types/checks.ts';
+import { sep, join, relative, isAbsolute } from 'node:path';
+import { prepareCommand } from '#cli/execution/tool/runner.ts';
+import { RAN_STATUSES } from '#cli/config/execution/execution.ts';
 import { commandConfigurations } from '#cli/execution/command-expansion.ts';
-import type { RunHashes, PlannedCheck, Session } from '#cli/types/execution/execution.ts';
-import { cacheInputs, cacheKey, fileHash, readCached, textHash, writeCached } from '#cli/execution/cache.ts';
+import { openSync, closeSync, fstatSync, readFileSync, realpathSync } from 'node:fs';
+import type { Session, RunHashes, PlannedCheck } from '#cli/types/execution/execution.ts';
+import { cacheKey, fileHash, readCached, cacheInputs, writeCached } from '#cli/execution/cache.ts';
 
 // The path a tool is recorded under: inside the cache root when it lies inside the repository.
 function identityPath(session: Session, path: string): string {
@@ -20,13 +21,18 @@ function identityPath(session: Session, path: string): string {
 function toolIdentity(session: Session, path: string, hashes: RunHashes): string {
     const held = hashes.tools.get(path);
     if (held !== undefined) return held;
-    const identity = JSON.stringify({
-        path: identityPath(session, path),
-        mode: statSync(path).mode,
-        hash: new Bun.CryptoHasher('sha256').update(readFileSync(path)).digest('hex'),
-    });
-    hashes.tools.set(path, identity);
-    return identity;
+    const file = openSync(path, 'r');
+    try {
+        const identity = JSON.stringify({
+            path: identityPath(session, path),
+            mode: fstatSync(file).mode,
+            hash: createHash('sha256').update(readFileSync(file)).digest('hex'),
+        });
+        hashes.tools.set(path, identity);
+        return identity;
+    } finally {
+        closeSync(file);
+    }
 }
 
 // The version fact of the tool a check runs, or the inspection that found none.
@@ -40,10 +46,10 @@ function toolVersionOf(session: Session, planned: PlannedCheck, hashes: RunHashe
 }
 
 // The hash of a repository file, read once per run.
-function observedHash(session: Session, path: string, hashes: RunHashes): string {
+function readHash(session: Session, path: string, hashes: RunHashes): string {
     const held = hashes.files.get(path);
     if (held !== undefined) return held;
-    const hash = fileHash(session.root, path, session.observations);
+    const hash = fileHash(session.root, path, session.reads);
     hashes.files.set(path, hash);
     return hash;
 }
@@ -52,7 +58,7 @@ function observedHash(session: Session, path: string, hashes: RunHashes): string
 function configurationHashes(session: Session, planned: PlannedCheck, hashes: RunHashes): string {
     const entries = commandConfigurations(session, planned).map((path) => {
         try {
-            return { path, hash: observedHash(session, path, hashes) };
+            return { path, hash: readHash(session, path, hashes) };
         } catch (error) {
             if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
             return { path, hash: 'missing' };
@@ -67,8 +73,8 @@ function declaredInputs(session: Session, planned: PlannedCheck): string[] | und
     return session.policyFiles.policy.checks.find((entry) => entry.name === planned.check)?.inputs;
 }
 
-// Whether a check reads only what its key records: a command unless its manifest says cached = false, an
-// analysis only when its manifest says cached = true, and never a check that needs a build, a daemon, or the network.
+// Commands cache unless their manifest opts out; analyses cache only when their manifest opts in.
+// Checks that need a build, daemon, or network never cache.
 function isCacheable(planned: PlannedCheck): boolean {
     const { spec } = planned;
     const isAnalysis = spec.engine !== undefined || spec.analysis !== undefined;
@@ -94,12 +100,12 @@ function portableResult(session: Session, result: CheckResult): CheckResult {
 }
 
 /**
- * The observations one execution pass shares between its cached checks.
+ * The reads one execution pass shares between its cached checks.
  * @param session the session whose policy text seeds the configuration hash
  * @returns empty file and tool tables under the policy hash
  */
 export function runHashes(session: Session): RunHashes {
-    const policy = textHash(session.policyFiles.text);
+    const policy = createHash('sha256').update(session.policyFiles.text).digest('hex');
     const files = new Map<string, string>();
     return { policy, files, tools: new Map<string, string>() };
 }
@@ -108,7 +114,7 @@ export function runHashes(session: Session): RunHashes {
  * The cache key of a planned check, or undefined when its result must not be reused.
  * @param session the session
  * @param planned the check
- * @param hashes the observations shared by this pass
+ * @param hashes the reads shared by this pass
  * @returns the key
  */
 export function cacheKeyFor(session: Session, planned: PlannedCheck, hashes: RunHashes): string | undefined {
@@ -117,7 +123,7 @@ export function cacheKeyFor(session: Session, planned: PlannedCheck, hashes: Run
     if (!isCacheable(planned)) return undefined;
     const files = keyedPaths(session, planned, declared).map((path) => ({
         path,
-        hash: observedHash(session, path, hashes),
+        hash: readHash(session, path, hashes),
     }));
     return cacheKey({
         check: planned.check,

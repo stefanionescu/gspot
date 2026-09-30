@@ -1,20 +1,14 @@
-// The comment forms of an inline ignore. `marker` finds the comment and captures the check id; the
+// The [[ignore]] filter, the inline gspot-ignore syntax, and the suppression census input.
+import type { Finding } from '#cli/types/checks.ts';
 import { extensionOf } from '#cli/platform/paths.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
-// The [[ignore]] filter, the inline gspot-ignore syntax, and the suppression census input.
 import { readSource } from '#cli/repository/tracked.ts';
-import type { Finding } from '#cli/types/checks/checks.ts';
 import type { IgnoreEntry } from '#cli/types/policy/policy.ts';
-import type { SourceObservations } from '#cli/types/repository/repository.ts';
+import type { SourceComment } from '#cli/types/parsers/parsers.ts';
+import type { SourceReads } from '#cli/types/repository/repository.ts';
+import { commentText, sourceComments } from '#cli/parsers/comments.ts';
 import type { IgnoreUse, InlineIgnore } from '#cli/types/execution/execution.ts';
-
-import {
-    COMMENT_OPENERS,
-    COMMENT_STYLE_BY_EXTENSION,
-    HTML_COMMENT_CLOSE,
-    INLINE_IGNORE,
-    REASON_INTRODUCER,
-} from '#cli/constants/execution/execution.ts';
+import { INLINE_IGNORE, REASON_INTRODUCER, COMMENT_STYLE_BY_EXTENSION } from '#cli/config/execution/execution.ts';
 
 function isEntryMatch(entry: IgnoreEntry, finding: Finding): boolean {
     if (entry.check !== finding.check) return false;
@@ -22,9 +16,9 @@ function isEntryMatch(entry: IgnoreEntry, finding: Finding): boolean {
     return entry.paths === undefined || entry.paths.length === 0 || pathMatcher(entry.paths)(finding.file);
 }
 
-function existingText(observations: SourceObservations, path: string): string {
+function existingText(reads: SourceReads, path: string): string {
     try {
-        return readSource(observations.root, path, observations).toString('utf8');
+        return readSource(reads.root, path, reads).toString('utf8');
     } catch (error) {
         if (error instanceof Error && 'code' in error && error.code === 'ENOENT') return '';
         throw error;
@@ -32,25 +26,19 @@ function existingText(observations: SourceObservations, path: string): string {
 }
 
 function reasonIn(rest: string): string | undefined {
-    const close = rest.indexOf(HTML_COMMENT_CLOSE);
-    const body = close === -1 ? rest : rest.slice(0, close);
-    const at = body.indexOf(REASON_INTRODUCER);
+    const at = rest.indexOf(REASON_INTRODUCER);
     if (at === -1) return undefined;
-    const reason = body.slice(at + REASON_INTRODUCER.length).trim();
+    const reason = rest.slice(at + REASON_INTRODUCER.length).trim();
     return reason === '' ? undefined : reason;
 }
 
-function targetLine(style: string, line: string, index: number): number {
-    const isStandalone = (COMMENT_OPENERS[style] ?? []).some((opener) => line.trim().startsWith(opener));
-    return index + (isStandalone ? 2 : 1);
-}
-
-function inlineIgnoreOf(style: string, line: string, index: number): InlineIgnore | undefined {
-    const match = INLINE_IGNORE[style]?.exec(line);
+function inlineIgnoreOf(style: string, comment: SourceComment): InlineIgnore | undefined {
+    const text = commentText(comment.text);
+    const match = INLINE_IGNORE[style]?.exec(text);
     const check = match?.[1];
     if (!match || check === undefined) return undefined;
-    const reason = reasonIn(line.slice(match.index + match[0].length));
-    return { line: targetLine(style, line, index), check, ...(reason === undefined ? {} : { reason }) };
+    const reason = reasonIn(text.slice(match.index + match[0].length));
+    return { line: comment.line + (comment.standalone ? 1 : 0), check, ...(reason === undefined ? {} : { reason }) };
 }
 
 /**
@@ -72,35 +60,34 @@ export function applyIgnores(findings: Finding[], entries: IgnoreEntry[]): { kep
 
 /**
  * Inline gspot-ignore comments in one file, with the line each applies to (the same line, or the next when the comment stands alone).
- * @param observations the source bytes shared by this execution
+ * @param reads the source bytes shared by this execution
  * @param path the file, relative to the root
  * @returns the ignores found
  */
-export function inlineIgnores(observations: SourceObservations, path: string): InlineIgnore[] {
+export async function inlineIgnores(reads: SourceReads, path: string): Promise<InlineIgnore[]> {
     const style = COMMENT_STYLE_BY_EXTENSION[extensionOf(path)];
     if (style === undefined) return [];
-    const lines = existingText(observations, path).split('\n');
-    return lines.map((line, index) => inlineIgnoreOf(style, line, index)).filter((entry) => entry !== undefined);
+    const comments = await sourceComments(path, existingText(reads, path));
+    return comments.map((comment) => inlineIgnoreOf(style, comment)).filter((entry) => entry !== undefined);
 }
 
 /**
  * Applies inline ignores to findings from the gspot engines. The suppression check owns reason validation.
- * @param observations the source bytes shared by this execution
+ * @param reads the source bytes shared by this execution
  * @param findings the findings before ignores
  * @returns the findings kept
  */
-export function applyInlineIgnores(observations: SourceObservations, findings: Finding[]): Finding[] {
+export async function applyInlineIgnores(reads: SourceReads, findings: Finding[]): Promise<Finding[]> {
     const byFile = new Map<string, InlineIgnore[]>();
-    const inlineFor = (file: string): InlineIgnore[] => {
-        const known = byFile.get(file);
-        if (known) return known;
-        const found = inlineIgnores(observations, file);
-        byFile.set(file, found);
-        return found;
-    };
+    for (const finding of findings) {
+        if (finding.engine === undefined || byFile.has(finding.file)) continue;
+        byFile.set(finding.file, await inlineIgnores(reads, finding.file));
+    }
     return findings.filter(
         (finding) =>
             finding.engine === undefined ||
-            inlineFor(finding.file).every((entry) => !(entry.check === finding.check && entry.line === finding.line)),
+            (byFile.get(finding.file) ?? []).every(
+                (entry) => !(entry.check === finding.check && entry.line === finding.line),
+            ),
     );
 }

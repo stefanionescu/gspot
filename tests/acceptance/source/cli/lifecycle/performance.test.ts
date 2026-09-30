@@ -1,12 +1,12 @@
 // Initialization and staged checks over a large repository stay within the performance limits.
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { writeFileSync } from 'node:fs';
-import { createFileTree, testdir } from 'testdirs';
+import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { script } from '#tests/support/cli/planted.ts';
 import { reportSchema } from '#cli/execution/report.ts';
-import { commitAll, git } from '#tests/support/cli/git.ts';
+import { git, commitAll } from '#tests/support/cli/git.ts';
 
 test('initialization and cold and warm staged checks stay within the 5000-file performance limits', async () => {
     await using directory = await testdir();
@@ -39,13 +39,11 @@ test('initialization and cold and warm staged checks stay within the 5000-file p
         expect(report.checks.find((check) => check.check === 'bash/syntax')?.status).toBe(
             measurements.length === 2 ? 'cache' : 'ok',
         );
-        console.log(
-            `5000 files: staged ${measurements.length === 1 ? 'cold' : 'warm'} ${elapsed.toFixed(0)} ms; limit ${String(ceiling)} ms`,
-        );
-        expect(elapsed).toBeLessThan(ceiling);
+        const stage = measurements.length === 1 ? 'cold' : 'warm';
+        expect(
+            elapsed,
+            `5000 files: staged ${stage} ${elapsed.toFixed(0)} ms after init ${initMs.toFixed(0)} ms`,
+        ).toBeLessThan(ceiling);
         expect(report.checks.some((check) => ['error', 'missing'].includes(check.status))).toBe(false);
     }
-    console.log(
-        `5000 files: init ${initMs.toFixed(0)} ms; staged cold ${measurements[0]!.toFixed(0)} ms; warm ${measurements[1]!.toFixed(0)} ms`,
-    );
 }, 120_000);

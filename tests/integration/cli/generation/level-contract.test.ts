@@ -1,42 +1,18 @@
-import type { Linter } from 'eslint';
-import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
-import { parse as parseToml } from 'smol-toml';
-import { createFileTree, testdir } from 'testdirs';
+import type { Linter } from 'eslint';
 import plugin from '#plugin/plugin.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { emitAll } from '#cli/generation/render.ts';
+import { test, expect } from 'bun:test';
+import { parse as parseToml } from 'smol-toml';
+import { testdir, createFileTree } from 'testdirs';
+import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { assertPolicyComplete, parsePolicyText } from '#cli/policy/read.ts';
-import { RUFF_PREVIEW_RULES } from '#cli/constants/checks/ruff-rules.ts';
-import { generatedFile } from '#tests/support/cli/generated-files.ts';
-import { generatedEslint } from '#tests/support/cli/generated-eslint.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
+import { RUFF_PREVIEW_RULES } from '#cli/config/checks/python.ts';
+import { generatedFile } from '#tests/support/cli/generated/files.ts';
+import { generatedEslint } from '#tests/support/cli/generated/eslint.ts';
+import { parsePolicyText, assertPolicyComplete } from '#cli/policy/read.ts';
 
-const review = readFileSync(new URL('../../../../architecture/levels/inventory.csv', import.meta.url), 'utf8');
-
-test('the accepted inventory assigns every check and public plugin rule', () => {
-    const checks = new Map(
-        [...configurationManifests().values()].flatMap((manifest) =>
-            manifest.checks.map((check) => [check.name, check.level] as const),
-        ),
-    );
-    const rows = review
-        .split('\n')
-        .filter((row) => row.startsWith('Check,'))
-        .map((row) => row.split(','));
-    expect(checks.size).toBe(210);
-    expect(rows).toHaveLength(210);
-    expect(rows.filter((row) => row[2] === 'recommended')).toHaveLength(144);
-    for (const row of rows) expect(String(checks.get(row[1]!))).toBe(row[2]!);
-    const rules = Object.entries(plugin.rules);
-    expect(rules).toHaveLength(25);
-    expect(
-        rules
-            .filter(([, rule]) => rule.meta.docs?.level === 'recommended')
-            .map(([name]) => name)
-            .toSorted((a, b) => a.localeCompare(b)),
-    ).toStrictEqual(['no-client-environment', 'no-duplicate-barrel-exports', 'require-server-only']);
+test('the recommended plugin configuration leaves out the framework-only server rule', () => {
     expect(plugin.configs.recommended.rules).not.toHaveProperty('gspot/require-server-only');
 });
 
@@ -45,7 +21,11 @@ test.each(['recommended', 'all'] as const)(
     async (level) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': `version = 1\nlevel = "${level}"\nconfigurations = ["python", "pytest"]\n[[scope]]\npath = "app"\nconfigurations = []\n[scope.tools.pytest]\ncoverage = 91\n[scope.tools.vulture]\nmin_confidence = 95\n`,
+            'gspot.toml': policyOf(
+                ['python', 'pytest'],
+                '[[scope]]\npath = "app"\nkits = []\n[scope.tools.pytest]\ncoverage = 91\n[scope.tools.vulture]\nmin_confidence = 95\n',
+                level,
+            ),
             'app/main.py': 'value = 1\n',
         });
         const session = await openSession(sandbox.path);
@@ -59,16 +39,15 @@ test.each(['recommended', 'all'] as const)(
 );
 
 test.each(['recommended', 'all'] as const)('%s Ruff selects stable rules with preview disabled', async (level) => {
-    const text = await generatedFile(
-        `version = 1\nlevel = "${level}"\nconfigurations = ["python", "fastapi", "pytest"]\n`,
-        '.gspot/config/ruff.toml',
-    );
+    const text = await generatedFile(policyOf(['python', 'fastapi', 'pytest'], '', level), '.gspot/config/ruff.toml');
     const config = parseToml(text) as { lint: { select: string[]; preview: boolean }; format: { preview: boolean } };
     expect(config.lint.preview).toBe(false);
     expect(config.format.preview).toBe(false);
     expect(config.lint.select.filter((code) => RUFF_PREVIEW_RULES.has(code))).toStrictEqual([]);
     expect(config.lint.select).toContain('F821');
     expect(config.lint.select.includes('N802')).toBe(level === 'all');
+    // gspot orders __all__ and __slots__ shortest first, so the alphabetical Ruff sorts stay off.
+    expect(config.lint.select.filter((code) => ['RUF022', 'RUF023'].includes(code))).toStrictEqual([]);
 });
 
 test.each(['recommended', 'all'] as const)('%s rejects experimental activation before generation', (level) => {
@@ -76,7 +55,7 @@ test.each(['recommended', 'all'] as const)('%s rejects experimental activation b
         '[tools.ruff.extra]\npreview = true\nreason = "Project preference"',
         `[tools.ruff]\nselect = ["${String([...RUFF_PREVIEW_RULES][0])}"]`,
     ]) {
-        const text = `version = 1\nlevel = "${level}"\nconfigurations = ["python"]\n${settings}`;
+        const text = policyOf(['python'], settings, level);
         expect(() => {
             assertPolicyComplete({ policy: parsePolicyText(text, 'gspot.toml'), text, path: 'gspot.toml' });
         }).toThrow('preview');
@@ -88,7 +67,7 @@ test.each(['recommended', 'all'] as const)(
     async (level) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': `version = 1\nlevel = "${level}"\nconfigurations = ["javascript"]\n[[scope]]\npath = "app"\nconfigurations = ["react", "drizzle"]\n`,
+            'gspot.toml': policyOf(['javascript'], '[[scope]]\npath = "app"\nkits = ["react", "drizzle"]\n', level),
             'package.json': '{"private":true,"type":"module"}',
             'root.jsx': '',
             'app/client.jsx': '',
@@ -116,7 +95,7 @@ test('all retains the effective recommended rules for the same applicable React 
     for (const level of ['recommended', 'all']) {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': `version = 1\nlevel = "${level}"\nconfigurations = ["react"]\n`,
+            'gspot.toml': policyOf(['react'], '', level),
             'package.json': '{"private":true,"type":"module"}',
             'client.jsx': '',
         });
@@ -132,12 +111,12 @@ test('switching levels restores generated defaults and agent instructions', asyn
     await using sandbox = await testdir();
     const outputs: string[] = [];
     for (const level of ['recommended', 'all', 'recommended']) {
-        const policy = `version = 1\nlevel = "${level}"\nconfigurations = ["javascript"]\n`;
+        const policy = policyOf(['javascript'], '', level);
         await Bun.write(join(sandbox.path, 'gspot.toml'), policy);
         const session = await openSession(sandbox.path);
         const output = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
             version: session.version,
-            packageManager: session.packageManager,
+            packageClient: session.packageClient,
         });
         const config = output.files.find((file) => file.path.endsWith('/eslint.config.mjs'))!;
         await Bun.write(join(sandbox.path, config.path), config.content);

@@ -1,8 +1,8 @@
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { stripVTControlCharacters } from 'node:util';
 import { configureOutput } from '#cli/output/messages.ts';
+import type { DoctorReport } from '#cli/types/commands.ts';
 import { doctorText } from '#cli/commands/doctor/report.ts';
-import type { DoctorReport } from '#cli/types/commands/doctor.ts';
 
 const report: DoctorReport = {
     tools: [

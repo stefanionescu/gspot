@@ -1,26 +1,27 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
-import { planRun } from '#cli/execution/planning/plan.ts';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
+import type { CheckSpec } from '#cli/types/kits.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { applyFixers } from '#cli/execution/fixers.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { planRun } from '#cli/execution/planning/plan.ts';
 import { rejection } from '#tests/support/expectations.ts';
-import type { CheckSpec } from '#cli/types/configurations.ts';
-import { existsSync, mkdirSync, readFileSync } from 'node:fs';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
+import { mkdirSync, existsSync, readFileSync } from 'node:fs';
 import type { Session } from '#cli/types/execution/execution.ts';
-import { changedFiles, stagedFiles } from '#cli/repository/revisions/selection.ts';
+import { stagedFiles, changedFiles } from '#cli/repository/revisions/selection.ts';
 
 const options = { stage: 'commit' as const, skips: [], only: ['sandbox/project'] };
 const policy = `version = 1
-configurations = []
+kits = []
 [[scope]]
 path = "api"
-configurations = []
+kits = []
 [[scope]]
 path = "web"
-configurations = []
+kits = []
 `;
 
 test('repository checks retain nested inputs and report their defects once at the root', async () => {
@@ -48,21 +49,10 @@ test('repository checks retain nested inputs and report their defects once at th
     expect(corrected.report.checks).toMatchObject([{ check: 'project/syntax', scope: '', files: 1, status: 'ok' }]);
 });
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Every git step of these tests runs and asserts success the same way.
 function git(root: string, ...argv: string[]): void {
     const result = runBlocking(['git', ...argv], { cwd: root });
     expect(result.code, result.stderr).toBe(0);
-}
-
-// The staged selection of the sandbox, as the commit stage receives it.
-async function stagedRevision(root: string): Promise<{ staged: string[] }> {
-    const { staged } = await stagedFiles(root);
-    return { staged };
-}
-
-// The changed selection of the sandbox against HEAD, as the pull-request form receives it.
-async function changedRevision(root: string): Promise<{ changed: string[] }> {
-    const { paths } = await changedFiles(root, 'HEAD');
-    return { changed: paths };
 }
 
 function projectChecks(session: Session): void {
@@ -79,7 +69,7 @@ function projectChecks(session: Session): void {
         cwd: 'root' as const,
         command: [process.execPath, '-e', "console.log('Project finding'); process.exitCode = 1"],
         output: { format: 'lines' as const },
-        claims: manifest.claims,
+        owners: manifest.owners,
         fix_order: 'codemod' as const,
         fix_command: [process.execPath, '-e', "await Bun.write('{scope}/source.ts', 'restored')"],
     };
@@ -109,12 +99,15 @@ test.each([
     mkdirSync(join(sandbox.path, 'api'), { recursive: true });
     const session = await openSession(sandbox.path);
     projectChecks(session);
-    const revision = selection === 'staged' ? await stagedRevision(sandbox.path) : await changedRevision(sandbox.path);
-    const planned = await planRun(session, { ...options, ...revision });
+    const revision =
+        selection === 'staged'
+            ? await stagedFiles(sandbox.path).then(({ staged }) => ({ staged }))
+            : await changedFiles(sandbox.path, 'HEAD').then(({ paths }) => ({ changed: paths }));
+    const planned = planRun(session, { ...options, ...revision });
     const api = planned.find((check) => check.scope.scope.path === 'api')!;
     expect(api.files).toStrictEqual([]);
     expect(api.triggerPaths).toContain('api/source.ts');
-    const fileChecks = await planRun(session, { ...options, only: ['sandbox/files'], ...revision });
+    const fileChecks = planRun(session, { ...options, only: ['sandbox/files'], ...revision });
     expect(fileChecks.flatMap((check) => check.triggerPaths)).toStrictEqual([]);
     expect(fileChecks.flatMap((check) => check.files.map((file) => file.path))).toStrictEqual(
         operation === 'delete' ? [] : ['web/source.ts'],
@@ -145,7 +138,7 @@ test('a positional file trigger preserves project-wide input and findings', asyn
     });
     const session = await openSession(sandbox.path);
     projectChecks(session);
-    const planned = await planRun(session, { ...options, paths: ['api/source.ts'] });
+    const planned = planRun(session, { ...options, paths: ['api/source.ts'] });
     const affected = planned.filter((check) => check.files.length > 0);
     expect(affected.map((check) => check.scope.scope.path)).toStrictEqual(['api']);
     expect(affected[0]?.files.map((file) => file.path)).toStrictEqual(['api/caller.ts', 'api/source.ts']);
@@ -165,11 +158,11 @@ test.each(['integrity', 'naming', 'structure', 'prose'] as const)(
     async (engine) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\nconfigurations = ["typescript"]\n',
+            'gspot.toml': policyOf(['typescript']),
             'source.ts': 'export const count = 1;\n',
         });
         const session = await openSession(sandbox.path);
-        const selected = session.scopes[0]!.selected.find(({ configuration }) => configuration.name === 'typescript')!;
+        const selected = session.scopes[0]!.selected.find(({ kit }) => kit.name === 'typescript')!;
         const definition = {
             name: 'sandbox/command',
             level: 'recommended',

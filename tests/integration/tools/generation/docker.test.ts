@@ -1,18 +1,21 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
-import { emitAll } from '#cli/generation/render.ts';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
+import { emitAll } from '#cli/generation/outputs.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 
 test('Docker configuration scans isolate deepest scopes and retain scoped advisory exceptions', async () => {
     await using sandbox = await testdir();
     const source =
         'FROM node:22.11.0-bookworm-slim\nWORKDIR /app\nUSER root\nHEALTHCHECK CMD ["node", "--version"]\nCMD ["node", "index.js"]\n';
     const paths = ['Dockerfile', 'app/Dockerfile', 'app/child/Dockerfile', 'sibling/Dockerfile'];
-    const policy =
-        'version = 1\nconfigurations = ["docker"]\n[[scope]]\npath = "app"\n[scope.tools.trivy]\nignore = [{ id = "DS-0002", reason = "This test exercises inherited advisory exceptions." }]\n[[scope]]\npath = "app/child"\n[[scope]]\npath = "sibling"\n';
+    const policy = policyOf(
+        ['docker'],
+        '[[scope]]\npath = "app"\n[scope.tools.trivy]\nignore = [{ id = "DS-0002", reason = "This test exercises inherited advisory exceptions." }]\n[[scope]]\npath = "app/child"\n[[scope]]\npath = "sibling"\n',
+    );
     await createFileTree(sandbox.path, {
         'gspot.toml': policy,
         '.gitignore': 'untracked/\n',
@@ -23,7 +26,7 @@ test('Docker configuration scans isolate deepest scopes and retain scoped adviso
     const session = await openSession(sandbox.path);
     for (const file of emitAll(session.policyFiles.policy, session.repository, session.scopes, {
         version: session.version,
-        packageManager: session.packageManager,
+        packageClient: session.packageClient,
     }).files.filter((file) => file.kind === 'config'))
         await Bun.write(join(sandbox.path, file.path), file.content);
     const options = {

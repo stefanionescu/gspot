@@ -1,10 +1,12 @@
-import type { SwiftReader } from '#cli/types/checks/swift.ts';
+import { findingAt } from '#cli/checks/result.ts';
 import { trivialFile } from '#cli/checks/structure/statements.ts';
-import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
-import { DEFAULT_DUPLICATE_LINES } from '#cli/constants/checks/swift.ts';
+import { DEFAULT_DUPLICATE_LINES } from '#cli/config/checks/swift.ts';
 import { functionsOf, swiftSources } from '#cli/checks/swift/sources.ts';
-import { duplicateFunctions, trivialFunctions } from '#cli/checks/swift/bodies.ts';
-import { environmentReads, privateBeforePublic } from '#cli/checks/swift/order.ts';
+import { DEFAULT_TRIVIAL_STATEMENTS } from '#cli/config/checks/structure.ts';
+import { trivialFunctions, duplicateFunctions } from '#cli/checks/swift/bodies.ts';
+import type { Engine, Finding, EngineInput, SwiftReader } from '#cli/types/checks.ts';
+import { swiftBuild, swiftAnalyze, swiftPeriphery } from '#cli/checks/swift/build.ts';
+import { importComments, environmentReads, privateBeforePublic } from '#cli/checks/swift/order.ts';
 
 function ownerPaths(input: EngineInput): string[] {
     const env = input.policyFiles.policy.architecture.roles['env'];
@@ -17,14 +19,9 @@ function analysis(read: SwiftReader): (input: EngineInput) => Promise<Finding[]>
         const sources = await swiftSources(input);
         try {
             const problems = read({ sources, functions: sources.flatMap((source) => functionsOf(source)) }, input);
-            return problems.map((entry) => ({
-                check: input.spec.name,
-                file: entry.file,
-                line: entry.line,
-                rule: entry.rule,
-                message: entry.text,
-                fixable: false,
-            }));
+            return problems.map((entry) =>
+                findingAt(input, { file: entry.file, line: entry.line }, entry.rule, entry.text),
+            );
         } finally {
             for (const source of sources) source.tree.delete();
         }
@@ -32,9 +29,9 @@ function analysis(read: SwiftReader): (input: EngineInput) => Promise<Finding[]>
 }
 
 /** The analyses by the name a manifest gives them. */
-export const SWIFT_STRUCTURE: Record<string, (input: EngineInput) => Promise<Finding[]>> = {
+export const SWIFT_STRUCTURE: Record<string, Engine> = {
     'swift-trivial-function': analysis(({ functions, sources }, input) => {
-        const threshold = input.view.limit('trivial_statements', 'swift') ?? 2;
+        const threshold = input.view.limit('trivial_statements', 'swift') ?? DEFAULT_TRIVIAL_STATEMENTS;
         return [
             ...trivialFunctions(functions, threshold),
             ...sources
@@ -54,4 +51,13 @@ export const SWIFT_STRUCTURE: Record<string, (input: EngineInput) => Promise<Fin
     ),
     'swift-private-before-public': analysis(({ sources }) => privateBeforePublic(sources)),
     'swift-env-access-owner': analysis(({ sources }, input) => environmentReads(sources, ownerPaths(input))),
+    'swift-import-comments': analysis(({ sources }) => importComments(sources)),
+};
+
+/** Every swift analysis: the parsed-source ones above, then the ones that run the project's tools. */
+export const SWIFT_ANALYSES: Record<string, Engine> = {
+    ...SWIFT_STRUCTURE,
+    'swift-build': swiftBuild,
+    'swift-analyze': swiftAnalyze,
+    'swift-periphery': swiftPeriphery,
 };

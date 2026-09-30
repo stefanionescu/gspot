@@ -1,14 +1,15 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { run } from '#cli/platform/spawn.ts';
-import { createFileTree, testdir } from 'testdirs';
 import { existsSync, readFileSync } from 'node:fs';
+import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/execution/session.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { applyBlock } from '#cli/lifecycle/managed-blocks.ts';
 import { uninstallCommand } from '#cli/commands/uninstall.ts';
-import { configurationManifests, gitignoreBlock, parseManifest } from '#cli/configurations/manifests.ts';
-import { MANAGED_IGNORES_CONFIGURATION } from '#tests/constants/integration/cli/generation/generation.ts';
+import { kitManifests, parseManifest, gitignoreBlock } from '#cli/kits/manifests.ts';
+import { MANAGED_IGNORES_CONFIGURATION } from '#tests/inputs/integration/cli/generation/generation.ts';
 
 test.each([true, false])(
     'apply waits for Git before managing ignore entries with authored file=%s',
@@ -16,7 +17,7 @@ test.each([true, false])(
         await using repository = await testdir();
         const original = '# Authored entries\nprivate.tmp\n';
         await createFileTree(repository.path, {
-            'gspot.toml': 'version = 1\nconfigurations = []\n[rules]\ninstall = false\n',
+            'gspot.toml': policyOf([], '[guides]\ninstall = false\n'),
             ...(authored ? { '.gitignore': original } : {}),
         });
         await applyAll(await openSession(repository.path));
@@ -33,17 +34,9 @@ test.each([true, false])(
         expect(readFileSync(path, 'utf8')).toBe(installed);
         const removed = await uninstallCommand({ cwd: repository.path, yes: true, isDryRun: false });
         expect(removed.exitCode).toBe(0);
-        expect(existsSync(join(repository.path, '.gspot/state/ownership.json'))).toBe(true);
-        expect(readFileSync(path, 'utf8')).toBe(installed);
-        const retained = await run(['git', 'check-ignore', '--stdin', '-z'], {
-            cwd: repository.path,
-            stdin: '.gspot/state/ownership.json\0.gspot/state/recovery/original\0.gspot/authored.json\0source.md\0',
-        });
-        expect(retained.code, retained.stderr).toBe(0);
-        expect(retained.stdout.split('\0').filter(Boolean)).toStrictEqual([
-            '.gspot/state/ownership.json',
-            '.gspot/state/recovery/original',
-        ]);
+        // Nothing was kept for its edits, so the recovery data and the ignore block leave with the .gspot folder.
+        expect(existsSync(join(repository.path, '.gspot'))).toBe(false);
+        expect(existsSync(path) ? readFileSync(path, 'utf8') : undefined).toBe(authored ? original : undefined);
     },
 );
 
@@ -53,7 +46,7 @@ test('manifest-owned tool directories are ignored while generated rules and auth
         'untracked = [".gspot/local/downloads/"]\n' + MANAGED_IGNORES_CONFIGURATION,
         'configurations/local',
     );
-    const block = gitignoreBlock([...configurationManifests().values(), manifest, manifest]);
+    const block = gitignoreBlock([...kitManifests().values(), manifest, manifest]);
     const authored = '# Authored entries\nprivate.tmp\n';
     const content = applyBlock(authored, block, 'hash');
     await createFileTree(repository.path, { '.gitignore': content });

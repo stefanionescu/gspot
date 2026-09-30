@@ -1,21 +1,21 @@
-import type { LOCKS } from '#cli/constants/tools/packages.ts';
 // The types of tools/packages in this package.
 import type { z } from 'zod';
-import type { FileSnapshot } from '#cli/types/platform.ts';
-import type { packageManagerSchema } from '#cli/tools/packages/manager.ts';
+import type { Read } from '#cli/types/platform.ts';
+import type { LOCKS } from '#cli/config/tools/packages.ts';
+import type { packageToolSchema } from '#cli/tools/packages/identity.ts';
 
 export type ToolProject = {
-    manager: ToolPackageManager;
+    client: PackageTool;
     dependencies: Record<string, string>;
     lock: (typeof LOCKS)[LockName];
     lockPath: string;
 };
-export type Inputs = { project: FileSnapshot; recorded: FileSnapshot; yarn: FileSnapshot | undefined };
-export type ToolPackageManager = z.infer<typeof packageManagerSchema>;
-export type Resolution = {
+export type Inputs = { project: Read; recorded: Read; yarn: Read | undefined };
+export type PackageTool = z.infer<typeof packageToolSchema>;
+export type PackageExecution = {
     root: string;
     work: string;
-    manager: ToolPackageManager;
+    client: PackageTool;
     frozen: boolean;
     env: Record<string, string>;
 };

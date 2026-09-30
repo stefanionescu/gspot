@@ -1,5 +1,4 @@
 // The init command: its flags, the profile's answers, and the run from detection to the written setup.
-import type { z } from 'zod';
 import { Option } from 'commander';
 import type { Command } from 'commander';
 import { hasPolicy } from '#cli/policy/read.ts';
@@ -9,16 +8,15 @@ import { write } from '#cli/commands/init/write.ts';
 import { runnerSchema } from '#cli/policy/runner.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
 import { note, print } from '#cli/output/messages.ts';
-import { hooksSchema } from '#cli/repository/hooks.ts';
 import { prepare } from '#cli/commands/init/prepare.ts';
 import { askConfirmation } from '#cli/commands/prompts.ts';
 import { readProfile } from '#cli/policy/profiles/read.ts';
 import type { Profile } from '#cli/types/policy/profiles.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
-import { initPlanText } from '#cli/commands/init/plan-text.ts';
-import { ALREADY_INSTALLED, UNREADABLE_EXIT } from '#cli/constants/commands/init.ts';
-import { directoryOf, listFlag, textEntry, textFlag } from '#cli/platform/arguments.ts';
-import type { InitOptions, InitPrepared, InitResult } from '#cli/types/commands/init.ts';
+import { initPlanText } from '#cli/commands/init/plan/text.ts';
+import { UNREADABLE_EXIT, ALREADY_INSTALLED } from '#cli/config/commands/init.ts';
+import type { InitResult, InitOptions, InitPrepared } from '#cli/types/commands.ts';
+import { listFlag, textFlag, textEntry, directoryOf } from '#cli/platform/arguments.ts';
 
 // The rules answer a profile gives: yes or no when it says, nothing when it leaves the question open.
 function ruleAnswer(install: boolean | undefined): 'yes' | 'no' | undefined {
@@ -26,40 +24,32 @@ function ruleAnswer(install: boolean | undefined): 'yes' | 'no' | undefined {
     return install ? 'yes' : 'no';
 }
 
-// A profile answers the questions a flag did not: its configurations, hooks, workflow, runner and rule files.
+// A profile answers the questions a flag did not: its kits, hooks, workflow, runner, and guides.
 function profileAnswers(profile: Profile): Partial<InitOptions> {
     const { tables } = profile;
-    const configurations = tables.configurations ?? [];
-    const install = tables.rules?.install;
+    const configurations = tables.kits ?? [];
+    const install = tables.guides?.install;
     return compact({
-        configurations: configurations.length === 0 ? ['none'] : configurations,
-        hooks: tables.hooks === undefined ? 'none' : tables.hooks.tool,
+        kits: configurations.length === 0 ? ['none'] : configurations,
+        hooks: tables.hooks === undefined ? 'none' : 'gspot',
         ci: tables.ci === undefined ? 'none' : tables.ci.provider,
         runner: tables.runner === undefined ? 'none' : tables.runner.tool,
         rules: ruleAnswer(install),
     });
 }
 
-function integrationChoice<Value extends string>(
-    flags: Record<string, unknown>,
-    name: string,
-    schema: z.ZodType<Value>,
-): Value | 'none' | undefined {
-    return flags[name] === false ? 'none' : schema.optional().parse(textFlag(flags, name));
-}
-
 function optionsFrom(flags: Record<string, unknown>, global: Record<string, unknown>): InitOptions {
     const lists = {
-        configurations: listFlag(flags, 'configurations'),
+        kits: listFlag(flags, 'kits'),
         without: listFlag(flags, 'without'),
         scopes: listFlag(flags, 'scope'),
     };
     const choices = {
-        hooks: integrationChoice(flags, 'hooks', hooksSchema.shape.tool),
-        ci: integrationChoice(flags, 'ci', ciSchema.shape.provider),
-        runner: integrationChoice(flags, 'runner', runnerSchema.shape.tool),
-        rules: flags['rules'] === false ? ('no' as const) : undefined,
-        format: textFlag(flags, 'format') as InitOptions['format'],
+        hooks: flags['hooks'] === false ? ('none' as const) : undefined,
+        ci: flags['ci'] === false ? 'none' : ciSchema.shape.provider.optional().parse(textFlag(flags, 'ci')),
+        runner:
+            flags['runner'] === false ? 'none' : runnerSchema.shape.tool.optional().parse(textFlag(flags, 'runner')),
+        rules: flags['guides'] === false ? ('no' as const) : undefined,
     };
     const given: Partial<InitOptions> = Object.fromEntries(
         [...Object.entries(lists), ...Object.entries(choices)].filter(([, value]) => value !== undefined),
@@ -76,7 +66,7 @@ function optionsFrom(flags: Record<string, unknown>, global: Record<string, unkn
     };
 }
 
-// The result of an init that writes nothing: a preview, or a takeover whose configuration could not be read.
+// The result of an init that writes nothing: a preview, or an unreadable configuration file.
 function unwritten(root: string, options: InitOptions, prepared: InitPrepared): InitResult | undefined {
     const { plan, policyText } = prepared;
     if (options.isDryRun) {
@@ -85,7 +75,7 @@ function unwritten(root: string, options: InitOptions, prepared: InitPrepared): 
     }
     if (plan.unread.length === 0) return undefined;
     return {
-        text: 'Cannot apply takeover because configuration could not be read. Fix the listed files and run gspot init again.\n',
+        text: 'A configuration file is unreadable. Fix the listed files and run gspot init again.\n',
         json: { root, plan, error: 'unread-configuration', written: false },
         exitCode: UNREADABLE_EXIT,
     };
@@ -94,7 +84,7 @@ function unwritten(root: string, options: InitOptions, prepared: InitPrepared): 
 /**
  * Runs init: detection, questions, plan, then writes and installs after acceptance.
  * @param options the init flags
- * @returns the text, the JSON report and the exit code
+ * @returns the text, the JSON report, and the exit code
  */
 export async function initCommand(options: InitOptions): Promise<InitResult> {
     const root = findRoot(options.cwd);
@@ -130,32 +120,31 @@ export async function initCommand(options: InitOptions): Promise<InitResult> {
 export function registerInit(program: Command): void {
     program
         .command('init')
-        .summary('Initialize a repository')
-        .description('Read this repository, propose a policy, and write it after a yes')
+        .summary('Set up gspot in a repository')
+        .description('Read the repository, show a plan, and write it when you accept')
         .addHelpText(
             'after',
-            '\nEffects:\nReads the repository and proposes gspot.toml, generated configuration, selected integrations, and private tool installation. Confirmation or --yes applies the proposal. --dry-run writes nothing. Existing authored configuration is adopted or retained according to ownership rules. Run from the repository you want to configure.\n\nExit codes:\n0: the request completed, including a preview or declined confirmation. 2: invalid input or inability to complete the request.\n\nExample:\ngspot init --yes --configurations bash',
+            '\nEffects:\nReads the repository and shows a plan: the policy file, the tool configuration, the guides for coding agents, the Git hooks, and the tool installation. With --yes or your answer, gspot writes the plan and installs the tools. It replaces the configuration files of the selected tools and keeps each original for gspot uninstall. init runs no check. --dry-run writes nothing.\n\nExit codes:\n- 0: the plan was written, shown, or declined.\n- 2: the input was invalid, or init could not finish.\n\nExample:\ngspot init --yes --kits bash',
         )
-        .option('--yes', 'Take every proposal without asking')
-        .option('--from <profile>', 'Install from a profile: a path, an https URL or github:owner/repo')
-        .option('--configurations <configurations...>', 'The root configurations instead of the detected ones')
-        .option('--without <configurations...>', 'Configurations to leave out of the proposal')
-        .option('--scope <path=configurations...>', 'Scopes and their comma-separated configurations')
-        .option('--no-install', 'Skip the install step and print the command instead')
-        .option('--allow-dirty', 'Run although the working tree has uncommitted changes')
-        .addOption(new Option('--hooks <tool>', 'Where hooks go').choices(hooksSchema.shape.tool.options))
-        .addOption(new Option('--ci <provider>', 'Write a CI workflow').choices(ciSchema.shape.provider.options))
-        .option('--no-hooks', 'Do not install hooks')
-        .option('--no-ci', 'Write no CI workflow')
-        .option('--no-rules', 'Leave the agent rule files out')
+        .option('--yes', 'Accept the plan without asking')
+        .option('--from <profile>', 'Start from a profile: a path, an https URL, or github:owner/repo')
+        .option('--kits <kits...>', 'Use these kits at the root instead of the detected ones')
+        .option('--without <kits...>', 'Leave these kits out of the plan')
+        .option('--scope <path=kits...>', 'Add scopes, each as a path and its comma-separated kits')
+        .option('--no-install', 'Skip installing the tools and print the install command')
+        .option('--allow-dirty', 'Run even when the working tree has uncommitted changes')
         .addOption(
-            new Option('--format <choice>', 'Keep existing or use shipped formatter settings').choices([
-                'keep',
-                'shipped',
-            ]),
+            new Option('--ci <provider>', 'Write a CI workflow for this provider').choices(
+                ciSchema.shape.provider.options,
+            ),
         )
-        .addOption(new Option('--runner <tool>', 'The task runner').choices(runnerSchema.shape.tool.options))
-        .option('--no-runner', 'Write no task-runner configuration')
+        .option('--no-hooks', 'Install no Git hooks')
+        .option('--no-ci', 'Write no CI workflow')
+        .option('--no-guides', 'Install no guides for coding agents')
+        .addOption(
+            new Option('--runner <tool>', 'Add gspot to this task runner').choices(runnerSchema.shape.tool.options),
+        )
+        .option('--no-runner', 'Add gspot to no task runner')
         .option('--dry-run', 'Print the plan and write nothing')
         .action(async (flags: Record<string, unknown>, command: Command) => {
             const global = command.optsWithGlobals();

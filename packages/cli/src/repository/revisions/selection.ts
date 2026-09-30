@@ -1,21 +1,10 @@
 // Staged files for the commit stage, and the honest note about unstaged changes.
 import { run } from '#cli/platform/spawn.ts';
-import { SelectionError } from '#cli/configurations/select.ts';
-import { GIT_TIMEOUT_MS } from '#cli/constants/checks/secrets.ts';
-import { CHANGED_PATHS } from '#cli/constants/repository/revisions.ts';
-import type { ChangedSet, StagedSet } from '#cli/types/repository/revisions.ts';
+import { GspotError } from '#cli/platform/errors.ts';
+import { GIT_TIMEOUT_MS } from '#cli/config/checks/security.ts';
+import { CHANGED_PATHS } from '#cli/config/repository/revisions.ts';
+import type { StagedSet, ChangedSet } from '#cli/types/repository/revisions.ts';
 import { gitLines, gitPaths, gitValue, isShallow } from '#cli/repository/revisions/git-queries.ts';
-
-// The paths with unstaged or uncommitted changes in the working tree.
-async function workingPaths(root: string, cancelSignal?: AbortSignal): Promise<string[]> {
-    return gitPaths(root, CHANGED_PATHS, cancelSignal);
-}
-
-// The upstream of the current branch, or '' when it has none.
-async function upstreamOf(root: string, cancelSignal?: AbortSignal): Promise<string> {
-    const head = await gitValue(root, ['rev-parse', '--symbolic-full-name', 'HEAD'], cancelSignal);
-    return gitValue(root, ['for-each-ref', '--format=%(upstream)', '--', head], cancelSignal);
-}
 
 // The remote HEAD symrefs, as pairs of the ref name and the branch it points to.
 async function remoteHeads(root: string, cancelSignal?: AbortSignal): Promise<[string, string][]> {
@@ -31,15 +20,15 @@ async function remoteHeads(root: string, cancelSignal?: AbortSignal): Promise<[s
     });
 }
 
-// The ref a comparison falls back to: the upstream, origin's default branch, or the one remote's default branch.
+// The upstream or remote default branch, or an empty string when neither exists.
 async function defaultReference(root: string, cancelSignal?: AbortSignal): Promise<string> {
-    const upstream = await upstreamOf(root, cancelSignal);
+    const head = await gitValue(root, ['rev-parse', '--symbolic-full-name', 'HEAD'], cancelSignal);
+    const upstream = await gitValue(root, ['for-each-ref', '--format=%(upstream)', '--', head], cancelSignal);
     if (upstream !== '') return upstream;
     const heads = await remoteHeads(root, cancelSignal);
     const preferred =
         heads.find(([name]) => name === 'refs/remotes/origin/HEAD') ?? (heads.length === 1 ? heads[0] : undefined);
-    if (preferred !== undefined) return preferred[1];
-    throw new SelectionError(['No upstream or default branch is available; use --changed=<ref>.']);
+    return preferred?.[1] ?? '';
 }
 
 // The merge base of a ref and HEAD, with a note about cut history when the repository is shallow.
@@ -51,7 +40,7 @@ async function mergeBase(root: string, compared: string, cancelSignal?: AbortSig
     });
     if (base.code === 0) return base.stdout.trim();
     const help = (await isShallow(root, cancelSignal)) ? ' History is cut; run git fetch --unshallow.' : '';
-    throw new SelectionError([`Git merge-base failed for ${compared}: ${base.stderr.trim()}.${help}`]);
+    throw new GspotError('selection', [`Git merge-base failed for ${compared}: ${base.stderr.trim()}.${help}`]);
 }
 
 /**
@@ -67,7 +56,7 @@ export async function stagedFiles(root: string, cancelSignal?: AbortSignal): Pro
         cancelSignal,
     );
     const staged = cached.toSorted((a, b) => a.localeCompare(b));
-    const dirty = new Set(await workingPaths(root, cancelSignal));
+    const dirty = new Set(await gitPaths(root, CHANGED_PATHS, cancelSignal));
     return { staged, unstaged: staged.filter((path) => dirty.has(path)).length };
 }
 
@@ -80,9 +69,12 @@ export async function stagedFiles(root: string, cancelSignal?: AbortSignal): Pro
  */
 export async function changedFiles(root: string, reference: string, cancelSignal?: AbortSignal): Promise<ChangedSet> {
     const compared = reference === '' ? await defaultReference(root, cancelSignal) : reference;
+    if (compared === '') {
+        throw new GspotError('selection', ['No upstream or default branch is available; use --changed=<ref>.']);
+    }
     const merged = await mergeBase(root, compared, cancelSignal);
     const committed = await gitPaths(root, [...CHANGED_PATHS, merged, '--'], cancelSignal);
-    const working = await workingPaths(root, cancelSignal);
+    const working = await gitPaths(root, CHANGED_PATHS, cancelSignal);
     return {
         reference: compared,
         paths: [...new Set([...committed, ...working])].toSorted((a, b) => a.localeCompare(b)),
@@ -90,14 +82,14 @@ export async function changedFiles(root: string, reference: string, cancelSignal
 }
 
 /**
- * Where a push starts: the merge base with the upstream branch, or the root commit when the branch has none.
+ * Compare a push with its upstream or remote default. Without either, start at the root commit.
  * @param root the repository root
  * @param cancelSignal cancellation for the Git commands
  * @returns the commit the pushed range starts after
  */
 export async function pushBase(root: string, cancelSignal?: AbortSignal): Promise<string> {
-    const upstream = await upstreamOf(root, cancelSignal);
-    if (upstream !== '') return gitValue(root, ['merge-base', '--', 'HEAD', upstream], cancelSignal);
+    const compared = await defaultReference(root, cancelSignal);
+    if (compared !== '') return mergeBase(root, compared, cancelSignal);
     const roots = await gitLines(root, ['rev-list', '--max-parents=0', 'HEAD'], cancelSignal);
     const first = roots.at(-1);
     if (first === undefined || first === '') throw new Error('Git did not return a root commit for HEAD.');

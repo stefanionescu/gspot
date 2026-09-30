@@ -1,31 +1,12 @@
+// The checks that read the schema the migrations build: row security, grants, definer functions, and foreign key indexes.
+import { findingAt } from '#cli/checks/result.ts';
 import { nodesOf } from '#cli/parsers/sql/parser.ts';
 import { positionAt } from '#cli/parsers/sql/statements.ts';
-import type { Declared } from '#cli/types/checks/postgres.ts';
-// The checks that read the schema the migrations build: row security, grants, definer functions and foreign key indexes.
+import { schema } from '#cli/checks/postgres/schema/fields.ts';
+import type { Finding, EngineInput } from '#cli/types/checks.ts';
+import { DEFAULT_SCHEMA } from '#cli/config/checks/platforms.ts';
 import { migrationsOf } from '#cli/checks/postgres/migrations.ts';
-import { DEFAULT_SCHEMA } from '#cli/constants/checks/postgres.ts';
-import { schemaFacts } from '#cli/checks/postgres/schema/facts.ts';
-import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 import type { SqlNode, SqlStatementView } from '#cli/types/parsers/sql.ts';
-
-function finding(input: EngineInput, at: Declared, rule: string, text: string): Finding {
-    return {
-        check: input.spec.name,
-        file: at.path,
-        ...positionAt(at.text, at.offset),
-        rule,
-        message: text,
-        fixable: false,
-    };
-}
-
-function isGrantAll(statement: SqlStatementView): boolean {
-    return (
-        statement.kind === 'GrantStmt' &&
-        statement.fields['is_grant'] === true &&
-        statement.fields['privileges'] === undefined
-    );
-}
 
 function isLooseDefiner(statement: SqlStatementView): boolean {
     if (statement.kind !== 'CreateFunctionStmt') return false;
@@ -55,7 +36,7 @@ async function statementFindings(
         migration.statements
             .filter((statement) => isWrong(statement))
             .map((statement) =>
-                finding(input, { path: migration.path, offset: statement.start, text: migration.text }, rule, text),
+                findingAt(input, { file: migration.path, ...positionAt(migration.text, statement.start) }, rule, text),
             ),
     );
 }
@@ -66,35 +47,36 @@ async function statementFindings(
  * @returns the findings
  */
 export async function rlsPresent(input: EngineInput): Promise<Finding[]> {
-    const facts = schemaFacts(await migrationsOf(input));
+    const fields = schema(await migrationsOf(input));
     const schemas = new Set(
         (input.view.tool('postgres')['client_schemas'] as string[] | undefined) ?? [DEFAULT_SCHEMA],
     );
-    return facts.tables
+    return fields.tables
         .entries()
         .filter(([table]) => schemas.has(table.slice(0, table.indexOf('.'))))
         .flatMap(([table, at]): Finding[] => {
-            if (!facts.secured.has(table))
-                return [finding(input, at, 'row-security', `${table} does not have row level security enabled.`)];
-            if (facts.policed.has(table)) return [];
-            return [finding(input, at, 'policy', `${table} enables row level security and has no policy.`)];
+            const place = { file: at.path, ...positionAt(at.text, at.offset) };
+            if (!fields.secured.has(table))
+                return [findingAt(input, place, 'row-security', `${table} does not have row level security enabled.`)];
+            if (fields.policed.has(table)) return [];
+            return [findingAt(input, place, 'policy', `${table} enables row level security and has no policy.`)];
         })
         .toArray();
 }
 
 /**
- * One finding for each foreign key column that no index, primary key or unique key leads with.
+ * One finding for each foreign key column that no index, primary key, or unique key leads with.
  * @param input the engine input
  * @returns the findings
  */
 export async function foreignKeyIndexes(input: EngineInput): Promise<Finding[]> {
-    const facts = schemaFacts(await migrationsOf(input));
-    return facts.foreignKeys
-        .filter((key) => facts.indexed.get(key.table)?.has(key.column) !== true)
+    const fields = schema(await migrationsOf(input));
+    return fields.foreignKeys
+        .filter((key) => fields.indexed.get(key.table)?.has(key.column) !== true)
         .map((key) =>
-            finding(
+            findingAt(
                 input,
-                key,
+                { file: key.path, ...positionAt(key.text, key.offset) },
                 'foreign-key-index',
                 `${key.table}.${key.column} is a foreign key and no index leads with it.`,
             ),
@@ -106,12 +88,19 @@ export async function foreignKeyIndexes(input: EngineInput): Promise<Finding[]> 
  * @param input the engine input
  * @returns the findings
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The entry point of the postgres-grants check, which the analysis table names.
 export function explicitGrants(input: EngineInput): Promise<Finding[]> {
     return statementFindings(
         input,
         'grant-all',
         'GRANT ALL gives every privilege, present and future; name the privileges.',
-        isGrantAll,
+        (statement: SqlStatementView): boolean => {
+            return (
+                statement.kind === 'GrantStmt' &&
+                statement.fields['is_grant'] === true &&
+                statement.fields['privileges'] === undefined
+            );
+        },
     );
 }
 
@@ -120,6 +109,7 @@ export function explicitGrants(input: EngineInput): Promise<Finding[]> {
  * @param input the engine input
  * @returns the findings
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The entry point of the postgres-definer check, which the analysis table names.
 export function definerSearchPath(input: EngineInput): Promise<Finding[]> {
     const text =
         'A SECURITY DEFINER function sets no search_path, so a caller chooses which objects its names resolve to.';

@@ -1,23 +1,24 @@
 // The file set: what git tracks or is about to track, or a gitignore-honoring walk without git.
-import ignore, { type Ignore } from 'ignore';
-import { dirname, join, resolve } from 'node:path';
+import ignore from 'ignore';
+import type { Dirent } from 'node:fs';
+import { join, dirname, resolve } from 'node:path';
 import { runBlocking } from '#cli/platform/spawn.ts';
+import { openRoot } from '#cli/platform/filesystem.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
 import type { SpawnResult } from '#cli/types/platform.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import { LIFECYCLE_PRIVATE_PATH } from '#cli/constants/platform.ts';
-import type { RawEntry, SourceObservations } from '#cli/types/repository/repository.ts';
-import { lstatSync, statSync, openSync, readSync, closeSync, readFileSync, readdirSync } from 'node:fs';
+import { LIFECYCLE_PRIVATE_PATH } from '#cli/config/platform.ts';
+import type { RawEntry, PathIgnore, SourceReads } from '#cli/types/repository/repository.ts';
+import { openSync, readSync, statSync, closeSync, lstatSync, readdirSync, readFileSync } from 'node:fs';
 
 import {
-    DEPENDENCY_FOLDERS,
     EXECUTABLE_BITS,
     NATURE_HEAD_BYTES,
+    DEPENDENCY_FOLDERS,
     NOT_REPOSITORY_CODE,
-} from '#cli/constants/repository/repository.ts';
+} from '#cli/config/repository/repository.ts';
 
 function symlinkEntry(root: string, path: string): RawEntry | undefined {
-    const files = openConfinedRoot(root, 'native');
+    const files = openRoot(root, 'native');
     try {
         const target = statSync(files.source(path));
         return target.isDirectory() ? undefined : { path, size: target.size, executable: false, symlink: true };
@@ -29,13 +30,22 @@ function symlinkEntry(root: string, path: string): RawEntry | undefined {
     }
 }
 
+// A listed file whose parent is now a file is reported the same way on every platform.
+function assertParents(root: string, path: string): void {
+    const parts = path.split('/').slice(0, -1);
+    const parents = parts.map((_, index) => parts.slice(0, index + 1).join('/')).toReversed();
+    const nearest = parents.find((parent) => lstatSync(join(root, parent), { throwIfNoEntry: false }) !== undefined);
+    if (nearest === undefined || lstatSync(join(root, nearest)).isDirectory()) return;
+    throw Object.assign(new Error(`ENOTDIR: not a directory, lstat '${join(root, path)}' (${nearest} is a file)`), {
+        code: 'ENOTDIR',
+    });
+}
+
 function entryFor(root: string, path: string): RawEntry | undefined {
     const full = join(root, path);
-    let stat;
-    try {
-        stat = lstatSync(full);
-    } catch (error) {
-        if (!(error instanceof Error && 'code' in error && error.code === 'ENOENT')) throw error;
+    const stat = lstatSync(full, { throwIfNoEntry: false });
+    if (stat === undefined) {
+        assertParents(root, path);
         return undefined;
     }
     if (stat.isSymbolicLink()) {
@@ -66,6 +76,7 @@ function hasGitEntry(directory: string): boolean {
     return parent !== directory && hasGitEntry(parent);
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Five readers ask git once; the default parameter carries the inspection for the caller that has it.
 function isOutsideGit(
     root: string,
     inspection: SpawnResult = runBlocking(['git', 'rev-parse', '--is-inside-work-tree'], {
@@ -80,31 +91,47 @@ function isOutsideGit(
     );
 }
 
+function directoryContents(
+    root: string,
+    directory: string,
+    inherited: PathIgnore[],
+): { entries: Dirent[]; rules: PathIgnore[] } {
+    const entries = readdirSync(join(root, directory), { withFileTypes: true });
+    const rules = [...inherited];
+    if (entries.some((entry) => entry.name === '.gitignore' && entry.isFile())) {
+        rules.push({
+            base: directory,
+            matcher: ignore().add(readSource(root, `${directory}.gitignore`).toString('utf8')),
+        });
+    }
+    return { entries, rules };
+}
+
+function isIgnored(candidate: string, rules: PathIgnore[]): boolean {
+    let ignored = false;
+    for (const { base, matcher } of rules) {
+        const result = matcher.test(candidate.slice(base.length));
+        if (result.ignored) ignored = true;
+        else if (result.unignored) ignored = false;
+    }
+    return ignored;
+}
+
 function walkPaths(root: string): string[] {
     const paths: string[] = [];
-    const pending: { directory: string; rules: { base: string; matcher: Ignore }[] }[] = [{ directory: '', rules: [] }];
+    const pending: { directory: string; rules: PathIgnore[] }[] = [{ directory: '', rules: [] }];
     for (let next = pending.pop(); next !== undefined; next = pending.pop()) {
-        const { directory, rules } = next;
-        const entries = readdirSync(join(root, directory), { withFileTypes: true });
-        const localRules = [...rules];
-        if (entries.some((entry) => entry.name === '.gitignore' && entry.isFile())) {
-            localRules.push({
-                base: directory,
-                matcher: ignore().add(readSource(root, `${directory}.gitignore`).toString('utf8')),
-            });
-        }
-        for (const entry of entries) {
-            if (entry.name === '.git' || entry.isSymbolicLink()) continue;
+        const { directory } = next;
+        const { entries, rules } = directoryContents(root, directory, next.rules);
+        const retained = entries.filter((entry) => {
+            if (entry.name === '.git' || entry.isSymbolicLink()) return false;
             const path = `${directory}${entry.name}`;
             const candidate = entry.isDirectory() ? `${path}/` : path;
-            let ignored = false;
-            for (const { base, matcher } of localRules) {
-                const result = matcher.test(candidate.slice(base.length));
-                if (result.ignored) ignored = true;
-                else if (result.unignored) ignored = false;
-            }
-            if (ignored || LIFECYCLE_PRIVATE_PATH.test(path.normalize('NFC'))) continue;
-            if (entry.isDirectory()) pending.push({ directory: candidate, rules: localRules });
+            return !isIgnored(candidate, rules) && !LIFECYCLE_PRIVATE_PATH.test(path.normalize('NFC'));
+        });
+        for (const entry of retained) {
+            const path = `${directory}${entry.name}`;
+            if (entry.isDirectory()) pending.push({ directory: `${path}/`, rules });
             else if (entry.isFile()) paths.push(path);
         }
     }
@@ -195,7 +222,7 @@ export function submodulePaths(root: string): string[] {
  * Tracked and about-to-be-tracked files, root-relative posix, sorted. Falls back to a gitignore walk without git.
  * @param root the repository root
  * @param exclude the paths to leave out
- * @returns the entries with size, executable bit and symlink flag
+ * @returns the entries with size, executable bit, and symlink flag
  */
 export function trackedEntries(root: string, exclude: string[] = []): RawEntry[] {
     const paths = listedPaths(root);
@@ -224,7 +251,7 @@ export function trackedEntries(root: string, exclude: string[] = []): RawEntry[]
  */
 export function readPrefix(root: string, path: string, bytes: number): Buffer {
     const buffer = Buffer.alloc(bytes);
-    const files = openConfinedRoot(root, 'native');
+    const files = openRoot(root, 'native');
     let source: string;
     try {
         source = files.source(path);
@@ -246,32 +273,33 @@ export function readPrefix(root: string, path: string, bytes: number): Buffer {
 }
 
 /**
- * The first bytes of required file content as text, for shebang and banner checks.
+ * Required file prefixes decoded as text for shebang and banner checks.
  * @param root the repository root
  * @param path the file, relative to the root
  * @param bytes how many bytes to read
  * @returns the text
  * @throws when required content cannot be read
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Doctor and the tracked-file tests read the opening bytes of a file as text through this.
 export function head(root: string, path: string, bytes = NATURE_HEAD_BYTES): string {
     return readPrefix(root, path, bytes).toString('utf8');
 }
 
 /**
- * Read required content, reusing source bytes only within the observed repository.
+ * Read required content, reusing source bytes only within the read repository.
  * @param root the directory being read
  * @param path the source path relative to that directory
- * @param observations optional run-owned bytes; isolated generated output remains fresh
+ * @param reads optional run-owned bytes; isolated generated output remains fresh
  * @returns the file bytes
  */
-export function readSource(root: string, path: string, observations?: SourceObservations): Buffer {
-    const observed = observations?.root === root ? observations.sources : undefined;
-    const held = observed?.get(path);
+export function readSource(root: string, path: string, reads?: SourceReads): Buffer {
+    const read = reads?.root === root ? reads.sources : undefined;
+    const held = read?.get(path);
     if (held !== undefined) return held;
-    const files = openConfinedRoot(root, 'native');
+    const files = openRoot(root, 'native');
     try {
         const bytes = readFileSync(files.source(path));
-        observed?.set(path, bytes);
+        read?.set(path, bytes);
         return bytes;
     } finally {
         files.close();

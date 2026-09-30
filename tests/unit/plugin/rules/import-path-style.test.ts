@@ -7,11 +7,18 @@ tester().run('import-path-style', importPathStyle, {
         { code: "import { a } from '@/a.js';", options: [{ style: 'js' }] },
         { code: "import { a } from 'package';", options: [{ style: 'js' }] },
         { code: "import data from './data.json';", options: [{ style: 'js' }] },
+        { code: 'import manifest from "#manifest" with { type: "json" };', options: [{ style: 'ts' }] },
+        { code: 'export { default } from "#manifest" with { "type": "json" };', options: [{ style: 'js' }] },
         { code: "import { a } from './a.ts';", options: [{ style: 'ts' }] },
         { code: "import { a } from './a';", options: [{ style: 'extensionless' }] },
         { code: "import { a } from '~/a';", options: [{ style: 'js', internalPrefixes: ['./'] }] },
     ],
     invalid: [
+        {
+            code: 'import manifest from "#manifest" with { type: "json" }; import { value } from "./owner";',
+            options: [{ style: 'ts' }],
+            errors: [{ messageId: 'ts', data: { source: './owner' } }],
+        },
         {
             code: "import { a } from './a';",
             options: [{ style: 'js' }],

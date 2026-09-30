@@ -1,25 +1,21 @@
+// The tree-sitter parsers the extractors use, loaded once per process from the embedded grammars.
 import { readFileSync } from 'node:fs';
 import { grammarPath } from '#cli/platform/assets.ts';
-// The tree-sitter parsers the extractors use, loaded once per process from the embedded grammars.
-import { Language, Parser, type Tree } from 'web-tree-sitter';
-import { DECLARATION_FILE } from '#cli/constants/parsers/parsers.ts';
-import type { SourceObservations } from '#cli/types/repository/repository.ts';
-import type { GrammarName, ParseContext } from '#cli/types/parsers/parsers.ts';
+import { Parser, Language, type Tree } from 'web-tree-sitter';
+import { DECLARATION_FILE } from '#cli/config/parsers/parsers.ts';
+import type { SourceReads } from '#cli/types/repository/repository.ts';
+import type { ParseReads, GrammarName } from '#cli/types/parsers/parsers.ts';
 
-const observations = new WeakMap<SourceObservations, Map<string, Tree>>();
+const reads = new WeakMap<SourceReads, Map<string, Tree>>();
 
 const state: { isReady: Promise<void> | undefined; parsers: Map<GrammarName, Promise<Parser>> } = {
     isReady: undefined,
     parsers: new Map(),
 };
 
-function ready(): Promise<void> {
-    state.isReady ??= Parser.init({ wasmBinary: readFileSync(grammarPath('web-tree-sitter.wasm')) });
-    return state.isReady;
-}
-
 async function build(name: GrammarName): Promise<Parser> {
-    await ready();
+    state.isReady ??= Parser.init({ wasmBinary: readFileSync(grammarPath('web-tree-sitter.wasm')) });
+    await state.isReady;
     const language = await Language.load(readFileSync(grammarPath(`${name}.wasm`)));
     const parser = new Parser();
     parser.setLanguage(language);
@@ -42,18 +38,18 @@ export function parserFor(name: GrammarName): Promise<Parser> {
 
 /**
  * Shares a run-owned parse while giving each reader its own disposable tree handle.
- * @param name the grammar that gives the source its meaning
- * @param text the exact source to parse
- * @param context execution observations and their existing resource owner, when running checks
- * @returns a caller-owned tree copy, or null when parsing cannot produce a tree
+ * @param name the grammar that gives the source its meaning.
+ * @param text the exact source to parse.
+ * @param context execution reads and their existing resource owner, when running checks.
+ * @returns a caller-owned tree copy, or null when parsing cannot produce a tree.
  */
-export async function parseSource(name: GrammarName, text: string, context?: ParseContext): Promise<Tree | null> {
+export async function parseSource(name: GrammarName, text: string, context?: ParseReads): Promise<Tree | null> {
     const parser = await parserFor(name);
     if (context?.resources === undefined) return parser.parse(text);
-    let trees = observations.get(context.observations);
+    let trees = reads.get(context.reads);
     if (trees === undefined) {
         trees = new Map();
-        observations.set(context.observations, trees);
+        reads.set(context.reads, trees);
     }
     const key = JSON.stringify([name, text]);
     const held = trees.get(key);
@@ -71,7 +67,7 @@ export async function parseSource(name: GrammarName, text: string, context?: Par
 /**
  * The grammar a file is read with, from its extension.
  * @param path the file path
- * @param language the language configuration the file belongs to
+ * @param language the language kit the file belongs to
  * @returns the grammar, or undefined when no extractor exists for it
  */
 export function grammarFor(path: string, language: string): GrammarName | undefined {

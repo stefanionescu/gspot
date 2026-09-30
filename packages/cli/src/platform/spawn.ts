@@ -1,11 +1,20 @@
-import { onExit } from 'signal-exit';
 // Execa owns capture and platform shims; this boundary supervises each asynchronous process tree.
-import { execa, execaSync, type Result } from 'execa';
+import { statSync } from 'node:fs';
+import { onExit } from 'signal-exit';
+import { execa, execaSync } from 'execa';
 import type { ChildProcess } from 'node:child_process';
-import { delimiter, dirname, isAbsolute } from 'node:path';
+import { dirname, resolve, delimiter, isAbsolute } from 'node:path';
 import { environmentVariables } from '#cli/platform/environment.ts';
-import type { AsyncSpawnOptions, BinarySpawnResult, SpawnOptions, SpawnResult } from '#cli/types/platform.ts';
-import { DRAIN_MS, FAILED_CODE, MISSING_CODE, REAP_MS, TASKKILL_GONE_CODE } from '#cli/constants/platform.ts';
+import { REAP_MS, DRAIN_MS, FAILED_CODE, MISSING_CODE, TASKKILL_GONE_CODE } from '#cli/config/platform.ts';
+
+import type {
+    SpawnResult,
+    SpawnOptions,
+    SpawnCompletion,
+    AsyncSpawnOptions,
+    BinarySpawnResult,
+    ProcessTermination,
+} from '#cli/types/platform.ts';
 
 function commandOptions(options: SpawnOptions, executable: string) {
     const env = { ...environmentVariables(), ...options.env };
@@ -25,23 +34,51 @@ function commandOptions(options: SpawnOptions, executable: string) {
     };
 }
 
-function completed(
-    result: Pick<
-        Result<{ encoding: 'utf8'; reject: false }>,
-        'code' | 'exitCode' | 'failed' | 'shortMessage' | 'stdout' | 'stderr' | 'timedOut' | 'isCanceled'
-    >,
-    started: number,
-    diagnostic = result.stderr,
-): SpawnResult {
+// A command that names a file which does not exist. A bare name is left to PATH lookup at spawn time.
+function missingExecutable(executable: string, cwd: string): boolean {
+    if (!/[\\/]/u.test(executable)) return false;
+    const path = resolve(cwd, executable);
+    // Windows names an executable without its extension; the spawn shim tries each PATHEXT entry in turn.
+    const extensions =
+        process.platform === 'win32' ? (environmentVariables()['PATHEXT'] ?? '.COM;.EXE;.BAT;.CMD').split(';') : [];
+    return [path, ...extensions.map((extension) => path + extension.toLowerCase())].every(
+        (candidate) => statSync(candidate, { throwIfNoEntry: false }) === undefined,
+    );
+}
+
+// The result of a command whose executable file does not exist, decided before any process starts.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The three run functions share the shape of a command that never started.
+function notFound(executable: string): SpawnCompletion {
+    return {
+        code: 'ENOENT',
+        failed: true,
+        shortMessage: `Executable not found: ${executable}`,
+        stdout: '',
+        stderr: '',
+        timedOut: false,
+        isCanceled: false,
+    };
+}
+
+// A process that never ran, or that a launch or stream error stopped, is an execution error and not a verdict.
+function failedToRun(result: SpawnCompletion): boolean {
+    if (result.exitCode === undefined) return true;
+    if (result.code !== undefined) return true;
+    return result.cause !== undefined;
+}
+
+function completed(result: SpawnCompletion, started: number, diagnostic: string): SpawnResult {
     const missing = result.code === 'ENOENT';
-    const isErrored = result.failed && (result.exitCode === undefined || result.code !== undefined);
+    const unfinished = failedToRun(result);
+    const isErrored = result.failed && unfinished;
     const code = missing ? MISSING_CODE : (result.exitCode ?? FAILED_CODE);
-    const failure = result.exitCode === undefined && result.failed ? result.shortMessage : undefined;
-    const stderr = failure === undefined ? diagnostic : [diagnostic, failure].filter(Boolean).join('\n');
+    const diagnostics: (string | undefined)[] = [diagnostic];
+    // Successful Execa results always contain exit code zero.
+    if (unfinished) diagnostics.push(result.shortMessage);
     return {
         code: isErrored && code === 0 ? FAILED_CODE : code,
         stdout: result.stdout,
-        stderr,
+        stderr: diagnostics.filter(Boolean).join('\n'),
         missing,
         duration: performance.now() - started,
         isTimedOut: result.timedOut,
@@ -50,55 +87,55 @@ function completed(
     };
 }
 
+function terminate(child: ChildProcess, state: ProcessTermination): void {
+    if (state.stopped || child.pid === undefined) return;
+    state.stopped = true;
+    try {
+        if (process.platform === 'win32') {
+            const result = execaSync('taskkill', ['/pid', String(child.pid), '/T', '/F'], {
+                reject: false,
+                timeout: DRAIN_MS,
+            });
+            const code = result.exitCode ?? FAILED_CODE;
+            if (![0, TASKKILL_GONE_CODE].includes(code))
+                throw new Error(`Cannot terminate the tool process tree: ${result.stderr}`);
+        } else process.kill(-child.pid, 'SIGKILL');
+    } catch (error) {
+        if ((error as NodeJS.ErrnoException).code !== 'ESRCH') state.failure = error as Error;
+    }
+    child.kill('SIGKILL');
+    state.drainTimer = setTimeout(() => {
+        const error = new Error('Tool output did not close within 5 seconds after termination.');
+        for (const stream of child.stdio) stream?.destroy(error);
+    }, DRAIN_MS);
+}
+
 function supervise(child: ChildProcess, options: AsyncSpawnOptions) {
     const state = { isTimedOut: false, isCanceled: false };
-    let failure: Error | undefined;
-    let stopped = false;
-    let drainTimer: ReturnType<typeof setTimeout> | undefined;
-    const stopTree = () => {
-        if (stopped || child.pid === undefined) return;
-        stopped = true;
-        try {
-            if (process.platform === 'win32') {
-                const result = execaSync('taskkill', ['/pid', String(child.pid), '/T', '/F'], {
-                    reject: false,
-                    timeout: DRAIN_MS,
-                });
-                if (result.exitCode !== 0 && result.exitCode !== TASKKILL_GONE_CODE)
-                    throw new Error(`Cannot terminate the tool process tree: ${result.stderr}`);
-            } else process.kill(-child.pid, 'SIGKILL');
-        } catch (error) {
-            if ((error as NodeJS.ErrnoException).code !== 'ESRCH')
-                failure = error instanceof Error ? error : new Error('Cannot terminate the tool process tree.');
-        }
-        child.kill('SIGKILL');
-        drainTimer = setTimeout(() => {
-            const error = new Error('Tool output did not close within 5 seconds after termination.');
-            for (const stream of child.stdio) stream?.destroy(error);
-        }, DRAIN_MS);
-    };
+    const termination: ProcessTermination = { stopped: false, failure: undefined, drainTimer: undefined };
+    const stopTree = terminate.bind(undefined, child, termination);
     const cancel = () => {
-        if (stopped) return;
+        if (termination.stopped) return;
         state.isCanceled = true;
         stopTree();
     };
-    const removeExitHandler = onExit(stopTree);
+    const removeExitListener = onExit(stopTree);
     const timer =
         options.timeoutMs === undefined || options.timeoutMs === 0
             ? undefined
             : setTimeout(() => {
-                  if (stopped) return;
+                  if (termination.stopped) return;
                   state.isTimedOut = true;
                   stopTree();
               }, options.timeoutMs);
     let exitCleanup: Promise<void> | undefined;
     const exited = () => {
         clearTimeout(timer);
-        exitCleanup = new Promise((resolve) => {
+        exitCleanup = new Promise((complete) => {
             setTimeout(() => {
                 if (process.platform !== 'win32') stopTree();
-                stopped = true;
-                resolve();
+                termination.stopped = true;
+                complete();
             }, REAP_MS);
         });
     };
@@ -111,15 +148,18 @@ function supervise(child: ChildProcess, options: AsyncSpawnOptions) {
         async dispose(executionFailure: Error | undefined) {
             await exitCleanup;
             clearTimeout(timer);
-            clearTimeout(drainTimer);
-            removeExitHandler();
+            clearTimeout(termination.drainTimer);
+            removeExitListener();
             options.cancelSignal?.removeEventListener('abort', cancel);
             child.removeListener('exit', exited);
             for (const stream of child.stdio) stream?.removeListener('error', stopTree);
-            if (failure !== undefined) {
+            if (termination.failure !== undefined) {
                 if (executionFailure !== undefined)
-                    throw new AggregateError([executionFailure, failure], 'Tool execution and process cleanup failed.');
-                throw failure;
+                    throw new AggregateError(
+                        [executionFailure, termination.failure],
+                        'Tool execution and process cleanup failed.',
+                    );
+                throw termination.failure;
             }
         },
     };
@@ -135,6 +175,7 @@ export async function run(command: string[], options: AsyncSpawnOptions): Promis
     const started = performance.now();
     const [executable, ...argv] = command;
     if (executable === undefined) throw new Error('An empty command cannot run.');
+    if (missingExecutable(executable, options.cwd)) return completed(notFound(executable), started, '');
     const base = commandOptions(options, executable);
     const child = execa(executable, argv, { ...base, detached: process.platform !== 'win32' });
     const supervision = supervise(child, options);
@@ -144,7 +185,7 @@ export async function run(command: string[], options: AsyncSpawnOptions): Promis
     try {
         const result = await child;
         if (result.failed) executionFailure = new Error(result.shortMessage);
-        return { ...completed(result, started), ...supervision.state };
+        return { ...completed(result, started, result.stderr), ...supervision.state };
     } catch (error) {
         executionFailure = error instanceof Error ? error : new Error(String(error));
         throw error;
@@ -163,8 +204,10 @@ export function runBlocking(command: string[], options: SpawnOptions): SpawnResu
     const started = performance.now();
     const [executable, ...argv] = command;
     if (executable === undefined) throw new Error('An empty command cannot run.');
+    if (missingExecutable(executable, options.cwd)) return completed(notFound(executable), started, '');
     const deadline = options.timeoutMs === undefined ? {} : { timeout: options.timeoutMs };
-    return completed(execaSync(executable, argv, { ...commandOptions(options, executable), ...deadline }), started);
+    const result = execaSync(executable, argv, { ...commandOptions(options, executable), ...deadline });
+    return completed(result, started, result.stderr);
 }
 
 /**
@@ -177,6 +220,8 @@ export async function runBinary(command: string[], options: AsyncSpawnOptions): 
     const started = performance.now();
     const [executable, ...argv] = command;
     if (executable === undefined) throw new Error('An empty command cannot run.');
+    if (missingExecutable(executable, options.cwd))
+        return { ...completed(notFound(executable), started, ''), stdout: Buffer.alloc(0) };
     const base = commandOptions(options, executable);
     const child = execa(executable, argv, {
         ...base,

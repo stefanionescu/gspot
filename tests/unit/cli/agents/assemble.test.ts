@@ -1,15 +1,15 @@
-import { describe, expect, test } from 'bun:test';
-import { FIRST_READ } from '#cli/constants/agents.ts';
+import { test, expect, describe } from 'bun:test';
+import { FIRST_READ } from '#cli/config/agents.ts';
 import { excludeProblems } from '#cli/agents/assemble.ts';
 
-describe('[rules] exclude', () => {
+describe('[guides] exclude', () => {
     test('a file path and a layer folder are accepted', () => {
         expect(excludeProblems(['general/code/ACCESSIBILITY.md', 'library'])).toStrictEqual([]);
     });
 
     test('an entry that matches no rule file names the near match', () => {
         const [problem = ''] = excludeProblems(['general/code/ACCESIBILITY.md']);
-        expect(problem).toContain('matches no rule file');
+        expect(problem).toContain('matches no guide');
         expect(problem).toContain('general/code/ACCESSIBILITY.md');
     });
 

@@ -1,29 +1,27 @@
 import { createHash } from 'node:crypto';
 import { join, relative } from 'node:path';
 import { rmSync, statSync } from 'node:fs';
+import { toPosix } from '#cli/platform/paths.ts';
+import { findingAt } from '#cli/checks/result.ts';
+import { GspotError } from '#cli/platform/errors.ts';
+import { openRoot } from '#cli/platform/filesystem.ts';
 import { readSource } from '#cli/repository/tracked.ts';
-import { SkippedCheckError } from '#cli/checks/result.ts';
 import { mutationTarget } from '#cli/platform/safe-paths.ts';
 import { commandArguments } from '#cli/platform/arguments.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import { scratchCopy } from '#cli/execution/file-workspace.ts';
-import { runCheckCommand } from '#cli/execution/tool-runner.ts';
-import type { SiteBuild } from '#cli/types/checks/static-site.ts';
-import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
-import { DEFAULT_BUILD, DEFAULT_BUILD_OUTPUT, SHOWN_DIFFERENCES } from '#cli/constants/checks/static-site.ts';
+import { runCheckCommand } from '#cli/execution/tool/runner.ts';
+import { scratchCopy } from '#cli/execution/files/workspace.ts';
+import type { Finding, SiteBuild, EngineInput } from '#cli/types/checks.ts';
+import { DEFAULT_BUILD, SHOWN_DIFFERENCES, DEFAULT_BUILD_OUTPUT } from '#cli/config/checks/platforms.ts';
 
 const builds = new WeakMap<object, Map<string, Promise<SiteBuild>>>();
 
-function text(input: EngineInput, key: string, otherwise: string): string {
-    const found = input.view.tool('site')[key];
-    return typeof found === 'string' && found !== '' ? found : otherwise;
-}
-
 async function built(input: EngineInput): Promise<SiteBuild> {
-    const outputPath = text(input, 'output', DEFAULT_BUILD_OUTPUT);
+    const site = input.view.tool('site');
+    const outputPath =
+        typeof site['output'] === 'string' && site['output'] !== '' ? site['output'] : DEFAULT_BUILD_OUTPUT;
     mutationTarget(outputPath);
     if (input.resources === undefined) throw new Error('Site builds require run-owned temporary resources.');
-    const scratch = scratchCopy(
+    const scratch = await scratchCopy(
         input.root,
         input.files.map((file) => file.path),
         input.scopeEntries.map((scope) => scope.path),
@@ -32,25 +30,18 @@ async function built(input: EngineInput): Promise<SiteBuild> {
         rmSync(scratch, { recursive: true, force: true });
     });
     const cwd = join(scratch, input.scope);
-    const command = text(input, 'build', DEFAULT_BUILD);
+    const command = typeof site['build'] === 'string' && site['build'] !== '' ? site['build'] : DEFAULT_BUILD;
     const result = await runCheckCommand(input, commandArguments(command), { cwd });
     const output = join(cwd, outputPath);
-    const files = openConfinedRoot(scratch);
+    const files = openRoot(scratch);
     let isBuilt: boolean;
     try {
-        isBuilt =
-            result.code === 0 && files.stat(relative(scratch, output).replaceAll('\\', '/'))?.isDirectory() === true;
+        isBuilt = result.code === 0 && files.stat(toPosix(relative(scratch, output)))?.isDirectory() === true;
     } finally {
         files.close();
     }
     const said = [result.stderr, result.stdout].join('\n').trim().split('\n').slice(-SHOWN_DIFFERENCES).join(' | ');
     return { cwd, command, output, isBuilt, said };
-}
-
-function digests(folder: string): Map<string, string> {
-    return new Map(
-        filesUnder(folder).map((path) => [path, createHash('sha256').update(readSource(folder, path)).digest('hex')]),
-    );
 }
 
 /**
@@ -60,17 +51,17 @@ function digests(folder: string): Map<string, string> {
  */
 export function filesUnder(folder: string): string[] {
     if (statSync(folder, { throwIfNoEntry: false }) === undefined) return [];
-    const files = openConfinedRoot(folder, 'native');
+    const files = openRoot(folder, 'native');
     const found: string[] = [];
     const directories = [''];
     try {
         for (let directory = directories.pop(); directory !== undefined; directory = directories.pop()) {
-            for (const entry of files.list(directory === '' ? undefined : directory)) {
+            const entries = files.list(directory === '' ? undefined : directory).map((entry) => {
                 const path = directory === '' ? entry : `${directory}/${entry}`;
-                const stat = statSync(files.source(path));
-                if (stat.isDirectory()) directories.push(path);
-                else if (stat.isFile()) found.push(path);
-            }
+                return { path, stat: statSync(files.source(path)) };
+            });
+            directories.push(...entries.filter(({ stat }) => stat.isDirectory()).map(({ path }) => path));
+            found.push(...entries.filter(({ stat }) => stat.isFile()).map(({ path }) => path));
         }
         return found.toSorted((left, right) => left.localeCompare(right));
     } finally {
@@ -85,8 +76,8 @@ export function filesUnder(folder: string): string[] {
  */
 export function siteBuild(input: EngineInput): Promise<SiteBuild> {
     const key = join(input.root, input.scope);
-    const scopeBuilds = builds.get(input.observations) ?? new Map<string, Promise<SiteBuild>>();
-    builds.set(input.observations, scopeBuilds);
+    const scopeBuilds = builds.get(input.reads) ?? new Map<string, Promise<SiteBuild>>();
+    builds.set(input.reads, scopeBuilds);
     const running = scopeBuilds.get(key) ?? built(input);
     scopeBuilds.set(key, running);
     return running;
@@ -99,7 +90,7 @@ export function siteBuild(input: EngineInput): Promise<SiteBuild> {
  */
 export async function requireSiteBuild(input: EngineInput): Promise<SiteBuild> {
     const build = await siteBuild(input);
-    if (!build.isBuilt) throw new SkippedCheckError('The site did not build.');
+    if (!build.isBuilt) throw new GspotError('skipped', 'The site did not build.');
     return build;
 }
 
@@ -111,39 +102,41 @@ export async function requireSiteBuild(input: EngineInput): Promise<SiteBuild> {
 export async function siteBuilds(input: EngineInput): Promise<Finding[]> {
     const build = await siteBuild(input);
     if (build.isBuilt) return [];
-    return [
-        {
-            check: input.spec.name,
-            file: '',
-            line: 1,
-            rule: 'build',
-            message: `${build.command} did not build the site: ${build.said}`,
-            fixable: false,
-        },
-    ];
+    return [findingAt(input, { file: '', line: 1 }, 'build', `${build.command} did not build the site: ${build.said}`)];
 }
 
 /**
  * Builds a second time and compares the two outputs file by file.
  * @param input the engine input
- * @returns one finding for each file that differs, appears or disappears
+ * @returns one finding for each file that differs, appears, or disappears
  */
 export async function buildReproducible(input: EngineInput): Promise<Finding[]> {
     const first = await requireSiteBuild(input);
-    const before = digests(first.output);
+    const before = new Map(
+        filesUnder(first.output).map((path) => [
+            path,
+            createHash('sha256').update(readSource(first.output, path)).digest('hex'),
+        ]),
+    );
     const second = await built(input);
     if (!second.isBuilt) throw new Error(`The second site build failed: ${second.command}: ${second.said}`);
-    const after = digests(second.output);
+    const after = new Map(
+        filesUnder(second.output).map((path) => [
+            path,
+            createHash('sha256').update(readSource(second.output, path)).digest('hex'),
+        ]),
+    );
     const differences = [...new Set([...before.keys(), ...after.keys()])].filter(
         (path) => before.get(path) !== after.get(path),
     );
-    return differences.slice(0, SHOWN_DIFFERENCES).map((path) => ({
-        check: input.spec.name,
-        file: path,
-        line: 1,
-        rule: 'not-reproducible',
-        message:
-            'Two builds of the same tree wrote this file differently. Look for a timestamp, a random value, or an unordered list.',
-        fixable: false,
-    }));
+    return differences
+        .slice(0, SHOWN_DIFFERENCES)
+        .map((path) =>
+            findingAt(
+                input,
+                { file: path, line: 1 },
+                'not-reproducible',
+                'Two builds of the same tree wrote this file differently. Look for a timestamp, a random value, or an unordered list.',
+            ),
+        );
 }

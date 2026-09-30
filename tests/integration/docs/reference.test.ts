@@ -1,12 +1,12 @@
 import * as fs from 'node:fs';
 import { join } from 'node:path';
 import plugin from '#plugin/plugin.ts';
-import { expect, spyOn, test } from 'bun:test';
+import { test, spyOn, expect } from 'bun:test';
 import { parsePolicyText } from '#cli/policy/read.ts';
+import * as manifestDefinitions from '#cli/kits/manifests.ts';
 import * as programDefinition from '#cli/commands/program.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
-import { referencePages } from '#docs/src/content/reference/loader.ts';
-import * as manifestDefinitions from '#cli/configurations/manifests.ts';
+import { referencePages } from '#docs/src/content/reference/collection.ts';
 
 test('command reference includes inherited options and nested usage while omitting hidden internals', () => {
     const program = programDefinition.buildProgram();
@@ -35,27 +35,35 @@ test('command reference includes inherited options and nested usage while omitti
             expect(nested.split(`| \`${flag}\` |`)).toHaveLength(2);
         }
         expect(pages.has('commands/account/internal.md')).toBe(false);
-        expect(pages.get('commands/check.md')?.body).not.toContain('--message-file');
+        expect(pages.get('commands/check.md')!.body).not.toContain('--message-file');
     } finally {
         build.mockRestore();
     }
 });
 
-test('identical setting definitions list every configuration owner and global settings remain visible', () => {
+test('a shared setting names its one owner and global settings remain visible', () => {
     const settings = referencePages().get('settings.md')!.body;
     const shared = settings.split('\n').find((line) => line.includes('`tools.openapi.produced_by`'))!;
-    expect(shared).toContain('/reference/configurations/express/');
-    expect(shared).toContain('/reference/configurations/fastapi/');
+    expect(shared).toContain('/reference/kits/openapi/');
+    expect(shared).not.toContain('/reference/kits/express/');
     expect(settings).toContain('`require_reasons`');
+    const javascript = referencePages().get('kits/javascript.md')!.body;
+    expect(javascript).toContain('`runtime/node/NODE.md`\n');
+    expect(javascript).toContain(
+        '`runtime/bun/BUN.md` when the repository matches any of: filename `bun.lock`, filename `bun.lockb`, filename `bunfig.toml`.',
+    );
 });
 
 test('conflicting setting definitions stop reference generation', () => {
-    const manifests = new Map(manifestDefinitions.configurationManifests());
+    const manifests = new Map(manifestDefinitions.kitManifests());
     const fastapi = structuredClone(manifests.get('fastapi')!);
-    const setting = fastapi.settings.find((entry) => entry.name === 'tools.openapi.produced_by')!;
+    const setting = structuredClone(
+        manifests.get('openapi')!.settings.find((entry) => entry.name === 'tools.openapi.produced_by')!,
+    );
     setting.kind = 'boolean';
+    fastapi.settings.push(setting);
     manifests.set('fastapi', fastapi);
-    const definitions = spyOn(manifestDefinitions, 'configurationManifests').mockReturnValue(manifests);
+    const definitions = spyOn(manifestDefinitions, 'kitManifests').mockReturnValue(manifests);
     try {
         expect(() => referencePages()).toThrow('Conflicting setting definition: tools.openapi.produced_by');
     } finally {
@@ -63,14 +71,16 @@ test('conflicting setting definitions stop reference generation', () => {
     }
 });
 
-test('configuration-specific defaults retain distinct values and their owning configurations', () => {
-    const rows = referencePages()
+test('a setting has one owner, and a kit that sets its default says so on its own page', () => {
+    const pages = referencePages();
+    const rows = pages
         .get('settings.md')!
         .body.split('\n')
         .filter((line) => line.includes('`tools.sqlfluff.dialect`'));
-    expect(rows).toHaveLength(2);
-    expect(rows.find((line) => line.includes('`"ansi"`'))).toContain('/reference/configurations/sql/');
-    expect(rows.find((line) => line.includes('`"postgres"`'))).toContain('/reference/configurations/postgres/');
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toContain('`"ansi"`');
+    expect(rows[0]).toContain('/reference/kits/sql/');
+    expect(pages.get('kits/postgres.md')!.body).toContain('`tools.sqlfluff.dialect`: `"postgres"`');
 });
 
 test('generated source links resolve to their actual owner and display the current product version', () => {
@@ -85,11 +95,11 @@ test('generated source links resolve to their actual owner and display the curre
 });
 
 test('duplicate check identities stop reference loading instead of hiding one owner', () => {
-    const manifests = new Map(manifestDefinitions.configurationManifests());
+    const manifests = new Map(manifestDefinitions.kitManifests());
     const duplicate = structuredClone(manifests.get('sql')!);
     duplicate.checks.push(duplicate.checks[0]!);
     manifests.set('sql', duplicate);
-    const definitions = spyOn(manifestDefinitions, 'configurationManifests').mockReturnValue(manifests);
+    const definitions = spyOn(manifestDefinitions, 'kitManifests').mockReturnValue(manifests);
     try {
         expect(() => referencePages()).toThrow('Duplicate check identity:');
     } finally {
@@ -106,19 +116,19 @@ test('command references render definition-owned effects, exits, and examples', 
     const build = spyOn(programDefinition, 'buildProgram').mockReturnValue(program);
     try {
         const pages = referencePages();
-        expect(pages.get('commands/sample.md')?.body).toContain('Reads the sample.');
-        expect(pages.get('commands/check.md')?.body).toContain('invalid reports');
-        expect(pages.get('commands/check.md')?.body).toContain('/packages/cli/src/commands/check/command.ts');
-        expect(pages.get('commands/completion.md')?.body).toContain('/packages/cli/src/commands/completion.ts');
-        expect(pages.get('commands/apply.md')?.body).toContain('without writing project files');
-        expect(pages.get('commands/doctor.md')?.body).toContain('1: a selected tool or hook');
+        expect(pages.get('commands/sample.md')!.body).toContain('Reads the sample.');
+        expect(pages.get('commands/check.md')!.body).toContain('a report is invalid');
+        expect(pages.get('commands/check.md')!.body).toContain('/packages/cli/src/commands/check/command.ts');
+        expect(pages.get('commands/completion.md')!.body).toContain('/packages/cli/src/commands/completion.ts');
+        expect(pages.get('commands/apply.md')!.body).toContain('without writing project files');
+        expect(pages.get('commands/doctor.md')!.body).toContain('1: a selected tool or hook');
         const settings = pages.get('settings.md')!.body;
         const policy = /```toml\n([\s\S]*?)```/u.exec(settings)?.[1];
         expect(policy).toBeDefined();
         expect(
             parsePolicyText(policy!, 'reference settings').scopeTables['app']?.limits?.root['file_lines']?.value,
         ).toBe(100);
-        expect(pages.get('rules/bash/syntax.md')?.body).toContain('## Defect and correction');
+        expect(pages.get('rules/bash/syntax.md')!.body).toContain('## Defect and correction');
     } finally {
         build.mockRestore();
     }
@@ -137,19 +147,23 @@ test('reference generation rejects a public command without behavioral documenta
 
 test('check references invoke the reporting check and expose execution restrictions', () => {
     const pages = referencePages();
-    const json = pages.get('rules/configs/json.md')!.body;
+    const json = pages.get('rules/files/json.md')!.body;
     expect(json).toContain('gspot check --stage commit --only formatting/prettier --no-cache');
-    expect(json).not.toContain('--only configs/json');
+    expect(json).not.toContain('--only files/json');
     expect(json).toContain('gspot ignore formatting/prettier --paths');
-    expect(json).not.toContain('gspot ignore configs/json');
+    expect(json).not.toContain('gspot ignore files/json');
     expect(json).toContain('This entry does not execute a separate check.');
     expect(json).toContain('Scope: follows the reporting check.');
-    expect(pages.get('rules/bash/syntax.md')?.body).toContain('selected file lists under the applicable scope policy');
-    expect(pages.get('rules/nextjs/build.md')?.body).toContain('`tools.next.build_in_gate`; skipped until configured.');
-    expect(pages.get('rules/nextjs/build.md')?.body).toContain(
+    expect(pages.get('rules/bash/syntax.md')!.body).toContain('selected file lists under the applicable scope policy');
+    expect(pages.get('rules/nextjs/build.md')!.body).toContain('`tools.next.build_in_gate`; skipped until configured.');
+    expect(pages.get('rules/nextjs/build.md')!.body).toContain(
         'each selected scope, excluding files owned by child scopes',
     );
-    expect(pages.get('rules/xctest/coverage.md')?.body).toContain('Platform selection: macos');
+    expect(pages.get('rules/xctest/coverage.md')!.body).toContain('Platform selection: macos');
+    const next = pages.get('kits/nextjs.md')!.body;
+    expect(next).toContain('## Rule exclusions');
+    expect(next).toContain('when `structure.reexports` is `"index-only"`');
+    expect(next).toContain('Next.js discovers route files by name');
 });
 
 test('plugin references reject an empty example before publishing pages', () => {
@@ -162,7 +176,7 @@ test('plugin references reject an empty example before publishing pages', () => 
     } finally {
         docs.example = original;
     }
-    expect(referencePages().get('plugin/no-trivial-files.md')?.body).toContain(original);
+    expect(referencePages().get('plugin/no-trivial-files.md')!.body).toContain(original);
 });
 
 test('reference titles come from their definitions and exact rule identifiers remain searchable', () => {
@@ -175,7 +189,7 @@ test('reference titles come from their definitions and exact rule identifiers re
         expect(pages.get(`commands/${command.name()}.md`)!.data.title).toBe(command.summary());
         expect(page).toContain(`gspot ${command.name()}`);
     }
-    for (const manifest of manifestDefinitions.configurationManifests().values()) {
+    for (const manifest of manifestDefinitions.kitManifests().values()) {
         for (const check of manifest.checks) {
             expect(check.title?.trim().length).toBeGreaterThan(0);
             const page = pages.get(`rules/${check.name}.md`)!.body;

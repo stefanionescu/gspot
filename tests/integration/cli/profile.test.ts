@@ -1,23 +1,24 @@
 import * as fs from 'node:fs';
 import { join } from 'node:path';
 import { stringify } from 'smol-toml';
-import { createFileTree, testdir } from 'testdirs';
+import { testdir, createFileTree } from 'testdirs';
 import { exportCommand } from '#cli/commands/export.ts';
-import { describe, expect, spyOn, test } from 'bun:test';
+import { test, spyOn, expect, describe } from 'bun:test';
 import { readProfile } from '#cli/policy/profiles/read.ts';
-import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { applyCommand } from '#cli/commands/apply/command.ts';
 import { exportedProfile } from '#cli/policy/profiles/export.ts';
+import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import { failure, rejection } from '#tests/support/expectations.ts';
-import { chmodSync, readFileSync, statSync, symlinkSync } from 'node:fs';
-import { applyUninstall, planUninstall } from '#cli/commands/uninstall.ts';
+import { planUninstall, applyUninstall } from '#cli/commands/uninstall.ts';
+import { statSync, chmodSync, existsSync, symlinkSync, readFileSync } from 'node:fs';
 
 describe('profile file paths', () => {
     test('an absolute profile loads from a different working directory', async () => {
         const source = 'policies/café house.profile.toml';
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            [source]: 'version = 1\nprofile = "house"\nselection = "exact"\nconfigurations = ["bash"]\n',
+            [source]: 'version = 1\nprofile = "house"\nselection = "exact"\nkits = ["bash"]\n',
             'project/README.md': '# Project\n',
         });
         const relative = await readProfile(source, sandbox.path);
@@ -27,29 +28,64 @@ describe('profile file paths', () => {
     });
 });
 
+test('a profile removed during reading retains the missing-profile diagnostic', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, { 'house.toml': 'version = 1\n' });
+    const read = spyOn(fs, 'readFileSync').mockImplementationOnce(() => {
+        throw Object.assign(new Error('The file disappeared.'), { code: 'ENOENT' });
+    });
+    try {
+        const read = await readProfile('house.toml', sandbox.path).catch((error: unknown) => error);
+        expect(read).toMatchObject({
+            name: 'GspotError',
+            problems: ['There is no profile at house.toml.'],
+        });
+    } finally {
+        read.mockRestore();
+    }
+});
+
+test('a denied profile read preserves the filesystem error', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, { 'house.toml': 'version = 1\n' });
+    const denied = Object.assign(new Error('The file is unreadable.'), { code: 'EACCES' });
+    const read = spyOn(fs, 'readFileSync').mockImplementationOnce(() => {
+        throw denied;
+    });
+    try {
+        const read = await readProfile('house.toml', sandbox.path).catch((error: unknown) => error);
+        expect(read).toBe(denied);
+    } finally {
+        read.mockRestore();
+    }
+});
+
 test.each(['jest', 'vitest'])(
     'profiles retain %s coverage settings and omit repository support directories',
     async (configuration) => {
         await using directory = await testdir();
-        const reusable = { coverage_lines: 90, ...(configuration === 'jest' ? { global_package: 'bun:test' } : {}) };
+        const sharedSettings = {
+            coverage_lines: 90,
+            ...(configuration === 'jest' ? { global_package: 'bun:test' } : {}),
+        };
         const exported = exportedProfile(
             stringify({
                 version: 1,
-                configurations: [configuration],
-                tools: { [configuration]: { ...reusable, harness_directory: 'tests/fixtures' } },
+                kits: [configuration],
+                tools: { [configuration]: { ...sharedSettings, harness_directory: 'tests/fixtures' } },
             }),
             'shared.profile.toml',
         );
         await createFileTree(directory.path, { 'shared.profile.toml': exported.text });
         const restored = await readProfile('shared.profile.toml', directory.path);
-        expect(restored.tables.tools?.[configuration]).toStrictEqual(reusable);
+        expect(restored.tables.tools?.[configuration]).toStrictEqual(sharedSettings);
         expect(exported.leftOut).toStrictEqual([`tools.${configuration}.harness_directory: names a repository path`]);
         await createFileTree(directory.path, {
             'invalid.profile.toml': stringify({
                 version: 1,
                 profile: 'local',
                 selection: 'exact',
-                configurations: [configuration],
+                kits: [configuration],
                 tools: { [configuration]: { harness_directory: 'tests/fixtures' } },
             }),
         });
@@ -59,71 +95,10 @@ test.each(['jest', 'vitest'])(
     },
 );
 
-test('profile export omits local ESLint registrations and selector bases while preserving reusable processors', async () => {
-    await using directory = await testdir();
-    const reusable = {
-        name: 'package processor',
-        processor: { module: 'eslint-plugin-example', export: 'default', members: ['processors', 'source'] },
-    };
-    const source = stringify({
-        version: 1,
-        configurations: ['javascript'],
-        tools: {
-            eslint: {
-                adopted: [
-                    { name: 'local selector', basePath: 'src', rules: { eqeqeq: 'error' } },
-                    { name: 'local processor', processor: { module: './processing.mjs', export: 'default' } },
-                    reusable,
-                ],
-            },
-        },
-    });
-    const exported = exportedProfile(source, 'shared.profile.toml');
-    expect(exported.leftOut).toHaveLength(2);
-    await createFileTree(directory.path, { 'shared.profile.toml': exported.text });
-    const restored = await readProfile('shared.profile.toml', directory.path);
-    expect(restored.tables.tools?.eslint?.adopted).toStrictEqual([reusable]);
-    await createFileTree(directory.path, {
-        'invalid.profile.toml': stringify({
-            version: 1,
-            profile: 'local',
-            selection: 'exact',
-            configurations: ['javascript'],
-            tools: { eslint: { adopted: [{ processor: { module: './processing.mjs', export: 'default' } }] } },
-        }),
-    });
-    expect(await rejection(readProfile('invalid.profile.toml', directory.path))).toContain('a profile carries no path');
-});
-
-test('profile export omits complete EditorConfig documents and preserves reusable formatting options', async () => {
-    await using directory = await testdir();
-    const adopted = {
-        preamble: { root: 'true' },
-        sections: [{ glob: '*.js', properties: { indent_size: '3' } }],
-        directories: [
-            { basePath: 'nested', preamble: {}, sections: [{ glob: '*', properties: { indent_size: '4' } }] },
-        ],
-    };
-    const exported = exportedProfile(
-        stringify({
-            version: 1,
-            configurations: ['formatting'],
-            format: { quotes: 'single' },
-            tools: { editorconfig: { adopted } },
-        }),
-        'shared.profile.toml',
-    );
-    await createFileTree(directory.path, { 'shared.profile.toml': exported.text });
-    const restored = await readProfile('shared.profile.toml', directory.path);
-    expect(restored.tables.tools?.editorconfig?.adopted).toBeUndefined();
-    expect(restored.tables.format?.quotes).toBe('single');
-    expect(exported.leftOut.some((entry) => entry.includes('tools.editorconfig.adopted'))).toBe(true);
-});
-
 test('profile publication is idempotent, preserves edits, and survives apply and uninstall', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'gspot.toml': 'version = 1\nconfigurations = []\n[rules]\ninstall = false\n',
+        'gspot.toml': policyOf([], '[guides]\ninstall = false\n'),
     });
     expect(exportCommand(directory.path, 'shared.profile.toml').exitCode).toBe(0);
     const path = join(directory.path, 'shared.profile.toml');
@@ -152,7 +127,7 @@ test.each([
 ])('profile export refuses unsafe destination %s without changing external bytes', async (file) => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'project/gspot.toml': 'version = 1\nconfigurations = []\n',
+        'project/gspot.toml': policyOf([]),
         'outside/profile.toml': 'original',
     });
     const root = join(directory.path, 'project');
@@ -166,7 +141,7 @@ test.each([
 test('profile export preserves an unowned destination and refuses the managed repository policy', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'gspot.toml': 'version = 1\nconfigurations = []\n[rules]\ninstall = false\n',
+        'gspot.toml': policyOf([], '[guides]\ninstall = false\n'),
         'occupied.toml': 'original bytes',
     });
     const occupied = join(directory.path, 'occupied.toml');
@@ -181,9 +156,9 @@ test('profile export preserves an unowned destination and refuses the managed re
     expect(readFileSync(join(directory.path, 'gspot.toml'))).toStrictEqual(original);
 });
 
-test('profile publication recovers an interrupted write through the lifecycle journal', async () => {
+test('profile publication recovers an interrupted write through the lifecycle log', async () => {
     await using directory = await testdir();
-    await createFileTree(directory.path, { 'gspot.toml': 'version = 1\nconfigurations = []\n' });
+    await createFileTree(directory.path, { 'gspot.toml': policyOf([]) });
     const path = join(directory.path, 'shared.profile.toml');
     const rename = fs.renameSync;
     const failed = spyOn(fs, 'renameSync').mockImplementation((source, target) => {
@@ -204,12 +179,12 @@ test('profile publication recovers an interrupted write through the lifecycle jo
     expect(exportCommand(directory.path, 'shared.profile.toml').exitCode).toBe(0);
     expect(readOwnership(directory.path).pending).toBeUndefined();
     const reread = await readProfile('shared.profile.toml', directory.path);
-    expect(reread.tables.configurations).toStrictEqual([]);
+    expect(reread.tables.kits).toStrictEqual([]);
 });
 
-test('profile publication preserves permissions when adopting identical existing bytes', async () => {
+test('profile publication preserves permissions when adopting identical existing bytes, and copies nothing', async () => {
     await using directory = await testdir();
-    const policy = 'version = 1\nconfigurations = []\n';
+    const policy = policyOf([]);
     const profile = exportedProfile(policy, 'shared.profile.toml');
     await createFileTree(directory.path, { 'gspot.toml': policy, 'shared.profile.toml': profile.text });
     const path = join(directory.path, 'shared.profile.toml');
@@ -217,7 +192,8 @@ test('profile publication preserves permissions when adopting identical existing
     expect(exportCommand(directory.path, 'shared.profile.toml').exitCode).toBe(0);
     expect(readFileSync(path, 'utf8')).toBe(profile.text);
     expect(statSync(path).mode & 0o200).toBe(0);
-    expect(readOwnership(directory.path).files[0]?.original).toBeDefined();
+    expect(readOwnership(directory.path).files[0]?.original).toBeUndefined();
+    expect(existsSync(join(directory.path, '.gspot/state/recovery'))).toBe(false);
 });
 
 test('profiles round-trip license allowances and exact-version exceptions', async () => {
@@ -227,7 +203,7 @@ test('profiles round-trip license allowances and exact-version exceptions', asyn
         packages_allowed: [{ package: 'example@1.2.3', license: 'BSD', reason: 'Reviewed package metadata.' }],
     };
     const exported = exportedProfile(
-        stringify({ version: 1, configurations: ['licenses'], tools: { licenses } }),
+        stringify({ version: 1, kits: ['licenses'], tools: { licenses } }),
         'licenses.profile.toml',
     );
     await createFileTree(directory.path, { 'licenses.profile.toml': exported.text });

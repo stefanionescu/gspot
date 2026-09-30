@@ -1,10 +1,9 @@
 // The types of policy in this package.
 import type { z } from 'zod';
 import type { parseDocument } from '@decimalturn/toml-patch';
-import type { runnerTasksSchema } from '#cli/policy/runner.ts';
-import type { policySchema, scopeSchema } from '#cli/policy/schema.ts';
-import type { Manifest, SettingSpec } from '#cli/types/configurations.ts';
-import type { ScopeEntry, TomlTable } from '#cli/types/repository/repository.ts';
+import type { Manifest, SettingSpec } from '#cli/types/kits.ts';
+import type { scopeSchema, policySchema } from '#cli/policy/schema.ts';
+import type { TomlTable, ScopeEntry } from '#cli/types/repository/repository.ts';
 
 export type PolicyFiles = {
     policy: Policy;
@@ -18,17 +17,34 @@ export type PolicyFinding = PolicyProblem & { line: number; column: number };
 export type Defined<T> = { [K in keyof T]: Exclude<T[K], undefined> };
 /** gspot.toml as the schema accepts it, before normalization. */
 export type RawPolicy = z.infer<typeof policySchema>;
-export type EslintAdoption = NonNullable<NonNullable<NonNullable<RawPolicy['tools']>['eslint']>['adopted']>[number];
 /** One [[scope]] entry as written. */
 export type RawScope = z.infer<typeof scopeSchema>;
 /** ESLint settings retain the validation shape of their policy owner. */
 export type EslintSettings = NonNullable<NonNullable<RawPolicy['tools']>['eslint']>;
-export type EslintRegistration = NonNullable<EslintAdoption['plugins']>[string];
-export type EditorconfigAdoption = NonNullable<NonNullable<NonNullable<RawPolicy['tools']>['editorconfig']>['adopted']>;
 export type TomlBlock = ReturnType<typeof parseDocument>['cst'][number];
 export type KeyValue = Extract<TomlBlock, { type: 'KeyValue' }>;
 export type Value = KeyValue['value'];
 export type Position = Value['loc']['start'];
+/** A syntax node with the kind field every parser node carries. */
+export type Kinded = { type: unknown };
+/** The kinds of syntax node the parser produces, as the literals it names them by. */
+export type NodeKind =
+    | 'Document'
+    | 'Table'
+    | 'TableKey'
+    | 'TableArray'
+    | 'TableArrayKey'
+    | 'KeyValue'
+    | 'Key'
+    | 'String'
+    | 'Integer'
+    | 'Float'
+    | 'Boolean'
+    | 'DateTime'
+    | 'InlineArray'
+    | 'InlineItem'
+    | 'InlineTable'
+    | 'Comment';
 export type Edit = { start: number; end: number; replacement: string };
 export type ResolvedSetting = {
     key: string;
@@ -40,14 +56,14 @@ export type ResolvedSetting = {
 };
 export type ExposedSettings = {
     specs: Map<string, SettingSpec>;
-    defaults: Map<string, { value: unknown; configuration: string }>;
+    defaults: Map<string, { value: unknown; kit: string }>;
     problems: { key: string; message: string }[];
 };
 /** A written value with its reason, once the reasoned form is unwrapped. */
 export type WrittenValue = { value: unknown; reason?: string };
 /** One layer of policy that a key is resolved through: the root table or one scope table. */
 export type PolicyLayer = { table: Partial<Policy>; name: string };
-/** A written key matched to its spec, with the language and category the key names. */
+/** A written key matched to its specification and its declared language and category. */
 export type SpecMatch = { spec: SettingSpec; language?: string; category?: string };
 /** Where a resolved value stands after some layers were applied. */
 export type SettingState = { value: unknown; source: string; reason: string | undefined };
@@ -118,7 +134,7 @@ export type ArchitectureElement = { name: string; paths: string[] };
 export type ArchitectureAllow = { from: string; to: string[]; reason?: string };
 export type ArchitectureSettings = {
     types_directory?: string;
-    constants_directory?: string;
+    config_directory?: string;
     elements: ArchitectureElement[];
     edges_allowed: ArchitectureAllow[];
     roles: Record<string, string | string[]>;
@@ -137,17 +153,17 @@ export type ToolTable = Record<string, unknown> & {
 };
 export type IgnoreEntry = NonNullable<RawPolicy['ignore']>[number];
 export type FileDeclaration =
-    | (RawPolicy['generated'][number] & { nature: 'generated' })
-    | (RawPolicy['vendored'][number] & { nature: 'vendored' });
+    | (RawPolicy['generated'][number] & { kind: 'generated' })
+    | (RawPolicy['vendored'][number] & { kind: 'vendored' });
 export type RepositoryCheck = Defined<NonNullable<RawPolicy['check']>[number]>;
-export type PolicyScope = { path: string; configurations: string[] };
+export type PolicyScope = { path: string; kits: string[] };
 export type Policy = {
     version: number;
     level: RawPolicy['level'];
     requireReasons: RawPolicy['require_reasons'];
     extraChecks: string[];
     exclude: RawPolicy['exclude'];
-    configurations: string[];
+    kits: string[];
     scopes: PolicyScope[];
     limits: Limits;
     naming: NamingSettings;
@@ -161,7 +177,7 @@ export type Policy = {
     checks: RepositoryCheck[];
     hooks?: Defined<NonNullable<RawPolicy['hooks']>>;
     ci?: NonNullable<RawPolicy['ci']>;
-    rules: { install: boolean; directory: string; project?: string; exclude: string[]; agents?: string[] };
+    guides: { install: boolean; directory: string; project?: string; exclude: string[]; agents?: string[] };
     coverage: { strict: boolean };
     runner?: Defined<NonNullable<RawPolicy['runner']>>;
     scopeTables: Record<string, Partial<Policy>>;
@@ -178,11 +194,9 @@ export type ScopeSelection = {
     surface: ExposedSettings;
     view: MergedView;
 };
-export type RunnerTaskNames = z.infer<typeof runnerTasksSchema>;
-export type RunnerTask = { name: string; description: string; run: string };
 export type MergedView = {
     scope: string;
-    configurations: string[];
+    kits: string[];
     settings: Record<string, unknown>;
     reasons: Record<string, string>;
     format: FormatSettings;
@@ -192,5 +206,3 @@ export type MergedView = {
     rulesOff: (check: string) => string[];
     extra: (name: string) => Record<string, unknown> | undefined;
 };
-export type Located<T> = { value: T; path: PathSegment[] };
-export type ModuleReference = { module: string };

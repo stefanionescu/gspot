@@ -1,17 +1,5 @@
 // The types of repository/revisions in this package.
-import type { ConfinedRoot } from '#cli/types/platform.ts';
-
-/** An installed virtual environment whose launchers and loader metadata name working-tree paths. */
-export type PythonLauncher = {
-    directory: string;
-    source: string;
-    names: [string, ...string[]];
-    sitePackages: string;
-    hosts: ReadonlySet<string>;
-};
-/** The snapshot the relocation writes, the roots it reads, and the cancellation it honours. */
-export type RelocationContext = { root: string; snapshot: string; selected: ConfinedRoot; cancelSignal?: AbortSignal };
-export type SnapshotSource = { kind: 'index' } | { kind: 'commit'; object: string };
+export type RevisionSource = { kind: 'index' } | { kind: 'commit'; hash: string };
 export type PushRevision = {
     object: string;
     tree: string;
@@ -24,13 +12,13 @@ export type PushSelection = {
     revisions: PushRevision[];
     notApplicable: { ref: string; object: string; reason: 'deleted ref' | 'non-commit object' }[];
 };
-export type GitEntry = { mode: string; object: string; path: string };
+export type GitEntry = { mode: string; hash: string; path: string };
 export type Directory = { folder: string; dependency: string };
 export type ChangedSet = { reference: string; paths: string[] };
 export type StagedSet = { staged: string[]; unstaged: number };
-export type PushLine = { localRef: string; localObject: string; remoteRef: string; remoteObject: string };
+export type PushLine = { localRef: string; localHash: string; remoteRef: string; remoteHash: string };
 export type Comparison = { changed: string[] | undefined; excluded: string[] };
-export type PushContext = {
+export type PushSearch = {
     root: string;
     cancelSignal: AbortSignal | undefined;
     commits: Map<string, string | undefined>;
@@ -38,6 +26,6 @@ export type PushContext = {
     shallow: boolean;
     boundaries: Set<string>;
 };
-export type FetchMapping = { source: string; destination: string };
-export type FetchRules = { mappings: FetchMapping[]; excluded: string[] };
-export type ParsedMapping = { kind: 'skip' } | { kind: 'unusable' } | ({ kind: 'mapping' } & FetchMapping);
+export type RefMapping = { source: string; destination: string };
+export type RefRules = { mappings: RefMapping[]; excluded: string[] };
+export type ParsedMapping = { kind: 'skip' } | { kind: 'unusable' } | ({ kind: 'mapping' } & RefMapping);

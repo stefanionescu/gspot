@@ -1,12 +1,8 @@
-import type { Migration } from '#cli/types/checks/postgres.ts';
+import { findingAt } from '#cli/checks/result.ts';
+import type { Finding, EngineInput } from '#cli/types/checks.ts';
 import { migrationsOf } from '#cli/checks/postgres/migrations.ts';
-import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
-import { FROZEN_ALL, FROZEN_NONE } from '#cli/constants/checks/postgres.ts';
-import { committedEntries, gitBlobs } from '#cli/repository/revisions/snapshot.ts';
-
-function report(input: EngineInput, migration: Migration, rule: string, text: string): Finding {
-    return { check: input.spec.name, file: migration.path, line: 1, rule, message: text, fixable: false };
-}
+import { FROZEN_ALL, FROZEN_NONE } from '#cli/config/checks/platforms.ts';
+import { gitBlobs, committedEntries } from '#cli/repository/revisions/contents.ts';
 
 const history = new WeakMap<object, Promise<Map<string, string>>>();
 
@@ -18,12 +14,12 @@ async function readCommittedText(input: EngineInput): Promise<Map<string, string
     );
     const blobs = await gitBlobs(
         input.root,
-        entries.map((entry) => entry.object),
+        entries.map((entry) => entry.hash),
         input.cancelSignal,
     );
     return new Map(
         entries.map((entry) => {
-            const content = blobs.get(entry.object);
+            const content = blobs.get(entry.hash);
             if (content === undefined) throw new Error('A requested Git blob was not returned.');
             return [entry.path, content.toString('utf8')];
         }),
@@ -31,12 +27,12 @@ async function readCommittedText(input: EngineInput): Promise<Map<string, string
 }
 
 function committedText(input: EngineInput): Promise<Map<string, string>> {
-    let observed = history.get(input.observations);
-    if (observed === undefined) {
-        observed = readCommittedText(input);
-        history.set(input.observations, observed);
+    let read = history.get(input.reads);
+    if (read === undefined) {
+        read = readCommittedText(input);
+        history.set(input.reads, read);
     }
-    return observed;
+    return read;
 }
 
 /**
@@ -50,13 +46,20 @@ export async function migrationOrder(input: EngineInput): Promise<Finding[]> {
     const seen = new Map<string, string>();
     for (const migration of migrations) {
         if (migration.version === '')
-            findings.push(report(input, migration, 'version', 'The file name starts with no version number.'));
+            findings.push(
+                findingAt(
+                    input,
+                    { file: migration.path, line: 1 },
+                    'version',
+                    'The file name starts with no version number.',
+                ),
+            );
         const earlier = seen.get(migration.version);
         if (earlier !== undefined && migration.version !== '')
             findings.push(
-                report(
+                findingAt(
                     input,
-                    migration,
+                    { file: migration.path, line: 1 },
                     'duplicate-version',
                     `${earlier} already has the version ${migration.version}.`,
                 ),
@@ -71,9 +74,9 @@ export async function migrationOrder(input: EngineInput): Promise<Finding[]> {
     return [
         ...findings,
         ...late.map((migration) =>
-            report(
+            findingAt(
                 input,
-                migration,
+                { file: migration.path, line: 1 },
                 'order',
                 `A new migration sorts before ${newest.name}, which is already committed.`,
             ),
@@ -98,9 +101,9 @@ export async function migrationsFrozen(input: EngineInput): Promise<Finding[]> {
             const committed = texts.get(migration.path);
             if (committed === undefined || committed === migration.text) return [];
             return [
-                report(
+                findingAt(
                     input,
-                    migration,
+                    { file: migration.path, line: 1 },
                     'frozen',
                     'This migration has run, and its text changed. Write a new migration.',
                 ),

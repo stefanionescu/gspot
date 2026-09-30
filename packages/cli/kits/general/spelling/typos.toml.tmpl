@@ -1,0 +1,40 @@
+<%
+const wordMap = (entries) => Object.fromEntries((entries ?? []).map((entry) => {
+    const word = typeof entry === 'string' ? entry : entry.word;
+    return [word, word];
+}));
+const allowed = wordMap(settings['tools.typos.words']);
+%><%~ toml({
+    default: {
+        locale: settings['tools.typos.locale'] ?? 'en-us',
+        'extend-ignore-re': ['\\b[0-9a-f]{7,40}\\b', '\\b[A-Za-z0-9+/]{40,}={0,2}\\b'],
+        'extend-identifiers': allowed,
+        'extend-words': allowed,
+    },
+    files: {
+        'extend-exclude': scopeIgnorePatterns([
+            '*.lock', 'bun.lockb', 'package-lock.json', 'pnpm-lock.yaml', 'yarn.lock', 'Package.resolved',
+            '*.pbxproj', '*.xcstrings', '*.svg', '*.min.js', '*.min.css',
+            '.gspot/cache/', '.gspot/config/vale/', '.gspot/reports/report.json', '.gspot/reports/report.sarif',
+            ...(settings['tools.typos.exclude'] ?? []).flatMap((entry) => entry.paths),
+            ...policy.declarations.flatMap((entry) => entry.paths),
+        ], targetPath.startsWith('.gspot/') ? '' : scope),
+    },
+    type: {
+        ...extra('typos')?.type,
+        'gspot-policy': {
+            'extend-glob': ['gspot.toml'],
+            'extend-identifiers': Object.fromEntries(kitScopes('spelling').flatMap((entry) =>
+                Object.values(entry.extra('typos')?.type ?? {}).flatMap((type) =>
+                    Object.keys(type['extend-identifiers'] ?? {}).map((identifier) => [identifier, identifier])
+                )
+            )),
+            'extend-words': Object.fromEntries(kitScopes('spelling').flatMap((entry) => [
+                ...Object.entries(wordMap(entry.settings['tools.typos.words'])),
+                ...Object.values(entry.extra('typos')?.type ?? {}).flatMap((type) =>
+                    Object.keys(type['extend-words'] ?? {}).map((word) => [word, word])
+                ),
+            ])),
+        },
+    },
+}).trimEnd() %>

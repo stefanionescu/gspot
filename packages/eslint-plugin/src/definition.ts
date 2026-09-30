@@ -10,6 +10,7 @@ const base = ESLintUtils.RuleCreator<RuleDocs>((name) => `https://gspot.dev/refe
  * @param spec the rule's name, meta, defaults and create function
  * @returns the ESLint rule module
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Every rule of the plugin is created here, so its docs description is its summary.
 export function createRule<Options extends readonly unknown[], MessageIds extends string>(
     spec: RuleSpec<Options, MessageIds>,
 ): TSESLint.RuleModule<MessageIds, Options, RuleDocs> {
@@ -31,6 +32,7 @@ export function createRule<Options extends readonly unknown[], MessageIds extend
  * @param required the property names that must be present
  * @returns the schema
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Every rule option schema is a closed object built this one way.
 export function optionsSchema(properties: Record<string, JSONSchema4>, required: string[] = []): JSONSchema4 {
     return { type: 'object', properties, additionalProperties: false, ...(required.length > 0 ? { required } : {}) };
 }

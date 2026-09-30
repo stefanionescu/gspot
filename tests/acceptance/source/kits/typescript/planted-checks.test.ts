@@ -1,0 +1,192 @@
+// Source CLI journeys: every check of the typescript configuration reports its planted defect and accepts the correction.
+import { test, expect } from 'bun:test';
+import { run } from '#tests/support/cli/command.ts';
+import type { FindingCase } from '#tests/types/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
+import { TYPESCRIPT_PACKAGE } from '#tests/support/cli/typescript.ts';
+import { runPlanted, plantedCases } from '#tests/support/cli/planted.ts';
+
+import {
+    TOTAL,
+    RECEIPT,
+    ORDERS_TYPES,
+    TOTALS_TYPES,
+    PLANTED_CHECKS_MAIN,
+} from '#tests/inputs/acceptance/source/kits/typescript.ts';
+
+// Built from two halves, so the spelling fixer of this repository never corrects the planted typo.
+const MISSPELLED = ['Te', 'h'].join('');
+
+const VALUE = '// A value owned by this module.\n\n/** The number of orders. */\nexport const orderCount = 1;\n';
+const WRONG = "// A wrong type.\n\n/** A count that is not a number. */\nexport const count: number = 'three';\n";
+const TYPO = `// ${MISSPELLED} order of things.\n\n/** A value. */\nexport const orderCount = 1;\n`;
+const PLAIN_JS =
+    '// A plain JavaScript file with a wrong call.\n\n/**\n * Doubles a number.\n * @param {number} value the value\n * @returns {number} twice the value\n */\nexport function twice(value) {\n    return value * 2;\n}\n\n/** A call with a string. */\nexport const wrong = twice("x");\n';
+const LIMITS = '// The limits.\n\n/** The most lines. */\nexport const MAX_LINES = 10;\n';
+
+const CASES: FindingCase[] = [
+    {
+        check: 'typescript/tsc',
+        files: { 'src/orders/wrong.ts': WRONG },
+        expected: { file: 'src/orders/wrong.ts', rule: 'TS2322', line: 4, column: 14 },
+        corrected: { files: { 'src/orders/wrong.ts': WRONG.replace("'three'", '3') } },
+    },
+    {
+        check: 'typescript/eslint',
+        files: {
+            'src/orders/paused.ts':
+                '// A debugger statement left behind.\n\n/**\n * Doubles a value.\n * @param value the value\n * @returns twice the value\n */\nexport function twice(value: number): number {\n    debugger;\n    return value * 2;\n}\n',
+        },
+        expected: { file: 'src/orders/paused.ts', rule: 'no-debugger', line: 9, column: 5 },
+    },
+    {
+        check: 'typescript/eslint',
+        files: {
+            'src/orders/forward.ts':
+                '// A second name for the receipt function.\nimport { receiptOptions } from "./receipt.js";\nimport type { Total } from "#types/totals.js";\n\n/**\n * Formats a receipt.\n * @param total the total\n * @returns the receipt line\n */\nexport const forward = (total: Total): string => new Intl.NumberFormat("en-US", receiptOptions).format(total.amount);\n',
+        },
+        expected: { file: 'src/orders/forward.ts', rule: 'gspot/no-trivial-functions', line: 10, column: 24 },
+    },
+    {
+        check: 'javascript/knip',
+        files: {
+            'src/orders/unused.ts':
+                '// Nothing imports this.\n\n/** A value nobody reads. */\nexport const unused = 1;\n',
+        },
+        expected: { file: 'src/orders/unused.ts', message: 'src/orders/unused.ts' },
+        corrected: {
+            files: {
+                'src/orders/unused.ts':
+                    '// Nothing imports this.\n\n/** A value nobody reads. */\nexport const unused = 1;\n',
+                'src/main.ts':
+                    PLANTED_CHECKS_MAIN +
+                    "\nimport { unused } from './orders/unused.js';\nexport const additional = unused;\n",
+            },
+        },
+    },
+    {
+        check: 'naming/identifiers',
+        files: {
+            'src/orders/names.ts':
+                '// A name with a banned word.\n\n/** A helper value. */\nexport const orderHelper = 1;\n',
+        },
+        expected: { file: 'src/orders/names.ts', rule: 'banned-term', line: 4, column: 14 },
+    },
+    {
+        check: 'naming/paths',
+        files: {
+            'src/orders/order-utils.ts':
+                '// A file name with a banned word.\n\n/** A value. */\nexport const orderCount = 1;\n',
+        },
+        expected: { file: 'src/orders/order-utils.ts', rule: 'banned-term', line: 1, column: 1 },
+        corrected: { files: { 'src/orders/count.ts': VALUE } },
+    },
+    {
+        check: 'naming/policy-schema',
+        files: {},
+        policy: '[naming]\nallowed = [{name = "neverUsedName", reason = "A name nothing in this repository carries."}]\n',
+        expected: {
+            file: 'gspot.toml',
+            message: 'naming.allowed names "neverUsedName", which no identifier in this scope carries.',
+        },
+        corrected: { files: { 'src/orders/allowed.ts': VALUE.replace('orderCount', 'neverUsedName') } },
+    },
+    {
+        check: 'formatting/prettier',
+        files: {
+            'src/orders/ugly.ts': '// Badly formatted.\n\n/** A value. */\nexport const   ugly   =   [1,2,\n3];\n',
+        },
+        expected: { file: 'src/orders/ugly.ts', message: 'This file is not formatted the way Prettier formats it.' },
+    },
+    {
+        check: 'formatting/editorconfig-checker',
+        files: {
+            'src/orders/trailing.ts':
+                '// Trailing spaces after this comment.   \n\n/** A value. */\nexport const orderCount = 1;\n',
+        },
+        expected: { file: 'src/orders/trailing.ts', line: 1, message: 'Trailing whitespace' },
+    },
+    {
+        check: 'spelling/typos',
+        files: { 'src/orders/typo.ts': TYPO },
+        expected: {
+            file: 'src/orders/typo.ts',
+            line: 1,
+            column: 4,
+            message: `\`${MISSPELLED}\` should be \`The\``,
+        },
+        corrected: { files: { 'src/orders/typo.ts': TYPO.replace(MISSPELLED, 'The') } },
+    },
+    {
+        check: 'integrity/files',
+        files: {
+            'config/limits.ts': LIMITS,
+            'config/logic.ts':
+                '// Logic where literals belong.\n\n/**\n * Doubles a value.\n * @param value the value\n * @returns twice the value\n */\nexport function twice(value: number): number {\n    return value * 2;\n}\n',
+        },
+        // init already wrote the architecture table, so the role joins it as a subtable.
+        policy: '[architecture.roles]\nconfig = "config"\n',
+        expected: { file: 'config/logic.ts', rule: 'logic-in-config', line: 8 },
+        corrected: { files: { 'config/limits.ts': LIMITS, 'config/logic.ts': VALUE } },
+    },
+    {
+        check: 'javascript/checkjs',
+        files: { 'src/orders/legacy.js': PLAIN_JS },
+        expected: { file: 'src/orders/legacy.js', rule: 'TS2345', line: 13, column: 28 },
+        corrected: { files: { 'src/orders/legacy.js': PLAIN_JS.replace('twice("x")', 'twice(3)') } },
+    },
+    {
+        check: 'integrity/tsconfig-options',
+        files: { 'tsconfig.json': '{\n    "compilerOptions": { "strict": false }\n}\n' },
+        expected: { file: 'tsconfig.json', rule: 'strict' },
+    },
+];
+
+plantedCases(
+    'the typescript configuration',
+    {
+        kits: ['typescript'],
+        without: [],
+        files: {
+            'package.json': TYPESCRIPT_PACKAGE,
+            'tsconfig.json':
+                '{\n    "compilerOptions": {\n        "strict": true,\n        "noFallthroughCasesInSwitch": true,\n        "noUncheckedIndexedAccess": true,\n        "noImplicitOverride": true,\n        "exactOptionalPropertyTypes": true,\n        "target": "ES2022",\n        "module": "NodeNext",\n        "moduleResolution": "NodeNext",\n        "types": [],\n        "skipLibCheck": true\n    },\n    "include": ["src", "types"]\n}\n',
+            '.gitignore': 'node_modules/\n',
+            'types/orders.ts': ORDERS_TYPES,
+            'types/totals.ts': TOTALS_TYPES,
+            'src/orders/total.ts': TOTAL,
+            'src/orders/receipt.ts': RECEIPT,
+            'src/main.ts': PLANTED_CHECKS_MAIN,
+        },
+    },
+    CASES,
+    (planted) => {
+        test(
+            'every check passes on the clean repository',
+            async () => {
+                const { root, environment } = planted();
+                const whole = await run(root, ['check', '--no-cache'], environment);
+                expect(whole.code, whole.stdout).toBe(0);
+            },
+            PLANTED_TIMEOUT_MS * 4,
+        );
+
+        // typos forgets its exclude list for a file named on the command line unless it is told to keep it.
+        test(
+            'spelling/typos keeps its exclusions for a file named on the command line',
+            async () => {
+                const { root, environment } = planted();
+                const excluded = await runPlanted(
+                    root,
+                    {
+                        check: 'spelling/typos',
+                        files: { 'assets/mark.svg': `<svg><title>${MISSPELLED}</title></svg>\n` },
+                    },
+                    environment,
+                );
+                expect(excluded.code, excluded.stdout).toBe(0);
+            },
+            PLANTED_TIMEOUT_MS * 2,
+        );
+    },
+);

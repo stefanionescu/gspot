@@ -1,5 +1,5 @@
-import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
-import { CONFLICT_HELP, MESSAGES, MOVE_HELP, STRAY_HELP } from '#cli/constants/checks/repository.ts';
+import type { Finding, EngineInput } from '#cli/types/checks.ts';
+import { MESSAGES, DRIFT_HELP } from '#cli/config/checks/repository.ts';
 
 /**
  * One finding per generated file that differs from its render, is missing, or is a stray gspot file.
@@ -13,7 +13,7 @@ export function generatedDrift(input: EngineInput): Finding[] {
         file: entry.path,
         rule: entry.kind,
         message: MESSAGES[entry.kind],
-        help: entry.kind === 'stray' ? STRAY_HELP : entry.kind === 'conflict' ? CONFLICT_HELP : MOVE_HELP,
+        help: DRIFT_HELP[entry.kind],
         fixable: true,
     }));
 }

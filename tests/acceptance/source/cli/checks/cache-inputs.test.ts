@@ -1,10 +1,10 @@
 // Declared cache inputs decide when a cached verdict is reused.
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { reportSchema } from '#cli/execution/report.ts';
-import { renameSync, symlinkSync, unlinkSync } from 'node:fs';
+import { renameSync, unlinkSync, symlinkSync } from 'node:fs';
 
 test('declared cache inputs include ignored files and invalidate for changed, added, renamed, and deleted inputs', async () => {
     await using sandbox = await testdir();
@@ -20,7 +20,7 @@ test('declared cache inputs include ignored files and invalidate for changed, ad
     await createFileTree(sandbox.path, {
         '.gitignore': '.gspot/\nstate/\n',
         'gspot.toml': `version = 1
-configurations = []
+kits = []
 [[check]]
 name = "project/state"
 command = ${JSON.stringify(command)}
@@ -67,7 +67,7 @@ test.each([{ inputs: [] }, { inputs: ['../outside'] }, { inputs: ['/outside'] },
         await createFileTree(sandbox.path, {
             'selected.txt': 'authored',
             'gspot.toml': `version = 1
-configurations = []
+kits = []
 [[check]]
 name = "project/state"
 command = ${JSON.stringify([process.execPath, '-e', 'await Bun.write("selected.txt", "changed")'])}
@@ -90,7 +90,7 @@ test('a declared symlink input invalidates the cached verdict when its target ch
         'target.txt': 'valid',
         'selected.txt': 'authored',
         'gspot.toml': `version = 1
-configurations = []
+kits = []
 [[check]]
 name = "project/linked-input"
 command = ${JSON.stringify([process.execPath, '-e', 'process.exit((await Bun.file("state/input.txt").text()) === "valid" ? 0 : 1)'])}

@@ -1,7 +1,7 @@
+// The profile schema retains path-independent policy and adds a profile name and selection mode.
 import { z } from 'zod';
-// The zod schema of a profile: the policy schema without anything that names a path, with a name and a selection mode.
 import { policySchema } from '#cli/policy/schema.ts';
-import { PATH_KEYS } from '#cli/constants/policy/profiles.ts';
+import { PATH_KEYS } from '#cli/config/policy/profiles.ts';
 
 /** A profile as written. */
 export const profileSchema = policySchema
@@ -17,10 +17,9 @@ export const profileSchema = policySchema
  * @param value the key's value
  * @returns whether the key stays with the repository
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Export and read both ask it; one owner keeps the path test.
 export function isRepositoryPath(key: string, value: unknown): boolean {
     return (
-        (key === 'adopted' && typeof value === 'object' && value !== null && 'sections' in value) ||
-        PATH_KEYS.has(key) ||
-        (key === 'module' && typeof value === 'string' && /^(?:\.|\/|\\|[A-Za-z]:)/u.test(value))
+        PATH_KEYS.has(key) || (key === 'module' && typeof value === 'string' && /^(?:\.|\/|\\|[A-Za-z]:)/u.test(value))
     );
 }

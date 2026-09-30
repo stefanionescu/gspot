@@ -1,6 +1,7 @@
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
-import { generatedEslint } from '#tests/support/cli/generated-eslint.ts';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
+import { generatedEslint } from '#tests/support/cli/generated/eslint.ts';
 
 test.each([
     ['recommended', 'client.js'],
@@ -10,7 +11,11 @@ test.each([
 ] as const)('generated %s ESLint retains client defects and makes aliases opt-in for %s', async (level, filePath) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': `version = 1\nlevel = "${level}"\nconfigurations = ["javascript"]\n[rules]\ninstall = false\n[[scope]]\npath = "app"\nconfigurations = []\n`,
+        'gspot.toml': policyOf(
+            ['javascript'],
+            '[guides]\ninstall = false\n[[scope]]\npath = "app"\nkits = []\n',
+            level,
+        ),
         'package.json': '{"private":true,"type":"module"}\n',
         'client.js': '',
         'other.js': '',
@@ -30,7 +35,7 @@ test.each([
         alias
             .flatMap((file) => file.messages)
             .filter(({ ruleId }) => ruleId === 'gspot/no-exported-alias-constants')
-            .map(({ line, column, messageId }) => ({ line, column, messageId })),
+            .map(({ line, column, messageId: diagnosticId }) => ({ line, column, messageId: diagnosticId })),
     ).toStrictEqual(level === 'recommended' ? [] : [{ line: 2, column: 14, messageId: 'alias' }]);
     const corrected = await eslint.lintText("'use client';\nexport const value = 'public';\n", {
         filePath,
@@ -53,7 +58,7 @@ test.each(['recommended', 'all'])(
             '/**\n * Measure the input.\n * @param {string} value The input text.\n * @returns {number} The input length.\n */\n';
         const typescript = 'export function measure(value: string): number { return value.length; }\n';
         await createFileTree(sandbox.path, {
-            'gspot.toml': `version = 1\nlevel = "${level}"\nconfigurations = ["typescript"]\n[rules]\ninstall = false\n`,
+            'gspot.toml': policyOf(['typescript'], '[guides]\ninstall = false\n', level),
             'package.json': '{"private":true,"type":"module"}\n',
             'tsconfig.json': '{"compilerOptions":{"strict":true,"noEmit":true},"include":["client.ts"]}\n',
             'client.ts': description + typescript,

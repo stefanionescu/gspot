@@ -1,12 +1,10 @@
+// An owned Verdaccio child with an isolated socket and storage for source acceptance and release tests.
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
-import type { SpawnOutcome } from '#tests/types/support/cli.ts';
-import type { Registry } from '#tests/types/support/registry.ts';
-// An owned Verdaccio child with an isolated socket and storage for source acceptance and release tests.
-import { environmentVariables } from '#cli/platform/environment.ts';
-import { REQUEST_MS, SHUTDOWN_MS, STARTUP_MS } from '#tests/constants/support/registry.ts';
+import type { Registry } from '#tests/types/registry.ts';
+import { rmSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { REQUEST_MS, STARTUP_MS, SHUTDOWN_MS } from '#tests/inputs/registry.ts';
 
 const root = fileURLToPath(new URL('../../..', import.meta.url));
 const serverEntry = fileURLToPath(new URL('server.ts', import.meta.url));
@@ -35,8 +33,10 @@ async function ping(url: string, signal: AbortSignal): Promise<void> {
 function launch(config: string, port: number, signal: AbortSignal) {
     signal.throwIfAborted();
     const address = Promise.withResolvers<number>();
-    const server = Bun.spawn([process.execPath, serverEntry, config, String(port)], {
+    // Verdaccio's proxy fails TLS under Bun, so the registry runs under Node.
+    const server = Bun.spawn(['node', serverEntry, config, String(port)], {
         cwd: root,
+        serialization: 'json',
         stdout: 'pipe',
         stderr: 'pipe',
         ipc(packet: unknown) {
@@ -50,10 +50,9 @@ function launch(config: string, port: number, signal: AbortSignal) {
     };
     signal.addEventListener('abort', cancel, { once: true });
     const output = Promise.all([new Response(server.stdout).text(), new Response(server.stderr).text()]);
-    const exited = (async () => {
-        const code = await server.exited;
+    const exited = server.exited.then((code) => {
         throw new Error(`Registry exited with status ${String(code)}.`);
-    })();
+    });
     const ready = (async () => {
         const assignedPort = await Promise.race([address.promise, exited]);
         const url = `http://127.0.0.1:${String(assignedPort)}`;
@@ -144,18 +143,17 @@ export async function startRegistry(
     }
 }
 
-/** Publishes built packages only while the owned registry is running. */
-export function publishTo(registry: Registry, version: string, checkout: string): SpawnOutcome {
-    registry.assertRunning();
-    const result = Bun.spawnSync(
-        ['bun', 'packages/cli/scripts/publish.ts', '--tag', `v${version}`, '--registry', registry.url],
-        {
-            cwd: checkout,
-            env: { ...environmentVariables(), NPM_CONFIG_USERCONFIG: registry.npmrc },
-            stdout: 'pipe',
-            stderr: 'pipe',
-            timeout: 180_000,
-        },
-    );
-    return { code: result.exitCode, stdout: result.stdout.toString(), stderr: result.stderr.toString() };
+// Cleanup retains both errors when execution and registry shutdown fail independently.
+export async function settleRegistry(registry: Registry, executionError: unknown): Promise<void> {
+    let cleanupError: unknown;
+    try {
+        await registry.stop();
+    } catch (error) {
+        cleanupError = error;
+    }
+    if (executionError !== undefined && cleanupError !== undefined)
+        throw new AggregateError([executionError, cleanupError], 'Registry execution and cleanup failed.');
+    const failure: unknown = executionError ?? cleanupError;
+    if (failure instanceof Error) throw failure;
+    if (failure !== undefined) throw new Error(`Registry execution failed: ${JSON.stringify(failure)}`);
 }

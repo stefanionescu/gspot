@@ -1,13 +1,15 @@
 import { ESLint } from 'eslint';
-import { join } from 'node:path';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
-import { emitAll } from '#cli/generation/render.ts';
+import { sep, join } from 'node:path';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
+import { emitAll } from '#cli/generation/outputs.ts';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { openSession } from '#cli/execution/session.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { applyCommand } from '#cli/commands/apply/command.ts';
-import { readFileSync, symlinkSync, writeFileSync } from 'node:fs';
-import { eslintPreviewResponse } from '#cli/evaluation/protocol.ts';
-import { evaluateConfiguration } from '#cli/evaluation/configuration.ts';
+import { eslintPreviewResponse } from '#cli/native/protocol.ts';
+import { runConfiguration } from '#cli/native/configuration.ts';
+import { linkInstalledModules } from '#tests/support/cli/platforms.ts';
 import { containing, containingAll } from '#tests/support/expectations.ts';
 import type { ResolvedRules } from '#tests/types/integration/cli/lifecycle/lifecycle.ts';
 
@@ -15,7 +17,7 @@ test('apply preview retains its text diff when ESLint dependencies are unavailab
     await using directory = await testdir();
     const original = 'export default [];\n';
     await createFileTree(directory.path, {
-        'gspot.toml': 'version = 1\nconfigurations = ["javascript"]\n[rules]\ninstall = false\n',
+        'gspot.toml': policyOf(['javascript'], '[guides]\ninstall = false\n'),
         '.gspot/config/eslint.config.mjs': original,
     });
     const preview = await applyCommand({ cwd: directory.path, isDryRun: true });
@@ -27,18 +29,18 @@ test('apply preview retains its text diff when ESLint dependencies are unavailab
 
 test('apply preview names a generated ESLint rule change using installed dependencies', async () => {
     await using directory = await testdir();
-    const policy = 'version = 1\nlevel = "all"\nconfigurations = ["javascript"]\n[rules]\ninstall = false\n';
+    const policy = policyOf(['javascript'], '[guides]\ninstall = false\n', 'all');
     const ignored =
         '\n[[ignore]]\ncheck = "javascript/eslint"\nrule = "no-console"\nreason = "The fixture checks a changed rule in the rendered configuration."\n';
     await createFileTree(directory.path, {
         'gspot.toml': policy + ignored,
         '.gspot/config/.keep': '',
     });
-    symlinkSync(join(import.meta.dir, '../../../../node_modules'), join(directory.path, '.gspot/node_modules'), 'dir');
-    const renderSession1 = await openSession(directory.path);
-    const original = emitAll(renderSession1.policyFiles.policy, renderSession1.repository, renderSession1.scopes, {
-        version: renderSession1.version,
-        packageManager: renderSession1.packageManager,
+    linkInstalledModules(join(directory.path, '.gspot/node_modules'));
+    const originalSession = await openSession(directory.path);
+    const original = emitAll(originalSession.policyFiles.policy, originalSession.repository, originalSession.scopes, {
+        version: originalSession.version,
+        packageClient: originalSession.packageClient,
     }).files.find((file) => file.path === '.gspot/config/eslint.config.mjs')!;
     writeFileSync(join(directory.path, original.path), original.content);
     const nativeBefore = (await new ESLint({
@@ -51,11 +53,16 @@ test('apply preview names a generated ESLint rule change using installed depende
     expect(preview.text).toContain('rules: changed no-console');
     expect(preview.text).not.toContain('Rule comparison failed');
     expect(readFileSync(join(directory.path, original.path), 'utf8')).toBe(original.content);
-    const renderSession2 = await openSession(directory.path);
-    const corrected = emitAll(renderSession2.policyFiles.policy, renderSession2.repository, renderSession2.scopes, {
-        version: renderSession2.version,
-        packageManager: renderSession2.packageManager,
-    }).files.find((file) => file.path === original.path)!;
+    const correctedSession = await openSession(directory.path);
+    const corrected = emitAll(
+        correctedSession.policyFiles.policy,
+        correctedSession.repository,
+        correctedSession.scopes,
+        {
+            version: correctedSession.version,
+            packageClient: correctedSession.packageClient,
+        },
+    ).files.find((file) => file.path === original.path)!;
     writeFileSync(join(directory.path, original.path), corrected.content);
     const nativeAfter = (await new ESLint({
         cwd: directory.path,
@@ -64,11 +71,11 @@ test('apply preview names a generated ESLint rule change using installed depende
     expect(nativeAfter.rules['no-console']?.[0]).toBe(2);
     const eslint = new ESLint({ cwd: directory.path, overrideConfigFile: join(directory.path, original.path) });
     const [allowed] = await eslint.lintText('console.log("message");\n', { filePath: 'tests/line\nbreak.js' });
-    expect(allowed!.messages.filter((message) => message.ruleId === 'no-console')).toStrictEqual([]);
+    expect(allowed!.messages.filter((diagnostic) => diagnostic.ruleId === 'no-console')).toStrictEqual([]);
     const [defect] = await eslint.lintText('console.log("message");\n', { filePath: 'src/line\nbreak.js' });
     expect(defect!.messages).toStrictEqual(containingAll([containing({ ruleId: 'no-console' })]));
     const [fixed] = await eslint.lintText('export const greeting = "message";\n', { filePath: 'src/line\nbreak.js' });
-    expect(fixed!.messages.filter((message) => message.ruleId === 'no-console')).toStrictEqual([]);
+    expect(fixed!.messages.filter((diagnostic) => diagnostic.ruleId === 'no-console')).toStrictEqual([]);
     const applied = await applyCommand({ cwd: directory.path, isDryRun: true });
     expect(applied.text).not.toContain('rules: changed no-console');
 });
@@ -87,7 +94,7 @@ const root = fileURLToPath(new URL('../..', import.meta.url));
 console.log('Configuration log stays outside the structured result.');
 export default [{ files: ['**/*.js'], ignores: ['tests/**'], rules: { ...rules, 'example/root': ['error', { root }] } }];`;
     const result = eslintPreviewResponse.parse(
-        await evaluateConfiguration({
+        await runConfiguration({
             tool: 'eslint',
             operation: 'preview-rules',
             root: directory.path,
@@ -98,7 +105,7 @@ export default [{ files: ['**/*.js'], ignores: ['tests/**'], rules: { ...rules, 
     expect(result[0]?.['no-eval']).toStrictEqual([{ files: ['**/*.js'], ignores: ['tests/**'], setting: 'error' }]);
     expect(result[1]?.['no-eval']).toStrictEqual([{ files: ['**/*.js'], ignores: ['tests/**'], setting: 'off' }]);
     expect(result[0]?.['example/root']).toStrictEqual([
-        { files: ['**/*.js'], ignores: ['tests/**'], setting: ['error', { root: `${directory.path}/` }] },
+        { files: ['**/*.js'], ignores: ['tests/**'], setting: ['error', { root: `${directory.path}${sep}` }] },
     ]);
     expect(readFileSync(join(directory.path, '.gspot/config/eslint.config.mjs'), 'utf8')).toBe(installed);
 });

@@ -1,10 +1,11 @@
 import { ESLint } from 'eslint';
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { fileURLToPath } from 'node:url';
-import { createFileTree, testdir } from 'testdirs';
-import { emitAll } from '#cli/generation/render.ts';
+import { testdir, createFileTree } from 'testdirs';
+import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { mkdirSync, symlinkSync, writeFileSync } from 'node:fs';
 import type { LicensesConfiguration } from '#tests/types/integration/cli/generation.ts';
 
@@ -18,22 +19,22 @@ test.each([
 ])('%s security output follows the selected security configuration', async (configuration, name) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': `version = 1\nconfigurations = ["${configuration}"]\n`,
+        'gspot.toml': policyOf([configuration]),
     });
     const target = `.gspot/config/semgrep/${name}.yml`;
-    const renderSession1 = await openSession(sandbox.path);
-    const plainOutput = emitAll(renderSession1.policyFiles.policy, renderSession1.repository, renderSession1.scopes, {
-        version: renderSession1.version,
-        packageManager: renderSession1.packageManager,
+    const plainSession = await openSession(sandbox.path);
+    const plainOutput = emitAll(plainSession.policyFiles.policy, plainSession.repository, plainSession.scopes, {
+        version: plainSession.version,
+        packageClient: plainSession.packageClient,
     });
     expect(plainOutput.files.map((file) => file.path)).not.toContain(target);
-    writeFileSync(join(sandbox.path, 'gspot.toml'), `version = 1\nconfigurations = ["${configuration}", "security"]\n`);
-    const renderSession2 = await openSession(sandbox.path);
+    writeFileSync(join(sandbox.path, 'gspot.toml'), policyOf([configuration, 'security']));
+    const securitySession = await openSession(sandbox.path);
     const securityOutput = emitAll(
-        renderSession2.policyFiles.policy,
-        renderSession2.repository,
-        renderSession2.scopes,
-        { version: renderSession2.version, packageManager: renderSession2.packageManager },
+        securitySession.policyFiles.policy,
+        securitySession.repository,
+        securitySession.scopes,
+        { version: securitySession.version, packageClient: securitySession.packageClient },
     );
     const generated = securityOutput.files.find((file) => file.path === target);
     expect(generated?.content).toContain('rules:');
@@ -42,7 +43,7 @@ test.each([
 test.each(['recommended', 'all'])('generated %s ESLint configuration makes layout opt-in', async (level) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': `version = 1\nlevel = "${level}"\nconfigurations = ["typescript"]\n`,
+        'gspot.toml': policyOf(['typescript'], '', level),
         'package.json': '{"name":"layout-consumer","private":true,"type":"module"}',
         'src/order.ts': 'export const value = 1;\n',
         'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["src/**/*.ts"]}',
@@ -52,10 +53,10 @@ test.each(['recommended', 'all'])('generated %s ESLint configuration makes layou
         join(sandbox.path, 'node_modules'),
         'dir',
     );
-    const renderSession3 = await openSession(sandbox.path);
-    const output = emitAll(renderSession3.policyFiles.policy, renderSession3.repository, renderSession3.scopes, {
-        version: renderSession3.version,
-        packageManager: renderSession3.packageManager,
+    const session = await openSession(sandbox.path);
+    const output = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
+        version: session.version,
+        packageClient: session.packageClient,
     });
     const config = output.files.find((file) => file.path === '.gspot/config/eslint.config.mjs');
     expect(config).toBeDefined();
@@ -69,7 +70,7 @@ test.each(['recommended', 'all'])('generated %s ESLint configuration makes layou
         filePath: 'src/order.js',
     });
     expect(result?.fatalErrorCount).toBe(0);
-    const layout = result!.messages.filter((message) => message.ruleId === 'gspot/private-before-public');
+    const layout = result!.messages.filter((diagnostic) => diagnostic.ruleId === 'gspot/private-before-public');
     // The layout rule belongs to the all level alone.
     expect(layout).toMatchObject(level === 'recommended' ? [] : [{ ruleId: 'gspot/private-before-public', line: 2 }]);
 });
@@ -79,13 +80,15 @@ test('license configuration retains scoped exceptions and inherited license allo
     await createFileTree(sandbox.path, {
         'app/child/source.py': 'selected = True\n',
         'sibling/source.py': 'selected = True\n',
-        'gspot.toml':
-            'version = 1\nconfigurations = ["licenses"]\n[tools.licenses]\nlicenses_allowed = ["MPL-2.0"]\n[[scope]]\npath = "app"\n[[scope.tools.licenses.packages_allowed]]\npackage = "example@1.2.3"\nlicense = "BSD"\nreason = "Reviewed installed metadata."\n[[scope]]\npath = "app/child"\n[[scope]]\npath = "sibling"\n',
+        'gspot.toml': policyOf(
+            ['licenses'],
+            '[tools.licenses]\nlicenses_allowed = ["MPL-2.0"]\n[[scope]]\npath = "app"\n[[scope.tools.licenses.packages_allowed]]\npackage = "example@1.2.3"\nlicense = "BSD"\nreason = "Reviewed installed metadata."\n[[scope]]\npath = "app/child"\n[[scope]]\npath = "sibling"\n',
+        ),
     });
-    const renderSession4 = await openSession(sandbox.path);
-    const configs = emitAll(renderSession4.policyFiles.policy, renderSession4.repository, renderSession4.scopes, {
-        version: renderSession4.version,
-        packageManager: renderSession4.packageManager,
+    const session = await openSession(sandbox.path);
+    const configs = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
+        version: session.version,
+        packageClient: session.packageClient,
     }).files.filter(({ path }) => path.endsWith('/licenses.json'));
     const parsed = new Map(configs.map(({ path, content }) => [path, JSON.parse(content) as LicensesConfiguration]));
     expect(parsed.size).toBe(4);

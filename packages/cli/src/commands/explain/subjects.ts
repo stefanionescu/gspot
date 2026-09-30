@@ -1,44 +1,46 @@
-// Explain a check, tool rule, configuration, setting, or file path.
-import { nearMatches } from '#cli/policy/near.ts';
+// Explain a check, tool rule, kit, setting, or file path.
+import { allChecks } from '#cli/kits/listing.ts';
+import { similar } from '#cli/policy/similar.ts';
 import * as messages from '#cli/policy/messages.ts';
+import { kitManifests } from '#cli/kits/manifests.ts';
 import { quoteArgument } from '#cli/platform/arguments.ts';
 import { explainPath } from '#cli/commands/explain/file.ts';
-import { settingValue, specFor } from '#cli/policy/settings.ts';
+import { specFor, settingValue } from '#cli/policy/settings.ts';
 import type { Session } from '#cli/types/execution/execution.ts';
-import { allChecks, toRow } from '#cli/configurations/listing.ts';
-import type { ResolvedSetting } from '#cli/types/policy/policy.ts';
-import { DIRECTIONS, STAGES } from '#cli/constants/commands/explain.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
-import type { ListingRow, SettingSpec } from '#cli/types/configurations.ts';
-import type { Explanation, SettingScope } from '#cli/types/commands/explain.ts';
+import type { ListingRow, SettingSpec } from '#cli/types/kits.ts';
+import { STAGES, DIRECTIONS } from '#cli/config/commands/explain.ts';
+import type { Explanation, SettingScope } from '#cli/types/commands.ts';
 import { checkExplanation, toolRuleExplanation } from '#cli/commands/explain/checks.ts';
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Seven rows of the subject listing share this shape; one owner keeps the label format.
 function listLine(label: string, items: string[]): string[] {
     return items.length === 0 ? [] : [`${label}: ${items.join(', ')}`];
 }
 
-function stageLines(row: ListingRow): string[] {
-    return STAGES.flatMap((stage) =>
-        listLine(
-            `Checks at ${stage}`,
-            row.checks.filter((check) => check.stage === stage).map((check) => check.check),
-        ),
-    );
-}
-
-function configurationExplanation(configurationName: string): Explanation | { error: string } {
-    const manifest = configurationManifests().get(configurationName);
+function kitExplanation(kitName: string): Explanation | { error: string } {
+    const manifest = kitManifests().get(kitName);
     if (!manifest)
         return {
-            error: messages.unknownConfiguration(
-                configurationName,
-                nearMatches(configurationName, configurationManifests().keys().toArray()),
-            ),
+            error: messages.unknownKit(kitName, similar(kitName, kitManifests().keys().toArray())),
         };
-    const row = toRow(manifest);
-    const { detect, claims } = manifest;
+    const row: ListingRow = {
+        name: manifest.kit.name,
+        kind: manifest.kit.kind,
+        title: manifest.kit.title,
+        description: manifest.kit.description,
+        requires: manifest.kit.requires,
+        tools: manifest.tools.map((tool) => (tool.version === undefined ? tool.name : `${tool.name} ${tool.version}`)),
+        checks: manifest.checks.map((check) => ({ check: check.name, stage: check.stage })),
+        settings: manifest.settings.map((setting) => setting.name),
+        rules: Object.values(manifest.guides)
+            .flat()
+            .map((entry) => entry.path),
+        default: manifest.kit.default,
+        proposed: manifest.kit.proposed,
+    };
+    const { detect, owners } = manifest;
     const lines = [
-        `${row.title} (${row.kind} configuration)`,
+        `${row.title} (${row.kind} kit)`,
         '',
         row.description,
         '',
@@ -47,52 +49,37 @@ function configurationExplanation(configurationName: string): Explanation | { er
             ...detect.filenames,
             ...detect.dependencies.map((name) => `${name} in dependencies`),
         ]),
-        ...listLine('Claims', [...claims.extensions, ...claims.filenames, ...claims.paths]),
-        ...(claims.from_languages ? ['Claims: every file a language configuration claims'] : []),
+        ...listLine('Owners', [...owners.extensions, ...owners.filenames, ...owners.paths]),
+        ...(owners.from_languages ? ['Owners: every file a language kit owners'] : []),
+        ...(owners.from_prettier_plugins ? ['Owners: the file types of the selected Prettier plugins'] : []),
         ...listLine('Requires', row.requires),
         ...listLine('Tools it pins', row.tools),
-        ...stageLines(row),
+        ...STAGES.flatMap((stage) =>
+            listLine(
+                `Checks at ${stage}`,
+                row.checks.filter((check) => check.stage === stage).map((check) => check.check),
+            ),
+        ),
         ...listLine('Settings', row.settings),
-        ...listLine('Rule files', row.rules),
+        ...listLine('Guides', row.rules),
     ];
-    return { kind: 'configuration', subject: configurationName, text: `${lines.join('\n')}\n`, data: row };
-}
-
-function changeLine(spec: SettingSpec, key: string, scope: string): string {
-    const isReasoned = ['ceiling', 'floor', 'loosening'].includes(spec.direction);
-    return `Change it: gspot set ${quoteArgument(key)} <value>${scope}${isReasoned ? ' --reason "..."' : ''}`;
-}
-
-// The lines that say what a setting holds in a scope now, and where the value came from.
-function valueLines(shipped: unknown, current: ResolvedSetting | undefined): string[] {
-    return [
-        `Shipped default: ${shipped === undefined ? 'none' : JSON.stringify(shipped)}`,
-        `Current value: ${JSON.stringify(current?.value)} (from ${current?.source ?? 'unset'})`,
-        ...(current?.reason === undefined ? [] : [`Reason on record: ${current.reason}`]),
-    ];
+    return { kind: 'kit', subject: kitName, text: `${lines.join('\n')}\n`, data: row };
 }
 
 // The lines about one scope: its default, its current value and source, and how to change it.
 function scopeLines(key: string, spec: SettingSpec, entry: SettingScope): string[] {
     const { scope, shipped, current } = entry;
+    const { value, source = 'unset', reason } = current ?? {};
     const target = scope === '' ? '' : ` --scope ${quoteArgument(scope)}`;
+    const isReasoned = ['ceiling', 'floor', 'loosening'].includes(spec.direction);
     return [
         '',
         `Scope: ${scope === '' ? 'root' : scope}`,
-        ...valueLines(shipped, current),
-        changeLine(spec, key, target),
+        `Shipped default: ${shipped === undefined ? 'none' : JSON.stringify(shipped)}`,
+        `Current value: ${JSON.stringify(value)} (from ${source})`,
+        ...(reason === undefined ? [] : [`Reason on record: ${reason}`]),
+        `Change it: gspot set ${quoteArgument(key)} <value>${target}${isReasoned ? ' --reason "..."' : ''}`,
         `Back to the default: gspot set ${quoteArgument(key)} --default${target}`,
-    ];
-}
-
-function settingLines(key: string, spec: SettingSpec, scopes: SettingScope[]): string[] {
-    return [
-        key,
-        '',
-        spec.summary,
-        '',
-        `Direction: ${DIRECTIONS[spec.direction] ?? spec.direction}`,
-        ...scopes.flatMap((entry) => scopeLines(key, spec, entry)),
     ];
 }
 
@@ -112,7 +99,14 @@ function settingExplanation(session: Session | undefined, key: string): Explanat
     });
     const first = scopes[0];
     if (first === undefined) return undefined;
-    const lines = settingLines(key, first.spec, scopes);
+    const lines = [
+        key,
+        '',
+        first.spec.summary,
+        '',
+        `Direction: ${DIRECTIONS[first.spec.direction] ?? first.spec.direction}`,
+        ...scopes.flatMap((entry) => scopeLines(key, first.spec, entry)),
+    ];
     return {
         kind: 'setting',
         subject: key,
@@ -138,21 +132,21 @@ function explainSlashed(session: Session | undefined, subject: string): Explanat
     const toolRule = toolRuleExplanation(session, subject.slice(0, slash), subject.slice(slash + 1));
     if (toolRule) return toolRule;
     const known = [...allChecks().keys(), ...(session?.policyFiles.policy.checks.map((check) => check.name) ?? [])];
-    return { error: messages.unknownCheck(subject, nearMatches(subject, known)) };
+    return { error: messages.unknownCheck(subject, similar(subject, known)) };
 }
 
 function explainDotted(session: Session | undefined, subject: string): Explanation | { error: string } {
     const setting = settingExplanation(session, subject);
     if (setting) return setting;
     const known = [...new Set(session?.scopes.flatMap((scope) => [...scope.surface.specs.keys()]))];
-    return { error: messages.settingNotExposed(subject, nearMatches(subject, known)) };
+    return { error: messages.settingNotExposed(subject, similar(subject, known)) };
 }
 
 /**
  * Explains whatever the argument names, or returns the near matches.
- * @param session the session, or undefined outside a repository
- * @param subject a check name, a tool/rule pair, a configuration name, a setting key, or a file path
- * @returns the explanation, or an error naming the closest matches
+ * @param session the session, or undefined outside a repository.
+ * @param subject a check name, a tool/rule pair, a kit name, a setting key, or a file path.
+ * @returns the explanation, or an error naming the closest matches.
  */
 export function explain(session: Session | undefined, subject: string): Explanation | { error: string } {
     const file = explainPath(session, subject);
@@ -160,7 +154,7 @@ export function explain(session: Session | undefined, subject: string): Explanat
     let named: Explanation | { error: string };
     if (subject.includes('/')) named = explainSlashed(session, subject);
     else if (subject.includes('.')) named = explainDotted(session, subject);
-    else named = configurationExplanation(subject);
+    else named = kitExplanation(subject);
     if (!('error' in named)) return named;
     return file ?? named;
 }

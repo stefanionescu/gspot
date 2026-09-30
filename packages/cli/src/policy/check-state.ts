@@ -1,5 +1,5 @@
-import type { CheckSpec } from '#cli/types/configurations.ts';
-import type { Policy, RepositoryCheck, ScopeSelection } from '#cli/types/policy/policy.ts';
+import type { CheckSpec } from '#cli/types/kits.ts';
+import type { Policy, ScopeSelection, RepositoryCheck } from '#cli/types/policy/policy.ts';
 
 /**
  * Describe the persistent policy selection independently of files or tool availability.
@@ -39,8 +39,9 @@ export function waitingSetting(scope: ScopeSelection, spec: CheckSpec): string |
 /**
  * Normalize a repository command into the check definition used by planning and explanations.
  * @param entry the check the policy declares
- * @returns the check as a manifest would declare it
+ * @returns the check in manifest form
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Planning and explain turn a [[check]] entry into a check definition the same way.
 export function repositoryCheckSpec(entry: RepositoryCheck): CheckSpec {
     const { paths, ...definition } = entry;
     return {
@@ -51,13 +52,14 @@ export function repositoryCheckSpec(entry: RepositoryCheck): CheckSpec {
         summary: entry.summary ?? `Runs the repository's own check ${entry.name}.`,
         why: 'The repository declared this command in gspot.toml as part of its gate.',
         help: entry.help ?? 'Read the command output; the repository owns this check.',
-        claims: {
+        owners: {
             extensions: [],
             filenames: [],
             tags: [],
             paths,
             from_languages: false,
-            natures: ['source', 'generated'],
+            from_prettier_plugins: false,
+            kinds: ['source', 'generated'],
         },
     };
 }

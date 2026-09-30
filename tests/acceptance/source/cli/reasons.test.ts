@@ -1,18 +1,18 @@
 import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
+import type { Finding } from '#cli/types/checks.ts';
 import { run } from '#tests/support/cli/command.ts';
 import { reportSchema } from '#cli/execution/report.ts';
-import type { Finding } from '#cli/types/checks/checks.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { containing, containingAll, textContaining } from '#tests/support/expectations.ts';
 
 test.each([false, true])(
     'ignore and loosened settings accept omitted reasons by default and enforce require_reasons=%s',
     async (required) => {
         await using directory = await testdir();
-        const policy = `version = 1\nrequire_reasons = ${String(required)}\nconfigurations = ["bash"]\n[rules]\ninstall = false\n`;
+        const policy = `version = 1\nrequire_reasons = ${String(required)}\nkits = ["bash"]\n[guides]\ninstall = false\n`;
         await createFileTree(directory.path, { 'gspot.toml': policy, 'entry.sh': 'if then\n' });
         const ignored = await run(directory.path, ['ignore', 'bash/syntax']);
         expect(ignored.code, ignored.stdout + ignored.stderr).toBe(required ? 2 : 0);
@@ -39,7 +39,7 @@ test.each([false, true])(
     async (required) => {
         {
             await using directory = await testdir();
-            const policy = `version = 1\nlevel = "all"\nrequire_reasons = ${String(required)}\nconfigurations = ["bash", "naming"]\n[rules]\ninstall = false\n`;
+            const policy = `version = 1\nlevel = "all"\nrequire_reasons = ${String(required)}\nkits = ["bash", "naming"]\n[guides]\ninstall = false\n`;
             await createFileTree(directory.path, { 'gspot.toml': policy, 'entry.sh': 'shell_command=example\n' });
             const entry = '{"name":"shell_command"}';
             const allowed = await run(directory.path, ['set', 'naming.allowed', entry]);
@@ -78,7 +78,7 @@ test.each([false, true])(
     async (required) => {
         await using directory = await testdir();
         await createFileTree(directory.path, {
-            'gspot.toml': `version = 1\nlevel = "all"\nrequire_reasons = ${String(required)}\nconfigurations = ["bash"]\n[rules]\ninstall = false\n`,
+            'gspot.toml': `version = 1\nlevel = "all"\nrequire_reasons = ${String(required)}\nkits = ["bash"]\n[guides]\ninstall = false\n`,
             'entry.sh': '# shellcheck disable=SC2086\necho $name\n',
         });
         const command = ['check', '--only', 'integrity/suppressions', '--no-cache', '--json'];
@@ -135,7 +135,7 @@ test.each([
     async ({ configuration, path, form, bare, clean }) => {
         await using directory = await testdir();
         await createFileTree(directory.path, {
-            'gspot.toml': `version = 1\nlevel = "all"\nrequire_reasons = true\nconfigurations = ["structure", "${configuration}"]\n[rules]\ninstall = false\n`,
+            'gspot.toml': `version = 1\nlevel = "all"\nrequire_reasons = true\nkits = ["structure", "${configuration}"]\n[guides]\ninstall = false\n`,
             [path]: `${bare}\n${clean}\n`,
         });
         const command = ['check', '--only', 'integrity/suppressions', '--no-cache', '--json'];
@@ -163,7 +163,7 @@ test('shared noqa text is attributed only to the tool that reads the file', asyn
     await using directory = await testdir();
     await createFileTree(directory.path, {
         'gspot.toml':
-            'version = 1\nlevel = "all"\nrequire_reasons = true\nconfigurations = ["structure", "sql", "python"]\n[rules]\ninstall = false\n',
+            'version = 1\nlevel = "all"\nrequire_reasons = true\nkits = ["structure", "sql", "python"]\n[guides]\ninstall = false\n',
         'query.sql': 'SELECT 1; -- noqa: LT01\n',
         'entry.py': 'answer = 1  # noqa: F841\n',
     });
@@ -185,7 +185,7 @@ test.each([false, true])(
     async (required) => {
         await using directory = await testdir();
         await createFileTree(directory.path, {
-            'gspot.toml': `version = 1\nrequire_reasons = ${String(required)}\nconfigurations = ["bash"]\n[rules]\ninstall = false\n`,
+            'gspot.toml': `version = 1\nrequire_reasons = ${String(required)}\nkits = ["bash"]\n[guides]\ninstall = false\n`,
             'entry.sh': 'echo example\n',
         });
         const ignored = await run(directory.path, ['ignore', 'bash/syntax', '--reason', 'TBD']);
@@ -209,3 +209,40 @@ test.each([false, true])(
         );
     },
 );
+
+test.each([
+    { key: 'naming.banned_terms', flag: '', item: 'added', expected: ['original', 'added'], code: 0 },
+    { key: 'naming.banned_terms', flag: '--remove', item: 'original', expected: [], code: 2 },
+    { key: 'naming.banned_terms', flag: '--replace', item: 'added', expected: ['added'], code: 2 },
+    { key: 'tools.bash.architecture_roots', flag: '', item: 'added', expected: ['original', 'added'], code: 0 },
+    { key: 'tools.bash.architecture_roots', flag: '--remove', item: 'original', expected: [], code: 0 },
+    { key: 'tools.bash.architecture_roots', flag: '--replace', item: 'added', expected: ['added'], code: 0 },
+])('list edits preserve reason requirements for $key $flag', async ({ key, flag, item, expected, code }) => {
+    await using directory = await testdir();
+    const policy = [
+        'version = 1',
+        'require_reasons = true',
+        'kits = ["bash", "naming"]',
+        '[guides]',
+        'install = false',
+        '[naming]',
+        'banned_terms = ["original"]',
+        '[tools.bash]',
+        'architecture_roots = ["original"]',
+    ].join('\n');
+    await createFileTree(directory.path, { 'gspot.toml': policy, 'entry.sh': 'echo example\n' });
+    const args = ['set', key, item, ...[flag].filter((value) => value !== '')];
+    const result = await run(directory.path, args);
+    expect(result.code, result.stdout + result.stderr).toBe(code);
+    expect(readFileSync(join(directory.path, 'gspot.toml'), 'utf8') === policy).toBe(code === 2);
+    const explained =
+        code === 2 ? await run(directory.path, [...args, '--reason', 'Repository requirements changed.']) : result;
+    expect(explained.code, explained.stdout + explained.stderr).toBe(0);
+    const parsed = Bun.TOML.parse(readFileSync(join(directory.path, 'gspot.toml'), 'utf8'));
+    let written: unknown = parsed;
+    for (const part of key.split('.')) {
+        expect(written).toBeObject();
+        written = (written as Record<string, unknown>)[part];
+    }
+    expect(written).toStrictEqual(expected);
+});

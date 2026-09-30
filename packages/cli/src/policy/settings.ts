@@ -1,18 +1,22 @@
+import { compact } from '#cli/policy/normalize.ts';
 import { scopeAncestors } from '#cli/repository/scopes.ts';
-import type { SettingSpec } from '#cli/types/configurations.ts';
-import { LANGUAGE_GROUP_TABLES } from '#cli/constants/policy/policy.ts';
+import type { Manifest, SettingSpec } from '#cli/types/kits.ts';
+import { LANGUAGE_GROUP_TABLES } from '#cli/config/policy/policy.ts';
 
 import type {
-    NamingLanguageTable,
     Policy,
     Reasoned,
-    ExposedSettings,
-    PolicyLayer,
-    ResolvedSetting,
-    SettingState,
     SpecMatch,
+    PolicyLayer,
+    SettingState,
     WrittenValue,
+    ExposedSettings,
+    ResolvedSetting,
+    NamingLanguageTable,
 } from '#cli/types/policy/policy.ts';
+
+// A category setting is naming.<language>.<category>.
+const CATEGORY_KEY_PARTS = 2;
 
 function isReasoned(value: unknown): value is Reasoned<unknown> {
     return (
@@ -29,6 +33,7 @@ function plain(value: unknown): WrittenValue {
     return value.reason === undefined ? { value: value.value } : { value: value.value, reason: value.reason };
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Six readers turn an absent value into undefined before plain(); one owner keeps that rule.
 function plainIfPresent(value: unknown): WrittenValue | undefined {
     return value === undefined ? undefined : plain(value);
 }
@@ -67,7 +72,7 @@ function groupedSpec(
     const [first, second] = rest;
     if (first === undefined) return undefined;
     if (second === undefined) return languageSpec(surface, key, table, language, first);
-    if (table !== 'naming' || rest.length !== 2) return undefined;
+    if (table !== 'naming' || rest.length !== CATEGORY_KEY_PARTS) return undefined;
     return categorySpec(surface, language, first, second);
 }
 
@@ -140,15 +145,13 @@ function applyLayers(
     return result;
 }
 
-// The declarations of one nature, without the nature field each carries.
-function declarationsOf(policy: Partial<Policy>, nature: string): unknown {
-    return policy.declarations
-        ?.filter((entry) => entry.nature === nature)
-        .map(({ nature: _nature, ...entry }) => entry);
+// The declarations of one kind, without the kind field each carries.
+function declarationsOf(policy: Partial<Policy>, kind: string): unknown {
+    return policy.declarations?.filter((entry) => entry.kind === kind).map(({ kind: _nature, ...entry }) => entry);
 }
 
 // The keys that live at the top of the policy, read from their normalized fields.
-const TOP_LEVEL_VALUES: Record<string, (policy: Partial<Policy>) => unknown> = {
+const ROOT_SETTING_READERS: Record<string, (policy: Partial<Policy>) => unknown> = {
     generated: (policy) => declarationsOf(policy, 'generated'),
     vendored: (policy) => declarationsOf(policy, 'vendored'),
     require_reasons: (policy) => policy.requireReasons,
@@ -190,12 +193,14 @@ export function policyTables(policy: Policy, scope: string | undefined): PolicyL
  * @param value anything
  * @returns the value as a record, or undefined for primitives and null
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Policy readers narrow an unknown value to a plain object by this one test.
 export function asRecord(value: unknown): Record<string, unknown> | undefined {
     return typeof value === 'object' && value !== null ? (value as Record<string, unknown>) : undefined;
 }
 
 /**
  * Matches a written key to the spec it belongs to: per-language and per-category variants map back to their base spec.
+ *
  * @param surface the surface of the selection
  * @param key the dotted key as written
  * @returns the spec with the language and category the key names, or undefined when nothing exposes it
@@ -216,7 +221,7 @@ export function specFor(surface: ExposedSettings, key: string): SpecMatch | unde
  */
 export function policyValue(policy: Partial<Policy>, key: string): WrittenValue | undefined {
     const [table, ...rest] = key.split('.');
-    const topLevel = TOP_LEVEL_VALUES[key];
+    const topLevel = ROOT_SETTING_READERS[key];
     if (topLevel !== undefined) return plainIfPresent(topLevel(policy));
     if (table === 'limits') return limitValue(policy, rest);
     if (table === 'naming') return namingValue(policy, rest);
@@ -226,11 +231,12 @@ export function policyValue(policy: Partial<Policy>, key: string): WrittenValue 
 
 /**
  * Resolves one key: configuration default, root table, scope table. Lists append and deduplicate; scalars replace.
- * @param surface the surface of the selection
- * @param policy the loaded policy
- * @param key the dotted key
- * @param scope the scope path whose table applies last, if any
- * @returns the value with where it came from, or undefined when nothing exposes the key
+ *
+ * @param surface the surface of the selection.
+ * @param policy the loaded policy.
+ * @param key the dotted key.
+ * @param scope the scope path whose table applies last, if any.
+ * @returns the value with where it came from, or undefined when nothing exposes the key.
  */
 export function settingValue(
     surface: ExposedSettings,
@@ -248,7 +254,7 @@ export function settingValue(
         layers.some((layer) => policyValue(layer.table, key) !== undefined);
     const start: SettingState = {
         value: declaredLicenses ? [] : shipped?.value,
-        source: shipped ? `configuration ${shipped.configuration}` : 'unset',
+        source: shipped ? `kit ${shipped.kit}` : 'unset',
         reason: undefined,
     };
     const candidates = match.language === undefined ? [key] : [spec.name, key];
@@ -258,13 +264,13 @@ export function settingValue(
         spec,
         value,
         source,
-        ...(reason === undefined ? {} : { reason }),
-        ...(scope === undefined ? {} : { scope }),
+        ...compact({ reason, scope }),
     };
 }
 
 /**
- * Every setting the surface exposes, resolved, for list settings and the docs.
+ * Effective exposed settings for command output and documentation.
+ *
  * @param surface the surface of the selection
  * @param policy the loaded policy
  * @param scope the scope path whose table applies last, if any
@@ -276,4 +282,19 @@ export function listSettings(surface: ExposedSettings, policy: Policy, scope?: s
         .toArray()
         .toSorted((a, b) => a.localeCompare(b));
     return keys.map((key) => settingValue(surface, policy, key, scope)).filter((row) => row !== undefined);
+}
+
+/**
+ * Resolve the directories assigned to a configuration role within one scope.
+ * @param selected the selected kits
+ * @param settings the effective settings
+ * @param role the declared directory role
+ * @returns the directories relative to the scope root
+ */
+export function roleFolders(selected: Manifest[], settings: Record<string, unknown>, role: string): string[] {
+    return selected
+        .flatMap((manifest) => manifest.settings)
+        .filter((spec) => spec.role === role)
+        .map((spec) => settings[spec.name])
+        .filter((value): value is string => typeof value === 'string' && value !== '');
 }

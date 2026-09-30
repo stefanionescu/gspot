@@ -1,43 +1,40 @@
+// Planted repository: uninstall removes what init wrote, the package.json entries and the hook scripts included.
 import { join } from 'node:path';
-import { describe, expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect, describe } from 'bun:test';
 import { existsSync, readFileSync } from 'node:fs';
-// Planted repository: uninstall removes what init wrote, the package.json entries and the lefthook commands included.
+import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { script } from '#tests/support/cli/planted.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/constants/support/cli.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 
 describe('uninstall', () => {
     test(
-        'removes the generated files, its package.json entries and its lefthook commands, and keeps the rest',
+        'removes the generated files, its package.json entries, its hook scripts, and the .gspot folder, and keeps the rest',
         async () => {
             await using sandbox = await testdir();
             await createFileTree(sandbox.path, {
                 'scripts/a.sh': script,
                 'package.json':
                     '{"name":"planted","private":true,"scripts":{"build":"true"},"devDependencies":{"left-pad":"1.3.0"}}\n',
-                'lefthook.yml': 'pre-commit:\n    commands:\n        mine:\n            run: echo mine\n',
             });
             commitAll(sandbox.path);
             await run(sandbox.path, [
                 'init',
                 '--yes',
-                '--configurations',
+                '--kits',
                 'bash',
                 '--runner',
                 'bun',
-                '--hooks',
-                'lefthook',
                 '--no-ci',
-                '--no-rules',
+                '--no-guides',
                 '--no-install',
             ]);
             const installed = JSON.parse(readFileSync(join(sandbox.path, 'package.json'), 'utf8')) as {
                 scripts: Record<string, string>;
             };
-            expect(installed.scripts['gspot:check']).toBe('gspot check');
-            expect(readFileSync(join(sandbox.path, 'lefthook.yml'), 'utf8')).toContain('gspot');
+            expect(installed.scripts).toStrictEqual({ build: 'true' });
+            expect(existsSync(join(sandbox.path, '.gspot/hooks/pre-commit'))).toBe(true);
             const removed = await run(sandbox.path, ['uninstall', '--yes', '--json']);
             expect(removed.code).toBe(0);
             expect((JSON.parse(removed.stdout) as { applied: boolean }).applied).toBe(true);
@@ -47,12 +44,9 @@ describe('uninstall', () => {
             };
             expect(manifest.scripts).toStrictEqual({ build: 'true' });
             expect(manifest.devDependencies).toStrictEqual({ 'left-pad': '1.3.0' });
-            const lefthook = readFileSync(join(sandbox.path, 'lefthook.yml'), 'utf8');
-            expect(lefthook).toContain('mine');
-            expect(lefthook).not.toContain('gspot');
-            expect(existsSync(join(sandbox.path, '.gspot/state/recovery'))).toBe(true);
-            expect(readFileSync(join(sandbox.path, '.gitignore'), 'utf8')).toContain('.gspot/state/');
-            expect(existsSync(join(sandbox.path, '.gspot/config/shellcheckrc'))).toBe(false);
+            // Nothing was kept for its edits, so no recovery data stays, and the ignore block goes with the folder.
+            expect(existsSync(join(sandbox.path, '.gspot'))).toBe(false);
+            expect(existsSync(join(sandbox.path, '.gitignore'))).toBe(false);
             expect(existsSync(join(sandbox.path, 'gspot.toml'))).toBe(true);
         },
         PLANTED_TIMEOUT_MS,

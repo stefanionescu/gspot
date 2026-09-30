@@ -1,14 +1,17 @@
 // The check command's flags, its pre-push input, and the cancellation the termination signals cause.
+import { addAbortSignal } from 'node:stream';
+import type { Stage } from '#cli/types/kits.ts';
 import { progress } from '#cli/output/reporter.ts';
-import type { Stage } from '#cli/types/configurations.ts';
 import { checkCommand } from '#cli/commands/check/run.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
-import type { CheckOptions } from '#cli/types/commands/check.ts';
-import { Command, InvalidArgumentError, Option } from 'commander';
-import type { CommandResult } from '#cli/types/commands/commands.ts';
+import { Option, Command, InvalidArgumentError } from 'commander';
 import type { StageFilter } from '#cli/types/execution/execution.ts';
-import { CANCELED_EXIT, PUBLIC_STAGES } from '#cli/constants/commands/check.ts';
-import { directoryOf, listFlag, textEntry, textFlag } from '#cli/platform/arguments.ts';
+import type { CheckOptions, CommandResult } from '#cli/types/commands.ts';
+import { CANCELED_EXIT, PUBLIC_STAGES } from '#cli/config/commands/check.ts';
+import { listFlag, textFlag, textEntry, directoryOf } from '#cli/platform/arguments.ts';
+
+// Git gives the pre-push hook the remote name and the remote URL.
+const PUSH_ARGUMENTS = 2;
 
 class CheckCommand extends Command {
     override parseOptions(argv: string[]): {
@@ -53,40 +56,29 @@ function optionsFrom(paths: string[], flags: Record<string, unknown>, global: Re
 
 // Reads the pre-push protocol from standard input, stopping when the run is canceled.
 async function readPushInput(signal: AbortSignal): Promise<string> {
-    const reader = Bun.stdin.stream().getReader();
-    let cancellation: Promise<void> | undefined;
-    const stopReading = (): void => {
-        cancellation = reader.cancel();
-    };
-    signal.addEventListener('abort', stopReading, { once: true });
+    signal.throwIfAborted();
     const decoder = new TextDecoder('utf-8', { fatal: true });
     let input = '';
     try {
+        for await (const chunk of addAbortSignal(signal, process.stdin) as AsyncIterable<Buffer>)
+            input += decoder.decode(chunk, { stream: true });
+    } catch (error) {
         signal.throwIfAborted();
-        for (;;) {
-            const chunk = await reader.read();
-            signal.throwIfAborted();
-            if (chunk.done) break;
-            input += decoder.decode(chunk.value, { stream: true });
-        }
-        return input + decoder.decode();
-    } finally {
-        signal.removeEventListener('abort', stopReading);
-        await cancellation;
-        reader.releaseLock();
+        throw error;
     }
+    return input + decoder.decode();
 }
 
 // Turns the pre-push invocation into check options: Git's remote name and the object updates on standard input.
 async function pushOptions(options: CheckOptions, paths: string[], signal: AbortSignal): Promise<CheckOptions> {
-    if (paths.length > 0 && paths.length !== 2)
+    if (paths.length > 0 && paths.length !== PUSH_ARGUMENTS)
         throw new InvalidArgumentError('Pre-push expects the remote name and URL supplied by Git.');
     const input = await readPushInput(signal);
     return { ...options, paths: [], push: { input, ...(paths[0] === undefined ? {} : { remote: paths[0] }) } };
 }
 
 // Runs check, or reports the cancellation when the signal fired before every selected content was checked.
-async function runOrCancel(
+async function checkedCommand(
     options: CheckOptions,
     paths: string[],
     isPush: boolean,
@@ -114,13 +106,14 @@ async function runCheck(
     const options = optionsFrom(paths, flags, global);
     if (global['json'] !== true) options.onResult = progress(process.stdout, options.quiet);
     const controller = new AbortController();
+    // eslint-disable-next-line gspot/no-trivial-functions -- reason: The signal handlers and the finally block all call this one cancellation.
     const cancel = (): void => {
         controller.abort();
     };
     process.on('SIGINT', cancel);
     process.on('SIGTERM', cancel);
     try {
-        await printCommand(() => runOrCancel(options, paths, flags['push'] === true, controller.signal), global);
+        await printCommand(() => checkedCommand(options, paths, flags['push'] === true, controller.signal), global);
     } finally {
         process.removeListener('SIGINT', cancel);
         process.removeListener('SIGTERM', cancel);
@@ -136,25 +129,29 @@ export function registerCheck(program: Command): void {
     program.addCommand(command);
     command
         .argument('[paths...]')
-        .summary('Run checks')
+        .summary('Run the checks')
         .description('Run checks over the selected files and folders and print findings')
         .addHelpText(
             'after',
-            '\nEffects:\nRuns the selected checks and writes managed reports and cache observations. --fix runs configured corrections and can change selected source files. --fix --dry-run previews corrections in a disposable copy. --staged checks index content; --changed checks working-tree content for paths changed from the comparison reference. A plain check uses the working tree.\n\nExit codes:\n0: executed checks passed; review skipped checks separately. 1: findings or failed corrections remain. 2: the run could not complete, including missing tools, invalid reports, or invalid input.\n\nExample:\ngspot check --staged',
+            '\nEffects:\nRuns the selected checks and prints each finding with its file, line, rule, and help. The reports go to .gspot/reports/. A plain check reads the working tree, --staged reads the staged files, and --changed reads the files changed since a branch. --fix runs the fixers and can change your source files. --fix --dry-run shows those changes in a copy.\n\nExit codes:\n- 0: every check that ran passed. The report lists the skipped checks.\n- 1: findings remain, or a fix failed.\n- 2: the run could not finish: a tool is missing, a report is invalid, or the input is invalid.\n\nExample:\ngspot check --staged',
         )
-        .option('--only <checks...>', 'Run the named checks')
+        .option('--only <checks...>', 'Run only these checks')
         .addOption(new Option('--push', 'Read Git pre-push object updates from stdin').hideHelp())
-        .option('--staged', 'The commit stage over staged files, as the pre-commit hook runs it')
+        .option('--staged', 'Check the staged files, as the commit hook does')
         .option(
             '--changed [ref]',
-            'Changed paths from the upstream or default branch; use --changed=<ref> to choose a ref',
+            'Check the files changed from the upstream or default branch, or from --changed=<ref>',
         )
-        .option('--fix', 'Run every fixer in order, then the checks again')
-        .option('--dry-run', 'With --fix, print the diff of every fix and write nothing')
-        .addOption(new Option('--stage <stage>', 'One stage').choices(PUBLIC_STAGES).argParser(stageArgument))
-        .option('--skip <checks...>', 'Skip the named checks for this run')
+        .option('--fix', 'Run every fixer, then run the checks again')
+        .option('--dry-run', 'With --fix, print the diff of each fix and write nothing')
+        .addOption(
+            new Option('--stage <stage>', 'Run the checks of one stage')
+                .choices(PUBLIC_STAGES)
+                .argParser(stageArgument),
+        )
+        .option('--skip <checks...>', 'Skip these checks for this run')
         .addOption(new Option('--message-file <path>', 'The commit message file, for the message stage').hideHelp())
-        .option('--no-cache', 'Run every check even when its inputs are unchanged')
+        .option('--no-cache', 'Run every check, even when its inputs did not change')
         .action(async (paths: string[], flags: Record<string, unknown>, command: Command) => {
             await runCheck(paths, flags, command.optsWithGlobals());
         });

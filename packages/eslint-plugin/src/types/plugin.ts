@@ -19,4 +19,4 @@ export type RuleDocs = {
     example: string;
 };
 export type DirectoryEntry = { name: string; kind: 'file' | 'dir' };
-export type RuleContextOf = Readonly<TSESLint.RuleContext<string, unknown[]>>;
+export type RuleReporter = Readonly<TSESLint.RuleContext<string, unknown[]>>;

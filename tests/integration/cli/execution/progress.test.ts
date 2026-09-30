@@ -1,11 +1,11 @@
 import { join } from 'node:path';
 import { stringify } from 'smol-toml';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { writeFileSync } from 'node:fs';
-import { createFileTree, testdir } from 'testdirs';
+import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
+import type { CheckResult } from '#cli/types/checks.ts';
 import { openSession } from '#cli/execution/session.ts';
-import type { CheckResult } from '#cli/types/checks/checks.ts';
 
 test('completion callbacks publish filtered results before the remaining check finishes', async () => {
     await using sandbox = await testdir();
@@ -13,7 +13,7 @@ test('completion callbacks publish filtered results before the remaining check f
         'source.sh': 'echo example\n',
         'gspot.toml': stringify({
             version: 1,
-            configurations: [],
+            kits: [],
             ignore: [{ check: 'project/fast', rule: 'demo', reason: 'The fixture verifies filtered progress.' }],
             check: [
                 {

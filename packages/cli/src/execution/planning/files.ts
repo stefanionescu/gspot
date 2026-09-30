@@ -1,46 +1,53 @@
-// Which files a planned check runs over: what it claims, less excluded and child-scope paths, narrowed to a selection.
-import { claimedByClaims } from '#cli/configurations/claims.ts';
+// Which files a planned check runs over: what it owners, less excluded and child-scope paths, narrowed to a selection.
+import { ownedBy } from '#cli/kits/owners.ts';
+import { kitName } from '#cli/kits/targets.ts';
+import type { Manifest, CheckSpec } from '#cli/types/kits.ts';
 import type { ScopeSelection } from '#cli/types/policy/policy.ts';
 import { isInScope, pathMatcher } from '#cli/repository/paths.ts';
-import { configurationName } from '#cli/configurations/targets.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
-import type { CheckSpec, Manifest } from '#cli/types/configurations.ts';
-import type { PlanContext, PlanEntry, PlannedCheck, Session } from '#cli/types/execution/execution.ts';
+import type { Session, PlanEntry, PlanInputs, PlannedCheck } from '#cli/types/execution/execution.ts';
 
 // Every tracked file under the scope.
-function projectFiles(context: PlanContext, scopeForFiles: string): TrackedFile[] {
+function projectFiles(context: PlanInputs, scopeForFiles: string): TrackedFile[] {
     const prefix = scopeForFiles === '' ? '' : `${scopeForFiles}/`;
     return context.session.repository.files.filter((file) => file.path.startsWith(prefix));
 }
 
-// The files a project-wide check runs over: the scope's tree, when its claims select anything in it.
-function projectClaimed(context: PlanContext, spec: CheckSpec, scopeForFiles: string): TrackedFile[] {
+// The files a project-wide check runs over: the scope's tree, when its owners select anything in it.
+function projectOwned(context: PlanInputs, spec: CheckSpec, scopeForFiles: string): TrackedFile[] {
     const { session, scope, children } = context;
     const isPerScope = spec.runs === 'per-scope';
-    const claimed =
-        spec.claims === undefined
+    const selectedFiles =
+        spec.owners === undefined
             ? undefined
-            : claimedByClaims(spec.claims, scope.selected, session.repository.files, scopeForFiles);
-    const owned = isPerScope ? claimed?.filter((file) => isOutsideChildren(file, children)) : claimed;
+            : ownedBy(spec.owners, scope.selected, session.repository.files, scopeForFiles);
+    const owned = isPerScope
+        ? selectedFiles?.filter((file) =>
+              children.every((child) => file.path !== child && !file.path.startsWith(`${child}/`)),
+          )
+        : selectedFiles;
     if (owned?.length === 0) return [];
     const files = projectFiles(context, scopeForFiles);
-    if (isPerScope) return files.filter((file) => isOutsideChildren(file, children));
-    return files.filter((file) => file.nature !== 'binary');
+    if (isPerScope)
+        return files.filter((file) =>
+            children.every((child) => file.path !== child && !file.path.startsWith(`${child}/`)),
+        );
+    return files.filter((file) => file.kind !== 'binary');
 }
 
-// The files a per-file check runs over: its own claims, its manifest's, or the paths a policy check names.
-function listClaimed(context: PlanContext, entry: PlanEntry, scopeForFiles: string): TrackedFile[] {
+// The files a per-file check runs over: its own owners, its manifest's, or the paths a policy check names.
+function listOwned(context: PlanInputs, entry: PlanEntry, scopeForFiles: string): TrackedFile[] {
     const { session, scope } = context;
     const { spec, manifest } = entry;
-    if (!manifest) return session.repository.files.filter((file) => pathMatcher(spec.claims?.paths ?? [])(file.path));
-    const claims = spec.claims ?? manifest.claims;
-    return claimedByClaims(claims, scope.selected, session.repository.files, scopeForFiles);
+    if (!manifest) return session.repository.files.filter((file) => pathMatcher(spec.owners?.paths ?? [])(file.path));
+    const owners = spec.owners ?? manifest.owners;
+    return ownedBy(owners, scope.selected, session.repository.files, scopeForFiles);
 }
 
-// The files the check claims in the scope.
-function claimedFor(context: PlanContext, entry: PlanEntry, scopeForFiles: string): TrackedFile[] {
-    if (entry.spec.runs !== 'per-file-list') return projectClaimed(context, entry.spec, scopeForFiles);
-    return listClaimed(context, entry, scopeForFiles);
+// The files the check owners in the scope.
+function ownedFor(context: PlanInputs, entry: PlanEntry, scopeForFiles: string): TrackedFile[] {
+    if (entry.spec.runs !== 'per-file-list') return projectOwned(context, entry.spec, scopeForFiles);
+    return listOwned(context, entry, scopeForFiles);
 }
 
 // The files less those the scope's exclude setting names.
@@ -53,31 +60,30 @@ function withoutExcluded(files: TrackedFile[], spec: CheckSpec, scope: ScopeSele
     return files.filter((file) => !isExcluded(file.path));
 }
 
-// Whether the selection touches the policy or its generated files, which can change what any check finds.
-function isPolicyTouched(narrow: Set<string>): boolean {
-    return narrow.has('gspot.toml') || narrow.values().some((path) => path.startsWith('.gspot/'));
-}
-
-// The policy changed, so the check runs over everything it claims, with the check's own claims kept.
-function reclaimed(context: PlanContext, entry: PlanEntry): TrackedFile[] {
+// The policy changed, so the check runs over everything it owners, with the check's own owners kept.
+function allOwned(context: PlanInputs, entry: PlanEntry): TrackedFile[] {
     const { scope, children } = context;
-    const files = claimedFor(context, entry, scope.scope.path);
-    return entry.manifest === undefined ? files : files.filter((file) => isOutsideChildren(file, children));
+    const files = ownedFor(context, entry, scope.scope.path);
+    return entry.manifest === undefined
+        ? files
+        : files.filter((file) => children.every((child) => file.path !== child && !file.path.startsWith(`${child}/`)));
 }
 
 // The files narrowed to the selection: a project check keeps everything when the selection touches it.
-function narrowed(context: PlanContext, entry: PlanEntry, files: TrackedFile[]): TrackedFile[] {
+function narrowed(context: PlanInputs, entry: PlanEntry, files: TrackedFile[]): TrackedFile[] {
     const { narrow } = context;
     if (!narrow) return files;
     const inNarrowed = files.filter((file) => narrow.has(file.path));
-    const isTouched = isPolicyTouched(narrow);
-    if (entry.spec.runs !== 'per-file-list') return !isTouched && inNarrowed.length === 0 ? [] : files;
-    if (!isTouched || !entry.manifest || inNarrowed.length > 0) return inNarrowed;
-    return reclaimed(context, entry);
+    const isTouched = narrow.has('gspot.toml') || narrow.values().some((path) => path.startsWith('.gspot/'));
+    if (inNarrowed.length > 0) return entry.spec.runs === 'per-file-list' ? inNarrowed : files;
+    if (!isTouched) return [];
+    if (entry.spec.runs !== 'per-file-list') return files;
+    if (entry.manifest === undefined) return [];
+    return allOwned(context, entry);
 }
 
-// Selected paths that are no longer in the tree but still trigger a project check.
-function missingTriggers(context: PlanContext, spec: CheckSpec, scopePath: string): string[] {
+// Selected paths deleted from the tree but still trigger a project check.
+function missingTriggers(context: PlanInputs, spec: CheckSpec, scopePath: string): string[] {
     if (spec.runs === 'per-file-list' || context.narrow === undefined) return [];
     const readable = new Set(context.session.repository.files.map((file) => file.path));
     return [...context.narrow].filter((path) => !readable.has(path) && isInScope(path, scopePath));
@@ -95,17 +101,6 @@ export function childScopes(session: Session, scope: ScopeSelection): string[] {
         .map((entry) => entry.scope.path)
         .filter((path) => path !== '' && path !== own && (own === '' || path.startsWith(`${own}/`)));
 }
-
-/**
- * Whether a file lies outside every child scope.
- * @param file the tracked file
- * @param children the child scope paths
- * @returns true when no child scope holds the file
- */
-export function isOutsideChildren(file: TrackedFile, children: string[]): boolean {
-    return children.every((child) => file.path !== child && !file.path.startsWith(`${child}/`));
-}
-
 /**
  * A policy check that reads a scoped configuration must run against that scope's file partition.
  * @param manifest the manifest that declares the check
@@ -113,14 +108,13 @@ export function isOutsideChildren(file: TrackedFile, children: string[]): boolea
  * @returns true when the check runs once for the repository
  */
 export function isRepositoryPolicy(manifest: Manifest, spec: CheckSpec): boolean {
-    if (manifest.configuration.kind !== 'policy' || manifest.claims.from_languages || spec.runs === 'per-scope')
-        return false;
+    if (manifest.kit.kind !== 'general' || manifest.owners.from_languages || spec.runs === 'per-scope') return false;
     const command = [...(spec.command ?? []), ...Object.values(spec.env ?? {})];
     return !manifest.configs.some(
         (config) =>
             config.per_scope &&
             !config.fragment &&
-            command.some((part) => part.includes(`{config:${configurationName(config.target)}}`)),
+            command.some((part) => part.includes(`{config:${kitName(config.target)}}`)),
     );
 }
 
@@ -132,7 +126,7 @@ export function isRepositoryPolicy(manifest: Manifest, spec: CheckSpec): boolean
  * @returns the selected files and the trigger paths
  */
 export function filesFor(
-    context: PlanContext,
+    context: PlanInputs,
     entry: PlanEntry,
     isWholeCheck: boolean,
 ): Pick<PlannedCheck, 'files' | 'triggerPaths'> {
@@ -141,8 +135,11 @@ export function filesFor(
     const scopePath = isWholeCheck ? '' : scope.scope.path;
     const triggerPaths = missingTriggers(context, spec, scopePath);
     const isWhole = spec.runs !== 'per-file-list' || (manifest !== undefined && isRepositoryPolicy(manifest, spec));
-    let files = triggerPaths.length === 0 ? claimedFor(context, entry, scopePath) : projectFiles(context, scopePath);
-    if (!isWhole && manifest !== undefined) files = files.filter((file) => isOutsideChildren(file, children));
+    let files = triggerPaths.length === 0 ? ownedFor(context, entry, scopePath) : projectFiles(context, scopePath);
+    if (!isWhole && manifest !== undefined)
+        files = files.filter((file) =>
+            children.every((child) => file.path !== child && !file.path.startsWith(`${child}/`)),
+        );
     const selected = withoutExcluded(files, spec, scope);
     return { files: triggerPaths.length === 0 ? narrowed(context, entry, selected) : selected, triggerPaths };
 }

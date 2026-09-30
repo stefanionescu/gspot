@@ -1,12 +1,14 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { rmSync, writeFileSync } from 'node:fs';
-import { createFileTree, testdir } from 'testdirs';
+import { testdir, createFileTree } from 'testdirs';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { indexedPaths } from '#cli/repository/tracked.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Every git step of these tests runs and asserts success the same way.
 function git(root: string, ...args: string[]): void {
     const result = runBlocking(['git', ...args], { cwd: root });
     expect(result.code, result.stderr).toBe(0);
@@ -24,11 +26,11 @@ test('the index keeps deleted tracked paths, encoded names, and excludes untrack
 });
 
 test.each(['integrity/env-files', 'integrity/tracked-dependencies'])(
-    '%s reports a failed index observation instead of a clean verdict',
+    '%s reports a failed index read instead of a clean verdict',
     async (check) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\nconfigurations = ["secrets", "structure"]\n',
+            'gspot.toml': policyOf(['secrets', 'structure']),
             '.env': 'TOKEN=example\n',
             'node_modules/example/source.js': 'export {};\n',
             'source.ts': 'export {};\n',

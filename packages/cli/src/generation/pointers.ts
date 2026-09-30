@@ -1,11 +1,11 @@
 import { dirname, relative } from 'node:path';
 import { toPosix } from '#cli/platform/paths.ts';
+import type { PointerSpec } from '#cli/types/kits.ts';
 import { headerFor } from '#cli/generation/headers.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import type { PointerSpec } from '#cli/types/configurations.ts';
-import { TARGET_PLACEHOLDER } from '#cli/constants/generation.ts';
-import { parse as parseJsonc, type ParseError } from 'jsonc-parser';
-import type { ConfigurationOutput, GeneratedFile } from '#cli/types/generation.ts';
+import { openRoot } from '#cli/platform/filesystem.ts';
+import { TARGET_PLACEHOLDER } from '#cli/config/generation.ts';
+import { type ParseError, parse as parseJsonc } from 'jsonc-parser';
+import type { GeneratedFile, ConfigurationOutput } from '#cli/types/generation.ts';
 
 function parsePointer(text: string, pointerPath: string): Record<string, unknown> {
     const errors: ParseError[] = [];
@@ -17,21 +17,11 @@ function parsePointer(text: string, pointerPath: string): Record<string, unknown
 
 function fillTarget(value: unknown, pointerPath: string, targetPath: string): unknown {
     if (typeof value !== 'string') return value;
-    const target = relativeTarget(pointerPath, targetPath);
+    const rel = toPosix(relative(dirname(pointerPath) === '.' ? '' : dirname(pointerPath), targetPath));
+    const target = rel.startsWith('./') || rel.startsWith('../') ? rel : `./${rel}`;
     return value.replaceAll(TARGET_PLACEHOLDER, (placeholder) =>
         placeholder === '{target_json}' ? JSON.stringify(target) : target,
     );
-}
-
-/**
- * The relative import path from a pointer to its target.
- * @param pointerPath the pointer's path
- * @param targetPath the generated file's path
- * @returns the path starting with ./ or ../
- */
-function relativeTarget(pointerPath: string, targetPath: string): string {
-    const rel = toPosix(relative(dirname(pointerPath) === '.' ? '' : dirname(pointerPath), targetPath));
-    return rel.startsWith('./') || rel.startsWith('../') ? rel : `./${rel}`;
 }
 
 /**
@@ -40,7 +30,7 @@ function relativeTarget(pointerPath: string, targetPath: string): string {
  * @param pointerPath the pointer's path
  * @param targetPath the generated file's path
  * @param version the gspot version
- * @param configuration the configuration that owns the pointer
+ * @param kit the kit that owns the pointer
  * @returns the generated file
  */
 export function bodyPointer(
@@ -48,7 +38,7 @@ export function bodyPointer(
     pointerPath: string,
     targetPath: string,
     version: string,
-    configuration: string,
+    kit: string,
 ): GeneratedFile {
     const body = String(fillTarget(pointer.body ?? '', pointerPath, targetPath));
     const ended = body.endsWith('\n') ? body : `${body}\n`;
@@ -57,7 +47,7 @@ export function bodyPointer(
         content: `${headerFor(pointerPath, version)}${ended}`,
         readOnly: true,
         kind: 'pointer',
-        configuration,
+        kit,
     };
 }
 
@@ -67,7 +57,7 @@ export function bodyPointer(
  * @param pointer the pointer spec
  * @param pointerPath the pointer's path
  * @param targetPath the generated file's path
- * @returns the path, the new text and the keys gspot owns
+ * @returns the path, the new text, and the keys gspot owns
  */
 export function mergePointer(
     root: string,
@@ -75,7 +65,7 @@ export function mergePointer(
     pointerPath: string,
     targetPath: string,
 ): ConfigurationOutput {
-    const files = openConfinedRoot(root);
+    const files = openRoot(root);
     try {
         const text = files.read(pointerPath)?.bytes.toString('utf8') ?? '{}\n';
         parsePointer(text, pointerPath);

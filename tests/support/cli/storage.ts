@@ -1,6 +1,6 @@
-// A session whose one planted check passes or prints a finding, for tests of cache and report storage.
+// A session with one configurable check for cache and report storage tests.
+import type { Stage } from '#cli/types/kits.ts';
 import { openSession } from '#cli/execution/session.ts';
-import type { Stage } from '#cli/types/configurations.ts';
 import type { Session } from '#cli/types/execution/execution.ts';
 
 /**
@@ -26,7 +26,7 @@ export async function storageSession(root: string, status: number, stage: Stage 
                     summary: 'Reports the planted storage finding.',
                     why: 'Storage failures preserve the check result.',
                     help: 'Fix the planted finding.',
-                    claims: manifest.claims,
+                    owners: manifest.owners,
                     name: 'sandbox/storage',
                     stage,
                     cwd: 'root',

@@ -1,32 +1,30 @@
 import { z } from 'zod';
 import { gzipSync } from 'node:zlib';
+import { toPosix } from '#cli/platform/paths.ts';
+import { findingAt } from '#cli/checks/result.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { mutationPath } from '#cli/platform/safe-paths.ts';
-import { runCheckCommand } from '#cli/execution/tool-runner.ts';
-import { isAbsolute, join, relative as relativePath } from 'node:path';
-import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
-import type { SiteBuild, SizeLimit } from '#cli/types/checks/static-site.ts';
+import { runCheckCommand } from '#cli/execution/tool/runner.ts';
+import { join, isAbsolute, relative as relativePath } from 'node:path';
 import { filesUnder, requireSiteBuild } from '#cli/checks/static-site/build.ts';
-import { BYTES_PER_KB, SITEMAP_LOCATION } from '#cli/constants/checks/static-site.ts';
-
-function finding(input: EngineInput, file: string, rule: string, text: string, line = 1): Finding {
-    return { check: input.spec.name, file, line, rule, message: text, fixable: false };
-}
+import { BYTES_PER_KB, SITEMAP_LOCATION } from '#cli/config/checks/platforms.ts';
+import type { Finding, SiteBuild, SizeLimit, EngineInput } from '#cli/types/checks.ts';
 
 function relative(input: EngineInput, build: SiteBuild, absolute: string): string {
-    const path = relativePath(build.cwd, absolute).replaceAll('\\', '/');
+    const path = toPosix(relativePath(build.cwd, absolute));
     mutationPath(path);
     return input.scope === '' ? path : `${input.scope}/${path}`;
 }
 
 async function brokenLinks(input: EngineInput, isExternal: boolean): Promise<Finding[]> {
     const build = await requireSiteBuild(input);
-    const skipped = ((input.view.tool('linkinator')['skip'] as { pattern?: string }[] | undefined) ?? []).flatMap(
+    const skipped = ((input.view.tool('linkinator')['exclude'] as { pattern?: string }[] | undefined) ?? []).flatMap(
         (entry) => (entry.pattern === undefined ? [] : [entry.pattern]),
     );
     const skips = [
-        ...(isExternal ? [] : ['^https?://(?!localhost)']),
+        // Linkinator serves the output on the loopback address, so an internal run skips every other host.
+        ...(isExternal ? [] : [String.raw`^https?://(?!localhost|127\.0\.0\.1)`]),
         '^mailto:',
         '^tel:',
         '^sms:',
@@ -57,7 +55,12 @@ async function brokenLinks(input: EngineInput, isExternal: boolean): Promise<Fin
     return report.links
         .filter((link) => link.state === 'BROKEN')
         .map((link) =>
-            finding(input, link.parent ?? '', 'broken-link', `${link.url} answers ${String(link.status ?? 0)}.`),
+            findingAt(
+                input,
+                { file: toPosix(link.parent ?? ''), line: 1 },
+                'broken-link',
+                `${link.url} answers ${String(link.status ?? 0)}.`,
+            ),
         );
 }
 
@@ -99,7 +102,12 @@ export async function builtMarkup(input: EngineInput): Promise<Finding[]> {
         throw new Error(`HTML validation failed without diagnostics: ${result.stderr}`);
     return files.flatMap((file) =>
         file.messages.map((entry) =>
-            finding(input, relative(input, build, file.filePath), entry.ruleId, entry.message, entry.line),
+            findingAt(
+                input,
+                { file: relative(input, build, file.filePath), line: entry.line },
+                entry.ruleId,
+                entry.message,
+            ),
         ),
     );
 }
@@ -134,9 +142,12 @@ export async function deadSelectors(input: EngineInput): Promise<Finding[]> {
     if (report.length !== sheets.length) throw new Error('Unused CSS analysis returned an incomplete report.');
     return report.flatMap((sheet) =>
         sheet.rejected.map((selector) =>
-            finding(
+            findingAt(
                 input,
-                relative(input, build, isAbsolute(sheet.file) ? sheet.file : join(build.output, sheet.file)),
+                {
+                    file: relative(input, build, isAbsolute(sheet.file) ? sheet.file : join(build.output, sheet.file)),
+                    line: 1,
+                },
                 'dead-selector',
                 `No built page uses the selector ${selector.trim()}.`,
             ),
@@ -145,10 +156,11 @@ export async function deadSelectors(input: EngineInput): Promise<Finding[]> {
 }
 
 /**
- * The links between the built pages, their stylesheets and their fragments.
+ * The links between the built pages, their stylesheets, and their fragments.
  * @param input the engine input
  * @returns one finding for each broken link
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The entry point of the site-links-internal check, which the analysis table and the tests name.
 export function internalLinks(input: EngineInput): Promise<Finding[]> {
     return brokenLinks(input, false);
 }
@@ -158,6 +170,7 @@ export function internalLinks(input: EngineInput): Promise<Finding[]> {
  * @param input the engine input
  * @returns one finding for each broken link
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The entry point of the site-links-external check, which the analysis table names.
 export function externalLinks(input: EngineInput): Promise<Finding[]> {
     return brokenLinks(input, true);
 }
@@ -180,9 +193,9 @@ export async function sizeLimits(input: EngineInput): Promise<Finding[]> {
         return weight <= limit.kb
             ? []
             : [
-                  finding(
+                  findingAt(
                       input,
-                      limit.paths.join(', '),
+                      { file: limit.paths.join(', '), line: 1 },
                       'size',
                       `${String(weight)} kB compressed is over the ceiling of ${String(limit.kb)} kB.`,
                   ),
@@ -210,9 +223,9 @@ export async function sitemapMatches(input: EngineInput): Promise<Finding[]> {
     const missing = urls
         .filter((url) => pageOf(url).every((page) => !files.has(page)))
         .map((url) =>
-            finding(
+            findingAt(
                 input,
-                'sitemap.xml',
+                { file: 'sitemap.xml', line: 1 },
                 'missing-page',
                 `The sitemap lists ${url}, and the build wrote no such page.`,
             ),
@@ -220,7 +233,12 @@ export async function sitemapMatches(input: EngineInput): Promise<Finding[]> {
     const unlisted = [...files]
         .filter((path) => path.endsWith('.html') && !listed.has(path) && !isLeftOut(path))
         .map((path) =>
-            finding(input, path, 'unlisted-page', 'The build wrote this page, and the sitemap does not list it.'),
+            findingAt(
+                input,
+                { file: path, line: 1 },
+                'unlisted-page',
+                'The build wrote this page, and the sitemap does not list it.',
+            ),
         );
     return [...missing, ...unlisted];
 }

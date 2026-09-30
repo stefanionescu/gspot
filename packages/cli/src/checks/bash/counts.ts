@@ -1,0 +1,56 @@
+import { findingAt } from '#cli/checks/result.ts';
+import { functionAt } from '#cli/checks/bash/parser.ts';
+import { astGrepMatches } from '#cli/checks/bash/ast-grep.ts';
+import { RULES, OUTER_LEVELS } from '#cli/config/checks/structure.ts';
+import type { Finding, ScriptIndex, AstGrepMatch, StructureInput } from '#cli/types/checks.ts';
+
+function scoreFor(matches: AstGrepMatch[], isDepth: boolean): number {
+    if (!isDepth) return matches.length;
+    let deepest = matches.length === 0 ? 0 : 1;
+    for (const match of matches) {
+        const containing = matches.filter(
+            (other) =>
+                other !== match &&
+                other.range.start.line <= match.range.start.line &&
+                other.range.end.line >= match.range.end.line,
+        );
+        deepest = Math.max(deepest, containing.length + OUTER_LEVELS);
+    }
+    return deepest;
+}
+
+/**
+ * Runs one count rule over the scope's scripts and reports every function over its limit.
+ * @param analysis the check's analysis name
+ * @param context the check context
+ * @param index the shell index
+ * @returns the findings; a missing ast-grep raises MissingToolError
+ */
+export async function countFindings(analysis: string, context: StructureInput, index: ScriptIndex): Promise<Finding[]> {
+    const rule = RULES[analysis];
+    const ceiling = rule === undefined ? undefined : context.limit(rule.limit, 'bash');
+    if (rule === undefined || ceiling === undefined) return [];
+    const matches = await astGrepMatches(
+        context.input,
+        `kits/language/bash/rules/${rule.asset}`,
+        index.files.map((file) => file.path),
+    );
+    return index.files.flatMap((file) => {
+        const inFile = matches.filter((match) => match.file === file.path);
+        return file.functions.flatMap((entry) => {
+            const own = inFile.filter(
+                (match) => functionAt(file.functions, match.range.start.line + 1)?.start === entry.start,
+            );
+            const score = scoreFor(own, rule.isDepth);
+            if (score <= ceiling) return [];
+            return [
+                findingAt(
+                    context.input,
+                    { file: file.path, line: entry.start },
+                    rule.limit.replaceAll('_', '-'),
+                    `${entry.name} has ${String(score)} ${rule.noun}, over the ceiling of ${String(ceiling)}.`,
+                ),
+            ];
+        });
+    });
+}

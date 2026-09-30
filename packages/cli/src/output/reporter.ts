@@ -1,31 +1,35 @@
 import type { Colors } from 'picocolors/types';
 import { colors } from '#cli/output/messages.ts';
 import { stripVTControlCharacters } from 'node:util';
+import { ERROR_EXIT } from '#cli/config/commands/commands.ts';
+import type { Finding, CheckResult } from '#cli/types/checks.ts';
+import { HOOK_FILES } from '#cli/config/repository/repository.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import type { Columns, ReporterOptions } from '#cli/types/output.ts';
-import { HOOK_FILES } from '#cli/constants/repository/repository.ts';
-import type { CheckResult, Finding } from '#cli/types/checks/checks.ts';
 
 import {
     FILES_WIDTH,
-    FINDINGS_SHOWN,
+    QUIET_HIDES,
     ID_WIDTH_MIN,
+    STATUS_WIDTH,
     MS_PER_SECOND,
     NOTE_STATUSES,
-    QUIET_HIDES,
+    FINDINGS_SHOWN,
     SCOPE_WIDTH_MIN,
-    STATUS_WIDTH,
-} from '#cli/constants/output.ts';
+} from '#cli/config/output.ts';
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Two lines print a duration; inlining it nests a template inside a template.
 function seconds(ms: number): string {
     return `${(ms / MS_PER_SECOND).toFixed(1)}s`;
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Two lines count files; inlining it nests a template inside a template.
 function fileCount(count: number): string {
     return `${String(count)} file${count === 1 ? '' : 's'}`;
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Two readers name the root scope; the caller sits at the complexity limit.
 function scopeName(scope: string): string {
     return scope === '' ? 'root' : scope;
 }
@@ -61,11 +65,14 @@ function location(finding: Finding): string {
     return `${finding.file}${line}${column}  `;
 }
 
-function findingLines(finding: Finding, colors: Colors): string[] {
+// The lines of one finding. Its help follows unless the next finding shares it, so a run of findings with the same
+// help prints it once, after the last of them.
+function findingLines(finding: Finding, colors: Colors, next?: Finding): string[] {
     const { dim, cyan } = colors;
     const rule = cyan(finding.rule ?? finding.check);
     const lines = [`  ${location(finding)}${rule}  ${finding.message}`];
-    if (finding.help !== undefined && finding.help !== '') lines.push(`    ${dim('help:')} ${finding.help}`);
+    if (finding.help !== undefined && finding.help !== '' && next?.help !== finding.help)
+        lines.push(`    ${dim('help:')} ${finding.help}`);
     return lines;
 }
 
@@ -77,7 +84,7 @@ function checkTail(check: CheckResult): string {
 
 function failureLines(check: CheckResult, options: ReporterOptions, colors: Colors): string[] {
     const shown = options.verbose ? check.findings : check.findings.slice(0, FINDINGS_SHOWN);
-    const lines = shown.flatMap((finding) => findingLines(finding, colors));
+    const lines = shown.flatMap((finding, index) => findingLines(finding, colors, shown[index + 1]));
     const hidden = check.findings.length - shown.length;
     if (hidden > 0) {
         const more = `and ${String(hidden)} more (--verbose prints every finding)`;
@@ -111,15 +118,13 @@ function ignoreLines(report: RunReport, options: ReporterOptions, colors: Colors
     });
 }
 
-function skipLine(check: string, source: string, colors: Colors): string {
-    const shown = `(${source})`;
-    return `skipped    ${check}  ${colors.dim(shown)}`;
-}
-
 function tailLines(report: RunReport, options: ReporterOptions, colors: Colors): string[] {
     const lines = [
         ...ignoreLines(report, options, colors),
-        ...report.skips.map((skip) => skipLine(skip.check, skip.source, colors)),
+        ...report.skips.map((skip) => {
+            const source = colors.dim(`(${skip.source})`);
+            return `skipped    ${skip.check}  ${source}`;
+        }),
     ];
     if (report.coverage.unchecked > 0) lines.push(`unchecked  ${fileCount(report.coverage.unchecked)} (gspot doctor)`);
     for (const finding of report.coverage.findings) lines.push(...findingLines(finding, colors));
@@ -132,6 +137,7 @@ function tailLines(report: RunReport, options: ReporterOptions, colors: Colors):
     return lines;
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Four summary lines count a noun; inlining it nests a template inside a template.
 function counted(value: number, noun: string): string {
     return `${String(value)} ${noun}${value === 1 ? '' : 's'}`;
 }
@@ -145,8 +151,26 @@ function summaryLine(report: RunReport, colors: Colors): string {
         report.coverage.findings.length,
     );
     const summary = `${counted(passed, 'check')} passed, ${counted(failed, 'check')} failed, ${counted(skipped, 'check')} skipped, ${counted(findings, 'finding')}, ${seconds(report.duration)}`;
-    if (report.exitCode === 2) return colors.red(`${summary} (incomplete)`);
+    if (report.exitCode === ERROR_EXIT) return colors.red(`${summary} (incomplete)`);
     return report.exitCode === 0 ? summary : colors.red(`${summary} (failed)`);
+}
+
+function hookFailureLines(report: RunReport): string[] {
+    const hook = HOOK_FILES.find((name) => name === environmentVariables()['GSPOT_HOOK']);
+    if (hook === undefined || report.exitCode === 0) return [];
+    const lines: string[] = [];
+    const reproduce = report.checks.find((check) => check.reproduce !== undefined)?.reproduce;
+    if (reproduce !== undefined) lines.push(`reproduce: ${reproduce}`);
+    lines.push(`Bypass this hook once: git ${hook === 'pre-push' ? 'push' : 'commit'} --no-verify`);
+    return lines;
+}
+
+function comparisonLine(comparison: RunReport['comparison'], quiet: boolean): string {
+    if (comparison === undefined || quiet) return '';
+    if (comparison.content === 'working-tree')
+        return `Working tree compared with the merge base of ${comparison.reference}.\n`;
+    const source = comparison.content === 'index' ? 'Staged index' : 'Committed tree';
+    return `${source} ${comparison.reference}.\n`;
 }
 
 /**
@@ -166,20 +190,8 @@ export function runText(report: RunReport, options: ReporterOptions): string {
     const isSeparated = tail.length > 0 && body.length > 0;
     const lines = [...body, ...(isSeparated ? [''] : []), ...tail];
     if (lines.length > 0) lines.push('');
-    lines.push(summaryLine(report, colors));
-    const hook = HOOK_FILES.find((name) => name === environmentVariables()['GSPOT_HOOK']);
-    if (hook !== undefined && report.exitCode !== 0) {
-        const reproduce = report.checks.find((check) => check.reproduce !== undefined)?.reproduce;
-        if (reproduce !== undefined) lines.push(`reproduce: ${reproduce}`);
-        lines.push(`Bypass this hook once: git ${hook === 'pre-push' ? 'push' : 'commit'} --no-verify`);
-    }
-    const comparison =
-        report.comparison === undefined || options.quiet
-            ? ''
-            : report.comparison.content === 'working-tree'
-              ? `Working tree compared with the merge base of ${report.comparison.reference}.\n`
-              : `${report.comparison.content === 'index' ? 'Staged index' : 'Committed tree'} ${report.comparison.reference}.\n`;
-    return `${comparison}${lines.join('\n')}\n`;
+    lines.push(summaryLine(report, colors), ...hookFailureLines(report));
+    return `${comparisonLine(report.comparison, options.quiet)}${lines.join('\n')}\n`;
 }
 
 /**

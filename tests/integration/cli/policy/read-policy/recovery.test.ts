@@ -1,9 +1,9 @@
-import { describe, expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect, describe } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
+import { MINIMAL_POLICY } from '#tests/inputs/cli.ts';
 import { textContaining } from '#tests/support/expectations.ts';
-import { MINIMAL_POLICY } from '#tests/constants/support/cli.ts';
-import { parsePolicyText, readPolicyText } from '#cli/policy/read.ts';
-import { GOOD_IGNORE } from '#tests/constants/integration/cli/policy/read-policy.ts';
+import { readPolicyText, parsePolicyText } from '#cli/policy/read.ts';
+import { GOOD_IGNORE } from '#tests/inputs/integration/cli/read-policy.ts';
 
 describe('readPolicyText', () => {
     test('an ignore without a reason is a finding on its line, and the other ignore stands', () => {
@@ -47,11 +47,11 @@ describe('readPolicyText', () => {
         expect(policy.scopeTables['api']?.limits?.root).toStrictEqual({});
     });
 
-    test('an unknown configuration and a default two configurations disagree on still stop reading', () => {
+    test('an unknown kit and a default two configurations disagree on still stop reading', () => {
         expect(() => readPolicyText(MINIMAL_POLICY.replace('bash', 'bas'), 'gspot.toml')).toThrow('bash');
     });
 
-    test('a table no selected configuration has says so without listing settings that do not exist', () => {
+    test('a table no selected kit has says so without listing settings that do not exist', () => {
         const { problems } = readPolicyText(
             `${MINIMAL_POLICY}[tools.shellcheck]\nrules = { SC2086 = "error" }\n`,
             'gspot.toml',
@@ -61,6 +61,6 @@ describe('readPolicyText', () => {
 
     test('a syntax error still stops reading, because no rest exists', () => {
         expect(() => readPolicyText(`${MINIMAL_POLICY}level = \n`, 'gspot.toml')).toThrow('is not valid TOML');
-        expect(() => readPolicyText(`${MINIMAL_POLICY}colour = "red"\n`, 'gspot.toml')).toThrow('`colour`');
+        expect(() => readPolicyText(`${MINIMAL_POLICY}hue = "red"\n`, 'gspot.toml')).toThrow('`hue`');
     });
 });

@@ -1,7 +1,11 @@
 // The types of parsers/sql in this package.
 
 // Keep psql substitutions outside SQL strings and comments while preserving character positions.
-export type Lexeme = { end: number; kind: 'comment' | 'dollar' | 'command' | 'variable' | 'other' };
+export type Token = {
+    end: number;
+    kind: 'block-comment' | 'line-comment' | 'dollar' | 'command' | 'variable' | 'other';
+};
+export type SqlToken = Token & { start: number };
 /** The part of the Emscripten module the parser wrapper calls. */
 export type PgModule = {
     lengthBytesUTF8: (text: string) => number;

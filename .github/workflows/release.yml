@@ -1,5 +1,5 @@
 name: release
-# Automatic release triggers remain disabled during the CI pause.
+# Release publication requires an explicit workflow dispatch.
 on:
     workflow_dispatch:
 permissions:
@@ -13,66 +13,9 @@ jobs:
             contents: read
             actions: read
             security-events: write
-        if: vars.GSPOT_CI_ENABLED == 'true'
         uses: $/.github/workflows/ci.yml
-        with:
-            full: true
-    targets:
-        needs: acceptance
-        runs-on: ubuntu-24.04
-        timeout-minutes: 5
-        outputs:
-            matrix: ${{ steps.targets.outputs.matrix }}
-        steps:
-            - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
-              with:
-                  persist-credentials: false
-            - id: targets
-              shell: bash
-              run: |
-                  matrix="$(jq -c '{include: map(. + {runner: (if .os == "darwin" then "macos-15" else "ubuntu-24.04" end)})}' packages/cli/src/platform/release-targets.json)"
-                  printf 'matrix=%s\n' "$matrix" >> "$GITHUB_OUTPUT"
-    build:
-        needs: targets
-        permissions:
-            contents: read
-            id-token: write
-            attestations: write
-        strategy:
-            fail-fast: false
-            matrix: ${{ fromJSON(needs.targets.outputs.matrix) }}
-        runs-on: ${{ matrix.runner }}
-        timeout-minutes: 30
-        steps:
-            - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
-              with:
-                  persist-credentials: false
-            - uses: jdx/mise-action@5ac50f778e26fac95da98d50503682459e86d566 # v3.2.0
-              with:
-                  version: '2026.8.8'
-                  install: false
-                  cache: false
-            - run: mise install bun node
-            - run: mise run --skip-tools repo:setup
-            - name: Validate the release version
-              shell: bash
-              run: mise run --skip-tools release:verify-version
-              env:
-                  TAG: ${{ github.ref_name }}
-            - run: mise run --skip-tools build -- --target "$TARGET"
-              env:
-                  TARGET: ${{ matrix.target }}
-            - uses: actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be # v2.4.0
-              with:
-                  subject-path: dist/*
-            - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-              with:
-                  name: ${{ matrix.binary }}
-                  path: dist/*
-                  if-no-files-found: error
-                  retention-days: 14
     publish:
-        needs: build
+        needs: acceptance
         runs-on: ubuntu-24.04
         timeout-minutes: 60
         environment: release
@@ -87,23 +30,26 @@ jobs:
               with:
                   version: '2026.8.8'
                   cache: false
-            - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
-              with:
-                  pattern: gspot-*
-                  path: dist/downloads
-            - name: Assemble matching artifacts
-              shell: bash
-              run: mise run --skip-tools release:assemble
             - run: mise run --skip-tools repo:setup
-            - run: mise run --skip-tools build:plugin
-            - run: mise run --skip-tools test:release
-            - run: mise run --skip-tools release:publish -- --tag "$TAG"
-              env:
-                  NPM_CONFIG_PROVENANCE: 'true'
-                  TAG: ${{ github.ref_name }}
-            - name: Publish release files
+            - name: Validate the release version
               shell: bash
-              run: gh release create "$TAG" dist/gspot-* dist/checksums.txt dist/LICENSE.md dist/NOTICE.md --title "$TAG" --generate-notes
+              run: mise run --skip-tools release:verify-version
+              env:
+                  TAG: ${{ github.ref_name }}
+            - run: mise run --skip-tools build
+            - run: mise run --skip-tools test:package
+            # npm trusted publishing: npm trades this job's OIDC token for a publish token that lasts one run, and
+            # records provenance. Each package names this workflow and the release environment as its trusted
+            # publisher on npmjs.com, so no token is stored anywhere.
+            - name: Publish the packages to npm
+              shell: bash
+              run: |
+                  for package in packages/eslint-plugin packages/cli; do
+                      npm publish "./${package}" --access public
+                  done
+            - name: Create the GitHub release
+              shell: bash
+              run: gh release create "${TAG}" --title "${TAG}" --generate-notes
               env:
                   GH_TOKEN: ${{ github.token }}
                   TAG: ${{ github.ref_name }}

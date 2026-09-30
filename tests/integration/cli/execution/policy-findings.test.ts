@@ -1,12 +1,12 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { writeFileSync } from 'node:fs';
-import { createFileTree, testdir } from 'testdirs';
+import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
 import { rejection, textContaining } from '#tests/support/expectations.ts';
-import { BROKEN, CORRECTED, POLICY_FINDINGS_OPTIONS } from '#tests/constants/integration/cli/execution/execution.ts';
+import { BROKEN, CORRECTED, POLICY_FINDINGS_OPTIONS } from '#tests/inputs/integration/cli/execution/execution.ts';
 
 test('a wrong line in gspot.toml is a finding of integrity/policy, and the other checks still run', async () => {
     await using sandbox = await testdir();

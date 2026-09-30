@@ -1,0 +1,99 @@
+[kit]
+name = "vue"
+kind = "framework"
+title = "Vue"
+requires = ["javascript"]
+recommends = ["typescript", "css", "vitest"]
+description = "Vue single-file components: ESLint reads the template and the script together, with the recommended Vue and accessibility rules as errors, and the Testing Library rules read test files."
+
+[detect]
+dependencies = ["vue"]
+extensions = [".vue"]
+
+[owners]
+extensions = [".vue"]
+kinds = ["source"]
+
+[[tools]]
+name = "eslint-plugin-vue"
+kind = "library"
+version = "10.11.0"
+npm = "eslint-plugin-vue"
+
+[[tools]]
+name = "vue-eslint-parser"
+kind = "library"
+version = "10.4.1"
+npm = "vue-eslint-parser"
+
+[[tools]]
+name = "eslint-plugin-vuejs-accessibility"
+kind = "library"
+version = "2.6.0"
+npm = "eslint-plugin-vuejs-accessibility"
+
+[[tools]]
+name = "eslint-plugin-testing-library"
+kind = "library"
+version = "7.16.2"
+npm = "eslint-plugin-testing-library"
+
+[[tools]]
+name = "vue-tsc"
+version = "3.3.11"
+npm = "vue-tsc"
+
+[[configs]]
+template = "eslint.fragment.js.tmpl"
+target = ".gspot/config/eslint.config.mjs"
+imports = "eslint.imports.js.tmpl"
+fragment = true
+code_files = ["**/*.vue"]
+
+[[checks]]
+name = "vue/eslint"
+title = "ESLint"
+example = "A Vue template containing `<div v-html=\"html\"></div>` reports `vue/no-v-html`. Render text with interpolation, such as `<p>{{ name }}</p>`, when the component needs text rather than injected markup."
+level = "recommended"
+stage = "commit"
+runs = "per-file-list"
+command = ["eslint", "--max-warnings", "0", "--no-warn-ignored", "--config", "{config:eslint}", "--format", "json", "{files}"]
+fix_command = ["eslint", "--fix", "--config", "{config:eslint}", "{files}"]
+fix_order = "codemod"
+findings_exit_codes = [1]
+fix_findings_exit_codes = [1]
+tool = "eslint"
+owners = {extensions = [".vue"]}
+coverage = ["style", "syntax", "structure"]
+output = {format = "eslint-json"}
+summary = "Runs ESLint with the Vue plugin over every .vue file. It reads the markup and the script together."
+why = "A component file is markup and code in one, and a plain JavaScript parser reads neither half of it."
+help = "Run gspot check --fix for the rules that fix themselves, then read each remaining line; gspot explain <rule> says what it means."
+
+[[checks]]
+name = "vue/typecheck"
+title = "Check Vue types"
+example = "A component script containing `const count: number = 'one';` reports an incompatible assignment. Correct it to `const count: number = 1;` when the contract requires a number."
+level = "recommended"
+stage = "push"
+runs = "per-scope"
+cwd = "scope"
+tool = "vue-tsc"
+analysis = "typescript"
+replaces = "typescript/tsc"
+needs = "typescript"
+owners = {extensions = [".vue"]}
+coverage = ["types"]
+output = {format = "regex", pattern = "^(?<file>[^(]+)\\((?<line>\\d+),(?<column>\\d+)\\): error (?<rule>TS\\d+): (?<message>.*)$"}
+summary = "Type-checks every Vue component and TypeScript file of the scope with the strict compiler options."
+why = "The TypeScript compiler cannot read a component file, so a type error inside one ships unless the Vue checker reads it."
+help = "Read the first error vue-tsc prints and fix that file; later errors are often the same mistake."
+
+[coverage]
+".vue" = ["format", "syntax", "style", "structure", "spelling"]
+
+[guides]
+framework = [{path = "framework/vue/VUE.md"}]
+
+[required_rules]
+vue = ["vue/no-v-html", "vue/require-v-for-key", "vue/no-mutating-props", "vue/no-use-v-if-with-v-for"]

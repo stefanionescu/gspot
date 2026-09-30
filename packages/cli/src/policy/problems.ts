@@ -1,7 +1,7 @@
 import * as messages from '#cli/policy/messages.ts';
+import { isReasonAccepted } from '#cli/policy/weaker.ts';
 import { quoteArgument } from '#cli/platform/arguments.ts';
-import { isReasonAccepted } from '#cli/policy/loosening.ts';
-import type { PathSegment, PolicyProblem, Policy, Reasoned, ToolTable } from '#cli/types/policy/policy.ts';
+import type { Policy, Reasoned, ToolTable, PathSegment, PolicyProblem } from '#cli/types/policy/policy.ts';
 
 function needReason(where: string, reason: string | undefined, command: string): string | undefined {
     if (reason === undefined) return messages.missingReason(where, command);
@@ -13,8 +13,9 @@ function reasonedProblem(where: string, value: Reasoned<unknown> | undefined): s
     return messages.refusedReason(where, value.reason);
 }
 
-function located(path: PathSegment[], message: string | undefined): PolicyProblem[] {
-    return message === undefined ? [] : [{ path, message }];
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Eight validators turn an optional message into a located problem; one owner keeps the shape.
+function located(path: PathSegment[], text: string | undefined): PolicyProblem[] {
+    return text === undefined ? [] : [{ path, message: text }];
 }
 
 function ignoreProblems(policy: Policy): PolicyProblem[] {
@@ -35,18 +36,18 @@ function ignoreProblems(policy: Policy): PolicyProblem[] {
 
 function declarationProblems(policy: Policy): PolicyProblem[] {
     if (!policy.requireReasons) return [];
-    return ['generated', 'vendored'].flatMap((nature) =>
+    return ['generated', 'vendored'].flatMap((kind) =>
         policy.declarations
-            .filter((entry) => entry.nature === nature)
+            .filter((entry) => entry.kind === kind)
             .flatMap((entry, index) => {
-                const where = `[[${entry.nature}]] ${entry.paths.join(', ')}`;
+                const where = `[[${entry.kind}]] ${entry.paths.join(', ')}`;
                 const [firstPath = ''] = entry.paths;
                 return located(
-                    [nature, index, 'reason'],
+                    [kind, index, 'reason'],
                     needReason(
                         where,
                         entry.reason,
-                        `gspot set ${entry.nature} ${quoteArgument(firstPath)} --reason "..."`,
+                        `gspot set ${entry.kind} ${quoteArgument(firstPath)} --reason "..."`,
                     ),
                 );
             }),
@@ -66,25 +67,24 @@ function limitProblems(policy: Policy): PolicyProblem[] {
     return problems;
 }
 
-// The command that records a reason for one naming entry.
-function namingCommand(table: string, entry: Record<string, string>): string {
-    return `gspot set naming.${table} ${quoteArgument(JSON.stringify(entry))} --reason "..."`;
-}
-
 function namingProblems(policy: Policy): PolicyProblem[] {
     if (!policy.requireReasons) return [];
     const allowed = policy.naming.allowed.flatMap((entry, index) => {
-        const message = needReason(
+        const text = needReason(
             `naming.allowed ${entry.name}`,
             entry.reason,
-            namingCommand('allowed', { name: entry.name }),
+            `gspot set naming.allowed ${quoteArgument(JSON.stringify({ name: entry.name }))} --reason "..."`,
         );
-        return located(['naming', 'allowed', index, 'reason'], message);
+        return located(['naming', 'allowed', index, 'reason'], text);
     });
     const removed = policy.naming.remove_groups.flatMap((entry, index) => {
         const where = `naming.remove_groups ${entry.group}`;
-        const message = needReason(where, entry.reason, namingCommand('remove_groups', { group: entry.group }));
-        return located(['naming', 'remove_groups', index, 'reason'], message);
+        const text = needReason(
+            where,
+            entry.reason,
+            `gspot set naming.remove_groups ${quoteArgument(JSON.stringify({ group: entry.group }))} --reason "..."`,
+        );
+        return located(['naming', 'remove_groups', index, 'reason'], text);
     });
     const excluded = policy.naming.rules.flatMap((rule, index) => {
         if (rule.exclude !== true) return [];
@@ -94,39 +94,24 @@ function namingProblems(policy: Policy): PolicyProblem[] {
     return [...allowed, ...removed, ...excluded];
 }
 
-function isOff(option: unknown): boolean {
-    const severity: unknown = Array.isArray(option) ? option[0] : option;
-    return severity === 'off' || severity === 0;
-}
-
-function ruleOffProblems(tool: string, rules: unknown, path: PathSegment[]): PolicyProblem[] {
-    const entries = typeof rules === 'object' && rules !== null ? Object.entries(rules as Record<string, unknown>) : [];
-    return entries
-        .filter(([, option]) => isOff(option))
-        .map(([rule]) => ({
-            path: [...path, 'rules', rule],
-            message: messages.ruleOffRefused(`<check that runs ${tool}>`, rule),
-        }));
-}
-
 function toolProblems(tool: string, table: ToolTable, requireReasons: boolean, path: PathSegment[]): PolicyProblem[] {
     const extra =
         requireReasons && table.extra !== undefined && !isReasonAccepted(table.extra.reason)
             ? messages.extraNeedsReason(tool)
             : undefined;
+    const rules = table['rules'];
+    const entries = typeof rules === 'object' && rules !== null ? Object.entries(rules as Record<string, unknown>) : [];
+    const disabled = entries
+        .filter(([, option]) => {
+            const severity: unknown = Array.isArray(option) ? option[0] : option;
+            return severity === 'off' || severity === 0;
+        })
+        .map(([rule]) => ({
+            path: [...path, 'rules', rule],
+            message: messages.ruleOffRefused(`<check that runs ${tool}>`, rule),
+        }));
     // Stylelint uses zero as an enabled numeric limit. Its schema rejects disabled primary options.
-    return [
-        ...located([...path, 'extra', 'reason'], extra),
-        ...(tool === 'stylelint' ? [] : ruleOffProblems(tool, table['rules'], path)),
-    ];
-}
-
-// The problem of a check entry that selects no paths.
-function checkProblems(policy: Policy): PolicyProblem[] {
-    return policy.checks.flatMap((entry, index) => {
-        if (entry.paths.length > 0) return [];
-        return [{ path: ['check', index, 'paths'], message: messages.checkEntryIncomplete(entry.name, 'paths') }];
-    });
+    return [...located([...path, 'extra', 'reason'], extra), ...(tool === 'stylelint' ? [] : disabled)];
 }
 
 /**
@@ -134,12 +119,12 @@ function checkProblems(policy: Policy): PolicyProblem[] {
  * @param policy the normalized policy
  * @returns the layers, root first
  */
-export function policyLayers(policy: Policy): { scope: Partial<Policy>; path: PathSegment[] }[] {
+export function policyLayers(policy: Policy): { table: Partial<Policy>; scope?: string; path: PathSegment[] }[] {
     return [
-        { scope: policy, path: [] },
+        { table: policy, path: [] },
         ...policy.scopes.flatMap((scope, index) => {
             const table = policy.scopeTables[scope.path];
-            return table === undefined ? [] : [{ scope: table, path: ['scope', index] as PathSegment[] }];
+            return table === undefined ? [] : [{ table, scope: scope.path, path: ['scope', index] as PathSegment[] }];
         }),
     ];
 }
@@ -150,8 +135,8 @@ export function policyLayers(policy: Policy): { scope: Partial<Policy>; path: Pa
  * @returns the problems in plain English
  */
 export function reasonProblems(policy: Policy): PolicyProblem[] {
-    const tools = policyLayers(policy).flatMap(({ scope, path }) =>
-        Object.entries(scope.tools ?? {}).flatMap(([tool, table]) =>
+    const tools = policyLayers(policy).flatMap(({ table: layer, path }) =>
+        Object.entries(layer.tools ?? {}).flatMap(([tool, table]) =>
             toolProblems(tool, table, policy.requireReasons, [...path, 'tools', tool]),
         ),
     );
@@ -161,6 +146,9 @@ export function reasonProblems(policy: Policy): PolicyProblem[] {
         ...limitProblems(policy),
         ...namingProblems(policy),
         ...tools,
-        ...checkProblems(policy),
+        ...policy.checks.flatMap((entry, index) => {
+            if (entry.paths.length > 0) return [];
+            return [{ path: ['check', index, 'paths'], message: messages.checkEntryIncomplete(entry.name, 'paths') }];
+        }),
     ];
 }

@@ -1,12 +1,12 @@
-import { dirname, join } from 'node:path';
+import { join, dirname } from 'node:path';
 import * as promises from 'node:fs/promises';
-import { expect, spyOn, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, spyOn, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { gitOutput } from '#tests/support/cli/git.ts';
 import { rejection } from '#tests/support/expectations.ts';
-import { withLifecycleOwner } from '#cli/lifecycle/ownership/owner.ts';
-import { existsSync, readFileSync, symlinkSync, unlinkSync } from 'node:fs';
-import { withRevisionSnapshot } from '#cli/repository/revisions/snapshot.ts';
+import { useRevision } from '#cli/repository/revisions/contents.ts';
+import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
+import { lstatSync, mkdirSync, existsSync, unlinkSync, symlinkSync, readFileSync } from 'node:fs';
 
 test('staged snapshots copy all workspace dependency trees before validating cross-tree links', async () => {
     await using sandbox = await testdir();
@@ -19,10 +19,10 @@ test('staged snapshots copy all workspace dependency trees before validating cro
         'packages/two/node_modules/owned/value.js': 'export const value = 2;',
         '.gitignore': 'node_modules/\n',
     });
-    symlinkSync('../packages/two/node_modules/owned', join(sandbox.path, 'node_modules/owned'));
+    symlinkSync('../packages/two/node_modules/owned', join(sandbox.path, 'node_modules/owned'), 'dir');
     gitOutput(sandbox.path, ['init']);
     gitOutput(sandbox.path, ['add', '.']);
-    await withRevisionSnapshot(sandbox.path, { kind: 'index' }, async (snapshot) => {
+    await useRevision(sandbox.path, { kind: 'index' }, async (snapshot) => {
         expect(await Bun.file(join(snapshot, 'node_modules/owned/value.js')).text()).toContain('value = 2');
         await Bun.write(join(snapshot, 'node_modules/owned/value.js'), 'snapshot change');
     });
@@ -30,10 +30,35 @@ test('staged snapshots copy all workspace dependency trees before validating cro
         'value = 2',
     );
     unlinkSync(join(sandbox.path, 'node_modules/owned'));
-    symlinkSync(sandbox.path, join(sandbox.path, 'node_modules/owned'));
-    expect(
-        await rejection(withRevisionSnapshot(sandbox.path, { kind: 'index' }, () => Promise.resolve(undefined))),
-    ).toContain('external link');
+    symlinkSync(sandbox.path, join(sandbox.path, 'node_modules/owned'), 'dir');
+    expect(await rejection(useRevision(sandbox.path, { kind: 'index' }, () => Promise.resolve(undefined)))).toContain(
+        'external link',
+    );
+});
+
+test('a workspace bin into untracked build output leaves the snapshot, and a broken link stops it', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'package.json': '{"workspaces":["packages/*"]}',
+        'bun.lock': '{}',
+        'packages/cli/package.json': '{"name":"cli","bin":{"cli":"dist/cli.js"}}',
+        'packages/cli/dist/cli.js': 'console.log(1);',
+        '.gitignore': 'node_modules/\ndist/\n',
+    });
+    mkdirSync(join(sandbox.path, 'node_modules/.bin'), { recursive: true });
+    symlinkSync('../packages/cli', join(sandbox.path, 'node_modules/cli'), 'dir');
+    symlinkSync('../cli/dist/cli.js', join(sandbox.path, 'node_modules/.bin/cli'));
+    gitOutput(sandbox.path, ['init']);
+    gitOutput(sandbox.path, ['add', '.']);
+    await useRevision(sandbox.path, { kind: 'index' }, (snapshot) => {
+        expect(existsSync(join(snapshot, 'node_modules/cli/package.json'))).toBe(true);
+        expect(lstatSync(join(snapshot, 'node_modules/.bin/cli'), { throwIfNoEntry: false })).toBeUndefined();
+        return Promise.resolve(undefined);
+    });
+    symlinkSync('../missing/tool.js', join(sandbox.path, 'node_modules/.bin/broken'));
+    expect(await rejection(useRevision(sandbox.path, { kind: 'index' }, () => Promise.resolve(undefined)))).toContain(
+        'cannot be resolved',
+    );
 });
 
 test('revision dependencies reject external manifest and installation links before copying', async () => {
@@ -50,17 +75,17 @@ test('revision dependencies reject external manifest and installation links befo
     gitOutput(sandbox.path, ['add', '.']);
     unlinkSync(join(sandbox.path, 'package.json'));
     symlinkSync(join(external.path, 'package.json'), join(sandbox.path, 'package.json'));
-    expect(
-        await rejection(withRevisionSnapshot(sandbox.path, { kind: 'index' }, () => Promise.resolve(undefined))),
-    ).toContain('Source link leaves');
+    expect(await rejection(useRevision(sandbox.path, { kind: 'index' }, () => Promise.resolve(undefined)))).toContain(
+        'Source link leaves',
+    );
     unlinkSync(join(sandbox.path, 'package.json'));
     await Bun.write(join(sandbox.path, 'package.json'), '{}');
     symlinkSync(external.path, join(sandbox.path, 'node_modules/external'));
-    expect(
-        await rejection(withRevisionSnapshot(sandbox.path, { kind: 'index' }, () => Promise.resolve(undefined))),
-    ).toContain('external link');
+    expect(await rejection(useRevision(sandbox.path, { kind: 'index' }, () => Promise.resolve(undefined)))).toContain(
+        'external link',
+    );
     unlinkSync(join(sandbox.path, 'node_modules/external'));
-    await withRevisionSnapshot(sandbox.path, { kind: 'index' }, async (snapshot) => {
+    await useRevision(sandbox.path, { kind: 'index' }, async (snapshot) => {
         expect(await Bun.file(join(snapshot, 'node_modules/example/index.js')).text()).toContain('value = 1');
     });
     expect(await Bun.file(join(external.path, 'private.txt')).text()).toBe('outside bytes');
@@ -77,87 +102,70 @@ test('a nested revision refuses its incomplete managed dependency installation',
     gitOutput(sandbox.path, ['init']);
     gitOutput(sandbox.path, ['add', '.']);
     const project = join(sandbox.path, 'project');
-    withLifecycleOwner(project, (owner) => {
+    runOwnedLifecycle(project, (owner) => {
         owner.beginInstallation('npm');
     });
-    expect(
-        await rejection(withRevisionSnapshot(project, { kind: 'index' }, () => Promise.resolve(undefined))),
-    ).toContain('Tool installation is incomplete');
-    withLifecycleOwner(project, (owner) => {
+    expect(await rejection(useRevision(project, { kind: 'index' }, () => Promise.resolve(undefined)))).toContain(
+        'Tool installation is incomplete',
+    );
+    runOwnedLifecycle(project, (owner) => {
         owner.finishInstallation('npm');
     });
-    await withRevisionSnapshot(project, { kind: 'index' }, async (snapshot) => {
+    await useRevision(project, { kind: 'index' }, async (snapshot) => {
+        // The private tools run in place, so the snapshot links them instead of copying them.
+        expect(lstatSync(join(snapshot, '.gspot/node_modules')).isSymbolicLink()).toBe(true);
         expect(await Bun.file(join(snapshot, '.gspot/node_modules/example/index.js')).text()).toContain('value = 1');
     });
 });
 
-test.each(['', 'nested/'])('revision prose checks reuse verified installed packages under %s', async (prefix) => {
+test.each(['', 'nested/'])('revision prose checks reuse the installed packages under %s', async (prefix) => {
     await using sandbox = await testdir();
     const config = `${prefix}.gspot/config/vale.ini`;
+    const packagePath = '.gspot/config/vale/styles/Example/rule.yml';
     await createFileTree(sandbox.path, {
         [config]: 'StylesPath = vale/styles\nPackages = Example\n',
-        '.gitignore': '.gspot/state/ownership.json\n.gspot/state/recovery/\n.gspot/config/vale/styles/Example/\n',
+        [`${prefix}${packagePath}`]: 'extends: existence\n',
+        '.gitignore': '.gspot/config/vale/styles/Example/\n',
     });
     gitOutput(sandbox.path, ['init']);
     gitOutput(sandbox.path, ['add', '.']);
     const project = join(sandbox.path, prefix);
-    const packagePath = '.gspot/config/vale/styles/Example/rule.yml';
-    withLifecycleOwner(project, (owner) => {
-        owner.replace(packagePath, { bytes: Buffer.from('extends: existence\n'), mode: 0o644 }, 'config');
-    });
-    await withRevisionSnapshot(sandbox.path, { kind: 'index' }, async (snapshot) => {
+    await useRevision(sandbox.path, { kind: 'index' }, async (snapshot) => {
         const copied = join(snapshot, prefix, packagePath);
         expect(await Bun.file(copied).text()).toBe('extends: existence\n');
         await Bun.write(copied, 'snapshot-only edit');
     });
     expect(await Bun.file(join(project, packagePath)).text()).toBe('extends: existence\n');
     await Bun.write(join(sandbox.path, config), 'Packages = Different\n');
-    expect(
-        await rejection(withRevisionSnapshot(sandbox.path, { kind: 'index' }, () => Promise.resolve(undefined))),
-    ).toContain('do not match the revision configuration');
-    await Bun.write(join(sandbox.path, config), 'StylesPath = vale/styles\nPackages = Example\n');
-    await Bun.write(join(project, packagePath), 'edited package');
-    expect(
-        await rejection(withRevisionSnapshot(sandbox.path, { kind: 'index' }, () => Promise.resolve(undefined))),
-    ).toContain('missing or edited');
+    expect(await rejection(useRevision(sandbox.path, { kind: 'index' }, () => Promise.resolve(undefined)))).toContain(
+        'do not match the revision configuration',
+    );
 });
 
-test.each([false, true])(
-    'a Windows snapshot relocates a Distlib launcher with quoted path %s without changing its payload',
-    async (quoted) => {
-        await using repository = await testdir();
-        const root = join(repository.path, "Windows author's project");
-        const prefix = Buffer.from('MZ\u0000native executable bytes\u0000');
-        const payload = Buffer.from('PK\u0003\u0004binary script payload\u0000ÿ', 'latin1');
-        const interpreter = join(root, '.venv/Scripts/python.exe');
-        const program = quoted ? `"${interpreter}"` : interpreter;
-        const header = `#!${program}\n`;
-        const launcher = Buffer.concat([prefix, Buffer.from(header), payload]);
-        await createFileTree(root, {
-            '.gitignore': '.venv/\n',
-            'pyproject.toml': '[project]\nname = "fixture"\nversion = "0.0.0"\n',
-            'source.py': 'selected = True\n',
-            'uv.lock': 'version = 1\n',
-            '.venv/pyvenv.cfg': `home = ${repository.path}\nversion_info = 3.12.2\ninclude-system-site-packages = false\n`,
-            '.venv/Scripts/python.exe': 'MZinterpreter',
-            '.venv/Scripts/check.exe': launcher,
-            '.venv/Lib/site-packages/source.pth': `${root}\n`,
-        });
-        gitOutput(root, ['init', '-q']);
-        gitOutput(root, ['add', '.']);
-        await withRevisionSnapshot(root, { kind: 'index' }, (snapshot) => {
-            const relocated = readFileSync(join(snapshot, '.venv/Scripts/check.exe'));
-            expect(relocated).toStrictEqual(
-                Buffer.concat([prefix, Buffer.from(`#!"${join(snapshot, '.venv/Scripts/python.exe')}"\n`), payload]),
-            );
-            expect(readFileSync(join(snapshot, '.venv/Lib/site-packages/source.pth'), 'utf8')).toBe(`${snapshot}\n`);
-            expect(readFileSync(join(snapshot, '.venv/Scripts/python.exe'), 'utf8')).toBe('MZinterpreter');
-            return Promise.resolve();
-        });
-        expect(readFileSync(join(root, '.venv/Scripts/check.exe'))).toStrictEqual(launcher);
-        expect(readFileSync(join(root, '.venv/Lib/site-packages/source.pth'), 'utf8')).toBe(`${root}\n`);
-    },
-);
+test('a snapshot leaves the virtual environment in the working tree and still checks its lock', async () => {
+    await using repository = await testdir();
+    const root = join(repository.path, "an author's project");
+    await createFileTree(root, {
+        '.gitignore': '.venv/\n',
+        'pyproject.toml': '[project]\nname = "fixture"\nversion = "0.0.0"\n',
+        'source.py': 'selected = True\n',
+        'uv.lock': 'version = 1\n',
+        '.venv/pyvenv.cfg': `home = ${repository.path}\nversion_info = 3.12.2\n`,
+        '.venv/bin/python': 'interpreter',
+    });
+    gitOutput(root, ['init', '-q']);
+    gitOutput(root, ['add', '.']);
+    await useRevision(root, { kind: 'index' }, (snapshot) => {
+        expect(existsSync(join(snapshot, '.venv'))).toBe(false);
+        expect(readFileSync(join(snapshot, 'source.py'), 'utf8')).toBe('selected = True\n');
+        return Promise.resolve();
+    });
+    expect(readFileSync(join(root, '.venv/bin/python'), 'utf8')).toBe('interpreter');
+    await Bun.write(join(root, 'uv.lock'), 'version = 2\n');
+    expect(await rejection(useRevision(root, { kind: 'index' }, () => Promise.resolve(undefined)))).toContain(
+        'do not match the revision manifests',
+    );
+});
 
 test('cancellation drains dependency copies before removing the snapshot and preserves installed files', async () => {
     await using sandbox = await testdir();
@@ -193,7 +201,7 @@ test('cancellation drains dependency copies before removing the snapshot and pre
     try {
         expect(
             await rejection(
-                withRevisionSnapshot(
+                useRevision(
                     sandbox.path,
                     { kind: 'index' },
                     () => {
@@ -214,4 +222,25 @@ test('cancellation drains dependency copies before removing the snapshot and pre
     } finally {
         copy.mockRestore();
     }
+});
+
+test('a manifest checked out with CRLF matches its LF blob when Git converts line endings', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'package.json': '{\n    "name": "crlf"\n}\n',
+        'bun.lock': '{}\n',
+        '.gitignore': 'node_modules/\n',
+        'node_modules/example/index.js': 'export const value = 1;',
+    });
+    gitOutput(sandbox.path, ['init']);
+    gitOutput(sandbox.path, ['config', 'core.autocrlf', 'true']);
+    gitOutput(sandbox.path, ['add', '.']);
+    await Bun.write(join(sandbox.path, 'package.json'), '{\r\n    "name": "crlf"\r\n}\r\n');
+    await useRevision(sandbox.path, { kind: 'index' }, async (snapshot) => {
+        expect(await Bun.file(join(snapshot, 'node_modules/example/index.js')).text()).toContain('value = 1');
+    });
+    await Bun.write(join(sandbox.path, 'package.json'), '{\r\n    "name": "changed"\r\n}\r\n');
+    expect(await rejection(useRevision(sandbox.path, { kind: 'index' }, () => Promise.resolve(undefined)))).toContain(
+        'do not match the revision manifests',
+    );
 });

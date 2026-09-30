@@ -1,7 +1,7 @@
 // Questions the revision code asks Git, each answered by one command whose failure names the command.
 import { run } from '#cli/platform/spawn.ts';
-import { SelectionError } from '#cli/configurations/select.ts';
-import { GIT_TIMEOUT_MS } from '#cli/constants/checks/secrets.ts';
+import { GspotError } from '#cli/platform/errors.ts';
+import { GIT_TIMEOUT_MS } from '#cli/config/checks/security.ts';
 
 /**
  * What a Git command prints, or the selection error it failed with.
@@ -17,7 +17,7 @@ export async function gitText(root: string, argv: string[], cancelSignal?: Abort
         ...(cancelSignal === undefined ? {} : { cancelSignal }),
     });
     if (result.code !== 0)
-        throw new SelectionError([
+        throw new GspotError('selection', [
             `Git ${argv[0] ?? ''} failed in ${root} (exit ${String(result.code)}): ${result.stderr.trim()}`,
         ]);
     return result.stdout;
@@ -30,6 +30,7 @@ export async function gitText(root: string, argv: string[], cancelSignal?: Abort
  * @param cancelSignal cancellation for the command
  * @returns the trimmed output
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Git queries that return one value trim the output the same way.
 export async function gitValue(root: string, argv: string[], cancelSignal?: AbortSignal): Promise<string> {
     const text = await gitText(root, argv, cancelSignal);
     return text.trim();
@@ -65,6 +66,7 @@ export async function gitPaths(root: string, argv: string[], cancelSignal?: Abor
  * @param cancelSignal cancellation for the command
  * @returns true for a shallow repository
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Push selection and its refusal both ask Git whether the history is cut.
 export async function isShallow(root: string, cancelSignal?: AbortSignal): Promise<boolean> {
     const answer = await gitValue(root, ['rev-parse', '--is-shallow-repository'], cancelSignal);
     return answer === 'true';

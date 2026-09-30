@@ -21,7 +21,7 @@ the declaration is redundant or that its abstraction is wrong.
 
 ## Schema
 
-The shipped policy is `packages/cli/configurations/policy/naming/policy.json`. The repository extends it through
+The shipped policy is `packages/cli/kits/general/naming/policy.json`. The repository extends it through
 `[naming]` in `gspot.toml`. Both use one schema.
 
 ```json
@@ -118,25 +118,27 @@ Node globals and APIs (`spawnSync`, `setTimeout`, `clearTimeout`, `URLSearchPara
 and `visit_*` visitor methods, `setUp`, `setUpClass`, `tearDown`, `tearDownClass`, environment
 variable names a runtime fixes (`HF_TOKEN`, `CUDA_MODULE_LOADING`, `CODEQL_*`).
 
-The shared policy names no framework. A framework configuration carries the names its framework fixes
-as `[[naming.rules]]` in its manifest. The nextjs configuration holds the exports of Next.js
-and its route file names. The react configuration holds the hooks of React, and PascalCase for a
+The shared policy names no framework. A framework kit carries the names its framework fixes
+as `[[naming.rules]]` in its manifest. The nextjs kit holds the exports of Next.js
+and its route file names. The react kit holds the hooks of React, and PascalCase for a
 component and its file. Vue, Svelte, and React Native do the same.
 
-Each language configuration contributes its external names. A repository adds more under `[naming]
+Each language kit contributes its external names. A repository adds more under `[naming]
 external`.
 
 ### Contract properties
 
 Property keys fixed by a protocol, a package option or a data format are exempt when a named file lists them. Examples: HTTP headers (`Content-Type`, `Retry-After`), ARIA attributes, key names (`ArrowUp`), locale tags (`en-GB`), card brands. A repository lists them under
-`[naming] contract_properties = [{ file = "...", names = [...] }]`. A property signature in a
+`[naming] contract_properties = [{ file = "...", names = [...], reason = "..." }]`. A property signature in a
 type or interface whose name is snake_case or UPPER_SNAKE describes a shape another format
 fixes (TOML keys, a JSON API, a generated type). It is exempt from the case check without a listing; a class field is not.
 
 ## Per-language tables
 
 These are the defaults for `[naming.<language>]`; a repository changes them per language and
-per category (see Extension below).
+per category (see Extension below). Where the tool of a language checks case and the template
+turns it on (TypeScript, Python, Swift, CSS), the engine leaves case to the tool. It keeps the
+ceilings, the digit and word rules, and the categories the tool does not cover.
 
 | Language   | Files                                       | Directories  | Types                                                     | Functions                  | Parameters | Variables                      | Properties                      | Other                                                       | Max chars | Max words |
 | ---------- | ------------------------------------------- | ------------ | --------------------------------------------------------- | -------------------------- | ---------- | ------------------------------ | ------------------------------- | ----------------------------------------------------------- | --------- | --------- |
@@ -159,9 +161,6 @@ upper-snake     ^[A-Z]+(?:_[A-Z]+)*$
 snake-migration ^\d{14}_[a-z]+(?:_[a-z]+)*\.sql$
 ```
 
-Digits are excluded from every pattern on purpose; the digit ban reports them with its own
-message.
-
 Acronyms follow the language, and the splitter knows which convention it is reading:
 
 | Language               | Acronym form                                                     | Examples                                         |
@@ -183,12 +182,12 @@ prefix. SQL boolean columns remain bare predicates such as `enabled` and `retrya
 These house-style checks run at `all`. The action and parameter contract in
 [public vocabulary](README.md#glossary) also applies to the naming rules and lint configuration of gspot itself.
 
-`handle` as a leading verb is a `verbs` finding in the shared policy. A configuration whose framework
+`handle` as a leading verb is a `verbs` finding in the shared policy. A kit whose framework
 uses the word allows it in its own rules: react for an event prop (`handleSubmit`), express and
 nestjs for a request handler, and swift for an `@objc` selector. `Handler` as a type or role
 suffix is always a `roles` finding.
 
-The nextjs configuration strips the brackets and parentheses of a route segment before matching:
+The nextjs kit strips the brackets and parentheses of a route segment before matching:
 `[slug]` is a path parameter in camel case, `(group)` is a folder in kebab case, and `@slot`
 likewise. `_private` folders drop the underscore.
 
@@ -206,31 +205,17 @@ categories = ["directories"]
 names      = ["e2e"]
 allow_digits = true
 
-[[naming.rules]]
-paths      = ["supabase/src/data/**"]
-categories = ["directories"]
-names      = ["data"]
-exclude    = true
-reason     = "The Supabase CLI names this directory."
-
-[[naming.rules]]
-paths      = ["config/**/*.py"]
-categories = ["constants"]
-structural_prefix = "^(?:TRT|OTEL|WS|HF)_"
 ```
 
 A rule narrows by paths, languages and categories, and does one of: exclude the named names,
 allow digits, allow duplicate words, strip a structural prefix, or set the case list. Every
 exclusion carries a reason.
 
-The shipped policy carries the rules every repository needs:
-
-- `_` and single letters `i j k x y` excluded in loop and lambda positions;
-- `__init__` and `__main__` excluded as Python file names;
-- `.githooks` and `.mise` excluded as directory names;
-- a leading underscore stripped as a structural prefix for private Python and Bash names;
-- the same for the unused TypeScript and JavaScript parameters and variables ESLint asks to be marked that way;
-- `pre` accepted as a shared prefix in hook directories;
+The shipped policy carries the rules every repository needs. `_` and single letters are
+excluded in loop and lambda positions. `__init__` and `__main__` are excluded as Python file
+names, and `.githooks` and `.mise` as directory names. A leading underscore is stripped as a
+structural prefix for private Python and Bash names, and for the unused parameters ESLint asks
+to be marked that way. `pre` is accepted as a shared prefix in hook directories.
 
 ## Matching
 
@@ -257,7 +242,7 @@ exemptions that whole-part matching does not need.
 The engine extracts identifiers with tree-sitter per language and classifies them. One unit test for each language runs the shipped policy over a short file written the way
 that language and its frameworks are written, and expects no finding (T-19).
 
-Extraction skips: generated files (by nature), lockfiles, the paths a configuration excludes
+Extraction skips: generated files (by kind), lockfiles, the paths a kit excludes
 (`node_modules`, build output, `.git`, caches, `Generated/`, `vendor/`), and string contents.
 Three things in a file are not declarations and are not extracted. Declaration files (`.d.ts`) describe another module. Import bindings (`const { existsSync } = require('node:fs')`, `const { default: X } = await import(...)`) belong to the imported module. The keys and methods of object literals name what another party reads (an ESLint visitor, an option table).
 
@@ -273,7 +258,7 @@ allowed      = [{ name = "createServiceRoleClient", reason = "Supabase API name"
 external     = ["RTCPeerConnection", "RTCAudioSink"]
 reserved     = [{ term = "payload", allowed_for = ["queue message body"] }]
 remove_groups = [{ group = "verbs-strict", reason = "A model-serving codebase has real loaders." }]
-contract_properties = [{ file = "src/app/api/checkout/route.ts", names = ["Retry-After"] }]
+contract_properties = [{ file = "src/app/api/checkout/route.ts", names = ["Retry-After"], reason = "An HTTP header." }]
 
 # Ceilings and cases per language, and per category inside a language.
 [naming.python]
@@ -308,7 +293,5 @@ and `defensive` groups refuse removal by command and by hand alike.
 
 The Vale `gspot` style bans the words of the `marketing` and `defensive` groups in prose, so a
 comment cannot say what an identifier cannot say. The style holds its own lists under
-`packages/cli/configurations/policy/prose/styles/gspot/`, and a unit test holds each list equal to its group of
-`packages/cli/configurations/policy/naming/policy.json`.
-
-Names follow their behavioral owners. Do not require top-level `config` or `types` buckets, forwarding modules, or source/test directory symmetry. Rename consumers directly without aliases.
+`packages/cli/kits/general/prose/styles/gspot/`, and a unit test holds each list equal to its group of
+`packages/cli/kits/general/naming/policy.json`.

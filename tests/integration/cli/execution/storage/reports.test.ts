@@ -1,17 +1,18 @@
 import * as fs from 'node:fs';
 import { join } from 'node:path';
 import { rejects } from 'node:assert/strict';
-import { expect, spyOn, test } from 'bun:test';
+import { test, spyOn, expect } from 'bun:test';
 import { runText } from '#cli/output/reporter.ts';
-import { createFileTree, testdir } from 'testdirs';
+import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { storageSession } from '#tests/support/cli/storage.ts';
 
 for (const target of ['cache', 'report.json', 'report.sarif', 'report.codequality.json']) {
     test.each([0, 1])(`${target} write failure preserves check status %s and findings`, async (status) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\nconfigurations = []\n',
+            'gspot.toml': policyOf([]),
             'source.ts': 'export {};\n',
         });
         const session = await storageSession(sandbox.path, status);
@@ -28,8 +29,8 @@ for (const target of ['cache', 'report.json', 'report.sarif', 'report.codequalit
                 isDryRun: false,
             });
             expect(outcome.report.exitCode).toBe(status);
-            expect(outcome.report.checks[0]?.status).toBe(status === 0 ? 'ok' : 'fail');
-            expect(outcome.report.checks[0]?.findings).toHaveLength(status);
+            expect(outcome.report.checks[0]!.status).toBe(status === 0 ? 'ok' : 'fail');
+            expect(outcome.report.checks[0]!.findings).toHaveLength(status);
             const output = runText(outcome.report, { quiet: false, verbose: false });
             expect(output).toContain(status === 0 ? '1 check passed' : 'Retained finding');
             const diagnostics = stderr.mock.calls.map((call) => String(call[0])).join('');
@@ -50,7 +51,7 @@ for (const target of ['cache', 'report.json', 'report.sarif', 'report.codequalit
 test('the message stage preserves the prior report files', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nconfigurations = []\n',
+        'gspot.toml': policyOf([]),
         'source.ts': 'export {};\n',
         '.gspot/reports/report.json': 'previous JSON',
         '.gspot/reports/report.sarif': 'previous SARIF',
@@ -76,7 +77,7 @@ test('the message stage preserves the prior report files', async () => {
 test.each([false, true])('unreadable selected sources reject a run with noCache=%s', async (noCache) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nconfigurations = []\n',
+        'gspot.toml': policyOf([]),
         'source.ts': 'export {};\n',
     });
     const session = await storageSession(sandbox.path, 0);
@@ -93,7 +94,7 @@ test.each([false, true])('unreadable selected sources reject a run with noCache=
 test('a dry run does not create cache, report, or ownership files', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nconfigurations = []\n',
+        'gspot.toml': policyOf([]),
         'source.ts': 'export {};\n',
     });
     const before = fs.readdirSync(sandbox.path, { recursive: true });
@@ -104,7 +105,7 @@ test('a dry run does not create cache, report, or ownership files', async () => 
         isDryRun: true,
     });
     expect(outcome.report.exitCode).toBe(0);
-    expect(outcome.report.checks[0]?.status).toBe('ok');
+    expect(outcome.report.checks[0]!.status).toBe('ok');
     expect(fs.readdirSync(sandbox.path, { recursive: true })).toStrictEqual(before);
     expect(fs.readFileSync(join(sandbox.path, 'source.ts'), 'utf8')).toBe('export {};\n');
 });

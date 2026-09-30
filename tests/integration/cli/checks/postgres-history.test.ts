@@ -1,16 +1,17 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { writeFileSync } from 'node:fs';
 import { rejects } from 'node:assert/strict';
-import { createFileTree, testdir } from 'testdirs';
+import { testdir, createFileTree } from 'testdirs';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { rejection } from '#tests/support/expectations.ts';
 import { sessionInput } from '#tests/support/cli/input.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { migrationsOf } from '#cli/checks/postgres/migrations.ts';
 import { migrationOrder, migrationsFrozen } from '#cli/checks/postgres/history.ts';
-import { ORIGINAL, PATH, POSTGRES_HISTORY_POLICY } from '#tests/constants/integration/cli/checks.ts';
+import { PATH, ORIGINAL, POSTGRES_HISTORY_POLICY } from '#tests/inputs/integration/cli/checks.ts';
 
 function git(root: string, args: string[]): string {
     const result = runBlocking(['git', ...args], { cwd: root });
@@ -52,17 +53,19 @@ test('migration history reports changed committed SQL and an earlier new version
     git(sandbox.path, ['mv', 'migrations/20240101_early.sql', 'migrations/20240301_later.sql']);
     expect(await migrationsFrozen(await sessionInput(sandbox.path, 'postgres/migrations-frozen'))).toStrictEqual([]);
     expect(await migrationOrder(await sessionInput(sandbox.path, 'postgres/migration-order'))).toStrictEqual([]);
-    const observed = await sessionInput(sandbox.path, 'postgres/migrations-frozen');
+    const read = await sessionInput(sandbox.path, 'postgres/migrations-frozen');
     const branch = git(sandbox.path, ['symbolic-ref', 'HEAD']);
     writeFileSync(join(sandbox.path, '.git', branch), 'broken');
-    await rejects(migrationsFrozen(observed), { message: /Cannot read committed Git history/u });
+    await rejects(migrationsFrozen(read), { message: /Cannot read committed Git history/u });
 });
 
-test('nested scopes keep migration roots and parsed observations separate', async () => {
+test('nested scopes keep migration roots and parsed reads separate', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml':
-            'version = 1\nconfigurations = ["postgres"]\n[[scope]]\npath = "apps/one"\nconfigurations = ["postgres"]\n[[scope]]\npath = "apps/two"\nconfigurations = ["postgres"]\n[scope.tools.postgres]\nmigrations_directory = "schema"\n',
+        'gspot.toml': policyOf(
+            ['postgres'],
+            '[[scope]]\npath = "apps/one"\nkits = ["postgres"]\n[[scope]]\npath = "apps/two"\nkits = ["postgres"]\n[scope.tools.postgres]\nmigrations_directory = "schema"\n',
+        ),
         [PATH]: ORIGINAL,
         'apps/one/migrations/20240101_one.sql': 'SELECT 1;\n',
         'apps/two/schema/20240101_two.sql': 'SELECT 2;\n',
@@ -77,10 +80,10 @@ test('nested scopes keep migration roots and parsed observations separate', asyn
         'apps/two': 'apps/two/schema/20240101_two.sql',
     };
     for (const selected of session.scopes) {
-        const scoped = engineInput(session, { scope: selected, spec, files: session.repository.files });
-        const migrations = await migrationsOf(scoped);
+        const scopeInput = engineInput(session, { scope: selected, spec, files: session.repository.files });
+        const migrations = await migrationsOf(scopeInput);
         expect(migrations.map((migration) => migration.path)).toStrictEqual([expected[selected.scope.path]!]);
-        expect(await migrationOrder(scoped)).toStrictEqual([]);
+        expect(await migrationOrder(scopeInput)).toStrictEqual([]);
     }
 });
 

@@ -1,10 +1,10 @@
 import type { Node } from 'web-tree-sitter';
+import { findingAt } from '#cli/checks/result.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
-import { xcodeFinding } from '#cli/checks/xcode/project.ts';
-import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
-import { SLEEP_CALLS, SWIFT_COMMENT_LINE } from '#cli/constants/checks/xctest.ts';
+import type { Finding, EngineInput } from '#cli/types/checks.ts';
+import { SLEEP_CALLS, SWIFT_COMMENT_LINE } from '#cli/config/checks/swift.ts';
 
 function hasReason(value: Node | undefined): boolean {
     if (value === undefined || value.text === 'nil') return false;
@@ -23,24 +23,18 @@ async function testFindings(
 ): Promise<Finding[]> {
     const findings: Finding[] = [];
     for (const file of input.files) {
-        if (file.nature !== 'source' || !file.tags.includes('swift-test')) continue;
-        const source = readSource(input.root, file.path, input.observations).toString('utf8');
+        if (file.kind !== 'source' || !file.tags.includes('swift-test')) continue;
+        const source = readSource(input.root, file.path, input.reads).toString('utf8');
         const tree = await parseSource('swift', source, input);
         if (tree === null) throw new Error('Swift test analysis could not parse the source.');
         try {
             for (const node of matching(tree.rootNode, source.split('\n')))
-                findings.push(xcodeFinding(input, { file: file.path, line: node.startPosition.row + 1 }, rule, text));
+                findings.push(findingAt(input, { file: file.path, line: node.startPosition.row + 1 }, rule, text));
         } finally {
             tree.delete();
         }
     }
     return findings;
-}
-
-// Whether a callee is one of the sleeps, with a generic Task specialization read as Task.
-function isSleepCall(callee: string): boolean {
-    const plain = callee.replace(/^Task<[^>]+>\./u, 'Task.');
-    return SLEEP_CALLS.has(plain);
 }
 
 /**
@@ -54,46 +48,48 @@ export async function disabledTests(input: EngineInput): Promise<Finding[]> {
         'disabled',
         'This test is turned off and says no reason in its reason argument or availability annotation.',
         (root, lines) => {
-            const missing: Node[] = [];
-            for (const call of root.descendantsOfType('call_expression')) {
-                const name = call.firstNamedChild?.text.replace(/^XCTest\./u, '');
-                if (
-                    ![
+            const calls = root
+                .descendantsOfType('call_expression')
+                .map((call) => ({ call, name: call.firstNamedChild?.text.replace(/^XCTest\./u, '') ?? '' }))
+                .filter(({ name }) =>
+                    [
                         'XCTSkip',
                         'XCTSkipIf',
                         'XCTSkipUnless',
                         '.disabled',
                         'ConditionTrait.disabled',
                         'Testing.ConditionTrait.disabled',
-                    ].includes(name ?? '')
+                    ].includes(name),
                 )
-                    continue;
-                const argumentsNode = call.namedChildren
-                    .find((node) => node.type === 'call_suffix')
-                    ?.namedChildren.find((node) => node.type === 'value_arguments');
-                const positional =
-                    argumentsNode?.namedChildren.filter(
-                        (node) => node.type === 'value_argument' && node.childForFieldName('name') === null,
-                    ) ?? [];
-                const reason =
-                    positional[name === 'XCTSkipIf' || name === 'XCTSkipUnless' ? 1 : 0]?.childForFieldName('value') ??
-                    undefined;
-                if (!hasReason(reason)) missing.push(call);
-            }
-            for (const attribute of root.descendantsOfType('attribute')) {
+                .filter(({ call, name }) => {
+                    const argumentsNode = call.namedChildren
+                        .find((node) => node.type === 'call_suffix')
+                        ?.namedChildren.find((node) => node.type === 'value_arguments');
+                    const positional =
+                        argumentsNode?.namedChildren.filter(
+                            (node) => node.type === 'value_argument' && node.childForFieldName('name') === null,
+                        ) ?? [];
+                    const reason =
+                        positional[['XCTSkipIf', 'XCTSkipUnless'].includes(name) ? 1 : 0]?.childForFieldName('value') ??
+                        undefined;
+                    return !hasReason(reason);
+                })
+                .map(({ call }) => call);
+            const attributes = root.descendantsOfType('attribute').filter((attribute) => {
                 if (
                     attribute.firstNamedChild?.text !== 'available' ||
                     !attribute.namedChildren.some(
                         (node) => node.type === 'simple_identifier' && node.text === 'unavailable',
                     )
                 )
-                    continue;
-                const message =
+                    return false;
+                const reasonArgument =
                     attribute.namedChildren.find((node) => node.text === 'message')?.nextNamedSibling ?? undefined;
-                if (!hasReason(message) && !SWIFT_COMMENT_LINE.test(lines[attribute.startPosition.row - 1] ?? ''))
-                    missing.push(attribute);
-            }
-            return missing;
+                return (
+                    !hasReason(reasonArgument) && !SWIFT_COMMENT_LINE.test(lines[attribute.startPosition.row - 1] ?? '')
+                );
+            });
+            return [...calls, ...attributes];
         },
     );
 }
@@ -108,9 +104,11 @@ export async function noSleep(input: EngineInput): Promise<Finding[]> {
     const isAllowed = pathMatcher(allowed.flatMap((entry) => entry.paths));
     const said = 'A test that sleeps is slow when it passes and flaky when it fails; wait on an expectation.';
     const found = await testFindings(input, 'sleep', said, (root) =>
-        root
-            .descendantsOfType('call_expression')
-            .filter((node) => isSleepCall(node.firstNamedChild?.text.replaceAll(/\s/gu, '') ?? '')),
+        root.descendantsOfType('call_expression').filter((node) => {
+            const callee = node.firstNamedChild?.text.replaceAll(/\s/gu, '') ?? '';
+            const plain = callee.replace(/^Task<[^>]+>\./u, 'Task.');
+            return SLEEP_CALLS.has(plain);
+        }),
     );
     return found.filter((finding) => !isAllowed(finding.file));
 }
@@ -123,19 +121,22 @@ export async function noSleep(input: EngineInput): Promise<Finding[]> {
 export async function recordingMode(input: EngineInput): Promise<Finding[]> {
     const said = 'Recording mode is on, so this test writes a new reference and passes whatever the screen shows.';
     return await testFindings(input, 'recording', said, (root) =>
-        root.descendantsOfType(['assignment', 'property_declaration', 'value_argument']).filter((node) => {
-            if (node.type === 'value_argument')
+        root
+            .descendantsOfType(['assignment', 'property_declaration', 'value_argument'])
+            .map((node) => ({
+                node,
+                name: node.childForFieldName(node.type === 'assignment' ? 'target' : 'name')?.text ?? '',
+                value: node.childForFieldName(node.type === 'assignment' ? 'result' : 'value'),
+            }))
+            .filter(({ node, name, value }) => {
+                if (node.type === 'value_argument')
+                    return name === 'record' && ['true', '.all', '.missing', '.failed'].includes(value?.text ?? '');
                 return (
-                    node.childForFieldName('name')?.text === 'record' &&
-                    ['true', '.all', '.missing', '.failed'].includes(node.childForFieldName('value')?.text ?? '')
+                    ['isRecording', 'SnapshotTesting.isRecording'].includes(name) &&
+                    value?.type === 'boolean_literal' &&
+                    value.text === 'true'
                 );
-            const name = node.childForFieldName(node.type === 'assignment' ? 'target' : 'name')?.text;
-            const value = node.childForFieldName(node.type === 'assignment' ? 'result' : 'value');
-            return (
-                ['isRecording', 'SnapshotTesting.isRecording'].includes(name ?? '') &&
-                value?.type === 'boolean_literal' &&
-                value.text === 'true'
-            );
-        }),
+            })
+            .map(({ node }) => node),
     );
 }

@@ -1,30 +1,6 @@
-import { codeLines } from '#cli/checks/structure/code-lines.ts';
-import type { StructureAnalysis as Analysis } from '#cli/types/checks/structure.ts';
-import { directoryOf, directoryTree, stemOf } from '#cli/checks/structure/directories.ts';
-
-/**
- * One finding per script whose code lines exceed limits.bash.file_lines.
- * @param context the check context
- * @param scripts the shell index
- * @returns the findings
- */
-export const fileLength: Analysis = async (context, scripts) => {
-    const ceiling = context.limit('file_lines', 'bash');
-    if (ceiling === undefined) return [];
-    const index = await scripts();
-    return index.files.flatMap((file) => {
-        const count = codeLines(file.lines).length;
-        if (count <= ceiling) return [];
-        return [
-            context.report(
-                file.path,
-                1,
-                'file-lines',
-                `${String(count)} code lines is over the ceiling of ${String(ceiling)}.`,
-            ),
-        ];
-    });
-};
+import { findingAt } from '#cli/checks/result.ts';
+import type { StructureAnalysis as Analysis } from '#cli/types/checks.ts';
+import { stemOf, directoryOf, directoryTree } from '#cli/checks/structure/directories.ts';
 
 /**
  * One finding per file whose stem is also a sibling folder's name.
@@ -38,9 +14,9 @@ export const fileDirectoryCollision: Analysis = (context) => {
         const siblings = tree.get(directoryOf(file.path)) ?? [];
         if (siblings.every((entry) => !(entry.kind === 'dir' && entry.name === stem))) return [];
         return [
-            context.report(
-                file.path,
-                1,
+            findingAt(
+                context.input,
+                { file: file.path, line: 1 },
                 'stem-collision',
                 `${file.path} sits beside a folder named ${stem}/, so an import of ./${stem} names both.`,
             ),

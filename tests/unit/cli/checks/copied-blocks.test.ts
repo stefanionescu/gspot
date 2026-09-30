@@ -1,10 +1,10 @@
-import { describe, expect, test } from 'bun:test';
+import { test, expect, describe } from 'bun:test';
 import { join, toNamespacedPath } from 'node:path';
-import type { CloneReport } from '#cli/types/checks/docs.ts';
+import type { CloneReport } from '#cli/types/checks.ts';
 import { cloneFindings } from '#cli/checks/docs/copied-blocks.ts';
 
 describe('clone findings', () => {
-    test('native absolute and relative paths retain claimed copies and exclude other files', () => {
+    test('native absolute and relative paths retain owned copies and exclude other files', () => {
         const root = join(import.meta.dir, 'workspace café');
         const prefixes = new Set([root, toNamespacedPath(root), '']);
         for (const prefix of prefixes) {
@@ -23,7 +23,7 @@ describe('clone findings', () => {
                     },
                 ],
             };
-            const shape = { check: 'duplication/jscpd', root, ceiling: 4, claimed: new Set(['scripts/café.sh']) };
+            const shape = { check: 'duplication/jscpd', root, ceiling: 4, owned: new Set(['scripts/café.sh']) };
             expect(cloneFindings(report, shape)).toStrictEqual([
                 {
                     check: 'duplication/jscpd',

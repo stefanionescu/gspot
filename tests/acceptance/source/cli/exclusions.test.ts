@@ -1,15 +1,15 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { writeFileSync } from 'node:fs';
-import { createFileTree, testdir } from 'testdirs';
+import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { reportSchema } from '#cli/execution/report.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 
 test('excluded directories stay out of checks until the policy removes their exclusion', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'gspot.toml':
-            'version = 1\nconfigurations = ["bash"]\nexclude = ["legacy scripts"]\n[rules]\ninstall = false\n',
+        'gspot.toml': policyOf(['bash'], 'exclude = ["legacy scripts"]\n[guides]\ninstall = false\n'),
         'entry.sh': 'echo example\n',
         'legacy scripts/broken.sh': 'if then\n',
     });

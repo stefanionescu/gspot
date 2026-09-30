@@ -4,35 +4,34 @@ import { cpus } from 'node:os';
 import { inspectTool } from '#cli/tools/inspect.ts';
 import { pruneCache } from '#cli/execution/cache.ts';
 import { applyFixers } from '#cli/execution/fixers.ts';
+import type { CheckResult } from '#cli/types/checks.ts';
 import { readRepository } from '#cli/repository/tree.ts';
-import { resolveCheck } from '#cli/execution/engines.ts';
-import { jobsWanted } from '#cli/platform/environment.ts';
-import { isActive, planRun } from '#cli/execution/planning/plan.ts';
+import { planRun } from '#cli/execution/planning/plan.ts';
+import { checkExecution } from '#cli/execution/engines.ts';
 import { reproduceLine } from '#cli/execution/reproduce.ts';
 import { assembleReport } from '#cli/execution/run-report.ts';
-import type { CheckResult } from '#cli/types/checks/checks.ts';
 import type { IgnoreEntry } from '#cli/types/policy/policy.ts';
+import { environmentVariables } from '#cli/platform/environment.ts';
+import type { SourceReads } from '#cli/types/repository/repository.ts';
 import { applyIgnores, applyInlineIgnores } from '#cli/execution/ignores.ts';
-import type { SourceObservations } from '#cli/types/repository/repository.ts';
-import { DOCKER, FAILED_STATUSES, RAN_STATUSES } from '#cli/constants/execution/execution.ts';
-import { cachedResult, cacheKeyFor, runHashes, storeResult } from '#cli/execution/result-cache.ts';
+import { runHashes, cacheKeyFor, storeResult, cachedResult } from '#cli/execution/result-cache.ts';
+import { DOCKER, RAN_STATUSES, FAILED_STATUSES, HISTORY_ANALYSES } from '#cli/config/execution/execution.ts';
 
 import type {
-    Executable,
     Pass,
-    RunOptions,
-    RunOutcome,
+    Session,
     FixReport,
     IgnoreUse,
+    Executable,
+    RunOptions,
+    RunOutcome,
     PlannedCheck,
-    RunReport,
-    Session,
 } from '#cli/types/execution/execution.ts';
 
 // The plan and, for each planned check, the function that runs it.
-async function planExecutables(session: Session, options: RunOptions): Promise<Executable[]> {
-    const planned = await planRun(session, options);
-    return planned.map((check) => ({ check, run: resolveCheck(check.spec) }));
+function planExecutables(session: Session, options: RunOptions): Executable[] {
+    const planned = planRun(session, options);
+    return planned.map((check) => ({ check, run: checkExecution(check.spec) }));
 }
 
 // Rereads the repository after fixers changed it, so the run that follows sees the corrected files.
@@ -40,7 +39,7 @@ async function refreshAfterFixes(session: Session, opened: Session): Promise<voi
     const { declarations, scopes, exclude } = session.policyFiles.policy;
     session.repository = await readRepository(session.root, declarations, scopes, exclude);
     opened.repository = session.repository;
-    session.observations = { root: session.root, sources: new Map() };
+    session.reads = { root: session.root, sources: new Map() };
     session.inspections.clear();
 }
 
@@ -85,23 +84,23 @@ function mergeUses(into: Map<string, IgnoreUse>, uses: IgnoreUse[]): void {
     }
 }
 
-// The command line that reruns a failed check alone, with the stage and staged flags it ran under.
+// The command that reruns one failed check with its original stage and staged flags.
 function reproduceFor(check: PlannedCheck, result: CheckResult, options: RunOptions): string {
-    const messageFile = options.messageFile === undefined ? {} : { messageFile: options.messageFile };
-    const line = reproduceLine(result.check, result.scope, { stage: check.spec.stage, ...messageFile });
+    const commitOptions = options.messageFile === undefined ? {} : { messageFile: options.messageFile };
+    const line = reproduceLine(result.check, result.scope, { stage: check.spec.stage, ...commitOptions });
     return options.comparison?.content === 'index' ? `${line} --staged` : line;
 }
 
 // Drops the findings the ignores cover and settles the status on what remains.
-function applyIgnoresTo(
-    observations: SourceObservations,
+async function applyIgnoresTo(
+    reads: SourceReads,
     check: PlannedCheck,
     result: CheckResult,
     ignores: IgnoreEntry[],
     uses: Map<string, IgnoreUse>,
-): void {
+): Promise<void> {
     const countedFailure = check.spec.count_regex !== undefined && result.status === 'fail';
-    const inline = applyInlineIgnores(observations, result.findings);
+    const inline = await applyInlineIgnores(reads, result.findings);
     const ignored = applyIgnores(
         inline,
         ignores.filter((entry) => entry.check === check.check),
@@ -113,20 +112,22 @@ function applyIgnoresTo(
 }
 
 // Filters a result through the ignores and attaches the line that reproduces a failure.
-function filterResult(pass: Pass, check: PlannedCheck, result: CheckResult): void {
+async function filterResult(pass: Pass, check: PlannedCheck, result: CheckResult): Promise<void> {
     const { ignores } = pass.session.policyFiles.policy;
-    if (RAN_STATUSES.has(result.status)) applyIgnoresTo(pass.session.observations, check, result, ignores, pass.uses);
+    if (RAN_STATUSES.has(result.status)) await applyIgnoresTo(pass.session.reads, check, result, ignores, pass.uses);
     if (FAILED_STATUSES.has(result.status)) result.reproduce = reproduceFor(check, result, pass.options);
 }
 
 // Runs every active check under the job limit and reports each result as it settles.
 async function runChecks(pass: Pass, executables: Executable[]): Promise<CheckResult[]> {
-    const limiter = pLimit(jobsWanted() ?? Math.max(1, cpus().length));
+    const wanted = Number(environmentVariables()['GSPOT_JOBS'] ?? '');
+    const jobs = Number.isSafeInteger(wanted) && wanted > 0 ? wanted : Math.max(1, cpus().length);
+    const limiter = pLimit(jobs);
     const settled = await Promise.allSettled(
         executables.map((executable) =>
             limiter(async () => {
                 const result = await runOne(pass, executable);
-                filterResult(pass, executable.check, result);
+                await filterResult(pass, executable.check, result);
                 pass.options.onResult?.(result);
                 return result;
             }),
@@ -138,11 +139,11 @@ async function runChecks(pass: Pass, executables: Executable[]): Promise<CheckRe
     });
 }
 
-// The session of one run: fresh observations, a disposable stack for its resources, and the cancel signal.
+// The session of one run: fresh reads, a disposable stack for its resources, and the cancel signal.
 function runSession(opened: Session, options: RunOptions, resources: DisposableStack): Session {
     const session = {
         ...opened,
-        observations: { root: opened.root, sources: new Map<string, Buffer>() },
+        reads: { root: opened.root, sources: new Map<string, Buffer>() },
         resources,
         ...(options.cancelSignal === undefined ? {} : { cancelSignal: options.cancelSignal }),
     };
@@ -151,12 +152,12 @@ function runSession(opened: Session, options: RunOptions, resources: DisposableS
 }
 
 // The plan, replanned after fixers changed the repository so the run sees the corrected files.
-async function planWithFixes(
+async function planCorrections(
     session: Session,
     opened: Session,
     options: RunOptions,
 ): Promise<{ executables: Executable[]; fixes: FixReport | undefined }> {
-    const executables = await planExecutables(session, options);
+    const executables = planExecutables(session, options);
     if (!options.fix) return { executables, fixes: undefined };
     const fixes = await applyFixers(
         session,
@@ -165,17 +166,11 @@ async function planWithFixes(
     );
     if (options.isDryRun) return { executables, fixes };
     await refreshAfterFixes(session, opened);
-    return { executables: await planExecutables(session, options), fixes };
-}
-
-// Whether a run covered the whole repository with live results, so stale cache entries can go.
-function isPruneWorthy(options: RunOptions, report: RunReport): boolean {
-    if (options.isDryRun || options.noCache === true) return false;
-    return options.stage === 'all' && !report.narrowed;
+    return { executables: planExecutables(session, options), fixes };
 }
 
 /**
- * Runs the checks and returns the report. Writes .gspot/reports/report.json.
+ * Runs the checks and returns the report. Writes `.gspot/reports/report.json`.
  * @param opened the session
  * @param options stage, skips, fix and cache flags
  * @returns the report, the plan, and the fix report when --fix ran
@@ -184,7 +179,7 @@ export async function executeRun(opened: Session, options: RunOptions): Promise<
     using resources = new DisposableStack();
     const session = runSession(opened, options, resources);
     const started = new Date();
-    const { executables, fixes } = await planWithFixes(session, opened, options);
+    const { executables, fixes } = await planCorrections(session, opened, options);
     const planned = executables.map(({ check }) => check);
     const { ignores } = session.policyFiles.policy;
     const pass: Pass = {
@@ -194,9 +189,15 @@ export async function executeRun(opened: Session, options: RunOptions): Promise<
         staged: options.staged ? new Set(options.staged) : undefined,
         uses: new Map(ignores.map((entry) => [JSON.stringify(entry), { entry, matched: 0 }])),
     };
-    const active = executables.filter(({ check }) => isActive(check));
+    const active = executables.filter(
+        ({ check }) =>
+            check.files.length > 0 ||
+            check.triggerPaths.length > 0 ||
+            check.spec.stage === 'message' ||
+            (HISTORY_ANALYSES.has(check.spec.analysis ?? '') && (check.commits?.length ?? 0) > 0),
+    );
     const ran = await runChecks(pass, active);
-    const report = assembleReport({
+    const report = await assembleReport({
         session,
         options,
         started,
@@ -206,6 +207,6 @@ export async function executeRun(opened: Session, options: RunOptions): Promise<
         uses: pass.uses,
         fixes,
     });
-    if (isPruneWorthy(options, report)) pruneCache(session.cacheRoot ?? session.root);
+    if (!options.isDryRun && options.noCache !== true) pruneCache(session.cacheRoot ?? session.root);
     return fixes ? { report, planned, fixes } : { report, planned };
 }

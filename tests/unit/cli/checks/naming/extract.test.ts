@@ -1,6 +1,19 @@
-import { describe, expect, test } from 'bun:test';
-import { identifiersOf } from '#cli/checks/naming/extract.ts';
-import { TS } from '#tests/constants/unit/cli/checks/naming.ts';
+import { test, expect, describe } from 'bun:test';
+import { TS } from '#tests/inputs/unit/cli/checks/naming.ts';
+import { identifiersOf } from '#cli/checks/naming/engine.ts';
+
+test('property signature spelling does not establish an external contract', async () => {
+    const found = await identifiersOf(
+        'source.ts',
+        'interface Profile { user_name: string; USER_COUNT: number; userName: string; }',
+        'typescript',
+    );
+    expect(found.filter(({ category }) => category === 'properties').map(({ name }) => name)).toStrictEqual([
+        'user_name',
+        'USER_COUNT',
+        'userName',
+    ]);
+});
 
 describe('identifiersOf', () => {
     test('collects TypeScript declarations by category and skips object literal keys', async () => {

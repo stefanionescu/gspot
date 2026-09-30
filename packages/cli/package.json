@@ -1,9 +1,43 @@
 {
-    "name": "@gspot/cli",
-    "license": "Apache-2.0",
-    "private": true,
+    "name": "@gspothq/cli",
     "version": "0.1.0",
+    "publishConfig": {
+        "access": "public"
+    },
+    "description": "Lint AI-generated code and install rules for AI coding agents.",
+    "license": "Apache-2.0",
+    "author": "Stefan Ionescu",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/stefanionescu/gspot.git",
+        "directory": "packages/cli"
+    },
+    "homepage": "https://gspot.dev",
+    "keywords": [
+        "lint",
+        "linter",
+        "ai",
+        "coding-agents",
+        "git-hooks",
+        "eslint",
+        "cli"
+    ],
     "type": "module",
+    "bin": {
+        "gspot": "dist/gspot.js"
+    },
+    "files": [
+        "dist",
+        "kits",
+        "guides",
+        "grammars"
+    ],
+    "sideEffects": [
+        "./dist/gspot.js"
+    ],
+    "engines": {
+        "node": ">=22"
+    },
     "imports": {
         "#cli/*": "./src/*",
         "#package": "./package.json"
@@ -17,15 +51,12 @@
         "@npmcli/config": "10.12.0",
         "@yarnpkg/parsers": "3.1.0",
         "commander": "15.0.0",
-        "consola": "3.4.2",
-        "detect-libc": "2.1.2",
         "diff": "9.0.0",
-        "editorconfig": "3.0.2",
+        "entities": "7.0.1",
         "eta": "4.6.0",
         "execa": "9.6.1",
-        "globby": "16.2.4",
         "ignore": "7.0.9",
-        "json5": "2.2.3",
+        "import-meta-resolve": "4.2.0",
         "jsonc-parser": "3.3.1",
         "libpg-query": "18.1.4",
         "linguist-languages": "9.5.0",
@@ -45,15 +76,10 @@
         "smol-toml": "1.8.0",
         "spdx-expression-parse": "5.0.0",
         "spdx-satisfies": "6.0.0",
-        "tree-sitter-bash": "0.25.1",
-        "tree-sitter-css": "0.25.0",
-        "tree-sitter-html": "0.23.2",
-        "tree-sitter-javascript": "0.25.0",
-        "tree-sitter-python": "0.25.0",
-        "tree-sitter-typescript": "0.23.2",
         "typescript": "5.9.3",
         "unist-util-visit": "5.1.0",
         "web-tree-sitter": "0.27.0",
+        "which": "7.0.0",
         "yaml": "2.9.0",
         "zod": "4.6.2"
     },
@@ -61,6 +87,14 @@
         "@types/mdast": "4.0.4",
         "@types/npmcli__config": "6.0.4",
         "@types/picomatch": "4.0.2",
-        "@types/semver": "7.7.1"
+        "@types/semver": "7.7.1",
+        "@types/which": "3.0.4",
+        "tree-sitter-bash": "0.25.1",
+        "tree-sitter-css": "0.25.0",
+        "tree-sitter-html": "0.23.2",
+        "tree-sitter-javascript": "0.25.0",
+        "tree-sitter-python": "0.25.0",
+        "tree-sitter-ruby": "0.23.1",
+        "tree-sitter-typescript": "0.23.2"
     }
 }

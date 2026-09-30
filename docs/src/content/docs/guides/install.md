@@ -1,89 +1,85 @@
 ---
-title: Install gspot
-description: Install dependencies and run gspot from source.
+title: Install
+description: Install gspot from npm and set it up in a repository.
 sidebar:
     order: 1
 ---
 
-**gspot is unreleased.** The supported starting point is a source checkout.
+gspot is an npm package. It runs on Node.js 22 or newer, or on Bun, under macOS, Linux, and
+Windows. You also need Git.
 
-Use Git, a Bash-compatible shell, and mise 2026.8.8 or later to run gspot from a source checkout:
+## Install gspot
 
-```bash
-git clone https://github.com/stefanionescu/gspot.git
-cd gspot
-mise install bun node
-mise run repo:setup
-mise exec -- bun packages/cli/src/main.ts --help
-```
-
-While still in the checkout, define a command for your current shell:
+In a JavaScript or TypeScript repository, add gspot as a development dependency:
 
 ```bash
-gspot_source="$PWD/packages/cli/src/main.ts"
-gspot_runtime_path="$(dirname "$(mise which bun)"):$(dirname "$(mise which node)")"
-gspot() { PATH="$gspot_runtime_path:$PATH" bun "$gspot_source" "$@"; }
+npm install --save-dev @gspothq/cli
 ```
 
-Change to the repository you want to check. The function retains the checkout's Bun and Node
-runtimes and source entry point without changing your working directory.
-For a new setup, follow [your first check](/guides/quick-start/) or
-[adopt an existing repository](/guides/existing-repository/).
+With another package manager, use its add command: `pnpm add -D @gspothq/cli`, `yarn add -D @gspothq/cli`,
+or `bun add -d @gspothq/cli`.
 
-The default `recommended` level includes routine formatting and baseline correctness,
-security, accessibility, and type checks. Select `all` for additional stable conventions.
-Neither level enables experimental rules. Selected integrations determine installed tools,
-including parser and plugin dependencies for rules that are disabled.
+In a repository without `package.json`, install gspot once for your user:
 
-After an upgrade, run `gspot apply` to regenerate an existing project. Recommended projects
-gain formatting and broader baseline checks, while opinionated restrictions move to `all`.
-
-## Match the repository version
-
-`gspot init` writes `.gspot/version` and, when mise runs the repository, a pin in
-`.mise/conf.d/gspot-tools.toml`. This integration requires mise 2026.8.8 or newer. Everyone on the repository runs that version; another version
-refuses `check` and says how to install the pinned one or move the pin with
-`gspot apply`. Preview generated changes with `gspot apply --dry-run`, apply them, then run `gspot install`.
-
-## Native binaries and npm packages
-
-Local builds produce macOS binaries for arm64 and x64, Linux binaries for both architectures
-with glibc or musl, and a Windows x64 binary. The npm launcher selects the matching operating
-system, architecture, and Linux C library. It requires Node.js 18 or newer. Keep optional
-dependencies enabled: they contain the executable. Installation needs no lifecycle scripts.
-
-Git must be on `PATH`. A configured repository also needs its selected tools. `gspot install`
-installs the locked private npm and Python projects under `.gspot/`; mise manages native tools
-when selected. See [using gspot without mise](/guides/without-mise/) for native tool provisioning.
-
-Every binary distribution includes `LICENSE.md`, `NOTICE.md`, and checksums. npm packages
-include the same license and notice files. The [build guide](/guides/build/) describes local
-candidate preparation and grammar provenance.
-
-macOS builds are signed ad hoc. They are not Developer ID signed or notarized. A browser
-download can receive a quarantine attribute and be blocked by Gatekeeper. After verifying
-the binary against its release checksum, remove that attribute from the verified file:
-
-```shell
-xattr -d com.apple.quarantine ./gspot-darwin-arm64
+```bash
+npm install --global @gspothq/cli
 ```
 
-Use the filename for your architecture. Windows builds are not Authenticode signed; Windows
-can display an unknown-publisher warning. Windows installation and hook behavior have not been verified natively.
+Check that it runs:
+
+```bash
+npx gspot --version
+```
+
+The command prints the version, such as `0.1.0`. After a global install, you can leave out
+`npx`.
+
+## Set up a repository
+
+From the root of your repository, run:
+
+```bash
+npx gspot init
+```
+
+`init` shows a plan and writes it after you accept. The Git hooks it installs run gspot through
+your package manager, or through the `gspot` on your `PATH`. The
+[quickstart](/guides/quick-start/) goes through a full example.
 
 ## Join a configured repository
 
-Prepare the CLI version recorded in `.gspot/version`, then run from the configured repository:
+When a teammate already set up gspot, install the dependencies of the repository and run:
 
 ```bash
-gspot install
-gspot check
+npx gspot install
+npx gspot check
 ```
 
-Install consumes matching tool locks and sets up selected hooks. If policy and locks disagree,
-the policy owner must run `gspot apply` and share the resulting changes. Installation does not
-regenerate policy or add a `prepare` lifecycle script. Working-tree and staged checks warn when
-hooks are missing or edited; that warning does not change the check result.
+`install` installs the tools at the versions in the committed locks and sets up the Git hooks.
+It changes no tracked file. If the policy and the locks disagree, `install` stops. The person
+who changed the policy runs `gspot apply` and commits the result.
 
-See [edit and retain repository files](/guides/generated-files/) for what to commit,
-regenerate, and keep for restoration.
+## Match the repository version
+
+`gspot init` records the gspot version in `.gspot/version`. When mise runs the repository, it
+also pins that version in `.mise/conf.d/gspot-tools.toml`. Every person on the repository runs
+that version.
+
+A different version refuses `gspot check` and prints two ways forward: install the pinned
+version, or move the pin. To move the pin, preview the change, apply it, and install:
+
+```bash
+npx gspot apply --dry-run
+npx gspot apply
+npx gspot install
+```
+
+## Tools gspot runs
+
+Git must be on your `PATH`. gspot installs its npm and Python tools in a private project under
+`.gspot/`, so your own dependencies do not change. When mise runs the repository, mise also
+installs the native tools, such as ShellCheck. Without mise, see
+[package managers](/guides/without-mise/).
+
+The `bash` kit needs Bash 4.4 or newer. macOS ships Bash 3.2, so install a newer one with
+`brew install bash`. With Bash 3.2, the bash checks report that Bash is too old.

@@ -1,21 +1,22 @@
 // Policy errors name their gspot.toml location and accept the suggested correction.
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { writeFileSync } from 'node:fs';
-import { createFileTree, testdir } from 'testdirs';
+import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { textContaining } from '#tests/support/expectations.ts';
-import type { CommandFailureJson } from '#cli/types/commands/commands.ts';
+import type { CommandFailureJson } from '#cli/types/commands.ts';
 
 test.each([
-    { scope: 'root', policy: 'version = 1\nconfigurations = ["bas"]\n', line: 2 },
+    { scope: 'root', policy: policyOf(['bas']), line: 2 },
     {
         scope: 'nested',
-        policy: 'version = 1\nconfigurations = []\n[[scope]]\npath = "api"\nconfigurations = ["bas"]\n',
+        policy: policyOf([], '[[scope]]\npath = "api"\nkits = ["bas"]\n'),
         line: 5,
     },
 ])(
-    'unknown configurations in the $scope scope identify their declaration and accept the suggested configuration',
+    'unknown kits in the $scope scope identify their declaration and accept the suggested configuration',
     async ({ policy, line }) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'gspot.toml': policy, 'api/example.toml': 'value = 1\n' });
@@ -31,8 +32,10 @@ test.each([
 );
 
 test('a nested unknown setting is a finding at its line, and its correction clears it', async () => {
-    const policy =
-        'version = 1\nconfigurations = ["bash"]\n[rules]\ninstall = false\n[[scope]]\npath = "api"\n[scope.limits]\nfile_linse = 200\n';
+    const policy = policyOf(
+        ['bash'],
+        '[guides]\ninstall = false\n[[scope]]\npath = "api"\n[scope.limits]\nfile_linse = 200\n',
+    );
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': policy, 'api/source.sh': 'echo example\n' });
     const invalid = await run(sandbox.path, ['check', '--only', 'bash/syntax', '--no-cache', '--json']);
@@ -45,8 +48,10 @@ test('a nested unknown setting is a finding at its line, and its correction clea
 });
 
 test('a loosening without a reason is a finding of integrity/policy, and the rest of the policy runs', async () => {
-    const policy =
-        'version = 1\nconfigurations = ["bash"]\nrequire_reasons = true\n[rules]\ninstall = false\n[limits]\nfile_lines = 1000\n';
+    const policy = policyOf(
+        ['bash'],
+        'require_reasons = true\n[guides]\ninstall = false\n[limits]\nfile_lines = 1000\n',
+    );
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': policy, 'source.sh': 'echo example\n' });
     const checked = await run(sandbox.path, ['check', '--only', 'bash/syntax', '--no-cache', '--json']);
@@ -77,7 +82,7 @@ test.each(['\n', '\r\n'])(
     'configuration errors retain source locations in text and JSON with %j lines',
     async (newline) => {
         await using sandbox = await testdir();
-        const policy = ['version = 1', 'configurations = []', 'require_reasons = "wrong"', ''].join(newline);
+        const policy = ['version = 1', 'kits = []', 'require_reasons = "wrong"', ''].join(newline);
         await createFileTree(sandbox.path, { 'gspot.toml': policy });
         const text = await run(sandbox.path, ['check']);
         expect(text.code).toBe(2);
@@ -85,7 +90,7 @@ test.each(['\n', '\r\n'])(
         const json = await run(sandbox.path, ['check', '--json']);
         expect(json.code).toBe(2);
         expect(JSON.parse(json.stdout)).toMatchObject({
-            error: 'PolicyError',
+            error: 'policy',
             message: textContaining('gspot.toml:3:19:'),
         });
         writeFileSync(join(sandbox.path, 'gspot.toml'), policy.replace('"wrong"', 'true'));

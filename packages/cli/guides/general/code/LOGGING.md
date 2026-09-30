@@ -1,0 +1,62 @@
+---
+layer: code
+kit: rules
+title: Logging
+---
+
+# Logging
+
+Requirements about vocabulary, architecture, naming, documentation coverage, declaration
+order, API style, and complexity apply at `all` or when the project explicitly opts into
+them. Correctness, security, accessibility, type safety, routine formatting, and declared
+project contracts apply at both levels.
+
+## One logger
+
+<!-- level: all -->
+
+- One logger owner per process, configured at the entrypoint: level, format, redaction, transports.
+- Feature code obtains a logger from that owner. It never instantiates, configures, or adds transports.
+- Do not use `console.log`, `print`, or `debugPrint` for application logging. `print` is for a CLI's own stdout output.
+- Logs go to stdout or stderr. Files, databases, and third-party transports are wired at the owner, never in feature code.
+
+## Levels
+
+<!-- level: all -->
+
+- `debug`: noisy diagnostic detail, off in production.
+- `info`: normal lifecycle events and status.
+- `warn`: degraded, retryable, or unexpected but survivable conditions.
+- `error`: a failed operation that was recorded at an isolation boundary.
+- `fatal`: the process or a major owner is unusable and is shutting down.
+- Do not add custom levels.
+
+## Structure
+
+- The message string is stable, human-readable, and describes the event. Values go in structured fields, never interpolated into the message.
+- Preserve declared event names and field keys. Renaming an operational contract requires updating its consumers.
+- Include the request trace when one is available.
+- Use stable names for request IDs, correlation IDs, provider request IDs, operation IDs, resource IDs, and safe user IDs. Propagate them to provider calls when supported.
+- Put an error object in the field the logger serializes errors from, so stack and cause are kept.
+- Summarize: counts, IDs, statuses, provider names, durations. No large, deeply nested, or expensive-to-compute fields.
+- Do not compute expensive log arguments when the level is disabled.
+
+### Field naming
+
+<!-- level: all -->
+
+Use `lower_snake_case` for new event names and field keys unless an existing operational contract defines their spelling.
+
+## Never log
+
+- Secrets, tokens, passwords, cookies, authorization headers, connection strings.
+- Personal data, raw user content, full request or response bodies, provider payloads, database rows.
+- Anything outside the dedicated HTTP logger or reporting owner that dumps a request or response.
+
+Redaction lives in the logger owner. When a new sensitive key can reach logs, update the redaction list; do not filter at one call site.
+
+## Signals
+
+Production signals to emit: error rate, response latency, throughput, saturation, process restarts, provider failures, database failures, circuit breaker state.
+
+Tests for telemetry assert the mandatory fields and redaction, not that a logger was called.

@@ -1,43 +1,50 @@
 ---
-// Adapted from Turborepo's homepage grid. See /licenses/turborepo.txt.
+import example from './example.json';
 import { Code } from '@astrojs/starlight/components';
+
+const agentFile = example.agent.files.find((file) => file.path === 'src/utils.ts');
+if (agentFile === undefined) throw new Error('The homepage example has no src/utils.ts.');
+const summary = example.rejected.trimEnd().split('\n').at(-1) ?? '';
 ---
-    <section class="home-hero" aria-labelledby="_top">
-        <div class="hero-copy">
-            <p class="release">Source preview · Unreleased</p>
-            <h1 id="_top">Lint AI generated code</h1>
-            <p class="purpose">gspot configures linters, runs checks, and generates instructions for coding agents from one configuration file.</p>
-            <nav class="hero-actions" aria-label="Start using gspot">
-                <a class="primary" href="/guides/install/">Get started <span aria-hidden="true">↗</span></a>
-                <a href="/reference/commands/check/">View commands</a>
-            </nav>
-            <div class="setup-command"><p>From your source checkout</p><Code code="mise run repo:setup" lang="sh" /></div>
+<section class="home-hero" aria-labelledby="_top">
+    <div class="hero-copy">
+        <p class="release">gspot {example.version}</p>
+        <h1 id="_top">Lint AI-generated code</h1>
+        <p class="purpose">gspot is a command-line tool that lints AI-generated code and installs rules for AI coding agents. Git hooks run the checks on every commit.</p>
+        <nav class="hero-actions" aria-label="Start using gspot">
+            <a class="primary" href="/guides/install/">Get started <span aria-hidden="true">↗</span></a>
+            <a href="/reference/commands/check/">View commands</a>
+        </nav>
+        <div class="setup-command"><p>In your repository</p><Code code="npx @gspothq/cli init" lang="sh" frame="none" /></div>
+    </div>
+    <section class="hero-demo" aria-labelledby="hero-example" data-example-root>
+        <div class="demo-heading"><h2 id="hero-example">An agent commits a wrapper</h2><span>Recorded run · TypeScript · level all</span></div>
+        <div class="demo-steps" role="group" aria-label="Repository example">
+            <button type="button" data-example="policy" aria-controls="demo-policy" aria-pressed="false">1. Set up</button>
+            <button type="button" data-example="before" aria-controls="demo-before" aria-pressed="true">2. Commit</button>
+            <button type="button" data-example="after" aria-controls="demo-after" aria-pressed="false">3. Fix</button>
         </div>
-        <div class="hero-visual" aria-hidden="true">
-            <img src="/brand/home/hero.webp" alt="" width="600" height="600" fetchpriority="high" />
+        <div class="demo-panels" aria-live="polite">
+            <div id="demo-policy" data-example-panel="policy" hidden>
+                <Code code={`${example.commands.install}\n${example.commands.init}\n${example.commands.level}`} lang="sh" frame="none" />
+                <p class="demo-note">Install gspot, accept the plan, and turn on the house style.</p>
+            </div>
+            <div id="demo-before" data-example-panel="before">
+                <Code code={agentFile.content.trimEnd()} lang="typescript" title={agentFile.path} wrap />
+                <Code code={`git commit -m "${example.agent.message}"`} lang="sh" frame="none" />
+                <ul class="demo-findings">{example.findings.map((finding) => <li><code>{finding.file}:{finding.line}</code><p>{finding.message}</p><span>{finding.rule} · {finding.check}</span></li>)}</ul>
+                <p class="demo-status">{summary}</p>
+            </div>
+            <div id="demo-after" data-example-panel="after" hidden>
+                <ul class="demo-corrections"><li>Delete <code>src/utils.ts</code>.</li><li>Call <code>calculateTotal</code> directly.</li></ul>
+                <Code code={`git commit -m "${example.agent.message}"`} lang="sh" frame="none" />
+                <p class="demo-status">{example.passed}</p>
+                <a href="#finding">See the code change ↓</a>
+            </div>
         </div>
+        <a class="demo-guide" href="/guides/quick-start/">Run the complete example <span aria-hidden="true">→</span></a>
     </section>
-
-<style>
-    .home-hero { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); align-items: center; gap: 0; padding: 72px 0 88px; }
-    .hero-copy { grid-column: span 7; padding-right: 40px; position: relative; z-index: 1; }
-    .release { display: inline-flex; align-items: center; gap: 8px; color: var(--sl-color-gray-2); font-size: 0.75rem; margin: 0 0 24px; }
-    .home-hero h1 { font-size: clamp(2.5rem, 5.5vw, 4.5rem); font-weight: 550; line-height: 1.06; letter-spacing: -0.055em; margin: 0; max-width: 15ch; }
-
-    .purpose { font-size: 1rem; color: var(--sl-color-gray-2); line-height: 1.5; margin-block: 24px 12px; max-width: 48ch; }
-    .hero-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; margin-top: 28px; }
-    .hero-actions a { min-height: 44px; display: inline-flex; align-items: center; gap: 24px; font-size: 0.875rem; text-decoration: none; }
-    .hero-actions a:hover { text-decoration: underline; }
-    .primary { background: var(--sl-color-white); color: var(--sl-color-black); border-radius: 999px; padding: 10px 22px; font-weight: 600; }
-    .setup-command { max-width: 330px; margin-top: 28px; }
-    .setup-command p { margin: 0; font-size: 0.75rem; color: var(--sl-color-gray-3); }
-    .setup-command :global(.expressive-code) { margin-top: 8px; }
-    .hero-visual { grid-column: span 5; aspect-ratio: 1; display: grid; place-items: center; position: relative; }
-    .hero-visual img { width: 92%; position: relative; z-index: 1; height: auto; }
-    @media (max-width: 49.99rem) {
-        .home-hero { grid-template-columns: 1fr; gap: 32px; padding: 32px 0 48px; }
-        .hero-copy, .hero-visual { grid-column: 1; padding-right: 0; }
-        .hero-visual { display: none; }
-        .home-hero h1 { font-size: 2.75rem; }
-    }
-</style>
+</section>
+<script>
+    import './example.ts';
+</script>

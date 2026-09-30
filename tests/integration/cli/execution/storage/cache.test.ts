@@ -1,22 +1,27 @@
 import * as fs from 'node:fs';
 import { join } from 'node:path';
 import { throws } from 'node:assert/strict';
-import { expect, spyOn, test } from 'bun:test';
+import { test, spyOn, expect } from 'bun:test';
 import * as cache from '#cli/execution/cache.ts';
-import { createFileTree, testdir } from 'testdirs';
+import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
+import * as inspections from '#cli/tools/inspect.ts';
 import { readCached } from '#cli/execution/cache.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { reportSchema } from '#cli/execution/report.ts';
-import { commitAll, git } from '#tests/support/cli/git.ts';
+import { onPosix } from '#tests/support/cli/platforms.ts';
+import { planRun } from '#cli/execution/planning/plan.ts';
+import { git, commitAll } from '#tests/support/cli/git.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { storageSession } from '#tests/support/cli/storage.ts';
+import { runHashes, cacheKeyFor } from '#cli/execution/result-cache.ts';
 
 test.each(['{', '{"status":"ok","findings":[]}'])(
-    'an edited cached result %s is preserved and the check runs again',
+    'an edited cached result %s is a miss: the check runs again and its result replaces the entry',
     async (content) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\nconfigurations = []\n',
+            'gspot.toml': policyOf([]),
             'source.ts': 'export {};\n',
         });
         const session = await storageSession(sandbox.path, 1);
@@ -27,48 +32,46 @@ test.each(['{', '{"status":"ok","findings":[]}'])(
         const cache = join(sandbox.path, '.gspot/cache');
         const [entry] = fs.readdirSync(cache);
         fs.writeFileSync(join(cache, entry!), content);
-        const stderr = spyOn(process.stderr, 'write').mockImplementation(() => true);
-        try {
-            const repeated = await executeRun(session, options);
-            expect(repeated.report.exitCode).toBe(1);
-            expect(repeated.report.checks[0]?.findings[0]?.message).toBe('Retained finding');
-            expect(fs.readFileSync(join(cache, entry!), 'utf8')).toBe(content);
-            expect(JSON.parse(fs.readFileSync(reportPath, 'utf8'))).toStrictEqual(repeated.report);
-            expect(stderr.mock.calls.map((call) => String(call[0])).join('')).toContain(
-                'Preserved edited or unowned cache',
-            );
-        } finally {
-            stderr.mockRestore();
-        }
+        const repeated = await executeRun(session, options);
+        expect(repeated.report.exitCode).toBe(1);
+        expect(repeated.report.checks[0]?.status).toBe('fail');
+        expect(repeated.report.checks[0]?.findings[0]?.message).toBe('Retained finding');
+        expect(JSON.parse(fs.readFileSync(join(cache, entry!), 'utf8'))).toMatchObject({
+            status: 'fail',
+            findings: [{ message: 'Retained finding' }],
+        });
+        expect(JSON.parse(fs.readFileSync(reportPath, 'utf8'))).toStrictEqual(repeated.report);
     },
 );
 
-test('a denied owned cache read reports its path and cause', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nconfigurations = []\n',
-        'source.ts': 'export {};\n',
+// Windows has no read permission bit, and a running executable cannot be renamed there.
+if (onPosix)
+    test('a denied cache read reports its path and cause', async () => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'gspot.toml': policyOf([]),
+            'source.ts': 'export {};\n',
+        });
+        const session = await storageSession(sandbox.path, 0);
+        const initial = await executeRun(session, { stage: 'commit', skips: [], fix: false, isDryRun: false });
+        expect(initial.report.exitCode).toBe(0);
+        const directory = join(sandbox.path, '.gspot/cache');
+        const [entry] = fs.readdirSync(directory);
+        if (entry === undefined) throw new Error('The executed check did not create its cache result.');
+        const path = join(directory, entry);
+        const mode = fs.statSync(path).mode & 0o777;
+        fs.chmodSync(path, 0);
+        try {
+            throws(() => readCached(sandbox.path, entry.slice(0, -5)), /Could not read cached check result.*EACCES/u);
+        } finally {
+            fs.chmodSync(path, mode);
+        }
     });
-    const session = await storageSession(sandbox.path, 0);
-    const initial = await executeRun(session, { stage: 'commit', skips: [], fix: false, isDryRun: false });
-    expect(initial.report.exitCode).toBe(0);
-    const directory = join(sandbox.path, '.gspot/cache');
-    const [entry] = fs.readdirSync(directory);
-    if (entry === undefined) throw new Error('The executed check did not create its cache result.');
-    const path = join(directory, entry);
-    const mode = fs.statSync(path).mode & 0o777;
-    fs.chmodSync(path, 0);
-    try {
-        throws(() => readCached(sandbox.path, entry.slice(0, -5)), /Could not read cached check result.*EACCES/u);
-    } finally {
-        fs.chmodSync(path, mode);
-    }
-});
 
-test('checks share generated-file hashes within a run and observe edits in the next run', async () => {
+test('checks share generated-file hashes within a run and read edits in the next run', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nconfigurations = []\n',
+        'gspot.toml': policyOf([]),
         '.gspot/shared.toml': 'value = 1\n',
         'source.ts': 'export {};\n',
     });
@@ -78,7 +81,7 @@ test('checks share generated-file hashes within a run and observe edits in the n
     const target = join(sandbox.path, '.gspot/shared.toml');
     const hash = cache.fileHash;
     let reads = 0;
-    const observation = spyOn(cache, 'fileHash').mockImplementation((root, path) => {
+    const read = spyOn(cache, 'fileHash').mockImplementation((root, path) => {
         if (path === '.gspot/shared.toml') reads += 1;
         return hash(root, path);
     });
@@ -94,14 +97,14 @@ test('checks share generated-file hashes within a run and observe edits in the n
         expect(changed.report.checks.map((check) => check.status)).toStrictEqual(['ok', 'ok']);
         expect(reads).toBe(3);
     } finally {
-        observation.mockRestore();
+        read.mockRestore();
     }
 });
 
 test('staged caches persist while index content, declared input additions, and corrections invalidate results', async () => {
     await using sandbox = await testdir();
     const policy = `version = 1
-configurations = []
+kits = []
 [[check]]
 name = "sandbox/content"
 command = ${JSON.stringify([process.execPath, '-e', 'process.exitCode = (await Bun.file("source.txt").text()).startsWith("clean") ? 0 : 1'])}
@@ -143,3 +146,61 @@ format = "none"
     expect(reportSchema.parse(JSON.parse(unchanged.stdout)).checks[0]?.status).toBe('cache');
     expect(fs.readFileSync(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(policy);
 });
+
+// Windows has no read permission bit, and a running executable cannot be renamed there.
+if (onPosix)
+    test('an executable replacement cannot combine old permissions with new cached bytes', async () => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'gspot.toml': policyOf([]),
+            'source.ts': 'export {};\n',
+            checker: 'original executable',
+            replacement: 'replacement executable',
+        });
+        const executable = fs.realpathSync(join(sandbox.path, 'checker'));
+        const replacement = join(sandbox.path, 'replacement');
+        fs.chmodSync(executable, 0o700);
+        fs.chmodSync(replacement, 0o600);
+        const inode = fs.statSync(executable).ino;
+        const session = await storageSession(sandbox.path, 0);
+        const [planned] = planRun(session, { stage: 'commit', skips: [] });
+        planned!.tool = { name: 'fixture-checker', installers: {} };
+        const inspection = spyOn(inspections, 'inspectTool').mockReturnValue({
+            name: 'fixture-checker',
+            state: 'ok',
+            path: executable,
+        });
+        try {
+            const originalKey = cacheKeyFor(session, planned!, runHashes(session));
+            const stat = fs.statSync;
+            const fstat = fs.fstatSync;
+            let replaced = false;
+            const replace = (): void => {
+                if (replaced) return;
+                fs.renameSync(replacement, executable);
+                replaced = true;
+            };
+            const pathRead = spyOn(fs, 'statSync').mockImplementation(((...args: Parameters<typeof fs.statSync>) => {
+                const read = stat(...args);
+                if (args[0] === executable) replace();
+                return read;
+            }) as typeof fs.statSync);
+            const descriptorRead = spyOn(fs, 'fstatSync').mockImplementation(((
+                ...args: Parameters<typeof fs.fstatSync>
+            ) => {
+                const read = fstat(...args);
+                if (read.ino === inode) replace();
+                return read;
+            }) as typeof fs.fstatSync);
+            try {
+                expect(cacheKeyFor(session, planned!, runHashes(session))).toBe(originalKey);
+                expect(fs.readFileSync(executable, 'utf8')).toBe('replacement executable');
+            } finally {
+                pathRead.mockRestore();
+                descriptorRead.mockRestore();
+            }
+            expect(cacheKeyFor(session, planned!, runHashes(session))).not.toBe(originalKey);
+        } finally {
+            inspection.mockRestore();
+        }
+    });

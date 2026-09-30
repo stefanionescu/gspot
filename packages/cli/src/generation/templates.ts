@@ -1,94 +1,48 @@
-import { ESLINT_RULE_LEVELS } from '#cli/constants/checks/eslint-levels.ts';
 import { eta } from '#cli/generation/registry.ts';
 import { stringify as stringifyYaml } from 'yaml';
 import { readAsset } from '#cli/platform/assets.ts';
 import { extensionOf } from '#cli/platform/paths.ts';
-import { policyValue } from '#cli/policy/settings.ts';
 import { jsonText } from '#cli/generation/json-format.ts';
-import { PROSE_FORMATS } from '#cli/configurations/vale.ts';
-import { styleNames } from '#cli/generation/vale-styles.ts';
-import type { Manifest } from '#cli/types/configurations.ts';
+import type { TemplateInputs } from '#cli/types/generation.ts';
 import { TomlDate, stringify as stringifyToml } from 'smol-toml';
-import { markdownlintRules } from '#cli/generation/markdownlint.ts';
+import { BLOCK_IGNORES, TOKEN_IGNORES } from '#cli/config/kits.ts';
+import { policyValue, roleFolders } from '#cli/policy/settings.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
 import { scopeIgnorePatterns } from '#cli/generation/ignore-patterns.ts';
-import type { Policy, ScopeSelection } from '#cli/types/policy/policy.ts';
-import { aliasesFor, javascriptConfig } from '#cli/generation/javascript.ts';
-import type { TemplateInputs, PrettierPlugin } from '#cli/types/generation.ts';
-import { BLOCK_IGNORES, TOKEN_IGNORES } from '#cli/constants/configurations.ts';
+import { styleNames, PROSE_FORMATS } from '#cli/generation/vale-styles.ts';
+import { eslintConfiguration } from '#cli/generation/eslint/configuration.ts';
 import { ALL_COMPILER_OPTIONS } from '#cli/checks/typescript/compiler-options.ts';
-import { editorconfigOverrides, prettierConfig } from '#cli/generation/format.ts';
-import { RECOMMENDED_COMPILER_OPTIONS } from '#cli/constants/checks/typescript.ts';
-import { eslintRuleBlocks, structuralRuleBlocks } from '#cli/generation/eslint.ts';
+import { aliasesFor, javascriptConfiguration } from '#cli/generation/javascript.ts';
 import { headerFor, headerLines, jsonHeaderAdded } from '#cli/generation/headers.ts';
-import { JSON_EXTENSIONS, LEADING_NEWLINES, PACKAGE_JSON_INDENT } from '#cli/constants/generation.ts';
-
-function toolNames(scopes: ScopeSelection[]): string[] {
-    const names = scopes.flatMap((entry) =>
-        entry.selected.flatMap((manifest) => manifest.tools.map((tool) => tool.name)),
-    );
-    return [...new Set(names)].toSorted((a, b) => a.localeCompare(b));
-}
-
-// The npm packages of the selected tools: a repository installs them to run them, and imports none of them.
-function toolPackages(scopes: ScopeSelection[]): string[] {
-    const names = scopes.flatMap((entry) =>
-        entry.selected.flatMap((manifest) =>
-            manifest.tools.flatMap((tool) => {
-                const name = tool.installers['npm']?.name;
-                return name === undefined ? [] : [name];
-            }),
-        ),
-    );
-    return [...new Set(names)].toSorted((a, b) => a.localeCompare(b));
-}
-
-// The Prettier plugins the selected manifests ship, for the formatting generator.
-function prettierPlugins(selected: Manifest[]): PrettierPlugin[] {
-    return selected.flatMap((manifest) =>
-        manifest.tools.flatMap((tool) => {
-            const name = tool.installers['npm']?.name;
-            return tool.prettier === undefined || name === undefined
-                ? []
-                : [{ name, entry: tool.prettier.entry, overrides: tool.prettier.overrides }];
-        }),
-    );
-}
-
-function policyEntries(policy: Policy, scope: string): string[] {
-    const layers = [
-        { path: '', table: policy },
-        ...Object.entries(policy.scopeTables)
-            .filter(([path]) => path === scope || scope.startsWith(`${path}/`))
-            .map(([path, table]) => ({ path, table })),
-    ];
-    return layers.flatMap(({ path, table }) => {
-        const entries = (policyValue(table, 'tools.knip.entry')?.value ?? []) as string[];
-        return entries.map((pattern) => prefixed(path, pattern));
-    });
-}
+import type { Policy, MergedView, ScopeSelection } from '#cli/types/policy/policy.ts';
+import { JSON_EXTENSIONS, LEADING_NEWLINES, PACKAGE_JSON_INDENT } from '#cli/config/generation.ts';
+import { ESLINT_RULE_LEVELS, RECOMMENDED_COMPILER_OPTIONS } from '#cli/config/checks/typescript.ts';
+import { editorconfigOverrides, prettierConfiguration } from '#cli/generation/formatting/settings.ts';
+import { eslintRuleBlocks, manifestRuleBlocks, structuralRuleBlocks } from '#cli/generation/eslint/blocks.ts';
 
 function prefixed(path: string, pattern: string): string {
     if (path === '') return pattern;
     return pattern.startsWith('!') ? `!${path}/${pattern.slice(1)}` : `${path}/${pattern}`;
 }
 
-// The entry files of a scope: what its policy declares, then what its selected configurations know.
+// The entry files of a scope: what its policy declares, then what its selected kits know.
 function entryFiles(policy: Policy, scopes: ScopeSelection[], scope: string): string[] {
+    const layers = [
+        { path: '', table: policy },
+        ...Object.entries(policy.scopeTables)
+            .filter(([path]) => path === scope || scope.startsWith(`${path}/`))
+            .map(([path, table]) => ({ path, table })),
+    ];
+    const authored = layers.flatMap(({ path, table }) => {
+        const entries = (policyValue(table, 'tools.knip.entry')?.value ?? []) as string[];
+        return entries.map((pattern) => prefixed(path, pattern));
+    });
     const selected = scopes.find((entry) => entry.scope.path === scope)?.selected ?? [];
     const declared = selected.flatMap((manifest) => manifest.entry_files).map((pattern) => prefixed(scope, pattern));
-    return [...new Set([...policyEntries(policy, scope), ...declared])];
+    return [...new Set([...authored, ...declared])];
 }
 
-// The folders the settings with this role name, read from one scope's settings.
-function roleFolders(selected: Manifest[], settings: Record<string, unknown>, role: string): string[] {
-    return selected
-        .flatMap((manifest) => manifest.settings)
-        .filter((spec) => spec.role === role)
-        .map((spec) => settings[spec.name])
-        .filter((value): value is string => typeof value === 'string' && value !== '');
-}
-
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Both scope listings order scopes shallowest first by the same comparison.
 function byDepth(scopes: ScopeSelection[]): ScopeSelection[] {
     return scopes.toSorted(
         (left, right) =>
@@ -97,15 +51,72 @@ function byDepth(scopes: ScopeSelection[]): ScopeSelection[] {
     );
 }
 
+function scopeInputs(policy: Policy, scopes: ScopeSelection[], selection: ScopeSelection) {
+    const { view } = selection;
+    const tools = scopes.flatMap((entry) => entry.selected.flatMap((manifest) => manifest.tools));
+    const names = [...new Set(tools.map((tool) => tool.name))].toSorted((a, b) => a.localeCompare(b));
+    const packages = [
+        ...new Set(
+            tools.flatMap((tool) => (tool.installers['npm']?.name === undefined ? [] : [tool.installers['npm'].name])),
+        ),
+    ].toSorted((a, b) => a.localeCompare(b));
+    const plugins = selection.selected
+        .flatMap((manifest) => manifest.tools)
+        .flatMap((tool) => {
+            const name = tool.installers['npm']?.name;
+            return tool.prettier === undefined || name === undefined
+                ? []
+                : [{ name, entry: tool.prettier.entry, overrides: tool.prettier.overrides }];
+        });
+    return {
+        prettierConfig: (targetPath: string) =>
+            prettierConfiguration(policy, targetPath, view.extra('prettier'), plugins),
+        scope: selection.scope.path,
+        scopes: scopes
+            .filter((entry) => entry.scope.path !== '')
+            .map((entry) => ({
+                path: entry.scope.path,
+                kits: entry.selected.map((manifest) => manifest.kit.name),
+            })),
+        kitScopes: (kit: string) =>
+            byDepth(scopes.filter((entry) => entry.view.kits.includes(kit))).map((entry) => ({
+                path: entry.scope.path,
+                settings: entry.view.settings,
+                extra: entry.view.extra,
+            })),
+        roleFolders: (role: string) => roleFolders(selection.selected, view.settings, role),
+        roleScopes: (role: string) =>
+            byDepth(scopes)
+                .map((entry) => ({
+                    path: entry.scope.path,
+                    folders: roleFolders(entry.selected, entry.view.settings, role),
+                }))
+                .filter((entry) => entry.folders.length > 0),
+        kits: view.kits,
+        policy: policy,
+        view,
+        format: view.format,
+        settings: view.settings,
+        tool: view.tool,
+        entryFiles: (scope: string) => entryFiles(policy, scopes, scope),
+        limit: view.limit,
+        rulesOff: view.rulesOff,
+        ignoresFor: view.ignoresFor,
+        extra: view.extra,
+        tools: names,
+        toolPackages: packages,
+    };
+}
+
 /**
  * The inputs every template sees.
- * @param root the repository root
- * @param policy the repository policy
- * @param sourceFiles the tracked files
- * @param scopes every resolved scope
- * @param selection the scope being rendered
- * @param version the gspot version the header names
- * @returns the template inputs, with empty fragment parts the generator fills per target
+ * @param root the repository root.
+ * @param policy the repository policy.
+ * @param sourceFiles the tracked files.
+ * @param scopes every resolved scope.
+ * @param selection the scope being rendered.
+ * @param version the gspot version the header names.
+ * @returns the template inputs, with empty fragment parts the generator fills per target.
  */
 export function templateInputs(
     root: string,
@@ -117,17 +128,19 @@ export function templateInputs(
 ): TemplateInputs {
     const { view } = selection;
     const files = (extension: string): string[] =>
-        sourceFiles
-            .filter((file) => file.path.endsWith(extension) && file.nature === 'source')
-            .map((file) => file.path);
+        sourceFiles.filter((file) => file.path.endsWith(extension) && file.kind === 'source').map((file) => file.path);
     return {
-        javascriptConfig: (targetPath) => javascriptConfig(root, policy, targetPath, selection.scope.path),
-        prettierConfig: (targetPath) =>
-            prettierConfig(policy, targetPath, view.extra('prettier'), prettierPlugins(selection.selected)),
+        ...scopeInputs(policy, scopes, selection),
+        javascriptConfig: (targetPath) => javascriptConfiguration(root, policy, targetPath, selection.scope.path),
         markdownlintRules: markdownlintRules(view, policy.level === 'all'),
         scopeIgnorePatterns,
         editorconfigOverrides: () => editorconfigOverrides(policy),
-        eslintPolicy: [...structuralRuleBlocks(scopes, policy), ...eslintRuleBlocks(policy)],
+        eslintPolicy: [
+            ...structuralRuleBlocks(scopes, policy),
+            ...manifestRuleBlocks(scopes, policy),
+            ...eslintRuleBlocks(policy),
+        ],
+        eslint: () => eslintConfiguration({ root, policy, scopes, selection }),
         eslintRuleLevels: ESLINT_RULE_LEVELS,
         isAll: policy.level === 'all',
         typescriptOptions: policy.level === 'all' ? ALL_COMPILER_OPTIONS : RECOMMENDED_COMPILER_OPTIONS,
@@ -138,41 +151,10 @@ export function templateInputs(
             formats: PROSE_FORMATS,
         },
         version: version,
-        scope: selection.scope.path,
-        scopes: scopes
-            .filter((entry) => entry.scope.path !== '')
-            .map((entry) => ({
-                path: entry.scope.path,
-                configurations: entry.selected.map((manifest) => manifest.configuration.name),
-            })),
-        configurationScopes: (configuration) =>
-            byDepth(scopes.filter((entry) => entry.view.configurations.includes(configuration))).map((entry) => ({
-                path: entry.scope.path,
-                settings: entry.view.settings,
-            })),
-        roleFolders: (role) => roleFolders(selection.selected, view.settings, role),
-        roleScopes: (role) =>
-            byDepth(scopes)
-                .map((entry) => ({
-                    path: entry.scope.path,
-                    folders: roleFolders(entry.selected, entry.view.settings, role),
-                }))
-                .filter((entry) => entry.folders.length > 0),
-        configurations: view.configurations,
-        policy: policy,
-        view,
-        format: view.format,
-        settings: view.settings,
         fragments: '',
         fragmentImports: '',
         fragmentFiles: [],
         fragmentSelectors: [],
-        tool: view.tool,
-        entryFiles: (scope) => entryFiles(policy, scopes, scope),
-        limit: view.limit,
-        rulesOff: view.rulesOff,
-        ignoresFor: view.ignoresFor,
-        extra: view.extra,
         json: (value, indent = PACKAGE_JSON_INDENT) =>
             JSON.stringify(value, null, indent)
                 .replaceAll('\u{2028}', String.raw`\u2028`)
@@ -181,8 +163,6 @@ export function templateInputs(
         yaml: stringifyYaml,
         tomlDate: TomlDate,
         importAliases: (scope) => aliasesFor(root, scope),
-        tools: toolNames(scopes),
-        toolPackages: toolPackages(scopes),
         files,
         header: headerFor('x.toml', version),
         headerLines: headerLines(version),
@@ -191,11 +171,11 @@ export function templateInputs(
 
 /**
  * Renders a configuration template asset to the final text of a target, header included unless the target's reader refuses unknown keys.
- * @param templatePath the asset path of the template
- * @param targetPath the path the text is written to
- * @param inputs the template inputs
- * @param isHeaderWanted false for a reader that refuses the header key or comment
- * @returns the text to write
+ * @param templatePath the asset path of the template.
+ * @param targetPath the path the text is written to.
+ * @param inputs the template inputs.
+ * @param isHeaderWanted false for a reader that refuses the header key or comment.
+ * @returns the text to write.
  */
 export function emitTarget(
     templatePath: string,
@@ -212,4 +192,37 @@ export function emitTarget(
     const body = rendered.replace(LEADING_NEWLINES, '').trimEnd() + '\n';
     if (!isHeaderWanted) return body;
     return `${headerFor(targetPath, inputs.version)}${body}`;
+}
+
+/**
+ * Share effective Markdown rules between native editor and structured CLI configurations.
+ * @param view the merged view of the scope.
+ * @param isAll whether the all level enables document structure conventions.
+ * @returns the markdownlint rules table
+ */
+export function markdownlintRules(view: MergedView, isAll = false): Record<string, unknown> {
+    const rules = (view.tool('markdownlint')['rules'] ?? {}) as Record<string, unknown>;
+    const defaults =
+        rules['default'] === undefined
+            ? {
+                  default: true,
+                  MD007: { indent: view.format.indent_width },
+                  MD013: false,
+                  MD024: { siblings_only: true },
+                  MD033: false,
+                  MD041: isAll,
+                  MD045: false,
+                  MD025: isAll ? { front_matter_title: '' } : false,
+                  MD046: { style: 'fenced' },
+                  MD048: { style: 'backtick' },
+                  MD049: { style: 'underscore' },
+                  MD050: { style: 'asterisk' },
+                  MD060: false,
+              }
+            : {};
+    return {
+        ...defaults,
+        ...rules,
+        ...Object.fromEntries(view.rulesOff('markdown/markdownlint').map((rule) => [rule, false])),
+    };
 }

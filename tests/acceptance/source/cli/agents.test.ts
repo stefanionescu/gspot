@@ -1,17 +1,18 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
-import type { TakeoverPlan } from '#cli/types/commands/init.ts';
+import type { ReplacePlan } from '#cli/types/commands.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { currentBlock } from '#cli/lifecycle/managed-blocks.ts';
-import { chmodSync, existsSync, readFileSync, statSync } from 'node:fs';
+import { statSync, chmodSync, existsSync, readFileSync } from 'node:fs';
 
 test('agent instructions reach detected and configured consumers and uninstall restores authored content', async () => {
     await using sandbox = await testdir();
     const original = '# Gemini instructions\n\nKeep this authored note.\n';
     const copilot = '# Copilot instructions\n';
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nconfigurations = []\n',
+        'gspot.toml': policyOf([]),
         'GEMINI.md': original,
         '.github/copilot-instructions.md': copilot,
         '.cursor/.keep': '',
@@ -19,12 +20,11 @@ test('agent instructions reach detected and configured consumers and uninstall r
     const gemini = join(sandbox.path, 'GEMINI.md');
     chmodSync(gemini, 0o600);
     const mode = statSync(gemini).mode;
-    const selected = await run(sandbox.path, ['set', 'rules.agents', 'TEAM.md']);
+    const selected = await run(sandbox.path, ['set', 'guides.agents', 'TEAM.md']);
     expect(selected.code, selected.stdout + selected.stderr).toBe(0);
     const applied = await run(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    const content = readFileSync(join(sandbox.path, 'AGENTS.md'), 'utf8');
-    const instructions = currentBlock(content, 'markdown');
+    const instructions = currentBlock(readFileSync(join(sandbox.path, 'AGENTS.md'), 'utf8'), 'markdown');
     expect(instructions).toContain('general/agent/WORKING.md');
     for (const path of ['GEMINI.md', '.github/copilot-instructions.md', '.cursor/rules/gspot.mdc', 'TEAM.md']) {
         expect(currentBlock(readFileSync(join(sandbox.path, path), 'utf8'), 'markdown')).toBe(instructions);
@@ -53,7 +53,7 @@ test('an authored Cursor rule is preserved and escaping agent destinations are r
     await using sandbox = await testdir();
     const original = '---\nalwaysApply: false\n---\n# Authored Cursor policy\n';
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nconfigurations = []\n',
+        'gspot.toml': policyOf([]),
         '.cursor/rules/gspot.mdc': original,
     });
     const applied = await run(sandbox.path, ['apply']);
@@ -61,7 +61,7 @@ test('an authored Cursor rule is preserved and escaping agent destinations are r
     expect(readFileSync(join(sandbox.path, '.cursor/rules/gspot.mdc'), 'utf8')).toBe(original);
     expect(applied.stdout + applied.stderr).toContain('.cursor/rules/gspot.mdc');
     const before = readFileSync(join(sandbox.path, 'gspot.toml'), 'utf8');
-    const refused = await run(sandbox.path, ['set', 'rules.agents', '../outside.md']);
+    const refused = await run(sandbox.path, ['set', 'guides.agents', '../outside.md']);
     expect(refused.code).toBe(2);
     expect(readFileSync(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(before);
 });
@@ -74,7 +74,7 @@ test('init previews the same detected agent destinations without writing them', 
         '--yes',
         '--dry-run',
         '--json',
-        '--configurations',
+        '--kits',
         'bash',
         '--without',
         'spelling',
@@ -84,9 +84,9 @@ test('init previews the same detected agent destinations without writing them', 
         '--no-install',
     ]);
     expect(preview.code, preview.stdout + preview.stderr).toBe(0);
-    const proposal = JSON.parse(preview.stdout) as { plan: TakeoverPlan };
-    const paths = proposal.plan.write.map((entry) => entry.path);
-    expect(proposal.plan.change.map((entry) => entry.path)).toContain('.gitattributes');
+    const plan = JSON.parse(preview.stdout) as { plan: ReplacePlan };
+    const paths = plan.plan.write.map((entry) => entry.path);
+    expect(plan.plan.change.map((entry) => entry.path)).toContain('.gitattributes');
     expect(paths).toContain('AGENTS.md');
     expect(paths).toContain('GEMINI.md');
     expect(paths).toContain('.cursor/rules/gspot.mdc');

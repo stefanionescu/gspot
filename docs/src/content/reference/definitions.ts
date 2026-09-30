@@ -1,7 +1,70 @@
 import plugin from '#plugin/plugin.ts';
 import type { ReferencePage } from '../../types/reference.ts';
-import { bullets, cell, referencePage, section, table } from './page.ts';
-import type { CheckSpec, Manifest } from '@gspot/cli/src/types/configurations.ts';
+import { cell, table, section, referencePage } from './page.ts';
+import type { Manifest, CheckSpec } from '@gspothq/cli/src/types/kits.ts';
+
+// The indentation of the JSON blocks a reference page shows.
+const JSON_INDENT = 2;
+
+function guideSelection(file: Manifest['guides'][string][number]): string {
+    if (file.when === undefined) return `\`${file.path}\``;
+    const labels = {
+        extensions: 'file extension',
+        filenames: 'filename',
+        dependencies: 'dependency',
+        shebangs: 'script interpreter',
+        tags: 'file tag',
+        paths: 'file path',
+        project_files: 'project file',
+    };
+    const conditions = Object.entries(file.when).flatMap(([kind, patterns]) =>
+        patterns.map((pattern) => `${labels[kind as keyof typeof labels]} \`${pattern}\``),
+    );
+    return `\`${file.path}\` when the repository matches any of: ${conditions.join(', ')}.`;
+}
+
+function ruleExclusions(manifest: Manifest): string {
+    return manifest.rules_off
+        .map((exclusion) => {
+            const rules = exclusion.rules.map((rule) => `\`${rule}\``).join(', ');
+            const files = exclusion.files?.map((path) => `\`${path}\``).join(', ') ?? 'all files in the scope';
+            const condition =
+                exclusion.when === undefined
+                    ? ''
+                    : ` when \`${exclusion.when.setting}\` is \`${JSON.stringify(exclusion.when.value)}\``;
+            return `${rules} (${exclusion.tool}) for ${files}${condition}. ${exclusion.reason}`;
+        })
+        .map((item) => `- ${item}`)
+        .join('\n');
+}
+
+function checkEnvironment(check: CheckSpec): string[] {
+    const tool = check.tool ?? check.command?.[0];
+    const attributes: [string, string | undefined][] = [
+        ['Tool', tool],
+        ['Platform selection', check.platform?.join(', ')],
+        ['Prerequisite', check.requires],
+        [
+            'Required setting',
+            check.waits_for === undefined ? undefined : `\`${check.waits_for}\`; skipped until configured.`,
+        ],
+    ];
+    return [
+        check.reported_by === undefined
+            ? `- Scope: ${
+                  {
+                      once: 'one execution for the repository',
+                      'per-scope': 'each selected scope, excluding files owned by child scopes',
+                      'per-file-list': 'selected file lists under the applicable scope policy',
+                  }[check.runs]
+              }. See [scope configuration](/guides/scopes/).\n`
+            : '- Scope: follows the reporting check.\n',
+        ...attributes.flatMap(([label, value]) => (value === undefined ? [] : [`- ${label}: ${value}\n`])),
+        check.reported_by === undefined
+            ? ''
+            : `- Reported by: [\`${check.reported_by}\`](/reference/rules/${check.reported_by}/). This entry does not execute a separate check.\n`,
+    ];
+}
 
 /**
  * Read standalone plugin documentation from the rule definitions and actual configurations.
@@ -21,7 +84,7 @@ export function pluginReferencePages(): Map<string, ReferencePage> {
                 configurations.length === 0
                     ? 'Select this rule explicitly for the files it governs.'
                     : `Enabled by ${configurations.join(' and ')}.`;
-            const body = `Rule: \`gspot/${name}\`.\n\n${docs.summary}\n\n${selected}\n\n## Why\n\n${docs.why}\n\n## Resolve the finding\n\n${docs.fix}\n\n## Defect and correction\n\n${docs.example}\n\n## Options\n\nThe rule accepts options described by this JSON schema:\n\n\`\`\`json\n${JSON.stringify(rule.meta.schema, null, 2)}\n\`\`\`\n\nDefault options:\n\n\`\`\`json\n${JSON.stringify(rule.meta.defaultOptions ?? [], null, 2)}\n\`\`\`\n`;
+            const body = `Rule: \`gspot/${name}\`.\n\n${docs.summary}\n\n${selected}\n\n## Why\n\n${docs.why}\n\n## Resolve the finding\n\n${docs.fix}\n\n## Defect and correction\n\n${docs.example}\n\n## Options\n\nThe rule accepts options described by this JSON schema:\n\n\`\`\`json\n${JSON.stringify(rule.meta.schema, null, JSON_INDENT)}\n\`\`\`\n\nDefault options:\n\n\`\`\`json\n${JSON.stringify(rule.meta.defaultOptions ?? [], null, JSON_INDENT)}\n\`\`\`\n`;
             return [
                 `plugin/${name}.md`,
                 referencePage(docs.title, docs.summary, body, `packages/eslint-plugin/src/rules/${name}.ts`),
@@ -35,18 +98,24 @@ export function pluginReferencePages(): Map<string, ReferencePage> {
  * @param manifest the configuration's manifest
  * @returns the page
  */
-export function configurationPage(manifest: Manifest): ReferencePage {
-    const { configuration } = manifest;
+export function kitPage(manifest: Manifest): ReferencePage {
+    const { kit: configuration } = manifest;
     const tools = manifest.tools.map((tool) =>
         tool.version === undefined ? tool.name : `${tool.name} ${tool.version}`,
     );
     const targets = manifest.configs.map((config) =>
         config.needs === undefined
             ? `\`${config.target}\``
-            : `\`${config.target}\` when the [${config.needs} configuration](/reference/configurations/${config.needs}/) is selected`,
+            : `\`${config.target}\` when the [${config.needs} configuration](/reference/kits/${config.needs}/) is selected`,
     );
-    const rules = Object.values(manifest.rule_files).flatMap((files) => files.map((file) => `\`${file}\``));
+    const rules = Object.values(manifest.guides).flatMap((files) => files.map((file) => guideSelection(file)));
     const settings = manifest.settings.map((setting) => `\`${setting.name}\`: ${setting.summary}`);
+    const defaults = [
+        ...Object.entries(manifest.defaults).map(([name, value]) => `\`${name}\`: \`${JSON.stringify(value)}\``),
+        ...Object.entries(manifest.defaults_all).map(
+            ([name, value]) => `\`${name}\`: \`${JSON.stringify(value)}\` at level all`,
+        ),
+    ];
     const requires = configuration.requires.map((id) => `\`${id}\``).join(', ');
     const opening = [
         `${configuration.description}\n\nKind: ${configuration.kind}.`,
@@ -56,9 +125,15 @@ export function configurationPage(manifest: Manifest): ReferencePage {
     ].join('');
     const body = [
         opening,
-        section('Tools', bullets(tools)),
-        section('Generated tool files', bullets(targets)),
-        section('Untracked tool files', bullets(manifest.untracked.map((path) => `\`${path}\``))),
+        section('Tools', tools.map((item) => `- ${item}`).join('\n')),
+        section('Generated tool files', targets.map((item) => `- ${item}`).join('\n')),
+        section(
+            'Untracked tool files',
+            manifest.untracked
+                .map((path) => `\`${path}\``)
+                .map((item) => `- ${item}`)
+                .join('\n'),
+        ),
         section(
             'Checks',
             table(
@@ -70,10 +145,17 @@ export function configurationPage(manifest: Manifest): ReferencePage {
                 ]),
             ),
         ),
-        section('Settings', bullets(settings)),
-        section('Rule files', bullets(rules)),
+        section('Settings', settings.map((item) => `- ${item}`).join('\n')),
+        section('Defaults set for other kits', defaults.map((item) => `- ${item}`).join('\n')),
+        section('Rule exclusions', ruleExclusions(manifest)),
+        section('Rule files', rules.map((item) => `- ${item}`).join('\n')),
     ].join('');
-    return referencePage(configuration.title, configuration.description, body, `${manifest.dir}/manifest.toml`);
+    return referencePage(
+        configuration.title,
+        configuration.description,
+        body,
+        `packages/cli/${manifest.dir}/manifest.toml`,
+    );
 }
 
 /**
@@ -85,27 +167,11 @@ export function configurationPage(manifest: Manifest): ReferencePage {
 export function rulePage(check: CheckSpec, configuration: Manifest): ReferencePage {
     if (typeof check.example !== 'string' || check.example.trim() === '')
         throw new Error(`Check ${check.name} has no example.`);
-    const tool = check.tool ?? check.command?.[0];
     const command = `gspot check --stage ${check.stage} --only ${check.reported_by ?? check.name} --no-cache`;
     const lines = [
         `${check.summary}\n\n## Why\n\n${check.why}\n\n## What to do\n\n${check.help}\n\n## Where it runs\n\n`,
-        `Check: \`${check.name}\`.\n\n- Configuration: [the ${configuration.configuration.name} configuration](/reference/configurations/${configuration.configuration.name}/)\n- Stage: ${check.stage}\n- Level: ${check.level}\n`,
-        check.reported_by === undefined
-            ? `- Scope: ${
-                  {
-                      once: 'one execution for the repository',
-                      'per-scope': 'each selected scope, excluding files owned by child scopes',
-                      'per-file-list': 'selected file lists under the applicable scope policy',
-                  }[check.runs]
-              }. See [scope configuration](/guides/scopes/).\n`
-            : '- Scope: follows the reporting check.\n',
-        tool === undefined ? '' : `- Tool: ${tool}\n`,
-        check.platform === undefined ? '' : `- Platform selection: ${check.platform.join(', ')}\n`,
-        check.requires === undefined ? '' : `- Prerequisite: ${check.requires}\n`,
-        check.waits_for === undefined ? '' : `- Required setting: \`${check.waits_for}\`; skipped until configured.\n`,
-        check.reported_by === undefined
-            ? ''
-            : `- Reported by: [\`${check.reported_by}\`](/reference/rules/${check.reported_by}/). This entry does not execute a separate check.\n`,
+        `Check: \`${check.name}\`.\n\n- Configuration: [the ${configuration.kit.name} configuration](/reference/kits/${configuration.kit.name}/)\n- Stage: ${check.stage}\n- Level: ${check.level}\n`,
+        ...checkEnvironment(check),
         section('Defect and correction', check.example),
         check.stage === 'message'
             ? '\n## Verify a correction\n\nThe installed commit-msg hook checks the proposed commit message. A reported defect prevents the commit. Correct the message and retry the commit. A missing tool or unreadable report does not establish a clean result.\n'
@@ -119,16 +185,16 @@ export function rulePage(check: CheckSpec, configuration: Manifest): ReferencePa
         check.title ?? check.name,
         check.summary,
         lines.join(''),
-        `${configuration.dir}/manifest.toml`,
+        `packages/cli/${configuration.dir}/manifest.toml`,
     );
 }
 
 /**
  * The page that lists every engine with the checks it runs.
- * @param checks every check with the configuration that declares it, by name
+ * @param checks every check with the kit that declares it, by name
  * @returns the page
  */
-export function enginesPage(checks: Map<string, { check: CheckSpec; configuration: Manifest }>): ReferencePage {
+export function enginesPage(checks: Map<string, { check: CheckSpec; kit: Manifest }>): ReferencePage {
     const byEngine = new Map<string, CheckSpec[]>();
     for (const { check } of checks.values()) {
         if (check.engine === undefined) continue;

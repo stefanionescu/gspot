@@ -1,8 +1,9 @@
-import { describe, expect, test } from 'bun:test';
-import { isRulePath, lintRules } from '#cli/agents/lint.ts';
+import { test, expect, describe } from 'bun:test';
+import { lintRules, isRulePath } from '#cli/agents/lint.ts';
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The cases build a guide with the same front matter.
 function file(path: string, body: string): { path: string; text: string } {
-    return { path, text: `---\nlayer: code\nconfiguration: naming\ntitle: T\n---\n\n# T\n\n${body}` };
+    return { path, text: `---\nlayer: code\nkit: naming\ntitle: T\n---\n\n# T\n\n${body}` };
 }
 
 describe('rule lint', () => {
@@ -58,10 +59,20 @@ describe('rule lint', () => {
         const report = lintRules([file('general/code/A.md', body)]);
         const messages = report.findings.map((finding) => finding.message);
         expect(messages).toContain('fenced block without a language tag');
-        expect(messages).toContain('link to another rule file');
+        expect(messages).toContain('link to another guide');
         expect(messages).toContain('em dash');
         expect(messages.some((text) => text.startsWith('layer boundary'))).toBe(true);
         expect(messages.some((text) => text.startsWith('corruption residue'))).toBe(true);
         expect(messages).toContain('unclosed fenced block');
     });
+});
+
+test('inline code cannot hide repository paths or names from boundary checks', () => {
+    const rejected = file('general/code/A.md', 'Use `quality/repository/naming` in `yap`.\n');
+    expect(lintRules([rejected]).findings.map((finding) => finding.message)).toStrictEqual([
+        String.raw`layer boundary: '\bquality\/' in a code file`,
+        String.raw`layer boundary: '\byap\b' in a code file`,
+    ]);
+    const corrected = file('general/code/A.md', 'Use the naming checks declared by the repository.\n');
+    expect(lintRules([corrected]).findings).toStrictEqual([]);
 });

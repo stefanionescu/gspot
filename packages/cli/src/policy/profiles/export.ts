@@ -4,7 +4,7 @@ import { stringify, parse as parseToml } from 'smol-toml';
 import { isRepositoryPath } from '#cli/policy/profiles/schema.ts';
 import type { ExportedProfile } from '#cli/types/policy/profiles.ts';
 import type { TomlTable } from '#cli/types/repository/repository.ts';
-import { PROFILE_EXTENSION, REPOSITORY_TABLES } from '#cli/constants/policy/profiles.ts';
+import { PROFILE_EXTENSION, REPOSITORY_TABLES } from '#cli/config/policy/profiles.ts';
 
 function isTable(value: unknown): value is TomlTable {
     return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -62,8 +62,8 @@ export function exportedProfile(policyText: string, file: string): ExportedProfi
             for (const index of entries.keys()) leftOut.push(`${table}[${String(index)}]: belongs to this repository`);
         Reflect.deleteProperty(raw, table);
     }
-    const { version, configurations, ...rest } = withoutPaths(raw, '', leftOut) as TomlTable;
+    const { version, kits, ...rest } = withoutPaths(raw, '', leftOut) as TomlTable;
     const name = basename(file).replace(PROFILE_EXTENSION, '');
-    const document = { version, profile: name, selection: 'exact', configurations: configurations ?? [], ...rest };
+    const document = { version, profile: name, selection: 'exact', kits: kits ?? [], ...rest };
     return { text: stringify(document).trimEnd().concat('\n'), leftOut };
 }

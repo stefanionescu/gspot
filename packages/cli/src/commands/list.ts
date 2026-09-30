@@ -1,41 +1,23 @@
+import { detectKits } from '#cli/kits/detect.ts';
 import { Argument, type Command } from 'commander';
+import { everyManifest } from '#cli/kits/select.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
 import { listSettings } from '#cli/policy/settings.ts';
 import { checkState } from '#cli/policy/check-state.ts';
 import { coverageLines } from '#cli/output/coverage.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { directoryOf } from '#cli/platform/arguments.ts';
+import type { CommandResult } from '#cli/types/commands.ts';
 import { coverageReport } from '#cli/execution/coverage.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import { readManifests } from '#cli/repository/manifests.ts';
-import { everyManifest } from '#cli/configurations/select.ts';
 import type { Session } from '#cli/types/execution/execution.ts';
-import type { CommandResult } from '#cli/types/commands/commands.ts';
-import { detectConfigurations } from '#cli/configurations/detect.ts';
-import { KEY_GAP, VALUE_WIDTH } from '#cli/constants/commands/commands.ts';
+import { KEY_GAP, VALUE_WIDTH } from '#cli/config/commands/commands.ts';
+import type { Policy, ExtraRow, ToolTables, ScopeSelection, SettingsListing } from '#cli/types/policy/policy.ts';
 
-import type {
-    Policy,
-    ScopeSelection,
-    ExtraRow,
-    SettingRow,
-    SettingsListing,
-    ToolTables,
-} from '#cli/types/policy/policy.ts';
-
-function rowsFor(policy: Policy, scopes: ScopeSelection[]): SettingRow[] {
-    return scopes.flatMap((selection) => {
-        const scope = selection.scope.path;
-        return listSettings(selection.surface, policy, scope)
-            .filter((entry) => scope === '' || !entry.source.startsWith('configuration'))
-            .map((entry) => ({
-                key: entry.key,
-                value: entry.value,
-                source: entry.source,
-                direction: entry.spec.direction,
-                scope,
-            }));
-    });
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Three rows print the scope tag; inlining it nests a template inside a template.
+function scopeTag(scope: string | undefined): string {
+    return scope === undefined || scope === '' ? '' : `  [scope ${scope}]`;
 }
 
 function extrasFor(scope: string, tools: ToolTables): ExtraRow[] {
@@ -50,10 +32,6 @@ function extrasFor(scope: string, tools: ToolTables): ExtraRow[] {
             },
         ];
     });
-}
-
-function scopeTag(scope: string | undefined): string {
-    return scope === undefined || scope === '' ? '' : `  [scope ${scope}]`;
 }
 
 function settingsText(session: Session): CommandResult {
@@ -73,11 +51,11 @@ function settingsText(session: Session): CommandResult {
     return { text: `${lines.join('\n')}\n`, json: { settings: rows, extras }, exitCode: 0 };
 }
 
-function configurationsResult(session: Session): CommandResult {
+function kitsResult(session: Session): CommandResult {
     const selected = everyManifest(session.scopes);
-    const names = new Set(selected.map((manifest) => manifest.configuration.name));
+    const names = new Set(selected.map((manifest) => manifest.kit.name));
     const installed = selected.map((manifest) => ({
-        name: manifest.configuration.name,
+        name: manifest.kit.name,
         checks: session.scopes.flatMap((scope) =>
             scope.selected.includes(manifest)
                 ? manifest.checks.map((spec) => ({
@@ -88,21 +66,19 @@ function configurationsResult(session: Session): CommandResult {
                 : [],
         ),
     }));
-    const facts = readManifests(session.root, session.repository.files);
-    const detected = detectConfigurations(session.repository.files, session.manifests, facts)
-        .filter((proposal) => !names.has(proposal.configuration))
-        .map((proposal) => ({
-            name: proposal.configuration,
-            evidence: proposal.evidence,
-            command: `gspot add ${proposal.configuration}`,
+    const fields = readManifests(session.root, session.repository.files);
+    const detected = detectKits(session.repository.files, session.manifests, fields)
+        .filter((plan) => !names.has(plan.kit))
+        .map((plan) => ({
+            name: plan.kit,
+            evidence: plan.evidence,
+            command: `gspot add ${plan.kit}`,
         }));
     const detectedNames = new Set(detected.map((entry) => entry.name));
     const available = session.manifests
         .values()
-        .filter(
-            (manifest) => !names.has(manifest.configuration.name) && !detectedNames.has(manifest.configuration.name),
-        )
-        .map((manifest) => ({ name: manifest.configuration.name, description: manifest.configuration.description }))
+        .filter((manifest) => !names.has(manifest.kit.name) && !detectedNames.has(manifest.kit.name))
+        .map((manifest) => ({ name: manifest.kit.name, description: manifest.kit.description }))
         .toArray();
     const lines = ['installed'];
     for (const configuration of installed) {
@@ -130,7 +106,19 @@ export function settingRows(policy: Policy, scopes: ScopeSelection[]): SettingsL
     const fromScopes = Object.entries(policy.scopeTables).flatMap(([scope, table]) =>
         table.tools === undefined ? [] : extrasFor(scope, table.tools),
     );
-    return { rows: rowsFor(policy, scopes), extras: [...extrasFor('', policy.tools), ...fromScopes] };
+    const rows = scopes.flatMap((selection) => {
+        const scope = selection.scope.path;
+        return listSettings(selection.surface, policy, scope)
+            .filter((entry) => scope === '' || !entry.source.startsWith('kit'))
+            .map((entry) => ({
+                key: entry.key,
+                value: entry.value,
+                source: entry.source,
+                direction: entry.spec.direction,
+                scope,
+            }));
+    });
+    return { rows, extras: [...extrasFor('', policy.tools), ...fromScopes] };
 }
 
 /**
@@ -140,18 +128,18 @@ export function settingRows(policy: Policy, scopes: ScopeSelection[]): SettingsL
 export function registerList(program: Command): void {
     program
         .command('list')
-        .summary('List configurations and settings')
-        .description('List configurations and check states, or effective settings and their sources')
+        .summary('List kits, checks, and settings')
+        .description('List the kits and their checks, or the settings and their sources')
         .addHelpText(
             'after',
-            '\nEffects:\nReads the policy and repository to list selected, detected, and available configurations. With settings, prints effective values and their sources. It does not execute checks or mutate project files.\n\nExit codes:\n0: the requested information was printed. 2: invalid input or inability to complete the request.\n\nExample:\ngspot list settings',
+            '\nEffects:\nLists the selected, detected, and available kits with the state of each check. gspot list settings prints each setting with its value and where the value comes from. list changes nothing and runs no check.\n\nExit codes:\n- 0: the list was printed.\n- 2: the input was invalid, or list could not finish.\n\nExample:\ngspot list settings',
         )
-        .addArgument(new Argument('[kind]', 'The information to list').choices(['settings']))
+        .addArgument(new Argument('[kind]', 'Pass settings to list the settings').choices(['settings']))
         .action(async (kind: string | undefined, _flags: Record<string, unknown>, command: Command) => {
             const global = command.optsWithGlobals();
             await printCommand(async () => {
                 const session = await openSession(findRoot(directoryOf(global)));
-                return kind === 'settings' ? settingsText(session) : configurationsResult(session);
+                return kind === 'settings' ? settingsText(session) : kitsResult(session);
             }, global);
         });
 }

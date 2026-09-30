@@ -1,20 +1,22 @@
 import * as fs from 'node:fs';
 import { join } from 'node:path';
-import { rejects } from 'node:assert/strict';
-import { executeRun } from '#cli/execution/execute.ts';
-import { openSession } from '#cli/execution/session.ts';
 import { writeFileSync } from 'node:fs';
+import { rejects } from 'node:assert/strict';
+import { expect, spyOn, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
-import { expect, spyOn, test } from 'bun:test';
+import { executeRun } from '#cli/execution/execute.ts';
+import { openSession } from '#cli/execution/session.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { readRepository } from '#cli/repository/tree.ts';
+import { onPosix } from '#tests/support/cli/platforms.ts';
 import { head, readSource, trackedEntries } from '#cli/repository/tracked.ts';
 
 test('opening a session reads less than one megabyte with a fifty-megabyte source', async () => {
     const megabyte = 1024 * 1024;
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nconfigurations = []\n',
+        'gspot.toml': policyOf([]),
         large: '#!/usr/bin/env bash\n# @generated\n' + 'x'.repeat(50 * megabyte),
     });
     const prefixReads = spyOn(fs, 'readSync');
@@ -25,7 +27,7 @@ test('opening a session reads less than one megabyte with a fifty-megabyte sourc
         expect(large.size).toBeGreaterThanOrEqual(50 * megabyte);
         expect(large.prefix.byteLength).toBe(4096);
         expect(large.tags).toContain('bash');
-        expect(large.nature).toBe('generated');
+        expect(large.kind).toBe('generated');
         const prefixBytes = prefixReads.mock.results.reduce(
             (sum, result) => sum + (result.type === 'return' ? result.value : 0),
             0,
@@ -92,7 +94,7 @@ test('source reads refuse an escape introduced after inventory and accept an int
 test('a managed secret baseline rejects linked bytes before evaluating entries', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'project/gspot.toml': 'version = 1\nlevel = "all"\nconfigurations = ["secrets"]\n',
+        'project/gspot.toml': policyOf(['secrets'], '', 'all'),
         'project/.gspot/.keep': '',
         'baseline.json': '[]\n',
     });
@@ -117,49 +119,53 @@ test('a managed secret baseline rejects linked bytes before evaluating entries',
     expect(fs.readFileSync(join(sandbox.path, 'baseline.json'), 'utf8')).toBe('[]\n');
 });
 
-test('a non-Git walk preserves newline directories, nested negations, pruning, and link boundaries', async () => {
-    await using sandbox = await testdir();
-    const root = join(sandbox.path, 'project');
-    await createFileTree(sandbox.path, {
-        'project/.gitignore': '*.log\npruned/\n',
-        'project/source\nfiles/.gitignore': '!keep.log\nlocal.ts\n',
-        'project/source\nfiles/keep.log': 'retained',
-        'project/source\nfiles/drop.log': 'ignored',
-        'project/source\nfiles/local.ts': 'ignored',
-        'project/source\nfiles/code.ts': 'export {};\n',
-        'project/pruned/.gitignore': '!keep.ts\n',
-        'project/pruned/keep.ts': 'ignored with its parent',
-        'outside/private.ts': 'external bytes',
+// Windows file names cannot hold a newline or a quote.
+    if (onPosix)
+        test('a non-Git walk preserves newline directories, nested negations, pruning, and link boundaries', async () => {
+        await using sandbox = await testdir();
+        const root = join(sandbox.path, 'project');
+        await createFileTree(sandbox.path, {
+            'project/.gitignore': '*.log\npruned/\n',
+            'project/source\nfiles/.gitignore': '!keep.log\nlocal.ts\n',
+            'project/source\nfiles/keep.log': 'retained',
+            'project/source\nfiles/drop.log': 'ignored',
+            'project/source\nfiles/local.ts': 'ignored',
+            'project/source\nfiles/code.ts': 'export {};\n',
+            'project/pruned/.gitignore': '!keep.ts\n',
+            'project/pruned/keep.ts': 'ignored with its parent',
+            'outside/private.ts': 'external bytes',
+        });
+        fs.symlinkSync('../../outside', join(root, 'pruned', 'external'));
+        fs.symlinkSync('source\nfiles', join(root, 'linked-directory'));
+        const entries = trackedEntries(root);
+        expect(entries.map((entry) => entry.path).toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
+            '.gitignore',
+            'source\nfiles/.gitignore',
+            'source\nfiles/code.ts',
+            'source\nfiles/keep.log',
+        ]);
+        fs.symlinkSync('../outside/private.ts', join(root, 'external.ts'));
+        expect(trackedEntries(root).map((entry) => entry.path)).toStrictEqual(entries.map((entry) => entry.path));
+        fs.unlinkSync(join(root, 'external.ts'));
+        expect(trackedEntries(root).map((entry) => entry.path)).toStrictEqual(entries.map((entry) => entry.path));
     });
-    fs.symlinkSync('../../outside', join(root, 'pruned', 'external'));
-    fs.symlinkSync('source\nfiles', join(root, 'linked-directory'));
-    const entries = trackedEntries(root);
-    expect(entries.map((entry) => entry.path).sort()).toStrictEqual([
-        '.gitignore',
-        'source\nfiles/.gitignore',
-        'source\nfiles/code.ts',
-        'source\nfiles/keep.log',
-    ]);
-    fs.symlinkSync('../outside/private.ts', join(root, 'external.ts'));
-    expect(trackedEntries(root).map((entry) => entry.path)).toStrictEqual(entries.map((entry) => entry.path));
-    fs.unlinkSync(join(root, 'external.ts'));
-    expect(trackedEntries(root).map((entry) => entry.path)).toStrictEqual(entries.map((entry) => entry.path));
-});
 
-if (process.platform !== 'win32')
-    test('a non-Git walk omits named pipes from readable source files', async () => {
+    if (onPosix)
+
+        test('a non-Git walk omits named pipes from readable source files', async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'source.ts': 'export {};\n' });
         expect(processes.runBlocking(['mkfifo', 'stream.ts'], { cwd: sandbox.path }).code).toBe(0);
         expect(trackedEntries(sandbox.path).map((entry) => entry.path)).toStrictEqual(['source.ts']);
     });
 
-if (process.platform !== 'win32')
-    test('Bash findings retain newline and colon directory names without Git', async () => {
+    if (onPosix)
+
+        test('Bash findings retain newline and colon directory names without Git', async () => {
         await using sandbox = await testdir();
         const paths = ['source\nfiles/greet.sh', 'source:files/greet.sh'];
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\nconfigurations = ["bash"]\n',
+            'gspot.toml': policyOf(['bash']),
             ...Object.fromEntries(paths.map((path) => [path, 'if then\n'])),
         });
         const options = {
@@ -172,9 +178,11 @@ if (process.platform !== 'win32')
         };
         const broken = await executeRun(await openSession(sandbox.path), options);
         expect(broken.report.exitCode).toBe(1);
-        expect([...new Set(broken.report.checks[0]!.findings.map((finding) => finding.file))].sort()).toStrictEqual(
-            paths,
-        );
+        expect(
+            [...new Set(broken.report.checks[0]!.findings.map((finding) => finding.file))].toSorted((left, right) =>
+                left.localeCompare(right),
+            ),
+        ).toStrictEqual(paths);
         for (const path of paths) writeFileSync(join(sandbox.path, path), 'printf "%s\\n" "Hello"\n');
         const corrected = await executeRun(await openSession(sandbox.path), options);
         expect(corrected.report.exitCode).toBe(0);

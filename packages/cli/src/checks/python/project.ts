@@ -1,27 +1,57 @@
 import { z } from 'zod';
-import { join } from 'node:path';
 import { parse } from 'smol-toml';
 import { statSync } from 'node:fs';
+import { join, posix } from 'node:path';
+import { findingAt } from '#cli/checks/result.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
+import { GspotError } from '#cli/platform/errors.ts';
+import { openRoot } from '#cli/platform/filesystem.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
 import { readSource } from '#cli/repository/tracked.ts';
-import { SkippedCheckError } from '#cli/checks/result.ts';
-import { runCheckCommand } from '#cli/execution/tool-runner.ts';
-import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
+import type { Finding, CheckResult, EngineInput } from '#cli/types/checks.ts';
+import { runToolCheck, runCheckCommand } from '#cli/execution/tool/runner.ts';
+import type { Session, PlannedCheck } from '#cli/types/execution/execution.ts';
 
 import {
+    PIP_INSTALL,
     BROKEN_CONTRACT,
     INSTALL_HOLDERS,
-    PIP_INSTALL,
     PYTHON_MANIFEST,
     REQUIREMENTS_FILE,
-} from '#cli/constants/checks/python.ts';
+} from '#cli/config/checks/python.ts';
 
 const importConfiguration = z.object({
     tool: z.object({ importlinter: z.record(z.string(), z.unknown()).optional() }).optional(),
 });
-function finding(input: EngineInput, at: { file: string; line: number }, rule: string, text: string): Finding {
-    return { check: input.spec.name, file: at.file, line: at.line, rule, message: text, fixable: false };
+const dependencyConfiguration = z.object({
+    tool: z
+        .object({
+            deptry: z.object({ extend_exclude: z.array(z.string()).default([]) }).default({ extend_exclude: [] }),
+        })
+        .default({ deptry: { extend_exclude: [] } }),
+});
+/**
+ * Exclude private tool installations while preserving native dependency scan settings.
+ * @param session the repository and native execution boundaries.
+ * @param planned the dependency check and its scope.
+ * @returns the native dependency findings, including undeclared application imports.
+ */
+export async function checkDependencies(session: Session, planned: PlannedCheck): Promise<CheckResult> {
+    const files = openRoot(session.root);
+    let exclusions: string[];
+    try {
+        const project = files.read(posix.join(planned.scope.scope.path, PYTHON_MANIFEST));
+        const text = project === undefined ? '' : new TextDecoder('utf-8', { fatal: true }).decode(project.bytes);
+        exclusions = dependencyConfiguration.parse(parse(text)).tool.deptry.extend_exclude;
+    } finally {
+        files.close();
+    }
+    return runToolCheck(session, planned, [
+        'deptry',
+        '.',
+        '--no-ansi',
+        ...[String.raw`(^|.*[/\\])\.gspot([/\\]|$)`, ...exclusions].flatMap((pattern) => ['--extend-exclude', pattern]),
+    ]);
 }
 
 /**
@@ -32,12 +62,10 @@ function finding(input: EngineInput, at: { file: string; line: number }, rule: s
 export async function importLinter(input: EngineInput): Promise<Finding[]> {
     const manifest = input.scope === '' ? PYTHON_MANIFEST : `${input.scope}/${PYTHON_MANIFEST}`;
     if (statSync(join(input.root, manifest), { throwIfNoEntry: false }) === undefined)
-        throw new SkippedCheckError('This scope has no pyproject.toml import contracts.');
-    const project = importConfiguration.parse(
-        parse(readSource(input.root, manifest, input.observations).toString('utf8')),
-    );
+        throw new GspotError('skipped', 'This scope has no pyproject.toml import contracts.');
+    const project = importConfiguration.parse(parse(readSource(input.root, manifest, input.reads).toString('utf8')));
     if (project.tool?.importlinter === undefined)
-        throw new SkippedCheckError('This scope has no tool.importlinter configuration.');
+        throw new GspotError('skipped', 'This scope has no tool.importlinter configuration.');
     const result = await runCheckCommand(input, ['lint-imports', '--no-cache'], {
         cwd: join(input.root, input.scope),
     });
@@ -47,9 +75,9 @@ export async function importLinter(input: EngineInput): Promise<Finding[]> {
     });
     const said = [result.stderr, result.stdout].join('').trim().split('\n').at(-1) ?? '';
     if (result.code !== 0 && broken.length === 0) throw new Error(`The lint-imports command failed: ${said}`);
-    const at = { file: input.scope === '' ? PYTHON_MANIFEST : `${input.scope}/${PYTHON_MANIFEST}`, line: 1 };
+    const at = { file: manifest, line: 1 };
     return broken.map((name) =>
-        finding(input, at, 'contract', `The import contract "${name}" is broken; lint-imports prints the chain.`),
+        findingAt(input, at, 'contract', `The import contract "${name}" is broken; lint-imports prints the chain.`),
     );
 }
 
@@ -64,16 +92,19 @@ export function dependencyOwnership(input: EngineInput): Finding[] {
             (name) => statSync(join(input.root, input.scope, name), { throwIfNoEntry: false }) !== undefined,
         )
     )
-        throw new SkippedCheckError('Dependency ownership requires uv.lock, poetry.lock, or pdm.lock in this scope.');
+        throw new GspotError(
+            'skipped',
+            'Dependency ownership requires uv.lock, poetry.lock, or pdm.lock in this scope.',
+        );
     const allowed = (input.view.tool('dependencies')['pip_install_allowed'] as { paths: string[] }[] | undefined) ?? [];
     const isAllowed = pathMatcher(allowed.flatMap((entry) => entry.paths));
     const files = input.files.filter(
-        (file) => file.nature === 'source' && scopeOf(file.path, input.scopeEntries).path === input.scope,
+        (file) => file.kind === 'source' && scopeOf(file.path, input.scopeEntries).path === input.scope,
     );
     const requirements = files
         .filter((file) => REQUIREMENTS_FILE.test(file.path))
         .map((file) =>
-            finding(
+            findingAt(
                 input,
                 { file: file.path, line: 1 },
                 'requirements-file',
@@ -83,13 +114,13 @@ export function dependencyOwnership(input: EngineInput): Finding[] {
     const installs = files
         .filter((file) => !isAllowed(file.path) && INSTALL_HOLDERS.some((ending) => file.path.endsWith(ending)))
         .flatMap((file) =>
-            readSource(input.root, file.path, input.observations)
+            readSource(input.root, file.path, input.reads)
                 .toString('utf8')
                 .split('\n')
                 .flatMap((text, index): Finding[] =>
                     PIP_INSTALL.test(text) && !text.trimStart().startsWith('#')
                         ? [
-                              finding(
+                              findingAt(
                                   input,
                                   { file: file.path, line: index + 1 },
                                   'pip-install',
@@ -117,7 +148,7 @@ export function typecheckMembership(input: EngineInput): Finding[] {
             return paths.every((path) => !isMatch(path));
         });
     return stale.map((pattern) =>
-        finding(
+        findingAt(
             input,
             { file: 'gspot.toml', line: 1 },
             'stale-exclusion',

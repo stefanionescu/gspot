@@ -1,6 +1,6 @@
 // Plants a directory tree for rules that read the file system.
 import { afterAll } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { testdir, createFileTree } from 'testdirs';
 
 /**
  * Plants the files under a fresh temporary root.

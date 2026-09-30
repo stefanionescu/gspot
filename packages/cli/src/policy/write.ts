@@ -1,10 +1,11 @@
 import { patch } from '@decimalturn/toml-patch';
 import * as messages from '#cli/policy/messages.ts';
+import { GspotError } from '#cli/platform/errors.ts';
 import { stringify as stringifyToml } from 'smol-toml';
 import type { TomlTable } from '#cli/types/repository/repository.ts';
 import type { Mutation, WriteResult } from '#cli/types/policy/policy.ts';
-import { policyIndent, wrapLongArrays } from '#cli/policy/toml-width.ts';
-import { assertPolicyComplete, parsePolicyText, parseTomlText, PolicyError } from '#cli/policy/read.ts';
+import { policyIndent, wrapLongArrays } from '#cli/policy/toml/width.ts';
+import { parseTomlText, parsePolicyText, assertPolicyComplete } from '#cli/policy/read.ts';
 
 function isTable(value: unknown): value is TomlTable {
     return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -17,21 +18,12 @@ function splitKey(key: string): { path: string[]; name: string } {
     return { path, name };
 }
 
-function listItemKey(item: unknown): string {
-    const isNamed = typeof item === 'object' && item !== null && 'name' in item;
-    return JSON.stringify(isNamed ? (item as TomlTable)['name'] : item);
-}
-
-function isSameIgnore(existing: TomlTable, entry: TomlTable): boolean {
-    return ['check', 'rule', 'reason'].every((field) => (existing[field] ?? undefined) === (entry[field] ?? undefined));
-}
-
 /**
  * Walks a dotted path of tables, creating the missing ones when asked to.
- * @param raw the parsed document
- * @param path the table names from the root down
- * @param canCreate when true, missing tables are created on the way
- * @returns the table at the end of the path, or undefined when the path is missing or runs through a value
+ * @param raw the parsed document.
+ * @param path the table names from the root down.
+ * @param canCreate when true, missing tables are created on the way.
+ * @returns the table at the end of the path, or undefined when the path is missing or runs through a value.
  */
 export function tableAt(raw: TomlTable, path: string[], canCreate: boolean): TomlTable | undefined {
     let current: TomlTable = raw;
@@ -53,7 +45,7 @@ export function tableAt(raw: TomlTable, path: string[], canCreate: boolean): Tom
  * @param root the repository root
  * @param text the original policy text
  * @param mutate the change to apply to the parsed document
- * @returns the new text, the parsed policy and whether the text changed
+ * @returns the new text, the parsed policy, and whether the text changed
  */
 export function proposePolicy(root: string, text: string, mutate: Mutation): WriteResult {
     const raw = parseTomlText(text, 'gspot.toml');
@@ -64,8 +56,11 @@ export function proposePolicy(root: string, text: string, mutate: Mutation): Wri
     for (const [key, value] of Object.entries(raw))
         if (!before.has(key) && Array.isArray(value) && value.length > 0 && typeof value[0] === 'object')
             seed = `${seed.trimEnd()}\n\n${stringifyToml({ [key]: value })}`;
-    // No padding inside array brackets: the style taplo formats to, so a hand edit and a written entry agree.
-    const next = wrapLongArrays(patch(seed, raw, { inlineTableStart: 2, bracketSpacing: false }), policyIndent(raw));
+    // Taplo requires TOML 1.0 inline tables, which cannot have trailing commas.
+    const next = wrapLongArrays(
+        patch(seed, raw, { inlineTableStart: 2, bracketSpacing: false, trailingComma: false }),
+        policyIndent(raw),
+    );
     const policy = parsePolicyText(next, 'gspot.toml', root);
     assertPolicyComplete({ policy, text: next, path: 'gspot.toml' });
     return { text: next, policy, changed: next !== text };
@@ -94,7 +89,11 @@ export function appendEntry(table: string, entry: TomlTable): Mutation {
 export function appendIgnore(entry: TomlTable): Mutation {
     return (raw) => {
         const list = (raw['ignore'] as TomlTable[] | undefined) ?? [];
-        const same = list.find((existing) => isSameIgnore(existing, entry));
+        const same = list.find((existing) =>
+            ['check', 'rule', 'reason'].every(
+                (field) => (existing[field] ?? undefined) === (entry[field] ?? undefined),
+            ),
+        );
         if (same === undefined) {
             list.push(entry);
             raw['ignore'] = list;
@@ -203,9 +202,11 @@ export function removeFromList(key: string, entries: unknown[]): Mutation {
         const existing = table?.[name];
         if (!table || !Array.isArray(existing)) return;
         const gone = new Set(entries.map((value) => JSON.stringify(value)));
-        table[name] = (existing as unknown[]).filter(
-            (item) => !gone.has(listItemKey(item)) && !gone.has(JSON.stringify(item)),
-        );
+        table[name] = (existing as unknown[]).filter((item) => {
+            const isNamed = typeof item === 'object' && item !== null && 'name' in item;
+            const key = JSON.stringify(isNamed ? (item as TomlTable)['name'] : item);
+            return !gone.has(key) && !gone.has(JSON.stringify(item));
+        });
     };
 }
 
@@ -219,6 +220,6 @@ export function scopeHolder(raw: TomlTable, scope: string | undefined): TomlTabl
     if (scope === undefined) return raw;
     const scopes = (raw['scope'] as TomlTable[] | undefined) ?? [];
     const holder = scopes.find((entry) => entry['path'] === scope);
-    if (holder === undefined) throw new PolicyError([messages.scopeMissing(scope)]);
+    if (holder === undefined) throw new GspotError('policy', [messages.scopeMissing(scope)]);
     return holder;
 }

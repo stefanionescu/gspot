@@ -1,11 +1,11 @@
-import { parseSql } from '#cli/parsers/sql/parser.ts';
 // The statements of one SQL file, each with its kind, its fields and where it starts in the text.
+import { parseSql } from '#cli/parsers/sql/parser.ts';
 import { sqlSource } from '#cli/parsers/sql/source.ts';
 import { codePoints } from '#cli/platform/code-points.ts';
-import type { SourceObservations } from '#cli/types/repository/repository.ts';
+import type { SourceReads } from '#cli/types/repository/repository.ts';
 import type { SqlFile, SqlNode, SqlStatement, SqlStatementView } from '#cli/types/parsers/sql.ts';
 
-const observations = new WeakMap<SourceObservations, Map<string, Promise<SqlFile>>>();
+const reads = new WeakMap<SourceReads, Map<string, Promise<SqlFile>>>();
 
 function located(bytes: Buffer, statement: SqlStatement): SqlStatementView {
     const [kind = ''] = Object.keys(statement.stmt);
@@ -51,17 +51,17 @@ export function positionAt(text: string, offset: number): { line: number; column
 }
 
 /**
- * Reuses a PostgreSQL file parse within one source observation lifetime.
+ * Reuses a PostgreSQL file parse within one source read lifetime.
  * @param text the original SQL, including supported psql syntax
- * @param observed the execution observations, omitted for standalone parsing
+ * @param read the execution reads, omitted for standalone parsing
  * @returns statements and original diagnostic positions
  */
-export function sqlFile(text: string, observed?: SourceObservations): Promise<SqlFile> {
-    if (observed === undefined) return parseFile(text);
-    let files = observations.get(observed);
+export function sqlFile(text: string, read?: SourceReads): Promise<SqlFile> {
+    if (read === undefined) return parseFile(text);
+    let files = reads.get(read);
     if (files === undefined) {
         files = new Map();
-        observations.set(observed, files);
+        reads.set(read, files);
     }
     let parsed = files.get(text);
     if (parsed === undefined) {

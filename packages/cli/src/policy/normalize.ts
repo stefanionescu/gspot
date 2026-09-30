@@ -1,17 +1,17 @@
-import { CATEGORY_KEYS, NAMING_LIST_KEYS } from '#cli/constants/policy/policy.ts';
+import { CATEGORY_KEYS, NAMING_LIST_KEYS } from '#cli/config/policy/policy.ts';
 
 import type {
-    Defined,
-    RawPolicy,
-    RawScope,
     Limits,
-    NamingCategoryTable,
-    NamingLanguageTable,
-    NamingSettings,
     Policy,
+    Defined,
+    RawScope,
+    Reasoned,
     RawLimits,
     RawNaming,
-    Reasoned,
+    RawPolicy,
+    NamingSettings,
+    NamingCategoryTable,
+    NamingLanguageTable,
 } from '#cli/types/policy/policy.ts';
 
 function isTable(value: unknown): value is Record<string, unknown> {
@@ -48,6 +48,7 @@ function normalizeScopeTables(raw: RawScope): Partial<Policy> {
     return table;
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Two normalizers fill defaults over the written keys; the generic keeps the table type.
 function defaulted<T extends object>(raw: object | undefined, defaults: T): T {
     const written: Partial<T> = compact(raw ?? {});
     return { ...defaults, ...written };
@@ -64,6 +65,7 @@ function trimTrailingSlashes(path: string): string {
  * @param value any object
  * @returns the same object without its undefined entries
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Readers drop undefined entries so exact optional types hold, and this is the one way they do it.
 export function compact<T extends object>(value: T): Defined<T> {
     return Object.fromEntries(Object.entries(value).filter(([, entry]) => entry !== undefined)) as Defined<T>;
 }
@@ -73,6 +75,7 @@ export function compact<T extends object>(value: T): Defined<T> {
  * @param entries the entries as written
  * @returns the compacted objects
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Rules, edges, and ignores compact each entry of a list that may be missing.
 export function compactAll<T extends object>(entries: T[] | undefined): Defined<T>[] {
     return (entries ?? []).map((entry) => compact(entry));
 }
@@ -96,12 +99,15 @@ export function normalizeLimits(raw: RawLimits | undefined): Limits {
     const limits: Limits = { root: {}, groups: {} };
     const entries = Object.entries(raw ?? {});
     for (const [key, value] of entries) {
-        if (isTable(value) && !('value' in value)) {
-            const group: Record<string, Reasoned<number>> = {};
-            for (const [inner, entry] of Object.entries(value))
-                if (entry !== undefined) group[inner] = toReasoned(entry);
-            limits.groups[key] = group;
-        } else limits.root[key] = toReasoned(value as number | { value: number; reason: string });
+        if (!isTable(value) || 'value' in value) {
+            limits.root[key] = toReasoned(value as number | { value: number; reason: string });
+            continue;
+        }
+        limits.groups[key] = Object.fromEntries(
+            Object.entries(value)
+                .filter(([, entry]) => entry !== undefined)
+                .map(([inner, entry]) => [inner, toReasoned(entry as number)]),
+        );
     }
     return limits;
 }
@@ -141,6 +147,7 @@ export function normalizeNaming(raw: RawNaming | undefined): NamingSettings {
  * @param raw the table as written, if any
  * @returns the architecture configuration
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The full policy and a scope table normalize the architecture table the same way.
 export function normalizeArchitecture(raw: RawPolicy['architecture']): Policy['architecture'] {
     const filled = defaulted(raw, { elements: [], edges_allowed: [], roles: {}, contracts: [] });
     return compact({ ...filled, edges_allowed: compactAll(filled.edges_allowed) });
@@ -151,6 +158,7 @@ export function normalizeArchitecture(raw: RawPolicy['architecture']): Policy['a
  * @param raw the table as written, if any
  * @returns the structure configuration
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The full policy and a scope table normalize the structure table the same way.
 export function normalizeStructure(raw: RawPolicy['structure']): Policy['structure'] {
     return defaulted<Policy['structure']>(raw, {
         reexports: 'none',
@@ -176,10 +184,10 @@ export function normalize(raw: RawPolicy): Policy {
         requireReasons: raw.require_reasons,
         extraChecks: raw.extra_checks,
         exclude: raw.exclude,
-        configurations: raw.configurations ?? [],
+        kits: raw.kits ?? [],
         scopes: scopes.map((scope) => ({
             path: trimTrailingSlashes(scope.path),
-            configurations: scope.configurations ?? [],
+            kits: scope.kits ?? [],
         })),
         limits: normalizeLimits(raw.limits),
         naming: normalizeNaming(raw.naming),
@@ -190,23 +198,25 @@ export function normalize(raw: RawPolicy): Policy {
         tools: (raw.tools ?? {}) as Policy['tools'],
         ignores: compactAll(raw.ignore),
         declarations: [
-            ...raw.generated.map((entry) => ({ ...entry, nature: 'generated' as const })),
-            ...raw.vendored.map((entry) => ({ ...entry, nature: 'vendored' as const })),
+            ...raw.generated.map((entry) => ({ ...entry, kind: 'generated' as const })),
+            ...raw.vendored.map((entry) => ({ ...entry, kind: 'vendored' as const })),
         ],
         checks: (raw.check ?? []).map((entry) => compact({ ...entry, output: entry.output && compact(entry.output) })),
 
-        ...(raw.hooks === undefined ? {} : { hooks: raw.hooks }),
-        ...(raw.ci === undefined ? {} : { ci: raw.ci }),
-        rules: defaulted<Policy['rules']>(raw.rules, { install: true, directory: '.gspot/rules', exclude: [] }),
+        ...compact({ hooks: raw.hooks, ci: raw.ci }),
+        guides: defaulted<Policy['guides']>(raw.guides, { install: true, directory: '.gspot/guides', exclude: [] }),
         coverage: defaulted<Policy['coverage']>(raw.coverage, { strict: false }),
-        ...(raw.runner === undefined
-            ? {}
-            : {
-                  runner: {
-                      tool: raw.runner.tool,
-                      ...(raw.runner.tasks === undefined ? {} : { tasks: raw.runner.tasks }),
-                  },
-              }),
+        ...(raw.runner === undefined ? {} : { runner: { tool: raw.runner.tool } }),
         scopeTables,
     };
+}
+
+/**
+ * A parsed value as a table.
+ * @param value the parsed value
+ * @returns the table, or undefined when the value is not one
+ */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The init proposal reads twelve TOML values as tables; one owner keeps the table test in one place.
+export function asRaw(value: unknown): Record<string, unknown> | undefined {
+    return isTable(value) ? value : undefined;
 }

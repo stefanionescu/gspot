@@ -1,16 +1,16 @@
 // Saves a reusable policy profile.
 import type { Command } from 'commander';
 import { readPolicy } from '#cli/policy/read.ts';
-import { relative, resolve, sep } from 'node:path';
+import { sep, resolve, relative } from 'node:path';
 import { findRoot } from '#cli/repository/tracked.ts';
 import { directoryOf } from '#cli/platform/arguments.ts';
+import type { CommandResult } from '#cli/types/commands.ts';
 import { parseProfile } from '#cli/policy/profiles/read.ts';
 import { mutationTarget } from '#cli/platform/safe-paths.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
-import { OWNER_WRITABLE_FILE } from '#cli/constants/platform.ts';
+import { OWNER_WRITABLE_FILE } from '#cli/config/platform.ts';
 import { exportedProfile } from '#cli/policy/profiles/export.ts';
-import type { CommandResult } from '#cli/types/commands/commands.ts';
-import { readOwnership, withLifecycleOwner } from '#cli/lifecycle/ownership/owner.ts';
+import { readOwnership, runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 
 /**
  * Writes a profile from the policy of this repository.
@@ -26,19 +26,19 @@ export function exportCommand(cwd: string, file: string): CommandResult {
     const path = relative(root, resolve(cwd, file)).split(sep).join('/');
     mutationTarget(path);
     parseProfile(saved.text, file);
-    withLifecycleOwner(root, (owner) => {
+    runOwnedLifecycle(root, (owner) => {
         if (owner.read('gspot.toml')?.bytes.toString('utf8') !== policy.text)
             throw new Error('The policy changed while the profile was prepared. Retry the export.');
         const existing = readOwnership(root).files.find((entry) => entry.path === path);
         if (existing !== undefined && existing.kind !== 'export')
             throw new Error(`Profile export cannot replace managed ${path}. Choose another destination.`);
         const current = owner.read(path);
-        const proposal = owner.proposeReplacement(
+        const plan = owner.proposeReplacement(
             path,
             { bytes: Buffer.from(saved.text), mode: current?.mode ?? OWNER_WRITABLE_FILE },
             'export',
         );
-        owner.applyProposals([proposal]);
+        owner.applyPlans([plan]);
     });
     const lines = [`wrote ${file}`, ...saved.leftOut.map((entry) => `left out  ${entry}`)];
     return { text: `${lines.join('\n')}\n`, json: { file, leftOut: saved.leftOut }, exitCode: 0 };
@@ -52,10 +52,10 @@ export function registerExport(program: Command): void {
     program
         .command('export <file>')
         .summary('Export a profile')
-        .description('Write a profile from the policy of this repository, without anything that names a path')
+        .description('Write the policy to a profile other repositories can start from')
         .addHelpText(
             'after',
-            '\nEffects:\nWrites a reusable profile to the requested file from the current policy. Path-specific settings are omitted and reported. The repository policy remains unchanged.\n\nExit codes:\n0: the profile was written. 2: invalid input or inability to complete the request.\n\nExample:\ngspot export team.toml',
+            '\nEffects:\nWrites the policy to the file as a profile. Settings that name a path stay out, and export lists them. gspot.toml does not change.\n\nExit codes:\n- 0: the profile was written.\n- 2: the input was invalid, or export could not finish.\n\nExample:\ngspot export team.toml',
         )
         .action(async (file: string, _flags: Record<string, unknown>, command: Command) => {
             const global = command.optsWithGlobals();

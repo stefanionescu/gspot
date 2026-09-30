@@ -1,24 +1,21 @@
 import { join } from 'node:path';
-import { rmSync } from 'node:fs';
+import { rm } from 'node:fs/promises';
 import { parse as parseToml } from 'smol-toml';
+import { findingAt } from '#cli/checks/result.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { readSource } from '#cli/repository/tracked.ts';
-import { scratchCopy } from '#cli/execution/file-workspace.ts';
-import { runCheckCommand } from '#cli/execution/tool-runner.ts';
-import { parse as parseJsonc, type ParseError } from 'jsonc-parser';
-import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
+import { runCheckCommand } from '#cli/execution/tool/runner.ts';
+import { scratchCopy } from '#cli/execution/files/workspace.ts';
+import { type ParseError, parse as parseJsonc } from 'jsonc-parser';
+import type { Engine, Finding, EngineInput } from '#cli/types/checks.ts';
 
 import {
-    COMPATIBILITY_DATE,
-    HTTP_HEADER_LINE,
-    REDIRECT_PARTS,
-    STATUS_CODES,
     TYPES_FILE,
-} from '#cli/constants/checks/checks.ts';
-
-function finding(input: EngineInput, file: string, line: number, rule: string, text: string): Finding {
-    return { check: input.spec.name, file, line, rule, message: text, fixable: false };
-}
+    STATUS_CODES,
+    REDIRECT_PARTS,
+    HTTP_HEADER_LINE,
+    COMPATIBILITY_DATE,
+} from '#cli/config/checks/repository.ts';
 
 function named(input: EngineInput, name: string): string[] {
     return input.files
@@ -30,18 +27,11 @@ function named(input: EngineInput, name: string): string[] {
 }
 
 function lines(input: EngineInput, path: string): { text: string; number: number }[] {
-    return readSource(input.root, path, input.observations)
+    return readSource(input.root, path, input.reads)
         .toString('utf8')
         .split('\n')
         .map((text, index) => ({ text, number: index + 1 }))
         .filter((line) => line.text.trim() !== '' && !line.text.trimStart().startsWith('#'));
-}
-
-function blockProblem(line: { text: string; number: number }): { number: number; text: string }[] {
-    const isPath = line.text.startsWith('/') || line.text.startsWith('https://');
-    return isPath
-        ? []
-        : [{ number: line.number, text: 'A block starts with a path that begins with a slash, or a full address.' }];
 }
 
 function headerProblem(line: { text: string; number: number }, hasPath: boolean): { number: number; text: string }[] {
@@ -56,7 +46,7 @@ function wranglerTable(
     input: EngineInput,
     path: string,
 ): { table: Record<string, unknown>; problem: string | undefined } {
-    const text = readSource(input.root, path, input.observations).toString('utf8');
+    const text = readSource(input.root, path, input.reads).toString('utf8');
     try {
         if (path.endsWith('.toml')) return { table: parseToml(text), problem: undefined };
         const errors: ParseError[] = [];
@@ -74,13 +64,13 @@ function wranglerTable(
 // Compares a copied types file with the output of wrangler in the same isolated directory.
 async function isTypesFileStale(input: EngineInput, path: string): Promise<boolean> {
     const folder = path.includes('/') ? path.slice(0, path.lastIndexOf('/')) : '';
-    const before = readSource(input.root, path, input.observations);
+    const before = readSource(input.root, path, input.reads);
     const result = await runCheckCommand(input, ['wrangler', 'types', TYPES_FILE], {
         cwd: join(input.root, folder),
     });
     if (result.code !== 0)
         throw new Error(`The wrangler types command failed: ${result.stderr.trim().split('\n').at(-1) ?? ''}`);
-    return !before.equals(readSource(input.root, path, input.observations));
+    return !before.equals(readSource(input.root, path, input.reads));
 }
 
 /**
@@ -93,7 +83,15 @@ export function headerProblems(entries: { text: string; number: number }[]): { n
     return entries.flatMap((line) => {
         if (/^\s/u.test(line.text)) return headerProblem(line, hasPath);
         hasPath = true;
-        return blockProblem(line);
+        const isPath = line.text.startsWith('/') || line.text.startsWith('https://');
+        return isPath
+            ? []
+            : [
+                  {
+                      number: line.number,
+                      text: 'A block starts with a path that begins with a slash, or a full address.',
+                  },
+              ];
     });
 }
 
@@ -124,7 +122,7 @@ export function redirectProblems(entries: { text: string; number: number }[]): {
 export function headersSyntax(input: EngineInput): Finding[] {
     return named(input, '_headers').flatMap((path) =>
         headerProblems(lines(input, path)).map((entry) =>
-            finding(input, path, entry.number, 'headers-syntax', entry.text),
+            findingAt(input, { file: path, line: entry.number }, 'headers-syntax', entry.text),
         ),
     );
 }
@@ -137,7 +135,7 @@ export function headersSyntax(input: EngineInput): Finding[] {
 export function redirectsSyntax(input: EngineInput): Finding[] {
     return named(input, '_redirects').flatMap((path) =>
         redirectProblems(lines(input, path)).map((entry) =>
-            finding(input, path, entry.number, 'redirects-syntax', entry.text),
+            findingAt(input, { file: path, line: entry.number }, 'redirects-syntax', entry.text),
         ),
     );
 }
@@ -151,20 +149,19 @@ export function wranglerFile(input: EngineInput): Finding[] {
     const paths = ['wrangler.toml', 'wrangler.json', 'wrangler.jsonc'].flatMap((name) => named(input, name));
     return paths.flatMap((path): Finding[] => {
         const { table, problem } = wranglerTable(input, path);
-        if (problem !== undefined) return [finding(input, path, 1, 'parse', problem)];
+        if (problem !== undefined) return [findingAt(input, { file: path, line: 1 }, 'parse', problem)];
         const unnamed =
             typeof table['name'] === 'string'
                 ? []
-                : [finding(input, path, 1, 'name', 'The configuration names no worker.')];
+                : [findingAt(input, { file: path, line: 1 }, 'name', 'The configuration names no worker.')];
         const date = table['compatibility_date'];
         const undated =
             typeof date === 'string' && COMPATIBILITY_DATE.test(date)
                 ? []
                 : [
-                      finding(
+                      findingAt(
                           input,
-                          path,
-                          1,
+                          { file: path, line: 1 },
                           'compatibility-date',
                           'The configuration pins no compatibility_date, so the runtime behavior changes under it.',
                       ),
@@ -181,7 +178,7 @@ export function wranglerFile(input: EngineInput): Finding[] {
 export async function envTypesFresh(input: EngineInput): Promise<Finding[]> {
     const paths = named(input, TYPES_FILE);
     if (paths.length === 0) return [];
-    const scratch = scratchCopy(
+    const scratch = await scratchCopy(
         input.root,
         input.files.map((file) => file.path),
         input.scopeEntries.map((scope) => scope.path),
@@ -192,16 +189,23 @@ export async function envTypesFresh(input: EngineInput): Promise<Finding[]> {
         for (const path of paths)
             if (await isTypesFileStale(isolated, path))
                 findings.push(
-                    finding(
+                    findingAt(
                         input,
-                        path,
-                        1,
+                        { file: path, line: 1 },
                         'stale-types',
                         'wrangler types writes this file differently. Run it and commit the result.',
                     ),
                 );
         return findings;
     } finally {
-        rmSync(scratch, { recursive: true, force: true });
+        await rm(scratch, { recursive: true, force: true });
     }
 }
+
+/** The analyses this file provides, by the name a manifest check gives them. */
+export const CLOUDFLARE_ANALYSES: Record<string, Engine> = {
+    'cloudflare-headers': headersSyntax,
+    'cloudflare-redirects': redirectsSyntax,
+    'cloudflare-wrangler': wranglerFile,
+    'cloudflare-env-types': envTypesFresh,
+};

@@ -4,38 +4,44 @@ import picomatch from 'picomatch';
 function alternatives(pattern: string): string[] {
     let start = -1;
     let depth = 0;
-    let bracket = false;
     const branches: string[] = [];
     let branch = 0;
-    for (let index = 0; index < pattern.length; index += 1) {
-        const character = pattern[index];
-        if (character === '\\') {
-            index += 1;
-            continue;
-        }
-        if (character === '[') bracket = true;
-        if (character === ']') bracket = false;
-        if (bracket) continue;
-        if (character === '{') {
-            if (depth === 0) {
-                start = index;
-                branch = index + 1;
+    // Keep escaped characters and character classes out of the brace parser.
+    const tokens = pattern.matchAll(/\\[\s\S]|\[(?:\\[\s\S]|[^\]\\])*\]?|[{},]/gu);
+    const closing = [...tokens].find((match) => {
+        const [character] = match;
+        const position = match.index;
+        switch (character) {
+            case '{': {
+                if (depth === 0) {
+                    start = position;
+                    branch = position + 1;
+                }
+                depth += 1;
+                break;
             }
-            depth += 1;
-        } else if (character === ',' && depth === 1) {
-            branches.push(pattern.slice(branch, index));
-            branch = index + 1;
-        } else if (character === '}' && depth > 0) {
-            depth -= 1;
-            if (depth === 0) {
-                branches.push(pattern.slice(branch, index));
-                return branches.flatMap((entry) =>
-                    alternatives(`${pattern.slice(0, start)}${entry}${pattern.slice(index + 1)}`),
-                );
+            case ',': {
+                if (depth === 1) {
+                    branches.push(pattern.slice(branch, position));
+                    branch = position + 1;
+                }
+                break;
+            }
+            case '}': {
+                if (depth !== 1) {
+                    depth = Math.max(0, depth - 1);
+                    break;
+                }
+                branches.push(pattern.slice(branch, position));
+                return true;
             }
         }
-    }
-    return [pattern];
+        return false;
+    });
+    if (closing === undefined) return [pattern];
+    return branches.flatMap((entry) =>
+        alternatives(`${pattern.slice(0, start)}${entry}${pattern.slice(closing.index + 1)}`),
+    );
 }
 
 // A globstar can consume no directories or stay active while consuming the scope prefix.
@@ -53,13 +59,12 @@ function suffixes(pattern: string, scope: string): string[] {
     if (!anchored) parts.unshift('**');
     let states = closure(new Set([0]), parts);
     for (const name of scope.split('/')) {
-        const next = new Set<number>();
-        for (const index of states) {
+        const next = [...states].flatMap((index) => {
             const part = parts[index];
-            if (part === undefined || part === '**') next.add(index);
-            else if (picomatch.isMatch(name, part, { dot: true, noext: true, nonegate: true })) next.add(index + 1);
-        }
-        states = closure(next, parts);
+            if (part === undefined || part === '**') return [index];
+            return picomatch.isMatch(name, part, { dot: true, noext: true, nonegate: true }) ? [index + 1] : [];
+        });
+        states = closure(new Set(next), parts);
     }
     if (states.has(parts.length)) return ['/**'];
     return [...states].map((index) => `/${parts.slice(index).join('/')}${directory ? '/' : ''}`);

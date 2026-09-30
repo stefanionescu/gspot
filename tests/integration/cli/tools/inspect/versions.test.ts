@@ -1,10 +1,13 @@
+import executables from 'which';
 import { join } from 'node:path';
-import { expect, spyOn, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { RUNS } from '#tests/inputs/cli.ts';
+import { test, spyOn, expect } from 'bun:test';
+import type { ToolPin } from '#cli/types/kits.ts';
+import { testdir, createFileTree } from 'testdirs';
 import { inspectTool } from '#cli/tools/inspect.ts';
-import { RUNS } from '#tests/constants/support/cli.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { chmodSync, mkdirSync, symlinkSync } from 'node:fs';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { commandPin, libraryPin } from '#tests/support/cli/pins.ts';
 
 test.each([
@@ -13,7 +16,7 @@ test.each([
     ['console.error("3.8.1");', 'ok', undefined],
 ] as const)('a version process classifies %s as %s', async (script, state, note) => {
     await using sandbox = await testdir();
-    const which = spyOn(Bun, 'which').mockReturnValue(process.execPath);
+    const which = spyOn(executables, 'sync').mockReturnValue(process.execPath);
     try {
         const tool = { ...commandPin('version-teller', '3.8.1'), version_command: ['-e', script] };
         const inspection = inspectTool({ root: sandbox.path, inspections: new Map() }, tool);
@@ -44,7 +47,7 @@ test('an npm package version does not hide a failed executable', async () => {
 
 test('a version printed before a genuine timeout does not make a tool usable', async () => {
     await using sandbox = await testdir();
-    const which = spyOn(Bun, 'which').mockReturnValue(process.execPath);
+    const which = spyOn(executables, 'sync').mockReturnValue(process.execPath);
     try {
         const tool = {
             ...commandPin('version-teller', '3.8.1'),
@@ -60,7 +63,7 @@ test('a version printed before a genuine timeout does not make a tool usable', a
 
 test('a manifest can declare its help command status without accepting other failed inspections', async () => {
     await using sandbox = await testdir();
-    const which = spyOn(Bun, 'which').mockReturnValue(process.execPath);
+    const which = spyOn(executables, 'sync').mockReturnValue(process.execPath);
     try {
         const tool = {
             ...commandPin('version-help', '3.8.1'),
@@ -79,10 +82,10 @@ test('a manifest can declare its help command status without accepting other fai
     }
 });
 
-test('tool observations distinguish pins and refresh private libraries in the next session', async () => {
+test('tool reads distinguish pins and refresh private libraries in the next session', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nconfigurations = []\n',
+        'gspot.toml': policyOf([]),
         'api/node_modules/example/package.json': '{"name":"example","version":"1.0.0"}',
     });
     const session = await openSession(sandbox.path);
@@ -97,14 +100,14 @@ test('tool observations distinguish pins and refresh private libraries in the ne
     expect(inspectTool(next, libraryPin('example', '2.0.0')).state).toBe('outdated');
 });
 
-test('a command shares version observations and the next session inspections again', async () => {
+test('a command shares version reads and the next session inspections again', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nconfigurations = []\n',
+        'gspot.toml': policyOf([]),
         'inspection.ts':
             'const file = Bun.file("calls.txt"); const calls = await file.exists() ? Number(await file.text()) : 0; await Bun.write("calls.txt", String(calls + 1)); console.log("3.8.1");',
     });
-    const which = spyOn(Bun, 'which').mockReturnValue(process.execPath);
+    const which = spyOn(executables, 'sync').mockReturnValue(process.execPath);
     try {
         const pin = { ...commandPin('version-teller', '3.8.1'), version_command: ['inspection.ts'] };
         const session = await openSession(sandbox.path);
@@ -136,8 +139,31 @@ test.each([
         const tool = commandPin('wrapped', '0.10.0');
         tool.floor = '0.9.0';
         tool.installers['npm'] = { name: 'wrapper', version: '0.7.0', version_exit_code: 1 };
-        const observed = inspectTool({ root: sandbox.path, inspections: new Map() }, tool);
-        expect(observed.state).toBe(state);
-        expect(state === 'ok' ? observed.found : observed.note).toContain(text);
+        const read = inspectTool({ root: sandbox.path, inspections: new Map() }, tool);
+        expect(read.state).toBe(state);
+        expect(state === 'ok' ? read.found : read.note).toContain(text);
     },
 );
+
+test.each([
+    ['3.2.57', 'outdated'],
+    ['5.2.0', 'host'],
+] as const)('a host bash that prints %s is %s against the 4.4 floor', async (version, state) => {
+    await using sandbox = await testdir();
+    const which = spyOn(executables, 'sync').mockReturnValue(process.execPath);
+    try {
+        const tool: ToolPin = {
+            name: 'bash',
+            kind: 'binary',
+            provider: 'host',
+            floor: '4.4',
+            installers: {},
+            version_command: ['-e', `console.log("GNU bash, version ${version}(1)-release")`],
+            version_regex: String.raw`version (\d+\.\d+(?:\.\d+)?)`,
+        };
+        const inspection = inspectTool({ root: sandbox.path, inspections: new Map() }, tool);
+        expect(inspection).toMatchObject({ state, found: version, floor: '4.4' });
+    } finally {
+        which.mockRestore();
+    }
+});

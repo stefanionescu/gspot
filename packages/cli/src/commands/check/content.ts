@@ -1,44 +1,19 @@
 // Checking one tree: the working tree, or a snapshot of the index or of a pushed commit.
 import { runText } from '#cli/output/reporter.ts';
+import { compact } from '#cli/policy/normalize.ts';
 import { writeReport } from '#cli/output/report.ts';
+import { hookStatus } from '#cli/lifecycle/hooks.ts';
 import { note, warn } from '#cli/output/messages.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { hookStatus } from '#cli/lifecycle/hooks/status.ts';
 import { reproduceLine } from '#cli/execution/reproduce.ts';
-import { CHANGED_SHOWN } from '#cli/constants/commands/check.ts';
+import { CHANGED_SHOWN } from '#cli/config/commands/check.ts';
 import { assertPinMatches } from '#cli/lifecycle/version-pin.ts';
 import { stagedFiles } from '#cli/repository/revisions/selection.ts';
-import type { ChangedSet, StagedSet } from '#cli/types/repository/revisions.ts';
-import type { Revision, Selections, CheckCommandResult, CheckOptions } from '#cli/types/commands/check.ts';
-import type { FixReport, RunOptions, RunReport, Session, StageFilter } from '#cli/types/execution/execution.ts';
-import { refusalFor, revisionSelection, selectedPaths, unknownSelection } from '#cli/commands/check/selection.ts';
-
-function runOptions(
-    options: CheckOptions,
-    stage: StageFilter,
-    staged: string[] | undefined,
-    changed: ChangedSet | undefined,
-): RunOptions {
-    return {
-        stage,
-        skips: options.skips,
-        fix: options.fix,
-        isDryRun: options.isDryRun,
-        noCache: options.noCache,
-        ...(options.onResult === undefined ? {} : { onResult: options.onResult }),
-        ...(staged === undefined ? {} : { staged }),
-        ...(changed === undefined
-            ? {}
-            : {
-                  changed: changed.paths,
-                  comparison: { content: 'working-tree' as const, reference: changed.reference },
-              }),
-        ...(options.only === undefined ? {} : { only: options.only }),
-        ...(options.paths.length === 0 ? {} : { paths: options.paths }),
-        ...(options.messageFile === undefined ? {} : { messageFile: options.messageFile }),
-    };
-}
+import type { StagedSet, ChangedSet } from '#cli/types/repository/revisions.ts';
+import type { Revision, Selections, CheckOptions, CheckCommandResult } from '#cli/types/commands.ts';
+import type { Session, FixReport, RunReport, RunOptions, StageFilter } from '#cli/types/execution/execution.ts';
+import { refusalFor, selectedPaths, unknownSelection, revisionSelection } from '#cli/commands/check/selection.ts';
 
 function fixSummary(fixes: FixReport, isDryRun: boolean, text: string): string {
     const failures = fixes.results.filter((result) => result.status === 'failed');
@@ -136,7 +111,8 @@ async function selectionsFor(
     const changed = await changedSet(session, options, signal, revision);
     const set = await stagedSet(root, options, signal, revision);
     const stage: StageFilter = options.stage ?? (options.staged ? 'commit' : 'all');
-    return { changed, set, stage };
+    const paths = selectedPaths(session, options, [...(set.staged ?? []), ...(changed?.paths ?? [])]);
+    return { changed, set, stage, paths };
 }
 
 // Runs the checks over the selections and renders the outcome.
@@ -147,10 +123,23 @@ async function runSelected(
     revision: Revision | undefined,
     selections: Selections,
 ): Promise<CheckCommandResult> {
-    const { changed, set, stage } = selections;
-    const paths = selectedPaths(session, options, [...(set.staged ?? []), ...(changed?.paths ?? [])]);
+    const { changed, set, stage, paths } = selections;
     const outcome = await executeRun(session, {
-        ...runOptions({ ...options, paths }, stage, set.staged, changed),
+        ...compact({
+            stage,
+            skips: options.skips,
+            fix: options.fix,
+            isDryRun: options.isDryRun,
+            noCache: options.noCache,
+            onResult: options.onResult,
+            staged: set.staged,
+            changed: changed?.paths,
+            comparison:
+                changed === undefined ? undefined : { content: 'working-tree' as const, reference: changed.reference },
+            only: options.only,
+            paths: paths.length === 0 ? undefined : paths,
+            messageFile: options.messageFile,
+        }),
         ...revisionOptions(revision),
         cancelSignal: signal,
     });
@@ -160,11 +149,11 @@ async function runSelected(
 
 /**
  * Runs check and returns what to print.
- * @param root the tree to check: the repository, or a snapshot of a revision
- * @param options the parsed flags
- * @param signal cancellation for the run
- * @param revision what the snapshot stands for, when the root is one
- * @returns the text, the run report and the exit code
+ * @param root the tree to check: the repository, or a snapshot of a revision.
+ * @param options the parsed flags.
+ * @param signal cancellation for the run.
+ * @param revision what the snapshot stands for, when the root is one.
+ * @returns the text, the run report, and the exit code.
  */
 export async function checkContent(
     root: string,
@@ -174,7 +163,10 @@ export async function checkContent(
 ): Promise<CheckCommandResult> {
     assertPinMatches(root);
     const session = await openSession(root);
-    if (revision !== undefined) session.cacheRoot = revision.cacheRoot;
+    if (revision !== undefined) {
+        session.cacheRoot = revision.cacheRoot;
+        session.installedRoot = revision.cacheRoot;
+    }
     const unknown = unknownSelection(session, options.only);
     if (unknown !== undefined) return unknown;
     warnAboutHooks(session, root, revision);

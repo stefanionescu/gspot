@@ -1,21 +1,21 @@
 // The path spellings and file snapshots the lifecycle accepts, and the metadata paths it keeps to itself.
 import { isDeepStrictEqual } from 'node:util';
-import type { FileSnapshot } from '#cli/types/platform.ts';
+import type { Read } from '#cli/types/platform.ts';
 
 import {
-    OWNER_WRITE_BIT,
-    READ_ONLY_FILE,
-    WRITABLE_FILE,
     DEVICE_NAME,
-    LIFECYCLE_PRIVATE_PATH,
-    TRAILING_DOT_OR_SPACE,
+    WRITABLE_FILE,
+    READ_ONLY_FILE,
+    OWNER_WRITE_BIT,
+    UNSAFE_PATH_END,
     UNSAFE_CHARACTERS,
-} from '#cli/constants/platform.ts';
+    LIFECYCLE_PRIVATE_PATH,
+} from '#cli/config/platform.ts';
 
 // Whether one segment of a portable path means something different on a supported operating system.
 function isUnsafeSegment(part: string): boolean {
     if (['', '.', '..'].includes(part)) return true;
-    if (UNSAFE_CHARACTERS.test(part) || TRAILING_DOT_OR_SPACE.test(part)) return true;
+    if (UNSAFE_CHARACTERS.test(part) || UNSAFE_PATH_END.test(part)) return true;
     return DEVICE_NAME.test(part);
 }
 
@@ -25,7 +25,7 @@ function isUnsafeSegment(part: string): boolean {
  * @param platform the platform whose permission model applies
  * @returns the mode the platform can represent
  */
-export function fileMode(file: Pick<FileSnapshot, 'mode' | 'isLink'>, platform = process.platform): number {
+export function fileMode(file: Pick<Read, 'mode' | 'isLink'>, platform = process.platform): number {
     if (platform !== 'win32') return file.mode;
     if (file.isLink || (file.mode & OWNER_WRITE_BIT) !== 0) return WRITABLE_FILE;
     return READ_ONLY_FILE;
@@ -37,11 +37,11 @@ export function fileMode(file: Pick<FileSnapshot, 'mode' | 'isLink'>, platform =
  * @param expected the snapshot the caller expects there
  * @returns true when both are absent or both match
  */
-export function sameSnapshot(found: FileSnapshot | undefined, expected: FileSnapshot | undefined): boolean {
+export function sameEntry(found: Read | undefined, expected: Read | undefined): boolean {
     if (found === undefined || expected === undefined) return found === expected;
-    const observed = { ...found, mode: fileMode(found) };
+    const read = { ...found, mode: fileMode(found) };
     const requested = { ...expected, mode: fileMode(expected) };
-    return isDeepStrictEqual(observed, requested);
+    return isDeepStrictEqual(read, requested);
 }
 
 /**
@@ -72,15 +72,17 @@ export function nativePath(path: string): string[] {
  * Refuses a path inside the lifecycle's own metadata.
  * @param path the proposed path
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Reads and writes both refuse lifecycle metadata by this one pattern.
 export function privateTarget(path: string): void {
     if (LIFECYCLE_PRIVATE_PATH.test(path.normalize('NFC')))
         throw new Error(`Lifecycle metadata is not a generated target: ${path}`);
 }
 
 /**
- * Public mutation proposals cannot target the owner's journal, lock, or recovery files.
+ * Public mutation plans cannot target the owner's log, lock, or recovery files.
  * @param path the proposed path
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Every mutation plan checks its target by the same two rules.
 export function mutationTarget(path: string): void {
     mutationPath(path);
     privateTarget(path);

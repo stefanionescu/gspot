@@ -1,10 +1,34 @@
-import { dirname, join } from 'node:path';
+import { join, dirname } from 'node:path';
+import { findingAt } from '#cli/checks/result.ts';
 import { readSource } from '#cli/repository/tracked.ts';
-import { SHOWN_LINES } from '#cli/constants/checks/nextjs.ts';
-import { runCheckCommand } from '#cli/execution/tool-runner.ts';
-import { createFileWorkspace } from '#cli/execution/file-workspace.ts';
-import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
-import { FROZEN_INSTALLS, STALE_LOCK_DIAGNOSTICS } from '#cli/constants/checks/dependencies.ts';
+import type { SpawnResult } from '#cli/types/platform.ts';
+import { SHOWN_LINES } from '#cli/config/checks/platforms.ts';
+import { runCheckCommand } from '#cli/execution/tool/runner.ts';
+import type { Finding, EngineInput } from '#cli/types/checks.ts';
+import { createFileWorkspace } from '#cli/execution/files/workspace.ts';
+import { FROZEN_INSTALLS, STALE_LOCK_DIAGNOSTICS } from '#cli/config/checks/repository.ts';
+
+// Yarn metadata selects its immutable-installation protocol. Other filenames select their pinned client command.
+function frozenCommand(input: EngineInput, path: string): string[] | undefined {
+    const filename = path.slice(path.lastIndexOf('/') + 1);
+    if (filename === 'yarn.lock' && /^__metadata:/mu.test(readSource(input.root, path, input.reads).toString('utf8')))
+        return ['yarn', 'install', '--immutable'];
+    return FROZEN_INSTALLS[filename];
+}
+
+// A frozen-installation failure is a finding only when the package manager identifies stale inputs.
+function lockfileRefusal(command: string[], result: SpawnResult): string {
+    const said = `${result.stderr}\n${result.stdout}`.split('\n').filter((line) => line.trim() !== '');
+    const [client] = command;
+    const staleDiagnostic = client === undefined ? undefined : STALE_LOCK_DIAGNOSTICS[client];
+    if (staleDiagnostic === undefined)
+        throw new Error(`No stale lockfile diagnostic is known for ${command.join(' ')}.`);
+    if (!staleDiagnostic.test(said.join('\n')))
+        throw new Error(
+            `${command.join(' ')} could not validate the lockfile: ${said.slice(0, SHOWN_LINES).join(' ')}`,
+        );
+    return `${command.join(' ')} refuses this lockfile: ${said.slice(0, SHOWN_LINES).join(' ')}`;
+}
 
 /**
  * One finding for each lockfile its package manager refuses to install from unchanged.
@@ -19,35 +43,15 @@ export async function lockfileFresh(input: EngineInput): Promise<Finding[]> {
         input.files.map((file) => file.path),
     );
     for (const file of input.files) {
-        const filename = file.path.slice(file.path.lastIndexOf('/') + 1);
-        const command =
-            filename === 'yarn.lock' &&
-            /^__metadata:/mu.test(readSource(input.root, file.path, input.observations).toString('utf8'))
-                ? ['yarn', 'install', '--immutable']
-                : FROZEN_INSTALLS[filename];
+        const command = frozenCommand(input, file.path);
         if (command === undefined) continue;
         const result = await runCheckCommand(input, command, {
             cwd: join(workspace.root, dirname(file.path)),
-            ...(filename === 'yarn.lock' ? { env: { YARN_ENABLE_SCRIPTS: 'false' } } : {}),
+            ...(command[0] === 'yarn' ? { env: { YARN_ENABLE_SCRIPTS: 'false' } } : {}),
         });
         if (result.code === 0) continue;
-        const said = `${result.stderr}\n${result.stdout}`.split('\n').filter((line) => line.trim() !== '');
-        const [manager] = command;
-        const staleDiagnostic = manager === undefined ? undefined : STALE_LOCK_DIAGNOSTICS[manager];
-        if (staleDiagnostic === undefined)
-            throw new Error(`No stale lockfile diagnostic is known for ${command.join(' ')}.`);
-        if (!staleDiagnostic.test(said.join('\n')))
-            throw new Error(
-                `${command.join(' ')} could not validate the lockfile: ${said.slice(0, SHOWN_LINES).join(' ')}`,
-            );
-        findings.push({
-            check: input.spec.name,
-            file: file.path,
-            line: 1,
-            rule: 'stale-lockfile',
-            message: `${command.join(' ')} refuses this lockfile: ${said.slice(0, SHOWN_LINES).join(' ')}`,
-            fixable: false,
-        });
+        const refusal = lockfileRefusal(command, result);
+        findings.push(findingAt(input, { file: file.path, line: 1 }, 'stale-lockfile', refusal));
     }
     return findings;
 }

@@ -1,10 +1,11 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { writeFileSync } from 'node:fs';
-import { createFileTree, testdir } from 'testdirs';
+import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { ROUTE, ROUTES_OPTIONS, ROUTES_POLICY } from '#tests/constants/integration/cli/checks.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
+import { ROUTE, ROUTES_POLICY, ROUTES_OPTIONS } from '#tests/inputs/integration/cli/checks.ts';
 
 test('route imports must resolve to the route in the same scope', async () => {
     await using sandbox = await testdir();
@@ -42,8 +43,7 @@ test.each([
 ])('a route test resolves its module through %s', async (source) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml':
-            'version = 1\nlevel = "all"\nconfigurations = ["express"]\n[tools.express]\nroute_files = ["routes/*.ts"]\n',
+        'gspot.toml': policyOf(['express'], '[tools.express]\nroute_files = ["routes/*.ts"]\n', 'all'),
         'package.json': '{"imports":{"#routes/*":"./routes/*.ts"}}',
         'tsconfig.json': '{"compilerOptions":{"paths":{"@routes/*":["./routes/*"]}}}',
         'routes/users.ts': ROUTE,

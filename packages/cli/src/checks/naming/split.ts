@@ -1,5 +1,5 @@
 import { splitByCase } from 'scule';
-import { DIGIT, SEPARATORS } from '#cli/constants/checks/naming.ts';
+import { SEPARATORS } from '#cli/config/checks/naming.ts';
 
 /**
  * The parts of an identifier, lowercased. `HTMLParser` gives `html`, `parser`; `user_id` gives `user`, `id`; `v2` gives `v`, `2`.
@@ -14,15 +14,6 @@ export function splitParts(name: string): string[] {
         .flatMap((part) => part.split(/(?<=\D)(?=\d)|(?<=\d)(?=\D)/u))
         .map((part) => part.toLowerCase())
         .filter((part) => part !== '');
-}
-
-/**
- * The words of an identifier: its parts without the digit runs.
- * @param name the identifier
- * @returns the words
- */
-export function wordsOf(name: string): string[] {
-    return splitParts(name).filter((part) => !DIGIT.test(part));
 }
 
 /**

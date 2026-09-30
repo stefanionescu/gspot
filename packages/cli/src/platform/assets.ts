@@ -1,115 +1,73 @@
-// Where the gspot data lives: the repository during development, embedded files in the binary.
-import { globbySync } from 'globby';
+// Where the gspot data lives: the kits, guides, and grammars beside the code. The source tree and the package
+// share that layout.
 import { fileURLToPath } from 'node:url';
-import { dirname, join } from 'node:path';
-import { readFileSync, statSync } from 'node:fs';
-import { toPosix } from '#cli/platform/paths.ts';
-import type { EmbeddedIndex } from '#cli/types/platform.ts';
-import { GRAMMAR_SOURCES, ROOT_SEARCH_DEPTH } from '#cli/constants/platform.ts';
+import { join, dirname } from 'node:path';
+import { createRequire } from 'node:module';
+import { statSync, readFileSync } from 'node:fs';
+import { toPosix, globPaths } from '#cli/platform/paths.ts';
+import { RUNTIME_WASM, GRAMMAR_FILES, ROOT_SEARCH_DEPTH } from '#cli/config/platform.ts';
 
-const state: { embedded: EmbeddedIndex | null | undefined; developmentRoot: string | undefined } = {
-    embedded: undefined,
-    developmentRoot: undefined,
-};
+const state: { root: string | undefined } = { root: undefined };
 
-function findRepoRoot(): string {
-    let dir = dirname(fileURLToPath(new URL(import.meta.url)));
+// The nearest folder above the running code with a package.json and the kits, or undefined.
+function nearestPackage(): string | undefined {
+    let dir = dirname(fileURLToPath(import.meta.url));
     for (let index = 0; index < ROOT_SEARCH_DEPTH; index += 1) {
         if (
-            statSync(join(dir, 'packages/cli/configurations'), { throwIfNoEntry: false }) !== undefined &&
-            statSync(join(dir, 'packages'), { throwIfNoEntry: false }) !== undefined
+            statSync(join(dir, 'package.json'), { throwIfNoEntry: false }) !== undefined &&
+            statSync(join(dir, 'kits'), { throwIfNoEntry: false })?.isDirectory() === true
         )
             return dir;
         dir = dirname(dir);
     }
-    throw new Error('The configurations folder is not beside the source tree.');
+    return undefined;
 }
 
-function embeddedIndex(): EmbeddedIndex | undefined {
-    state.embedded ??= (globalThis as { gspotEmbedded?: EmbeddedIndex }).gspotEmbedded ?? null;
-    return state.embedded ?? undefined;
+// The package folder that holds the running code. The source tree and an installed package both have one. Code bundled
+// into another build, such as the documentation site, finds the package through module resolution instead.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The package root is found once; the state object owns the answer.
+function packageRoot(): string {
+    state.root ??= nearestPackage() ?? dirname(createRequire(import.meta.url).resolve('@gspothq/cli/package.json'));
+    return state.root;
 }
 
-function developmentRoot(): string {
-    state.developmentRoot ??= findRepoRoot();
-    return state.developmentRoot;
-}
-
-export const GRAMMAR_NAMES = [...Object.keys(GRAMMAR_SOURCES), 'swift.wasm'];
+export const GRAMMAR_NAMES = [...GRAMMAR_FILES, ...Object.keys(RUNTIME_WASM)];
 
 /**
- * The absolute path of this binary when compiled, for hooks under runner none; undefined when running from source.
- * @returns the path, or undefined
- */
-export function binaryPath(): string | undefined {
-    return isEmbedded() ? process.execPath : undefined;
-}
-
-/**
- * True when running from a compiled binary with embedded assets.
- * @returns whether the assets are embedded
- */
-export function isEmbedded(): boolean {
-    return embeddedIndex() !== undefined;
-}
-
-/**
- * Reads one asset by its repository-relative path (`packages/cli/configurations/language/bash/manifest.toml`).
+ * Reads one asset by its path in the package, such as `kits/language/bash/manifest.toml`.
  * @param path the asset path
  * @returns the text
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: 20 callers name assets by their path in the package; this owner finds the package root once for all of them.
 export function readAsset(path: string): string {
-    const index = embeddedIndex();
-    if (index) {
-        const file = index[path];
-        if (file === undefined) throw new Error(`No embedded asset is at ${path}.`);
-        return readFileSync(file, 'utf8');
-    }
-    return readFileSync(join(developmentRoot(), path), 'utf8');
+    return readFileSync(join(packageRoot(), path), 'utf8');
 }
 
 /**
- * The installed path of a grammar file: embedded in the binary, or read from its npm package during development.
- * @param name the file name under grammars/, such as `bash.wasm`
- * @returns the WASM asset path
+ * The path of a grammar file: shipped in grammars/, or read from the runtime package that owns it.
+ * @param name the file name, such as `bash.wasm`
+ * @returns the WASM file path
  */
 export function grammarPath(name: string): string {
     if (!GRAMMAR_NAMES.includes(name)) throw new Error(`No grammar is called ${name}.`);
-    const index = embeddedIndex();
-    if (index !== undefined) {
-        const embedded = index[`grammars/${name}`];
-        if (embedded === undefined) throw new Error(`No embedded grammar is called ${name}.`);
-        return embedded;
-    }
-    const root = developmentRoot();
-    if (name === 'swift.wasm') {
-        const path = join(root, 'packages', 'cli', '.build', name);
-        if (statSync(path, { throwIfNoEntry: false }) === undefined)
-            throw new Error('The Swift grammar is not prepared; run mise run prepare:grammar.');
-        return path;
-    }
-    const source = GRAMMAR_SOURCES[name];
-    if (source === undefined) throw new Error(`No grammar source is known for ${name}.`);
-    const candidates = [join(root, 'packages', 'cli', 'node_modules', source), join(root, 'node_modules', source)];
-    const found = candidates.find((candidate) => statSync(candidate, { throwIfNoEntry: false }) !== undefined);
-    if (found === undefined) throw new Error(`The grammar package for ${name} is not installed; run bun install.`);
-    return found;
+    const root = packageRoot();
+    const source = RUNTIME_WASM[name];
+    if (source !== undefined) return createRequire(join(root, 'package.json')).resolve(source);
+    const path = join(root, 'grammars', name);
+    if (statSync(path, { throwIfNoEntry: false }) === undefined)
+        throw new Error(`The grammar ${name} is missing. Run: mise run prepare:grammar`);
+    return path;
 }
 
 /**
- * Lists asset paths under a prefix, repository-relative, sorted.
- * @param prefix the path prefix, such as `configurations/`
+ * Lists asset paths under a prefix, relative to the package, sorted.
+ * @param prefix the path prefix, such as `kits/`
  * @returns the paths
  */
 export function listAssets(prefix: string): string[] {
-    const index = embeddedIndex();
-    if (index)
-        return Object.keys(index)
-            .filter((key) => key.startsWith(prefix))
-            .toSorted((a, b) => a.localeCompare(b));
-    const dir = join(developmentRoot(), prefix);
+    const dir = join(packageRoot(), prefix);
     if (statSync(dir, { throwIfNoEntry: false }) === undefined) return [];
-    return globbySync('**/*', { cwd: dir, dot: true })
+    return globPaths(dir, '**/*', { dot: true })
         .map((path) => toPosix(join(prefix, path)))
         .toSorted((a, b) => a.localeCompare(b));
 }

@@ -4,21 +4,20 @@ import semver from 'semver';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { isDeepStrictEqual } from 'node:util';
-import { LOCKS } from '#cli/constants/tools/packages.ts';
-import { SETUP } from '#cli/constants/tools/tools.ts';
-import type { FileSnapshot } from '#cli/types/platform.ts';
+import type { ToolPin } from '#cli/types/kits.ts';
+import type { Read } from '#cli/types/platform.ts';
+import { SETUP } from '#cli/config/tools/tools.ts';
+import { openRoot } from '#cli/platform/filesystem.ts';
 import { lockMatches } from '#cli/tools/packages/locks.ts';
-import type { ToolPin } from '#cli/types/configurations.ts';
 import type { GeneratedFile } from '#cli/types/generation.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import { withLifecycleOwner } from '#cli/lifecycle/ownership/owner.ts';
-import { parsePackageManager } from '#cli/tools/packages/manager.ts';
-import { publishInstalledFiles } from '#cli/tools/installed-files.ts';
+import type { Owner } from '#cli/types/lifecycle/lifecycle.ts';
+import { installedOutputs } from '#cli/tools/installed-files.ts';
+import { parsePackageTool } from '#cli/tools/packages/identity.ts';
+import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import type { Inputs, ToolProject } from '#cli/types/tools/packages.ts';
-import type { LifecycleOwner } from '#cli/types/lifecycle/lifecycle.ts';
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { TOOL_PACKAGE_PROJECT, YARN_SETTINGS } from '#cli/constants/tools/packages.ts';
-import { packageCommand, packageManagerCommand, prepareNativeWrappers } from '#cli/tools/packages/resolution.ts';
+import { rmSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { LOCKS, YARN_SETTINGS, TOOL_PACKAGE_PROJECT } from '#cli/config/tools/packages.ts';
+import { packageCommand, packageInstallCommand, prepareNativeWrappers } from '#cli/tools/packages/commands.ts';
 
 const packageSchema = z.strictObject({
     name: z.literal('gspot-tools'),
@@ -34,16 +33,17 @@ const packageSchema = z.strictObject({
 // What the tool project's manifest says: its manager, its dependencies, and the lock the manager writes.
 function projectOf(manifest: string): ToolProject {
     const parsed = packageSchema.parse(JSON.parse(manifest));
-    const manager = parsePackageManager(parsed.packageManager);
-    const lock = LOCKS[manager.name];
-    return { manager, dependencies: parsed.devDependencies, lock, lockPath: `.gspot/${lock}` };
+    const client = parsePackageTool(parsed.packageManager);
+    const lock = LOCKS[client.name];
+    return { client, dependencies: parsed.devDependencies, lock, lockPath: `.gspot/${lock}` };
 }
 
 // Whether a recorded lock pins the project's dependencies.
-function isCurrentLock(project: ToolProject, recorded: FileSnapshot | undefined): boolean {
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Four steps of apply and install ask whether the recorded lock is current; one owner keeps the comparison.
+function isCurrentLock(project: ToolProject, recorded: Read | undefined): boolean {
     return (
         recorded !== undefined &&
-        lockMatches(project.manager.name, recorded.bytes.toString('utf8'), project.dependencies)
+        lockMatches(project.client.name, recorded.bytes.toString('utf8'), project.dependencies)
     );
 }
 
@@ -53,7 +53,7 @@ function writeProject(work: string, manifest: string, yarn: string | undefined):
 }
 
 // Resolves the lock in a scratch directory, starting from the recorded lock when it still matches.
-async function resolveLock(
+async function prepareLock(
     root: string,
     project: ToolProject,
     files: GeneratedFile[],
@@ -63,12 +63,12 @@ async function resolveLock(
     const work = mkdtempSync(join(tmpdir(), 'gspot-lock-'));
     try {
         writeProject(work, manifest, files.find((file) => file.path === YARN_SETTINGS)?.content);
-        if (recorded !== undefined && lockMatches(project.manager.name, recorded, project.dependencies))
+        if (recorded !== undefined && lockMatches(project.client.name, recorded, project.dependencies))
             writeFileSync(join(work, project.lock), recorded);
-        await packageCommand(root, work, project.manager, false);
+        await packageCommand(root, work, project.client, false);
         const content = readFileSync(join(work, project.lock), 'utf8');
-        if (!lockMatches(project.manager.name, content, project.dependencies))
-            throw new Error(`${project.manager.name} produced a mismatched tool lock. Existing files were preserved.`);
+        if (!lockMatches(project.client.name, content, project.dependencies))
+            throw new Error(`${project.client.name} produced a mismatched tool lock. Existing files were preserved.`);
         return content;
     } finally {
         rmSync(work, { recursive: true, force: true });
@@ -76,21 +76,21 @@ async function resolveLock(
 }
 
 // Refuses an installation whose inputs the manager rewrote or another writer changed meanwhile.
-function assertInputsUnchanged(owner: LifecycleOwner, work: string, project: ToolProject, inputs: Inputs): void {
+function assertInputsUnchanged(owner: Owner, work: string, project: ToolProject, inputs: Inputs): void {
     const manifestKept = readFileSync(join(work, 'package.json')).equals(inputs.project.bytes);
     const lockKept = readFileSync(join(work, project.lock)).equals(inputs.recorded.bytes);
     if (!manifestKept || !lockKept)
-        throw new Error(`${project.manager.name} changed locked inputs. No installed files were published. ${SETUP}`);
+        throw new Error(`${project.client.name} changed locked inputs. No installed files were written. ${SETUP}`);
     const manifestSame = isDeepStrictEqual(owner.read(TOOL_PACKAGE_PROJECT), inputs.project);
     const lockSame = isDeepStrictEqual(owner.read(project.lockPath), inputs.recorded);
     if (!manifestSame || !lockSame || !isDeepStrictEqual(owner.read(YARN_SETTINGS), inputs.yarn))
         throw new Error('Tool project inputs changed during installation. Retry the command.');
 }
 
-// Installs the recorded lock in a scratch directory and publishes the installed files through the owner.
+// Installs the recorded lock in a scratch directory and writes the installed files through the owner.
 async function installFromInputs(
     root: string,
-    owner: LifecycleOwner,
+    owner: Owner,
     project: ToolProject,
     inputs: Inputs,
     tools: Iterable<ToolPin>,
@@ -99,26 +99,22 @@ async function installFromInputs(
     try {
         writeProject(work, inputs.project.bytes.toString('utf8'), inputs.yarn?.bytes.toString('utf8'));
         writeFileSync(join(work, project.lock), inputs.recorded.bytes);
-        await packageCommand(root, work, project.manager, true);
+        await packageCommand(root, work, project.client, true);
         await prepareNativeWrappers(work, project.dependencies, tools);
         assertInputsUnchanged(owner, work, project, inputs);
-        publishInstalledFiles(owner, join(work, 'node_modules'), 'npm');
+        owner.installTree('npm', installedOutputs(join(work, 'node_modules'), 'npm'));
     } finally {
         rmSync(work, { recursive: true, force: true });
     }
 }
 
 /**
- * Resolve only a missing or mismatched tool lock, before apply publishes generated files.
+ * Resolve only a missing or mismatched tool lock, before apply writes generated files.
  * @param root the repository root
  * @param files the generated files, among them the tool project
  * @param owner the lifecycle owner that records the lock
  */
-export async function resolvePackageProject(
-    root: string,
-    files: GeneratedFile[],
-    owner: LifecycleOwner,
-): Promise<void> {
+export async function preparePackageProject(root: string, files: GeneratedFile[], owner: Owner): Promise<void> {
     const generated = files.find((file) => file.path === TOOL_PACKAGE_PROJECT);
     if (generated === undefined) return;
     const project = projectOf(generated.content);
@@ -128,13 +124,13 @@ export async function resolvePackageProject(
     const content =
         unchanged && recorded !== undefined && isCurrentLock(project, original)
             ? recorded
-            : await resolveLock(root, project, files, generated.content, recorded);
+            : await prepareLock(root, project, files, generated.content, recorded);
     files.push({
         path: project.lockPath,
         content,
         readOnly: true,
         kind: 'lock',
-        ...(original === undefined ? {} : { observed: original }),
+        ...(original === undefined ? {} : { read: original }),
     });
 }
 
@@ -151,7 +147,7 @@ export function packageLockDrift(
     const manifest = generated.find((file) => file.path === TOOL_PACKAGE_PROJECT);
     if (manifest === undefined) return undefined;
     const project = projectOf(manifest.content);
-    const files = openConfinedRoot(root);
+    const files = openRoot(root);
     try {
         const recorded = files.read(project.lockPath);
         if (recorded === undefined) return { path: project.lockPath, kind: 'missing' };
@@ -169,26 +165,26 @@ export function packageLockDrift(
  * @returns the commands an install runs, or none without a tool project
  */
 export function packageInstallSteps(root: string): string[][] {
-    const files = openConfinedRoot(root);
+    const files = openRoot(root);
     try {
         const manifest = files.read(TOOL_PACKAGE_PROJECT);
         if (manifest === undefined) return [];
         const project = projectOf(manifest.bytes.toString('utf8'));
         if (!isCurrentLock(project, files.read(project.lockPath))) throw new Error(SETUP);
-        return [packageManagerCommand(project.manager, true)];
+        return [packageInstallCommand(project.client, true)];
     } finally {
         files.close();
     }
 }
 
 /**
- * Install locked packages outside the repository, then publish each owned entry through native confinement.
+ * Install locked packages outside the repository, then write each owned entry through native bounds.
  * @param root the repository root
  * @param tools the pinned tools whose native wrappers the installation prepares
  * @returns the line that says what was installed, or '' without a tool project
  */
 export async function installPackageProject(root: string, tools: Iterable<ToolPin>): Promise<string> {
-    return withLifecycleOwner(root, async (owner) => {
+    return runOwnedLifecycle(root, async (owner) => {
         const manifest = owner.read(TOOL_PACKAGE_PROJECT);
         if (manifest === undefined) return '';
         const project = projectOf(manifest.bytes.toString('utf8'));
@@ -196,6 +192,6 @@ export async function installPackageProject(root: string, tools: Iterable<ToolPi
         if (recorded === undefined || !isCurrentLock(project, recorded)) throw new Error(SETUP);
         const inputs: Inputs = { project: manifest, recorded, yarn: owner.read(YARN_SETTINGS) };
         await installFromInputs(root, owner, project, inputs, tools);
-        return `installed locked npm tools under .gspot/node_modules with ${project.manager.name}@${project.manager.version}`;
+        return `installed locked npm tools under .gspot/node_modules with ${project.client.name}@${project.client.version}`;
     });
 }

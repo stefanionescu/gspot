@@ -1,12 +1,12 @@
-import type { GeneratedProposal } from '#cli/types/generation.ts';
-import type { FileSnapshot } from '#cli/types/platform.ts';
+import type { Read } from '#cli/types/platform.ts';
+import type { Generated } from '#cli/types/generation.ts';
 import type { ApplyReport } from '#cli/types/lifecycle/lifecycle.ts';
 
-export type PublicationRequest = {
+export type WriteRequest = {
     root: string;
-    rendered: GeneratedProposal;
+    rendered: Generated;
     report: ApplyReport;
     retained: { prose: boolean; packages: boolean };
-    takeover?: ReadonlyMap<string, FileSnapshot> | undefined;
-    regenerate?: ReadonlyMap<string, FileSnapshot>;
+    replace?: ReadonlyMap<string, Read> | undefined;
+    regenerate?: ReadonlyMap<string, Read>;
 };

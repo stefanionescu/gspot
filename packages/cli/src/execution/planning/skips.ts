@@ -1,8 +1,9 @@
 // Why a planned check does not run: an ignore, a waiting setting, a rule, the platform, or a flag.
 import { pathMatcher } from '#cli/repository/paths.ts';
 import { waitingSetting } from '#cli/policy/check-state.ts';
-import type { CheckSpec, ToolPin } from '#cli/types/configurations.ts';
-import type { RuleSkip, Skip, PlanOptions, PlannedCheck } from '#cli/types/execution/execution.ts';
+import type { ToolPin, CheckSpec } from '#cli/types/kits.ts';
+import { PLATFORM_LABELS } from '#cli/config/execution/execution.ts';
+import type { Host, Skip, RuleSkip, PlanOptions, PlannedCheck } from '#cli/types/execution/execution.ts';
 
 // The rules a check declares about where it runs, each with the sentence that says why it was skipped.
 const RULE_SKIPS: RuleSkip[] = [
@@ -11,7 +12,7 @@ const RULE_SKIPS: RuleSkip[] = [
         note: (spec) => `its findings come from ${spec.reported_by ?? ''}`,
     },
     {
-        applies: (spec, check) => spec.needs !== undefined && !check.scope.view.configurations.includes(spec.needs),
+        applies: (spec, check) => spec.needs !== undefined && !check.scope.view.kits.includes(spec.needs),
         note: (spec) => `needs the ${spec.needs ?? ''} configuration, which this scope does not select`,
     },
     {
@@ -34,24 +35,13 @@ function ignoreSkip(check: PlannedCheck): Skip {
     return { source: 'ignore', note: `disabled by gspot.toml${reason}` };
 }
 
-// The skip a setting the check waits for imposes.
-function waitingSkip(check: PlannedCheck): Skip {
-    const setting = waitingSetting(check.scope, check.spec);
-    return setting === undefined ? undefined : { source: 'rules', note: `set ${setting} to turn this on` };
-}
-
-// The first declared rule that keeps the check from running here.
-function ruleSkip(check: PlannedCheck, hasGit: boolean): Skip {
-    const rule = RULE_SKIPS.find((candidate) => candidate.applies(check.spec, check, hasGit));
-    return rule === undefined ? undefined : { source: 'rules', note: rule.note(check.spec) };
-}
-
-// The skip the platform imposes: the check names other platforms, or its tool has no Windows build.
-function platformSkip(spec: CheckSpec, tool: ToolPin | undefined, platform: string): Skip {
-    if (spec.platform && !(spec.platform as readonly string[]).includes(platform))
-        return { source: 'platform', note: `runs on ${spec.platform.join(', ')} only; this is ${platform}` };
-    if (platform === 'windows' && tool && !tool.windows)
-        return { source: 'platform', note: `${tool.name} has no Windows build` };
+// The skip the platform imposes: the check names other platforms, or its tool has no build for this host.
+function platformSkip(spec: CheckSpec, tool: ToolPin | undefined, host: Host): Skip {
+    if (spec.platform && !(spec.platform as readonly string[]).includes(host.platform))
+        return { source: 'platform', note: `runs on ${spec.platform.join(', ')} only; this is ${host.platform}` };
+    const missing = tool === undefined ? undefined : missingBuild(tool, host.platform, host.arch);
+    if (tool !== undefined && missing !== undefined)
+        return { source: 'platform', note: `${tool.name} has no ${missing} build` };
     return undefined;
 }
 
@@ -59,14 +49,18 @@ function platformSkip(spec: CheckSpec, tool: ToolPin | undefined, platform: stri
  * Why the check does not run, in the order the reasons take precedence, or undefined when it runs.
  * @param check the planned check
  * @param options the run options
- * @param platform the platform name
+ * @param host the platform and architecture the run is on
  * @param hasGit whether the repository is a Git repository
  * @returns the skip
  */
-export function skipFor(check: PlannedCheck, options: PlanOptions, platform: string, hasGit: boolean): Skip {
-    const declared = ignoreSkip(check) ?? waitingSkip(check) ?? ruleSkip(check, hasGit);
-    if (declared !== undefined) return declared;
-    const byPlatform = platformSkip(check.spec, check.tool, platform);
+export function skipFor(check: PlannedCheck, options: PlanOptions, host: Host, hasGit: boolean): Skip {
+    const ignored = ignoreSkip(check);
+    if (ignored !== undefined) return ignored;
+    const setting = waitingSetting(check.scope, check.spec);
+    if (setting !== undefined) return { source: 'rules', note: `set ${setting} to turn this on` };
+    const rule = RULE_SKIPS.find((candidate) => candidate.applies(check.spec, check, hasGit));
+    if (rule !== undefined) return { source: 'rules', note: rule.note(check.spec) };
+    const byPlatform = platformSkip(check.spec, check.tool, host);
     if (byPlatform !== undefined) return byPlatform;
     return options.skips.includes(check.spec.name) ? { source: 'flag', note: 'skipped by --skip' } : undefined;
 }
@@ -90,4 +84,20 @@ export function restrictIgnoredPaths(check: PlannedCheck): PlannedCheck {
     return files.length === 0
         ? { ...check, skip: { source: 'ignore', note: 'all selected paths are disabled by gspot.toml' } }
         : { ...check, files };
+}
+
+/**
+ * The build a tool lacks on a host, such as Windows or arm64 Linux, or undefined when the tool ships for it.
+ * @param tool the tool pin
+ * @param platform the host platform name: macos, linux, or windows
+ * @param arch the host architecture: x64 or arm64
+ * @returns the words for the missing build, or undefined
+ */
+export function missingBuild(tool: ToolPin, platform: string, arch: string): string | undefined {
+    const named: readonly string[] = tool.platforms ?? [];
+    if (tool.platforms === undefined || named.includes(platform) || named.includes(`${platform}-${arch}`))
+        return undefined;
+    const label = PLATFORM_LABELS[platform] ?? platform;
+    // A pin that names the operating system with another architecture lacks this architecture only.
+    return named.some((entry) => entry.startsWith(`${platform}-`)) ? `${arch} ${label}` : label;
 }

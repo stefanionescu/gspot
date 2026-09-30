@@ -1,13 +1,13 @@
 // The types of execution in this package.
 import type { z } from 'zod';
-import type { ConfinedRoot } from '#cli/types/platform.ts';
-import type { CheckResult, Finding } from '#cli/types/checks/checks.ts';
-import type { packageManagerSchema } from '#cli/tools/packages/manager.ts';
-import type { ToolContext, ToolInspection } from '#cli/types/tools/tools.ts';
-import type { pushReportSchema, reportSchema } from '#cli/execution/report.ts';
-import type { CheckSpec, Manifest, ToolPin } from '#cli/types/configurations.ts';
+import type { Root } from '#cli/types/platform.ts';
+import type { Finding, CheckResult } from '#cli/types/checks.ts';
+import type { ToolPin, Manifest, CheckSpec } from '#cli/types/kits.ts';
+import type { packageToolSchema } from '#cli/tools/packages/identity.ts';
+import type { ToolSearch, ToolInspection } from '#cli/types/tools/tools.ts';
+import type { reportSchema, pushReportSchema } from '#cli/execution/report.ts';
+import type { Repository, SourceReads, TrackedFile } from '#cli/types/repository/repository.ts';
 import type { Defined, IgnoreEntry, PolicyFiles, ScopeSelection } from '#cli/types/policy/policy.ts';
-import type { Repository, SourceObservations, TrackedFile } from '#cli/types/repository/repository.ts';
 
 /** What one tool run accumulates across its spawns. */
 export type ToolRunState = { root: string; cwd: string; findings: Finding[]; isFailed: boolean };
@@ -39,7 +39,7 @@ export type FixResult = { check: string; changed: string[] } & (
     | { status: 'failed'; note: string }
 );
 export type FixReport = { results: FixResult[]; changed: string[]; diffs: string[] };
-/** File observations shared by cached checks within one execution pass. */
+/** File reads shared by cached checks within one execution pass. */
 export type RunHashes = {
     policy: string;
     files: Map<string, string>;
@@ -66,12 +66,12 @@ export type CoverageReport = {
     partial: { path: string; missing: string[] }[];
     checked: number;
 };
-export type Session = ToolContext & {
-    observations: SourceObservations;
+export type Session = ToolSearch & {
+    reads: SourceReads;
     /** Persistent result storage for a disposable revision snapshot. */
     cacheRoot?: string;
     resources?: DisposableStack;
-    packageManager?: z.infer<typeof packageManagerSchema>;
+    packageClient?: z.infer<typeof packageToolSchema>;
     cancelSignal?: AbortSignal;
     version: string;
     policyFiles: PolicyFiles;
@@ -125,7 +125,7 @@ export type Copy = { source: string; target: string };
 export type Scratch = {
     root: string;
     scratch: string;
-    files: ConfinedRoot;
+    files: Root;
     copies: Map<string, string>;
     pending: Copy[];
     fileLinks: Copy[];
@@ -160,7 +160,7 @@ export type PlannedCheck = {
 /** One check to plan: its spec and the manifest it came from, none for a [[check]] entry. */
 export type PlanEntry = { spec: CheckSpec; manifest?: Manifest };
 /** What planning one scope needs. */
-export type PlanContext = {
+export type PlanInputs = {
     session: Session;
     scope: ScopeSelection;
     options: PlanOptions;
@@ -168,3 +168,5 @@ export type PlanContext = {
     narrow: Set<string> | undefined;
     children: string[];
 };
+/** The platform name and architecture a run is on. */
+export type Host = { platform: string; arch: string };

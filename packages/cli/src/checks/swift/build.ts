@@ -1,69 +1,51 @@
 import { rmSync } from 'node:fs';
-import type { ConfinedRoot } from '#cli/types/platform.ts';
-import { join, relative as relativePath } from 'node:path';
+import { join, relative } from 'node:path';
+import { toPosix } from '#cli/platform/paths.ts';
+import { findingAt } from '#cli/checks/result.ts';
+import type { Root } from '#cli/types/platform.ts';
 import { swiftBuildPlan } from '#cli/checks/swift/plan.ts';
-import { runCheckCommand } from '#cli/execution/tool-runner.ts';
-import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
+import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import { openBuildCache, prepareBuildSources } from '#cli/checks/swift/cache.ts';
-import type { SwiftBuildPlan, SwiftBuildOutput } from '#cli/types/checks/swift.ts';
-import { DIAGNOSTIC, PRIVATE_PREFIX, RESPONSE_FILE, RULE_SUFFIX } from '#cli/constants/checks/swift.ts';
+import type { Finding, EngineInput, SwiftBuildPlan, SwiftBuildOutput } from '#cli/types/checks.ts';
+import { DIAGNOSTIC, RULE_SUFFIX, RESPONSE_FILE, PRIVATE_PREFIX } from '#cli/config/checks/swift.ts';
 
 const builds = new WeakMap<object, Map<string, Promise<SwiftBuildOutput>>>();
 
-function relative(root: string, file: string): string {
-    const [from, to] = [
-        root.replace(/^\/private\/(?=tmp\/|var\/)/u, '/'),
-        file.replace(/^\/private\/(?=tmp\/|var\/)/u, '/'),
-    ];
-    return to.startsWith(`${from}/`) ? to.slice(from.length + 1) : file;
-}
-
-// SwiftLint closes a line with the id of its rule in brackets; the compiler names no rule.
-function ruleOf(text: string, named: string): { rule: string; text: string } {
-    const groups = RULE_SUFFIX.exec(text)?.groups;
-    return groups === undefined
-        ? { rule: named, text }
-        : { rule: groups['rule'] ?? named, text: groups['text'] ?? text };
-}
-
 function diagnostics(input: EngineInput, output: string, levels: Set<string>, named: string): Finding[] {
-    const seen = new Set<string>();
-    return output.split('\n').flatMap((line): Finding[] => {
-        const groups = DIAGNOSTIC.exec(line)?.groups;
-        if (groups === undefined || !levels.has(groups['level'] ?? '') || seen.has(line)) return [];
-        seen.add(line);
-        const { rule, text } = ruleOf(groups['text'] ?? '', named);
-        return [
-            {
-                check: input.spec.name,
-                file: relative(input.root, groups['file'] ?? ''),
-                line: Number(groups['line']),
-                column: Number(groups['column']),
-                rule,
-                message: text,
-                fixable: false,
-            },
-        ];
-    });
+    const root = input.root.replace(/^\/private\/(?=tmp\/|var\/)/u, '/');
+    return [...new Set(output.split('\n'))]
+        .flatMap((line) => {
+            const groups = DIAGNOSTIC.exec(line)?.groups;
+            if (groups === undefined || !levels.has(groups['level'] ?? '')) return [];
+            return [groups];
+        })
+        .map((groups): Finding => {
+            // SwiftLint appends the rule ID in brackets; compiler diagnostics do not.
+            const text = groups['text'] ?? '';
+            const suffix = RULE_SUFFIX.exec(text)?.groups ?? {};
+            const file = groups['file'] ?? '';
+            const normalized = file.replace(/^\/private\/(?=tmp\/|var\/)/u, '/');
+            return findingAt(
+                input,
+                {
+                    file: normalized.startsWith(`${root}/`) ? normalized.slice(root.length + 1) : file,
+                    line: Number(groups['line']),
+                    column: Number(groups['column']),
+                },
+                suffix['rule'] ?? named,
+                suffix['text'] ?? text,
+            );
+        });
 }
 
 // The package manager hands the compiler its sources in a response file, written as @path. The analyzer reads the
 // file names from the log and opens no response file, so each one is written out in the log.
-function sourcesWritten(line: string, folder: string, files: ConfinedRoot): string {
+function sourcesWritten(line: string, folder: string, files: Root): string {
     if (!line.includes('swiftc ')) return line;
     return line.replaceAll(RESPONSE_FILE, (token, path: string) => {
-        const content = files.read(relativePath(folder, path).replaceAll('\\', '/'));
+        const content = files.read(toPosix(relative(folder, path)));
         return content === undefined ? token : content.bytes.toString('utf8').trim().replaceAll('\n', ' ');
     });
-}
-
-// macOS keeps /tmp and /var under /private, and SwiftLint names a file without that prefix.
-// The analyzer pairs a file with its compiler call by name, so the log names files the way SwiftLint does.
-function expanded(log: string, folder: string, files: ConfinedRoot): string {
-    return log
-        .split('\n')
-        .map((line) => sourcesWritten(line, folder, files).replaceAll(PRIVATE_PREFIX, '$<before>/$<folder>/'))
-        .join('\n');
 }
 
 async function ranBuild(input: EngineInput, plan: SwiftBuildPlan): Promise<SwiftBuildOutput> {
@@ -71,7 +53,7 @@ async function ranBuild(input: EngineInput, plan: SwiftBuildPlan): Promise<Swift
     const files = openBuildCache(plan.folder);
     try {
         if (plan.scratch !== undefined) {
-            files.stat(relativePath(plan.folder, plan.scratch).replaceAll('\\', '/'));
+            files.stat(toPosix(relative(plan.folder, plan.scratch)));
             rmSync(plan.scratch, { recursive: true, force: true });
         }
         const source = prepareBuildSources(
@@ -82,8 +64,12 @@ async function ranBuild(input: EngineInput, plan: SwiftBuildPlan): Promise<Swift
         );
         const cwd = join(source, input.scope);
         const result = await runCheckCommand(input, plan.argv, { cwd });
-        const output = expanded(`${result.stdout}\n${result.stderr}`, plan.folder, files);
-        const log = relativePath(plan.folder, plan.log).replaceAll('\\', '/');
+        // Match SwiftLint paths and expose response-file sources in the compiler log.
+        const output = `${result.stdout}\n${result.stderr}`
+            .split('\n')
+            .map((line) => sourcesWritten(line, plan.folder, files).replaceAll(PRIVATE_PREFIX, '$<before>/$<folder>/'))
+            .join('\n');
+        const log = toPosix(relative(plan.folder, plan.log));
         files.write(log, { bytes: Buffer.from(output), mode: 0o600 }, files.read(log));
         return { output, code: result.code };
     } finally {
@@ -91,11 +77,11 @@ async function ranBuild(input: EngineInput, plan: SwiftBuildPlan): Promise<Swift
     }
 }
 
-// Share the compiler log within a command; a later command must observe the current source.
+// Share the compiler log within a command; a later command must read the current source.
 function buildOutput(input: EngineInput, plan: SwiftBuildPlan): Promise<SwiftBuildOutput> {
-    const { observations } = input;
-    const scopes = builds.get(observations) ?? new Map<string, Promise<SwiftBuildOutput>>();
-    builds.set(observations, scopes);
+    const { reads } = input;
+    const scopes = builds.get(reads) ?? new Map<string, Promise<SwiftBuildOutput>>();
+    builds.set(reads, scopes);
     const running = scopes.get(plan.folder) ?? ranBuild(input, plan);
     scopes.set(plan.folder, running);
     return running;

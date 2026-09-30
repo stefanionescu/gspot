@@ -1,11 +1,12 @@
-import { basename, dirname } from 'node:path';
+import { dirname, basename } from 'node:path';
+import { findingAt } from '#cli/checks/result.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
 import { readSource } from '#cli/repository/tracked.ts';
-import { POLICY_FILE } from '#cli/constants/checks/repository.ts';
-import type { PathPattern } from '#cli/types/checks/repository.ts';
+import { POLICY_FILE } from '#cli/config/checks/repository.ts';
+import { referencedPaths } from '#cli/checks/docs/stale-paths.ts';
 import { lockedPackages } from '#cli/repository/locked-packages.ts';
 import { normalizedPythonPackage } from '#cli/repository/manifests.ts';
-import type { EngineInput, Finding, LicenseException } from '#cli/types/checks/checks.ts';
+import type { Finding, EngineInput, PathPattern, LicenseException } from '#cli/types/checks.ts';
 
 function listed(value: unknown, key: string): string[] {
     if (!Array.isArray(value)) return [];
@@ -29,17 +30,24 @@ function toolPatterns(tools: Record<string, Record<string, unknown>>): PathPatte
 function policyPatterns(input: EngineInput): PathPattern[] {
     const { policy } = input.policyFiles;
     const { structure, naming } = policy;
-    const named = (value: unknown, where: string): PathPattern[] =>
-        listed(value, 'paths').map((pattern) => ({ pattern, where }));
     return [
         ...policy.ignores.flatMap((entry) => (entry.paths ?? []).map((pattern) => ({ pattern, where: '[[ignore]]' }))),
         ...policy.declarations.flatMap((entry) =>
-            entry.paths.map((pattern) => ({ pattern, where: `[[${entry.nature}]]` })),
+            entry.paths.map((pattern) => ({ pattern, where: `[[${entry.kind}]]` })),
         ),
-        ...named(structure.single_file_folder_allowed, 'structure.single_file_folder_allowed'),
-        ...named(structure.prefix_collision_allowed, 'structure.prefix_collision_allowed'),
-        ...named(structure.folder_name_allowed, 'structure.folder_name_allowed'),
-        ...named(naming.rules, '[[naming.rules]]'),
+        ...listed(structure.single_file_folder_allowed, 'paths').map((pattern) => ({
+            pattern,
+            where: 'structure.single_file_folder_allowed',
+        })),
+        ...listed(structure.prefix_collision_allowed, 'paths').map((pattern) => ({
+            pattern,
+            where: 'structure.prefix_collision_allowed',
+        })),
+        ...listed(structure.folder_name_allowed, 'paths').map((pattern) => ({
+            pattern,
+            where: 'structure.folder_name_allowed',
+        })),
+        ...listed(naming.rules, 'paths').map((pattern) => ({ pattern, where: '[[naming.rules]]' })),
         ...toolPatterns(policy.tools),
     ];
 }
@@ -54,28 +62,13 @@ function matchCandidates(paths: string[]): string[] {
     return [...paths, ...folders];
 }
 
-/**
- * One finding per policy pattern that matches no tracked file or folder. The policy is one per repository, so the root scope reports.
- * @param input the engine input
- * @returns the findings
- */
-export function allowlistsMatch(input: EngineInput): Finding[] {
-    const candidates = matchCandidates(input.files.map((file) => file.path));
-    const findings = policyPatterns(input)
-        .filter((entry) => !candidates.some(pathMatcher([entry.pattern])))
-        .map((entry) => ({
-            check: input.spec.name,
-            file: POLICY_FILE,
-            line: 1,
-            rule: 'unmatched-pattern',
-            message: `${entry.pattern} under ${entry.where} matches no tracked file or folder.`,
-            fixable: false,
-        }));
+function licenseFindings(input: EngineInput): Finding[] {
     const policy = input.policyFiles.policy;
     const locks = new Map<string, Set<string>>();
-    for (const [scope, table] of [['', policy], ...Object.entries(policy.scopeTables)] as const) {
+    const tables = [['', policy], ...Object.entries(policy.scopeTables)] as const;
+    return tables.flatMap(([scope, table]) => {
         const exceptions = (table.tools?.['licenses']?.['packages_allowed'] ?? []) as LicenseException[];
-        if (exceptions.length === 0) continue;
+        if (exceptions.length === 0) return [];
         const paths = input.files.filter(({ path }) => {
             if (path.split('/').includes('.gspot')) return false;
             if (
@@ -95,37 +88,51 @@ export function allowlistsMatch(input: EngineInput): Finding[] {
         });
         if (paths.length === 0)
             throw new Error('License exceptions require a dependency lockfile in their project or workspace.');
-        for (const { path } of paths)
-            if (!locks.has(path))
-                locks.set(
-                    path,
-                    lockedPackages(basename(path), readSource(input.root, path, input.observations).toString('utf8')),
-                );
+        const packages = paths.map(({ path }) => {
+            let names = locks.get(path);
+            if (names === undefined) {
+                names = lockedPackages(basename(path), readSource(input.root, path, input.reads).toString('utf8'));
+                locks.set(path, names);
+            }
+            return { names, python: ['uv.lock', 'poetry.lock', 'pdm.lock'].includes(basename(path)) };
+        });
         const where = scope === '' ? 'tools.licenses.packages_allowed' : `scope ${scope}`;
-        for (const exception of exceptions) {
+        return exceptions.flatMap((exception): Finding[] => {
             const pythonIdentity = exception.package.replace(/^[^@]+(?=@)/u, normalizedPythonPackage);
-            if (
-                paths.some(
-                    ({ path }) =>
-                        locks
-                            .get(path)
-                            ?.has(
-                                ['uv.lock', 'poetry.lock', 'pdm.lock'].includes(basename(path))
-                                    ? pythonIdentity
-                                    : exception.package,
-                            ) === true,
-                )
-            )
-                continue;
-            findings.push({
-                check: input.spec.name,
-                file: POLICY_FILE,
-                line: 1,
-                rule: 'unlocked-package',
-                message: `${exception.package} under ${where} is absent from its dependency lockfiles. Remove the exception or correct its exact version.`,
-                fixable: false,
-            });
-        }
-    }
-    return findings;
+            if (packages.some(({ names, python }) => names.has(python ? pythonIdentity : exception.package))) return [];
+            return [
+                findingAt(
+                    input,
+                    { file: POLICY_FILE, line: 1 },
+                    'unlocked-package',
+                    `${exception.package} under ${where} is absent from its dependency lockfiles. Remove the exception or correct its exact version.`,
+                ),
+            ];
+        });
+    });
+}
+
+/**
+ * One finding per policy pattern that matches no tracked file or folder. The policy is one per repository, so the root scope reports.
+ * @param input the engine input
+ * @returns the findings
+ */
+export function allowlistsMatch(input: EngineInput): Finding[] {
+    const candidates = matchCandidates(input.files.map((file) => file.path));
+    const references = referencedPaths(input);
+    const findings = policyPatterns(input)
+        .filter((entry) => {
+            const matches = pathMatcher([entry.pattern]);
+            if (candidates.some((path) => matches(path))) return false;
+            return entry.where !== 'tools.docs.paths_allowed' || ![...references].some((path) => matches(path));
+        })
+        .map((entry) =>
+            findingAt(
+                input,
+                { file: POLICY_FILE, line: 1 },
+                'unmatched-pattern',
+                `${entry.pattern} under ${entry.where} matches no tracked file or folder.`,
+            ),
+        );
+    return [...findings, ...licenseFindings(input)];
 }

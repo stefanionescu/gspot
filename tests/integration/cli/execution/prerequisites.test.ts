@@ -1,15 +1,14 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { writeFileSync } from 'node:fs';
-import { planRun } from '#cli/execution/planning/plan.ts';
-import { createFileTree, testdir } from 'testdirs';
+import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { resolveCheck } from '#cli/execution/engines.ts';
+import { planRun } from '#cli/execution/planning/plan.ts';
+import { checkExecution } from '#cli/execution/engines.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { textContaining } from '#tests/support/expectations.ts';
-import { PREREQUISITES_POLICY, WAITING } from '#tests/constants/integration/cli/execution/execution.ts';
-
-const byCheck = (left: { check: string }, right: { check: string }) => left.check.localeCompare(right.check);
+import { WAITING, PREREQUISITES_POLICY } from '#tests/inputs/integration/cli/execution/execution.ts';
 
 test('disabled settings produce skipped results and enabling a setting runs the check', async () => {
     await using sandbox = await testdir();
@@ -23,18 +22,18 @@ test('disabled settings produce skipped results and enabling a setting runs the 
     const options = {
         stage: 'all' as const,
         skips: [],
-        only: WAITING.keys().toArray(),
+        only: Object.keys(WAITING),
         fix: false,
         isDryRun: false,
         noCache: true,
     };
     const session = await openSession(sandbox.path);
     const outcome = await executeRun(session, options);
-    expect(new Set(outcome.report.checks.map((check) => check.check))).toStrictEqual(new Set(WAITING.keys()));
+    expect(new Set(outcome.report.checks.map((check) => check.check))).toStrictEqual(new Set(Object.keys(WAITING)));
     expect(outcome.report.coverage.checked).toBe(0);
     for (const check of outcome.report.checks) {
         expect(check.status).toBe('skipped');
-        expect(check.note).toContain(WAITING.get(check.check));
+        expect(check.note).toContain(WAITING[check.check]);
     }
     writeFileSync(
         join(sandbox.path, 'gspot.toml'),
@@ -53,8 +52,11 @@ test('a failed site build skips every output consumer and a new session rebuilds
     await using sandbox = await testdir();
     using resources = new DisposableStack();
     await createFileTree(sandbox.path, {
-        'gspot.toml':
-            'version = 1\nlevel = "all"\nconfigurations = ["static-site"]\n[tools.site]\nbuild = "bun build.js"\nsize_limits = [{paths = ["**/*"], kb = 100}]\n',
+        'gspot.toml': policyOf(
+            ['static-site'],
+            '[tools.site]\nbuild = "bun build.js"\nsize_limits = [{paths = ["**/*"], kb = 100}]\n',
+            'all',
+        ),
         'build.js': 'console.error("Planted build failure"); process.exitCode = 1;',
         'page.html': '<!doctype html><html lang="en"><title>Example</title></html>',
     });
@@ -69,21 +71,19 @@ test('a failed site build skips every output consumer and a new session rebuilds
     ]);
     const session = await openSession(sandbox.path);
     session.resources = resources;
-    const stages = await Promise.all(
-        ['push', 'manual'].map((stage) =>
-            planRun(session, {
-                stage: stage as 'push' | 'manual',
-                skips: [],
-                only: ['static-site/build', ...consumers],
-            }),
-        ),
+    const stages = ['push', 'manual'].map((stage) =>
+        planRun(session, {
+            stage: stage as 'push' | 'manual',
+            skips: [],
+            only: ['static-site/build', ...consumers],
+        }),
     );
     const planned = stages.flat();
     expect(planned).toHaveLength(consumers.size + 1);
     // The build fails with its own output, and every check that reads the built site is skipped with one note.
     const outcomes: { check: string; status: string; note: string | undefined; message: string | undefined }[] = [];
     for (const check of planned) {
-        const result = await resolveCheck(check.spec)(session, check);
+        const result = await checkExecution(check.spec)(session, check);
         outcomes.push({
             check: check.check,
             status: result.status,
@@ -91,11 +91,13 @@ test('a failed site build skips every output consumer and a new session rebuilds
             message: result.findings[0]?.message,
         });
     }
-    expect(outcomes.toSorted(byCheck)).toMatchObject(
+    expect(
+        outcomes.toSorted((left: { check: string }, right: { check: string }) => left.check.localeCompare(right.check)),
+    ).toMatchObject(
         [
             { check: 'static-site/build', status: 'fail', message: textContaining('Planted build failure') },
             ...[...consumers].map((check) => ({ check, status: 'skipped', note: 'The site did not build.' })),
-        ].toSorted(byCheck),
+        ].toSorted((left: { check: string }, right: { check: string }) => left.check.localeCompare(right.check)),
     );
     writeFileSync(
         join(sandbox.path, 'build.js'),
@@ -103,7 +105,7 @@ test('a failed site build skips every output consumer and a new session rebuilds
     );
     const next = await openSession(sandbox.path);
     next.resources = resources;
-    const [build] = await planRun(next, { stage: 'push', skips: [], only: ['static-site/build'] });
-    const rebuilt = await resolveCheck(build!.spec)(next, build!);
+    const [build] = planRun(next, { stage: 'push', skips: [], only: ['static-site/build'] });
+    const rebuilt = await checkExecution(build!.spec)(next, build!);
     expect(rebuilt.status).toBe('ok');
 });

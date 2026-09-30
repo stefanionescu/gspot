@@ -1,26 +1,28 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
-import { planRun } from '#cli/execution/planning/plan.ts';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { TYPO } from '#tests/support/spelling.ts';
+import { testdir, createFileTree } from 'testdirs';
+import { GspotError } from '#cli/platform/errors.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { planRun } from '#cli/execution/planning/plan.ts';
 import { containing } from '#tests/support/expectations.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { checkedFindings } from '#cli/execution/broken-tool.ts';
-import { ToolOutputError } from '#cli/execution/output/tool-formats.ts';
 
 test.each([
     '403 API rate limit exceeded',
     '429 Too Many Requests',
     '503 Service Unavailable',
     'dial tcp: no such host',
-])('pin verification treats %s as an execution error and accepts a completed observation', async (failure) => {
+])('pin verification treats %s as an execution error and accepts a completed read', async (failure) => {
     await using sandbox = await testdir();
     const workflow = 'jobs:\n  check:\n    steps:\n      - uses: actions/checkout@v4\n';
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nconfigurations = ["configs"]\n',
+        'gspot.toml': policyOf(['files']),
         '.github/workflows/check.yml': workflow,
     });
     const session = await openSession(sandbox.path);
-    const plans = await planRun(session, { stage: 'push', skips: [], only: ['configs/actions-pins'] });
+    const plans = planRun(session, { stage: 'push', skips: [], only: ['files/actions-pins'] });
     const planned = plans[0]!;
     const result = {
         code: 1,
@@ -29,7 +31,7 @@ test.each([
         missing: false,
         duration: 1,
     };
-    expect(() => checkedFindings(planned, result, [sandbox.path, sandbox.path])).toThrow(ToolOutputError);
+    expect(() => checkedFindings(planned, result, [sandbox.path, sandbox.path])).toThrow(GspotError);
     expect(
         checkedFindings(planned, { ...result, stderr: 'invalid action pin: .github/workflows/check.yml:4' }, [
             sandbox.path,
@@ -37,7 +39,7 @@ test.each([
         ]),
     ).toStrictEqual([
         containing({
-            check: 'configs/actions-pins',
+            check: 'files/actions-pins',
             message: 'invalid action pin: .github/workflows/check.yml:4',
         }),
     ]);
@@ -50,11 +52,11 @@ test.each([
 test('spelling distinguishes native findings from fatal exits for configuration and declared checks', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nconfigurations = ["spelling"]\n',
-        'sample.txt': 'teh\n',
+        'gspot.toml': policyOf(['spelling']),
+        'sample.txt': `${TYPO.the}\n`,
     });
     const session = await openSession(sandbox.path);
-    const plans = await planRun(session, { stage: 'all', only: ['spelling/typos'], skips: [] });
+    const plans = planRun(session, { stage: 'all', only: ['spelling/typos'], skips: [] });
     const planned = plans[0]!;
     const declared = { ...planned };
     delete declared.manifest;
@@ -63,7 +65,7 @@ test('spelling distinguishes native findings from fatal exits for configuration 
         path: 'sample.txt',
         line_num: 1,
         byte_offset: 0,
-        typo: 'teh',
+        typo: TYPO.the,
         corrections: ['the'],
     });
     const result = { stdout, stderr: '', code: 2, missing: false, duration: 1 };
@@ -74,9 +76,9 @@ test('spelling distinguishes native findings from fatal exits for configuration 
                 sandbox.path,
                 sandbox.path,
             ]),
-        ).toThrow(ToolOutputError);
+        ).toThrow(GspotError);
         expect(() => checkedFindings(check, { ...result, stdout: '' }, [sandbox.path, sandbox.path])).toThrow(
-            ToolOutputError,
+            GspotError,
         );
         expect(checkedFindings(check, { ...result, stdout: '', code: 0 }, [sandbox.path, sandbox.path])).toStrictEqual(
             [],
@@ -95,11 +97,11 @@ test.each(
         const extension = configuration === 'javascript' ? 'js' : 'ts';
         const path = `source.${extension}`;
         await createFileTree(sandbox.path, {
-            'gspot.toml': `version = 1\nlevel = "${level}"\nconfigurations = ["${configuration}"]\n`,
+            'gspot.toml': policyOf([configuration], '', level),
             [path]: 'const message = "ERR_MODULE_NOT_FOUND";\n',
         });
         const session = await openSession(sandbox.path);
-        const plans = await planRun(session, { stage: 'all', skips: [], only: [`${configuration}/eslint`] });
+        const plans = planRun(session, { stage: 'all', skips: [], only: [`${configuration}/eslint`] });
         const planned = plans[0]!;
         const stdout = JSON.stringify([
             {
@@ -117,7 +119,7 @@ test.each(
                 sandbox.path,
                 sandbox.path,
             ]),
-        ).toThrow(ToolOutputError);
+        ).toThrow(GspotError);
         expect(() =>
             checkedFindings(
                 planned,

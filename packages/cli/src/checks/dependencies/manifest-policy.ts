@@ -1,44 +1,31 @@
+import { findingAt } from '#cli/checks/result.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
-import type { Reporter } from '#cli/types/checks/dependencies.ts';
+import type { Finding, EngineInput } from '#cli/types/checks.ts';
+import { LOCKFILES } from '#cli/config/repository/repository.ts';
 import { readPackageManifest } from '#cli/repository/manifests.ts';
-import { LOCKFILES } from '#cli/constants/repository/repository.ts';
-import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
 import type { PackageManifest } from '#cli/types/repository/repository.ts';
+import { NPM_MANIFEST, EXACT_VERSION, DEPENDENCY_TABLES, NON_REGISTRY_VERSION } from '#cli/config/checks/repository.ts';
 
-import {
-    DEPENDENCY_TABLES,
-    EXACT_VERSION,
-    NON_REGISTRY_VERSION,
-    NPM_MANIFEST,
-} from '#cli/constants/checks/dependencies.ts';
-
-function isManifest(path: string): boolean {
-    return path === NPM_MANIFEST || path.endsWith(`/${NPM_MANIFEST}`);
-}
-
-function rangeFindings(input: EngineInput, path: string, manifest: PackageManifest): Finding[] {
-    return DEPENDENCY_TABLES.flatMap((table) =>
-        Object.entries(manifest[table] ?? {})
-            .filter(([, version]) => !EXACT_VERSION.test(version) && !NON_REGISTRY_VERSION.test(version))
-            .map(([name, version]) => ({
-                check: input.spec.name,
-                file: path,
-                line: 1,
-                rule: 'version-range',
-                message: `${name} is "${version}" under ${table}; pin the exact version the lockfile holds.`,
-                fixable: false,
-            })),
-    );
-}
-
-function rootFindings(report: Reporter, root: PackageManifest | undefined): Finding[] {
+function rootFindings(input: EngineInput, root: PackageManifest | undefined): Finding[] {
     if (root === undefined) return [];
     const findings: Finding[] = [];
     if (root.packageManager === undefined)
-        findings.push(report(NPM_MANIFEST, 'package-manager', 'The root package.json names no packageManager.'));
+        findings.push(
+            findingAt(
+                input,
+                { file: NPM_MANIFEST, line: 1 },
+                'package-manager',
+                'The root package.json names no packageManager.',
+            ),
+        );
     if (root.workspaces !== undefined && root.private !== true)
         findings.push(
-            report(NPM_MANIFEST, 'private-root', 'A workspace root is private, so nobody publishes it by accident.'),
+            findingAt(
+                input,
+                { file: NPM_MANIFEST, line: 1 },
+                'private-root',
+                'A workspace root is private, so nobody publishes it by accident.',
+            ),
         );
     return findings;
 }
@@ -46,23 +33,16 @@ function rootFindings(report: Reporter, root: PackageManifest | undefined): Find
 function installerFindings(input: EngineInput, manifests: Map<string, PackageManifest>): Finding[] {
     const root = manifests.get(NPM_MANIFEST);
     const wanted = root?.packageManager;
-    const report: Reporter = (file, rule, text) => ({
-        check: input.spec.name,
-        file,
-        line: 1,
-        rule,
-        message: text,
-        fixable: false,
-    });
     const differing = manifests
         .entries()
         .filter(([, manifest]) => wanted !== undefined && (manifest.packageManager ?? wanted) !== wanted)
         .toArray();
     return [
-        ...rootFindings(report, root),
+        ...rootFindings(input, root),
         ...differing.map(([path, manifest]) =>
-            report(
-                path,
+            findingAt(
+                input,
+                { file: path, line: 1 },
                 'package-manager',
                 `This package names ${manifest.packageManager ?? ''}; the root names ${wanted ?? ''}.`,
             ),
@@ -76,20 +56,20 @@ function lockfileFindings(input: EngineInput): Finding[] {
         const kind = LOCKFILES[file.path.slice(file.path.lastIndexOf('/') + 1)];
         if (kind !== undefined && !kinds.has(kind)) kinds.set(kind, file.path);
     }
-    if (kinds.size < 2) return [];
+    if (kinds.size <= 1) return [];
     const listed = kinds.values().toArray().join(', ');
     return kinds
         .values()
         .toArray()
         .slice(1)
-        .map((path) => ({
-            check: input.spec.name,
-            file: path,
-            line: 1,
-            rule: 'foreign-lockfile',
-            message: `The repository holds lockfiles of ${String(kinds.size)} package managers: ${listed}. Keep one.`,
-            fixable: false,
-        }));
+        .map((path) =>
+            findingAt(
+                input,
+                { file: path, line: 1 },
+                'foreign-lockfile',
+                `The repository holds lockfiles of ${String(kinds.size)} package managers: ${listed}. Keep one.`,
+            ),
+        );
 }
 
 /**
@@ -102,11 +82,24 @@ export function manifestPolicy(input: EngineInput): Finding[] {
     const isRangeAllowed = pathMatcher(allowed.flatMap((entry) => entry.paths));
     const manifests = new Map<string, PackageManifest>();
     for (const file of input.files) {
-        if (file.nature !== 'source' || !isManifest(file.path)) continue;
+        if (file.kind !== 'source') continue;
+        if (file.path !== NPM_MANIFEST && !file.path.endsWith(`/${NPM_MANIFEST}`)) continue;
         manifests.set(file.path, readPackageManifest(input.root, file.path));
     }
-    const ranges = [...manifests].flatMap(([path, manifest]) =>
-        isRangeAllowed(path) ? [] : rangeFindings(input, path, manifest),
-    );
+    const ranges = [...manifests].flatMap(([path, manifest]) => {
+        if (isRangeAllowed(path)) return [];
+        return DEPENDENCY_TABLES.flatMap((table) =>
+            Object.entries(manifest[table] ?? {})
+                .filter(([, version]) => !EXACT_VERSION.test(version) && !NON_REGISTRY_VERSION.test(version))
+                .map(([name, version]) =>
+                    findingAt(
+                        input,
+                        { file: path, line: 1 },
+                        'version-range',
+                        `${name} is "${version}" under ${table}; pin the exact version the lockfile holds.`,
+                    ),
+                ),
+        );
+    });
     return [...ranges, ...installerFindings(input, manifests), ...lockfileFindings(input)];
 }

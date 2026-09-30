@@ -1,26 +1,66 @@
 import type { Node } from 'web-tree-sitter';
+import { decodeHTMLAttribute } from 'entities';
+import { findingAt } from '#cli/checks/result.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
-import type { MarkupProblem, EngineInput, Finding } from '#cli/types/checks/checks.ts';
+import type { Engine, Finding, EngineInput, MarkupProblem, MarkupAttribute } from '#cli/types/checks.ts';
 
 import {
-    COPY_ATTRIBUTES,
-    INERT_SCRIPT_TYPES,
     LETTERS,
-    PLACEHOLDER_MARKS,
     SHOWN_TEXT,
-} from '#cli/constants/checks/checks.ts';
+    URL_ATTRIBUTES,
+    COPY_ATTRIBUTES,
+    PLACEHOLDER_MARKS,
+    INERT_SCRIPT_TYPES,
+    ACTIVE_DOCUMENT_TYPES,
+    DOCUMENT_URL_ATTRIBUTES,
+} from '#cli/config/checks/repository.ts';
 
-function attributes(element: Node): { name: string; value: string; node: Node }[] {
+// The text with every placeholder mark pair removed.
+function withoutPlaceholders(text: string): string {
+    let rest = text;
+    for (const [open, close] of PLACEHOLDER_MARKS) rest = withoutMarks(rest, open, close);
+    return rest;
+}
+
+function attributes(element: Node): MarkupAttribute[] {
     const tag = element.namedChildren.find((child) => child.type === 'start_tag' || child.type === 'self_closing_tag');
+    const name = tag?.namedChildren.find((child) => child.type === 'tag_name')?.text.toLowerCase() ?? '';
     return (tag?.namedChildren ?? [])
         .filter((child) => child.type === 'attribute')
         .map((node) => ({
             node,
+            element: name,
             name: node.namedChildren[0]?.text.toLowerCase() ?? '',
             value: (node.namedChildren[1]?.text ?? '').replaceAll(/^["']|["']$/gu, ''),
         }));
+}
+
+// Script and active-document contexts can execute data URLs. Image and text resources are inert.
+function isActiveResource(attribute: MarkupAttribute, url: URL, kind: string): boolean {
+    if (attribute.element === 'script') return !INERT_SCRIPT_TYPES.has(kind);
+    if (DOCUMENT_URL_ATTRIBUTES[attribute.element]?.includes(attribute.name) !== true) return false;
+    const mediaType = url.pathname.split(',', 1)[0]?.split(';', 1)[0]?.trim().toLowerCase() ?? '';
+    return ACTIVE_DOCUMENT_TYPES.has(mediaType);
+}
+
+// Decode HTML character references before URL parsing removes embedded tabs and newlines.
+function scriptScheme(attribute: MarkupAttribute, kind: string): string | undefined {
+    if (!URL_ATTRIBUTES.has(attribute.name)) return undefined;
+    const url = URL.parse(decodeHTMLAttribute(attribute.value), 'https://example.invalid');
+    switch (url?.protocol) {
+        case 'javascript:':
+        case 'vbscript:': {
+            return url.protocol;
+        }
+        case 'data:': {
+            return isActiveResource(attribute, url, kind) ? url.protocol : undefined;
+        }
+        default: {
+            return undefined;
+        }
+    }
 }
 
 function scriptProblems(root: Node): MarkupProblem[] {
@@ -39,8 +79,10 @@ function scriptProblems(root: Node): MarkupProblem[] {
                   },
               ];
     });
-    const handlers = root.descendantsOfType('element').flatMap((element) =>
-        attributes(element).flatMap((entry): MarkupProblem[] => {
+    const handlers = root.descendantsOfType(['element', 'script_element']).flatMap((element) => {
+        const held = attributes(element);
+        const kind = held.find((entry) => entry.name === 'type')?.value.toLowerCase() ?? '';
+        return held.flatMap((entry): MarkupProblem[] => {
             if (/^on[a-z]+$/u.test(entry.name))
                 return [
                     {
@@ -49,11 +91,18 @@ function scriptProblems(root: Node): MarkupProblem[] {
                         text: `The ${entry.name} attribute is inline script. Attach the handler from a script file.`,
                     },
                 ];
-            return entry.value.trim().toLowerCase().startsWith('javascript:')
-                ? [{ node: entry.node, rule: 'script-link', text: 'A javascript: link is inline script.' }]
-                : [];
-        }),
-    );
+            const scheme = scriptScheme(entry, kind);
+            return scheme === undefined
+                ? []
+                : [
+                      {
+                          node: entry.node,
+                          rule: 'script-link',
+                          text: `A ${scheme} URL embeds executable content. Use an external file.`,
+                      },
+                  ];
+        });
+    });
     return [...inline, ...handlers];
 }
 
@@ -74,19 +123,10 @@ function withoutMarks(text: string, open: string, close: string): string {
     return rest;
 }
 
-// The text with every placeholder cut out, whatever marks it uses.
-function withoutPlaceholders(text: string): string {
-    return PLACEHOLDER_MARKS.reduce((rest, [open, close]) => withoutMarks(rest, open, close), text);
-}
-
-function isLiteral(text: string): boolean {
-    return LETTERS.test(withoutPlaceholders(text));
-}
-
 function copyProblems(root: Node): MarkupProblem[] {
     const texts = root
         .descendantsOfType('text')
-        .filter((node) => isLiteral(node.text))
+        .filter((node) => LETTERS.test(withoutPlaceholders(node.text)))
         .map((node) => ({
             node,
             rule: 'literal-text',
@@ -94,7 +134,7 @@ function copyProblems(root: Node): MarkupProblem[] {
         }));
     const held = root.descendantsOfType('element').flatMap((element) =>
         attributes(element)
-            .filter((entry) => COPY_ATTRIBUTES.has(entry.name) && isLiteral(entry.value))
+            .filter((entry) => COPY_ATTRIBUTES.has(entry.name) && LETTERS.test(withoutPlaceholders(entry.value)))
             .map((entry) => ({
                 node: entry.node,
                 rule: 'literal-attribute',
@@ -111,23 +151,22 @@ async function findings(
 ): Promise<Finding[]> {
     const found: Finding[] = [];
     for (const path of paths) {
-        const tree = await parseSource(
-            'html',
-            readSource(input.root, path, input.observations).toString('utf8'),
-            input,
-        );
+        const tree = await parseSource('html', readSource(input.root, path, input.reads).toString('utf8'), input);
         if (tree === null) throw new Error('The source parser returned no tree.');
         try {
             for (const problem of read(tree.rootNode))
-                found.push({
-                    check: input.spec.name,
-                    file: path,
-                    line: problem.node.startPosition.row + 1,
-                    column: problem.node.startPosition.column + 1,
-                    rule: problem.rule,
-                    message: problem.text,
-                    fixable: false,
-                });
+                found.push(
+                    findingAt(
+                        input,
+                        {
+                            file: path,
+                            line: problem.node.startPosition.row + 1,
+                            column: problem.node.startPosition.column + 1,
+                        },
+                        problem.rule,
+                        problem.text,
+                    ),
+                );
         } finally {
             tree.delete();
         }
@@ -136,12 +175,12 @@ async function findings(
 }
 
 /**
- * Inline script, handler attributes and script links in every claimed HTML file.
+ * Inline script, handler attributes and script links in every owned HTML file.
  * @param input the engine input
  * @returns the findings
  */
 export function htmlScripts(input: EngineInput): Promise<Finding[]> {
-    const paths = input.files.filter((file) => file.nature === 'source').map((file) => file.path);
+    const paths = input.files.filter((file) => file.kind === 'source').map((file) => file.path);
     return findings(input, paths, scriptProblems);
 }
 
@@ -150,7 +189,7 @@ export function htmlScripts(input: EngineInput): Promise<Finding[]> {
  * @param input the engine input
  * @returns the findings
  */
-export function htmlCopy(input: EngineInput): Finding[] | Promise<Finding[]> {
+export function htmlText(input: EngineInput): Finding[] | Promise<Finding[]> {
     const tool = input.view.tool('html');
     const templates = (tool['template_files'] as string[] | undefined) ?? [];
     if (templates.length === 0) return [];
@@ -162,3 +201,9 @@ export function htmlCopy(input: EngineInput): Finding[] | Promise<Finding[]> {
     const paths = input.files.map((file) => file.path).filter((path) => isTemplate(path) && !isExcluded(path));
     return findings(input, paths, copyProblems);
 }
+
+/** The analyses this file provides, by the name a manifest check gives them. */
+export const HTML_ANALYSES: Record<string, Engine> = {
+    'html-scripts': htmlScripts,
+    'html-text': htmlText,
+};

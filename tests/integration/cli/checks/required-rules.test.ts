@@ -1,23 +1,25 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { rejects } from 'node:assert/strict';
-import { createFileTree, testdir } from 'testdirs';
-import { emitAll } from '#cli/generation/render.ts';
+import { testdir, createFileTree } from 'testdirs';
+import { emitAll } from '#cli/generation/outputs.ts';
+import type { EngineInput } from '#cli/types/checks.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
-import type { EngineInput } from '#cli/types/checks/checks.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { linkInstalledModules } from '#tests/support/cli/platforms.ts';
 import { requiredRules } from '#cli/checks/typescript/required-rules.ts';
-import { mkdirSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
 
 test('required ESLint rules inspect later file overrides and accept their correction', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nlevel = "all"\nconfigurations = ["javascript"]\n',
+        'gspot.toml': policyOf(['javascript'], '', 'all'),
         'package.json': '{"private":true,"type":"module"}\n',
         'a.js': 'export const first = 1;\n',
         'z.js': 'export const last = 2;\n',
     });
-    symlinkSync(join(import.meta.dir, '../../../../node_modules'), join(sandbox.path, 'node_modules'), 'dir');
+    linkInstalledModules(join(sandbox.path, 'node_modules'));
     const session = await openSession(sandbox.path);
     const selected = session.scopes[0]!;
     const spec = selected.selected
@@ -30,7 +32,7 @@ test('required ESLint rules inspect later file overrides and accept their correc
     });
     const generated = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
         version: session.version,
-        packageManager: session.packageManager,
+        packageClient: session.packageClient,
     }).files.find((file) => file.path === '.gspot/config/eslint.config.mjs')!;
     mkdirSync(join(sandbox.path, '.gspot/config'), { recursive: true });
     const config = join(sandbox.path, generated.path);

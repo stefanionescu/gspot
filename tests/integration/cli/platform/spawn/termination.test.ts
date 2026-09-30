@@ -1,23 +1,30 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { readFileSync } from 'node:fs';
-import { expect, spyOn, test } from 'bun:test';
+import { test, spyOn, expect } from 'bun:test';
 import * as childProcess from 'node:child_process';
 import { run, runBinary } from '#cli/platform/spawn.ts';
+import { onPosix } from '#tests/support/cli/platforms.ts';
 import { waitForExit } from '#tests/support/cli/process.ts';
+
+const captures = { text: run, binary: runBinary };
+
+// What the supervisor leaves on a child it stopped: a signal on a POSIX host, an exit code on Windows.
+function terminated(child: childProcess.ChildProcess | undefined): boolean {
+    if (child === undefined) return false;
+    if (process.platform === 'win32') return child.exitCode !== null;
+    return child.signalCode !== null;
+}
 
 test.each(['text', 'binary'] as const)('a failed %s stream read terminates the owned child', async (capture) => {
     await using sandbox = await testdir();
     const children = spyOn(childProcess, 'spawn');
     let child: childProcess.ChildProcess | undefined;
     try {
-        const running = (capture === 'binary' ? runBinary : run)(
-            [process.execPath, '-e', 'setInterval(() => {}, 1000)'],
-            {
-                cwd: sandbox.path,
-                timeoutMs: 3000,
-            },
-        );
+        const running = captures[capture]([process.execPath, '-e', 'setInterval(() => {}, 1000)'], {
+            cwd: sandbox.path,
+            timeoutMs: 3000,
+        });
         const launched = children.mock.results[0];
         if (launched?.type === 'return') {
             child = launched.value;
@@ -30,8 +37,7 @@ test.each(['text', 'binary'] as const)('a failed %s stream read terminates the o
         expect(result.code).not.toBe(0);
         expect(result.missing).toBe(false);
         expect(result.stderr).toContain('Planted stream failure');
-        expect(child).toBeDefined();
-        expect(child?.signalCode).not.toBeNull();
+        expect(terminated(child)).toBe(true);
     } finally {
         children.mockRestore();
         if (child?.exitCode === null && child.signalCode === null) child.kill('SIGKILL');
@@ -80,7 +86,7 @@ test.each([
         const marker = join(sandbox.path, 'descendant-survived');
         const descendant = `await Bun.write(${JSON.stringify(marker)}, String(process.pid)); console.log("descendant-ready"); setInterval(() => {}, 1000);`;
         const parent = `Bun.spawn([process.execPath, "-e", ${JSON.stringify(descendant)}], {stdout:"inherit", stderr:"inherit"}); await Bun.sleep(10000);`;
-        const result = await (capture === 'binary' ? runBinary : run)([process.execPath, '-e', parent], {
+        const result = await captures[capture]([process.execPath, '-e', parent], {
             cwd: sandbox.path,
             timeoutMs: termination === 'timeout' ? 1500 : 5000,
             ...(termination === 'canceled' ? { cancelSignal: AbortSignal.timeout(1500) } : {}),
@@ -169,7 +175,7 @@ test.each(['text', 'binary'] as const)(
         const marker = join(sandbox.path, 'orphan-survived');
         const descendant = `await Bun.write(${JSON.stringify(marker)}, String(process.pid)); console.log('ready'); setInterval(() => {}, 1000);`;
         const parent = `const child = Bun.spawn([process.execPath, '-e', ${JSON.stringify(descendant)}], {stdout:'pipe', stderr:'inherit'}); for await (const chunk of child.stdout) { process.stdout.write(chunk); process.exit(7); }`;
-        const result = await (capture === 'binary' ? runBinary : run)([process.execPath, '-e', parent], {
+        const result = await captures[capture]([process.execPath, '-e', parent], {
             cwd: sandbox.path,
             timeoutMs: 3000,
         });
@@ -184,7 +190,7 @@ test.each(['text', 'binary'] as const)(
     },
 );
 
-if (process.platform !== 'win32')
+if (onPosix)
     test('preserves execution and process-group permission errors', async () => {
         await using sandbox = await testdir();
         const original = process.kill.bind(process);
@@ -195,17 +201,17 @@ if (process.platform !== 'win32')
         });
         try {
             for (const execute of [run, runBinary]) {
-                let observed: unknown;
+                let read: unknown;
                 try {
                     await execute([process.execPath, '-e', "console.error('tool failed'); process.exitCode = 7"], {
                         cwd: sandbox.path,
                     });
                 } catch (error) {
-                    observed = error;
+                    read = error;
                 }
-                expect(observed).toBeInstanceOf(AggregateError);
-                expect(String((observed as AggregateError).errors[0])).toContain('exit code 7');
-                expect((observed as AggregateError).errors[1]).toBe(denied);
+                expect(read).toBeInstanceOf(AggregateError);
+                expect(String((read as AggregateError).errors[0])).toContain('exit code 7');
+                expect((read as AggregateError).errors[1]).toBe(denied);
             }
         } finally {
             signaling.mockRestore();

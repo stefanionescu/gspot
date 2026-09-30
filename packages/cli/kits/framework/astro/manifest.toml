@@ -1,0 +1,104 @@
+[kit]
+name = "astro"
+kind = "framework"
+title = "Astro"
+requires = ["javascript"]
+recommends = ["typescript", "css"]
+description = "Astro components: ESLint reads the frontmatter, the markup, and the scripts together with the recommended and accessibility rules of the Astro plugin as errors, and astro check reports type errors in every component."
+
+[detect]
+dependencies = ["astro"]
+extensions = [".astro"]
+
+[owners]
+extensions = [".astro"]
+filenames = ["astro.config.mjs", "astro.config.ts"]
+kinds = ["source"]
+
+[[tools]]
+name = "eslint-plugin-astro"
+kind = "library"
+version = "1.7.0"
+npm = "eslint-plugin-astro"
+
+[[tools]]
+name = "eslint-plugin-jsx-a11y"
+kind = "library"
+version = "6.10.2"
+npm = "eslint-plugin-jsx-a11y"
+
+# The astro-check binary drops the first two words it is given, so every command passes "astro check" first.
+[[tools]]
+name = "astro-check"
+version = "0.9.10"
+npm = "@astrojs/check"
+version_command = ["astro", "check", "--version"]
+
+[[tools]]
+name = "prettier-plugin-astro"
+kind = "library"
+version = "1.0.1"
+npm = "prettier-plugin-astro"
+prettier = {entry = "dist/index.js", extensions = [".astro"], overrides = [{files = "*.astro", options = {parser = "astro"}}]}
+
+[[configs]]
+template = "eslint.fragment.js.tmpl"
+target = ".gspot/config/eslint.config.mjs"
+imports = "eslint.imports.js.tmpl"
+fragment = true
+code_files = ["**/*.astro"]
+
+[[rules_off]]
+tool = "eslint"
+rules = ["gspot/no-trivial-files", "gspot/types-placement"]
+files = ["**/*.astro", "**/*.astro/*.ts", "**/*.astro/*.js"]
+reason = "A component is markup, never a file that only forwards: a script that only imports a module is how Astro bundles client code, and Astro reads the props of a component from the Props type in its own frontmatter."
+
+[[checks]]
+name = "astro/eslint"
+title = "ESLint"
+example = "A component containing `<div set:html={html} />` reports `astro/no-set-html-directive`. Render text with an expression, such as `<p>{name}</p>`, when the component needs text rather than injected markup."
+level = "recommended"
+stage = "commit"
+runs = "per-file-list"
+command = ["eslint", "--max-warnings", "0", "--no-warn-ignored", "--config", "{config:eslint}", "--format", "json", "{files}"]
+fix_command = ["eslint", "--fix", "--config", "{config:eslint}", "{files}"]
+fix_order = "codemod"
+findings_exit_codes = [1]
+fix_findings_exit_codes = [1]
+tool = "eslint"
+owners = {extensions = [".astro"]}
+coverage = ["style", "syntax", "structure"]
+output = {format = "eslint-json"}
+summary = "Runs ESLint with the Astro plugin over every .astro file. It reads the frontmatter, the markup, and the scripts together."
+why = "A component file is frontmatter, markup, and scripts in one, and a plain JavaScript parser reads none of it."
+help = "Run gspot check --fix for the rules that fix themselves, then read each remaining line; gspot explain <rule> says what it means."
+
+[[checks]]
+name = "astro/check"
+title = "Check Astro components"
+example = "A component whose frontmatter holds `const count: number = 'three';` reports `ts(2322)`. Give the value the declared type, such as `const count: number = 3;`."
+level = "recommended"
+stage = "push"
+runs = "per-scope"
+cwd = "scope"
+command = ["astro-check", "astro", "check", "--minimumSeverity", "warning", "--minimumFailingSeverity", "warning"]
+findings_exit_codes = [1]
+owners = {extensions = [".astro"]}
+coverage = ["types"]
+output = {format = "regex", pattern = "^(?<file>[^:\\s][^:]*\\.astro):(?<line>\\d+):(?<column>\\d+) - (?:error|warning) (?<rule>[a-z-]+\\(\\d+\\)): (?<message>.*)$"}
+summary = "Runs astro check over the scope: the type errors and warnings of every Astro component."
+why = "The TypeScript compiler cannot read a component file, so a type error inside one ships unless the Astro checker reads it."
+help = "Read the first error astro check prints and fix that component; later errors are often the same mistake."
+
+[coverage]
+".astro" = ["format", "syntax", "style", "structure", "spelling", "types"]
+
+[guides]
+framework = [{path = "framework/astro/ASTRO.md"}]
+
+[required_rules]
+astro = ["astro/valid-compile", "astro/no-set-html-directive", "astro/jsx-a11y/alt-text"]
+
+[defaults]
+"structure.single_file_folder_allowed" = [{paths = ["src/pages/**"], reason = "Astro names a route by its path, and a folder of one route holds one page file."}]

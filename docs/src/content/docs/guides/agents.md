@@ -1,48 +1,51 @@
 ---
-title: Work with coding agents
-description: Install selected rule guides and direct agents to policy-owned changes.
+title: Coding agents
+description: The guides gspot installs for coding agents, and how an agent works with findings.
 sidebar:
     order: 6
 ---
 
-Run commands from the configured repository root with the [CLI available](/guides/install/).
+gspot installs Markdown guides that tell a coding agent how to write code in your repository.
+The guides match the checks, so code that follows them passes.
 
-gspot installs its rule files under `.gspot/rules/` and links them from a managed block in
-`AGENTS.md`. Existing `CLAUDE.md`, `GEMINI.md`, and `.github/copilot-instructions.md`
-receive the same block. When `.cursor/` exists, gspot creates `.cursor/rules/gspot.mdc`
-with `alwaysApply: true`. An authored file at that path is preserved.
+## What gspot installs
 
-Those links give an agent the selected repository instructions. The agent must still read and
-follow them; installing files does not establish compliance.
+- **Guides** under `.gspot/guides/`, one for each topic: how to work, how to write, and one for
+  each language, framework, and tool you selected.
+- **A managed block in `AGENTS.md`** that lists the guides. `CLAUDE.md`, `GEMINI.md`, and
+  `.github/copilot-instructions.md` get the same block when they exist.
+- **A Cursor rule**, `.cursor/rules/gspot.mdc`, when the `.cursor/` folder exists. gspot leaves
+  a rule file you wrote yourself at that path alone.
 
-To include another instruction file, run:
+The guides follow your level. At `recommended` they cover safety and correctness. At `all` they
+add naming, architecture, and style. After you change the policy, `gspot apply` updates them.
 
-```shell
-gspot set rules.agents TEAM.md
+gspot writes only inside its managed blocks, so the rest of each file stays yours. To add the
+block to another file, run:
+
+```bash
+gspot set guides.agents TEAM.md
 ```
 
-Destinations are relative to the repository root. gspot preserves content outside its managed
-blocks. Uninstall restores recorded original files and removes files it created when they
-have not been edited.
+The path is relative to the repository root.
 
-## Resolve findings with an agent
+## How an agent resolves findings
 
-1. Run `gspot check --staged` before committing. An installed pre-commit integration also runs it.
+An agent works with findings this way. The managed block gives steps 1, 3, and 4:
+
+1. Run `gspot check --staged` before each commit. The commit hook runs it too.
 2. For each finding, run `gspot explain <check>` and do what the `help:` line says.
-3. When a rule does not fit, change the policy with a writing command and a reason:
-   `gspot ignore`, `gspot set`. Never edit a file under `.gspot/`.
-4. Run `gspot apply` after any hand edit of `gspot.toml`.
+3. When a rule does not fit, change the policy with `gspot ignore` or `gspot set` and a reason.
+   Never edit a file under `.gspot/`.
+4. After editing `gspot.toml` by hand, run `gspot apply`.
 
-## Preserve policy ownership
+## Hooks and bypasses
 
-- Keep managed outputs under `.gspot/` unchanged. Change `gspot.toml` and use `apply --dry-run` to preview generated differences. Apply preserves subsequent edits and recovery copies.
-- Include a specific reason when `require_reasons = true`.
-- Run the check explicitly after bypassing a local hook. A bypass is not a passing result. `git commit --no-verify` bypasses local
-  commit hooks, and `git push --no-verify` bypasses the local push hook. Remote CI and server
-  policy operate independently.
+`git commit --no-verify` and `git push --no-verify` skip the local hooks. CI and server rules
+still run. After a bypass, run `gspot check` yourself.
 
-## What the rule files say
+## Remove the guides
 
-Each rule file states guidance for one topic, including applicable tools and checks. `general/agent/WORKING.md` says how
-to work in the repository; `general/prose/WRITING.md` says how to write; the language, framework
-and tool files say what code looks like here.
+`gspot uninstall` removes the guides and the managed blocks. A file gspot created is removed
+only when you did not edit it, and an original file comes back when gspot replaced it. See
+[uninstall](/guides/uninstall/).

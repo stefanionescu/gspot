@@ -1,25 +1,26 @@
 // Telling a tool that found something from a tool that fell over: a crash must never pass for a finding.
 import { statSync } from 'node:fs';
-import { isAbsolute, join } from 'node:path';
+import { join, isAbsolute } from 'node:path';
+import type { Finding } from '#cli/types/checks.ts';
+import { GspotError } from '#cli/platform/errors.ts';
 import type { SpawnResult } from '#cli/types/platform.ts';
-import type { Finding } from '#cli/types/checks/checks.ts';
 import { parseOutput } from '#cli/execution/output/parse.ts';
 import type { PlannedCheck } from '#cli/types/execution/execution.ts';
-import { ToolOutputError } from '#cli/execution/output/tool-formats.ts';
-import type { CheckSpec, OutputFormat, ToolPin } from '#cli/types/configurations.ts';
+import type { ToolPin, CheckSpec, OutputFormat } from '#cli/types/kits.ts';
 
 import {
-    FILELESS_FORMATS,
     TAIL_LINES,
+    FILELESS_FORMATS,
+    FINDING_EXIT_CODES,
     TRUFFLEHOG_FINDINGS,
-    TYPOS_FINDINGS,
-} from '#cli/constants/execution/execution.ts';
+} from '#cli/config/execution/execution.ts';
 
 // Whether the findings of this output name files of the repository: a link target, a coverage floor and a plain line do not.
 function isFileNamed(output: OutputFormat | undefined): boolean {
     if (output === undefined || ['eslint-json', 'typos-json', 'markdownlint-json'].includes(output.format)) return true;
     if (FILELESS_FORMATS.has(output.format) || (output.file_is ?? 'path') !== 'path') return false;
-    return output.pattern?.includes('(?<file>') ?? output.fields?.file !== undefined;
+    if (output.pattern !== undefined) return output.pattern.includes('(?<file>');
+    return output.fields?.file !== undefined;
 }
 
 function isOnDisk(file: string, roots: string[]): boolean {
@@ -31,21 +32,37 @@ function isOnDisk(file: string, roots: string[]): boolean {
 
 function redactedFindings(spec: CheckSpec, result: SpawnResult, root: string, broken: boolean): Finding[] {
     if ((result.code !== 0 && result.code !== TRUFFLEHOG_FINDINGS) || broken)
-        throw new ToolOutputError(`TruffleHog failed with exit ${String(result.code)}; raw output was withheld.`);
+        throw new GspotError(
+            'tool-output',
+            `TruffleHog failed with exit ${String(result.code)}; raw output was withheld.`,
+        );
     const findings = parseOutput(spec, result.stdout, result.stderr, root);
     if (result.code === TRUFFLEHOG_FINDINGS && findings.length === 0)
-        throw new ToolOutputError(
+        throw new GspotError(
+            'tool-output',
             'TruffleHog reported findings without valid structured data; raw output was withheld.',
         );
     return findings;
 }
 
+function parsedFindings(spec: CheckSpec, result: SpawnResult, roots: [string, string], broken: boolean): Finding[] {
+    if (spec.output?.format === 'trufflehog-json') return redactedFindings(spec, result, roots[1], broken);
+    if (broken) return [];
+    return parseOutput(spec, result.stdout, result.stderr, roots[1], roots[0]);
+}
+
+function outputFailure(planned: PlannedCheck, result: SpawnResult): never {
+    const name = planned.tool?.name ?? planned.spec.name;
+    const detail = toolOutputDetail(result, `${name} exited ${String(result.code)}`);
+    throw new GspotError('tool-output', `${name} broke: exit ${String(result.code)}\n${detail}`);
+}
+
 /**
  * Whether a run that exited nonzero produced nothing that points at a real file.
- * @param spec the check
- * @param parsed the findings read from the output
- * @param roots the folders a finding path may be relative to: the working folder of the tool, then the repository root
- * @returns true when the tool broke
+ * @param spec the check.
+ * @param parsed the findings read from the output.
+ * @param roots the folders a finding path may be relative to: the working folder of the tool, then the repository root.
+ * @returns true when the tool broke.
  */
 export function isToolBroken(spec: CheckSpec, parsed: Finding[], roots: string[]): boolean {
     if (spec.count_regex !== undefined || !isFileNamed(spec.output)) return false;
@@ -87,12 +104,13 @@ export function executionFailure(
 }
 
 /**
- * Match the declared fatal diagnostics of a check or of the tool it runs, for checks and corrections.
- * @param spec the check, whose own pattern comes first
- * @param tool the tool the check runs, with the pattern every check of it shares
- * @param result the completed process
- * @returns true when the output says the tool fell over
+ * Match declared fatal diagnostics from a check or its tool during checks and corrections.
+ * @param spec the check, whose own pattern comes first.
+ * @param tool the tool the check runs, with the pattern every check of it shares.
+ * @param result the completed process.
+ * @returns true when the output says the tool fell over.
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Checks and fixes decide that a tool crashed by the same declared pattern.
 export function hasToolError(spec: CheckSpec, tool: ToolPin | undefined, result: SpawnResult): boolean {
     const pattern = spec.tool_errors ?? tool?.crash_pattern;
     return pattern !== undefined && new RegExp(pattern, 'mu').test(`${result.stdout}\n${result.stderr}`);
@@ -120,28 +138,13 @@ export function toolOutputDetail(result: SpawnResult, placeholder: string): stri
  */
 export function checkedFindings(planned: PlannedCheck, result: SpawnResult, roots: [string, string]): Finding[] {
     const { spec } = planned;
-    const isTypos = spec.output?.format === 'typos-json';
-    const isMarkdownlint = spec.output?.format === 'markdownlint-json';
+    const specificCodes = FINDING_EXIT_CODES.get(spec.output?.format);
+    const accepted = [spec.findings_exit_codes, specificCodes];
     const broken =
-        (result.code !== 0 &&
-            spec.findings_exit_codes !== undefined &&
-            !spec.findings_exit_codes.includes(result.code)) ||
-        (isTypos && result.code !== 0 && result.code !== TYPOS_FINDINGS) ||
-        (isMarkdownlint && result.code !== 0 && result.code !== 1) ||
+        (result.code !== 0 && accepted.some((codes) => codes !== undefined && !codes.includes(result.code))) ||
         hasToolError(spec, planned.tool, result);
-    const parsed =
-        spec.output?.format === 'trufflehog-json'
-            ? redactedFindings(spec, result, roots[1], broken)
-            : broken
-              ? []
-              : parseOutput(spec, result.stdout, result.stderr, roots[1], roots[0]);
-    if (
-        broken ||
-        ((planned.manifest !== undefined || isTypos || isMarkdownlint) && isCrash(spec, result, parsed, roots))
-    ) {
-        const name = planned.tool?.name ?? spec.name;
-        const detail = toolOutputDetail(result, `${name} exited ${String(result.code)}`);
-        throw new ToolOutputError(`${name} broke: exit ${String(result.code)}\n${detail}`);
-    }
+    const parsed = parsedFindings(spec, result, roots, broken);
+    const verifyFiles = planned.manifest !== undefined || specificCodes !== undefined;
+    if (broken || (verifyFiles && isCrash(spec, result, parsed, roots))) outputFailure(planned, result);
     return parsed;
 }

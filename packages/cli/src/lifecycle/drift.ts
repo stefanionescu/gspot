@@ -1,44 +1,42 @@
+// apply --dry-run: render in memory, read recorded generated files, compare bytes, print the diff.
 import { createTwoFilesPatch } from 'diff';
-import { ruleDiff } from '#cli/lifecycle/rule-diff.ts';
+import { openRoot } from '#cli/platform/filesystem.ts';
+import { ruleDiff } from '#cli/lifecycle/rules/diff.ts';
+import type { Generated } from '#cli/types/generation.ts';
 import type { Policy } from '#cli/types/policy/policy.ts';
-import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
-import { CACHE_DIRECTORY } from '#cli/constants/platform.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
 import { pythonLockDrift } from '#cli/tools/python-project.ts';
 import { currentBlock } from '#cli/lifecycle/managed-blocks.ts';
-import type { GeneratedProposal } from '#cli/types/generation.ts';
 import { packageLockDrift } from '#cli/tools/packages/project.ts';
+import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import type { DriftEntry } from '#cli/types/lifecycle/lifecycle.ts';
-// apply --dry-run: render in memory, read recorded generated files, compare bytes, print the diff.
-import { isValePackageFile } from '#cli/repository/file-classification.ts';
-import { hasConfiguration } from '#cli/lifecycle/configuration-document.ts';
-import { CONFLICT_MARKERS, DRIFT_DIFF_CONTEXT, NEVER_STRAY } from '#cli/constants/lifecycle/lifecycle.ts';
+import { hasConfiguration } from '#cli/lifecycle/configuration/document.ts';
+import { NEVER_STRAY, CONFLICT_MARKERS, DRIFT_DIFF_CONTEXT } from '#cli/config/lifecycle.ts';
 
 function isStrayCandidate(path: string, policy: Policy): boolean {
-    if (path.startsWith('.gspot/state/')) return false;
-    if (path.startsWith('.gspot/rules/') && !policy.rules.install) return false;
+    if (path.startsWith('.gspot/guides/') && !policy.guides.install) return false;
     if (path.startsWith('.gspot/hooks/') && policy.hooks === undefined) return false;
-    return !(path.startsWith(`${CACHE_DIRECTORY}/`) || NEVER_STRAY.has(path));
+    return !NEVER_STRAY.has(path);
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Two drift entries carry a patch; the caller sits at the complexity limit.
 function patch(path: string, before: string, after: string, beforeName: string): string {
     return createTwoFilesPatch(`a/${path}`, `b/${path}`, before, after, beforeName, 'rendered', {
         context: DRIFT_DIFF_CONTEXT,
     });
 }
 
-function fileDrift(root: string, rendered: GeneratedProposal): DriftEntry[] {
+function fileDrift(root: string, rendered: Generated): DriftEntry[] {
     const entries: DriftEntry[] = [];
-    const confined = openConfinedRoot(root);
+    const files = openRoot(root);
     for (const file of rendered.files) {
-        const current = confined.read(file.path);
+        const current = files.read(file.path);
         if (current === undefined) {
             entries.push({ path: file.path, kind: 'missing', ...ruleDiff(file, undefined) });
             continue;
         }
         const disk = current.bytes.toString('utf8');
         // A merge left its markers in the file: no tool can read it, and regeneration is the one repair (K-274).
-        if (hasConflictMarkers(disk)) entries.push({ path: file.path, kind: 'conflict' });
+        if (CONFLICT_MARKERS.test(disk)) entries.push({ path: file.path, kind: 'conflict' });
         else if (disk !== file.content)
             entries.push({
                 path: file.path,
@@ -50,11 +48,11 @@ function fileDrift(root: string, rendered: GeneratedProposal): DriftEntry[] {
     return entries;
 }
 
-function blockDrift(root: string, rendered: GeneratedProposal): DriftEntry[] {
+function blockDrift(root: string, rendered: Generated): DriftEntry[] {
     const entries: DriftEntry[] = [];
-    const confined = openConfinedRoot(root);
+    const files = openRoot(root);
     for (const block of rendered.blocks) {
-        const text = confined.read(block.path)?.bytes.toString('utf8') ?? '';
+        const text = files.read(block.path)?.bytes.toString('utf8') ?? '';
         const current = currentBlock(text, block.style);
         const wanted = block.block.trim();
         if (current === undefined) entries.push({ path: block.path, kind: 'missing' });
@@ -68,11 +66,12 @@ function blockDrift(root: string, rendered: GeneratedProposal): DriftEntry[] {
     return entries;
 }
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Two generated files can be missing or changed; the caller sits at the complexity limit.
 function presenceDrift(root: string, path: string): DriftEntry {
-    return { path, kind: openConfinedRoot(root).read(path) === undefined ? 'missing' : 'changed' };
+    return { path, kind: openRoot(root).read(path) === undefined ? 'missing' : 'changed' };
 }
 
-function otherDrift(root: string, rendered: GeneratedProposal): DriftEntry[] {
+function otherDrift(root: string, rendered: Generated): DriftEntry[] {
     const entries: DriftEntry[] = [];
     for (const merge of rendered.merges)
         if (!hasConfiguration(root, merge)) entries.push(presenceDrift(root, merge.path));
@@ -81,39 +80,20 @@ function otherDrift(root: string, rendered: GeneratedProposal): DriftEntry[] {
     return entries;
 }
 
-function knownPaths(rendered: GeneratedProposal): Set<string> {
-    return new Set([
+/**
+ * Every generated file that differs from its render, is missing, or is a stray gspot file. Blocks and merges count too.
+ * @param root the repository root
+ * @param policy the repository policy
+ * @param rendered the generated files as rendered now
+ * @returns the drift entries in path order
+ */
+export function computeDrift(root: string, policy: Policy, rendered: Generated): DriftEntry[] {
+    const known = new Set([
         ...rendered.files.map((file) => file.path),
         ...rendered.blocks.map((block) => block.path),
         ...rendered.merges.map((merge) => merge.path),
         ...rendered.configurations.map((output) => output.path),
     ]);
-}
-
-/**
- * Whether a text holds the markers a merge leaves behind, so no tool can read it.
- * @param text the file's text
- * @returns true when a marker line is present
- */
-export function hasConflictMarkers(text: string): boolean {
-    return CONFLICT_MARKERS.test(text);
-}
-
-/**
- * Every generated file that differs from its render, is missing, or is a stray gspot file. Blocks and merges count too.
- * @param root the repository root
- * @param policy the repository policy
- * @param hasPackageManager whether generated tools use a package manager
- * @param rendered the generated files as rendered now
- * @returns the drift entries in path order
- */
-export function computeDrift(
-    root: string,
-    policy: Policy,
-    hasPackageManager: boolean,
-    rendered: GeneratedProposal,
-): DriftEntry[] {
-    const known = knownPaths(rendered);
     const lock = packageLockDrift(root, rendered.files);
     if (lock !== undefined) known.add(lock.path);
     const python = pythonLockDrift(root, rendered.files);
@@ -121,12 +101,7 @@ export function computeDrift(
     const strays = readOwnership(root)
         .files.filter(
             (entry) =>
-                entry.kind !== 'runtime' &&
-                entry.kind !== 'hook' &&
-                entry.kind !== 'export' &&
-                !isValePackageFile(entry.path) &&
-                (entry.kind !== 'dependency' ||
-                    (entry.path.startsWith('.gspot/.venv/') ? python === undefined : !hasPackageManager)) &&
+                !['hook', 'export'].includes(entry.kind) &&
                 entry.installed !== undefined &&
                 !known.has(entry.path) &&
                 isStrayCandidate(entry.path, policy),

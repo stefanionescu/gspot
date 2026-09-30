@@ -1,11 +1,11 @@
-import { ESLINT_RULE_LEVELS } from '#cli/constants/checks/eslint-levels.ts';
+import { findingAt } from '#cli/checks/result.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
-import { eslintCoverageResponse } from '#cli/evaluation/protocol.ts';
-import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
-import { evaluateConfiguration } from '#cli/evaluation/configuration.ts';
-import { ESLINT_FILE, LINT_CHECKS } from '#cli/constants/checks/typescript.ts';
+import { runConfiguration } from '#cli/native/configuration.ts';
+import type { Finding, EngineInput } from '#cli/types/checks.ts';
+import { eslintCoverageResponse } from '#cli/native/protocol.ts';
+import { ESLINT_FILE, LINT_CHECKS, ESLINT_RULE_LEVELS } from '#cli/config/checks/typescript.ts';
 
-// The rules the selected configurations require, for each file ending they name.
+// The rules the selected kits require, for each file ending they name.
 function requiredByEnding(input: EngineInput): Map<string, Set<string>> {
     const selected = input.selection.selected;
     const required = new Map<string, Set<string>>();
@@ -34,13 +34,13 @@ export async function requiredRules(input: EngineInput): Promise<Finding[]> {
     const required = requiredByEnding(input);
     const files = input.files.filter(
         (file) =>
-            file.nature === 'source' &&
+            file.kind === 'source' &&
             scopeOf(file.path, input.scopeEntries).path === input.scope &&
             required.has(file.path.split('.').at(-1) ?? ''),
     );
     if (files.length === 0) return findings;
     const resolved = eslintCoverageResponse.parse(
-        await evaluateConfiguration(
+        await runConfiguration(
             { tool: 'eslint', operation: 'coverage', root: input.root, paths: files.map((file) => file.path) },
             input.view,
             input.cancelSignal,
@@ -52,14 +52,14 @@ export async function requiredRules(input: EngineInput): Promise<Finding[]> {
         const enabled = new Set(resolved[file.path]);
         const off = [...(required.get(ending) ?? [])].filter((rule) => !decided.has(rule) && !enabled.has(rule));
         findings.push(
-            ...off.map((rule) => ({
-                check: input.spec.name,
-                file: ESLINT_FILE,
-                line: 1,
-                rule: 'rule-off',
-                message: `${rule} is off for ${file.path}, and the configurations require it for every .${ending} file.`,
-                fixable: false,
-            })),
+            ...off.map((rule) =>
+                findingAt(
+                    input,
+                    { file: ESLINT_FILE, line: 1 },
+                    'rule-off',
+                    `${rule} is off for ${file.path}, and the configurations require it for every .${ending} file.`,
+                ),
+            ),
         );
     }
     return findings;

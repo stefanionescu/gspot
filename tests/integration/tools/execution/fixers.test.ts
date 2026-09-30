@@ -1,20 +1,22 @@
 import { stringify } from 'smol-toml';
-import { expect, test } from 'bun:test';
-import { dirname, join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
-import { emitAll } from '#cli/generation/render.ts';
+import { test, expect } from 'bun:test';
+import { join, dirname } from 'node:path';
+import { TYPO } from '#tests/support/spelling.ts';
+import { testdir, createFileTree } from 'testdirs';
+import { emitAll } from '#cli/generation/outputs.ts';
+import { kitManifests } from '#cli/kits/manifests.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { explain } from '#cli/commands/explain/subjects.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { textContaining } from '#tests/support/expectations.ts';
 import type { RunOptions } from '#cli/types/execution/execution.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { chmodSync, copyFileSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { chmodSync, mkdirSync, copyFileSync, readFileSync, writeFileSync } from 'node:fs';
 
 if (!(process.platform === 'win32' || process.getuid?.() === 0))
     test('SQLFluff write failures remain execution errors when its exit code also means findings', async () => {
         await using sandbox = await testdir();
-        const sql = configurationManifests().get('sql')!;
+        const sql = kitManifests().get('sql')!;
         const spec = sql.checks.find((check) => check.name === 'sql/sqlfluff')!;
         // A repository command declares the crash pattern itself; the manifest keeps it on the sqlfluff tool.
         const crashPattern = sql.tools.find((tool) => tool.name === 'sqlfluff')!.crash_pattern!;
@@ -24,7 +26,7 @@ if (!(process.platform === 'win32' || process.getuid?.() === 0))
         await createFileTree(sandbox.path, {
             'gspot.toml': stringify({
                 version: 1,
-                configurations: [],
+                kits: [],
                 check: [
                     {
                         name: 'project/native',
@@ -97,7 +99,7 @@ test.each([
     },
 ])('$check preserves native partial corrections and accepts a manual correction', async (entry) => {
     await using sandbox = await testdir();
-    const spec = configurationManifests()
+    const spec = kitManifests()
         .get(entry.configuration)!
         .checks.find((check) => check.name === entry.check)!;
     const executable = Bun.which(entry.command[0]);
@@ -105,7 +107,7 @@ test.each([
     await createFileTree(sandbox.path, {
         'gspot.toml': stringify({
             version: 1,
-            configurations: [],
+            kits: [],
             check: [
                 {
                     name: 'project/native',
@@ -132,82 +134,100 @@ test.each([
     expect(corrected.report.exitCode, JSON.stringify(corrected.report)).toBe(0);
 });
 
-test.each(['javascript', 'typescript', 'svelte', 'vue', 'css'])(
-    '%s correction status agrees with native residual diagnostics',
-    async (configuration) => {
-        await using sandbox = await testdir();
-        const isCss = configuration === 'css';
-        const tool = isCss ? 'stylelint' : 'eslint';
-        const spec = configurationManifests()
-            .get(configuration)!
-            .checks.find((check) => check.name === `${configuration}/${tool}`)!;
-        const executable = join(
-            dirname(Bun.resolveSync(`${tool}/package.json`, import.meta.dir)),
-            'bin',
-            isCss ? 'stylelint.mjs' : 'eslint.js',
-        );
-        const path = isCss ? 'sample.css' : 'sample.js';
-        const config = isCss ? 'native.json' : 'native.mjs';
-        const command = [process.execPath, executable, '--config', config];
-        const nativeConfiguration = isCss
-            ? JSON.stringify({ rules: { 'color-hex-length': 'short', 'property-no-unknown': true } })
-            : 'export default [{ rules: { semi: ["error", "always"], "no-undef": "error" } }];';
-        const partial = isCss ? 'a { color: #fff; unknown: 1; }\n' : 'missing();\n';
-        await createFileTree(sandbox.path, {
-            'gspot.toml': stringify({
-                version: 1,
-                configurations: [],
-                check: [
-                    {
-                        name: 'project/native',
-                        command: [...command, isCss ? '--formatter' : '--format', isCss ? 'unix' : 'json', '{files}'],
-                        fix_command: [...command, '--fix', '{files}'],
-                        fix_order: spec.fix_order!,
-                        fix_findings_exit_codes: spec.fix_findings_exit_codes!,
-                        findings_exit_codes: spec.findings_exit_codes!,
-                        output: spec.output!,
-                        paths: [path],
-                        stage: 'commit',
-                    },
-                ],
-            }),
-            [config]: nativeConfiguration,
-            [path]: isCss ? 'a { color: #ffffff; unknown: 1; }\n' : 'missing()\n',
-        });
-        const source = readFileSync(join(sandbox.path, path), 'utf8');
-        writeFileSync(join(sandbox.path, config), isCss ? '{' : 'throw new Error("Invalid native configuration");');
-        const invalid = await executeRun(await openSession(sandbox.path), {
-            stage: 'all',
-            skips: [],
-            fix: false,
-            isDryRun: false,
-            noCache: true,
-        });
-        expect(invalid.report.exitCode).toBe(2);
-        expect(invalid.report.checks).toMatchObject([{ status: 'error', findings: [] }]);
-        expect(readFileSync(join(sandbox.path, path), 'utf8')).toBe(source);
-        writeFileSync(join(sandbox.path, config), nativeConfiguration);
-        const session = await openSession(sandbox.path);
-        const explanation = explain(session, 'project/native');
-        expect(explanation).toMatchObject({ data: { fix_findings_exit_codes: [isCss ? 2 : 1] } });
-        const options: RunOptions = { stage: 'all', skips: [], fix: true, isDryRun: false, noCache: true };
-        const failed = await executeRun(session, options);
-        expect(failed.report.exitCode, JSON.stringify(failed)).toBe(1);
-        expect(failed.fixes?.results).toMatchObject([{ status: 'changed', changed: [path] }]);
-        expect(readFileSync(join(sandbox.path, path), 'utf8')).toBe(partial);
-        await Bun.write(join(sandbox.path, path), isCss ? 'a { color: #fff; }\n' : 'export {};\n');
-        const corrected = await executeRun(await openSession(sandbox.path), options);
-        expect(corrected.report.exitCode, JSON.stringify(corrected)).toBe(0);
+test.each([
+    ...['javascript', 'typescript', 'svelte', 'vue'].map((configuration) => ({
+        configuration,
+        tool: 'eslint',
+        executable: 'eslint.js',
+        path: 'sample.js',
+        config: 'native.mjs',
+        nativeConfiguration: 'export default [{ rules: { semi: ["error", "always"], "no-undef": "error" } }];',
+        invalidConfiguration: 'throw new Error("Invalid native configuration");',
+        formatter: ['--format', 'json'],
+        defect: 'missing()\n',
+        partial: 'missing();\n',
+        corrected: 'export {};\n',
+        findingsCode: 1,
+    })),
+    {
+        configuration: 'css',
+        tool: 'stylelint',
+        executable: 'stylelint.mjs',
+        path: 'sample.css',
+        config: 'native.json',
+        nativeConfiguration: JSON.stringify({ rules: { 'color-hex-length': 'short', 'property-no-unknown': true } }),
+        invalidConfiguration: '{',
+        formatter: ['--formatter', 'unix'],
+        defect: 'a { color: #ffffff; unknown: 1; }\n',
+        partial: 'a { color: #fff; unknown: 1; }\n',
+        corrected: 'a { color: #fff; }\n',
+        findingsCode: 2,
     },
-);
+])('$configuration correction status agrees with native residual diagnostics', async (entry) => {
+    await using sandbox = await testdir();
+    const spec = kitManifests()
+        .get(entry.configuration)!
+        .checks.find((check) => check.name === `${entry.configuration}/${entry.tool}`)!;
+    const executable = join(
+        dirname(Bun.resolveSync(`${entry.tool}/package.json`, import.meta.dir)),
+        'bin',
+        entry.executable,
+    );
+    const command = [process.execPath, executable, '--config', entry.config];
+    await createFileTree(sandbox.path, {
+        'gspot.toml': stringify({
+            version: 1,
+            kits: [],
+            check: [
+                {
+                    name: 'project/native',
+                    command: [...command, ...entry.formatter, '{files}'],
+                    fix_command: [...command, '--fix', '{files}'],
+                    fix_order: spec.fix_order!,
+                    fix_findings_exit_codes: spec.fix_findings_exit_codes!,
+                    findings_exit_codes: spec.findings_exit_codes!,
+                    output: spec.output!,
+                    paths: [entry.path],
+                    stage: 'commit',
+                },
+            ],
+        }),
+        [entry.config]: entry.nativeConfiguration,
+        [entry.path]: entry.defect,
+    });
+    const source = readFileSync(join(sandbox.path, entry.path), 'utf8');
+    writeFileSync(join(sandbox.path, entry.config), entry.invalidConfiguration);
+    const invalid = await executeRun(await openSession(sandbox.path), {
+        stage: 'all',
+        skips: [],
+        fix: false,
+        isDryRun: false,
+        noCache: true,
+    });
+    expect(invalid.report.exitCode).toBe(2);
+    expect(invalid.report.checks).toMatchObject([{ status: 'error', findings: [] }]);
+    expect(readFileSync(join(sandbox.path, entry.path), 'utf8')).toBe(source);
+    writeFileSync(join(sandbox.path, entry.config), entry.nativeConfiguration);
+    const session = await openSession(sandbox.path);
+    const explanation = explain(session, 'project/native');
+    expect(explanation).toMatchObject({ data: { fix_findings_exit_codes: [entry.findingsCode] } });
+    const options: RunOptions = { stage: 'all', skips: [], fix: true, isDryRun: false, noCache: true };
+    const failed = await executeRun(session, options);
+    expect(failed.report.exitCode, JSON.stringify(failed)).toBe(1);
+    expect(failed.fixes?.results).toMatchObject([{ status: 'changed', changed: [entry.path] }]);
+    expect(readFileSync(join(sandbox.path, entry.path), 'utf8')).toBe(entry.partial);
+    await Bun.write(join(sandbox.path, entry.path), entry.corrected);
+    const corrected = await executeRun(await openSession(sandbox.path), options);
+    expect(corrected.report.exitCode, JSON.stringify(corrected)).toBe(0);
+});
 
 test.each([
     {
         configuration: 'spelling',
         check: 'spelling/typos',
         path: 'sample.txt',
-        defect: 'teh wether\n',
-        partial: 'the wether\n',
+        defect: `${TYPO.the} ${TYPO.whether}\n`,
+        partial: `the ${TYPO.whether}\n`,
         corrected: 'the whether\n',
     },
     {
@@ -223,7 +243,7 @@ test.each([
     async ({ configuration, check, path, defect, partial, corrected }) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': `version = 1\nlevel = "all"\nconfigurations = ["${configuration}"]\n`,
+            'gspot.toml': policyOf([configuration], '', 'all'),
             '.gitignore': '.gspot/\n',
             [path]: defect,
         });
@@ -237,7 +257,7 @@ test.each([
         const session = await openSession(sandbox.path);
         for (const output of emitAll(session.policyFiles.policy, session.repository, session.scopes, {
             version: session.version,
-            packageManager: session.packageManager,
+            packageClient: session.packageClient,
         }).files.filter((file) => file.kind === 'config'))
             await Bun.write(join(sandbox.path, output.path), output.content);
         const options = { stage: 'all', skips: [], only: [check], fix: true, isDryRun: false, noCache: true } as const;

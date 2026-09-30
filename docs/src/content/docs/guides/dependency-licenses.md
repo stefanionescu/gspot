@@ -1,22 +1,16 @@
 ---
-title: Check dependency licenses
-description: Check installed dependency licenses and record exact package exceptions.
+title: Dependency licenses
+description: Check the licenses of your installed packages, and allow one package version by exception.
 ---
 
-Run commands from the configured repository root with the [CLI available](/guides/install/).
+The `licenses` kit checks the license of every installed npm and Python package at the push
+stage. Install your project dependencies first. Python projects use the `.venv` of their scope,
+and `gspot install` installs the license scanner.
 
-Select `licenses` to check installed npm and Python packages with `licenses/packages` at push.
-Install the project dependencies first. Python projects use their scope's `.venv`; the license
-scanner is installed separately by `gspot install`.
+## Allow a license or one package
 
-`gspot apply` writes the effective allowances and exceptions to `.gspot/config/licenses.json`.
-Scoped policies have their own files under `.gspot/<scope>/licenses.json`. Change these values
-with `gspot set`, which applies the setting. After a manual edit of `gspot.toml`, run `gspot apply`.
-The scanner reads this generated configuration and refuses missing or stale values before
-scanning dependencies.
-
-Add a license to `tools.licenses.licenses_allowed`, or record an exception for one package
-version and its reported license:
+Add a license to `tools.licenses.licenses_allowed` to allow every package under it. To allow
+one package version with a license you reviewed, add an exception:
 
 ```toml
 [[tools.licenses.packages_allowed]]
@@ -25,21 +19,28 @@ license = "BSD"
 reason = "Installed metadata reports the reviewed BSD license in its short form."
 ```
 
-An exception stops passing if the package reports a different license, even when that license
-is otherwise allowed. A disallowed license returns exit code `1`. A missing environment,
-empty scan, or scanner failure returns `2`.
+An exception holds only while the package reports that license. When it reports another one,
+the exception stops working, even when the new license is allowed.
 
-Python package names use the same
-[normalization](https://packaging.python.org/en/latest/specifications/name-normalization/)
-for installed packages, exceptions, and lockfiles. Letter case and runs of `.`, `_`, and `-`
-do not distinguish Python distribution names. Versions and reported licenses remain exact.
+`gspot set` writes these settings and applies them. After you edit `gspot.toml` by hand, run
+`gspot apply`. gspot writes the result to `.gspot/config/licenses.json`, or to
+`.gspot/config/<scope>/licenses.json` for a scope. The check refuses to run when that file is
+missing or out of date.
 
-Selecting `licenses` also selects `integrity/allowlists-match` at commit. This shared check
-verifies that each package exception names a version in the project or workspace lockfile.
-It runs once even when another selected configuration includes it. It does not select the other
-checks or tools from `structure`.
+## Results
 
-Adoption keeps nested license configuration in its directory scope. It retains original
-configuration when an `onlyAllow` list excludes shipped allowances, or when overlapping
-configuration requires explicit conversion. Package exclusions need installed dependencies
-so adoption can record their exact versions and reported licenses.
+- `0`: every package has an allowed license or a valid exception.
+- `1`: a package has a license that is not allowed.
+- `2`: the environment is missing, the scan found nothing, or the scanner failed.
+
+Python package names match the way pip matches them: letter case and runs of `.`, `_`, and `-`
+do not matter. Versions and licenses must match exactly.
+
+## Exceptions and the lockfile
+
+Selecting `licenses` also turns on `integrity/allowlists-match` at the commit stage. It checks
+that each exception names a version that the lockfile of the project or workspace holds. A
+kit that selects the same check does not run it twice.
+
+When init replaces an existing license configuration file, move the exceptions you still need
+into `tools.licenses.packages_allowed`, with exact versions.

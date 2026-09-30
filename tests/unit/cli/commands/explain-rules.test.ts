@@ -1,5 +1,6 @@
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { explain } from '#cli/commands/explain/subjects.ts';
+import { textContaining } from '#tests/support/expectations.ts';
 
 test('a tool rule is explained with the page its manifest declares', () => {
     expect(explain(undefined, 'shellcheck/SC2086')).toMatchObject({
@@ -29,4 +30,17 @@ test('a check explanation shows the crash pattern of the tool it runs', () => {
             tool_errors: '^(?:Oops! Something went wrong|Error: Cannot find module|ERR_MODULE_NOT_FOUND|ConfigError:)',
         },
     });
+});
+
+test('check explanations retain correction exit codes without adding absent metadata', () => {
+    const correction = explain(undefined, 'python/ruff');
+    expect(correction).toMatchObject({
+        kind: 'check',
+        data: { kit: 'python', fix_findings_exit_codes: [1] },
+        text: textContaining('Correction exit codes that mean findings remain: 1'),
+    });
+    const format = explain(undefined, 'python/ruff-format');
+    expect(format).toHaveProperty('kind', 'check');
+    expect(format).not.toHaveProperty('data.fix_findings_exit_codes');
+    expect(format).not.toHaveProperty('data.file_prefix');
 });

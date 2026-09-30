@@ -1,0 +1,28 @@
+<%
+const workspaceEntries = (scope) => entryFiles(scope).flatMap((pattern) => {
+    const sign = pattern.startsWith('!') ? '!' : '';
+    const path = sign === '' ? pattern : pattern.slice(1);
+    if (scope === '' || path.startsWith('**/')) return [pattern];
+    return path.startsWith(`${scope}/`) ? [`${sign}${path.slice(scope.length + 1)}`] : [];
+});
+const ignored = (settings['tools.knip.ignore_dependencies'] ?? []).map((entry) => (typeof entry === 'string' ? { name: entry } : entry));
+const ignoredNames = (workspace) => ignored.filter((entry) => entry.workspace === workspace).map((entry) => entry.name);
+const named = ignored.flatMap((entry) => (entry.workspace === undefined ? [] : [entry.workspace]));
+const paths = [...new Set(['', ...scopes.map((scope) => scope.path), ...named])];
+const workspaces = Object.fromEntries(paths.map((path) => [path === '' ? '.' : path, {
+    entry: workspaceEntries(path),
+    project: ['**/*.{ts,tsx,mts,cts,js,mjs,cjs}'],
+    ...(named.includes(path) ? { ignoreDependencies: ignoredNames(path) } : {}),
+}]));
+%>
+{
+    "$schema": "https://unpkg.com/knip@6/schema.json",
+    "entry": <%= json(entryFiles('')) %>,
+    "project": ["**/*.{ts,tsx,mts,cts,js,mjs,cjs}"],
+    "ignore": <%= json(['.gspot/**', 'eslint.config.{js,mjs,cjs}', ...(tool('knip').exclude ?? []).flatMap((entry) => entry.paths ?? []), ...policy.declarations.flatMap((entry) => entry.paths)]) %>,
+    "ignoreDependencies": <%= json(["@gspothq/cli", "@gspothq/eslint-plugin", "eslint-config-prettier", "prettier", "@socketsecurity/bun-security-scanner", ...toolPackages, ...ignoredNames(undefined)]) %>,
+    "ignoreBinaries": <%= json([...tools, "vale", "git", "mise", "bunx", "npx"]) %>,
+    "ignoreExportsUsedInFile": true,
+    "workspaces": <%= json(workspaces) %><% const extras = extra('knip'); if (extras) { for (const [key, value] of Object.entries(extras)) { if (key !== 'reason') { %>,
+    <%= json(key, 0) %>: <%= json(value) %><% } } } %>
+}

@@ -1,37 +1,35 @@
+import { findingAt } from '#cli/checks/result.ts';
 import { trivialFile } from '#cli/checks/structure/statements.ts';
-import type { StructureReader } from '#cli/types/checks/python.ts';
-import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
-import { importCycles, singletons } from '#cli/checks/python/imports.ts';
 import { functionsOf, pythonModules } from '#cli/checks/python/modules.ts';
-import { DEFAULT_FILE_LINES, DEFAULT_FUNCTION_LINES, DEFAULT_PACKAGE_EXPORTS } from '#cli/constants/checks/python.ts';
-import { longFunctions, longModules, placeholderDocstrings, trivialFunctions } from '#cli/checks/python/functions.ts';
+import { pythonBlockingCalls } from '#cli/checks/python/blocking-calls.ts';
+import { DEFAULT_TRIVIAL_STATEMENTS } from '#cli/config/checks/structure.ts';
+import { singletons, importCycles, importComments } from '#cli/checks/python/imports.ts';
+import type { Engine, Finding, EngineInput, StructureReader } from '#cli/types/checks.ts';
+import { trivialFunctions, placeholderDocstrings } from '#cli/checks/python/functions.ts';
+import { importLinter, dependencyOwnership, typecheckMembership } from '#cli/checks/python/project.ts';
 
 import {
-    exportsAtBottom,
-    lazyExports,
+    DEFINITIONS,
+    DEFAULT_FILE_LINES,
+    DEFAULT_FUNCTION_LINES,
+    DEFAULT_PACKAGE_EXPORTS,
+} from '#cli/config/checks/python.ts';
+import {
+    exportOrder,
     packageExports,
-    privateBeforePublic,
+    exportsAtBottom,
     privatePrefixes,
+    privateBeforePublic,
 } from '#cli/checks/python/exports.ts';
-
-function names(input: EngineInput, key: string): Set<string> {
-    const entries = (input.view.settings[key] as { names?: string[] }[] | undefined) ?? [];
-    return new Set(entries.flatMap((entry) => entry.names ?? []));
-}
 
 function analysis(read: StructureReader): (input: EngineInput) => Promise<Finding[]> {
     return async (input) => {
         const modules = await pythonModules(input);
         try {
             const problems = read({ modules, functions: modules.flatMap((module) => functionsOf(module)) }, input);
-            return problems.map((entry) => ({
-                check: input.spec.name,
-                file: entry.file,
-                line: entry.line,
-                rule: entry.rule,
-                message: entry.text,
-                fixable: false,
-            }));
+            return problems.map((entry) =>
+                findingAt(input, { file: entry.file, line: entry.line }, entry.rule, entry.text),
+            );
         } finally {
             for (const module of modules) module.tree.delete();
         }
@@ -39,15 +37,46 @@ function analysis(read: StructureReader): (input: EngineInput) => Promise<Findin
 }
 
 /** The analyses by the name a manifest gives them. */
-export const PYTHON_STRUCTURE: Record<string, (input: EngineInput) => Promise<Finding[]>> = {
-    'python-file-length': analysis(({ modules }, input) =>
-        longModules(modules, input.view.limit('file_lines', 'python') ?? DEFAULT_FILE_LINES),
-    ),
-    'python-function-length': analysis(({ modules, functions }, input) =>
-        longFunctions(modules, functions, input.view.limit('function_lines', 'python') ?? DEFAULT_FUNCTION_LINES),
-    ),
+export const PYTHON_STRUCTURE: Record<string, Engine> = {
+    'python-file-length': analysis(({ modules }, input) => {
+        const ceiling = input.view.limit('file_lines', 'python') ?? DEFAULT_FILE_LINES;
+        return modules.flatMap((module) => {
+            const count = [...module.lines].filter(
+                (line) => line.trim() !== '' && !line.trimStart().startsWith('#'),
+            ).length;
+            return count <= ceiling
+                ? []
+                : [
+                      {
+                          file: module.path,
+                          line: 1,
+                          rule: 'file-lines',
+                          text: `${String(count)} code lines is over the ceiling of ${String(ceiling)}.`,
+                      },
+                  ];
+        });
+    }),
+    'python-function-length': analysis(({ modules, functions }, input) => {
+        const ceiling = input.view.limit('function_lines', 'python') ?? DEFAULT_FUNCTION_LINES;
+        const lines = new Map(modules.map((module) => [module.path, module.lines]));
+        return functions.flatMap((fn) => {
+            const count = (lines.get(fn.path) ?? [])
+                .slice(fn.node.startPosition.row, fn.node.endPosition.row + 1)
+                .filter((line) => line.trim() !== '' && !line.trimStart().startsWith('#')).length;
+            return count <= ceiling
+                ? []
+                : [
+                      {
+                          file: fn.path,
+                          line: fn.node.startPosition.row + 1,
+                          rule: 'function-lines',
+                          text: `${fn.name} holds ${String(count)} code lines, over the ceiling of ${String(ceiling)}.`,
+                      },
+                  ];
+        });
+    }),
     'python-trivial-function': analysis(({ functions, modules }, input) => {
-        const threshold = input.view.limit('trivial_statements', 'python') ?? 2;
+        const threshold = input.view.limit('trivial_statements', 'python') ?? DEFAULT_TRIVIAL_STATEMENTS;
         return [
             ...trivialFunctions(functions, threshold),
             ...modules
@@ -66,13 +95,40 @@ export const PYTHON_STRUCTURE: Record<string, (input: EngineInput) => Promise<Fi
     'python-private-prefix': analysis(({ modules }) => privatePrefixes(modules)),
     'python-private-before-public': analysis(({ modules }) => privateBeforePublic(modules)),
     'python-exports-at-bottom': analysis(({ modules }) => exportsAtBottom(modules)),
-    'python-no-lazy-exports': analysis(({ modules }) => lazyExports(modules)),
+    'python-no-lazy-exports': analysis(({ modules }) =>
+        modules.flatMap((module) =>
+            module.statements
+                .filter(
+                    (statement) =>
+                        DEFINITIONS.has(statement.type) && statement.childForFieldName('name')?.text === '__getattr__',
+                )
+                .map((statement) => ({
+                    file: module.path,
+                    line: statement.startPosition.row + 1,
+                    rule: 'no-lazy-exports',
+                    text: 'A module __getattr__ makes names appear at run time. Import and list them.',
+                })),
+        ),
+    ),
     'python-package-exports': analysis(({ modules }, input) => {
         const ceiling = input.view.settings['structure.python.max_package_exports'];
         return packageExports(modules, typeof ceiling === 'number' ? ceiling : DEFAULT_PACKAGE_EXPORTS);
     }),
     'python-import-cycles': analysis(({ modules }) => importCycles(modules)),
-    'python-no-singletons': analysis(({ modules }, input) =>
-        singletons(modules, names(input, 'structure.python.singletons_allowed')),
-    ),
+    'python-import-comments': analysis(({ modules }) => importComments(modules)),
+    'python-export-order': analysis(({ modules }) => exportOrder(modules)),
+    'python-no-singletons': analysis(({ modules }, input) => {
+        const entries =
+            (input.view.settings['structure.python.singletons_allowed'] as { names?: string[] }[] | undefined) ?? [];
+        return singletons(modules, new Set(entries.flatMap((entry) => entry.names ?? [])));
+    }),
+};
+
+/** Every python analysis: the parsed-source ones above, then the ones that run the project's tools. */
+export const PYTHON_ANALYSES: Record<string, Engine> = {
+    ...PYTHON_STRUCTURE,
+    'python-import-linter': importLinter,
+    'python-blocking-calls': pythonBlockingCalls,
+    'python-dependency-ownership': dependencyOwnership,
+    'python-typecheck-membership': typecheckMembership,
 };

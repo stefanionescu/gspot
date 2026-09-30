@@ -1,107 +1,79 @@
 ---
-title: Diagnose a check that cannot run
-description: Resolve missing tools, mismatched locks, version pins, and edited generated files.
+title: Troubleshooting
+description: Fix a policy that does not load, a missing tool, locks that disagree, a version mismatch, and slow checks.
 ---
 
-Use the [source installation guide](/guides/install/) to prepare the CLI. Run the commands below
-from the repository root unless a step names another directory.
-
-Run diagnostics from the repository root:
+Start with the diagnosis:
 
 ```bash
 gspot doctor
 ```
 
-Keep the command output, check name, and reproduction command when reporting a problem.
-Do not include credentials from configuration or environment variables.
+`doctor` lists missing tools, hooks that do not match the policy, files no check reads, and
+generated files that changed. Each problem comes with the command that fixes it. When you
+report a problem, include the output, the check name, and the command that reproduces it.
+Leave out credentials.
 
-## Configuration does not load
+## The policy does not load
 
-TOML syntax and schema errors name the file, line, and column. Correct the named value or
-table, then rerun the command. For a missing required value, the location identifies its
-nearest authored table. Syntax diagnostics do not print neighboring configuration lines.
-Missing scopes, invalid adopted tool paths, missing reasons, and disabled-rule errors also
-identify their policy declarations.
-Unknown configurations and unsupported settings name their source entries. A refused loosening
-points to the configured value and includes the command for recording its reason.
+An error in `gspot.toml` names the line and the column. Fix the value or table it names and
+run the command again. An unknown kit or setting names the entry. A loosening that needs a
+reason prints the command that records one.
 
 ## A tool is missing
 
-Run `gspot install` to install the matching private tool projects. Native tools need the
-selected mise integration or [manual provisioning](/guides/without-mise/). Doctor reports
-missing prerequisites separately from successful execution. Skipping a tool does not prove
-its check passes.
+Run `gspot install` to install the locked npm and Python tools. Native tools come from mise, or
+from your own install; see [package managers](/guides/without-mise/). A check whose tool is
+missing fails, and `doctor` names the tool.
 
-## EditorConfig Checker download returns HTTP 403
+## A GitHub download returns HTTP 403
 
-Read the download error before changing configuration. A response that says `API rate limit
-exceeded` means GitHub refused the release lookup or asset download. The npm wrapper downloads
-the native version pinned by the formatting configuration, even when npm package installation succeeds.
+`gspot install` downloads the EditorConfig checker from GitHub. When the error says
+`API rate limit exceeded`, GitHub refused the download. Wait for the
+limit to reset, then run `gspot install` again. If `GITHUB_TOKEN` is set in your environment,
+the download uses it. Keep the token out of policy files and reports.
 
-Wait for the GitHub API limit to reset, then rerun `gspot install` from the same repository.
-An existing `GITHUB_TOKEN` environment variable is passed to the wrapper for authenticated
-GitHub requests. Keep it out of policy files and diagnostic reports. Do not change the tool
-version or substitute another executable to bypass a failed download.
+## The policy and the locks disagree
 
-## Configuration and locks disagree
+`gspot install` installs only locks that match the policy. When you change the policy on
+purpose, run `gspot apply`, review the changes, and commit them. Your teammates then run
+`gspot install`.
 
-`install` consumes matching locks without regenerating tracked files. Run `gspot apply` when
-you intentionally change policy or upgrade tool dependencies. Review and share its output.
-Then teammates can run `gspot install` against the matching policy and locks.
+## The gspot version differs from the pin
 
-## The CLI version differs from the pin
-
-Read `.gspot/version`. Use that exact CLI version, or intentionally upgrade with the target
-binary and `gspot apply`. Preview first:
+The pin is in `.gspot/version`. Use that version, or move the pin with the gspot you have:
 
 ```bash
 gspot apply --dry-run
+gspot apply
 ```
 
-Review the generated text diff and the added, removed, and changed rule entries. Rule
-comparisons use each tool's configuration format. If a configuration cannot be compared,
-the preview retains its text diff and reports the reason. Executable ESLint comparisons need
-the project's installed dependencies; missing dependencies are reported explicitly.
+The preview shows the text diff and every rule that turns on, turns off, or changes. `apply`
+checks the configuration, writes it, and moves the pin. It runs no check, so run `gspot check`
+afterwards.
 
-`gspot apply` validates configuration, prepares generated output, and changes the pin after
-successful application. It runs no checks. Run `gspot check` separately.
+## A generated file has local edits
 
-## Generated files have local edits
-
-Apply preserves conflicting edits instead of assuming they belong to gspot. Review the named
-paths. Move intentional policy changes into `gspot.toml`, then apply again. Keep authored copies
-until you understand the conflict. Uninstall also preserves conflicts; see
-[restoration and recovery](/guides/uninstall/).
+`gspot apply` keeps a generated file you edited and names it. Move the change you want into
+`gspot.toml`, then run `gspot apply` again. [Uninstall](/guides/uninstall/) keeps edited files
+too.
 
 ## A check is slow
 
-Run the printed reproduction command to isolate it. Use `--verbose` for execution details.
-Use `--no-cache` when checking whether a cached result differs. An affected project-wide check
-can read more files than the selected paths. A timeout or canceled command is not a clean result.
+Run the reproduce command the report prints, to time that check alone. `--verbose` prints each
+command gspot runs. `--no-cache` runs a check even when its inputs did not change.
 
-Swift compilation reuses compiler state. SwiftLint analysis runs at the manual stage and uses
-a separate clean build to capture its complete compiler log. Build state lives under a
-repository-specific `gspot` directory in the platform cache:
+Swift builds reuse compiler state from the cache folder of your system, in a `gspot` folder per
+repository:
 
-- macOS: `~/Library/Caches`.
-- Linux: `XDG_CACHE_HOME`, or `~/.cache` when unset.
-- Windows: `LOCALAPPDATA`, or `~/AppData/Local` when unset.
+- macOS: `~/Library/Caches`
+- Linux: `XDG_CACHE_HOME`, or `~/.cache` when it is not set
+- Windows: `LOCALAPPDATA`, or `~/AppData/Local` when it is not set
 
-The environment overrides are optional absolute directory paths. Relative values fail before
-build-cache access. Compiler state is separate from the check-result cache in `.gspot/cache`.
-
-Run the analyzer with:
-
-```shell
-gspot check --stage manual --only swift/swiftlint-analyze
-```
-
-A full check with caching enabled removes unchanged, owned cache results older than 30 days.
-Narrowed checks and `--no-cache` leave those files alone. Edited or unowned cache files remain
-preserved.
+Every check with the cache on deletes the cached results written more than seven days ago.
 
 ## A Windows path is refused
 
-Managed paths reject drive-relative paths, UNC paths, reserved device names, and linked
-output directories. Use repository-relative paths with forward slashes in `gspot.toml`.
-Run `gspot apply` after correcting the policy.
+gspot refuses drive-relative paths, reserved device names, Universal Naming Convention (UNC)
+paths, and output folders that are links. In `gspot.toml`, write paths relative to the
+repository with forward slashes, then run `gspot apply`.

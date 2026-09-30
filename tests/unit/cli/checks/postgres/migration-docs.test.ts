@@ -1,10 +1,11 @@
-import { describe, expect, test } from 'bun:test';
+import { test, expect, describe } from 'bun:test';
+import type { Migration } from '#cli/types/checks.ts';
 import { sqlFile } from '#cli/parsers/sql/statements.ts';
-import type { Migration } from '#cli/types/checks/postgres.ts';
-import { DOC_SEPARATOR } from '#cli/constants/checks/postgres.ts';
+import { DOC_SEPARATOR } from '#cli/config/checks/platforms.ts';
 import { docProblems } from '#cli/checks/postgres/migration-docs.ts';
-import { NAME, SECTIONS } from '#tests/constants/unit/cli/checks/postgres.ts';
+import { NAME, SECTIONS } from '#tests/inputs/unit/cli/checks/postgres.ts';
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Two cases parse a migration fixture; one owner keeps its shape.
 async function migration(text: string): Promise<Migration> {
     const parsed = await sqlFile(text);
     return { path: `migrations/${NAME}`, name: NAME, version: '20240101000000', text, statements: parsed.statements };

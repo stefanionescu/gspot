@@ -1,14 +1,14 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { parse as parseYaml } from 'yaml';
-import { planRun } from '#cli/execution/planning/plan.ts';
 import prettier, { type Options } from 'prettier';
-import { createFileTree, testdir } from 'testdirs';
 import { parse as parseJsonc } from 'jsonc-parser';
-import { emitAll } from '#cli/generation/render.ts';
+import { testdir, createFileTree } from 'testdirs';
+import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { parse as parseToml, stringify } from 'smol-toml';
-import { prepareCommand } from '#cli/execution/tool-runner.ts';
+import { planRun } from '#cli/execution/planning/plan.ts';
+import { stringify, parse as parseToml } from 'smol-toml';
+import { prepareCommand } from '#cli/execution/tool/runner.ts';
 
 test.each([2, 6])('format width %i reaches editors and generated tool configurations', async (width) => {
     await using directory = await testdir();
@@ -16,7 +16,7 @@ test.each([2, 6])('format width %i reaches editors and generated tool configurat
         'gspot.toml': stringify({
             version: 1,
             level: 'all',
-            configurations: ['formatting', 'configs', 'python', 'swift', 'sql', 'markdown', 'bash'],
+            kits: ['formatting', 'files', 'python', 'swift', 'sql', 'markdown', 'bash'],
             format: { indent_width: width },
         }),
         'sample.yaml': 'parent:\n child: value\n',
@@ -26,11 +26,11 @@ test.each([2, 6])('format width %i reaches editors and generated tool configurat
     const generated = new Map(
         emitAll(session.policyFiles.policy, session.repository, session.scopes, {
             version: session.version,
-            packageManager: session.packageManager,
+            packageClient: session.packageClient,
         }).files.map((file) => [file.path, file.content]),
     );
-    const [shell] = await planRun(session, { stage: 'all', skips: [], only: ['bash/shfmt'] });
-    const command = prepareCommand(session, shell!, shell!.spec.command!);
+    const [bashCheck] = planRun(session, { stage: 'all', skips: [], only: ['bash/shfmt'] });
+    const command = prepareCommand(session, bashCheck!, bashCheck!.spec.command!);
     expect(command.argv[command.argv.indexOf('-i') + 1]).toBe(String(width));
     await Bun.write(join(directory.path, '.editorconfig'), generated.get('.editorconfig')!);
     const path = join(directory.path, 'sample.yaml');
@@ -65,16 +65,16 @@ test('an explicit YAML width override remains consistent between EditorConfig an
     await createFileTree(directory.path, {
         'gspot.toml': stringify({
             version: 1,
-            configurations: ['formatting'],
+            kits: ['formatting'],
             format: { indent_width: 6, overrides: [{ paths: ['**/*.yaml'], indent_width: 2 }] },
         }),
         'sample.yaml': 'parent:\n child: value\n',
     });
-    const renderSession1 = await openSession(directory.path);
+    const session = await openSession(directory.path);
     const generated = new Map(
-        emitAll(renderSession1.policyFiles.policy, renderSession1.repository, renderSession1.scopes, {
-            version: renderSession1.version,
-            packageManager: renderSession1.packageManager,
+        emitAll(session.policyFiles.policy, session.repository, session.scopes, {
+            version: session.version,
+            packageClient: session.packageClient,
         }).files.map((file) => [file.path, file.content]),
     );
     await Bun.write(join(directory.path, '.editorconfig'), generated.get('.editorconfig')!);

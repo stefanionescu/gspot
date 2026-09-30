@@ -1,7 +1,7 @@
 # Contributing
 
-gspot is developed from a source checkout with [mise](https://mise.jdx.dev). Every task below runs
-locally; nothing here needs a GitHub run.
+You work on gspot in a source checkout with [mise](https://mise.jdx.dev). Every task below runs
+on your machine. None of them needs a GitHub run.
 
 ## Setup
 
@@ -10,52 +10,59 @@ mise install
 mise run repo:setup
 ```
 
-`repo:setup` installs the frozen dependencies, prepares the pinned Swift parser, and generates the
-Astro content types the documentation build reads.
+`repo:setup` installs the locked dependencies and prepares the grammar files. It also builds
+the ESLint plugin of the workspace and generates the content types the documentation build
+reads. After you change the plugin, run `mise run build:plugin` before the repository
+checks.
 
 ## Verification
 
-Run these before a commit, in this order. Each lane is independent and stops on its own failures.
+Run these tasks before a commit, in this order. Each task stops on its own failures.
 
-Run the tasks from the repository root so mise selects the pinned runtimes. Test startup checks
-the Bun version against `package.json`; a plain `bun test` can select an older executable from
-the shell's `PATH`.
+Run them from the repository root, so mise selects the pinned runtimes. The tests check the Bun
+version against `package.json` at startup. A plain `bun test` can pick an older Bun from your
+`PATH`.
 
-| Task                       | What it verifies                                                              |
-| -------------------------- | ----------------------------------------------------------------------------- |
-| `mise run check:types`     | TypeScript in the workspace and the documentation site.                       |
-| `mise run test`            | The unit and integration tests, without native tools or the network.          |
-| `mise run test:tools`      | Native compatibility: the pinned tools run over generated configuration.      |
-| `mise run test:acceptance` | Behavioral acceptance from a planted repository through an isolated registry. |
-| `mise run build`           | The host binary, with licenses and notices.                                   |
-| `mise run test:release`    | The built binary and the installed packages through an isolated registry.     |
-| `mise run gspot:check`     | This repository's own checks, run from source.                                |
+| Task                       | What it verifies                                                           |
+| -------------------------- | -------------------------------------------------------------------------- |
+| `mise run check:types`     | TypeScript in the workspace and in the documentation site.                 |
+| `mise run test`            | The unit and integration tests, without native tools or the network.       |
+| `mise run test:tools`      | The pinned tools, run over the generated configuration.                    |
+| `mise run test:acceptance` | Planted repositories, checked end to end through a local registry.         |
+| `mise run test:package`    | The two npm packages, built, published to a local registry, and installed. |
+| `mise run check`           | The checks of this repository, run from source.                            |
 
-The acceptance runner stops after 30 minutes, so pass it a list of files or folders:
+The full acceptance suite stops after 90 minutes. Each test also has its own time limit. To run
+some of it, pass files or folders:
 
 ```sh
-mise run test:acceptance -- acceptance/source/configurations/css.test.ts acceptance/source/cli/hooks
+mise run test:acceptance -- acceptance/source/kits/css.test.ts acceptance/source/cli/hooks
 ```
 
-Some tool installers fetch a binary from GitHub during a cold install. Set `GITHUB_TOKEN` to a
-token that reads public releases before an acceptance run, or the anonymous limit of 60 requests
-an hour stops the install.
+Some tool installers download a binary from GitHub. Without a token, GitHub allows 60 requests
+an hour, which a cold install can use up. Before an acceptance run, set `GITHUB_TOKEN` to a
+token that can read public releases.
 
 ## Policy and generated files
 
-`gspot.toml` is the policy of this repository. Change it with `gspot set`, `gspot ignore`, `gspot add`,
-or `gspot remove`, then run `mise run gspot:apply` to regenerate the files under `.gspot/`. Never edit
-a generated file by hand; `integrity/generated-drift` reports one that differs from its render.
+`gspot.toml` is the policy of this repository. Change it with `gspot set`, `gspot ignore`,
+`gspot add`, or `gspot remove`, then run `mise run apply` to write the files under `.gspot/`
+again. Do not edit a generated file by hand. `integrity/generated-drift` reports a generated
+file that differs from the policy.
 
 ## Commits
 
-Every commit message is conventional: `type(scope): Subject`. The types are `feat`, `fix`,
-`refactor`, `perf`, `docs`, `test`, `build`, `ci`, and `chore`; the scopes are `cli`,
-`eslint-plugin`, `docs`, `root`, `hooks`, and `deps`. `gspot check --staged` runs from the
-pre-commit hook and reads the staged index alone.
+Every commit message follows the conventional format: `type(scope): Subject`.
 
-## Reading CI results
+- The types are `feat`, `fix`, `refactor`, `perf`, `docs`, `test`, `build`, `ci`, and `chore`.
+- The scopes are `cli`, `eslint-plugin`, `docs`, `root`, `hooks`, and `deps`.
 
-Remote CI is paused until the first release. When it runs, every job executes one of the tasks above
-against the pushed commit and uploads `.gspot/reports/report.json` and the SARIF report as
-artifacts. A red job names the task; run that task locally with the same arguments to reproduce it.
+The commit hook runs `gspot check --staged`, which reads only what you staged.
+
+## CI results
+
+CI runs on every pull request, on Linux, macOS, and Windows. To run it on a branch without a
+pull request, start the `ci` workflow by hand. The check job uploads `.gspot/reports/report.json`
+and the SARIF reports of the commit. A failed job names its task. Run that task locally with
+the same arguments to reproduce the failure. A failed shard of the suite runs the same files
+again with `mise run test:acceptance -- --shard=<k>/<n> --timings=timings/<system>.json`.

@@ -1,11 +1,12 @@
-// The configuration root confines every write: a linked managed directory is refused and a nested policy owns only its project.
+// The configuration root bounds every write: a linked managed directory is refused and a nested policy owns only its project.
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { initArgs } from '#tests/support/cli/init.ts';
-import { existsSync, readFileSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
+import { existsSync, unlinkSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
 
 const INIT = initArgs(['bash']);
 
@@ -29,8 +30,8 @@ test('init refuses a symlinked managed directory without writing outside the con
 
 test('a configuration below the Git root owns only its own project writes and changed paths', async () => {
     await using directory = await testdir();
-    const outerPolicy = 'version = 1\nconfigurations = ["bash"]\n[rules]\ninstall = false\n';
-    const innerPolicy = 'version = 1\nconfigurations = ["sql"]\n[rules]\ninstall = false\n';
+    const outerPolicy = policyOf(['bash'], '[guides]\ninstall = false\n');
+    const innerPolicy = policyOf(['sql'], '[guides]\ninstall = false\n');
     await createFileTree(directory.path, {
         'gspot.toml': outerPolicy,
         '.gspot/authored.txt': 'Preserve outside the configuration root.\n',

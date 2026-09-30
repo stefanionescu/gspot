@@ -1,13 +1,16 @@
 import { join } from 'node:path';
-import { expect, spyOn, test } from 'bun:test';
-import { planRun } from '#cli/execution/planning/plan.ts';
-import { createFileTree, testdir } from 'testdirs';
+import { test, spyOn, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import * as inspections from '#cli/tools/inspect.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { valeFindings } from '#cli/checks/prose/vale.ts';
+import { planRun } from '#cli/execution/planning/plan.ts';
 import { runEngineCheck } from '#cli/execution/engines.ts';
 import { containing } from '#tests/support/expectations.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
+
+const DIAGNOSTIC = { Line: 1, Span: [3, 5], Check: 'gspot.Example', Message: 'Use a concrete example.' };
 
 for (const extension of ['md', 'sh']) {
     test.each(['outdated', 'deadline', 'cancellation'])(
@@ -17,13 +20,12 @@ for (const extension of ['md', 'sh']) {
             const path = `sample.${extension}`;
             const source = '# Example text\n';
             await createFileTree(directory.path, {
-                'gspot.toml':
-                    'version = 1\nconfigurations = ["prose", "bash", "markdown"]\n[limits]\ntool_seconds = 1\n',
+                'gspot.toml': policyOf(['prose', 'bash', 'markdown'], '[limits]\ntool_seconds = 1\n'),
                 '.gspot/config/vale.ini': 'Packages =\n',
                 [path]: source,
             });
             const session = await openSession(directory.path);
-            const [planned] = await planRun(session, { stage: 'commit', skips: [], only: ['prose/vale'] });
+            const [planned] = planRun(session, { stage: 'commit', skips: [], only: ['prose/vale'] });
             const inspection = spyOn(inspections, 'inspectTool').mockReturnValue({
                 name: 'vale',
                 state: failure === 'outdated' ? 'outdated' : 'ok',
@@ -51,16 +53,7 @@ for (const extension of ['md', 'sh']) {
                     expect(options.stdin).toBeUndefined();
                     return Promise.resolve({
                         code: 0,
-                        stdout: JSON.stringify({
-                            [join(directory.path, path)]: [
-                                {
-                                    Line: 1,
-                                    Span: [3, 5],
-                                    Check: 'gspot.Example',
-                                    Message: 'Use a concrete example.',
-                                },
-                            ],
-                        }),
+                        stdout: JSON.stringify({ [join(directory.path, path)]: [DIAGNOSTIC] }),
                         stderr: '',
                         missing: false,
                         duration: 1,

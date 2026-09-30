@@ -1,30 +1,36 @@
 import type { Command } from 'commander';
 import type { ReferencePage } from '../../types/reference.ts';
-import { referencePage, section, table, cell } from './page.ts';
-import { buildProgram } from '@gspot/cli/src/commands/program.ts';
+import { cell, table, section, referencePage } from './page.ts';
+import { buildProgram } from '@gspothq/cli/src/commands/program.ts';
+
+// The help text splits into the usage and the effects.
+const HELP_PARTS = 2;
+
+const COMMAND_OWNERS = new Map([
+    ['init', 'commands/init/command.ts'],
+    ['doctor', 'commands/doctor/command.ts'],
+    ['check', 'commands/check/command.ts'],
+    ['explain', 'commands/explain/command.ts'],
+    ['apply', 'commands/apply/command.ts'],
+    ['add', 'commands/kits.ts'],
+    ['remove', 'commands/kits.ts'],
+]);
 
 function commandPage(command: Command, name: string): ReferencePage {
     const [rootCommand = name] = name.split(' ', 1);
-    const owner =
-        rootCommand === 'completion'
-            ? 'commands/completion.ts'
-            : ['init', 'doctor', 'check', 'explain', 'apply'].includes(rootCommand)
-              ? `commands/${rootCommand}/command.ts`
-              : ['add', 'remove'].includes(rootCommand)
-                ? 'commands/configurations.ts'
-                : `commands/${rootCommand}.ts`;
-    const helper = command.createHelp();
-    helper.showGlobalOptions = true;
-    const usage = helper.commandUsage(command);
+    const owner = COMMAND_OWNERS.get(rootCommand) ?? `commands/${rootCommand}.ts`;
+    const helpFormat = command.createHelp();
+    helpFormat.showGlobalOptions = true;
+    const usage = helpFormat.commandUsage(command);
     const visible = new Map(
-        [...helper.visibleGlobalOptions(command), ...helper.visibleOptions(command)].map((option) => [
+        [...helpFormat.visibleGlobalOptions(command), ...helpFormat.visibleOptions(command)].map((option) => [
             option.flags,
             option,
         ]),
     );
     const options = [...visible.values()].map((option) => [
         `\`${option.flags}\``,
-        cell(helper.optionDescription(option)),
+        cell(helpFormat.optionDescription(option)),
     ]);
     const argumentRows = command.registeredArguments.map((argument) => [
         `\`${argument.name()}\``,
@@ -42,10 +48,14 @@ function commandPage(command: Command, name: string): ReferencePage {
     } finally {
         command.configureOutput(output);
     }
-    const details = help.split('\nEffects:\n', 2)[1];
-    if (details === undefined || !details.includes('\n\nExit codes:\n') || !details.includes('\n\nExample:\n'))
+    const contractText = help.split('\nEffects:\n', HELP_PARTS)[1];
+    if (
+        contractText === undefined ||
+        !contractText.includes('\n\nExit codes:\n') ||
+        !contractText.includes('\n\nExample:\n')
+    )
         throw new Error(`Command ${name} has no effects, exits, or example documentation.`);
-    const behavior = `\n## Effects and prerequisites\n\n${details
+    const behavior = `\n## Effects and prerequisites\n\n${contractText
         .replace('\n\nExit codes:\n', '\n\n## Exit codes\n\n')
         .replace(
             '\n\nExample:\n',

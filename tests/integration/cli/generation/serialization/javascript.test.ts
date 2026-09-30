@@ -1,9 +1,10 @@
 import { stringify } from 'smol-toml';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
-import { emitAll } from '#cli/generation/render.ts';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
+import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { parserFor } from '#cli/parsers/tree-sitter.ts';
+import { generatedEslint } from '#tests/support/cli/generated/eslint.ts';
 
 test('reason comments cannot add JavaScript statements or ignore entries', async () => {
     const parser = await parserFor('javascript');
@@ -18,7 +19,7 @@ test('reason comments cannot add JavaScript statements or ignore entries', async
         await createFileTree(sandbox.path, {
             'gspot.toml': stringify({
                 version: 1,
-                configurations: ['javascript', 'docker', 'prose'],
+                kits: ['javascript', 'docker', 'prose'],
                 tools: {
                     eslint: { extra: { reason, name: 'custom' } },
                     trivy: { ignore: [{ id: 'CVE-2026-12345', reason }] },
@@ -26,10 +27,10 @@ test('reason comments cannot add JavaScript statements or ignore entries', async
                 ignore: [{ check: 'prose/vale', rule: 'Vale.Spelling', reason }],
             }),
         });
-        const renderSession4 = await openSession(sandbox.path);
-        const output = emitAll(renderSession4.policyFiles.policy, renderSession4.repository, renderSession4.scopes, {
-            version: renderSession4.version,
-            packageManager: renderSession4.packageManager,
+        const session = await openSession(sandbox.path);
+        const output = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
+            version: session.version,
+            packageClient: session.packageClient,
         });
         const script = output.files.find((file) => file.path === '.gspot/config/eslint.config.mjs');
         expect(script).toBeDefined();
@@ -65,14 +66,14 @@ test('runtime names remain data in generated JavaScript', async () => {
         await createFileTree(sandbox.path, {
             'gspot.toml': stringify({
                 version: 1,
-                configurations: ['javascript'],
+                kits: ['javascript'],
                 tools: { eslint: { globals: { '**/*.js': runtime } } },
             }),
         });
-        const renderSession6 = await openSession(sandbox.path);
-        const output = emitAll(renderSession6.policyFiles.policy, renderSession6.repository, renderSession6.scopes, {
-            version: renderSession6.version,
-            packageManager: renderSession6.packageManager,
+        const session = await openSession(sandbox.path);
+        const output = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
+            version: session.version,
+            packageClient: session.packageClient,
         });
         const file = output.files.find((entry) => entry.path === '.gspot/config/eslint.config.mjs');
         expect(file).toBeDefined();
@@ -80,14 +81,65 @@ test('runtime names remain data in generated JavaScript', async () => {
         expect(tree).not.toBeNull();
         try {
             expect(tree!.rootNode.hasError).toBe(false);
-            const indices = tree!.rootNode
-                .descendantsOfType('subscript_expression')
-                .filter((node) => node.childForFieldName('object')?.text === 'globals')
-                .map((node) => node.childForFieldName('index')!.text);
-            expect(indices).toHaveLength(1);
-            expect(JSON.parse(indices[0]!)).toBe(runtime);
+            const runtimes = tree!.rootNode
+                .descendantsOfType('pair')
+                .filter((node) => node.childForFieldName('key')?.text === '"runtime"')
+                .map((node): unknown => JSON.parse(node.childForFieldName('value')!.text));
+            expect(runtimes).toStrictEqual([runtime]);
         } finally {
             tree!.delete();
         }
     }
+});
+
+test('scope paths remain string literals in fragment file selectors and child exclusions', async () => {
+    const parser = await parserFor('javascript');
+    const shapes: string[] = [];
+    for (const scope of ['example', "scope'; throw 1; '"]) {
+        await using sandbox = await testdir();
+        const child = `${scope}/child`;
+        await createFileTree(sandbox.path, {
+            'gspot.toml': stringify({
+                version: 1,
+                kits: ['javascript', 'react'],
+                scope: [
+                    { path: scope, kits: ['javascript', 'react'] },
+                    { path: child, kits: ['javascript', 'react'] },
+                ],
+            }),
+            [`${scope}/source.js`]: 'export const value = 1;',
+            [`${child}/source.js`]: 'export const value = 2;',
+        });
+        const session = await openSession(sandbox.path);
+        const output = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
+            version: session.version,
+            packageClient: session.packageClient,
+        });
+        const file = output.files.find((entry) => entry.path === '.gspot/config/eslint.config.mjs');
+        expect(file).toBeDefined();
+        const tree = parser.parse(file!.content);
+        expect(tree).not.toBeNull();
+        try {
+            expect(tree!.rootNode.hasError).toBe(false);
+            shapes.push(tree!.rootNode.toString());
+            const literals = tree!.rootNode
+                .descendantsOfType('string')
+                .filter((node) => node.text.includes(scope === 'example' ? scope : 'throw 1'))
+                .map((node): unknown => JSON.parse(node.text));
+            expect(literals).toContain(`${scope}/**/*`);
+            expect(literals).toContain(`${child}/**/*`);
+            expect(literals).toContain(`${child}/**`);
+        } finally {
+            tree!.delete();
+        }
+        const eslint = await generatedEslint(sandbox.path);
+        const filePath = `${child}/source.js`;
+        const invalid = await eslint.lintText('missing();', { filePath });
+        expect(invalid.flatMap(({ messages }) => messages).some(({ ruleId }) => ruleId === 'no-undef')).toBe(true);
+        const corrected = await eslint.lintText('export const value = 1;', { filePath });
+        expect(
+            corrected.flatMap(({ messages }) => messages).filter(({ ruleId }) => ruleId === 'no-undef'),
+        ).toStrictEqual([]);
+    }
+    expect(new Set(shapes).size).toBe(1);
 });

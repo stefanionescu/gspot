@@ -1,7 +1,7 @@
 import starlight from '@astrojs/starlight';
 import { defineConfig } from 'astro/config';
 import starlightLlmsTxt from 'starlight-llms-txt';
-import { copyFileSync, mkdirSync } from 'node:fs';
+import { mkdirSync, copyFileSync } from 'node:fs';
 import { sourceRevision } from './src/content/revision.ts';
 
 export default defineConfig({
@@ -42,6 +42,8 @@ export default defineConfig({
             ],
             components: {
                 Header: './src/components/starlight/Header.astro',
+                Footer: './src/components/starlight/Footer.astro',
+                ThemeSelect: './src/components/starlight/ThemeSelect.astro',
                 Hero: './src/components/starlight/Hero.astro',
                 SiteTitle: './src/components/starlight/SiteTitle.astro',
                 Search: './src/components/starlight/Search.astro',
@@ -50,42 +52,44 @@ export default defineConfig({
             routeMiddleware: './src/route-metadata.ts',
             editLink: { baseUrl: `https://github.com/stefanionescu/gspot/edit/${sourceRevision}/docs/` },
             description:
-                'gspot configures linters, runs checks, and generates instructions for coding agents from one configuration file',
-            customCss: ['./src/styles/theme.css'],
+                'gspot is a command-line tool that lints AI-generated code and installs rules for AI coding agents',
+            customCss: ['./src/theme.css'],
             social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/stefanionescu/gspot' }],
             plugins: [starlightLlmsTxt()],
             sidebar: [
                 {
                     label: 'Get started',
+                    collapsed: true,
                     items: [
                         { label: 'Overview', slug: 'guides/overview' },
                         { label: 'Install', slug: 'guides/install' },
-                        { label: 'Run your first check', slug: 'guides/quick-start' },
-                        { label: 'Check client environment access', slug: 'guides/client-environment' },
-                        { label: 'Adopt in an existing repository', slug: 'guides/existing-repository' },
+                        { label: 'Quickstart', slug: 'guides/quick-start' },
+                        { label: 'Existing repositories', slug: 'guides/existing-repository' },
                     ],
                 },
                 {
                     label: 'Guides',
+                    collapsed: true,
                     items: [
-                        { label: 'Read and resolve findings', slug: 'guides/you-got-a-finding' },
-                        { label: 'Choose checks and exceptions', slug: 'guides/customize' },
-                        { label: 'Edit and retain files', slug: 'guides/generated-files' },
-                        { label: 'Share profiles', slug: 'guides/profiles' },
-                        { label: 'Work with agents', slug: 'guides/agents' },
+                        { label: 'Fix findings', slug: 'guides/findings' },
+                        { label: 'The policy file', slug: 'guides/customize' },
+                        { label: 'Coding agents', slug: 'guides/agents' },
                         { label: 'Hooks and CI', slug: 'guides/hooks-and-ci' },
-                        { label: 'Scopes and monorepos', slug: 'guides/scopes' },
-                        { label: 'Without mise', slug: 'guides/without-mise' },
-                        { label: 'Add a custom check', slug: 'guides/custom-checks' },
+                        { label: 'Generated files', slug: 'guides/generated-files' },
+                        { label: 'Monorepos', slug: 'guides/scopes' },
+                        { label: 'Team profiles', slug: 'guides/profiles' },
+                        { label: 'Package managers', slug: 'guides/without-mise' },
+                        { label: 'Custom checks', slug: 'guides/custom-checks' },
                         { label: 'Tests and coverage', slug: 'guides/testing' },
                         { label: 'Dependency licenses', slug: 'guides/dependency-licenses' },
-                        { label: 'Security checks', slug: 'guides/security' },
+                        { label: 'Security', slug: 'guides/security' },
                         { label: 'Troubleshooting', slug: 'guides/troubleshooting' },
-                        { label: 'Uninstall and recover', slug: 'guides/uninstall' },
+                        { label: 'Uninstall', slug: 'guides/uninstall' },
                     ],
                 },
                 {
                     label: 'Reference',
+                    collapsed: true,
                     items: [
                         {
                             label: 'Commands',
@@ -93,9 +97,9 @@ export default defineConfig({
                             items: [{ autogenerate: { directory: 'reference/commands' } }],
                         },
                         {
-                            label: 'Configurations',
+                            label: 'Kits',
                             collapsed: true,
-                            items: [{ autogenerate: { directory: 'reference/configurations' } }],
+                            items: [{ autogenerate: { directory: 'reference/kits' } }],
                         },
                         {
                             label: 'Checks',
@@ -108,11 +112,12 @@ export default defineConfig({
                             items: [{ autogenerate: { directory: 'reference/plugin' } }],
                         },
                         { label: 'Settings', slug: 'reference/settings' },
-                        { label: 'Configuration file', slug: 'reference/configuration' },
+                        { label: 'Policy file', slug: 'reference/configuration' },
                     ],
                 },
                 {
                     label: 'Development',
+                    collapsed: true,
                     items: [
                         { label: 'Build and contribute', slug: 'guides/build' },
                         { label: 'Check engines', slug: 'development/engines' },

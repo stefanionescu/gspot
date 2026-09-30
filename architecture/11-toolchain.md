@@ -6,14 +6,15 @@ pinned, installed, verified, and upgraded. gspot pins, the package managers inst
 
 ## Installing gspot
 
-gspot is one binary for each platform. It is published to GitHub Releases, and to npm as a
-launcher package over one package for each platform. Three ways to get it:
+gspot is one npm package, `@gspothq/cli`, whose command is `gspot`. It is written in TypeScript and bundled to plain
+JavaScript. It runs on Node.js 22 or newer and on Bun, on every system those run on. It has no per-system
+builds and no install script. Three ways to get it:
 
-| Way                  | Command                                                                                         |
-| -------------------- | ----------------------------------------------------------------------------------------------- |
-| mise                 | `mise use -g github:stefanionescu/gspot` for a global copy                                      |
-| npm, pnpm, yarn, bun | `npx gspot init` or `bunx gspot init`; the `gspot` package is a launcher with no install script |
-| release asset        | download `gspot-<os>-<arch>` from the release page and put it on `PATH`                         |
+| Way                  | Command                                                                            |
+| -------------------- | ---------------------------------------------------------------------------------- |
+| npm, pnpm, yarn, bun | `npm install --save-dev @gspothq/cli`, then `npx gspot init`; or `bunx gspot init` |
+| global npm           | `npm install --global @gspothq/cli`, for a repository without `package.json`       |
+| mise                 | `mise use -g npm:@gspothq/cli` for a global copy                                   |
 
 A `curl | sh` installer is never offered, because the rule files ban the pattern.
 
@@ -23,40 +24,36 @@ every command reads. The runner holds the second: the mise file of gspot, or the
 `devDependencies`. The hook and the tasks find that pinned version, so two people on one
 repository run the same gspot.
 
-A binary of another version than `.gspot/version` exits 2 on every command that reads the
+A gspot of another version than `.gspot/version` exits 2 on every command that reads the
 config. It prints the two ways forward: install the pinned version, or move the pin with
 `gspot apply`. `init`, `doctor`, `explain`, `list`, `--version`, and
 `--help` run under any version. Package managers update gspot itself.
 
 ## Where gspot is published
 
-All three places carry the same version from one release run:
+Both places carry the same version from one release run:
 
-| Place          | Holds                                                                                    | Used by                                                |
-| -------------- | ---------------------------------------------------------------------------------------- | ------------------------------------------------------ |
-| GitHub release | the seven binaries and `checksums.txt`, each binary attested                             | mise, and the CI job without mise                      |
-| npm            | `gspot`, one `@gspot/cli-<os>-<cpu>` package for each target, and `@gspot/eslint-plugin` | `npx gspot`, and `.gspot/package.json`                 |
-| `gspot.dev`    | the manual and `gspot.schema.json`                                                       | the `#:schema` line of every `gspot.toml`, and editors |
+| Place       | Holds                                       | Used by                                                |
+| ----------- | ------------------------------------------- | ------------------------------------------------------ |
+| npm         | `@gspothq/cli` and `@gspothq/eslint-plugin` | `npx gspot`, mise, CI, and `.gspot/package.json`       |
+| `gspot.dev` | the manual and `gspot.schema.json`          | the `#:schema` line of every `gspot.toml`, and editors |
 
-The seven targets include `linux-x64-musl` and `linux-arm64-musl`, for Alpine images. Every
-published package ships `LICENSE.md` and `NOTICE.md`. The release fails before it
-publishes anything when one binary or one grammar is absent.
-
-Before the first release, a repository installs from the local `verdaccio` registry of the test
-harness, which `GSPOT_REGISTRY` names. The redo of yap-swift-app runs that way, and no
-tracked file holds the address.
+The `@gspothq/cli` package holds the bundle in `dist/`, the kits, the guides, and the grammar files
+with their licenses. The GitHub release carries notes only.
 
 The first release needs these, in this order:
 
-1. The npm organization `gspot` and the package name `gspot`, owned by this project.
+1. The npm org `gspothq` for `@gspothq/cli` and `@gspothq/eslint-plugin`, a first version of each
+   published by hand, and `release.yml` added to each as its trusted publisher. The release job
+   then publishes through OpenID Connect, with no stored token. The `@gspot` scope belongs to
+   another npm account.
 2. A public repository.
-3. Trusted publishing set up for each package.
-4. The domain that serves the manual.
-5. Every row of [22-remaining.md](22-remaining.md) closed, and the Windows job green.
+3. The domain that serves the manual.
+4. The Windows job green.
 
 ## Pins
 
-Every configuration lists its tools with one version and the name under each installer. An installer
+Every kit lists its tools with one version and the name under each installer. An installer
 that numbers differently carries its own version:
 
 ```toml
@@ -82,6 +79,10 @@ npm     = "eslint-plugin-regexp"
 [[tools]]
 name     = "xcodebuild"
 provider = "host"                   # present or the check fails; gspot cannot install it
+
+[[tools]]
+name      = "codeql"
+platforms = ["macos", "linux-x64", "windows"] # no arm64 Linux build; the check is skipped there
 ```
 
 One gspot version pins one version of every managed tool. Locked dependencies and the package-manager version are
@@ -94,7 +95,7 @@ fails a pin below what a reference repository runs.
 
 | Kind of tool                      | Where it installs                                                                             |
 | --------------------------------- | --------------------------------------------------------------------------------------------- |
-| a binary mise can install         | `.mise/conf.d/gspot-tools.toml`, under the mise runner                                        |
+| a native tool mise can install    | `.mise/conf.d/gspot-tools.toml`, under the mise runner                                        |
 | an npm tool or library            | `.gspot/node_modules`, from `.gspot/package.json`, with the package manager of the repository |
 | a Python tool                     | `.gspot/.venv`, from `.gspot/pyproject.toml`, with uv                                         |
 | a host tool, such as `xcodebuild` | nowhere; `doctor` reports whether it is present                                               |
@@ -117,13 +118,16 @@ the package manager. It stays a project of its own inside a pnpm or Yarn workspa
 hint names Homebrew only for a tool with no pin, because Homebrew installs the
 current version alone.
 
-Every tool in the configurations has a Windows build except `plutil`, `xcodebuild`, `xcstringstool`,
+Every tool in the kits has a Windows build except `plutil`, `xcodebuild`, `xcstringstool`,
 `swiftlint`, `swiftformat`, and `periphery`. Their checks are platform skips elsewhere.
+A tool pin names the platforms it ships for under `platforms`. Each entry is an operating system
+alone, or one with an architecture. CodeQL ships no arm64 Linux build, so its check is a platform
+skip there.
 
 ## One tool per job
 
 A tool enters a configuration only when it does something no tool already in the set does. Applied to
-the reference set, these were cut, and every rule they enforced is re-pointed in the ledger:
+the reference set, these were cut, and every rule they enforced is re-pointed in the acceptance record:
 
 | Cut                                     | Kept instead                                             | Why                                                               |
 | --------------------------------------- | -------------------------------------------------------- | ----------------------------------------------------------------- |
@@ -176,7 +180,7 @@ No version migrations or release-PR machinery are maintained before release.
 ## Rollback
 
 Restore the previous complete policy, generated files, locks, and version pin from Git or recovery.
-Run the matching binary and `gspot install`. Do not execute publication or deployment during cleanup.
+Install the matching gspot version and run `gspot install`. Do not execute publication or deployment during cleanup.
 
 ## Network
 
@@ -184,111 +188,3 @@ The install of tools reaches
 the registries. `apply` may reach registries to resolve changed tool locks and downloads Vale packages at `all`. Immutable `install` only installs recorded dependency contents; it never regenerates locks. `check` and the
 hooks never reach the network, except for a check that declares `network`, which sits at `push`
 or `manual`.
-
-## Acceptance contracts
-
-These clauses specify required behavior. [Remaining work](22-remaining.md) owns status and evidence.
-
-### Acceptance K-264
-
-`gspot install` sets up one clone. It installs the mise tools,
-`.gspot/node_modules`, `.gspot/.venv`, and the hooks, writes no tracked file, and is safe
-to run twice. Before the first release it takes its packages from the local registry that
-`GSPOT_REGISTRY` names.
-
-`tool-environment.ts` writes `.gspot/pyproject.toml` from every tool with a `pypi`
-name, and `install` runs `uv sync --locked --project .gspot`. The inspection looks under `.gspot/.venv/bin`
-after `.gspot/node_modules/.bin`. `init` call the function, and `--no-install`
-skips it. The developer runs `gspot install` explicitly; no setup or lifecycle script is injected. `apply` resolves lockfiles, while `install` uses only matching locked contents.
-
-`missing-tool.ts` prints `Run: gspot install` for a tool gspot can install, and the
-platform hint for a host tool. `check` prints the same line once when the hooks of the config do
-not run in this clone. The plan counts the binaries that need mise, and where mise is absent it
-shows the one line that installs mise and then all of them.
-
-A planted clone: `git clone` of an installed repository, then `gspot check` holds the
-line, then `gspot install`, then a commit runs the hook. A planted Python repository with no mise
-and uv alone runs `python/ruff`. The harness starts the registry and sets `GSPOT_REGISTRY` for
-every planted install.
-
-### Acceptance K-297
-
-A missing tool never blocks the setup. `init` writes the config on
-any machine, `install` installs what it is able to and lists the rest, and gspot installs no
-system software unasked.
-
-`install-tools.ts` picks the package manager in this order: the root, the
-first JavaScript project, bun or npm on the machine, then bun from the mise file of gspot.
-The tool-environment generator pins bun only in that last case, and pins uv where a Python tool is selected.
-
-Each step of the install runs even when an earlier one failed. The command ends with one list of what
-is left, each entry with its command. It exits 2 when a tool gspot installs itself is on the
-list, and a host tool such as Xcode leaves the exit code alone. `init` preserves the written
-configuration, prints the same list, and exits 2 when managed-tool installation fails. Successful initialization exits 0.
-
-Three planted machines, each a `PATH` with tools left out. A Swift repository with
-mise and no Node installs the npm tools through bun. A Python repository with no mise and no uv
-ends `install` with exit 2 and one line for uv. A repository with nothing but gspot preserves
-its configuration and reports any managed-tool installation failure with exit 2.
-
-### Acceptance K-206
-
-An installer that numbers differently carries its own version.
-
-An installer value is a name, or a table with `name` and `version`. A release test
-asks npm, PyPI, crates.io, and GitHub for every pin. It runs with the release suite, because it
-calls the network.
-
-That release test.
-
-### Acceptance K-263
-
-Use the standard filesystem boundary and verify the installed binary, unit/plugin and behavioral journeys on Windows. Include checkout paths with spaces and Unicode, LF generated output, command shims, cancellation, and process-tree cleanup. Windows execution is deferred while CI is paused; unsupported-platform refusal is not completed native support.
-
-### Acceptance K-164
-
-A release fails before it publishes anything that is incomplete.
-
-K-305 validates all script arguments before any writes or registry operations. Both scripts throw at the first missing file. `publish.ts` verifies every package
-with `npm pack --dry-run` before it publishes the first, and each package includes
-the project license from distribution output. Platform packages also include `NOTICE.md` for bundled
-inputs. The launcher and external-dependency plugin do not inherit unrelated CLI notices.
-The build command is `bun packages/cli/scripts/command.ts`; publication uses
-`bun packages/cli/scripts/publish.ts`. Both consume shared validation in the authored build target
-owner. Generated input and notice caches live in `packages/cli/.build/`, and root `dist/` holds
-release payloads. The CLI build reads actual bundler inputs and embedded grammar sources. Its notice assembler
-lives in `packages/cli/scripts/notices.ts`. It reads installed license files and fetches missing
-supplemental notices from pinned upstream sources. Downloaded and cached bytes must match
-recorded SHA-256 values. Include the Bun runtime and upstream Swift parser provenance. A dependency-tree
-scanner is not a substitute: installed dependencies are not necessarily bundled inputs.
-
-`packages/cli/scripts/inputs.ts` downloads the pinned upstream Swift parser and verifies its SHA-256 before caching or embedding it. An install hint
-names Homebrew only for a tool with no pin, and a `github` installer takes the tag form its
-repository uses. The owner publishes a placeholder of `gspot` on npm before the release workflow
-first runs.
-
-Release acceptance removes one required binary, invokes the publication owner, and verifies
-failure before any registry publication. Keep that regression with the existing release
-argument and installed-consumer tests; no separate publish test file is required.
-
-### Acceptance K-280
-
-Seven targets, and an install guide that says what each system shows.
-
-The shared target definition includes Linux x64 and arm64 musl builds using the corresponding
-Bun compile targets. The launcher reads the libc of the machine before it picks a platform package.
-The macOS binaries are signed ad hoc at build, and the guide names `xattr -d` for a browser
-download. Document quarantine behavior for the verified delivery route; do not promise a host security
-policy solely from the package manager name. Recommend only published, verified install routes.
-
-The release job runs `gspot --version` in an Alpine container for both musl targets.
-
-### Acceptance K-281
-
-Apply the installed version without migrating policy. Dry-run is read-only. Preserve originals and recovery before publication, and update the pin last. Verify pin changes, edited outputs, lock failure, interruption, and safe retry.
-
-## Internal build arguments
-
-The CLI compiler always compiles an executable with syntax minification. Its internal interface
-accepts the entry, target, output path, and metadata path. It exposes no flags that suggest these
-fixed operations can be disabled. Cross-compilation does not establish native execution evidence.

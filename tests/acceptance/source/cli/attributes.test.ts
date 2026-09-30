@@ -1,21 +1,22 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
-import { readFileSync, rmSync } from 'node:fs';
+import { test, expect } from 'bun:test';
+import { rmSync, readFileSync } from 'node:fs';
 import { git } from '#tests/support/cli/git.ts';
-import { createFileTree, testdir } from 'testdirs';
+import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 
 test('generated attributes preserve LF through autocrlf checkout and restore authored attributes', async () => {
     await using sandbox = await testdir();
     const original = '*.txt text\n';
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nconfigurations = []\n',
+        'gspot.toml': policyOf([]),
         '.gitattributes': original,
     });
     expect(git(sandbox.path, ['init', '-q']).code).toBe(0);
     const applied = await run(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    const path = '.gspot/rules/general/agent/WORKING.md';
+    const path = '.gspot/guides/general/agent/WORKING.md';
     const bytes = readFileSync(join(sandbox.path, path));
     expect(git(sandbox.path, ['add', '--', '.gitattributes', path]).code).toBe(0);
     const attributes = git(sandbox.path, ['check-attr', 'text', 'eol', 'linguist-generated', '--', path]);

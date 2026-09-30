@@ -1,19 +1,20 @@
+import executables from 'which';
 import { join } from 'node:path';
-import { expect, spyOn, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, spyOn, expect } from 'bun:test';
 import { existsSync, readFileSync } from 'node:fs';
+import { testdir, createFileTree } from 'testdirs';
 import { runFixer } from '#cli/execution/fixers.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { waitForExit } from '#tests/support/cli/process.ts';
-import { prepareCommand, runToolCheck } from '#cli/execution/tool-runner.ts';
+import { runToolCheck, prepareCommand } from '#cli/execution/tool/runner.ts';
 import { CORRECTION_POLICY, plannedCorrection } from '#tests/support/cli/correction.ts';
 
 test('splits 20,000 correction paths without losing or reordering arguments', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': CORRECTION_POLICY, 'source.txt': 'original' });
     const session = await openSession(sandbox.path);
-    const planned = await plannedCorrection(session, 'process.exitCode = 0');
+    const planned = plannedCorrection(session, 'process.exitCode = 0');
     const source = planned.files[0];
     if (source === undefined) throw new Error('The sandbox has no selected source.');
     const paths = Array.from({ length: 20_000 }, (_, index) => `long folder/café/${String(index)}/source.txt`);
@@ -32,7 +33,7 @@ test('Correction environment paths expand against the execution root', async () 
         'café settings.txt': 'corrected',
     });
     const session = await openSession(sandbox.path);
-    const planned = await plannedCorrection(
+    const planned = plannedCorrection(
         session,
         "await Bun.write('source.txt', await Bun.file(process.env['SANDBOX_SETTINGS']).text())",
     );
@@ -46,16 +47,15 @@ test('a failed version inspection blocks a check and its correction without chan
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': CORRECTION_POLICY, 'source.txt': 'original' });
     const session = await openSession(sandbox.path);
-    const planned = await plannedCorrection(session, "await Bun.write('source.txt', 'changed')");
+    const planned = plannedCorrection(session, "await Bun.write('source.txt', 'changed')");
     planned.tool = {
         name: 'version-teller',
         version: '3.8.1',
-        windows: true,
         installers: {},
         version_command: ['-e', 'console.log("3.8.1"); process.exitCode = 7;'],
     };
     planned.spec.fix_command![0] = 'version-teller';
-    const which = spyOn(Bun, 'which').mockReturnValue(process.execPath);
+    const which = spyOn(executables, 'sync').mockReturnValue(process.execPath);
     try {
         const checked = await runToolCheck(session, planned);
         expect(checked.status).toBe('error');
@@ -79,7 +79,7 @@ test.each(['canceled', 'timeout'].flatMap((failure) => [false, true].map((isolat
         const session = await openSession(sandbox.path);
         const controller = new AbortController();
         const ready = join(sandbox.path, 'ready.pid');
-        const planned = await plannedCorrection(
+        const planned = plannedCorrection(
             session,
             `await Bun.write('source.txt', 'partial'); await Bun.write(${JSON.stringify(ready)}, String(process.pid)); await Bun.sleep(10000);`,
         );
@@ -105,7 +105,7 @@ test.each(['canceled', 'timeout'].flatMap((failure) => [false, true].map((isolat
         }
         const corrected = await runFixer(
             session,
-            await plannedCorrection(session, "await Bun.write('source.txt', 'corrected')"),
+            plannedCorrection(session, "await Bun.write('source.txt', 'corrected')"),
             sandbox.path,
         );
         expect(corrected.status).toBe('changed');
@@ -118,7 +118,7 @@ test('checks refresh the file inventory after a fixer creates a source', async (
     await createFileTree(sandbox.path, {
         'source.txt': 'input',
         'gspot.toml': `version = 1
-configurations = []
+kits = []
 [[check]]
 name = "project/inventory"
 stage = "commit"

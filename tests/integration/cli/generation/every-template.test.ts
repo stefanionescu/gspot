@@ -1,20 +1,18 @@
-// Every template of every configuration renders at both levels into a file its reader parses (S-1).
+// Every template of every kit renders at both levels into a file its reader parses (S-1).
 import ts from 'typescript';
-import { join } from 'node:path';
-import { symlinkSync } from 'node:fs';
-import { expect, test } from 'bun:test';
-import { fileURLToPath } from 'node:url';
+import { test, expect } from 'bun:test';
+import { join, extname } from 'node:path';
 import { parse as parseYaml } from 'yaml';
 import { parse as parseToml } from 'smol-toml';
-import { createFileTree, testdir } from 'testdirs';
-import { emitAll } from '#cli/generation/render.ts';
+import { testdir, createFileTree } from 'testdirs';
+import { emitAll } from '#cli/generation/outputs.ts';
+import { kitManifests } from '#cli/kits/manifests.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { parse as parseJsonc, type ParseError } from 'jsonc-parser';
+import { type ParseError, parse as parseJsonc } from 'jsonc-parser';
+import { linkInstalledModules } from '#tests/support/cli/platforms.ts';
 import type { Parser } from '#tests/types/integration/cli/generation.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { PLANTED } from '#tests/constants/integration/cli/generation/generation.ts';
+import { PLANTED } from '#tests/inputs/integration/cli/generation/generation.ts';
 
-const MODULES = fileURLToPath(new URL('../../../../node_modules', import.meta.url));
 const PARSERS: Record<string, Parser> = {
     '.json': parseJson,
     '.jsonc': parseJson,
@@ -44,33 +42,28 @@ function parseModule(text: string, path: string): void {
     if (errors.length > 0) throw new Error(`${path}: ${errors.join('; ')}`);
 }
 
-function extensionOf(path: string): string {
-    const base = path.slice(path.lastIndexOf('/') + 1);
-    return base.includes('.') ? base.slice(base.lastIndexOf('.')) : '';
-}
-
-const configurations = [...configurationManifests().values()]
+const kits = [...kitManifests().values()]
     .filter((manifest) => manifest.configs.some((config) => !config.fragment))
-    .map((manifest) => manifest.configuration.name);
+    .map((manifest) => manifest.kit.name);
 
-test.each(configurations.flatMap((name) => ['recommended', 'all'].map((level) => [name, level] as const)))(
+test.each(kits.flatMap((name) => ['recommended', 'all'].map((level) => [name, level] as const)))(
     'the %s configuration renders files their readers parse at level %s',
     async (name, level) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
             ...PLANTED,
-            'gspot.toml': `version = 1\nlevel = "${level}"\nconfigurations = [${JSON.stringify(name)}]\n`,
+            'gspot.toml': `version = 1\nlevel = "${level}"\nkits = [${JSON.stringify(name)}]\n`,
         });
-        symlinkSync(MODULES, join(sandbox.path, 'node_modules'), 'dir');
+        linkInstalledModules(join(sandbox.path, 'node_modules'));
         const session = await openSession(sandbox.path);
         const output = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
             version: session.version,
-            packageManager: session.packageManager,
+            packageClient: session.packageClient,
         });
         const generated = output.files.filter((file) => file.kind === 'config' || file.kind === 'pointer');
         expect(generated.length).toBeGreaterThan(0);
         for (const file of generated) {
-            const parser = PARSERS[extensionOf(file.path)];
+            const parser = PARSERS[extname(file.path)];
             if (parser !== undefined) parser(file.content, file.path);
         }
     },

@@ -2,23 +2,21 @@ import { join } from 'node:path';
 import { statSync } from 'node:fs';
 import type { RootContent } from 'mdast';
 import { toString } from 'mdast-util-to-string';
+import { findingAt } from '#cli/checks/result.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { readSource } from '#cli/repository/tracked.ts';
-import type { ShapeProblem } from '#cli/types/checks/docs.ts';
-import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
-import { CONTENTS_HEADING, CONTENTS_THRESHOLD, START_SECTION_WORDS } from '#cli/constants/checks/docs.ts';
+import type { Finding, EngineInput, ShapeProblem } from '#cli/types/checks.ts';
+import { CONTENTS_HEADING, CONTENTS_THRESHOLD, START_SECTION_WORDS } from '#cli/config/checks/docs.ts';
 
-function titleProblem(nodes: RootContent[]): ShapeProblem[] {
-    const titles = nodes.filter((node) => node.type === 'heading' && node.depth === 1);
-    return titles.length === 1
-        ? []
-        : [[titles[0]?.position?.start.line ?? 1, 'one-h1', 'A README has exactly one H1.']];
-}
+// A README section is a second-level heading.
+const SECTION_DEPTH = 2;
 
 function openingProblem(nodes: RootContent[]): ShapeProblem[] {
     const title = nodes.findIndex((node) => node.type === 'heading' && node.depth === 1);
     const start = title === -1 ? 0 : title;
-    const section = nodes.findIndex((node, index) => index >= start && node.type === 'heading' && node.depth === 2);
+    const section = nodes.findIndex(
+        (node, index) => index >= start && node.type === 'heading' && node.depth === SECTION_DEPTH,
+    );
     const opening = nodes.slice(start, section === -1 ? nodes.length : section);
     return opening.some((node) => node.type === 'paragraph')
         ? []
@@ -33,7 +31,7 @@ function openingProblem(nodes: RootContent[]): ShapeProblem[] {
 
 function sectionProblems(nodes: RootContent[], threshold: number, isScopeRoot: boolean): ShapeProblem[] {
     const sections = nodes
-        .filter((node) => node.type === 'heading' && node.depth === 2)
+        .filter((node) => node.type === 'heading' && node.depth === SECTION_DEPTH)
         .map((node) => toString(node).trim().toLowerCase());
     const problems: ShapeProblem[] = [];
     if (sections.length > threshold && !sections.includes(CONTENTS_HEADING))
@@ -51,16 +49,6 @@ function sectionProblems(nodes: RootContent[], threshold: number, isScopeRoot: b
     return problems;
 }
 
-function shapeProblems(text: string, threshold: number, isScopeRoot: boolean): ShapeProblem[] {
-    const nodes = fromMarkdown(text).children;
-    return [...titleProblem(nodes), ...openingProblem(nodes), ...sectionProblems(nodes, threshold, isScopeRoot)];
-}
-
-// The root README and every scope's README tell the reader how to start; a folder README only explains its folder.
-function scopeRoots(input: EngineInput): Set<string> {
-    return new Set(['README.md', ...input.scopeEntries.map((scope) => `${scope.path}/README.md`)]);
-}
-
 /**
  * The shape findings for every README in the check's files.
  * @param input the engine input
@@ -69,25 +57,21 @@ function scopeRoots(input: EngineInput): Set<string> {
 export function readmeShape(input: EngineInput): Finding[] {
     const docs = input.view.tool('docs');
     const threshold = typeof docs['contents_threshold'] === 'number' ? docs['contents_threshold'] : CONTENTS_THRESHOLD;
-    const roots = scopeRoots(input);
+    const roots = new Set(['README.md', ...input.scopeEntries.map((scope) => `${scope.path}/README.md`)]);
     return input.files
         .filter(
             (file) =>
                 (file.path === 'README.md' || file.path.endsWith('/README.md')) &&
                 statSync(join(input.root, file.path), { throwIfNoEntry: false }) !== undefined,
         )
-        .flatMap((file) =>
-            shapeProblems(
-                readSource(input.root, file.path, input.observations).toString('utf8'),
-                threshold,
-                roots.has(file.path),
-            ).map(([line, rule, text]) => ({
-                check: input.spec.name,
-                file: file.path,
-                line,
-                rule,
-                message: text,
-                fixable: false,
-            })),
-        );
+        .flatMap((file) => {
+            const nodes = fromMarkdown(readSource(input.root, file.path, input.reads).toString('utf8')).children;
+            const titles = nodes.filter((node) => node.type === 'heading' && node.depth === 1);
+            const problems: ShapeProblem[] =
+                titles.length === 1
+                    ? []
+                    : [[titles[0]?.position?.start.line ?? 1, 'one-h1', 'A README has exactly one H1.']];
+            problems.push(...openingProblem(nodes), ...sectionProblems(nodes, threshold, roots.has(file.path)));
+            return problems.map(([line, rule, text]) => findingAt(input, { file: file.path, line }, rule, text));
+        });
 }

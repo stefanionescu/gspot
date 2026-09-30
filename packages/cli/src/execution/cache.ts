@@ -1,25 +1,37 @@
-import { globbySync } from 'globby';
-import { join, relative } from 'node:path';
-import { readSource } from '#cli/repository/tracked.ts';
-import { checkResultSchema } from '#cli/checks/result.ts';
-import { CACHE_DIRECTORY } from '#cli/constants/platform.ts';
-import { readdirSync, statSync, type Dirent } from 'node:fs';
-import type { CheckResult } from '#cli/types/checks/checks.ts';
 // .gspot/cache/: a recorded verdict keyed on the tool version, the configuration hash and the content hash of every file read.
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
+// The folder is disposable: entries are plain files, and a run deletes those written more than a week before.
+import { join } from 'node:path';
+import { createHash } from 'node:crypto';
+import { globPaths } from '#cli/platform/paths.ts';
+import { openRoot } from '#cli/platform/filesystem.ts';
+import type { CheckResult } from '#cli/types/checks.ts';
+import { readSource } from '#cli/repository/tracked.ts';
+import type { Read, Root } from '#cli/types/platform.ts';
+import { checkResultSchema } from '#cli/checks/result.ts';
 import { reportStorageFailure } from '#cli/output/messages.ts';
 import type { CacheKeyInput } from '#cli/types/execution/execution.ts';
-import type { SourceObservations } from '#cli/types/repository/repository.ts';
-import { readOwnership, withLifecycleOwner } from '#cli/lifecycle/ownership/owner.ts';
-import { CACHE_ENTRY, CACHE_FORMAT, RETENTION_MS } from '#cli/constants/execution/execution.ts';
+import type { SourceReads } from '#cli/types/repository/repository.ts';
+import { PRIVATE_FILE, CACHE_DIRECTORY } from '#cli/config/platform.ts';
+import { CACHE_FORMAT, CACHE_RETENTION_MS } from '#cli/config/execution/execution.ts';
+// Whether the cache folder is a real folder. A file or a link in its place holds no results, and the write after the
+// run reports it.
+function hasCacheFolder(files: Root): boolean {
+    try {
+        return files.stat(CACHE_DIRECTORY)?.isDirectory() === true;
+    } catch {
+        return false;
+    }
+}
 
-/**
- * The SHA-256 hex digest of a text.
- * @param text the text
- * @returns the digest
- */
-export function textHash(text: string): string {
-    return new Bun.CryptoHasher('sha256').update(text).digest('hex');
+// The cache files written before the cutoff, read so that their removal can check they are unchanged.
+function expiredEntries(files: Root, cutoff: number): { path: string; current: Read }[] {
+    if (!hasCacheFolder(files)) return [];
+    return files.list(CACHE_DIRECTORY).flatMap((name) => {
+        const path = `${CACHE_DIRECTORY}/${name}`;
+        const status = files.stat(path);
+        const current = status?.isFile() === true && status.mtimeMs < cutoff ? files.read(path) : undefined;
+        return current === undefined ? [] : [{ path, current }];
+    });
 }
 
 /**
@@ -27,19 +39,25 @@ export function textHash(text: string): string {
  * @param input the check name, scope, tool version, configuration hash and file hashes
  * @returns the key
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The result cache and its tests key a run by this one hash of its inputs and the cache format.
 export function cacheKey(input: CacheKeyInput): string {
-    return textHash(JSON.stringify({ format: CACHE_FORMAT, ...input }));
+    return createHash('sha256')
+        .update(JSON.stringify({ format: CACHE_FORMAT, ...input }))
+        .digest('hex');
 }
 
 /**
  * The content hash of a required file.
  * @param root the repository root
  * @param path the file, relative to the root
- * @param observations the source bytes observed during the run, when there are any
+ * @param reads the source bytes read during the run, when there are any
  * @returns the digest
  */
-export function fileHash(root: string, path: string, observations?: SourceObservations): string {
-    return new Bun.CryptoHasher('sha256').update(readSource(root, path, observations)).digest('hex');
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The result cache and its tests hash a file's bytes the same way.
+export function fileHash(root: string, path: string, reads?: SourceReads): string {
+    return createHash('sha256')
+        .update(readSource(root, path, reads))
+        .digest('hex');
 }
 
 /**
@@ -49,64 +67,52 @@ export function fileHash(root: string, path: string, observations?: SourceObserv
  * @returns the files the selectors name, relative to the root
  */
 export function cacheInputs(root: string, patterns: string[]): string[] {
-    const files = openConfinedRoot(root, 'native');
-    const localPath = (path: string): string => relative(root, path).replaceAll('\\', '/');
-    function readDirectory(path: string): string[];
-    function readDirectory(path: string, options: { withFileTypes: true }): Dirent[];
-    function readDirectory(path: string, options?: { withFileTypes: true }): string[] | Dirent[] {
-        const local = localPath(path);
-        if (local !== '') files.stat(local);
-        return options === undefined ? readdirSync(path) : readdirSync(path, options);
-    }
+    const files = openRoot(root, 'native');
     try {
-        return globbySync(patterns, {
-            cwd: root,
+        const paths = globPaths(root, patterns, {
             dot: true,
             onlyFiles: true,
-            followSymbolicLinks: true,
-            throwErrorOnBrokenSymbolicLink: true,
-            gitignore: false,
-            expandDirectories: false,
-            fs: {
-                readdirSync: readDirectory,
-                statSync: (path) => statSync(localPath(path) === '' ? root : files.source(localPath(path))),
-            },
+            followSymlinks: true,
+            refuseBrokenLinks: true,
         });
+        // Every named file resolves through the root boundary, which refuses a link that leaves the repository.
+        for (const path of paths) files.source(path);
+        return paths;
     } finally {
         files.close();
     }
 }
 
 /**
- * A recorded result for a key, or undefined.
+ * A recorded result for a key, or undefined. An entry that does not parse is a miss, and the run replaces it.
  * @param root the repository root
  * @param key the cache key
  * @returns the result when the cache holds one
  */
 export function readCached(root: string, key: string): CheckResult | undefined {
-    const path = join(join(root, CACHE_DIRECTORY), `${key}.json`);
+    const path = `${CACHE_DIRECTORY}/${key}.json`;
+    let file;
     try {
-        const relative = `${CACHE_DIRECTORY}/${key}.json`;
-        const recorded = readOwnership(root).files.find((entry) => entry.path === relative && entry.kind === 'runtime');
-        if (recorded?.installed === undefined) return undefined;
-        const confined = openConfinedRoot(root);
-        let file;
+        const files = openRoot(root);
         try {
-            file = confined.read(relative);
+            if (!hasCacheFolder(files)) return undefined;
+            file = files.read(path);
         } finally {
-            confined.close();
+            files.close();
         }
-        if (
-            file?.mode !== recorded.installed.mode ||
-            new Bun.CryptoHasher('sha256').update(file.bytes).digest('hex') !== recorded.installed.hash
-        )
-            return undefined;
-        const result: unknown = JSON.parse(file.bytes.toString('utf8'));
-        checkResultSchema.parse(result);
-        return result as CheckResult;
     } catch (error) {
-        throw new Error(`Could not read cached check result ${path}: ${String(error)}`, { cause: error });
+        throw new Error(`Could not read cached check result ${join(root, path)}: ${String(error)}`, { cause: error });
     }
+    if (file === undefined) return undefined;
+    let recorded: unknown;
+    try {
+        recorded = JSON.parse(file.bytes.toString('utf8'));
+    } catch (error) {
+        if (error instanceof SyntaxError) return undefined;
+        throw error;
+    }
+    const parsed = checkResultSchema.safeParse(recorded);
+    return parsed.success ? (recorded as CheckResult) : undefined;
 }
 
 /**
@@ -116,42 +122,34 @@ export function readCached(root: string, key: string): CheckResult | undefined {
  * @param result the result to record
  */
 export function writeCached(root: string, key: string, result: CheckResult): void {
-    const path = join(join(root, CACHE_DIRECTORY), `${key}.json`);
+    const path = `${CACHE_DIRECTORY}/${key}.json`;
     const status = result.status === 'cache' ? 'ok' : result.status;
-    const text = JSON.stringify({ ...result, status });
+    const bytes = Buffer.from(JSON.stringify({ ...result, status }));
     try {
-        withLifecycleOwner(root, (owner) => {
-            const status = owner.replace(
-                `${CACHE_DIRECTORY}/${key}.json`,
-                { bytes: Buffer.from(text), mode: 0o600 },
-                'runtime',
-            );
-            if (status === 'preserved') throw new Error(`Preserved edited or unowned cache result ${path}.`);
-        });
+        const files = openRoot(root);
+        try {
+            files.write(path, { bytes, mode: PRIVATE_FILE }, files.read(path));
+        } finally {
+            files.close();
+        }
     } catch (error) {
-        reportStorageFailure(path, error);
+        reportStorageFailure(join(root, path), error);
     }
 }
 
 /**
- * Retire expired, recorded cache results without removing authored or subsequently edited files.
+ * Deletes every file of the cache folder written more than a week ago.
  * @param root the repository root
  */
 export function pruneCache(root: string): void {
-    const cutoff = Date.now() - RETENTION_MS;
+    const cutoff = Date.now() - CACHE_RETENTION_MS;
     try {
-        withLifecycleOwner(root, (owner) => {
-            const files = openConfinedRoot(root);
-            const proposals = readOwnership(root)
-                .files.filter((entry) => entry.kind === 'runtime' && CACHE_ENTRY.test(entry.path))
-                .filter((entry) => {
-                    const status = files.stat(entry.path);
-                    return status !== undefined && status.isFile() && status.mtimeMs < cutoff;
-                })
-                .map((entry) => owner.proposeRestoration(entry.path))
-                .filter((proposal) => proposal.status !== 'preserved');
-            owner.applyProposals(proposals);
-        });
+        const files = openRoot(root);
+        try {
+            for (const { path, current } of expiredEntries(files, cutoff)) files.remove(path, current);
+        } finally {
+            files.close();
+        }
     } catch (error) {
         reportStorageFailure(join(root, CACHE_DIRECTORY), error);
     }

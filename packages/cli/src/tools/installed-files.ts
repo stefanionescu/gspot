@@ -1,71 +1,87 @@
-import { basename, dirname, join } from 'node:path';
-import type { FileSnapshot } from '#cli/types/platform.ts';
+import type { Read } from '#cli/types/platform.ts';
+import { openRoot } from '#cli/platform/filesystem.ts';
 import { mutationTarget } from '#cli/platform/safe-paths.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import { lstatSync, readFileSync, readlinkSync } from 'node:fs';
-import type { LifecycleOwner } from '#cli/types/lifecycle/lifecycle.ts';
-import { MODE_BITS, NODE_MODULES_DIRECTORY, PYTHON_ENVIRONMENT_DIRECTORY } from '#cli/constants/platform.ts';
+import type { InstalledOutput } from '#cli/types/lifecycle/lifecycle.ts';
+import { sep, join, posix, dirname, basename, relative } from 'node:path';
+import { MODE_BITS, NODE_MODULES_DIRECTORY, PYTHON_ENVIRONMENT_DIRECTORY } from '#cli/config/platform.ts';
+
+import {
+    openSync,
+    closeSync,
+    constants,
+    fstatSync,
+    lstatSync,
+    readFileSync,
+    readlinkSync,
+    realpathSync,
+} from 'node:fs';
+
+// The link target of an entry, or nothing when the entry is not a link. One call decides, so no check precedes a use.
+function linkTarget(entry: string): string | undefined {
+    try {
+        return readlinkSync(entry);
+    } catch (error) {
+        if (error instanceof Error && 'code' in error && error.code === 'EINVAL') return undefined;
+        throw error;
+    }
+}
+
+// Preserve file links at their original location and copy their bytes inside a directory alias.
+function installedFile(directory: string, local: string, target: string, source: string): Read {
+    if (local === target) {
+        const entry = join(directory, local);
+        const link = linkTarget(entry);
+        if (link !== undefined)
+            return { bytes: Buffer.from(link), mode: lstatSync(entry).mode & MODE_BITS, isLink: true };
+    }
+    const descriptor = openSync(source, constants.O_RDONLY | constants.O_NONBLOCK);
+    try {
+        const stat = fstatSync(descriptor);
+        if (!stat.isFile()) throw new Error(`Unsupported installed entry: ${local}`);
+        return { bytes: readFileSync(descriptor), mode: stat.mode & MODE_BITS };
+    } finally {
+        closeSync(descriptor);
+    }
+}
 
 /**
- * Publish an isolated native installation through the shared ownership journal.
- * @param owner the lifecycle owner of the repository
- * @param directory the isolated installation to publish
+ * Reads a complete isolated installation before the owner swaps it in. A link cycle or a link that leaves it is refused.
+ * @param directory the isolated installation
  * @param kind whether the installation is the npm project or the Python environment
+ * @returns every file at its path under the installation folder
  */
-export function publishInstalledFiles(owner: LifecycleOwner, directory: string, kind: 'npm' | 'python'): void {
+export function installedOutputs(directory: string, kind: 'npm' | 'python'): InstalledOutput[] {
     const destination = kind === 'npm' ? NODE_MODULES_DIRECTORY : PYTHON_ENVIRONMENT_DIRECTORY;
-    const outputs: { path: string; file: FileSnapshot }[] = [];
-    const parent = openConfinedRoot(dirname(directory), 'native');
+    const outputs: InstalledOutput[] = [];
+    const parent = openRoot(dirname(directory), 'native');
     try {
         if (parent.stat(basename(directory))?.isDirectory() !== true)
             throw new Error(`Installed output is not a directory: ${directory}`);
     } finally {
         parent.close();
     }
-    const files = openConfinedRoot(directory, 'native');
-    const collect = (prefix: string): void => {
-        for (const name of files.list(prefix === '' ? undefined : prefix)) {
-            const local = prefix === '' ? name : `${prefix}/${name}`;
-            const path = `${destination}/${local}`;
+    const root = realpathSync(directory);
+    const files = openRoot(root, 'native');
+    const cacheDirectory = kind === 'python' ? '__pycache__' : undefined;
+    const collect = (prefix: string | undefined, output: string, ancestors: string[]): void => {
+        const canonical = join(root, prefix ?? '');
+        if (ancestors.includes(canonical)) throw new Error(`Installed directory link forms a cycle: ${output}`);
+        for (const name of files.list(prefix)) {
+            const local = posix.join(prefix ?? '', name);
+            const target = posix.join(output, name);
+            const path = `${destination}/${target}`;
             mutationTarget(path);
-            const source = join(directory, local);
-            const stat = lstatSync(source);
-            if (kind === 'python' && stat.isDirectory() && name === '__pycache__') continue;
-            if (stat.isDirectory()) collect(local);
-            else if (stat.isFile())
-                outputs.push({ path, file: { bytes: readFileSync(files.source(local)), mode: stat.mode & MODE_BITS } });
-            else if (stat.isSymbolicLink())
-                outputs.push({
-                    path,
-                    file: { bytes: Buffer.from(readlinkSync(source)), mode: stat.mode & MODE_BITS, isLink: true },
-                });
-            else throw new Error(`Unsupported installed entry: ${path}`);
+            const source = files.source(local);
+            if (lstatSync(source).isDirectory()) {
+                if (name === cacheDirectory) continue;
+                collect(relative(root, source).split(sep).join('/'), target, [...ancestors, canonical]);
+            } else outputs.push({ path, file: installedFile(directory, local, target, source) });
         }
     };
     try {
-        collect('');
+        collect(undefined, '', []);
     } finally {
         files.close();
     }
-    owner.beginInstallation(kind);
-    const proposed = new Map(outputs.map(({ path, file }) => [path, file]));
-    const proposals = outputs.map((output) =>
-        owner.proposeReplacement(output.path, output.file, 'dependency', false, undefined, proposed),
-    );
-    const wanted = new Set(outputs.map((output) => output.path));
-    const pruning = owner
-        .installedPaths()
-        .filter(
-            (path) =>
-                path.startsWith(`${destination}/`) &&
-                !wanted.has(path) &&
-                !(kind === 'python' && path.includes('/__pycache__/')),
-        )
-        .map((path) => owner.proposeRestoration(path));
-    const publication = [...proposals, ...pruning];
-    const conflict = publication.find((proposal) => proposal.status === 'preserved');
-    if (conflict !== undefined)
-        throw new Error(`Preserved edited or unowned ${conflict.path}. Move it aside before installing.`);
-    owner.applyProposals(publication);
-    owner.finishInstallation(kind);
+    return outputs;
 }

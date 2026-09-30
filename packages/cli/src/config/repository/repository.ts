@@ -1,0 +1,154 @@
+// The literal values repository reads: names, patterns, limits, and tables.
+import type { ExistingTooling } from '#cli/types/repository/repository.ts';
+
+/** The package-lock format that carries both the packages table and the old dependencies tree. */
+const HYBRID_LOCKFILE = 2;
+/** The package-lock format that carries the packages table alone. */
+const PACKAGES_LOCKFILE = 3;
+export const NATURE_HEAD_BYTES = 2048;
+export const FOREIGN_HOOK_DIRECTORIES = ['.githooks', '.husky', '.git-hooks'];
+export const EXECUTABLE_BITS = 0o111;
+export const NOT_REPOSITORY_CODE = 128;
+export const BYTE_ORDER_MARK = '\uFEFF';
+export const KEY_QUOTES = ['"', '`'];
+export const VALUE_QUOTES = ['"""', '`'];
+export const LOCKFILE_VERSIONS = [HYBRID_LOCKFILE, PACKAGES_LOCKFILE] as const;
+export const LOCKFILES: Record<string, string> = {
+    'bun.lock': 'bun',
+    'bun.lockb': 'bun',
+    'package-lock.json': 'npm',
+    'pnpm-lock.yaml': 'pnpm',
+    'yarn.lock': 'yarn',
+};
+export const ENV_SUFFIX = '/env';
+export const BANNER_BYTES = 1024;
+export const GENERATED_ATTRIBUTES = new Set(['linguist-generated', 'linguist-generated=true']);
+export const VENDORED_ATTRIBUTES = new Set(['linguist-vendored', 'linguist-vendored=true']);
+export const BINARY_ATTRIBUTES = new Set(['-text', 'binary']);
+export const DEPENDENCY_FOLDERS = [
+    'node_modules',
+    'bower_components',
+    '.venv',
+    'venv',
+    'Pods',
+    'DerivedData',
+    '.build',
+];
+export const DIRECTIVE = /^([a-zA-Z-]+)=/u;
+export const RULE_NAME = /^[a-zA-Z-]+$/u;
+export const RULE_CODE = /^(?:SC)?\d+$/u;
+// The words in a CI job name that say it lints.
+export const LINT_WORDS = new Set(['lint', 'quality', 'gspot']);
+// Two-word lint commands, and the package managers whose lint task counts.
+export const LINT_PAIRS = new Set(['gspot check', 'biome check', 'ruff check']);
+export const TASK_RUNNERS = new Set(['npm', 'pnpm', 'yarn', 'bun', 'mise']);
+export const OTHER_CI_FILES = new Set([
+    'Jenkinsfile',
+    'bitbucket-pipelines.yml',
+    '.circleci/config.yml',
+    'azure-pipelines.yml',
+    '.buildkite/pipeline.yml',
+]);
+export const MISE_FILES = ['mise.toml', '.mise.toml', '.mise/config.toml', '.tool-versions', 'mise.local.toml'];
+export const RUNNER_LOCKS: { file: string; runner: ExistingTooling['runner'] }[] = [
+    { file: 'bun.lock', runner: 'bun' },
+    { file: 'bun.lockb', runner: 'bun' },
+    { file: 'pnpm-lock.yaml', runner: 'pnpm' },
+    { file: 'yarn.lock', runner: 'yarn' },
+    { file: 'package-lock.json', runner: 'npm' },
+    { file: 'package.json', runner: 'npm' },
+    { file: 'uv.lock', runner: 'none' },
+    { file: 'pyproject.toml', runner: 'none' },
+];
+export const REQUIREMENT_NAME_END = /[\s<>=!~;[@]/u;
+export const SWIFT_PACKAGE_URL = /url:\s*"([^"]+)"/gu;
+
+export const HOOK_FILES = ['pre-commit', 'pre-push', 'commit-msg'] as const;
+/** The folder of the hook scripts gspot writes, which core.hooksPath names. */
+export const HOOKS_DIRECTORY = '.gspot/hooks';
+export const EMPTY_FILES = 18_002;
+export const NO_INPUTS = 18_003;
+export const FILE_PREFIX_BYTES = 4096;
+export const ENV_FILE_PATTERNS = ['.env', '.env.*', '.dev.vars', '.dev.vars.*'];
+export const ENV_TEMPLATE_NAMES = ['.env.example', '.env.template', '.env.sample', '.dev.vars.example'];
+/** How code reads an environment variable, by language; the first group is the key. */
+export const ENV_READ_PATTERNS = [
+    /process\.env\.([A-Z][A-Z0-9_]*)/gu,
+    /process\.env\[['"]([A-Z][A-Z0-9_]*)['"]\]/gu,
+    /os\.environ\[['"]([A-Z][A-Z0-9_]*)['"]\]/gu,
+    /os\.environ\.get\(\s*['"]([A-Z][A-Z0-9_]*)['"]/gu,
+    /os\.getenv\(\s*['"]([A-Z][A-Z0-9_]*)['"]/gu,
+];
+/** The files the environment reads are searched in. */
+export const ENV_READ_EXTENSIONS = ['.ts', '.tsx', '.mts', '.cts', '.js', '.mjs', '.cjs', '.jsx', '.py'];
+/** A key line in an environment file, trimmed: the key before the equals sign. */
+export const ENV_KEY_LINE = /^(?:export )?([A-Z][A-Z0-9_]*)=/u;
+export const EXTENSION_TAGS: Record<string, string[]> = {
+    '.sh': ['shell', 'bash', 'text'],
+    '.bash': ['shell', 'bash', 'text'],
+    '.zsh': ['shell', 'zsh', 'text'],
+    '.bats': ['shell', 'bats', 'text'],
+    '.py': ['python', 'text'],
+    '.pyi': ['python', 'pyi', 'text'],
+    '.js': ['javascript', 'text'],
+    '.mjs': ['javascript', 'text'],
+    '.cjs': ['javascript', 'text'],
+    '.jsx': ['javascript', 'jsx', 'text'],
+    '.ts': ['typescript', 'text'],
+    '.mts': ['typescript', 'text'],
+    '.cts': ['typescript', 'text'],
+    '.tsx': ['typescript', 'tsx', 'text'],
+    '.vue': ['vue', 'source', 'text'],
+    '.svelte': ['svelte', 'source', 'text'],
+    '.astro': ['astro', 'source', 'text'],
+    '.swift': ['swift', 'text'],
+    '.sql': ['sql', 'text'],
+    '.pgsql': ['sql', 'text'],
+    '.psql': ['sql', 'text'],
+    '.md': ['markdown', 'text'],
+    '.mdx': ['markdown', 'text'],
+    '.json': ['json', 'text'],
+    '.jsonc': ['json', 'jsonc', 'text'],
+    '.json5': ['json', 'text'],
+    '.yml': ['yaml', 'text'],
+    '.yaml': ['yaml', 'text'],
+    '.toml': ['toml', 'text'],
+    '.ini': ['ini', 'text'],
+    '.cfg': ['ini', 'text'],
+    '.css': ['css', 'text'],
+    '.scss': ['scss', 'text'],
+    '.html': ['html', 'text'],
+    '.htm': ['html', 'text'],
+    '.xml': ['xml', 'text'],
+    '.plist': ['plist', 'xml', 'text'],
+    '.entitlements': ['plist', 'xml', 'text'],
+    '.xcconfig': ['xcconfig', 'text'],
+    '.xcstrings': ['json', 'xcstrings', 'text'],
+    '.storyboard': ['xml', 'text'],
+    '.xib': ['xml', 'text'],
+    '.svg': ['svg', 'xml', 'text'],
+    '.txt': ['text'],
+    '.env': ['dotenv', 'text'],
+    '.conf': ['text'],
+    '.webmanifest': ['json', 'text'],
+};
+export const FILENAME_TAGS: Record<string, string[]> = {
+    Dockerfile: ['dockerfile', 'text'],
+    Makefile: ['makefile', 'text'],
+    '.gitignore': ['text'],
+    '.gitattributes': ['text'],
+    '.editorconfig': ['ini', 'text'],
+    '.nvmrc': ['text'],
+    '.node-version': ['text'],
+    '.python-version': ['text'],
+    _headers: ['text'],
+    _redirects: ['text'],
+    LICENSE: ['text'],
+    'LICENSE.md': ['markdown', 'text'],
+    CODEOWNERS: ['text'],
+};
+export const SHEBANG_TAGS: Record<string, string[]> = {
+    shell: ['shell', 'executable', 'text'],
+    python: ['python', 'executable', 'text'],
+    node: ['javascript', 'node', 'executable', 'text'],
+};

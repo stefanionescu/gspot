@@ -1,52 +1,57 @@
 ---
-title: Build gspot
-description: Build local binaries, prepare the upstream Swift parser, and package releases.
+title: Build and contribute
+description: Build gspot and its ESLint plugin, run the tests, and prepare a release.
 sidebar:
     order: 2
 ---
 
-Run these commands from the repository root with Git and mise 2026.8.8 or later installed.
-Complete the [source installation](/guides/install/) first. The repository pins Bun and Node
-through mise. Routine tasks do not install native check tools automatically.
+To change gspot itself, work in a source checkout. You need Git, a Bash shell, and
+[mise](https://mise.jdx.dev) 2026.8.8 or newer. mise pins Bun and Node for the checkout. Run
+every command from the root of the checkout.
+
+```shell
+git clone https://github.com/stefanionescu/gspot.git
+cd gspot
+mise install
+mise run repo:setup
+```
+
+## Build
 
 ```shell
 mise run build
 mise run build:plugin
 ```
 
-The CLI build selects the host target. Binaries, `LICENSE.md`, and `NOTICE.md` go under
-`dist/`. The plugin build writes its modules and declarations under
-`packages/eslint-plugin/dist/`, including its copy of `LICENSE.md`.
-Plugin dependencies remain separate npm packages with their own licenses.
-The plugin build runs independently of the CLI build.
+`build` writes the `gspot` package to `packages/cli/dist/`: `gspot.js`, the command, and
+`configuration.js`, which evaluates ESLint configuration in its own process. The package also
+ships `packages/cli/kits/`, `packages/cli/guides/`, and `packages/cli/grammars/`.
+`build:plugin` writes the ESLint plugin to `packages/eslint-plugin/dist/`. The two builds do
+not depend on each other.
 
-## Contributor hooks and configuration
+To run the build under Node:
 
-Activate mise in your shell before invoking Git hooks, or run Git through `mise exec -- git`.
-This checkout places its executable source launcher on mise PATH. Hooks and repository tasks
-run the same source without a build or published binary. Confirm the resolution without
-running checks:
+```shell
+node packages/cli/dist/gspot.js --version
+```
+
+## Run gspot from source
+
+In this checkout, `mise run gspot -- <command>` runs gspot from source, without a build. The
+checkout's Git hooks reach the same source through `packages/cli/bin`, which mise puts on
+`PATH`. Activate mise in your shell before you commit, or run Git through `mise exec -- git`. To
+check which gspot the hooks find:
 
 ```shell
 mise exec -- which gspot
 mise exec -- gspot --version
 ```
 
-The first command prints this checkout's `.mise/gspot/gspot`. The second prints the source version.
-If resolution fails, complete source setup and activate mise again. Keep hooks enabled.
-The release-provider override in `mise.toml` applies only to this checkout. Consumer
-repositories retain their generated pinned executable.
+`mise.toml` holds the runtimes and the tasks of the checkout. gspot writes its tool pins to
+`.mise/conf.d/gspot-tools.toml`. Change the policy in `gspot.toml`, then run `mise run apply`.
+When a generated file drifts, fix its source. Then generate it again.
 
-`mise.toml` owns development runtimes and repository settings. Authored tasks and the source-launcher PATH belong to
-`.mise/conf.d/repo.toml`; gspot owns the generated tool pins. Edit policy in `gspot.toml`
-and run `mise run apply` to regenerate managed configuration. Native tools discover
-`typos.toml` by filename; the spelling configuration owns its content. The editor schema is generated
-from the policy schema and copied into the published documentation during the site build.
-Do not edit managed outputs to resolve drift. Change their source and regenerate them.
-
-## Run tests
-
-Run the suites relevant to your change from the repository root:
+## Run the tests
 
 ```shell
 mise run check:types
@@ -54,163 +59,100 @@ mise run test
 mise run docs:build
 ```
 
-`test` runs the unit and integration suites using the development prerequisites and installed
-workspace dependencies. Routine tasks explicitly exclude `tests/integration/tools`. Use `test:unit` or
-`test:integration` to select one suite. Tasks that load plugin exports build the plugin first.
-
-Unit tests cover focused production logic and ESLint RuleTester cases. Integration tests
-combine production components with local fixtures and controlled external boundaries.
-Tool integration executes installed tools. Source acceptance runs user journeys through the
-source CLI. Release acceptance uses built binaries, installed packages, and standalone plugin
-consumers. Shared test setup, preservation, and cleanup live under `tests/support`.
-
-Native compatibility and source acceptance require their pinned external tools. Install those
-tools with `mise install`, then run the explicit suites. Supabase type compatibility requires
-Supabase CLI 2.72.7 and a running Docker daemon. Its isolated project removes its own containers
-and volumes after execution. XCTest coverage requires macOS with full Xcode and command-line
-tools selected by `xcode-select`. These suites can download dependencies:
+`test` runs the unit and integration suites. `test:unit` and `test:integration` run one of them.
+The native and acceptance suites need their pinned tools, from `mise install`, and can download
+packages:
 
 ```shell
 mise run test:tools
 mise run test:acceptance
+mise run test:acceptance -- ./acceptance/source/kits/vite.test.ts
 ```
 
-The acceptance runner builds the plugin and serves it from an isolated local registry; tool
-dependencies use the configured npm registry. Output streams while the suite runs.
-The runner removes its registry after failure, timeout, or interruption. Select acceptance cases through that runner:
+The acceptance runner builds the ESLint plugin and serves it from a local registry, which it
+removes when the run ends. The Supabase tests need Supabase CLI 2.72.7 and a running Docker
+daemon. The XCTest coverage tests need macOS with Xcode selected by `xcode-select`.
 
-```shell
-mise run test:acceptance -- ./acceptance/source/configurations/vite.test.ts
-```
-
-Use `mise run test:coverage` to run the unit and integration suites with coverage measurement.
-Coverage measures in-process source execution. It excludes tests and support code,
-generated configuration, built distributions, fixtures, and vendored assets. Reports are
-written to `coverage/lcov.info`; subprocess and native execution provide separate evidence.
-There is no fixed coverage-percentage gate. Jest supplies lint rules for `bun:test`; its native
-coverage command does not run Bun tests. Direct `bun test` discovers the broader test tree,
-including suites that require the acceptance runner or built release artifacts.
-
-Run [installed-package verification](#validate-packages-locally) separately from source tests.
-The publisher prepares packages in disposable directories. Run source acceptance and release
-verification sequentially so each suite owns its registry and tool installation workload.
-
-The documentation build generates the editor schema from the runtime policy schema and
-publishes it at `/schema/gspot.schema.json`.
-See the [documentation conventions](https://github.com/stefanionescu/gspot/blob/main/docs/README.md)
-for example, reference, and link validation.
-
-## Build every target
-
-```shell
-mise run build -- --target \
-    bun-darwin-arm64 bun-darwin-x64-baseline \
-    bun-linux-x64-baseline bun-linux-arm64 \
-    bun-linux-x64-musl-baseline bun-linux-arm64-musl \
-    bun-windows-x64-baseline
-```
-
-The target definitions in `packages/cli/src/platform/release-targets.json` own the compiler targets, binary
-names, npm identities, and libc selection. macOS builds run `codesign` when built on macOS.
-Use macOS for signed macOS artifacts. Building another target does not execute it.
-
-The build reads bundler metadata to collect the licenses of bundled dependencies. Pinned
-sources supply licenses for packages that omit a separate license file. The build downloads
-Bun and Swift notices from pinned sources and verifies all downloaded and cached bytes against
-recorded SHA-256 values. Notice inputs are cached in ignored build output. `NOTICE.md` retains
-upstream attribution. Failed downloads, mismatched checksums, and unrecorded notice versions
-fail the build.
-
-## Prepare the Swift parser
-
-Source checkout setup and release builds download the upstream Swift 0.7.3 WebAssembly parser.
-The input preparation script records its release URL and SHA-256. Preparation verifies cached
-bytes and rejects a failed download or checksum mismatch. The cache lives in ignored
-`packages/cli/.build/swift.wasm`; no compiler or Docker is required for this preparation.
+## Prepare the grammars
 
 ```shell
 mise run prepare:grammar
 ```
 
-Test tasks prepare the grammar automatically. Before invoking Bun tests directly, run repository
-setup or the preparation task. Source checks report a missing cache without downloading it.
-Release binaries embed the verified parser and require no parser download at runtime.
-Builds fetch the pinned Swift license and include its attribution in the release notices.
+The task copies the tree-sitter grammar files into `packages/cli/grammars/`, with their
+licenses. It also downloads the Swift 0.7.3 WebAssembly parser and checks its SHA-256. The
+setup and test tasks run it for you. Run it before you run `bun test` directly.
 
-## Validate packages locally
-
-After building every target and the plugin, run the installed-product journeys:
+## Test the packages
 
 ```shell
-mise run test:release
+mise run test:package
 ```
 
-These journeys publish only to an isolated local registry. They install the packages into a
-fresh consumer, exercise real findings and corrections, and verify packaged assets and
-cancellation. They require the pinned tools used by those journeys.
+This task builds `@gspothq/cli` and `@gspothq/eslint-plugin`, and publishes both to a local registry.
+Then it installs them into new projects and runs real findings and fixes under Node.
 
-The publisher checks every required binary and license file before preparing packages, then
-runs `npm pack --dry-run` for every package before publishing any package. Public publication
-is a separate release operation. Do not use the publisher without `--dry-run` or an explicitly
-selected local registry during local validation.
+## Release
 
-### Activate the npm badge after publication
+The release workflow runs the full CI, builds both packages, and runs `test:package`. Then it
+publishes `@gspothq/eslint-plugin` and `@gspothq/cli` to npm, and creates a GitHub release with
+notes. The Git tag must match the version in `packages/cli/package.json`.
 
-Keep the root README badge labeled **unreleased** until the intended `gspot` package version
-is available in the public npm registry. During the authorized release procedure, verify it:
+The workflow publishes through npm trusted publishing: npm trades the OpenID Connect token of the
+job for a publish token that lasts one run, and records provenance. No npm token is stored as a
+secret. npm links a trusted publisher only to a package that exists, so the first version of
+each package is published by hand:
+
+1. Sign in with `npm login` as a member of the `gspothq` org.
+2. Run `mise run build`. Then run `npm publish --access public` in `packages/eslint-plugin`,
+   and again in `packages/cli`.
+3. On npmjs.com, open the settings of each package and add a trusted publisher: GitHub Actions,
+   the repository `stefanionescu/gspot`, the workflow `release.yml`, and the environment
+   `release`.
+
+The README badge says **unreleased** until `@gspothq/cli` is on npm. After the first release,
+confirm the package, then replace the badge with `https://img.shields.io/npm/v/@gspothq/cli.svg`
+linked to `https://www.npmjs.com/package/@gspothq/cli`:
 
 ```shell
-npm view gspot@0.1.0 name version repository --registry=https://registry.npmjs.org
+npm view @gspothq/cli@0.1.0 name version repository --registry=https://registry.npmjs.org
 ```
 
-Require the intended name, version, and repository. Only then replace the static npm image
-with `https://img.shields.io/npm/v/gspot.svg` and its destination with
-`https://www.npmjs.com/package/gspot`. Update the installation guide for that verified release
-at the same time. Do not add download counts, a coverage percentage, or a CI status badge.
-This verification command does not publish a package or activate CI.
+## Checks of this repository
 
-## Repository acceptance
+```shell
+mise run repo:install-checks
+mise run doctor
+gspot check
+gspot check --stage manual
+```
 
-Install locked check dependencies with `mise run repo:install-checks`. Use `mise run doctor`
-to diagnose the environment. Run repository checks with `mise run gspot:check`; append
-`-- --stage manual` to include manual-stage checks. These checks are separate from the tests.
+The CI workflow runs on every pull request, merge group, and push to `main`, and the release
+workflow calls it before it publishes. A newer run of a pull request cancels the older one. The
+jobs:
 
-The authored CI workflow owns repository automation. This checkout omits `[ci]` from
-`gspot.toml`, so apply does not generate a second workflow. Repository CI is paused behind
-`GSPOT_CI_ENABLED`; local test results do not imply a CI run.
+- `check`, on Linux: the type check, every commit and push check except the tests, the manual
+  checks, and `doctor`. It uploads the reports, and outside pull requests it sends the SARIF to
+  code scanning.
+- `docs`: the documentation tests and the site build.
+- `package`: `mise run test:package`.
+- `unit`, on Linux, macOS, and Windows: `mise run test`.
+- `suite`: the tool and acceptance tests, in six shards on Linux, five on macOS, and six on
+  Windows. The Linux shards run the Supabase database tests, and the macOS shards run the Xcode
+  tests.
 
-When enabled, affected checks run for pull requests, merge queues, and main pushes.
-A full dispatch or release checkpoint runs the Linux, macOS, and Windows acceptance matrix,
-manual checks, and documentation build. The release workflow validates installed packages
-before publication. Local execution and cross-compilation do not establish native acceptance
-on other platforms.
+Bun balances the shards by the duration of each file in `tests/timings/<system>.json`. Each
+shard uploads the durations it measured as a `timings-*` artifact. When the shards drift apart,
+merge the `files` of those artifacts into the file of their system.
 
-## Released documentation and rollback
+## Publish the documentation
 
-The site workflow builds from a published stable release tag. The CLI version must match that
-tag. A documentation correction can name an exact descendant commit, but changes outside
-`docs/`, the root README, and the site workflow are refused. Generated references
-show the product version and link to their definitions at the recorded source commit.
+The site workflow builds from a published release tag, when `GSPOT_PAGES_ENABLED` is `true`.
+The gspot version must match the tag. The build records the version and the source revision in
+`source.json`, and keeps the site artifact for 90 days. Only the deployment job may write to
+Pages, and a reviewer on the `github-pages` environment approves it.
 
-The build records product version and source revision in `source.json`. It retains the complete
-site artifact for 90 days. Pull-request artifacts are previews; they cannot enter the deployment
-job. Local builds and preview checks do not establish that a public deployment succeeded.
-
-Before enabling deployment, the repository owner must configure Pages for Actions, protect the
-`github-pages` environment with a reviewer, and verify the provider URL and HTTPS. Confirm
-ownership of `gspot.dev` before any DNS change. The build has read-only access; only the separate
-protected deployment job receives Pages and identity-token write permissions. This follows
-[GitHub's custom Pages workflow contract](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages).
-
-CI and Pages are gated separately by `GSPOT_CI_ENABLED` and `GSPOT_PAGES_ENABLED`. Enabling
-repository checks does not authorize a site deployment.
-
-For a content rollback after launch, identify the previous successful site run and retain its
-artifact and `source.json`. Select **Run workflow** on the site workflow with its recorded
-published tag as `release_tag`. Set `source_ref` to its recorded source commit if that build
-included a documentation correction. The workflow verifies that source again, rebuilds with its
-pinned runtime and frozen lock, and requests protected-environment approval before deployment.
-This exact-source route also works after artifact retention expires. Do not roll back DNS for
-an ordinary content defect. Verify the resulting page and recorded revision after deployment.
-
-Verify the deployed version and a rollback before treating the release procedure as operational.
+To roll the site back, open the site workflow, select **Run workflow**, and enter the published
+tag as `release_tag`. When that build carried a documentation fix, also enter its source commit
+as `source_ref`. The workflow checks that source again, rebuilds it, and waits for the approval
+before it deploys. Check the page and its recorded revision afterwards.

@@ -1,28 +1,31 @@
 import { join } from 'node:path';
 import { stringify } from 'smol-toml';
 import { readFileSync } from 'node:fs';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { TYPO } from '#tests/support/spelling.ts';
+import { testdir, createFileTree } from 'testdirs';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { initCommand } from '#cli/commands/init/command.ts';
 import { exportedProfile } from '#cli/policy/profiles/export.ts';
-import { applyUninstall, planUninstall } from '#cli/commands/uninstall.ts';
+import { planUninstall, applyUninstall } from '#cli/commands/uninstall.ts';
 
-test('profile tool settings survive adoption of another setting for the same tool', async () => {
+test('profile tool settings reach the generated configuration and uninstall restores the replaced file', async () => {
     await using directory = await testdir();
     const original = '[default]\nlocale = "en-gb"\n';
     const profile = exportedProfile(
         stringify({
             version: 1,
-            configurations: ['spelling'],
-            tools: { typos: { words: [{ word: 'teh', reason: 'A domain term used by the team.' }] } },
+            kits: ['spelling'],
+            tools: {
+                typos: { locale: 'en-gb', words: [{ word: TYPO.the, reason: 'A domain term used by the team.' }] },
+            },
         }),
         'team.profile.toml',
     );
     await createFileTree(directory.path, {
         'team.profile.toml': profile.text,
         'typos.toml': original,
-        'sample.txt': 'colour teh\n',
+        'sample.txt': `${TYPO.color} ${TYPO.the}\n`,
     });
     const options = {
         cwd: directory.path,
@@ -41,18 +44,22 @@ test('profile tool settings survive adoption of another setting for the same too
     expect(readFileSync(join(directory.path, 'typos.toml'), 'utf8')).toBe(original);
     const applied = await initCommand({ ...options, isDryRun: false });
     expect(applied.exitCode).toBe(0);
-    const check = () =>
+    const accepted = runBlocking(['typos', '--isolated', '--config', '.gspot/config/typos.toml', 'sample.txt'], {
+        cwd: directory.path,
+    });
+    expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
+    await Bun.write(join(directory.path, 'sample.txt'), `${TYPO.color} ${TYPO.the} ${TYPO.word}\n`);
+    const defect = runBlocking(['typos', '--isolated', '--config', '.gspot/config/typos.toml', 'sample.txt'], {
+        cwd: directory.path,
+    });
+    expect(defect.code).toBe(2);
+    expect(defect.stdout).toContain(TYPO.word);
+    await Bun.write(join(directory.path, 'sample.txt'), `${TYPO.color} ${TYPO.the} word\n`);
+    expect(
         runBlocking(['typos', '--isolated', '--config', '.gspot/config/typos.toml', 'sample.txt'], {
             cwd: directory.path,
-        });
-    const accepted = check();
-    expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
-    await Bun.write(join(directory.path, 'sample.txt'), 'colour teh wrod\n');
-    const defect = check();
-    expect(defect.code).toBe(2);
-    expect(defect.stdout).toContain('wrod');
-    await Bun.write(join(directory.path, 'sample.txt'), 'colour teh word\n');
-    expect(check().code).toBe(0);
+        }).code,
+    ).toBe(0);
     applyUninstall(directory.path, planUninstall(directory.path));
     expect(readFileSync(join(directory.path, 'typos.toml'), 'utf8')).toBe(original);
 });

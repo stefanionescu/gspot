@@ -1,0 +1,380 @@
+import { relative, sep } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import eslint from '@eslint/js';
+import gspot from '@gspothq/eslint-plugin';
+import eslintComments from '@eslint-community/eslint-plugin-eslint-comments';
+import boundaries from 'eslint-plugin-boundaries';
+import importX from 'eslint-plugin-import-x';
+import jsdoc from 'eslint-plugin-jsdoc';
+import nodePlugin from 'eslint-plugin-n';
+import packageJson from 'eslint-plugin-package-json';
+import regexp from 'eslint-plugin-regexp';
+import security from 'eslint-plugin-security';
+import sonarjs from 'eslint-plugin-sonarjs';
+import unicorn from 'eslint-plugin-unicorn';
+import prettierConfig from 'eslint-config-prettier';
+import globals from 'globals';
+<%~ fragmentImports %>
+<% const config = eslint(); %>
+// The root without a closing separator: typescript-eslint stops its tsconfig search one folder short of a root that ends in one.
+const root = fileURLToPath(new URL('../..', import.meta.url)).replace(/[\\/]$/u, '');
+// The component files a selected framework adds to the code and type-checked file sets.
+const FRAGMENT_FILES = <%~ json(fragmentFiles, 0) %>;
+const CODE = ['**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}', ...FRAGMENT_FILES];
+const TYPESCRIPT_SOURCE = ['**/*.{ts,tsx,mts,cts}'];
+const TYPESCRIPT = [...TYPESCRIPT_SOURCE, ...FRAGMENT_FILES];
+const JAVASCRIPT = ['**/*.{js,mjs,cjs,jsx}'];
+const TESTS = <%= json(config.testFiles) %>;
+const SCRIPTS = <%= json(config.scriptFiles) %>;
+// The code files among the tests and scripts: a package.json under a test folder takes no code rule.
+const TEST_CODE = TESTS.flatMap((test) => CODE.map((pattern) => [test, pattern]));
+const SCRIPT_CODE = SCRIPTS.flatMap((script) => CODE.map((pattern) => [script, pattern]));
+const IS_ALL = <%= isAll %>;
+const NODE_VERSION = <%= json(config.nodeVersion) %>;
+const RESTRICTED = <%= json(config.restrictedImports) %>;
+const JAVASCRIPT_LIMITS = <%= json(config.javascriptLimits) %>;
+
+const limits = <%= json(config.limits) %>;
+
+const sizeRules = {
+    'max-lines': ['error', { max: limits.fileLines, skipBlankLines: true, skipComments: true }],
+    'max-lines-per-function': ['error', { max: limits.functionLines, skipBlankLines: true, skipComments: true, IIFEs: true }],
+    'max-params': ['error', { max: limits.parameters, countVoidThis: false }],
+    'max-depth': ['error', limits.depth],
+    'max-statements': ['error', limits.statements],
+    'max-nested-callbacks': ['error', limits.nestedCallbacks],
+    complexity: ['error', limits.cyclomatic],
+};
+
+// A plugin set can hold warnings, and the gate allows no warning: each rule that is on becomes an error with its options kept.
+const errorLevels = (rules) =>
+    Object.fromEntries(
+        Object.entries(rules).map(([rule, entry]) => {
+            const [level, ...options] = Array.isArray(entry) ? entry : [entry];
+            return [rule, level === 'off' || level === 0 ? 'off' : ['error', ...options]];
+        }),
+    );
+
+// One rule holds every selector, because a later block that sets the rule replaces the earlier one. The library
+// selectors join the base ones here, and each block below lists all that apply to its files.
+const BASE_SELECTORS = IS_ALL ? [
+        { selector: 'TSEnumDeclaration', message: 'Use a literal union or an as-const object instead of an enum.' },
+        { selector: 'TSAsExpression[expression.type="TSAsExpression"]', message: 'Do not assert twice. Narrow the value, improve the type, or add a typed boundary.' },
+        { selector: 'TSTypeAssertion[expression.type="TSTypeAssertion"]', message: 'Do not assert twice. Narrow the value, improve the type, or add a typed boundary.' },
+        { selector: 'TSAsExpression > TSAnyKeyword', message: 'Do not assert to any. Add a typed boundary or runtime narrowing instead.' },
+        { selector: 'TSTypeAssertion > TSAnyKeyword', message: 'Do not assert to any. Add a typed boundary or runtime narrowing instead.' },
+        { selector: 'TSAsExpression > TSNeverKeyword', message: 'Do not assert to never to silence the type system.' },
+        { selector: 'TSTypeAssertion > TSNeverKeyword', message: 'Do not assert to never to silence the type system.' },
+        { selector: 'LogicalExpression[operator="||"][right.type="ObjectExpression"][right.properties.length=0]', message: 'An empty-object fallback hides a missing value. Handle the missing case.' },
+        { selector: 'NewExpression[callee.name=/Error$/]:not([callee.name="GspotError"]) > Literal.arguments:first-child[value=/^[a-z]/]', message: 'Start an error message with a capital letter.' },
+        { selector: 'NewExpression[callee.name=/Error$/]:not([callee.name="GspotError"]) > TemplateLiteral.arguments:first-child[quasis.0.value.raw=/^[a-z]/]', message: 'Start an error message with a capital letter.' },
+        { selector: 'NewExpression[callee.name="GspotError"] > Literal.arguments:nth-child(2)[value=/^[a-z]/]', message: 'Start an error message with a capital letter.' },
+        { selector: 'NewExpression[callee.name="GspotError"] > TemplateLiteral.arguments:nth-child(2)[quasis.0.value.raw=/^[a-z]/]', message: 'Start an error message with a capital letter.' },
+        { selector: 'NewExpression[callee.name="GspotError"] > ArrayExpression.arguments > Literal:first-child[value=/^[a-z]/]', message: 'Start an error message with a capital letter.' },
+        { selector: 'NewExpression[callee.name="GspotError"] > ArrayExpression.arguments > TemplateLiteral:first-child[quasis.0.value.raw=/^[a-z]/]', message: 'Start an error message with a capital letter.' },
+        { selector: 'CallExpression[callee.property.name=/^(json|send)$/] ObjectExpression > Property[key.name=/^(message|error)$/] > TemplateLiteral.value[expressions.length>0]', message: 'A message a client reads names no identifier; put the value in its own field.' },
+        { selector: 'CallExpression[callee.object.name=/^(logger|log|console)$/][callee.property.name=/^(debug|info|warn|error|fatal|trace)$/] > TemplateLiteral.arguments:first-child[expressions.length>0]', message: 'Log a stable message and pass the values as fields.' },
+] : [];
+// The selectors the selected libraries add, grouped by the files each group reads: an absent files list means every code file.
+const FRAGMENT_SELECTORS = <%~ json(fragmentSelectors) %>;
+const librarySelectorBlocks = FRAGMENT_SELECTORS.map((group) => ({
+    files: (group.files ?? CODE).map((pattern) => [pattern, group.scope ? `${group.scope}/**/*` : '**/*']),
+    ignores: (group.ignoredScopes ?? []).map((scope) => `${scope}/**`),
+    rules: { 'no-restricted-syntax': ['error', ...BASE_SELECTORS, ...group.selectors] },
+}));
+
+const coreRules = {
+    'no-useless-constructor': 'error',
+    'no-useless-return': 'error',
+    'no-useless-call': 'error',
+    'no-useless-rename': 'error',
+    // import-x/no-duplicates owns duplicate imports and can merge them.
+    'no-duplicate-imports': 'off',
+    eqeqeq: ['error', 'always'],
+    'no-param-reassign': 'error',
+    'prefer-const': 'error',
+    'padding-line-between-statements': ['error', { blankLine: 'always', prev: ['function', 'class'], next: ['function', 'class'] }],
+    'lines-between-class-members': ['error', 'always'],
+    'no-empty': ['error', { allowEmptyCatch: false }],
+    'no-restricted-syntax': ['error', ...BASE_SELECTORS],
+};
+
+const gspotRules = { ...gspot.configs.recommended.rules, ...<%= json(config.gspotRules) %> };
+
+// sonarjs recommended is the base. no-empty-test-file is off because a test that registers its cases through a
+// helper (ESLint's RuleTester) looks empty to it; vitest/expect-expect covers the same ground.
+const sonarRules = {
+    // A file that plants only fixtures beside tests has no test in it by design.
+    'sonarjs/no-empty-test-file': 'off',
+    'sonarjs/cognitive-complexity': ['error', limits.cognitive],
+    'sonarjs/no-identical-functions': ['error', limits.identicalFunctions],
+    'sonarjs/no-all-duplicated-branches': 'error',
+    'sonarjs/no-duplicated-branches': 'error',
+    'sonarjs/no-identical-conditions': 'error',
+    'sonarjs/no-identical-expressions': 'error',
+    'sonarjs/no-element-overwrite': 'error',
+    'sonarjs/no-empty-collection': 'error',
+    'sonarjs/no-extra-arguments': 'error',
+    'sonarjs/no-use-of-empty-return-value': 'error',
+    'sonarjs/non-existent-operator': 'error',
+    'sonarjs/no-gratuitous-expressions': 'error',
+    'sonarjs/no-invariant-returns': 'error',
+    'sonarjs/for-loop-increment-sign': 'error',
+    'sonarjs/no-useless-increment': 'error',
+    'sonarjs/no-unthrown-error': 'error',
+    'sonarjs/no-collapsible-if': 'error',
+    'sonarjs/no-nested-switch': 'error',
+    'sonarjs/no-nested-template-literals': 'error',
+    'sonarjs/no-redundant-boolean': 'error',
+    'sonarjs/no-redundant-jump': 'error',
+    'sonarjs/no-same-line-conditional': 'error',
+    'sonarjs/no-small-switch': 'error',
+    'sonarjs/no-unused-collection': 'error',
+    'sonarjs/no-useless-catch': 'error',
+    'sonarjs/prefer-single-boolean-return': 'error',
+    'sonarjs/prefer-while': 'error',
+    'sonarjs/prefer-object-literal': 'error',
+    'sonarjs/no-nested-conditional': 'error',
+    'sonarjs/no-inverted-boolean-check': 'error',
+    'sonarjs/no-nested-functions': 'error',
+    'sonarjs/no-parameter-reassignment': 'error',
+    'sonarjs/no-commented-code': 'error',
+    'sonarjs/no-dead-store': 'error',
+    'sonarjs/prefer-immediate-return': 'error',
+    'sonarjs/updated-loop-counter': 'error',
+    'sonarjs/no-equals-in-for-termination': 'error',
+    'sonarjs/no-redundant-assignments': 'error',
+};
+
+const unicornRules = {
+    // The naming check owns abbreviations and filename case; two owners would give two answers.
+    'unicorn/prevent-abbreviations': 'off',
+    'unicorn/filename-case': 'off',
+    // Platform APIs and syntax trees return null; replacing it everywhere is churn without a defect.
+    'unicorn/no-null': 'off',
+    // An explicit undefined satisfies noImplicitReturns and a required parameter typed with undefined; its fixer
+    // removes both.
+    'unicorn/no-useless-undefined': 'off',
+    // gspot/import-path-style owns the import shape.
+    'unicorn/import-style': 'off',
+    'unicorn/prefer-ternary': ['error', 'only-single-line'],
+    'unicorn/expiring-todo-comments': ['error', { allowWarningComments: false }],
+    'unicorn/no-array-reduce': 'error',
+    'unicorn/no-array-for-each': 'error',
+    'unicorn/prefer-node-protocol': 'error',
+    'unicorn/no-useless-spread': 'error',
+    'unicorn/no-useless-promise-resolve-reject': 'error',
+    'unicorn/prefer-array-find': 'error',
+    'unicorn/prefer-array-flat': 'error',
+    'unicorn/prefer-array-flat-map': 'error',
+    'unicorn/prefer-at': 'error',
+    'unicorn/prefer-includes': 'error',
+    'unicorn/prefer-number-properties': 'error',
+    'unicorn/prefer-string-replace-all': 'error',
+    'unicorn/prefer-string-slice': 'error',
+    'unicorn/prefer-string-starts-ends-with': 'error',
+    'unicorn/no-typeof-undefined': 'error',
+    'unicorn/no-lonely-if': 'error',
+};
+
+const securityRules = {
+    'security/detect-buffer-noassert': 'error',
+    'security/detect-child-process': 'error',
+    'security/detect-disable-mustache-escape': 'error',
+    'security/detect-eval-with-expression': 'error',
+    'security/detect-new-buffer': 'error',
+    'security/detect-no-csrf-before-method-override': 'error',
+    // detect-non-literal-regexp is off: it flags the constructor, not the input (D-67).
+    'security/detect-non-literal-regexp': 'off',
+    'security/detect-non-literal-require': 'error',
+    'security/detect-possible-timing-attacks': 'error',
+    'security/detect-pseudoRandomBytes': 'error',
+    'security/detect-unsafe-regex': 'error',
+    // detect-object-injection fires on every bracket access and detect-non-literal-fs-filename on every path
+    // variable; neither names a defect a linter of file paths can avoid.
+    'security/detect-object-injection': 'off',
+    'security/detect-non-literal-fs-filename': 'off',
+};
+
+const nodeRules = {
+    'n/no-deprecated-api': 'error',
+    'n/no-process-exit': 'error',
+    'n/no-unsupported-features/node-builtins': ['error', { version: NODE_VERSION, allowExperimental: true }],
+    'n/no-unsupported-features/es-builtins': ['error', { version: NODE_VERSION }],
+    // TypeScript owns syntax support.
+    'n/no-unsupported-features/es-syntax': 'off',
+    'n/prefer-global/buffer': ['error', 'always'],
+    'n/prefer-global/console': ['error', 'always'],
+    'n/prefer-global/process': ['error', 'always'],
+    'n/prefer-global/url': ['error', 'always'],
+    'n/prefer-global/url-search-params': ['error', 'always'],
+    'n/prefer-promises/dns': 'error',
+    'n/prefer-promises/fs': 'error',
+    // A command-line tool reads and writes files synchronously by design.
+    'n/no-sync': 'off',
+    'n/no-callback-literal': 'error',
+    'n/no-new-require': 'error',
+    'n/no-path-concat': 'error',
+    // TypeScript and import-x resolve imports; a second resolver disagrees on aliases.
+    'n/no-missing-import': 'off',
+    'n/no-missing-require': 'off',
+    'n/no-unpublished-import': 'error',
+    'n/no-unpublished-require': 'error',
+    'n/no-extraneous-import': 'error',
+    'n/no-extraneous-require': 'error',
+};
+
+const jsdocRules = {
+    'jsdoc/require-jsdoc': ['error', { publicOnly: true, require: { FunctionDeclaration: true, ArrowFunctionExpression: true, FunctionExpression: true, MethodDefinition: true } }],
+    'jsdoc/require-description': 'error',
+    'jsdoc/require-param': 'error',
+    'jsdoc/require-param-description': 'error',
+    'jsdoc/require-param-name': 'error',
+    // TypeScript owns the types, so JSDoc carries none.
+    'jsdoc/require-param-type': 'off',
+    'jsdoc/require-returns': 'error',
+    'jsdoc/require-returns-description': 'error',
+    'jsdoc/require-returns-type': 'off',
+    'jsdoc/check-param-names': 'error',
+    'jsdoc/check-tag-names': 'error',
+    'jsdoc/check-types': 'off',
+    'jsdoc/no-undefined-types': 'off',
+    'jsdoc/valid-types': 'off',
+    'jsdoc/no-types': 'off',
+};
+
+const regexpRules = {
+    'regexp/no-super-linear-backtracking': 'error',
+    'regexp/no-empty-alternative': 'error',
+    'regexp/no-empty-capturing-group': 'error',
+    'regexp/no-empty-character-class': 'error',
+    'regexp/no-empty-group': 'error',
+    'regexp/no-empty-lookarounds-assertion': 'error',
+    'regexp/no-useless-assertions': 'error',
+    'regexp/no-useless-backreference': 'error',
+    'regexp/no-useless-character-class': 'error',
+    'regexp/no-useless-dollar-replacements': 'error',
+    'regexp/no-useless-lazy': 'error',
+    'regexp/no-useless-quantifier': 'error',
+    'regexp/no-useless-range': 'error',
+    'regexp/no-lazy-ends': 'error',
+    'regexp/no-optional-assertion': 'error',
+    'regexp/no-invalid-regexp': 'error',
+    'regexp/no-misleading-capturing-group': 'error',
+    'regexp/no-contradiction-with-assertion': 'error',
+    'regexp/strict': 'error',
+};
+
+const importRules = {
+    'import-x/export': 'error',
+    ...<%= json(config.importLayoutRules) %>,
+    'import-x/no-cycle': ['error', { maxDepth: Infinity, ignoreExternal: false }],
+    'import-x/no-self-import': 'error',
+    'import-x/no-useless-path-segments': ['error', { noUselessIndex: true }],
+    'import-x/no-empty-named-blocks': 'error',
+    'import-x/no-duplicates': 'error',
+};
+
+const commentRules = {
+    '@eslint-community/eslint-comments/require-description': <%= json(config.commentLevel) %>,
+    '@eslint-community/eslint-comments/no-unused-disable': 'error',
+};
+
+// A pair of patterns in one list means both hold, so a pattern as wide as **/* still reaches code files only.
+const importStyleOverrides = <%= json(config.importStyleBlocks) %>;
+
+// A CommonJS file gets the Node module globals and may require; any other runtime gets its own globals.
+const runtimeOverrides = <%= json(config.runtimes) %>.map(({ files, runtime }) =>
+    runtime === 'commonjs'
+        ? {
+              files,
+              languageOptions: { sourceType: 'commonjs', globals: { ...globals.node, ...globals.commonjs } },
+              rules: { 'unicorn/prefer-module': 'off', '@typescript-eslint/no-require-imports': 'off', 'unicorn/import-style': 'off' },
+          }
+        : { files, languageOptions: { globals: globals[runtime] } },
+);
+
+const boundaryConfigs = <%= json(config.boundaryBlocks) %>;
+
+const scopeRules = <%= json(config.scopeBlocks) %>;
+
+const policyRules = <%= json(eslintPolicy) %>.flatMap(({ scope, includes, excludes, rules }) => {
+    const included = includes.map((source) => new RegExp(source, 's'));
+    const excluded = excludes.map((source) => new RegExp(source, 's'));
+    const matches = (file) => {
+        const path = relative(root, file).split(sep).join('/');
+        return (scope === '' || path.startsWith(`${scope}/`)) && included.some((pattern) => pattern.test(path)) && !excluded.some((pattern) => pattern.test(path));
+    };
+    Object.defineProperty(matches, Symbol.for('gspot.eslint.scope'), { value: { scope, includes, excludes, flags: 's' } });
+    const entries = Object.entries(rules);
+    return [
+        { files: CODE.map((pattern) => [pattern, matches]), rules: Object.fromEntries(entries.filter(([name]) => !name.startsWith('package-json/'))) },
+        { files: [['**/package.json', matches]], rules: Object.fromEntries(entries.filter(([name]) => name.startsWith('package-json/'))) },
+    ];
+});
+
+const defaults = [
+    { ignores: <%= json(config.ignoredPaths) %> },
+    { files: CODE, ...eslint.configs.recommended },
+    { files: CODE, ...sonarjs.configs.recommended },
+    { files: CODE, ...unicorn.configs.recommended },
+    {
+        files: CODE,
+        plugins: { gspot, 'import-x': importX, jsdoc, n: nodePlugin, regexp, security, boundaries, '@eslint-community/eslint-comments': eslintComments },
+        linterOptions: { reportUnusedDisableDirectives: 'error' },
+        languageOptions: { ecmaVersion: 'latest', sourceType: 'module', globals: { ...globals.node, ...globals.es2024 } },
+        settings: { node: { version: NODE_VERSION }, gspot: { root } },
+        rules: { ...sizeRules, ...coreRules, ...gspotRules, ...sonarRules, ...unicornRules, ...securityRules, ...nodeRules, ...jsdocRules, ...regexpRules, ...importRules, ...commentRules },
+    },
+    { files: JAVASCRIPT, rules: { 'no-unused-vars': ['error', { args: 'all', argsIgnorePattern: '^_', varsIgnorePattern: '^_', destructuredArrayIgnorePattern: '^_' }] } },
+    ...importStyleOverrides,
+    ...scopeRules,
+    ...runtimeOverrides,
+    ...boundaryConfigs,
+<%~ fragments %>
+    ...librarySelectorBlocks,
+    { files: CODE, ignores: [...TESTS, ...SCRIPTS], rules: { 'no-console': 'error' } },
+    {
+        files: SCRIPT_CODE,
+        rules: { 'n/no-process-exit': 'off', 'no-unused-vars': ['error', { args: 'all', argsIgnorePattern: '^_', varsIgnorePattern: '^_' }] },
+    },
+    // A test needs no documentation and imports development dependencies.
+    {
+        files: TEST_CODE,
+        rules: {
+            'jsdoc/require-jsdoc': 'off',
+            'jsdoc/require-param': 'off',
+            'jsdoc/require-returns': 'off',
+            'jsdoc/require-description': 'off',
+            'jsdoc/require-param-description': 'off',
+            'jsdoc/require-returns-description': 'off',
+            'n/no-unpublished-import': 'off',
+            'n/no-unpublished-require': 'off',
+            ...<%= json(config.testRules) %>,
+        },
+    },
+    ...(RESTRICTED.length === 0 ? [] : [{ files: CODE, rules: { 'no-restricted-imports': ['error', { paths: RESTRICTED }] } }]),
+    // package-json/sort-collections keeps dependency lists alphabetical, unlike the shortest-first order of code:
+    // npm, pnpm, Yarn, and Bun rewrite them alphabetically on every install.
+    { files: ['**/package.json'], ...packageJson.configs.recommended },
+    { files: CODE, ...prettierConfig },
+    {
+        files: JAVASCRIPT,
+        rules: {
+            'max-params': ['error', JAVASCRIPT_LIMITS.parameters],
+            'gspot/no-trivial-functions': ['error', { maxStatements: JAVASCRIPT_LIMITS.trivialStatements }],
+            'gspot/no-trivial-files': ['error', { maxStatements: JAVASCRIPT_LIMITS.trivialStatements }],
+        },
+    },
+];
+const ruleLevels = <%~ json(eslintRuleLevels) %>;
+const selectedDefaults = defaults.map((entry) => entry.rules === undefined ? entry : {
+    ...entry,
+    rules: Object.fromEntries(Object.entries(entry.rules).map(([name, value]) =>
+        [name, !IS_ALL && ruleLevels[name] === 'all' ? 'off' : value])),
+});
+export default [...selectedDefaults,
+<% if (config.extra !== undefined) { %>    // [tools.eslint.extra]: <%= json(config.extra.reason, 0) %>
+    <%= json(config.extra.entries) %>,
+<% } %>
+...policyRules];

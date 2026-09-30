@@ -44,6 +44,7 @@ export function pathExpressions(patterns: string[]): PathExpressions {
  * @param scope the scope path
  * @returns whether the file is in the scope
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Planning, naming, and imports decide scope membership by this one rule, where '' is the root and holds everything.
 export function isInScope(path: string, scope: string): boolean {
     return scope === '' || path === scope || path.startsWith(`${scope}/`);
 }

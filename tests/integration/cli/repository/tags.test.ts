@@ -1,10 +1,10 @@
 import { join } from 'node:path';
 import { chmodSync } from 'node:fs';
-import { describe, expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect, describe } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
+import { kitManifests } from '#cli/kits/manifests.ts';
 import { readRepository } from '#cli/repository/tree.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { detectConfigurations, unknownLanguages } from '#cli/configurations/detect.ts';
+import { detectKits, unknownLanguages } from '#cli/kits/detect.ts';
 
 describe('tags', () => {
     test('tags come from extension, filename, shebang and content', async () => {
@@ -19,11 +19,11 @@ describe('tags', () => {
         const repository = await readRepository(sandbox.path, [], [], []);
         const files = new Map(repository.files.map((file) => [file.path, file]));
         const hook = files.get('hook')!;
-        // Windows has no executable bit to read.
-        expect(hook.tags.includes('executable')).toBe(process.platform !== 'win32');
+        // The shell shebang grants the executable tag, so the bit itself is not needed.
+        expect(hook.tags).toContain('executable');
         for (const tag of ['shell', 'shebang:shell', 'text']) expect(hook.tags).toContain(tag);
-        expect(files.get('a.png')!.nature).toBe('binary');
-        expect(files.get('binary.js')!.nature).toBe('binary');
+        expect(files.get('a.png')!.kind).toBe('binary');
+        expect(files.get('binary.js')!.kind).toBe('binary');
         expect(files.get('Dockerfile')!.tags).toContain('dockerfile');
     });
 });
@@ -40,15 +40,15 @@ test('Vue and Svelte keep source tags while unsupported JVM languages remain det
     const files = new Map(repository.files.map((file) => [file.path, file]));
     for (const language of ['vue', 'svelte']) {
         const component = files.get(`View.${language}`)!;
-        expect(component.nature).toBe('source');
+        expect(component.kind).toBe('source');
         for (const tag of [language, 'source', 'text']) expect(component.tags).toContain(tag);
     }
-    const manifests = configurationManifests();
+    const manifests = kitManifests();
     expect(unknownLanguages(repository.files, manifests)).toStrictEqual([
         { language: 'Java', extensions: ['.java'], count: 1 },
         { language: 'Kotlin', extensions: ['.kt'], count: 1 },
     ]);
-    const selected = detectConfigurations(repository.files, manifests, []).map((entry) => entry.configuration);
+    const selected = detectKits(repository.files, manifests, []).map((entry) => entry.kit);
     expect(selected).toContain('vue');
     expect(selected).toContain('svelte');
     expect(selected).not.toContain('java');

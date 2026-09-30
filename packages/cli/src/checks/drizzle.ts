@@ -1,38 +1,16 @@
-import { rmSync } from 'node:fs';
-import { globbySync } from 'globby';
-import { basename, dirname, join } from 'node:path';
-import { TABLE } from '#cli/constants/checks/checks.ts';
+import { rm } from 'node:fs/promises';
+import { findingAt } from '#cli/checks/result.ts';
+import { globPaths } from '#cli/platform/paths.ts';
+import { join, dirname, basename } from 'node:path';
 import { readSource } from '#cli/repository/tracked.ts';
-import { scratchCopy } from '#cli/execution/file-workspace.ts';
-import { runCheckCommand } from '#cli/execution/tool-runner.ts';
-import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
-
-function finding(input: EngineInput, file: string, line: number, rule: string, text: string): Finding {
-    return { check: input.spec.name, file, line, rule, message: text, fixable: false };
-}
-
-function sources(input: EngineInput): { path: string; text: string }[] {
-    return input.files
-        .filter((file) => file.nature === 'source' && /\.tsx?$/u.test(file.path))
-        .map((file) => ({
-            path: file.path,
-            text: readSource(input.root, file.path, input.observations).toString('utf8'),
-        }));
-}
+import { TABLE } from '#cli/config/checks/repository.ts';
+import { runCheckCommand } from '#cli/execution/tool/runner.ts';
+import { scratchCopy } from '#cli/execution/files/workspace.ts';
+import type { Engine, Finding, EngineInput } from '#cli/types/checks.ts';
 
 function generatedContents(cwd: string): Map<string, Buffer> {
-    const paths = globbySync(['**/*', '!**/node_modules/**', '!**/.venv/**', '!**/.gspot/**'], {
-        cwd,
-        dot: true,
-        followSymbolicLinks: false,
-    });
+    const paths = globPaths(cwd, ['**/*', '!**/node_modules/**', '!**/.venv/**', '!**/.gspot/**'], { dot: true });
     return new Map(paths.map((path) => [path, readSource(cwd, path)]));
-}
-
-function hasDrizzleFile(input: EngineInput): boolean {
-    return input.files.some(
-        (file) => dirname(file.path) === (input.scope || '.') && basename(file.path).startsWith('drizzle.config.'),
-    );
 }
 
 /**
@@ -41,7 +19,12 @@ function hasDrizzleFile(input: EngineInput): boolean {
  * @returns the findings
  */
 export function drizzleRelations(input: EngineInput): Finding[] {
-    const files = sources(input);
+    const files = input.files
+        .filter((file) => file.kind === 'source' && /\.tsx?$/u.test(file.path))
+        .map((file) => ({
+            path: file.path,
+            text: readSource(input.root, file.path, input.reads).toString('utf8'),
+        }));
     const everything = files.map((file) => file.text).join('\n');
     return files.flatMap((file) =>
         file.text
@@ -56,10 +39,9 @@ export function drizzleRelations(input: EngineInput): Finding[] {
                 );
             })
             .map((match) =>
-                finding(
+                findingAt(
                     input,
-                    file.path,
-                    file.text.slice(0, match.index).split('\n').length,
+                    { file: file.path, line: file.text.slice(0, match.index).split('\n').length },
                     'relations',
                     `${match.groups?.['name'] ?? ''} references another table and has no relations entry.`,
                 ),
@@ -74,8 +56,13 @@ export function drizzleRelations(input: EngineInput): Finding[] {
  * @returns the findings
  */
 export async function drizzleMigrations(input: EngineInput): Promise<Finding[]> {
-    if (!hasDrizzleFile(input)) return [];
-    const scratch = scratchCopy(
+    if (
+        !input.files.some(
+            (file) => dirname(file.path) === (input.scope || '.') && basename(file.path).startsWith('drizzle.config.'),
+        )
+    )
+        return [];
+    const scratch = await scratchCopy(
         input.root,
         input.files.map((file) => file.path),
         input.scopeEntries.map((scope) => scope.path),
@@ -97,15 +84,20 @@ export async function drizzleMigrations(input: EngineInput): Promise<Finding[]> 
             })
             .toSorted((left, right) => left.localeCompare(right));
         return changed.map((path) =>
-            finding(
+            findingAt(
                 input,
-                input.scope === '' ? path : `${input.scope}/${path}`,
-                1,
+                { file: input.scope === '' ? path : `${input.scope}/${path}`, line: 1 },
                 'missing-migration',
                 'drizzle-kit changes this file when generating migrations; regenerate and commit the migration output.',
             ),
         );
     } finally {
-        rmSync(scratch, { recursive: true, force: true });
+        await rm(scratch, { recursive: true, force: true });
     }
 }
+
+/** The analyses this file provides, by the name a manifest check gives them. */
+export const DRIZZLE_ANALYSES: Record<string, Engine> = {
+    'drizzle-relations': drizzleRelations,
+    'drizzle-migrations': drizzleMigrations,
+};

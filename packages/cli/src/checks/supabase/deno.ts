@@ -1,11 +1,14 @@
 import { z } from 'zod';
-import { join } from 'node:path';
 import { statSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { runCheckCommand } from '#cli/execution/tool-runner.ts';
-import { CHECK_LOCATION } from '#cli/constants/checks/supabase.ts';
-import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
-import { functionFolders, supabaseFinding } from '#cli/checks/supabase/project.ts';
+import { toPosix } from '#cli/platform/paths.ts';
+import { findingAt } from '#cli/checks/result.ts';
+import { stripVTControlCharacters } from 'node:util';
+import { runCheckCommand } from '#cli/execution/tool/runner.ts';
+import type { Finding, EngineInput } from '#cli/types/checks.ts';
+import { CHECK_LOCATION } from '#cli/config/checks/platforms.ts';
+import { functionFolders } from '#cli/checks/supabase/project.ts';
+import { join, isAbsolute, relative as relativePath } from 'node:path';
 
 const lintReport = z.object({
     diagnostics: z.array(
@@ -18,6 +21,7 @@ const lintReport = z.object({
     ),
     errors: z.array(z.object({ file_path: z.string(), message: z.string() })),
 });
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Lint and check both pass the folder configuration when it exists; one owner keeps the flag.
 function denoFileArguments(root: string, folder: string): string[] {
     const path = join(root, folder, 'deno.json');
     return statSync(path, { throwIfNoEntry: false }) === undefined ? [] : ['--config', path];
@@ -25,7 +29,8 @@ function denoFileArguments(root: string, folder: string): string[] {
 
 function relative(root: string, locator: string): string {
     const path = locator.startsWith('file://') ? fileURLToPath(locator) : locator;
-    return path.startsWith(`${root}/`) ? path.slice(root.length + 1) : path;
+    const local = toPosix(relativePath(root, path));
+    return local === '' || local.startsWith('../') || isAbsolute(local) ? path : local;
 }
 
 async function linted(input: EngineInput, folder: string): Promise<Finding[]> {
@@ -35,10 +40,10 @@ async function linted(input: EngineInput, folder: string): Promise<Finding[]> {
     if (result.code !== 0 && report.diagnostics.length === 0 && report.errors.length === 0)
         throw new Error(`Deno lint failed without diagnostics: ${result.stderr.trim()}`);
     const broken = report.errors.map((entry) =>
-        supabaseFinding(input, { file: relative(input.root, entry.file_path), line: 1 }, 'parse', entry.message),
+        findingAt(input, { file: relative(input.root, entry.file_path), line: 1 }, 'parse', entry.message),
     );
     const found = report.diagnostics.map((entry) =>
-        supabaseFinding(
+        findingAt(
             input,
             { file: relative(input.root, entry.filename), line: entry.range.start.line },
             entry.code,
@@ -48,13 +53,13 @@ async function linted(input: EngineInput, folder: string): Promise<Finding[]> {
     return [...broken, ...found];
 }
 
-// The first error deno check printed, at the file and line it names.
+// The first error from `deno check` with its reported file and line.
 function firstError(input: EngineInput, folder: string, stderr: string): Finding {
-    const said = Bun.stripANSI(stderr);
+    const said = stripVTControlCharacters(stderr);
     const place = CHECK_LOCATION.exec(said)?.groups;
     const file = place?.['file'] === undefined ? `${folder}/index.ts` : relative(input.root, place['file']);
     const first = said.split('\n').find((line) => line.trim() !== '') ?? 'The deno check command failed.';
-    return supabaseFinding(input, { file, line: Number(place?.['line'] ?? 1) }, 'deno-check', first.trim());
+    return findingAt(input, { file, line: Number(place?.['line'] ?? 1) }, 'deno-check', first.trim());
 }
 
 async function typed(input: EngineInput, folder: string): Promise<Finding[]> {

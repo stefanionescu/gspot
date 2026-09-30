@@ -1,118 +1,91 @@
-import type { PublicationRequest } from '#cli/types/lifecycle/apply.ts';
-import type { GeneratedProposal } from '#cli/types/generation.ts';
-import { isValePackageFile } from '#cli/repository/file-classification.ts';
-import { publicationSnapshot, readOwnership } from '#cli/lifecycle/ownership/owner.ts';
-import { EXECUTABLE_FILE, OWNER_WRITABLE_FILE, READ_ONLY_FILE } from '#cli/constants/platform.ts';
-import type { ApplyReport, FileProposal, LifecycleOwner } from '#cli/types/lifecycle/lifecycle.ts';
+import { removePackages } from '#cli/tools/vale.ts';
+import type { Generated } from '#cli/types/generation.ts';
+import type { WriteRequest } from '#cli/types/lifecycle/apply.ts';
+import { written, readOwnership } from '#cli/lifecycle/ownership/owner.ts';
+import type { Owner, Planned, ApplyReport } from '#cli/types/lifecycle/lifecycle.ts';
+import { READ_ONLY_FILE, EXECUTABLE_FILE, OWNER_WRITABLE_FILE } from '#cli/config/platform.ts';
 
-function configurationProposals(owner: LifecycleOwner, generated: GeneratedProposal, takeover: boolean) {
-    const proposals: { proposal: FileProposal; package: boolean }[] = [];
+function configurationPlans(owner: Owner, generated: Generated, replace: boolean) {
+    const plans: { plan: Planned; package: boolean }[] = [];
     for (const merge of generated.merges) {
-        proposals.push({
+        plans.push({
             package: false,
-            proposal: owner.proposeConfiguration(merge.path, merge.format, merge.changes, takeover),
+            plan: owner.proposeConfiguration(merge.path, merge.format, merge.changes, replace),
         });
     }
     for (const output of generated.configurations) {
-        proposals.push({
+        plans.push({
             package: output.path === 'package.json',
-            proposal: owner.proposeConfiguration(output.path, output.format, output.changes, true),
+            plan: owner.proposeConfiguration(output.path, output.format, output.changes, true),
         });
     }
-    return proposals;
+    return plans;
 }
 
-// Both publication and pruning report preserved files through the same ownership result.
-function recordPreserved(report: ApplyReport, proposals: FileProposal[]): void {
-    const preserved = proposals.filter((proposal) => proposal.status === 'preserved');
-    report.preserved.push(...preserved.map((proposal) => proposal.path));
-    for (const proposal of preserved) {
-        report.notes.push(`preserved edited or unowned ${proposal.path}`);
-        if (proposal.previous?.original !== undefined)
-            report.notes.push(`original for ${proposal.path} retained at ${proposal.previous.original.backup}`);
+// Both writing and pruning report preserved files through the same ownership result.
+function recordPreserved(report: ApplyReport, plans: Planned[]): void {
+    const preserved = plans.filter((plan) => plan.status === 'preserved');
+    report.preserved.push(...preserved.map((plan) => plan.path));
+    for (const plan of preserved) {
+        report.notes.push(`preserved edited or unowned ${plan.path}`);
+        if (plan.previous?.original?.backup !== undefined)
+            report.notes.push(`original for ${plan.path} retained at ${plan.previous.original.backup}`);
     }
 }
 
-// Pruning restores only locally recorded outputs that no selected owner still needs.
-function pruningProposals(
-    owner: LifecycleOwner,
-    root: string,
-    expected: Set<string>,
-    retained: { prose: boolean; packages: boolean },
-): FileProposal[] {
-    const recorded = new Set(
-        readOwnership(root)
-            .files.filter((entry) => ['hook', 'runtime', 'export'].includes(entry.kind))
-            .map((entry) => entry.path),
-    );
-    return owner
-        .installedPaths()
-        .filter(
-            (path) =>
-                !(
-                    expected.has(path) ||
-                    recorded.has(path) ||
-                    (retained.prose && isValePackageFile(path)) ||
-                    (retained.packages && path.startsWith('.gspot/node_modules/')) ||
-                    (expected.has('.gspot/pyproject.toml') && path.startsWith('.gspot/.venv/'))
-                ),
-        )
-        .map((path) => owner.proposeRestoration(path));
+// An installation no selected kit needs any more goes whole, and so do the Vale packages once nothing checks prose.
+function pruneInstallations(owner: Owner, root: string, retained: WriteRequest['retained'], hasPython: boolean): void {
+    if (!retained.packages) owner.removeInstallation('npm');
+    if (!hasPython) owner.removeInstallation('python');
+    if (!retained.prose) removePackages(root);
 }
 
-// Every proposal is prepared before the owner publishes the batch.
+// Every plan is prepared before the owner writes the batch.
 /**
  * Publish and prune generated files using recorded ownership and current snapshots.
  * @param owner the lifecycle owner of the repository
  * @param request generated outputs, pruning policy, and reviewed originals
  */
-export function publishGenerated(owner: LifecycleOwner, request: PublicationRequest): void {
-    const { root, rendered, report, retained, takeover, regenerate = new Map() } = request;
-    const configurations = configurationProposals(owner, rendered, takeover !== undefined);
+export function writeGenerated(owner: Owner, request: WriteRequest): void {
+    const { root, rendered, report, retained, replace, regenerate } = request;
+    const configurations = configurationPlans(owner, rendered, replace !== undefined);
+    const authorized = new Map([...(regenerate ?? []), ...(replace ?? [])]);
     const replacements = rendered.files.map((file) => {
         const kind = file.kind === 'lock' || file.kind === 'hook' ? file.kind : 'config';
-        // A reviewed original (takeover) or a file a merge broke (regenerate) is replaced whatever its bytes are.
-        const authorized = takeover?.get(file.path) ?? regenerate.get(file.path);
-        return owner.proposeReplacement(
-            file.path,
-            publicationSnapshot(
-                {
-                    bytes: Buffer.from(file.content),
-                    mode:
-                        file.executable === true
-                            ? EXECUTABLE_FILE
-                            : file.readOnly
-                              ? READ_ONLY_FILE
-                              : OWNER_WRITABLE_FILE,
-                },
-                owner.read(file.path),
-            ),
-            kind,
-            file.kind === 'lock' ? file.observed !== undefined : authorized !== undefined,
-            file.kind === 'lock' ? file.observed : authorized,
-        );
+        // A reviewed original (replace) or a file a merge broke (regenerate) is replaced whatever its bytes are.
+        const read = file.kind === 'lock' ? file.read : authorized.get(file.path);
+        let mode = file.readOnly ? READ_ONLY_FILE : OWNER_WRITABLE_FILE;
+        if (file.executable === true) mode = EXECUTABLE_FILE;
+        const replacement = written({ bytes: Buffer.from(file.content), mode }, owner.read(file.path));
+        return owner.proposeReplacement(file.path, replacement, kind, read !== undefined, read);
     });
     const blocks = rendered.blocks.map((block) => owner.proposeBlock(block.path, block.block, block.style));
-    const generated = [...replacements, ...blocks, ...configurations.map(({ proposal }) => proposal)];
+    const generated = [...replacements, ...blocks, ...configurations.map(({ plan }) => plan)];
     const expected = new Set(['gspot.toml', '.gspot/version', '.gitignore', ...generated.map(({ path }) => path)]);
-    const pruning = pruningProposals(owner, root, expected, retained);
-    const proposals = [...generated, ...pruning];
-    const conflicts = proposals.filter((proposal) => proposal.status === 'preserved').map((proposal) => proposal.path);
-    if (takeover !== undefined && conflicts.length > 0)
+    // Pruning restores only recorded outputs that no selected owner still needs.
+    const recorded = new Set(
+        readOwnership(root)
+            .files.filter((entry) => ['hook', 'export'].includes(entry.kind))
+            .map((entry) => entry.path),
+    );
+    const pruning = owner
+        .installedPaths()
+        .filter((path) => !(expected.has(path) || recorded.has(path)))
+        .map((path) => owner.proposeRestoration(path));
+    const plans = [...generated, ...pruning];
+    const conflicts = plans.filter((plan) => plan.status === 'preserved').map((plan) => plan.path);
+    if (replace !== undefined && conflicts.length > 0)
         throw new Error(
             `Setup preserved conflicting outputs: ${conflicts.join(', ')}. Move them aside and run gspot apply; old tool configuration was retained.`,
         );
-    owner.applyProposals(proposals.filter((proposal) => proposal.status !== 'preserved'));
-    recordPreserved(report, proposals);
-    report.written.push(
-        ...replacements.filter((proposal) => proposal.status === 'changed').map((proposal) => proposal.path),
-    );
-    report.unchanged.push(
-        ...replacements.filter((proposal) => proposal.status === 'unchanged').map((proposal) => proposal.path),
-    );
-    report.blocks.push(...blocks.filter((proposal) => proposal.status === 'changed').map((proposal) => proposal.path));
-    for (const { proposal, package: isPackage } of configurations) {
-        if (proposal.status === 'changed') (isPackage ? report.packages : report.written).push(proposal.path);
+    owner.applyPlans(plans.filter((plan) => plan.status !== 'preserved'));
+    pruneInstallations(owner, root, retained, expected.has('.gspot/pyproject.toml'));
+    recordPreserved(report, plans);
+    report.written.push(...replacements.filter((plan) => plan.status === 'changed').map((plan) => plan.path));
+    report.unchanged.push(...replacements.filter((plan) => plan.status === 'unchanged').map((plan) => plan.path));
+    report.blocks.push(...blocks.filter((plan) => plan.status === 'changed').map((plan) => plan.path));
+    for (const { plan, package: isPackage } of configurations) {
+        if (plan.status === 'changed') (isPackage ? report.packages : report.written).push(plan.path);
     }
-    report.removed.push(...pruning.filter((proposal) => proposal.status !== 'preserved').map(({ path }) => path));
+    report.removed.push(...pruning.filter((plan) => plan.status !== 'preserved').map(({ path }) => path));
 }

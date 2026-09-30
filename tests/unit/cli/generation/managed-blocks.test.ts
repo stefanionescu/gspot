@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'bun:test';
+import { test, expect, describe } from 'bun:test';
 import { applyBlock, currentBlock } from '#cli/lifecycle/managed-blocks.ts';
 
 describe('managed blocks', () => {

@@ -1,18 +1,18 @@
-import { dirname, join } from 'node:path';
-import type { OriginalFile, PlantedInput } from '#tests/types/support/cli.ts';
+import { join, dirname } from 'node:path';
+import type { OriginalFile, PlantedInput } from '#tests/types/cli.ts';
 
 import {
-    chmodSync,
-    mkdirSync,
-    readFileSync,
-    readdirSync,
-    rmdirSync,
     rmSync,
     statSync,
+    chmodSync,
     lstatSync,
-    readlinkSync,
-    symlinkSync,
+    mkdirSync,
+    rmdirSync,
     unlinkSync,
+    readdirSync,
+    symlinkSync,
+    readFileSync,
+    readlinkSync,
     writeFileSync,
 } from 'node:fs';
 
@@ -84,16 +84,11 @@ function plantFiles(cwd: string, planted: PlantedInput, policy: string): void {
     writeFileSync(join(cwd, 'gspot.toml'), policy);
 }
 
-function plantedPolicy(policy: string, planted: PlantedInput): string {
-    const edited = planted.policyEdit === undefined ? policy : policy.replace(...planted.policyEdit);
-    if (edited === policy && planted.policyEdit !== undefined)
-        throw new Error(`The policy edit for ${planted.check} did not change the sandbox.`);
-    return planted.policy === undefined ? edited : `${edited}\n${planted.policy}`;
-}
 // Preserve bytes and permissions before the first mutation, including setup that fails partway through.
 export function plant(cwd: string, planted: PlantedInput): () => void {
     const policyPath = join(cwd, 'gspot.toml');
-    const policy = plantedPolicy(readFileSync(policyPath, 'utf8'), planted);
+    const current = readFileSync(policyPath, 'utf8');
+    const policy = planted.policy === undefined ? current : `${current}\n${planted.policy}`;
     const gone = planted.removed ?? [];
     const executables = planted.executable ?? [];
     const paths = [...new Set(['gspot.toml', ...gone, ...executables, ...Object.keys(planted.files)])];
@@ -101,6 +96,7 @@ export function plant(cwd: string, planted: PlantedInput): () => void {
     for (const path of gone)
         if (originals.get(path) === undefined) throw new Error(`The sandbox removal target ${path} is absent.`);
     const parents = absentParents(cwd, paths);
+    // eslint-disable-next-line gspot/no-trivial-functions -- reason: The caller receives this function and the failure path runs it; both need the same value.
     const restore = (): void => {
         restoreFiles(cwd, originals);
         removeParents(parents);
@@ -125,11 +121,9 @@ export function treeContents(root: string): Record<string, string> {
             const path = String(entry);
             const full = join(root, path);
             const attributes = lstatSync(full);
-            const bytes = attributes.isSymbolicLink()
-                ? `symlink:${readlinkSync(full)}`
-                : attributes.isFile()
-                  ? `file:${readFileSync(full).toString('base64')}`
-                  : 'directory';
+            let bytes = 'directory';
+            if (attributes.isSymbolicLink()) bytes = `symlink:${readlinkSync(full)}`;
+            else if (attributes.isFile()) bytes = `file:${readFileSync(full).toString('base64')}`;
             return [path, `${String(attributes.mode)}:${bytes}`];
         }),
     );

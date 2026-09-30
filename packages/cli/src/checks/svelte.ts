@@ -1,9 +1,9 @@
 import { z } from 'zod';
 import { join } from 'node:path';
-import { runCheckCommand } from '#cli/execution/tool-runner.ts';
-import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
-import { selectedTarget, targetInScope } from '#cli/configurations/targets.ts';
-import { DIAGNOSTIC_LINE, FAILURE_LINE } from '#cli/constants/checks/checks.ts';
+import { kitName, targetInScope } from '#cli/kits/targets.ts';
+import { runCheckCommand } from '#cli/execution/tool/runner.ts';
+import type { Finding, EngineInput } from '#cli/types/checks.ts';
+import { FAILURE_LINE, DIAGNOSTIC_LINE } from '#cli/config/checks/repository.ts';
 
 const diagnosticSchema = z.object({
     type: z.enum(['ERROR', 'WARNING']),
@@ -52,7 +52,9 @@ export function svelteFindings(check: string, scope: string, stdout: string): Fi
  */
 export async function svelteCheck(input: EngineInput): Promise<Finding[]> {
     // A scope with a generated TypeScript configuration is checked with its strict compiler options.
-    const tsconfig = selectedTarget(input.selection.selected, 'tsconfig');
+    const tsconfig = input.selection.selected
+        .flatMap((manifest) => manifest.configs)
+        .find((config) => !config.fragment && kitName(config.target) === 'tsconfig');
     const command = [
         'svelte-check',
         '--workspace',

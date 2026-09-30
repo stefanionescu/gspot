@@ -1,4 +1,4 @@
-import type { SpawnOutcome } from '#tests/types/support/cli.ts';
+import type { SpawnOutcome } from '#tests/types/cli.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 
 /**
@@ -8,6 +8,7 @@ import { environmentVariables } from '#cli/platform/environment.ts';
  * @param environment extra variables
  * @returns the exit code and both streams
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Every test runs Git with a throwaway identity and no background maintenance through this.
 export function git(cwd: string, argv: string[], environment: Record<string, string> = {}): SpawnOutcome {
     const result = Bun.spawnSync(
         [

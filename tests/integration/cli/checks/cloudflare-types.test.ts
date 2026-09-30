@@ -1,29 +1,30 @@
 import { join } from 'node:path';
 import * as tools from '#cli/tools/inspect.ts';
-import { expect, spyOn, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, spyOn, expect } from 'bun:test';
+import { toPosix } from '#cli/platform/paths.ts';
+import { testdir, createFileTree } from 'testdirs';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { rejection } from '#tests/support/expectations.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { envTypesFresh, headersSyntax } from '#cli/checks/cloudflare.ts';
-import { chmodSync, existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { statSync, chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import type { CloudflarePlanted as Planted } from '#tests/types/integration/cli/checks.ts';
-import { CLOUDFLARE_TYPES_GENERATOR, CLOUDFLARE_TYPES_SCOPES } from '#tests/constants/integration/cli/checks.ts';
+import { CLOUDFLARE_TYPES_SCOPES, CLOUDFLARE_TYPES_GENERATOR } from '#tests/inputs/integration/cli/checks.ts';
 
 // A planted Worker whose generator stands in for wrangler types: `bindings.txt` is what it writes, or the failure.
 async function plant(scope: string, bindings: string): Promise<Planted> {
     const directory = await testdir();
-    const path = (name: string) => join(scope, name);
     await createFileTree(directory.path, {
-        'gspot.toml': 'version = 1\nconfigurations = ["cloudflare"]\n',
-        [path('package.json')]: '{"private":true}\n',
-        [path('cloudflare-env.d.ts')]: '// Committed types\n',
-        [path('bindings.txt')]: bindings,
-        [path('types')]: CLOUDFLARE_TYPES_GENERATOR,
+        'gspot.toml': policyOf(['cloudflare']),
+        [join(scope, 'package.json')]: '{"private":true}\n',
+        [join(scope, 'cloudflare-env.d.ts')]: '// Committed types\n',
+        [join(scope, 'bindings.txt')]: bindings,
+        [join(scope, 'types')]: CLOUDFLARE_TYPES_GENERATOR,
     });
     commitAll(directory.path);
-    const target = join(directory.path, path('cloudflare-env.d.ts'));
+    const target = join(directory.path, join(scope, 'cloudflare-env.d.ts'));
     const edited = '// Developer types\n';
     writeFileSync(target, edited);
     chmodSync(target, 0o640);
@@ -41,7 +42,16 @@ async function plant(scope: string, bindings: string): Promise<Planted> {
         state: 'host',
         path: process.execPath,
     });
-    return { directory, path, target, edited, mode: statSync(target).mode, spec, input, locate };
+    return {
+        directory,
+        path: (name: string) => join(scope, name),
+        target,
+        edited,
+        mode: statSync(target).mode,
+        spec,
+        input,
+        locate,
+    };
 }
 
 // The developer's edit, its mode, and the absence of generator side effects, whatever the generator did.
@@ -75,7 +85,7 @@ test.each(CLOUDFLARE_TYPES_SCOPES)(
             expect(await envTypesFresh(planted.input)).toStrictEqual([
                 {
                     check: planted.spec.name,
-                    file: planted.path('cloudflare-env.d.ts').replaceAll('\\', '/'),
+                    file: toPosix(planted.path('cloudflare-env.d.ts')),
                     line: 1,
                     rule: 'stale-types',
                     message: 'wrangler types writes this file differently. Run it and commit the result.',
@@ -94,8 +104,7 @@ test.each(CLOUDFLARE_TYPES_SCOPES)(
 test('Cloudflare header checks report only files in their owning scope', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'gspot.toml':
-            'version = 1\nconfigurations = ["cloudflare"]\n[[scope]]\npath = "workers/api"\nconfigurations = ["cloudflare"]\n',
+        'gspot.toml': policyOf(['cloudflare'], '[[scope]]\npath = "workers/api"\nkits = ["cloudflare"]\n'),
         _headers: '  Invalid header\n',
         'workers/api/_headers': '/*\n  X-Frame-Options: DENY\n',
     });

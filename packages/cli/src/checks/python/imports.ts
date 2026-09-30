@@ -1,14 +1,7 @@
 import type { Node } from 'web-tree-sitter';
-import type { PythonModule } from '#cli/types/checks/python.ts';
-import type { StructureProblem } from '#cli/types/checks/structure.ts';
-import { CLASS_CALL, SINGLETONS_ALLOWED } from '#cli/constants/checks/python.ts';
-
-function dottedName(path: string): string {
-    return path
-        .replace(/\.py$/u, '')
-        .replace(/\/__init__$/u, '')
-        .replaceAll('/', '.');
-}
+import { assignmentOf } from '#cli/checks/python/modules.ts';
+import type { PythonModule, StructureProblem } from '#cli/types/checks.ts';
+import { IMPORTS, DIRECTIVE, CLASS_CALL, SINGLETONS_ALLOWED } from '#cli/config/checks/python.ts';
 
 // The module a from-import starts at: an absolute name, or a relative one counted up from the current module.
 function sourceModule(source: Node, current: string): string {
@@ -56,18 +49,30 @@ function reached(start: string, graph: Map<string, string[]>): Map<string, strin
     return trails;
 }
 
-function assignmentOf(statement: Node): Node | undefined {
-    const first = statement.type === 'expression_statement' ? statement.namedChildren[0] : undefined;
-    return first?.type === 'assignment' ? first : undefined;
-}
-
 // A module variable that holds an object built from a class at import time, or undefined. A name in capitals is a constant.
 function builtAtImport(statement: Node): string | undefined {
     const assignment = assignmentOf(statement);
-    const name = assignment?.childForFieldName('left');
-    const built = assignment?.childForFieldName('right');
-    if (name?.type !== 'identifier' || !(built?.type === 'call' && CLASS_CALL.test(built.text))) return undefined;
-    return name.text === name.text.toUpperCase() ? undefined : name.text;
+    if (assignment === undefined) return undefined;
+    const name = assignment.childForFieldName('left');
+    if (name?.type !== 'identifier' || name.text === name.text.toUpperCase()) return undefined;
+    const built = assignment.childForFieldName('right');
+    return built?.type === 'call' && CLASS_CALL.test(built.text) ? name.text : undefined;
+}
+
+// The runs of top-level import statements, from the first import of each to the last. Only comments may lie between two imports of a run.
+function importRuns(module: PythonModule): [Node, Node][] {
+    const runs: [Node, Node][] = [];
+    let open = false;
+    for (const node of module.tree.rootNode.namedChildren.filter((child) => child.type !== 'comment')) {
+        const current = runs.at(-1);
+        if (!IMPORTS.has(node.type)) open = false;
+        else if (open && current !== undefined) current[1] = node;
+        else {
+            runs.push([node, node]);
+            open = true;
+        }
+    }
+    return runs;
 }
 
 /**
@@ -76,7 +81,15 @@ function builtAtImport(statement: Node): string | undefined {
  * @returns the problems
  */
 export function importCycles(modules: PythonModule[]): StructureProblem[] {
-    const names = new Map(modules.map((module) => [dottedName(module.path), module]));
+    const names = new Map(
+        modules.map((module) => [
+            module.path
+                .replace(/\.py$/u, '')
+                .replace(/\/__init__$/u, '')
+                .replaceAll('/', '.'),
+            module,
+        ]),
+    );
     const known = new Set(names.keys());
     const graph = new Map(
         [...names].map(([name, module]): [string, string[]] => [
@@ -124,5 +137,31 @@ export function singletons(modules: PythonModule[], allowed: Set<string>): Struc
                 },
             ];
         }),
+    );
+}
+
+/**
+ * Comments written among a module's imports, from the first import to the last. A tool directive is not a comment.
+ * @param modules every module of the run
+ * @returns the problems
+ */
+export function importComments(modules: PythonModule[]): StructureProblem[] {
+    return modules.flatMap((module) =>
+        importRuns(module).flatMap(([first, last]) =>
+            module.tree.rootNode.namedChildren
+                .filter(
+                    (node) =>
+                        node.type === 'comment' &&
+                        node.startIndex > first.startIndex &&
+                        node.startPosition.row <= last.endPosition.row &&
+                        !DIRECTIVE.test(node.text),
+                )
+                .map((node) => ({
+                    file: module.path,
+                    line: node.startPosition.row + 1,
+                    rule: 'import-comment',
+                    text: 'No comments among imports. Say it where the import is used, or above the block.',
+                })),
+        ),
     );
 }

@@ -1,49 +1,62 @@
 ---
-title: Without mise
-description: Private tool projects and task integration when mise is not the runner.
+title: Package managers
+description: How gspot installs its tools, and how to run it with npm, Bun, pnpm, Yarn, uv, or no task runner.
 sidebar:
     order: 5
 ---
 
-Run commands from the configured repository root with the [CLI available](/guides/install/).
+gspot keeps its tools in a private project, separate from your application:
 
-gspot keeps npm lint dependencies in `.gspot/package.json` and Python lint dependencies in
-`.gspot/pyproject.toml`. These private projects exist under every runner, including when no
-runner is selected. `gspot apply` resolves their locks in isolation. `gspot install` installs
-those locked versions without changing the application dependencies.
+- npm tools in `.gspot/package.json`
+- Python tools in `.gspot/pyproject.toml`, installed with uv into `.gspot/.venv`
 
-The npm project uses the package manager declared by the repository. Without a declared
-manager, gspot selects Bun when available, or npm. Python tools use uv and install into
-`.gspot/.venv`.
+`gspot apply` writes the locks for these projects, and `gspot install` installs the locked
+versions. Your own dependencies do not change. For the npm tools, gspot uses the package
+manager your repository declares. Without one, it uses Bun when Bun is installed, and npm
+otherwise.
 
 ## With npm, Bun, pnpm, or Yarn
 
-Select the task integration with `gspot init --runner npm`, `--runner bun`, `--runner pnpm`, or `--runner yarn`.
-The integration adds available `gspot:check`, `gspot:fix`, `gspot:apply`, and `gspot:doctor` scripts.
-Initialization proposes existing check and format task names in `[runner.tasks]`. Review the
-listed replacements before accepting the plan. Authored lifecycle scripts remain intact.
-
-To choose names explicitly, set the mapping and apply it:
+Pick the package manager when you set up the repository:
 
 ```bash
-gspot set runner.tasks '{"check":"lint","fix":"format"}'
+gspot init --runner bun
 ```
 
-Uninstall restores accepted task bodies when they remain unchanged and preserves later edits.
+The choices are `npm`, `bun`, `pnpm`, and `yarn`. gspot adds its launcher to your
+`devDependencies` and changes nothing else: no scripts, and your own scripts stay. Run gspot
+through the package manager, as in `npx gspot check` or `bunx gspot check`. The generated hooks
+and CI job do the same.
 
 ## With uv
 
-Select the Python configuration with `gspot init --configurations python --no-runner`.
-`gspot install` uses uv to install the private Python environment without adding tasks to
-`pyproject.toml`. Run `gspot check` through the installed binary.
+For a Python repository without a task runner, run:
 
-## With no runner
+```bash
+gspot init --kits python --no-runner
+```
 
-`gspot init --no-runner` omits task integration. Run `gspot install` to install the private
-tool projects and any selected hook integration. Native tools without an npm or Python
-package require separate installation. `gspot doctor` reports missing tools and installation
+`gspot install` installs the Python tools with uv and adds no tasks to `pyproject.toml`. Run
+`gspot` directly, from a global npm install.
+
+## With no task runner
+
+`gspot init --no-runner` sets up no task runner. `gspot install` still installs the private tool
+projects and the hooks you chose. Native tools without an npm or Python package, such as
+ShellCheck, need a separate install. `gspot doctor` lists the missing tools with their install
 commands.
 
-Omit `[runner]` to leave task-runner configuration unmanaged. An absent `[hooks]` or `[ci]`
-table enables no integration. When a table is present, name its tool or provider explicitly.
-Use `--no-runner`, `--no-hooks`, and `--no-ci` during initialization to omit those tables.
+In `gspot.toml`, a missing `[runner]`, `[hooks]`, or `[ci]` table turns that integration off.
+When a table is present, it names its tool or provider. `--no-runner`, `--no-hooks`, and `--no-ci`
+leave the tables out during init.
+
+## Private registries
+
+gspot passes the registry settings from your `.npmrc` or your package manager environment to
+its own npm, Bun, pnpm, and Yarn runs. For the Python tools, uv reads the indexes from `uv.toml`
+or `[tool.uv]` in `pyproject.toml`.
+
+Keep credentials in your environment or your user configuration, never in `gspot.toml` or a
+committed lock. Each teammate uses their own credentials with `gspot install`. After a policy
+change, run `gspot apply` and commit the new manifests and locks. `install` refuses a lock that
+does not match the manifest.

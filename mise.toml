@@ -1,8 +1,8 @@
 min_version = "2026.8.8"
 
 [settings]
-# Repository tasks execute the CLI source before a release exists.
-disable_tools = ["github:stefanionescu/gspot"]
+# Repository tasks run the CLI source, so mise does not install the published package.
+disable_tools = ["npm:@gspothq/cli"]
 
 # Tasks use installed tools; native provisioning is an explicit development step.
 [settings.task]
@@ -11,17 +11,166 @@ run_auto_install = false
 [settings.npm]
 package_manager = "npm"
 
+# The hooks of this checkout run `mise exec -- gspot`; the package bin resolves it to the source CLI.
+[env]
+_.path = ["{{config_root}}/packages/cli/bin"]
+
+# Runtimes. Every kit tool the tests need comes from the manifests through `mise run repo:tools`.
 [tools]
-bats = "1.14.0"
 bun = "1.4.2"
 node = "24.20.0"
-deno = "2.6.6"
-hadolint = "2.14.0"
-trivy = "0.69.3"
+pnpm = "9.9.0"
+yarn = "1.22.22"
+# Test harness tools no kit pins, and the Python tools the native tests run from PATH.
+bats = "1.14.0"
 ruff = "0.16.8"
+"pipx:sqlfluff" = "4.3.0"
 "pipx:pytest" = {version = "9.1.1", depends = ["uv"], uvx_args = "--with pytest-cov==7.1.0"}
-"pipx:sqlfluff" = "4.0.0"
-swiftlint = {version = "0.63.2", os = ["linux", "macos"]}
-swiftformat = {version = "0.61.1", no_app = true, rename_exe = "swiftformat"}
-periphery = {version = "3.6.0", os = ["macos"]}
-"github:sbdchd/squawk" = "2.64.0"
+
+[tasks.gspot]
+description = "Run the source CLI: mise run gspot -- <command>."
+dir = "{{config_root}}"
+run = "bun packages/cli/src/main.ts"
+
+[tasks.check]
+description = "Run repository checks from gspot source."
+dir = "{{config_root}}"
+run = "bun packages/cli/src/main.ts check"
+
+[tasks.apply]
+description = "Generate repository configuration using gspot source and the workspace plugin."
+dir = "{{config_root}}"
+run = "bun tests/support/registry/workspace-command.ts apply"
+
+[tasks.doctor]
+description = "Diagnose the repository using gspot source."
+dir = "{{config_root}}"
+run = "bun packages/cli/src/main.ts doctor"
+
+[tasks."repo:tools"]
+description = "Write the mise pins of every kit tool from the manifests."
+run = "bun packages/cli/scripts/test-tools.ts"
+
+[tasks."repo:setup"]
+description = "Install frozen dependencies, prepare the grammars, and synchronize Astro types."
+run = ["bun install --frozen-lockfile", "bun packages/cli/scripts/inputs.ts"]
+depends_post = ["docs:sync", "build:plugin"]
+
+[tasks."repo:install-checks"]
+description = "Install locked repository checks with the current workspace plugin."
+run = "bun tests/support/registry/workspace-command.ts install"
+
+[tasks.build]
+depends = ["prepare:grammar"]
+description = "Build the gspot package into packages/cli/dist."
+run = "bun packages/cli/scripts/build.ts"
+
+[tasks."build:plugin"]
+description = "Build the standalone ESLint plugin and stage its license."
+run = "bun packages/eslint-plugin/build.ts"
+
+[tasks.test]
+depends = ["prepare:grammar", "build:plugin"]
+description = "Run deterministic unit and integration tests."
+dir = "{{config_root}}/tests"
+run = "bun test --timeout 60000 ./unit ./integration/cli ./integration/docs ./integration/repository"
+
+[tasks."test:unit"]
+depends = ["prepare:grammar", "build:plugin"]
+description = "Run CLI unit and standalone plugin tests."
+dir = "{{config_root}}/tests"
+run = "bun test --timeout 60000 ./unit"
+
+[tasks."test:integration"]
+depends = ["prepare:grammar", "build:plugin"]
+description = "Run integration tests."
+dir = "{{config_root}}/tests"
+run = "bun test --timeout 60000 ./integration/cli ./integration/docs ./integration/repository"
+
+[tasks."test:tools"]
+depends = ["prepare:grammar", "build:plugin"]
+description = "Run native compatibility tests with the selected tools installed."
+dir = "{{config_root}}/tests"
+run = "bun test --timeout 60000 ./integration/tools"
+
+[tasks."guides:lint"]
+depends = ["prepare:grammar", "build:plugin"]
+description = "Validate guide structure and native Good examples at both levels."
+dir = "{{config_root}}/tests"
+run = [
+    "bun ../packages/cli/scripts/guides-lint.ts",
+    "bun test --timeout 60000 --test-name-pattern 'examples|Good fence' ./unit/cli/agents/examples.test.ts ./integration/tools/generation/bash.test.ts ./integration/tools/generation/docker.test.ts ./integration/tools/generation/fastapi.test.ts ./integration/tools/generation/ruff.test.ts ./integration/tools/generation/swift/docs.test.ts ./integration/tools/generation/typescript.test.ts",
+]
+
+[tasks."test:acceptance"]
+depends = ["prepare:grammar"]
+description = "Run behavioral acceptance tests with the local plugin in an isolated registry."
+dir = "{{config_root}}/tests"
+run = "bun support/acceptance.ts"
+
+[tasks."test:package"]
+depends = ["prepare:grammar", "build:plugin"]
+description = "Build and publish both packages to an isolated registry, then test consumers that install them."
+dir = "{{config_root}}/tests"
+run = "bun support/package/run.ts"
+
+[tasks."check:types"]
+description = "Check workspace and documentation TypeScript types."
+depends = ["docs:sync"]
+run = ["bunx tsc --noEmit -p tsconfig.json", "bunx tsc --noEmit -p docs/tsconfig.json"]
+
+[tasks."docs:sync"]
+description = "Generate Astro content and TypeScript metadata."
+dir = "{{config_root}}/docs"
+run = "bun --bun astro sync"
+
+[tasks."docs:build"]
+description = "Build the documentation site and validate its links and fragments."
+dir = "{{config_root}}/docs"
+run = "bun --bun astro build"
+depends_post = ["docs:check-links"]
+
+[tasks."docs:dev"]
+alias = "dev"
+description = "Generate references and serve the documentation locally."
+dir = "{{config_root}}/docs"
+run = "bun --bun astro dev"
+
+[tasks."ci:swiftformat"]
+description = "Prepare and exercise SwiftFormat on Windows."
+run = "bun tests/support/cli/swiftformat.ts"
+
+[tasks."site:verify-release"]
+description = "Verify that documentation describes a published stable release."
+run = "bun docs/scripts/verify-release.ts"
+
+[tasks."prepare:grammar"]
+description = "Copy the grammar files into packages/cli/grammars, and download and verify the Swift parser."
+run = "bun packages/cli/scripts/inputs.ts"
+
+[tasks."release:verify-version"]
+description = "Require TAG to match the gspot package version before publishing."
+shell = "bash -euo pipefail -c"
+run = '''test "v$(bun -e 'console.log(require("./packages/cli/package.json").version)')" = "$TAG"'''
+
+[tasks."site:record-source"]
+description = "Record the selected source revision and CLI version in the built site artifact."
+run = '''
+bun -e 'await Bun.write("docs/dist/source.json", JSON.stringify({revision:process.env.GSPOT_DOCS_REVISION,version:require("./packages/cli/package.json").version})+"\n")'
+'''
+
+[tasks."test:docs"]
+depends = ["prepare:grammar"]
+description = "Run documentation example, reference, link, and release-source tests."
+dir = "{{config_root}}/tests"
+run = "bun test --timeout 60000 ./integration/docs"
+
+[tasks."test:bash-example"]
+description = "Exercise the published Bash example and captured transcript with native tools."
+dir = "{{config_root}}/tests"
+run = "bun test --timeout 60000 ./integration/tools/bash/example.test.ts"
+
+[tasks."docs:check-links"]
+description = "Validate local links and fragment targets in the built documentation site."
+dir = "{{config_root}}/docs"
+run = "bun scripts/links.ts"

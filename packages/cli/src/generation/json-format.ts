@@ -64,6 +64,7 @@ function block(value: unknown, depth: number, format: JsonFormat, taken: number)
  * @param format the print width and the indent width
  * @returns the text
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Headers and templates write JSON the way Prettier does, with a final newline, through this one entry.
 export function jsonText(value: unknown, format: JsonFormat): string {
     return `${block(value, 0, format, 0)}\n`;
 }

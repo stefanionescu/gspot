@@ -7,6 +7,9 @@ import { isDeepStrictEqual } from 'node:util';
 import type { PageLinks } from '#docs/src/types/links.ts';
 import { policyJsonSchema } from '#cli/policy/json-schema.ts';
 
+// The runtime and the script come before the arguments.
+const ARGUMENT_START = 2;
+
 function inspectPage(path: string, content: string): PageLinks {
     const ids = new Set<string>();
     const links: string[] = [];
@@ -21,10 +24,6 @@ function inspectPage(path: string, content: string): PageLinks {
     });
     parser.end(content);
     return { path, ids, links };
-}
-
-function routeFor(path: string): string {
-    return path.endsWith('/index.html') ? path.slice(0, -'index.html'.length) : path;
 }
 
 function targetProblem(
@@ -57,7 +56,7 @@ function pageProblems(page: PageLinks, origin: string, files: Set<string>, pages
 }
 
 if (import.meta.main) {
-    if (process.argv.length > 2) throw new Error('The built-site link check accepts no arguments.');
+    if (process.argv.length > ARGUMENT_START) throw new Error('The built-site link check accepts no arguments.');
     await validateSiteLinks(new URL('../dist/', import.meta.url), 'https://gspot.dev');
     const schema: unknown = JSON.parse(
         await readFile(new URL('../dist/schema/gspot.schema.json', import.meta.url), 'utf8'),
@@ -82,7 +81,10 @@ export async function validateSiteLinks(directory: URL, site: string): Promise<v
     const pages = new Map<string, PageLinks>();
     for (const path of files) {
         if (!path.endsWith('.html')) continue;
-        const page = inspectPage(routeFor(path), await readFile(join(root, path.slice(1)), 'utf8'));
+        const page = inspectPage(
+            path.endsWith('/index.html') ? path.slice(0, -'index.html'.length) : path,
+            await readFile(join(root, path.slice(1)), 'utf8'),
+        );
         pages.set(path, page);
         pages.set(page.path, page);
     }

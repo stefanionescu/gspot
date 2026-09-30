@@ -1,6 +1,7 @@
+import { INDEX_ONLY_RULES } from '#plugin/config/plugin.ts';
 import { noReexports } from '#plugin/rules/no-reexports.ts';
+import { exportLayout } from '#plugin/rules/export-layout.ts';
 import { importLayout } from '#plugin/rules/import-layout.ts';
-import { INDEX_ONLY_RULES } from '#plugin/constants/plugin.ts';
 import { typesPlacement } from '#plugin/rules/types-placement.ts';
 import { envAccessOwner } from '#plugin/rules/env-access-owner.ts';
 import { noIndexImports } from '#plugin/rules/no-index-imports.ts';
@@ -8,14 +9,13 @@ import { noTrivialFiles } from '#plugin/rules/no-trivial-files.ts';
 import packageManifest from '#plugin-package' with { type: 'json' };
 import { importDirection } from '#plugin/rules/import-direction.ts';
 import { importPathStyle } from '#plugin/rules/import-path-style.ts';
+import { noImportComments } from '#plugin/rules/no-import-comments.ts';
 import { requireServerOnly } from '#plugin/rules/require-server-only.ts';
 import { noExportOnlyFiles } from '#plugin/rules/no-export-only-files.ts';
 import { maxBarrelReexports } from '#plugin/rules/max-barrel-reexports.ts';
-import { noPrefixCollisions } from '#plugin/rules/no-prefix-collisions.ts';
 import { noTrivialFunctions } from '#plugin/rules/no-trivial-functions.ts';
 import { noClientEnvironment } from '#plugin/rules/no-client-environment.ts';
 import { privateBeforePublic } from '#plugin/rules/private-before-public.ts';
-import { noSingleFileFolders } from '#plugin/rules/no-single-file-folders.ts';
 import { registryInstanceOnly } from '#plugin/rules/registry-instance-only.ts';
 import { noCrossFolderImports } from '#plugin/rules/no-cross-folder-imports.ts';
 import { noCrossProjectImports } from '#plugin/rules/no-cross-project-imports.ts';
@@ -28,6 +28,7 @@ import { headerCommentsBeforeImports } from '#plugin/rules/header-comments-befor
 
 const rules = {
     'env-access-owner': envAccessOwner,
+    'export-layout': exportLayout,
     'header-comments-before-imports': headerCommentsBeforeImports,
     'import-direction': importDirection,
     'import-layout': importLayout,
@@ -40,11 +41,10 @@ const rules = {
     'no-export-only-files': noExportOnlyFiles,
     'no-exported-alias-constants': noExportedAliasConstants,
     'no-harness-barrel-imports': noHarnessBarrelImports,
+    'no-import-comments': noImportComments,
     'no-index-imports': noIndexImports,
-    'no-prefix-collisions': noPrefixCollisions,
     'no-reexports': noReexports,
     'no-reexports-outside-index': noReexportsOutsideIndex,
-    'no-single-file-folders': noSingleFileFolders,
     'no-trivial-files': noTrivialFiles,
     'no-trivial-functions': noTrivialFunctions,
     'private-before-public': privateBeforePublic,

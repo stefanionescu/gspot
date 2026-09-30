@@ -1,25 +1,24 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { runToolCommand } from '#cli/tools/command.ts';
-import { readFileSync, statSync, writeFileSync } from 'node:fs';
+import { statSync, readFileSync, writeFileSync } from 'node:fs';
 import { packageEnvironment } from '#cli/tools/packages/environment.ts';
 
 test('native registry settings authenticate from an isolated project and preserve authored configuration', async () => {
     await using repository = await testdir();
     await using isolated = await testdir();
     const token = 'synthetic-registry-credential';
-    let rejected = 0;
-    let authenticated = 0;
+    const requests = { rejected: 0, authenticated: 0 };
     const server = Bun.serve({
         hostname: '127.0.0.1',
         port: 0,
         fetch(request) {
             if (request.headers.get('authorization') !== `Bearer ${token}`) {
-                rejected++;
+                requests.rejected++;
                 return Response.json({ error: 'Authentication required' }, { status: 401 });
             }
-            authenticated++;
+            requests.authenticated++;
             return Response.json({
                 name: 'private-check-tool',
                 'dist-tags': { latest: '1.0.0' },
@@ -48,7 +47,7 @@ test('native registry settings authenticate from an isolated project and preserv
             env: await packageEnvironment(repository.path),
         });
         expect(missing.code).not.toBe(0);
-        expect(rejected).toBeGreaterThan(0);
+        expect(requests.rejected).toBeGreaterThan(0);
         const source = `registry=${registry}\n//127.0.0.1:${String(server.port)}/:_authToken=${token}\n`;
         writeFileSync(join(repository.path, '.npmrc'), source, { mode: 0o600 });
         const mode = statSync(join(repository.path, '.npmrc')).mode;
@@ -58,7 +57,7 @@ test('native registry settings authenticate from an isolated project and preserv
         });
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect(JSON.parse(corrected.stdout)).toBe('1.0.0');
-        expect(authenticated).toBeGreaterThan(0);
+        expect(requests.authenticated).toBeGreaterThan(0);
         expect(corrected.stdout + corrected.stderr).not.toContain(token);
         expect(readFileSync(join(repository.path, '.npmrc'), 'utf8')).toBe(source);
         expect(statSync(join(repository.path, '.npmrc')).mode).toBe(mode);

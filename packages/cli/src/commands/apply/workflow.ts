@@ -1,48 +1,48 @@
-import { emitAll } from '#cli/generation/render.ts';
+import type { Read } from '#cli/types/platform.ts';
+import { emitAll } from '#cli/generation/outputs.ts';
 import { assertNoProblems } from '#cli/policy/read.ts';
+import { writeGenerated } from '#cli/lifecycle/apply.ts';
 import { writePin } from '#cli/lifecycle/version-pin.ts';
-import type { FileSnapshot } from '#cli/types/platform.ts';
-import { publishGenerated } from '#cli/lifecycle/apply.ts';
-import { hasConflictMarkers } from '#cli/lifecycle/drift.ts';
+import type { Generated } from '#cli/types/generation.ts';
+import { CONFLICT_MARKERS } from '#cli/config/lifecycle.ts';
 import type { Session } from '#cli/types/execution/execution.ts';
-import { withLifecycleOwner } from '#cli/lifecycle/ownership/owner.ts';
-import type { GeneratedProposal } from '#cli/types/generation.ts';
 import { hasPackages, installPackages } from '#cli/tools/vale.ts';
-import { resolvePythonProject } from '#cli/tools/python-project.ts';
-import { resolvePackageProject } from '#cli/tools/packages/project.ts';
-import type { ApplyReport, LifecycleOwner } from '#cli/types/lifecycle/lifecycle.ts';
+import { preparePythonProject } from '#cli/tools/python-project.ts';
+import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
+import { preparePackageProject } from '#cli/tools/packages/project.ts';
+import type { Owner, ApplyReport } from '#cli/types/lifecycle/lifecycle.ts';
 
 async function installProsePackages(session: Session, report: ApplyReport): Promise<void> {
     const isProse = session.scopes.some((selection) =>
-        selection.selected.some((manifest) => manifest.configuration.name === 'prose'),
+        selection.selected.some((manifest) => manifest.kit.name === 'prose'),
     );
-    if (!isProse || hasPackages(session.root, true)) return;
+    if (!isProse || hasPackages(session.root)) return;
     const problem = await installPackages(session.root);
     if (problem === undefined) report.notes.push('synced the Vale packages into .gspot/config/vale/styles');
     else report.notes.push(`the Vale packages are not synced (${problem}); run gspot apply with the network on`);
 }
 
 // A generated file a merge left with conflict markers is no edit anyone keeps: apply writes it again (K-274).
-function conflictedOutputs(owner: LifecycleOwner, rendered: GeneratedProposal): Map<string, FileSnapshot> {
-    const conflicted = new Map<string, FileSnapshot>();
+function conflictedOutputs(owner: Owner, rendered: Generated): Map<string, Read> {
+    const conflicted = new Map<string, Read>();
     for (const file of rendered.files) {
         const current = owner.read(file.path);
-        if (current !== undefined && hasConflictMarkers(current.bytes.toString('utf8')))
+        if (current !== undefined && CONFLICT_MARKERS.test(current.bytes.toString('utf8')))
             conflicted.set(file.path, current);
     }
     return conflicted;
 }
 
 /**
- * Apply generated proposals through the repository's lifecycle owner.
- * @param session the configuration and repository observations
- * @param takeover reviewed originals authorized for replacement
+ * Apply generated plans through the repository's lifecycle owner.
+ * @param session the configuration and repository reads
+ * @param replace reviewed originals authorized for replacement
  * @returns generated changes and preserved files
  */
-export async function applyAll(session: Session, takeover?: ReadonlyMap<string, FileSnapshot>): Promise<ApplyReport> {
-    // Generation writes from the policy, so a policy with a wrong line is refused here, where check would report it.
+export async function applyAll(session: Session, replace?: ReadonlyMap<string, Read>): Promise<ApplyReport> {
+    // Generation requires a valid policy. Refuse errors before writing proposed files.
     assertNoProblems(session.policyFiles);
-    return withLifecycleOwner(session.root, async (owner) => {
+    return runOwnedLifecycle(session.root, async (owner) => {
         if (owner.read('gspot.toml')?.bytes.toString('utf8') !== session.policyFiles.text)
             throw new Error('The gspot.toml file changed after generation was planned. Retry the command.');
         const report: ApplyReport = {
@@ -56,25 +56,22 @@ export async function applyAll(session: Session, takeover?: ReadonlyMap<string, 
         };
         const rendered = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
             version: session.version,
-            packageManager: session.packageManager,
-            takeover: takeover,
+            packageClient: session.packageClient,
         });
-        await resolvePackageProject(session.root, rendered.files, owner);
-        await resolvePythonProject(session.root, rendered.files, owner);
+        await preparePackageProject(session.root, rendered.files, owner);
+        await preparePythonProject(session.root, rendered.files, owner);
         if (owner.read('gspot.toml')?.bytes.toString('utf8') !== session.policyFiles.text)
             throw new Error('The gspot.toml file changed during tool resolution. Retry the command.');
         report.notes.push(...rendered.notes);
-        publishGenerated(owner, {
+        writeGenerated(owner, {
             root: session.root,
             rendered,
             report,
             retained: {
-                prose: session.scopes.some((scope) =>
-                    scope.selected.some((manifest) => manifest.configuration.name === 'prose'),
-                ),
-                packages: session.packageManager !== undefined,
+                prose: session.scopes.some((scope) => scope.selected.some((manifest) => manifest.kit.name === 'prose')),
+                packages: session.packageClient !== undefined,
             },
-            takeover,
+            replace,
             regenerate: conflictedOutputs(owner, rendered),
         });
         await installProsePackages(session, report);
@@ -82,9 +79,7 @@ export async function applyAll(session: Session, takeover?: ReadonlyMap<string, 
             rendered.files
                 .filter(
                     (file) =>
-                        file.kind === 'lock' ||
-                        file.path === '.gspot/package.json' ||
-                        file.path === '.gspot/pyproject.toml',
+                        file.kind === 'lock' || ['.gspot/package.json', '.gspot/pyproject.toml'].includes(file.path),
                 )
                 .map((file) => file.path),
         );

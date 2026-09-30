@@ -1,9 +1,10 @@
+import type { Manifest } from '#cli/types/kits.ts';
 import type { RuleFile } from '#cli/types/agents.ts';
+import { openRoot } from '#cli/platform/filesystem.ts';
 import type { Policy } from '#cli/types/policy/policy.ts';
 import { selectRuleFiles } from '#cli/agents/assemble.ts';
-import type { Manifest } from '#cli/types/configurations.ts';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import { AREA_BY_LAYER, CHECKS_INSTALLED, RULES_ALONE } from '#cli/constants/agents.ts';
+import type { Repository } from '#cli/types/repository/repository.ts';
+import { RULES_ALONE, AREA_BY_LAYER, CHECKS_INSTALLED } from '#cli/config/agents.ts';
 
 function guideGroups(files: RuleFile[]): [string, string[]][] {
     const rows = new Map<string, string[]>();
@@ -15,7 +16,7 @@ function guideGroups(files: RuleFile[]): [string, string[]][] {
     return [...rows];
 }
 
-function indexLines(rules: Policy['rules'], files: RuleFile[]): string[] {
+function indexLines(rules: Policy['guides'], files: RuleFile[]): string[] {
     const { directory, project } = rules;
     const projectRow: [string, string[]][] =
         project === undefined || project === '' ? [] : [['Project rules', [`\`${project}/\``]]];
@@ -34,15 +35,18 @@ function indexLines(rules: Policy['rules'], files: RuleFile[]): string[] {
 /**
  * The managed block text for a session.
  * @param rules the rule policy
- * @param manifests the selected configurations
+ * @param manifests the selected kits.
+ * @param level the selected enforcement level.
+ * @param repository the source inventory for conditional guide selection.
  * @returns the block: a heading, the guide index when rules are installed, and the standing instructions
  */
 export function managedBlock(
-    rules: Policy['rules'],
+    rules: Policy['guides'],
     manifests: Manifest[],
-    level: Policy['level'] = 'recommended',
+    level: Policy['level'],
+    repository: Repository,
 ): string {
-    const files = selectRuleFiles(rules, manifests);
+    const files = selectRuleFiles(rules, manifests, repository);
     const index = files.length > 0 ? indexLines(rules, files) : [];
     const hasChecks = manifests.some((manifest) => manifest.checks.length > 0);
     const closing = hasChecks ? CHECKS_INSTALLED : RULES_ALONE;
@@ -65,7 +69,7 @@ export function managedBlock(
  * @returns deduplicated repository-relative destinations
  */
 export function agentFiles(root: string, configured: string[] = []): string[] {
-    const files = openConfinedRoot(root);
+    const files = openRoot(root);
     const detected = ['CLAUDE.md', 'GEMINI.md', '.github/copilot-instructions.md'].filter(
         (path) => files.read(path) !== undefined,
     );

@@ -1,11 +1,18 @@
 import { fileURLToPath } from 'node:url';
 import { readPolicy } from '#cli/policy/read.ts';
-import { run } from '#tests/support/cli/command.ts';
-import { delimiter, dirname, join } from 'node:path';
-import { inspectTool, toolPin } from '#cli/tools/inspect.ts';
+import * as processes from '#cli/platform/spawn.ts';
+import { emitAll } from '#cli/generation/outputs.ts';
+import { join, dirname, delimiter } from 'node:path';
+import { kitManifests } from '#cli/kits/manifests.ts';
+import { openSession } from '#cli/execution/session.ts';
+import { run, gspot } from '#tests/support/cli/command.ts';
 import { privateToolInstallation } from '#cli/tools/pins.ts';
+import { toolPin, inspectTool } from '#cli/tools/inspect.ts';
+import { toolShipsHere } from '#tests/support/cli/platforms.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
+import { INSTALL_TIMEOUT_MS } from '#tests/inputs/integration/tools/tools.ts';
+import { installPythonProject, preparePythonProject } from '#cli/tools/python-project.ts';
 
 const root = fileURLToPath(new URL('../../..', import.meta.url));
 
@@ -15,11 +22,13 @@ const root = fileURLToPath(new URL('../../..', import.meta.url));
  * @returns the PATH value
  */
 export function toolsPath(names: string[]): string {
-    const manifests = [...configurationManifests().values()];
+    const manifests = [...kitManifests().values()];
     const context = { root, inspections: new Map(), policyFiles: readPolicy(root) };
     const folders = names.flatMap((name) => {
         const tool = toolPin(manifests, name.replace(/^[a-z]+:/u, ''));
         if (privateToolInstallation(tool, context.policyFiles.policy.runner?.tool) !== undefined) return [];
+        // A pin without a build for this machine is skipped by the checks that need it, so no PATH entry is owed.
+        if (!toolShipsHere(tool.name)) return [];
         const found = inspectTool(context, tool);
         if (found.path === undefined || !['ok', 'host'].includes(found.state))
             throw new Error(`Required tool ${name} is ${found.state}. ${found.hint ?? ''} ${found.note ?? ''}`);
@@ -48,7 +57,11 @@ export async function install(cwd: string, argv: string[], environment: Record<s
 /** Install generated, locked tool projects through the public command. */
 export async function installPrivateTools(cwd: string): Promise<void> {
     // No release of gspot exists yet, so a sandbox with a mise runner skips its own pin as this repository does.
-    const outcome = await run(cwd, ['install'], { MISE_DISABLE_TOOLS: 'github:stefanionescu/gspot' });
+    const outcome = await processes.run([process.execPath, gspot, 'install'], {
+        cwd,
+        env: { NO_COLOR: '1', CI: '1', MISE_DISABLE_TOOLS: 'npm:@gspothq/cli' },
+        timeoutMs: INSTALL_TIMEOUT_MS,
+    });
     if (outcome.code !== 0)
         throw new Error(
             `Sandbox installation failed with status ${String(outcome.code)}: ${outcome.stderr}${outcome.stdout}`,
@@ -72,4 +85,23 @@ export async function installAtLevel(
     const selected = await run(cwd, ['set', 'level', level], environment);
     if (selected.code !== 0)
         throw new Error(`The ${level} level was not selected: ${selected.stdout}${selected.stderr}`);
+}
+
+/**
+ * Generate selected Semgrep rules and install their locked Python environment in a sandbox.
+ * @param root the sandbox with its policy and planted sources
+ */
+export async function installSemgrep(root: string): Promise<void> {
+    const session = await openSession(root);
+    const outputs = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
+        version: session.version,
+        packageClient: session.packageClient,
+    }).files.filter(
+        ({ path }) => path.includes('/semgrep/') || path.endsWith('.semgrepignore') || path === '.gspot/pyproject.toml',
+    );
+    await runOwnedLifecycle(root, async (owner) => {
+        await preparePythonProject(root, outputs, owner);
+    });
+    for (const output of outputs) await Bun.write(join(root, output.path), output.content);
+    await installPythonProject(root);
 }

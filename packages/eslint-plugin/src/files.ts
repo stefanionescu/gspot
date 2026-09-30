@@ -3,8 +3,8 @@ import { posix } from 'node:path';
 import { readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
-import type { DirectoryEntry, RuleContextOf } from '#plugin/types/plugin.ts';
-import { DECLARATION_SUFFIX, FILE_SCHEME, INDEX_BASENAMES, STDIN_NAMES } from '#plugin/constants/plugin.ts';
+import type { RuleReporter, DirectoryEntry } from '#plugin/types/plugin.ts';
+import { FILE_SCHEME, STDIN_NAMES, INDEX_BASENAMES } from '#plugin/config/plugin.ts';
 
 const globCache = new Map<string, (path: string) => boolean>();
 
@@ -26,7 +26,7 @@ export function normalizePath(value: string): string {
  * @param context the rule context
  * @returns the path, or undefined when ESLint reads stdin
  */
-export function lintedFile(context: RuleContextOf): string | undefined {
+export function lintedFile(context: RuleReporter): string | undefined {
     const raw = context.physicalFilename === '' ? context.filename : context.physicalFilename;
     const normalized = normalizePath(raw);
     return STDIN_NAMES.has(normalized) ? undefined : normalized;
@@ -37,7 +37,7 @@ export function lintedFile(context: RuleContextOf): string | undefined {
  * @param context the rule context
  * @returns the root without a trailing slash
  */
-export function lintedRoot(context: RuleContextOf): string {
+export function lintedRoot(context: RuleReporter): string {
     const settings = (context.settings as { gspot?: { root?: string } } | undefined)?.gspot;
     const root = settings?.root ?? context.cwd;
     return normalizePath(root).replace(/\/$/u, '');
@@ -48,30 +48,9 @@ export function lintedRoot(context: RuleContextOf): string {
  * @param path a file path
  * @returns whether the base name is an index file
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The barrel rules decide what an index module is by this one list of names.
 export function isIndexFile(path: string): boolean {
     return INDEX_BASENAMES.has(posix.basename(normalizePath(path)));
-}
-
-/**
- * The base name without its extension; `.d.ts` counts as one extension.
- * @param path a file path
- * @returns the stem
- */
-export function stemOf(path: string): string {
-    const base = posix.basename(path);
-    if (base.endsWith(DECLARATION_SUFFIX)) return base.slice(0, -DECLARATION_SUFFIX.length);
-    const dot = base.lastIndexOf('.');
-    return dot <= 0 ? base : base.slice(0, dot);
-}
-
-/**
- * A grouping prefix: the stem up to its first dash or dot.
- * @param stem a file stem
- * @returns the prefix, or the whole stem when it has no dash or dot
- */
-export function prefixOf(stem: string): string {
-    const cuts = [stem.indexOf('-'), stem.indexOf('.')].filter((index) => index >= 0);
-    return cuts.length === 0 ? stem : stem.slice(0, Math.min(...cuts));
 }
 
 /**
@@ -119,6 +98,7 @@ export function isAnyGlobMatch(path: string, globs: readonly string[]): boolean 
  * @param path an absolute path
  * @returns the relative path
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Import rules make a path relative to the lint root the same way.
 export function relativeToRoot(root: string, path: string): string {
     return path.startsWith(`${root}/`) ? path.slice(root.length + 1) : path;
 }
@@ -128,6 +108,7 @@ export function relativeToRoot(root: string, path: string): string {
  * @param node any node
  * @returns the string when the node is a string literal
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Import rules read a literal import source the same way.
 export function staticString(node: unknown): string | undefined {
     const literal = node as { type?: string; value?: unknown } | null | undefined;
     return literal?.type === AST_NODE_TYPES.Literal && typeof literal.value === 'string' ? literal.value : undefined;

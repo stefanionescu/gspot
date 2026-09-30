@@ -1,11 +1,7 @@
 // What init fills in from the repository: every setting whose manifest says where to look (K-93).
-import type { Manifest } from '#cli/types/configurations.ts';
-import type { Detect, DetectedSetting } from '#cli/types/commands/init.ts';
-import type { ManifestFacts, TrackedFile } from '#cli/types/repository/repository.ts';
-
-function dependencyNames(facts: ManifestFacts[]): Set<string> {
-    return new Set(facts.flatMap((fact) => [...Object.keys(fact.dependencies), ...Object.keys(fact.installed)]));
-}
+import type { Manifest } from '#cli/types/kits.ts';
+import type { Detect, DetectedSetting } from '#cli/types/commands.ts';
+import type { Fields, TrackedFile } from '#cli/types/repository/repository.ts';
 
 function folderNames(files: TrackedFile[]): Set<string> {
     const folders = new Set<string>();
@@ -16,34 +12,41 @@ function folderNames(files: TrackedFile[]): Set<string> {
     return folders;
 }
 
+// Ordered mappings can select a false or undefined value, so retain the matching entry itself.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Dependencies and folder values both take the first entry whose name a kit lists.
+function firstMatch(mapping: Record<string, unknown> | undefined, names: Set<string>): [string, unknown] | undefined {
+    return Object.entries(mapping ?? {}).find(([name]) => names.has(name));
+}
+
 function detectedValue(detect: Detect, dependencies: Set<string>, folders: Set<string>): unknown {
     if (detect.dependency !== undefined && dependencies.has(detect.dependency)) return true;
-    for (const [name, value] of Object.entries(detect.dependencies ?? {})) if (dependencies.has(name)) return value;
-    for (const folder of detect.folders ?? []) if (folders.has(folder)) return folder;
-    for (const [folder, value] of Object.entries(detect.folder_values ?? {})) if (folders.has(folder)) return value;
-    return undefined;
+    const dependency = firstMatch(detect.dependencies, dependencies);
+    if (dependency !== undefined) return dependency[1];
+    const folder = detect.folders?.find((name) => folders.has(name));
+    if (folder !== undefined) return folder;
+    return firstMatch(detect.folder_values, folders)?.[1];
 }
 
 /**
  * The settings init can fill from what the repository holds, each with the value its detect table gives.
- * @param manifests the selected configurations
- * @param facts the project manifests read from the tree
+ * @param manifests the selected kits
+ * @param fields the project manifests read from the tree
  * @param files the tracked files
  * @returns the detected settings in manifest order, one per setting
  */
-export function detectedSettings(
-    manifests: Manifest[],
-    facts: ManifestFacts[],
-    files: TrackedFile[],
-): DetectedSetting[] {
-    const dependencies = dependencyNames(facts);
+export function detectedSettings(manifests: Manifest[], fields: Fields[], files: TrackedFile[]): DetectedSetting[] {
+    const dependencies = new Set(
+        fields.flatMap((fact) => [...Object.keys(fact.dependencies), ...Object.keys(fact.installed)]),
+    );
     const folders = folderNames(files);
-    const found: DetectedSetting[] = [];
-    for (const manifest of manifests)
-        for (const spec of manifest.settings) {
-            if (spec.detect === undefined || found.some((entry) => entry.key === spec.name)) continue;
+    const seen = new Set<string>();
+    return manifests.flatMap((manifest) =>
+        manifest.settings.flatMap((spec) => {
+            if (spec.detect === undefined || seen.has(spec.name)) return [];
             const value = detectedValue(spec.detect, dependencies, folders);
-            if (value !== undefined) found.push({ key: spec.name, value, configuration: manifest.configuration.name });
-        }
-    return found;
+            if (value === undefined) return [];
+            seen.add(spec.name);
+            return [{ key: spec.name, value, kit: manifest.kit.name }];
+        }),
+    );
 }

@@ -1,25 +1,24 @@
 // Checking every revision a push sends, each in its own snapshot, with one report for the push.
 import { writeReport } from '#cli/output/report.ts';
+import { GspotError } from '#cli/platform/errors.ts';
+import { CANCELED_EXIT } from '#cli/config/commands/check.ts';
 import { checkContent } from '#cli/commands/check/content.ts';
-import { SelectionError } from '#cli/configurations/select.ts';
-import { CANCELED_EXIT } from '#cli/constants/commands/check.ts';
 import type { PushReport } from '#cli/types/execution/execution.ts';
-import type { CommandResult } from '#cli/types/commands/commands.ts';
+import { useRevision } from '#cli/repository/revisions/contents.ts';
 import type { PushSelection } from '#cli/types/repository/revisions.ts';
-import { withRevisionSnapshot } from '#cli/repository/revisions/snapshot.ts';
 import { pushedRevisions } from '#cli/repository/revisions/push-selection.ts';
-import type { Checked, PushedRevision, CheckCommandResult, CheckOptions } from '#cli/types/commands/check.ts';
+import type { Checked, CheckOptions, CommandResult, PushedRevision, CheckCommandResult } from '#cli/types/commands.ts';
 
 // Refuses the options that select or change files, which a push of exact objects cannot honor.
 function assertPushOptions(options: CheckOptions): void {
-    const isCombined =
+    const hasConflictingOptions =
         options.staged ||
         options.changed !== undefined ||
         options.fix ||
         options.stage !== undefined ||
         options.messageFile !== undefined;
-    if (isCombined)
-        throw new SelectionError([
+    if (hasConflictingOptions)
+        throw new GspotError('selection', [
             'Pre-push object checks cannot be combined with staged, changed, fix, stage, or message-file options.',
         ]);
 }
@@ -32,11 +31,11 @@ async function checkRevision(
     revision: PushedRevision,
 ): Promise<CheckCommandResult | undefined> {
     try {
-        return await withRevisionSnapshot(
+        return await useRevision(
             root,
-            { kind: 'commit', object: revision.object },
-            (snapshot) =>
-                checkContent(snapshot, options, signal, {
+            { kind: 'commit', hash: revision.object },
+            (revisionRoot) =>
+                checkContent(revisionRoot, options, signal, {
                     commits: revision.commits,
                     historyComplete: revision.historyComplete,
                     content: 'commit',
@@ -69,13 +68,13 @@ function pushReport(selected: PushSelection, revisions: Checked[], signal: Abort
 
 /**
  * Checks the revisions Git's pre-push protocol names, each in an exact snapshot.
- * @param root the repository root
- * @param options the parsed flags, with the pre-push input
- * @param input what Git handed the pre-push hook
- * @param input.input the ref and object lines on standard input
- * @param input.remote the remote name, when Git gave one
- * @param signal cancellation for the run
- * @returns the text to print, the push report, and the exit code
+ * @param root the repository root.
+ * @param options the parsed flags, with the pre-push input.
+ * @param input what Git handed the pre-push hook.
+ * @param input.input the ref and object lines on standard input.
+ * @param input.remote the remote name, when Git gave one.
+ * @param signal cancellation for the run.
+ * @returns the text to print, the push report, and the exit code.
  */
 export async function checkPushed(
     root: string,

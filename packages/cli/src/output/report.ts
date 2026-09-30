@@ -1,13 +1,15 @@
-import { join } from 'node:path';
-import type { Finding } from '#cli/types/checks/checks.ts';
-import packageManifest from '#package' with { type: 'json' };
-import { REPORT_DIRECTORY } from '#cli/constants/platform.ts';
-import { reportStorageFailure } from '#cli/output/messages.ts';
 // JSON, SARIF, and GitLab Code Quality reports.
-import { withLifecycleOwner } from '#cli/lifecycle/ownership/owner.ts';
-import { PACKAGE_JSON_INDENT } from '#cli/constants/generation.ts';
-import type { PushReport, RunReport } from '#cli/types/execution/execution.ts';
-import { SarifBuilder, SarifResultBuilder, SarifRuleBuilder, SarifRunBuilder } from 'node-sarif-builder';
+import { join } from 'node:path';
+import { createHash } from 'node:crypto';
+import { toolPath } from '#cli/platform/paths.ts';
+import type { Finding } from '#cli/types/checks.ts';
+import { openRoot } from '#cli/platform/filesystem.ts';
+import packageManifest from '#package' with { type: 'json' };
+import { reportStorageFailure } from '#cli/output/messages.ts';
+import { PACKAGE_JSON_INDENT } from '#cli/config/generation.ts';
+import { PRIVATE_FILE, REPORT_DIRECTORY } from '#cli/config/platform.ts';
+import type { RunReport, PushReport } from '#cli/types/execution/execution.ts';
+import { SarifBuilder, SarifRunBuilder, SarifRuleBuilder, SarifResultBuilder } from 'node-sarif-builder';
 
 const { version: GSPOT_VERSION } = packageManifest;
 
@@ -32,27 +34,30 @@ function codeQualityText(report: RunReport | PushReport): string {
         ...entry.coverage.findings,
     ]);
     const seen = new Set<string>();
-    const entries = findings.flatMap((finding) => {
-        const path = finding.file.replaceAll('\\', '/').replace(/^\.\//u, '');
-        if (path === '' || path.startsWith('/') || /^[a-zA-Z]:/u.test(path) || path.split('/').includes('..'))
-            return [];
-        const check = finding.rule === undefined ? finding.check : `${finding.check}:${finding.rule}`;
-        const line = Math.max(1, finding.line ?? 1);
-        const fingerprint = new Bun.CryptoHasher('sha256')
-            .update(JSON.stringify([check, path, line, finding.column ?? 1, finding.message]))
-            .digest('hex');
-        if (seen.has(fingerprint)) return [];
-        seen.add(fingerprint);
-        return [
-            {
-                description: finding.message,
-                check_name: check,
-                fingerprint,
-                severity: 'major',
-                location: { path, lines: { begin: line } },
-            },
-        ];
-    });
+    const entries = findings
+        .map((finding) => ({ finding, path: toolPath(finding.file).replace(/^\.\//u, '') }))
+        .filter(
+            ({ path }) =>
+                path !== '' && !path.startsWith('/') && !/^[a-zA-Z]:/u.test(path) && !path.split('/').includes('..'),
+        )
+        .flatMap(({ finding, path }) => {
+            const check = finding.rule === undefined ? finding.check : `${finding.check}:${finding.rule}`;
+            const line = Math.max(1, finding.line ?? 1);
+            const fingerprint = createHash('sha256')
+                .update(JSON.stringify([check, path, line, finding.column ?? 1, finding.message]))
+                .digest('hex');
+            if (seen.has(fingerprint)) return [];
+            seen.add(fingerprint);
+            return [
+                {
+                    description: finding.message,
+                    check_name: check,
+                    fingerprint,
+                    severity: 'major',
+                    location: { path, lines: { begin: line } },
+                },
+            ];
+        });
     return `${JSON.stringify(entries, null, PACKAGE_JSON_INDENT)}\n`;
 }
 
@@ -98,34 +103,28 @@ function sarifRun(report: RunReport): SarifRunBuilder {
 }
 
 /**
- * Write every public report through the lifecycle owner.
+ * Writes the JSON, SARIF, and Code Quality reports, replacing those of the last run.
  * @param root the repository root
  * @param report the run report
  */
 export function writeReport(root: string, report: RunReport | PushReport): void {
-    const json = `${JSON.stringify(report, null, PACKAGE_JSON_INDENT)}\n`;
-    const sarif = sarifText(report);
-    const path = join(root, REPORT_DIRECTORY, 'report.json');
+    const outputs = [
+        ['report.json', `${JSON.stringify(report, null, PACKAGE_JSON_INDENT)}\n`],
+        ['report.sarif', sarifText(report)],
+        ['report.codequality.json', codeQualityText(report)],
+    ] as const;
     try {
-        withLifecycleOwner(root, (owner) => {
-            const proposals = (
-                [
-                    [`${REPORT_DIRECTORY}/report.json`, json],
-                    [`${REPORT_DIRECTORY}/report.sarif`, sarif],
-                    [`${REPORT_DIRECTORY}/report.codequality.json`, codeQualityText(report)],
-                ] as const
-            ).map(([destination, content]) =>
-                owner.proposeReplacement(destination, { bytes: Buffer.from(content), mode: 0o600 }, 'runtime'),
-            );
-            const conflict = proposals.find((proposal) => proposal.status === 'preserved');
-            if (conflict !== undefined)
-                throw new Error(
-                    `Preserved edited or unowned report ${conflict.path}. Move it aside to save a new report.`,
-                );
-            owner.applyProposals(proposals);
-        });
+        const files = openRoot(root);
+        try {
+            for (const [name, content] of outputs) {
+                const path = `${REPORT_DIRECTORY}/${name}`;
+                files.write(path, { bytes: Buffer.from(content), mode: PRIVATE_FILE }, files.read(path));
+            }
+        } finally {
+            files.close();
+        }
     } catch (error) {
-        reportStorageFailure(path, error);
+        reportStorageFailure(join(root, REPORT_DIRECTORY, 'report.json'), error);
     }
 }
 

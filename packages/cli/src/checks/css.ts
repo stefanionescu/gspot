@@ -1,10 +1,20 @@
 import ts from 'typescript';
 import { parse } from 'postcss';
 import { posix } from 'node:path';
+import { findingAt } from '#cli/checks/result.ts';
 import selectorParser from 'postcss-selector-parser';
 import { readSource } from '#cli/repository/tracked.ts';
-import { CODE_SUFFIX, MODULE_SUFFIX } from '#cli/constants/checks/checks.ts';
-import type { Importer, EngineInput, Finding } from '#cli/types/checks/checks.ts';
+import type { Finding, Importer, EngineInput } from '#cli/types/checks.ts';
+import { CODE_SUFFIX, MODULE_SUFFIX } from '#cli/config/checks/repository.ts';
+
+// CSS module objects use default or namespace bindings. Type-only and named imports do not carry the object.
+function moduleBinding(statement: ts.ImportDeclaration): ts.Identifier | undefined {
+    const clause = statement.importClause;
+    if (clause === undefined || clause.phaseModifier === ts.SyntaxKind.TypeKeyword) return undefined;
+    if (clause.name !== undefined) return clause.name;
+    const bindings = clause.namedBindings;
+    return bindings !== undefined && ts.isNamespaceImport(bindings) ? bindings.name : undefined;
+}
 
 // Bind identifiers without reading dependencies or sources outside the selected inventory.
 function moduleImporters(code: { path: string; text: string }[], sheets: Set<string>): Map<string, Importer[]> {
@@ -27,30 +37,36 @@ function moduleImporters(code: { path: string; text: string }[], sheets: Set<str
     const program = ts.createProgram([...sources.keys()], options, host);
     const checker = program.getTypeChecker();
     const importers = new Map<string, Importer[]>();
-    for (const [path, source] of sources) {
-        for (const statement of source.statements) {
-            if (!ts.isImportDeclaration(statement) || !ts.isStringLiteral(statement.moduleSpecifier)) continue;
-            const specifier = statement.moduleSpecifier.text;
-            if (!specifier.startsWith('.')) continue;
-            const sheet = posix.normalize(posix.join(posix.dirname(path), specifier));
-            if (!sheets.has(sheet)) continue;
-            const clause = statement.importClause;
-            if (clause === undefined || clause.phaseModifier === ts.SyntaxKind.TypeKeyword) continue;
-            const binding =
-                clause.name ??
-                (clause.namedBindings !== undefined && ts.isNamespaceImport(clause.namedBindings)
-                    ? clause.namedBindings.name
-                    : undefined);
-            if (binding === undefined) continue;
-            const symbol = checker.getSymbolAtLocation(binding);
-            if (symbol === undefined) continue;
+    for (const [path, source] of sources)
+        for (const [sheet, importer] of sourceImporters(path, source, checker, sheets)) {
             const entries = importers.get(sheet) ?? [];
-            const importer: Importer = { path, read: [...bindingReads(checker, symbol, source)] };
             entries.push(importer);
             importers.set(sheet, entries);
         }
-    }
     return importers;
+}
+
+// Resolve one source file against the selected stylesheets before grouping its lexical binding reads.
+function sourceImporters(
+    path: string,
+    source: ts.SourceFile,
+    checker: ts.TypeChecker,
+    sheets: Set<string>,
+): [string, Importer][] {
+    return source.statements
+        .filter((node) => ts.isImportDeclaration(node))
+        .flatMap((statement): [string, Importer][] => {
+            if (!ts.isStringLiteral(statement.moduleSpecifier)) return [];
+            const specifier = statement.moduleSpecifier.text;
+            if (!specifier.startsWith('.')) return [];
+            const sheet = posix.normalize(posix.join(posix.dirname(path), specifier));
+            if (!sheets.has(sheet)) return [];
+            const binding = moduleBinding(statement);
+            if (binding === undefined) return [];
+            const symbol = checker.getSymbolAtLocation(binding);
+            if (symbol === undefined) return [];
+            return [[sheet, { path, read: [...bindingReads(checker, symbol, source)] }]];
+        });
 }
 
 // The properties read through one imported binding, including where lexical shadowing hides the name.
@@ -71,33 +87,31 @@ function bindingReads(checker: ts.TypeChecker, symbol: ts.Symbol, source: ts.Nod
     return reads;
 }
 
-function camel(name: string): string {
-    return name.replaceAll(/-(?<letter>[a-z\d])/gu, (_match, letter: string) => letter.toUpperCase());
-}
-
 function sheetFindings(input: EngineInput, sheet: string, defined: string[], importers: Importer[]): Finding[] {
     const name = sheet.slice(sheet.lastIndexOf('/') + 1);
     if (importers.length === 0) return [];
-    const known = new Set(defined.flatMap((entry) => [entry, camel(entry)]));
+    const known = new Set(
+        defined.flatMap((entry) => [
+            entry,
+            entry.replaceAll(/-(?<letter>[a-z\d])/gu, (_match, letter: string) => letter.toUpperCase()),
+        ]),
+    );
     const read = new Set(importers.flatMap((file) => file.read));
-    const base = { check: input.spec.name, line: 1, fixable: false };
     const unused = defined
-        .filter((entry) => !read.has(entry) && !read.has(camel(entry)))
-        .map((entry) => ({
-            ...base,
-            file: sheet,
-            rule: 'unused-class',
-            message: `No importer reads the class ${entry}.`,
-        }));
+        .filter(
+            (entry) =>
+                !read.has(entry) &&
+                !read.has(entry.replaceAll(/-(?<letter>[a-z\d])/gu, (_match, letter: string) => letter.toUpperCase())),
+        )
+        .map((entry) =>
+            findingAt(input, { file: sheet, line: 1 }, 'unused-class', `No importer reads the class ${entry}.`),
+        );
     const missing = importers.flatMap((file) =>
         file.read
             .filter((entry) => !known.has(entry))
-            .map((entry) => ({
-                ...base,
-                file: file.path,
-                rule: 'undefined-class',
-                message: `${name} defines no class ${entry}.`,
-            })),
+            .map((entry) =>
+                findingAt(input, { file: file.path, line: 1 }, 'undefined-class', `${name} defines no class ${entry}.`),
+            ),
     );
     return [...unused, ...missing];
 }
@@ -121,15 +135,15 @@ function definedClasses(text: string, path: string): string[] {
  * @returns the findings
  */
 export function cssModuleUsage(input: EngineInput): Finding[] {
-    const paths = input.files.filter((file) => file.nature === 'source').map((file) => file.path);
+    const paths = input.files.filter((file) => file.kind === 'source').map((file) => file.path);
     const code = paths
         .filter((path) => CODE_SUFFIX.test(path))
-        .map((path) => ({ path, text: readSource(input.root, path, input.observations).toString('utf8') }));
+        .map((path) => ({ path, text: readSource(input.root, path, input.reads).toString('utf8') }));
     const findings: Finding[] = [];
     const sheets = paths.filter((path) => MODULE_SUFFIX.test(path));
     const importers = moduleImporters(code, new Set(sheets));
     for (const sheet of sheets) {
-        const defined = definedClasses(readSource(input.root, sheet, input.observations).toString('utf8'), sheet);
+        const defined = definedClasses(readSource(input.root, sheet, input.reads).toString('utf8'), sheet);
         findings.push(...sheetFindings(input, sheet, defined, importers.get(sheet) ?? []));
     }
     return findings;

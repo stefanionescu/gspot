@@ -3,14 +3,15 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import satisfies from 'spdx-satisfies';
 import { isDeepStrictEqual } from 'node:util';
+import { findingAt } from '#cli/checks/result.ts';
 import parseExpression from 'spdx-expression-parse';
-import { statSync, mkdtempSync, rmSync } from 'node:fs';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import { targetInScope } from '#cli/configurations/targets.ts';
-import { runCheckCommand } from '#cli/execution/tool-runner.ts';
-import { LICENSE_CHECKER_TOOL } from '#cli/constants/checks/checks.ts';
+import { targetInScope } from '#cli/kits/targets.ts';
+import { openRoot } from '#cli/platform/filesystem.ts';
+import { rmSync, statSync, mkdtempSync } from 'node:fs';
+import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import { normalizedPythonPackage } from '#cli/repository/manifests.ts';
-import type { LicenseException, EngineInput, Finding } from '#cli/types/checks/checks.ts';
+import { LICENSE_CHECKER_TOOL } from '#cli/config/checks/repository.ts';
+import type { Finding, EngineInput, LicensedPackage, LicenseException } from '#cli/types/checks.ts';
 
 const licenseSchema = z.object({ licenses: z.union([z.string(), z.array(z.string())]).optional() });
 const reportSchema = z.record(z.string(), licenseSchema);
@@ -27,33 +28,17 @@ function isAllowed(license: string, allow: Set<string>): boolean {
     return satisfies(license, [...allow]);
 }
 
-function reported(entry: z.infer<typeof licenseSchema>): string {
-    return Array.isArray(entry.licenses) ? entry.licenses.join(' OR ') : (entry.licenses ?? 'UNKNOWN');
-}
-
 function verdict(name: string, license: string, exception: LicenseException | undefined): string | undefined {
     if (exception === undefined) return `${name} reports ${license}, which is not an allowed license.`;
     if (exception.license === license) return undefined;
     return `${name} reports ${license}, and its exception names ${exception.license}; the exception no longer holds.`;
 }
 
-export const configurationSchema = z.object({
-    licenses_allowed: z.array(z.string().min(1)),
-    packages_allowed: z.array(
-        z.strictObject({ package: z.string().min(1), license: z.string().min(1), reason: z.string().min(1) }),
-    ),
-});
-
-/**
- * One finding for each installed package whose license is neither allowed nor covered by an exception that still holds.
- * @param input the engine input
- * @returns the findings
- */
-export async function licensesPackages(input: EngineInput): Promise<Finding[]> {
-    if ((input.view.settings['tools.licenses.licenses_allowed'] as string[]).length === 0) return [];
+// Read through the files filesystem and verify the generated configuration against the selected policy.
+function readConfiguration(input: EngineInput): z.infer<typeof configurationSchema> {
     const target = input.manifests.get('licenses')?.configs.find((config) => !config.fragment);
     if (target === undefined) throw new Error('The license configuration has no configuration target.');
-    const files = openConfinedRoot(input.root);
+    const files = openRoot(input.root);
     let configuration: z.infer<typeof configurationSchema>;
     try {
         const content = files.read(targetInScope(input.scope, target));
@@ -73,42 +58,87 @@ export async function licensesPackages(input: EngineInput): Promise<Finding[]> {
         throw new Error(
             'License configuration differs from the selected policy. Run gspot apply before checking licenses.',
         );
+    return configuration;
+}
+
+function installedDirectory(start: string, name: string): string {
+    const installed = join(start, name);
+    if (statSync(installed, { throwIfNoEntry: false })?.isDirectory() !== true)
+        throw new Error('Dependency licenses cannot be checked before installing the project dependencies.');
+    return installed;
+}
+
+async function licenseReport(input: EngineInput, command: string[], cwd: string): Promise<unknown> {
+    const result = await runCheckCommand(input, command, { cwd });
+    if (result.code !== 0)
+        throw new Error(`${command.join(' ')} did not run: ${result.stderr.trim().split('\n', 1)[0] ?? ''}`);
+    return JSON.parse(result.stdout);
+}
+
+async function javascriptLicenses(input: EngineInput, start: string): Promise<LicensedPackage[]> {
+    installedDirectory(start, 'node_modules');
+    const report = await licenseReport(
+        input,
+        [LICENSE_CHECKER_TOOL, '--json', '--excludePrivatePackages', '--start', start],
+        start,
+    );
+    return Object.entries(reportSchema.parse(report)).map(([name, entry]) => ({
+        name,
+        license: Array.isArray(entry.licenses) ? entry.licenses.join(' OR ') : (entry.licenses ?? 'UNKNOWN'),
+    }));
+}
+
+// Run outside the project so project-owned scanner settings cannot hide installed dependencies.
+async function pythonLicenses(input: EngineInput, start: string): Promise<LicensedPackage[]> {
+    const installed = installedDirectory(start, '.venv');
+    const isolated = mkdtempSync(join(tmpdir(), 'gspot-licenses-'));
+    try {
+        const report = await licenseReport(
+            input,
+            [
+                'pip-licenses',
+                '--format=json',
+                '--with-system',
+                '--from=mixed',
+                '--python',
+                join(installed, process.platform === 'win32' ? 'Scripts/python.exe' : 'bin/python'),
+            ],
+            isolated,
+        );
+        return pythonReportSchema
+            .parse(report)
+            .map((entry) => ({ name: `${entry.Name}@${entry.Version}`, license: entry.License }));
+    } finally {
+        rmSync(isolated, { recursive: true, force: true });
+    }
+}
+
+const SCANNERS = new Map<string, (input: EngineInput, start: string) => Promise<LicensedPackage[]>>([
+    ['package.json', javascriptLicenses],
+    ['pyproject.toml', pythonLicenses],
+]);
+
+export const configurationSchema = z.object({
+    licenses_allowed: z.array(z.string().min(1)),
+    packages_allowed: z.array(
+        z.strictObject({ package: z.string().min(1), license: z.string().min(1), reason: z.string().min(1) }),
+    ),
+});
+
+/**
+ * One finding for each installed package whose license is neither allowed nor covered by an exception that still holds.
+ * @param input the engine input
+ * @returns the findings
+ */
+export async function licensesPackages(input: EngineInput): Promise<Finding[]> {
+    if ((input.view.settings['tools.licenses.licenses_allowed'] as string[]).length === 0) return [];
+    const configuration = readConfiguration(input);
     const start = join(input.root, input.scope);
-    const scans: { manifest: string; packages: { name: string; license: string }[] }[] = [];
-    for (const manifest of ['package.json', 'pyproject.toml']) {
+    const scans: { manifest: string; packages: LicensedPackage[] }[] = [];
+    for (const [manifest, scan] of SCANNERS) {
         if (statSync(join(start, manifest), { throwIfNoEntry: false }) === undefined) continue;
-        const python = manifest === 'pyproject.toml';
-        const installed = join(start, python ? '.venv' : 'node_modules');
-        if (statSync(installed, { throwIfNoEntry: false })?.isDirectory() !== true)
-            throw new Error('Dependency licenses cannot be checked before installing the project dependencies.');
-        const isolated = python ? mkdtempSync(join(tmpdir(), 'gspot-licenses-')) : undefined;
-        try {
-            const command = python
-                ? [
-                      'pip-licenses',
-                      '--format=json',
-                      '--with-system',
-                      '--from=mixed',
-                      '--python',
-                      join(installed, process.platform === 'win32' ? 'Scripts/python.exe' : 'bin/python'),
-                  ]
-                : [LICENSE_CHECKER_TOOL, '--json', '--excludePrivatePackages', '--start', start];
-            const result = await runCheckCommand(input, command, { cwd: isolated ?? start });
-            if (result.code !== 0)
-                throw new Error(`${command.join(' ')} did not run: ${result.stderr.trim().split('\n', 1)[0] ?? ''}`);
-            const report: unknown = JSON.parse(result.stdout);
-            const packages = python
-                ? pythonReportSchema
-                      .parse(report)
-                      .map((entry) => ({ name: `${entry.Name}@${entry.Version}`, license: entry.License }))
-                : Object.entries(reportSchema.parse(report)).map(([name, entry]) => ({
-                      name,
-                      license: reported(entry),
-                  }));
-            scans.push({ manifest: input.scope === '' ? manifest : `${input.scope}/${manifest}`, packages });
-        } finally {
-            if (isolated !== undefined) rmSync(isolated, { recursive: true, force: true });
-        }
+        const packages = await scan(input, start);
+        scans.push({ manifest: input.scope === '' ? manifest : `${input.scope}/${manifest}`, packages });
     }
     if (scans.length === 0) throw new Error('No supported dependency manifest is available for license scanning.');
     const allow = new Set(configuration.licenses_allowed);
@@ -120,14 +150,6 @@ export async function licensesPackages(input: EngineInput): Promise<Finding[]> {
         ]),
     );
     return scans.flatMap(({ manifest, packages }) => {
-        const finding = (rule: string, text: string): Finding => ({
-            check: input.spec.name,
-            file: manifest,
-            line: 1,
-            rule,
-            message: text,
-            fixable: false,
-        });
         if (packages.length === 0)
             throw new Error(
                 'The license scan found no packages. Install the selected project dependencies before scanning.',
@@ -138,7 +160,8 @@ export async function licensesPackages(input: EngineInput): Promise<Finding[]> {
                 : exceptions.get(name);
             if (exception === undefined && isAllowed(license, allow)) return [];
             const text = verdict(name, license, exception);
-            return text === undefined ? [] : [finding('license', text)];
+            if (text === undefined) return [];
+            return [findingAt(input, { file: manifest, line: 1 }, 'license', text)];
         });
     });
 }

@@ -1,6 +1,7 @@
+import { findingAt } from '#cli/checks/result.ts';
 import { indexedPaths } from '#cli/repository/tracked.ts';
-import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
-import { DEPENDENCY_FOLDERS } from '#cli/constants/repository/repository.ts';
+import type { Finding, EngineInput } from '#cli/types/checks.ts';
+import { DEPENDENCY_FOLDERS } from '#cli/config/repository/repository.ts';
 
 function dependencyFolder(path: string): string | undefined {
     const segments = path.split('/').slice(0, -1);
@@ -20,12 +21,12 @@ export function trackedDependencies(input: EngineInput): Finding[] {
         const folder = dependencyFolder(path);
         if (folder !== undefined) counts.set(folder, (counts.get(folder) ?? 0) + 1);
     }
-    return [...counts].map(([folder, count]) => ({
-        check: input.spec.name,
-        file: folder,
-        line: 1,
-        rule: 'tracked-folder',
-        message: `git tracks ${String(count)} file(s) under ${folder}/; a package manager fills that folder.`,
-        fixable: false,
-    }));
+    return [...counts].map(([folder, count]) =>
+        findingAt(
+            input,
+            { file: folder, line: 1 },
+            'tracked-folder',
+            `git tracks ${String(count)} file(s) under ${folder}/; a package manager fills that folder.`,
+        ),
+    );
 }

@@ -1,12 +1,12 @@
 import { ESLint } from 'eslint';
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
-import { emitAll } from '#cli/generation/render.ts';
+import { test, expect } from 'bun:test';
+import { mkdirSync, writeFileSync } from 'node:fs';
+import { testdir, createFileTree } from 'testdirs';
+import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { mkdirSync, symlinkSync, writeFileSync } from 'node:fs';
-
-const modules = join(import.meta.dir, '../../../../node_modules');
+import { policyOf } from '#tests/support/cli/policy/text.ts';
+import { linkInstalledModules } from '#tests/support/cli/platforms.ts';
 
 for (const language of ['javascript', 'typescript']) {
     test.each([7, 8])(`${language} counts declared parameters with maximum %i`, async (maximum) => {
@@ -23,16 +23,16 @@ for (const language of ['javascript', 'typescript']) {
             .join('\n');
         const limits = maximum === 7 ? '' : `[limits.${language}]\nfunction_parameters = ${String(maximum)}\n`;
         await createFileTree(directory.path, {
-            'gspot.toml': `version = 1\nlevel = "all"\nconfigurations = ["${language}"]\n${limits}`,
+            'gspot.toml': policyOf([language], limits, 'all'),
             'package.json': '{"private":true,"type":"module"}',
             'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["*.ts"]}',
             [`example.${extension}`]: source,
         });
-        symlinkSync(modules, join(directory.path, 'node_modules'));
-        const renderSession1 = await openSession(directory.path);
-        const files = emitAll(renderSession1.policyFiles.policy, renderSession1.repository, renderSession1.scopes, {
-            version: renderSession1.version,
-            packageManager: renderSession1.packageManager,
+        linkInstalledModules(join(directory.path, 'node_modules'));
+        const session = await openSession(directory.path);
+        const files = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
+            version: session.version,
+            packageClient: session.packageClient,
         }).files;
         const configName = '.gspot/config/eslint.config.mjs';
         const config = files.find(({ path }) => path === configName)!;

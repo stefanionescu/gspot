@@ -1,22 +1,39 @@
-import { isImportLike } from '#plugin/imports.ts';
 import type { TSESTree } from '@typescript-eslint/utils';
-import { AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { isDirective, isImportLike } from '#plugin/imports.ts';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
 import type { HeaderCommentsOptions } from '#plugin/types/rules.ts';
+import { AST_NODE_TYPES, AST_TOKEN_TYPES } from '@typescript-eslint/utils';
+import { BLANK, WHITESPACE, ATTACHED_DISTANCE, BLANK_LINE_DISTANCE } from '#plugin/config/rules.ts';
 
-import {
-    BLANK,
-    BLANK_LINE,
-    DIRECTIVE_PREFIXES,
-    LEADING_STAR,
-    TS_DIRECTIVE,
-    WHITESPACE,
-} from '#plugin/constants/rules.ts';
-
-function isDirective(value: string): boolean {
-    const text = value.replace(LEADING_STAR, '').trim();
-    if (TS_DIRECTIVE.test(text)) return true;
-    return DIRECTIVE_PREFIXES.some((prefix) => text === prefix.trim() || text.startsWith(prefix));
+// Adjacent prose lines form one comment so fixes preserve their attachment and order.
+function commentBlocks(text: string, comments: TSESTree.Comment[]): TSESTree.Comment[] {
+    const blocks: TSESTree.Comment[] = [];
+    let previous: TSESTree.Comment | undefined;
+    for (const comment of comments) {
+        const lineStart = text.lastIndexOf('\n', comment.range[0] - 1) + 1;
+        if (
+            comment.type !== AST_TOKEN_TYPES.Line ||
+            isDirective(comment.value) ||
+            !BLANK.test(text.slice(lineStart, comment.range[0]))
+        ) {
+            blocks.push(comment);
+            previous = undefined;
+            continue;
+        }
+        if (previous !== undefined && /^[\t ]*\r?\n[\t ]*$/u.test(text.slice(previous.range[1], comment.range[0]))) {
+            previous = {
+                ...previous,
+                value: `${previous.value}\n${comment.value}`,
+                range: [previous.range[0], comment.range[1]],
+                loc: { start: previous.loc.start, end: comment.loc.end },
+            };
+            blocks[blocks.length - 1] = previous;
+        } else {
+            blocks.push(comment);
+            previous = comment;
+        }
+    }
+    return blocks;
 }
 
 function isTrailing(text: string, comment: TSESTree.Comment, node: TSESTree.Node): boolean {
@@ -30,7 +47,9 @@ function firstDecorator(node: TSESTree.Node): TSESTree.Decorator | undefined {
     const isExport =
         node.type === AST_NODE_TYPES.ExportNamedDeclaration || node.type === AST_NODE_TYPES.ExportDefaultDeclaration;
     const declared = isExport ? node.declaration : node;
-    return declared?.type === AST_NODE_TYPES.ClassDeclaration ? declared.decorators[0] : undefined;
+    return declared?.type === AST_NODE_TYPES.ClassDeclaration && Array.isArray(declared.decorators)
+        ? declared.decorators[0]
+        : undefined;
 }
 
 function startOf(node: TSESTree.Node): { offset: number; line: number } {
@@ -51,24 +70,22 @@ function isLeading(
     const start = startOf(node);
     if (comment.range[1] > start.offset) return false;
     let between = text.slice(comment.range[1], start.offset);
-    for (const directive of comments.toReversed()) {
-        if (directive.range[0] < comment.range[1] || directive.range[1] > start.offset || !isDirective(directive.value))
-            continue;
+    const directives = comments.filter(
+        (directive) =>
+            directive.range[0] >= comment.range[1] &&
+            directive.range[1] <= start.offset &&
+            isDirective(directive.value),
+    );
+    for (const directive of directives.toReversed()) {
         const from = directive.range[0] - comment.range[1];
         const to = directive.range[1] - comment.range[1];
         between = between.slice(0, from) + between.slice(to).replace(/^[\t ]*\r?\n/u, '');
     }
     if (!BLANK.test(between)) return false;
     const distance = between.split('\n').length - 1;
-    if (distance > (isBlankLineAllowed ? 2 : 1)) return false;
-    if (!isBlankLineAllowed && BLANK_LINE.test(between)) return false;
+    if (distance > (isBlankLineAllowed ? BLANK_LINE_DISTANCE : ATTACHED_DISTANCE)) return false;
     const lineStart = text.lastIndexOf('\n', comment.range[0] - 1) + 1;
     return BLANK.test(text.slice(lineStart, comment.range[0]));
-}
-
-function firstOtherIndex(body: TSESTree.Statement[], firstImport: number, isRequireAllowed: boolean): number {
-    const offset = body.slice(firstImport + 1).findIndex((statement) => !isImportLike(statement, isRequireAllowed));
-    return offset === -1 ? -1 : firstImport + 1 + offset;
 }
 
 export const headerCommentsBeforeImports = createRule<HeaderCommentsOptions, 'headerFirst'>({
@@ -92,15 +109,19 @@ export const headerCommentsBeforeImports = createRule<HeaderCommentsOptions, 'he
     create(context, [options]) {
         const source = context.sourceCode;
         const text = source.getText();
-        const comments = source.getAllComments();
+        const comments = commentBlocks(text, source.getAllComments());
         const isRequireAllowed = options.allowRequire === true;
         return {
             Program(node) {
                 const firstImport = node.body.findIndex((statement) => isImportLike(statement, isRequireAllowed));
-                const firstOther = firstImport === -1 ? -1 : firstOtherIndex(node.body, firstImport, isRequireAllowed);
                 const first = node.body[firstImport];
+                if (first === undefined) return;
+                const offset = node.body
+                    .slice(firstImport + 1)
+                    .findIndex((statement) => !isImportLike(statement, isRequireAllowed));
+                const firstOther = offset === -1 ? -1 : firstImport + 1 + offset;
                 const other = node.body[firstOther];
-                if (first === undefined || other === undefined) return;
+                if (other === undefined) return;
                 const run = node.body.slice(firstImport, firstOther);
                 const violating = comments.find((comment) => {
                     if (

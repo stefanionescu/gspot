@@ -1,18 +1,18 @@
 import { z } from 'zod';
 import { join } from 'node:path';
-import { PERCENT } from '#cli/constants/checks/xctest.ts';
-import type { ConfinedRoot } from '#cli/types/platform.ts';
+import { findingAt } from '#cli/checks/result.ts';
+import type { Root } from '#cli/types/platform.ts';
+import { PERCENT } from '#cli/config/checks/swift.ts';
 import { swiftBuildPlan } from '#cli/checks/swift/plan.ts';
-import { runCheckCommand } from '#cli/execution/tool-runner.ts';
-import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
+import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import { openBuildCache, prepareBuildSources } from '#cli/checks/swift/cache.ts';
-import type { CoverageFloor, XcodeCoverageReport as CoverageReport } from '#cli/types/checks/xcode.ts';
+import type { Finding, EngineInput, CoverageFloor, XcodeCoverageReport as CoverageReport } from '#cli/types/checks.ts';
 
 const coverageReportSchema = z.object({
     targets: z.array(z.object({ name: z.string().min(1), lineCoverage: z.number().min(0).max(1) })),
 });
-// Removes one entry of the previous result bundle, queueing a folder for the walk.
-function removeBundleEntry(files: ConfinedRoot, path: string, directories: string[]): void {
+// Removes one entry of the previous result bundle, queuing a folder for the walk.
+function removeBundleEntry(files: Root, path: string, directories: string[]): void {
     if (files.stat(path)?.isDirectory() === true) {
         directories.push(path);
         return;
@@ -21,8 +21,8 @@ function removeBundleEntry(files: ConfinedRoot, path: string, directories: strin
     if (previous !== undefined) files.remove(path, previous);
 }
 
-// Removes the result bundle of the previous run, file by file and then folder by folder.
-function removePreviousBundle(files: ConfinedRoot): void {
+// Removes the previous result bundle by deleting files before their containing folders.
+function removePreviousBundle(files: Root): void {
     if (files.stat('coverage.xcresult') === undefined) return;
     const directories = ['coverage.xcresult'];
     for (const directory of directories)
@@ -96,14 +96,7 @@ export async function testCoverage(input: EngineInput): Promise<Finding[]> {
         removePreviousBundle(files);
         const viewed = await measureCoverage(input, plan.argv, bundle, cwd);
         const report = coverageReportSchema.parse(JSON.parse(viewed.stdout));
-        return underFloor(report, floors).map((text) => ({
-            check: input.spec.name,
-            file: '',
-            line: 1,
-            rule: 'coverage',
-            message: text,
-            fixable: false,
-        }));
+        return underFloor(report, floors).map((text) => findingAt(input, { file: '', line: 1 }, 'coverage', text));
     } finally {
         files.close();
     }

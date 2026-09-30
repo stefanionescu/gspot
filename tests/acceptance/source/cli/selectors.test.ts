@@ -1,19 +1,41 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { git } from '#tests/support/cli/git.ts';
-import { createFileTree, testdir } from 'testdirs';
+import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { reportSchema } from '#cli/execution/report.ts';
+import { keptMode } from '#tests/support/cli/platforms.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
-import type { CommandFailureJson } from '#cli/types/commands/commands.ts';
-import { chmodSync, existsSync, readFileSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
+import type { CommandFailureJson } from '#cli/types/commands.ts';
+import { statSync, chmodSync, existsSync, unlinkSync, readFileSync, writeFileSync } from 'node:fs';
 
 const { version: GSPOT_VERSION } = packageManifest;
+
+// Both report formats identify index content and preserve literal source paths.
+async function expectIndexReport(
+    root: string,
+    args: string[],
+    report: ReturnType<typeof reportSchema.parse>,
+): Promise<void> {
+    expect(report.comparison?.content).toBe('index');
+    expect(report.checks[0]?.reproduce).toContain('--staged');
+    const text = await run(
+        root,
+        args.filter((argument) => argument !== '--json'),
+    );
+    expect(text.stdout).toContain('checked index;');
+    expect(text.stdout).not.toContain('checked working tree;');
+    expect(report.checks[0]?.findings.map((finding) => finding.file)).toStrictEqual([
+        'script with spaces.sh',
+        'script with spaces.sh',
+    ]);
+}
 
 test('an ignored folder includes descendants while a negated file remains enforced', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'gspot.toml': 'version = 1\nconfigurations = ["bash"]\n[rules]\ninstall = false\n',
+        'gspot.toml': policyOf(['bash'], '[guides]\ninstall = false\n'),
         'legacy scripts/nested/example.sh': 'if then\n',
         'legacy scripts/required.sh': 'if then\n',
         'entry.sh': 'echo example\n',
@@ -57,7 +79,7 @@ test('an ignored folder includes descendants while a negated file remains enforc
 
 test('staged checks use index bytes and policy on an unborn branch while preserving unstaged edits', async () => {
     await using directory = await testdir();
-    const policy = 'version = 1\nconfigurations = ["bash"]\n[rules]\ninstall = false\n';
+    const policy = policyOf(['bash'], '[guides]\ninstall = false\n');
     await createFileTree(directory.path, { 'gspot.toml': policy, 'script with spaces.sh': 'if then\n' });
     expect(git(directory.path, ['init', '-q']).code).toBe(0);
     expect(git(directory.path, ['add', '-A']).code).toBe(0);
@@ -68,18 +90,7 @@ test('staged checks use index bytes and policy on an unborn branch while preserv
     const failed = await run(directory.path, args);
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
     const failedReport = reportSchema.parse(JSON.parse(failed.stdout));
-    expect(failedReport.comparison?.content).toBe('index');
-    expect(failedReport.checks[0]?.reproduce).toContain('--staged');
-    const text = await run(
-        directory.path,
-        args.filter((argument) => argument !== '--json'),
-    );
-    expect(text.stdout).toContain('checked index;');
-    expect(text.stdout).not.toContain('checked working tree;');
-    expect(failedReport.checks[0]?.findings.map((finding) => finding.file)).toStrictEqual([
-        'script with spaces.sh',
-        'script with spaces.sh',
-    ]);
+    await expectIndexReport(directory.path, args, failedReport);
     expect(git(directory.path, ['ls-files', '--stage', '-z']).stdout).toBe(index);
     expect(readFileSync(join(directory.path, 'gspot.toml'), 'utf8')).toBe('invalid working policy');
     expect(readFileSync(join(directory.path, 'script with spaces.sh'), 'utf8')).toBe(
@@ -105,7 +116,7 @@ test('staged checks use index bytes and policy on an unborn branch while preserv
 test('staged checks validate the index version pin instead of the working pin', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'gspot.toml': 'version = 1\nconfigurations = ["bash"]\n[rules]\ninstall = false\n',
+        'gspot.toml': policyOf(['bash'], '[guides]\ninstall = false\n'),
         '.gspot/version': '0.0.0\n',
         'script.sh': 'echo valid\n',
     });
@@ -115,7 +126,7 @@ test('staged checks validate the index version pin instead of the working pin', 
     const args = ['check', '--staged', '--only', 'bash/syntax', '--json'];
     const refused = await run(directory.path, args);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
-    expect((JSON.parse(refused.stdout) as CommandFailureJson).error).toBe('VersionPinError');
+    expect((JSON.parse(refused.stdout) as CommandFailureJson).error).toBe('version-pin');
     expect(git(directory.path, ['add', '.gspot/version']).code).toBe(0);
     writeFileSync(join(directory.path, '.gspot/version'), '0.0.0\n');
     const accepted = await run(directory.path, args);
@@ -140,7 +151,7 @@ test('index snapshots preserve binary bytes and executable modes without applyin
         'payload.dat': Buffer.from([255, 10, 0]),
         'task.sh': '#!/bin/sh\nexit 0\n',
         'gspot.toml': `version = 1
-configurations = []
+kits = []
 [[check]]
 name = "project/index-bytes"
 command = ${JSON.stringify(command)}
@@ -157,7 +168,7 @@ stage = "commit"
     expect(result.code, result.stdout + result.stderr).toBe(0);
     expect(reportSchema.parse(JSON.parse(result.stdout)).checks[0]?.status).toBe('ok');
     expect(readFileSync(join(directory.path, 'payload.dat'))).toStrictEqual(Buffer.from([0, 1, 2]));
-    expect(statSync(join(directory.path, 'task.sh')).mode & 0o777).toBe(0o644);
+    expect(statSync(join(directory.path, 'task.sh')).mode & 0o777).toBe(keptMode(0o644));
     expect(existsSync(join(directory.path, 'created.txt'))).toBe(false);
 });
 
@@ -188,7 +199,7 @@ test('index checks copy matching locked dependencies and refuse a different work
         'node_modules/dependency/stamp.txt': 'authored dependency data',
         'source.txt': 'authored input',
         'gspot.toml': `version = 1
-configurations = []
+kits = []
 [[check]]
 name = "project/dependencies"
 command = ${JSON.stringify(command)}

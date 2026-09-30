@@ -1,15 +1,20 @@
-import { fail, print, printJson } from '#cli/output/messages.ts';
-import { KNOWN_ERRORS } from '#cli/constants/commands/commands.ts';
-import type { CommandFailureJson, CommandResult } from '#cli/types/commands/commands.ts';
+import { GspotError } from '#cli/platform/errors.ts';
+import { fail, print } from '#cli/output/messages.ts';
+import { OUTPUT_JSON_INDENT } from '#cli/config/output.ts';
+import { KNOWN_ERRORS } from '#cli/config/commands/commands.ts';
+import type { CommandResult, CommandFailureJson } from '#cli/types/commands.ts';
 
 function printResult(result: CommandResult, isJson: boolean): void {
-    if (isJson) printJson(result.json);
+    if (isJson) process.stdout.write(`${JSON.stringify(result.json, null, OUTPUT_JSON_INDENT)}\n`);
     else if (result.text !== '') print(result.text);
     process.exitCode = result.exitCode;
 }
 
-function printError(error: Error, isJson: boolean): void {
-    if (isJson) printJson({ error: error.name, message: error.message } satisfies CommandFailureJson);
+function printError(error: GspotError, isJson: boolean): void {
+    if (isJson)
+        process.stdout.write(
+            `${JSON.stringify({ error: error.code, message: error.message } satisfies CommandFailureJson, null, OUTPUT_JSON_INDENT)}\n`,
+        );
     else fail(error.message);
     process.exitCode = 2;
 }
@@ -27,7 +32,7 @@ export async function printCommand(
     try {
         printResult(await command(), isJson);
     } catch (error) {
-        if (error instanceof Error && KNOWN_ERRORS.has(error.name)) printError(error, isJson);
+        if (error instanceof GspotError && KNOWN_ERRORS.has(error.code)) printError(error, isJson);
         else throw error;
     }
 }

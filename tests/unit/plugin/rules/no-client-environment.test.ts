@@ -1,5 +1,5 @@
 import { tester } from '#tests/support/plugin/tester.ts';
-import example from '#docs/src/components/home/client-environment.json';
+import example from '#tests/inputs/unit/plugin/client-environment.json';
 import { noClientEnvironment } from '#plugin/rules/no-client-environment.ts';
 
 tester().run('no-client-environment', noClientEnvironment, {

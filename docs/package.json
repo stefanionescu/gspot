@@ -1,5 +1,5 @@
 {
-    "name": "@gspot/docs",
+    "name": "gspot-docs",
     "private": true,
     "version": "0.1.0",
     "type": "module",
@@ -7,12 +7,13 @@
         "@astrojs/starlight": "0.42.0",
         "@fontsource-variable/geist": "5.3.0",
         "@fontsource-variable/geist-mono": "5.3.0",
-        "@gspot/cli": "workspace:*",
+        "@gspothq/cli": "workspace:*",
         "astro": "7.3.2",
         "commander": "15.0.0",
         "execa": "9.6.1",
         "htmlparser2": "10.1.0",
         "starlight-llms-txt": "0.11.0",
         "zod": "4.6.2"
-    }
+    },
+    "description": "Documentation site for the gspot CLI."
 }

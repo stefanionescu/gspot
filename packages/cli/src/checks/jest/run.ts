@@ -1,16 +1,17 @@
 // Jest run over a disposable copy of the sources, with failed tests and coverage under its floors as findings.
 import { z } from 'zod';
 import { tmpdir } from 'node:os';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync } from 'node:fs';
+import { rm } from 'node:fs/promises';
+import { findingAt } from '#cli/checks/result.ts';
+import type { Root } from '#cli/types/platform.ts';
 import { stripVTControlCharacters } from 'node:util';
-import type { ConfinedRoot } from '#cli/types/platform.ts';
-import { isAbsolute, join, relative, sep } from 'node:path';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import { scratchCopy } from '#cli/execution/file-workspace.ts';
-import { runCheckCommand } from '#cli/execution/tool-runner.ts';
-import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
-import type { JestRun, Suite, TestReport } from '#cli/types/checks/jest.ts';
-import { jestCoverageSettings, jestPercentage } from '#cli/checks/jest/schema.ts';
+import { openRoot } from '#cli/platform/filesystem.ts';
+import { sep, join, relative, isAbsolute } from 'node:path';
+import { runCheckCommand } from '#cli/execution/tool/runner.ts';
+import { scratchCopy } from '#cli/execution/files/workspace.ts';
+import { jestPercentage, jestCoverageSettings } from '#cli/checks/jest/schema.ts';
+import type { Suite, Finding, JestRun, TestReport, EngineInput } from '#cli/types/checks.ts';
 
 const dimensions = ['lines', 'branches', 'functions', 'statements'] as const;
 const metric = z.object({ pct: jestPercentage });
@@ -18,26 +19,8 @@ const coverageSchema = z.object({
     total: z.object({ lines: metric, branches: metric, functions: metric, statements: metric }),
 });
 
-// The Jest command: coverage on, one worker, machine-readable reports into the work folder.
-function jestArguments(work: string, thresholds: Record<string, number>): string[] {
-    return [
-        'jest',
-        '--coverage',
-        '--runInBand',
-        '--ci',
-        '--json',
-        '--testLocationInResults',
-        '--outputFile',
-        join(work, 'tests.json'),
-        '--coverageDirectory',
-        join(work, 'coverage'),
-        '--coverageReporters=json-summary',
-        `--coverageThreshold=${JSON.stringify({ global: thresholds })}`,
-    ];
-}
-
-// The test report Jest wrote, refused when it says the run could not execute its suites.
-function readTestReport(reports: ConfinedRoot, stderr: string): TestReport {
+// Read the Jest report and refuse a run that cannot execute its suites.
+function readTestReport(reports: Root, stderr: string): TestReport {
     const testFile = reports.read('tests.json');
     if (testFile === undefined)
         throw new Error(`Jest produced no test report: ${stripVTControlCharacters(stderr).trim()}`);
@@ -59,30 +42,8 @@ function suitePath(source: string, suite: Suite): string {
     return file.split(sep).join('/');
 }
 
-// One finding per failed assertion of a suite.
-function suiteFindings(run: JestRun, suite: Suite): Finding[] {
-    const file = suitePath(run.source, suite);
-    return suite.assertionResults
-        .filter((assertion) => assertion.status === 'failed')
-        .map((assertion) => ({
-            check: run.input.spec.name,
-            file,
-            line: assertion.location?.line ?? 1,
-            ...(assertion.location === undefined || assertion.location === null
-                ? {}
-                : { column: assertion.location.column + 1 }),
-            rule: 'test-failure',
-            message: stripVTControlCharacters(assertion.failureMessages.join('\n')) || assertion.fullName,
-            fixable: false,
-        }));
-}
-
 // One finding per coverage dimension under its floor.
-function coverageFindings(
-    run: JestRun,
-    reports: ConfinedRoot,
-    settings: z.infer<typeof jestCoverageSettings>,
-): Finding[] {
+function coverageFindings(run: JestRun, reports: Root, settings: z.infer<typeof jestCoverageSettings>): Finding[] {
     const coverageFile = reports.read('coverage/coverage-summary.json');
     if (coverageFile === undefined)
         throw new Error('Jest produced no coverage summary. Enable coverage for the selected project.');
@@ -91,14 +52,12 @@ function coverageFindings(
         const floor = settings[`coverage_${name}`];
         if (covered[name].pct >= floor) return [];
         return [
-            {
-                check: run.input.spec.name,
-                file: '',
-                line: 1,
-                rule: `coverage-${name}`,
-                message: `Jest covers ${String(covered[name].pct)}% of ${name}, below the ${String(floor)}% floor.`,
-                fixable: false,
-            },
+            findingAt(
+                run.input,
+                { file: '', line: 1 },
+                `coverage-${name}`,
+                `Jest covers ${String(covered[name].pct)}% of ${name}, below the ${String(floor)}% floor.`,
+            ),
         ];
     });
 }
@@ -106,19 +65,51 @@ function coverageFindings(
 // Runs Jest over the copied sources and reads its reports into findings.
 async function runJest(
     run: JestRun,
-    reports: ConfinedRoot,
+    reports: Root,
     settings: z.infer<typeof jestCoverageSettings>,
 ): Promise<Finding[]> {
     const { input, source, work } = run;
     const thresholds = Object.fromEntries(dimensions.map((name) => [name, settings[`coverage_${name}`]]));
-    const result = await runCheckCommand(input, jestArguments(work, thresholds), { cwd: join(source, input.scope) });
+    const command = [
+        'jest',
+        '--coverage',
+        '--runInBand',
+        '--ci',
+        '--json',
+        '--testLocationInResults',
+        '--outputFile',
+        join(work, 'tests.json'),
+        '--coverageDirectory',
+        join(work, 'coverage'),
+        '--coverageReporters=json-summary',
+        `--coverageThreshold=${JSON.stringify({ global: thresholds })}`,
+    ];
+    const result = await runCheckCommand(input, command, { cwd: join(source, input.scope) });
     if (result.code !== 0 && result.code !== 1)
         throw new Error(
             `Jest could not run (exit ${String(result.code)}): ${stripVTControlCharacters(result.stderr).trim()}`,
         );
     const tested = readTestReport(reports, result.stderr);
     const findings = [
-        ...tested.testResults.flatMap((suite) => suiteFindings(run, suite)),
+        ...tested.testResults.flatMap((suite) => {
+            const file = suitePath(run.source, suite);
+            return suite.assertionResults
+                .filter((assertion) => assertion.status === 'failed')
+                .map((assertion) =>
+                    findingAt(
+                        run.input,
+                        {
+                            file,
+                            line: assertion.location?.line ?? 1,
+                            ...(assertion.location === undefined || assertion.location === null
+                                ? {}
+                                : { column: assertion.location.column + 1 }),
+                        },
+                        'test-failure',
+                        stripVTControlCharacters(assertion.failureMessages.join('\n')) || assertion.fullName,
+                    ),
+                );
+        }),
         ...coverageFindings(run, reports, settings),
     ];
     if ((result.code !== 0 || !tested.success) && findings.length === 0)
@@ -151,7 +142,7 @@ export const reportSchema = z.object({
 });
 
 /**
- * JestRun repository-owned Jest against disposable sources and retain test and coverage failures as findings.
+ * Run repository-owned Jest against disposable sources and retain test and coverage failures as findings.
  * @param input the engine input
  * @returns the findings
  */
@@ -159,9 +150,9 @@ export async function jestCoverage(input: EngineInput): Promise<Finding[]> {
     const settings = jestCoverageSettings.parse(input.view.tool('jest'));
     const work = mkdtempSync(join(tmpdir(), 'gspot-jest-'));
     let source: string | undefined;
-    const reports = openConfinedRoot(work);
+    const reports = openRoot(work);
     try {
-        source = scratchCopy(
+        source = await scratchCopy(
             input.root,
             input.files.map((file) => file.path),
             input.scopeEntries.map((scope) => scope.path),
@@ -169,7 +160,7 @@ export async function jestCoverage(input: EngineInput): Promise<Finding[]> {
         return await runJest({ input, source, work }, reports, settings);
     } finally {
         reports.close();
-        if (source !== undefined) rmSync(source, { recursive: true, force: true });
-        rmSync(work, { recursive: true, force: true });
+        if (source !== undefined) await rm(source, { recursive: true, force: true });
+        await rm(work, { recursive: true, force: true });
     }
 }

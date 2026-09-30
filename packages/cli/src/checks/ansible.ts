@@ -1,7 +1,8 @@
 import { join } from 'node:path';
-import { runCheckCommand } from '#cli/execution/tool-runner.ts';
-import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
-import { ANSIBLE_PROJECT_FILE, LINT_LINE } from '#cli/constants/checks/checks.ts';
+import { findingAt } from '#cli/checks/result.ts';
+import { runCheckCommand } from '#cli/execution/tool/runner.ts';
+import type { Finding, EngineInput } from '#cli/types/checks.ts';
+import { LINT_LINE, ANSIBLE_PROJECT_FILE } from '#cli/config/checks/repository.ts';
 
 async function linted(input: EngineInput, folder: string, skipped: string[]): Promise<Finding[]> {
     const skips = skipped.length === 0 ? [] : ['--skip-list', skipped.join(',')];
@@ -13,14 +14,12 @@ async function linted(input: EngineInput, folder: string, skipped: string[]): Pr
         if (groups === undefined) return [];
         const file = folder === '' ? (groups['file'] ?? '') : `${folder}/${groups['file'] ?? ''}`;
         return [
-            {
-                check: input.spec.name,
-                file,
-                line: Number(groups['line']),
-                rule: groups['rule'] ?? 'ansible-lint',
-                message: groups['text'] ?? '',
-                fixable: false,
-            },
+            findingAt(
+                input,
+                { file, line: Number(groups['line']) },
+                groups['rule'] ?? 'ansible-lint',
+                groups['text'] ?? '',
+            ),
         ];
     });
     if (result.code !== 0 && found.length === 0)

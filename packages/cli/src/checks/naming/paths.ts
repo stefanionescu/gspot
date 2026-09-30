@@ -1,5 +1,5 @@
-import type { Identifier } from '#cli/types/checks/naming.ts';
-import { DECLARATION_SUFFIXES, MIGRATION_DIRECTORY, WRAPPERS } from '#cli/constants/checks/naming.ts';
+import type { Identifier } from '#cli/types/checks.ts';
+import { WRAPPERS, MIGRATION_DIRECTORY, DECLARATION_SUFFIXES } from '#cli/config/checks/naming.ts';
 
 function stemOf(base: string): string {
     const declaration = DECLARATION_SUFFIXES.find((suffix) => base.endsWith(suffix));
@@ -18,7 +18,7 @@ function unwrapped(segment: string): { name: string; category: string } {
 /**
  * The file's own name as an identifier: the stem for most languages, the whole base name for a SQL migration.
  * @param path the file path
- * @param language the language configuration the file belongs to
+ * @param language the language kit the file belongs to
  * @returns the identifier
  */
 export function fileIdentifier(path: string, language: string): Identifier {
@@ -39,7 +39,7 @@ export function fileIdentifier(path: string, language: string): Identifier {
 /**
  * Every directory on a file's path as an identifier, from the top down. Dot folders and migration folders are skipped.
  * @param path the file path
- * @param language the language configuration the file belongs to
+ * @param language the language kit the file belongs to
  * @returns the identifiers
  */
 export function directoryIdentifiers(path: string, language: string): Identifier[] {

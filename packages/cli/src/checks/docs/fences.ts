@@ -1,22 +1,22 @@
 import { parseAllDocuments } from 'yaml';
 import { visit } from 'unist-util-visit';
 import { parse as parseToml } from 'smol-toml';
+import { findingAt } from '#cli/checks/result.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { parserFor } from '#cli/parsers/tree-sitter.ts';
 import { readSource } from '#cli/repository/tracked.ts';
-import type { FencedBlock } from '#cli/types/checks/docs.ts';
-import { runCheckCommand } from '#cli/execution/tool-runner.ts';
+import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import type { GrammarName } from '#cli/types/parsers/parsers.ts';
-import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
+import type { Finding, EngineInput, FencedBlock } from '#cli/types/checks.ts';
 
 import {
-    ANGLE_PLACEHOLDER,
-    ELLIPSIS_ARGUMENTS,
+    TREE_PARSERS,
     ELLIPSIS_LINE,
     FENCE_PARSERS,
+    ANGLE_PLACEHOLDER,
+    ELLIPSIS_ARGUMENTS,
     STRUCTURED_PARSERS,
-    TREE_PARSERS,
-} from '#cli/constants/checks/docs.ts';
+} from '#cli/config/checks/docs.ts';
 
 function fencesOf(text: string): FencedBlock[] {
     const out: FencedBlock[] = [];
@@ -27,32 +27,18 @@ function fencesOf(text: string): FencedBlock[] {
     return out;
 }
 
-// A stream of YAML documents, as front matter examples are, parses document by document.
-function yamlProblem(body: string): string | undefined {
-    const failed = parseAllDocuments(body).find((document) => document.errors.length > 0);
-    return failed?.errors[0] === undefined ? undefined : failed.errors[0].message.split('\n', 1)[0];
-}
-
 function structuredProblem(parser: string, body: string): string | undefined {
     try {
         if (parser === 'json') JSON.parse(body);
         else if (parser === 'toml') parseToml(body);
-        else return yamlProblem(body);
+        else {
+            const failed = parseAllDocuments(body).find((document) => document.errors.length > 0);
+            return failed?.errors[0] === undefined ? undefined : failed.errors[0].message.split('\n', 1)[0];
+        }
         return undefined;
     } catch (error) {
         return (error as Error).message.split('\n', 1)[0];
     }
-}
-
-// What an example leaves out is not a syntax error: a line of dots stands for omitted code, <UPPER_CASE> for a value the reader supplies.
-function withoutPlaceholders(body: string, parser: string): string {
-    const noop = parser === 'bash' ? ':' : '';
-    return body
-        .split('\n')
-        .map((line) => (ELLIPSIS_LINE.test(line) ? noop : line))
-        .join('\n')
-        .replaceAll(ELLIPSIS_ARGUMENTS, '()')
-        .replaceAll(ANGLE_PLACEHOLDER, 'PLACEHOLDER');
 }
 
 async function treeProblem(grammar: GrammarName, body: string): Promise<string | undefined> {
@@ -82,20 +68,28 @@ function problemFor(input: EngineInput, parser: string, body: string): Promise<s
 
 async function fileFindings(input: EngineInput, path: string): Promise<Finding[]> {
     const findings: Finding[] = [];
-    const blocks = fencesOf(readSource(input.root, path, input.observations).toString('utf8'));
+    const blocks = fencesOf(readSource(input.root, path, input.reads).toString('utf8'));
     for (const fence of blocks) {
         const parser = FENCE_PARSERS[fence.language];
         if (parser === undefined || fence.body.trim() === '') continue;
-        const problem = await problemFor(input, parser, withoutPlaceholders(fence.body, parser));
+        // Omitted code and placeholder values do not represent syntax errors in examples.
+        const noop = parser === 'bash' ? ':' : '';
+        const body = fence.body
+            .split('\n')
+            .map((line) => (ELLIPSIS_LINE.test(line) ? noop : line))
+            .join('\n')
+            .replaceAll(ELLIPSIS_ARGUMENTS, '()')
+            .replaceAll(ANGLE_PLACEHOLDER, 'PLACEHOLDER');
+        const problem = await problemFor(input, parser, body);
         if (problem !== undefined)
-            findings.push({
-                check: input.spec.name,
-                file: path,
-                line: fence.line,
-                rule: fence.language,
-                message: `This ${fence.language} block does not parse: ${problem}.`,
-                fixable: false,
-            });
+            findings.push(
+                findingAt(
+                    input,
+                    { file: path, line: fence.line },
+                    fence.language,
+                    `This ${fence.language} block does not parse: ${problem}.`,
+                ),
+            );
     }
     return findings;
 }
@@ -107,7 +101,7 @@ async function fileFindings(input: EngineInput, path: string): Promise<Finding[]
  */
 export async function fences(input: EngineInput): Promise<Finding[]> {
     const findings: Finding[] = [];
-    const markdown = input.files.filter((entry) => entry.nature === 'source' && entry.path.endsWith('.md'));
+    const markdown = input.files.filter((entry) => entry.kind === 'source' && entry.path.endsWith('.md'));
     for (const file of markdown) findings.push(...(await fileFindings(input, file.path)));
     return findings;
 }

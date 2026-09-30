@@ -1,25 +1,26 @@
 import { join } from 'node:path';
-import { expect, spyOn, test } from 'bun:test';
-import { planRun } from '#cli/execution/planning/plan.ts';
-import { createFileTree, testdir } from 'testdirs';
+import { test, spyOn, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { planRun } from '#cli/execution/planning/plan.ts';
 import { runEngineCheck } from '#cli/execution/engines.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { lockfileFresh } from '#cli/checks/dependencies/lockfile/fresh.ts';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 
-test.each(['missing', 'deadline', 'cancellation', 'registry', 'authentication', 'unexpected'])(
+test.each(['missing', 'deadline', 'cancellation', 'registry', 'authentication', 'unexpected'] as const)(
     'frozen installation reports %s as inability, preserves the repository, and retries successfully',
     async (failure) => {
         await using directory = await testdir();
         await createFileTree(directory.path, {
-            'gspot.toml': 'version = 1\nconfigurations = ["dependencies"]\n',
+            'gspot.toml': policyOf(['dependencies']),
             'package.json': '{"name":"example","private":true}\n',
             'bun.lock': 'original lock\n',
             'node_modules/protected.txt': 'installed dependency\n',
         });
         const session = await openSession(directory.path);
-        const [planned] = await planRun(session, {
+        const [planned] = planRun(session, {
             stage: 'push',
             skips: [],
             only: ['integrity/lockfile-fresh'],
@@ -33,12 +34,14 @@ test.each(['missing', 'deadline', 'cancellation', 'registry', 'authentication', 
             return Promise.resolve({
                 code: 1,
                 stdout: '',
-                stderr:
-                    failure === 'registry'
-                        ? 'ConnectionRefused downloading package metadata'
-                        : failure === 'authentication'
-                          ? 'HTTP 401 Unauthorized'
-                          : 'Installation failed.',
+                stderr: {
+                    missing: 'Installation failed.',
+                    deadline: 'Installation failed.',
+                    cancellation: 'Installation failed.',
+                    registry: 'ConnectionRefused downloading package metadata',
+                    authentication: 'HTTP 401 Unauthorized',
+                    unexpected: 'Installation failed.',
+                }[failure],
                 duration: 1,
                 missing: failure === 'missing',
                 isTimedOut: failure === 'deadline',

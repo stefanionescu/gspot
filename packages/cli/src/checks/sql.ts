@@ -1,31 +1,28 @@
+import { findingAt } from '#cli/checks/result.ts';
 import { readSource } from '#cli/repository/tracked.ts';
+import { parseSql, parsePlpgsql } from '#cli/parsers/sql/parser.ts';
+import { sqlFile, positionAt } from '#cli/parsers/sql/statements.ts';
+import { trivialFunctionText } from '#cli/checks/structure/statements.ts';
 import type { SqlFile, SqlStatementView } from '#cli/types/parsers/sql.ts';
-import { parsePlpgsql, parseSql } from '#cli/parsers/sql/parser.ts';
-import { positionAt, sqlFile } from '#cli/parsers/sql/statements.ts';
+import { DEFAULT_TRIVIAL_STATEMENTS } from '#cli/config/checks/structure.ts';
+import type { Engine, Finding, SqlSource, EngineInput, SqlAnalysis, FunctionOption } from '#cli/types/checks.ts';
 
-import type { EngineInput, Finding, FunctionOption, SqlAnalysis, SqlSource } from '#cli/types/checks/checks.ts';
 import {
-    BLOCK_COMMENT,
+    SQL_TOKENS,
     LINE_COMMENT,
+    BLOCK_COMMENT,
     OUTPUT_PARAMETERS,
     POSTGRES_DIALECTS,
     SHIPPED_PARAMETER_LIMIT,
-    SQL_TOKENS,
-} from '#cli/constants/checks/checks.ts';
+} from '#cli/config/checks/repository.ts';
 
 function sources(input: EngineInput): SqlSource[] {
     return input.files
-        .filter((file) => file.nature === 'source')
+        .filter((file) => file.kind === 'source')
         .map((file) => ({
             path: file.path,
-            text: readSource(input.root, file.path, input.observations).toString('utf8'),
+            text: readSource(input.root, file.path, input.reads).toString('utf8'),
         }));
-}
-
-// The index of the first block comment outside a string and outside a line comment, or a negative number.
-function blockCommentAt(text: string): number {
-    const found = text.matchAll(SQL_TOKENS).find((match) => match[0] === BLOCK_COMMENT);
-    return found?.index ?? -1;
 }
 
 // Whether a PL/pgSQL node is one executable statement: a statement node other than a block, placed on a line.
@@ -53,22 +50,10 @@ function sqlStatements(value: unknown): number {
     return count;
 }
 
-// The declared input parameters of a function, leaving out its outputs and table columns.
-function inputParameters(statement: SqlStatementView): number {
-    const parameters = (statement.fields['parameters'] ?? []) as { FunctionParameter: { mode: string } }[];
-    return parameters.filter(({ FunctionParameter: parameter }) => !OUTPUT_PARAMETERS.has(parameter.mode)).length;
-}
-
-// The argument of a CREATE FUNCTION option, by name.
+// The argument of a `CREATE FUNCTION` option, by name.
 function functionOption(statement: SqlStatementView, name: string): FunctionOption['DefElem']['arg'] | undefined {
     const options = (statement.fields['options'] ?? []) as FunctionOption[];
-    return options.find(({ DefElem }) => DefElem.defname === name)?.DefElem.arg;
-}
-
-// The executable statements of a PL/pgSQL function, parsed from its definition text.
-async function plpgsqlStatements(parsed: SqlFile, statement: SqlStatementView, index: number): Promise<number> {
-    const end = parsed.statements[index + 1]?.start ?? parsed.source.length;
-    return proceduralStatements(await parsePlpgsql(parsed.source.slice(statement.start, end)));
+    return options.find(({ DefElem: option }) => option.defname === name)?.DefElem.arg;
 }
 
 // The executable statements of an SQL function: its standard body, or the string body parsed on its own.
@@ -87,37 +72,31 @@ async function bodyStatements(
     index: number,
 ): Promise<number | undefined> {
     const language = functionOption(statement, 'language')?.String?.sval;
-    if (language === 'plpgsql') return plpgsqlStatements(parsed, statement, index);
+    if (language === 'plpgsql') {
+        const end = parsed.statements[index + 1]?.start ?? parsed.source.length;
+        return proceduralStatements(await parsePlpgsql(parsed.source.slice(statement.start, end)));
+    }
     return language === 'sql' ? sqlBodyStatements(statement) : undefined;
 }
 
-// A finding at a statement of the source.
-function functionFinding(analysis: SqlAnalysis, statement: SqlStatementView, rule: string, message: string): Finding {
-    const { input, source } = analysis;
-    return {
-        check: input.spec.name,
-        file: source.path,
-        ...positionAt(source.text, statement.start),
-        rule,
-        message,
-        fixable: false,
-    };
-}
-
-// The findings of one CREATE FUNCTION statement, and whether the function is trivial.
+// The findings of one `CREATE FUNCTION` statement, and whether the function is trivial.
 async function functionFindings(
     analysis: SqlAnalysis,
     statement: SqlStatementView,
     index: number,
 ): Promise<{ findings: Finding[]; isTrivial: boolean }> {
-    const { threshold, maximum, parsed } = analysis;
+    const { input, source, threshold, maximum, parsed } = analysis;
+    const at = { file: source.path, ...positionAt(source.text, statement.start) };
     const findings: Finding[] = [];
-    const count = inputParameters(statement);
+    const parameters = (statement.fields['parameters'] ?? []) as { FunctionParameter: { mode: string } }[];
+    const count = parameters.filter(
+        ({ FunctionParameter: parameter }) => !OUTPUT_PARAMETERS.has(parameter.mode),
+    ).length;
     if (count > maximum)
         findings.push(
-            functionFinding(
-                analysis,
-                statement,
+            findingAt(
+                input,
+                at,
                 'function-parameters',
                 `${String(count)} declared input parameters exceeds ${String(maximum)}.`,
             ),
@@ -126,12 +105,7 @@ async function functionFindings(
     const isTrivial = statements !== undefined && statements <= threshold;
     if (isTrivial)
         findings.push(
-            functionFinding(
-                analysis,
-                statement,
-                'trivial-function',
-                `This function has ${String(statements)} executable statements, at most ${String(threshold)}. Inline it or suppress its required API with a reason.`,
-            ),
+            findingAt(input, at, 'trivial-function', trivialFunctionText('This function', statements, threshold)),
         );
     return { findings, isTrivial };
 }
@@ -148,14 +122,14 @@ async function fileFunctionFindings(analysis: SqlAnalysis): Promise<Finding[]> {
         if (found.isTrivial) trivial += 1;
     }
     if (trivial > 0 && trivial === parsed.statements.length)
-        findings.push({
-            check: input.spec.name,
-            file: source.path,
-            line: 1,
-            rule: 'trivial-file',
-            message: 'This file contains only trivial functions. Move them to their owner.',
-            fixable: false,
-        });
+        findings.push(
+            findingAt(
+                input,
+                { file: source.path, line: 1 },
+                'trivial-file',
+                'This file contains only trivial functions. Move them to their owner.',
+            ),
+        );
     return findings;
 }
 
@@ -169,18 +143,10 @@ export async function sqlSyntax(input: EngineInput): Promise<Finding[]> {
     if (!POSTGRES_DIALECTS.has(dialect)) return [];
     const findings: Finding[] = [];
     for (const source of sources(input)) {
-        const parsed = await sqlFile(source.text, input.observations);
+        const parsed = await sqlFile(source.text, input.reads);
         if (parsed.error === undefined) continue;
         const { text, line, column } = parsed.error;
-        findings.push({
-            check: input.spec.name,
-            file: source.path,
-            line,
-            column,
-            rule: 'syntax',
-            message: text,
-            fixable: false,
-        });
+        findings.push(findingAt(input, { file: source.path, line, column }, 'syntax', text));
     }
     return findings;
 }
@@ -192,17 +158,15 @@ export async function sqlSyntax(input: EngineInput): Promise<Finding[]> {
  */
 export function sqlBlockComments(input: EngineInput): Finding[] {
     return sources(input).flatMap((source): Finding[] => {
-        const found = blockCommentAt(source.text);
-        if (found === -1) return [];
+        const found = source.text.matchAll(SQL_TOKENS).find((match) => match[0] === BLOCK_COMMENT);
+        if (found === undefined) return [];
         return [
-            {
-                check: input.spec.name,
-                file: source.path,
-                ...positionAt(source.text, found),
-                rule: 'block-comment',
-                message: 'A block comment; write line comments, which the prose checks read.',
-                fixable: false,
-            },
+            findingAt(
+                input,
+                { file: source.path, ...positionAt(source.text, found.index) },
+                'block-comment',
+                'A block comment; write line comments, which the prose checks read.',
+            ),
         ];
     });
 }
@@ -220,9 +184,7 @@ export function sqlFileLength(input: EngineInput): Finding[] {
         const count = lines.filter((line) => line !== '' && !line.startsWith(LINE_COMMENT)).length;
         if (count <= ceiling) return [];
         const said = `${String(count)} code lines is over the ceiling of ${String(ceiling)}.`;
-        return [
-            { check: input.spec.name, file: source.path, line: 1, rule: 'file-lines', message: said, fixable: false },
-        ];
+        return [findingAt(input, { file: source.path, line: 1 }, 'file-lines', said)];
     });
 }
 
@@ -233,13 +195,21 @@ export function sqlFileLength(input: EngineInput): Finding[] {
  */
 export async function sqlFunctions(input: EngineInput): Promise<Finding[]> {
     const findings: Finding[] = [];
-    const threshold = input.view.limit('trivial_statements', 'sql') ?? 2;
+    const threshold = input.view.limit('trivial_statements', 'sql') ?? DEFAULT_TRIVIAL_STATEMENTS;
     const maximum = input.view.limit('function_parameters', 'sql') ?? SHIPPED_PARAMETER_LIMIT;
     for (const source of sources(input)) {
-        const parsed = await sqlFile(source.text, input.observations);
+        const parsed = await sqlFile(source.text, input.reads);
         if (parsed.error !== undefined)
             throw new Error(`Cannot analyze SQL functions in ${source.path}: ${parsed.error.text}`);
         findings.push(...(await fileFunctionFindings({ input, source, parsed, threshold, maximum })));
     }
     return findings;
 }
+
+/** The analyses this file provides, by the name a manifest check gives them. */
+export const SQL_ANALYSES: Record<string, Engine> = {
+    'sql-functions': sqlFunctions,
+    'sql-syntax': sqlSyntax,
+    'sql-block-comments': sqlBlockComments,
+    'sql-file-length': sqlFileLength,
+};

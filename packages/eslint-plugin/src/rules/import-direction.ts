@@ -1,28 +1,29 @@
 import { posix } from 'node:path';
 import { importFile } from '#plugin/imports.ts';
 import type { TSESTree } from '@typescript-eslint/utils';
-import { ASTUtils, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { CODE_EXTENSION } from '#plugin/config/rules.ts';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
-import { lintedFile, lintedRoot, isAnyGlobMatch, relativeToRoot, staticString } from '#plugin/files.ts';
+import { ASTUtils, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { lintedFile, lintedRoot, staticString, isAnyGlobMatch, relativeToRoot } from '#plugin/files.ts';
 
-import { CODE_EXTENSION } from '#plugin/constants/rules.ts';
 import {
-    CONFIG_ROLES,
-    DEFAULT_CONTRACTS,
-    DEFAULT_ROLES,
     ROLE_ORDER,
     TEST_ROLES,
-} from '#plugin/constants/import-direction.ts';
+    CONFIG_ROLES,
+    DEFAULT_ROLES,
+    DEFAULT_CONTRACTS,
+} from '#plugin/config/import-direction.ts';
 import type {
-    ImportDirectionMessages,
-    ImportDirectionOptions,
-    ImportDirectionRole,
-    ImportDirectionRoles,
     ImportEdge,
     ImportNode,
     ImportVerdict,
+    ImportDirectionRole,
+    ImportDirectionRoles,
+    ImportDirectionOptions,
+    ImportDirectionMessages,
 } from '#plugin/types/rules.ts';
 
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The importer and the imported file get their role by the same glob lookup.
 function roleOf(path: string, roles: Required<ImportDirectionRoles>): ImportDirectionRole {
     return ROLE_ORDER.find((role) => role !== 'other' && isAnyGlobMatch(path, roles[role])) ?? 'other';
 }
@@ -106,6 +107,7 @@ export const importDirection = createRule<ImportDirectionOptions, ImportDirectio
         const root = lintedRoot(context);
         const scope = (options.scope ?? '').replace(/\/$/u, '');
         const prefix = scope === '' ? '' : `${scope}/`;
+        // eslint-disable-next-line gspot/no-trivial-functions -- reason: The importer and the import target are made relative to the scope the same way.
         const relativeOf = (absolute: string): string => {
             const rel = relativeToRoot(root, absolute);
             return prefix !== '' && rel.startsWith(prefix) ? rel.slice(prefix.length) : rel;
@@ -116,7 +118,7 @@ export const importDirection = createRule<ImportDirectionOptions, ImportDirectio
         const contracts = options.contracts ?? DEFAULT_CONTRACTS;
         const rootOfScope = scope === '' ? root : `${root}/${scope}`;
         const check = (node: TSESTree.Node, sourceNode: TSESTree.Node | null | undefined, typeOnly = false): void => {
-            const source = sourceNode === null || sourceNode === undefined ? undefined : staticString(sourceNode);
+            const source = staticString(sourceNode);
             const resolved =
                 source === undefined ? undefined : importFile(file, source, rootOfScope, options.aliases ?? {});
             if (source === undefined || resolved === undefined) return;

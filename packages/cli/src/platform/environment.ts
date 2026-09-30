@@ -1,35 +1,14 @@
+// Owns reads from the process environment and normalizes variables for tool execution.
+
 import { homedir } from 'node:os';
-import { isAbsolute, join } from 'node:path';
-// The one place gspot reads the environment: every variable it honors has a function here.
-
-function isSet(name: string): boolean {
-    const value = process.env[name];
-    return value !== undefined && value !== '';
-}
-
+import { join, isAbsolute } from 'node:path';
 /**
  * True under a CI runner, which sets CI.
  * @returns whether CI is set
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Prompts and colors decide that they run under CI by the same variable.
 export function isCi(): boolean {
-    return isSet('CI');
-}
-
-/**
- * True when NO_COLOR asks for plain output.
- * @returns whether NO_COLOR is set
- */
-export function isColorRefused(): boolean {
-    return isSet('NO_COLOR');
-}
-
-/**
- * The parallelism GSPOT_JOBS asks for, when it names a positive integer.
- * @returns the count, or undefined
- */
-export function jobsWanted(): number | undefined {
-    const wanted = Number(process.env['GSPOT_JOBS'] ?? '');
-    return Number.isSafeInteger(wanted) && wanted > 0 ? wanted : undefined;
+    return (process.env['CI'] ?? '') !== '';
 }
 
 /**
@@ -37,8 +16,8 @@ export function jobsWanted(): number | undefined {
  * @returns the directory, or undefined for the default under the home directory
  */
 export function miseHome(): string | undefined {
-    if (isSet('MISE_DATA_DIR')) return process.env['MISE_DATA_DIR'];
-    return isSet('XDG_DATA_HOME') ? `${process.env['XDG_DATA_HOME'] ?? ''}/mise` : undefined;
+    if ((process.env['MISE_DATA_DIR'] ?? '') !== '') return process.env['MISE_DATA_DIR'];
+    return (process.env['XDG_DATA_HOME'] ?? '') === '' ? undefined : `${process.env['XDG_DATA_HOME'] ?? ''}/mise`;
 }
 
 /**

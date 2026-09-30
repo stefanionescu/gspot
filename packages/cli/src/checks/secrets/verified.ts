@@ -2,19 +2,21 @@
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { runBinary } from '#cli/platform/spawn.ts';
+import { GspotError } from '#cli/platform/errors.ts';
+import { PRIVATE_FILE } from '#cli/config/platform.ts';
 import { runToolCommand } from '#cli/tools/command.ts';
-import { PRIVATE_FILE } from '#cli/constants/platform.ts';
-import { runToolCheck } from '#cli/execution/tool-runner.ts';
-import type { CheckResult } from '#cli/types/checks/checks.ts';
-import type { SecretScan } from '#cli/types/checks/secrets.ts';
-import { SelectionError } from '#cli/configurations/select.ts';
-import { gitBlobs } from '#cli/repository/revisions/snapshot.ts';
+import { runToolCheck } from '#cli/execution/tool/runner.ts';
+import { gitBlobs } from '#cli/repository/revisions/contents.ts';
 import { pushBase } from '#cli/repository/revisions/selection.ts';
-import { appendFileSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
-import type { PlannedCheck, Session } from '#cli/types/execution/execution.ts';
-import { CHANGE_LINE, COMMIT_METADATA, DIFF_TREE, GIT_TIMEOUT_MS } from '#cli/constants/checks/secrets.ts';
+import type { SecretScan, CheckResult } from '#cli/types/checks.ts';
+import { rmSync, mkdtempSync, writeFileSync, appendFileSync } from 'node:fs';
+import type { Session, PlannedCheck } from '#cli/types/execution/execution.ts';
+import { DIFF_TREE, CHANGE_LINE, GIT_TIMEOUT_MS, COMMIT_METADATA } from '#cli/config/checks/security.ts';
 
-// The commits under review: the ones the run supplies, or every commit since the push base.
+// The fields come as key and value pairs.
+const PAIR = 2;
+
+// The commits under review: the ones the run supplies, or every commit after the push base.
 async function selectedCommits(session: Session, planned: PlannedCheck): Promise<string[] | undefined> {
     if (planned.commits !== undefined) return planned.commits;
     const base = await pushBase(session.root, session.cancelSignal);
@@ -29,62 +31,60 @@ async function selectedCommits(session: Session, planned: PlannedCheck): Promise
 
 // The NUL-separated fields of a commit's raw change list, which must be UTF-8 and complete.
 async function changeFields(session: Session, commit: string): Promise<string[]> {
-    const observed = await runBinary(['git', ...DIFF_TREE, commit, '--'], {
+    const read = await runBinary(['git', ...DIFF_TREE, commit, '--'], {
         cwd: session.root,
         timeoutMs: GIT_TIMEOUT_MS,
         ...(session.cancelSignal === undefined ? {} : { cancelSignal: session.cancelSignal }),
     });
-    if (observed.code !== 0)
-        throw new SelectionError(['Cannot read the changed objects for verified secret scanning.']);
-    const bytes = Buffer.from(observed.stdout);
+    if (read.code !== 0)
+        throw new GspotError('selection', ['Cannot read the changed objects for verified secret scanning.']);
+    const bytes = Buffer.from(read.stdout);
     const text = bytes.toString('utf8');
-    if (!Buffer.from(text).equals(bytes)) throw new SelectionError(['History paths must be valid UTF-8.']);
+    if (!Buffer.from(text).equals(bytes)) throw new GspotError('selection', ['History paths must be valid UTF-8.']);
     const fields = text.split('\0');
-    if (fields.pop() !== '') throw new SelectionError(['Git returned an incomplete history change list.']);
+    if (fields.pop() !== '') throw new GspotError('selection', ['Git returned an incomplete history change list.']);
     return fields;
 }
 
 // The blob each changed file holds after the commit, by path.
 function changedObjects(fields: string[]): Map<string, string> {
     const entries = new Map<string, string>();
-    for (let position = 0; position < fields.length; position += 2) {
-        const object = CHANGE_LINE.exec(fields[position] ?? '')?.[2];
+    for (let position = 0; position < fields.length; position += PAIR) {
+        const blobId = CHANGE_LINE.exec(fields[position] ?? '')?.[2];
         const file = fields[position + 1];
-        if (object === undefined || file === undefined)
-            throw new SelectionError(['Git returned an unsupported history object.']);
-        entries.set(file, object);
+        if (blobId === undefined || file === undefined)
+            throw new GspotError('selection', ['Git returned an unsupported history object.']);
+        entries.set(file, blobId);
     }
     return entries;
-}
-
-// Appends one enumerator record.
-function appendRecord(input: string, record: Record<string, unknown>): void {
-    appendFileSync(input, `${JSON.stringify(record)}\n`);
 }
 
 // Appends every changed blob of a commit to the enumerator input.
 async function appendBlobs(scan: SecretScan, commit: string): Promise<void> {
     const entries = changedObjects(await changeFields(scan.session, commit));
     const blobs = await gitBlobs(scan.session.root, [...entries.values()], scan.session.cancelSignal);
-    for (const [file, object] of entries) {
-        const data = blobs.get(object);
-        if (data === undefined) throw new SelectionError(['A selected history blob is missing.']);
-        appendRecord(scan.input, { metadata: { commit, file }, data_b64: data.toString('base64') });
+    for (const [file, blobId] of entries) {
+        const blob = blobs.get(blobId);
+        if (blob === undefined) throw new GspotError('selection', ['A selected history blob is missing.']);
+        appendFileSync(
+            scan.input,
+            `${JSON.stringify({ metadata: { commit, file }, data_b64: blob.toString('base64') })}\n`,
+        );
     }
 }
 
 // Appends a commit's author, committer, and message to the enumerator input.
 async function appendMetadata(scan: SecretScan, commit: string): Promise<void> {
     const { session, planned } = scan;
-    const message = await runToolCommand(
+    const commitResult = await runToolCommand(
         planned.scope.view,
         ['git', ...COMMIT_METADATA, commit, '--'],
         { cwd: session.root },
         session.cancelSignal,
     );
-    if (message.code !== 0)
-        throw new SelectionError(['Cannot read selected commit metadata for verified secret scanning.']);
-    appendRecord(scan.input, { metadata: { commit, file: '' }, data: message.stdout });
+    if (commitResult.code !== 0)
+        throw new GspotError('selection', ['Cannot read selected commit metadata for verified secret scanning.']);
+    appendFileSync(scan.input, `${JSON.stringify({ metadata: { commit, file: '' }, data: commitResult.stdout })}\n`);
 }
 
 // Writes the enumerator input for every commit, then runs TruffleHog over it.

@@ -3,9 +3,9 @@ import { hasPolicy } from '#cli/policy/read.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { directoryOf } from '#cli/platform/arguments.ts';
+import type { CommandResult } from '#cli/types/commands.ts';
 import { explain } from '#cli/commands/explain/subjects.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
-import type { CommandResult } from '#cli/types/commands/commands.ts';
 
 async function explainResult(directory: string, subject: string): Promise<CommandResult> {
     const root = findRoot(directory);
@@ -22,11 +22,11 @@ async function explainResult(directory: string, subject: string): Promise<Comman
 export function registerExplain(program: Command): void {
     program
         .command('explain <subject>')
-        .summary('Explain a check or setting')
-        .description('Say what a check, a tool rule, a configuration, a setting, or a file path is, in plain words')
+        .summary('Explain a check, rule, kit, setting, or file')
+        .description('Explain a check, a tool rule, a kit, a setting, or a file path')
         .addHelpText(
             'after',
-            '\nEffects:\nReads definitions or file ownership and prints the requested explanation. It does not change policy or run the repository gate. An unknown subject is an inability to complete the request.\n\nExit codes:\n0: the explanation was printed. 2: invalid input or inability to complete the request.\n\nExample:\ngspot explain bash/syntax',
+            '\nEffects:\nPrints what the subject is and what to do about it. A rule also gets the gspot ignore and gspot set lines that change it. A setting gets its value, its default, and where the value comes from. A file gets the checks that read it. explain changes nothing.\n\nExit codes:\n- 0: the explanation was printed.\n- 2: the subject is unknown, or the input was invalid.\n\nExample:\ngspot explain bash/syntax',
         )
         .action(async (subject: string, _flags: Record<string, unknown>, command: Command) => {
             const global = command.optsWithGlobals();

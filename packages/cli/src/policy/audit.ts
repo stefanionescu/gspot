@@ -1,20 +1,21 @@
-import { nearMatches } from '#cli/policy/near.ts';
+import { similar } from '#cli/policy/similar.ts';
 import * as messages from '#cli/policy/messages.ts';
+import { policyLayers } from '#cli/policy/problems.ts';
 import { writtenKeys } from '#cli/policy/written-keys.ts';
 import { quoteArgument } from '#cli/platform/arguments.ts';
 import { settingValueSchemas } from '#cli/policy/schema.ts';
 import { shippedPolicy } from '#cli/checks/naming/policy.ts';
-import { LIMITS_PREFIX } from '#cli/constants/policy/policy.ts';
-import { isLoosening, isReasonAccepted } from '#cli/policy/loosening.ts';
-import { asRecord, policyTables, policyValue, specFor } from '#cli/policy/settings.ts';
+import { isWeaker, isReasonAccepted } from '#cli/policy/weaker.ts';
+import { LIMITS_PREFIX, TOOL_KEY_DEPTH } from '#cli/config/policy/policy.ts';
+import { specFor, asRecord, policyValue, policyTables } from '#cli/policy/settings.ts';
 
 import type {
-    ExposedSettings,
-    PathSegment,
     Policy,
-    PolicyProblem,
     SpecMatch,
+    PathSegment,
     WrittenValue,
+    PolicyProblem,
+    ExposedSettings,
 } from '#cli/types/policy/policy.ts';
 
 function unknownKeyProblem(surface: ExposedSettings, key: string): string {
@@ -26,12 +27,12 @@ function unknownKeyProblem(surface: ExposedSettings, key: string): string {
             limits.map((candidate) => candidate.slice(LIMITS_PREFIX.length)),
         );
     }
-    const depth = key.startsWith('tools.') ? 2 : 1;
+    const depth = key.startsWith('tools.') ? TOOL_KEY_DEPTH : 1;
     const prefix = key.split('.').slice(0, depth).join('.');
     const known = all
         .filter((candidate) => candidate.startsWith(`${prefix}.`))
         .map((candidate) => candidate.slice(prefix.length + 1));
-    const near = nearMatches(key.slice(prefix.length + 1), known);
+    const near = similar(key.slice(prefix.length + 1), known);
     const rest = known.filter((item) => !near.includes(item));
     return messages.settingNotExposed(key, known.length > 0 ? [...near, ...rest] : []);
 }
@@ -73,7 +74,7 @@ function looseningProblem(
     const shown = shipped === undefined ? 'default' : `default ${JSON.stringify(shipped)}`;
     const scopeFlag = scope === undefined ? '' : ` --scope ${quoteArgument(scope)}`;
     const value = JSON.stringify(written.value);
-    return messages.loosenNeedsReason(
+    return messages.weakerNeedsReason(
         key,
         value,
         shown,
@@ -105,7 +106,7 @@ function scalarProblems(
     scope: string | undefined,
 ): PolicyProblem[] {
     const shipped = surface.defaults.get(match.spec.name)?.value;
-    if (!isLoosening(match.spec, written.value, shipped) || isReasonAccepted(written.reason)) return [];
+    if (!isWeaker(match.spec, written.value, shipped) || isReasonAccepted(written.reason)) return [];
     const problem = looseningProblem(key, written, shipped, scope);
     return problem === undefined ? [] : [{ path: key.split('.'), message: problem }];
 }
@@ -140,27 +141,7 @@ function extraProblems(surface: ExposedSettings, table: Partial<Policy>): Policy
     return problems;
 }
 
-// The first surface wins a key two surfaces share, so the root keeps its own default.
-function mergedSurface(surfaces: ExposedSettings[]): ExposedSettings {
-    const later = surfaces.toReversed();
-    return {
-        specs: new Map(later.flatMap((surface) => surface.specs.entries().toArray())),
-        defaults: new Map(later.flatMap((surface) => surface.defaults.entries().toArray())),
-        problems: surfaces[0]?.problems ?? [],
-    };
-}
-
-function tableProblems(
-    surface: ExposedSettings,
-    table: Partial<Policy>,
-    scope: string | undefined,
-    requireReasons: boolean,
-): PolicyProblem[] {
-    const keys = writtenKeys(table, surface).flatMap((key) => keyProblems(surface, table, scope, key, requireReasons));
-    return [...keys, ...extraProblems(surface, table)];
-}
-
-// The surface problems no written table settles, for the root selection and for each scope.
+// Unresolved surface problems in the root selection and each scope.
 function unwrittenSurfaceProblems(
     surface: ExposedSettings,
     policy: Policy,
@@ -168,38 +149,28 @@ function unwrittenSurfaceProblems(
 ): PolicyProblem[] {
     const problems: PolicyProblem[] = [];
     const surfaces = [
-        { settings: surface, scope: undefined, path: ['configurations'] as PathSegment[] },
+        { settings: surface, scope: undefined, path: ['kits'] as PathSegment[] },
         ...policy.scopes.map((scope, index) => ({
             settings: scopeSurfaces.get(scope.path) ?? surface,
             scope: scope.path,
-            path: ['scope', index, 'configurations'] as PathSegment[],
+            path: ['scope', index, 'kits'] as PathSegment[],
         })),
     ];
     for (const { settings, scope, path } of surfaces) {
         const layers = policyTables(policy, scope);
-        for (const { key, message } of settings.problems)
-            if (!layers.some(({ table }) => policyValue(table, key) !== undefined)) problems.push({ path, message });
+        for (const { key, message: text } of settings.problems)
+            if (!layers.some(({ table }) => policyValue(table, key) !== undefined))
+                problems.push({ path, message: text });
     }
     return problems;
 }
 
-// The root table and each scope table that exists, with where each one sits in the document.
-function policyLayersOf(policy: Policy): { table: Partial<Policy>; scope?: string; path: PathSegment[] }[] {
-    return [
-        { table: policy, path: [] },
-        ...policy.scopes.flatMap((scope, index) => {
-            const table = policy.scopeTables[scope.path];
-            return table === undefined ? [] : [{ table, scope: scope.path, path: ['scope', index] as PathSegment[] }];
-        }),
-    ];
-}
-
 /**
  * Validates every written key against the surface and the loosening rule.
- * @param surface the surface of the selection
- * @param policy the loaded policy
- * @param scopeSurfaces the surface of each scope by its path; a scope table is read against its own
- * @returns the problems in plain English, empty when the policy is sound
+ * @param surface the surface of the selection.
+ * @param policy the loaded policy.
+ * @param scopeSurfaces the surface of each scope by its path; a scope table is read against its own.
+ * @returns the problems in plain English, empty when the policy is sound.
  */
 export function validateAgainstSurface(
     surface: ExposedSettings,
@@ -208,10 +179,20 @@ export function validateAgainstSurface(
 ): PolicyProblem[] {
     const problems = unwrittenSurfaceProblems(surface, policy, scopeSurfaces);
     // A root table feeds every scope, so it may hold a setting that only a configuration of some scope exposes.
-    const everywhere = mergedSurface([surface, ...scopeSurfaces.values()]);
-    for (const { table, scope, path } of policyLayersOf(policy)) {
+    const later = [surface, ...scopeSurfaces.values()].toReversed();
+    const everywhere: ExposedSettings = {
+        specs: new Map(later.flatMap((entry) => entry.specs.entries().toArray())),
+        defaults: new Map(later.flatMap((entry) => entry.defaults.entries().toArray())),
+        problems: surface.problems,
+    };
+    for (const { table, scope, path } of policyLayers(policy)) {
         const settings = scope === undefined ? everywhere : (scopeSurfaces.get(scope) ?? surface);
-        const found = tableProblems(settings, table, scope, policy.requireReasons);
+        const found = [
+            ...writtenKeys(table, settings).flatMap((key) =>
+                keyProblems(settings, table, scope, key, policy.requireReasons),
+            ),
+            ...extraProblems(settings, table),
+        ];
         problems.push(...found.map((problem) => ({ ...problem, path: [...path, ...problem.path] })));
     }
     for (const [index, { group }] of policy.naming.remove_groups.entries())

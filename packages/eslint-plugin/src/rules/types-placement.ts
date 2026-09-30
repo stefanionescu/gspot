@@ -1,9 +1,9 @@
-import type { TSESTree } from '@typescript-eslint/utils';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { TYPE_DECLARATIONS } from '#plugin/constants/rules.ts';
+import { TYPE_DECLARATIONS } from '#plugin/config/rules.ts';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
-import { lintedFile, lintedRoot, isAnyGlobMatch, relativeToRoot } from '#plugin/files.ts';
-import type { TypesPlacementMessages, TypesPlacementOptions, TypesPlacementReporter } from '#plugin/types/rules.ts';
+import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
+import { lintedFile, lintedRoot, staticString, isAnyGlobMatch, relativeToRoot } from '#plugin/files.ts';
+import type { TypesPlacementOptions, TypesPlacementMessages, TypesPlacementReporter } from '#plugin/types/rules.ts';
 
 function isConstAssertion(init: TSESTree.Expression | null): init is TSESTree.TSAsExpression {
     return (
@@ -14,25 +14,52 @@ function isConstAssertion(init: TSESTree.Expression | null): init is TSESTree.TS
     );
 }
 
-function isBraceLiteral(expression: TSESTree.Expression): boolean {
+// A value union explicitly derives an enum domain from its readonly record.
+function isEnumValueReference(identifier: TSESTree.Identifier | TSESTree.JSXIdentifier): boolean {
+    const query = identifier.parent;
+    if (query.type !== AST_NODE_TYPES.TSTypeQuery) return false;
+    const indexed = query.parent;
+    if (indexed.type !== AST_NODE_TYPES.TSIndexedAccessType) return false;
+    const keys = indexed.indexType;
     return (
-        expression.type === AST_NODE_TYPES.ObjectExpression &&
-        expression.properties.every(
-            (property) => property.type === AST_NODE_TYPES.Property && property.value.type === AST_NODE_TYPES.Literal,
-        )
+        keys.type === AST_NODE_TYPES.TSTypeOperator &&
+        keys.operator === 'keyof' &&
+        keys.typeAnnotation?.type === AST_NODE_TYPES.TSTypeQuery &&
+        keys.typeAnnotation.exprName.type === AST_NODE_TYPES.Identifier &&
+        keys.typeAnnotation.exprName.name === identifier.name
     );
 }
 
-function isEnumReplacement(declaration: TSESTree.VariableDeclaration): boolean {
-    return (
-        declaration.kind === 'const' &&
-        declaration.declarations.some(
-            (declarator) => isConstAssertion(declarator.init) && isBraceLiteral(declarator.init.expression),
-        )
-    );
+// Matching member names and string values form an enum; arbitrary literal records do not.
+function isIdentityMember(property: TSESTree.ObjectLiteralElement): boolean {
+    if (
+        property.type !== AST_NODE_TYPES.Property ||
+        property.computed ||
+        property.value.type !== AST_NODE_TYPES.Literal
+    )
+        return false;
+    const key = property.key.type === AST_NODE_TYPES.Identifier ? property.key.name : staticString(property.key);
+    return typeof property.value.value === 'string' && key?.toLowerCase() === property.value.value.toLowerCase();
 }
 
-function declarationName(declaration: NonNullable<TSESTree.ExportNamedDeclaration['declaration']>): string {
+function isEnumReplacement(declarator: TSESTree.VariableDeclarator, source: TSESLint.SourceCode): boolean {
+    if (!isConstAssertion(declarator.init)) return false;
+    const expression = declarator.init.expression;
+    if (expression.type !== AST_NODE_TYPES.ObjectExpression || expression.properties.length === 0) return false;
+    if (
+        expression.properties.some(
+            (property) => property.type !== AST_NODE_TYPES.Property || property.value.type !== AST_NODE_TYPES.Literal,
+        )
+    )
+        return false;
+    if (expression.properties.every((property) => isIdentityMember(property))) return true;
+    const variables = source.getDeclaredVariables(declarator);
+    return variables.some((variable) => variable.references.some(({ identifier }) => isEnumValueReference(identifier)));
+}
+
+function declarationName(
+    declaration: NonNullable<TSESTree.ExportNamedDeclaration['declaration']> | TSESTree.VariableDeclarator,
+): string {
     if ('id' in declaration && declaration.id?.type === AST_NODE_TYPES.Identifier) return declaration.id.name;
     const first = declaration.type === AST_NODE_TYPES.VariableDeclaration ? declaration.declarations[0] : undefined;
     return first?.id.type === AST_NODE_TYPES.Identifier ? first.id.name : 'this export';
@@ -48,7 +75,10 @@ function isTypeOnlyImport(node: TSESTree.ImportDeclaration): boolean {
     );
 }
 
-function insideListeners(report: TypesPlacementReporter): Record<string, (node: never) => void> {
+function insideListeners(
+    report: TypesPlacementReporter,
+    source: TSESLint.SourceCode,
+): Record<string, (node: never) => void> {
     return {
         ExportDefaultDeclaration(node: TSESTree.ExportDefaultDeclaration) {
             report(node, 'defaultInside');
@@ -60,7 +90,13 @@ function insideListeners(report: TypesPlacementReporter): Record<string, (node: 
         ExportNamedDeclaration(node: TSESTree.ExportNamedDeclaration) {
             const { declaration } = node;
             if (!declaration || TYPE_DECLARATIONS.has(declaration.type)) return;
-            if (declaration.type === AST_NODE_TYPES.VariableDeclaration && isEnumReplacement(declaration)) return;
+            if (declaration.type === AST_NODE_TYPES.VariableDeclaration && declaration.kind === 'const') {
+                for (const declarator of declaration.declarations) {
+                    if (!isEnumReplacement(declarator, source))
+                        report(node, 'runtimeInside', { name: declarationName(declarator) });
+                }
+                return;
+            }
             report(node, 'runtimeInside', { name: declarationName(declaration) });
         },
     };
@@ -69,6 +105,7 @@ function insideListeners(report: TypesPlacementReporter): Record<string, (node: 
 function outsideListeners(
     report: TypesPlacementReporter,
     isInterfaceAllowed: boolean,
+    source: TSESLint.SourceCode,
 ): Record<string, (node: never) => void> {
     return {
         TSInterfaceDeclaration(node: TSESTree.TSInterfaceDeclaration) {
@@ -79,10 +116,11 @@ function outsideListeners(
         },
         ExportNamedDeclaration(node: TSESTree.ExportNamedDeclaration) {
             const { declaration } = node;
-            if (declaration?.type !== AST_NODE_TYPES.VariableDeclaration || !isEnumReplacement(declaration)) return;
-            report(node, 'enumOutside', {
-                name: declarationName(declaration) === 'this export' ? 'this object' : declarationName(declaration),
-            });
+            if (declaration?.type !== AST_NODE_TYPES.VariableDeclaration || declaration.kind !== 'const') return;
+            for (const declarator of declaration.declarations) {
+                if (!isEnumReplacement(declarator, source)) continue;
+                report(node, 'enumOutside', { name: declarationName(declarator) });
+            }
         },
     };
 }
@@ -126,9 +164,16 @@ export const typesPlacement = createRule<TypesPlacementOptions, TypesPlacementMe
         if (isAnyGlobMatch(relative, options.exempt ?? [])) return {};
         const directory = options.typesDirectory.replace(/\/$/u, '');
         const isInside = relative.startsWith(`${directory}/`) || relative.includes(`/${directory}/`);
-        const report: TypesPlacementReporter = (node, id, extra = {}) => {
-            context.report({ node, messageId: id, data: { directory, ...extra } });
-        };
-        return isInside ? insideListeners(report) : outsideListeners(report, options.allowInterface === true);
+        return isInside
+            ? insideListeners((node, id, extra = {}) => {
+                  context.report({ node, messageId: id, data: { directory, ...extra } });
+              }, context.sourceCode)
+            : outsideListeners(
+                  (node, id, extra = {}) => {
+                      context.report({ node, messageId: id, data: { directory, ...extra } });
+                  },
+                  options.allowInterface === true,
+                  context.sourceCode,
+              );
     },
 });

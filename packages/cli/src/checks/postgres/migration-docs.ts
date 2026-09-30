@@ -1,19 +1,22 @@
 // The documented migration layout: a boxed header with the file name and a purpose, boxed sections, and a labeled block above each table and function.
+import { findingAt } from '#cli/checks/result.ts';
 import { positionAt } from '#cli/parsers/sql/statements.ts';
-import { HEADER_LINES } from '#cli/constants/checks/script.ts';
+import { HEADER_LINES } from '#cli/config/checks/structure.ts';
 import { migrationsOf } from '#cli/checks/postgres/migrations.ts';
-import type { EngineInput, Finding } from '#cli/types/checks/checks.ts';
-import type { DocProblem, Migration } from '#cli/types/checks/postgres.ts';
+import type { Finding, Migration, DocProblem, EngineInput } from '#cli/types/checks.ts';
 
 import {
-    BLOCK_REACH,
-    DOC_SEPARATOR,
-    MIGRATION_DOC_LABELS,
-    MIGRATION_DOC_SECTIONS,
     PURPOSE,
     SECTION,
+    BLOCK_REACH,
+    DOC_SEPARATOR,
     STATEMENT_WORDS,
-} from '#cli/constants/checks/postgres.ts';
+    MIGRATION_DOC_LABELS,
+    MIGRATION_DOC_SECTIONS,
+} from '#cli/config/checks/platforms.ts';
+
+// From a one-based line to the zero-based index of the line above it.
+const LINE_ABOVE = 2;
 
 function headerProblems(migration: Migration, lines: string[]): DocProblem[] {
     const problems: DocProblem[] = [];
@@ -48,7 +51,7 @@ function sectionAbove(lines: string[], line: number, sections: Set<string>): str
 // The comment lines directly above a statement, nearest first, reaching past blank lines.
 function commentsAbove(lines: string[], line: number): string[] {
     const found: string[] = [];
-    for (let index = line - 2; index >= Math.max(0, line - 2 - BLOCK_REACH); index -= 1) {
+    for (let index = line - LINE_ABOVE; index >= Math.max(0, line - LINE_ABOVE - BLOCK_REACH); index -= 1) {
         const text = (lines[index] ?? '').trim();
         if (text === '') continue;
         if (!text.startsWith('--')) break;
@@ -112,13 +115,8 @@ export async function migrationDocs(input: EngineInput): Promise<Finding[]> {
     const sections = (tool['doc_sections'] as string[] | undefined) ?? Object.values(MIGRATION_DOC_SECTIONS);
     const migrations = await migrationsOf(input);
     return migrations.flatMap((migration) =>
-        docProblems(migration, sections).map((problem) => ({
-            check: input.spec.name,
-            file: migration.path,
-            line: problem.line,
-            rule: problem.rule,
-            message: problem.text,
-            fixable: false,
-        })),
+        docProblems(migration, sections).map((problem) =>
+            findingAt(input, { file: migration.path, line: problem.line }, problem.rule, problem.text),
+        ),
     );
 }

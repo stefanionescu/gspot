@@ -1,50 +1,54 @@
 ---
-title: Share a team profile
-description: Export portable policy, review it, and use it when initializing another repository.
+title: Team profiles
+description: Export your policy as a profile and start another repository from it.
 ---
 
-With the [CLI available](/guides/install/), start from the root of a configured repository
-whose policy you want to share:
+A profile is a policy other repositories can start from. It carries your kits, your level, and
+your settings to a new repository.
+
+## Export a profile
+
+From the root of a configured repository, run:
 
 ```bash
 gspot export team.profile.toml
 ```
 
-Choose a destination inside the repository, relative to your working directory. Export refuses
-symlinked destinations, unrelated existing content, and later edits to a previous export.
-Repeat the command to refresh an unchanged export. Apply and uninstall retain exported profiles.
-An interrupted export resumes through the local recovery journal when you retry.
+The destination is relative to the current folder and inside the repository. gspot refuses a
+destination that is a link, a file with other content, or an export you edited later. Run the
+same command again to refresh an export you did not edit.
 
-Read the resulting TOML and the list of omitted entries. A profile excludes repository-specific
-scope definitions, custom checks, generated/vendored declarations, and path-based entries.
-It is not a backup of hooks, original files, or installation state.
+Read the profile before you share it. A profile leaves out everything that belongs to one
+repository: scopes, custom checks, generated and vendored declarations, and entries that name a
+path. The command lists what it left out. A profile holds no hooks, original files, or installed
+tools.
 
-## Preview adoption
+## Start a repository from a profile
 
-Copy the reviewed profile into the new repository. Change to its root, then preview initialization:
+1. Copy the profile into the new repository.
+2. From its root, preview the plan:
 
-```bash
-gspot init --from team.profile.toml --dry-run
-```
+    ```bash
+    gspot init --from team.profile.toml --dry-run
+    ```
 
-The preview validates the profile and reports the proposed changes without applying them.
-Fix reported profile errors before continuing. Then run:
+    The preview checks the profile and shows the plan. It writes nothing. Fix any error it
+    reports.
 
-```bash
-gspot init --from team.profile.toml
-```
+3. Run init and accept the plan:
 
-Review and accept the plan. Initialization applies it once and runs no checks. Run `gspot check`
-after setup. A profile with `selection = "exact"` selects its configuration list; `selection = "detect"`
-combines its policy with project detection.
+    ```bash
+    gspot init --from team.profile.toml
+    ```
 
-Adopting an existing tool configuration preserves the profile settings for that tool which
-the repository does not override. For example, a native spelling locale can override the
-profile locale while retaining the profile word allowances.
+Init writes the plan once and runs no check, so run `gspot check` afterwards.
 
-## Share a remote source
+With `selection = "exact"`, the profile's kit list is the selection. With
+`selection = "detect"`, gspot adds the kits it detects in the repository.
 
-The same `--from` option accepts HTTPS and `github:owner/repository` sources. Review the source
-and use an immutable revision when reproducibility matters. Exported policy is copied into
-the receiving repository; changing the source profile does not silently rewrite existing projects.
-Keep repository-specific exceptions in each repository and review profile updates as policy changes.
+## Share a profile from a URL
+
+`--from` also takes an HTTPS URL or `github:owner/repository`. Pin an exact revision when you
+need the same result every time. gspot copies the profile into the repository, so a later
+change to the source does not change repositories that already used it. Keep exceptions for one
+repository in that repository, and review profile updates like any policy change.

@@ -1,39 +1,19 @@
+import { ownerOf } from '#cli/kits/owners.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
-import { claimants } from '#cli/configurations/claims.ts';
 import type { Session } from '#cli/types/execution/execution.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
-import { claimedInputs, configuredChecks } from '#cli/execution/planning/plan.ts';
-import type { Explanation, PathExplanation } from '#cli/types/commands/explain.ts';
+import type { Explanation, PathExplanation } from '#cli/types/commands.ts';
+import { ownedInputs, configuredChecks } from '#cli/execution/planning/plan.ts';
 
 function uncheckedNote(file: TrackedFile): string | undefined {
-    if (file.nature === 'binary') return 'binary: eligible for secrets and size checks';
-    if (file.nature === 'generated') {
+    if (file.kind === 'binary') return 'binary: eligible for secrets and size checks';
+    if (file.kind === 'generated') {
         const by = file.producedBy === undefined ? '' : ` by ${file.producedBy}`;
         return `generated${by}: eligible for secrets and freshness checks`;
     }
-    if (file.nature === 'vendored') return 'vendored: eligible for secrets, license, and security checks';
+    if (file.kind === 'vendored') return 'vendored: eligible for secrets, license, and security checks';
     return undefined;
-}
-
-function checksFor(session: Session, file: TrackedFile): PathExplanation['checks'] {
-    return configuredChecks(session)
-        .filter((check) => claimedInputs(session, check).some((entry) => entry.path === file.path))
-        .map((check) => ({
-            check: check.check,
-            stage: check.spec.stage,
-            ...(check.manifest === undefined ? {} : { configuration: check.manifest.configuration.name }),
-        }));
-}
-
-function ignoresFor(session: Session, path: string): PathExplanation['ignores'] {
-    return session.policyFiles.policy.ignores
-        .filter((entry) => entry.paths === undefined || entry.paths.length === 0 || pathMatcher(entry.paths)(path))
-        .map((entry) => ({
-            check: entry.check,
-            ...(entry.rule === undefined ? {} : { rule: entry.rule }),
-            ...(entry.reason === undefined ? {} : { reason: entry.reason }),
-        }));
 }
 
 function ignoreLine(entry: PathExplanation['ignores'][number]): string {
@@ -45,15 +25,11 @@ function ignoreLine(entry: PathExplanation['ignores'][number]): string {
 function annotated(report: PathExplanation, file: TrackedFile): PathExplanation {
     const unchecked = uncheckedNote(file);
     if (unchecked !== undefined) report.unchecked = unchecked;
-    if (report.checks.length === 0 && file.nature === 'source') {
-        report.unchecked = 'no enabled check claims this file';
-        report.remedy = 'gspot set generated "<glob>" or gspot set vendored "<glob>", or gspot add <configuration>';
+    if (report.checks.length === 0 && file.kind === 'source') {
+        report.unchecked = 'no enabled check owners this file';
+        report.remedy = 'gspot set generated "<glob>" or gspot set vendored "<glob>", or gspot add <kit>';
     }
     return report;
-}
-
-function section(title: string, rows: string[]): string[] {
-    return rows.length === 0 ? [] : [title, ...rows];
 }
 
 /**
@@ -67,17 +43,29 @@ function pathReport(session: Session, path: string): PathExplanation | { error: 
     if (!file) return { error: `${path} is not a file git tracks or would track here.` };
     const scope = scopeOf(path, session.repository.scopes);
     const selection = session.scopes.find((entry) => entry.scope.path === scope.path) ?? session.scopes[0];
-    const owners = selection ? claimants(file, selection.selected) : [];
+    const owners = selection ? ownerOf(file, selection.selected) : [];
     const report: PathExplanation = {
         path,
         scope: scope.path === '' ? 'root' : scope.path,
-        nature: file.nature,
+        file: file.kind,
         tags: file.tags,
-        configurations: owners.map((manifest) => manifest.configuration.name),
-        checks: checksFor(session, file),
-        ignores: ignoresFor(session, path),
+        kits: owners.map((manifest) => manifest.kit.name),
+        checks: configuredChecks(session)
+            .filter((check) => ownedInputs(session, check).some((entry) => entry.path === file.path))
+            .map((check) => ({
+                check: check.check,
+                stage: check.spec.stage,
+                ...(check.manifest === undefined ? {} : { kit: check.manifest.kit.name }),
+            })),
+        ignores: session.policyFiles.policy.ignores
+            .filter((entry) => entry.paths === undefined || entry.paths.length === 0 || pathMatcher(entry.paths)(path))
+            .map((entry) => ({
+                check: entry.check,
+                ...(entry.rule === undefined ? {} : { rule: entry.rule }),
+                ...(entry.reason === undefined ? {} : { reason: entry.reason }),
+            })),
     };
-    if (file.natureSource !== undefined) report.natureSource = file.natureSource;
+    if (file.kindSource !== undefined) report.fileSource = file.kindSource;
     return annotated(report, file);
 }
 
@@ -87,22 +75,18 @@ function pathReport(session: Session, path: string): PathExplanation | { error: 
  * @returns the text for stdout
  */
 function pathText(report: PathExplanation): string {
-    const by = report.natureSource === undefined ? '' : ` by ${report.natureSource}`;
+    const by = report.fileSource === undefined ? '' : ` by ${report.fileSource}`;
+    const checks = report.checks.map(
+        (check) => `  ${check.check}  ${check.stage}  (${check.kit ?? 'repository command'})`,
+    );
+    const ignores = report.ignores.map((entry) => ignoreLine(entry));
     const lines = [
-        `${report.path}  (scope ${report.scope}, ${report.nature}${by})`,
+        `${report.path}  (scope ${report.scope}, ${report.file}${by})`,
         '',
         ...(report.unchecked === undefined ? [] : [report.unchecked]),
-        ...(report.configurations.length === 0 ? [] : [`claimed by: ${report.configurations.join(', ')}`]),
-        ...section(
-            'checks:',
-            report.checks.map(
-                (check) => `  ${check.check}  ${check.stage}  (${check.configuration ?? 'repository command'})`,
-            ),
-        ),
-        ...section(
-            'ignores:',
-            report.ignores.map((entry) => ignoreLine(entry)),
-        ),
+        ...(report.kits.length === 0 ? [] : [`owned by: ${report.kits.join(', ')}`]),
+        ...(checks.length === 0 ? [] : ['checks:', ...checks]),
+        ...(ignores.length === 0 ? [] : ['ignores:', ...ignores]),
         ...(report.remedy === undefined ? [] : ['', `to change this: ${report.remedy}`]),
     ];
     return `${lines.join('\n')}\n`;

@@ -1,64 +1,61 @@
-# @gspot/eslint-plugin
+# gspot ESLint Plugin
 
-ESLint rules that detect private environment reads in client code, duplicate barrel exports,
-and trivial files and functions in JavaScript and TypeScript. Additional rules check import
-boundaries, declaration order, and file organization. The plugin runs without the gspot CLI.
+ESLint rules for private environment reads in client code, duplicate barrel exports, trivial
+files and functions, and the layout of imports and files. The
+[gspot](https://github.com/stefanionescu/gspot) CLI sets this plugin up for you. You can also
+use it on its own with ESLint 9.38.0 or newer.
 
-**Unreleased:** build the plugin from a source checkout. Follow the
-[source setup and executable example](https://github.com/stefanionescu/gspot/blob/main/docs/src/content/docs/guides/client-environment.md)
-to install it in a disposable project. Local package builds do not establish npm availability.
-The plugin requires ESLint 9.38.0 or newer.
+## Install
 
-## ESLint setup
+```shell
+npm install --save-dev @gspothq/eslint-plugin
+```
 
-Add the recommended flat configuration to `eslint.config.mjs`:
+## Configure
+
+Add the recommended configuration to `eslint.config.mjs`:
 
 ```javascript
-import gspot from '@gspot/eslint-plugin';
+import gspot from '@gspothq/eslint-plugin';
 
 export default [gspot.configs.recommended];
 ```
 
-`recommended` enables two rules at error severity:
+`recommended` turns on two rules as errors:
 
 - `gspot/no-client-environment`
 - `gspot/no-duplicate-barrel-exports`
 
-Use `gspot.configs.all` in place of `recommended` to include import, layout, and ordering
-checks. It includes every recommended rule. Neither configuration enables
-`require-server-only`, `max-barrel-reexports`, or `no-reexports-outside-index`.
-Select server files and alternative re-export policies explicitly. `require-server-only`
-is classified as recommended but needs an explicit file target. Trivial-file and
-trivial-function restrictions belong to `all`. Both presets select stable rules only.
+`gspot.configs.all` adds the rules for imports, layout, declaration order, trivial files, and
+trivial functions. Neither configuration turns on `require-server-only`,
+`max-barrel-reexports`, or `no-reexports-outside-index`. Both configurations hold stable rules
+only.
 
-## Correct a private environment read
+## Example: a private variable in client code
 
-This client module reads private configuration:
+This client module reads a private environment variable:
 
 ```javascript
 "use client";
 export const endpoint = process.env.PRIVATE_API_URL;
 ```
 
-With plugin 0.1.0 and ESLint 9.39.5, `gspot/no-client-environment` reports the read at line 2,
-column 25. Keep the private work on the server and let the client use a public route:
+`gspot/no-client-environment` reports the read at line 2, column 25. Keep the private work on
+the server, and let the client call a public route:
 
 ```javascript
 "use client";
 export const endpoint = "/api/search";
 ```
 
-The corrected module produces no finding from this rule. The application still needs a server
-implementation for `/api/search`. The
-[walkthrough](https://github.com/stefanionescu/gspot/blob/main/docs/src/content/docs/guides/client-environment.md)
-provides a configuration that runs only this rule, the commands, and the captured diagnostic.
+The corrected module has no finding. Your server still needs to answer `/api/search`.
 
 ## Select server modules
 
-Apply `require-server-only` only to the files that contain server code:
+`require-server-only` needs to know which files hold server code, so select them yourself:
 
 ```javascript
-import gspot from '@gspot/eslint-plugin';
+import gspot from '@gspothq/eslint-plugin';
 
 export default [{
     files: ['server/**/*.js'],
@@ -67,16 +64,16 @@ export default [{
 }];
 ```
 
-The rule reports a selected module without `import 'server-only'`. Add that import to mark the
-framework boundary. Neither bundled configuration selects server modules for you.
+The rule reports a selected module without `import 'server-only'`. Add that import at the top
+of the module.
 
 ## Check TypeScript
 
-Configure a TypeScript parser separately. The plugin does not install or select one.
-With `@typescript-eslint/parser` installed, select your TypeScript files explicitly:
+The plugin brings no TypeScript parser. Install `@typescript-eslint/parser`, then select your
+TypeScript files:
 
 ```javascript
-import gspot from '@gspot/eslint-plugin';
+import gspot from '@gspothq/eslint-plugin';
 import tsParser from '@typescript-eslint/parser';
 
 export default [{
@@ -86,13 +83,10 @@ export default [{
 }];
 ```
 
-See the [rule reference](https://gspot.dev/reference/plugin/no-client-environment/) for rule
-options and examples. The package exports ECMAScript and CommonJS modules with TypeScript
-declarations. Individual rules are available through `gspot.rules`.
-
-Read the [documentation source](https://github.com/stefanionescu/gspot/tree/main/docs) for
-setup and contribution instructions.
+The [rule reference](https://gspot.dev/reference/plugin/no-client-environment/) lists every
+rule with its options and examples. The package ships ECMAScript and CommonJS modules with
+TypeScript declarations, and `gspot.rules` holds each rule.
 
 ## License
 
-[Apache-2.0](https://github.com/stefanionescu/gspot/blob/main/LICENSE.md).
+[Apache-2.0](https://github.com/stefanionescu/gspot/blob/main/LICENSE.md)

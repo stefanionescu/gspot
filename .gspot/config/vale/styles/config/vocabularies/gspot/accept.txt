@@ -10,6 +10,7 @@ commitlint
 CSS
 Docker
 Drizzle
+EditorConfig Checker
 ESLint
 GitHub
 gitleaks
@@ -17,9 +18,11 @@ gspot
 hadolint
 Homebrew
 HTML
+Husky
 JavaScript
 JSON
 knip
+Lefthook
 Linux
 lychee
 macOS
@@ -30,6 +33,7 @@ Next.js
 nginx
 Node
 npm
+Nx
 osv-scanner
 Periphery
 pnpm
@@ -55,6 +59,7 @@ TOML
 tree-sitter
 Trivy
 tRPC
+Turborepo
 TypeScript
 typos
 Vale

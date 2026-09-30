@@ -1,129 +1,138 @@
-import { scopeOf } from '#cli/repository/scopes.ts';
-import { readSource } from '#cli/repository/tracked.ts';
 // Validate suppression comments against the repository reason policy; reporting owns the census.
-import { isReasonAccepted } from '#cli/policy/loosening.ts';
-import { claimedByClaims } from '#cli/configurations/claims.ts';
+import { ownedBy } from '#cli/kits/owners.ts';
+import { findingAt } from '#cli/checks/result.ts';
+import { scopeOf } from '#cli/repository/scopes.ts';
+import { extensionOf } from '#cli/platform/paths.ts';
+import { readSource } from '#cli/repository/tracked.ts';
+import { isReasonAccepted } from '#cli/policy/weaker.ts';
 import type { ScopeSelection } from '#cli/types/policy/policy.ts';
-import { GSPOT_SUPPRESSION } from '#cli/constants/checks/repository.ts';
-import type { SourceObservations, TrackedFile } from '#cli/types/repository/repository.ts';
-import type { EngineInput, Finding, SuppressionComment } from '#cli/types/checks/checks.ts';
-import { COMMENT_OPENERS, COMMENT_STYLE_BY_EXTENSION } from '#cli/constants/execution/execution.ts';
+import type { SourceComment } from '#cli/types/parsers/parsers.ts';
+import { GSPOT_SUPPRESSION } from '#cli/config/checks/repository.ts';
+import { commentText, sourceComments } from '#cli/parsers/comments.ts';
+import { COMMENT_STYLE_BY_EXTENSION } from '#cli/config/execution/execution.ts';
+import type { SourceReads, TrackedFile } from '#cli/types/repository/repository.ts';
+import type { Finding, EngineInput, SuppressionForm, SuppressionComment } from '#cli/types/checks.ts';
 
-function styleOf(file: TrackedFile): string | undefined {
-    const dot = file.path.lastIndexOf('.');
-    return dot === -1 ? undefined : COMMENT_STYLE_BY_EXTENSION[file.path.slice(dot)];
+// A preceding reason belongs only to the next line. Intervening source or comments break adjacency.
+function reasonAbove(previous: SourceComment | undefined, comment: SourceComment): string | undefined {
+    if (
+        previous === undefined ||
+        !previous.standalone ||
+        previous.line + 1 !== comment.line ||
+        previous.text.includes('\n')
+    )
+        return undefined;
+    const text = commentText(previous.text);
+    return /^(?:\/\/|\/\*|#|--|<!--)\s*reason:\s*(?<reason>\S.*)$/u.exec(text)?.groups?.['reason']?.trim();
 }
 
-// Whether an opener at this index sits inside a string literal: an odd count of a quote character before it.
-function isQuoted(line: string, index: number): boolean {
-    const before = line.slice(0, index);
-    return ["'", '"', '`'].some((quote) => before.split(quote).length % 2 === 0);
-}
-
-// The comment part of a line: from the first comment opener outside a string literal on; code before it holds no directive.
-function commentOf(line: string, style: string): string | undefined {
-    const starts = (COMMENT_OPENERS[style] ?? [])
-        .map((opener) => line.indexOf(opener))
-        .filter((index) => index !== -1 && !isQuoted(line, index));
-    return starts.length === 0 ? undefined : line.slice(Math.min(...starts));
+// Only tools whose checks claim this source contribute suppression syntax.
+function suppressionForms(selection: ScopeSelection, file: TrackedFile): SuppressionForm[] {
+    const { selected } = selection;
+    const readers = new Set(
+        selected.flatMap((manifest) =>
+            manifest.checks.flatMap((check) =>
+                ownedBy(check.owners ?? manifest.owners, selected, [file], selection.scope.path).length === 0
+                    ? []
+                    : [check.tool ?? check.command?.[0]],
+            ),
+        ),
+    );
+    const definitions = new Map(
+        selected.flatMap((manifest) =>
+            manifest.tools.flatMap((tool) =>
+                tool.suppression === undefined || !readers.has(tool.name)
+                    ? []
+                    : [[tool.name, tool.suppression] as const],
+            ),
+        ),
+    );
+    definitions.set('gspot-ignore', GSPOT_SUPPRESSION);
+    return [...definitions].map(([form, definition]) => ({
+        form,
+        marker: new RegExp(definition.marker, 'u'),
+        inlineMarker: new RegExp(definition.inline_marker ?? definition.marker, 'u'),
+        reason: new RegExp(definition.reason, 'u'),
+        forbidden: definition.forbidden === true,
+    }));
 }
 
 /**
- * Observe comments once through the selected tool definitions for each file scope.
+ * Read comments once through the selected tool definitions for each file scope.
  * @param root the repository root
  * @param selections the resolved scopes
- * @param observations the source observations shared across checks
+ * @param reads the source reads shared across checks
  * @param files the tracked files
  * @returns every suppression comment with its tool, reason, and whether it is forbidden
  */
-export function suppressionComments(
+export async function suppressionComments(
     root: string,
     selections: ScopeSelection[],
-    observations: SourceObservations,
+    reads: SourceReads,
     files: TrackedFile[],
-): SuppressionComment[] {
+): Promise<SuppressionComment[]> {
     const scopes = selections.map((selection) => selection.scope);
-    return files.flatMap((file) => {
-        const style = styleOf(file);
-        if (style === undefined) return [];
+    const found: SuppressionComment[] = [];
+    for (const file of files) {
+        const style = COMMENT_STYLE_BY_EXTENSION[extensionOf(file.path)];
+        if (style === undefined) continue;
         const scope = scopeOf(file.path, scopes);
         const selection = selections.find((candidate) => candidate.scope.path === scope.path);
         if (selection === undefined) throw new Error(`No selection covers the scope ${scope.path}.`);
-        const { selected } = selection;
-        const readers = new Set(
-            selected.flatMap((manifest) =>
-                manifest.checks.flatMap((check) =>
-                    claimedByClaims(check.claims ?? manifest.claims, selected, [file], scope.path).length === 0
-                        ? []
-                        : [check.tool ?? check.command?.[0]],
-                ),
-            ),
-        );
-        const definitions = new Map(
-            selected.flatMap((manifest) =>
-                manifest.tools.flatMap((tool) =>
-                    tool.suppression === undefined || !readers.has(tool.name)
-                        ? []
-                        : [[tool.name, tool.suppression] as const],
-                ),
-            ),
-        );
-        definitions.set('gspot-ignore', GSPOT_SUPPRESSION);
-        const forms = [...definitions].map(([form, definition]) => ({
-            form,
-            marker: new RegExp(definition.marker, 'u'),
-            reason: new RegExp(definition.reason, 'u'),
-            forbidden: definition.forbidden === true,
-        }));
-        return readSource(root, file.path, observations)
-            .toString('utf8')
-            .split('\n')
-            .flatMap((line, index) => {
-                const comment = commentOf(line, style);
-                if (comment === undefined) return [];
-                const text = comment.replace(/(?:\*\/|-->)\s*$/u, '').trimEnd();
+        const forms = suppressionForms(selection, file);
+        const source = readSource(root, file.path, reads).toString('utf8');
+        const comments = await sourceComments(file.path, source);
+        found.push(
+            ...comments.flatMap((comment, index) => {
+                const preceding = reasonAbove(comments[index - 1], comment);
+                const text = commentText(comment.text);
                 return forms.flatMap((form): SuppressionComment[] => {
-                    if (!form.marker.test(text)) return [];
-                    const reason = form.reason.exec(text)?.groups?.['reason']?.trim();
+                    const marker = comment.standalone ? form.marker : form.inlineMarker;
+                    if (!marker.test(text)) return [];
+                    const reason = form.reason.exec(text)?.groups?.['reason']?.trim() ?? preceding;
                     return [
                         {
                             file: file.path,
-                            line: index + 1,
+                            line: comment.line,
                             form: form.form,
                             forbidden: form.forbidden,
                             ...(reason === undefined ? {} : { reason }),
                         },
                     ];
                 });
-            });
-    });
+            }),
+        );
+    }
+    return found;
 }
 
 /**
  * Report forbidden suppressions and missing or invalid required reasons.
- * @param input the engine input with the observed suppression comments
+ * @param input the engine input with the read suppression comments
  * @returns the findings
  */
 export function suppressions(input: EngineInput): Finding[] {
     if (input.suppressions === undefined) throw new Error('Suppression validation requires once-only execution.');
     return input.suppressions.flatMap((entry): Finding[] => {
-        const base = { check: input.spec.name, file: entry.file, line: entry.line, fixable: false };
+        const at = { file: entry.file, line: entry.line };
         if (entry.forbidden && input.policyFiles.policy.level === 'all')
             return [
-                {
-                    ...base,
-                    rule: entry.form,
-                    message: `${entry.form} suppression is not allowed; fix the finding or configure an explicit ignore.`,
-                },
+                findingAt(
+                    input,
+                    at,
+                    entry.form,
+                    `${entry.form} suppression is not allowed; fix the finding or configure an explicit ignore.`,
+                ),
             ];
         if (!input.policyFiles.policy.requireReasons) return [];
         if (isReasonAccepted(entry.reason)) return [];
         return [
-            {
-                ...base,
-                rule: `${entry.form}-no-reason`,
-                message: `This ${entry.form} suppression needs a meaningful reason.`,
-            },
+            findingAt(
+                input,
+                at,
+                `${entry.form}-no-reason`,
+                `This ${entry.form} suppression needs a meaningful reason.`,
+            ),
         ];
     });
 }

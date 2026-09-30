@@ -1,8 +1,42 @@
-import { expect } from 'bun:test';
+// One installed repository per table, and each planted defect as an edit that is restored: the check fails with the
+// expected finding, then the corrected repository passes.
+import { join } from 'node:path';
+import { testdir } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { reportSchema } from '#cli/execution/report.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { plant } from '#tests/support/cli/preservation.ts';
-import type { PlantedInput, SpawnOutcome } from '#tests/types/support/cli.ts';
+import { containing } from '#tests/support/expectations.ts';
+import { installSandbox } from '#tests/support/cli/sandbox.ts';
+import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
+import type { Planted, FindingCase, PlantedInput, SpawnOutcome, PlantedRepository } from '#tests/types/cli.ts';
+
+// The check fails with the planted defect, and the finding is where the case says.
+async function expectDefect(planted: Planted, entry: FindingCase): Promise<void> {
+    const outcome = await runPlanted(planted.root, entry, planted.environment);
+    expect(outcome.code, `${entry.check}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
+    const failed = reportSchema.parse(await Bun.file(join(planted.root, '.gspot/reports/report.json')).json());
+    expect(failed.checks).toMatchObject([{ check: entry.check, status: 'fail' }]);
+    expect(failed.checks[0]?.findings).toContainEqual(containing({ check: entry.check, ...entry.expected }));
+}
+
+// The clean rerun plants the correction under the case's policy and executable bits, unless it names its own.
+function correctionOf(entry: FindingCase, repository: PlantedRepository): PlantedInput {
+    const given = entry.corrected ?? repository.corrected?.(entry) ?? { files: {} };
+    const policy = 'policy' in given ? given.policy : entry.policy;
+    const executable = 'executable' in given ? given.executable : entry.executable;
+    const kept = { policy, executable, removed: given.removed };
+    const defined = Object.entries(kept).filter(([, value]) => value !== undefined);
+    return { check: entry.check, files: given.files, ...Object.fromEntries(defined) };
+}
+
+// The check passes once the correction is planted.
+async function expectCorrection(planted: Planted, entry: FindingCase, repository: PlantedRepository): Promise<void> {
+    const outcome = await runPlanted(planted.root, correctionOf(entry, repository), planted.environment);
+    expect(outcome.code, `${entry.check} corrected: ${outcome.stdout}${outcome.stderr}`).toBe(0);
+    const accepted = reportSchema.parse(await Bun.file(join(planted.root, '.gspot/reports/report.json')).json());
+    expect(accepted.checks).toMatchObject([{ check: entry.check, status: 'ok', findings: [] }]);
+}
 
 /** A clean bash script every planted repository starts from. */
 export const script =
@@ -17,7 +51,7 @@ export const script =
  */
 export async function runPlanted(
     cwd: string,
-    planted: PlantedInput & { expected?: string | { file: string } },
+    planted: PlantedInput & { expected?: unknown },
     environment: Record<string, string>,
 ): Promise<SpawnOutcome> {
     const restore = plant(cwd, planted);
@@ -29,15 +63,47 @@ export async function runPlanted(
 }
 
 /**
- * Runs one check over a corrected repository and fails unless it passes with no findings.
- * @param cwd the installed repository
- * @param check the check
- * @param environment extra variables, such as the PATH of the tools
+ * Installs the repository once, then runs each case as an edit that is restored: the check reports the planted defect
+ * where the case says, and the corrected repository passes. Tests that need the same repository register through
+ * `more`, which receives the installed repository.
+ * @param name the kit or family under test
+ * @param repository what the repository holds and selects
+ * @param cases the planted defects
+ * @param more tests over the same installed repository, registered inside the table's describe block
  */
-export async function expectCorrected(cwd: string, check: string, environment: Record<string, string>): Promise<void> {
-    const corrected = await run(cwd, ['check', '--only', check, '--no-cache', '--json'], environment);
-    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
-        { check, status: 'ok', findings: [] },
-    ]);
+export function plantedCases(
+    name: string,
+    repository: PlantedRepository,
+    cases: FindingCase[],
+    more?: (planted: () => Planted) => void,
+): void {
+    describe(name, () => {
+        let sandbox: Awaited<ReturnType<typeof testdir>> | undefined;
+        let planted: Planted | undefined;
+        const installed = (): Planted => {
+            if (planted === undefined) throw new Error(`The ${name} repository is not installed.`);
+            return planted;
+        };
+        beforeAll(async () => {
+            sandbox = await testdir({}, repository.dirname === undefined ? {} : { dirname: repository.dirname });
+            const environment = await installSandbox(sandbox.path, repository);
+            planted = { root: sandbox.path, environment };
+            await repository.prepare?.(sandbox.path, environment);
+        });
+        afterAll(async () => {
+            await sandbox?.[Symbol.asyncDispose]();
+        });
+        for (const entry of cases) {
+            const where = [entry.expected.rule, entry.expected.file].filter(Boolean).join(' in ');
+            test.skipIf(entry.platforms !== undefined && !entry.platforms.includes(process.platform))(
+                `${entry.check} reports ${where} and accepts the correction`,
+                async () => {
+                    await expectDefect(installed(), entry);
+                    await expectCorrection(installed(), entry, repository);
+                },
+                PLANTED_TIMEOUT_MS * 4,
+            );
+        }
+        more?.(installed);
+    });
 }

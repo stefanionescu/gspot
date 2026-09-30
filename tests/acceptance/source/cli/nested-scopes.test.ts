@@ -1,10 +1,10 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { writeFileSync } from 'node:fs';
-import { createFileTree, testdir } from 'testdirs';
+import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { reportSchema } from '#cli/execution/report.ts';
-import { NESTED_SCOPES_POLICY } from '#tests/constants/acceptance/source/cli/cli.ts';
+import { NESTED_SCOPES_POLICY } from '#tests/inputs/acceptance/source/cli/cli.ts';
 
 test('nested scopes inherit parent configurations and settings and check each file in its deepest scope', async () => {
     await using directory = await testdir();

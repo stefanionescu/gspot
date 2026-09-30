@@ -1,9 +1,10 @@
 import * as fs from 'node:fs';
 import { join } from 'node:path';
-import { expect, spyOn, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, spyOn, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 
 test.each([
     ['xcode/xcstrings', 'App/Localizable.xcstrings', '{"sourceLanguage":"en","strings":{}}\n'],
@@ -17,7 +18,7 @@ test.each([
     async (check, path, content) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\nconfigurations = ["xcode"]\n',
+            'gspot.toml': policyOf(['xcode']),
             [path]: content,
             'App/Assets.xcassets/Logo.imageset/logo.png': new Uint8Array([0, 1, 2]),
             'App/Home.swift': 'let logo = Image("Logo")\n',
@@ -52,14 +53,14 @@ test.each([
     },
 );
 
-test('a denied asset existence observation is an execution error and a genuinely missing image is a finding', async () => {
+test('a denied asset existence read is an execution error and a genuinely missing image is a finding', async () => {
     await using sandbox = await testdir();
-    const catalog = 'App/Assets.xcassets/Logo.imageset/Contents.json';
+    const assetManifest = 'App/Assets.xcassets/Logo.imageset/Contents.json';
     const image = 'App/Assets.xcassets/Logo.imageset/logo.png';
     const content = '{"images":[{"filename":"logo.png"}]}\n';
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nconfigurations = ["xcode"]\n',
-        [catalog]: content,
+        'gspot.toml': policyOf(['xcode']),
+        [assetManifest]: content,
         [image]: new Uint8Array([0, 1, 2]),
         'App/Home.swift': 'let logo = Image("Logo")\n',
     });
@@ -74,7 +75,7 @@ test('a denied asset existence observation is an execution error and a genuinely
     };
     const target = join(sandbox.path, image);
     const original = fs.statSync;
-    const observation = spyOn(fs, 'statSync').mockImplementation(((...args: Parameters<typeof fs.statSync>) => {
+    const read = spyOn(fs, 'statSync').mockImplementation(((...args: Parameters<typeof fs.statSync>) => {
         if (args[0] === target) throw Object.assign(new Error(`EACCES: cannot inspect ${image}`), { code: 'EACCES' });
         return original(...args);
     }) as typeof fs.statSync);
@@ -85,15 +86,15 @@ test('a denied asset existence observation is an execution error and a genuinely
         expect(failed.report.checks[0]?.note).toContain(`EACCES: cannot inspect ${image}`);
         expect(failed.report.checks[0]?.findings).toStrictEqual([]);
     } finally {
-        observation.mockRestore();
+        read.mockRestore();
     }
     fs.rmSync(target);
     const missing = await executeRun(session, options);
     expect(missing.report.exitCode).toBe(1);
-    expect(missing.report.checks[0]?.findings).toMatchObject([{ file: catalog, line: 1, rule: 'missing-image' }]);
+    expect(missing.report.checks[0]?.findings).toMatchObject([{ file: assetManifest, line: 1, rule: 'missing-image' }]);
     fs.writeFileSync(target, new Uint8Array([0, 1, 2]));
     const corrected = await executeRun(session, options);
     expect(corrected.report.exitCode).toBe(0);
-    expect(fs.readFileSync(join(sandbox.path, catalog), 'utf8')).toBe(content);
+    expect(fs.readFileSync(join(sandbox.path, assetManifest), 'utf8')).toBe(content);
     expect(fs.readFileSync(target)).toStrictEqual(Buffer.from([0, 1, 2]));
 });

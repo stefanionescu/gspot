@@ -1,13 +1,14 @@
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { detectKits } from '#cli/kits/detect.ts';
+import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
+import { kitManifests } from '#cli/kits/manifests.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import { readRepository } from '#cli/repository/tree.ts';
 import { containing } from '#tests/support/expectations.ts';
-import { detectConfigurations } from '#cli/configurations/detect.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 
 test.each([
     { source: 'import XCTest\n', selected: true },
@@ -24,11 +25,7 @@ test.each([
     await createFileTree(sandbox.path, { 'Examples/Checks.swift': source });
     const repository = await readRepository(sandbox.path, [], [], []);
     expect(repository.files[0]!.tags.includes('swift-test')).toBe(selected);
-    expect(
-        detectConfigurations(repository.files, configurationManifests(), []).some(
-            ({ configuration }) => configuration === 'xctest',
-        ),
-    ).toBe(selected);
+    expect(detectKits(repository.files, kitManifests(), []).some(({ kit }) => kit === 'xctest')).toBe(selected);
 });
 
 test.each([true, false])('Swift package test targets are executable declarations: %s', async (declared) => {
@@ -39,18 +36,14 @@ test.each([true, false])('Swift package test targets are executable declarations
             : '// .testTarget(name: "Checks")\nlet example = ".testTarget"\n',
     });
     const repository = await readRepository(sandbox.path, [], [], []);
-    expect(
-        detectConfigurations(repository.files, configurationManifests(), []).some(
-            ({ configuration }) => configuration === 'xctest',
-        ),
-    ).toBe(declared);
+    expect(detectKits(repository.files, kitManifests(), []).some(({ kit }) => kit === 'xctest')).toBe(declared);
 });
 
 test('Swift Testing outside test folders reports a sleep and accepts its correction', async () => {
     await using sandbox = await testdir();
     const source = 'import Testing\n@Test func checks() async {\n    try await Task.sleep(for: .seconds(1))\n}\n';
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nlevel = "all"\nconfigurations = ["xctest"]\n',
+        'gspot.toml': policyOf(['xctest'], '', 'all'),
         'Examples/Checks.swift': source,
         'AppTests/Helper.swift': 'func waits() { sleep(1) }\n',
     });
@@ -93,7 +86,7 @@ test.each([
 ])('Swift skip reason belongs to its argument: $body', async ({ body, missing }) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nconfigurations = ["xctest"]\n',
+        'gspot.toml': policyOf(['xctest']),
         'Examples/Checks.swift': `import Testing\nfunc checks() throws {\n    ${body}\n}\n`,
     });
     const result = await executeRun(await openSession(sandbox.path), {
@@ -113,8 +106,11 @@ test('Swift test checks apply sleep allowances in their declared scope', async (
     await using sandbox = await testdir();
     const source = 'import Testing\n@Test func checks() { sleep(1) }\n';
     await createFileTree(sandbox.path, {
-        'gspot.toml':
-            'version = 1\nlevel = "all"\nconfigurations = ["xctest"]\n[[scope]]\npath = "integration"\n[scope.tools.xctest]\nsleep_allowed = [{ paths = ["integration/**"], reason = "Integration fixture verifies a native timeout." }]\n',
+        'gspot.toml': policyOf(
+            ['xctest'],
+            '[[scope]]\npath = "integration"\n[scope.tools.xctest]\nsleep_allowed = [{ paths = ["integration/**"], reason = "Integration fixture verifies a native timeout." }]\n',
+            'all',
+        ),
         'Examples/Checks.swift': source,
         'integration/Checks.swift': source,
     });
@@ -130,9 +126,6 @@ test('Swift test checks apply sleep allowances in their declared scope', async (
         { scope: 'integration', findings: [] },
     ]);
 });
-
-const testSource = (body: string): string => `import Testing\n@Test func checks() {\n    ${body}\n}\n`;
-
 test.each([
     { check: 'xctest/no-sleep', body: 'let example = "Task.sleep(1)"', count: 0 },
     { check: 'xctest/no-sleep', body: '/* Thread.sleep(forTimeInterval: 1) */', count: 0 },
@@ -145,24 +138,35 @@ test.each([
 ])('Swift syntax controls $check for $body', async ({ check, body, count }) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nlevel = "all"\nconfigurations = ["xctest"]\n',
-        'Examples/Checks.swift': testSource(body),
+        'gspot.toml': policyOf(['xctest'], '', 'all'),
+        'Examples/Checks.swift': `import Testing\n@Test func checks() {\n    ${body}\n}\n`,
     });
-    const inspect = async () =>
-        await executeRun(await openSession(sandbox.path), {
-            stage: 'all',
-            only: [check],
-            skips: [],
-            fix: false,
-            isDryRun: false,
-        });
-    const result = await inspect();
+    const result = await executeRun(await openSession(sandbox.path), {
+        stage: 'all',
+        only: [check],
+        skips: [],
+        fix: false,
+        isDryRun: false,
+    });
     expect(result.report.exitCode).toBe(count > 0 ? 1 : 0);
     expect(result.report.checks).toMatchObject([{ check, status: count > 0 ? 'fail' : 'ok' }]);
     expect(result.report.checks.flatMap((entry) => entry.findings)).toHaveLength(count);
     // A reported body is corrected and inspected again; a clean body already stands as the corrected run.
-    if (count > 0) await Bun.write(`${sandbox.path}/Examples/Checks.swift`, testSource('#expect(true)'));
-    const corrected = count > 0 ? await inspect() : result;
+    if (count > 0)
+        await Bun.write(
+            `${sandbox.path}/Examples/Checks.swift`,
+            `import Testing\n@Test func checks() {\n    #expect(true)\n}\n`,
+        );
+    const corrected =
+        count > 0
+            ? await executeRun(await openSession(sandbox.path), {
+                  stage: 'all',
+                  only: [check],
+                  skips: [],
+                  fix: false,
+                  isDryRun: false,
+              })
+            : result;
     expect(corrected.report.exitCode).toBe(0);
     expect(corrected.report.checks).toMatchObject([{ check, status: 'ok', findings: [] }]);
 });
@@ -170,8 +174,11 @@ test.each([
 test('snapshot layouts match semantic owners by path and respect nested scopes', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml':
-            'version = 1\nlevel = "all"\nconfigurations = ["xctest"]\n[[scope]]\npath = "custom"\n[scope.tools.xctest]\nreference_layout = "References/{file}-{test}.png"\n',
+        'gspot.toml': policyOf(
+            ['xctest'],
+            '[[scope]]\npath = "custom"\n[scope.tools.xctest]\nreference_layout = "References/{file}-{test}.png"\n',
+            'all',
+        ),
         'first/Checks.swift': 'import Testing\n@Test func title() {}\n',
         'first/__Snapshots__/Checks/title.1.png': 'png',
         'second/Checks.swift': 'struct Checks {}\n',
@@ -210,13 +217,13 @@ test.each([
 ])('invalid snapshot layout is a policy error: %s', async (layout) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': `version = 1\nconfigurations = ["xctest"]\n[tools.xctest]\nreference_layout = ${JSON.stringify(layout)}\n`,
+        'gspot.toml': policyOf(['xctest'], `[tools.xctest]\nreference_layout = ${JSON.stringify(layout)}\n`),
         'Checks.swift': 'import Testing\n',
     });
     const result = await run(sandbox.path, ['check', '--only', 'xctest/reference-images']);
     expect(result.code, result.stdout + result.stderr).toBe(2);
     expect(result.stdout + result.stderr).toContain('reference_layout');
-    await Bun.write(`${sandbox.path}/gspot.toml`, 'version = 1\nlevel = "all"\nconfigurations = ["xctest"]\n');
+    await Bun.write(`${sandbox.path}/gspot.toml`, policyOf(['xctest'], '', 'all'));
     await Bun.write(`${sandbox.path}/__Snapshots__/Checks/example.png`, new Uint8Array([0, 1, 2]));
     const corrected = await run(sandbox.path, ['check', '--only', 'xctest/reference-images', '--no-cache', '--json']);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);

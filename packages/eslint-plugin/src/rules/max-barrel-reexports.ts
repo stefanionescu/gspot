@@ -1,6 +1,6 @@
+import { DEFAULT_MAX } from '#plugin/config/rules.ts';
 import type { TSESTree } from '@typescript-eslint/utils';
-import { DEFAULT_MAX } from '#plugin/constants/rules.ts';
-import { isIndexFile, lintedFile } from '#plugin/files.ts';
+import { lintedFile, isIndexFile } from '#plugin/files.ts';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
 import type { MaxBarrelReexportsOptions } from '#plugin/types/rules.ts';
 

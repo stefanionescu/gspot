@@ -1,11 +1,11 @@
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
+import { kitManifests } from '#cli/kits/manifests.ts';
 import { readRepository } from '#cli/repository/tree.ts';
 import { readManifests } from '#cli/repository/manifests.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { proposedScopes, workspaceScopes } from '#cli/repository/scopes.ts';
-import { mkdirSync, rmSync, writeFileSync, symlinkSync, readFileSync, unlinkSync } from 'node:fs';
+import { rmSync, mkdirSync, unlinkSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
 
 test.each([
     { 'package.json': '{"workspaces":["packages/*"]}' },
@@ -115,8 +115,8 @@ test('every folder that holds a project file is a scope, the root and lint-only 
         'apps/web/supabase/config.toml': 'project_id = "web"\n',
     });
     const repository = await readRepository(sandbox.path, [], [], []);
-    const facts = readManifests(sandbox.path, repository.files);
-    const found = proposedScopes(sandbox.path, repository.files, facts, configurationManifests().values());
+    const fields = readManifests(sandbox.path, repository.files);
+    const found = proposedScopes(sandbox.path, repository.files, fields, kitManifests().values());
     expect(found.scopes.map((scope) => [scope.path, scope.source])).toStrictEqual([
         ['api', 'project'],
         ['apps/web', 'project'],

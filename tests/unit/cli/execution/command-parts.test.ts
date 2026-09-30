@@ -1,4 +1,4 @@
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import type { CommandPart } from '#cli/types/execution/execution.ts';
 import { perFileCommands } from '#cli/execution/command-expansion.ts';
 

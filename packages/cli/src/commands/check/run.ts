@@ -1,30 +1,29 @@
 // check: open the session, honor the pin, run, render, decide the exit code.
-import { relative, resolve } from 'node:path';
+import { resolve, relative } from 'node:path';
+import { GspotError } from '#cli/platform/errors.ts';
 import { checkPushed } from '#cli/commands/check/push.ts';
 import { checkContent } from '#cli/commands/check/content.ts';
 import { refusalFor } from '#cli/commands/check/selection.ts';
-import { SelectionError } from '#cli/configurations/select.ts';
-import type { CheckOptions } from '#cli/types/commands/check.ts';
-import type { CommandResult } from '#cli/types/commands/commands.ts';
+import { useRevision } from '#cli/repository/revisions/contents.ts';
 import { stagedFiles } from '#cli/repository/revisions/selection.ts';
 import { findRoot, isGitRepository } from '#cli/repository/tracked.ts';
-import { withRevisionSnapshot } from '#cli/repository/revisions/snapshot.ts';
+import type { CheckOptions, CommandResult } from '#cli/types/commands.ts';
 // Checks an exact snapshot of the staged index, with the report published to the repository.
 async function checkStaged(root: string, options: CheckOptions, signal: AbortSignal): Promise<CommandResult> {
     if (options.fix)
-        throw new SelectionError([
+        throw new GspotError('selection', [
             'Staged checks do not run fixers. Run gspot check --fix and stage the reviewed changes.',
         ]);
-    if (options.changed !== undefined) throw new SelectionError(['Choose --staged or --changed, not both.']);
+    if (options.changed !== undefined) throw new GspotError('selection', ['Choose --staged or --changed, not both.']);
     const set = await stagedFiles(root, signal);
     const refusal = refusalFor(options, options.stage ?? 'commit', set.staged);
     if (refusal !== undefined) return refusal;
-    return withRevisionSnapshot(
+    return useRevision(
         root,
         { kind: 'index' },
-        async (snapshot, tree) => {
+        async (revisionRoot, tree) => {
             const paths = options.paths.map((path) => relative(root, resolve(options.cwd, path)));
-            return checkContent(snapshot, { ...options, cwd: snapshot, paths }, signal, {
+            return checkContent(revisionRoot, { ...options, cwd: revisionRoot, paths }, signal, {
                 content: 'index',
                 cacheRoot: root,
                 reference: tree,
@@ -45,7 +44,7 @@ async function checkStaged(root: string, options: CheckOptions, signal: AbortSig
 export async function checkCommand(options: CheckOptions, signal: AbortSignal): Promise<CommandResult> {
     const root = findRoot(options.cwd);
     if ((options.staged || options.push !== undefined) && !isGitRepository(root))
-        throw new SelectionError(['Revision selection requires a Git repository.']);
+        throw new GspotError('selection', ['Revision selection requires a Git repository.']);
     if (options.push !== undefined) return checkPushed(root, options, options.push, signal);
     if (!options.staged) return checkContent(root, options, signal);
     return checkStaged(root, options, signal);

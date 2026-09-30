@@ -1,5 +1,5 @@
 import type { Command } from 'commander';
-import { emitAll } from '#cli/generation/render.ts';
+import { emitAll } from '#cli/generation/outputs.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
 import { computeDrift } from '#cli/lifecycle/drift.ts';
 import { openSession } from '#cli/execution/session.ts';
@@ -9,10 +9,9 @@ import packageManifest from '#package' with { type: 'json' };
 import { printCommand } from '#cli/commands/print-result.ts';
 import { pinnedVersion } from '#cli/lifecycle/version-pin.ts';
 import type { Session } from '#cli/types/execution/execution.ts';
-import { eslintRuleDiff } from '#cli/lifecycle/eslint-rule-diff.ts';
-import type { CommandResult } from '#cli/types/commands/commands.ts';
-import type { ApplyReport, DriftEntry } from '#cli/types/lifecycle/lifecycle.ts';
-import type { ApplyOptions, ApplyPreviewJson } from '#cli/types/commands/apply.ts';
+import { eslintRuleDiff } from '#cli/lifecycle/rules/eslint-diff.ts';
+import type { DriftEntry, ApplyReport } from '#cli/types/lifecycle/lifecycle.ts';
+import type { ApplyOptions, CommandResult, ApplyPreviewJson } from '#cli/types/commands.ts';
 
 const { version: GSPOT_VERSION } = packageManifest;
 
@@ -20,21 +19,16 @@ function driftText(drift: DriftEntry[]): string {
     const noun = drift.length === 1 ? 'file' : 'files';
     const lines = [`${String(drift.length)} generated ${noun} drifted:`, ''];
     for (const entry of drift) {
-        lines.push(`  ${entry.path}  ${entry.kind}`);
-        for (const rules of entry.rules ?? []) {
-            const at = rules.path === '' ? 'root' : rules.path;
-            if (rules.added.length > 0) lines.push(`    ${at}: added ${rules.added.join(', ')}`);
-            if (rules.removed.length > 0) lines.push(`    ${at}: removed ${rules.removed.join(', ')}`);
-            if (rules.changed.length > 0) lines.push(`    ${at}: changed ${rules.changed.join(', ')}`);
-        }
-        if (entry.ruleError !== undefined) lines.push(`    ${entry.ruleError}`);
-        if (entry.diff !== undefined && entry.diff !== '')
-            lines.push(
-                entry.diff
-                    .split('\n')
-                    .map((line) => `    ${line}`)
-                    .join('\n'),
-            );
+        const rules = (entry.rules ?? []).flatMap((rule) => {
+            const at = rule.path === '' ? 'root' : rule.path;
+            return (['added', 'removed', 'changed'] as const)
+                .filter((change) => rule[change].length > 0)
+                .map((change) => `    ${at}: ${change} ${rule[change].join(', ')}`);
+        });
+        const errors = entry.ruleError === undefined ? [] : [`    ${entry.ruleError}`];
+        const differences = (entry.diff ?? '').split('\n').map((line) => `    ${line}`);
+        lines.push(`  ${entry.path}  ${entry.kind}`, ...rules, ...errors);
+        if ((entry.diff ?? '') !== '') lines.push(...differences);
     }
     lines.push(
         '',
@@ -44,27 +38,22 @@ function driftText(drift: DriftEntry[]): string {
 }
 
 async function previewApply(session: Session): Promise<CommandResult> {
-    const proposal = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
+    const plan = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
         version: session.version,
-        packageManager: session.packageManager,
+        packageClient: session.packageClient,
     });
-    const drift = computeDrift(
-        session.root,
-        session.policyFiles.policy,
-        session.packageManager !== undefined,
-        proposal,
-    );
+    const drift = computeDrift(session.root, session.policyFiles.policy, plan);
     await eslintRuleDiff(
         session.root,
         session.scopes.find((selection) => selection.scope.path === '')?.view,
         session.cancelSignal,
-        proposal,
+        plan,
         drift,
     );
-    const summary = drift.length === 0 ? 'every generated file matches its proposal\n' : driftText(drift);
-    const text = summary + proposal.notes.map((note) => `note     ${note}\n`).join('');
+    const summary = drift.length === 0 ? 'every generated file matches its plan\n' : driftText(drift);
+    const text = summary + plan.notes.map((note) => `note     ${note}\n`).join('');
     const pin = { from: pinnedVersion(session.root), to: GSPOT_VERSION };
-    const json: ApplyPreviewJson = { isDryRun: true, pin, drift, notes: proposal.notes };
+    const json: ApplyPreviewJson = { isDryRun: true, pin, drift, notes: plan.notes };
     return { text: `version ${pin.from ?? 'unpinned'} -> ${pin.to}\n${text}`, json, exitCode: 0 };
 }
 
@@ -87,13 +76,13 @@ function reportText(report: ApplyReport): string {
 export function registerApply(program: Command): void {
     program
         .command('apply')
-        .summary('Generate tool files')
-        .description('Generate configuration from gspot.toml')
+        .summary('Write the configuration from gspot.toml')
+        .description('Regenerate the tool configuration, guides, and hooks from gspot.toml')
         .addHelpText(
             'after',
-            '\nEffects:\nReads gspot.toml and regenerates owned configuration, rule copies, and selected integrations. Authored or edited files remain subject to ownership validation. --dry-run previews the proposal without writing project files. This command does not install newly selected tools.\n\nExit codes:\n0: configuration was applied, or the preview completed. 2: invalid input or inability to complete the request.\n\nExample:\ngspot apply --dry-run',
+            '\nEffects:\nReads gspot.toml and writes the tool configuration, the guides for coding agents, and the selected integrations. A generated file you edited stays as it is, and apply names it. --dry-run shows every change, including each rule that changes, without writing project files. apply installs no tools: run gspot install after it.\n\nExit codes:\n- 0: the configuration was written, or the preview finished.\n- 2: the input was invalid, or apply could not finish.\n\nExample:\ngspot apply --dry-run',
         )
-        .option('--dry-run', 'Preview proposed changes without writing project files')
+        .option('--dry-run', 'Show the changes without writing project files')
         .action(async (flags: Record<string, unknown>, command: Command) => {
             const global = command.optsWithGlobals();
             await printCommand(

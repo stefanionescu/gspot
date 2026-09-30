@@ -1,14 +1,13 @@
 // What a check run refuses or narrows before it starts: staged secrets, unreadable messages, unknown checks, paths.
 import { readFileSync } from 'node:fs';
-import { SelectionError } from '#cli/configurations/select.ts';
-import { isAbsolute, relative, resolve, sep } from 'node:path';
-import type { CheckOptions } from '#cli/types/commands/check.ts';
+import { GspotError } from '#cli/platform/errors.ts';
+import { isEnvironmentFile } from '#cli/repository/kind.ts';
+import { sep, resolve, relative, isAbsolute } from 'node:path';
+import { INVALID_INPUT_EXIT } from '#cli/config/commands/check.ts';
 import type { ChangedSet } from '#cli/types/repository/revisions.ts';
-import type { CommandResult } from '#cli/types/commands/commands.ts';
-import { INVALID_INPUT_EXIT } from '#cli/constants/commands/check.ts';
 import { changedFiles } from '#cli/repository/revisions/selection.ts';
+import type { CheckOptions, CommandResult } from '#cli/types/commands.ts';
 import type { Session, StageFilter } from '#cli/types/execution/execution.ts';
-import { isEnvironmentFile } from '#cli/repository/file-classification.ts';
 
 function isReadable(path: string): boolean {
     try {
@@ -23,11 +22,11 @@ function isReadable(path: string): boolean {
 function matchingFiles(session: Session, options: CheckOptions, path: string, candidates: string[]): string[] {
     const selector = relative(session.root, resolve(options.cwd, path)).split(sep).join('/');
     if (selector === '..' || selector.startsWith('../') || isAbsolute(selector))
-        throw new SelectionError([`Path ${path} is outside this repository.`]);
+        throw new GspotError('selection', [`Path ${path} is outside this repository.`]);
     const matches = candidates.filter(
         (file) => selector === '' || file === selector || file.startsWith(`${selector}/`),
     );
-    if (matches.length === 0) throw new SelectionError([`Path ${path} matches no repository files.`]);
+    if (matches.length === 0) throw new GspotError('selection', [`Path ${path} matches no repository files.`]);
     return matches;
 }
 
@@ -60,10 +59,10 @@ export function refusalFor(
 }
 
 /**
- * The repository files the positional paths select, among the tracked files and the changed ones.
+ * Selects tracked and changed repository files through positional paths.
  * @param session the open session
  * @param options the parsed flags
- * @param changed the staged or changed paths, which may name files no longer in the tree
+ * @param changed the staged or changed paths, which can name deleted files
  * @returns the selected paths, or none when no path was given
  */
 export function selectedPaths(session: Session, options: CheckOptions, changed: string[]): string[] {
@@ -74,7 +73,7 @@ export function selectedPaths(session: Session, options: CheckOptions, changed: 
 }
 
 /**
- * The refusal for an --only check no selected configuration runs here.
+ * The refusal for an --only check no selected kit runs here.
  * @param session the open session
  * @param only the checks named on the command line
  * @returns the refusal, or undefined when every named check is known
@@ -89,7 +88,7 @@ export function unknownSelection(session: Session, only: string[] | undefined): 
     const unknown = only?.find((check) => !known.has(check));
     if (unknown === undefined) return undefined;
     return {
-        text: `No selected configuration runs a check called \`${unknown}\` here. Run gspot explain ${unknown} to see which configuration ships it.\n`,
+        text: `No selected kit runs a check called \`${unknown}\` here. Run gspot explain ${unknown} to see which configuration ships it.\n`,
         json: { error: 'unknown-check' },
         exitCode: INVALID_INPUT_EXIT,
     };
@@ -108,6 +107,6 @@ export async function revisionSelection(
     signal: AbortSignal,
 ): Promise<ChangedSet | undefined> {
     if ((options.staged || options.changed !== undefined) && !session.repository.hasGit)
-        throw new SelectionError(['Revision selection requires a Git repository.']);
+        throw new GspotError('selection', ['Revision selection requires a Git repository.']);
     return options.changed === undefined ? undefined : changedFiles(session.root, options.changed, signal);
 }

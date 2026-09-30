@@ -1,8 +1,8 @@
+import { SKIPPED } from '#plugin/config/rules.ts';
 import { createRule } from '#plugin/definition.ts';
-import { SKIPPED } from '#plugin/constants/rules.ts';
 import type { TSESTree } from '@typescript-eslint/utils';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { isIndexFile, lintedFile } from '#plugin/files.ts';
+import { lintedFile, isIndexFile } from '#plugin/files.ts';
 
 function classify(statement: TSESTree.Statement): 'skip' | 'reexport' | 'declaration' {
     if (SKIPPED.has(statement.type)) return 'skip';

@@ -1,11 +1,11 @@
 import { z } from 'zod';
 import { parse as parseToml } from 'smol-toml';
-import { openConfinedRoot } from '#cli/platform/filesystem.ts';
-import { REQUIREMENT_NAME_END, SWIFT_PACKAGE_URL } from '#cli/constants/repository/repository.ts';
-import type { TrackedFile, DependencyMap, ManifestFacts, PackageManifest } from '#cli/types/repository/repository.ts';
+import { openRoot } from '#cli/platform/filesystem.ts';
+import { SWIFT_PACKAGE_URL, REQUIREMENT_NAME_END } from '#cli/config/repository/repository.ts';
+import type { Fields, TrackedFile, DependencyMap, PackageManifest } from '#cli/types/repository/repository.ts';
 
 function manifestText(root: string, path: string): string {
-    const files = openConfinedRoot(root, 'native');
+    const files = openRoot(root, 'native');
     try {
         const content = files.read(path);
         if (content === undefined) throw new Error(`Manifest is missing: ${path}`);
@@ -17,7 +17,7 @@ function manifestText(root: string, path: string): string {
     }
 }
 
-function packageJsonFacts(root: string, path: string): ManifestFacts {
+function packageJsonFacts(root: string, path: string): Fields {
     const parsed = readPackageManifest(root, path);
     const installed: DependencyMap = { ...parsed.dependencies, ...parsed.devDependencies };
     const dependencies: DependencyMap = {
@@ -25,7 +25,7 @@ function packageJsonFacts(root: string, path: string): ManifestFacts {
         ...parsed.peerDependencies,
         ...parsed.optionalDependencies,
     };
-    const facts: ManifestFacts = {
+    const fields: Fields = {
         path,
         kind: 'package.json',
         dependencies,
@@ -35,9 +35,9 @@ function packageJsonFacts(root: string, path: string): ManifestFacts {
         engines: parsed.engines ?? {},
     };
     const installer = parsed['packageManager'];
-    if (typeof installer === 'string') facts.installer = installer;
-    if (typeof parsed['type'] === 'string') facts.type = parsed['type'];
-    return facts;
+    if (typeof installer === 'string') fields.installer = installer;
+    if (typeof parsed['type'] === 'string') fields.type = parsed['type'];
+    return fields;
 }
 
 // A requirement that names a package: letters or digits at both ends, dots, dashes, and underscores between.
@@ -53,6 +53,23 @@ function requirementName(spec: string): string {
     return normalizedPythonPackage(end === -1 ? trimmed : trimmed.slice(0, end));
 }
 
+function poetryDependencies(
+    poetry: NonNullable<ReturnType<typeof pythonManifestSchema.parse>['tool']>['poetry'],
+): DependencyMap {
+    const poetryGroups = [
+        poetry?.dependencies ?? {},
+        ...Object.values(poetry?.group ?? {}).map((entry) => entry.dependencies ?? {}),
+    ];
+    const poetryEntries = poetryGroups
+        .flatMap((group) => Object.entries(group))
+        .map(
+            ([name, value]) =>
+                [normalizedPythonPackage(name), typeof value === 'string' ? value : JSON.stringify(value)] as const,
+        )
+        .filter(([name]) => name !== 'python');
+    return Object.fromEntries(poetryEntries);
+}
+
 function pythonDependencies(parsed: ReturnType<typeof pythonManifestSchema.parse>): DependencyMap {
     const project = parsed.project ?? {};
     const groups = [
@@ -63,21 +80,14 @@ function pythonDependencies(parsed: ReturnType<typeof pythonManifestSchema.parse
             .filter((entry) => typeof entry === 'string'),
     ];
     const dependencies: DependencyMap = parsed.tool?.pytest === undefined ? {} : { pytest: 'tool.pytest' };
-    for (const spec of groups) dependencies[requirementName(spec)] = spec;
-    const poetry = parsed.tool?.poetry;
-    for (const group of [
-        poetry?.dependencies ?? {},
-        ...Object.values(poetry?.group ?? {}).map((entry) => entry.dependencies ?? {}),
-    ]) {
-        for (const [name, value] of Object.entries(group)) {
-            if (normalizedPythonPackage(name) === 'python') continue;
-            dependencies[normalizedPythonPackage(name)] = typeof value === 'string' ? value : JSON.stringify(value);
-        }
-    }
-    return dependencies;
+    return Object.assign(
+        dependencies,
+        Object.fromEntries(groups.map((spec) => [requirementName(spec), spec])),
+        poetryDependencies(parsed.tool?.poetry),
+    );
 }
 
-function pipfileFacts(root: string, path: string): ManifestFacts {
+function pipfile(root: string, path: string): Fields {
     const parsed = pipfileSchema.parse(parseToml(manifestText(root, path)));
     const dependencies: DependencyMap = {};
     for (const [name, value] of Object.entries({ ...parsed.packages, ...parsed['dev-packages'] })) {
@@ -86,7 +96,7 @@ function pipfileFacts(root: string, path: string): ManifestFacts {
     return { path, kind: 'Pipfile', dependencies, installed: dependencies, scripts: {}, workspaces: [], engines: {} };
 }
 
-function requirementsFacts(root: string, path: string): ManifestFacts {
+function requirements(root: string, path: string): Fields {
     const text = manifestText(root, path);
     const dependencies: DependencyMap = {};
     for (const line of text.replaceAll(/\\\r?\n/gu, '').split(/\r?\n/u)) {
@@ -106,7 +116,7 @@ function requirementsFacts(root: string, path: string): ManifestFacts {
     };
 }
 
-function pyprojectFacts(root: string, path: string): ManifestFacts {
+function pyproject(root: string, path: string): Fields {
     const text = manifestText(root, path);
     const parsed = pythonManifestSchema.parse(parseToml(text));
     const project = parsed.project ?? {};
@@ -124,7 +134,7 @@ function pyprojectFacts(root: string, path: string): ManifestFacts {
     };
 }
 
-function swiftFacts(root: string, path: string): ManifestFacts {
+function swift(root: string, path: string): Fields {
     const text = manifestText(root, path);
     const dependencies: DependencyMap = {};
     for (const match of text.matchAll(SWIFT_PACKAGE_URL)) {
@@ -143,11 +153,11 @@ function swiftFacts(root: string, path: string): ManifestFacts {
     };
 }
 
-const READERS: Record<string, (root: string, path: string) => ManifestFacts> = {
+const READERS: Record<string, (root: string, path: string) => Fields> = {
     'package.json': packageJsonFacts,
-    'pyproject.toml': pyprojectFacts,
-    'Package.swift': swiftFacts,
-    Pipfile: pipfileFacts,
+    'pyproject.toml': pyproject,
+    'Package.swift': swift,
+    Pipfile: pipfile,
 };
 
 const stringList = z.array(z.string());
@@ -190,6 +200,7 @@ const workspacePackages = z.object({ packages: stringList });
  * @param name the name as written
  * @returns the name in lower case with one hyphen between words
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: License, allowlist, and lock readers compare Python package names by this one normalization.
 export function normalizedPythonPackage(name: string): string {
     return name.toLowerCase().replaceAll(/[._-]+/gu, '-');
 }
@@ -209,7 +220,7 @@ export const packageManifestSchema = z.object({
 });
 
 /**
- * Reads the package fields used by detection, takeover, and manifest checks.
+ * Reads the package fields used by detection, replace, and manifest checks.
  * @param root the repository root
  * @param path the manifest path relative to the root
  * @returns the validated package fields
@@ -225,21 +236,21 @@ export function readPackageManifest(root: string, path: string): PackageManifest
 }
 
 /**
- * Facts from every manifest in the tree.
+ * Fields from every manifest in the tree.
  * @param root the repository root
  * @param files the tracked files
- * @returns one facts entry per supported manifest
+ * @returns one fields entry per supported manifest
  */
-export function readManifests(root: string, files: TrackedFile[]): ManifestFacts[] {
+export function readManifests(root: string, files: TrackedFile[]): Fields[] {
     return files
         .filter(
             (file) =>
-                file.nature === 'source' &&
+                file.kind === 'source' &&
                 !file.path.split('/').some((part) => part.toLowerCase() === '.gspot' || part === 'node_modules'),
         )
         .flatMap((file) => {
             const base = file.path.slice(file.path.lastIndexOf('/') + 1);
-            const reader = base.startsWith('requirements') && base.endsWith('.txt') ? requirementsFacts : READERS[base];
+            const reader = base.startsWith('requirements') && base.endsWith('.txt') ? requirements : READERS[base];
             if (reader === undefined) return [];
             try {
                 return [reader(root, file.path)];

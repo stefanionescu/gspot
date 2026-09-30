@@ -1,19 +1,20 @@
 // NestJS names a file for its feature and its kind, as its generator writes it: cats.controller.ts beside cats.service.ts.
 
+import { findingAt } from '#cli/checks/result.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
-import type { StructureAnalysis as Analysis } from '#cli/types/checks/structure.ts';
-import { directoryOf, directoryTree, prefixOf, stemOf } from '#cli/checks/structure/directories.ts';
+import type { StructureAnalysis as Analysis } from '#cli/types/checks.ts';
+import { stemOf, prefixOf, directoryOf, directoryTree } from '#cli/checks/structure/directories.ts';
 
 import {
-    HOOK_PREFIX,
-    IGNORED_FOLDERS,
-    STRUCTURE_HOOK_DIRECTORIES as HOOK_DIRECTORIES,
-    DEFAULT_THRESHOLD,
-    INDEX_STEMS,
     NEST_KINDS,
+    HOOK_PREFIX,
+    INDEX_STEMS,
     SCRIPT_ENDING,
     TOOL_PREFIXES,
-} from '#cli/constants/checks/structure.ts';
+    IGNORED_FOLDERS,
+    DEFAULT_THRESHOLD,
+    STRUCTURE_HOOK_DIRECTORIES as HOOK_DIRECTORIES,
+} from '#cli/config/checks/structure.ts';
 
 // The shared first word is the feature, and the folder already carries it, so these files are no set to regroup.
 function isNestName(name: string): boolean {
@@ -44,7 +45,7 @@ export const prefixCollisions: Analysis = (context) => {
     const isAllowed = pathMatcher(
         input.policyFiles.policy.structure.prefix_collision_allowed.flatMap((entry) => entry.paths),
     );
-    const isNest = input.selection.selected.some((manifest) => manifest.configuration.name === 'nestjs');
+    const isNest = input.selection.selected.some((manifest) => manifest.kit.name === 'nestjs');
     const tree = directoryTree(input.files);
     const seen = new Set<string>();
     return context.files.flatMap((file) => {
@@ -71,13 +72,17 @@ export const prefixCollisions: Analysis = (context) => {
             const peerStem = stemOf(entry.name);
             return !INDEX_STEMS.has(peerStem) && prefixOf(peerStem) === prefix;
         });
-        if (peers.length < threshold) return [];
+        if (
+            new Set(peers.map((entry) => (entry.kind === 'dir' ? `${entry.name}/` : stemOf(entry.name)))).size <
+            threshold
+        )
+            return [];
         seen.add(key);
         const names = peers.map((entry) => (entry.kind === 'dir' ? `${entry.name}/` : entry.name)).join(', ');
         return [
-            context.report(
-                file.path,
-                1,
+            findingAt(
+                context.input,
+                { file: file.path, line: 1 },
                 'shared-prefix',
                 `${names} share the prefix "${prefix}". Group them in a folder named ${prefix} and drop the prefix, or allow the set with a reason.`,
             ),

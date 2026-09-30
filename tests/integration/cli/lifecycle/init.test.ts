@@ -1,29 +1,81 @@
 import * as fs from 'node:fs';
 import { join } from 'node:path';
 import { rejects } from 'node:assert/strict';
-import { expect, spyOn, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, spyOn, expect } from 'bun:test';
+import { TYPO } from '#tests/support/spelling.ts';
+import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { run } from '#tests/support/cli/command.ts';
 import { initCommand } from '#cli/commands/init/command.ts';
 import { applyCommand } from '#cli/commands/apply/command.ts';
 import { uninstallCommand } from '#cli/commands/uninstall.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
-import { containingAll, rejection } from '#tests/support/expectations.ts';
-import { existsSync, readFileSync, symlinkSync, unlinkSync } from 'node:fs';
+import { PRETTIER_TOOLING } from '#tests/support/cli/tooling.ts';
+import { askInitQuestions } from '#cli/commands/init/questions.ts';
+import { rejection, containingAll } from '#tests/support/expectations.ts';
+import { existsSync, unlinkSync, symlinkSync, readFileSync } from 'node:fs';
 
 const { version: GSPOT_VERSION } = packageManifest;
 
-test('init plans scoped spelling settings and uninstall restores the original nested configuration', async () => {
+test.each([
+    [
+        'tracked GitLab before GitHub',
+        ['.gitlab-ci.yml', '.github/workflows/build.yml'],
+        '',
+        'git@github.com:example/repo.git',
+        'gitlab',
+    ],
+    [
+        'tracked GitHub before untracked GitLab',
+        ['.github/workflows/build.yml'],
+        '.gitlab-ci.yml',
+        'git@gitlab.com:example/repo.git',
+        'github',
+    ],
+    ['untracked GitLab before remote', [], '.gitlab-ci.yml', 'git@github.com:example/repo.git', 'gitlab'],
+    ['untracked GitHub before remote', [], '.github/workflows/build.yml', 'git@gitlab.com:example/repo.git', 'github'],
+    ['Bitbucket before GitHub remote', ['bitbucket-pipelines.yml'], '', 'git@github.com:example/repo.git', 'none'],
+    ['other tracked CI before remote', ['ci/build.yml'], '', 'git@github.com:example/repo.git', 'none'],
+    ['GitHub SSH remote', [], '', 'git@github.com:example/repo.git', 'github'],
+    ['GitLab HTTPS remote', [], '', 'https://gitlab.com/example/repo.git', 'gitlab'],
+    ['GitHub SSH URL', [], '', 'ssh://git@github.com/example/repo.git', 'github'],
+    ['unrecognized remote host', [], '', 'https://github.com.example.com/example/repo.git', 'none'],
+] as const)('initialization CI preference uses %s', async (_label, ci, path, remote, expected) => {
+    await using sandbox = await testdir();
+    if (path !== '') await createFileTree(sandbox.path, { [path]: '{}\n' });
+    expect(processes.runBlocking(['git', 'init'], { cwd: sandbox.path }).code).toBe(0);
+    expect(processes.runBlocking(['git', 'config', 'remote.origin.url', remote], { cwd: sandbox.path }).code).toBe(0);
+    const answers = await askInitQuestions(
+        sandbox.path,
+        {
+            cwd: sandbox.path,
+            yes: true,
+            isDryRun: true,
+            json: true,
+            install: false,
+            allowDirty: false,
+            hooks: 'none',
+            runner: 'none',
+            rules: 'no',
+        },
+        { ...PRETTIER_TOOLING, ci: [...ci] },
+    );
+    expect(answers).toStrictEqual({ hooks: 'none', runner: 'none', isRules: false, ci: expected });
+});
+
+test('init replaces a nested spelling configuration and uninstall restores the original', async () => {
     await using directory = await testdir();
-    const original = '[default]\nlocale = "en-gb"\n[default.extend-words]\nteh = "teh"\n';
-    await createFileTree(directory.path, { 'nested/typos.toml': original, 'nested/sample.txt': 'colour teh\n' });
+    const original = `[default]\nlocale = "en-gb"\n[default.extend-words]\n${TYPO.the} = "${TYPO.the}"\n`;
+    await createFileTree(directory.path, {
+        'nested/typos.toml': original,
+        'nested/sample.txt': `${TYPO.color} ${TYPO.the}\n`,
+    });
     const options = {
         cwd: directory.path,
         yes: true,
         isDryRun: true,
         json: true,
-        configurations: ['spelling'],
+        kits: ['spelling'],
         isListExact: true,
         hooks: 'none',
         runner: 'none',
@@ -32,22 +84,22 @@ test('init plans scoped spelling settings and uninstall restores the original ne
         install: false,
         allowDirty: false,
     } as const;
-    const preview = await initCommand({ ...options, configurations: [...options.configurations] });
+    const preview = await initCommand({ ...options, kits: [...options.kits] });
     expect(preview.exitCode).toBe(0);
     expect(preview.json).toMatchObject({
         plan: {
-            carried: containingAll([
-                { from: 'nested: typos locale', count: 1, into: '[[scope]] nested: tools.typos.locale' },
+            remove: containingAll([
+                { path: 'nested/typos.toml', note: 'replaced by the generated typos configuration' },
             ]),
         },
     });
     expect(readFileSync(join(directory.path, 'nested/typos.toml'), 'utf8')).toBe(original);
     expect(existsSync(join(directory.path, 'gspot.toml'))).toBe(false);
-    const installed = await initCommand({ ...options, configurations: [...options.configurations], isDryRun: false });
+    const installed = await initCommand({ ...options, kits: [...options.kits], isDryRun: false });
     expect(installed.exitCode).toBe(0);
     expect(existsSync(join(directory.path, '.gitignore'))).toBe(false);
-    expect(readFileSync(join(directory.path, 'gspot.toml'), 'utf8')).toContain('en-gb');
-    expect(readFileSync(join(directory.path, 'nested/typos.toml'), 'utf8')).not.toBe(original);
+    expect(readFileSync(join(directory.path, 'gspot.toml'), 'utf8')).not.toContain('en-gb');
+    expect(existsSync(join(directory.path, 'nested/typos.toml'))).toBe(false);
     await uninstallCommand({ cwd: directory.path, yes: true, isDryRun: false });
     expect(readFileSync(join(directory.path, 'nested/typos.toml'), 'utf8')).toBe(original);
 });
@@ -65,15 +117,15 @@ test('init reports each submodule once without reading its contents', async () =
     execute(['init']);
     execute(['add', '.']);
     execute(['-c', 'user.name=Example', '-c', 'user.email=example@example.com', 'commit', '-qm', 'Source']);
-    const object = execute(['rev-parse', 'HEAD']);
-    execute(['update-index', '--add', '--cacheinfo', `160000,${object},external project`]);
+    const commitId = execute(['rev-parse', 'HEAD']);
+    execute(['update-index', '--add', '--cacheinfo', `160000,${commitId},external project`]);
     symlinkSync(outside.path, join(directory.path, 'external project'), 'dir');
     const result = await initCommand({
         cwd: directory.path,
         yes: true,
         isDryRun: true,
         json: true,
-        configurations: ['none'],
+        kits: ['none'],
         hooks: 'none',
         runner: 'none',
         ci: 'none',
@@ -105,7 +157,7 @@ test('failed initialization retains the previous pin until generated publication
                     yes: true,
                     isDryRun: false,
                     json: true,
-                    configurations: ['none'],
+                    kits: ['none'],
                     hooks: 'none',
                     runner: 'none',
                     ci: 'none',
@@ -132,7 +184,7 @@ test('init refuses a failed Git status before writing and succeeds after the fai
         yes: true,
         isDryRun: false,
         json: true,
-        configurations: ['none'],
+        kits: ['none'],
         hooks: 'none',
         runner: 'none',
         ci: 'none',
@@ -147,7 +199,7 @@ test('init refuses a failed Git status before writing and succeeds after the fai
             : execute(command, settings),
     );
     try {
-        await rejects(initCommand({ ...options, configurations: [...options.configurations] }), {
+        await rejects(initCommand({ ...options, kits: [...options.kits] }), {
             message: /Cannot read the Git index/u,
         });
         expect(existsSync(join(directory.path, 'gspot.toml'))).toBe(false);
@@ -155,7 +207,7 @@ test('init refuses a failed Git status before writing and succeeds after the fai
     } finally {
         failed.mockRestore();
     }
-    const corrected = await initCommand({ ...options, configurations: [...options.configurations] });
+    const corrected = await initCommand({ ...options, kits: [...options.kits] });
     expect(corrected.exitCode).toBe(0);
     expect(existsSync(join(directory.path, 'gspot.toml'))).toBe(true);
 });
@@ -175,7 +227,7 @@ test.each(['../outside', 'linked', 'linked/nested', 'missing', 'README.md'])(
             yes: true,
             isDryRun: false,
             json: true,
-            configurations: ['none'],
+            kits: ['none'],
             scopes: [`${scope}=`],
             hooks: 'none',
             runner: 'none',
@@ -184,12 +236,9 @@ test.each(['../outside', 'linked', 'linked/nested', 'missing', 'README.md'])(
             install: false,
             allowDirty: false,
         } as const;
-        await rejects(
-            initCommand({ ...options, configurations: [...options.configurations], scopes: [...options.scopes] }),
-            {
-                message: /Unsafe lifecycle|Scope directory does not exist/u,
-            },
-        );
+        await rejects(initCommand({ ...options, kits: [...options.kits], scopes: [...options.scopes] }), {
+            message: /Unsafe lifecycle|Scope directory does not exist/u,
+        });
         expect(existsSync(join(root, 'gspot.toml'))).toBe(false);
         expect(existsSync(join(root, '.gspot'))).toBe(false);
         expect(readFileSync(join(directory.path, 'outside/nested/keep.txt'), 'utf8')).toBe('original\n');
@@ -197,7 +246,7 @@ test.each(['../outside', 'linked', 'linked/nested', 'missing', 'README.md'])(
         await createFileTree(root, { 'src/keep.txt': 'inside\n' });
         const corrected = await initCommand({
             ...options,
-            configurations: [...options.configurations],
+            kits: [...options.kits],
             scopes: ['src='],
         });
         expect(corrected.exitCode).toBe(0);
@@ -218,13 +267,13 @@ test('uv is an installer rather than a task runner, and Python initialization pr
         'init',
         '--yes',
         '--dry-run',
-        '--configurations',
+        '--kits',
         'python',
         '--no-runner',
         '--no-install',
         '--no-ci',
         '--no-hooks',
-        '--no-rules',
+        '--no-guides',
     ]);
     expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
     expect(existsSync(join(sandbox.path, 'gspot.toml'))).toBe(false);

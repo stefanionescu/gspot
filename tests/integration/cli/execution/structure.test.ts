@@ -1,138 +1,30 @@
 import { join } from 'node:path';
 import { renameSync } from 'node:fs';
-import { expect, spyOn, test } from 'bun:test';
-import { planRun } from '#cli/execution/planning/plan.ts';
-import { createFileTree, testdir } from 'testdirs';
-import * as processes from '#cli/platform/spawn.ts';
-import * as inspections from '#cli/tools/inspect.ts';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { executeRun } from '#cli/execution/execute.ts';
-import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { rejection } from '#tests/support/expectations.ts';
-import { astGrepMatches } from '#cli/checks/structure/ast-grep.ts';
-
-test('ast-grep batches all file arguments and retains matches from every batch', async () => {
-    await using sandbox = await testdir();
-    const files = Array.from(
-        { length: 5000 },
-        (_, index) => `scripts/long path with spaces/source-${String(index)}.sh`,
-    );
-    const received: string[] = [];
-    await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nlevel = "all"\nconfigurations = ["bash"]\n',
-        'source.sh': 'echo example\n',
-    });
-    const session = await openSession(sandbox.path);
-    const [planned] = await planRun(session, { stage: 'commit', skips: [], only: ['structure/bash-branches'] });
-    const input = engineInput(session, planned!);
-    const inspection = spyOn(inspections, 'inspectTool').mockReturnValue({
-        name: 'ast-grep',
-        state: 'ok',
-        path: process.execPath,
-    });
-    const processRun = spyOn(processes, 'run').mockImplementation((command) => {
-        const batch = command.slice(5);
-        received.push(...batch);
-        return Promise.resolve({
-            code: 1,
-            missing: false,
-            duration: 1,
-            stderr: '',
-            stdout: JSON.stringify(
-                batch.map((file) => ({
-                    file,
-                    ruleId: 'bash-branches',
-                    range: { start: { line: 0 }, end: { line: 1 } },
-                })),
-            ),
-        });
-    });
-    try {
-        const matches = await astGrepMatches(
-            input,
-            'packages/cli/configurations/language/bash/rules/bash-branches.yml',
-            files,
-        );
-        expect(received).toStrictEqual(files);
-        expect(matches.map((match) => match.file)).toStrictEqual(files);
-        expect(processRun.mock.calls.length).toBeGreaterThan(1);
-    } finally {
-        processRun.mockRestore();
-        inspection.mockRestore();
-    }
-});
-
-test.each(['fatal exit', 'deadline', 'cancellation', 'malformed JSON', 'invalid match', 'unselected file'])(
-    'ast-grep rejects %s and accepts corrected execution',
-    async (failure) => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\nlevel = "all"\nconfigurations = ["bash"]\n',
-            'source.sh': 'echo example\n',
-        });
-        const session = await openSession(sandbox.path);
-        const [planned] = await planRun(session, { stage: 'commit', skips: [], only: ['structure/bash-branches'] });
-        const input = engineInput(session, planned!);
-        const inspection = spyOn(inspections, 'inspectTool').mockReturnValue({
-            name: 'ast-grep',
-            state: 'ok',
-            path: process.execPath,
-        });
-        const output =
-            failure === 'malformed JSON'
-                ? '{'
-                : JSON.stringify(
-                      failure === 'invalid match'
-                          ? [{ file: 'source.sh' }]
-                          : failure === 'unselected file'
-                            ? [
-                                  {
-                                      file: 'other.sh',
-                                      ruleId: 'bash-branches',
-                                      range: { start: { line: 0 }, end: { line: 1 } },
-                                  },
-                              ]
-                            : [],
-                  );
-        const processRun = spyOn(processes, 'run').mockResolvedValue({
-            code: failure === 'fatal exit' ? 2 : 0,
-            missing: false,
-            duration: 1,
-            stdout: output,
-            stderr: 'cannot read source.sh',
-            isTimedOut: failure === 'deadline',
-            isCanceled: failure === 'cancellation',
-        });
-        try {
-            await rejection(
-                astGrepMatches(input, 'packages/cli/configurations/language/bash/rules/bash-branches.yml', [
-                    'source.sh',
-                ]),
-            );
-            processRun.mockResolvedValue({ code: 0, missing: false, duration: 1, stdout: '[]', stderr: '' });
-            expect(
-                await astGrepMatches(input, 'packages/cli/configurations/language/bash/rules/bash-branches.yml', [
-                    'source.sh',
-                ]),
-            ).toStrictEqual([]);
-        } finally {
-            processRun.mockRestore();
-            inspection.mockRestore();
-        }
-    },
-);
+import { onPosix } from '#tests/support/cli/platforms.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 
 test('folder checks count code files and preserve allowed and nested directories', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml':
-            'version = 1\nlevel = "all"\nconfigurations = ["typescript"]\n[structure]\nsingle_file_folder_allowed = [{ paths = ["allowed/**"], reason = "Required entry directory." }]\n',
+        'gspot.toml': policyOf(
+            ['typescript'],
+            '[structure]\nsingle_file_folder_allowed = [{ paths = ["allowed/**"], reason = "Required entry directory." }]\n',
+            'all',
+        ),
         'lone/only.ts': '',
         'typed/one.ts': '',
         'typed/one.d.ts': '',
         'pair/first.ts': '',
         'pair/second.ts': '',
+        'component/logic.ts': '',
+        'component/View.astro': '<main>Example</main>',
+        'schema/parser.ts': '',
+        'schema/schema.json': '{}',
         'parent/main.ts': '',
         'parent/child/first.ts': '',
         'parent/child/second.ts': '',
@@ -149,13 +41,14 @@ test('folder checks count code files and preserve allowed and nested directories
     });
     expect(result.report.exitCode).toBe(1);
     expect(result.report.checks.flatMap((check) => check.findings.map((finding) => finding.file))).toStrictEqual([
+        'dist/pkg/lone.ts',
         'lone/only.ts',
         'typed/one.ts',
     ]);
 });
 
 test('prefix checks group files and directories once and honor allowances and the threshold', async () => {
-    const policy = 'version = 1\nlevel = "all"\nconfigurations = ["typescript"]\n';
+    const policy = policyOf(['typescript'], '', 'all');
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': policy,
@@ -170,6 +63,15 @@ test('prefix checks group files and directories once and honor allowances and th
         'fine/index-page.ts': '',
         'fine/first.ts': '',
         'fine/second.ts': '',
+        'paired/api.ts': '',
+        'paired/api.d.ts': '',
+        'paired/social.png': '',
+        'paired/social.svg': '',
+        // The package managers fix these names.
+        'npm/package.json': '{}',
+        'npm/package-lock.json': '{}',
+        'pnpm/pnpm-lock.yaml': '',
+        'pnpm/pnpm-workspace.yaml': '',
     });
     const options = {
         stage: 'all' as const,
@@ -215,14 +117,14 @@ test.each([
     ['fastapi', 'py'],
     ['xcode', 'swift'],
     ['xctest', 'swift'],
-])('%s retains shared folder enforcement and observes corrections', async (configuration, extension) => {
+])('%s retains shared folder enforcement and reads corrections', async (configuration, extension) => {
     const language = { ts: 'typescript', tsx: 'typescript', swift: 'swift', py: 'python' }[extension] ?? 'javascript';
     const lone = `feature/only.${extension}`;
     const card = `cards/asset-card.${extension}`;
     const list = `cards/asset-list.${extension}`;
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': `version = 1\nlevel = "all"\nconfigurations = ["${configuration}", "${language}", "structure"]\n`,
+        'gspot.toml': policyOf([configuration, language, 'structure'], '', 'all'),
         [lone]: '',
         [card]: '',
         [list]: '',
@@ -249,12 +151,12 @@ test.each([
     expect(corrected.report.exitCode).toBe(0);
 });
 
-if (process.platform !== 'win32')
+if (onPosix)
     test('prefix groups remain distinct when directory and prefix contain newlines', async () => {
         await using sandbox = await testdir();
         const paths = ['a\nb/c-one.ts', 'a\nb/c-two.ts', 'a/b\nc-one.ts', 'a/b\nc-two.ts'];
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\nlevel = "all"\nconfigurations = ["typescript"]\n',
+            'gspot.toml': policyOf(['typescript'], '', 'all'),
             ...Object.fromEntries(paths.map((path) => [path, 'export const value = 1;\n'])),
         });
         commitAll(sandbox.path);
@@ -279,3 +181,74 @@ if (process.platform !== 'win32')
         expect(corrected.report.exitCode).toBe(0);
         expect(corrected.report.checks[0]!.findings).toStrictEqual([]);
     });
+
+test.each([
+    ['jest', 'tests/support', ''],
+    ['vitest', 'tests/helpers', ''],
+    ['jest', 'tests/support', 'nested'],
+    ['vitest', 'tests/helpers', 'nested'],
+])('%s naming checks preserve the declared test harness directory', async (configuration, harness, scope) => {
+    await using sandbox = await testdir();
+    const prefix = scope === '' ? '' : `${scope}/`;
+    const scopePolicy = scope === '' ? '' : `\n[[scope]]\npath = "${scope}"\nkits = []\n`;
+    await createFileTree(sandbox.path, {
+        'gspot.toml': policyOf(
+            [configuration, 'typescript', 'naming'],
+            `[tools.${configuration}]\nharness_directory = "${harness}"\n${scopePolicy}`,
+            'all',
+        ),
+        [`${prefix}${harness}/startup.ts`]: '',
+        [`${prefix}app/support/startup.ts`]: '',
+    });
+    const result = await executeRun(await openSession(sandbox.path), {
+        stage: 'all',
+        skips: [],
+        fix: false,
+        isDryRun: false,
+        noCache: true,
+        only: ['structure/folder-names', 'naming/paths'],
+    });
+    expect(result.report.checks.flatMap((check) => check.findings)).toMatchObject([
+        { check: 'structure/folder-names', file: `${prefix}app/support/startup.ts`, line: 1, rule: 'container-name' },
+        { check: 'naming/paths', file: `${prefix}app/support/startup.ts`, line: 1, rule: 'banned-term' },
+    ]);
+});
+
+test.each(['recommended', 'all'])('structural checks classify output directories by ownership at %s', async (level) => {
+    await using sandbox = await testdir();
+    const authored = Object.fromEntries(
+        ['build', 'dist', 'coverage'].flatMap((directory) => [
+            [`${directory}/lone/only.ts`, ''],
+            [`${directory}/cards/asset-one.ts`, ''],
+            [`${directory}/cards/asset-two.ts`, ''],
+        ]),
+    );
+    await createFileTree(sandbox.path, {
+        'gspot.toml': policyOf(
+            ['typescript'],
+            '[[generated]]\npaths = ["emitted/**"]\nreason = "The compiler owns emitted files."\n',
+            level,
+        ),
+        ...authored,
+        'emitted/lone/only.ts': '',
+        'emitted/cards/asset-one.ts': '',
+        'emitted/cards/asset-two.ts': '',
+    });
+    const result = await executeRun(await openSession(sandbox.path), {
+        stage: 'commit',
+        skips: [],
+        fix: false,
+        isDryRun: false,
+        noCache: true,
+        only: ['structure/single-file-folder', 'structure/prefix-collisions'],
+    });
+    const findings = result.report.checks.flatMap((check) => check.findings);
+    expect(findings.map(({ file }) => file).toSorted((left, right) => left.localeCompare(right))).toStrictEqual(
+        level === 'all'
+            ? ['build', 'dist', 'coverage']
+                  .flatMap((directory) => [`${directory}/lone/only.ts`, `${directory}/cards/asset-one.ts`])
+                  .toSorted((left, right) => left.localeCompare(right))
+            : [],
+    );
+    expect(result.report.exitCode).toBe(level === 'all' ? 1 : 0);
+});

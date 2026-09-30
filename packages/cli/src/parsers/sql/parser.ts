@@ -1,8 +1,8 @@
 // The Postgres parser: libpg-query compiled to WASM, loaded from the bytes the binary embeds.
 import { grammarPath } from '#cli/platform/assets.ts';
 import createModule from 'libpg-query/wasm/libpg-query.js';
-import { ERROR_POSITION_OFFSET, POINTER_BYTES } from '#cli/constants/parsers/sql.ts';
-import type { PgModule, SqlNode, SqlParse, SqlTree } from '#cli/types/parsers/sql.ts';
+import { POINTER_BYTES, ERROR_POSITION_OFFSET } from '#cli/config/parsers/sql.ts';
+import type { SqlNode, SqlTree, PgModule, SqlParse } from '#cli/types/parsers/sql.ts';
 
 const state: { module: Promise<PgModule> | undefined } = { module: undefined };
 
@@ -85,6 +85,7 @@ export function nodesOf(list: unknown, kind: string): SqlNode[] {
  * @param field the field
  * @returns the text
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: SQL readers take the text of a field, or '' for any other value, by this one rule.
 export function textOf(field: unknown): string {
     return typeof field === 'string' ? field : '';
 }
@@ -94,6 +95,7 @@ export function textOf(field: unknown): string {
  * @param list the field
  * @returns each part
  */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Names, keys, and grants read a list of String nodes the same way.
 export function partsOf(list: unknown): string[] {
     return nodesOf(list, 'String').map((node) => textOf(node['sval']));
 }

@@ -1,0 +1,20 @@
+// The literal values unit/cli/commands reads: names, patterns, limits, and tables.
+export const CONFIGURATIONS = [
+    'typescript',
+    'javascript',
+    'react',
+    'nextjs',
+    'css',
+    'html',
+    'markdown',
+    'prose',
+    'spelling',
+    'commits',
+    'files',
+    'naming',
+    'formatting',
+    'docs',
+    'secrets',
+    'dependencies',
+    'licenses',
+];

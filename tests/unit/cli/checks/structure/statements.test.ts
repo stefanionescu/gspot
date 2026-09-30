@@ -1,23 +1,22 @@
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { policySchema } from '#cli/policy/schema.ts';
 import { parserFor } from '#cli/parsers/tree-sitter.ts';
 import { functionsOf as swiftFunctions } from '#cli/checks/swift/sources.ts';
 import { functionsOf as pythonFunctions } from '#cli/checks/python/modules.ts';
 import { trivialFunctions as swiftTrivial } from '#cli/checks/swift/bodies.ts';
 import { trivialFunctions as pythonTrivial } from '#cli/checks/python/functions.ts';
-import { executableStatements, trivialFile } from '#cli/checks/structure/statements.ts';
+import { trivialFile, executableStatements } from '#cli/checks/structure/statements.ts';
 
 for (const language of ['python', 'swift', 'bash'] as const) {
     test.each([0, 1, 2, 3])(`${language} counts %i executable statements`, async (count) => {
         const body = Array.from({ length: count }, () => (language === 'bash' ? 'echo value' : 'work()')).join(
             language === 'python' ? '\n    ' : '; ',
         );
-        const source =
-            language === 'python'
-                ? `def example():\n    """Contract."""\n    ${body}\n`
-                : language === 'swift'
-                  ? `func example() { /* comment */ ${body} }`
-                  : `example() { # comment\n${body}\n}`;
+        const source = {
+            python: `def example():\n    """Contract."""\n    ${body}\n`,
+            swift: `func example() { /* comment */ ${body} }`,
+            bash: `example() { # comment\n${body}\n}`,
+        }[language];
         const parser = await parserFor(language);
         const tree = parser.parse(source)!;
         try {
@@ -105,10 +104,10 @@ test.each([
     ['bash', 'source ./other.sh\nwrapper() { original; }', 'owner() { one; two; three; }'],
 ] as const)(
     '%s trivial files distinguish wrappers from substantial implementations',
-    async (language, wrapper, owner) => {
+    async (language, declaration, owner) => {
         const parser = await parserFor(language);
         for (const [source, expected] of [
-            [wrapper, true],
+            [declaration, true],
             [owner, false],
         ] as const) {
             const tree = parser.parse(source)!;
@@ -121,7 +120,7 @@ test.each([
     },
 );
 
-test('Swift includes implicit getters, property observers, and subscript accessors', async () => {
+test('Swift includes implicit getters, property readers, and subscript accessors', async () => {
     const text =
         'struct A { var x:Int { 1 }; var y = 0 { willSet { save(newValue) } didSet { save(oldValue) } }; subscript(i:Int)->Int { get { 1 } set { save(newValue) } } }';
     const parser = await parserFor('swift');

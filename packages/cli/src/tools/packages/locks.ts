@@ -4,9 +4,9 @@ import semver from 'semver';
 import { parse as parseYaml } from 'yaml';
 import { parseSyml } from '@yarnpkg/parsers';
 import { isDeepStrictEqual } from 'node:util';
-import { applyEdits, modify, parse as parseJsonc } from 'jsonc-parser';
-import type { BunPackage, Dependencies, LockName } from '#cli/types/tools/packages.ts';
-import { CONFLICT_MARKER, HTTP_URL, INTEGRITY } from '#cli/constants/tools/packages.ts';
+import { modify, applyEdits, parse as parseJsonc } from 'jsonc-parser';
+import { HTTP_URL, INTEGRITY, CONFLICT_MARKER } from '#cli/config/tools/packages.ts';
+import type { LockName, BunPackage, Dependencies } from '#cli/types/tools/packages.ts';
 
 const DEV_DEPENDENCIES = z.object({ devDependencies: z.record(z.string(), z.string()).optional() });
 const NPM_LOCK = z.object({ packages: z.record(z.string(), DEV_DEPENDENCIES) });
@@ -18,19 +18,7 @@ const YARN_LOCK = z.record(
     z.looseObject({ version: z.string().optional(), resolved: z.string().optional() }),
 );
 const BUN_LOCK_PACKAGES = z.looseObject({ packages: z.record(z.string(), z.array(z.unknown())) });
-const BUN_PACKAGE = z.tuple([z.string(), z.string(), z.record(z.string(), z.unknown()), z.string()]);
-
-// The root dev dependencies an npm lock records.
-function npmDependencies(content: string): unknown {
-    return NPM_LOCK.parse(JSON.parse(content)).packages['']?.devDependencies;
-}
-
-// The root dev dependencies a Bun lock records.
-function bunDependencies(content: string): unknown {
-    return BUN_LOCK.parse(parseJsonc(content)).workspaces['']?.devDependencies;
-}
-
-// The root dev dependencies a pnpm lock records, each as the specifier it was requested with.
+const BUN_PACKAGE = z.tuple([z.string(), z.string(), z.record(z.string(), z.unknown()), z.string()]); // The root dev dependencies a pnpm lock records, each as the specifier it was requested with.
 function pnpmDependencies(content: string): unknown {
     const pinned = PNPM_LOCK.parse(parseYaml(content)).importers['.']?.devDependencies;
     const entries = PNPM_SPECIFIERS.parse(pinned);
@@ -50,28 +38,28 @@ function yarnMatches(content: string, dependencies: Dependencies): boolean {
 }
 
 const ROOT_DEPENDENCIES: Record<Exclude<LockName, 'yarn'>, (content: string) => unknown> = {
-    npm: npmDependencies,
-    bun: bunDependencies,
+    npm: (content: string): unknown => {
+        return NPM_LOCK.parse(JSON.parse(content)).packages['']?.devDependencies;
+    },
+    bun: (content: string): unknown => {
+        return BUN_LOCK.parse(parseJsonc(content)).workspaces['']?.devDependencies;
+    },
     pnpm: pnpmDependencies,
 };
-
-// The name and version of a Bun lock package identity such as `name@1.2.3`.
-function bunIdentity(identity: string): { name: string; version: string } {
-    const separator = identity.lastIndexOf('@');
-    return { name: identity.slice(0, separator), version: identity.slice(separator + 1) };
-}
 
 // The registry a package resolves through: its scope's, or the default one.
 function registryFor(name: string, env: Record<string, string>): string | undefined {
     const scope = name.startsWith('@') ? name.split('/', 1)[0] : undefined;
-    const scoped = scope === undefined ? undefined : env[`npm_config_${scope}:registry`];
-    return scoped ?? env['npm_config_registry'];
+    const scopeRegistry = scope === undefined ? undefined : env[`npm_config_${scope}:registry`];
+    return scopeRegistry ?? env['npm_config_registry'];
 }
 
 // Whether a Bun lock entry resolved the standard tarball of a valid npm version through the configured registry.
 function isStandardTarball(entry: BunPackage, env: Record<string, string>): boolean {
     const [identity, resolved, , integrity] = entry;
-    const { name, version } = bunIdentity(identity);
+    const separator = identity.lastIndexOf('@');
+    const name = identity.slice(0, separator);
+    const version = identity.slice(separator + 1);
     if (semver.valid(version) === null || !INTEGRITY.test(integrity)) return false;
     const registry = registryFor(name, env);
     if (registry === undefined) return false;

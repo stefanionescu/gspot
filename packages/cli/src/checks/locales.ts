@@ -1,7 +1,8 @@
 import { posix } from 'node:path';
+import { findingAt } from '#cli/checks/result.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { parse } from '@formatjs/icu-messageformat-parser';
-import type { Translations, EngineInput, Finding } from '#cli/types/checks/checks.ts';
+import type { Finding, EngineInput, Translations } from '#cli/types/checks.ts';
 
 // Every message of a file by its dotted key: a nested table adds its key to the path of what it holds.
 function flat(value: unknown, prefix = ''): Map<string, string> {
@@ -43,36 +44,39 @@ export function localeFiles(input: EngineInput): Finding[] {
         .map((file) => file.path)
         .filter((path) => path.startsWith(`${directory}/`) && path.endsWith('.json'));
     const raw = new Map(
-        files.map((path) => [
-            path,
-            JSON.parse(readSource(input.root, path, input.observations).toString('utf8')) as unknown,
-        ]),
+        files.map((path) => [path, JSON.parse(readSource(input.root, path, input.reads).toString('utf8')) as unknown]),
     );
     const held = new Map([...raw].map(([path, value]) => [path, flat(value)]));
     const wanted =
         [...held].find(([path]) => posix.basename(path) === `${base}.json`)?.[1] ?? new Map<string, string>();
-    const at = (file: string, rule: string, text: string): Finding => ({
-        check: input.spec.name,
-        file,
-        line: 1,
-        rule,
-        message: text,
-        fixable: false,
-    });
     return held
         .entries()
         .flatMap(([path, messages]) => {
             const broken = [...messages].flatMap(([key, text]) => {
                 const problem = textProblem(text);
-                return problem === undefined ? [] : [at(path, 'message', `${key}: ${problem}`)];
+                return problem === undefined
+                    ? []
+                    : [findingAt(input, { file: path, line: 1 }, 'message', `${key}: ${problem}`)];
             });
             const missing = wanted
                 .keys()
                 .filter((key) => !messages.has(key))
-                .map((key) => at(path, 'missing-key', `The key ${key} of ${base} has no message here.`))
+                .map((key) =>
+                    findingAt(
+                        input,
+                        { file: path, line: 1 },
+                        'missing-key',
+                        `The key ${key} of ${base} has no message here.`,
+                    ),
+                )
                 .toArray();
             const dotted = dottedKeys(raw.get(path)).map((key) =>
-                at(path, 'dotted-key', `The key ${key} holds a dot, which is how a nested key is written.`),
+                findingAt(
+                    input,
+                    { file: path, line: 1 },
+                    'dotted-key',
+                    `The key ${key} holds a dot, which is how a nested key is written.`,
+                ),
             );
             return [...broken, ...missing, ...dotted];
         })

@@ -1,5 +1,5 @@
 import { Ajv2020 } from 'ajv/dist/2020.js';
-import { describe, expect, test } from 'bun:test';
+import { test, expect, describe } from 'bun:test';
 import { policySchema } from '#cli/policy/schema.ts';
 import { policyJsonSchema } from '#cli/policy/json-schema.ts';
 
@@ -8,7 +8,7 @@ describe('the JSON schema of gspot.toml', () => {
         expect(
             policySchema.safeParse({
                 version: 1,
-                configurations: ['bash'],
+                kits: ['bash'],
                 limits: { file_lines: 300, python: { file_lines: { value: 400, reason: 'why' } } },
             }).success,
         ).toBe(true);

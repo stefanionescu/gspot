@@ -1,9 +1,10 @@
 // A framework allows its own one-file folders through the setting default it declares; the repository adds its own.
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { PAGE } from '#tests/constants/integration/cli/execution/execution.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
+import { PAGE } from '#tests/inputs/integration/cli/execution/execution.ts';
 
 async function loneFiles(root: string): Promise<string[]> {
     const result = await executeRun(await openSession(root), {
@@ -20,7 +21,7 @@ async function loneFiles(root: string): Promise<string[]> {
 test('SvelteKit route folders hold one page each without a finding, and other lone files still report', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nlevel = "all"\nconfigurations = ["javascript", "svelte"]\n',
+        'gspot.toml': policyOf(['javascript', 'svelte'], '', 'all'),
         'package.json': '{"name":"planted","private":true,"type":"module"}\n',
         'src/routes/about/+page.svelte': PAGE,
         'src/routes/blog/[slug]/+page.svelte': PAGE,
@@ -32,8 +33,11 @@ test('SvelteKit route folders hold one page each without a finding, and other lo
 test('the repository allowance joins the framework allowance instead of replacing it', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml':
-            'version = 1\nlevel = "all"\nconfigurations = ["javascript", "svelte"]\n[structure]\nsingle_file_folder_allowed = [{ paths = ["src/lib/lone/**"], reason = "Required entry directory." }]\n',
+        'gspot.toml': policyOf(
+            ['javascript', 'svelte'],
+            '[structure]\nsingle_file_folder_allowed = [{ paths = ["src/lib/lone/**"], reason = "Required entry directory." }]\n',
+            'all',
+        ),
         'package.json': '{"name":"planted","private":true,"type":"module"}\n',
         'src/routes/about/+page.svelte': PAGE,
         'src/lib/lone/util.js': 'export const answer = 42;\n',
