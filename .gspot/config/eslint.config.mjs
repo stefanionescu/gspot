@@ -39,28 +39,26 @@ const SCRIPTS = [
     "packages/eslint-plugin/build.ts",
     "docs/src/content/reference/**"
 ];
-const ALIASES = {
-    "#cli/": "packages/cli/src/",
-    "#plugin/": "packages/eslint-plugin/src/",
-    "#tests/": "tests/",
-    "#docs/": "docs/",
-    "#scripts/": "packages/cli/scripts/",
-    "#cli-package": "packages/cli/package.json",
-    "#workspace-package": "package.json",
-    "#plugin-package": "packages/eslint-plugin/package.json"
+const IS_ALL = true;
+const NODE_VERSION = ">=24.2.0";
+const RESTRICTED = [];
+const JAVASCRIPT_LIMITS = {
+    "parameters": 7,
+    "trivialStatements": 2
 };
 
 const limits = {
-    fileLines: 300,
-    functionLines: 60,
-    parameters: 7,
-    cyclomatic: 8,
-    cognitive: 8,
-    depth: 3,
-    statements: 30,
-    nestedCallbacks: 3,
-    identicalFunctions: 3,
-    barrelReexports: 20,
+    "fileLines": 300,
+    "functionLines": 60,
+    "parameters": 7,
+    "cyclomatic": 8,
+    "cognitive": 8,
+    "depth": 3,
+    "statements": 30,
+    "nestedCallbacks": 3,
+    "identicalFunctions": 3,
+    "barrelReexports": 20,
+    "trivialStatements": 2
 };
 
 const sizeRules = {
@@ -84,7 +82,7 @@ const errorLevels = (rules) =>
 
 // One rule holds every selector, because a later block that sets the rule replaces the earlier one. The library
 // selectors join the base ones here, and each block below lists all that apply to its files.
-const BASE_SELECTORS = true ? [
+const BASE_SELECTORS = IS_ALL ? [
         { selector: 'TSEnumDeclaration', message: 'Use a literal union or an as-const object instead of an enum.' },
         { selector: 'TSAsExpression[expression.type="TSAsExpression"]', message: 'Do not assert twice. Narrow the value, improve the type, or add a typed boundary.' },
         { selector: 'TSTypeAssertion[expression.type="TSTypeAssertion"]', message: 'Do not assert twice. Narrow the value, improve the type, or add a typed boundary.' },
@@ -126,58 +124,119 @@ const coreRules = {
     'no-restricted-syntax': ['error', ...BASE_SELECTORS],
 };
 
-const gspotRules = {
-    ...gspot.configs.recommended.rules,
-    'gspot/types-placement': ['error', { typesDirectory: "types" }],
-
-    'gspot/no-trivial-functions': ['error', { maxStatements: 2 }],
-    'gspot/no-trivial-files': ['error', { maxStatements: 2 }],
-
-    'gspot/no-export-only-files': 'error',
-    'gspot/no-exported-alias-constants': 'error',
-    'gspot/no-index-imports': 'error',
-    'gspot/header-comments-before-imports': 'error',
-    'gspot/no-import-comments': 'error',
-    'gspot/import-layout': 'error',
-    'gspot/export-layout': 'error',
-    'gspot/no-cross-folder-imports': ['error', { aliases: ALIASES }],
-    'gspot/no-cross-project-imports': ['error', { scopes: [
-    "packages/cli",
-    "packages/eslint-plugin",
-    "docs"
-] }],
-    'gspot/registry-instance-only': ['error', { registryFiles: ['**/registry.ts', '**/registry.tsx', '**/registry.js', "config/**", "**/config/**"] }],
-    'gspot/private-before-public': 'error',
-    'gspot/import-direction': ['error', { roles: {
-    "types": [
-        "types/**",
-        "**/types/**"
+const gspotRules = { ...gspot.configs.recommended.rules, ...{
+    "gspot/types-placement": [
+        "error",
+        {
+            "typesDirectory": "types"
+        }
     ],
-    "tests": [
-        "tests/**",
-        "**/*.test.*",
-        "**/*.spec.*",
-        "**/__tests__/**"
+    "gspot/no-trivial-functions": [
+        "error",
+        {
+            "maxStatements": 2
+        }
     ],
-    "harness": [
-        "tests/support/**"
+    "gspot/no-trivial-files": [
+        "error",
+        {
+            "maxStatements": 2
+        }
     ],
-    "config": [
-        "config/**"
+    "gspot/no-export-only-files": "error",
+    "gspot/no-exported-alias-constants": "error",
+    "gspot/no-index-imports": "error",
+    "gspot/header-comments-before-imports": "error",
+    "gspot/no-import-comments": "error",
+    "gspot/import-layout": "error",
+    "gspot/export-layout": "error",
+    "gspot/no-cross-folder-imports": [
+        "error",
+        {
+            "aliases": {
+                "#cli/": "packages/cli/src/",
+                "#plugin/": "packages/eslint-plugin/src/",
+                "#tests/": "tests/",
+                "#docs/": "docs/",
+                "#scripts/": "packages/cli/scripts/",
+                "#cli-package": "packages/cli/package.json",
+                "#workspace-package": "package.json",
+                "#plugin-package": "packages/eslint-plugin/package.json"
+            }
+        }
     ],
-    "env": [
-        "packages/cli/src/platform/environment.ts"
+    "gspot/no-cross-project-imports": [
+        "error",
+        {
+            "scopes": [
+                "packages/cli",
+                "packages/eslint-plugin",
+                "docs"
+            ]
+        }
     ],
-    "runtime": [
-        "src/**"
-    ]
-}, aliases: ALIASES }],
-    'gspot/env-access-owner': ['error', { owners: [
-    "packages/cli/src/platform/environment.ts"
-] }],
-    'gspot/no-reexports': 'error',
-
-};
+    "gspot/registry-instance-only": [
+        "error",
+        {
+            "registryFiles": [
+                "**/registry.ts",
+                "**/registry.tsx",
+                "**/registry.js",
+                "config/**",
+                "**/config/**"
+            ]
+        }
+    ],
+    "gspot/private-before-public": "error",
+    "gspot/import-direction": [
+        "error",
+        {
+            "roles": {
+                "types": [
+                    "types/**",
+                    "**/types/**"
+                ],
+                "harness": [
+                    "tests/support/**"
+                ],
+                "tests": [
+                    "tests/**",
+                    "**/*.test.*",
+                    "**/*.spec.*",
+                    "**/__tests__/**"
+                ],
+                "config": [
+                    "config/**"
+                ],
+                "env": [
+                    "packages/cli/src/platform/environment.ts"
+                ],
+                "runtime": [
+                    "src/**"
+                ]
+            },
+            "aliases": {
+                "#cli/": "packages/cli/src/",
+                "#plugin/": "packages/eslint-plugin/src/",
+                "#tests/": "tests/",
+                "#docs/": "docs/",
+                "#scripts/": "packages/cli/scripts/",
+                "#cli-package": "packages/cli/package.json",
+                "#workspace-package": "package.json",
+                "#plugin-package": "packages/eslint-plugin/package.json"
+            }
+        }
+    ],
+    "gspot/env-access-owner": [
+        "error",
+        {
+            "owners": [
+                "packages/cli/src/platform/environment.ts"
+            ]
+        }
+    ],
+    "gspot/no-reexports": "error"
+} };
 
 // sonarjs recommended is the base. no-empty-test-file is off because a test that registers its cases through a
 // helper (ESLint's RuleTester) looks empty to it; vitest/expect-expect covers the same ground.
@@ -277,8 +336,8 @@ const securityRules = {
 const nodeRules = {
     'n/no-deprecated-api': 'error',
     'n/no-process-exit': 'error',
-    'n/no-unsupported-features/node-builtins': ['error', { version: ">=24.2.0", allowExperimental: true }],
-    'n/no-unsupported-features/es-builtins': ['error', { version: ">=24.2.0" }],
+    'n/no-unsupported-features/node-builtins': ['error', { version: NODE_VERSION, allowExperimental: true }],
+    'n/no-unsupported-features/es-builtins': ['error', { version: NODE_VERSION }],
     // TypeScript owns syntax support.
     'n/no-unsupported-features/es-syntax': 'off',
     'n/prefer-global/buffer': ['error', 'always'],
@@ -345,10 +404,16 @@ const regexpRules = {
 
 const importRules = {
     'import-x/export': 'error',
-    'import-x/first': 'error',
-    'import-x/newline-after-import': ['error', { count: 1 }],
-    'import-x/exports-last': 'error',
-
+    ...{
+    "import-x/first": "error",
+    "import-x/newline-after-import": [
+        "error",
+        {
+            "count": 1
+        }
+    ],
+    "import-x/exports-last": "error"
+},
     'import-x/no-cycle': ['error', { maxDepth: Infinity, ignoreExternal: false }],
     'import-x/no-self-import': 'error',
     'import-x/no-useless-path-segments': ['error', { noUselessIndex: true }],
@@ -357,7 +422,7 @@ const importRules = {
 };
 
 const commentRules = {
-    '@eslint-community/eslint-comments/require-description': 'off',
+    '@eslint-community/eslint-comments/require-description': "off",
     '@eslint-community/eslint-comments/no-unused-disable': 'error',
 };
 
@@ -393,11 +458,18 @@ const importStyleOverrides = [
     }
 ];
 
-const runtimeOverrides = [
-];
+// A CommonJS file gets the Node module globals and may require; any other runtime gets its own globals.
+const runtimeOverrides = [].map(({ files, runtime }) =>
+    runtime === 'commonjs'
+        ? {
+              files,
+              languageOptions: { sourceType: 'commonjs', globals: { ...globals.node, ...globals.commonjs } },
+              rules: { 'unicorn/prefer-module': 'off', '@typescript-eslint/no-require-imports': 'off', 'unicorn/import-style': 'off' },
+          }
+        : { files, languageOptions: { globals: globals[runtime] } },
+);
 
-const boundaryConfigs = [
-];
+const boundaryConfigs = [];
 
 const scopeRules = [
     {
@@ -429,14 +501,14 @@ const scopeRules = [
                             "types/**",
                             "**/types/**"
                         ],
+                        "harness": [
+                            "tests/support/**"
+                        ],
                         "tests": [
                             "tests/**",
                             "**/*.test.*",
                             "**/*.spec.*",
                             "**/__tests__/**"
-                        ],
-                        "harness": [
-                            "tests/support/**"
                         ],
                         "config": [
                             "config/**"
@@ -486,14 +558,14 @@ const scopeRules = [
                             "types/**",
                             "**/types/**"
                         ],
+                        "harness": [
+                            "tests/support/**"
+                        ],
                         "tests": [
                             "tests/**",
                             "**/*.test.*",
                             "**/*.spec.*",
                             "**/__tests__/**"
-                        ],
-                        "harness": [
-                            "tests/support/**"
                         ],
                         "config": [
                             "config/**"
@@ -542,14 +614,14 @@ const scopeRules = [
                             "types/**",
                             "**/types/**"
                         ],
+                        "harness": [
+                            "tests/support/**"
+                        ],
                         "tests": [
                             "tests/**",
                             "**/*.test.*",
                             "**/*.spec.*",
                             "**/__tests__/**"
-                        ],
-                        "harness": [
-                            "tests/support/**"
                         ],
                         "config": [
                             "config/**"
@@ -797,7 +869,7 @@ const defaults = [
         plugins: { gspot, 'import-x': importX, jsdoc, n: nodePlugin, regexp, security, boundaries, '@eslint-community/eslint-comments': eslintComments },
         linterOptions: { reportUnusedDisableDirectives: 'error' },
         languageOptions: { ecmaVersion: 'latest', sourceType: 'module', globals: { ...globals.node, ...globals.es2024 } },
-        settings: { node: { version: ">=24.2.0" }, gspot: { root } },
+        settings: { node: { version: NODE_VERSION }, gspot: { root } },
         rules: { ...sizeRules, ...coreRules, ...gspotRules, ...sonarRules, ...unicornRules, ...securityRules, ...nodeRules, ...jsdocRules, ...regexpRules, ...importRules, ...commentRules },
     },
     { files: JAVASCRIPT, rules: { 'no-unused-vars': ['error', { args: 'all', argsIgnorePattern: '^_', varsIgnorePattern: '^_', destructuredArrayIgnorePattern: '^_' }] } },
@@ -1591,14 +1663,29 @@ const defaults = [
             'jsdoc/require-returns-description': 'off',
             'n/no-unpublished-import': 'off',
             'n/no-unpublished-require': 'off',
-            'gspot/no-harness-barrel-imports': ['error', { barrels: [
-    "#tests"
-] }],
+            ...{
+    "gspot/no-harness-barrel-imports": [
+        "error",
+        {
+            "barrels": [
+                "#tests"
+            ]
+        }
+    ]
+},
         },
     },
+    ...(RESTRICTED.length === 0 ? [] : [{ files: CODE, rules: { 'no-restricted-imports': ['error', { paths: RESTRICTED }] } }]),
     { files: ['**/package.json'], ...packageJson.configs.recommended },
     { files: CODE, ...prettierConfig },
-    { files: ['**/*.{js,mjs,cjs,jsx}'], rules: { 'max-params': ['error', 7], 'gspot/no-trivial-functions': ['error', { maxStatements: 2 }], 'gspot/no-trivial-files': ['error', { maxStatements: 2 }] } },
+    {
+        files: JAVASCRIPT,
+        rules: {
+            'max-params': ['error', JAVASCRIPT_LIMITS.parameters],
+            'gspot/no-trivial-functions': ['error', { maxStatements: JAVASCRIPT_LIMITS.trivialStatements }],
+            'gspot/no-trivial-files': ['error', { maxStatements: JAVASCRIPT_LIMITS.trivialStatements }],
+        },
+    },
 ];
 const ruleLevels = {
     "gspot/env-access-owner": "all",
@@ -3137,7 +3224,7 @@ const ruleLevels = {
 const selectedDefaults = defaults.map((entry) => entry.rules === undefined ? entry : {
     ...entry,
     rules: Object.fromEntries(Object.entries(entry.rules).map(([name, value]) =>
-        [name, !true && ruleLevels[name] === 'all' ? 'off' : value])),
+        [name, !IS_ALL && ruleLevels[name] === 'all' ? 'off' : value])),
 });
 export default [...selectedDefaults,
 

@@ -81,12 +81,11 @@ test('runtime names remain data in generated JavaScript', async () => {
         expect(tree).not.toBeNull();
         try {
             expect(tree!.rootNode.hasError).toBe(false);
-            const indices = tree!.rootNode
-                .descendantsOfType('subscript_expression')
-                .filter((node) => node.childForFieldName('object')?.text === 'globals')
-                .map((node) => node.childForFieldName('index')!.text);
-            expect(indices).toHaveLength(1);
-            expect(JSON.parse(indices[0]!)).toBe(runtime);
+            const runtimes = tree!.rootNode
+                .descendantsOfType('pair')
+                .filter((node) => node.childForFieldName('key')?.text === '"runtime"')
+                .map((node): unknown => JSON.parse(node.childForFieldName('value')!.text));
+            expect(runtimes).toStrictEqual([runtime]);
         } finally {
             tree!.delete();
         }

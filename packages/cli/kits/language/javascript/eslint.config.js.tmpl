@@ -15,46 +15,7 @@ import unicorn from 'eslint-plugin-unicorn';
 import prettierConfig from 'eslint-config-prettier';
 import globals from 'globals';
 <%~ fragmentImports %>
-<%
-const eslintTool = tool('eslint');
-const architecture = policy.architecture;
-const structure = policy.structure;
-const scopePaths = scopes.map((entry) => entry.path);
-const limitOf = (key, language) => limit(key, language) ?? limit(key);
-const aliases = importAliases('');
-const importStyle = eslintTool.import_style ?? {};
-const testFiles = settings['tools.eslint.test_files'] ?? [];
-const scriptFiles = settings['tools.eslint.script_files'] ?? [];
-const nodeVersion = settings['tools.eslint.node_version'] ?? '>=22.0.0';
-const globalsByClass = eslintTool.globals ?? {};
-const roles = architecture.roles ?? {};
-const roleList = (value, fallback) => (value === undefined ? fallback : Array.isArray(value) ? value : [value]);
-const elementNames = new Set(architecture.elements.map((element) => element.name));
-const roleGlobs = (name, fallback) => roleList(roles[name], fallback).flatMap((entry) => (elementNames.has(entry) ? architecture.elements.find((element) => element.name === entry).paths : [entry]));
-const envOwners = roleGlobs('env', ['src/env/**', 'config/**']);
-const harnessGlobs = (folders) => folders.map((folder) => `${folder}/**`);
-const harnessScopes = roleScopes('harness');
-const directionRoles = {
-    types: roleGlobs('types', [`${architecture.types_directory ?? 'types'}/**`, `**/${architecture.types_directory ?? 'types'}/**`]),
-    tests: roleGlobs('tests', ['tests/**', '**/*.test.*', '**/*.spec.*', '**/__tests__/**']),
-    harness: roleGlobs('harness', harnessGlobs(roleFolders('harness'))),
-    config: roleGlobs('config', ['config/**']),
-    env: envOwners,
-    runtime: roleGlobs('runtime', ['src/**']),
-};
-const scopeRules = (isAll ? scopes : []).map((scope) => {
-    const scoped = importAliases(scope.path);
-    const selected = harnessScopes.findLast((entry) => entry.path === scope.path);
-    const scopedRoles = { ...directionRoles, harness: roleGlobs('harness', harnessGlobs(selected?.folders ?? roleFolders('harness'))) };
-    const imports = {
-        ...(Object.keys(scoped).length === 0 ? {} : { 'gspot/no-cross-folder-imports': ['error', { aliases: scoped }] }),
-        'gspot/import-direction': ['error', { roles: scopedRoles, aliases: scoped, scope: scope.path }],
-    };
-    return { files: [`${scope.path}/**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}`], rules: imports };
-});
-const restricted = settings['tools.eslint.restricted_imports'] ?? [];
-const ignoredPaths = ['**/node_modules/**', '.gspot/**', ...policy.declarations.flatMap((entry) => entry.paths)];
-%>
+<% const config = eslint(); %>
 const root = fileURLToPath(new URL('../..', import.meta.url));
 // The component files a selected framework adds to the code and type-checked file sets.
 const FRAGMENT_FILES = <%~ json(fragmentFiles, 0) %>;
@@ -62,22 +23,14 @@ const CODE = ['**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}', ...FRAGMENT_FILES];
 const TYPESCRIPT_SOURCE = ['**/*.{ts,tsx,mts,cts}'];
 const TYPESCRIPT = [...TYPESCRIPT_SOURCE, ...FRAGMENT_FILES];
 const JAVASCRIPT = ['**/*.{js,mjs,cjs,jsx}'];
-const TESTS = <%= json(testFiles) %>;
-const SCRIPTS = <%= json(scriptFiles) %>;
-const ALIASES = <%= json(aliases) %>;
+const TESTS = <%= json(config.testFiles) %>;
+const SCRIPTS = <%= json(config.scriptFiles) %>;
+const IS_ALL = <%= isAll %>;
+const NODE_VERSION = <%= json(config.nodeVersion) %>;
+const RESTRICTED = <%= json(config.restrictedImports) %>;
+const JAVASCRIPT_LIMITS = <%= json(config.javascriptLimits) %>;
 
-const limits = {
-    fileLines: <%= limitOf('file_lines', 'typescript') %>,
-    functionLines: <%= limitOf('function_lines', 'typescript') %>,
-    parameters: <%= limitOf('function_parameters', 'typescript') %>,
-    cyclomatic: <%= limitOf('cyclomatic_complexity', 'typescript') %>,
-    cognitive: <%= limitOf('cognitive_complexity', 'typescript') %>,
-    depth: <%= limitOf('nested_blocks', 'typescript') %>,
-    statements: <%= limitOf('statements', 'typescript') %>,
-    nestedCallbacks: <%= limitOf('nested_callbacks', 'typescript') %>,
-    identicalFunctions: <%= limitOf('identical_functions', 'typescript') %>,
-    barrelReexports: <%= limitOf('barrel_reexports', 'typescript') %>,
-};
+const limits = <%= json(config.limits) %>;
 
 const sizeRules = {
     'max-lines': ['error', { max: limits.fileLines, skipBlankLines: true, skipComments: true }],
@@ -100,7 +53,7 @@ const errorLevels = (rules) =>
 
 // One rule holds every selector, because a later block that sets the rule replaces the earlier one. The library
 // selectors join the base ones here, and each block below lists all that apply to its files.
-const BASE_SELECTORS = <%= isAll %> ? [
+const BASE_SELECTORS = IS_ALL ? [
         { selector: 'TSEnumDeclaration', message: 'Use a literal union or an as-const object instead of an enum.' },
         { selector: 'TSAsExpression[expression.type="TSAsExpression"]', message: 'Do not assert twice. Narrow the value, improve the type, or add a typed boundary.' },
         { selector: 'TSTypeAssertion[expression.type="TSTypeAssertion"]', message: 'Do not assert twice. Narrow the value, improve the type, or add a typed boundary.' },
@@ -142,32 +95,7 @@ const coreRules = {
     'no-restricted-syntax': ['error', ...BASE_SELECTORS],
 };
 
-const gspotRules = {
-    ...gspot.configs.recommended.rules,
-<% if (architecture.types_directory !== undefined) { %>    'gspot/types-placement': ['error', { typesDirectory: <%= json(architecture.types_directory) %> }],
-<% } %>
-    'gspot/no-trivial-functions': ['error', { maxStatements: <%= limitOf('trivial_statements', 'typescript') %> }],
-    'gspot/no-trivial-files': ['error', { maxStatements: <%= limitOf('trivial_statements', 'typescript') %> }],
-<% if (isAll) { %>
-    'gspot/no-export-only-files': 'error',
-    'gspot/no-exported-alias-constants': 'error',
-    'gspot/no-index-imports': 'error',
-    'gspot/header-comments-before-imports': 'error',
-    'gspot/no-import-comments': 'error',
-    'gspot/import-layout': 'error',
-    'gspot/export-layout': 'error',
-    'gspot/no-cross-folder-imports': ['error', { aliases: ALIASES }],
-    'gspot/no-cross-project-imports': ['error', { scopes: <%= json(scopePaths) %> }],
-<% if (architecture.config_directory !== undefined) { %>    'gspot/registry-instance-only': ['error', { registryFiles: ['**/registry.ts', '**/registry.tsx', '**/registry.js', <%= json(`${architecture.config_directory}/**`) %>, <%= json(`**/${architecture.config_directory}/**`) %>] }],
-<% } else { %>    'gspot/registry-instance-only': 'error',
-<% } %>    'gspot/private-before-public': 'error',
-    'gspot/import-direction': ['error', { roles: <%= json(directionRoles) %>, aliases: ALIASES }],
-    'gspot/env-access-owner': ['error', { owners: <%= json(envOwners) %> }],
-<% if (structure.reexports === 'none') { %>    'gspot/no-reexports': 'error',
-<% } else { %>    'gspot/no-reexports': ['error', { allowIndex: true }],
-    'gspot/max-barrel-reexports': ['error', { max: limits.barrelReexports }],
-<% } %>
-<% } %>};
+const gspotRules = { ...gspot.configs.recommended.rules, ...<%= json(config.gspotRules) %> };
 
 // sonarjs recommended is the base. no-empty-test-file is off because a test that registers its cases through a
 // helper (ESLint's RuleTester) looks empty to it; vitest/expect-expect covers the same ground.
@@ -267,8 +195,8 @@ const securityRules = {
 const nodeRules = {
     'n/no-deprecated-api': 'error',
     'n/no-process-exit': 'error',
-    'n/no-unsupported-features/node-builtins': ['error', { version: <%= json(nodeVersion) %>, allowExperimental: true }],
-    'n/no-unsupported-features/es-builtins': ['error', { version: <%= json(nodeVersion) %> }],
+    'n/no-unsupported-features/node-builtins': ['error', { version: NODE_VERSION, allowExperimental: true }],
+    'n/no-unsupported-features/es-builtins': ['error', { version: NODE_VERSION }],
     // TypeScript owns syntax support.
     'n/no-unsupported-features/es-syntax': 'off',
     'n/prefer-global/buffer': ['error', 'always'],
@@ -335,10 +263,7 @@ const regexpRules = {
 
 const importRules = {
     'import-x/export': 'error',
-<% if (isAll) { %>    'import-x/first': 'error',
-    'import-x/newline-after-import': ['error', { count: 1 }],
-    'import-x/exports-last': 'error',
-<% } %>
+    ...<%= json(config.importLayoutRules) %>,
     'import-x/no-cycle': ['error', { maxDepth: Infinity, ignoreExternal: false }],
     'import-x/no-self-import': 'error',
     'import-x/no-useless-path-segments': ['error', { noUselessIndex: true }],
@@ -347,31 +272,27 @@ const importRules = {
 };
 
 const commentRules = {
-    '@eslint-community/eslint-comments/require-description': <%= policy.requireReasons ? "'error'" : "'off'" %>,
+    '@eslint-community/eslint-comments/require-description': <%= json(config.commentLevel) %>,
     '@eslint-community/eslint-comments/no-unused-disable': 'error',
 };
 
 // A pair of patterns in one list means both hold, so a pattern as wide as **/* still reaches code files only.
-const importStyleOverrides = <%= json(Object.entries(importStyle).map(([glob, style]) => ({ files: [[glob, '**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}']], rules: { 'gspot/import-path-style': ['error', { style, internalPrefixes: ['./', '../', ...Object.keys(aliases)] }] } }))) %>;
+const importStyleOverrides = <%= json(config.importStyleBlocks) %>;
 
-const runtimeOverrides = [
-<% for (const [glob, runtime] of Object.entries(globalsByClass)) { %>    { files: [<%= json(glob) %>], languageOptions: <%= runtime === 'commonjs' ? "{ sourceType: 'commonjs', globals: { ...globals.node, ...globals.commonjs } }" : `{ globals: globals[${json(runtime === 'worker' ? 'serviceworker' : runtime, 0)}] }` %><%= runtime === 'commonjs' ? ", rules: { 'unicorn/prefer-module': 'off', '@typescript-eslint/no-require-imports': 'off', 'unicorn/import-style': 'off' }" : '' %> },
-<% } %>];
+// A CommonJS file gets the Node module globals and may require; any other runtime gets its own globals.
+const runtimeOverrides = <%= json(config.runtimes) %>.map(({ files, runtime }) =>
+    runtime === 'commonjs'
+        ? {
+              files,
+              languageOptions: { sourceType: 'commonjs', globals: { ...globals.node, ...globals.commonjs } },
+              rules: { 'unicorn/prefer-module': 'off', '@typescript-eslint/no-require-imports': 'off', 'unicorn/import-style': 'off' },
+          }
+        : { files, languageOptions: { globals: globals[runtime] } },
+);
 
-const boundaryConfigs = [
-<% for (const scope of [{ path: '', kits }, ...scopes]) { const scoped = scope.path === '' ? policy.architecture : (policy.scopeTables[scope.path]?.architecture ?? policy.architecture); if (!scoped.elements || scoped.elements.length === 0) continue; const prefix = scope.path === '' ? '' : `${scope.path}/`; %>    {
-        files: [<%= json(`${prefix}**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}`) %>],
-        settings: {
-            'boundaries/elements': <%= json(scoped.elements.map((element) => ({ type: element.name, pattern: element.paths.map((path) => `${prefix}${path}`), mode: 'full' }))) %>,
-            'boundaries/ignore': ['**/*.test.*', '**/*.spec.*'],
-        },
-        rules: {
-            'boundaries/element-types': ['error', { default: 'disallow', rules: <%= json(scoped.edges_allowed.map((entry) => ({ from: entry.from, allow: entry.to }))) %> }],
-        },
-    },
-<% } %>];
+const boundaryConfigs = <%= json(config.boundaryBlocks) %>;
 
-const scopeRules = <%= json(scopeRules) %>;
+const scopeRules = <%= json(config.scopeBlocks) %>;
 
 const policyRules = <%= json(eslintPolicy) %>.flatMap(({ scope, includes, excludes, rules }) => {
     const included = includes.map((source) => new RegExp(source, 's'));
@@ -389,7 +310,7 @@ const policyRules = <%= json(eslintPolicy) %>.flatMap(({ scope, includes, exclud
 });
 
 const defaults = [
-    { ignores: <%= json(ignoredPaths) %> },
+    { ignores: <%= json(config.ignoredPaths) %> },
     { files: CODE, ...eslint.configs.recommended },
     { files: CODE, ...sonarjs.configs.recommended },
     { files: CODE, ...unicorn.configs.recommended },
@@ -398,7 +319,7 @@ const defaults = [
         plugins: { gspot, 'import-x': importX, jsdoc, n: nodePlugin, regexp, security, boundaries, '@eslint-community/eslint-comments': eslintComments },
         linterOptions: { reportUnusedDisableDirectives: 'error' },
         languageOptions: { ecmaVersion: 'latest', sourceType: 'module', globals: { ...globals.node, ...globals.es2024 } },
-        settings: { node: { version: <%= json(nodeVersion) %> }, gspot: { root } },
+        settings: { node: { version: NODE_VERSION }, gspot: { root } },
         rules: { ...sizeRules, ...coreRules, ...gspotRules, ...sonarRules, ...unicornRules, ...securityRules, ...nodeRules, ...jsdocRules, ...regexpRules, ...importRules, ...commentRules },
     },
     { files: JAVASCRIPT, rules: { 'no-unused-vars': ['error', { args: 'all', argsIgnorePattern: '^_', varsIgnorePattern: '^_', destructuredArrayIgnorePattern: '^_' }] } },
@@ -425,22 +346,29 @@ const defaults = [
             'jsdoc/require-returns-description': 'off',
             'n/no-unpublished-import': 'off',
             'n/no-unpublished-require': 'off',
-<% if (isAll) { %>            'gspot/no-harness-barrel-imports': ['error', { barrels: <%= json(Object.keys(aliases).filter((prefix) => /tests?\//.test(aliases[prefix]) || prefix.includes('tests')).map((prefix) => prefix.replace(/\/$/, ''))) %> }],
-<% } %>        },
+            ...<%= json(config.testRules) %>,
+        },
     },
-<% if (restricted.length > 0) { %>    { files: CODE, rules: { 'no-restricted-imports': ['error', { paths: <%= json(restricted) %> }] } },
-<% } %>    { files: ['**/package.json'], ...packageJson.configs.recommended },
+    ...(RESTRICTED.length === 0 ? [] : [{ files: CODE, rules: { 'no-restricted-imports': ['error', { paths: RESTRICTED }] } }]),
+    { files: ['**/package.json'], ...packageJson.configs.recommended },
     { files: CODE, ...prettierConfig },
-    { files: ['**/*.{js,mjs,cjs,jsx}'], rules: { 'max-params': ['error', <%= limitOf('function_parameters', 'javascript') %>], 'gspot/no-trivial-functions': ['error', { maxStatements: <%= limitOf('trivial_statements', 'javascript') %> }], 'gspot/no-trivial-files': ['error', { maxStatements: <%= limitOf('trivial_statements', 'javascript') %> }] } },
+    {
+        files: JAVASCRIPT,
+        rules: {
+            'max-params': ['error', JAVASCRIPT_LIMITS.parameters],
+            'gspot/no-trivial-functions': ['error', { maxStatements: JAVASCRIPT_LIMITS.trivialStatements }],
+            'gspot/no-trivial-files': ['error', { maxStatements: JAVASCRIPT_LIMITS.trivialStatements }],
+        },
+    },
 ];
 const ruleLevels = <%~ json(eslintRuleLevels) %>;
 const selectedDefaults = defaults.map((entry) => entry.rules === undefined ? entry : {
     ...entry,
     rules: Object.fromEntries(Object.entries(entry.rules).map(([name, value]) =>
-        [name, !<%= isAll %> && ruleLevels[name] === 'all' ? 'off' : value])),
+        [name, !IS_ALL && ruleLevels[name] === 'all' ? 'off' : value])),
 });
 export default [...selectedDefaults,
-<% const extras = extra('eslint'); if (extras) { const entries = Object.fromEntries(Object.entries(extras).filter(([key]) => key !== 'reason')); if (Object.keys(entries).length > 0) { %>    // [tools.eslint.extra]: <%= json(extras.reason, 0) %>
-    <%= json(entries) %>,
-<% } } %>
+<% if (config.extra !== undefined) { %>    // [tools.eslint.extra]: <%= json(config.extra.reason, 0) %>
+    <%= json(config.extra.entries) %>,
+<% } %>
 ...policyRules];

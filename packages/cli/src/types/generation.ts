@@ -18,6 +18,8 @@ export type WorkflowShape = {
     isMise: boolean;
 };
 export type TemplateInputs = {
+    /** The parts of the ESLint configuration the policy decides, computed when that template renders. */
+    eslint: () => EslintConfiguration;
     markdownlintRules: Record<string, unknown>;
     targetPath?: string;
     scopeIgnorePatterns: (patterns: string[], scope: string) => string[];
@@ -115,6 +117,35 @@ export type NativeOverride<Options> = {
     options: Options;
 };
 export type EslintRuleBlock = PathExpressions & { scope: string; rules: Record<string, unknown> };
+/** One block of the generated ESLint configuration: the files it covers and what it sets for them. */
+export type EslintBlock = {
+    files: (string | string[])[];
+    ignores?: string[];
+    settings?: Record<string, unknown>;
+    rules?: Record<string, unknown>;
+};
+/** What the ESLint configuration reads: the repository root, the policy, every scope, and the scope being rendered. */
+export type EslintContext = { root: string; policy: Policy; scopes: ScopeSelection[]; selection: ScopeSelection };
+/** The parts of the ESLint configuration that the policy and the rendered scope decide. */
+export type EslintConfiguration = {
+    aliases: Record<string, string>;
+    testFiles: string[];
+    scriptFiles: string[];
+    nodeVersion: string;
+    limits: Record<string, number | undefined>;
+    javascriptLimits: Record<string, number | undefined>;
+    gspotRules: Record<string, unknown>;
+    importLayoutRules: Record<string, unknown>;
+    commentLevel: 'error' | 'off';
+    testRules: Record<string, unknown>;
+    importStyleBlocks: EslintBlock[];
+    runtimes: { files: string[]; runtime: string }[];
+    boundaryBlocks: EslintBlock[];
+    scopeBlocks: EslintBlock[];
+    ignoredPaths: string[];
+    restrictedImports: unknown[];
+    extra: { reason: unknown; entries: Record<string, unknown> } | undefined;
+};
 /** A fragment selector with the allowed setting replaced by the paths it holds. */
 export type ResolvedSelector = Pick<FragmentSelector, 'selector' | 'message' | 'files'> & { except?: string[] };
 /** One no-restricted-syntax rule: its file set, or every code file when absent, and the selectors it holds. */

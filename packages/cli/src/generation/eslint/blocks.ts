@@ -1,3 +1,5 @@
+// The rule blocks of the generated ESLint configuration: policy overrides, structural ceilings, manifest exclusions,
+// and the selector groups of framework fragments.
 import { policyValue } from '#cli/policy/settings.ts';
 import { pathExpressions } from '#cli/repository/paths.ts';
 import type { Policy, EslintSettings, ScopeSelection } from '#cli/types/policy/policy.ts';

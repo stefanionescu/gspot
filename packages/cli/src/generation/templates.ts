@@ -10,6 +10,7 @@ import { policyValue, roleFolders } from '#cli/policy/settings.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
 import { scopeIgnorePatterns } from '#cli/generation/ignore-patterns.ts';
 import { styleNames, PROSE_FORMATS } from '#cli/generation/vale-styles.ts';
+import { eslintConfiguration } from '#cli/generation/eslint/configuration.ts';
 import { ALL_COMPILER_OPTIONS } from '#cli/checks/typescript/compiler-options.ts';
 import { aliasesFor, javascriptConfiguration } from '#cli/generation/javascript.ts';
 import { headerFor, headerLines, jsonHeaderAdded } from '#cli/generation/headers.ts';
@@ -17,7 +18,7 @@ import type { Policy, MergedView, ScopeSelection } from '#cli/types/policy/polic
 import { JSON_EXTENSIONS, LEADING_NEWLINES, PACKAGE_JSON_INDENT } from '#cli/config/generation.ts';
 import { ESLINT_RULE_LEVELS, RECOMMENDED_COMPILER_OPTIONS } from '#cli/config/checks/typescript.ts';
 import { editorconfigOverrides, prettierConfiguration } from '#cli/generation/formatting/settings.ts';
-import { eslintRuleBlocks, manifestRuleBlocks, structuralRuleBlocks } from '#cli/generation/eslint.ts';
+import { eslintRuleBlocks, manifestRuleBlocks, structuralRuleBlocks } from '#cli/generation/eslint/blocks.ts';
 
 function prefixed(path: string, pattern: string): string {
     if (path === '') return pattern;
@@ -139,6 +140,7 @@ export function templateInputs(
             ...manifestRuleBlocks(scopes, policy),
             ...eslintRuleBlocks(policy),
         ],
+        eslint: () => eslintConfiguration({ root, policy, scopes, selection }),
         eslintRuleLevels: ESLINT_RULE_LEVELS,
         isAll: policy.level === 'all',
         typescriptOptions: policy.level === 'all' ? ALL_COMPILER_OPTIONS : RECOMMENDED_COMPILER_OPTIONS,

@@ -2,8 +2,8 @@
 
 import { eta } from '#cli/generation/registry.ts';
 import { readAsset } from '#cli/platform/assets.ts';
-import { selectorGroups } from '#cli/generation/eslint.ts';
 import type { ScopeSelection } from '#cli/types/policy/policy.ts';
+import { selectorGroups } from '#cli/generation/eslint/blocks.ts';
 import type { Manifest, FragmentSelector, ConfigurationTarget } from '#cli/types/kits.ts';
 import type { Fragment, TemplateInputs, ResolvedSelector } from '#cli/types/generation.ts';
 
