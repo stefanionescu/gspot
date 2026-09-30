@@ -33,7 +33,6 @@ export const LONGER_THAN = /longer than \d+/u;
 export const UNREPRESENTABLE_SELECTOR = /[\r\n]|[!+?*@]\(/u;
 export const LEADING_GLOBSTARS = /^(?:\*\*\/)+/u;
 export const GLOB_GROUPING = /[{}()]/u;
-export const PATH = '.pre-commit-config.yaml';
 export const GENERATED_JSON_KEY = '_gspot';
 export const TARGET_PLACEHOLDER = /\{target(?:_json)?\}/gu;
 export const HOOK_HEADER = '# Written by gspot. Run `gspot uninstall` to remove.';

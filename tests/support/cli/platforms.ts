@@ -1,13 +1,11 @@
-// What this machine can and cannot do: which pinned tools ship for it, the modes it keeps, and how it runs a launcher.
-import { createFileTree } from 'testdirs';
+// What this machine can and cannot do: which pinned tools ship for it, the modes it keeps, and the modules it links.
 import { join, dirname } from 'node:path';
 import { toolPin } from '#cli/tools/inspect.ts';
-import { toPosix } from '#cli/platform/paths.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
 import { missingBuild } from '#cli/execution/planning/skips.ts';
 import { PLATFORM_NAMES } from '#cli/config/execution/execution.ts';
 import { PLANTED_MODULES, INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
-import { chmodSync, mkdirSync, existsSync, readdirSync, symlinkSync, realpathSync } from 'node:fs';
+import { mkdirSync, existsSync, readdirSync, symlinkSync, realpathSync } from 'node:fs';
 
 /** Whether the platform has POSIX shells, links, and modes; Windows does not. */
 export const onPosix = process.platform !== 'win32';
@@ -57,29 +55,6 @@ export function keptDirectoryMode(mode: number): number {
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Every Python fixture spells the environment layout through this one owner.
 export function venvExecutable(environment: string, name: string): string {
     return process.platform === 'win32' ? join(environment, 'Scripts', `${name}.exe`) : join(environment, 'bin', name);
-}
-
-/**
- * Plants a launcher that records what a hook or runner hands it. A POSIX host runs the script through its shebang.
- * Windows cannot: a hook's shell spells the script path the POSIX way, which Bun does not read. There the script
- * lives beside a shell wrapper that converts the path, and beside a command file for a runner or a direct spawn.
- * @param root the directory the path is relative to
- * @param path the launcher path a hook finds on PATH, such as bin/gspot
- * @param script the Bun script body that runs with the launcher's arguments
- */
-export async function plantLauncher(root: string, path: string, script: string): Promise<void> {
-    if (process.platform !== 'win32') {
-        await createFileTree(root, { [path]: `#!${process.execPath}\n${script}` });
-        chmodSync(join(root, path), 0o755);
-        return;
-    }
-    const bun = toPosix(process.execPath);
-    const name = path.slice(path.lastIndexOf('/') + 1);
-    await createFileTree(root, {
-        [`${path}.mjs`]: script,
-        [path]: `#!/bin/sh\nscript=$(cygpath -w "$0" 2>/dev/null || printf '%s' "$0")\nexec "${bun}" "$script.mjs" "$@"\n`,
-        [`${path}.cmd`]: `@"${process.execPath}" "%~dp0${name}.mjs" %*\r\n`,
-    });
 }
 
 /**

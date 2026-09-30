@@ -16,8 +16,6 @@ export const WRITABLE_FILE = 0o666;
 export const PERMISSION_BITS = 0o777;
 /** The permission bits together with the setuid, setgid, and sticky bits. */
 export const MODE_BITS = 0o7777;
-/** The execute bits of the owner, the group, and others. */
-export const EXECUTE_BITS = 0o111;
 /** The owner's write bit. */
 export const OWNER_WRITE_BIT = 0o200;
 export const DEVICE_NAME = /^(?:con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/iu;
