@@ -11,7 +11,7 @@ import { pathMatcher } from '#cli/repository/paths.ts';
 import { isLintOnlyManifest } from '#cli/repository/scopes.ts';
 import { readGitSetting } from '#cli/repository/git-config.ts';
 import { hooksDirectory } from '#cli/repository/hook-location.ts';
-import { kitSection } from '#cli/repository/configuration/configuration-section.ts';
+import { kitSection } from '#cli/repository/configuration-section.ts';
 import type { Fields, TrackedFile, ExistingTool, ExistingTooling } from '#cli/types/repository/repository.ts';
 import { AGENT_FILE_NAMES, LINT_FOLDER_NAMES, RULES_DIRECTORY_NAMES } from '#cli/config/repository/patterns.ts';
 

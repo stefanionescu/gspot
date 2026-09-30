@@ -218,7 +218,7 @@ names = ["FunctionParameter"]
 reason = "The libpg-query AST tag for a function parameter."
 
 [[naming.contract_properties]]
-file = "packages/cli/src/repository/configuration/vale-rules.ts"
+file = "packages/cli/src/lifecycle/rules/vale.ts"
 names = ["BasedOnStyles"]
 reason = "The Vale setting the rule preview reads."
 
@@ -353,7 +353,7 @@ entry = [
     "docs/src/route-metadata.ts",
     "tests/support/cli/swiftformat.ts",
     "tests/support/registry/install.ts",
-    "tests/support/release/run.ts",
+    "tests/support/package/run.ts",
 ]
 
 [[tools.knip.ignore_dependencies]]
@@ -388,7 +388,12 @@ paths = [
 reason = "Each directory owns tests of that named language kit, parser, or tool integration; the files are TypeScript, not buckets grouped by implementation language."
 
 [[structure.folder_name_allowed]]
-paths = ["packages/cli/src/checks/python", "packages/cli/src/checks/swift", "packages/cli/src/checks/typescript"]
+paths = [
+    "packages/cli/src/checks/bash",
+    "packages/cli/src/checks/python",
+    "packages/cli/src/checks/swift",
+    "packages/cli/src/checks/typescript",
+]
 reason = "Language names identify the implemented check and parser domains in the architecture ownership layout."
 
 [[structure.single_file_folder_allowed]]

@@ -9,7 +9,7 @@ import packageManifest from '#package' with { type: 'json' };
 import { printCommand } from '#cli/commands/print-result.ts';
 import { pinnedVersion } from '#cli/lifecycle/version-pin.ts';
 import type { Session } from '#cli/types/execution/execution.ts';
-import { eslintRuleDiff } from '#cli/lifecycle/eslint-rule-diff.ts';
+import { eslintRuleDiff } from '#cli/lifecycle/rules/eslint-diff.ts';
 import type { DriftEntry, ApplyReport } from '#cli/types/lifecycle/lifecycle.ts';
 import type { ApplyOptions, CommandResult, ApplyPreviewJson } from '#cli/types/commands.ts';
 

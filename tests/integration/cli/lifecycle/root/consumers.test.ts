@@ -8,8 +8,8 @@ import { onPosix } from '#tests/support/cli/platforms.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { rejection } from '#tests/support/expectations.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
+import { astGrepMatches } from '#cli/checks/bash/ast-grep.ts';
 import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
-import { astGrepMatches } from '#cli/checks/structure/ast-grep.ts';
 import { chmodSync, existsSync, unlinkSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
 
 describe.if(onPosix)('files discovery', () => {

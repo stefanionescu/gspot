@@ -10,9 +10,9 @@ import { onPosix } from '#tests/support/cli/platforms.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { scratchCopy } from '#cli/execution/files/workspace.ts';
+import { scriptIndex } from '#cli/checks/bash/cross-file-index.ts';
 import { planRun, ownedInputs } from '#cli/execution/planning/plan.ts';
 import { engineInput, runEngineCheck } from '#cli/execution/engines.ts';
-import { scriptIndex } from '#cli/checks/structure/cross-file-index.ts';
 
 test.each([
     {

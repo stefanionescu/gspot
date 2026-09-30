@@ -131,7 +131,7 @@ jobs:
               run: mise run --skip-tools doctor
             - name: Test the npm package through a local registry
               if: matrix.os == 'ubuntu-24.04' && inputs.tests == ''
-              run: mise run --skip-tools test:release
+              run: mise run --skip-tools test:package
             - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
               if: always() && !cancelled() && steps.manual.outcome != 'skipped'
               with:

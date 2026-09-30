@@ -86,7 +86,7 @@ setup and test tasks run it for you. Run it before you run `bun test` directly.
 ## Test the packages
 
 ```shell
-mise run test:release
+mise run test:package
 ```
 
 This task builds `gspot` and `eslint-plugin-gspot`, and publishes both to a local registry.
@@ -94,7 +94,7 @@ Then it installs them into new projects and runs real findings and fixes under N
 
 ## Release
 
-The release workflow runs the full CI, builds both packages, and runs `test:release`. Then it
+The release workflow runs the full CI, builds both packages, and runs `test:package`. Then it
 publishes `eslint-plugin-gspot` and `gspot` to npm with the `NPM_TOKEN` secret, and creates a
 GitHub release with notes. The Git tag must match the version in `packages/cli/package.json`.
 

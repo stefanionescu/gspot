@@ -114,11 +114,11 @@ description = "Run behavioral acceptance tests with the local plugin in an isola
 dir = "{{config_root}}/tests"
 run = "bun support/acceptance.ts"
 
-[tasks."test:release"]
+[tasks."test:package"]
 depends = ["prepare:grammar", "build:plugin"]
 description = "Build and publish both packages to an isolated registry, then test consumers that install them."
 dir = "{{config_root}}/tests"
-run = "bun support/release/run.ts"
+run = "bun support/package/run.ts"
 
 [tasks."check:types"]
 description = "Check workspace and documentation TypeScript types."

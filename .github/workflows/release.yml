@@ -40,7 +40,7 @@ jobs:
               env:
                   TAG: ${{ github.ref_name }}
             - run: mise run --skip-tools build
-            - run: mise run --skip-tools test:release
+            - run: mise run --skip-tools test:package
             - name: Publish the packages to npm
               shell: bash
               run: |

@@ -1,5 +1,5 @@
 import { test, expect } from 'bun:test';
-import { sqlfluffRules, sqlfluffConfiguration } from '#cli/repository/configuration/sqlfluff.ts';
+import { sqlfluffRules, sqlfluffConfiguration } from '#cli/lifecycle/rules/sqlfluff.ts';
 
 test.each([
     { input: '12', expected: 12 },

@@ -49,7 +49,7 @@ with it, in the same change; nothing is relocated, aliased, or wrapped in a new 
 | `packages/cli/src/checks/<family>/` | the analyses of one check family, each exporting one `analyses` registry that the dispatch module spreads             |
 | `packages/cli/src/execution/`       | planning, scheduling, cancellation, the tool runner, output parsing, the cache, and reports                           |
 | `packages/cli/src/generation/`      | template rendering, managed blocks, hooks, runners, workflows; `outputs.ts` orchestrates                              |
-| `packages/cli/src/lifecycle/`       | ownership, recovery, the hooks path, and apply and uninstall publication                                              |
+| `packages/cli/src/lifecycle/`       | ownership, recovery, the hooks path, rule readers, and apply and uninstall publication                                |
 | `packages/cli/src/policy/`          | `gspot.toml` schema, reading, validation, merge, writing, and profiles                                                |
 | `packages/cli/src/kits/`            | manifest schema, loading, and selection; the assets stay under `packages/cli/kits/`                                   |
 | `packages/cli/src/repository/`      | discovery, file classification, existing tooling, revisions, and snapshots                                            |
@@ -86,7 +86,7 @@ Tests use the native Bun test configuration in `tests/bunfig.toml`, run from `te
 every test under its strict settings; `tests/tsconfig.json` extends it so knip resolves the
 workspace's aliases. All tests belong under `tests/`: unit CLI and plugin suites, integration
 CLI, docs, and repository suites, tool integration under `integration/tools/`, source journeys
-under `acceptance/source/`, and release consumers under `acceptance/release/`. `mise run test`
+under `acceptance/source/`, and package consumers under `acceptance/package/`. `mise run test`
 runs the deterministic unit and integration suites; native tools, downloads, source acceptance,
 and installed release consumers have separate explicit tasks. No Vitest, Jest, or custom
 coordinator runs this repository's tests.
@@ -161,7 +161,7 @@ CommonJS, versioned with `gspot`.
 
 The version has one source, `version` in `packages/cli/package.json`: the CLI reads it through
 the package manifest import, and the plugin exposes it in `meta.version`. The release workflow
-fails when the tag differs. It runs the `test:release` task before publishing: both packages
+fails when the tag differs. It runs the `test:package` task before publishing: both packages
 are published to a local registry, installed into new projects, and run under Node.
 
 | Step           | Tool                                                                                                              |

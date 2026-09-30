@@ -1,5 +1,5 @@
 import { test, expect } from 'bun:test';
-import { ruleDiff } from '#cli/lifecycle/rule-diff.ts';
+import { ruleDiff } from '#cli/lifecycle/rules/diff.ts';
 import type { GeneratedFile } from '#cli/types/generation.ts';
 
 test('Gixy previews retain final root selectors and keep plugin options outside the rule lists', () => {

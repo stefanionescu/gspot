@@ -11,7 +11,7 @@
         "docs/src/route-metadata.ts",
         "tests/support/cli/swiftformat.ts",
         "tests/support/registry/install.ts",
-        "tests/support/release/run.ts",
+        "tests/support/package/run.ts",
         "src/main.{ts,js}",
         "src/index.{ts,js}",
         "src/server.{ts,js}",
@@ -143,7 +143,7 @@
                 "docs/src/route-metadata.ts",
                 "tests/support/cli/swiftformat.ts",
                 "tests/support/registry/install.ts",
-                "tests/support/release/run.ts",
+                "tests/support/package/run.ts",
                 "src/main.{ts,js}",
                 "src/index.{ts,js}",
                 "src/server.{ts,js}",
@@ -213,7 +213,7 @@
                 "**/build.ts",
                 "support/cli/swiftformat.ts",
                 "support/registry/install.ts",
-                "support/release/run.ts"
+                "support/package/run.ts"
             ],
             "project": ["**/*.{ts,tsx,mts,cts,js,mjs,cjs}"],
             "ignoreDependencies": ["^.+$"]

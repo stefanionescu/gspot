@@ -1,7 +1,7 @@
 // apply --dry-run: render in memory, read recorded generated files, compare bytes, print the diff.
 import { createTwoFilesPatch } from 'diff';
 import { openRoot } from '#cli/platform/filesystem.ts';
-import { ruleDiff } from '#cli/lifecycle/rule-diff.ts';
+import { ruleDiff } from '#cli/lifecycle/rules/diff.ts';
 import type { Generated } from '#cli/types/generation.ts';
 import type { Policy } from '#cli/types/policy/policy.ts';
 import { CACHE_DIRECTORY } from '#cli/config/platform.ts';
