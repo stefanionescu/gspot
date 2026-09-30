@@ -29,6 +29,9 @@
         "guides",
         "grammars"
     ],
+    "sideEffects": [
+        "./dist/gspot.js"
+    ],
     "engines": {
         "node": ">=22"
     },

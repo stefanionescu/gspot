@@ -10,6 +10,8 @@
         },
     },
     {
-        files: ['**/server/**', '**/*.server.*', '**/features/*/server/**', '**/lib/**/server.*'],
+        files: ['**/server/**', '**/*.server.*', '**/features/*/server/**', '**/lib/**/server.*'].flatMap((place) =>
+            CODE.map((pattern) => [place, pattern]),
+        ),
         rules: { 'gspot/require-server-only': 'error' },
     },

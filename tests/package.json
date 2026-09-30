@@ -4,9 +4,9 @@
     "description": "The test suites and the packages the planted repositories install.",
     "type": "module",
     "dependencies": {
+        "eslint-plugin-gspot": "workspace:*",
         "gspot": "workspace:*",
-        "gspot-docs": "workspace:*",
-        "eslint-plugin-gspot": "workspace:*"
+        "gspot-docs": "workspace:*"
     },
     "devDependencies": {
         "@nestjs/common": "11.2.3",

@@ -25,6 +25,9 @@ const TYPESCRIPT = [...TYPESCRIPT_SOURCE, ...FRAGMENT_FILES];
 const JAVASCRIPT = ['**/*.{js,mjs,cjs,jsx}'];
 const TESTS = <%= json(config.testFiles) %>;
 const SCRIPTS = <%= json(config.scriptFiles) %>;
+// The code files among the tests and scripts: a package.json under a test folder takes no code rule.
+const TEST_CODE = TESTS.flatMap((test) => CODE.map((pattern) => [test, pattern]));
+const SCRIPT_CODE = SCRIPTS.flatMap((script) => CODE.map((pattern) => [script, pattern]));
 const IS_ALL = <%= isAll %>;
 const NODE_VERSION = <%= json(config.nodeVersion) %>;
 const RESTRICTED = <%= json(config.restrictedImports) %>;
@@ -331,12 +334,12 @@ const defaults = [
     ...librarySelectorBlocks,
     { files: CODE, ignores: [...TESTS, ...SCRIPTS], rules: { 'no-console': 'error' } },
     {
-        files: SCRIPTS,
+        files: SCRIPT_CODE,
         rules: { 'n/no-process-exit': 'off', 'no-unused-vars': ['error', { args: 'all', argsIgnorePattern: '^_', varsIgnorePattern: '^_' }] },
     },
     // A test needs no documentation and imports development dependencies.
     {
-        files: TESTS,
+        files: TEST_CODE,
         rules: {
             'jsdoc/require-jsdoc': 'off',
             'jsdoc/require-param': 'off',

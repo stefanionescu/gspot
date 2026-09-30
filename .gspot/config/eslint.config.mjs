@@ -39,6 +39,9 @@ const SCRIPTS = [
     "packages/eslint-plugin/build.ts",
     "docs/src/content/reference/**"
 ];
+// The code files among the tests and scripts: a package.json under a test folder takes no code rule.
+const TEST_CODE = TESTS.flatMap((test) => CODE.map((pattern) => [test, pattern]));
+const SCRIPT_CODE = SCRIPTS.flatMap((script) => CODE.map((pattern) => [script, pattern]));
 const IS_ALL = true;
 const NODE_VERSION = ">=24.2.0";
 const RESTRICTED = [];
@@ -910,7 +913,7 @@ const defaults = [
         },
     },
     {
-        files: ["**/*"],
+        files: CODE.map((pattern) => [pattern, "**/*"]),
         rules: { 'gspot/tests-directory-contents': ['error', { harnessDirectory: "tests/support" }] },
     },
 
@@ -946,7 +949,7 @@ const defaults = [
         },
     },
     {
-        files: ["docs/**/*"],
+        files: CODE.map((pattern) => [pattern, "docs/**/*"]),
         rules: { 'gspot/tests-directory-contents': ['error', { harnessDirectory: "docs/tests/support" }] },
     },
 
@@ -982,7 +985,7 @@ const defaults = [
         },
     },
     {
-        files: ["packages/cli/**/*"],
+        files: CODE.map((pattern) => [pattern, "packages/cli/**/*"]),
         rules: { 'gspot/tests-directory-contents': ['error', { harnessDirectory: "packages/cli/tests/support" }] },
     },
 
@@ -1018,7 +1021,7 @@ const defaults = [
         },
     },
     {
-        files: ["packages/eslint-plugin/**/*"],
+        files: CODE.map((pattern) => [pattern, "packages/eslint-plugin/**/*"]),
         rules: { 'gspot/tests-directory-contents': ['error', { harnessDirectory: "packages/eslint-plugin/tests/support" }] },
     },
 
@@ -1056,7 +1059,7 @@ const defaults = [
         },
     },
     {
-        files: ["**/*"],
+        files: CODE.map((pattern) => [pattern, "**/*"]),
         rules: { 'gspot/tests-directory-contents': ['error', { harnessDirectory: "tests/support" }] },
     },
 
@@ -1092,7 +1095,7 @@ const defaults = [
         },
     },
     {
-        files: ["docs/**/*"],
+        files: CODE.map((pattern) => [pattern, "docs/**/*"]),
         rules: { 'gspot/tests-directory-contents': ['error', { harnessDirectory: "docs/tests/support" }] },
     },
 
@@ -1128,7 +1131,7 @@ const defaults = [
         },
     },
     {
-        files: ["packages/cli/**/*"],
+        files: CODE.map((pattern) => [pattern, "packages/cli/**/*"]),
         rules: { 'gspot/tests-directory-contents': ['error', { harnessDirectory: "packages/cli/tests/support" }] },
     },
 
@@ -1164,7 +1167,7 @@ const defaults = [
         },
     },
     {
-        files: ["packages/eslint-plugin/**/*"],
+        files: CODE.map((pattern) => [pattern, "packages/eslint-plugin/**/*"]),
         rules: { 'gspot/tests-directory-contents': ['error', { harnessDirectory: "packages/eslint-plugin/tests/support" }] },
     },
 
@@ -1202,7 +1205,7 @@ const defaults = [
         },
     },
     {
-        files: ["**/*"],
+        files: CODE.map((pattern) => [pattern, "**/*"]),
         rules: { 'gspot/tests-directory-contents': ['error', { harnessDirectory: "tests/support" }] },
     },
 
@@ -1238,7 +1241,7 @@ const defaults = [
         },
     },
     {
-        files: ["docs/**/*"],
+        files: CODE.map((pattern) => [pattern, "docs/**/*"]),
         rules: { 'gspot/tests-directory-contents': ['error', { harnessDirectory: "docs/tests/support" }] },
     },
 
@@ -1274,7 +1277,7 @@ const defaults = [
         },
     },
     {
-        files: ["packages/cli/**/*"],
+        files: CODE.map((pattern) => [pattern, "packages/cli/**/*"]),
         rules: { 'gspot/tests-directory-contents': ['error', { harnessDirectory: "packages/cli/tests/support" }] },
     },
 
@@ -1310,7 +1313,7 @@ const defaults = [
         },
     },
     {
-        files: ["packages/eslint-plugin/**/*"],
+        files: CODE.map((pattern) => [pattern, "packages/eslint-plugin/**/*"]),
         rules: { 'gspot/tests-directory-contents': ['error', { harnessDirectory: "packages/eslint-plugin/tests/support" }] },
     },
 
@@ -1348,7 +1351,7 @@ const defaults = [
         },
     },
     {
-        files: ["**/*"],
+        files: CODE.map((pattern) => [pattern, "**/*"]),
         rules: { 'gspot/tests-directory-contents': ['error', { harnessDirectory: "tests/support" }] },
     },
 
@@ -1384,7 +1387,7 @@ const defaults = [
         },
     },
     {
-        files: ["docs/**/*"],
+        files: CODE.map((pattern) => [pattern, "docs/**/*"]),
         rules: { 'gspot/tests-directory-contents': ['error', { harnessDirectory: "docs/tests/support" }] },
     },
 
@@ -1420,7 +1423,7 @@ const defaults = [
         },
     },
     {
-        files: ["packages/cli/**/*"],
+        files: CODE.map((pattern) => [pattern, "packages/cli/**/*"]),
         rules: { 'gspot/tests-directory-contents': ['error', { harnessDirectory: "packages/cli/tests/support" }] },
     },
 
@@ -1456,7 +1459,7 @@ const defaults = [
         },
     },
     {
-        files: ["packages/eslint-plugin/**/*"],
+        files: CODE.map((pattern) => [pattern, "packages/eslint-plugin/**/*"]),
         rules: { 'gspot/tests-directory-contents': ['error', { harnessDirectory: "packages/eslint-plugin/tests/support" }] },
     },
 
@@ -1505,7 +1508,7 @@ const defaults = [
     },
     // A test asserts on literal values, and it asserts presence with a non-null assertion that fails loudly; the
     // optional chain the rule suggests would let a missing value pass. Every other rule holds in tests.
-    { files: TESTS, rules: { '@typescript-eslint/no-magic-numbers': 'off', '@typescript-eslint/no-non-null-assertion': 'off' } },
+    { files: TEST_CODE, rules: { '@typescript-eslint/no-magic-numbers': 'off', '@typescript-eslint/no-non-null-assertion': 'off' } },
 ].map((entry) => ({ ...entry, files: (entry.files ?? CODE).map((files) => [...(Array.isArray(files) ? files : [files]), "**/*"]), ignores: [...(entry.ignores ?? []), ...["packages/cli/**","packages/eslint-plugin/**","docs/**"]] })),
 ...[    ...tseslint.configs.strictTypeChecked.map((entry) => ({ ...entry, files: entry.languageOptions?.parser ? TYPESCRIPT_SOURCE : TYPESCRIPT })),
     {
@@ -1551,7 +1554,7 @@ const defaults = [
     },
     // A test asserts on literal values, and it asserts presence with a non-null assertion that fails loudly; the
     // optional chain the rule suggests would let a missing value pass. Every other rule holds in tests.
-    { files: TESTS, rules: { '@typescript-eslint/no-magic-numbers': 'off', '@typescript-eslint/no-non-null-assertion': 'off' } },
+    { files: TEST_CODE, rules: { '@typescript-eslint/no-magic-numbers': 'off', '@typescript-eslint/no-non-null-assertion': 'off' } },
 ].map((entry) => ({ ...entry, files: (entry.files ?? CODE).map((files) => [...(Array.isArray(files) ? files : [files]), "packages/cli/**/*"]), ignores: [...(entry.ignores ?? []), ...[]] })),
 ...[    ...tseslint.configs.strictTypeChecked.map((entry) => ({ ...entry, files: entry.languageOptions?.parser ? TYPESCRIPT_SOURCE : TYPESCRIPT })),
     {
@@ -1597,7 +1600,7 @@ const defaults = [
     },
     // A test asserts on literal values, and it asserts presence with a non-null assertion that fails loudly; the
     // optional chain the rule suggests would let a missing value pass. Every other rule holds in tests.
-    { files: TESTS, rules: { '@typescript-eslint/no-magic-numbers': 'off', '@typescript-eslint/no-non-null-assertion': 'off' } },
+    { files: TEST_CODE, rules: { '@typescript-eslint/no-magic-numbers': 'off', '@typescript-eslint/no-non-null-assertion': 'off' } },
 ].map((entry) => ({ ...entry, files: (entry.files ?? CODE).map((files) => [...(Array.isArray(files) ? files : [files]), "packages/eslint-plugin/**/*"]), ignores: [...(entry.ignores ?? []), ...[]] })),
 ...[    ...tseslint.configs.strictTypeChecked.map((entry) => ({ ...entry, files: entry.languageOptions?.parser ? TYPESCRIPT_SOURCE : TYPESCRIPT })),
     {
@@ -1643,17 +1646,17 @@ const defaults = [
     },
     // A test asserts on literal values, and it asserts presence with a non-null assertion that fails loudly; the
     // optional chain the rule suggests would let a missing value pass. Every other rule holds in tests.
-    { files: TESTS, rules: { '@typescript-eslint/no-magic-numbers': 'off', '@typescript-eslint/no-non-null-assertion': 'off' } },
+    { files: TEST_CODE, rules: { '@typescript-eslint/no-magic-numbers': 'off', '@typescript-eslint/no-non-null-assertion': 'off' } },
 ].map((entry) => ({ ...entry, files: (entry.files ?? CODE).map((files) => [...(Array.isArray(files) ? files : [files]), "docs/**/*"]), ignores: [...(entry.ignores ?? []), ...[]] })),
     ...librarySelectorBlocks,
     { files: CODE, ignores: [...TESTS, ...SCRIPTS], rules: { 'no-console': 'error' } },
     {
-        files: SCRIPTS,
+        files: SCRIPT_CODE,
         rules: { 'n/no-process-exit': 'off', 'no-unused-vars': ['error', { args: 'all', argsIgnorePattern: '^_', varsIgnorePattern: '^_' }] },
     },
     // A test needs no documentation and imports development dependencies.
     {
-        files: TESTS,
+        files: TEST_CODE,
         rules: {
             'jsdoc/require-jsdoc': 'off',
             'jsdoc/require-param': 'off',

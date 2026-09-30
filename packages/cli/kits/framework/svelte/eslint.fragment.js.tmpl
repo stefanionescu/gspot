@@ -19,4 +19,4 @@
 <% } %>        },
     },
     // The Testing Library rules read test files, and their debugging rule ships as a warning.
-    { files: TESTS, plugins: { 'testing-library': testingLibrary }, rules: errorLevels(testingLibrary.configs['flat/svelte'].rules) },
+    { files: TEST_CODE, plugins: { 'testing-library': testingLibrary }, rules: errorLevels(testingLibrary.configs['flat/svelte'].rules) },

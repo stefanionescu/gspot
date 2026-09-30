@@ -1,5 +1,5 @@
     {
-        files: TESTS,
+        files: TEST_CODE,
         plugins: { vitest },
         rules: {
             ...vitest.configs.recommended.rules,
@@ -16,7 +16,7 @@
         },
     },
 <% if (isAll) { for (const selected of kitScopes('vitest')) { %>    {
-        files: [<%= json(selected.path === '' ? '**/*' : `${selected.path}/**/*`) %>],
+        files: CODE.map((pattern) => [pattern, <%= json(selected.path === '' ? '**/*' : `${selected.path}/**/*`) %>]),
         rules: { 'gspot/tests-directory-contents': ['error', { harnessDirectory: <%= json([selected.path, selected.settings['tools.vitest.harness_directory']].filter(Boolean).join('/')) %> }] },
     },
 <% } } %>
