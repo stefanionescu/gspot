@@ -9,21 +9,26 @@ import { RUNTIME_WASM, GRAMMAR_FILES, ROOT_SEARCH_DEPTH } from '#cli/config/plat
 
 const state: { root: string | undefined } = { root: undefined };
 
-// The package folder: the nearest folder above the running code with a package.json and the kits.
-function packageRoot(): string {
-    if (state.root !== undefined) return state.root;
+// The nearest folder above the running code with a package.json and the kits, or undefined.
+function nearestPackage(): string | undefined {
     let dir = dirname(fileURLToPath(import.meta.url));
     for (let index = 0; index < ROOT_SEARCH_DEPTH; index += 1) {
         if (
             statSync(join(dir, 'package.json'), { throwIfNoEntry: false }) !== undefined &&
             statSync(join(dir, 'kits'), { throwIfNoEntry: false })?.isDirectory() === true
-        ) {
-            state.root = dir;
+        )
             return dir;
-        }
         dir = dirname(dir);
     }
-    throw new Error('The kits folder is not beside the gspot code.');
+    return undefined;
+}
+
+// The package folder that holds the running code. The source tree and an installed package both have one. Code bundled
+// into another build, such as the documentation site, finds the package through module resolution instead.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: The package root is found once; the state object owns the answer.
+function packageRoot(): string {
+    state.root ??= nearestPackage() ?? dirname(createRequire(import.meta.url).resolve('gspot/package.json'));
+    return state.root;
 }
 
 export const GRAMMAR_NAMES = [...GRAMMAR_FILES, ...Object.keys(RUNTIME_WASM)];
