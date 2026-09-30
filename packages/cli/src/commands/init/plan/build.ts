@@ -1,3 +1,4 @@
+import { parse as parseToml } from 'smol-toml';
 import { selectKits } from '#cli/kits/select.ts';
 import type { Manifest } from '#cli/types/kits.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
@@ -47,7 +48,7 @@ function runnerRows(answers: InitAnswers, everySelected: Manifest[]): ReplacePla
 
 // The install settings a bunfig.toml carries into the policy: the release age floor and the security scanner.
 function bunfigSettings(text: string): InstallSettings {
-    const document = Bun.TOML.parse(text) as Record<string, unknown>;
+    const document = parseToml(text) as Record<string, unknown>;
     const install = document['install'] as Record<string, unknown> | undefined;
     const age = install?.['minimumReleaseAge'];
     const scanner = (install?.['security'] as Record<string, unknown> | undefined)?.['scanner'];

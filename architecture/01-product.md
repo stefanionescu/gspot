@@ -1,6 +1,6 @@
 # Product
 
-gspot is unreleased and has no users. Names and configuration change directly without compatibility aliases or version migrations. Package managers update the binary.
+gspot is unreleased and has no users. Names and configuration change directly without compatibility aliases or version migrations. Package managers update gspot.
 
 This document decides who gspot serves, what it promises, and what it refuses to do.
 
@@ -14,7 +14,7 @@ implemented four times in four repositories and drifts in each.
 
 ## The product
 
-gspot is the shared house style for AI-written code, delivered as one binary:
+gspot is the shared house style for AI-written code, delivered as one npm package:
 
 - **Configured linters.** gspot writes the configuration for the tools the repository needs,
   such as ESLint, Prettier, Ruff, SwiftLint, ShellCheck, and sqlfluff. It runs file-list tools over an

@@ -3,7 +3,8 @@ import ts from 'typescript';
 import { isBuiltin } from 'node:module';
 import { writeFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
-import { join, dirname, resolve } from 'node:path';
+import { resolve } from 'import-meta-resolve';
+import { join, resolve as resolvePath } from 'node:path';
 import { mutationPath } from '#cli/platform/safe-paths.ts';
 import type { eslintPreviewRequest, eslintPreviewResponse } from '#cli/native/protocol.ts';
 
@@ -17,7 +18,7 @@ function moduleSource(path: string, text: string): string {
                     ts.isStringLiteral(node.moduleSpecifier) &&
                     !isBuiltin(node.moduleSpecifier.text)
                 ) {
-                    const target = pathToFileURL(Bun.resolveSync(node.moduleSpecifier.text, dirname(path))).href;
+                    const target = resolve(node.moduleSpecifier.text, pathToFileURL(path).href);
                     return context.factory.updateImportDeclaration(
                         node,
                         node.modifiers,
@@ -80,7 +81,7 @@ export async function runEslintPreview(
     request: z.infer<typeof eslintPreviewRequest>,
     work: string,
 ): Promise<z.infer<typeof eslintPreviewResponse>> {
-    const path = resolve(request.root, ...mutationPath(request.path));
+    const path = resolvePath(request.root, ...mutationPath(request.path));
     // Every module is on disk before the first import: the runtime reads the directory once and keeps that listing.
     const modules = request.sources.map((source, index) => {
         const module = join(work, `eslint-preview-${String(index)}.mjs`);

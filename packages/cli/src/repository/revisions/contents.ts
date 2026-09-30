@@ -1,6 +1,7 @@
 import { tmpdir } from 'node:os';
 import { join, relative } from 'node:path';
 import type { Root } from '#cli/types/platform.ts';
+import { setImmediate } from 'node:timers/promises';
 import { GspotError } from '#cli/platform/errors.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { run, runBinary } from '#cli/platform/spawn.ts';
@@ -64,7 +65,7 @@ async function populateRevision(
     try {
         for (const [index, entry] of ordered.entries()) {
             if (index % MATERIALIZATION_BATCH_SIZE === 0) {
-                await Bun.sleep(0);
+                await setImmediate();
                 cancelSignal?.throwIfAborted();
             }
             writeEntry(files, entry, objects);
@@ -265,7 +266,7 @@ export async function useRevision<Result>(
             entries.map((entry) => entry.path),
         );
         await copyDependencies(gitRoot, revisionRoot, entries, cancelSignal);
-        await Bun.sleep(0);
+        await setImmediate();
         cancelSignal?.throwIfAborted();
         return await action(join(revisionRoot, directory), tree.trim());
     } finally {

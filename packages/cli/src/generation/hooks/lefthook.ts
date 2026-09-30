@@ -7,17 +7,14 @@ import type { HookName, ConfigurationOutput } from '#cli/types/generation.ts';
  * Preserve the gspot verdict before the native manager combines job results.
  * @param name the hook
  * @param runner the task runner the policy names, or undefined
- * @param binaryPath the pinned executable when no runner resolves gspot
  * @returns the Lefthook command text
  */
-export function lefthookCommand(name: HookName, runner: string | undefined, binaryPath?: string): string {
+export function lefthookCommand(name: HookName, runner: string | undefined): string {
     // On Windows, Lefthook wraps this text in a double-quoted sh command line without escaping it, so the text holds
     // no double quote. An empty IFS keeps every unquoted expansion one word, and case replaces the empty-value tests.
     // Lefthook reads braces as its own templates, so the variables stand without them.
     const { args, required } = LEFTHOOK_ARGUMENTS[name];
-    // A single quote in the path closes, escapes, and reopens the quoting: '\''.
-    const quoted = binaryPath?.replaceAll("'", String.raw`'\''`);
-    const executable = RUNNER_EXEC[runner ?? ''] ?? (quoted === undefined ? 'gspot' : `'${quoted}'`);
+    const executable = RUNNER_EXEC[runner ?? ''] ?? 'gspot';
     return [
         'IFS=',
         'set -f',
@@ -37,14 +34,9 @@ export function lefthookCommand(name: HookName, runner: string | undefined, bina
  * Select the authored Lefthook file and own only the gspot commands.
  * @param root the repository root
  * @param runner the task runner the policy names, or undefined
- * @param binary the pinned executable when no runner resolves gspot
  * @returns the shared configuration output with the keys gspot installs
  */
-export function lefthookConfiguration(
-    root: string,
-    runner: string | undefined,
-    binary: string | undefined,
-): ConfigurationOutput {
+export function lefthookConfiguration(root: string, runner: string | undefined): ConfigurationOutput {
     if (hookPrefix(root) !== '')
         throw new Error('Lefthook reads configuration at the Git root. Configure its integration from that directory.');
     const files = openRoot(root);
@@ -62,7 +54,7 @@ export function lefthookConfiguration(
             ...HOOK_FILES.map((name) => ({
                 path: [name, 'commands', 'gspot'],
                 value: {
-                    run: lefthookCommand(name, runner, binary),
+                    run: lefthookCommand(name, runner),
                     ...(name === 'pre-push' ? { use_stdin: true } : {}),
                 },
             })),

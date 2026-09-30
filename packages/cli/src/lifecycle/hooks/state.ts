@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import type { Root } from '#cli/types/platform.ts';
 import { EXECUTE_BITS } from '#cli/config/platform.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
@@ -28,13 +29,12 @@ export function requirePackageConfiguration(files: Root): void {
  * Verify the invocation without owning ownership of authored Husky commands.
  * @param root the repository root
  * @param runner the task runner the policy names, or undefined
- * @param binaryPath the pinned executable when no runner resolves gspot
  * @returns whether every Husky script carries the current gspot line
  */
-export function huskyReady(root: string, runner: string | undefined, binaryPath?: string): boolean {
+export function huskyReady(root: string, runner: string | undefined): boolean {
     const files = openRoot(root);
     try {
-        return huskyLines(root, runner, binaryPath).every(({ path, line }) => {
+        return huskyLines(root, runner).every(({ path, line }) => {
             const current = files.read(path);
             if (current === undefined) return false;
             const text = current.bytes.toString('utf8');
@@ -49,10 +49,9 @@ export function huskyReady(root: string, runner: string | undefined, binaryPath?
  * Verify executable integration, including clones without local ownership records.
  * @param root the repository root.
  * @param runner the task runner the policy names, or undefined.
- * @param binary the pinned executable when no runner resolves gspot.
  * @returns whether the package commands and the integration scripts are the current ones.
  */
-export function simpleGitHooksReady(root: string, runner: string | undefined, binary: string | undefined): boolean {
+export function simpleGitHooksReady(root: string, runner: string | undefined): boolean {
     const prefix = hookPrefix(root);
     const entries = readOwnership(root).files;
     const changes = HOOK_FILES.map((name) => ({
@@ -67,7 +66,7 @@ export function simpleGitHooksReady(root: string, runner: string | undefined, bi
             const path = `${DIRECTORY}/${name}`;
             const current = files.read(path);
             const original = files.read(`${path}.gspot-original`);
-            const expected = hookBody(name, original !== undefined, [hookCommand(name, runner, binary, prefix)]);
+            const expected = hookBody(name, original !== undefined, [hookCommand(name, runner, prefix)]);
             if (current?.bytes.equals(Buffer.from(expected)) !== true) return false;
             if (
                 process.platform !== 'win32' &&
@@ -82,7 +81,7 @@ export function simpleGitHooksReady(root: string, runner: string | undefined, bi
                     file !== undefined &&
                     (installed === undefined ||
                         (installed.mode === file.mode &&
-                            installed.hash === new Bun.CryptoHasher('sha256').update(file.bytes).digest('hex')))
+                            installed.hash === createHash('sha256').update(file.bytes).digest('hex')))
                 );
             });
         });

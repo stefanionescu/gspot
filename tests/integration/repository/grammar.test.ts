@@ -7,7 +7,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { SWIFT_GRAMMAR } from '#cli/config/platform.ts';
 import { rejection } from '#tests/support/expectations.ts';
 
-const bytes = readFileSync(fileURLToPath(new URL('../../../packages/cli/.build/swift.wasm', import.meta.url)));
+const bytes = readFileSync(fileURLToPath(new URL('../../../packages/cli/grammars/swift.wasm', import.meta.url)));
 
 test('verified upstream grammar is cached and reused without another download', async () => {
     await using sandbox = await testdir();

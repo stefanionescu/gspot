@@ -19,7 +19,7 @@ export const CAMEL_WORD = /^[a-z][A-Za-z]*$/u;
 export const PASCAL_WORD = /^[A-Z][A-Za-z]*$/u;
 export const UPPER_WORD = /^[A-Z]+$/u;
 export const TIMESTAMP = /^\d+$/u;
-export const POLICY_ASSET = 'packages/cli/kits/general/naming/policy.json';
+export const POLICY_ASSET = 'kits/general/naming/policy.json';
 /** The identifier categories a setting can narrow to; every other category borrows the limits of one of these. */
 export const CATEGORY_PARENTS: Record<string, string> = {
     classes: 'types',

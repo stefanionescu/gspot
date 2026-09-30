@@ -42,7 +42,7 @@ export function ruleExamples(file: RuleText): RuleExample[] {
  * @returns examples retaining their guide-relative paths and selected levels.
  */
 export function allRuleExamples(): RuleExample[] {
-    const prefix = 'packages/cli/guides/';
+    const prefix = 'guides/';
     const paths = listAssets(prefix).filter((path) => path.endsWith('.md'));
     return paths.flatMap((path) => ruleExamples({ path: path.slice(prefix.length), text: readAsset(path) }));
 }

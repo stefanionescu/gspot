@@ -1,7 +1,7 @@
 import type { Command } from 'commander';
+import { buildProgram } from 'gspot/src/commands/program.ts';
 import type { ReferencePage } from '../../types/reference.ts';
 import { cell, table, section, referencePage } from './page.ts';
-import { buildProgram } from 'gspot-cli/src/commands/program.ts';
 
 // The help text splits into the usage and the effects.
 const HELP_PARTS = 2;

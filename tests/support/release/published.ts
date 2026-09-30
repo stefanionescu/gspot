@@ -1,60 +1,50 @@
 // The built packages published into an isolated registry, and a fresh consumer that installed them from it.
+import { join } from 'node:path';
 import { writeFileSync } from 'node:fs';
-import { join, dirname } from 'node:path';
 import { run } from '#cli/platform/spawn.ts';
 import * as processes from '#cli/platform/spawn.ts';
 import type { Registry } from '#tests/types/registry.ts';
 import { RELEASE_TIMEOUT_MS } from '#tests/inputs/release.ts';
-import { publishTo } from '#tests/support/registry/lifecycle.ts';
+import packageManifest from '#cli-package' with { type: 'json' };
 import { environmentVariables } from '#cli/platform/environment.ts';
-import { host, root, requireCli, environment, preparePackages } from '#tests/support/release/packages.ts';
+import { root, environment } from '#tests/support/release/packages.ts';
 import type { PublishedRelease, InstalledConsumer, ConsumerInitialization } from '#tests/types/release.ts';
 
 /**
- * Publishes the built packages and their dependency into the caller-owned registry.
+ * Builds gspot and its ESLint plugin, and publishes both into the caller-owned registry.
  * @param registry the registry retained for the consumer suite.
+ * @param signal cancels the build and the publication
  * @returns the registry, the published version, and the tool npmrc
  */
 export async function publishRelease(registry: Registry, signal: AbortSignal): Promise<PublishedRelease> {
-    const built = await run([join(root, 'dist', host.binary), '--version'], {
-        cwd: registry.work,
-        env: environment,
-        timeoutMs: RELEASE_TIMEOUT_MS,
-        cancelSignal: signal,
-    });
-    if (built.code !== 0) throw new Error(`Built version command failed: ${built.stdout}${built.stderr}`);
-    const version = built.stdout.trim();
-    const checkout = preparePackages(registry.work);
-    const dependency = await run(
-        [
-            'npm',
-            'publish',
-            dirname(requireCli.resolve('detect-libc/package.json')),
-            '--registry',
-            registry.url,
-            '--userconfig',
-            registry.npmrc,
-            '--ignore-scripts',
-        ],
-        {
-            cwd: registry.work,
+    registry.assertRunning();
+    for (const [folder, build] of [
+        ['packages/cli', 'packages/cli/scripts/build.ts'],
+        ['packages/eslint-plugin', 'packages/eslint-plugin/build.ts'],
+    ] as const) {
+        const options = {
+            cwd: root,
             env: environment,
             timeoutMs: RELEASE_TIMEOUT_MS,
             cancelSignal: signal,
-            onStderr: (chunk) => {
+            onStderr: (chunk: string) => {
                 process.stderr.write(chunk);
             },
-        },
-    );
-    if (dependency.code !== 0)
-        throw new Error(`Registry dependency publication failed: ${dependency.stdout}${dependency.stderr}`);
-    const published = await publishTo(registry, version, checkout, signal);
-    if (published.code !== 0) throw new Error(`Release publication failed: ${published.stdout}${published.stderr}`);
+        };
+        const built = await run([process.execPath, build], options);
+        if (built.code !== 0) throw new Error(`The build of ${folder} failed: ${built.stdout}${built.stderr}`);
+        const published = await run(
+            ['npm', 'publish', '--ignore-scripts', '--registry', registry.url, '--userconfig', registry.npmrc],
+            { ...options, cwd: join(root, folder) },
+        );
+        if (published.code !== 0)
+            throw new Error(`The publication of ${folder} failed: ${published.stdout}${published.stderr}`);
+    }
     const toolNpmrc = join(registry.work, 'tools.npmrc');
     writeFileSync(toolNpmrc, `registry=${registry.url}\n${registry.url.replace('http:', '')}/:_authToken=fake\n`, {
         mode: 0o600,
     });
-    return { registry, version, toolNpmrc };
+    return { registry, version: packageManifest.version, toolNpmrc };
 }
 
 /**

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import which from 'which';
 import semver from 'semver';
 import { join, dirname } from 'node:path';
 import { detectPackageManager } from 'nypm';
@@ -53,7 +54,7 @@ export async function packageTool(root: string, projectPaths: string[]): Promise
         ];
         const detected = await detectedTool(root, files, candidates);
         const { name, version } = detected ?? {
-            name: Bun.which('bun') === null ? 'npm' : 'bun',
+            name: which.sync('bun', { nothrow: true }) === null ? 'npm' : 'bun',
             version: undefined,
         };
         if (version !== undefined) return packageToolSchema.parse({ name, version });

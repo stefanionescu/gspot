@@ -5,7 +5,6 @@ import { tmpdir } from 'node:os';
 import { rmSync, mkdtempSync } from 'node:fs';
 import type { Read } from '#cli/types/platform.ts';
 import { inspectTool } from '#cli/tools/inspect.ts';
-import { binaryPath } from '#cli/platform/assets.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { runToolCommand } from '#cli/tools/command.ts';
 import type { Policy } from '#cli/types/policy/policy.ts';
@@ -32,13 +31,10 @@ function selectedHookTool(policy: Policy, repository: Pick<Repository, 'hasGit'>
 // Whether the manager's integration, which gspot apply writes, is in place and unedited.
 function isIntegrationReady(hookTool: HookTool, policy: Policy, root: string): boolean {
     const runner = policy.runner?.tool;
-    const binary = binaryPath();
-    if (hookTool === 'husky') return huskyReady(root, runner, binary);
-    if (hookTool === 'simple-git-hooks') return simpleGitHooksReady(root, runner, binary);
+    if (hookTool === 'husky') return huskyReady(root, runner);
+    if (hookTool === 'simple-git-hooks') return simpleGitHooksReady(root, runner);
     const configuration =
-        hookTool === 'lefthook'
-            ? lefthookConfiguration(root, runner, binary)
-            : preCommitConfiguration(root, runner, binary);
+        hookTool === 'lefthook' ? lefthookConfiguration(root, runner) : preCommitConfiguration(root, runner);
     return hasConfiguration(root, configuration);
 }
 
@@ -162,7 +158,7 @@ export async function installNativeHooks({
     const executable = hookExecutable(hookTool, tools);
     const configPath =
         hookTool === 'lefthook'
-            ? lefthookConfiguration(repository.root, policy.runner?.tool, binaryPath()).path
+            ? lefthookConfiguration(repository.root, policy.runner?.tool).path
             : CONFIG_PATHS[hookTool];
     const configuration = await hookConfiguration(hookTool, repository.root, configPath, executable);
     const installedConfig = hookTool === 'pre-commit' ? `${hookPrefix(repository.root)}${configPath}` : configPath;

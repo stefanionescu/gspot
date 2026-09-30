@@ -1,88 +1,10 @@
 import { stringify } from 'yaml';
 import { headerFor } from '#cli/generation/headers.ts';
-// eslint-disable-next-line gspot/no-cross-folder-imports, gspot/no-cross-project-imports -- reason: The npm launcher owns the shared release target contract.
-import releaseTargets from '../../../npm/targets.json' with { type: 'json' };
 import type { GeneratedFile, WorkflowShape } from '#cli/types/generation.ts';
 import { MISE_CONFIG_PATH, MISE_MIN_VERSION } from '#cli/config/tools/tools.ts';
-import { MISE, CACHE, SARIF, UPLOAD, RUNNERS, CHECKOUT, DOWNLOAD, RELEASES } from '#cli/config/generation.ts';
+import { MISE, NODE, CACHE, SARIF, UPLOAD, RUNNERS, CHECKOUT, DOWNLOAD, NODE_VERSION } from '#cli/config/generation.ts';
 
-const ASSET_CASES = releaseTargets
-    .filter((target) => target.os !== 'win32')
-    .map((target) => {
-        const system = target.os === 'darwin' ? 'Darwin' : 'Linux';
-        let architecture = 'x86_64';
-        if (target.cpu !== 'x64') architecture = target.os === 'darwin' ? 'arm64' : 'aarch64';
-        return `    ${system}-${architecture}-${target.libc ?? 'none'}) asset=${target.binary} ;;`;
-    });
-
-// uname prints x86_64 and aarch64; the release assets end in x64 and arm64, so the step maps one to the other and verifies the checksum.
-function unixInstallCommands(version: string, directory: string): string[] {
-    const base = `${RELEASES}/v${version}`;
-    return [
-        `mkdir -p "${directory}"`,
-        'system="$(uname -s)"',
-        'architecture="$(uname -m)"',
-        'libc=none',
-        'if [[ ${system} == Linux ]]; then',
-        '    if description="$(getconf GNU_LIBC_VERSION 2>/dev/null)" && [[ ${description} == glibc* ]]; then',
-        '        libc=glibc',
-        '    else',
-        '        description="$(ldd --version 2>&1)" || :',
-        '        case "${description}" in',
-        '            *musl*) libc=musl ;;',
-        '            *)',
-        '                echo "Cannot identify the Linux C library." >&2',
-        '                exit 2',
-        '                ;;',
-        '        esac',
-        '    fi',
-        'fi',
-        'case "${system}-${architecture}-${libc}" in',
-        ...ASSET_CASES.map((line) => `    ${line.trimStart()}`),
-        '    *)',
-        '        echo "gspot has no build for this runner" >&2',
-        '        exit 2',
-        '        ;;',
-        'esac',
-        `curl -fsSL "${base}/\${asset}" -o "${directory}/gspot"`,
-        `curl -fsSL "${base}/checksums.txt" -o "${directory}/checksums.txt"`,
-        `expected="$(awk -v asset="\${asset}" '$2 == asset { print $1 }' "${directory}/checksums.txt")"`,
-        'if command -v sha256sum >/dev/null 2>&1; then',
-        `    digest="$(sha256sum "${directory}/gspot")"`,
-        'else',
-        `    digest="$(shasum -a 256 "${directory}/gspot")"`,
-        'fi',
-        'digest="${digest%% *}"',
-        'if [[ -z ${expected} || ${expected} != "${digest}" ]]; then',
-        '    echo "The gspot checksum does not match." >&2',
-        '    exit 1',
-        'fi',
-        `chmod 0755 "${directory}/gspot"`,
-        `export PATH="${directory}:\${PATH}"`,
-    ];
-}
-
-function windowsInstall(version: string): string[] {
-    const base = `${RELEASES}/v${version}`;
-    const windows = releaseTargets.find((target) => target.os === 'win32');
-    if (windows === undefined) throw new Error('The release targets name no Windows build.');
-    return [
-        '      - name: Install gspot',
-        '        shell: pwsh',
-        '        run: |',
-        `          $asset = '${windows.binary}'`,
-        "          $bin = Join-Path $env:RUNNER_TEMP 'gspot-bin'",
-        '          New-Item -ItemType Directory -Force -Path $bin | Out-Null',
-        `          Invoke-WebRequest "${base}/$asset" -OutFile (Join-Path $bin 'gspot.exe')`,
-        `          Invoke-WebRequest "${base}/checksums.txt" -OutFile (Join-Path $bin 'checksums.txt')`,
-        "          $expected = ((Get-Content (Join-Path $bin 'checksums.txt')) -match \"  $asset$\" | Select-Object -First 1).Split(' ')[0]",
-        "          $digest = (Get-FileHash (Join-Path $bin 'gspot.exe') -Algorithm SHA256).Hash.ToLower()",
-        "          if (-not $expected -or $expected -ne $digest) { throw 'The gspot checksum does not match.' }",
-        '          Add-Content $env:GITHUB_PATH $bin',
-    ];
-}
-
-function setupSteps(shape: WorkflowShape, platform: string): string[] {
+function setupSteps(shape: WorkflowShape): string[] {
     if (shape.isMise)
         return [
             `      - uses: ${MISE} # v3.2.0`,
@@ -91,17 +13,14 @@ function setupSteps(shape: WorkflowShape, platform: string): string[] {
             '          cache: false',
             '      - run: mise exec -- gspot install',
         ];
-    const install =
-        platform === 'windows'
-            ? windowsInstall(shape.version)
-            : [
-                  '      - name: Install gspot',
-                  '        shell: bash',
-                  '        run: |',
-                  ...unixInstallCommands(shape.version, '${RUNNER_TEMP}/gspot-bin').map((line) => `          ${line}`),
-                  '          echo "${RUNNER_TEMP}/gspot-bin" >> "${GITHUB_PATH}"',
-              ];
-    return [...install, '      - run: gspot install', '      - run: gspot doctor'];
+    return [
+        `      - uses: ${NODE} # v7.0.0`,
+        '        with:',
+        `          node-version: "${NODE_VERSION}"`,
+        `      - run: npm install --global gspot@${shape.version}`,
+        '      - run: gspot install',
+        '      - run: gspot doctor',
+    ];
 }
 
 function comparisonCheck(command: string, isFull: boolean): string {
@@ -156,7 +75,7 @@ function checkJob(shape: WorkflowShape, platform: string, stage: 'check' | 'manu
         '            ~/.local/share/mise/installs',
         '            ~/.local/share/pnpm/store',
         '            ~/.yarn/berry/cache',
-        ...setupSteps(shape, platform),
+        ...setupSteps(shape),
         '      - name: Check',
         ...(stage === 'manual'
             ? []
@@ -253,11 +172,7 @@ export function gitlabFile(shape: WorkflowShape): GeneratedFile {
     const command = shape.isMise ? 'mise exec -- gspot' : 'gspot';
     const setup = shape.isMise
         ? [`mise trust ${MISE_CONFIG_PATH}`, 'mise install']
-        : [
-              'gspot_directory="$(mktemp -d)"',
-              'trap \'rm -rf "${gspot_directory}"\' EXIT',
-              ...unixInstallCommands(shape.version, '${gspot_directory}'),
-          ];
+        : [`npm install --global gspot@${shape.version}`];
     const check = [
         'GSPOT_CI_BASE="${CI_MERGE_REQUEST_DIFF_BASE_SHA:-${CI_COMMIT_BEFORE_SHA:-}}"',
         comparisonCheck(`${command} check`, shape.run === 'all'),

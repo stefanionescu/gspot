@@ -130,7 +130,7 @@ The block is a compact task index with one guide per entry, grouped where that h
 
 ## The guides lint
 
-The guides lint belongs to this repository, not to the commands of the binary. It runs as the
+The guides lint belongs to this repository, not to the commands of the package. It runs as the
 `[[check]]` entry `guides/lint` in the `gspot.toml` of this repository, at the push stage, over
 `packages/cli/guides/**` and its implementation and test owners. Its code sits in
 `packages/cli/src/agents/`. Prose is no part of it: `prose/vale` reads the guides like every

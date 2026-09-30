@@ -2,11 +2,8 @@
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
-import { run } from '#cli/platform/spawn.ts';
-import type { SpawnOutcome } from '#tests/types/cli.ts';
 import type { Registry } from '#tests/types/registry.ts';
 import { rmSync, mkdtempSync, writeFileSync } from 'node:fs';
-import { environmentVariables } from '#cli/platform/environment.ts';
 import { REQUEST_MS, STARTUP_MS, SHUTDOWN_MS } from '#tests/inputs/registry.ts';
 
 const root = fileURLToPath(new URL('../../..', import.meta.url));
@@ -144,26 +141,6 @@ export async function startRegistry(
         }
         throw error;
     }
-}
-
-/** Publishes built packages only while the owned registry is running. */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Publishes built packages only while the owned registry is running. */. 2 files make 3 calls; one owner keeps that behavior in one place.
-export async function publishTo(
-    registry: Registry,
-    version: string,
-    checkout: string,
-    signal = new AbortController().signal,
-): Promise<SpawnOutcome> {
-    registry.assertRunning();
-    return await run(
-        [process.execPath, 'packages/cli/scripts/publish.ts', '--tag', `v${version}`, '--registry', registry.url],
-        {
-            cwd: checkout,
-            env: { ...environmentVariables(), NPM_CONFIG_USERCONFIG: registry.npmrc },
-            timeoutMs: 180_000,
-            cancelSignal: signal,
-        },
-    );
 }
 
 // Cleanup retains both errors when execution and registry shutdown fail independently.

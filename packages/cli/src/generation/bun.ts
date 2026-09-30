@@ -1,3 +1,4 @@
+import { parse as parseToml } from 'smol-toml';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import type { ScopeSelection } from '#cli/types/policy/policy.ts';
 import type { ConfigurationOutput } from '#cli/types/generation.ts';
@@ -22,7 +23,7 @@ export function bunConfiguration(root: string, scopes: ScopeSelection[]): Config
             const path = `${prefix}bunfig.toml`;
             const source = files.read(path);
             const document =
-                source === undefined ? {} : (Bun.TOML.parse(source.bytes.toString('utf8')) as Record<string, unknown>);
+                source === undefined ? {} : (parseToml(source.bytes.toString('utf8')) as Record<string, unknown>);
             const install = document['install'] as Record<string, unknown> | undefined;
             const settings = selection.view.tool('install');
             const required = Number(settings['min_release_age_days'] ?? DEFAULT_RELEASE_AGE_DAYS) * SECONDS_PER_DAY;

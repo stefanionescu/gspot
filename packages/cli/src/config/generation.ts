@@ -15,7 +15,9 @@ export const SARIF = 'github/codeql-action/upload-sarif@df5a14dc28094dc936e103b3
 export const UPLOAD = 'actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02';
 export const DOWNLOAD = 'actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093';
 export const CACHE = 'actions/cache@5a3ec84eff668545956fd18022155c47e93e2684';
-export const RELEASES = 'https://github.com/stefanionescu/gspot/releases/download';
+export const NODE = 'actions/setup-node@820762786026740c76f36085b0efc47a31fe5020';
+/** The Node major the generated CI installs gspot with. */
+export const NODE_VERSION = '22';
 export const RUNNERS: Record<string, string> = { ubuntu: 'ubuntu-24.04', macos: 'macos-15', windows: 'windows-2025' };
 /** The days a release must be public before Bun installs it when the policy names no age. */
 export const DEFAULT_RELEASE_AGE_DAYS = 7;
@@ -24,7 +26,7 @@ export const SECONDS_PER_DAY = 86_400;
 export const PACKAGE_JSON_INDENT = 4;
 export const LEADING_NEWLINES = /^\n+/u;
 export const BARE_KEY = /^[\w-]+$/u;
-export const STYLE_ASSETS = 'packages/cli/kits/general/prose/styles/gspot/';
+export const STYLE_ASSETS = 'kits/general/prose/styles/gspot/';
 export const MAX_LINE = /^max: \d+$/mu;
 export const LONGER_THAN = /longer than \d+/u;
 // Line breaks and extglob groups, which EditorConfig sections cannot express.

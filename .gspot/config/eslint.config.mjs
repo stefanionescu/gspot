@@ -35,7 +35,6 @@ const SCRIPTS = [
     "scripts/**",
     "**/*.config.{js,mjs,cjs,ts}",
     ".mise/tasks/**",
-    "packages/npm/**",
     "packages/cli/scripts/**",
     "packages/eslint-plugin/build.ts",
     "docs/src/content/reference/**"
@@ -47,7 +46,6 @@ const ALIASES = {
     "#docs/": "docs/",
     "#scripts/": "packages/cli/scripts/",
     "#cli-package": "packages/cli/package.json",
-    "#npm-targets": "packages/npm/targets.json",
     "#workspace-package": "package.json",
     "#plugin-package": "packages/eslint-plugin/package.json"
 };
@@ -386,7 +384,6 @@ const importStyleOverrides = [
                         "#docs/",
                         "#scripts/",
                         "#cli-package",
-                        "#npm-targets",
                         "#workspace-package",
                         "#plugin-package"
                     ]
@@ -397,7 +394,6 @@ const importStyleOverrides = [
 ];
 
 const runtimeOverrides = [
-    { files: ["packages/npm/**"], languageOptions: { sourceType: 'commonjs', globals: { ...globals.node, ...globals.commonjs } }, rules: { 'unicorn/prefer-module': 'off', '@typescript-eslint/no-require-imports': 'off', 'unicorn/import-style': 'off' } },
 ];
 
 const boundaryConfigs = [
@@ -420,7 +416,6 @@ const scopeRules = [
                         "#docs/": "docs/",
                         "#scripts/": "packages/cli/scripts/",
                         "#cli-package": "packages/cli/package.json",
-                        "#npm-targets": "packages/npm/targets.json",
                         "#workspace-package": "package.json",
                         "#plugin-package": "packages/eslint-plugin/package.json"
                     }
@@ -461,7 +456,6 @@ const scopeRules = [
                         "#docs/": "docs/",
                         "#scripts/": "packages/cli/scripts/",
                         "#cli-package": "packages/cli/package.json",
-                        "#npm-targets": "packages/npm/targets.json",
                         "#workspace-package": "package.json",
                         "#plugin-package": "packages/eslint-plugin/package.json"
                     },
@@ -535,7 +529,6 @@ const scopeRules = [
                         "#docs/": "docs/",
                         "#scripts/": "packages/cli/scripts/",
                         "#cli-package": "packages/cli/package.json",
-                        "#npm-targets": "packages/npm/targets.json",
                         "#workspace-package": "package.json",
                         "#plugin-package": "packages/eslint-plugin/package.json"
                     }
@@ -575,7 +568,6 @@ const scopeRules = [
                         "#docs/": "docs/",
                         "#scripts/": "packages/cli/scripts/",
                         "#cli-package": "packages/cli/package.json",
-                        "#npm-targets": "packages/npm/targets.json",
                         "#workspace-package": "package.json",
                         "#plugin-package": "packages/eslint-plugin/package.json"
                     },
@@ -769,8 +761,8 @@ const policyRules = [
     {
         "scope": "",
         "includes": [
-            "^(?:packages\\/npm\\/package\\.json)$",
-            "^(?:packages\\/npm\\/package\\.json(?:\\/(?!\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)|$))$"
+            "^(?:packages\\/cli\\/package\\.json)$",
+            "^(?:packages\\/cli\\/package\\.json(?:\\/(?!\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)|$))$"
         ],
         "excludes": [],
         "rules": {

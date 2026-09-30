@@ -60,9 +60,9 @@ patterns = [
     ".gspot/guides/framework/nextjs/NEXTJS.md",
     ".gspot/guides/framework/react/REACT.md",
     ".gspot/guides/library/zod/ZOD.md",
-    "packages/cli/.build",
+    "packages/cli/grammars",
 ]
-reason = "These documented paths are ignored build or installation outputs, exact embedded asset identities, or outputs of optional consumer configurations. Their source manifests and build owners define them. Remove an entry when its output contract or documentation is removed."
+reason = "These documented paths are ignored build or installation outputs, exact packaged asset identities, or outputs of optional consumer configurations. Their source manifests and build owners define them. Remove an entry when its output contract or documentation is removed."
 
 [[tools.docs.paths_allowed]]
 patterns = [
@@ -107,7 +107,9 @@ reason = "These documented integration destinations belong to consumer repositor
 patterns = [
     "packages/eslint-plugin/dist",
     "coverage/lcov.info",
-    "packages/cli/.build/swift.wasm",
+    "packages/cli/dist",
+    "packages/cli/dist/gspot.js",
+    "packages/cli/dist/configuration.js",
     ".gspot/state",
     ".gspot/state/recovery",
     ".gspot/cache",
@@ -121,7 +123,6 @@ reason = "These exact documented outputs are ignored build products, runtime sta
 
 [[tools.docs.paths_allowed]]
 patterns = [
-    "gspot-darwin-arm64",
     "scripts/check-notes.ts",
     "notes/deploy.txt",
     "bash",
@@ -287,12 +288,10 @@ roles = {env = "packages/cli/src/platform/environment.ts"}
 [tools.eslint]
 import_style = {"**/*" = "ts"}
 script_files = [
-    "packages/npm/**",
     "packages/cli/scripts/**",
     "packages/eslint-plugin/build.ts",
     "docs/src/content/reference/**",
 ]
-globals = {"packages/npm/**" = "commonjs"}
 node_version = ">=24.2.0"
 
 [[tools.osv.ignore]]
@@ -303,11 +302,8 @@ review_by = "2026-10-13"
 [tools.knip]
 entry = [
     "**/build.ts",
-    "packages/cli/scripts/command.ts",
     "packages/cli/scripts/inputs.ts",
-    "**/publish.ts",
-    "packages/cli/src/agents/lint.ts",
-    "packages/npm/gspot.js",
+    "packages/cli/scripts/guides-lint.ts",
     "docs/src/content/reference/collection.ts",
     "docs/astro.config.ts",
     "docs/src/content.config.ts",
@@ -324,7 +320,7 @@ reason = "Every package the tests workspace lists is planted into a test reposit
 
 [[tools.knip.ignore_dependencies]]
 name = "^tree-sitter-"
-reason = "The grammar WASM files are read from the packages by path, not imported."
+reason = "The build copies the grammar WASM files from these packages by path; nothing imports them."
 
 [[tools.knip.ignore_dependencies]]
 name = "^@fontsource-variable/"
@@ -332,7 +328,7 @@ reason = "The site imports the fonts from docs/src/theme.css, outside the TypeSc
 
 [structure]
 
-# The rule corpus is this repository's product; its lint is this repository's check and ships in no binary.
+# The rule corpus is this repository's product; its lint is this repository's check and ships in no package.
 
 [[structure.folder_name_allowed]]
 paths = [
@@ -375,7 +371,7 @@ summary = "Validates guide structure and runs Good examples through their native
 [[tools.licenses.packages_allowed]]
 package = "axe-core@4.13.0"
 license = "MPL-2.0"
-reason = "The JSX accessibility lint plugin requires this unmodified development dependency. Its installed LICENSE identifies MPL-2.0; it is not included in the CLI binary."
+reason = "The JSX accessibility lint plugin requires this unmodified development dependency. Its installed LICENSE identifies MPL-2.0; it is not included in the gspot package."
 
 [[tools.licenses.packages_allowed]]
 package = "@csstools/selector-specificity@5.0.0"
@@ -395,7 +391,7 @@ reason = "The documentation distributes this unmodified font and copies its lice
 [[tools.licenses.packages_allowed]]
 package = "eslint-plugin-sonarjs@4.2.0"
 license = "LGPL-3.0-only"
-reason = "A lint plugin that runs at development time and is linked dynamically; nothing of it ships in the binary."
+reason = "A lint plugin that runs at development time and is linked dynamically; nothing of it ships in the gspot package."
 
 [[tools.licenses.packages_allowed]]
 package = "lightningcss@1.33.0"
@@ -433,8 +429,8 @@ reason = "Every policy message has one builder here, and tests/unit/cli/policy/m
 [[ignore]]
 check = "typescript/eslint"
 rule = "package-json/require-exports"
-paths = ["packages/npm/package.json"]
-reason = "The npm package exposes a command through bin and has no importable module API. An exports map would change existing package subpath resolution. Remove this exception if the launcher gains a module API."
+paths = ["packages/cli/package.json"]
+reason = "The gspot package exposes a command through bin and has no importable module API. Remove this exception if the package gains a module API."
 
 [[check]]
 name = "tests/unit"

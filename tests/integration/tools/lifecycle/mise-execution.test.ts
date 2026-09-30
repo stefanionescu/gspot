@@ -73,9 +73,9 @@ if (onPosix)
         expect(refused.code, refused.stdout + refused.stderr).toBe(2);
         expect((JSON.parse(refused.stdout) as InstallJson).error).toContain(MISE_MIN_VERSION);
         expect(readFileSync(join(repository.path, MISE_CONFIG_PATH))).toStrictEqual(generated);
-        expect(
-            await run(['mise', 'link', `github:stefanionescu/gspot@${GSPOT_VERSION}`, state.path], options),
-        ).toMatchObject({ code: 0 });
+        expect(await run(['mise', 'link', `npm:gspot@${GSPOT_VERSION}`, state.path], options)).toMatchObject({
+            code: 0,
+        });
         const installed = await run([process.execPath, CLI, 'install', '--json'], options);
         expect(installed.code, installed.stdout + installed.stderr).toBe(0);
         expect((JSON.parse(installed.stdout) as InstallJson).installed).toBe(true);

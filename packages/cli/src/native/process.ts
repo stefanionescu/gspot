@@ -1,13 +1,14 @@
 import { z } from 'zod';
 import type * as Eslint from 'eslint';
+import { readFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import { createRequire } from 'node:module';
 import { join, dirname, basename } from 'node:path';
 import { ACTIVE_LEVELS } from '#cli/config/native.ts';
-import { PRIVATE_FILE } from '#cli/config/platform.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { runEslintPreview } from '#cli/native/eslint-preview.ts';
 import type { eslintCoverageRequest } from '#cli/native/protocol.ts';
+import { PRIVATE_FILE, ARGUMENT_START } from '#cli/config/platform.ts';
 import { configurationRequest, eslintPreviewResponse, eslintCoverageResponse } from '#cli/native/protocol.ts';
 
 // Evaluates the operation the request names and checks the answer against its response shape.
@@ -18,13 +19,10 @@ async function evaluate(request: z.infer<typeof configurationRequest>, output: s
 }
 
 try {
-    const request = configurationRequest.parse(
-        (globalThis as { gspotConfigurationRequest?: unknown }).gspotConfigurationRequest,
-    );
-    const output = z
-        .string()
-        .min(1)
-        .parse((globalThis as { gspotConfigurationOutput?: unknown }).gspotConfigurationOutput);
+    const [requestPath, output] = z
+        .tuple([z.string().min(1), z.string().min(1)])
+        .parse(process.argv.slice(ARGUMENT_START));
+    const request = configurationRequest.parse(JSON.parse(readFileSync(requestPath, 'utf8')));
     const result = await evaluate(request, output);
     const files = openRoot(dirname(output));
     try {

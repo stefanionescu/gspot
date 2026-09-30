@@ -5,7 +5,7 @@ words the code uses. Status lives in the issue tracker and in Git, not here.
 
 ## What gspot is
 
-gspot is one binary a developer runs once in any repository. It reads the repository, proposes a
+gspot is one npm package a developer runs once in any repository. It reads the repository, proposes a
 policy, and on a yes it:
 
 1. Writes configuration for the standard linters, formatters, type checkers, and scanners that

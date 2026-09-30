@@ -1,13 +1,11 @@
 // Installs built packages from an isolated registry: private tool installation preserves authored metadata and native wrappers run.
 import { test, expect } from 'bun:test';
-import { fileURLToPath } from 'node:url';
+import { join, relative } from 'node:path';
 import { run } from '#cli/platform/spawn.ts';
 import { toPosix } from '#cli/platform/paths.ts';
-import { join, dirname, relative } from 'node:path';
 import { reportSchema } from '#cli/execution/report.ts';
 import type { InstallJson } from '#cli/types/commands.ts';
 import { RELEASE_TIMEOUT_MS } from '#tests/inputs/release.ts';
-import { environment } from '#tests/support/release/packages.ts';
 import { createConsumer } from '#tests/support/release/consumer.ts';
 import { getPublishedRelease } from '#tests/support/release/published.ts';
 import { existsSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
@@ -15,17 +13,6 @@ import { prepareNativeConsumer, prepareFormatterConsumer } from '#tests/support/
 
 const release = getPublishedRelease();
 
-const formatterPackage = dirname(fileURLToPath(import.meta.resolve('prettier/package.json')));
-const publishedFormatter = await run(
-    ['npm', 'publish', formatterPackage, '--registry', release.registry.url, '--ignore-scripts'],
-    {
-        cwd: release.registry.work,
-        env: { ...environment, NPM_CONFIG_USERCONFIG: release.registry.npmrc },
-        timeoutMs: RELEASE_TIMEOUT_MS,
-    },
-);
-if (publishedFormatter.code !== 0)
-    throw new Error(`Formatter registry publication failed: ${publishedFormatter.stdout}${publishedFormatter.stderr}`);
 test(
     'private installation preserves authored and locked metadata while reporting an outdated host runner',
     async () => {

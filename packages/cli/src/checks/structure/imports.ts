@@ -1,30 +1,44 @@
+import ts from 'typescript';
 import type { Node } from 'web-tree-sitter';
 import { toPosix } from '#cli/platform/paths.ts';
 import { join, dirname, relative } from 'node:path';
 import { isInScope } from '#cli/repository/paths.ts';
 import { readSource } from '#cli/repository/tracked.ts';
+import { SOURCE } from '#cli/config/checks/structure.ts';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
-import { SOURCE, IMPORT_KINDS } from '#cli/config/checks/structure.ts';
 import type { Edge, EdgeSource, EngineInput, ImportIndex } from '#cli/types/checks.ts';
 
 const cache = new WeakMap<object, Map<string, Promise<ImportIndex>>>();
+const projects = new WeakMap<object, Map<string, ts.CompilerOptions>>();
 
-function modulePath(path: string, directory: string): string | undefined {
-    try {
-        return Bun.resolveSync(path, directory);
-    } catch (error) {
-        // An uninstalled external package cannot be a tracked route in this scope.
-        if (
-            typeof error === 'object' &&
-            error !== null &&
-            'code' in error &&
-            error.code === 'ERR_MODULE_NOT_FOUND' &&
-            !path.startsWith('.') &&
-            !path.startsWith('#')
-        )
-            return undefined;
-        throw error;
+// The resolution settings of the tsconfig.json nearest a folder, which carry the path aliases imports use.
+function projectOptions(input: EngineInput, directory: string): ts.CompilerOptions {
+    const configuration = ts.findConfigFile(directory, (path) => ts.sys.fileExists(path)) ?? '';
+    let held = projects.get(input.reads);
+    if (held === undefined) {
+        held = new Map();
+        projects.set(input.reads, held);
     }
+    let options = held.get(configuration);
+    if (options === undefined) {
+        const parsed =
+            configuration === ''
+                ? undefined
+                : ts.getParsedCommandLineOfConfigFile(
+                      configuration,
+                      {},
+                      { ...ts.sys, onUnRecoverableConfigFileDiagnostic: () => undefined },
+                  );
+        options = {
+            ...parsed?.options,
+            module: ts.ModuleKind.ESNext,
+            moduleResolution: ts.ModuleResolutionKind.Bundler,
+            allowJs: true,
+            resolveJsonModule: true,
+        };
+        held.set(configuration, options);
+    }
+    return options;
 }
 
 // Refuse incomplete tree-sitter parses and identify the first invalid location.
@@ -34,33 +48,68 @@ function assertParsed(tree: NonNullable<Awaited<ReturnType<typeof parseSource>>>
     throw new Error(`Cannot parse imports in ${path}:${String(location.row + 1)}:${String(location.column + 1)}.`);
 }
 
-// Whether a node imports something: an import or export with a source, or a call to import or require.
-function isImporting(node: Node): boolean {
-    if (node.childForFieldName('source') !== null) return true;
-    if (node.type !== 'call_expression') return false;
-    const callee = node.childForFieldName('function')?.text ?? '';
-    return callee === 'import' || callee === 'require';
+// The named specifiers of an import or export, when braces hold everything it brings in.
+function namedSpecifiers(node: Node): Node[] {
+    const clause = node.namedChildren.find((child) => child.type === 'import_clause' || child.type === 'export_clause');
+    if (clause?.type === 'export_clause') return clause.namedChildren;
+    const only = clause?.namedChildren.length === 1 ? clause.namedChildren[0] : undefined;
+    return only?.type === 'named_imports' ? only.namedChildren : [];
 }
 
-// The edges one importing node adds: each import specifier that resolves to a tracked file of the scope.
+// Whether an import or export carries only types: marked as a whole, or in each of its named specifiers.
+function isTypeOnly(node: Node): boolean {
+    if (node.children.some((child) => child.type === 'type')) return true;
+    const specifiers = namedSpecifiers(node);
+    return (
+        specifiers.length > 0 &&
+        specifiers.every((specifier) => specifier.children.some((child) => child.type === 'type'))
+    );
+}
+
+// The module a call to import() or require() names with a string.
+function calledModule(node: Node): string | undefined {
+    const callee = node.childForFieldName('function')?.text;
+    if (callee !== 'import' && callee !== 'require') return undefined;
+    const argument = node.childForFieldName('arguments')?.namedChildren[0];
+    return argument?.type === 'string' ? stringText(argument) : undefined;
+}
+
+// The module an importing node names: the source of an import or export, or the first argument of import() or
+// require(). A type-only import or export names none, because it leaves no edge at run time.
+function importedModule(node: Node): string | undefined {
+    if (isTypeOnly(node)) return undefined;
+    const source = node.childForFieldName('source');
+    if (source !== null) return stringText(source);
+    return node.type === 'call_expression' ? calledModule(node) : undefined;
+}
+
+// The text of a string literal without its quotes.
+function stringText(node: Node): string | undefined {
+    const text = node.namedChildren.find((child) => child.type === 'string_fragment')?.text;
+    return text === undefined || text === '' ? undefined : text;
+}
+
+// The edge one importing node adds, when its module resolves to a tracked file of the scope.
 function nodeEdges(source: EdgeSource, node: Node): Edge[] {
-    const { input, path, owned, scanner } = source;
-    return scanner.scanImports(node.text).flatMap((entry) => {
-        if (!IMPORT_KINDS.has(entry.kind)) return [];
-        const resolved = modulePath(entry.path, dirname(join(input.root, path)));
-        if (resolved === undefined) return [];
-        const target = toPosix(relative(input.root, resolved));
-        if (!owned.has(target)) return [];
-        return [
-            {
-                from: path,
-                to: target,
-                source: entry.path,
-                line: node.startPosition.row + 1,
-                column: node.startPosition.column + 1,
-            },
-        ];
-    });
+    const { input, path, owned } = source;
+    const specifier = importedModule(node);
+    if (specifier === undefined) return [];
+    // The file the import names; none for a package, a missing file, or a file of another kind.
+    const file = join(input.root, path);
+    const resolved = ts.resolveModuleName(specifier, file, projectOptions(input, dirname(file)), ts.sys).resolvedModule
+        ?.resolvedFileName;
+    if (resolved === undefined) return [];
+    const target = toPosix(relative(input.root, resolved));
+    if (!owned.has(target)) return [];
+    return [
+        {
+            from: path,
+            to: target,
+            source: specifier,
+            line: node.startPosition.row + 1,
+            column: node.startPosition.column + 1,
+        },
+    ];
 }
 
 async function importedEdges(input: EngineInput, path: string, owned: Set<string>): Promise<Edge[]> {
@@ -69,11 +118,9 @@ async function importedEdges(input: EngineInput, path: string, owned: Set<string
     if (tree === null) throw new Error(`Cannot parse imports in ${path}.`);
     try {
         assertParsed(tree, path);
-        const scanner = new Bun.Transpiler({ loader: path.endsWith('x') ? 'tsx' : 'ts' });
-        const source: EdgeSource = { input, path, owned, scanner };
+        const source: EdgeSource = { input, path, owned };
         return tree.rootNode
             .descendantsOfType(['import_statement', 'export_statement', 'call_expression'])
-            .filter((node) => isImporting(node))
             .flatMap((node) => nodeEdges(source, node));
     } finally {
         tree.delete();

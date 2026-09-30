@@ -34,7 +34,7 @@ export function styleFiles(policy: Policy, view: MergedView): GeneratedFile[] {
                 kit: 'prose',
             };
         });
-    const shipped = readAsset('packages/cli/kits/general/prose/vocabularies/gspot/accept.txt').trim().split(/\r?\n/u);
+    const shipped = readAsset('kits/general/prose/vocabularies/gspot/accept.txt').trim().split(/\r?\n/u);
     const vocabulary = [...new Set([...shipped, ...policy.prose.vocabulary])].toSorted((a, b) => a.localeCompare(b));
     const base = `${STYLES_DIRECTORY}/config/vocabularies/${GSPOT_STYLE}`;
     return [

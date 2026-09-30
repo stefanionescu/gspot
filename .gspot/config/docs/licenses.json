@@ -18,7 +18,7 @@
         {
             "package": "axe-core@4.13.0",
             "license": "MPL-2.0",
-            "reason": "The JSX accessibility lint plugin requires this unmodified development dependency. Its installed LICENSE identifies MPL-2.0; it is not included in the CLI binary."
+            "reason": "The JSX accessibility lint plugin requires this unmodified development dependency. Its installed LICENSE identifies MPL-2.0; it is not included in the gspot package."
         },
         {
             "package": "@csstools/selector-specificity@5.0.0",
@@ -38,7 +38,7 @@
         {
             "package": "eslint-plugin-sonarjs@4.2.0",
             "license": "LGPL-3.0-only",
-            "reason": "A lint plugin that runs at development time and is linked dynamically; nothing of it ships in the binary."
+            "reason": "A lint plugin that runs at development time and is linked dynamically; nothing of it ships in the gspot package."
         },
         {
             "package": "lightningcss@1.33.0",

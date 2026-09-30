@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { createHash } from 'node:crypto';
 import { isDeepStrictEqual } from 'node:util';
 import type { Root } from '#cli/types/platform.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
@@ -31,7 +32,7 @@ function retainedContent(
             ? undefined
             : {
                   mode: retained.mode,
-                  hash: new Bun.CryptoHasher('sha256').update(retained.bytes).digest('hex'),
+                  hash: createHash('sha256').update(retained.bytes).digest('hex'),
               };
     const expected = installed === undefined ? undefined : { mode: installed.mode, hash: installed.hash };
     const unchanged = isDeepStrictEqual(current, expected);
@@ -50,14 +51,8 @@ function retainedContent(
  * @param root the repository root.
  * @param runner the task runner the policy names, or undefined.
  * @param out the generated plan the integration scripts and package keys are added to.
- * @param binary the pinned executable when no runner resolves gspot.
  */
-export function simpleGitHookOutputs(
-    root: string,
-    runner: string | undefined,
-    out: Generated,
-    binary: string | undefined,
-): void {
+export function simpleGitHookOutputs(root: string, runner: string | undefined, out: Generated): void {
     const prefix = hookPrefix(root);
     const files = openRoot(root);
     try {
@@ -81,7 +76,7 @@ export function simpleGitHookOutputs(
             if (original === simpleGitHookCommand(prefix, name)) {
                 const installed = entries.find((entry) => entry.path === `${path}.gspot-original`)?.installed;
                 content = retainedContent(files, path, installed, () =>
-                    owned === undefined ? simpleGitHooksReady(root, runner, binary) : undefined,
+                    owned === undefined ? simpleGitHooksReady(root, runner) : undefined,
                 );
             } else if (original !== undefined) content = `#!/usr/bin/env sh\n${original}\n`;
             if (content !== undefined)
@@ -94,7 +89,7 @@ export function simpleGitHookOutputs(
                 });
             out.files.push({
                 path,
-                content: hookBody(name, content !== undefined, [hookCommand(name, runner, binary, prefix)]),
+                content: hookBody(name, content !== undefined, [hookCommand(name, runner, prefix)]),
                 readOnly: false,
                 executable: true,
                 kind: 'runner',
@@ -112,15 +107,9 @@ export function simpleGitHookOutputs(
  * @param root the repository root
  * @param name the hook
  * @param runner the task runner the policy names, or undefined
- * @param binary the pinned executable when no runner resolves gspot
  * @returns the hook script
  */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Two hook generators build the direct hook through it; one owner keeps its shape.
-export function simpleGitDirectHook(
-    root: string,
-    name: HookName,
-    runner: string | undefined,
-    binary: string | undefined,
-): string {
-    return hookBody(name, false, [hookCommand(name, runner, binary, hookPrefix(root))]);
+export function simpleGitDirectHook(root: string, name: HookName, runner: string | undefined): string {
+    return hookBody(name, false, [hookCommand(name, runner, hookPrefix(root))]);
 }

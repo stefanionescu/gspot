@@ -17,19 +17,6 @@ export function hookPrefix(root: string): string {
 }
 
 /**
- * Resolve gspot locally, without downloading a missing launcher.
- * @param runner the task runner the policy names, or undefined
- * @param binaryPath the pinned executable when no runner resolves gspot
- * @returns the shell text that runs gspot
- */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Its callers sit at the complexity or length limit; inlining the expression pushes them over.
-export function runnerExec(runner: string | undefined, binaryPath?: string): string {
-    return (
-        RUNNER_EXEC[runner ?? ''] ?? (binaryPath === undefined ? 'gspot' : `'${binaryPath.replaceAll("'", "'\"'\"'")}'`)
-    );
-}
-
-/**
  * The lines that spell a commit message path the way gspot reads it. The path becomes absolute when the hook
  * needs that. Under Git for Windows, whose shell hands hooks POSIX paths, it takes the Windows spelling.
  * @param variable the shell variable that holds the path
@@ -47,15 +34,15 @@ export function commitPathLines(variable: string, absolute: boolean): string[] {
  * The check invocation for one Git hook.
  * @param name the hook.
  * @param runner the task runner the policy names, or undefined.
- * @param binaryPath the pinned executable when no runner resolves gspot.
  * @param directory the directory to enter first, '' for the working directory.
  * @returns the shell text that runs the hook's check, or explains an unavailable executable.
  */
-export function hookCommand(name: HookName, runner: string | undefined, binaryPath?: string, directory = ''): string {
+export function hookCommand(name: HookName, runner: string | undefined, directory = ''): string {
     const at = directory === '' ? '' : `cd '${directory.replaceAll("'", "'\"'\"'")}' && `;
     const args = name === 'commit-msg' ? 'check --stage message --message-file "${gspot_message}"' : HOOK_ARGS[name];
-    const executable = runner !== undefined && Object.hasOwn(RUNNER_EXEC, runner) ? runner : (binaryPath ?? 'gspot');
-    return String.raw`${at}{ gspot_executable=$(command -v '${executable.replaceAll("'", "'\"'\"'")}') && [ -x "$gspot_executable" ] || { printf "%s\n" "The pinned gspot executable is unavailable. Install gspot, then run: gspot install" >&2; exit 2; }; ${runnerExec(runner, binaryPath)} ${args}; }`;
+    const known = runner !== undefined && Object.hasOwn(RUNNER_EXEC, runner);
+    const executable = known ? runner : 'gspot';
+    return String.raw`${at}{ gspot_executable=$(command -v '${executable.replaceAll("'", "'\"'\"'")}') && [ -x "$gspot_executable" ] || { printf "%s\n" "The pinned gspot executable is unavailable. Install gspot, then run: gspot install" >&2; exit 2; }; ${known ? RUNNER_EXEC[runner] : 'gspot'} ${args}; }`;
 }
 
 /**

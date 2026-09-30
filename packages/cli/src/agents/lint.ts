@@ -1,7 +1,4 @@
-import { fileURLToPath } from 'node:url';
-import { globPaths } from '#cli/platform/paths.ts';
 import { guideSections } from '#cli/agents/sections.ts';
-import { readSource } from '#cli/repository/tracked.ts';
 import { ESLINT_RULE_LEVELS } from '#cli/config/checks/typescript.ts';
 import { layerOfPath, frontMatterFindings } from '#cli/agents/metadata.ts';
 import type { RuleText, RuleFinding, RulesLintReport } from '#cli/types/agents.ts';
@@ -159,19 +156,6 @@ function sizeFindings(file: string, lines: string[]): RuleFinding[] {
             message: `${String(lines.length)} lines exceeds the ${String(RULE_FILE_LINE_CEILING)}-line ceiling`,
         },
     ];
-}
-
-if (import.meta.main) {
-    const rulesFolder = fileURLToPath(new URL('../../guides/', import.meta.url));
-    const paths = globPaths(rulesFolder, '**/*.md');
-    const files = paths
-        .filter((path) => isRulePath(path))
-        .toSorted((a, b) => a.localeCompare(b))
-        .map((path) => ({ path, text: readSource(rulesFolder, path).toString('utf8') }));
-    const report = lintRules(files);
-    for (const finding of report.findings)
-        process.stdout.write(`rules/${finding.file}:${String(finding.line)}: ${finding.message}\n`);
-    process.exitCode = report.findings.length > 0 ? 1 : 0;
 }
 
 /**

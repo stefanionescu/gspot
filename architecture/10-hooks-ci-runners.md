@@ -119,9 +119,9 @@ way past it. A unit test renders every dispatcher for
 every tool and stage and runs `sh -n` on it. Lefthook lines use `echo`, never `printf "%s\n"`,
 because the YAML writer turns `\n` into a line break that Lefthook on Windows splits.
 
-`init` writes how the binary is found into the line. Under mise it is `mise exec -- gspot`.
+`init` writes how gspot is found into the line. Under mise it is `mise exec -- gspot`.
 Under an npm runner it is a package-manager local-exec form that cannot download a missing
-package. Without a runner it is a PATH-resolved pinned binary. Each finds the version the repository pins, and a
+package. Without a runner it is the `gspot` on `PATH`. Each finds the version the repository pins, and a
 hook that cannot find gspot prints the install command and fails. The line asks the developer
 for no environment variable.
 
@@ -222,10 +222,8 @@ host name, so a self-hosted host works. For every other system gspot writes no f
 prints the lines to paste: install gspot at the pinned version, `gspot install`, and
 `gspot check`, keeping `.gspot/reports/report.*` as artifacts.
 
-Without mise, the job installs gspot from the release asset by version and runs `gspot doctor`
-first. It downloads `checksums.txt` from the same release and stops when the SHA-256 differs.
-One table in the code holds the targets, with the `uname` pair of each: `gspot-linux-x64`,
-`gspot-linux-arm64`, `gspot-darwin-arm64`, `gspot-darwin-x64`, and `gspot-windows-x64.exe`.
+Without mise, the GitHub job sets up Node 22 and runs `npm install --global gspot@<version>`,
+then `gspot doctor`. The GitLab job runs the same install, so its image needs Node 22.
 
 ## Reproduce lines and the report
 

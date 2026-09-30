@@ -7,7 +7,7 @@ export const EM_DASH = '—';
 export const LIST_ITEM = /^\s*(?:[-*]|\d+\.)\s+/u;
 export const ITEM_END = /[.!?]["')\]]*$/u;
 export const AGENT_LAYERS = new Set(['general/agent', 'general/code', 'general/prose']);
-export const RULES_PREFIX = 'packages/cli/guides/';
+export const RULES_PREFIX = 'guides/';
 export const TITLE = /^# (?<title>.+)$/mu;
 /** The files the managed block tells the reader to open first; they cannot be left out. */
 export const FIRST_READ = ['general/agent/WORKING.md', 'general/prose/WRITING.md'];

@@ -4,6 +4,7 @@ import { isAbsolute } from 'node:path';
 import { realpathSync } from 'node:fs';
 import type { Finding } from '#cli/types/checks.ts';
 import { GspotError } from '#cli/platform/errors.ts';
+import { stripVTControlCharacters } from 'node:util';
 import { parseJson } from '#cli/execution/output/json.ts';
 import { toPosix, toolPath } from '#cli/platform/paths.ts';
 import type { CheckSpec, OutputFormat } from '#cli/types/kits.ts';
@@ -175,7 +176,7 @@ const FORMAT_READERS: Record<OutputFormat['format'], (parsing: Parsing, output: 
 function parseRaw(spec: CheckSpec, stdout: string, stderr: string, root: string, cwd: string): Finding[] {
     const output = spec.output ?? DEFAULT_OUTPUT_FORMAT;
     // A tool that colors its output although nothing reads colors still yields clean paths and messages.
-    const text = Bun.stripANSI(`${stdout}\n${stderr}`).replaceAll('\r\n', '\n');
+    const text = stripVTControlCharacters(`${stdout}\n${stderr}`).replaceAll('\r\n', '\n');
     return FORMAT_READERS[output.format]({ spec, stdout, text, root, cwd }, output);
 }
 

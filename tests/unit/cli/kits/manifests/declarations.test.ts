@@ -55,8 +55,8 @@ query_packs = {python = "${pin}"}
 test.each(['latest', '^1.2.3', '../pack'])(
     'query-pack metadata refuses an unpinned version %s and accepts an exact release',
     (version) => {
-        expect(() => parseManifest(pinnedSecurity(version), 'packages/cli/kits/general/security')).toThrow();
-        expect(() => parseManifest(pinnedSecurity('1.7.8'), 'packages/cli/kits/general/security')).not.toThrow();
+        expect(() => parseManifest(pinnedSecurity(version), 'kits/general/security')).toThrow();
+        expect(() => parseManifest(pinnedSecurity('1.7.8'), 'kits/general/security')).not.toThrow();
     },
 );
 

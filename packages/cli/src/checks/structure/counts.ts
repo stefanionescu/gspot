@@ -31,7 +31,7 @@ export async function countFindings(analysis: string, context: StructureInput, i
     if (rule === undefined || ceiling === undefined) return [];
     const matches = await astGrepMatches(
         context.input,
-        `packages/cli/kits/language/bash/rules/${rule.asset}`,
+        `kits/language/bash/rules/${rule.asset}`,
         index.files.map((file) => file.path),
     );
     return index.files.flatMap((file) => {

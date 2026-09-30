@@ -5,9 +5,16 @@ sidebar:
     order: 2
 ---
 
-To change gspot itself, work in a source checkout. Run every command from the root of the
-checkout, after the [source installation](/guides/install/). mise pins Bun and Node for the
-checkout.
+To change gspot itself, work in a source checkout. You need Git, a Bash shell, and
+[mise](https://mise.jdx.dev) 2026.8.8 or newer. mise pins Bun and Node for the checkout. Run
+every command from the root of the checkout.
+
+```shell
+git clone https://github.com/stefanionescu/gspot.git
+cd gspot
+mise install
+mise run repo:setup
+```
 
 ## Build
 
@@ -16,9 +23,17 @@ mise run build
 mise run build:plugin
 ```
 
-`build` writes the gspot executable for your system to `dist/`, with `LICENSE.md` and
-`NOTICE.md`. `build:plugin` writes the ESLint plugin to `packages/eslint-plugin/dist/`, with its
-own copy of `LICENSE.md`. The two builds do not depend on each other.
+`build` writes the `gspot` package to `packages/cli/dist/`: `gspot.js`, the command, and
+`configuration.js`, which evaluates ESLint configuration in its own process. The package also
+ships `packages/cli/kits/`, `packages/cli/guides/`, and `packages/cli/grammars/`.
+`build:plugin` writes the ESLint plugin to `packages/eslint-plugin/dist/`. The two builds do
+not depend on each other.
+
+To run the build under Node:
+
+```shell
+node packages/cli/dist/gspot.js --version
+```
 
 ## Run gspot from source
 
@@ -59,26 +74,15 @@ removes when the run ends. The Supabase tests need Supabase CLI 2.72.7 and a run
 daemon. The XCTest coverage tests need macOS with Xcode selected by `xcode-select`.
 `mise run test:coverage` writes coverage to `coverage/lcov.info` and sets no floor.
 
-## Build every system
-
-```shell
-mise run build -- --all
-```
-
-`packages/npm/targets.json` lists the targets, the executable names, and the npm packages. On
-macOS, the build signs the macOS executables with `codesign`. The build collects the licenses of
-the bundled packages and downloads the Bun and Swift notices. It checks every download against
-its recorded SHA-256, and a mismatch fails the build.
-
-## Prepare the Swift parser
+## Prepare the grammars
 
 ```shell
 mise run prepare:grammar
 ```
 
-Setup and release builds download the Swift 0.7.3 WebAssembly parser, check its SHA-256, and
-cache it in `packages/cli/.build/swift.wasm`. The test tasks prepare it for you. Run this task
-before you run `bun test` directly. Release executables embed the parser.
+The task copies the tree-sitter grammar files into `packages/cli/grammars/`, with their
+licenses. It also downloads the Swift 0.7.3 WebAssembly parser and checks its SHA-256. The
+setup and test tasks run it for you. Run it before you run `bun test` directly.
 
 ## Test the packages
 
@@ -86,15 +90,18 @@ before you run `bun test` directly. Release executables embed the parser.
 mise run test:release
 ```
 
-This task builds every system and the plugin, and publishes the packages to a local registry.
-Then it installs them into a new project and runs real findings and fixes through them. The
-publisher checks every executable and license file, and runs `npm pack --dry-run` for every
-package before it publishes any. Use the publisher only with `--dry-run` or a local registry
-during development. Publishing to npm is a separate release step.
+This task builds `gspot` and `eslint-plugin-gspot`, and publishes both to a local registry.
+Then it installs them into new projects and runs real findings and fixes under Node.
 
-The README badge says **unreleased** until the `gspot` package is on npm. During the release,
-confirm the package, then replace the badge with `https://img.shields.io/npm/v/gspot.svg`
-linked to `https://www.npmjs.com/package/gspot`:
+## Release
+
+The release workflow runs the full CI, builds both packages, and runs `test:release`. Then it
+publishes `eslint-plugin-gspot` and `gspot` to npm with the `NPM_TOKEN` secret, and creates a
+GitHub release with notes. The Git tag must match the version in `packages/cli/package.json`.
+
+The README badge says **unreleased** until the `gspot` package is on npm. After the first
+release, confirm the package, then replace the badge with
+`https://img.shields.io/npm/v/gspot.svg` linked to `https://www.npmjs.com/package/gspot`:
 
 ```shell
 npm view gspot@0.1.0 name version repository --registry=https://registry.npmjs.org

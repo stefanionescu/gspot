@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { statSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { toPosix } from '#cli/platform/paths.ts';
+import { stripVTControlCharacters } from 'node:util';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import type { Finding, EngineInput } from '#cli/types/checks.ts';
 import { CHECK_LOCATION } from '#cli/config/checks/platforms.ts';
@@ -53,7 +54,7 @@ async function linted(input: EngineInput, folder: string): Promise<Finding[]> {
 
 // The first error from `deno check` with its reported file and line.
 function firstError(input: EngineInput, folder: string, stderr: string): Finding {
-    const said = Bun.stripANSI(stderr);
+    const said = stripVTControlCharacters(stderr);
     const place = CHECK_LOCATION.exec(said)?.groups;
     const file = place?.['file'] === undefined ? `${folder}/index.ts` : relative(input.root, place['file']);
     const first = said.split('\n').find((line) => line.trim() !== '') ?? 'The deno check command failed.';

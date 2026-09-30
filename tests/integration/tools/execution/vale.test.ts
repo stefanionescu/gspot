@@ -40,7 +40,7 @@ test('Vale preserves ESLint delimiters while checking punctuation inside reasons
     await createFileTree(directory.path, {
         'gspot.toml': policyOf(['prose', 'typescript']),
         '.gspot/config/vale.ini': 'StylesPath = styles\nMinAlertLevel = suggestion\n[*]\nBasedOnStyles = Example\n',
-        '.gspot/config/styles/Example/Dashes.yml': readAsset('packages/cli/kits/general/prose/styles/gspot/dashes.yml'),
+        '.gspot/config/styles/Example/Dashes.yml': readAsset('kits/general/prose/styles/gspot/dashes.yml'),
         'source.ts': [
             '// eslint-disable -- reason: The external declaration requires this signature.',
             '// eslint-enable no-x, @scope/no-y -- reason: Checks resume here.',
@@ -116,9 +116,7 @@ test('Vale accepts explicit minimum versions and still reports vague or redundan
     await createFileTree(directory.path, {
         'gspot.toml': policyOf(['prose', 'markdown']),
         '.gspot/config/vale.ini': 'StylesPath = styles\nMinAlertLevel = suggestion\n[*]\nBasedOnStyles = Example\n',
-        '.gspot/config/styles/Example/Versions.yml': readAsset(
-            'packages/cli/kits/general/prose/styles/gspot/version-range.yml',
-        ),
+        '.gspot/config/styles/Example/Versions.yml': readAsset('kits/general/prose/styles/gspot/version-range.yml'),
         'versions.md': [
             'Use Node.js 24.2.0 or later.',
             'Use Git 2.40 or newer.',
@@ -157,7 +155,7 @@ test('a raw-markup fixture exception preserves adjacent images and other prose r
             '',
         ].join('\n'),
         '.gspot/config/vale.ini': 'StylesPath = styles\n[*]\nBasedOnStyles = Example\n',
-        '.gspot/config/styles/Example/Alt.yml': readAsset('packages/cli/kits/general/prose/styles/gspot/alt-text.yml'),
+        '.gspot/config/styles/Example/Alt.yml': readAsset('kits/general/prose/styles/gspot/alt-text.yml'),
         '.gspot/config/styles/Example/Concrete.yml':
             'extends: existence\nmessage: "Use inspect."\nlevel: error\ntokens: [delve]\n',
         'fixture.ts': 'const markup = \'<img src="fixture.png">\';\n// We delve into records.\n',

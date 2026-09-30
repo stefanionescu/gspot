@@ -1,5 +1,6 @@
 import { join } from 'node:path';
 import { statSync } from 'node:fs';
+import { parse as parseToml } from 'smol-toml';
 import { readSource } from '#cli/repository/tracked.ts';
 import { SECONDS_PER_DAY } from '#cli/config/generation.ts';
 import { LOCKFILES } from '#cli/config/repository/repository.ts';
@@ -9,7 +10,7 @@ import { BUNFIG, DEFAULT_AGE_DAYS } from '#cli/config/checks/repository.ts';
 function installTable(root: string): Record<string, unknown> | undefined {
     const path = join(root, BUNFIG);
     if (statSync(path, { throwIfNoEntry: false }) === undefined) return undefined;
-    const parsed = Bun.TOML.parse(readSource(root, BUNFIG).toString('utf8')) as { install?: Record<string, unknown> };
+    const parsed = parseToml(readSource(root, BUNFIG).toString('utf8')) as { install?: Record<string, unknown> };
     return parsed.install ?? {};
 }
 

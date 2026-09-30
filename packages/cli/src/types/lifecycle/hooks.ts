@@ -4,7 +4,7 @@ import type { Policy } from '#cli/types/policy/policy.ts';
 import type { HookLocation } from '#cli/types/repository/repository.ts';
 import type { Owner, Planned, OwnershipEntry } from '#cli/types/lifecycle/lifecycle.ts';
 
-export type Readiness = (root: string, runner: string | undefined, binary: string | undefined) => boolean;
+export type Readiness = (root: string, runner: string | undefined) => boolean;
 export type Status = {
     policy: Policy;
     root: string;

@@ -1,3 +1,4 @@
+import executables from 'which';
 import { spyOn } from 'bun:test';
 import { createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
@@ -34,10 +35,11 @@ export async function prepareSupabaseCheck(
             ? { code: 0, stdout: '2.75.0\n', stderr: '', missing: false, duration: 1 }
             : blocking(argv, options),
     );
-    const findExecutable = Bun.which;
-    const which = spyOn(Bun, 'which').mockImplementation((name, options) =>
-        name === 'supabase' ? '/fixture/supabase' : findExecutable(name, options),
-    );
+    const findExecutable = executables.sync;
+    const which = spyOn(executables, 'sync').mockImplementation(((name: string) =>
+        name === 'supabase'
+            ? '/fixture/supabase'
+            : findExecutable(name, { nothrow: true })) as typeof executables.sync);
     const executeProcess = processes.run;
     const run = spyOn(processes, 'run').mockImplementation(async (argv, options) => {
         if (argv[0] !== '/fixture/supabase') return executeProcess(argv, options);

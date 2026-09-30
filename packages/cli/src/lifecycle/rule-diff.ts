@@ -1,3 +1,4 @@
+import { parse as parseYaml } from 'yaml';
 import { isDeepStrictEqual } from 'node:util';
 import { parse as parseToml } from 'smol-toml';
 import type { GeneratedFile } from '#cli/types/generation.ts';
@@ -31,8 +32,8 @@ const NAMED_READERS: Record<string, (text: string) => unknown> = {
 
 const FORMAT_READERS: Record<string, (text: string) => unknown> = {
     '.toml': parseToml,
-    '.yaml': Bun.YAML.parse,
-    '.yml': Bun.YAML.parse,
+    '.yaml': parseYaml,
+    '.yml': parseYaml,
     '.json': jsonDocument,
     '.jsonc': jsonDocument,
 };

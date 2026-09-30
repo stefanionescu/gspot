@@ -17,5 +17,5 @@ for (const name of GRAMMAR_NAMES) {
 }
 try { grammarPath('undeclared.wasm'); throw new Error('Undeclared asset was accepted.'); }
 catch (error) { if (!String(error).includes('No grammar is called')) throw error; }
-console.log(JSON.stringify({ text: readAsset('packages/cli/kits/language/bash/manifest.toml'), files: listAssets('packages/cli/kits') }));
+console.log(JSON.stringify({ text: readAsset('kits/language/bash/manifest.toml'), files: listAssets('kits') }));
 `;

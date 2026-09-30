@@ -1,5 +1,6 @@
 // JSON, SARIF, and GitLab Code Quality reports.
 import { join } from 'node:path';
+import { createHash } from 'node:crypto';
 import { toolPath } from '#cli/platform/paths.ts';
 import type { Finding } from '#cli/types/checks.ts';
 import { REPORT_DIRECTORY } from '#cli/config/platform.ts';
@@ -42,7 +43,7 @@ function codeQualityText(report: RunReport | PushReport): string {
         .flatMap(({ finding, path }) => {
             const check = finding.rule === undefined ? finding.check : `${finding.check}:${finding.rule}`;
             const line = Math.max(1, finding.line ?? 1);
-            const fingerprint = new Bun.CryptoHasher('sha256')
+            const fingerprint = createHash('sha256')
                 .update(JSON.stringify([check, path, line, finding.column ?? 1, finding.message]))
                 .digest('hex');
             if (seen.has(fingerprint)) return [];

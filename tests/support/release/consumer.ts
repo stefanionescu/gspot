@@ -42,8 +42,7 @@ export async function createConsumer(
                 timeoutMs: RELEASE_TIMEOUT_MS,
             },
         );
-        const launcherDirectory = join(consumer, 'node_modules', 'gspot');
-        const command = ['node', join(launcherDirectory, 'gspot.js')];
+        const command = ['node', join(consumer, 'node_modules', 'gspot', 'dist', 'gspot.js')];
         const options = {
             cwd: consumer,
             env: {

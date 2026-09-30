@@ -1,5 +1,6 @@
 // .gspot/cache/: a recorded verdict keyed on the tool version, the configuration hash and the content hash of every file read.
 import { join } from 'node:path';
+import { createHash } from 'node:crypto';
 import { globPaths } from '#cli/platform/paths.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import type { CheckResult } from '#cli/types/checks.ts';
@@ -18,7 +19,9 @@ import { CACHE_ENTRY, CACHE_FORMAT, RETENTION_MS } from '#cli/config/execution/e
  */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The cache key for one check run. 2 files make 3 calls; one owner keeps that behavior in one place.
 export function cacheKey(input: CacheKeyInput): string {
-    return new Bun.CryptoHasher('sha256').update(JSON.stringify({ format: CACHE_FORMAT, ...input })).digest('hex');
+    return createHash('sha256')
+        .update(JSON.stringify({ format: CACHE_FORMAT, ...input }))
+        .digest('hex');
 }
 
 /**
@@ -30,7 +33,9 @@ export function cacheKey(input: CacheKeyInput): string {
  */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The content hash of a required file. 3 files make 3 calls; one owner keeps that behavior in one place.
 export function fileHash(root: string, path: string, reads?: SourceReads): string {
-    return new Bun.CryptoHasher('sha256').update(readSource(root, path, reads)).digest('hex');
+    return createHash('sha256')
+        .update(readSource(root, path, reads))
+        .digest('hex');
 }
 
 /**
@@ -77,7 +82,7 @@ export function readCached(root: string, key: string): CheckResult | undefined {
         }
         if (
             file?.mode !== recorded.installed.mode ||
-            new Bun.CryptoHasher('sha256').update(file.bytes).digest('hex') !== recorded.installed.hash
+            createHash('sha256').update(file.bytes).digest('hex') !== recorded.installed.hash
         )
             return undefined;
         const result: unknown = JSON.parse(file.bytes.toString('utf8'));

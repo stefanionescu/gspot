@@ -1,3 +1,4 @@
+import executables from 'which';
 import { join } from 'node:path';
 import { writeFileSync } from 'node:fs';
 import { rejects } from 'node:assert/strict';
@@ -17,10 +18,9 @@ test('pinned Deno reports a lint defect and accepts its correction in a scoped e
     });
     const native = Bun.which('deno', { PATH: toolsPath(['deno']) });
     if (native === null) throw new Error('Pinned Deno is required for this integration test.');
-    const which = Bun.which;
-    const executableLookup = spyOn(Bun, 'which').mockImplementation((name, options) =>
-        name === 'deno' ? native : which(name, options),
-    );
+    const which = executables.sync;
+    const executableLookup = spyOn(executables, 'sync').mockImplementation(((name: string) =>
+        name === 'deno' ? native : which(name, { nothrow: true })) as typeof executables.sync);
     try {
         const session = await openSession(sandbox.path);
         const selected = engineInput(session, {

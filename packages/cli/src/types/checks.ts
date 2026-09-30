@@ -115,7 +115,7 @@ export type NameProblem = {
 };
 /** What the engine needs to check a file's identifiers: the policy and the language the file belongs to. */
 export type NamingInputs = { policy: EffectivePolicy; isReactFile: boolean; isTestFile: boolean };
-/** The shipped policy file, packages/cli/kits/general/naming/policy.json. */
+/** The shipped policy file, kits/general/naming/policy.json. */
 export type ShippedPolicy = {
     version: number;
     matching: { wholeParts: boolean; caseInsensitive: boolean };
@@ -302,7 +302,7 @@ export type ScriptIndex = { files: ScriptFile[]; owners: Map<string, string> };
 /** How an analysis reports one problem in one file. */
 export type ScriptReport = (line: number, rule: string, text: string) => void;
 export type Edge = ImportIndex['edges'][number];
-export type EdgeSource = { input: EngineInput; path: string; owned: Set<string>; scanner: Bun.Transpiler };
+export type EdgeSource = { input: EngineInput; path: string; owned: Set<string> };
 export type ImportIndex = {
     paths: string[];
     importers: Map<string, Set<string>>;

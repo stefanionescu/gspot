@@ -129,7 +129,7 @@ engine's, for JavaScript as for every language.
 
 For every language that is not JavaScript or TypeScript, and for repository-level rules.
 
-- **Parsing.** `web-tree-sitter` with WASM grammars embedded in the binary: bash, python, swift,
+- **Parsing.** `web-tree-sitter` with WASM grammars shipped in the package: bash, python, swift,
   css, html, and the JavaScript family for the naming extractors. SQL parses through
   `libpg-query` compiled to WASM. No native modules.
 - **Parse errors are findings.** A tree with an `ERROR` or `MISSING` node fails the file with

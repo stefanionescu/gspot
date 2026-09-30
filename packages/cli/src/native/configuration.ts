@@ -1,11 +1,12 @@
 import type { z } from 'zod';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
+import { fileURLToPath } from 'node:url';
 import { rmSync, mkdtempSync } from 'node:fs';
+import { PRIVATE_FILE } from '#cli/config/platform.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { runToolCommand } from '#cli/tools/command.ts';
 import type { MergedView } from '#cli/types/policy/policy.ts';
-import { readAsset, isEmbedded } from '#cli/platform/assets.ts';
 import type { configurationRequest } from '#cli/native/protocol.ts';
 
 /**
@@ -20,20 +21,22 @@ export async function runConfiguration(
     view?: Pick<MergedView, 'limit'>,
     cancelSignal?: AbortSignal,
 ): Promise<unknown> {
-    const program = isEmbedded()
-        ? readAsset('packages/cli/scripts/configuration-process.js')
-        : `await import(${JSON.stringify(new URL('process.ts', import.meta.url).href)});`;
+    // The program is the TypeScript module in the source tree, or its build beside the bundle.
+    const program = import.meta.url.endsWith('.ts') ? 'process.ts' : 'configuration.js';
     const work = mkdtempSync(join(tmpdir(), 'gspot-configuration-'));
     const files = openRoot(work);
     try {
+        files.write('request.json', { bytes: Buffer.from(JSON.stringify(request)), mode: PRIVATE_FILE }, undefined);
         const result = await runToolCommand(
             view,
-            [process.execPath, '--no-install', 'run', '-'],
-            {
-                cwd: request.root,
-                env: { BUN_BE_BUN: '1' },
-                stdin: `globalThis.gspotConfigurationRequest = ${JSON.stringify(request)};\nglobalThis.gspotConfigurationOutput = ${JSON.stringify(join(work, 'result.json'))};\n${program}`,
-            },
+            [
+                process.execPath,
+                ...('bun' in process.versions ? ['--no-install'] : []),
+                fileURLToPath(new URL(program, import.meta.url)),
+                join(work, 'request.json'),
+                join(work, 'result.json'),
+            ],
+            { cwd: request.root },
             cancelSignal,
         );
         if (result.code !== 0 || result.isTimedOut === true || result.isCanceled === true)

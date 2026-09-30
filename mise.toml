@@ -1,8 +1,8 @@
 min_version = "2026.8.8"
 
 [settings]
-# Repository tasks execute the CLI source before a release exists.
-disable_tools = ["github:stefanionescu/gspot"]
+# Repository tasks run the CLI source, so mise does not install the published package.
+disable_tools = ["npm:gspot"]
 
 # Tasks use installed tools; native provisioning is an explicit development step.
 [settings.task]
@@ -52,7 +52,7 @@ description = "Write the mise pins of every kit tool from the manifests."
 run = "bun packages/cli/scripts/test-tools.ts"
 
 [tasks."repo:setup"]
-description = "Install frozen dependencies, prepare the Swift parser, and synchronize Astro types."
+description = "Install frozen dependencies, prepare the grammars, and synchronize Astro types."
 run = ["bun install --frozen-lockfile", "bun packages/cli/scripts/inputs.ts"]
 depends_post = ["docs:sync", "build:plugin"]
 
@@ -61,8 +61,9 @@ description = "Install locked repository checks with the current workspace plugi
 run = "bun tests/support/registry/install.ts"
 
 [tasks.build]
-description = "Build the host CLI, or targets supplied as arguments, with licenses and notices."
-run = "bun packages/cli/scripts/command.ts"
+depends = ["prepare:grammar"]
+description = "Build the gspot package into packages/cli/dist."
+run = "bun packages/cli/scripts/build.ts"
 
 [tasks."build:plugin"]
 description = "Build the standalone ESLint plugin and stage its license."
@@ -109,7 +110,7 @@ depends = ["prepare:grammar", "build:plugin"]
 description = "Validate guide structure and native Good examples at both levels."
 dir = "{{config_root}}/tests"
 run = [
-    "bun ../packages/cli/src/agents/lint.ts",
+    "bun ../packages/cli/scripts/guides-lint.ts",
     "bun test --timeout 60000 --test-name-pattern 'examples|Good fence' ./unit/cli/agents/examples.test.ts ./integration/tools/generation/bash.test.ts ./integration/tools/generation/docker.test.ts ./integration/tools/generation/fastapi.test.ts ./integration/tools/generation/ruff.test.ts ./integration/tools/generation/swift/docs.test.ts ./integration/tools/generation/typescript.test.ts",
 ]
 
@@ -121,7 +122,7 @@ run = "bun support/acceptance.ts"
 
 [tasks."test:release"]
 depends = ["prepare:grammar", "build:plugin"]
-description = "Exercise built release artifacts and installed consumers through an isolated registry."
+description = "Build and publish both packages to an isolated registry, then test consumers that install them."
 dir = "{{config_root}}/tests"
 run = "bun support/release/run.ts"
 
@@ -155,12 +156,8 @@ run = "bun tests/support/cli/swiftformat.ts"
 description = "Verify that documentation describes a published stable release."
 run = "bun docs/scripts/verify-release.ts"
 
-[tasks."release:publish"]
-description = "Validate and publish packages to the selected registry."
-run = "bun packages/cli/scripts/publish.ts"
-
 [tasks."prepare:grammar"]
-description = "Download and verify the pinned upstream Swift parser for source development."
+description = "Copy the grammar files into packages/cli/grammars, and download and verify the Swift parser."
 run = "bun packages/cli/scripts/inputs.ts"
 
 [tasks."ci:affected"]
@@ -185,25 +182,9 @@ esac
 '''
 
 [tasks."release:verify-version"]
-description = "Require TAG to match the CLI package version before building release artifacts."
+description = "Require TAG to match the gspot package version before publishing."
 shell = "bash -euo pipefail -c"
 run = '''test "v$(bun -e 'console.log(require("./packages/cli/package.json").version)')" = "$TAG"'''
-
-[tasks."release:assemble"]
-description = "Assemble downloaded binaries after checking that their licenses and notices agree."
-shell = "bash -euo pipefail -c"
-run = '''
-for directory in dist/downloads/gspot-*; do
-    for file in LICENSE.md NOTICE.md; do
-        if [[ -f dist/$file ]]; then
-            cmp "dist/$file" "$directory/$file"
-        else
-            cp "$directory/$file" "dist/$file"
-        fi
-    done
-    cp "$directory"/gspot-* dist/
-done
-'''
 
 [tasks."site:record-source"]
 description = "Record the selected source revision and CLI version in the built site artifact."

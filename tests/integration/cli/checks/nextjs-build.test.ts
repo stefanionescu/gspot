@@ -1,3 +1,4 @@
+import executables from 'which';
 import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
 import { toPosix } from '#cli/platform/paths.ts';
@@ -72,7 +73,7 @@ test.each(['Generator failed', 'unknown command', 'Invalid project directory'])(
             files: session.repository.files,
         });
         let scratch = '';
-        const locate = spyOn(Bun, 'which').mockReturnValue(process.execPath);
+        const locate = spyOn(executables, 'sync').mockReturnValue(process.execPath);
         const run = spyOn(processes, 'run').mockImplementation((_command, options) => {
             scratch = options.cwd;
             writeFileSync(join(scratch, 'tsconfig.json'), 'partial generator output\n');

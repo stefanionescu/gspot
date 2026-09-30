@@ -6,14 +6,15 @@ pinned, installed, verified, and upgraded. gspot pins, the package managers inst
 
 ## Installing gspot
 
-gspot is one binary for each platform. It is published to GitHub Releases, and to npm as a
-launcher package over one package for each platform. Three ways to get it:
+gspot is one npm package named `gspot`. It is written in TypeScript and bundled to plain
+JavaScript. It runs on Node.js 22 or newer and on Bun, on every system those run on. It has no per-system
+builds and no install script. Three ways to get it:
 
-| Way                  | Command                                                                                         |
-| -------------------- | ----------------------------------------------------------------------------------------------- |
-| mise                 | `mise use -g github:stefanionescu/gspot` for a global copy                                      |
-| npm, pnpm, yarn, bun | `npx gspot init` or `bunx gspot init`; the `gspot` package is a launcher with no install script |
-| release asset        | download `gspot-<os>-<arch>` from the release page and put it on `PATH`                         |
+| Way                  | Command                                                                     |
+| -------------------- | --------------------------------------------------------------------------- |
+| npm, pnpm, yarn, bun | `npm install --save-dev gspot`, then `npx gspot init`; or `bunx gspot init` |
+| global npm           | `npm install --global gspot`, for a repository without `package.json`       |
+| mise                 | `mise use -g npm:gspot` for a global copy                                   |
 
 A `curl | sh` installer is never offered, because the rule files ban the pattern.
 
@@ -23,24 +24,22 @@ every command reads. The runner holds the second: the mise file of gspot, or the
 `devDependencies`. The hook and the tasks find that pinned version, so two people on one
 repository run the same gspot.
 
-A binary of another version than `.gspot/version` exits 2 on every command that reads the
+A gspot of another version than `.gspot/version` exits 2 on every command that reads the
 config. It prints the two ways forward: install the pinned version, or move the pin with
 `gspot apply`. `init`, `doctor`, `explain`, `list`, `--version`, and
 `--help` run under any version. Package managers update gspot itself.
 
 ## Where gspot is published
 
-All three places carry the same version from one release run:
+Both places carry the same version from one release run:
 
-| Place          | Holds                                                                              | Used by                                                |
-| -------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------ |
-| GitHub release | the seven binaries and `checksums.txt`, each binary attested                       | mise, and the CI job without mise                      |
-| npm            | `gspot`, one `gspot-<os>-<cpu>` package for each target, and `eslint-plugin-gspot` | `npx gspot`, and `.gspot/package.json`                 |
-| `gspot.dev`    | the manual and `gspot.schema.json`                                                 | the `#:schema` line of every `gspot.toml`, and editors |
+| Place       | Holds                              | Used by                                                |
+| ----------- | ---------------------------------- | ------------------------------------------------------ |
+| npm         | `gspot` and `eslint-plugin-gspot`  | `npx gspot`, mise, CI, and `.gspot/package.json`       |
+| `gspot.dev` | the manual and `gspot.schema.json` | the `#:schema` line of every `gspot.toml`, and editors |
 
-The seven targets include `linux-x64-musl` and `linux-arm64-musl`, for Alpine images. Every
-published package ships `LICENSE.md` and `NOTICE.md`. The release fails before it
-publishes anything when one binary or one grammar is absent.
+The `gspot` package holds the bundle in `dist/`, the kits, the guides, and the grammar files
+with their licenses. The GitHub release carries notes only.
 
 Before the first release, a repository installs from the local `verdaccio` registry of the test
 harness, which `GSPOT_REGISTRY` names. The redo of yap-swift-app runs that way, and no
@@ -48,11 +47,11 @@ tracked file holds the address.
 
 The first release needs these, in this order:
 
-1. The npm organization `gspot` and the package name `gspot`, owned by this project.
+1. The unscoped npm names `gspot` and `eslint-plugin-gspot`, and an `NPM_TOKEN` secret that
+   can publish them. The `@gspot` scope belongs to another npm account.
 2. A public repository.
-3. Trusted publishing set up for each package.
-4. The domain that serves the manual.
-5. The Windows job green.
+3. The domain that serves the manual.
+4. The Windows job green.
 
 ## Pins
 
@@ -98,7 +97,7 @@ fails a pin below what a reference repository runs.
 
 | Kind of tool                      | Where it installs                                                                             |
 | --------------------------------- | --------------------------------------------------------------------------------------------- |
-| a binary mise can install         | `.mise/conf.d/gspot-tools.toml`, under the mise runner                                        |
+| a native tool mise can install    | `.mise/conf.d/gspot-tools.toml`, under the mise runner                                        |
 | an npm tool or library            | `.gspot/node_modules`, from `.gspot/package.json`, with the package manager of the repository |
 | a Python tool                     | `.gspot/.venv`, from `.gspot/pyproject.toml`, with uv                                         |
 | a host tool, such as `xcodebuild` | nowhere; `doctor` reports whether it is present                                               |
@@ -183,7 +182,7 @@ No version migrations or release-PR machinery are maintained before release.
 ## Rollback
 
 Restore the previous complete policy, generated files, locks, and version pin from Git or recovery.
-Run the matching binary and `gspot install`. Do not execute publication or deployment during cleanup.
+Install the matching gspot version and run `gspot install`. Do not execute publication or deployment during cleanup.
 
 ## Network
 
@@ -191,9 +190,3 @@ The install of tools reaches
 the registries. `apply` may reach registries to resolve changed tool locks and downloads Vale packages at `all`. Immutable `install` only installs recorded dependency contents; it never regenerates locks. `check` and the
 hooks never reach the network, except for a check that declares `network`, which sits at `push`
 or `manual`.
-
-## Internal build arguments
-
-The CLI compiler always compiles an executable with syntax minification. Its internal interface
-accepts the entry, target, output path, and metadata path. It exposes no flags that suggest these
-fixed operations can be disabled. Cross-compilation does not establish native execution evidence.

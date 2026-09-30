@@ -28,7 +28,7 @@ export const matchSchema = z.object({
 /**
  * Runs one rule asset over selected files through shared execution boundaries.
  * @param input the engine input
- * @param asset the rule's asset path, such as `packages/cli/kits/language/bash/rules/branches.yml`
+ * @param asset the rule's asset path, such as `kits/language/bash/rules/branches.yml`
  * @param files the files, relative to the root
  * @returns the matches with zero-based lines, by file
  */

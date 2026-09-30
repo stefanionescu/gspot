@@ -3,7 +3,6 @@ import type { SpawnOutcome } from '#tests/types/cli.ts';
 import type { Registry } from '#tests/types/registry.ts';
 import type { createConsumer } from '#tests/support/release/consumer.ts';
 
-export type PublishedManifest = { version: string; optionalDependencies?: Record<string, string> };
 /** The registry holding the published release, its version, and the npmrc private tool installs read. */
 export type PublishedRelease = {
     registry: Pick<Registry, 'url' | 'npmrc' | 'work'>;

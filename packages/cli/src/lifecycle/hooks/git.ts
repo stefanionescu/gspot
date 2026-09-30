@@ -1,7 +1,6 @@
 import { isDeepStrictEqual } from 'node:util';
 import { toPosix } from '#cli/platform/paths.ts';
 import type { Read } from '#cli/types/platform.ts';
-import { binaryPath } from '#cli/platform/assets.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { gitignoreBlock } from '#cli/kits/manifests.ts';
 import type { HookName } from '#cli/types/generation.ts';
@@ -117,7 +116,7 @@ function nativeCopyPlans(installation: Installation, name: string, path: string)
 // The commands a stage hook runs: gspot itself, or the manager's copy and, for pre-commit's other stages, gspot too.
 function hookCommands(installation: Installation, name: HookName): string[] {
     const { policy, nativeHooks, directory } = installation;
-    const own = hookCommand(name, policy.runner?.tool, binaryPath(), directory);
+    const own = hookCommand(name, policy.runner?.tool, directory);
     if (nativeHooks === undefined) return [own];
     const isPreCommit = policy.hooks?.tool === 'pre-commit';
     const managed = isPreCommit

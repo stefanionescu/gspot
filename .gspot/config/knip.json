@@ -2,11 +2,8 @@
     "$schema": "https://unpkg.com/knip@6/schema.json",
     "entry": [
         "**/build.ts",
-        "packages/cli/scripts/command.ts",
         "packages/cli/scripts/inputs.ts",
-        "**/publish.ts",
-        "packages/cli/src/agents/lint.ts",
-        "packages/npm/gspot.js",
+        "packages/cli/scripts/guides-lint.ts",
         "docs/src/content/reference/collection.ts",
         "docs/astro.config.ts",
         "docs/src/content.config.ts",
@@ -135,11 +132,8 @@
         ".": {
             "entry": [
                 "**/build.ts",
-                "packages/cli/scripts/command.ts",
                 "packages/cli/scripts/inputs.ts",
-                "**/publish.ts",
-                "packages/cli/src/agents/lint.ts",
-                "packages/npm/gspot.js",
+                "packages/cli/scripts/guides-lint.ts",
                 "docs/src/content/reference/collection.ts",
                 "docs/astro.config.ts",
                 "docs/src/content.config.ts",
@@ -162,10 +156,8 @@
         "packages/cli": {
             "entry": [
                 "**/build.ts",
-                "scripts/command.ts",
                 "scripts/inputs.ts",
-                "**/publish.ts",
-                "src/agents/lint.ts",
+                "scripts/guides-lint.ts",
                 "src/main.{ts,js}",
                 "src/index.{ts,js}",
                 "src/server.{ts,js}",
@@ -181,7 +173,6 @@
         "packages/eslint-plugin": {
             "entry": [
                 "**/build.ts",
-                "**/publish.ts",
                 "src/main.{ts,js}",
                 "src/index.{ts,js}",
                 "src/server.{ts,js}",
@@ -197,7 +188,6 @@
         "docs": {
             "entry": [
                 "**/build.ts",
-                "**/publish.ts",
                 "src/content/reference/collection.ts",
                 "astro.config.ts",
                 "src/content.config.ts",
@@ -217,7 +207,6 @@
         "tests": {
             "entry": [
                 "**/build.ts",
-                "**/publish.ts",
                 "support/cli/swiftformat.ts",
                 "support/registry/install.ts",
                 "support/release/run.ts"

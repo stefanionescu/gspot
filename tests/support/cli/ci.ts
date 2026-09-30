@@ -1,14 +1,13 @@
-import { createHash } from 'node:crypto';
 import { createFileTree } from 'testdirs';
 import { join, delimiter } from 'node:path';
 import * as processes from '#cli/platform/spawn.ts';
 import { gitOutput } from '#tests/support/cli/git.ts';
 import type { SpawnOutcome } from '#tests/types/cli.ts';
 import { run, gspot } from '#tests/support/cli/command.ts';
-import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import type { PrepareCiProjectResult } from '#tests/types/results.ts';
 import type { Generated } from '#tests/types/acceptance/source/cli.ts';
+import { rmSync, chmodSync, readFileSync, writeFileSync } from 'node:fs';
 
 /** Commits authored CI inputs and returns the exact object checked by the generated job. */
 export function commitCiSource(root: string, text: string): string {
@@ -55,57 +54,36 @@ format = "lines"
     return { base, target, generated, pipeline, pipelinePath, workflowPath };
 }
 
-/** Serves a checksum-controlled CLI download through the job's actual curl command. */
-export async function createCiDownload(
-    directory: string,
-): Promise<{ directory: string; corrupt: boolean; [Symbol.asyncDispose](): Promise<void> }> {
-    const binary = `#!/usr/bin/env bun
+/** A fake npm on the job's PATH: its global install of gspot writes a launcher of the source CLI, or fails on request. */
+export function createCiInstall(directory: string): { directory: string; refuse: () => void; allow: () => void } {
+    const launcher = `#!/usr/bin/env bun
 const child = Bun.spawnSync([process.execPath, ${JSON.stringify(gspot)}, ...process.argv.slice(2)], { stdin: 'inherit', stdout: 'inherit', stderr: 'inherit' });
 process.exit(child.exitCode);
 `;
-    const digest = createHash('sha256').update(binary).digest('hex');
-    let corrupt = false;
-    const server = Bun.serve({
-        hostname: '127.0.0.1',
-        port: 0,
-        fetch(request) {
-            const name = new URL(request.url).pathname.split('/').at(-1)!;
-            return new Response(
-                name === 'checksums.txt'
-                    ? ['gspot-darwin-arm64', 'gspot-darwin-x64', 'gspot-linux-arm64', 'gspot-linux-x64']
-                          .map((asset) => `${corrupt ? '0'.repeat(64) : digest}  ${asset}\n`)
-                          .join('')
-                    : binary,
-            );
+    const failure = join(directory, 'npm-fails');
+    writeFileSync(
+        join(directory, 'npm'),
+        `#!/usr/bin/env bun
+import { existsSync, writeFileSync } from 'node:fs';
+const [command, flag, spec] = process.argv.slice(2);
+if (existsSync(${JSON.stringify(failure)})) {
+    console.error('npm error 404 Not Found - GET https://registry.npmjs.org/gspot');
+    process.exit(1);
+}
+if (command !== 'install' || flag !== '--global' || !spec?.startsWith('gspot@')) process.exit(2);
+writeFileSync(${JSON.stringify(join(directory, 'gspot'))}, ${JSON.stringify(launcher)}, { mode: 0o755 });
+`,
+    );
+    chmodSync(join(directory, 'npm'), 0o755);
+    return {
+        directory,
+        refuse: () => {
+            writeFileSync(failure, '');
         },
-    });
-    try {
-        const curl = Bun.which('curl');
-        if (curl === null) throw new Error('Curl is required for the generated CI download fixture.');
-        writeFileSync(
-            join(directory, 'curl'),
-            `#!/usr/bin/env bun
-    const args = process.argv.slice(2).map(value => value.startsWith('https://github.com/stefanionescu/gspot/releases/download/') ? ${JSON.stringify(`http://127.0.0.1:${String(server.port)}`)} + new URL(value).pathname : value);
-    process.exit(Bun.spawnSync([${JSON.stringify(curl)}, ...args], {stdin:'inherit',stdout:'inherit',stderr:'inherit'}).exitCode);
-    `,
-        );
-        chmodSync(join(directory, 'curl'), 0o755);
-        return {
-            directory,
-            get corrupt() {
-                return corrupt;
-            },
-            set corrupt(value: boolean) {
-                corrupt = value;
-            },
-            async [Symbol.asyncDispose]() {
-                await server.stop(true);
-            },
-        };
-    } catch (error) {
-        await server.stop(true);
-        throw error;
-    }
+        allow: () => {
+            rmSync(failure, { force: true });
+        },
+    };
 }
 
 /** Executes the generated provider script with its documented comparison and artifact environment. */

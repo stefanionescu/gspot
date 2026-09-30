@@ -1,5 +1,5 @@
 {
-    "name": "gspot",
+    "name": "gspot-workspace",
     "license": "Apache-2.0",
     "private": true,
     "workspaces": [
@@ -24,7 +24,6 @@
         "@typescript-eslint/parser": "8.70.0",
         "@typescript-eslint/rule-tester": "8.70.0",
         "ajv": "8.20.0",
-        "detect-libc": "2.1.2",
         "eslint": "9.39.5",
         "eslint-config-prettier": "10.1.8",
         "eslint-import-resolver-typescript": "4.4.5",

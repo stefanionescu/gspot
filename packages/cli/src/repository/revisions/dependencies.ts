@@ -12,33 +12,39 @@ import type { GitEntry, Directory } from '#cli/types/repository/revisions.ts';
 import { MODE_BITS, GSPOT_FOLDER, PRIVATE_DIRECTORY } from '#cli/config/platform.ts';
 import { sep, join, posix, dirname, basename, relative, isAbsolute } from 'node:path';
 import { LOCKS, COPY_CONCURRENCY, VALE_CONFIGURATION } from '#cli/config/repository/revisions.ts';
-import { cp, stat, chmod, lstat, mkdir, readdir, symlink, readlink, realpath } from 'node:fs/promises';
+import { cp, stat, chmod, lstat, mkdir, unlink, readdir, symlink, readlink, realpath } from 'node:fs/promises';
 
 const MANIFESTS = new Set(['package.json', 'pyproject.toml', 'Package.swift', ...LOCKS]);
-// Refuses a copied link that leaves the snapshot.
-async function assertInternalLink(root: string, path: string): Promise<void> {
-    let resolved: string;
-    try {
-        resolved = await realpath(path);
-    } catch (error) {
+
+// Checks one copied link. Some links point at files the revision does not track, such as the build output of a
+// workspace package. Such a link resolves only in the working tree, and nothing in the revision can run it, so it is
+// removed. A link that is broken in the working tree too, or that leaves the copy, is refused.
+async function checkCopiedLink(roots: { revision: string; working: string }, path: string): Promise<void> {
+    const resolved = await realpath(path).catch(() => undefined);
+    const target =
+        resolved ?? (await realpath(join(roots.working, relative(roots.revision, path))).catch(() => undefined));
+    if (target === undefined)
         throw new GspotError('selection', [
-            `Installed dependency link ${relative(root, path)} cannot be resolved: ${(error as Error).message}. Repair the dependency installation before checking this revision.`,
+            `Installed dependency link ${relative(roots.revision, path)} cannot be resolved. Repair the dependency installation before checking this revision.`,
         ]);
-    }
-    const target = relative(root, resolved);
-    const isExternal = isAbsolute(target) || target === '..' || target.startsWith(`..${sep}`);
-    if (isExternal)
+    const inside = relative(resolved === undefined ? roots.working : roots.revision, target);
+    if (isAbsolute(inside) || inside === '..' || inside.startsWith(`..${sep}`))
         throw new GspotError('selection', [
             'Installed dependencies contain an external link. Prepare isolated dependencies for the selected revision.',
         ]);
+    if (resolved === undefined) await unlink(path);
 }
 
-async function validateCopiedLinks(root: string, directory: string, cancelSignal?: AbortSignal): Promise<void> {
+async function validateCopiedLinks(
+    roots: { revision: string; working: string },
+    directory: string,
+    cancelSignal?: AbortSignal,
+): Promise<void> {
     for (const entry of await readdir(directory, { withFileTypes: true })) {
         cancelSignal?.throwIfAborted();
         const path = join(directory, entry.name);
-        if (entry.isDirectory()) await validateCopiedLinks(root, path, cancelSignal);
-        else if (entry.isSymbolicLink()) await assertInternalLink(root, path);
+        if (entry.isDirectory()) await validateCopiedLinks(roots, path, cancelSignal);
+        else if (entry.isSymbolicLink()) await checkCopiedLink(roots, path);
     }
 }
 
@@ -230,11 +236,11 @@ export async function copyDependencies(
         const packages = directories.filter((directory) => directory.dependency === 'node_modules');
         for (const directory of packages) await copyDirectory(root, revisionRoot, directory, cancelSignal);
         // The snapshot root is compared in its resolved spelling, which a Windows temp path shortens.
-        const resolvedRoot = await realpath(revisionRoot);
+        const roots = { revision: await realpath(revisionRoot), working: await realpath(root) };
         for (const { folder, dependency } of packages.filter(
             (directory) => basename(directory.folder) !== GSPOT_FOLDER,
         ))
-            await validateCopiedLinks(resolvedRoot, join(resolvedRoot, folder, dependency), cancelSignal);
+            await validateCopiedLinks(roots, join(roots.revision, folder, dependency), cancelSignal);
     } finally {
         installed.close();
     }

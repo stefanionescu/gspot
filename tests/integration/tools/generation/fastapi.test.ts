@@ -10,7 +10,7 @@ test.each(FASTAPI_GUIDE_TESTS)(
     async (scenario) => {
         await using sandbox = await testdir();
         const path = `framework/fastapi/${scenario.guide}.md`;
-        const examples = ruleExamples({ path, text: readAsset(`packages/cli/guides/${path}`) }).filter(
+        const examples = ruleExamples({ path, text: readAsset(`guides/${path}`) }).filter(
             (example) => example.language === 'python',
         );
         expect(examples).toHaveLength(2);

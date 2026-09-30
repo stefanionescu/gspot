@@ -53,7 +53,6 @@ export const COUNT_ANALYSES = new Set(['bash-branches', 'bash-nesting', 'bash-mu
 export const SCRIPT_TAG = 'shell';
 export const GSPOT_DIRECTORY = '.gspot/';
 export const SOURCE = /\.[cm]?[jt]sx?$/u;
-export const IMPORT_KINDS = new Set(['import-statement', 'require-call', 'dynamic-import']);
 export const CALL = /^([A-Za-z_]\w*)\b(.*)$/u;
 export const OPERATORS = [' && ', ' || ', ' | ', ';'];
 /** The start of a computed directory constant, and the three signs that mark one. */

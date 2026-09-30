@@ -1,3 +1,4 @@
+import executables from 'which';
 import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
 import { toPosix } from '#cli/platform/paths.ts';
@@ -64,7 +65,7 @@ test.each(DRIZZLE_MIGRATIONS_SCOPES)(
     async (scope) => {
         const planted = await plant(scope, 'failure');
         await using directory = planted.directory;
-        const locate = spyOn(Bun, 'which').mockReturnValue(process.execPath);
+        const locate = spyOn(executables, 'sync').mockReturnValue(process.execPath);
         try {
             expect(await rejection(drizzleMigrations(planted.input))).toContain('Migration generation failed');
             writeFileSync(join(directory.path, planted.path('schema.txt')), 'current');
@@ -81,7 +82,7 @@ test.each(DRIZZLE_MIGRATIONS_SCOPES)(
     async (scope) => {
         const planted = await plant(scope, 'changed');
         await using directory = planted.directory;
-        const locate = spyOn(Bun, 'which').mockReturnValue(process.execPath);
+        const locate = spyOn(executables, 'sync').mockReturnValue(process.execPath);
         try {
             const found = await drizzleMigrations(planted.input);
             expect(found.map(({ check, file, rule }) => ({ check, file, rule }))).toStrictEqual([

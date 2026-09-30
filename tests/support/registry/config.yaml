@@ -1,7 +1,7 @@
 # A throwaway registry: the gspot packages are published here, and every other package comes from npm through it.
 storage: ./storage
-# Compiled binaries exceed Verdaccio's default 10 MB request limit.
-max_body_size: 200mb
+# The gspot package with its grammars exceeds Verdaccio's default 10 MB request limit.
+max_body_size: 50mb
 auth:
     htpasswd:
         file: ./htpasswd
@@ -15,10 +15,6 @@ packages:
         publish: $anonymous
         unpublish: $anonymous
     'gspot':
-        access: $all
-        publish: $anonymous
-        unpublish: $anonymous
-    'gspot-*':
         access: $all
         publish: $anonymous
         unpublish: $anonymous

@@ -6,7 +6,7 @@ import { gitOutput } from '#tests/support/cli/git.ts';
 import { rejection } from '#tests/support/expectations.ts';
 import { useRevision } from '#cli/repository/revisions/contents.ts';
 import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
-import { lstatSync, existsSync, unlinkSync, symlinkSync, readFileSync } from 'node:fs';
+import { lstatSync, mkdirSync, existsSync, unlinkSync, symlinkSync, readFileSync } from 'node:fs';
 
 test('staged snapshots copy all workspace dependency trees before validating cross-tree links', async () => {
     await using sandbox = await testdir();
@@ -33,6 +33,31 @@ test('staged snapshots copy all workspace dependency trees before validating cro
     symlinkSync(sandbox.path, join(sandbox.path, 'node_modules/owned'), 'dir');
     expect(await rejection(useRevision(sandbox.path, { kind: 'index' }, () => Promise.resolve(undefined)))).toContain(
         'external link',
+    );
+});
+
+test('a workspace bin into untracked build output leaves the snapshot, and a broken link stops it', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'package.json': '{"workspaces":["packages/*"]}',
+        'bun.lock': '{}',
+        'packages/cli/package.json': '{"name":"cli","bin":{"cli":"dist/cli.js"}}',
+        'packages/cli/dist/cli.js': 'console.log(1);',
+        '.gitignore': 'node_modules/\ndist/\n',
+    });
+    mkdirSync(join(sandbox.path, 'node_modules/.bin'), { recursive: true });
+    symlinkSync('../packages/cli', join(sandbox.path, 'node_modules/cli'), 'dir');
+    symlinkSync('../cli/dist/cli.js', join(sandbox.path, 'node_modules/.bin/cli'));
+    gitOutput(sandbox.path, ['init']);
+    gitOutput(sandbox.path, ['add', '.']);
+    await useRevision(sandbox.path, { kind: 'index' }, (snapshot) => {
+        expect(existsSync(join(snapshot, 'node_modules/cli/package.json'))).toBe(true);
+        expect(lstatSync(join(snapshot, 'node_modules/.bin/cli'), { throwIfNoEntry: false })).toBeUndefined();
+        return Promise.resolve(undefined);
+    });
+    symlinkSync('../missing/tool.js', join(sandbox.path, 'node_modules/.bin/broken'));
+    expect(await rejection(useRevision(sandbox.path, { kind: 'index' }, () => Promise.resolve(undefined)))).toContain(
+        'cannot be resolved',
     );
 });
 

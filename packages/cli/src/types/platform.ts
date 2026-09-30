@@ -21,6 +21,17 @@ export type GlobOptions = {
     followSymlinks?: boolean;
     refuseBrokenLinks?: boolean;
 };
+/** One pattern's walk over a folder: what it matches, how deep it goes, and where each match goes. */
+export type GlobWalk = {
+    cwd: string;
+    options: Required<GlobOptions>;
+    matches: (path: string) => boolean;
+    depth: number;
+    skipsHidden: boolean;
+    visited: Set<string>;
+    isPruned?: (folder: string) => boolean;
+    visit: (path: string) => void;
+};
 export type Read = { bytes: Buffer; mode: number; isLink?: true };
 export type Staging = { bounds: Bounds; path: string; target: string; temporary: string };
 export type SpawnResult = {
@@ -55,7 +66,6 @@ export type SpawnCompletion = Pick<
     Result<{ encoding: 'utf8'; reject: false }>,
     'code' | 'exitCode' | 'failed' | 'shortMessage' | 'stdout' | 'stderr' | 'timedOut' | 'isCanceled'
 > & { cause?: unknown };
-export type EmbeddedIndex = Record<string, string>;
 export type Proposed = ReadonlyMap<string, Read | undefined>;
 export type PathFormat = 'portable' | 'native';
 export type Bounds = {
@@ -77,11 +87,4 @@ export type Root = {
     rmdir(path: string): void;
     lock(path: string): void;
     close(): void;
-};
-/** A third-party license text the release notices embed, pinned by its digest. */
-export type UpstreamNotice = {
-    source: string;
-    checksum: string;
-    attribution?: string;
-    omitTemplateCopyright?: boolean;
 };

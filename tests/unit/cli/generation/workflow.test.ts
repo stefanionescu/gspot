@@ -25,9 +25,16 @@ test('a Swift scope adds the macOS jobs, and sarif = false leaves the code scann
     expect(quiet).not.toContain('security-events');
 });
 
-test('the GitLab include runs through mise when the runner is mise, and installs gspot itself otherwise', () => {
+test('the GitLab include runs through mise when the runner is mise, and installs gspot from npm otherwise', () => {
     expect(gitlabFile(SHAPE).content).toContain('mise exec -- gspot');
     const plain = gitlabFile({ ...SHAPE, isMise: false }).content;
-    expect(plain).toContain('mktemp -d');
+    expect(plain).toContain('npm install --global gspot@1.2.3');
     expect(plain).not.toContain('mise exec');
+});
+
+test('the GitHub workflow without mise sets up Node and installs the pinned gspot from npm', () => {
+    const plain = workflowFile({ ...SHAPE, isMise: false }).content;
+    expect(plain).toContain('actions/setup-node@');
+    expect(plain).toContain('npm install --global gspot@1.2.3');
+    expect(plain).not.toContain('releases/download');
 });

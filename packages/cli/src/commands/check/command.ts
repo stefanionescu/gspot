@@ -1,4 +1,5 @@
 // The check command's flags, its pre-push input, and the cancellation the termination signals cause.
+import { addAbortSignal } from 'node:stream';
 import type { Stage } from '#cli/types/kits.ts';
 import { progress } from '#cli/output/reporter.ts';
 import { checkCommand } from '#cli/commands/check/run.ts';
@@ -55,29 +56,17 @@ function optionsFrom(paths: string[], flags: Record<string, unknown>, global: Re
 
 // Reads the pre-push protocol from standard input, stopping when the run is canceled.
 async function readPushInput(signal: AbortSignal): Promise<string> {
-    const reader = Bun.stdin.stream().getReader();
-    let cancellation: Promise<void> | undefined;
-    // eslint-disable-next-line gspot/no-trivial-functions -- reason: removeEventListener needs the same function value that addEventListener received.
-    const stopReading = (): void => {
-        cancellation = reader.cancel();
-    };
-    signal.addEventListener('abort', stopReading, { once: true });
+    signal.throwIfAborted();
     const decoder = new TextDecoder('utf-8', { fatal: true });
     let input = '';
     try {
+        for await (const chunk of addAbortSignal(signal, process.stdin) as AsyncIterable<Buffer>)
+            input += decoder.decode(chunk, { stream: true });
+    } catch (error) {
         signal.throwIfAborted();
-        for (;;) {
-            const chunk = await reader.read();
-            signal.throwIfAborted();
-            if (chunk.done) break;
-            input += decoder.decode(chunk.value, { stream: true });
-        }
-        return input + decoder.decode();
-    } finally {
-        signal.removeEventListener('abort', stopReading);
-        await cancellation;
-        reader.releaseLock();
+        throw error;
     }
+    return input + decoder.decode();
 }
 
 // Turns the pre-push invocation into check options: Git's remote name and the object updates on standard input.

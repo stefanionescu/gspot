@@ -16,6 +16,7 @@ import {
     readdirSync,
     symlinkSync,
     readFileSync,
+    readlinkSync,
     realpathSync,
     writeFileSync,
 } from 'node:fs';
@@ -282,6 +283,22 @@ test('a link into another linked tree points at the copy of that tree, whatever 
         const copied = realpathSync(join(scratch, 'node_modules/beta'));
         expect(copied.startsWith(realpathSync(join(scratch, 'node_modules/alpha')))).toBe(true);
         expect(existsSync(join(copied, '../helpers/package.json'))).toBe(true);
+    } finally {
+        rmSync(scratch, { recursive: true, force: true });
+    }
+});
+
+test('a link that points at nothing is copied as it is', async () => {
+    await using repository = await testdir();
+    await createFileTree(repository.path, {
+        'package.json': '{"private":true}',
+        'node_modules/.bin/tool': '#!/bin/sh\n',
+    });
+    symlinkSync('../missing/bin/gspot', join(repository.path, 'node_modules/.bin/gspot'));
+    const scratch = await scratchCopy(repository.path, ['package.json'], ['']);
+    try {
+        expect(readlinkSync(join(scratch, 'node_modules/.bin/gspot'))).toBe('../missing/bin/gspot');
+        expect(readFileSync(join(scratch, 'node_modules/.bin/tool'), 'utf8')).toBe('#!/bin/sh\n');
     } finally {
         rmSync(scratch, { recursive: true, force: true });
     }

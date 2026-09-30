@@ -75,10 +75,8 @@ test.each(TOOLS.flatMap((tool) => HOOK_FILES.map((name) => [tool, name] as const
 test.each(HOOK_FILES.flatMap((name) => [undefined, 'mise', 'bun'].map((runner) => [name, runner] as const)))(
     'the Lefthook command for %s under the %s runner holds no double quote',
     (name, runner) => {
-        const command = lefthookCommand(name, runner, "/work/the author's tools/gspot");
+        const command = lefthookCommand(name, runner);
         expect(command).not.toContain('"');
-        expect(command).toContain(
-            runner === undefined ? String.raw`'/work/the author'\''s tools/gspot'` : 'gspot check',
-        );
+        expect(command).toContain('gspot check');
     },
 );

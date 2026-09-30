@@ -78,7 +78,9 @@ async function outerTargetsFirst(source: string): Promise<Dirent[]> {
     const depths = new Map(
         entries.map((entry) => [
             entry,
-            entry.isSymbolicLink() ? realpathSync(join(source, entry.name)).split(sep).length : 0,
+            entry.isSymbolicLink() && statSync(join(source, entry.name), { throwIfNoEntry: false }) !== undefined
+                ? realpathSync(join(source, entry.name)).split(sep).length
+                : 0,
         ]),
     );
     return entries.toSorted((left, right) => (depths.get(left) ?? 0) - (depths.get(right) ?? 0));
@@ -93,6 +95,8 @@ async function visitEntry(context: Scratch, directory: Copy, entry: Dirent): Pro
         return;
     }
     if (!entry.isSymbolicLink()) return;
+    // A link that points at nothing stays as it was copied.
+    if (statSync(source, { throwIfNoEntry: false }) === undefined) return;
     const original = realpathSync(source);
     if (statSync(original).isFile()) context.fileLinks.push({ source: original, target });
     else await relinkDirectory(context, original, target);

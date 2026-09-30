@@ -36,8 +36,8 @@ For a Python repository without a task runner, run:
 gspot init --kits python --no-runner
 ```
 
-`gspot install` installs the Python tools with uv and adds no tasks to `pyproject.toml`. Run the
-installed `gspot` binary directly.
+`gspot install` installs the Python tools with uv and adds no tasks to `pyproject.toml`. Run
+`gspot` directly, from a global npm install.
 
 ## With no task runner
 

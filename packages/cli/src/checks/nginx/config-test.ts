@@ -1,4 +1,5 @@
 import { tmpdir } from 'node:os';
+import picomatch from 'picomatch';
 import { join, posix } from 'node:path';
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { readSource } from '#cli/repository/tracked.ts';
@@ -15,8 +16,8 @@ function includedConfigurations(input: EngineInput, text: string, base: string):
     for (const [name, value] of nginxDirectives(text)) {
         if (name !== 'include' || value === undefined || value.includes('$')) continue;
         const target = posix.resolve('/etc/nginx', value);
-        const pattern = new Bun.Glob(posix.normalize(posix.join(base, posix.relative('/etc/nginx', target))));
-        for (const file of input.files.filter((candidate) => pattern.match(candidate.path)))
+        const isIncluded = picomatch(posix.normalize(posix.join(base, posix.relative('/etc/nginx', target))));
+        for (const file of input.files.filter((candidate) => isIncluded(candidate.path)))
             included.push({ path: file.path, target: posix.resolve('/etc/nginx', posix.relative(base, file.path)) });
     }
     return included;

@@ -1,4 +1,5 @@
 // Which planned checks may reuse a stored result, the key that identifies one, and how a result is stored.
+import { createHash } from 'node:crypto';
 import { inspectTool } from '#cli/tools/inspect.ts';
 import type { CheckResult } from '#cli/types/checks.ts';
 import { sep, join, relative, isAbsolute } from 'node:path';
@@ -25,7 +26,7 @@ function toolIdentity(session: Session, path: string, hashes: RunHashes): string
         const identity = JSON.stringify({
             path: identityPath(session, path),
             mode: fstatSync(file).mode,
-            hash: new Bun.CryptoHasher('sha256').update(readFileSync(file)).digest('hex'),
+            hash: createHash('sha256').update(readFileSync(file)).digest('hex'),
         });
         hashes.tools.set(path, identity);
         return identity;
@@ -104,7 +105,7 @@ function portableResult(session: Session, result: CheckResult): CheckResult {
  * @returns empty file and tool tables under the policy hash
  */
 export function runHashes(session: Session): RunHashes {
-    const policy = new Bun.CryptoHasher('sha256').update(session.policyFiles.text).digest('hex');
+    const policy = createHash('sha256').update(session.policyFiles.text).digest('hex');
     const files = new Map<string, string>();
     return { policy, files, tools: new Map<string, string>() };
 }

@@ -1,3 +1,4 @@
+import executables from 'which';
 import { join } from 'node:path';
 import { RUNS } from '#tests/inputs/cli.ts';
 import { test, spyOn, expect } from 'bun:test';
@@ -43,7 +44,7 @@ test('the tool inspection > an active PATH executable wins over an unrelated mis
     const active = join(sandbox.path, 'active/teller');
     chmodSync(active, RUNS);
     chmodSync(join(sandbox.path, 'mise/shims/teller'), RUNS);
-    const which = spyOn(Bun, 'which').mockReturnValue(active);
+    const which = spyOn(executables, 'sync').mockReturnValue(active);
     const home = spyOn(environment, 'miseHome').mockReturnValue(join(sandbox.path, 'mise'));
     try {
         const inspection = inspectTool({ root: sandbox.path, inspections: new Map() }, commandPin('teller', '3.8.1'));

@@ -4,11 +4,9 @@ This document decides the gspot repository: packages, folders, tests, and how gs
 itself. Local checks, normal hooks, and full CI against the exact task-branch commit are
 required before a merge.
 
-Two published artifacts: the binary (GitHub Releases, one asset per platform) and
-`eslint-plugin-gspot` (npm). Kits, guides, and prose ship inside the binary. On npm the binary ships the way Biome and ast-grep ship theirs. One package per platform
-(`gspot-darwin-arm64`, `gspot-linux-x64` and the rest) holds the executable, gated
-by the `os` and `cpu` fields. A thin `gspot` package lists them as `optionalDependencies`, and
-its `bin` launcher runs the one that installed. Nothing downloads at install time and no install script runs.
+Two published npm packages: `gspot` and `eslint-plugin-gspot`. `gspot` is TypeScript bundled
+to plain JavaScript that runs on Node.js 22 or newer and on Bun. Kits, guides, prose styles, and
+grammar files ship inside it. It has no per-system builds, and no install script runs.
 
 ## Ownership
 
@@ -57,9 +55,9 @@ with it, in the same change; nothing is relocated, aliased, or wrapped in a new 
 | `packages/cli/src/repository/`      | discovery, file classification, existing tooling, revisions, and snapshots                                            |
 | `packages/cli/src/tools/`           | locating, inspecting, and installing tools; Python and npm projects under `.gspot/`                                   |
 | `packages/cli/src/parsers/`         | tree-sitter loading, the SQL parser, comments, and TOML and JSON readers                                              |
-| `packages/cli/src/platform/`        | process execution, environment access, paths, errors, and embedded assets                                             |
+| `packages/cli/src/platform/`        | process execution, environment access, paths, errors, and package assets                                              |
 | `packages/cli/src/agents/`          | guide selection, assembly, the managed block, and the guides lint                                                     |
-| `packages/cli/scripts/`             | the build: command parsing, compilation, embedded assets, pinned inputs, notices, and publication                     |
+| `packages/cli/scripts/`             | the package build, the grammar preparation, the guides lint, and the tool pins of the tests                           |
 | `packages/eslint-plugin/`           | the plugin, with its rules beside their logic, `src/types/`, and `src/config/`                                        |
 | `docs/`                             | the Astro Starlight site; `docs/src/content/reference/collection.ts` renders the check and setting definitions        |
 | `tests/`                            | every test, with support under `tests/support/`, literal inputs under `tests/inputs/`, and types under `tests/types/` |
@@ -75,7 +73,7 @@ inputs. Infrastructure never imports every check definition for a basic operatio
 The CLI and the independently usable ESLint plugin are separate workspace packages. The plugin
 exports `configs.recommended`, `configs.all`, and its rules through the conventional ESLint
 plugin shape. Both configs enable the trivial-function and trivial-file rules with the shipped
-options. The plugin matches paths with `picomatch`, the matcher the binary uses.
+options. The plugin matches paths with `picomatch`, the matcher the CLI uses.
 
 Authored repository tasks live in `mise.toml`, which also owns the development runtimes, and
 generated integration in `.mise/conf.d/gspot-tools.toml`, which gspot writes with every tool
@@ -107,10 +105,9 @@ under `.gspot/state/`, reports under `.gspot/reports/`, and disposable caches un
 environment stay at `.gspot/`'s root for native dependency resolution; only installed
 dependencies, downloaded styles, local state, reports, and caches are ignored.
 
-The root `LICENSE.md` is the authored project license, copied into distribution output. CLI
-notices describe the bundled inputs, embedded grammars, and Bun. The build-owned notice
-assembler owns pinned supplemental sources, checksums, and attribution. No scanner of the
-whole dependency tree replaces it.
+The root `LICENSE.md` is the authored project license, copied into distribution output. The
+`gspot` package bundles only its own source; its npm dependencies install with their own
+licenses. The grammar files it ships carry their licenses in `grammars/licenses/`.
 
 ## Libraries
 
@@ -146,7 +143,7 @@ interactive input is available.
 | Process execution                                     | `execa`                                                                | capture, deadlines, cancellation, and platform command shims; gspot maps results and terminates its child on failure |
 | Path selectors                                        | picomatch, `Bun.Glob` for scans                                        | one syntax everywhere                                                                                                |
 | Versions                                              | semver                                                                 | pins, floors, the version-pin comparison                                                                             |
-| Parsing for the structure and naming engines          | `web-tree-sitter` with embedded grammars; `libpg-query` WASM for SQL   | no native modules                                                                                                    |
+| Parsing for the structure and naming engines          | `web-tree-sitter` with packaged grammars; `libpg-query` WASM for SQL   | no native modules                                                                                                    |
 | ICU messages                                          | `@formatjs/icu-messageformat-parser`                                   | `i18n/locales`                                                                                                       |
 | CSS selectors and class names                         | `postcss`, `postcss-scss`, `postcss-selector-parser`                   | stylesheet syntax and decoded selector classes; no regex over CSS                                                    |
 
@@ -155,26 +152,23 @@ framework, or dependency-injection container.
 
 ## Build and release
 
-`bun build --compile --target=bun-<os>-<arch>` per platform, with the grammar WASM files, kits,
-and prose embedded through the file embedding of Bun, produces `gspot-darwin-arm64`,
-`gspot-darwin-x64`, `gspot-linux-x64`, `gspot-linux-arm64`, `gspot-windows-x64.exe`, and the
-Linux musl targets from the same platform definition. Generated inputs and evaluator bundles
-live in `packages/cli/.build/`, release artifacts in root `dist/`. Every downloaded or cached
-build input matches its pinned SHA-256. `eslint-plugin-gspot` builds with `bun build` to ESM
-and CommonJS, versioned with the binary.
+`packages/cli/scripts/build.ts` bundles `packages/cli/src/main.ts` to `packages/cli/dist/gspot.js`
+and the configuration process to `packages/cli/dist/configuration.js`, for Node, with every npm dependency left external. The
+package ships `dist/`, `kits/`, `guides/`, and `grammars/`. `prepare:grammar` fills
+`grammars/`: it copies the tree-sitter grammar files and downloads the Swift grammar, which
+must match its pinned SHA-256. `eslint-plugin-gspot` builds with `bun build` to ESM and
+CommonJS, versioned with `gspot`.
 
-The version has one source, `version` in `packages/cli/package.json`: the binary reads it
-through the package manifest import, the plugin exposes it in `meta.version`, and `publish.ts`
-reads it for every npm manifest. The release workflow fails when the tag differs. It runs the explicit `test:release` task
-against the binaries it built before publishing. It starts the compiled binary of the
-platform of the runner in a planted repository for `init --yes` and `check`.
+The version has one source, `version` in `packages/cli/package.json`: the CLI reads it through
+the package manifest import, and the plugin exposes it in `meta.version`. The release workflow
+fails when the tag differs. It runs the `test:release` task before publishing: both packages
+are published to a local registry, installed into new projects, and run under Node.
 
 | Step           | Tool                                                                                                              |
 | -------------- | ----------------------------------------------------------------------------------------------------------------- |
-| Build          | a GitHub Actions matrix runs `bun build --compile` per target                                                     |
-| Provenance     | `actions/attest` signs every binary and the npm packages carry `--provenance` from trusted publishing             |
-| GitHub release | `gh release create` uploads the binaries, checksums, license, and bundled notices                                 |
-| npm            | the launcher and one platform package per target, published in one job at one version                             |
+| Build          | `mise run build` and `mise run build:plugin`                                                                      |
+| npm            | `npm publish --provenance` for `eslint-plugin-gspot`, then `gspot`, in one job at one version                     |
+| GitHub release | `gh release create` with generated notes and no files                                                             |
 | Docs           | Astro Starlight; `starlight-llms-txt` writes `llms.txt`, `llms-full.txt` and `llms-small.txt` from the same pages |
 
 ## Tests

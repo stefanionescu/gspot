@@ -328,7 +328,7 @@ SHA-256. Flags given beside `--from` win over the profile.
 ## Global behavior
 
 `--json` works on every command that prints a report, and each shape is documented. `-C <dir>`
-runs as if started in that folder, and every command works from the repository root. The repository pins a gspot version in `.gspot/version`. A binary of another version exits 2
+runs as if started in that folder, and every command works from the repository root. The repository pins a gspot version in `.gspot/version`. A gspot of another version exits 2
 on every command that reads the policy except `apply` and `uninstall`, and names the pinned
 version. [11-toolchain.md](11-toolchain.md) has the install paths.
 

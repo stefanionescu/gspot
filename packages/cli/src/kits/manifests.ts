@@ -128,8 +128,7 @@ export function parseManifest(text: string, dir: string): Manifest {
 export function kitManifests(): Map<string, Manifest> {
     if (state.cache) return state.cache;
     const manifests = new Map<string, Manifest>();
-    for (const path of listAssets('packages/cli/kits/'))
-        if (path.endsWith('/manifest.toml')) registerManifest(manifests, path);
+    for (const path of listAssets('kits/')) if (path.endsWith('/manifest.toml')) registerManifest(manifests, path);
     validateManifests(manifests);
     appendReferences(manifests);
     state.cache = new Map([...manifests].toSorted(([first], [second]) => first.localeCompare(second)));

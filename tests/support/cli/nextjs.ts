@@ -1,4 +1,5 @@
 // Next.js projects for installed consumers and disposable build verification.
+import executables from 'which';
 import { spyOn } from 'bun:test';
 import { randomUUID } from 'node:crypto';
 import { join, delimiter } from 'node:path';
@@ -105,7 +106,7 @@ export function readNextjsCommands(check: string): NextjsRead {
     // What the mocked commands were asked and saw, asserted once the check has run.
     const inspections: string[][] = [];
     const routesSeen: string[] = [];
-    const locate = spyOn(Bun, 'which').mockReturnValue(process.execPath);
+    const locate = spyOn(executables, 'sync').mockReturnValue(process.execPath);
     const runBlocking = processes.runBlocking;
     const inspection = spyOn(processes, 'runBlocking').mockImplementation((command, options) => {
         if (command[0] === 'git') return runBlocking(command, options);

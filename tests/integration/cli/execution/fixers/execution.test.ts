@@ -1,3 +1,4 @@
+import executables from 'which';
 import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
 import { existsSync, readFileSync } from 'node:fs';
@@ -54,7 +55,7 @@ test('a failed version inspection blocks a check and its correction without chan
         version_command: ['-e', 'console.log("3.8.1"); process.exitCode = 7;'],
     };
     planned.spec.fix_command![0] = 'version-teller';
-    const which = spyOn(Bun, 'which').mockReturnValue(process.execPath);
+    const which = spyOn(executables, 'sync').mockReturnValue(process.execPath);
     try {
         const checked = await runToolCheck(session, planned);
         expect(checked.status).toBe('error');

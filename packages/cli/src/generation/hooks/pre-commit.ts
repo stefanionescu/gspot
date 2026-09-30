@@ -17,14 +17,9 @@ const configurationSchema = z.object({
  * Own one local pre-commit entry while preserving every unrelated repository node.
  * @param root the repository root
  * @param runner the task runner the policy names, or undefined
- * @param binary the pinned executable when no runner resolves gspot
  * @returns the shared configuration output with the entry gspot installs
  */
-export function preCommitConfiguration(
-    root: string,
-    runner: string | undefined,
-    binary: string | undefined,
-): ConfigurationOutput {
+export function preCommitConfiguration(root: string, runner: string | undefined): ConfigurationOutput {
     const files = openRoot(root);
     let source;
     try {
@@ -38,7 +33,7 @@ export function preCommitConfiguration(
     const prefix = hookPrefix(root);
     const command = [
         'gspot_status=0',
-        `(${hookCommand('pre-commit', runner, binary, prefix)}) || gspot_status=$?`,
+        `(${hookCommand('pre-commit', runner, prefix)}) || gspot_status=$?`,
         'if [ -n "${GSPOT_HOOK_RESULT:-}" ]; then echo "$gspot_status" > "$GSPOT_HOOK_RESULT"; fi',
         'exit "$gspot_status"',
     ].join('; ');

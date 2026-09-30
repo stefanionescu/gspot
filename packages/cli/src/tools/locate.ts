@@ -1,4 +1,5 @@
 // Where an executable and its installed package version are found: repository bin folders, PATH, and mise shims.
+import which from 'which';
 import { homedir } from 'node:os';
 import { toPosix } from '#cli/platform/paths.ts';
 import type { ToolPin } from '#cli/types/kits.ts';
@@ -56,7 +57,7 @@ function repositoryCandidates(root: string, directories: string[], names: string
 
 // The executables of the name on PATH and among mise's shims.
 function hostCandidates(name: string, names: string[]): string[] {
-    const onPath = Bun.which(name);
+    const onPath = which.sync(name, { nothrow: true });
     const launcherDirectory = join(miseHome() ?? join(homedir(), '.local', 'share', 'mise'), 'shims');
     const found = names
         .map((file) => join(launcherDirectory, file))

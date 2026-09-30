@@ -1,7 +1,6 @@
 // Installs a gspot hook beside the hook tool's copy and invokes that native hook.
 // Runs gspot when the native hook did not report a gspot result.
 import { join } from 'node:path';
-import { binaryPath } from '#cli/platform/assets.ts';
 import type { HookName } from '#cli/types/generation.ts';
 import { huskyLines } from '#cli/generation/hooks/husky.ts';
 import { HOOK_FILES } from '#cli/config/repository/repository.ts';
@@ -140,7 +139,7 @@ function simpleGitDispatch(preparation: Preparation, name: string, generated: st
         native: `SKIP_SIMPLE_GIT_HOOKS=0 sh -c ${quoted(native)} "$0" "$@"`,
         unavailable: ['126', '127'],
         isRunRequired: false,
-        direct: `bash -c ${quoted(simpleGitDirectHook(root, stage, policy.runner?.tool, binaryPath()))} "$0" "$@"`,
+        direct: `bash -c ${quoted(simpleGitDirectHook(root, stage, policy.runner?.tool))} "$0" "$@"`,
     };
 }
 
@@ -148,9 +147,7 @@ function simpleGitDispatch(preparation: Preparation, name: string, generated: st
 function huskyDispatch(preparation: Preparation, name: string): Dispatch {
     const { root, policy, files } = preparation;
     const runtime = files.read('.husky/_/h');
-    const command = huskyLines(root, policy.runner?.tool, binaryPath()).find(
-        (entry) => entry.path === `.husky/${name}`,
-    );
+    const command = huskyLines(root, policy.runner?.tool).find((entry) => entry.path === `.husky/${name}`);
     if (runtime === undefined || command === undefined)
         throw new Error(`Unsupported Husky installation for ${name}. No hooks were changed.`);
     const script = join(root, '.husky', name);
@@ -190,7 +187,7 @@ function lefthookDispatch(preparation: Preparation, stage: HookName, native: str
         '    exit 2',
         'fi',
     ];
-    const direct = `(${lefthookCommand(stage, preparation.policy.runner?.tool, binaryPath())})`;
+    const direct = `(${lefthookCommand(stage, preparation.policy.runner?.tool)})`;
     return {
         tool: 'lefthook',
         preamble: [`export LEFTHOOK=1 LEFTHOOK_BIN=${quoted(preparation.executable)}`],

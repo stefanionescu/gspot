@@ -1,6 +1,6 @@
 // Whether the installed Git hooks still match what the log recorded, with the line that says so.
+import { createHash } from 'node:crypto';
 import { posix, basename } from 'node:path';
-import { binaryPath } from '#cli/platform/assets.ts';
 import { EXECUTE_BITS } from '#cli/config/platform.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import type { HookName } from '#cli/types/generation.ts';
@@ -21,9 +21,9 @@ import { huskyReady, simpleGitHooksReady } from '#cli/lifecycle/hooks/state.ts';
 import { hookBody, hookPrefix, hookCommand } from '#cli/generation/hooks/scripts.ts';
 // Whether each native manager's integration is in place, by the tool that owns the hooks.
 const INTEGRATIONS: Record<string, Readiness> = {
-    'pre-commit': (root, runner, binary) => hasConfiguration(root, preCommitConfiguration(root, runner, binary)),
+    'pre-commit': (root, runner) => hasConfiguration(root, preCommitConfiguration(root, runner)),
     'simple-git-hooks': simpleGitHooksReady,
-    lefthook: (root, runner, binary) => hasConfiguration(root, lefthookConfiguration(root, runner, binary)),
+    lefthook: (root, runner) => hasConfiguration(root, lefthookConfiguration(root, runner)),
     husky: huskyReady,
 };
 
@@ -33,15 +33,13 @@ function integrationStatus(policy: Policy, root: string): string | undefined {
     if (tool === 'gspot') return undefined;
     const isReady = INTEGRATIONS[tool];
     if (isReady === undefined) return `${tool}: run gspot install to verify integration`;
-    return isReady(root, policy.runner?.tool, binaryPath())
-        ? undefined
-        : `${tool} integration is missing or edited; run gspot apply`;
+    return isReady(root, policy.runner?.tool) ? undefined : `${tool} integration is missing or edited; run gspot apply`;
 }
 
 // Whether a file is the one the log installed, by mode and content.
 function isInstalled(current: Read | undefined, installed: OwnershipEntry['installed']): boolean {
     if (current?.mode !== installed?.mode || current === undefined) return false;
-    return new Bun.CryptoHasher('sha256').update(current.bytes).digest('hex') === installed?.hash;
+    return createHash('sha256').update(current.bytes).digest('hex') === installed?.hash;
 }
 
 // The command a manager copy must carry for this hook, when the manager's integration names one.
@@ -50,7 +48,7 @@ function expectedCommand(status: Status, name: HookName): string | undefined {
     if (fromHusky !== undefined) return fromHusky;
     if (status.policy.hooks?.tool !== 'simple-git-hooks') return undefined;
     const directCommand = hookBody(name, false, [
-        hookCommand(name, status.policy.runner?.tool, binaryPath(), hookPrefix(status.root)),
+        hookCommand(name, status.policy.runner?.tool, hookPrefix(status.root)),
     ]);
     return directCommand.replaceAll("'", "'\"'\"'");
 }
@@ -118,12 +116,7 @@ export function hookStatus({
     const location = hookLocation(repository.root);
     const husky =
         policy.hooks.tool === 'husky'
-            ? new Map(
-                  huskyLines(repository.root, policy.runner?.tool, binaryPath()).map(({ path, line }) => [
-                      basename(path),
-                      line,
-                  ]),
-              )
+            ? new Map(huskyLines(repository.root, policy.runner?.tool).map(({ path, line }) => [basename(path), line]))
             : undefined;
     const status: Status = {
         policy,

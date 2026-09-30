@@ -34,7 +34,7 @@ export function miseToolsFile(manifests: Manifest[], version: string, isPackageP
         `min_version = "${MISE_MIN_VERSION}"`,
         '',
         '[tools]',
-        `"github:stefanionescu/gspot" = "${version}"`,
+        `"npm:gspot" = "${version}"`,
         ...misePins(manifests, isPackagePinned).map((pin) => miseToolLine(pin)),
     ];
     return { path: MISE_CONFIG_PATH, content: `${lines.join('\n')}\n`, readOnly: true, kind: 'runner' };

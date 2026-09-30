@@ -1,7 +1,7 @@
 import plugin from '#plugin/plugin.ts';
 import type { ReferencePage } from '../../types/reference.ts';
 import { cell, table, section, referencePage } from './page.ts';
-import type { Manifest, CheckSpec } from 'gspot-cli/src/types/kits.ts';
+import type { Manifest, CheckSpec } from 'gspot/src/types/kits.ts';
 
 // The indentation of the JSON blocks a reference page shows.
 const JSON_INDENT = 2;
@@ -150,7 +150,12 @@ export function kitPage(manifest: Manifest): ReferencePage {
         section('Rule exclusions', ruleExclusions(manifest)),
         section('Rule files', rules.map((item) => `- ${item}`).join('\n')),
     ].join('');
-    return referencePage(configuration.title, configuration.description, body, `${manifest.dir}/manifest.toml`);
+    return referencePage(
+        configuration.title,
+        configuration.description,
+        body,
+        `packages/cli/${manifest.dir}/manifest.toml`,
+    );
 }
 
 /**
@@ -180,7 +185,7 @@ export function rulePage(check: CheckSpec, configuration: Manifest): ReferencePa
         check.title ?? check.name,
         check.summary,
         lines.join(''),
-        `${configuration.dir}/manifest.toml`,
+        `packages/cli/${configuration.dir}/manifest.toml`,
     );
 }
 

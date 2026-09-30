@@ -1,4 +1,4 @@
-import { environmentVariables } from 'gspot-cli/src/platform/environment.ts';
+import { environmentVariables } from 'gspot/src/platform/environment.ts';
 
 const revision = environmentVariables()['GSPOT_DOCS_REVISION'];
 if (revision !== undefined && !/^[a-f\d]{40}$/u.test(revision)) {

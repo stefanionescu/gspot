@@ -2,6 +2,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import { GRAMMAR_FILES } from '#cli/config/platform.ts';
 import { symlinkSync, copyFileSync, readFileSync } from 'node:fs';
 
 import {
@@ -22,7 +23,7 @@ describe('development assets', () => {
             ...sources,
             [`${CHECKOUT}/packages/cli/kits/language/bash/manifest.toml`]: ASSETS_CONFIGURATION,
             [`${CHECKOUT}/assets-reader.ts`]: ASSET_READER_SCRIPT,
-            [`${CHECKOUT}/packages/cli/.build/undeclared.wasm`]: 'not a declared asset',
+            [`${CHECKOUT}/packages/cli/grammars/undeclared.wasm`]: 'not a declared asset',
         });
         const cwd = join(sandbox.path, CHECKOUT);
         symlinkSync(join(ROOT, 'packages/cli/node_modules'), join(cwd, 'packages/cli/node_modules'), 'junction');
@@ -33,8 +34,9 @@ describe('development assets', () => {
             stderr: 'pipe',
         });
         expect(missing.exitCode).toBe(1);
-        expect(missing.stderr.toString()).toContain('run mise run prepare:grammar');
-        copyFileSync(join(ROOT, 'packages/cli/.build/swift.wasm'), join(cwd, 'packages/cli/.build/swift.wasm'));
+        expect(missing.stderr.toString()).toContain('Run: mise run prepare:grammar');
+        for (const name of GRAMMAR_FILES)
+            copyFileSync(join(ROOT, 'packages/cli/grammars', name), join(cwd, 'packages/cli/grammars', name));
         const result = Bun.spawnSync([process.execPath, '--no-install', join(cwd, 'assets-reader.ts')], {
             cwd,
             stdout: 'pipe',
@@ -43,7 +45,7 @@ describe('development assets', () => {
         expect(result.exitCode, result.stderr.toString()).toBe(0);
         expect(JSON.parse(result.stdout.toString())).toStrictEqual({
             text: ASSETS_CONFIGURATION,
-            files: ['packages/cli/kits/language/bash/manifest.toml'],
+            files: ['kits/language/bash/manifest.toml'],
         });
     });
 });
