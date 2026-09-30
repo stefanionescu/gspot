@@ -90,10 +90,6 @@ patterns = [".gspot/reports/report.json"]
 reason = "The check runner writes this ignored runtime report and the CI workflow uploads it. Runtime reports are not tracked repository inputs."
 
 [[tools.docs.paths_allowed]]
-patterns = [".mise/conf.d/repo.toml", ".mise/gspot/gspot"]
-reason = "ASSESSMENT.md records the layout before the mise fold; these names say what was removed."
-
-[[tools.docs.paths_allowed]]
 patterns = ["packages/cli/guides/**"]
 reason = "The rule corpus is generic text installed into other repositories; it names nothing in this one."
 
