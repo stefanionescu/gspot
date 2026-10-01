@@ -18,13 +18,10 @@ approved it on October 1, 2026.
 
 ### Where things stand on October 1, 2026
 
-- `main` is at `39133e66`. Stages 1 to 7 are merged as pull requests #2 to #8. Stage 7 also deleted the
+- `main` is at `942b3ee7`. Stages 1 to 8 are merged as pull requests #2 to #8 and #10. Stage 7 also deleted the
   `architecture` folder, a part of stage 15.
-- Pull request #9 updates `devalue` to 5.9.4. Seven advisories published on October 1 fail `dependencies/osv`, which
-  runs at the push stage and in the CI `check` job, so `main` fails that job until #9 merges.
-- Stage 8 is pull request #10, branch `refactor/cut-unit-integration-tests`.
-- Stage 9 is pull request #11, branch `refactor/cut-tool-docs-tests`, stacked on #10. Rebase it onto `main` once #10
-  merges.
+- Pull request #9 updated `devalue` to 5.9.4 for seven advisories that `dependencies/osv` reported on October 1.
+- Stage 9 is pull request #11, branch `refactor/cut-tool-docs-tests`.
 - The next stage to start is stage 10.
 
 ### Stages
@@ -40,7 +37,7 @@ One pull request per stage, in this order. Each merges with a merge commit only 
 | 5     | Delete the init extras and the startup manifest check  | adaptations 2 and 4                                                                                     | merged, #6             |
 | 6     | Delete source positions, coverage, and fix settings    | adaptations 3 and 5; `fix_order` and `fix_findings_exit_codes`                                          | merged, #7             |
 | 7     | Write the agent block only into `AGENTS.md`            | the `CLAUDE.md` decision; the Cursor rule                                                               | merged, #8             |
-| 8     | Cut unit and CLI integration tests                     | D.2 rows that delete, trim, and merge within one tier                                                   | pull request #10       |
+| 8     | Cut unit and CLI integration tests                     | D.2 rows that delete, trim, and merge within one tier                                                   | merged, #10            |
 | 9     | Cut tool, docs, and repository tests                   | D.3 rows; drop `test:docs` and those folders from `test`                                                | pull request #11       |
 | 10    | Cut command acceptance and package tests               | D.4 rows; pins move to a scheduled `pins.yml`                                                           | not started            |
 | 11    | Cut kit acceptance tests                               | D.4 kit rows; find why `documents.test.ts` does not run on Linux                                        | not started            |
