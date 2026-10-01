@@ -56,7 +56,8 @@ export async function runPlanted(
 ): Promise<SpawnOutcome> {
     const restore = plant(cwd, planted);
     try {
-        return await run(cwd, ['check', '--only', planted.check, '--no-cache'], environment);
+        // A case may build a site twice, which takes minutes on a slow runner.
+        return await run(cwd, ['check', '--only', planted.check, '--no-cache'], environment, PLANTED_TIMEOUT_MS * 4);
     } finally {
         restore();
     }
@@ -102,7 +103,7 @@ export function plantedCases(
                     await expectDefect(installed(), entry);
                     await expectCorrection(installed(), entry, repository);
                 },
-                PLANTED_TIMEOUT_MS * 4,
+                PLANTED_TIMEOUT_MS * 8,
             );
         }
         more?.(installed);

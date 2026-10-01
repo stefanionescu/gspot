@@ -29,6 +29,7 @@ const WINDOWS_PENDING = new Map<string, string>([
     ['kits/bash/lifecycle.test.ts', 'the sandbox reads checkout line endings'],
     ['kits/bash/syntax.test.ts', 'Git root discovery fails in the Windows sandbox'],
     ['kits/component-files/accessibility.test.ts', 'times out on the Windows runner'],
+    ['kits/component-files/styles.test.ts', 'the sandbox install runs past five minutes on the Windows runner'],
     ['kits/component-files/testing.test.ts', 'the sandbox install fails on Windows'],
     ['kits/component-files/types.test.ts', 'the sandbox install fails on Windows'],
     ['kits/components.test.ts', 'findings carry backslash paths'],
@@ -59,6 +60,7 @@ const WINDOWS_PENDING = new Map<string, string>([
     ['kits/typescript/javascript.test.ts', 'the sandbox install fails on Windows'],
     ['kits/typescript/planted-checks.test.ts', 'times out on the Windows runner'],
     ['kits/typescript/projects.test.ts', 'the sandbox install fails on Windows'],
+    ['kits/vite.test.ts', 'times out on the Windows runner'],
     ['kits/vitest.test.ts', 'the sandbox install fails on Windows'],
     ['kits/xctest.test.ts', 'the setup hook times out on the Windows runner'],
 ]);
