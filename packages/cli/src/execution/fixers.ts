@@ -3,7 +3,6 @@ import { rm } from 'node:fs/promises';
 import { createTwoFilesPatch } from 'diff';
 import type { ToolPin } from '#cli/types/kits.ts';
 import { TOOL_DEADLINE } from '#cli/config/kits.ts';
-import { toPlatform } from '#cli/platform/paths.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { runToolCommand } from '#cli/tools/command.ts';
 import { toolPin, inspectTool } from '#cli/tools/inspect.ts';
@@ -212,8 +211,8 @@ export async function applyFixers(session: Session, planned: PlannedCheck[], isD
         const diffs = isDryRun
             ? changed.map((path) =>
                   createTwoFilesPatch(
-                      `a/${toPlatform(path)}`,
-                      `b/${toPlatform(path)}`,
+                      `a/${path}`,
+                      `b/${path}`,
                       before.get(path)?.toString('utf8') ?? '',
                       after.get(path)?.toString('utf8') ?? '',
                       '',
