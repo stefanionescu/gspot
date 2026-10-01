@@ -3,13 +3,12 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
+import { installHooks } from '#cli/lifecycle/hooks.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
 import { coverageReport } from '#cli/execution/coverage.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
-import { uninstallCommand } from '#cli/commands/uninstall.ts';
 import { doctorCommand } from '#cli/commands/doctor/command.ts';
-import { installHooks, uninstallHooks } from '#cli/lifecycle/hooks.ts';
 import { containing, containingAll } from '#tests/support/expectations.ts';
 
 test('doctor coverage honors path exceptions and does not borrow syntax from another shell dialect', async () => {
@@ -105,7 +104,7 @@ test('doctor reports local configuration and version', async () => {
     expect(result.json).toMatchObject({ version: { running: expect.any(String) as unknown } });
 });
 
-test('doctor identifies unowned generated-directory files that apply and uninstall preserve', async () => {
+test('doctor identifies unowned generated-directory files that apply preserves', async () => {
     await using sandbox = await testdir();
     const original = '{"authored": true}\n';
     await createFileTree(sandbox.path, {
@@ -118,8 +117,6 @@ test('doctor identifies unowned generated-directory files that apply and uninsta
         changes: { configurationNotOwned: [containing({ path: '.gspot/authored.json' })] },
     });
     expect(result.text).toContain('not recorded as owned');
-    expect(readFileSync(join(sandbox.path, '.gspot/authored.json'), 'utf8')).toBe(original);
-    await uninstallCommand({ cwd: sandbox.path, yes: true, isDryRun: false });
     expect(readFileSync(join(sandbox.path, '.gspot/authored.json'), 'utf8')).toBe(original);
 });
 
@@ -135,9 +132,6 @@ test('doctor fails hooks this clone does not run and accepts them once installed
     const diagnosed = await doctorCommand({ cwd: sandbox.path });
     expect(diagnosed.exitCode, diagnosed.text).toBe(0);
     expect(diagnosed.text).toContain('.gspot/hooks: installed');
-    uninstallHooks(sandbox.path);
-    const removed = await doctorCommand({ cwd: sandbox.path });
-    expect(removed.exitCode).toBe(1);
 });
 
 test('doctor excludes private tool manifests from language detection and detects an authored Python project', async () => {

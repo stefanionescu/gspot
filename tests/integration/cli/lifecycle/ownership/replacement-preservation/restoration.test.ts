@@ -10,9 +10,6 @@ import {
     statSync,
     chmodSync,
     lstatSync,
-    existsSync,
-    // eslint-disable-next-line sonarjs/deprecation, n/no-deprecated-api -- reason: The `lchmod` API sets a symbolic link's own mode on macOS.
-    lchmodSync,
     unlinkSync,
     symlinkSync,
     readFileSync,
@@ -20,18 +17,18 @@ import {
     writeFileSync,
 } from 'node:fs';
 
-// Later user edits remain intact across replacement and restoration.
+// Later user edits remain intact across replacement and giving the file back.
 function expectEditedLinkPreserved(owner: Owner, path: string, absolute: string, next: Read): void {
     expect(owner.replace(path, next, 'config', true)).toBe('changed');
     unlinkSync(absolute);
     symlinkSync('../tool/original.sh', absolute);
     expect(owner.replace(path, next, 'config')).toBe('preserved');
-    expect(owner.restore(path)).toBe('preserved');
+    expect(owner.applyPlan(owner.proposeRestoration(path))).toBe('preserved');
     expect(readlinkSync(absolute)).toBe('../tool/original.sh');
 }
 
 if (onPosix) {
-    test('lifecycle ownership: two replacements restore the first original bytes and mode and preserve unowned files', async () => {
+    test('lifecycle ownership: giving back a twice replaced file deletes it, keeps unowned files, and keeps the log private', async () => {
         await using directory = await testdir();
         await createFileTree(directory.path, { '.gspot/authored.txt': 'keep\n' });
         const original = Buffer.from([0, 255, 1, 10]);
@@ -44,21 +41,19 @@ if (onPosix) {
             expect(owner.replace('config.txt', { bytes: Buffer.from('second'), mode: 0o444 }, 'config')).toBe(
                 'changed',
             );
-            expect(statSync(join(directory.path, '.gspot/state/recovery')).mode & 0o777).toBe(keptMode(0o700));
             owner.close();
             owner = openOwner(directory.path);
-            expect(owner.restore('config.txt')).toBe('changed');
-            expect(owner.read('config.txt')).toStrictEqual({ bytes: original, mode: 0o640 });
+            expect(owner.applyPlan(owner.proposeRestoration('config.txt'))).toBe('changed');
+            expect(owner.read('config.txt')).toBeUndefined();
             expect(readFileSync(join(directory.path, '.gspot/authored.txt'), 'utf8')).toBe('keep\n');
             expect(owner.paths()).toStrictEqual([]);
             expect(statSync(join(directory.path, '.gspot/state/ownership.json')).mode & 0o777).toBe(keptMode(0o600));
-            expect(existsSync(join(directory.path, '.gspot/state/recovery'))).toBe(false);
         } finally {
             owner.close();
         }
     });
 
-    test('lifecycle ownership: installed executable links run, restore authored links and modes, and preserve later edits', async () => {
+    test('lifecycle ownership: installed executable links run, giving them back deletes them, and later edits stay', async () => {
         await using directory = await testdir();
         await createFileTree(directory.path, {
             'vendor/tools/tool/bin.sh': '#!/bin/sh\nprintf installed',
@@ -70,9 +65,6 @@ if (onPosix) {
         chmodSync(join(directory.path, 'vendor/tools/tool/bin.sh'), 0o755);
         chmodSync(join(directory.path, 'vendor/tools/tool/original.sh'), 0o755);
         symlinkSync('../tool/original.sh', absolute);
-        // eslint-disable-next-line @typescript-eslint/no-deprecated, sonarjs/deprecation -- reason: The `lchmod` API sets a symbolic link's own mode on macOS.
-        if (process.platform === 'darwin') lchmodSync(absolute, 0o700);
-        const originalMode = lstatSync(absolute).mode & 0o7777;
         const next = { bytes: Buffer.from('../tool/bin.sh'), mode: 0o777, isLink: true as const };
         let owner = openOwner(directory.path);
         try {
@@ -85,9 +77,8 @@ if (onPosix) {
             expect(() => owner.read(path)).toThrow();
             owner.close();
             owner = openOwner(directory.path);
-            expect(owner.restore(path)).toBe('changed');
-            expect(readlinkSync(absolute)).toBe('../tool/original.sh');
-            expect(lstatSync(absolute).mode & 0o7777).toBe(originalMode);
+            expect(owner.applyPlan(owner.proposeRestoration(path))).toBe('changed');
+            expect(lstatSync(absolute, { throwIfNoEntry: false })).toBeUndefined();
             expect(statSync(join(directory.path, 'vendor/tools/tool/original.sh')).mode & 0o777).toBe(keptMode(0o755));
             expectEditedLinkPreserved(owner, path, absolute, next);
         } finally {
@@ -105,7 +96,7 @@ if (onPosix) {
             unlinkSync(join(directory.path, 'tool'));
             writeFileSync(join(directory.path, 'tool'), 'target', { mode: 0o777 });
             expect(owner.replace('tool', next, 'config')).toBe('preserved');
-            expect(owner.restore('tool')).toBe('preserved');
+            expect(owner.applyPlan(owner.proposeRestoration('tool'))).toBe('preserved');
             expect(lstatSync(join(directory.path, 'tool')).isFile()).toBe(true);
             expect(readFileSync(join(directory.path, 'target'), 'utf8')).toBe('authored target');
         } finally {

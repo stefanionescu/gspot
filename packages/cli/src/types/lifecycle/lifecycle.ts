@@ -2,7 +2,7 @@
 import type { z } from 'zod';
 import type { Read, Root } from '#cli/types/platform.ts';
 import type { WriteResult } from '#cli/types/policy/policy.ts';
-import type { identitySchema, originalSchema, ownershipSchema, configurationFieldsSchema } from '#cli/lifecycle/log.ts';
+import type { identitySchema, ownershipSchema, configurationFieldsSchema } from '#cli/lifecycle/log.ts';
 
 export type OwnedBlock = NonNullable<OwnershipEntry['block']>;
 export type ConfigurationWriteRequest = {
@@ -33,13 +33,6 @@ export type KitPlan = {
     status: 'changed' | 'unchanged';
 };
 export type Outcome = 'changed' | 'unchanged' | 'preserved';
-export type PreparedWrite = {
-    path: string;
-    current: Read | undefined;
-    next: Read | undefined;
-    entry: OwnershipEntry | undefined;
-    recovery: z.infer<typeof originalSchema> | undefined;
-};
 export type PreparedPolicy = WriteResult & { original: Read };
 export type DriftEntry = {
     path: string;
@@ -56,7 +49,6 @@ export type ReplaceRemovalResult = { removed: string[]; preserved: string[] };
 export type OwnershipState = z.infer<typeof ownershipSchema>;
 export type OwnershipEntry = OwnershipState['files'][number];
 export type Identity = z.infer<typeof identitySchema>;
-export type Original = z.infer<typeof originalSchema>;
 /** A private tool installation gspot writes whole: the npm tools or the Python environment. */
 export type InstallationKind = 'npm' | 'python';
 /** One file of a finished installation, at its path under the installation folder. */
@@ -66,7 +58,6 @@ export type Log = {
     files: Root;
     state: OwnershipState;
     save(): void;
-    backup(path: string, file: Read): Original;
     entryFor(path: string): OwnershipEntry | undefined;
     finish(): void;
 };
@@ -78,7 +69,6 @@ export type Planned = {
     status: 'changed' | 'unchanged' | 'preserved';
     next?: Read;
     entry?: OwnershipEntry;
-    saveOriginal?: boolean;
 };
 export type Owner = {
     beginInstallation(kind: InstallationKind): void;
@@ -108,8 +98,7 @@ export type Owner = {
     installedPaths(): string[];
     proposeRetirement(path: string, expected: Read): Planned;
     replace(path: string, next: Read, kind: OwnershipEntry['kind'], replace?: boolean, expected?: Read): Outcome;
-    proposeRestoration(path: string, original?: Read): Planned;
-    restore(path: string, original?: Read): 'changed' | 'preserved';
+    proposeRestoration(path: string): Planned;
     close(): void;
 };
 export type ConfigurationFormat = 'json' | 'yaml' | 'toml';

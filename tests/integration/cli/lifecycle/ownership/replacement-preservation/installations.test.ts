@@ -33,7 +33,7 @@ test.each([false, true])(
             expect(owner.applyPlan(owner.proposeConfiguration('mise.toml', 'toml', changes))).toBe('unchanged');
             if (edited)
                 writeFileSync(join(directory.path, 'mise.toml'), installed + '\n[env]\nAPP_MODE = "authored"\n');
-            expect(owner.restore('mise.toml')).toBe('changed');
+            expect(owner.applyPlan(owner.proposeRestoration('mise.toml'))).toBe('changed');
             const restored = readFileSync(join(directory.path, 'mise.toml'), 'utf8');
             expect(parseToml(restored)['tasks']).toStrictEqual(parseToml(original)['tasks']);
             // An authored edit survives the restore; without one the file is byte for byte the original.
@@ -45,7 +45,7 @@ test.each([false, true])(
     },
 );
 
-test('Windows permission projection supports repeated log writes, idempotent replacement, and restoration', async () => {
+test('Windows permission projection supports repeated log writes, idempotent replacement, and removal', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, { 'config.txt': 'authored bytes' });
     const program = `
@@ -57,8 +57,8 @@ try {
     const repeated = owner.replace('config.txt', {bytes: Buffer.from('installed bytes'), mode: 0o755}, 'config');
     owner.close();
     owner = openOwner(process.cwd());
-    const restored = owner.restore('config.txt');
-    console.log(JSON.stringify({first, repeated, restored, text: owner.read('config.txt').bytes.toString()}));
+    const restored = owner.applyPlan(owner.proposeRestoration('config.txt'));
+    console.log(JSON.stringify({first, repeated, restored, isRemoved: owner.read('config.txt') === undefined}));
 } finally {owner.close();}
 `;
     const child = Bun.spawnSync([process.execPath, '-e', program], {
@@ -71,9 +71,8 @@ try {
         first: 'changed',
         repeated: 'unchanged',
         restored: 'changed',
-        text: 'authored bytes',
+        isRemoved: true,
     });
-    expect(readFileSync(join(directory.path, 'config.txt'), 'utf8')).toBe('authored bytes');
 });
 
 test('a Python installation replaces the whole environment, runtime caches included, as one record', async () => {

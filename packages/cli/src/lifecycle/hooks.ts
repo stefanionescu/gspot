@@ -13,7 +13,7 @@ import type { Repository } from '#cli/types/repository/repository.ts';
 import { HOOK_FILES, HOOKS_DIRECTORY } from '#cli/config/repository/repository.ts';
 
 // The value core.hooksPath takes for the gspot hooks, relative to the Git top level.
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Install, doctor, and uninstall must compare core.hooksPath with the same spelling of the hooks folder.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Install and doctor must compare core.hooksPath with the same spelling of the hooks folder.
 function ownHooksPath(root: string): string {
     return `${hookPrefix(root)}${HOOKS_DIRECTORY}`;
 }
@@ -76,29 +76,9 @@ export function hookStatus({
     if (policy.hooks === undefined) return { ready: true, text: 'none' };
     if (!repository.hasGit) return { ready: false, text: 'not installed: no Git repository' };
     const path = ownHooksPath(repository.root);
-    if (hooksInstalled(repository.root)) return { ready: true, text: `${path}: installed` };
+    if (readGitSetting(repository.root, 'core.hooksPath') === path) return { ready: true, text: `${path}: installed` };
     const foreign = foreignHooks(repository.root);
     if (foreign.length > 0)
         return { ready: true, text: `run from ${foreign.join(', ')}; gspot install prints the lines they need` };
     return { ready: false, text: 'not installed; run gspot install' };
-}
-
-/**
- * Whether Git runs the gspot hooks in this clone.
- * @param root the repository root
- * @returns whether core.hooksPath names the gspot hooks
- */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Doctor, uninstall, and the uninstall plan ask the same question and must read the same setting.
-export function hooksInstalled(root: string): boolean {
-    return readGitSetting(root, 'core.hooksPath') === ownHooksPath(root);
-}
-
-/**
- * Stop Git from running the gspot hooks in this clone.
- * @param root the repository root
- */
-export function uninstallHooks(root: string): void {
-    if (!hooksInstalled(root)) return;
-    const result = runBlocking(['git', 'config', '--unset', 'core.hooksPath'], { cwd: root });
-    if (result.code !== 0) throw new Error(`Cannot unset core.hooksPath: ${result.stderr.trim()}`);
 }

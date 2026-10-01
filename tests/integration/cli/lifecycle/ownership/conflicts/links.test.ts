@@ -1,7 +1,6 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { ownershipSchema } from '#cli/lifecycle/log.ts';
 import { onPosix } from '#tests/support/cli/platforms.ts';
 import { openOwner } from '#cli/lifecycle/ownership/owner.ts';
 import { installedOutputs } from '#cli/tools/installed-files.ts';
@@ -110,7 +109,7 @@ if (onPosix) {
         }
     });
 
-    test('lifecycle ownership: later edits survive both apply and uninstall, with the original recovery bytes retained', async () => {
+    test('lifecycle ownership: later edits survive both apply and a prune', async () => {
         await using directory = await testdir();
         await createFileTree(directory.path, { 'config.txt': 'authored original\n' });
         const owner = openOwner(directory.path);
@@ -122,15 +121,9 @@ if (onPosix) {
             expect(owner.replace('config.txt', { bytes: Buffer.from('upgrade\n'), mode: 0o644 }, 'config')).toBe(
                 'preserved',
             );
-            expect(owner.restore('config.txt')).toBe('preserved');
+            expect(owner.applyPlan(owner.proposeRestoration('config.txt'))).toBe('preserved');
             expect(readFileSync(join(directory.path, 'config.txt'), 'utf8')).toBe('authored later\n');
-            const state = ownershipSchema.parse(
-                JSON.parse(readFileSync(join(directory.path, '.gspot/state/ownership.json'), 'utf8')),
-            );
-            expect(readFileSync(join(directory.path, state.files[0]!.original!.backup!), 'utf8')).toBe(
-                'authored original\n',
-            );
-            expect(owner.restore('.gspot/unowned')).toBe('preserved');
+            expect(owner.applyPlan(owner.proposeRestoration('.gspot/unowned'))).toBe('preserved');
         } finally {
             owner.close();
         }
@@ -159,8 +152,7 @@ if (onPosix) {
                 if (change === 'removed') writeFileSync(path, '{"semi":true}\n', { mode: 0o600 });
                 const refreshed = owner.read('authored.json')!;
                 expect(owner.applyPlan(owner.proposeRetirement('authored.json', refreshed))).toBe('changed');
-                expect(owner.restore('authored.json')).toBe('changed');
-                expect(owner.read('authored.json')).toStrictEqual(refreshed);
+                expect(owner.read('authored.json')).toBeUndefined();
             } finally {
                 owner.close();
             }

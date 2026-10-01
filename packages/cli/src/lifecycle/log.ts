@@ -1,8 +1,7 @@
 import { z } from 'zod';
 import { isDeepStrictEqual } from 'node:util';
 import { MODE_BITS } from '#cli/config/platform.ts';
-import { RECOVERY_OWNER } from '#cli/config/lifecycle.ts';
-import { mutationPath, mutationTarget } from '#cli/platform/safe-paths.ts';
+import { mutationTarget } from '#cli/platform/safe-paths.ts';
 
 const hashSchema = z.string().regex(/^[a-f0-9]{64}$/u);
 const modeSchema = z.number().int().min(0).max(MODE_BITS);
@@ -19,38 +18,10 @@ const configurationFieldSchema = z.strictObject({
     installed: z.json(),
     original: z.json().optional(),
 });
-// Whether a path names a recovery backup: any folders, then .gspot/state/recovery/<operation>/<file>.original.
-function isRecoveryBackupPath(path: string): boolean {
-    const parts = path.split('/');
-    const [file, operation, ...folders] = parts.toReversed();
-    const owner = folders.slice(0, RECOVERY_OWNER.length).toReversed();
-    const identity = /^[a-f0-9-]{36}$/u;
-    return (
-        parts.every((part) => part !== '') &&
-        owner.join('/') === RECOVERY_OWNER.join('/') &&
-        operation !== undefined &&
-        identity.test(operation) &&
-        file !== undefined &&
-        /^[a-f0-9-]{36}\.original$/u.test(file)
-    );
-}
-
 export const identitySchema = z.strictObject({
     hash: hashSchema,
     mode: modeSchema,
     isLink: z.literal(true).optional(),
-});
-export const originalSchema = identitySchema.extend({
-    backup: z
-        .string()
-        .superRefine((value, context) => {
-            try {
-                mutationPath(value);
-            } catch (error) {
-                context.addIssue({ code: 'custom', message: String(error) });
-            }
-        })
-        .refine((path) => isRecoveryBackupPath(path), 'A backup lives under .gspot/state/recovery.'),
 });
 export const configurationFieldsSchema = z.array(configurationFieldSchema).superRefine((fields, context) => {
     for (const [index, field] of fields.entries()) {
@@ -69,8 +40,8 @@ export const entrySchema = z.strictObject({
     path: pathSchema,
     kind: z.enum(['config', 'block', 'merge', 'policy', 'pin', 'hook', 'lock', 'export']),
     installed: identitySchema.optional(),
-    // Without a backup, the original bytes are the installed ones: the file already held them when gspot adopted it.
-    original: originalSchema.partial({ backup: true }).optional(),
+    // The file already held the exact bytes when gspot first wrote it, so a prune leaves it in place.
+    adopted: z.literal(true).optional(),
     configuration: z
         .strictObject({
             format: z.enum(['json', 'yaml', 'toml']),
@@ -105,26 +76,10 @@ export const ownershipSchema = z
                     .strictObject({
                         path: pathSchema,
                         before: identitySchema.optional(),
-                        beforeBackup: originalSchema.optional(),
                         after: identitySchema.optional(),
                         entry: entrySchema.optional(),
                     })
                     .superRefine((pending, context) => {
-                        if (
-                            pending.beforeBackup !== undefined &&
-                            !isDeepStrictEqual(
-                                {
-                                    hash: pending.beforeBackup.hash,
-                                    mode: pending.beforeBackup.mode,
-                                    ...(pending.beforeBackup.isLink ? { isLink: true } : {}),
-                                },
-                                pending.before,
-                            )
-                        )
-                            context.addIssue({
-                                code: 'custom',
-                                message: 'Interrupted backup has a different previous identity.',
-                            });
                         if (pending.entry !== undefined && !isDeepStrictEqual(pending.entry.installed, pending.after))
                             context.addIssue({
                                 code: 'custom',

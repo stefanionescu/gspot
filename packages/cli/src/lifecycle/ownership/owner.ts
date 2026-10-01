@@ -57,13 +57,7 @@ function lifecycleOwner(log: Log): Owner {
             applyPlan(log, proposeReplacement(log, { path, next, kind, replace, expected })),
         installedPaths: () => state.files.filter((entry) => entry.installed !== undefined).map((entry) => entry.path),
         proposeRetirement: (path, expected) => proposeRetirement(log, path, expected),
-        proposeRestoration: (path, original) => proposeRestoration(log, path, original),
-        restore(path, original) {
-            const plan = proposeRestoration(log, path, original);
-            if (plan.status === 'preserved') return 'preserved';
-            applyPlans(log, [plan]);
-            return 'changed';
-        },
+        proposeRestoration: (path) => proposeRestoration(log, path),
         close: () => {
             files.close();
         },

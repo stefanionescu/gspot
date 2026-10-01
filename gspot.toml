@@ -579,7 +579,7 @@ languages = ["javascript-typescript", "actions"]
 rule = "js/file-system-race"
 paths = [
     "tests/acceptance/source/cli/agents.test.ts",
-    "tests/acceptance/source/cli/lifecycle/uninstall.test.ts",
+    "tests/acceptance/source/cli/lifecycle/clone.test.ts",
     "tests/integration/cli/checks/nextjs-build.test.ts",
     "tests/integration/cli/checks/swift/build/isolation.test.ts",
     "tests/integration/cli/execution/storage/cache.test.ts",

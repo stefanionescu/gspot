@@ -1,16 +1,14 @@
-// Installs built packages from an isolated registry: the launcher stops its owned process on a signal and uninstall restores replaced files.
+// Installs built packages from an isolated registry: the launcher stops its owned process on a signal, and init replaces formatter files.
 import prettier from 'prettier';
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
-import { run } from '#cli/platform/spawn.ts';
 import { reportSchema } from '#cli/execution/report.ts';
-import { keptMode } from '#tests/support/cli/platforms.ts';
 import { waitForExit } from '#tests/support/cli/process.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { RELEASE_TIMEOUT_MS } from '#tests/inputs/package.ts';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { createConsumer } from '#tests/support/package/consumer.ts';
-import { lstatSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { initializeConsumer, getPublishedRelease } from '#tests/support/package/published.ts';
 
 const release = getPublishedRelease();
@@ -79,11 +77,11 @@ test.each(['SIGINT', 'SIGTERM'] as const)(
 );
 
 test(
-    'init replaces the formatter files and uninstall restores their bytes and modes',
+    'init replaces the formatter files',
     async () => {
         await using fixture = await createConsumer(release.registry, release.version);
         expect(fixture.installed.code, fixture.installed.stdout + fixture.installed.stderr).toBe(0);
-        const { consumer, command, options, editorconfig, formatter } = fixture;
+        const { consumer } = fixture;
         const { initialized, installedTools } = await initializeConsumer(release, fixture);
         expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
         expect(installedTools.code, installedTools.stdout + installedTools.stderr).toBe(0);
@@ -109,11 +107,6 @@ test(
         });
         expect(futureJson?.tabWidth).toBe(4);
         expect(existsSync(join(consumer, '.gspot', 'reports', 'report.json'))).toBe(false);
-        const removed = await run([...command, 'uninstall', '--yes'], options);
-        expect(removed.code, removed.stdout + removed.stderr).toBe(0);
-        expect(readFileSync(join(consumer, '.editorconfig'), 'utf8')).toBe(editorconfig);
-        expect(lstatSync(join(consumer, '.editorconfig')).mode & 0o777).toBe(keptMode(0o640));
-        expect(readFileSync(join(consumer, 'prettier.config.mjs'), 'utf8')).toBe(formatter);
     },
     RELEASE_TIMEOUT_MS,
 );

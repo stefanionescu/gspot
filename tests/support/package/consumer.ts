@@ -20,7 +20,7 @@ export async function createConsumer(
         const consumer = join(workspace.path, 'consumer');
         mkdirSync(consumer);
         writeFileSync(join(consumer, 'package.json'), '{"name":"consumer","private":true}\n');
-        writeFileSync(join(consumer, '.editorconfig'), EDITORCONFIG, { mode: 0o640 });
+        writeFileSync(join(consumer, '.editorconfig'), EDITORCONFIG);
         writeFileSync(join(consumer, 'prettier.config.mjs'), FORMATTER);
         writeFileSync(join(consumer, 'source.js'), 'const greeting="hello";');
         writeFileSync(join(consumer, 'broken.sh'), 'if then\n');
@@ -60,8 +60,6 @@ export async function createConsumer(
             command,
             options,
             setupOptions,
-            editorconfig: EDITORCONFIG,
-            formatter: FORMATTER,
             workspace: workspace.path,
             [Symbol.asyncDispose]: workspace[Symbol.asyncDispose].bind(workspace),
         };

@@ -1,9 +1,10 @@
-// Restoring a file the owner changed: merged fields go back, a managed block is removed, or the original returns.
+// Giving back a file the owner changed: merged fields go back, a managed block leaves, or the file goes unless
+// gspot adopted it.
 import { isDeepStrictEqual } from 'node:util';
 import type { Read } from '#cli/types/platform.ts';
+import { matches } from '#cli/lifecycle/ownership/log.ts';
 import { blockSpan } from '#cli/lifecycle/managed-blocks.ts';
 import { currentRead } from '#cli/lifecycle/ownership/plans.ts';
-import { matches, identity } from '#cli/lifecycle/ownership/log.ts';
 import { configurationDocument } from '#cli/lifecycle/configuration/document.ts';
 import { pruneConfigurationParents } from '#cli/lifecycle/configuration/plan.ts';
 
@@ -52,61 +53,35 @@ function restoreBlock(current: Read, block: NonNullable<OwnershipEntry['block']>
     return next === '' && block.created ? {} : { next: { bytes: Buffer.from(next), mode: current.mode } };
 }
 
-// The original bytes the log backed up when gspot first changed the file.
-function originalRead(log: Log, path: string, original: NonNullable<OwnershipEntry['original']>, backup: string): Read {
-    const saved = log.files.read(backup);
-    if (saved === undefined || identity(saved).hash !== original.hash)
-        throw new Error(`Original recovery bytes are missing or changed for ${path}: ${backup}`);
-    return { bytes: saved.bytes, mode: original.mode, ...(original.isLink ? { isLink: true } : {}) };
-}
-
-// The bytes that replace an owned file when it is given back, or {} when it is removed.
-function originalRestoration(
-    log: Log,
-    path: string,
-    existing: OwnershipEntry,
-    current: Read | undefined,
-    original: Read | undefined,
-): Restoration | undefined {
+// What giving back a whole file writes: an adopted file stays as it is, any other is deleted.
+function fileRestoration(existing: OwnershipEntry, current: Read | undefined): Restoration | undefined {
     if (current !== undefined && !matches(current, existing.installed)) return undefined;
-    const kept = existing.original;
-    // An adopted file without a backup still holds its original bytes, because they match what gspot installed.
-    let saved = kept === undefined ? undefined : current;
-    if (kept?.backup !== undefined) saved = originalRead(log, path, kept, kept.backup);
-    const next = original ?? saved;
-    return next === undefined ? {} : { next };
+    return existing.adopted === true && current !== undefined ? { next: current } : {};
 }
 
 // What a restoration writes, {} for a removal, or undefined when the file must be preserved.
-function restorationFor(
-    log: Log,
-    path: string,
-    existing: OwnershipEntry,
-    current: Read | undefined,
-    original: Read | undefined,
-): Restoration | undefined {
+function restorationFor(existing: OwnershipEntry, current: Read | undefined): Restoration | undefined {
     const fields = fieldRestoration(existing, current);
     if (fields !== undefined) {
         const next = restoreConfiguration(fields.current, fields.configuration);
         return next === undefined ? undefined : { next };
     }
     if (current !== undefined && existing.block !== undefined) return restoreBlock(current, existing.block);
-    return originalRestoration(log, path, existing, current, original);
+    return fileRestoration(existing, current);
 }
 
 /**
- * Proposes giving a file back: merged fields return, a managed block leaves, or the original bytes return.
+ * Proposes giving a file back: merged fields return, a managed block leaves, or the file goes unless gspot adopted it.
  * @param log the open log
  * @param path the file
- * @param original bytes to restore instead of the recorded original
  * @returns the plan
  */
-export function proposeRestoration(log: Log, path: string, original?: Read): Planned {
+export function proposeRestoration(log: Log, path: string): Planned {
     const existing = log.entryFor(path);
     const current = currentRead(log, path, existing);
     const base = { path, current, previous: existing };
     if (existing === undefined) return { ...base, status: 'preserved' };
-    const restoration = restorationFor(log, path, existing, current, original);
+    const restoration = restorationFor(existing, current);
     if (restoration === undefined) return { ...base, status: 'preserved' };
     return { ...base, ...(restoration.next === undefined ? {} : { next: restoration.next }), status: 'changed' };
 }

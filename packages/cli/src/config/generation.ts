@@ -35,7 +35,6 @@ export const LEADING_GLOBSTARS = /^(?:\*\*\/)+/u;
 export const GLOB_GROUPING = /[{}()]/u;
 export const GENERATED_JSON_KEY = '_gspot';
 export const TARGET_PLACEHOLDER = /\{target(?:_json)?\}/gu;
-export const HOOK_HEADER = '# Written by gspot. Run `gspot uninstall` to remove.';
 /** What a hook prints when the command that runs gspot is missing. */
 export const HOOK_UNAVAILABLE = 'The command that runs gspot is not installed. Install gspot, then run: gspot install';
 // Every file gspot writes keeps LF, so a CRLF checkout does not mark the generated files and hooks as changed.

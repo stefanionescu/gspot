@@ -1,14 +1,15 @@
 // The Git hooks gspot writes: one short script per stage in .gspot/hooks, each running one gspot check.
 import { runBlocking } from '#cli/platform/spawn.ts';
+import { headerLines } from '#cli/generation/headers.ts';
 import type { Policy } from '#cli/types/policy/policy.ts';
 import { isGitRepository } from '#cli/repository/tracked.ts';
 import type { HookName, GeneratedFile } from '#cli/types/generation.ts';
 import { HOOK_FILES, HOOKS_DIRECTORY } from '#cli/config/repository/repository.ts';
-import { HOOK_ARGS, HOOK_HEADER, RUNNER_EXEC, HOOK_UNAVAILABLE } from '#cli/config/generation.ts';
+import { HOOK_ARGS, RUNNER_EXEC, HOOK_UNAVAILABLE } from '#cli/config/generation.ts';
 
 // The script of one hook. Git runs it from the top level; a commit message path Git gives relative to there
 // becomes absolute first, in the Windows spelling under Git for Windows.
-function hookScript(name: HookName, runner: string | undefined, prefix: string): string {
+function hookScript(name: HookName, runner: string | undefined, prefix: string, version: string): string {
     const program = (RUNNER_EXEC[runner ?? ''] ?? 'gspot').split(' ', 1)[0] ?? 'gspot';
     const quoted = prefix.replaceAll("'", String.raw`'\''`);
     const absolutePath =
@@ -21,7 +22,7 @@ function hookScript(name: HookName, runner: string | undefined, prefix: string):
             : [];
     return [
         '#!/bin/sh',
-        HOOK_HEADER,
+        ...headerLines(version).map((line) => `# ${line}`),
         ...absolutePath,
         ...(prefix === '' ? [] : [`cd '${quoted}' || exit 2`]),
         `command -v ${program} >/dev/null 2>&1 || { echo '${HOOK_UNAVAILABLE}' >&2; exit 2; }`,
@@ -57,14 +58,15 @@ export function hookLine(name: HookName, runner: string | undefined): string {
  * The hook scripts, one per stage, in the hooks folder of the repository, when the policy selects hooks.
  * @param root the repository root
  * @param policy the repository policy
+ * @param version the gspot version the header names
  * @returns the generated files
  */
-export function hookFiles(root: string, policy: Policy): GeneratedFile[] {
+export function hookFiles(root: string, policy: Policy, version: string): GeneratedFile[] {
     if (policy.hooks === undefined) return [];
     const prefix = hookPrefix(root);
     return HOOK_FILES.map((name) => ({
         path: `${HOOKS_DIRECTORY}/${name}`,
-        content: hookScript(name, policy.runner?.tool, prefix),
+        content: hookScript(name, policy.runner?.tool, prefix, version),
         readOnly: true,
         executable: true,
         kind: 'hook',

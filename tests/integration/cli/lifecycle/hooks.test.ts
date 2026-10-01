@@ -6,7 +6,7 @@ import { gitOutput } from '#tests/support/cli/git.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { readGitSetting } from '#cli/repository/git-config.ts';
-import { hookStatus, installHooks, uninstallHooks } from '#cli/lifecycle/hooks.ts';
+import { hookStatus, installHooks } from '#cli/lifecycle/hooks.ts';
 
 // The policy and repository of a session: what install and doctor both read.
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Every case reads the hooks state again after a change, through a new session like a new gspot run.
@@ -15,7 +15,7 @@ async function hooksOf(root: string) {
     return { policy: session.policyFiles.policy, repository: session.repository };
 }
 
-test.each(['', 'app/'])('install points core.hooksPath at %s.gspot/hooks, and uninstall unsets it', async (prefix) => {
+test.each(['', 'app/'])('install points core.hooksPath at %s.gspot/hooks', async (prefix) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { [`${prefix}gspot.toml`]: policyOf([], '[hooks]\n') });
     gitOutput(sandbox.path, ['init', '-q']);
@@ -24,8 +24,6 @@ test.each(['', 'app/'])('install points core.hooksPath at %s.gspot/hooks, and un
     expect(installHooks(await hooksOf(root))).toBe(`installed hooks: core.hooksPath is ${prefix}.gspot/hooks`);
     expect(readGitSetting(sandbox.path, 'core.hooksPath')).toBe(`${prefix}.gspot/hooks`);
     expect(hookStatus(await hooksOf(root))).toStrictEqual({ ready: true, text: `${prefix}.gspot/hooks: installed` });
-    uninstallHooks(root);
-    expect(readGitSetting(sandbox.path, 'core.hooksPath')).toBeUndefined();
 });
 
 test.each([

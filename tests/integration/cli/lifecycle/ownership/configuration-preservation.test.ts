@@ -3,7 +3,6 @@ import { test, expect } from 'bun:test';
 import { parse as parseYaml } from 'yaml';
 import { parse as parseToml } from 'smol-toml';
 import { testdir, createFileTree } from 'testdirs';
-import { ownershipSchema } from '#cli/lifecycle/log.ts';
 import { keptMode } from '#tests/support/cli/platforms.ts';
 import { applyBlock } from '#cli/lifecycle/managed-blocks.ts';
 import { openOwner } from '#cli/lifecycle/ownership/owner.ts';
@@ -27,7 +26,7 @@ test('managed block updates and removal preserve authored bytes and subsequent s
         );
         owner.close();
         owner = openOwner(directory.path);
-        expect(owner.restore('AGENTS.md')).toBe('changed');
+        expect(owner.applyPlan(owner.proposeRestoration('AGENTS.md'))).toBe('changed');
         expect(owner.read('AGENTS.md')!.bytes.toString('utf8')).toBe(prefix + original + suffix);
     } finally {
         owner.close();
@@ -40,14 +39,14 @@ test('removing a block restores an originally empty file instead of deleting it'
     const owner = openOwner(directory.path);
     try {
         expect(owner.replaceBlock('AGENTS.md', 'instructions', 'markdown')).toBe('changed');
-        expect(owner.restore('AGENTS.md')).toBe('changed');
+        expect(owner.applyPlan(owner.proposeRestoration('AGENTS.md'))).toBe('changed');
         expect(owner.read('AGENTS.md')?.bytes).toStrictEqual(Buffer.alloc(0));
     } finally {
         owner.close();
     }
 });
 
-test('shared JSON updates preserve comments and later authored settings through uninstall', async () => {
+test('shared JSON updates preserve comments and later authored settings through removal', async () => {
     await using directory = await testdir();
     const original =
         '{\n  // Keep this comment.\n  "extends": "./authored.json",\n  "compilerOptions": { "strict": false }\n}\n';
@@ -79,7 +78,7 @@ test('shared JSON updates preserve comments and later authored settings through 
         );
         owner.close();
         owner = openOwner(directory.path);
-        expect(owner.restore('tsconfig.json')).toBe('changed');
+        expect(owner.applyPlan(owner.proposeRestoration('tsconfig.json'))).toBe('changed');
         expect(owner.read('tsconfig.json')!.bytes.toString('utf8')).toBe(
             original.replace('"strict": false', '"strict": true'),
         );
@@ -118,7 +117,7 @@ test('leaving JSON keys restores their original values and preserves authored ch
         expect(owner.read('package.json')!.bytes.toString('utf8')).toBe(
             original.replace('"private":true', '"private":false'),
         );
-        expect(owner.restore('package.json')).toBe('changed');
+        expect(owner.applyPlan(owner.proposeRestoration('package.json'))).toBe('changed');
         expect(owner.read('package.json')!.bytes.toString('utf8')).toBe(
             original.replace('"private":true', '"private":false'),
         );
@@ -153,7 +152,7 @@ test('YAML ownership preserves authored entries and comments through updates and
             ),
         ).toBe('changed');
         expect(owner.read('tool.yml')!.bytes.toString('utf8')).toContain('echo authored-later');
-        expect(owner.restore('tool.yml')).toBe('changed');
+        expect(owner.applyPlan(owner.proposeRestoration('tool.yml'))).toBe('changed');
         expect(owner.read('tool.yml')!.bytes.toString('utf8')).toBe(
             original.replace('echo original', 'echo authored-later'),
         );
@@ -162,7 +161,7 @@ test('YAML ownership preserves authored entries and comments through updates and
     }
 });
 
-test('adopting identical authored configuration restores its bytes and permissions without a backup', async () => {
+test('adopting identical authored configuration restores its bytes and permissions', async () => {
     await using directory = await testdir();
     const content = '{\n    "scripts": {"check": "gspot check"},\n    "authored": true\n}\n';
     await createFileTree(directory.path, { 'package.json': content });
@@ -177,11 +176,7 @@ test('adopting identical authored configuration restores its bytes and permissio
                 true,
             ),
         ]);
-        const state = ownershipSchema.parse(
-            JSON.parse(readFileSync(join(directory.path, '.gspot/state/ownership.json'), 'utf8')),
-        );
-        expect(state.files[0]!.original).toBeUndefined();
-        expect(owner.restore('package.json')).toBe('changed');
+        expect(owner.applyPlan(owner.proposeRestoration('package.json'))).toBe('changed');
         expect(readFileSync(join(directory.path, 'package.json'), 'utf8')).toBe(content);
         expect(statSync(join(directory.path, 'package.json')).mode & 0o777).toBe(keptMode(0o640));
     } finally {
@@ -252,7 +247,7 @@ test.each([
                 join(directory.path, path),
                 owner.read(path)!.bytes.toString('utf8').replace('true', 'false'),
             );
-            expect(owner.restore(path)).toBe('changed');
+            expect(owner.applyPlan(owner.proposeRestoration(path))).toBe('changed');
             expect(parse(owner.read(path)!.bytes.toString('utf8'))).toStrictEqual({ authored: false, kept: {} });
         } finally {
             owner.close();

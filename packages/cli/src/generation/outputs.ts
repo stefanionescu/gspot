@@ -112,7 +112,7 @@ export function emitAll(
     }
     out.configurations.push(...bunConfiguration(root, scopes));
     out.files.push(
-        ...hookFiles(root, policy),
+        ...hookFiles(root, policy, version),
         ...toolPackages(manifests, packageClient, policy.runner?.tool),
         ...toolEnvironment(manifests),
     );

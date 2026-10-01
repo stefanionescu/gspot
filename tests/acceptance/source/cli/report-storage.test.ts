@@ -29,7 +29,7 @@ test.each([{ flags: ['--stage', 'message'] }, { flags: ['--dry-run'] }])(
                 `[[check]]\nname = "project/commit"\npaths = ["source.txt"]\nstage = "commit"\ncommand = ${JSON.stringify([process.execPath, '-e', 'process.exitCode=0'])}\n`,
             ),
             'source.txt': 'source',
-            '.gitignore': '.gspot/reports/report.*\n.gspot/state/ownership.json\n.gspot/state/recovery/\n',
+            '.gitignore': '.gspot/reports/report.*\n.gspot/state/ownership.json\n',
         });
         for (const args of [
             ['init', '-q'],
@@ -125,7 +125,7 @@ test.each([
     },
 );
 
-test('a run replaces stale reports and edited cache results, and uninstall deletes both folders', async () => {
+test('a run replaces stale reports and edited cache results', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': policyOf(
@@ -155,11 +155,6 @@ test('a run replaces stale reports and edited cache results, and uninstall delet
     const applied = await run(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     expect(readFileSync(join(sandbox.path, '.gspot/reports/report.json'), 'utf8')).toBe(report);
-    const removed = await run(sandbox.path, ['uninstall', '--yes']);
-    expect(removed.code, removed.stdout + removed.stderr).toBe(0);
-    expect(existsSync(join(sandbox.path, '.gspot/reports'))).toBe(false);
-    expect(existsSync(join(sandbox.path, '.gspot/cache'))).toBe(false);
-    expect(readFileSync(join(sandbox.path, 'source.txt'), 'utf8')).toBe('input\n');
 });
 
 test.each(['before', 'after'])(

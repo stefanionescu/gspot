@@ -37,7 +37,7 @@ test('Bun safeguards preserve stricter age and unrelated fields across apply and
     expect(owner.applyPlan(owner.proposeConfiguration(generated.path, generated.format, generated.changes, true))).toBe(
         'unchanged',
     );
-    expect(owner.restore('bunfig.toml')).toBe('changed');
+    expect(owner.applyPlan(owner.proposeRestoration('bunfig.toml'))).toBe('changed');
     owner.close();
     expect(readFileSync(join(repository.path, 'bunfig.toml'), 'utf8')).toBe(original);
 });

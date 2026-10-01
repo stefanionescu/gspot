@@ -10,7 +10,6 @@ import packageManifest from '#package' with { type: 'json' };
 import { registerInit } from '#cli/commands/init/command.ts';
 import { registerApply } from '#cli/commands/apply/command.ts';
 import { registerCheck } from '#cli/commands/check/command.ts';
-import { registerUninstall } from '#cli/commands/uninstall.ts';
 import { installCompletion } from '#cli/commands/completion.ts';
 import { registerDoctor } from '#cli/commands/doctor/command.ts';
 import { registerExplain } from '#cli/commands/explain/command.ts';
@@ -33,7 +32,6 @@ const COMMAND_REGISTRATIONS: ((program: Command) => void)[] = [
     registerExplain,
     registerDoctor,
     registerList,
-    registerUninstall,
     registerExport,
     installCompletion,
 ];

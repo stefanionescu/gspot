@@ -74,8 +74,8 @@ if (onPosix) {
                     }).toThrow();
                     expect(readFileSync(join(outside, 'sentinel'), 'utf8')).toBe('authored\n');
                 }
-                root.mkdir('.gspot/state/recovery', 0o700);
-                expect(statSync(join(project, '.gspot/state/recovery')).mode & 0o777).toBe(
+                root.mkdir('.gspot/state/private', 0o700);
+                expect(statSync(join(project, '.gspot/state/private')).mode & 0o777).toBe(
                     process.platform === 'win32' ? 0o777 : 0o700,
                 );
             } finally {

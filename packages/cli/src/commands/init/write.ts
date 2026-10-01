@@ -18,7 +18,7 @@ import type { Owner, ReplaceRemovalResult } from '#cli/types/lifecycle/lifecycle
 import type { Written, Installed, InitOptions, InitPrepared } from '#cli/types/commands.ts';
 
 const { version: GSPOT_VERSION } = packageManifest;
-// Retire explicitly replaced files after saving recoverable originals; retain directories.
+// Deletes the replaced files the plan lists, which Git keeps, and retains directories.
 function retireReplaced(
     root: string,
     removed: { path: string }[],

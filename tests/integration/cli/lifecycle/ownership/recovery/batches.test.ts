@@ -1,21 +1,19 @@
 import { join } from 'node:path';
+import { readFileSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { cliSource } from '#tests/support/cli/process.ts';
-import { keptMode } from '#tests/support/cli/platforms.ts';
-import { statSync, chmodSync, readFileSync } from 'node:fs';
 import { openOwner } from '#cli/lifecycle/ownership/owner.ts';
 
 const implementation = cliSource('lifecycle/ownership/owner.ts');
 const boundary = cliSource('platform/filesystem.ts');
 
 test.each(['before', 'after'] as const)(
-    'an interrupted batch recovers each published file and restores original bytes and permissions (%s)',
+    'an interrupted batch keeps each published file, and the next batch finishes it (%s)',
     async (point) => {
         await using directory = await testdir();
         const paths = ['first.txt', 'middle.txt', 'last.txt'];
         await createFileTree(directory.path, Object.fromEntries(paths.map((path) => [path, `authored ${path}\n`])));
-        for (const path of paths) chmodSync(join(directory.path, path), 0o640);
         const program = String.raw`
 import { mock } from 'bun:test';
 const boundary=await import(${JSON.stringify(boundary)});
@@ -60,12 +58,9 @@ owner.close();
                     ),
                 ),
             );
-            for (const path of paths) {
-                expect(owner.restore(path)).toBe('changed');
-                expect(readFileSync(join(directory.path, path), 'utf8')).toBe(`authored ${path}\n`);
-                expect(statSync(join(directory.path, path)).mode & 0o777).toBe(keptMode(0o640));
-            }
-            expect(owner.installedPaths()).toStrictEqual([]);
+            for (const path of paths)
+                expect(readFileSync(join(directory.path, path), 'utf8')).toBe(`installed ${path}\n`);
+            expect(owner.installedPaths()).toHaveLength(paths.length);
         } finally {
             owner.close();
         }
