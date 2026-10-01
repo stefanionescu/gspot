@@ -85,6 +85,15 @@ stage = "commit"
     expect(corrected.checked).toBeGreaterThan(ignored.checked);
 });
 
+test('doctor lists a tool only on the systems it has a build for', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, { 'gspot.toml': policyOf(['files']) });
+    const result = await doctorCommand({ cwd: sandbox.path });
+    const names = (result.json as { tools: { name: string }[] }).tools.map((tool) => tool.name);
+    expect(names).toContain('xmllint');
+    expect(names.includes('plutil')).toBe(process.platform === 'darwin');
+});
+
 test('doctor reports local configuration and version', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
