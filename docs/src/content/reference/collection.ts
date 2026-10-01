@@ -52,7 +52,7 @@ export function referencePages(): Map<string, ReferencePage> {
                     ),
                 )
                 .join(''),
-            'architecture/04-kits.md',
+            'packages/cli/kits',
         ),
     );
     for (const manifest of manifests) add(`kits/${manifest.kit.name}.md`, kitPage(manifest));
