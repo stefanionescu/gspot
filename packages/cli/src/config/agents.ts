@@ -131,7 +131,7 @@ export const FENCE_LANGUAGES = [
 ];
 /** No guide exceeds this many lines. */
 export const RULE_FILE_LINE_CEILING = 250;
-/** What ties a guide to gspot or owners enforcement; a guide stands without either (D-81). */
+/** What ties a guide to gspot or owners enforcement; a guide stands without either. */
 export const INDEPENDENCE_TERMS = [
     /\bgspot\b/iu,
     /\bthe gate\b/iu,

@@ -1,4 +1,4 @@
-// A framework carries the naming rules of its own files in its manifest, and the repository's rules follow them (K-50).
+// A framework carries the naming rules of its own files in its manifest, and the repository's rules follow them.
 import { test, expect } from 'bun:test';
 import { kitManifests } from '#cli/kits/manifests.ts';
 import { parsePolicyText } from '#cli/policy/read.ts';

@@ -1,4 +1,4 @@
-// Every flag a manifest command passes exists in the pinned tool: the tool's own help text says so (K-251).
+// Every flag a manifest command passes exists in the pinned tool: the tool's own help text says so.
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readPolicy } from '#cli/policy/read.ts';

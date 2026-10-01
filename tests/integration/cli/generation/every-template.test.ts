@@ -1,4 +1,4 @@
-// Every template of every kit renders at both levels into a file its reader parses (S-1).
+// Every template of every kit renders at both levels into a file its reader parses.
 import ts from 'typescript';
 import { test, expect } from 'bun:test';
 import { join, extname } from 'node:path';

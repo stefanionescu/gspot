@@ -57,7 +57,7 @@ function filenameEvidence(detect: Manifest['detect'], tree: Layout): string | un
     return found?.path ?? filename;
 }
 
-// A project file names the project it marks, so the file is the evidence and its folder is a scope (K-48).
+// A project file names the project it marks, so the file is the evidence and its folder is a scope.
 function projectEvidence(detect: Manifest['detect'], tree: Layout): string | undefined {
     for (const pattern of detect.project_files) {
         const found = tree.candidates.find((file) => projectFolder(file.path, pattern) !== undefined);

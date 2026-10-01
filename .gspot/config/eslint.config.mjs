@@ -326,7 +326,7 @@ const securityRules = {
     'security/detect-eval-with-expression': 'error',
     'security/detect-new-buffer': 'error',
     'security/detect-no-csrf-before-method-override': 'error',
-    // detect-non-literal-regexp is off: it flags the constructor, not the input (D-67).
+    // detect-non-literal-regexp is off: it flags the constructor, not the input.
     'security/detect-non-literal-regexp': 'off',
     'security/detect-non-literal-require': 'error',
     'security/detect-possible-timing-attacks': 'error',

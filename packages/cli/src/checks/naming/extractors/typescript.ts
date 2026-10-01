@@ -52,7 +52,7 @@ function addParameters(sink: ExtractSink, node: Node): void {
 }
 
 // `const { existsSync } = require('node:fs')` and `const { default: X } = await import('x')` bind names another module
-// declared. Any other awaited value is a locally declared binding, and its name is checked (K-137).
+// declared. Any other awaited value is a locally declared binding, and its name is checked.
 function isImportBinding(node: Node): boolean {
     const value = node.childForFieldName('value');
     if (value === null) return false;

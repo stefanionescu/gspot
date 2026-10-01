@@ -63,8 +63,8 @@ tester().run('import-layout', importLayout, {
         },
         {
             // A comment that opens the file is its header, not a note on the import under it.
-            code: "// The file header stays above the block (T-22).\nimport { bbb } from 'bbb';\nimport a from 'a';",
-            output: "// The file header stays above the block (T-22).\nimport a from 'a';\nimport { bbb } from 'bbb';",
+            code: "// The file header stays above the block.\nimport { bbb } from 'bbb';\nimport a from 'a';",
+            output: "// The file header stays above the block.\nimport a from 'a';\nimport { bbb } from 'bbb';",
             errors: [{ messageId: 'layout' }],
         },
     ],

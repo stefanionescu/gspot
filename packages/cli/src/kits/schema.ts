@@ -144,7 +144,7 @@ const checkSchema = z.union(
     { error: 'Choose one command, tool analysis, or engine without combining execution forms.' },
 );
 
-// A path-scoped naming rule a kit ships, in the shape gspot.toml writes under [[naming.rules]] (K-50).
+// A path-scoped naming rule a kit ships, in the shape gspot.toml writes under [[naming.rules]].
 const manifestNamingRule = z.strictObject({
     paths: z.array(z.string().min(1)).min(1),
     languages: z.array(z.string()).optional(),

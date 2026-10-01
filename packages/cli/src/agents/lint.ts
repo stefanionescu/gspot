@@ -75,7 +75,7 @@ function proseLineFindings(file: string, line: string, number: number, layer: st
 }
 
 // A list item that stops at a comma, at the conjunction, or without a full stop is a cut sentence. A parent that ends with a
-// colon and continues in a nested list is whole (K-229).
+// colon and continues in a nested list is whole.
 function cutItemFinding(file: string, item: { line: number; last: string; nested: boolean }): RuleFinding | undefined {
     const last = item.last.trim();
     if (last === '' || (last.endsWith(':') && item.nested)) return undefined;
