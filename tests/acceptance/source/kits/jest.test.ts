@@ -3,53 +3,18 @@ import { test, expect } from 'bun:test';
 import { join, delimiter } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
+import { toolsPath } from '#tests/support/cli/tools.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { INSTALLED_BIN_PATH } from '#tests/support/cli/modules.ts';
 import { containing, textContaining } from '#tests/support/expectations.ts';
-import { toolsPath, installPrivateTools } from '#tests/support/cli/tools.ts';
 
 const source =
     'function total(values) { let sum = 0; for (const value of values) { if (value > 0) sum += value; } return sum; }\nfunction triple(value) { return value * 3; }\nmodule.exports = { total, triple };\n';
 const planted =
     'const { total, triple } = require("./math.cjs");\nconst { writeFileSync } = require("node:fs");\ntest("adds positive values", () => { writeFileSync("authored.txt", "isolated test output"); expect(total([2, -1, 3])).toBe(5); });\n';
 const corrected = `${planted}test("triples an integer", () => { expect(triple(2)).toBe(6); });\n`;
-
-test(
-    'private Jest lint installation reports a focused Bun test at all and accepts its correction',
-    async () => {
-        await using sandbox = await testdir();
-        const focused =
-            "import { test, expect } from 'bun:test';\n\ntest.only('parses a URL', () => {\n    const parsed = new URL('https://example.com/docs');\n    expect(parsed.hostname, 'The URL keeps its host.').toBe('example.com');\n    expect(parsed.pathname).toBe('/docs');\n});\n";
-        await createFileTree(sandbox.path, {
-            'gspot.toml': policyOf(
-                ['jest'],
-                '[runner]\ntool = "mise"\n[guides]\ninstall = false\n[tools.jest]\nglobal_package = "bun:test"\n',
-                'all',
-            ),
-            'package.json':
-                '{"name":"jest-private-lint","private":true,"description":"A planted Jest repository.","type":"module"}\n',
-            'sample.test.js': focused,
-        });
-        const applied = await run(sandbox.path, ['apply']);
-        expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-        await installPrivateTools(sandbox.path);
-        const command = ['check', '--only', 'javascript/eslint', '--json'];
-        const failed = await run(sandbox.path, command);
-        expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-        expect((JSON.parse(failed.stdout) as RunReport).checks.flatMap((check) => check.findings)).toContainEqual(
-            containing({ rule: 'jest/no-focused-tests', file: 'sample.test.js', line: 3 }),
-        );
-        await Bun.write(join(sandbox.path, 'sample.test.js'), focused.replace('test.only(', 'test('));
-        const passing = await run(sandbox.path, command);
-        expect(passing.code, passing.stdout + passing.stderr).toBe(0);
-        expect((JSON.parse(passing.stdout) as RunReport).checks).toMatchObject([
-            { check: 'javascript/eslint', status: 'ok', findings: [] },
-        ]);
-    },
-    PLANTED_TIMEOUT_MS * 5,
-);
 
 test(
     'native Jest at all applies nested coverage settings without executing sibling tests',

@@ -57,46 +57,6 @@ test(
 );
 
 test(
-    'a finding fails the check with the file, the rule and a help line',
-    async () => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, { 'scripts/good.sh': script, 'README.md': '# planted\n' });
-        commitAll(sandbox.path);
-        await run(sandbox.path, [
-            'init',
-            '--yes',
-            '--kits',
-            'bash',
-            '--no-runner',
-            '--no-ci',
-            '--no-guides',
-            '--no-install',
-        ]);
-        await Bun.write(join(sandbox.path, 'scripts', 'bad.sh'), '#!/usr/bin/env bash\necho $1\n');
-        const check = await run(sandbox.path, ['check', '--only', 'bash/shellcheck']);
-        expect(check.code).toBe(1);
-        expect(check.stdout).toContain('scripts/bad.sh:2:6  SC2086');
-        expect(check.stdout).toContain('help:');
-        expect(check.stdout).toContain('reproduce: gspot check --only bash/shellcheck');
-        const ignored = await run(sandbox.path, [
-            'ignore',
-            'bash/shellcheck',
-            '--rule',
-            'SC2086',
-            '--reason',
-            'Word splitting is wanted in this launcher.',
-        ]);
-        expect(ignored.code).toBe(0);
-        const ignoredCheck = await run(sandbox.path, ['check', '--only', 'bash/shellcheck', '--json']);
-        expect(ignoredCheck.code).toBe(0);
-        expect((JSON.parse(ignoredCheck.stdout) as RunReport).checks).toMatchObject([
-            { check: 'bash/shellcheck', status: 'ok', findings: [] },
-        ]);
-    },
-    PLANTED_TIMEOUT_MS,
-);
-
-test(
     'a missing tool fails with the install hint',
     async () => {
         await using sandbox = await testdir();

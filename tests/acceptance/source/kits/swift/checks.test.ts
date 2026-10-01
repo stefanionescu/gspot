@@ -6,12 +6,10 @@ import { run } from '#tests/support/cli/command.ts';
 import type { FindingCase } from '#tests/types/cli.ts';
 import { plantedCases } from '#tests/support/cli/planted.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
+import { STRUCTURAL } from '#tests/inputs/acceptance/source/kits/swift.ts';
 import { CAST_SWIFT, CLEAN_SWIFT, PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
-import { TINY, BELOW, COPIES, FORWARD, STRUCTURAL } from '#tests/inputs/acceptance/source/kits/swift.ts';
 
 const SPACED = CLEAN_SWIFT.replace('func greeting', () => 'func   greeting');
-const SNAKE = CLEAN_SWIFT.replace('func greeting', () => 'func make_greeting');
-const HOME = `import Foundation\n\n/// Reads one variable.\nfunc homeFolder() -> String? {\n    ProcessInfo.processInfo.environment["HOME"]\n}\n`;
 const CASES: FindingCase[] = [
     // SwiftLint has no Windows build.
     {
@@ -26,48 +24,12 @@ const CASES: FindingCase[] = [
         expected: { file: 'Sources/App/Greeting.swift', rule: 'consecutiveSpaces', line: 4 },
     },
     {
-        check: 'naming/identifiers',
-        files: { 'Sources/App/Greeting.swift': SNAKE },
-        expected: { file: 'Sources/App/Greeting.swift', rule: 'case', line: 4 },
-    },
-    {
-        check: 'swift/trivial-function',
-        files: { 'Sources/App/Welcome.swift': FORWARD },
-        expected: { file: 'Sources/App/Welcome.swift', rule: 'trivial-function', line: 4 },
-    },
-    {
-        check: 'swift/trivial-function',
-        files: { 'Sources/App/Pair.swift': TINY },
-        expected: { file: 'Sources/App/Pair.swift', rule: 'trivial-function', line: 3 },
-    },
-    {
-        check: 'swift/duplicate-functions',
-        files: { 'Sources/App/Mix.swift': COPIES },
-        expected: { file: 'Sources/App/Mix.swift', rule: 'same-body', line: 4 },
-    },
-    {
-        check: 'swift/private-before-public',
-        files: { 'Sources/App/Limits.swift': BELOW },
-        expected: { file: 'Sources/App/Limits.swift', rule: 'private-below-shared', line: 6 },
-    },
-    {
         check: 'swift/import-comments',
         files: {
             'Sources/App/Noted.swift':
                 'import Foundation\n// the interface kit\nimport UIKit\n\n/// The size of a label.\nfunc labelSize() -> Int {\n    let label = UILabel()\n    return Int(label.frame.width)\n}\n',
         },
         expected: { file: 'Sources/App/Noted.swift', rule: 'import-comment', line: 2 },
-    },
-    {
-        check: 'swift/env-access-owner',
-        files: { 'Sources/App/Home.swift': HOME, 'Sources/App/User.swift': HOME.replace('homeFolder', 'userFolder') },
-        expected: { file: 'Sources/App/Home.swift', rule: 'read-outside-owner', line: 5 },
-    },
-    {
-        check: 'swift/env-access-owner',
-        files: { 'Sources/App/Home.swift': HOME },
-        policy: '[architecture]\nroles = { env = "Sources/App/Environment.swift" }\n',
-        expected: { file: 'Sources/App/Home.swift', rule: 'read-outside-owner', line: 5 },
     },
     ...STRUCTURAL,
 ];

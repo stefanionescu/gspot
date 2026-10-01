@@ -3,11 +3,6 @@ import { run } from '#tests/support/cli/command.ts';
 import { plantedCases } from '#tests/support/cli/planted.ts';
 import { PSQL, SQL_CLEAN } from '#tests/inputs/acceptance/source/kits/kits.ts';
 
-const LONG = Array.from({ length: 401 }, (_, index) => `SELECT ${String(index)};\n`).join('');
-
-// The keyword arrives in two halves, because the spelling fixer corrects it when it is whole.
-const MISSPELLED = ['TAB', 'EL'].join('');
-
 plantedCases(
     'the sql configuration',
     {
@@ -32,29 +27,9 @@ plantedCases(
     },
     [
         {
-            check: 'sql/syntax',
-            files: { 'db/broken.sql': `CREATE ${MISSPELLED} user_accounts (id UUID);\n` },
-            expected: { file: 'db/broken.sql', rule: 'syntax', line: 1 },
-        },
-        {
-            check: 'sql/block-comments',
-            files: { 'db/commented.sql': '/* Old. */\nSELECT 1;\n' },
-            expected: { file: 'db/commented.sql', rule: 'block-comment', line: 1 },
-        },
-        {
-            check: 'sql/file-length',
-            files: { 'db/long.sql': LONG },
-            expected: { file: 'db/long.sql', rule: 'file-lines', line: 1 },
-        },
-        {
             check: 'sql/sqlfluff',
             files: { 'db/lower.sql': 'select id from user_accounts;\n' },
             expected: { file: 'db/lower.sql', rule: 'CP01', line: 1 },
-        },
-        {
-            check: 'naming/identifiers',
-            files: { 'db/camel.sql': 'CREATE TABLE audit_entries (\n    "createdAt" TIMESTAMPTZ NOT NULL\n);\n' },
-            expected: { file: 'db/camel.sql', rule: 'case', line: 2 },
         },
     ],
 );

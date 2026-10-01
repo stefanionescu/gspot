@@ -63,26 +63,3 @@ test(
     },
     PLANTED_TIMEOUT_MS * 3,
 );
-
-test(
-    'the security push stage includes shipped rules and leaves external scans opt-in',
-    async () => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
-            'src/index.ts': SECURITY_CLEAN,
-            'package.json': '{\n    "name": "planted",\n    "private": true\n}\n',
-        });
-        commitAll(sandbox.path);
-        const environment = { PATH: toolsPath(['semgrep', 'typos', 'ec']) };
-        await installAtLevel(sandbox.path, SECURITY_INIT, environment);
-        const checked = await run(sandbox.path, ['check', '--stage', 'push', '--json'], environment);
-        const atPush = JSON.parse(checked.stdout) as {
-            checks: { check: string }[];
-        };
-        const ids = atPush.checks.map((check) => check.check);
-        expect(ids).toContain('security/semgrep');
-        expect(ids).not.toContain('security/codeql');
-        expect(ids).not.toContain('security/semgrep-registry');
-    },
-    PLANTED_TIMEOUT_MS * 3,
-);

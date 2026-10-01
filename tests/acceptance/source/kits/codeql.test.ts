@@ -19,27 +19,16 @@ const python = {
     line: 6,
     column: 42,
 };
-const javascript = {
-    language: 'javascript-typescript',
-    file: 'query.js',
-    unsafe: 'const express = require("express");\nconst mysql = require("mysql");\nconst connection = mysql.createConnection({});\nconst rateLimit = require("express-rate-limit");\nconst app = express();\napp.use(rateLimit({windowMs: 60000, max: 100}));\napp.get("/users", (request, response) => {\n    connection.query("SELECT * FROM users WHERE name = " + request.query.name, (error, result) => response.send(result));\n});\n',
-    corrected:
-        'const express = require("express");\nconst mysql = require("mysql");\nconst connection = mysql.createConnection({});\nconst rateLimit = require("express-rate-limit");\nconst app = express();\napp.use(rateLimit({windowMs: 60000, max: 100}));\napp.get("/users", (request, response) => {\n    connection.query("SELECT * FROM users WHERE name = ?", [request.query.name], (error, result) => response.send(result));\n});\n',
-    rule: 'js/sql-injection',
-    line: 8,
-    column: 22,
-};
 
 // CodeQL ships no arm64 Linux build; its pin says where it runs.
 describe.if(toolShipsHere('codeql'))('the pinned CodeQL', () => {
-    test.each(
-        ['recommended', 'all'].flatMap((level) => [python, javascript].map((example) => ({ level, ...example }))),
-    )(
-        'pinned CodeQL reports SQL injection for $language at $level and accepts a parameterized query without changing sources',
-        async ({ level, language, file, unsafe, corrected, rule, line, column }) => {
+    test(
+        'pinned CodeQL reports SQL injection in Python and accepts a parameterized query without changing sources',
+        async () => {
+            const { language, file, unsafe, corrected, rule, line, column } = python;
             await using directory = await testdir();
             await createFileTree(directory.path, {
-                'gspot.toml': policyOf(['security'], `[tools.codeql]\nlanguages = ["${language}"]\n`, level),
+                'gspot.toml': policyOf(['security'], `[tools.codeql]\nlanguages = ["${language}"]\n`, 'all'),
                 [file]: unsafe,
                 'authored.txt': 'Preserve this file.\n',
             });

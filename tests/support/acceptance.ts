@@ -56,8 +56,6 @@ const WINDOWS_PENDING = new Map<string, string>([
     ['kits/security.test.ts', 'Semgrep times out on the Windows runner'],
     ['kits/static-site.test.ts', 'the setup hook times out on the Windows runner'],
     ['kits/structure.test.ts', 'the setup hook times out on the Windows runner'],
-    ['kits/svg.test.ts', 'the setup hook times out on the Windows runner'],
-    ['kits/swift/security.test.ts', 'times out on the Windows runner'],
     ['kits/typescript/eslint.test.ts', 'times out on the Windows runner'],
     ['kits/typescript/javascript.test.ts', 'the sandbox install fails on Windows'],
     ['kits/typescript/planted-checks.test.ts', 'times out on the Windows runner'],
