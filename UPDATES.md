@@ -2,7 +2,8 @@
 
 This file records an audit of the gspot repository, done on September 30, 2026, and the decisions the owner made that
 day. Nothing here is fixed yet. `architecture.png` shows the source folders and their imports today and after the work.
-`folder-structure.png` shows the folder tree before and after.
+`folder-structure.png` shows the folder tree before and after, and `tests-structure.png` does the same for the tests.
+Appendices A to F list every finding: names, files, tiny functions, tests, documentation, and the agent rules.
 
 The audit read every file in `packages/cli`, `packages/eslint-plugin`, `docs`, `tests`, `.github`, and the root. It
 measured the import graph with a script and compared the layout with eight established command-line tools. Today the
@@ -51,6 +52,9 @@ on these parts.
 | Keep the scopes `packages/cli` and `packages/eslint-plugin` in the `gspot.toml` of this repository?                                         | 24 generated files that repeat the root byte for byte | delete both scopes                                                      |
 | Keep the docs extras: the custom homepage, the Starlight overrides, the page of generated configuration, and the release check of the site? | about 1,000 lines                                     | a Starlight splash page and plain Starlight                             |
 | Keep `CLAUDE.md`, identical to `AGENTS.md`?                                                                                                 | one file                                              | delete if every agent in use reads `AGENTS.md`                          |
+| Keep a `config` folder for constants, as the owner decided on September 28, 2026?                                                           | 32 files; 588 of 663 exports have one importer        | keep it, organized by the folders that read it (section 6.1)            |
+| How do manual checks run once `--stage` becomes `--hook`?                                                                                   | a flag                                                | `--only <ids>`, which already selects checks of every stage             |
+| Keep the preferences of this repository in the shipped rules: ASD-STE100 for talking, no subagents, the plan format?                        | three rule files                                      | move them to the local rules of this repository                         |
 
 ## 2. Answers to the questions asked
 
@@ -135,10 +139,10 @@ such as `packages/cli/src/kits/manifests.ts:63`.
 
 ### Config files with no blank lines
 
-17 of the 32 files in `packages/cli/src/config` have no blank line between groups. The real problem is the folder: 588
-of its 663 exports have exactly one importer, and 215 of the 402 types in `packages/cli/src/types` have exactly one
-user. Both folders exist because `gspot.toml` sets `types_directory` and `config_directory`, against
-`packages/cli/guides/general/code/NAMING-FILES.md:154`. Delete the two settings and dissolve both folders (section 6.1).
+17 of the 32 files in `packages/cli/src/config` have no blank line between groups. Beyond the blank lines, the files
+are organized by theme while their users are spread out: 588 of the 663 exports have exactly one importer. The owner
+keeps `config` as the home of constants, so section 6.1 reorganizes it by the folders that read it. 215 of the 402 types
+in `packages/cli/src/types` have one user; `types` is the second open part of section 6.1.
 
 ### `packages/cli/src/execution/broken-tool.ts`
 
@@ -268,26 +272,35 @@ then a mirror of the source path. Appendix B maps every file.
 
 ## 4. Bugs in code that stays
 
-| Where                                                                                                                                                                                 | Problem                                                                                                                 | Action                                   |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
-| `packages/cli/src/config/agents.ts:30`                                                                                                                                                | tells users to edit `[rules]` in `gspot.toml`; the table is `[guides]` today                                            | correct with the rename to rules         |
-| `packages/cli/guides/templates/docs`                                                                                                                                                  | 8 files ship but never install; `packages/cli/guides/general/prose/DOCS-REVIEW.md:178` promises them                    | delete both                              |
-| `packages/cli/guides/framework/fastapi/FASTAPI.md`, `RUNTIME.md`, and `packages/cli/guides/framework/nextjs/SECURITY.md`                                                              | never installed: no manifest names them                                                                                 | name them in their kits                  |
-| `packages/cli/guides/language/YAML.md`, `packages/cli/guides/tool/tasks/TASKS.md`, `packages/cli/guides/tool/github-actions/GITHUB-ACTIONS.md`                                        | the front matter names a `configs` kit, which does not exist, and cloudflare                                            | name the kit that installs them          |
-| about 20 kit manifest entries                                                                                                                                                         | name rules that every repository gets anyway, such as `TESTING.md`                                                      | delete them                              |
-| `packages/cli/src/platform/assets.ts:58`, `packages/cli/scripts/build.ts:15`                                                                                                          | tell users to run a task that exists only in this repository                                                            | name the package to reinstall            |
-| `packages/cli/package.json`                                                                                                                                                           | `prettier` is a runtime dependency that `packages/cli/src` never loads                                                  | use it for the JSON layout, or remove it |
-| `mise.toml` (`guides:lint`)                                                                                                                                                           | runs test files that moved to `tests/integration/tools/guides`, and one that is gone                                    | goes with the guide linter               |
-| `gspot.toml`                                                                                                                                                                          | entries for a deleted hook test and a `fail_fast` property; the typos words `virtua` and `referers` appear in no source | delete                                   |
-| `tests/support/package/run.ts:43`                                                                                                                                                     | `process.removeListener` receives new arrow functions and removes nothing                                               | keep the handlers in variables           |
-| `tests/timings/windows.json`                                                                                                                                                          | a copy of the Linux file; Bun reports Windows paths with backslashes, so no key matches                                 | regenerate it on Windows                 |
-| `packages/cli/src/commands/ignore.ts:51`, `packages/cli/src/generation/eslint/blocks.ts:133`, `packages/cli/src/policy/write.ts:187`, `packages/cli/src/policy/setting-surface.ts:14` | compare with `JSON.stringify`, which depends on key order                                                               | `isDeepStrictEqual`                      |
-| `packages/cli/src/execution/fixers.ts:215`                                                                                                                                            | diff headers use backslashes on Windows                                                                                 | forward slashes                          |
-| `packages/cli/src/config/kits.ts:65`                                                                                                                                                  | the word "length-guidenames", left by a bulk rename                                                                     | fix                                      |
-| `packages/cli/src/repository/existing-tooling.ts:181`                                                                                                                                 | `declaredKits` compares kit names with tool names, and its one caller never passes `selected`                           | fix the comparison                       |
-| `packages/cli/src/checks/structure/directories.ts:22`, `packages/cli/src/checks/structure/single-file-folder.ts:33`                                                                   | count only `.d.ts` files as declaration files                                                                           | check with the shared extension table    |
-| `docs/scripts/links.ts`                                                                                                                                                               | its last step compares the schema with the function that wrote it, so it always passes                                  | delete that step                         |
-| `docs/src/components/starlight/SiteTitle.astro:13`                                                                                                                                    | repeats the background image of line 12                                                                                 | delete the line                          |
+| Where                                                                                                                                                                                 | Problem                                                                                                                                        | Action                                   |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
+| `packages/cli/src/config/agents.ts:30`                                                                                                                                                | tells users to edit `[rules]` in `gspot.toml`; the table is `[guides]` today                                                                   | correct with the rename to rules         |
+| `packages/cli/guides/templates/docs`                                                                                                                                                  | 8 files ship but never install; `packages/cli/guides/general/prose/DOCS-REVIEW.md:178` promises them                                           | delete both                              |
+| `packages/cli/guides/framework/fastapi/FASTAPI.md`, `RUNTIME.md`, and `packages/cli/guides/framework/nextjs/SECURITY.md`                                                              | never installed: no manifest names them                                                                                                        | name them in their kits                  |
+| `packages/cli/guides/language/YAML.md`, `packages/cli/guides/tool/tasks/TASKS.md`, `packages/cli/guides/tool/github-actions/GITHUB-ACTIONS.md`                                        | the front matter names a `configs` kit, which does not exist, and cloudflare                                                                   | name the kit that installs them          |
+| 26 kit manifest entries                                                                                                                                                               | name rules that every repository gets anyway, such as `TESTING.md`                                                                             | delete them                              |
+| `packages/cli/src/platform/assets.ts:58`, `packages/cli/scripts/build.ts:15`                                                                                                          | tell users to run a task that exists only in this repository                                                                                   | name the package to reinstall            |
+| `packages/cli/package.json`                                                                                                                                                           | `prettier` is a runtime dependency that `packages/cli/src` never loads                                                                         | use it for the JSON layout, or remove it |
+| `mise.toml` (`guides:lint`)                                                                                                                                                           | runs test files that moved to `tests/integration/tools/guides`, and one that is gone                                                           | goes with the guide linter               |
+| `gspot.toml`                                                                                                                                                                          | entries for a deleted hook test and a `fail_fast` property; the typos words `virtua` and `referers` appear in no source                        | delete                                   |
+| `tests/support/package/run.ts:43`                                                                                                                                                     | `process.removeListener` receives new arrow functions and removes nothing                                                                      | keep the handlers in variables           |
+| `tests/timings/windows.json`                                                                                                                                                          | a copy of the Linux file; Bun reports Windows paths with backslashes, so no key matches                                                        | regenerate it on Windows                 |
+| `packages/cli/src/commands/ignore.ts:51`, `packages/cli/src/generation/eslint/blocks.ts:133`, `packages/cli/src/policy/write.ts:187`, `packages/cli/src/policy/setting-surface.ts:14` | compare with `JSON.stringify`, which depends on key order                                                                                      | `isDeepStrictEqual`                      |
+| `packages/cli/src/execution/fixers.ts:215`                                                                                                                                            | diff headers use backslashes on Windows                                                                                                        | forward slashes                          |
+| `packages/cli/src/config/kits.ts:65`                                                                                                                                                  | the word "length-guidenames", left by a bulk rename                                                                                            | fix                                      |
+| `packages/cli/src/repository/existing-tooling.ts:181`                                                                                                                                 | `declaredKits` compares kit names with tool names, and its one caller never passes `selected`                                                  | fix the comparison                       |
+| `packages/cli/src/checks/structure/directories.ts:22`, `packages/cli/src/checks/structure/single-file-folder.ts:33`                                                                   | count only `.d.ts` files as declaration files                                                                                                  | check with the shared extension table    |
+| `.github/workflows/ci.yml:229`                                                                                                                                                        | the tool step rewrites `tests/timings` under `--shard` before the acceptance step reads it, so acceptance is never balanced by time            | delete the timings (appendix D.1)        |
+| `tests/acceptance/source/kits/documents.test.ts`                                                                                                                                      | records 5 milliseconds on Linux: its 11 cases do not run there                                                                                 | find out why                             |
+| `packages/cli/src/repository/revisions/contents.ts:41`                                                                                                                                | likely: a tracked link to a folder, to an absolute path, outside the repository, or to a missing file makes every staged and push check exit 2 | confirm with D.5 row 1                   |
+| `packages/cli/src/lifecycle/ownership/installs.ts:36`                                                                                                                                 | likely: an install killed after the folder swap leaves a folder that the next install refuses                                                  | confirm with D.5 row 2                   |
+| `packages/cli/src/platform/root/writes.ts:104`                                                                                                                                        | likely: a stale writer lock with the ID of an unrelated process refuses forever, or throws for process 1                                       | confirm with D.5 row 3                   |
+| `packages/cli/src/commands/print-result.ts:27`                                                                                                                                        | likely: with `--json`, a plain error prints nothing on standard output                                                                         | confirm with D.5 row 6                   |
+| `packages/cli/src/checks/dependencies/lockfile/hosts.ts:35`                                                                                                                           | likely: `npm-shrinkwrap.json` is never read, although its parser exists                                                                        | confirm with D.5 row 30                  |
+| `packages/cli/src/policy/merge.ts:30`                                                                                                                                                 | possible: the root wins over a nested scope for tool settings                                                                                  | confirm with D.5 row 25                  |
+| the agent rules                                                                                                                                                                       | teach code that the shipped ESLint, SwiftLint, and Stylelint configurations reject                                                             | appendix F.3                             |
+| `docs/scripts/links.ts`                                                                                                                                                               | its last step compares the schema with the function that wrote it, so it always passes                                                         | delete that step                         |
+| `docs/src/components/starlight/SiteTitle.astro:13`                                                                                                                                    | repeats the background image of line 12                                                                                                        | delete the line                          |
 
 ## 5. Delete
 
@@ -344,33 +357,33 @@ The other 22 rules stay.
 
 ### 5.5 Code written for this repository that ships to users
 
-| Where                                                                                                                                            | What it forces on users                                                                                                                                 | Action                                                     |
-| ------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
-| `packages/eslint-plugin/src/config/import-direction.ts:3`                                                                                        | roles for `tests/support`, `config`, `src/env`, `types`, and `src`                                                                                      | no default roles                                           |
-| `packages/cli/src/config/generation.ts:83`                                                                                                       | the same roles again, already different from the plugin copy                                                                                            | delete                                                     |
-| `packages/cli/src/generation/eslint/configuration.ts:27`                                                                                         | a `types` role even when the user sets none                                                                                                             | delete                                                     |
-| `packages/eslint-plugin/src/rules/tests-directory-contents.ts:34`                                                                                | a `tests/support` folder for any helper beside tests                                                                                                    | the harness folder becomes a required option               |
-| `packages/eslint-plugin/src/rules/env-access-owner.ts:37`                                                                                        | environment reads only under `src/env` or `config`                                                                                                      | no default owners                                          |
-| `packages/cli/kits/tool/jest/manifest.toml:82`, `packages/cli/kits/tool/vitest/manifest.toml:88`                                                 | `harness_directory = "tests/support"`, which feeds four other checks                                                                                    | no default                                                 |
-| `packages/cli/guides/general/code/TESTING.md:61`, `packages/cli/guides/general/code/NAMING-FILES.md:28`, and the naming rules of three languages | tell agents to use `tests/support`                                                                                                                      | name the harness setting instead                           |
-| `packages/cli/kits/language/javascript/eslint.config.js.tmpl:69`                                                                                 | the internal error class `GspotError`                                                                                                                   | delete                                                     |
-| `packages/cli/kits/language/javascript/eslint.config.js.tmpl:187`                                                                                | an internal decision number                                                                                                                             | delete                                                     |
-| `packages/cli/kits/general/prose/styles/gspot/corruption.yml`                                                                                    | a Vale rule for damage from an old bulk rename in this repository                                                                                       | delete                                                     |
-| `packages/cli/kits/language/javascript/manifest.toml:2`                                                                                          | the knip entry files `src/plugin`, `build.ts`, and `publish.ts`                                                                                         | delete                                                     |
-| `packages/cli/kits/general/naming/policy.json`                                                                                                   | bans `catalog`, `corpus`, `render`, `load`, `fetch`, and `resolve`, words this repository chose to avoid, and puts a two-digit prefix on Markdown files | move to the `gspot.toml` of this repository                |
-| `packages/cli/src/config/checks/structure.ts:62` to `:263`                                                                                       | the Bash conventions of another project: `run_ssh` blocks, `nvidia-smi` sweeps, include guards, a four-line header                                      | the project-specific names become settings with no default |
+| Where                                                                                                                                                           | What it forces on users                                                                                                                                 | Action                                                     |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| `packages/eslint-plugin/src/config/import-direction.ts:3`                                                                                                       | roles for `tests/support`, `config`, `src/env`, `types`, and `src`                                                                                      | no default roles                                           |
+| `packages/cli/src/config/generation.ts:83`                                                                                                                      | the same roles again, already different from the plugin copy                                                                                            | delete                                                     |
+| `packages/cli/src/generation/eslint/configuration.ts:27`                                                                                                        | a `types` role even when the user sets none                                                                                                             | delete                                                     |
+| `packages/eslint-plugin/src/rules/tests-directory-contents.ts:34`                                                                                               | a `tests/support` folder for any helper beside tests                                                                                                    | the harness folder becomes a required option               |
+| `packages/eslint-plugin/src/rules/env-access-owner.ts:37`                                                                                                       | environment reads only under `src/env` or `config`                                                                                                      | no default owners                                          |
+| `packages/cli/kits/tool/jest/manifest.toml:82`, `packages/cli/kits/tool/vitest/manifest.toml:88`                                                                | `harness_directory = "tests/support"`, which feeds four other checks                                                                                    | no default                                                 |
+| `packages/cli/guides/general/code/TESTING.md:62`, `packages/cli/guides/general/code/NAMING-FILES.md:28`, and `packages/cli/guides/language/naming/PYTHON.md:33` | tell agents to use `tests/support`                                                                                                                      | name the harness setting instead                           |
+| `packages/cli/kits/language/javascript/eslint.config.js.tmpl:69`                                                                                                | the internal error class `GspotError`                                                                                                                   | delete                                                     |
+| `packages/cli/kits/language/javascript/eslint.config.js.tmpl:187`                                                                                               | an internal decision number                                                                                                                             | delete                                                     |
+| `packages/cli/kits/general/prose/styles/gspot/corruption.yml`                                                                                                   | a Vale rule for damage from an old bulk rename in this repository                                                                                       | delete                                                     |
+| `packages/cli/kits/language/javascript/manifest.toml:2`                                                                                                         | the knip entry files `src/plugin`, `build.ts`, and `publish.ts`                                                                                         | delete                                                     |
+| `packages/cli/kits/general/naming/policy.json`                                                                                                                  | bans `catalog`, `corpus`, `render`, `load`, `fetch`, and `resolve`, words this repository chose to avoid, and puts a two-digit prefix on Markdown files | move to the `gspot.toml` of this repository                |
+| `packages/cli/src/config/checks/structure.ts:62` to `:263`                                                                                                      | the Bash conventions of another project: `run_ssh` blocks, `nvidia-smi` sweeps, include guards, a four-line header                                      | the project-specific names become settings with no default |
 
 ### 5.6 Code that lints this repository
 
-| What                                                                                                                                                                | Action                                        |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
-| the guide linter: `packages/cli/src/agents/lint.ts`, `examples.ts`, `metadata.ts`, 14 constants, `packages/cli/scripts/guides-lint.ts`, and `tests/unit/cli/agents` | delete                                        |
-| the tests that run rule examples through the generated configuration: `tests/integration/tools/guides` and `tests/integration/tools/bash/example.test.ts`           | delete                                        |
-| the `guides/lint` and `tests/unit` checks in `gspot.toml`                                                                                                           | delete; CI runs the tests directly            |
-| `types_directory`, `config_directory`, 19 `naming.contract_properties`, the `[structure]` exemptions, and the `[[ignore]]` entries for this repository              | delete with the folders and checks they serve |
-| the jest kit in the kit list of this repository, which runs Bun tests                                                                                               | delete                                        |
-| `testToolsText` in `packages/cli/src/generation/tools/mise.ts`                                                                                                      | move to the test pin script                   |
-| the tasks `gspot`, `check`, `doctor`, and `guides:lint`                                                                                                             | one `gspot` task                              |
+| What                                                                                                                                                                                      | Action                                        |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
+| the guide linter: `packages/cli/src/agents/lint.ts`, `examples.ts`, `metadata.ts`, 14 constants, `packages/cli/scripts/guides-lint.ts`, and three of the tests in `tests/unit/cli/agents` | delete                                        |
+| the tests that run rule examples through the generated configuration: `tests/integration/tools/guides` and `tests/integration/tools/bash/example.test.ts`                                 | delete                                        |
+| the `guides/lint` and `tests/unit` checks in `gspot.toml`                                                                                                                                 | delete; CI runs the tests directly            |
+| `types_directory`, `config_directory`, 19 `naming.contract_properties`, the `[structure]` exemptions, and the `[[ignore]]` entries for this repository                                    | delete with the folders and checks they serve |
+| the jest kit in the kit list of this repository, which runs Bun tests                                                                                                                     | delete                                        |
+| `testToolsText` in `packages/cli/src/generation/tools/mise.ts`                                                                                                                            | move to the test pin script                   |
+| the tasks `gspot`, `check`, `doctor`, and `guides:lint`                                                                                                                                   | one `gspot` task                              |
 
 ### 5.7 Dead code and migrations
 
@@ -404,13 +417,21 @@ The other 22 rules stay.
 
 ## 6. Move, merge, and replace
 
-### 6.1 Dissolve `config` and `types`
+### 6.1 `config` and `types`
 
-Every constant and type moves to the module that reads it; a type sits beside its zod schema as `z.infer`. Six small
-shared modules take what several folders need: git, text, objects, shell quoting, file modes, and `.gspot` locations,
-all in `platform`. The exit codes join `packages/cli/src/platform/errors.ts`. Fifteen test files and
-`docs/src/content/reference/definitions.ts` import from `types` today and change with it. The plugin gets the same
-treatment: each rule holds its own option types, and the shared constants move to the helpers that read them.
+The owner keeps constants in a folder named `config`, decided on September 28, 2026. The folder has three problems: 588
+of its 663 exports have exactly one importer, 17 of its 32 files have no blank line between groups, and `config` and
+`types` import each other. With the folder kept:
+
+- One `config` file per folder that reads it, named after that folder, with groups separated by blank lines.
+- Values that several folders share go to one file each: git, file modes, `.gspot` locations, and exit codes.
+- Constants that nothing imports go.
+- `config` imports nothing but `platform`, and no type imports `config`.
+
+If the owner dissolves the folder instead, every constant moves to the module that reads it, as appendix B.1 maps.
+`types` holds 402 types, 215 of them with one user. A type beside its zod schema can be `z.infer`. Fifteen test files and
+`docs/src/content/reference/definitions.ts` import from `types` and change with it. In the plugin, each rule holds its
+own option types. Helpers for text, objects, and shell quoting move to `platform` either way.
 
 ### 6.2 Duplicates to merge
 
@@ -485,69 +506,79 @@ modules in the NestJS kit, as the Astro kit does for `.astro` files.
 
 ## 9. Tests
 
-Tests for the deleted features and code go with them: the uninstall, completion, report, cache, inline-ignore, guide
-linter, and guide example tests. The layout changes to tier, then package, then a mirror of the source (appendix B.5),
-and `tests/support` becomes a `harness` folder. Of the rest:
+Appendix D judges all 514 test files. The summary:
 
-| Test or folder                                                                                                                                                   | Problem                                                                              | Action                                                  |
-| ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ | ------------------------------------------------------- |
-| `tests/integration/repository`                                                                                                                                   | tests the test harness and a generated file, besides the grammar script              | keep the grammar script test; delete the rest           |
-| `tests/integration/docs`                                                                                                                                         | checks page text and the release script; runs 4 times per CI run                     | delete the page text checks; run the rest once          |
-| `tests/inputs` (37 files) and `tests/types` (12 files)                                                                                                           | a second copy of the test tree; 22 files have one user                               | put each file beside its user or in the harness         |
-| `tests/unit/cli/policy/messages.test.ts`                                                                                                                         | checks the wording of every message builder                                          | delete                                                  |
-| `tests/integration/tools/flags.test.ts`                                                                                                                          | matches every manifest flag against help text, in the repository root                | run it in a temporary folder                            |
-| `tests/acceptance/package/pins.test.ts`                                                                                                                          | one network call per pin                                                             | a scheduled job                                         |
-| `tests/acceptance/source/cli/lifecycle/performance.test.ts`                                                                                                      | wall-clock limits on shared runners; it failed in CI                                 | a manual benchmark                                      |
-| `tests/acceptance/source/kits/static-site.test.ts` (494 s) and `tests/acceptance/source/kits/codeql.test.ts` (279 s)                                             | the slowest files in the suite                                                       | one case per kit in CI; the full set in a scheduled job |
-| `tests/acceptance/source/kits/nextjs/selection.test.ts` (271 s), `tests/acceptance/source/kits/react.test.ts`, `tests/acceptance/source/kits/components.test.ts` | one planted defect per third-party rule                                              | one case per framework                                  |
-| `tests/acceptance/source/kits/python/docstrings.test.ts` (105 s)                                                                                                 | repeats `tests/unit/cli/checks/python/docstrings.test.ts`                            | one case                                                |
-| the two `parameter-limits.test.ts` files                                                                                                                         | the same test in two tiers                                                           | one                                                     |
-| init arguments written four ways, timeouts in 8 files, the repository root computed 12 times, and a test `run` that clashes with the CLI `run`                   | sprawl in `tests/support`                                                            | one of each; rename the test helper `runGspot`          |
-| `tests/support/acceptance.ts`, `tests/support/package/run.ts`, `tests/support/registry/workspace-command.ts`, `tests/support/cli/swiftformat.ts`                 | tasks, not helpers                                                                   | a root `scripts` folder                                 |
-| the fixture packages of the tests                                                                                                                                | have no `description`, which the linted `package.json` rules require; 10 CI failures | add one to each fixture                                 |
+- **About 1,140 cases go or shrink.** They check wording, pin the content of gspot, restate a schema, repeat another
+  test, test the test harness, or test removed features. About 9,700 test lines go.
+- **About 300 acceptance cases move to faster tiers,** because most need no native tool. One case per kit that proves
+  the wiring stays; one planted defect per third-party rule goes. Each Linux CI run saves about 2,500 seconds.
+- **Five tiers named by what a test needs:** `unit`, `integration`, `tools`, `acceptance`, and `package` (D.1).
+- **`tests/timings` goes.** A CI bug means it never balanced acceptance, and it saves little after the cuts.
+- **`tests/inputs` becomes two folders, `config` and `fixtures`.** The config folder holds the hard-coded parameters,
+  such as timeouts; the fixtures folder holds planted content that several tests share. The rest goes inline.
+- **`tests/support` becomes a `harness` folder,** and four runners move to a root `scripts` folder.
+- **34 tests for real scenarios are missing** (D.5). Six of them confirm or clear likely bugs (section 4).
+- **The fixture packages lack the `description`** that the linted `package.json` rules require; that caused 10 CI
+  failures.
 
-## 10. CI and tasks
+## 10. Documentation and the rules
+
+Appendix E covers the docs site and every Markdown file outside the rules; appendix F covers the 99 files of agent
+rules.
+
+- **Docs:** 58 findings of bloat, 86 places that go stale once this audit lands, and 8 claims that are false today.
+  Two pages go, 17 shorten, and 7 get rewritten.
+- **The worst false claim:** the install commands lack an exact version, so a newer gspot than the pin makes six
+  commands refuse.
+- **Rules:** 11,662 lines become about 7,100. The paragraph about levels repeats in 65 files, although assembly applies
+  levels. Eleven files install empty at level recommended, and one rule appears in up to eight files.
+- **Rules that mislead:** several teach code that the shipped linters reject (F.3), and some carry the preferences of
+  this repository or of other projects.
+
+## 11. CI and tasks
 
 CI run 36765405183 failed in 16 of 21 jobs. The causes, none of them fixed yet:
 
-| Cause                                                                                                            | Jobs                        | Fix                                                                            |
-| ---------------------------------------------------------------------------------------------------------------- | --------------------------- | ------------------------------------------------------------------------------ |
-| test fixture packages lack the `description` that the linted `package.json` rules require                        | 7 shards on Linux and macOS | add descriptions (section 9)                                                   |
-| the 5,000-file staged run takes 5.3 s against a 5 s limit                                                        | 3 shards                    | a manual benchmark (section 9)                                                 |
-| `commits/range` lints every commit back to the first, once per scope: 264 findings, 4 times, 6 to 8 minutes each | check                       | lint only the commits of the pull request or push, once                        |
-| gitleaks flags three secret-shaped fixtures                                                                      | check                       | an allow list for the fixture paths                                            |
-| Vale has no styles, because CI runs `install` and only `apply` downloads them                                    | check                       | download the styles in `install`                                               |
-| `doctor` finds `plutil`, `xmllint`, and `zsh` missing                                                            | check                       | install them in the check job as the other jobs do                             |
-| Windows: timeouts, backslash paths, line endings on checkout, exit code 130 after a signal where 2 is expected   | 7 jobs                      | forward slashes in output, `eol=lf` for fixtures, map signals, longer timeouts |
-| `tests/timings/windows.json` has Linux keys                                                                      | 6 shards                    | regenerate it on Windows                                                       |
-| macOS runners have no Docker                                                                                     | 1 shard                     | skip the Docker cases on macOS                                                 |
+| Cause                                                                                                               | Jobs                        | Fix                                                                            |
+| ------------------------------------------------------------------------------------------------------------------- | --------------------------- | ------------------------------------------------------------------------------ |
+| test fixture packages lack the `description` that the linted `package.json` rules require                           | 7 shards on Linux and macOS | add descriptions (section 9)                                                   |
+| the 5,000-file staged run takes 5.3 s against a 5 s limit                                                           | 3 shards                    | a manual benchmark (section 9)                                                 |
+| `commits/range` lints every commit back to the first, once per scope: 264 findings, 4 times, 6 to 8 minutes each    | check                       | lint only the commits of the pull request or push, once                        |
+| gitleaks flags three secret-shaped fixtures                                                                         | check                       | an allow list for the fixture paths                                            |
+| Vale has no styles, because CI runs `install` and only `apply` downloads them                                       | check                       | download the styles in `install`                                               |
+| `doctor` finds `plutil`, `xmllint`, and `zsh` missing                                                               | check                       | install them in the check job as the other jobs do                             |
+| Windows: timeouts, backslash paths, line endings on checkout, exit code 130 after a signal where 2 is expected      | 7 jobs                      | forward slashes in output, `eol=lf` for fixtures, map signals, longer timeouts |
+| `tests/timings` is rewritten by the tool step before acceptance reads it, and the Windows file copies the Linux one | 17 shards                   | delete the timings and shard by file count (appendix D.1)                      |
+| macOS runners have no Docker                                                                                        | 1 shard                     | skip the Docker cases on macOS                                                 |
 
 The rest of CI and the tasks:
 
-| What                                                                                                                                           | Action                           |
-| ---------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------- |
-| the `docs` job runs `test:docs`, which `test` already runs on 3 systems                                                                        | keep only `docs:build`           |
-| the release runs `test:package` again after CI ran it                                                                                          | delete the second run            |
-| `actions/cache` copied into 4 jobs                                                                                                             | one composite step               |
-| `site.yml`: the `source_ref` input, `site:verify-release`, `site:record-source`, the extra artifact, and a concurrency group that never queues | delete; build the tag and deploy |
-| the tasks `test:unit`, `test:integration`, `test:docs`, and `test:bash-example`                                                                | delete                           |
-| the task `docs:check-links`                                                                                                                    | fold into `docs:build`           |
-| the tasks `repo:setup` and `prepare:grammar`, which run the same script                                                                        | one task                         |
-| task and job names                                                                                                                             | appendix A.9                     |
+| What                                                                                                                                           | Action                                |
+| ---------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- |
+| the `docs` job runs `test:docs`, which `test` already runs on 3 systems                                                                        | keep only `docs:build`                |
+| the release runs `test:package` again after CI ran it                                                                                          | delete the second run                 |
+| `actions/cache` copied into 4 jobs                                                                                                             | one composite step                    |
+| `site.yml`: the `source_ref` input, `site:verify-release`, `site:record-source`, the extra artifact, and a concurrency group that never queues | delete; build the tag and deploy      |
+| the tasks `test:unit`, `test:integration`, `test:docs`, and `test:bash-example`                                                                | delete                                |
+| the task `docs:check-links`                                                                                                                    | fold into `docs:build`                |
+| the tasks `repo:setup` and `prepare:grammar`, which run the same script                                                                        | one task                              |
+| 17 shards of uneven length; each pays for its own setup                                                                                        | 12 shards of equal size, 4 per system |
+| task and job names                                                                                                                             | appendix A.9                          |
 
-## 11. Order of work
+## 12. Order of work
 
-| Stage | What                                                                                                                     | Size                              |
-| ----- | ------------------------------------------------------------------------------------------------------------------------ | --------------------------------- |
-| 1     | The owner answers the open questions (section 1)                                                                         | none                              |
-| 2     | Delete the removed features, the byte backups, and their tests (5.1 and 5.2)                                             | about 1,600 source lines          |
-| 3     | Delete duplicates, dead rules, repository defaults, the self-lint code, dead code, and files (5.3 to 5.8)                | about 1,900 lines, 1.5 GB on disk |
-| 4     | Dissolve `config` and `types`, move every file to its place, and write the layers into `gspot.toml` (3, 6.1, appendix B) | about 400 files touched           |
-| 5     | Rename: rules, packages, check IDs, settings, and identifiers (7, appendix A)                                            | about 1,200 names                 |
-| 6     | Merge duplicates, adopt libraries, and fix the bugs (4, 6.2, 6.3)                                                        | about 1,000 lines saved           |
-| 7     | Settle each tiny function (8, appendix C)                                                                                | 56 suppressions                   |
-| 8     | Restructure and clean the tests (9, appendix B.5)                                                                        | about 500 files moved             |
-| 9     | Fix CI (10)                                                                                                              | 16 failing jobs                   |
+| Stage | What                                                                                                                   | Size                              |
+| ----- | ---------------------------------------------------------------------------------------------------------------------- | --------------------------------- |
+| 1     | The owner answers the open questions (section 1)                                                                       | none                              |
+| 2     | Delete the removed features, the byte backups, and their tests (5.1 and 5.2)                                           | about 1,600 source lines          |
+| 3     | Delete duplicates, dead rules, repository defaults, the self-lint code, dead code, and files (5.3 to 5.8)              | about 1,900 lines, 1.5 GB on disk |
+| 4     | Settle `config` and `types`, move every file to its place, and write the layers into `gspot.toml` (3, 6.1, appendix B) | about 400 files touched           |
+| 5     | Rename: rules, packages, check IDs, settings, and identifiers (7, appendix A)                                          | about 1,200 names                 |
+| 6     | Merge duplicates, adopt libraries, and fix the bugs (4, 6.2, 6.3)                                                      | about 1,000 lines saved           |
+| 7     | Settle each tiny function (8, appendix C)                                                                              | 56 suppressions                   |
+| 8     | Restructure and clean the tests, then add the missing ones (9, appendix D)                                             | about 500 files moved             |
+| 9     | Shorten the docs and the rules (10, appendices E and F)                                                                | about 6,000 lines                 |
+| 10    | Fix CI (11)                                                                                                            | 16 failing jobs                   |
 
 ## Appendix A: names to change
 
@@ -1560,8 +1591,8 @@ folder. They replace 58 open-try-close blocks and 17 hand-made temporary folders
 | `packages/cli/src/commands/set.ts`              | 245   | keep   | same               |                          |                                                                                   |
 | `packages/cli/src/commands/uninstall.ts`        | 166   | delete |                    |                          | owner decision, with `uninstallHooks` and `Owner.restore`                         |
 
-**`config` and `types` dissolve.** Every constant and type moves to the module that reads it. The groups that do not go
-to a single obvious owner:
+**`config` and `types`.** Where each group goes if the owner dissolves the folders (section 6.1). If `config` stays,
+the same column names the folder whose `config` file holds it. The groups that do not go to a single obvious owner:
 
 | Now                                              | Lines | Where it goes                                                                                                                                                                      |
 | ------------------------------------------------ | ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -1980,9 +2011,9 @@ importer; delete them.
 ### B.3 Kits, and guides renamed to rules
 
 Each kit keeps its agent rules in its own folder, as `rules/*.md` beside `manifest.toml`. Only the rules that every
-repository gets stay apart, in three folders of the CLI package: `agent`, `code`, and `prose`. Every guide already names
-its kit in its front matter, and the kit tables of rules shrink to five conditional entries in four kits (Tailwind,
-Bun, SwiftUI and UIKit, Playwright). TypeScript stays in `packages/cli/src`, because the kit folders ship to npm as raw
+repository gets stay apart, in three folders of the CLI package: `agent`, `code`, and `prose`. Most guides name their
+kit in their front matter; five do not. The kit tables of rules shrink to five conditional entries in four kits:
+Tailwind, Bun, SwiftUI and UIKit, and Playwright. TypeScript stays in `packages/cli/src`, because the kit folders ship to npm as raw
 files.
 
 | Now                                                                                  | Files | Action     | After                                                                                                                                                                                                                                                      |
@@ -2001,7 +2032,7 @@ files.
 | `packages/cli/guides/library`                                                        | 7     | move       | each library kit; next-intl to i18n                                                                                                                                                                                                                        |
 | `packages/cli/guides/runtime`                                                        | 5     | move       | node and bun to javascript, workers to cloudflare, deno to supabase, browser to static-site                                                                                                                                                                |
 | `packages/cli/guides/shared`                                                         | 2     | move       | http to express, i18n to i18n                                                                                                                                                                                                                              |
-| `packages/cli/guides/repository`                                                     | 2     | move       | the static-site and postgres kits                                                                                                                                                                                                                          |
+| `packages/cli/guides/repository`, `database`, and `platform`                         | 3     | move       | the static-site, postgres, and supabase kits                                                                                                                                                                                                               |
 | `packages/cli/guides/tool`                                                           | 10    | move       | commitlint to commits, GitHub Actions to the new actions kit, tasks to files, Tailwind to css, Playwright to vitest, the rest to their kits                                                                                                                |
 
 The installed layout puts the base rules in `agent`, `code`, and `prose` inside the installed rules folder, and each
@@ -2038,28 +2069,8 @@ kit in a `<category>/<kit>` folder beside them, so the two never collide. Proble
 
 ### B.5 `tests`
 
-Tests group by tier, then package, then a one-to-one mirror of the source path. The tier says what a test needs to run:
-`unit`, `integration`, `tools` (needs the native tools), `acceptance` (runs the built CLI in sandboxes), and `package`
-(runs the packed packages). Acceptance mirrors the product surface instead: commands, and kits by category. Today
-`integration` mixes a package (`cli`, `docs`), scripts (`repository`), and a tier (`tools`) on one level, which is how
-`tests/integration/tools/tools/packages` came about.
-
-| Now                            | Files | Action   | After                                                                                                                                                           |
-| ------------------------------ | ----- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `tests/unit/cli`               | 70    | mirror   | `unit/cli/<source path>`; the guide linter tests go; root files move to their source folders; `agents` becomes `rules`                                          |
-| `tests/unit/plugin`            | 27    | mirror   | 22 rule tests; `configuration.test.ts` becomes `plugin.test.ts`                                                                                                 |
-| `tests/integration/cli`        | 147   | mirror   | `integration/cli/<source path>`; the completion, cache, report, and inline-ignore tests go                                                                      |
-| `tests/integration/docs`       | 5     | keep     |                                                                                                                                                                 |
-| `tests/integration/repository` | 3     | rename   | `integration/scripts`; they test the repository scripts                                                                                                         |
-| `tests/integration/tools`      | 51    | move     | `tools/cli/<source path>`; the guide example tests go; `tests/integration/tools/flags.test.ts` runs in a temporary folder                                       |
-| `tests/acceptance/source/cli`  | 41    | move     | `acceptance/cli`; the uninstall, report, and cache tests go                                                                                                     |
-| `tests/acceptance/source/kits` | 55    | move     | `acceptance/kits/<category>/<kit>`; the fastapi blocking-call cases go                                                                                          |
-| `tests/acceptance/package`     | 7     | move     | `package`; the report test goes                                                                                                                                 |
-| `tests/support`                | 53    | rename   | `harness`; gspot bans `support` as a folder name and exempts this one only through the default this audit removes; four runners move to a root `scripts` folder |
-| `tests/inputs`                 | 37    | dissolve | 18 files with one user into that test; 19 shared ones into the harness module of their area                                                                     |
-| `tests/types`                  | 12    | dissolve | 4 into their one user; 8 into the harness module that makes the values                                                                                          |
-| `tests/timings`                | 3     | keep     | regenerate the Windows file with backslash keys                                                                                                                 |
-| `tests/package.json`           |       | rename   | `@gspothq/tests`; drop the docs dependency, which the tests reach through a path alias                                                                          |
+Appendix D.1 maps the tests: five tiers named by what a test needs, `config` and `fixtures` instead of
+`inputs`, `harness` instead of `support`, and no `timings`.
 
 ### B.6 `docs`
 
@@ -2357,3 +2368,864 @@ The other rule suppressions outside `packages/cli` are honest. Two deprecation r
 macOS, in `tests/integration/cli/lifecycle/ownership/replacement-preservation/restoration.test.ts:14` and `:73`; the
 control-character rule for man-page overstrike in `tests/integration/tools/flags.test.ts:60`; and two planted defects
 in `tests/integration/tools/generation/swift/security.test.ts:26` and `tests/inputs/integration/tools/checks.ts:32`.
+
+## Appendix D: every test file, judged
+
+Every test file was read: 514 files and about 2,990 cases. Each was held to one standard: a test stays only if it
+exercises real logic or a real scenario and catches a real regression.
+
+| Area                                            | Files | Cases     | Cases removed                | Lines removed | Other effect                               |
+| ----------------------------------------------- | ----- | --------- | ---------------------------- | ------------- | ------------------------------------------ |
+| `tests/unit` and `tests/integration/cli`        | 244   | 2,304     | 774                          | about 3,400   | 58 CLI spawns become in-process calls      |
+| `tests/integration/tools`, `docs`, `repository` | 59    | about 300 | about 96                     | about 2,100   | two folders disappear                      |
+| `tests/acceptance`                              | 103   | about 690 | about 271 deleted, 307 moved | about 4,200   | about 2,500 seconds saved per Linux CI run |
+
+Tests to add, ranked by risk, are in D.5; six of them confirm likely bugs.
+
+### D.1 The structure
+
+**The tiers.** The current folders do not say what a test needs. `tests/integration/tools` needs the native tools and
+the network, has its own task, CI job, sharding, and timings, and so is a tier hidden inside integration; the nesting is
+how `tests/integration/tools/tools/packages` came about. `tests/acceptance/source` and `tests/acceptance/package` need
+different setups, runners, and CI jobs, so they are two tiers. Acceptance runs the CLI from source with only the plugin
+built, not the built CLI as appendix B said.
+
+| Tier          | Rule                                                                                                        | CI job               |
+| ------------- | ----------------------------------------------------------------------------------------------------------- | -------------------- |
+| `unit`        | imports source and calls it in-process; no child processes and no git; temporary files are fine             | `test`, on 3 systems |
+| `integration` | temporary repositories, git, and child processes, the CLI from source included; no kit tools and no network | `test`, on 3 systems |
+| `tools`       | needs the kit tools that the test pins install, and may download packages                                   | sharded              |
+| `acceptance`  | runs `gspot` from source end to end in sandboxes, with the plugin served from a local registry              | sharded              |
+| `package`     | needs the packed packages, published to a local registry                                                    | Linux                |
+
+The network call per pin leaves the tests for a script on a schedule.
+
+**`tests/timings`.** Bun reads it to split the sharded jobs by time instead of by file count. Delete it, with the
+`--timings` and `--update-timings` flags and the artifact upload, and shard by file count:
+
+- **It never balances acceptance.** The tool step runs first with `--update-timings`
+  (`.github/workflows/ci.yml:229`), and under `--shard` Bun rewrites the file with only that shard of tool files. The
+  acceptance step (`.github/workflows/ci.yml:232`) then finds no acceptance keys and gives every file the median time.
+- **It is stale.** `tests/timings/windows.json` is a byte-for-byte copy of the Linux file. One key names a file that is
+  gone, two files have no key, and every key goes stale when the folders move.
+- **It saves little after the cuts.** With the recorded times and the acceptance files this audit moves out, the
+  slowest Linux shard takes 10 minutes split by file count and 8 split by time.
+- Fewer shards of equal size cut setup time: four per system, 12 jobs instead of 17. If the minutes matter later, Bun
+  documents a cache of per-shard timing files that needs no committed file.
+
+**`tests/inputs` becomes `config` and `fixtures`.** Its 36 TypeScript files hold 217 exports: 187 have one
+user, 26 have two or more, and 4 are used only in their own file. In 29 of the 36 files no export has a second user.
+Three values copy constants of the CLI (`LOCKS` and two file modes), and the Supabase version sits both here and in the
+CI workflow.
+
+- **The `config` folder** holds the hard-coded parameters. `timeouts.ts` holds every timeout, from the command limit
+  to the 90-minute acceptance limit. `cli.ts` holds the quiet init arguments, the default list of left-out tools, and the
+  run environment that three helpers repeat.
+- **The rule for `config`:** a value goes there when it changes with the runner, a pin, or the CLI. A value that tells
+  one test its story stays in that test.
+- **The `fixtures` folder** holds planted content that several tests must keep identical, one module per kit: bash,
+  components, Next.js, OpenAPI, Python, Swift, TypeScript, and the client environment JSON. Modules, because real files
+  need exclusions in the lint, `tsc`, gitleaks, and typos of this repository.
+- The rest goes inline into its one user, and the copied constants import from the CLI.
+
+**`tests/support` becomes `harness`.** gspot bans `support` as a folder name. This repository passes only through the
+default that section 5.5 removes. Four files are runners, not helpers, and move to a root `scripts`
+folder. They are the acceptance runner, the package runner with its listener bug fixed, the local plugin command, and
+the SwiftFormat runner. Six helpers with one user each go inline. The 53 files become 36:
+
+| Folder             | Files | Holds                                                                                     |
+| ------------------ | ----- | ----------------------------------------------------------------------------------------- |
+| `harness`          | 3     | the preload, the matchers, and the spelling helper                                        |
+| `harness/cli`      | 15    | running gspot (`runGspot`, not `run`), git, processes, platforms, policy, generated files |
+| `harness/planted`  | 6     | planted cases, sandbox repositories, init, preservation, push, secrets                    |
+| `harness/tools`    | 3     | tool installs and the npm and Python projects                                             |
+| `harness/registry` | 4     | the local registry and its configuration                                                  |
+| `harness/package`  | 3     | the packed packages and their consumers                                                   |
+| `harness/plugin`   | 2     | the rule tester and planted plugin cases                                                  |
+
+**`tests/types`.** Its 12 files hold 43 types. Two report types go with the report files, and one copies a CLI type. Ten
+result types become type literals in the signatures of the functions that return them, and 17 types with one user go
+inline. Four files stay while `types_directory = "types"` holds, because the `gspot/types-placement` rule reports any
+type outside a `types` folder, test files included. If that setting goes, they move beside their harness modules too.
+
+`support`, `inputs`, and `types` import each other in every direction: one harness split across three folders. The new
+layout ends that.
+
+**`tests/package.json`** stays a workspace package, because its 41 dev dependencies are the packages that planted
+repositories link in. Drop its unused docs dependency, check whether the CLI dependency is needed, and rename the
+package `@gspothq/tests`. The `[test]` section of the root `bunfig.toml` matters only when `bun test` runs from the
+root; delete it.
+
+**Before and after** (see `tests-structure.png`):
+
+```text
+Today: 514 files                          After
+tests/                                     tests/
+  unit/            97                        config/         2   hard-coded parameters
+  integration/    206                        fixtures/       8   shared planted content, one per kit
+    cli           147                        harness/       36   helpers with two or more users
+    docs            5                        types/          4   while types_directory holds
+    repository      3                        unit/          97   in-process
+    tools          51                        integration/  155   repositories and child processes
+  acceptance/     103                        tools/         51   native kit tools
+    source/cli     41                        acceptance/    96   the source CLI end to end
+    source/kits    55                        package/        6   packed packages
+    package         7                      scripts/ (root)   5   runners that were helpers
+  support/         53
+  inputs/          37
+  types/           12
+  timings/          3
+```
+
+Counts after the move are before the deletions in D.2 to D.4.
+
+### D.2 `tests/unit` and `tests/integration/cli`
+
+All 244 files and 2,304 cases were read. 774 cases go (34%), about 3,400 of 24,554 lines. About 160 of those cases are
+table rows that two rewrites collapse without losing coverage, and about 170 test features the owner removed. If the
+open questions in section 1 go the way this audit recommends, about 60 more cases go.
+
+Three changes touch many files at once:
+
+- `Owner.restore` goes with `uninstall`. Twelve ownership test files end with it. Where it removes only gspot changes,
+  it becomes `owner.applyPlan(owner.proposeRestoration(path))`, which `gspot remove` still uses. Where it brings back
+  the bytes of a replaced file, the test goes with the byte backups.
+- The report writer also writes `report.json` in the reports folder of `.gspot`. Eleven files read that file or import the report schema;
+  they parse the `--json` output instead.
+- `--no-cache` and `noCache` appear in 36 files.
+
+**`tests/unit/plugin`**
+
+| File                                                             | Cases | Verdict | Reason                                                                                                   |
+| ---------------------------------------------------------------- | ----- | ------- | -------------------------------------------------------------------------------------------------------- |
+| `tests/unit/plugin/configuration.test.ts`                        | 23    | trim    | one case pins a message text and README content; 18 rows restate the option schemas that ESLint enforces |
+| `tests/unit/plugin/files.test.ts`                                | 3     | trim    | two cases test `node:fs`                                                                                 |
+| `tests/unit/plugin/rules/env-access-owner.test.ts`               | 13    | rewrite | the valid cases rely on default owners, which go                                                         |
+| `tests/unit/plugin/rules/header-comments-before-imports.test.ts` | 14    | trim    | two repeated cases                                                                                       |
+| `tests/unit/plugin/rules/import-direction.test.ts`               | 28    | rewrite | every case relies on the default roles, which go; three rows differ only in import syntax                |
+| `tests/unit/plugin/rules/no-export-only-files.test.ts`           | 7     | delete  | the rule goes                                                                                            |
+| `tests/unit/plugin/rules/no-harness-barrel-imports.test.ts`      | 4     | delete  | the rule goes                                                                                            |
+| `tests/unit/plugin/rules/no-reexports-outside-index.test.ts`     | 6     | delete  | the rule goes                                                                                            |
+| `tests/unit/plugin/rules/no-trivial-functions.test.ts`           | 80    | trim    | eight names hit one branch; keep two                                                                     |
+| `tests/unit/plugin/rules/tests-directory-contents.test.ts`       | 9     | rewrite | every case relies on the default harness, which becomes a required option                                |
+| the other 17 rule tests                                          |       | keep    | real rule behavior                                                                                       |
+
+**`tests/unit/cli`**
+
+| File                                                          | Cases | Verdict                       | Reason                                                                                                    |
+| ------------------------------------------------------------- | ----- | ----------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `tests/unit/cli/agents/assemble.test.ts`                      | 3     | keep                          | the assembly stays                                                                                        |
+| `tests/unit/cli/agents/examples.test.ts`                      | 2     | delete                        | the guide linter                                                                                          |
+| `tests/unit/cli/agents/front-matter.test.ts`                  | 3     | delete                        | the guide linter                                                                                          |
+| `tests/unit/cli/agents/lint.test.ts`                          | 5     | delete                        | the guide linter                                                                                          |
+| `tests/unit/cli/agents/sections.test.ts`                      | 2     | trim                          | one case runs the linter                                                                                  |
+| `tests/unit/cli/checks/bash-parser.test.ts`                   | 4     | trim, move                    | one case tests tree-sitter; one mocks a null tree to reach a defensive throw                              |
+| `tests/unit/cli/checks/codeql.test.ts`                        | 9     | keep                          | takes in the SARIF parser test                                                                            |
+| `tests/unit/cli/checks/naming/extract.test.ts`                | 5     | trim                          | two cases cover a default and a repeat                                                                    |
+| `tests/unit/cli/checks/naming/python-extractor.test.ts`       | 1     | merge into extract            |                                                                                                           |
+| `tests/unit/cli/checks/naming/swift-extractor.test.ts`        | 1     | merge into extract            |                                                                                                           |
+| `tests/unit/cli/checks/naming/validate-name.test.ts`          | 11    | trim                          | four rows repeat one assertion; one case loops over the shipped banned words, which move out              |
+| `tests/unit/cli/checks/nginx/test-plan.test.ts`               | 5     | trim                          | three rows of empty input are one                                                                         |
+| `tests/unit/cli/checks/prose/batches.test.ts`                 | 2     | delete                        | repeats the grammar and batch tests                                                                       |
+| `tests/unit/cli/checks/prose/vale.test.ts`                    | 8     | trim                          | six rows repeat one assertion                                                                             |
+| `tests/unit/cli/checks/python/imports.test.ts`                | 3     | trim                          | the import-cycle case goes with the check                                                                 |
+| `tests/unit/cli/checks/sarif.test.ts`                         | 15    | merge into codeql             | it parses CodeQL output, not a report file                                                                |
+| `tests/unit/cli/checks/structure/directories.test.ts`         | 1     | delete                        | trivial getters                                                                                           |
+| `tests/unit/cli/checks/structure/statements.test.ts`          | 26    | trim                          | a schema bound and a table of counts per language                                                         |
+| `tests/unit/cli/commands/detected-settings.test.ts`           | 9     | keep, or delete               | depends on the open question about detected settings                                                      |
+| `tests/unit/cli/commands/doctor-report.test.ts`               | 1     | delete                        | pins column offsets and colors                                                                            |
+| `tests/unit/cli/commands/explain-rules.test.ts`               | 4     | trim                          | two cases pin manifest patterns and text                                                                  |
+| `tests/unit/cli/commands/prompts.test.ts`                     | 10    | trim                          | two tables give one outcome per row pair                                                                  |
+| `tests/unit/cli/commands/propose-width.test.ts`               | 4     | keep, rename `propose`        | only one case is about width                                                                              |
+| `tests/unit/cli/generation/managed-blocks.test.ts`            | 1     | move                          | it tests lifecycle code                                                                                   |
+| `tests/unit/cli/generation/workflow.test.ts`                  | 4     | rewrite                       | parse the YAML instead of matching text; drop the SARIF half                                              |
+| `tests/unit/cli/kits/manifests/checks.test.ts`                | 19    | trim                          | seven cases restate required fields and enums; the `cached` field goes                                    |
+| `tests/unit/cli/kits/manifests/declarations.test.ts`          | 11    | trim                          | six cases restate the schema or repeat one parse                                                          |
+| `tests/unit/cli/kits/owners.test.ts`                          | 11    | trim                          | two cases pin manifest content or linguist data                                                           |
+| `tests/unit/cli/kits/sections.test.ts`                        | 9     | merge into the rule-diff test | it tests the preview readers, not kits                                                                    |
+| `tests/unit/cli/kits/select.test.ts`                          | 4     | trim                          | one case asserts manifest content                                                                         |
+| `tests/unit/cli/output/progress.test.ts`                      | 2     | trim                          | the cache status goes                                                                                     |
+| `tests/unit/cli/output/reporter.test.ts`                      | 13    | trim                          | five cases check wording, columns, the cache status, or the census                                        |
+| `tests/unit/cli/policy/json-schema/checks.test.ts`            | 17    | trim                          | one row per refinement where the two schemas must agree; the folder goes if the schema of known keys goes |
+| `tests/unit/cli/policy/json-schema/manifest-settings.test.ts` | 10    | merge, keep 2                 |                                                                                                           |
+| `tests/unit/cli/policy/json-schema/overrides.test.ts`         | 18    | merge, keep 4                 | the ESLint rows repeat the policy boundary test                                                           |
+| `tests/unit/cli/policy/json-schema/tool-settings.test.ts`     | 28    | merge, keep 4                 | enum tables                                                                                               |
+| `tests/unit/cli/policy/json-schema/vocabulary.test.ts`        | 20    | delete                        | refuses renamed keys: history plus a generic refusal                                                      |
+| `tests/unit/cli/policy/messages.test.ts`                      | 28    | delete                        | the wording of every message                                                                              |
+| `tests/unit/cli/policy/settings.test.ts`                      | 32    | trim                          | 14 cases pin defaults or schema bounds, or repeat another case                                            |
+| `tests/unit/cli/project-folder.test.ts`                       | 10    | move                          | it tests the repository scopes                                                                            |
+| `tests/unit/cli/sql-parser.test.ts`                           | 10    | trim, move                    | one case repeats another; one spawns a process and belongs to integration                                 |
+| `tests/unit/cli/sqlfluff-configuration.test.ts`               | 22    | merge into the rule-diff test | 15 rows become one per branch                                                                             |
+| the other 32 files                                            |       | keep                          | real logic                                                                                                |
+
+**`tests/integration/cli`: the top level and the checks**
+
+| File                                                         | Cases | Verdict      | Reason                                                                                              |
+| ------------------------------------------------------------ | ----- | ------------ | --------------------------------------------------------------------------------------------------- |
+| `tests/integration/cli/completion.test.ts`                   | 19    | delete       | completion goes                                                                                     |
+| `tests/integration/cli/doctor.test.ts`                       | 8     | trim         | coverage cases move; one case checks only that the version is a string; one uses `uninstallHooks`   |
+| `tests/integration/cli/instructions.test.ts`                 | 2     | trim         | drop the wording checks                                                                             |
+| `tests/integration/cli/profile.test.ts`                      | 16    | trim         | two cases mock file reads to reach defensive branches; the adoption case checks the recovery folder |
+| `tests/integration/cli/checks/async-functions.test.ts`       | 1     | delete       | the fastapi check goes                                                                              |
+| `tests/integration/cli/checks/cloudflare-types.test.ts`      | 5     | keep         | drop a tautology                                                                                    |
+| `tests/integration/cli/checks/codeql-execution.test.ts`      | 5     | trim         | four rows to two                                                                                    |
+| `tests/integration/cli/checks/copied-blocks.test.ts`         | 6     | trim         | three malformed reports hit one parse                                                               |
+| `tests/integration/cli/checks/fences.test.ts`                | 12    | trim, rename | one case repeats three; it tests stale paths                                                        |
+| `tests/integration/cli/checks/html-scripts.test.ts`          | 13    | move to unit | 13 sandboxes for a pure analysis of HTML text                                                       |
+| `tests/integration/cli/checks/license-locks.test.ts`         | 24    | trim, move   | the lockfile parsing is unit logic; seven rows to two; six CLI spawns to one in-process run         |
+| `tests/integration/cli/checks/licenses.test.ts`              | 11    | trim         | five malformed rows to two                                                                          |
+| `tests/integration/cli/checks/lockfile-fresh.test.ts`        | 6     | trim         | registry and authentication failures give the same status                                           |
+| `tests/integration/cli/checks/manifest-policy.test.ts`       | 7     | trim         | five malformed rows to two; one mocked denial                                                       |
+| `tests/integration/cli/checks/naming.test.ts`                | 6     | rewrite      | 16 CLI spawns; run in-process                                                                       |
+| `tests/integration/cli/checks/nextjs-build.test.ts`          | 7     | trim         | three rows are one branch                                                                           |
+| `tests/integration/cli/checks/repository-shape.test.ts`      | 5     | trim         | two cases test one function                                                                         |
+| `tests/integration/cli/checks/site-build.test.ts`            | 11    | trim         | argument quoting is covered elsewhere                                                               |
+| `tests/integration/cli/checks/structure-functions.test.ts`   | 7     | trim, rename | a threshold loop, and mocked null trees; it tests SQL functions                                     |
+| `tests/integration/cli/checks/svelte-execution.test.ts`      | 4     | trim         | keep two rows                                                                                       |
+| `tests/integration/cli/checks/swift/build/compiler.test.ts`  | 7     | trim         | one case repeats another                                                                            |
+| `tests/integration/cli/checks/swift/build/isolation.test.ts` | 7     | trim         | four rows to two                                                                                    |
+| `tests/integration/cli/checks/swift/cache.test.ts`           | 2     | trim         | the cache home convention moves to a library                                                        |
+| `tests/integration/cli/checks/tsconfig-options.test.ts`      | 13    | trim         | nine cases test the TypeScript `extends` resolution, malformed input, or a mocked denial            |
+| `tests/integration/cli/checks/xctest-execution.test.ts`      | 7     | trim         | two rows hit one branch                                                                             |
+| the other 17 check tests                                     |       | keep         |                                                                                                     |
+
+**`tests/integration/cli/execution`**
+
+| File                                                                    | Cases | Verdict              | Reason                                                                           |
+| ----------------------------------------------------------------------- | ----- | -------------------- | -------------------------------------------------------------------------------- |
+| `tests/integration/cli/execution/ast-grep.test.ts`                      | 7     | trim                 | the deadline and cancellation rows repeat the spawn tests                        |
+| `tests/integration/cli/execution/cache-retention.test.ts`               | 8     | delete               | the result cache                                                                 |
+| `tests/integration/cli/execution/comment-syntax.test.ts`                | 28    | trim                 | 25 cases are inline `gspot-ignore`                                               |
+| `tests/integration/cli/execution/coverage.test.ts`                      | 12    | trim                 | strip report and wording assertions; two cases share setup and assertion         |
+| `tests/integration/cli/execution/engine-input.test.ts`                  | 13    | trim                 | five rows pin the stages of five manifests                                       |
+| `tests/integration/cli/execution/fixers/execution.test.ts`              | 8     | trim                 | batch splitting is covered by the unit test; the timeout rows wait a second each |
+| `tests/integration/cli/execution/fixers/isolation.test.ts`              | 15    | trim, split          | the scratch copy gets its own file                                               |
+| `tests/integration/cli/execution/identity.test.ts`                      | 5     | trim                 | one case reads the report files; three rows spawn the CLI                        |
+| `tests/integration/cli/execution/ignores.test.ts`                       | 12    | delete               | ten cases are inline `gspot-ignore`; two move to the suppression test            |
+| `tests/integration/cli/execution/impact.test.ts`                        | 10    | trim                 | rows that hit one branch                                                         |
+| `tests/integration/cli/execution/parse-output/contract.test.ts`         | 122   | rewrite              | loops over 61 shipped specs instead of 8 output formats; about 16 cases          |
+| `tests/integration/cli/execution/parse-output/declared-checks.test.ts`  | 9     | trim                 | two tables whose dimensions do not matter                                        |
+| `tests/integration/cli/execution/parse-output/formats.test.ts`          | 20    | trim                 | assert the valid case once; drop message text                                    |
+| `tests/integration/cli/execution/prerequisites.test.ts`                 | 2     | trim                 | pins five manifests                                                              |
+| `tests/integration/cli/execution/scopes/readers.test.ts`                | 4     | rewrite              | 14 CLI spawns                                                                    |
+| `tests/integration/cli/execution/scopes/trpc.test.ts`                   | 7     | rewrite              | 15 CLI spawns                                                                    |
+| `tests/integration/cli/execution/scopes/xcode.test.ts`                  | 9     | rewrite, trim        | 20 CLI spawns; six rows prove one mechanism                                      |
+| `tests/integration/cli/execution/single-file-folder-allowances.test.ts` | 2     | merge into structure |                                                                                  |
+| `tests/integration/cli/execution/storage/cache.test.ts`                 | 6     | delete               | the result cache                                                                 |
+| `tests/integration/cli/execution/storage/reports.test.ts`               | 12    | delete               | the report files; two cases move                                                 |
+| `tests/integration/cli/execution/structure.test.ts`                     | 23    | trim                 | 14 rows to three; the default harness goes                                       |
+| `tests/integration/cli/execution/suppression-comments.test.ts`          | 19    | trim                 | three cases are inline `gspot-ignore`                                            |
+| `tests/integration/cli/execution/tool-runner/adapters.test.ts`          | 5     | trim                 | one case asserts the cache status; one repeats another                           |
+| `tests/integration/cli/execution/vale.test.ts`                          | 6     | trim                 | the file type does not affect failure handling                                   |
+| the other 8 execution tests                                             |       | keep                 |                                                                                  |
+
+**`tests/integration/cli/generation`**
+
+| File                                                                  | Cases | Verdict | Reason                                                                                   |
+| --------------------------------------------------------------------- | ----- | ------- | ---------------------------------------------------------------------------------------- |
+| `tests/integration/cli/generation/aliases.test.ts`                    | 11    | trim    | rows that assert one error; comment tolerance belongs to the JSON parser                 |
+| `tests/integration/cli/generation/astro-parts.test.ts`                | 1     | keep    | loosen the exact rule list                                                               |
+| `tests/integration/cli/generation/bun.test.ts`                        | 2     | trim    | drop `owner.restore`; one case depends on the bunfig import question                     |
+| `tests/integration/cli/generation/every-template.test.ts`             | 56    | rewrite | a real safety net in 56 sessions; one sandbox per level, two cases                       |
+| `tests/integration/cli/generation/format-width.test.ts`               | 3     | trim    | two widths take one path                                                                 |
+| `tests/integration/cli/generation/framework-rules.test.ts`            | 4     | trim    | drop the dead rule                                                                       |
+| `tests/integration/cli/generation/guides.test.ts`                     | 4     | trim    | one case asserts 42 headings of shipped rule text                                        |
+| `tests/integration/cli/generation/level-contract.test.ts`             | 11    | trim    | pins constants, values, and wording                                                      |
+| `tests/integration/cli/generation/managed-ignores.test.ts`            | 10    | rewrite | two cases end in uninstall; seven rows to four                                           |
+| `tests/integration/cli/generation/package-manifests.test.ts`          | 2     | trim    | the two rows are identical                                                               |
+| `tests/integration/cli/generation/plugin-levels/functions.test.ts`    | 9     | trim    | the four recommended rows repeat the plugin test                                         |
+| `tests/integration/cli/generation/plugin-levels/jest.test.ts`         | 46    | trim    | 40 rows test eslint-plugin-jest; keep one per test module                                |
+| `tests/integration/cli/generation/plugin-levels/limits.test.ts`       | 9     | trim    | rows that repeat the unit rule tests                                                     |
+| `tests/integration/cli/generation/plugin-levels/source-rules.test.ts` | 6     | trim    | four rows repeat the plugin test                                                         |
+| `tests/integration/cli/generation/prose.test.ts`                      | 3     | merge   | into the Vale packages test                                                              |
+| `tests/integration/cli/generation/selection.test.ts`                  | 9     | trim    | six rows pin one file name each                                                          |
+| `tests/integration/cli/generation/shared-settings.test.ts`            | 4     | rewrite | it pins the knip entries of this repository and shipped rule lists; use a local manifest |
+| the other 8 generation tests                                          |       | keep    |                                                                                          |
+
+**`tests/integration/cli/lifecycle`**
+
+| File                                                                                       | Cases | Verdict           | Reason                                                                            |
+| ------------------------------------------------------------------------------------------ | ----- | ----------------- | --------------------------------------------------------------------------------- |
+| `tests/integration/cli/lifecycle/apply/rule-preview.test.ts`                               | 12    | trim              | eight cases repeat unit parser tests or the settings test                         |
+| `tests/integration/cli/lifecycle/ci.test.ts`                                               | 3     | trim              | pins the command list and the upload wording                                      |
+| `tests/integration/cli/lifecycle/hooks.test.ts`                                            | 7     | trim              | drop `uninstallHooks`                                                             |
+| `tests/integration/cli/lifecycle/init.test.ts`                                             | 20    | trim              | tables cut; one case tests the choice validation of commander                     |
+| `tests/integration/cli/lifecycle/installer-failures.test.ts`                               | 8     | trim              | one case exists for coverage                                                      |
+| `tests/integration/cli/lifecycle/ownership/bounded-state.test.ts`                          | 12    | trim              | five cases test byte backups and uninstall                                        |
+| `tests/integration/cli/lifecycle/ownership/configuration-preservation.test.ts`             | 10    | rewrite           | every case ends in `owner.restore`                                                |
+| `tests/integration/cli/lifecycle/ownership/conflicts/documents.test.ts`                    | 3     | rewrite           | the same                                                                          |
+| `tests/integration/cli/lifecycle/ownership/conflicts/links.test.ts`                        | 8     | trim              | one case keeps recovery bytes                                                     |
+| `tests/integration/cli/lifecycle/ownership/conflicts/plans.test.ts`                        | 8     | trim              | two cases restore replaced bytes                                                  |
+| `tests/integration/cli/lifecycle/ownership/recovery/batches.test.ts`                       | 4     | trim              | keep the crash points; share the child script copied five times                   |
+| `tests/integration/cli/lifecycle/ownership/recovery/links.test.ts`                         | 5     | trim              | one case is the recovery folder                                                   |
+| `tests/integration/cli/lifecycle/ownership/recovery/replacement.test.ts`                   | 10    | trim              | five cases are byte backups                                                       |
+| `tests/integration/cli/lifecycle/ownership/replacement-preservation/boundaries.test.ts`    | 3     | delete            | old `.gspot` layouts, the recovery folder, and restore                            |
+| `tests/integration/cli/lifecycle/ownership/replacement-preservation/installations.test.ts` | 5     | rewrite           | move to `proposeRestoration`                                                      |
+| `tests/integration/cli/lifecycle/ownership/replacement-preservation/restoration.test.ts`   | 3     | trim              | one case is byte backups                                                          |
+| `tests/integration/cli/lifecycle/root/consumers.test.ts`                                   | 8     | trim              | three rows test the YAML library; seven cases depend on the Xcode import question |
+| `tests/integration/cli/lifecycle/root/roots.test.ts`                                       | 10    | move, trim        | it tests the platform folder                                                      |
+| `tests/integration/cli/lifecycle/xcode.test.ts`                                            | 2     | rewrite or delete | spawns the CLI; depends on the Xcode import question                              |
+| the other 5 lifecycle tests                                                                |       | keep              |                                                                                   |
+
+**`tests/integration/cli/platform`, `policy`, `tools`, and `repository`**
+
+| File                                                          | Cases | Verdict                | Reason                                                                   |
+| ------------------------------------------------------------- | ----- | ---------------------- | ------------------------------------------------------------------------ |
+| `tests/integration/cli/platform/assets.test.ts`               | 1     | rewrite                | copies seven source files by name; uses a constant that goes             |
+| `tests/integration/cli/platform/spawn/termination.test.ts`    | 12    | trim                   | four rows of 1.5 seconds to two; one mocked permission error             |
+| `tests/integration/cli/policy/read-policy/boundaries.test.ts` | 29    | move to unit, trim     | pure parsing; tables cut to one row per class                            |
+| `tests/integration/cli/policy/read-policy/locations.test.ts`  | 15    | delete if positions go | the version gate and a repeated case go in any case                      |
+| `tests/integration/cli/policy/read-policy/recovery.test.ts`   | 7     | move to unit           |                                                                          |
+| `tests/integration/cli/policy/read-policy/settings.test.ts`   | 14    | move to unit, trim     | four cases with no branch of their own                                   |
+| `tests/integration/cli/policy/write.test.ts`                  | 14    | trim                   | one case tests `appendEntry`, called nowhere; one repeats the width test |
+| `tests/integration/cli/tools/inspect/placement.test.ts`       | 13    | rewrite                | seven rows read shipped manifests; use synthetic pins                    |
+| `tests/integration/cli/tools/inspect/versions.test.ts`        | 12    | trim                   | one case waits the real 15-second timeout                                |
+| `tests/integration/cli/repository/existing-tooling.test.ts`   | 18    | trim                   | four rows to one                                                         |
+| `tests/integration/cli/repository/kinds.test.ts`              | 5     | trim                   | one case uses the reports folder                                         |
+| `tests/integration/cli/repository/manifests.test.ts`          | 21    | trim                   | eight rows that hit one branch                                           |
+| `tests/integration/cli/repository/refspecs.test.ts`           | 3     | trim                   | one refusal                                                              |
+| `tests/integration/cli/repository/scopes.test.ts`             | 15    | trim                   | four rows to two                                                         |
+| `tests/integration/cli/repository/snapshot/gitlinks.test.ts`  | 4     | trim                   | a wording line                                                           |
+| `tests/integration/cli/repository/swift-tests.test.ts`        | 45    | trim, split            | 14 cases repeat a branch or spawn the CLI ten times                      |
+| `tests/integration/cli/repository/tags.test.ts`               | 2     | trim                   | repeats the owners test                                                  |
+| `tests/integration/cli/repository/tracked/boundaries.test.ts` | 7     | trim                   | a 50 MB fixture where 2 MB does                                          |
+| `tests/integration/cli/repository/tracked/discovery.test.ts`  | 15    | trim                   | mocked denials and a repeated case                                       |
+| `tests/integration/cli/repository/xcode-project.test.ts`      | 9     | rewrite, trim          | four rows spawn the CLI; one case repeats the snapshot test              |
+| the other tests in these folders                              |       | keep                   |                                                                          |
+
+Across these tiers, 58 CLI spawns in 12 files can run in-process. The emit-and-write block is written 38 times, the
+engine input 30 times, the run options 113 times, and full init options 15 times; one helper each.
+
+### D.3 `tests/integration/tools`, `tests/integration/docs`, and `tests/integration/repository`
+
+All 59 files were read with the fixtures they import. About 96 cases go and about 2,100 test lines with them. The tools
+tier shrinks from about 4,680 lines to about 2,950, and the docs and repository folders disappear.
+
+| File                                                                    | Cases | Verdict                        | Reason                                                                                                                                                             |
+| ----------------------------------------------------------------------- | ----- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `tests/integration/repository/acceptance.test.ts`                       | 11    | delete                         | tests the test runner script and its shard options, not gspot                                                                                                      |
+| `tests/integration/repository/grammar.test.ts`                          | 4     | delete                         | tests the build script that downloads the grammars                                                                                                                 |
+| `tests/integration/repository/test-tools.test.ts`                       | 1     | delete                         | checks that a generated file of this repository is fresh; a CI step with `git diff --exit-code` does the same                                                      |
+| `tests/integration/docs/example.test.ts`                                | 2     | delete                         | checks that two pages contain text; `tests/acceptance/source/cli/example.test.ts` replays the example                                                              |
+| `tests/integration/docs/examples.test.ts`                               | 2     | delete                         | checks page content, and repeats `tests/acceptance/source/cli/checks/declared.test.ts`                                                                             |
+| `tests/integration/docs/links.test.ts`                                  | 1     | delete                         | tests a script of the docs site                                                                                                                                    |
+| `tests/integration/docs/reference.test.ts`                              | 11    | delete                         | checks the wording of generated pages; move its one real guard, conflicting setting definitions, into manifest validation with a unit test                         |
+| `tests/integration/docs/release.test.ts`                                | 1     | delete                         | tests a script of the docs site                                                                                                                                    |
+| `tests/integration/tools/flags.test.ts`                                 | 54    | rewrite                        | catches a manifest flag that a pinned tool no longer accepts; run help in the sandbox, match whole tokens (11 flags are one letter), move the static check to unit |
+| `tests/integration/tools/parameter-limits.test.ts`                      | 4     | keep                           | proves real tools read the generated limits                                                                                                                        |
+| `tests/integration/tools/profile.test.ts`                               | 1     | delete                         | its point is that uninstall restores a replaced file                                                                                                               |
+| `tests/integration/tools/swift-build.test.ts`                           | 2     | keep                           | the only real incremental Swift build; use the shared Swift helpers                                                                                                |
+| `tests/integration/tools/bash/example.test.ts`                          | 3     | delete                         | runs rule examples and checks output wording                                                                                                                       |
+| `tests/integration/tools/bash/safety.test.ts`                           | 2     | delete                         | runs rule examples                                                                                                                                                 |
+| `tests/integration/tools/checks/licenses.test.ts`                       | 1     | trim                           | keep the Python name normalization; the acceptance test covers the rest                                                                                            |
+| `tests/integration/tools/checks/lockfile-fresh.test.ts`                 | 6     | trim to 3                      | the check runs at both levels, so the level dimension doubles installs for nothing                                                                                 |
+| `tests/integration/tools/checks/secrets-files.test.ts`                  | 1     | trim                           | the only test of scanning files without git; drop the third run and the wording match                                                                              |
+| `tests/integration/tools/checks/site-output.test.ts`                    | 3     | move to the CLI tier           | its tools come from `node_modules`; no native tool                                                                                                                 |
+| `tests/integration/tools/checks/xctest-coverage.test.ts`                | 1     | keep                           | the only real coverage floor run                                                                                                                                   |
+| `tests/integration/tools/checks/supabase/configuration.test.ts`         | 1     | trim                           | drop the cancellation part, which other tests cover                                                                                                                |
+| `tests/integration/tools/checks/supabase/types.test.ts`                 | 2     | trim to 1                      | the first case only proves the Supabase CLI works; it costs one database start of the 179 s file                                                                   |
+| `tests/integration/tools/execution/fixers.test.ts`                      | 10    | trim and split                 | keep the SQLFluff crash case; the four ESLint cases share one spec: keep one, and move it with Stylelint to the CLI tier                                           |
+| `tests/integration/tools/execution/python-staged.test.ts`               | 1     | keep                           | the only staged snapshot with a private Python environment                                                                                                         |
+| `tests/integration/tools/execution/suppressions.test.ts`                | 32    | trim, move, batch              | the census goes with inline ignores; the reasons case repeats `tests/acceptance/source/cli/reasons.test.ts`; batch 16 Ruff rows into one run                       |
+| `tests/integration/tools/execution/vale.test.ts`                        | 15    | trim                           | 8 extension rows only pin a list; keep 4; drop the case that the prose-ignore test covers                                                                          |
+| `tests/integration/tools/execution/parse-output/actionlint.test.ts`     | 14    | rewrite                        | the rewrite of workflow scalars is pure: 13 unit rows and 2 native runs                                                                                            |
+| `tests/integration/tools/execution/parse-output/native-tools.test.ts`   | 4     | trim                           | keep the Trivy image case and move it to the checks folder; merge the two typos cases                                                                              |
+| `tests/integration/tools/execution/parse-output/partial-output.test.ts` | 3     | trim, speed up                 | a real exit-code contract; install Vulture once                                                                                                                    |
+| `tests/integration/tools/execution/parse-output/plist.test.ts`          | 2     | keep                           | the two checks use different patterns                                                                                                                              |
+| `tests/integration/tools/generation/bash.test.ts`                       | 1     | merge                          | one Semgrep file with one install instead of three                                                                                                                 |
+| `tests/integration/tools/generation/docker.test.ts`                     | 1     | keep                           | scope isolation and inherited ignores                                                                                                                              |
+| `tests/integration/tools/generation/fastapi.test.ts`                    | 2     | delete                         | runs rule examples; about 90 fixture lines go with it                                                                                                              |
+| `tests/integration/tools/generation/headings.test.ts`                   | 1     | merge into the Vale test       | it tests one shipped style                                                                                                                                         |
+| `tests/integration/tools/generation/ignores.test.ts`                    | 8     | merge into the spelling test   | real rebasing of excludes per scope; run typos once per case, not 12 times                                                                                         |
+| `tests/integration/tools/generation/level-formatting.test.ts`           | 3     | delete                         | two cases run Prettier with no gspot configuration; the shfmt fix moves to the fixers test                                                                         |
+| `tests/integration/tools/generation/toml.test.ts`                       | 1     | move to the CLI tier           | the trailing-comma logic needs a TOML parser, not Taplo                                                                                                            |
+| `tests/integration/tools/generation/sqlfluff.test.ts`                   | 1     | keep                           | proves the generated dialect is read                                                                                                                               |
+| `tests/integration/tools/generation/squawk.test.ts`                     | 1     | keep                           | fold three copied spawn blocks into one helper                                                                                                                     |
+| `tests/integration/tools/generation/framework-security.test.ts`         | 2     | trim; becomes the Semgrep file | keep scope inheritance and the invalid-rule error                                                                                                                  |
+| `tests/integration/tools/generation/javascript.test.ts`                 | 6     | trim                           | one case repeats the nested-scope case; one belongs to the CLI tier                                                                                                |
+| `tests/integration/tools/generation/ruff.test.ts`                       | 9     | trim to 1                      | 8 cases run rule examples                                                                                                                                          |
+| `tests/integration/tools/generation/spelling.test.ts`                   | 2     | keep                           | compare file, line, and word instead of the typos output lines                                                                                                     |
+| `tests/integration/tools/generation/vale-install.test.ts`               | 3     | trim                           | keep sync, prune, and repair; drop the version and lint runs                                                                                                       |
+| `tests/integration/tools/generation/xctest.test.ts`                     | 7     | trim to 4                      | the cache steps go with the cache; the level dimension adds nothing                                                                                                |
+| `tests/integration/tools/generation/swift/docs.test.ts`                 | 6     | trim to 4                      | two cases run rule examples                                                                                                                                        |
+| `tests/integration/tools/generation/swift/security.test.ts`             | 2     | trim, merge                    | a hand copy of the manifest command can drift; keep two rules to prove level gating                                                                                |
+| `tests/integration/tools/guides/bash.test.ts`                           | 4     | delete                         | rule examples                                                                                                                                                      |
+| `tests/integration/tools/guides/docker.test.ts`                         | 1     | delete                         | rule examples                                                                                                                                                      |
+| `tests/integration/tools/guides/typescript.test.ts`                     | 1     | delete                         | rule examples; it also links the tools the developer installed in `.gspot`                                                                                         |
+| `tests/integration/tools/lifecycle/mise-execution.test.ts`              | 2     | trim to 1                      | keep `mise link`, install, and argument forwarding                                                                                                                 |
+| `tests/integration/tools/lifecycle/python-project.test.ts`              | 11    | trim to 6                      | merge the relocation cases; run the lock conflict once; drop every Ruff run                                                                                        |
+| `tests/integration/tools/lifecycle/tool-isolation.test.ts`              | 2     | delete                         | the placement tests in the CLI tier cover the precedence; what remains proves Prettier and tsc work                                                                |
+| `tests/integration/tools/tools/packages/native.test.ts`                 | 1     | keep                           | the only npm install with a native wrapper                                                                                                                         |
+| `tests/integration/tools/tools/packages/preservation.test.ts`           | 6     | merge into the project test    | the same matrix; saves six setups                                                                                                                                  |
+| `tests/integration/tools/tools/packages/refusals.test.ts`               | 7     | trim to 2                      | the refusal happens before any client runs, so one client proves it                                                                                                |
+| `tests/integration/tools/tools/packages/clone.test.ts`                  | 4     | keep                           | check the tool state instead of running Prettier                                                                                                                   |
+| `tests/integration/tools/tools/packages/environment.test.ts`            | 1     | keep                           | registry authentication reaches the private project                                                                                                                |
+| `tests/integration/tools/tools/packages/project.test.ts`                | 6     | keep                           | absorbs the preservation cases                                                                                                                                     |
+| `tests/integration/tools/tools/packages/locks.test.ts`                  | 12    | trim to 10                     | the recovery assertion goes with the byte backups                                                                                                                  |
+
+Across these folders, 21 files still pass `--no-cache`, which dies with the cache, and the emit-and-write block is
+copied 23 times in 17 files; one helper replaces it. `mise.toml` `guides:lint` names a test file that does not exist, and
+the timing files still list a CI test file that is gone.
+
+### D.4 `tests/acceptance`
+
+All 103 files were read. Acceptance tests run the built CLI in sandbox repositories with the real tools, so they cost
+the most: 3,951 seconds per Linux run. About 72% of that time leaves this tier. Most moved cases need no native tool
+and become integration tests. The rest of the savings comes from dropping cases that plant one defect per third-party
+rule, which only proves the third-party rule works. One case per kit that proves gspot wires the tool, its
+configuration, and its exit code is enough.
+
+- **Left in acceptance:** about 112 of about 690 cases (12 for commands, 90 for kits, 10 for the packed package).
+- **Deleted:** 7 files and about 271 cases, 156 of them the network call per pin.
+- **Moved to another tier:** 39 files and about 307 cases.
+- **Saved:** about 2,500 seconds per Linux run, about 7 minutes off each Linux shard, and about 4,200 test lines.
+
+Fix these with the deletions:
+
+- The shared Bash fixture in `tests/support/cli/planted.ts:43` holds an inline `gspot-ignore` comment, and 13 files use
+  it. Replace it with a two-statement `main` or an `[[ignore]]` entry.
+- `--no-cache` appears 163 times, and the report types and constants of SARIF and GitLab sit in the shared test types.
+- `tests/acceptance/source/kits/documents.test.ts` records 5 milliseconds on Linux, so its 11 cases do not run there.
+- The macOS-only Swift and Xcode tables install a sandbox on Linux and Windows before skipping every case.
+- The static-site fixture links the whole `node_modules` of the repository, although the site needs no packages.
+- Sandboxes are set up four different ways, and init arguments are written out 15 times. The strict `tsconfig` text is
+  copied 10 times, and the "run again, expect 0, no findings" block repeats about 80 times. One helper each.
+
+**Commands, in `tests/acceptance/source/cli`**
+
+| File                                                        | Cases | Seconds | Verdict                                  | Reason                                                                              |
+| ----------------------------------------------------------- | ----- | ------- | ---------------------------------------- | ----------------------------------------------------------------------------------- |
+| `tests/acceptance/source/cli/agents.test.ts`                | 3     | 5.4     | move to the CLI tier, trim               | no tool; drop the uninstall half of case 1                                          |
+| `tests/acceptance/source/cli/attributes.test.ts`            | 1     | 1.4     | merge into the agents test               | a real Windows line-ending regression; drop the uninstall tail                      |
+| `tests/acceptance/source/cli/cancellation.test.ts`          | 9     | 12.6    | move to the CLI tier, trim               | fake checks and a git shim; drop the SARIF assertions                               |
+| `tests/acceptance/source/cli/changed.test.ts`               | 5     | 6.5     | move to the CLI tier                     | a Bun check and git; use the shared git helper                                      |
+| `tests/acceptance/source/cli/checks/cache-inputs.test.ts`   | 6     | 13.1    | delete                                   | the result cache                                                                    |
+| `tests/acceptance/source/cli/checks/declared.test.ts`       | 3     | 6.8     | merge into the declared-check parse test | case 1 is cache staleness; the format cases need no install                         |
+| `tests/acceptance/source/cli/checks/policy-errors.test.ts`  | 6     | 12.1    | move to the CLI tier                     | policy parsing with host Bash only                                                  |
+| `tests/acceptance/source/cli/checks/selection.test.ts`      | 5     | 6.4     | move to the CLI tier                     | no tool                                                                             |
+| `tests/acceptance/source/cli/ci.test.ts`                    | 12    | 14.6    | move to the CLI tier, trim               | a fake npm; drop the SARIF and Code Quality assertions and the GitLab duplicate     |
+| `tests/acceptance/source/cli/commits.test.ts`               | 4     | 51.6    | trim                                     | one case runs commitlint directly; install commitlint once, not three times         |
+| `tests/acceptance/source/cli/configuration-arrival.test.ts` | 1     | 29.6    | keep                                     | `gspot add` changes the next check                                                  |
+| `tests/acceptance/source/cli/declarations.test.ts`          | 2     | 6.8     | move to the CLI tier                     | absorbs the exclusions test                                                         |
+| `tests/acceptance/source/cli/example.test.ts`               | 1     | n/a     | keep                                     | the recorded journey of the README; add it to the timings                           |
+| `tests/acceptance/source/cli/exclusions.test.ts`            | 1     | 3.1     | merge into declarations                  | the same shape                                                                      |
+| `tests/acceptance/source/cli/explain.test.ts`               | 6     | 10.7    | move to the CLI tier, trim               | keep the JSON and exit codes; drop the wording                                      |
+| `tests/acceptance/source/cli/format-overrides.test.ts`      | 3     | 8.2     | trim                                     | keep the correction case; the other two belong to generation and unit tests         |
+| `tests/acceptance/source/cli/hooks/commit.test.ts`          | 2     | 14.2    | trim                                     | keep the real commits in an installed and a cloned repository, minus wording        |
+| `tests/acceptance/source/cli/hooks/push/refs.test.ts`       | 5     | 8.8     | move to the CLI tier                     | ref resolution with `bash -n`; five pasted assertion blocks become a helper         |
+| `tests/acceptance/source/cli/hooks/push/revisions.test.ts`  | 4     | 10.6    | merge into refs, trim                    | drop the SARIF assertions and wording                                               |
+| `tests/acceptance/source/cli/ignored-execution.test.ts`     | 5     | 19.0    | split                                    | ignores to the CLI tier, ESLint configuration to generation, profile export to unit |
+| `tests/acceptance/source/cli/init/refusals.test.ts`         | 13    | 14.7    | move to the CLI tier, trim               | nothing is installed; assert exit 2 and nothing written, not messages               |
+| `tests/acceptance/source/cli/init/replace.test.ts`          | 6     | 8.8     | move to the CLI tier, trim               | read the plan from `--json`; drop uninstall and byte restore                        |
+| `tests/acceptance/source/cli/init/selection.test.ts`        | 3     | 4.0     | move to the CLI tier                     | detection only                                                                      |
+| `tests/acceptance/source/cli/levels.test.ts`                | 3     | 10.4    | move to the CLI tier, trim               | one helper repeats the reasons test                                                 |
+| `tests/acceptance/source/cli/lifecycle/apply.test.ts`       | 4     | 7.7     | move to the CLI tier, trim               | keep the refusal of an edited file; the uninstall parts go                          |
+| `tests/acceptance/source/cli/lifecycle/performance.test.ts` | 1     | 28.3    | delete                                   | wall-clock limits on shared runners and a warm cache                                |
+| `tests/acceptance/source/cli/lifecycle/roots.test.ts`       | 2     | 4.3     | merge into the CLI roots test            | no tool                                                                             |
+| `tests/acceptance/source/cli/lifecycle/uninstall.test.ts`   | 7     | 14.7    | delete                                   | uninstall; keep the 15 lines about a fresh clone adopting exact bytes               |
+| `tests/acceptance/source/cli/list.test.ts`                  | 2     | 6.1     | move to the CLI tier, trim               | drop the wording and an obsolete flag                                               |
+| `tests/acceptance/source/cli/local-override.test.ts`        | 1     | 3.8     | move to the CLI tier                     | use a host tool instead of ShellCheck                                               |
+| `tests/acceptance/source/cli/nested-scopes.test.ts`         | 1     | 3.0     | merge into the scopes test               | no tool                                                                             |
+| `tests/acceptance/source/cli/profile.test.ts`               | 4     | 16.0    | trim                                     | keep the export into a second repository; one case repeats the reasons test         |
+| `tests/acceptance/source/cli/prose-ignore.test.ts`          | 2     | 7.0     | trim                                     | keep the Vale path ignore                                                           |
+| `tests/acceptance/source/cli/python-ownership.test.ts`      | 2     | 2.9     | move to the CLI tier                     | engine checks                                                                       |
+| `tests/acceptance/source/cli/reasons.test.ts`               | 20    | 33.1    | move to the CLI tier, trim to 13         | no tool; four per-tool rows become one unit table                                   |
+| `tests/acceptance/source/cli/report-storage.test.ts`        | 11    | 16.9    | delete; keep 4 cases                     | the report files, the cache, and uninstall; move the symlink and publication cases  |
+| `tests/acceptance/source/cli/scopes.test.ts`                | 3     | 43.0    | trim                                     | keep the shared ESLint case; two cases belong to init                               |
+| `tests/acceptance/source/cli/selectors.test.ts`             | 5     | 12.3    | move to the CLI tier                     | index snapshots with Bun and Bash                                                   |
+| `tests/acceptance/source/cli/spelling.test.ts`              | 3     | 13.0    | trim                                     | keep the ambiguous correction                                                       |
+| `tests/acceptance/source/cli/typed-tables.test.ts`          | 1     | 7.0     | move to the CLI tier                     | TOML parsing needs no install                                                       |
+| `tests/acceptance/source/cli/uninstall.test.ts`             | 1     | 1.4     | delete                                   | uninstall                                                                           |
+
+**Kits, in `tests/acceptance/source/kits`**
+
+| File                                                                 | Cases | Seconds | Verdict                                | Reason                                                                                            |
+| -------------------------------------------------------------------- | ----- | ------- | -------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `tests/acceptance/source/kits/ansible.test.ts`                       | 1     | 18.1    | keep                                   | one wiring case                                                                                   |
+| `tests/acceptance/source/kits/astro.test.ts`                         | 5     | n/a     | trim to 3, one install                 | two rows repeat the generation test                                                               |
+| `tests/acceptance/source/kits/bash/checks.test.ts`                   | 33    | 59.4    | trim                                   | keep ShellCheck and shfmt; 30 engine rows move to an in-process table                             |
+| `tests/acceptance/source/kits/bash/lifecycle.test.ts`                | 4     | 15.5    | trim                                   | keep init then check; one case checks the text format                                             |
+| `tests/acceptance/source/kits/bash/syntax.test.ts`                   | 3     | 8.2     | move to the tools tier                 | host Bash, Zsh, and Bats with only `apply`                                                        |
+| `tests/acceptance/source/kits/codeql.test.ts`                        | 4     | 278.5   | trim to 1                              | recommended and all assert the same findings; the JavaScript row repeats the adapter test         |
+| `tests/acceptance/source/kits/component-files/accessibility.test.ts` | 2     | 40.6    | merge into the vue and svelte files    | the Vue alt-text row is a third-party rule                                                        |
+| `tests/acceptance/source/kits/component-files/formatting.test.ts`    | 1     | 16.9    | merge into the svelte file             | real plugin wiring                                                                                |
+| `tests/acceptance/source/kits/component-files/styles.test.ts`        | 2     | 36.3    | merge into the vue and svelte files    | on shared installs                                                                                |
+| `tests/acceptance/source/kits/component-files/testing.test.ts`       | 2     | 44.3    | move to generation                     | ESLint configuration, repeated in the React test                                                  |
+| `tests/acceptance/source/kits/component-files/types.test.ts`         | 3     | 98.1    | merge into the vue and svelte files    | keep the type checks and the takeover of tsc                                                      |
+| `tests/acceptance/source/kits/components.test.ts`                    | 8     | 187.5   | merge into the vue and svelte files    | one ESLint row per framework; 18 cases in 16 installs become 9 cases in 3                         |
+| `tests/acceptance/source/kits/css.test.ts`                           | 5     | 21.0    | trim to 1                              | one row is a third-party rule; three repeat the integration test                                  |
+| `tests/acceptance/source/kits/dependencies.test.ts`                  | 9     | 18.6    | move and delete                        | six engine rows move; three repeat integration tests                                              |
+| `tests/acceptance/source/kits/docker.test.ts`                        | 6     | 30.1    | trim to 3                              | keep compose, hadolint, and trivy                                                                 |
+| `tests/acceptance/source/kits/documents.test.ts`                     | 11    | 0.005   | trim to 4, investigate                 | its cases do not run on Linux; two repeat integration tests                                       |
+| `tests/acceptance/source/kits/duplication.test.ts`                   | 1     | 6.4     | keep                                   | jscpd wiring                                                                                      |
+| `tests/acceptance/source/kits/express.test.ts`                       | 3     | 36.3    | trim to 1                              | two rows repeat integration tests                                                                 |
+| `tests/acceptance/source/kits/fastapi.test.ts`                       | 4     | 48.9    | trim to 1                              | keep pytest coverage; the blocking-call check goes; one install fewer                             |
+| `tests/acceptance/source/kits/files.test.ts`                         | 13    | 73.3    | trim to 11, one install                | six installs become one                                                                           |
+| `tests/acceptance/source/kits/html.test.ts`                          | 4     | 10.7    | trim to 1                              | keep html-validate                                                                                |
+| `tests/acceptance/source/kits/jest.test.ts`                          | 3     | 28.2    | trim to 2                              | one row checks a rule setting                                                                     |
+| `tests/acceptance/source/kits/libraries.test.ts`                     | 6     | 44.7    | move                                   | ESLint rows to generation, engine rows to the CLI tier; the Zod row repeats configuration arrival |
+| `tests/acceptance/source/kits/licenses.test.ts`                      | 5     | 36.6    | trim to 1                              | one journey on one install                                                                        |
+| `tests/acceptance/source/kits/naming.test.ts`                        | 2     | 2.3     | merge into the naming integration test | engine only                                                                                       |
+| `tests/acceptance/source/kits/nestjs.test.ts`                        | 7     | 56.3    | trim to 2                              | keep the clean module and the plugin row                                                          |
+| `tests/acceptance/source/kits/nextjs/checks.test.ts`                 | 7     | 77.7    | merge into one nextjs file             | keep the type check; the build row runs webpack twice                                             |
+| `tests/acceptance/source/kits/nextjs/delegation.test.ts`             | 3     | 95.5    | merge into one nextjs file             | three installs become one                                                                         |
+| `tests/acceptance/source/kits/nextjs/selection.test.ts`              | 9     | 271.3   | merge and move                         | keep one row; the rest repeat generation tests or belong to init                                  |
+| `tests/acceptance/source/kits/nginx.test.ts`                         | 3     | 15.0    | trim to 2                              | merge the two `nginx -t` cases                                                                    |
+| `tests/acceptance/source/kits/platforms.test.ts`                     | 11    | 39.7    | trim to 1                              | keep the Deno check; the Cloudflare and Supabase engine rows move                                 |
+| `tests/acceptance/source/kits/postgres.test.ts`                      | 10    | 21.9    | trim to 1                              | keep squawk; the rest are engine rows or repeats                                                  |
+| `tests/acceptance/source/kits/python/docstrings.test.ts`             | 4     | 104.8   | move to generation                     | four full installs to test a style setting                                                        |
+| `tests/acceptance/source/kits/python/structure.test.ts`              | 14    | 55.8    | move to the CLI tier                   | all 14 are engine checks                                                                          |
+| `tests/acceptance/source/kits/python/tools.test.ts`                  | 11    | 109.2   | trim to 8                              | keep the real tools                                                                               |
+| `tests/acceptance/source/kits/react.test.ts`                         | 15    | 171.8   | trim to 2                              | one row per third-party rule; nine move to generation                                             |
+| `tests/acceptance/source/kits/secrets/pushed.test.ts`                | 4     | 31.8    | trim assertions                        | real history journeys; drop the report reads                                                      |
+| `tests/acceptance/source/kits/secrets/staged.test.ts`                | 3     | 16.1    | trim to 1                              | three installs become one                                                                         |
+| `tests/acceptance/source/kits/security.test.ts`                      | 2     | 65.3    | trim to 1                              | one case installs everything to read a stage list                                                 |
+| `tests/acceptance/source/kits/sql.test.ts`                           | 5     | 16.3    | trim to 1                              | keep sqlfluff                                                                                     |
+| `tests/acceptance/source/kits/static-site.test.ts`                   | 12    | 494.3   | trim to 2                              | keep the broken build and the clean run; stop linking `node_modules`                              |
+| `tests/acceptance/source/kits/structure.test.ts`                     | 10    | 34.6    | move and delete                        | engine checks; the suppression census goes                                                        |
+| `tests/acceptance/source/kits/svg.test.ts`                           | 2     | 56.3    | merge into static-site                 | the same kit                                                                                      |
+| `tests/acceptance/source/kits/swift/checks.test.ts`                  | 14    | 24.0    | trim to 3                              | keep SwiftLint, SwiftFormat, and the header case                                                  |
+| `tests/acceptance/source/kits/swift/package.test.ts`                 | 3     | 3.7     | keep, gate to macOS                    |                                                                                                   |
+| `tests/acceptance/source/kits/swift/scopes.test.ts`                  | 1     | 14.5    | keep                                   |                                                                                                   |
+| `tests/acceptance/source/kits/swift/security.test.ts`                | 1     | 37.8    | delete                                 | other tests cover every part                                                                      |
+| `tests/acceptance/source/kits/typescript/eslint.test.ts`             | 4     | 80.7    | move to generation                     | configuration assertions, each paying for an install                                              |
+| `tests/acceptance/source/kits/typescript/javascript.test.ts`         | 1     | 18.3    | keep                                   |                                                                                                   |
+| `tests/acceptance/source/kits/typescript/planted-checks.test.ts`     | 15    | 178.7   | trim to 9                              | keep the real tools; the plugin row repeats its unit test                                         |
+| `tests/acceptance/source/kits/typescript/projects.test.ts`           | 6     | 90.3    | move to the tools tier, trim to 4      | real tsc with no install                                                                          |
+| `tests/acceptance/source/kits/vite.test.ts`                          | 1     | 33.8    | move to generation                     | the entry exceptions are ESLint configuration                                                     |
+| `tests/acceptance/source/kits/vitest.test.ts`                        | 2     | 50.8    | trim to 1                              | keep coverage                                                                                     |
+| `tests/acceptance/source/kits/xcode.test.ts`                         | 12    | 11.9    | trim to 1                              | keep the macOS plist row                                                                          |
+| `tests/acceptance/source/kits/xctest.test.ts`                        | 5     | 11.5    | move and delete                        | four engine rows move                                                                             |
+
+**The packed package, in `tests/acceptance/package`**
+
+| File                                                 | Cases | Verdict                     | Reason                                                                                                       |
+| ---------------------------------------------------- | ----- | --------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `tests/acceptance/package/install/languages.test.ts` | 4     | trim to one shared consumer | four identical consumers each install their tools                                                            |
+| `tests/acceptance/package/install/launcher.test.ts`  | 3     | trim to 2                   | the uninstall and restore parts go                                                                           |
+| `tests/acceptance/package/install/reports.test.ts`   | 1     | merge into languages        | the report assertions go                                                                                     |
+| `tests/acceptance/package/install/tools.test.ts`     | 5     | trim to 2                   | two shared consumers, without message wording                                                                |
+| `tests/acceptance/package/lifecycle.test.ts`         | 3     | trim, move                  | it tests the runner script; keep the refusal and one signal                                                  |
+| `tests/acceptance/package/pins.test.ts`              | ~156  | delete from pull request CI | one network call per pin; a scheduled workflow instead                                                       |
+| `tests/acceptance/package/plugin.test.ts`            | 2     | trim to 1                   | publish and install once; 76 lines of exact rule messages shrink to load, configurations, one rule per level |
+
+### D.5 Tests to add
+
+These real scenarios have no test, or only a test that stops short. They are ranked by how badly a failure hurts users.
+Six look like bugs from reading the code; the first test of each confirms or clears it. Tiers use the target names of
+D.1.
+
+| #   | Scenario                                                                                                                                                                                                                                                                        | Code                                                                                                     | Tier        | Test                                                                                                                                               |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | **Likely bug.** A repository tracks a link to a folder, an absolute path, a path outside the repository, or a missing file. The snapshot writes every tracked link through the lifecycle checks, which refuse all four, so the commit hook exits 2 on every commit.             | `packages/cli/src/repository/revisions/contents.ts:41`, `packages/cli/src/platform/root/reads.ts:42`     | integration | commit the four links; `check --staged` and the push check exit by findings alone                                                                  |
+| 2   | **Likely bug.** The first install is killed after the new tool folder is swapped in and before the log records it. The next install refuses the folder gspot made.                                                                                                              | `packages/cli/src/lifecycle/ownership/installs.ts:36`                                                    | integration | build that state, as `tests/integration/cli/lifecycle/ownership/bounded-state.test.ts:57` already does, then install again: the folder is replaced |
+| 3   | **Likely bug.** A crash leaves the writer lock behind with the ID of an unrelated process, or empty. Process 1 throws a permission error, and any live process gets "retry after it finishes", which never happens. Two real processes, `apply` during `install`, are untested. | `packages/cli/src/platform/root/writes.ts:104`                                                           | integration | a lock holding `1:x` or nothing: exit 2 with a message that names the lock; a second `apply` during a slow `install` exits 2                       |
+| 4   | The commit hook runs with a staged `.env` file                                                                                                                                                                                                                                  | `packages/cli/src/commands/check/selection.ts:40`                                                        | integration | `git add -f .env`, then `check --staged --json`: exit 1, the env-files check fails, no tool runs                                                   |
+| 5   | `gspot remove` is never run by any test: removal, a kit that another kit requires, a kit not listed, `--scope`, pruning outputs, dropping the npm install                                                                                                                       | `packages/cli/src/commands/kits.ts:60`                                                                   | integration | remove javascript: its outputs and its installed npm tools go; remove typescript while react needs it: exit 2 and the chain named                  |
+| 6   | **Likely bug.** With `--json`, a command that fails with a plain error prints nothing on standard output                                                                                                                                                                        | `packages/cli/src/commands/program.ts:46`, `packages/cli/src/commands/print-result.ts:27`                | integration | an edited generated file, then `apply --json`: one JSON object with the error, exit 2                                                              |
+| 7   | A commit that changes only `gspot.toml` rechecks every file the per-file checks own                                                                                                                                                                                             | `packages/cli/src/execution/planning/files.ts:73`                                                        | integration | tighten `limits.file_lines`, stage only `gspot.toml`: the file now too long is reported                                                            |
+| 8   | Two paths that differ only by case, in a snapshot on macOS or Windows, and a generated file renamed by case                                                                                                                                                                     | `packages/cli/src/repository/revisions/contents.ts:53`, `packages/cli/src/lifecycle/ownership/log.ts:98` | integration | both spellings in the index: success or a clear selection error; a case rename: apply follows one defined rule                                     |
+| 9   | Git worktrees: init, install, the hook, and the snapshot inside `git worktree add`, which coding agents use often                                                                                                                                                               | `packages/cli/src/repository/revisions/contents.ts:233`, `packages/cli/src/lifecycle/hooks.ts:23`        | integration | in a worktree, a real commit with a defect is blocked                                                                                              |
+| 10  | Detecting the package manager of the tool project: a `+sha512` suffix, a `devEngines` range, a lockfile alone, no Bun installed                                                                                                                                                 | `packages/cli/src/tools/packages/identity.ts:33`                                                         | unit        | each input yields the right client and version, or a refusal                                                                                       |
+| 11  | A failed reinstall keeps the working tools, as the `install` help promises                                                                                                                                                                                                      | `packages/cli/src/tools/packages/project.ts:95`                                                          | tools       | change a pin, make the registry answer 404: exit 2, the old tools still run, no temporary folder left                                              |
+| 12  | Several fixers, one failing midway                                                                                                                                                                                                                                              | `packages/cli/src/execution/fixers.ts:189`                                                               | integration | three fixers, the first exits 3: order holds, later fixers run, exit 2, other edits stay                                                           |
+| 13  | `check --fix --dry-run` through the CLI                                                                                                                                                                                                                                         | `packages/cli/src/commands/check/content.ts:18`                                                          | integration | a format defect: a diff on standard output, the file unchanged                                                                                     |
+| 14  | Invalid flag combinations and bad pre-push input                                                                                                                                                                                                                                | `packages/cli/src/commands/check/run.ts:13`, `packages/cli/src/commands/check/push.ts:13`                | integration | `--staged --fix`, `--push --fix`, garbage or non-UTF-8 on standard input: exit 2, working tree untouched                                           |
+| 15  | A staged check during a merge conflict, or with non-UTF-8 file names in the index                                                                                                                                                                                               | `packages/cli/src/repository/revisions/contents.ts:94`                                                   | integration | exit 2 with a clear message and no snapshot folder left                                                                                            |
+| 16  | Repositories with SHA-256 object names                                                                                                                                                                                                                                          | `packages/cli/src/repository/revisions/contents.ts:78`                                                   | integration | `git init --object-format=sha256`: the same verdicts as with SHA-1                                                                                 |
+| 17  | An analysis outside the engine wrapper throws, and every result is lost                                                                                                                                                                                                         | `packages/cli/src/execution/execute.ts:122`                                                              | integration | decide the behavior (that check errors, the rest survive), then pin it                                                                             |
+| 18  | `init` in a repository that already has `gspot.toml`                                                                                                                                                                                                                            | `packages/cli/src/commands/init/command.ts:91`                                                           | integration | exit 2 with the already-initialized error; nothing changes                                                                                         |
+| 19  | A file that init takes over changes or vanishes between the plan and the write                                                                                                                                                                                                  | `packages/cli/src/commands/init/write.ts:49`                                                             | integration | init refuses and writes nothing                                                                                                                    |
+| 20  | `add` or `remove` when the install fails after the policy was written                                                                                                                                                                                                           | `packages/cli/src/commands/kits.ts:18`                                                                   | integration | exit 2 and a message that says to run `gspot install`                                                                                              |
+| 21  | The refusals of `set`, run through the command                                                                                                                                                                                                                                  | `packages/cli/src/commands/set.ts:45`                                                                    | integration | a scope-only key without `--scope`, a tool rule turned off, a key without a value, an undeclared scope: exit 2                                     |
+| 22  | `set` or `ignore` when apply fails after `gspot.toml` was written                                                                                                                                                                                                               | `packages/cli/src/commands/policy.ts:21`                                                                 | integration | pin whether the policy keeps the change                                                                                                            |
+| 23  | Drift kinds of `apply --dry-run` other than a missing file: changed, stray, conflict, an edited managed block                                                                                                                                                                   | `packages/cli/src/lifecycle/drift.ts:28`                                                                 | integration | each kind with its diff, nothing written                                                                                                           |
+| 24  | An `[[ignore]]` with a rule and paths, per scope in the generated configuration                                                                                                                                                                                                 | `packages/cli/src/policy/merge.ts:18`                                                                    | unit        | `paths = ["api/**"]` turns the rule off in `api` and below only                                                                                    |
+| 25  | Nested scope precedence for limits per language and for tool settings; the code walks the outermost table first, so the root may win                                                                                                                                            | `packages/cli/src/policy/merge.ts:30`                                                                    | unit        | the deepest scope wins everywhere                                                                                                                  |
+| 26  | Edge cases of `ignore`: an unknown check, removing an entry that does not exist, removing one rule                                                                                                                                                                              | `packages/cli/src/commands/ignore.ts:15`                                                                 | integration | exit codes and a byte-identical file where nothing matched                                                                                         |
+| 27  | Profiles from `https://` and `github:owner/repo`, a 404, an `http://` address                                                                                                                                                                                                   | `packages/cli/src/policy/profiles/read.ts:14`                                                            | unit        | the address mapping, the refusal of plain HTTP, nothing written after a 404                                                                        |
+| 28  | The change report of `doctor` and its exit code for an outdated tool                                                                                                                                                                                                            | `packages/cli/src/commands/doctor/changes.ts:19`                                                         | integration | a new Python file after init shows up with `gspot add python`; an outdated tool exits 1                                                            |
+| 29  | Install guards: uv writes credentials into the lock, or a tool project file changes during an install                                                                                                                                                                           | `packages/cli/src/tools/python-project.ts:143`, `packages/cli/src/tools/packages/project.ts:77`          | tools       | both refused, nothing written                                                                                                                      |
+| 30  | **Likely bug.** The lockfile host check never reads `npm-shrinkwrap.json`, which its parser supports; Yarn and pnpm hosts are untested                                                                                                                                          | `packages/cli/src/checks/dependencies/lockfile/hosts.ts:35`                                              | integration | a foreign host in each lockfile is reported                                                                                                        |
+| 31  | Plugin rules that read paths, with Windows file names and a drive letter in another case                                                                                                                                                                                        | `packages/eslint-plugin/src/files.ts:16`                                                                 | unit        | the same verdicts as with POSIX paths                                                                                                              |
+| 32  | `no-client-environment` with bracket access and custom prefixes                                                                                                                                                                                                                 | `packages/eslint-plugin/src/rules/no-client-environment.ts:73`                                           | unit        | public keys allowed, secret and computed keys reported                                                                                             |
+| 33  | `globPaths` refuses patterns that leave the folder, and ends on a link loop                                                                                                                                                                                                     | `packages/cli/src/platform/paths.ts:163`                                                                 | unit        | a parent path, an absolute path, and a negated parent path throw; a loop ends                                                                      |
+| 34  | Positional paths outside the repository, a path that matches nothing, a missing message file                                                                                                                                                                                    | `packages/cli/src/commands/check/selection.ts:22`                                                        | integration | exit 2 with the right error for each                                                                                                               |
+
+These areas are well covered already, so new tests there repeat old ones. They are the recovery of the ownership log,
+the lockfiles, cancellation, push ranges, the crash-or-finding contract, policy parsing, and most plugin rules. No source file is entirely unexercised. Still, 165 CLI files are reached only
+through spawned CLI runs, and branches such as `removeCommand`, the refusals of `checkStaged`, and the failures of the
+writer lock never run in any test.
+
+## Appendix E: every page of the documentation
+
+Every page of the docs site, the generators of its reference pages, the homepage, and every Markdown file outside the
+rules corpus were read and checked against the code. 58 findings are bloat. 101 go stale or are wrong: 86 go stale when
+this audit lands, 7 depend on an open question, and 8 are false today.
+
+### E.1 Every page
+
+| Page                                                                | Verdict                                                                            | Lines now and after                        |
+| ------------------------------------------------------------------- | ---------------------------------------------------------------------------------- | ------------------------------------------ |
+| `docs/src/content/docs/404.md`                                      | keep                                                                               | 19                                         |
+| `docs/src/content/docs/guides/overview.md`                          | rewrite: a table of what gspot writes, links for the rest                          | 52 to about 25                             |
+| `docs/src/content/docs/guides/install.md`                           | shorten: the upgrade steps and tool list repeat other pages                        | 85 to about 50                             |
+| `docs/src/content/docs/guides/quick-start.md`                       | keep; re-record the transcript after the renames                                   | about 236                                  |
+| `docs/src/content/docs/guides/existing-repository.md`               | shorten: the backup and restore promises go                                        | 59 to about 40                             |
+| `docs/src/content/docs/guides/findings.md`                          | shorten: the report files and coverage sections go                                 | 104 to about 60                            |
+| `docs/src/content/docs/guides/customize.md`                         | shorten; the one home for levels, ignores, apply, upgrades                         | 121 to about 100                           |
+| `docs/src/content/docs/guides/agents.md`                            | rewrite for rules and the new layout                                               | 51 to about 30                             |
+| `docs/src/content/docs/guides/check-automation.md`                  | rewrite: hook internals and SARIF uploads go                                       | 102 to about 60                            |
+| `docs/src/content/docs/guides/generated-files.md`                   | shorten: cache, reports, and recovery go                                           | 48 to about 32                             |
+| `docs/src/content/docs/guides/scopes.md`                            | shorten: kit defaults and an SVG section that is not about scopes                  | 108 to about 70                            |
+| `docs/src/content/docs/guides/profiles.md`                          | shorten                                                                            | 54 to about 40                             |
+| `docs/src/content/docs/guides/without-mise.md`                      | rewrite: two sections describe one flag                                            | 62 to about 40                             |
+| `docs/src/content/docs/guides/project-checks.md`                    | shorten: the cache inputs go; settings renamed                                     | 120 to about 90                            |
+| `docs/src/content/docs/guides/testing.md`                           | shorten: Swift internals move to the kit pages                                     | 90 to about 55                             |
+| `docs/src/content/docs/guides/dependency-licenses.md`               | shorten: exit codes repeat the command page                                        | 46 to about 32                             |
+| `docs/src/content/docs/guides/security.md`                          | shorten; add the actions kit                                                       | 66 to about 50                             |
+| `docs/src/content/docs/guides/troubleshooting.md`                   | shorten: cache and build cache paths go; document `GSPOT_JOBS`                     | 79 to about 55                             |
+| `docs/src/content/docs/guides/uninstall.md`                         | delete, with `docs/public/brand/diagrams/recovery.svg`                             | 57 to 0                                    |
+| `docs/src/content/docs/guides/build.md`                             | merge into `CONTRIBUTING.md`, then delete                                          | 158 to 0                                   |
+| `docs/src/content/reference/definitions.ts`                         | shorten the text of 210 check pages; delete the engines page                       | check page tail from about 110 words to 25 |
+| `docs/src/content/reference/commands.ts`                            | its parser of the `Effects:` help heading throws once that heading goes            | small                                      |
+| `docs/src/content/reference/policy.ts`                              | shorten two introductions                                                          | about 310 words to 65                      |
+| `docs/src/content/reference/page.ts`                                | drop the source link at the top of every page; the edit link already exists        | one line                                   |
+| `docs/src/content/reference/collection.ts`                          | check pages under `/reference/checks/`, no engines page, no link to `architecture` | small                                      |
+| `docs/src/pages/index.astro` with the home and Starlight components | a Starlight splash page (open question)                                            | about 190 to 40                            |
+| `docs/astro.config.ts`                                              | drop the uninstall entry, the development group, and the rules path                | minus 12                                   |
+| `README.md`                                                         | shorten: the fourth copy of the example; five links instead of ten                 | 114 to about 70                            |
+| `CONTRIBUTING.md`                                                   | rewrite, taking in the build page, the test tiers, and the harness                 | 68 to about 110                            |
+| `AGENTS.md`                                                         | regenerate with `gspot apply` after the rename                                     | about 79                                   |
+| `CLAUDE.md`                                                         | delete (open question)                                                             | 79 to 0                                    |
+| `docs/README.md`                                                    | keep only the asset license notices                                                | 124 to about 20                            |
+| `packages/cli/README.md`                                            | two edits: rules, and an exact install                                             | 30                                         |
+| `packages/eslint-plugin/README.md`                                  | drop the deleted rule; document the options that lose their defaults               | about 95                                   |
+
+### E.2 Bloat
+
+| Where                                                                                                                                                 | Problem                                                                                                                          | Action                                                  |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| `docs/src/content/docs/guides/overview.md:11`                                                                                                         | four bold paragraphs, 170 words that repeat install, agents, and hooks                                                           | a table of four rows with links                         |
+| `docs/src/content/docs/guides/overview.md:32`, `docs/src/content/docs/guides/customize.md:34`, `AGENTS.md:5`                                          | the two levels explained three times, nearly word for word                                                                       | keep customize; one sentence and a link elsewhere       |
+| `docs/src/content/docs/guides/overview.md:42`                                                                                                         | "One policy file" repeats customize and generated files                                                                          | delete                                                  |
+| `docs/src/content/docs/guides/overview.md:24`, `docs/src/content/docs/guides/agents.md:8`, `docs/src/pages/index.astro:46`                            | the promise that code following the rules passes, three times                                                                    | one plain sentence in agents                            |
+| `docs/src/content/docs/guides/install.md:62`, `docs/src/content/docs/guides/customize.md:103`, `docs/src/content/docs/guides/troubleshooting.md:42`   | the upgrade steps three times                                                                                                    | keep customize; link from the others                    |
+| `docs/src/content/docs/guides/install.md:77`                                                                                                          | "Tools gspot runs" repeats two pages                                                                                             | delete; the Bash 4.4 line goes to the prerequisites     |
+| `docs/src/content/docs/guides/install.md:58`, `docs/src/content/docs/guides/troubleshooting.md:36`, `docs/src/content/docs/guides/without-mise.md:60` | the lock rule three times                                                                                                        | keep install                                            |
+| `docs/src/content/docs/guides/customize.md:6` and seven more places                                                                                   | "run `gspot apply` after you edit it by hand", eight times                                                                       | keep customize                                          |
+| `docs/src/content/docs/guides/findings.md:30`, `:48`, `:73`, `:90`                                                                                    | explain and whole-project checks repeat scopes; a heading for two sentences; a `doctor` feature on this page                     | keep each once; fold or move                            |
+| `docs/src/content/docs/guides/agents.md:32`, `:42`                                                                                                    | restates the managed block the agent reads; copies the hooks page                                                                | two sentences; delete the copy                          |
+| `docs/src/content/docs/guides/check-automation.md:27`                                                                                                 | hook internals the reader never types                                                                                            | three sentences and one example                         |
+| `docs/src/content/docs/guides/scopes.md:68`, `:90`                                                                                                    | kit defaults, and an SVG check that has nothing to do with scopes                                                                | one sentence; delete the SVG section                    |
+| `docs/src/content/docs/guides/profiles.md:17`, `:52`                                                                                                  | edge cases and advice                                                                                                            | one sentence; delete the advice                         |
+| `docs/src/content/docs/guides/without-mise.md:31`                                                                                                     | two sections describe `--no-runner`                                                                                              | one section                                             |
+| `docs/src/content/docs/guides/security.md:16`, `:42`                                                                                                  | reassurance and a list of kit details                                                                                            | one sentence and a link                                 |
+| `docs/src/content/docs/guides/dependency-licenses.md:30`, `:42`                                                                                       | exit codes of the check command; internals                                                                                       | delete                                                  |
+| `docs/src/content/docs/guides/testing.md:69`, `:74`, `:86`                                                                                            | SwiftLint internals, the xctest kit page repeated, Xcode membership that is not about tests                                      | shorten, link, move to the Xcode kit                    |
+| `docs/src/content/docs/guides/troubleshooting.md:66`                                                                                                  | Swift build cache paths per system                                                                                               | delete                                                  |
+| `README.md:32`                                                                                                                                        | the fourth copy of the example, with the fixed file                                                                              | keep the agent file and the transcript                  |
+| `README.md:96`                                                                                                                                        | ten links to repository files, whose names differ from the page addresses                                                        | five links to gspot.dev                                 |
+| `docs/src/pages/index.astro:41`, `:47`, `:56`, `:29`, `:9`, `:17`                                                                                     | the example twice, a setup grid with a different command, three calls to action, one heading four times, a logo strip, six cards | one example, three cards, no call to action             |
+| `docs/src/content/docs/guides/build.md:101`, `:130`                                                                                                   | one-time publishing chores; a list of CI jobs that goes stale with every rename                                                  | three lines in `CONTRIBUTING.md`; point to the workflow |
+| `docs/README.md:1`, `:33`, `:85`, `:112`                                                                                                              | setup, writing rules, review steps, and a logo prompt, all repeated or history                                                   | delete                                                  |
+| `CONTRIBUTING.md:3`                                                                                                                                   | "None of them needs a GitHub run."                                                                                               | delete                                                  |
+| `docs/src/content/reference/definitions.ts:176`                                                                                                       | 75 words about exit codes on each of 210 check pages                                                                             | the command only; exit codes once on the check page     |
+| `docs/src/content/reference/definitions.ts:53`, `:121`                                                                                                | "Scope: selected file lists under the applicable scope policy" and "Kind: language" on 210 pages                                 | "Runs: per file, per scope, or once"; delete the kind   |
+| `docs/src/content/reference/definitions.ts:109`, `docs/src/content/reference/policy.ts:115`                                                           | kits called "configuration"                                                                                                      | "kit"                                                   |
+| `docs/src/content/reference/commands.ts:62`                                                                                                           | the `-C` sentence on every command page                                                                                          | once, on the commands index                             |
+| `docs/src/content/reference/policy.ts:9`, `:100`                                                                                                      | a 200-word settings introduction that repeats scopes; a JSON Schema primer                                                       | two sentences and a link; one sentence                  |
+| `docs/src/content/docs/guides/check-automation.md:2`, `docs/src/content/docs/guides/project-checks.md:2`                                              | file names differ from their addresses, so contributor links point to the wrong name                                             | rename the files and drop `slug`                        |
+
+### E.3 Stale once the audit lands
+
+| Topic                        | Where                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | Action                                                                                                  |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| uninstall and backups        | `docs/src/content/docs/guides/uninstall.md`, `docs/astro.config.ts:87`, `docs/src/content/docs/guides/agents.md:47`, `docs/src/content/docs/guides/existing-repository.md:3`, `:8`, `:31`, `:59`, `docs/src/content/docs/guides/generated-files.md:41`, `docs/src/content/docs/guides/troubleshooting.md:58`, `README.md:104`, `docs/src/content/docs/guides/profiles.md:23`, and the init help at `packages/cli/src/commands/init/command.ts:127`                                                       | delete; say that git keeps replaced files                                                               |
+| report files                 | `docs/src/content/docs/guides/findings.md:79`, `:103`, `docs/src/content/docs/guides/check-automation.md:73`, `:82`, `:101`, `docs/src/content/docs/guides/generated-files.md:38`, `CONTRIBUTING.md:65`, `docs/src/content/docs/guides/build.md:135`, and the check help at `packages/cli/src/commands/check/command.ts:136`                                                                                                                                                                             | delete; keep `gspot check --json`                                                                       |
+| result cache                 | `docs/src/content/docs/guides/project-checks.md:101`, `--no-cache` in `docs/src/content/docs/guides/project-checks.md:57`, `docs/src/content/docs/guides/testing.md:17`, `docs/src/content/docs/guides/security.md:61`, `docs/src/content/docs/guides/troubleshooting.md:63`, and the command on 210 check pages at `docs/src/content/reference/definitions.ts:170`                                                                                                                                      | delete; the check pages show `gspot check --only <id>`                                                  |
+| inline `gspot-ignore`        | the finding help at `packages/cli/kits/language/bash/manifest.toml:204` and `packages/cli/kits/general/structure/manifest.toml:108`                                                                                                                                                                                                                                                                                                                                                                      | point to `gspot ignore` with the new check ID                                                           |
+| guides become rules          | `docs/src/content/docs/guides/overview.md:22`, `docs/src/content/docs/guides/agents.md:3`, `:27`, `docs/src/content/docs/guides/customize.md:31`, `docs/src/content/docs/guides/generated-files.md:14`, `docs/src/content/docs/guides/quick-start.md:236`, `README.md:27`, `packages/cli/README.md:20`, `docs/src/pages/index.astro:23`, the init and apply help, `docs/src/content/reference/definitions.ts:9`, and `AGENTS.md`                                                                         | rules; regenerate `AGENTS.md` with `gspot apply`                                                        |
+| "rule" meaning a lint rule   | 16 places in overview, customize, findings, agents, troubleshooting, and `README.md:69`                                                                                                                                                                                                                                                                                                                                                                                                                  | "tool rule"                                                                                             |
+| check IDs                    | `CONTRIBUTING.md:50`, `docs/src/content/docs/guides/dependency-licenses.md:41`, `docs/src/content/docs/guides/scopes.md:90`, `packages/cli/kits/general/files/manifest.toml:234`, `docs/src/content/docs/guides/findings.md:39`, `docs/src/content/docs/guides/customize.md:52`                                                                                                                                                                                                                          | the IDs of appendix A.5, and one `javascript/eslint`                                                    |
+| recorded example             | `docs/src/content/docs/guides/quick-start.md:176`, `README.md:53`, and the recorded JSON of the homepage                                                                                                                                                                                                                                                                                                                                                                                                 | re-record through the example acceptance test                                                           |
+| settings renamed             | `docs/src/content/docs/guides/security.md:30`, `docs/src/content/docs/guides/dependency-licenses.md:12`, `docs/src/content/docs/guides/testing.md:27`, `:34`, `:47`, `:49`, `docs/src/content/docs/guides/scopes.md:86`, `docs/src/content/docs/guides/project-checks.md:77`, `:89`, `:97`, `:109`, `:118`, `docs/src/content/docs/guides/customize.md:22`, `docs/src/content/docs/guides/without-mise.md:49`, `docs/src/content/reference/policy.ts:24`, `docs/src/content/reference/definitions.ts:45` | the names of appendices A.3 and A.4; drop `version = 1`                                                 |
+| `--stage` becomes `--hook`   | `docs/src/content/docs/guides/check-automation.md:53`, `docs/src/content/docs/guides/security.md:27`, `docs/src/content/docs/guides/testing.md:17`, `docs/src/content/docs/guides/build.md:127`                                                                                                                                                                                                                                                                                                          | `--only` already selects checks of every stage; running every manual check needs a decision (section 1) |
+| check pages and engines page | `docs/src/content/reference/collection.ts:61`, `:9`, `:55`, `docs/src/content/reference/definitions.ts:65`, `:192`, `docs/astro.config.ts:107`, `:118`                                                                                                                                                                                                                                                                                                                                                   | `/reference/checks/`; delete the engines page and the development group                                 |
+| tasks, tiers, CI             | `CONTRIBUTING.md:10`, `:33`, `:39`, `:68`, `docs/src/content/docs/guides/build.md:16`, `docs/README.md:3`, `README.md:4`, `docs/src/pages/index.astro:59`                                                                                                                                                                                                                                                                                                                                                | the new task names, tiers, and harness; links to `CONTRIBUTING.md`                                      |
+| the plugin                   | `packages/eslint-plugin/README.md:29`                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | drop the deleted rule; document the options that lose their defaults                                    |
+| open questions               | the Cursor rule and `.gitattributes` block, `--allow-dirty` and `--runner`, the coverage report, source positions, `fix_order`, the custom homepage, `CLAUDE.md`                                                                                                                                                                                                                                                                                                                                         | follow the answers in section 1                                                                         |
+
+### E.4 False today
+
+| Where                                                                                                      | Problem                                                                                 | Action                                   |
+| ---------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- | ---------------------------------------- |
+| `docs/README.md:9`                                                                                         | links the user install page as the source setup                                         | link `CONTRIBUTING.md`                   |
+| `docs/README.md:103`                                                                                       | describes a hero image that no page uses                                                | delete the sentence and both image files |
+| `docs/src/content/docs/guides/build.md:26`                                                                 | calls the package "gspot"; it is `@gspothq/cli`                                         | fix the name                             |
+| `docs/src/content/docs/guides/build.md:107`                                                                | `mise run build` does not build the plugin                                              | add `mise run build:plugin`              |
+| `docs/src/content/docs/guides/without-mise.md:26`                                                          | the list of runners leaves out mise                                                     | add it                                   |
+| `docs/src/content/docs/guides/without-mise.md:50`                                                          | says every table names its tool; `[hooks]` names none                                   | fix the sentence                         |
+| `docs/src/content/docs/guides/overview.md:13`                                                              | says gspot installs every tool into `.gspot`; native tools come from mise or the system | "npm and Python tools"                   |
+| `docs/src/content/docs/guides/install.md:16`, `packages/cli/README.md:12`, `docs/src/pages/index.astro:50` | install without `--save-exact`; a newer gspot than the pin makes six commands refuse    | `--save-exact` everywhere                |
+
+## Appendix F: every file of the agent rules
+
+All 99 files in `packages/cli/guides` were read and checked against the shipped templates, `policy.json`, and the
+code. The corpus is 11,662 lines. About 4,060 of them go through edits, and about 520 more if the front matter goes
+too, which leaves about 7,100 lines.
+
+Four facts shape the cuts:
+
+- **Levels are applied already.** `packages/cli/src/agents/sections.ts` strips the sections marked for level all at
+  level recommended. The paragraph "Requirements about vocabulary… apply at all" tells an agent nothing, and it sits in
+  65 files.
+- **Front matter loses its reader.** Only the guide linter reads `layer`, `kit`, and `title`, and it goes. Assembly
+  takes the kit from the manifest and the title from the first heading.
+- **Eleven files install as empty shells** at level recommended. Every section in them is marked for level all:
+  the two general naming files, the eight naming files per language, and the commitlint file.
+- **The rules teach code that the shipped linters reject** (F.3). Fix those first, with the eight lines damaged by an
+  old bulk rename, which no check catches.
+
+### F.1 Every file
+
+**`packages/cli/guides/general`**
+
+| File                     | Lines now and after | Verdict                                                                 |
+| ------------------------ | ------------------- | ----------------------------------------------------------------------- |
+| agent `GIT.md`           | 54 to 42            | rewrite; takes the commitlint essentials                                |
+| agent `PLANNING.md`      | 118 to 45           | shorten: one project's taste, and the order rules twice                 |
+| agent `SUPPRESSIONS.md`  | 24 to 20            | rewrite: no suppression count; say how `[[ignore]]` accepts a finding   |
+| agent `TALKING.md`       | 9                   | owner decides: ASD-STE100 is one owner's taste; merge into `WRITING.md` |
+| agent `WORKING.md`       | 140 to 95           | shorten; the subagent rule is one owner's preference                    |
+| code `ACCESSIBILITY.md`  | 52 to 42            | shorten                                                                 |
+| code `CLI.md`            | 51 to 46            | keep                                                                    |
+| code `COMMENTS.md`       | 90 to 45            | rewrite: the same rules twice in one file                               |
+| code `CONFIGURATION.md`  | 51 to 44            | keep; the eight copies elsewhere go                                     |
+| code `DEPENDENCIES.md`   | 43 to 38            | keep                                                                    |
+| code `ERRORS.md`         | 68 to 50            | shorten; the six copies elsewhere go                                    |
+| code `GENERATED.md`      | 27 to 22            | keep                                                                    |
+| code `LOGGING.md`        | 62 to 52            | keep                                                                    |
+| code `NAMING-FILES.md`   | 202 to 95           | rewrite: describes how two checks work; repeats testing                 |
+| code `NAMING.md`         | 175 to 120          | shorten; the banned retrieval verbs are this repository's vocabulary    |
+| code `SECRETS.md`        | 96 to 35            | shorten: the docs part moves to the docs rules                          |
+| code `SECURITY.md`       | 79 to 72            | keep                                                                    |
+| code `TESTING.md`        | 122 to 95           | rewrite: `tests/support` becomes the harness setting                    |
+| prose `DOCS.md`          | 223 to 150          | shorten                                                                 |
+| prose `DOCS-CONTENT.md`  | 173 to 145          | shorten                                                                 |
+| prose `DOCS-FORMAT.md`   | 182 to 130          | shorten                                                                 |
+| prose `DOCS-MEDIA.md`    | 148 to 110          | shorten                                                                 |
+| prose `DOCS-REVIEW.md`   | 180 to 50           | delete the nine checklists that restate the other files                 |
+| prose `DOCS-SURFACES.md` | 146 to 110          | shorten                                                                 |
+| prose `WRITING.md`       | 175 to 140          | shorten: Vale enforces most of the numbers and punctuation              |
+
+**`packages/cli/guides/language`**
+
+| File                   | Lines now and after | Verdict                                                                           |
+| ---------------------- | ------------------- | --------------------------------------------------------------------------------- |
+| `BASH.md`              | 249 to 170          | rewrite: restates ShellCheck; another project's conventions                       |
+| bash `LANGUAGE.md`     | 247 to 190          | shorten                                                                           |
+| bash `OPERATIONS.md`   | 241 to 130          | rewrite: another project's server, model, and checkpoint conventions              |
+| bash `SAFETY.md`       | 248 to 185          | shorten; merge the portability part from `BASH.md`                                |
+| `CSS.md`               | 48 to 44            | keep                                                                              |
+| `HTML.md`              | 57 to 45            | shorten: html-validate enforces most of it                                        |
+| `JAVASCRIPT.md`        | 205 to 60           | rewrite: nearly the same as `TYPESCRIPT.md`; keep what is specific to JavaScript  |
+| `PYTHON.md`            | 249 to 190          | shorten: how the rules were derived is not a rule                                 |
+| python `DESIGN.md`     | 169 to 155          | keep                                                                              |
+| python `FLOW.md`       | 178 to 140          | shorten: Ruff enforces two sections                                               |
+| python `PACKAGING.md`  | 166 to 110          | shorten: three layout trees become one                                            |
+| python `TYPING.md`     | 160 to 150          | rewrite: an inline `gspot-ignore` example                                         |
+| `SQL.md`               | 37 to 30            | keep                                                                              |
+| `SWIFT.md`             | 170 to 160          | rewrite: a TODO format that SwiftLint rejects                                     |
+| `TYPESCRIPT.md`        | 211 to 165          | rewrite: an example that the shipped ESLint rejects; history                      |
+| `YAML.md`              | 37 to 28            | rewrite: yamllint enforces half; the front matter names a kit that does not exist |
+| naming `BASH.md`       | 114 to 60           | shorten: this repository's numbered file prefix                                   |
+| naming `CSS.md`        | 31 to 22            | rewrite: BEM contradicts the shipped class pattern                                |
+| naming `HTML.md`       | 30 to 22            | keep                                                                              |
+| naming `JAVASCRIPT.md` | 119 to 55           | merge into the TypeScript naming file as a short delta                            |
+| naming `PYTHON.md`     | 126 to 60           | rewrite: the case rules twice; examples from one machine-learning project         |
+| naming `SQL.md`        | 159 to 110          | shorten; the Supabase parts move to the Supabase rules                            |
+| naming `SWIFT.md`      | 121 to 112          | keep                                                                              |
+| naming `TYPESCRIPT.md` | 194 to 120          | shorten                                                                           |
+
+**`packages/cli/guides/framework`, `library`, `platform`, `database`, `repository`, `runtime`, `shared`, `tool`, and `templates`**
+
+| File                                                         | Lines now and after          | Verdict                                                              |
+| ------------------------------------------------------------ | ---------------------------- | -------------------------------------------------------------------- |
+| astro `ASTRO.md`                                             | 66 to 55                     | rewrite: `interface Props`, which the shipped rules reject           |
+| express `API.md`                                             | 88 to 50                     | shorten or merge into `EXPRESS.md`                                   |
+| express `EXPRESS.md`                                         | 129 to 80                    | shorten: a 45-line example with project constants                    |
+| express `OPENAPI.md`                                         | 63 to 55                     | keep                                                                 |
+| fastapi `FASTAPI.md`                                         | 249 to 110                   | rewrite and wire into the kit; never installed today                 |
+| fastapi `RUNTIME.md`                                         | 248 to 0                     | merge into `FASTAPI.md`                                              |
+| nestjs `NESTJS.md`                                           | 65 to 58                     | rewrite                                                              |
+| nextjs `NEXTJS.md`                                           | 249 to 215                   | shorten; assumes three libraries                                     |
+| nextjs `SECURITY.md`                                         | 208 to 0                     | delete; one product's stack; 15 lines move to `NEXTJS.md`            |
+| react-native, react, svelte, uikit, vue                      | 71, 107, 74, 95, 70          | keep, minus the accessibility lines that repeat the general rules    |
+| swiftui `SWIFTUI.md`                                         | 112 to 85                    | shorten                                                              |
+| drizzle, react-hook-form, tanstack-query, trpc, zod, zustand | 249, 243, 249, 233, 183, 175 | shorten each by about 20% to 30%: version history, repeated sections |
+| next-intl `NEXT-INTL.md`                                     | 50 to 43                     | keep                                                                 |
+| supabase `SUPABASE.md`                                       | 238 to 150                   | shorten: one project's setup                                         |
+| postgres `POSTGRES.md`                                       | 200 to 150                   | rewrite: one project's choices; an example the SQL rules forbid      |
+| static-site `STATIC-SITE.md`                                 | 90 to 70                     | shorten; takes in the browser rules                                  |
+| browser `BROWSER.md`                                         | 33 to 0                      | merge into `STATIC-SITE.md`                                          |
+| bun, deno, node, workers                                     | 25, 26, 43, 35               | keep, trimmed                                                        |
+| http `HTTP.md`, i18n `I18N.md`                               | 65 to 45, 157 to 85          | shorten: i18n says each topic twice                                  |
+| commitlint `COMMITLINT.md`                                   | 32 to 0                      | delete; commitlint enforces it, and `GIT.md` keeps three sentences   |
+| docker `DOCKER.md`                                           | 195 to 150                   | shorten: hadolint enforces the pins                                  |
+| github-actions `GITHUB-ACTIONS.md`                           | 66 to 55                     | rewrite: its front matter names the cloudflare kit                   |
+| nginx, playwright, tailwind, xctest                          | 58, 46, 39, 92               | keep                                                                 |
+| tasks `TASKS.md`                                             | 38 to 30                     | rewrite: this repository's task names                                |
+| vitest `VITEST.md`                                           | 146 to 60                    | shorten: nearly word for word from the testing rules                 |
+| xcode `XCODE.md`                                             | 55 to 48                     | rewrite                                                              |
+| templates `docs` (8 files)                                   | 453 to 0                     | delete; never installed                                              |
+
+### F.2 Bloat across files
+
+- The level paragraph in 65 files (about 285 lines). Delete it; assembly applies levels.
+- Lists of what each linter reports, in 25 files. The agent sees these as findings, and the lists drift: one names terms
+  that `policy.json` does not hold. One sentence in a base file replaces them.
+- The same rule sits in many files. Reading the environment in one place has 8 copies, and error disclosure has 6.
+  No history in comments has 7, generated output 4, exact pins 3, and no speculative handling 3. Keep each rule in one
+  file.
+- Examples from other projects: `run_ssh`, `nvidia-smi`, `server_start`, model names, `HF_TOKEN`, Tiptap, `resend`,
+  legal pages, Cloudflare request data, and a chat proxy. Use neutral examples.
+- The corpus uses owner 236 times, contract 275 times, boundary 130 times, and declared 136 times. Many of those
+  sentences carry no action.
+
+### F.3 Rules that contradict the shipped configuration or each other
+
+| Where                                                                                                                                                                                       | Rule                                                    | Conflicts with                                                                                                         | Action                         |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- | ------------------------------ |
+| `packages/cli/guides/language/JAVASCRIPT.md:193`, `packages/cli/guides/language/TYPESCRIPT.md:148`, `packages/cli/guides/language/SWIFT.md:141`, `packages/cli/guides/language/BASH.md:231` | a TODO format with an issue or a date                   | `packages/cli/guides/general/code/COMMENTS.md:85` bans TODO; the shipped ESLint and SwiftLint rules reject that format | ban TODO everywhere            |
+| `packages/cli/guides/language/TYPESCRIPT.md:187`                                                                                                                                            | a good example that uses `reduce`                       | the shipped `unicorn/no-array-reduce`                                                                                  | a `for…of` loop                |
+| `packages/cli/guides/language/TYPESCRIPT.md:184` and three more                                                                                                                             | examples named with nouns                               | `packages/cli/guides/general/code/NAMING.md:89`: a function name starts with its action                                | rename the examples            |
+| `packages/cli/guides/framework/astro/ASTRO.md:27`                                                                                                                                           | `interface Props`                                       | the shipped `consistent-type-definitions: type`                                                                        | `type Props`                   |
+| `packages/cli/guides/language/naming/CSS.md:19`                                                                                                                                             | BEM class names                                         | the shipped kebab-case class pattern                                                                                   | drop BEM                       |
+| `packages/cli/guides/language/naming/BASH.md:56` and the bash rules                                                                                                                         | `tmp_dir`, `tmp_file`                                   | `policy.json` bans `tmp` and `temp`                                                                                    | change the names or the policy |
+| `packages/cli/guides/framework/vue/VUE.md:64`                                                                                                                                               | `useThing`                                              | `policy.json` bans `thing`                                                                                             | `useCart`                      |
+| `packages/cli/guides/platform/supabase/SUPABASE.md:127`                                                                                                                                     | a `functions/shared` folder                             | a folder named `shared` is banned; Supabase uses `_shared`                                                             | `_shared`                      |
+| `packages/cli/guides/database/postgres/POSTGRES.md:52`                                                                                                                                      | `CREATE TABLE IF NOT EXISTS`                            | `packages/cli/guides/language/SQL.md:21` forbids hiding schema drift                                                   | `CREATE TABLE`                 |
+| `packages/cli/guides/framework/express/EXPRESS.md:47`                                                                                                                                       | a cast as the good example                              | the API and TypeScript rules: a cast neither validates nor narrows                                                     | narrow through the auth helper |
+| `packages/cli/guides/general/agent/GIT.md:29`                                                                                                                                               | a subject under 72 characters                           | commitlint counts the whole header                                                                                     | "header"                       |
+| `packages/cli/guides/general/code/COMMENTS.md:36`                                                                                                                                           | no double hyphens                                       | the `--` reason syntax of ESLint and the suppressions check                                                            | exempt tool directives         |
+| `packages/cli/guides/general/code/NAMING-FILES.md:54`                                                                                                                                       | bans a `support` folder, then requires `tests/support`  | itself and `packages/cli/guides/general/code/TESTING.md:62`                                                            | the harness setting            |
+| `packages/cli/guides/general/agent/WORKING.md:55`, `:52`, `:132`                                                                                                                            | tests and full runs only when asked; no deprecated code | the Postgres, Supabase, i18n, Docker, and Playwright rules ask for them; public interfaces need deprecation            | say which rule wins            |
+| `packages/cli/guides/language/JAVASCRIPT.md:129`                                                                                                                                            | no decorators                                           | NestJS, which the nestjs kit supports                                                                                  | the TypeScript wording         |
+| `packages/cli/guides/framework/astro/ASTRO.md:21`, and the Svelte and Vue rules                                                                                                             | PascalCase file names                                   | the React and TypeScript naming rules: kebab-case for every file                                                       | pick one                       |
+
+### F.4 Stale once the audit lands
+
+- The words this guide and the guides, in about 40 places, become these rules.
+- `tests/support` in `packages/cli/guides/general/code/TESTING.md:62`, `packages/cli/guides/general/code/NAMING-FILES.md:28`,
+  and `packages/cli/guides/language/naming/PYTHON.md:33` becomes the harness setting. Section 5.5 says three
+  languages; only Python mentions it.
+- Inline `gspot-ignore` examples in `packages/cli/guides/language/python/TYPING.md:142` and both fastapi files become
+  `gspot ignore`.
+- Check IDs that change (appendix A.5), such as the fastapi check that goes and the `structure/` prefix of the bash
+  checks, and one plugin rule name (appendix A.12).
+- The front matter of `YAML.md` and `TASKS.md` names a `configs` kit; `GITHUB-ACTIONS.md` names cloudflare. Their
+  kits are files and the new actions kit.
+- 26 kit manifest entries name general rules that every repository gets anyway (section 4).
+- Eight lines carry damage from an old rename. "Required kit is invalid" means configuration, and "trusted owns" means
+  claims. They sit in the Express, NestJS, Xcode, Postgres, docs review, i18n, and template files.
