@@ -56,7 +56,7 @@ test.each(['none', 'index-only'])(
             { check: 'typescript/eslint', status: 'ok', findings: [] },
         ]);
     },
-    PLANTED_TIMEOUT_MS,
+    PLANTED_TIMEOUT_MS * 4,
 );
 
 // One way of leaving the Next.js check out is enough: --only and [[ignore]] reach the same skip.

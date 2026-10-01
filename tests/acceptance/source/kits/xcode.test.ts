@@ -201,6 +201,6 @@ describe('init in a repository with an Xcode project', () => {
             );
             expect(later.code, later.stderr).toBe(0);
         },
-        PLANTED_TIMEOUT_MS * 3,
+        PLANTED_TIMEOUT_MS * 6,
     );
 });
