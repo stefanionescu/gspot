@@ -20,9 +20,6 @@
                 "details",
                 "info",
                 "object",
-                "catalog",
-                "catalogue",
-                "corpus",
                 "taxonomy",
                 "tmp",
                 "temp"
@@ -96,45 +93,9 @@
                 "loadbearing"
             ]
         },
-        "verbs": {
-            "removable": true,
-            "terms": [
-                "render",
-                "sync",
-                "synchronize",
-                "synchronise",
-                "materialize",
-                "materialise",
-                "coerce",
-                "scoped",
-                "bind"
-            ]
-        },
-        "verbs-strict": {
-            "removable": true,
-            "terms": [
-                "load",
-                "loaded",
-                "loader",
-                "loaders",
-                "loading",
-                "fetch",
-                "resolve",
-                "resolving",
-                "resolution",
-                "probe",
-                "probes",
-                "probed",
-                "probing"
-            ]
-        },
         "conjunctions": {
             "removable": true,
             "terms": ["and", "or", "with", "when", "what", "whatever", "once", "plus"]
-        },
-        "terminology": {
-            "removable": false,
-            "terms": ["fixture", "fixtures", "shell"]
         },
         "test": {
             "removable": true,
@@ -579,12 +540,6 @@
             "paths": ["**/.mise/tasks/**", "**/scripts/steps/**"],
             "categories": ["files"],
             "structuralPrefix": "^\\d{2}-"
-        },
-        {
-            "paths": ["**/*.md"],
-            "categories": ["files"],
-            "structuralPrefix": "^\\d{2}-",
-            "reason": "Documents read in order carry a two-digit prefix."
         },
         {
             "paths": ["**"],

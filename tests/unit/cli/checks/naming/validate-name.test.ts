@@ -2,7 +2,6 @@ import { test, expect, describe } from 'bun:test';
 import { hasCase } from '#cli/checks/naming/cases.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
 import { compileTerms } from '#cli/checks/naming/match.ts';
-import { shippedPolicy } from '#cli/checks/naming/policy.ts';
 import { nameProblems } from '#cli/checks/naming/validate-name.ts';
 import type { Identifier, EffectivePolicy } from '#cli/types/checks.ts';
 
@@ -121,17 +120,6 @@ describe('nameProblems', () => {
             nameProblems(identifier('handleSubmit'), { policy, isReactFile: true, isTestFile: false }),
         ).toStrictEqual([]);
     });
-});
-
-test('the shipped terminology ban applies inside tests', () => {
-    const terms = compileTerms(shippedPolicy().groups['terminology']!.terms, 'terminology group');
-    const context = { ...plain, policy: { ...policy, terms }, isTestFile: true };
-    for (const term of terms) {
-        const problems = nameProblems(identifier(term.term, 'variables', 'tests/names.test.ts'), context);
-        expect(problems.find((problem) => problem.rule === 'banned-term')).toMatchObject({
-            source: 'terminology group',
-        });
-    }
 });
 
 test('an unknown case never matches an identifier or invokes an inherited object member', () => {
