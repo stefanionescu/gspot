@@ -17,7 +17,7 @@ test('TOML task ownership refuses malformed and edited fields and creates new ta
         const installed = readFileSync(join(directory.path, 'mise.toml'), 'utf8');
         expect(parseToml(installed)).toStrictEqual({ tasks: { 'gspot:check': { run: 'gspot check' } } });
         writeFileSync(join(directory.path, 'mise.toml'), installed.replace('gspot check', 'authored check'));
-        expect(owner.restore('mise.toml')).toBe('preserved');
+        expect(owner.applyPlan(owner.proposeRestoration('mise.toml'))).toBe('preserved');
         expect(readFileSync(join(directory.path, 'mise.toml'), 'utf8')).toContain('authored check');
     } finally {
         owner.close();
@@ -35,7 +35,7 @@ test('edited and repeated managed blocks are preserved without overwriting their
             .replace('installed instructions', 'authored instructions');
         writeFileSync(join(directory.path, 'AGENTS.md'), edited);
         expect(owner.replaceBlock('AGENTS.md', 'replacement', 'markdown')).toBe('preserved');
-        expect(owner.restore('AGENTS.md')).toBe('preserved');
+        expect(owner.applyPlan(owner.proposeRestoration('AGENTS.md'))).toBe('preserved');
         expect(owner.read('AGENTS.md')!.bytes.toString('utf8')).toBe(edited);
         writeFileSync(join(directory.path, 'AGENTS.md'), edited + edited);
         expect(() => owner.replaceBlock('AGENTS.md', 'replacement', 'markdown')).toThrow('incomplete or repeated');
@@ -60,7 +60,7 @@ test('shared JSON preserves changed managed keys and rejects malformed input', a
                 owner.proposeConfiguration('tsconfig.json', 'json', [{ path: ['extends'], value: './next.json' }]),
             ),
         ).toBe('preserved');
-        expect(owner.restore('tsconfig.json')).toBe('preserved');
+        expect(owner.applyPlan(owner.proposeRestoration('tsconfig.json'))).toBe('preserved');
         expect(owner.read('tsconfig.json')!.bytes.toString('utf8')).toBe(authored);
         writeFileSync(join(directory.path, 'invalid.json'), '{ unfinished');
         expect(() =>

@@ -1,10 +1,8 @@
 // Applying plans: each batch is logged before a byte moves, so an interruption can be recovered.
-import type { z } from 'zod';
 import { isDeepStrictEqual } from 'node:util';
 import type { Read } from '#cli/types/platform.ts';
-import type { originalSchema } from '#cli/lifecycle/log.ts';
 import { matches, identity } from '#cli/lifecycle/ownership/log.ts';
-import type { Log, Outcome, Planned, Original, PreparedWrite, OwnershipEntry } from '#cli/types/lifecycle/lifecycle.ts';
+import type { Log, Outcome, Planned } from '#cli/types/lifecycle/lifecycle.ts';
 
 // The file as it is now, read as a link entry when either side of the plan is a link.
 function foundRead(log: Log, path: string, current: Read | undefined, next: Read | undefined): Read | undefined {
@@ -34,52 +32,16 @@ function assertPlansCurrent(log: Log, plans: Planned[], proposed: ReadonlyMap<st
     }
 }
 
-// The backup of the current bytes, taken when they leave: a removal or a change.
-function backupFor(log: Log, plan: Planned): z.infer<typeof originalSchema> | undefined {
-    const { path, current, next } = plan;
-    if (current === undefined) return undefined;
-    const isReplaced = next === undefined || !matches(current, identity(next));
-    return isReplaced ? log.backup(path, current) : undefined;
-}
-
-// The original an entry carries into a write. The first change gspot makes to an adopted file backs up the bytes it
-// held, and that backup becomes the original.
-function carriedOriginal(kept: OwnershipEntry['original'], recovery: Original | undefined): OwnershipEntry['original'] {
-    if (kept === undefined || kept.backup !== undefined || recovery === undefined) return kept;
-    const isSameBytes = recovery.hash === kept.hash && recovery.mode === kept.mode;
-    return isSameBytes ? recovery : kept;
-}
-
-// The original an entry records: the backup of the file gspot first replaced, or, for a file that already held the
-// exact bytes, their identity alone.
-function recordedOriginal(plan: Planned, recovery: Original | undefined): OwnershipEntry['original'] {
-    const { current, entry, saveOriginal } = plan;
-    if (saveOriginal === true) return recovery ?? (current === undefined ? undefined : identity(current));
-    return carriedOriginal(entry?.original, recovery);
-}
-
-// The record a changed plan writes, with the original its entry keeps.
-function prepareRecord(log: Log, plan: Planned): PreparedWrite | undefined {
-    const { path, current, next, entry } = plan;
-    if (entry === undefined && plan.status !== 'changed') return undefined;
-    const recovery = backupFor(log, plan);
-    const original = recordedOriginal(plan, recovery);
-    const recordedEntry =
-        entry === undefined ? undefined : { ...entry, ...(original === undefined ? {} : { original }) };
-    return { path, current, next, entry: recordedEntry, recovery };
-}
-
 // Writes the pending records, writes every file, and settles the log.
-function write(log: Log, prepared: PreparedWrite[]): void {
-    log.state.pending = prepared.map(({ path, current, next, entry, recovery }) => ({
+function write(log: Log, prepared: Planned[]): void {
+    log.state.pending = prepared.map(({ path, current, next, entry }) => ({
         path,
         ...(current === undefined ? {} : { before: identity(current) }),
-        ...(recovery === undefined ? {} : { beforeBackup: recovery }),
         ...(next === undefined ? {} : { after: identity(next) }),
         ...(entry === undefined ? {} : { entry }),
     }));
     log.save();
-    // Publish regular targets before links, including original targets restored in this batch.
+    // Publish regular targets before links, so a link finds its target.
     const ordered = prepared.toSorted(
         (left, right) => Number(left.next?.isLink === true) - Number(right.next?.isLink === true),
     );
@@ -108,10 +70,8 @@ export function applyPlans(log: Log, plans: Planned[]): Outcome[] {
     const conflict = plans.find((plan) => plan.status === 'preserved');
     if (conflict !== undefined)
         throw new Error(`Preserved edited or unowned ${conflict.path}. Review that file before applying.`);
-    const prepared = plans.flatMap((plan) => {
-        const record = prepareRecord(log, plan);
-        return record === undefined ? [] : [record];
-    });
+    // A plan writes when it changes the file or records a new entry.
+    const prepared = plans.filter((plan) => plan.entry !== undefined || plan.status === 'changed');
     if (prepared.length > 0) write(log, prepared);
     return plans.map((plan) => plan.status);
 }

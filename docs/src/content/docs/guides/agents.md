@@ -46,6 +46,5 @@ still run. After a bypass, run `gspot check` yourself.
 
 ## Remove the guides
 
-`gspot uninstall` removes the guides and the managed blocks. A file gspot created is removed
-only when you did not edit it, and an original file comes back when gspot replaced it. See
-[uninstall](/guides/uninstall/).
+Run `gspot set guides.install false`. It removes the guides and the managed blocks. A file
+gspot created goes only when you did not edit it.

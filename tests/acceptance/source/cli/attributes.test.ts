@@ -6,12 +6,11 @@ import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
 
-test('generated attributes preserve LF through autocrlf checkout and restore authored attributes', async () => {
+test('generated attributes preserve LF through autocrlf checkout', async () => {
     await using sandbox = await testdir();
-    const original = '*.txt text\n';
     await createFileTree(sandbox.path, {
         'gspot.toml': policyOf([]),
-        '.gitattributes': original,
+        '.gitattributes': '*.txt text\n',
     });
     expect(git(sandbox.path, ['init', '-q']).code).toBe(0);
     const applied = await run(sandbox.path, ['apply']);
@@ -30,7 +29,4 @@ test('generated attributes preserve LF through autocrlf checkout and restore aut
     const checked = git(sandbox.path, ['-c', 'core.autocrlf=true', 'checkout-index', '--force', '--', path]);
     expect(checked.code, checked.stderr).toBe(0);
     expect(readFileSync(join(sandbox.path, path))).toStrictEqual(bytes);
-    const removed = await run(sandbox.path, ['uninstall', '--yes']);
-    expect(removed.code, removed.stdout + removed.stderr).toBe(0);
-    expect(readFileSync(join(sandbox.path, '.gitattributes'), 'utf8')).toBe(original);
 });

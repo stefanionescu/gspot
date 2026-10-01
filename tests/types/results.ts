@@ -67,8 +67,6 @@ export type CreateConsumerResult = {
         timeoutMs: number;
     };
     setupOptions: { env: Record<string, string>; cwd: string; timeoutMs: number };
-    editorconfig: string;
-    formatter: string;
     workspace: string;
     [Symbol.asyncDispose]: () => Promise<void>;
 };

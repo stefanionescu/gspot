@@ -7,7 +7,6 @@ import { openSession } from '#cli/execution/session.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { applyBlock } from '#cli/lifecycle/managed-blocks.ts';
-import { uninstallCommand } from '#cli/commands/uninstall.ts';
 import { kitManifests, parseManifest, gitignoreBlock } from '#cli/kits/manifests.ts';
 import { MANAGED_IGNORES_CONFIGURATION } from '#tests/inputs/integration/cli/generation/generation.ts';
 
@@ -32,11 +31,6 @@ test.each([true, false])(
         expect(installed).toContain('.gspot/cache/');
         await applyAll(await openSession(repository.path));
         expect(readFileSync(path, 'utf8')).toBe(installed);
-        const removed = await uninstallCommand({ cwd: repository.path, yes: true, isDryRun: false });
-        expect(removed.exitCode).toBe(0);
-        // Nothing was kept for its edits, so the recovery data and the ignore block leave with the .gspot folder.
-        expect(existsSync(join(repository.path, '.gspot'))).toBe(false);
-        expect(existsSync(path) ? readFileSync(path, 'utf8') : undefined).toBe(authored ? original : undefined);
     },
 );
 

@@ -26,11 +26,7 @@ function configurationPlans(owner: Owner, generated: Generated, replace: boolean
 function recordPreserved(report: ApplyReport, plans: Planned[]): void {
     const preserved = plans.filter((plan) => plan.status === 'preserved');
     report.preserved.push(...preserved.map((plan) => plan.path));
-    for (const plan of preserved) {
-        report.notes.push(`preserved edited or unowned ${plan.path}`);
-        if (plan.previous?.original?.backup !== undefined)
-            report.notes.push(`original for ${plan.path} retained at ${plan.previous.original.backup}`);
-    }
+    for (const plan of preserved) report.notes.push(`preserved edited or unowned ${plan.path}`);
 }
 
 // An installation no selected kit needs any more goes whole, and so do the Vale packages once nothing checks prose.

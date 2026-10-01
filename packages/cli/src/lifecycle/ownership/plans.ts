@@ -1,7 +1,7 @@
 // What the owner proposes for one file: a replacement, a managed block, a merged configuration, or a retirement.
 import { isDeepStrictEqual } from 'node:util';
 import type { Read } from '#cli/types/platform.ts';
-import { ORIGINAL_KINDS } from '#cli/config/lifecycle.ts';
+import { ADOPTED_KINDS } from '#cli/config/lifecycle.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/platform.ts';
 import { matches, identity } from '#cli/lifecycle/ownership/log.ts';
 import { blockSpan, applyBlock } from '#cli/lifecycle/managed-blocks.ts';
@@ -33,7 +33,7 @@ function isPreservedReplacement(
     return !matches(current, existing.installed) && kind !== 'policy' && !(replace && expected !== undefined);
 }
 
-// The plan that installs the next bytes, recording the original the entry already keeps.
+// The plan that installs the next bytes. A file gspot first records while it already holds them is adopted.
 function changedReplacement(
     path: string,
     current: Read | undefined,
@@ -42,22 +42,10 @@ function changedReplacement(
     kind: OwnershipEntry['kind'],
 ): Planned & { entry: OwnershipEntry } {
     const installed = identity(next);
-    const entry: OwnershipEntry = {
-        path,
-        kind,
-        installed,
-        ...(existing?.original === undefined ? {} : { original: existing.original }),
-    };
     const status = matches(current, installed) ? 'unchanged' : 'changed';
-    return {
-        path,
-        current,
-        previous: existing,
-        next,
-        entry,
-        saveOriginal: existing === undefined && current !== undefined && ORIGINAL_KINDS.has(kind),
-        status,
-    };
+    const isAdopted = existing === undefined && status === 'unchanged' && ADOPTED_KINDS.has(kind);
+    const entry: OwnershipEntry = { path, kind, installed, ...(isAdopted ? { adopted: true } : {}) };
+    return { path, current, previous: existing, next, entry, status };
 }
 
 // The text of a managed block's file, refused when the file is not UTF-8 text.
@@ -114,17 +102,6 @@ function blockPlan(
     return plan;
 }
 
-// The plan that retires a file: its record loses the installed identity and keeps the original.
-function retirementPlan(path: string, current: Read, existing: OwnershipEntry | undefined): Planned {
-    const kind = existing?.kind ?? 'config';
-    const entry: OwnershipEntry = {
-        path,
-        kind,
-        ...(existing?.original === undefined ? {} : { original: existing.original }),
-    };
-    return { path, current, previous: existing, entry, saveOriginal: existing === undefined, status: 'changed' };
-}
-
 /**
  * The file as it is now, read as a link entry when the plan or the record involves a link.
  * @param log the open log
@@ -139,7 +116,7 @@ export function currentRead(
     existing: OwnershipEntry | undefined,
     next?: Read,
 ): Read | undefined {
-    const isLink = [next, existing?.installed, existing?.original].some((read) => read?.isLink === true);
+    const isLink = [next, existing?.installed].some((read) => read?.isLink === true);
     return isLink ? log.files.readEntry(path) : log.files.read(path);
 }
 
@@ -230,7 +207,7 @@ export function proposeConfiguration(
 }
 
 /**
- * Proposes the removal of a file whose bytes the caller reviewed.
+ * Proposes the removal of a file whose bytes the caller reviewed, with its record. Git keeps the bytes.
  * @param log the open log
  * @param path the file
  * @param expected the bytes the caller reviewed, which must still be the file's
@@ -244,5 +221,5 @@ export function proposeRetirement(log: Log, path: string, expected: Read): Plann
     if (current === undefined) return { path, current, previous: existing, status: 'unchanged' };
     if (existing !== undefined && !matches(current, existing.installed))
         return { path, current, previous: existing, status: 'preserved' };
-    return retirementPlan(path, current, existing);
+    return { path, current, previous: existing, status: 'changed' };
 }

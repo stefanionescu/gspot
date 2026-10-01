@@ -7,18 +7,16 @@ import { initArgs } from '#tests/support/cli/init.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { git, commitAll } from '#tests/support/cli/git.ts';
-import { keptMode } from '#tests/support/cli/platforms.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { containing, containingAll } from '#tests/support/expectations.ts';
-import { statSync, chmodSync, existsSync, renameSync, unlinkSync, readFileSync } from 'node:fs';
+import { chmodSync, existsSync, renameSync, unlinkSync, readFileSync } from 'node:fs';
 
-// Edited generated configuration is preserved; recovery restores the authored source and mode.
-async function expectSpellingRestoration(
+// Edited generated configuration is preserved, and apply writes a deleted one again.
+async function expectConfigurationRepaired(
     root: string,
     environment: Record<string, string>,
     configuration: string,
-    original: string,
 ): Promise<void> {
     const args = ['check', '--only', 'spelling/typos', '--no-cache', '--json'];
     chmodSync(join(root, '.gspot/config/typos.toml'), 0o644);
@@ -36,10 +34,6 @@ async function expectSpellingRestoration(
     const restored = await run(root, ['apply'], environment);
     expect(restored.code, restored.stdout + restored.stderr).toBe(0);
     expect(readFileSync(join(root, '.gspot/config/typos.toml'), 'utf8')).toBe(configuration);
-    const removed = await run(root, ['uninstall', '--yes'], environment);
-    expect(removed.code, removed.stdout + removed.stderr).toBe(0);
-    expect(readFileSync(join(root, 'nested/typos.toml'), 'utf8')).toBe(original);
-    expect(statSync(join(root, 'nested/typos.toml')).mode & 0o777).toBe(keptMode(0o640));
 }
 
 test(
@@ -126,7 +120,7 @@ test(
 );
 
 test(
-    'init deletes a nested spelling configuration, checks ignore rogue native files, and uninstall restores it',
+    'init deletes a nested spelling configuration, and checks ignore rogue native files',
     async () => {
         await using sandbox = await testdir();
         const original = `[default]\nlocale = "en-gb"\n[default.extend-words]\n${TYPO.the} = "${TYPO.the}"\n[files]\nextend-exclude = ["src/**"]\n`;
@@ -135,7 +129,6 @@ test(
             'nested/typos.toml': original,
             'nested/src/ignored.txt': `${TYPO.receive}\n`,
         });
-        chmodSync(join(sandbox.path, 'nested/typos.toml'), 0o640);
         const environment = { PATH: toolsPath(['typos']) };
         const initialized = await run(sandbox.path, initArgs(['spelling']), environment);
         expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
@@ -168,7 +161,7 @@ test(
             expect(readFileSync(join(sandbox.path, path), 'utf8')).toBe(text);
         const corrected = await run(sandbox.path, args, environment);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        await expectSpellingRestoration(sandbox.path, environment, configuration, original);
+        await expectConfigurationRepaired(sandbox.path, environment, configuration);
     },
     PLANTED_TIMEOUT_MS,
 );

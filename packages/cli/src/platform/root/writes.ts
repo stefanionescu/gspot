@@ -49,8 +49,8 @@ function stageLink(temporary: string, link: string, value: Read): void {
     }
 }
 
-// Windows cannot rename over a read-only file. The owner logs its saved bytes before this removal,
-// so an interrupted replacement can restore the absent target.
+// Windows cannot rename over a read-only file, so it goes first. The owner's recovery treats an absent target of an
+// interrupted replacement as not written.
 function mustUnlinkFirst(expected: Read | undefined): boolean {
     if (process.platform !== 'win32' || expected === undefined || expected.isLink === true) return false;
     return (expected.mode & OWNER_WRITE_BIT) === 0;

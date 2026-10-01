@@ -34,7 +34,7 @@ mock.module('node:fs', () => ({ ...fs, renameSync(from, to) {
         if (exists(to) && (stat(to).mode & 0o200) === 0)
             throw Object.assign(new Error('Read-only destination'), {code: 'EPERM'});
         if (read(from).equals(Buffer.from('installed\n'))) {
-            if (point === 'interruption' || point === 'damaged backup') process.exit(73);
+            if (point === 'interruption') process.exit(73);
             if (point === 'edited') { write(to, 'developer edit\n'); process.exit(73); }
             if ((point === 'error' || point === 'restoration error') && !failed) { failed = true; throw new Error('Publication failed'); }
         }
@@ -46,7 +46,7 @@ const {openOwner} = await import(${JSON.stringify(implementation)});
 const owner = openOwner(process.cwd());
 try {
     owner.replace('config.txt', {bytes: Buffer.from('installed\n'), mode: 0o444}, 'config', true);
-    if (point !== 'success') throw new Error('Expected publication failure');
+    throw new Error('Expected publication failure');
 } catch (error) {
     if (point === 'restoration error') {
         if (!(error instanceof AggregateError) || error.errors.map(entry => entry.message).join(',') !== 'Publication failed,Restoration failed') throw error;
@@ -59,92 +59,47 @@ try {
         stderr: 'pipe',
     });
     expect(child.exitCode, child.stdout.toString() + child.stderr.toString()).toBe(
-        ['success', 'error', 'restoration error'].includes(point) ? 0 : 73,
+        ['error', 'restoration error'].includes(point) ? 0 : 73,
     );
-    if (point === 'error') {
-        expect(readFileSync(destination)).toStrictEqual(original);
-        expect(statSync(destination).mode & 0o777).toBe(keptMode(0o444));
-    }
-    const state = ownershipSchema.parse(
-        JSON.parse(readFileSync(join(directory.path, '.gspot/state/ownership.json'), 'utf8')),
-    );
-    return { directory, original, destination, backup: state.pending?.[0]?.beforeBackup?.backup };
+    return { directory, original, destination };
 }
 
-// What recovery leaves behind: the file's bytes and mode, and what the owner still records as installed.
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Four recovery cases compare the same three fields of the restored file.
-function recovered(owner: ReturnType<typeof openOwner>, { destination }: Published) {
-    return {
-        bytes: readFileSync(destination),
-        mode: statSync(destination).mode & 0o777,
-        installed: owner.installedPaths(),
-    };
-}
-
-test('a completed read-only replacement restores the original bytes on request with Windows semantics', async () => {
-    const published = await publish('success');
+test('a failed read-only replacement keeps the original bytes and mode with Windows semantics', async () => {
+    const published = await publish('error');
     await using directory = published.directory;
     const owner = openOwner(directory.path);
     try {
-        expect(owner.restore('config.txt')).toBe('changed');
-        expect(recovered(owner, published)).toStrictEqual({ bytes: published.original, mode: 0o444, installed: [] });
+        expect(readFileSync(published.destination)).toStrictEqual(published.original);
+        expect(statSync(published.destination).mode & 0o777).toBe(keptMode(0o444));
+        expect(owner.installedPaths()).toStrictEqual([]);
     } finally {
         owner.close();
     }
 });
 
-test.each(['error', 'interruption'] as const)(
-    'read-only replacement recovers the original bytes after %s with Windows semantics',
+test.each(['interruption', 'restoration error'] as const)(
+    'after %s, a read-only replacement removed on Windows counts as not written, and the next write publishes it',
     async (point) => {
         const published = await publish(point);
         await using directory = published.directory;
         const owner = openOwner(directory.path);
         try {
-            expect(recovered(owner, published)).toStrictEqual({
-                bytes: published.original,
-                mode: 0o444,
-                installed: [],
-            });
+            expect(owner.read('config.txt')).toBeUndefined();
+            expect(owner.installedPaths()).toStrictEqual([]);
+            expect(owner.replace('config.txt', { bytes: Buffer.from('installed\n'), mode: 0o444 }, 'config')).toBe(
+                'changed',
+            );
         } finally {
             owner.close();
         }
     },
 );
 
-test('failed immediate restoration preserves both errors and leaves log recovery available', async () => {
-    const published = await publish('restoration error');
-    await using directory = published.directory;
-    expect(() => readFileSync(published.destination)).toThrow();
-    const owner = openOwner(directory.path);
-    try {
-        expect(recovered(owner, published)).toStrictEqual({ bytes: published.original, mode: 0o444, installed: [] });
-    } finally {
-        owner.close();
-    }
-});
-
-test('a damaged backup refuses recovery until the backup is put back', async () => {
-    const published = await publish('damaged backup');
-    await using directory = published.directory;
-    const backup = join(directory.path, published.backup!);
-    writeFileSync(backup, 'damaged');
-    expect(() => openOwner(directory.path)).toThrow('backup is missing or changed');
-    expect(() => readFileSync(published.destination)).toThrow();
-    writeFileSync(backup, published.original);
-    const owner = openOwner(directory.path);
-    try {
-        expect(recovered(owner, published)).toStrictEqual({ bytes: published.original, mode: 0o444, installed: [] });
-    } finally {
-        owner.close();
-    }
-});
-
 test('a file edited during an interrupted replacement is kept, and recovery refuses to overwrite it', async () => {
     const published = await publish('edited');
     await using directory = published.directory;
     expect(() => openOwner(directory.path)).toThrow('conflicts with edited');
     expect(readFileSync(published.destination, 'utf8')).toBe('developer edit\n');
-    expect(readFileSync(join(directory.path, published.backup!))).toStrictEqual(published.original);
 });
 
 test('an inconsistent interrupted log cannot acquire ownership of current bytes', async () => {
@@ -173,28 +128,22 @@ test('an inconsistent interrupted log cannot acquire ownership of current bytes'
     expect(readFileSync(record, 'utf8')).toBe(inconsistent);
 });
 
-test.each(['first backup', 'second backup', 'log'])(
-    'a full disk during %s preserves every original and permits a corrected batch',
-    async (point) => {
-        await using directory = await testdir();
-        const original = Buffer.from([0, 255, 10, 13, 42]);
-        for (const name of ['first.bin', 'second.bin'])
-            writeFileSync(join(directory.path, name), original, { mode: 0o444 });
-        const originalMode = statSync(join(directory.path, 'first.bin')).mode & 0o777;
-        const program = `
+test('a full disk while logging a batch keeps every file and permits a corrected batch', async () => {
+    await using directory = await testdir();
+    const original = Buffer.from([0, 255, 10, 13, 42]);
+    for (const name of ['first.bin', 'second.bin'])
+        writeFileSync(join(directory.path, name), original, { mode: 0o444 });
+    const originalMode = statSync(join(directory.path, 'first.bin')).mode & 0o777;
+    const program = `
 import { mock } from 'bun:test';
 const boundary = await import(${JSON.stringify(boundary)});
 const open = boundary.openRoot;
-let backups = 0;
 mock.module(${JSON.stringify(boundary)}, () => ({
     ...boundary,
     openRoot(root) {
         const files = open(root);
         return { ...files, write(path, next, expected) {
-            if (path.endsWith('.original')) backups++;
-            const point = ${JSON.stringify(point)};
-            if ((point === 'log' && path === '.gspot/state/ownership.json') ||
-                (path.endsWith('.original') && backups === (point === 'first backup' ? 1 : point === 'second backup' ? 2 : 0)))
+            if (path === '.gspot/state/ownership.json')
                 throw Object.assign(new Error('No space left on device'), { code: 'ENOSPC' });
             files.write(path, next, expected);
         }};
@@ -208,30 +157,22 @@ try {
     console.log(JSON.stringify({ code: error.code }));
 } finally { owner.close(); }
 `;
-        const { stdout, stderr, code } = await processes.run([process.execPath, '-e', program], {
-            cwd: directory.path,
-        });
-        expect(code, stderr).toBe(0);
-        expect(JSON.parse(stdout)).toStrictEqual({ code: 'ENOSPC' });
-        for (const name of ['first.bin', 'second.bin']) {
-            expect(readFileSync(join(directory.path, name))).toStrictEqual(original);
-            expect(statSync(join(directory.path, name)).mode & 0o777).toBe(originalMode);
-        }
-        expect(readOwnership(directory.path).files).toStrictEqual([]);
-        const owner = openOwner(directory.path);
-        try {
-            owner.applyPlans(
-                ['first.bin', 'second.bin'].map((path) =>
-                    owner.proposeReplacement(path, { bytes: Buffer.from('installed'), mode: 0o444 }, 'config', true),
-                ),
-            );
-            owner.applyPlans(['first.bin', 'second.bin'].map((path) => owner.proposeRestoration(path)));
-            for (const name of ['first.bin', 'second.bin']) {
-                expect(readFileSync(join(directory.path, name))).toStrictEqual(original);
-                expect(statSync(join(directory.path, name)).mode & 0o777).toBe(originalMode);
-            }
-        } finally {
-            owner.close();
-        }
-    },
-);
+    const { stdout, stderr, code } = await processes.run([process.execPath, '-e', program], { cwd: directory.path });
+    expect(code, stderr).toBe(0);
+    expect(JSON.parse(stdout)).toStrictEqual({ code: 'ENOSPC' });
+    for (const name of ['first.bin', 'second.bin']) {
+        expect(readFileSync(join(directory.path, name))).toStrictEqual(original);
+        expect(statSync(join(directory.path, name)).mode & 0o777).toBe(originalMode);
+    }
+    expect(readOwnership(directory.path).files).toStrictEqual([]);
+    const owner = openOwner(directory.path);
+    try {
+        const plans = ['first.bin', 'second.bin'].map((path) =>
+            owner.proposeReplacement(path, { bytes: Buffer.from('installed'), mode: 0o444 }, 'config', true),
+        );
+        expect(owner.applyPlans(plans)).toStrictEqual(['changed', 'changed']);
+        expect(readFileSync(join(directory.path, 'first.bin'), 'utf8')).toBe('installed');
+    } finally {
+        owner.close();
+    }
+});

@@ -9,8 +9,8 @@ import type { InstallJson } from '#cli/types/commands.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
 import { rejection } from '#tests/support/expectations.ts';
 import { gspot as CLI } from '#tests/support/cli/command.ts';
+import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
 import { installPackageProject } from '#cli/tools/packages/project.ts';
-import { chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { LOCKS, PACKAGE_PROJECTS } from '#tests/inputs/integration/tools/packages.ts';
 import { readPackageInputs, createPackageProject } from '#tests/support/cli/package-project.ts';
 
@@ -93,8 +93,6 @@ ${lock.toString('utf8')}
         expect(repaired.written).toContain(`.gspot/${LOCKS[client]}`);
         expect(repaired.notes.filter((note) => note.startsWith('preserved'))).toStrictEqual([]);
         expect(readFileSync(lockPath, 'utf8')).not.toContain('<<<<<<<');
-        // The conflicted lock was a generated file, so no copy of it is kept.
-        expect(existsSync(join(root, '.gspot/state/recovery'))).toBe(false);
     },
     120_000,
 );

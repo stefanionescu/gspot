@@ -5,21 +5,19 @@ import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { initArgs } from '#tests/support/cli/init.ts';
-import { keptMode } from '#tests/support/cli/platforms.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
-import { statSync, chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 
 const INIT = initArgs(['bash']);
 
-test('apply and uninstall preserve later edits and unowned content while restoring a replace original', async () => {
+test('init deletes a replaced file, and apply preserves later edits and unowned content', async () => {
     await using directory = await testdir();
-    const original = 'disable=SC2086\n';
-    await createFileTree(directory.path, { '.shellcheckrc': original, 'entry.sh': 'echo example\n' });
-    chmodSync(join(directory.path, '.shellcheckrc'), 0o640);
+    await createFileTree(directory.path, { '.shellcheckrc': 'disable=SC2086\n', 'entry.sh': 'echo example\n' });
     commitAll(directory.path);
     const initialized = await run(directory.path, INIT);
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
+    expect(existsSync(join(directory.path, '.shellcheckrc'))).toBe(false);
     const generated = join(directory.path, '.gspot/config/shellcheckrc');
     const edited = `${readFileSync(generated, 'utf8')}# Authored after installation.\n`;
     chmodSync(generated, 0o644);
@@ -29,30 +27,19 @@ test('apply and uninstall preserve later edits and unowned content while restori
     expect(applied.code, applied.stdout + applied.stderr).toBe(2);
     expect(applied.stderr).toContain('version pin was not changed');
     expect(readFileSync(generated, 'utf8')).toBe(edited);
-    const removed = await run(directory.path, ['uninstall', '--yes']);
-    expect(removed.code, removed.stdout + removed.stderr).toBe(0);
-    expect(removed.stdout).toContain('preserved edited or unowned .gspot/config/shellcheckrc');
-    expect(readFileSync(generated, 'utf8')).toBe(edited);
     expect(readFileSync(join(directory.path, '.gspot/authored.txt'), 'utf8')).toBe('Preserve this file.\n');
-    expect(readFileSync(join(directory.path, '.shellcheckrc'), 'utf8')).toBe(original);
-    expect(statSync(join(directory.path, '.shellcheckrc')).mode & 0o777).toBe(keptMode(0o640));
-    // No original waits for a kept file, so the recovery data and the ignore block that init created go.
-    expect(existsSync(join(directory.path, '.gspot/state'))).toBe(false);
-    expect(existsSync(join(directory.path, '.gitignore'))).toBe(false);
 });
 
-test('a generated plan cannot overwrite lifecycle recovery data', async () => {
+test('a generated plan cannot write into the lifecycle state folder', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'gspot.toml': policyOf(['bash'], '[guides]\ndirectory = ".gspot/state/recovery"\n'),
-        '.gspot/state/recovery/authored.txt': 'preserve recovery\n',
+        'gspot.toml': policyOf(['bash'], '[guides]\ndirectory = ".gspot/state/notes"\n'),
+        '.gspot/state/notes/authored.txt': 'preserve notes\n',
     });
     const refused = await run(directory.path, ['apply']);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
     expect(refused.stdout + refused.stderr).toContain('Lifecycle metadata is not a generated target');
-    expect(readFileSync(join(directory.path, '.gspot/state/recovery/authored.txt'), 'utf8')).toBe(
-        'preserve recovery\n',
-    );
+    expect(readFileSync(join(directory.path, '.gspot/state/notes/authored.txt'), 'utf8')).toBe('preserve notes\n');
     expect(existsSync(join(directory.path, '.gspot/config/shellcheckrc'))).toBe(false);
 });
 

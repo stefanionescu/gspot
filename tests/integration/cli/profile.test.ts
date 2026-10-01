@@ -10,8 +10,7 @@ import { applyCommand } from '#cli/commands/apply/command.ts';
 import { exportedProfile } from '#cli/policy/profiles/export.ts';
 import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import { failure, rejection } from '#tests/support/expectations.ts';
-import { planUninstall, applyUninstall } from '#cli/commands/uninstall.ts';
-import { statSync, chmodSync, existsSync, symlinkSync, readFileSync } from 'node:fs';
+import { statSync, chmodSync, symlinkSync, readFileSync } from 'node:fs';
 
 describe('profile file paths', () => {
     test('an absolute profile loads from a different working directory', async () => {
@@ -95,7 +94,7 @@ test.each(['jest', 'vitest'])(
     },
 );
 
-test('profile publication is idempotent, preserves edits, and survives apply and uninstall', async () => {
+test('profile publication is idempotent, preserves edits, and survives apply', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
         'gspot.toml': policyOf([], '[guides]\ninstall = false\n'),
@@ -108,7 +107,6 @@ test('profile publication is idempotent, preserves edits, and survives apply and
     expect(readOwnership(directory.path).files.filter((entry) => entry.kind === 'export')).toHaveLength(1);
     const applied = await applyCommand({ cwd: directory.path, isDryRun: false });
     expect(applied.exitCode).toBe(0);
-    applyUninstall(directory.path, planUninstall(directory.path));
     expect(readFileSync(path)).toStrictEqual(first);
     await Bun.write(path, `${first.toString('utf8')}\n# Authored note.\n`);
     expect(failure(() => exportCommand(directory.path, 'shared.profile.toml'))?.message).toContain(
@@ -182,7 +180,7 @@ test('profile publication recovers an interrupted write through the lifecycle lo
     expect(reread.tables.kits).toStrictEqual([]);
 });
 
-test('profile publication preserves permissions when adopting identical existing bytes, and copies nothing', async () => {
+test('profile publication preserves permissions when adopting identical existing bytes', async () => {
     await using directory = await testdir();
     const policy = policyOf([]);
     const profile = exportedProfile(policy, 'shared.profile.toml');
@@ -192,8 +190,6 @@ test('profile publication preserves permissions when adopting identical existing
     expect(exportCommand(directory.path, 'shared.profile.toml').exitCode).toBe(0);
     expect(readFileSync(path, 'utf8')).toBe(profile.text);
     expect(statSync(path).mode & 0o200).toBe(0);
-    expect(readOwnership(directory.path).files[0]?.original).toBeUndefined();
-    expect(existsSync(join(directory.path, '.gspot/state/recovery'))).toBe(false);
 });
 
 test('profiles round-trip license allowances and exact-version exceptions', async () => {

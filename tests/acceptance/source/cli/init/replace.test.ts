@@ -50,7 +50,7 @@ function expectPointers(root: string): void {
 }
 
 test(
-    'replaces the files of the selected tools, lists the lint folder, and uninstall restores every original',
+    'replaces the files of the selected tools and lists the lint folder',
     async () => {
         await using sandbox = await testdir();
         const originals = {
@@ -67,7 +67,6 @@ test(
             'README.md': '# planted\n',
             'quality/lint.sh': script,
         });
-        chmodSync(join(sandbox.path, '.shellcheckrc'), 0o640);
         git(sandbox.path, ['init', '-q']);
         git(sandbox.path, ['add', '-A']);
         git(sandbox.path, ['commit', '-qm', 'init']);
@@ -90,11 +89,6 @@ test(
         const applied = await run(sandbox.path, ['apply', '--dry-run', '--json']);
         expect((JSON.parse(applied.stdout) as { drift: unknown[] }).drift).toStrictEqual([]);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-        const removed = await run(sandbox.path, ['uninstall', '--yes']);
-        expect(removed.code, removed.stdout + removed.stderr).toBe(0);
-        for (const [path, text] of Object.entries(originals))
-            expect(readFileSync(join(sandbox.path, path), 'utf8')).toBe(text);
-        expect(statSync(join(sandbox.path, '.shellcheckrc')).mode & 0o777).toBe(keptMode(0o640));
     },
     PLANTED_TIMEOUT_MS * 2,
 );
@@ -130,10 +124,6 @@ test.each(['setup.cfg', 'tox.ini'])(
             path,
             note: textContaining('Delete the section when ready'),
         });
-        expect(readFileSync(join(sandbox.path, path), 'utf8')).toBe(original);
-        expect(statSync(join(sandbox.path, path)).mode & 0o777).toBe(keptMode(0o640));
-        const removed = await run(sandbox.path, ['uninstall', '--yes']);
-        expect(removed.code, removed.stdout + removed.stderr).toBe(0);
         expect(readFileSync(join(sandbox.path, path), 'utf8')).toBe(original);
         expect(statSync(join(sandbox.path, path)).mode & 0o777).toBe(keptMode(0o640));
     },

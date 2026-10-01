@@ -20,8 +20,7 @@ same command again to refresh an export you did not edit.
 
 Read the profile before you share it. A profile leaves out everything that belongs to one
 repository: scopes, custom checks, generated and vendored declarations, and entries that name a
-path. The command lists what it left out. A profile holds no hooks, original files, or installed
-tools.
+path. The command lists what it left out. A profile holds no hooks or installed tools.
 
 ## Start a repository from a profile
 

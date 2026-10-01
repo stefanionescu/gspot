@@ -102,9 +102,8 @@ folder.
 - [Coding agents](docs/src/content/docs/guides/agents.md): the guides gspot installs.
 - [Hooks and CI](docs/src/content/docs/guides/check-automation.md): when the checks run.
 - [Existing repositories](docs/src/content/docs/guides/existing-repository.md): what init
-  replaces and how to get the originals back.
-- [Troubleshooting](docs/src/content/docs/guides/troubleshooting.md) and
-  [uninstall](docs/src/content/docs/guides/uninstall.md).
+  replaces and where the originals stay.
+- [Troubleshooting](docs/src/content/docs/guides/troubleshooting.md).
 - [Kit reference](https://gspot.dev/reference/kits/): supported languages, frameworks, and tools.
 - [ESLint plugin](packages/eslint-plugin/README.md): the gspot ESLint rules on their own.
 - [Build and contribute](docs/src/content/docs/guides/build.md), for contributors.

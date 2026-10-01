@@ -8,7 +8,6 @@ import * as processes from '#cli/platform/spawn.ts';
 import { run } from '#tests/support/cli/command.ts';
 import { initCommand } from '#cli/commands/init/command.ts';
 import { applyCommand } from '#cli/commands/apply/command.ts';
-import { uninstallCommand } from '#cli/commands/uninstall.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
 import { PRETTIER_TOOLING } from '#tests/support/cli/tooling.ts';
 import { askInitQuestions } from '#cli/commands/init/questions.ts';
@@ -63,7 +62,7 @@ test.each([
     expect(answers).toStrictEqual({ hooks: 'none', runner: 'none', isRules: false, ci: expected });
 });
 
-test('init replaces a nested spelling configuration and uninstall restores the original', async () => {
+test('init replaces a nested spelling configuration and deletes the original', async () => {
     await using directory = await testdir();
     const original = `[default]\nlocale = "en-gb"\n[default.extend-words]\n${TYPO.the} = "${TYPO.the}"\n`;
     await createFileTree(directory.path, {
@@ -100,8 +99,6 @@ test('init replaces a nested spelling configuration and uninstall restores the o
     expect(existsSync(join(directory.path, '.gitignore'))).toBe(false);
     expect(readFileSync(join(directory.path, 'gspot.toml'), 'utf8')).not.toContain('en-gb');
     expect(existsSync(join(directory.path, 'nested/typos.toml'))).toBe(false);
-    await uninstallCommand({ cwd: directory.path, yes: true, isDryRun: false });
-    expect(readFileSync(join(directory.path, 'nested/typos.toml'), 'utf8')).toBe(original);
 });
 
 test('init reports each submodule once without reading its contents', async () => {

@@ -7,14 +7,13 @@ import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { currentBlock } from '#cli/lifecycle/managed-blocks.ts';
 import { statSync, chmodSync, existsSync, readFileSync } from 'node:fs';
 
-test('agent instructions reach detected and configured consumers and uninstall restores authored content', async () => {
+test('agent instructions reach detected and configured consumers', async () => {
     await using sandbox = await testdir();
     const original = '# Gemini instructions\n\nKeep this authored note.\n';
-    const copilot = '# Copilot instructions\n';
     await createFileTree(sandbox.path, {
         'gspot.toml': policyOf([]),
         'GEMINI.md': original,
-        '.github/copilot-instructions.md': copilot,
+        '.github/copilot-instructions.md': '# Copilot instructions\n',
         '.cursor/.keep': '',
     });
     const gemini = join(sandbox.path, 'GEMINI.md');
@@ -39,14 +38,6 @@ test('agent instructions reach detected and configured consumers and uninstall r
     const again = await run(sandbox.path, ['apply']);
     expect(again.code, again.stdout + again.stderr).toBe(0);
     expect(statSync(join(sandbox.path, 'AGENTS.md')).mtimeMs).toBe(modified);
-    const removed = await run(sandbox.path, ['uninstall', '--yes']);
-    expect(removed.code, removed.stdout + removed.stderr).toBe(0);
-    expect(readFileSync(gemini, 'utf8')).toBe(original);
-    expect(statSync(gemini).mode).toBe(mode);
-    expect(readFileSync(join(sandbox.path, '.github/copilot-instructions.md'), 'utf8')).toBe(copilot);
-    for (const path of ['AGENTS.md', 'TEAM.md', '.cursor/rules/gspot.mdc'])
-        expect(existsSync(join(sandbox.path, path))).toBe(false);
-    expect(existsSync(join(sandbox.path, '.cursor/.keep'))).toBe(true);
 });
 
 test('an authored Cursor rule is preserved and escaping agent destinations are refused', async () => {

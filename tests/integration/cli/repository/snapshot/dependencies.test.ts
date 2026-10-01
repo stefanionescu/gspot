@@ -97,7 +97,7 @@ test('a nested revision refuses its incomplete managed dependency installation',
         'project/.gspot/package.json': '{}',
         'project/.gspot/bun.lock': '{}',
         'project/.gspot/node_modules/example/index.js': 'export const value = 1;',
-        '.gitignore': 'node_modules/\n.gspot/state/ownership.json\n.gspot/state/recovery/\n',
+        '.gitignore': 'node_modules/\n.gspot/state/\n',
     });
     gitOutput(sandbox.path, ['init']);
     gitOutput(sandbox.path, ['add', '.']);

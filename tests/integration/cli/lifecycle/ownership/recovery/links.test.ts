@@ -12,7 +12,7 @@ const boundary = cliSource('platform/filesystem.ts');
 
 if (onPosix) {
     test.each(['before', 'after'] as const)(
-        'lifecycle ownership: interrupted link publication %s rename recovers without losing the original',
+        'lifecycle ownership: an interrupted link publication %s rename is kept only when it finished',
         async (point) => {
             await using directory = await testdir();
             await createFileTree(directory.path, { target: 'installed target', original: 'authored target' });
@@ -40,39 +40,18 @@ if (onPosix) {
             expect(child.exitCode, child.stderr.toString()).toBe(73);
             const owner = openOwner(directory.path);
             try {
-                // A publication that completed is restored on request; one that never happened has nothing to restore.
-                const restored = point === 'after' ? owner.restore('tool') : undefined;
-                expect(restored).toBe(point === 'after' ? 'changed' : undefined);
-                expect(readlinkSync(join(directory.path, 'tool'))).toBe('original');
+                expect(readlinkSync(join(directory.path, 'tool'))).toBe(point === 'after' ? 'target' : 'original');
                 expect(readFileSync(join(directory.path, 'original'), 'utf8')).toBe('authored target');
                 expect(readFileSync(join(directory.path, 'target'), 'utf8')).toBe('installed target');
-                expect(owner.paths()).toStrictEqual([]);
+                expect(owner.paths()).toStrictEqual(point === 'after' ? ['tool'] : []);
             } finally {
                 owner.close();
             }
         },
     );
 
-    test('lifecycle ownership: unavailable recovery refuses replace before modifying the original', async () => {
-        await using directory = await testdir();
-        await createFileTree(directory.path, {
-            'config.txt': 'original\n',
-            '.gspot/state/recovery': 'authored obstruction\n',
-        });
-        const owner = openOwner(directory.path);
-        try {
-            expect(() =>
-                owner.replace('config.txt', { bytes: Buffer.from('replacement'), mode: 0o644 }, 'config', true),
-            ).toThrow();
-            expect(readFileSync(join(directory.path, 'config.txt'), 'utf8')).toBe('original\n');
-            expect(readFileSync(join(directory.path, '.gspot/state/recovery'), 'utf8')).toBe('authored obstruction\n');
-        } finally {
-            owner.close();
-        }
-    });
-
     test.each(['before', 'after'] as const)(
-        'lifecycle ownership: an interrupted replacement %s publication recovers and releases its writer lock',
+        'lifecycle ownership: an interrupted replacement %s publication settles and releases its writer lock',
         async (point) => {
             await using directory = await testdir();
             await createFileTree(directory.path, { 'config.txt': 'original\n' });
@@ -107,9 +86,9 @@ if (onPosix) {
             const owner = openOwner(directory.path);
             try {
                 expect(owner.paths()).toStrictEqual(point === 'after' ? ['config.txt'] : []);
-                const restored = point === 'after' ? owner.restore('config.txt') : undefined;
-                expect(restored).toBe(point === 'after' ? 'changed' : undefined);
-                expect(readFileSync(join(directory.path, 'config.txt'), 'utf8')).toBe('original\n');
+                expect(readFileSync(join(directory.path, 'config.txt'), 'utf8')).toBe(
+                    point === 'after' ? 'installed\n' : 'original\n',
+                );
                 const recovered = ownershipSchema.parse(
                     JSON.parse(readFileSync(join(directory.path, '.gspot/state/ownership.json'), 'utf8')),
                 );
