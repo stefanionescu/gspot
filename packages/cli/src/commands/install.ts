@@ -4,6 +4,7 @@ import { everyManifest } from '#cli/kits/select.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { directoryOf } from '#cli/platform/arguments.ts';
+import { installProsePackages } from '#cli/tools/vale.ts';
 import { installTools } from '#cli/tools/installation.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import { MISE_CONFIG_PATH } from '#cli/config/tools/tools.ts';
@@ -55,6 +56,18 @@ function previewInstallation(steps: string[][], failures: string[], hooks: strin
     };
 }
 
+// The locked tools, then the Vale packages: they are not tracked, so a fresh clone gets them here as well as from apply.
+async function installEverything(session: Session, failures: string[]): Promise<string> {
+    const note = await installTools(session, true).catch((error: unknown) => {
+        failures.push(error instanceof Error ? error.message : 'Tool installation failed.');
+        return '';
+    });
+    if (failures.length > 0) return note;
+    const installed = await installProsePackages(session);
+    if (installed?.problem !== undefined) failures.push(`The Vale packages did not install: ${installed.problem}.`);
+    return note;
+}
+
 /**
  * Register immutable installation for a clone.
  * @param program the command-line program
@@ -90,10 +103,7 @@ export async function installCommand(options: InstallOptions): Promise<CommandRe
     try {
         const { steps, failures, hooks } = preparation(session);
         if (options.isDryRun) return previewInstallation(steps, failures, hooks);
-        const note = await installTools(session, true).catch((error: unknown) => {
-            failures.push(error instanceof Error ? error.message : 'Tool installation failed.');
-            return '';
-        });
+        const note = await installEverything(session, failures);
         if (failures.length > 0) throw new Error([note, ...new Set(failures)].filter(Boolean).join('\n'));
         return {
             text: `${note === '' ? 'No managed tools to install.' : note}\n`,

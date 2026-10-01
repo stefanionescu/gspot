@@ -4,22 +4,22 @@ import { assertNoProblems } from '#cli/policy/read.ts';
 import { writeGenerated } from '#cli/lifecycle/apply.ts';
 import { writePin } from '#cli/lifecycle/version-pin.ts';
 import type { Generated } from '#cli/types/generation.ts';
+import { installProsePackages } from '#cli/tools/vale.ts';
 import { CONFLICT_MARKERS } from '#cli/config/lifecycle.ts';
 import type { Session } from '#cli/types/execution/execution.ts';
-import { hasPackages, installPackages } from '#cli/tools/vale.ts';
 import { preparePythonProject } from '#cli/tools/python-project.ts';
 import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import { preparePackageProject } from '#cli/tools/packages/project.ts';
 import type { Owner, ApplyReport } from '#cli/types/lifecycle/lifecycle.ts';
 
-async function installProsePackages(session: Session, report: ApplyReport): Promise<void> {
-    const isProse = session.scopes.some((selection) =>
-        selection.selected.some((manifest) => manifest.kit.name === 'prose'),
-    );
-    if (!isProse || hasPackages(session.root)) return;
-    const problem = await installPackages(session.root);
-    if (problem === undefined) report.notes.push('synced the Vale packages into .gspot/config/vale/styles');
-    else report.notes.push(`the Vale packages are not synced (${problem}); run gspot apply with the network on`);
+async function noteProsePackages(session: Session, report: ApplyReport): Promise<void> {
+    const installed = await installProsePackages(session);
+    if (installed === undefined) return;
+    if (installed.problem === undefined) report.notes.push('synced the Vale packages into .gspot/config/vale/styles');
+    else
+        report.notes.push(
+            `the Vale packages are not synced (${installed.problem}); run gspot apply with the network on`,
+        );
 }
 
 // A generated file a merge left with conflict markers is no edit anyone keeps: apply writes it again (K-274).
@@ -74,7 +74,7 @@ export async function applyAll(session: Session, replace?: ReadonlyMap<string, R
             replace,
             regenerate: conflictedOutputs(owner, rendered),
         });
-        await installProsePackages(session, report);
+        await noteProsePackages(session, report);
         const toolInputs = new Set(
             rendered.files
                 .filter(
