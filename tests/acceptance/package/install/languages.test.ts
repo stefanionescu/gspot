@@ -131,7 +131,7 @@ test(
         expect(ruffVersion.code, ruffVersion.stdout + ruffVersion.stderr).toBe(0);
         expect(ruffVersion.stdout).toContain(ruffPin.version!);
         writeFileSync(join(consumer, 'entry.py'), 'answer = missing_name\n');
-        const pythonCommand = [...command, 'check', 'entry.py', '--only', 'python/ruff', '--no-cache', '--json'];
+        const pythonCommand = [...command, 'check', 'entry.py', '--only', 'python/ruff', '--json'];
         const undefinedName = await run(pythonCommand, options);
         expect(undefinedName.code, undefinedName.stdout + undefinedName.stderr).toBe(1);
         const pythonReport = JSON.parse(undefinedName.stdout) as RunReport;

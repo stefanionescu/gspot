@@ -14,7 +14,7 @@ import { generatedFile } from '#tests/support/cli/generated/files.ts';
 import { SWIFT_DOCS_SOURCE, SWIFT_INLINE_DOCS } from '#tests/inputs/integration/tools/generation.ts';
 
 async function documentationFindings(root: string, code: 0 | 1) {
-    const result = await run(root, ['check', '--only', 'swift/swiftlint', '--no-cache', '--json']);
+    const result = await run(root, ['check', '--only', 'swift/swiftlint', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(code);
     const [checked] = (JSON.parse(result.stdout) as RunReport).checks;
     if (checked === undefined) throw new Error('The report holds no check.');
@@ -84,7 +84,7 @@ if (onPosix) {
                 level === 'all' ? [containing({ rule_id: 'doc_comment_style', line: 1, character: 1 })] : [],
             );
             // The documentation style rule is on at the all level alone, so the CLI reports it there and passes otherwise.
-            const cli = await run(root, ['check', '--only', 'swift/swiftlint', '--no-cache', '--json']);
+            const cli = await run(root, ['check', '--only', 'swift/swiftlint', '--json']);
             const docComment = containing({ rule: 'doc_comment_style', file: 'Value.swift', line: 1, column: 1 });
             expect(cli.code, cli.stdout + cli.stderr).toBe(level === 'all' ? 1 : 0);
             const findings = (JSON.parse(cli.stdout) as { checks: { findings: unknown[] }[] }).checks.flatMap(

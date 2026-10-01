@@ -41,7 +41,8 @@ async function expectSvgSelection(root: string, svg: string): Promise<void> {
     expect(configured.code, configured.stdout + configured.stderr).toBe(0);
     await Bun.write(join(root, 'icon.svg'), svg);
     await Bun.write(join(root, 'other.svg'), '<svg><broken>');
-    const selected = await run(root, [...COMMAND, 'icon.svg']);
+    // A path goes before --only, which takes every word up to the next command option.
+    const selected = await run(root, ['check', 'icon.svg', ...COMMAND.slice(1)]);
     expect(selected.code, selected.stdout + selected.stderr).toBe(0);
     const malformed = await run(root, COMMAND);
     expect(malformed.code, malformed.stdout + malformed.stderr).toBe(2);

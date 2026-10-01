@@ -59,7 +59,7 @@ if (toolShipsHere('swiftlint'))
         const planned = planRun(session, { stage: 'commit', only: ['swift/swiftlint'], skips: [] });
         expect(planned).toHaveLength(1);
         expect(commandConfigurations(session, planned[0]!)).toContain(`${prefix}AppTests/.swiftlint.yml`);
-        const command = ['check', '--only', 'swift/swiftlint', '--no-cache', '--json'];
+        const command = ['check', '--only', 'swift/swiftlint', '--json'];
         const broken = await run(root, command);
         expect(broken.code, broken.stdout + broken.stderr).toBe(1);
         const findings = (JSON.parse(broken.stdout) as RunReport).checks.flatMap((check) => check.findings);
@@ -99,6 +99,6 @@ if (toolShipsHere('swiftlint'))
         );
         expect(native.code, native.stdout + native.stderr).toBe(0);
         expect(JSON.parse(native.stdout)).toStrictEqual([]);
-        const result = await run(sandbox.path, ['check', '--only', 'swift/swiftlint', '--no-cache', '--json']);
+        const result = await run(sandbox.path, ['check', '--only', 'swift/swiftlint', '--json']);
         expect(result.code, result.stdout + result.stderr).toBe(0);
     });
