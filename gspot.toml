@@ -352,6 +352,7 @@ review_by = "2026-10-15"
 [tools.knip]
 entry = [
     "**/build.ts",
+    "packages/eslint-plugin/src/plugin.ts",
     "packages/cli/scripts/inputs.ts",
     "packages/cli/scripts/guides-lint.ts",
     "packages/cli/src/native/process.ts",
