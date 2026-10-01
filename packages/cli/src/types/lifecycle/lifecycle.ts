@@ -99,6 +99,7 @@ export type Owner = {
     proposeRetirement(path: string, expected: Read): Planned;
     replace(path: string, next: Read, kind: OwnershipEntry['kind'], replace?: boolean, expected?: Read): Outcome;
     proposeRestoration(path: string): Planned;
+    proposeClaudeMove(): Planned[];
     close(): void;
 };
 export type ConfigurationFormat = 'json' | 'yaml' | 'toml';

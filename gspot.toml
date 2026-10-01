@@ -51,61 +51,39 @@ tool = "mise"
 [[tools.docs.paths_allowed]]
 patterns = [
     ".github/workflows/gspot.yml",
-    ".gspot/node_modules",
-    ".gspot/node_modules/.bin",
-    ".gspot/guides/framework/nextjs/NEXTJS.md",
-    ".gspot/guides/framework/react/REACT.md",
-    ".gspot/guides/library/zod/ZOD.md",
     "packages/cli/grammars",
 ]
 reason = "These documented paths are ignored build or installation outputs, exact packaged asset identities, or outputs of optional consumer configurations. Their source manifests and build owners define them. Remove an entry when its output contract or documentation is removed."
 
 [[tools.docs.paths_allowed]]
 patterns = [
-    "api/types/supabase.ts",
-    "functions/_middleware.js",
-    "src/app/api/checkout/route.ts",
     "src/orders.ts",
     "src/discounts.ts",
     "src/utils.ts",
     "src/receipt.ts",
     "./orders.js",
     "./utils.js",
-    "supabase/scripts/migrations.ts",
-    "turn",
-    "utils/common.ts",
 ]
-reason = "Architecture examples, documentation walkthroughs, and regression records use these exact consumer paths, deliberately invalid imports, and sandbox module names. They are not tracked checkout claims. Remove an entry when its example or regression record is removed."
+reason = "Documentation walkthroughs and regression records use these exact consumer paths, deliberately invalid imports, and sandbox module names. They are not tracked checkout claims. Remove an entry when its example or regression record is removed."
 
 [[tools.docs.paths_allowed]]
 patterns = ["acceptance/source/kits/css.test.ts"]
 reason = "The documented acceptance command resolves this argument from its declared tests working directory; the tracked target is tests/acceptance/source/kits/css.test.ts."
 
 [[tools.docs.paths_allowed]]
-patterns = [".gspot/reports", ".gspot/reports/report.json", ".gspot/reports/report.sarif", ".gspot/reports/report.codequality.json"]
-reason = "The architecture folder still describes the report files gspot no longer writes; stage 15 deletes that folder and this entry."
-
-[[tools.docs.paths_allowed]]
 patterns = ["packages/cli/guides/**"]
 reason = "The rule corpus is generic text installed into other repositories; it names nothing in this one."
 
 [[tools.docs.paths_allowed]]
-patterns = [
-    ".github/copilot-instructions.md",
-    ".cursor",
-    ".cursor/rules/gspot.mdc",
-    ".gitlab/ci/gspot.yml",
-]
-reason = "These documented integration destinations belong to consumer repositories. Their presence depends on the selected agent, hook, or CI integration."
+patterns = [".gitlab/ci/gspot.yml"]
+reason = "This documented integration destination belongs to consumer repositories that select GitLab CI."
 
 [[tools.docs.paths_allowed]]
 patterns = [
     "packages/eslint-plugin/dist",
     "packages/cli/dist",
     "packages/cli/dist/gspot.js",
-    "packages/cli/dist/configuration.js",
     ".gspot/state",
-    ".gspot/cache",
     ".gspot/.venv",
     ".gspot/config/semgrep/ios.yml",
 ]
@@ -152,28 +130,20 @@ word = "axe"
 reason = "The axe-core accessibility package name."
 
 [[tools.typos.words]]
-word = "virtua"
-reason = "The Virtua list virtualization library. Native dictionary matching also accepts the capitalized name."
-
-[[tools.typos.words]]
 word = "capitalisation"
-reason = "SQLFluff names its rule group capitalisation; the SQL template, its tests, and the level inventory quote it."
+reason = "SQLFluff names its rule group capitalisation; the SQL template and its tests quote it."
 
 [[tools.typos.words]]
 word = "materialise"
-reason = "The naming policy bans this British spelling by name, so the policy, the inventory, and the notes spell it."
+reason = "The naming policy bans this British spelling by name, so the policy and the notes spell it."
 
 [[tools.typos.words]]
 word = "synchronise"
-reason = "The naming policy bans this British spelling by name, so the policy, the inventory, and the notes spell it."
+reason = "The naming policy bans this British spelling by name, so the policy and the notes spell it."
 
 [[tools.typos.words]]
 word = "IIFEs"
 reason = "ESLint's max-lines-per-function option and the unicorn rule description spell the plural so."
-
-[[tools.typos.words]]
-word = "referers"
-reason = "nginx spells its directive valid_referers; the level inventory names it."
 
 [[naming.contract_properties]]
 file = "packages/cli/src/types/commands.ts"
@@ -433,7 +403,7 @@ paths = [
     "packages/cli/src/checks/swift",
     "packages/cli/src/checks/typescript",
 ]
-reason = "Language names identify the implemented check and parser domains in the architecture ownership layout."
+reason = "Each folder holds the checks and parsers of one language, named after it."
 
 [[structure.single_file_folder_allowed]]
 paths = ["docs/src/pages/schema"]
@@ -529,12 +499,7 @@ reason = "The gspot package exposes a command through bin and has no importable 
 [[ignore]]
 check = "integrity/stale-paths"
 paths = ["UPDATES.md"]
-reason = "UPDATES.md records the audit that the stages carry out, and it names the files they delete and move. Remove this entry when the last stage deletes UPDATES.md."
-
-[[ignore]]
-check = "integrity/large-files"
-paths = ["architecture/levels/inventory.csv"]
-reason = "The level inventory holds one reviewed row per check, tool, and rule. It is plain text that diffs by line, and splitting it would split one review table."
+reason = "UPDATES.md records an audit, and it names files and folders the work deletes and moves."
 
 [[check]]
 name = "tests/unit"

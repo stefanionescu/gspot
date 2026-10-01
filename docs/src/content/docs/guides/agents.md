@@ -12,10 +12,9 @@ The guides match the checks, so code that follows them passes.
 
 - **Guides** under `.gspot/guides/`, one for each topic: how to work, how to write, and one for
   each language, framework, and tool you selected.
-- **A managed block in `AGENTS.md`** that lists the guides. `CLAUDE.md`, `GEMINI.md`, and
-  `.github/copilot-instructions.md` get the same block when they exist.
-- **A Cursor rule**, `.cursor/rules/gspot.mdc`, when the `.cursor/` folder exists. gspot leaves
-  a rule file you wrote yourself at that path alone.
+- **A managed block in `AGENTS.md`** that lists the guides. gspot writes no other agent file.
+  `gspot init` and `gspot apply` delete `CLAUDE.md`. Its own text moves to the end of
+  `AGENTS.md`, under `## Other instructions`.
 
 The guides follow your level. At `recommended` they cover safety and correctness. At `all` they
 add naming, architecture, and style. After you change the policy, `gspot apply` updates them.

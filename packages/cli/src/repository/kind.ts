@@ -1,7 +1,7 @@
 // Every tracked path has one kind: source, generated, vendored, binary.
+import { GSPOT_FOLDER } from '#cli/config/platform.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
-import { PRIVATE_PATHS } from '#cli/config/platform.ts';
 import type { FileDeclaration } from '#cli/types/policy/policy.ts';
 import type { Verdict, Attribute } from '#cli/types/repository/repository.ts';
 
@@ -9,7 +9,6 @@ import {
     LICENSE_FILE,
     GENERATED_BANNERS,
     VALE_OWN_PREFIXES,
-    INSTALLED_PREFIXES,
     VALE_STYLES_PREFIX,
     VENDORED_DIRECTORIES,
 } from '#cli/config/repository/patterns.ts';
@@ -56,12 +55,11 @@ function attributeKind(attributes: string[]): Verdict | undefined {
     return isBinary ? { kind: 'binary', source: '.gitattributes' } : undefined;
 }
 
+// gspot writes everything under its folder; the Vale packages it fetches there are another party's text.
 function managedKind(path: string): Verdict | undefined {
     if (LICENSE_FILE.test(path.slice(path.lastIndexOf('/') + 1))) return { kind: 'vendored', source: 'license' };
-    if ([...INSTALLED_PREFIXES, ...PRIVATE_PATHS].some((prefix) => path.startsWith(prefix)))
-        return { kind: 'generated', source: 'gspot' };
     if (isValePackageFile(path)) return { kind: 'vendored', source: 'gspot' };
-    return undefined;
+    return path.startsWith(`${GSPOT_FOLDER}/`) ? { kind: 'generated', source: 'gspot' } : undefined;
 }
 
 /**

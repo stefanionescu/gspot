@@ -36,6 +36,13 @@ function pruneInstallations(owner: Owner, root: string, retained: WriteRequest['
     if (!retained.prose) removePackages(root);
 }
 
+// The text of `CLAUDE.md` lands after the block the batch wrote to `AGENTS.md`, and the file goes.
+function moveClaudeFile(owner: Owner, report: ApplyReport): void {
+    const moves = owner.proposeClaudeMove();
+    owner.applyPlans(moves);
+    if (moves.length > 0) report.removed.push('CLAUDE.md');
+}
+
 // Every plan is prepared before the owner writes the batch.
 /**
  * Publish and prune generated files using recorded ownership and current snapshots.
@@ -57,7 +64,14 @@ export function writeGenerated(owner: Owner, request: WriteRequest): void {
     });
     const blocks = rendered.blocks.map((block) => owner.proposeBlock(block.path, block.block, block.style));
     const generated = [...replacements, ...blocks, ...configurations.map(({ plan }) => plan)];
-    const expected = new Set(['gspot.toml', '.gspot/version', '.gitignore', ...generated.map(({ path }) => path)]);
+    // `CLAUDE.md` is no output: it moves into `AGENTS.md` after the batch instead of getting its old text back.
+    const expected = new Set([
+        'gspot.toml',
+        '.gspot/version',
+        '.gitignore',
+        'CLAUDE.md',
+        ...generated.map(({ path }) => path),
+    ]);
     // Pruning restores only recorded outputs that no selected owner still needs.
     const recorded = new Set(
         readOwnership(root)
@@ -75,6 +89,7 @@ export function writeGenerated(owner: Owner, request: WriteRequest): void {
             `Setup preserved conflicting outputs: ${conflicts.join(', ')}. Move them aside and run gspot apply; old tool configuration was retained.`,
         );
     owner.applyPlans(plans.filter((plan) => plan.status !== 'preserved'));
+    moveClaudeFile(owner, report);
     pruneInstallations(owner, root, retained, expected.has('.gspot/pyproject.toml'));
     recordPreserved(report, plans);
     report.written.push(...replacements.filter((plan) => plan.status === 'changed').map((plan) => plan.path));

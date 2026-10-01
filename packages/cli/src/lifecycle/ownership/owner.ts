@@ -6,6 +6,7 @@ import { ownershipSchema } from '#cli/lifecycle/log.ts';
 import { openLog } from '#cli/lifecycle/ownership/log.ts';
 import { fileMode, mutationTarget } from '#cli/platform/safe-paths.ts';
 import { applyPlan, applyPlans } from '#cli/lifecycle/ownership/apply.ts';
+import { proposeClaudeMove } from '#cli/lifecycle/ownership/claude-file.ts';
 import { proposeRestoration } from '#cli/lifecycle/ownership/restoration.ts';
 import type { Log, Owner, OwnershipState } from '#cli/types/lifecycle/lifecycle.ts';
 import { READ_ONLY_FILE, STATE_DIRECTORY, OWNER_WRITABLE_FILE } from '#cli/config/platform.ts';
@@ -58,6 +59,7 @@ function lifecycleOwner(log: Log): Owner {
         installedPaths: () => state.files.filter((entry) => entry.installed !== undefined).map((entry) => entry.path),
         proposeRetirement: (path, expected) => proposeRetirement(log, path, expected),
         proposeRestoration: (path) => proposeRestoration(log, path),
+        proposeClaudeMove: () => proposeClaudeMove(log),
         close: () => {
             files.close();
         },
