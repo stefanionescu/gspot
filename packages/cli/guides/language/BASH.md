@@ -85,8 +85,7 @@ source direct dependencies, and define functions. A file is exactly one of the t
 
 <!-- level: all -->
 
-Every file declares its runtime contract in the header. The structure check reads it when
-`tools.bash.runtime_header` names the platforms:
+The header declares the runtime contract, checked when `tools.bash.runtime_header` is set:
 
 ```bash
 #!/usr/bin/env bash
