@@ -54,7 +54,7 @@ Apply the policy and run the check:
 
 ```bash
 gspot apply
-gspot check --only project/notes --no-cache
+gspot check --only project/notes
 ```
 
 The check exits with `1` and reports a finding at `notes/deploy.txt:1`. Replace the note with
@@ -97,12 +97,6 @@ Malformed output counts as a failed run, exit code `2`. The
 Some tools print a summary and always exit with `0`. For those, set `count_regex` on the check.
 With `count_regex = "FAILED"`, each match in stdout or stderr is a failure. Use it only for a
 tool that works this way.
-
-## Declare the inputs for the cache
-
-gspot reuses a result when the inputs of a check did not change. Add `inputs` when file globs
-can name everything the command reads, including configuration, locks, and scripts. Leave
-`inputs` out when the result depends on anything else, such as the network.
 
 ## Add a correction command
 

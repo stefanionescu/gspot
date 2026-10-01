@@ -58,7 +58,7 @@ Then apply, install, and run the scan:
 ```bash
 gspot apply
 gspot install
-gspot check --stage manual --only security/codeql --no-cache
+gspot check --stage manual --only security/codeql
 ```
 
 CodeQL scans a copy of your sources, and the findings name paths in your repository. The

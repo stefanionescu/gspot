@@ -60,7 +60,7 @@ afterwards.
 ## A check is slow
 
 Run the reproduce command the report prints, to time that check alone. `--verbose` prints each
-command gspot runs. `--no-cache` runs a check even when its inputs did not change.
+command gspot runs.
 
 Swift builds reuse compiler state from the cache folder of your system, in a `gspot` folder per
 repository:
@@ -68,8 +68,6 @@ repository:
 - macOS: `~/Library/Caches`
 - Linux: `XDG_CACHE_HOME`, or `~/.cache` when it is not set
 - Windows: `LOCALAPPDATA`, or `~/AppData/Local` when it is not set
-
-Every check with the cache on deletes the cached results written more than seven days ago.
 
 ## A Windows path is refused
 
