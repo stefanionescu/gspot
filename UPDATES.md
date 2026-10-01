@@ -154,6 +154,10 @@ The owner and the work settled these while implementing:
   `gh run rerun <run> --failed`.
 - After a stage changes the ownership schema, delete `.gspot/state` and rerun `mise run apply`. Before switching to a
   branch with another schema, copy the folder aside, delete it, and apply on the other branch.
+- The tool lock `.gspot/bun.lock` pins the integrity of the workspace ESLint plugin. After a change to the plugin, delete
+  the lock and run `mise run apply` in the same pull request, or the frozen install in CI refuses the rebuilt plugin.
+- After a branch switch, `chmod 0444` the generated files `apply` calls edited, and if it still refuses them, copy
+  `.gspot/state` aside, delete it, and apply. Move an unowned `.gspot/node_modules` aside before `gspot install`.
 - Never print the npm token, and never publish to npm without the owner.
 
 ### Open items
