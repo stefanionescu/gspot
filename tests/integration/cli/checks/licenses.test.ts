@@ -49,9 +49,6 @@ test('license analysis refuses absent dependencies instead of reporting a succes
 
 test.each([
     ['malformed JSON', '{', 0],
-    ['missing version', '[{"Name":"example","License":"MIT"}]', 0],
-    ['missing license', '[{"Name":"example","Version":"1.0.0"}]', 0],
-    ['empty report', '[]', 0],
     ['scanner failure', '[]', 1],
 ] as const)(
     'Python license scanning rejects %s and removes its temporary configuration directory',

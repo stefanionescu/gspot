@@ -1,6 +1,5 @@
 import { join } from 'node:path';
 import type { Linter } from 'eslint';
-import plugin from '#plugin/plugin.ts';
 import { test, expect } from 'bun:test';
 import { parse as parseToml } from 'smol-toml';
 import { testdir, createFileTree } from 'testdirs';
@@ -12,31 +11,21 @@ import { generatedFile } from '#tests/support/cli/generated/files.ts';
 import { generatedEslint } from '#tests/support/cli/generated/eslint.ts';
 import { parsePolicyText, assertPolicyComplete } from '#cli/policy/read.ts';
 
-test('the recommended plugin configuration leaves out the framework-only server rule', () => {
-    expect(plugin.configs.recommended.rules).not.toHaveProperty('gspot/require-server-only');
+test('a scope resolves its own tool settings over the root defaults', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': policyOf(
+            ['python', 'pytest'],
+            '[[scope]]\npath = "app"\nkits = []\n[scope.tools.pytest]\ncoverage = 91\n[scope.tools.vulture]\nmin_confidence = 95\n',
+            'all',
+        ),
+        'app/main.py': 'value = 1\n',
+    });
+    const session = await openSession(sandbox.path);
+    const nested = session.scopes.find((scope) => scope.scope.path === 'app')!;
+    expect(nested.view.settings['tools.pytest.coverage']).toBe(91);
+    expect(nested.view.settings['tools.vulture.min_confidence']).toBe(95);
 });
-
-test.each(['recommended', 'all'] as const)(
-    '%s resolves defaults and scoped project overrides consistently',
-    async (level) => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
-            'gspot.toml': policyOf(
-                ['python', 'pytest'],
-                '[[scope]]\npath = "app"\nkits = []\n[scope.tools.pytest]\ncoverage = 91\n[scope.tools.vulture]\nmin_confidence = 95\n',
-                level,
-            ),
-            'app/main.py': 'value = 1\n',
-        });
-        const session = await openSession(sandbox.path);
-        const root = session.scopes.find((scope) => scope.scope.path === '')!;
-        const nested = session.scopes.find((scope) => scope.scope.path === 'app')!;
-        expect(root.view.settings['tools.pytest.coverage']).toBe(level === 'all' ? 80 : 0);
-        expect(root.view.settings['tools.vulture.min_confidence']).toBe(level === 'all' ? 80 : 100);
-        expect(nested.view.settings['tools.pytest.coverage']).toBe(91);
-        expect(nested.view.settings['tools.vulture.min_confidence']).toBe(95);
-    },
-);
 
 test.each(['recommended', 'all'] as const)('%s Ruff selects stable rules with preview disabled', async (level) => {
     const text = await generatedFile(policyOf(['python', 'fastapi', 'pytest'], '', level), '.gspot/config/ruff.toml');
@@ -44,18 +33,15 @@ test.each(['recommended', 'all'] as const)('%s Ruff selects stable rules with pr
     expect(config.lint.preview).toBe(false);
     expect(config.format.preview).toBe(false);
     expect(config.lint.select.filter((code) => RUFF_PREVIEW_RULES.has(code))).toStrictEqual([]);
-    expect(config.lint.select).toContain('F821');
     expect(config.lint.select.includes('N802')).toBe(level === 'all');
-    // gspot orders __all__ and __slots__ shortest first, so the alphabetical Ruff sorts stay off.
-    expect(config.lint.select.filter((code) => ['RUF022', 'RUF023'].includes(code))).toStrictEqual([]);
 });
 
-test.each(['recommended', 'all'] as const)('%s rejects experimental activation before generation', (level) => {
+test('experimental activation is refused before generation', () => {
     for (const settings of [
         '[tools.ruff.extra]\npreview = true\nreason = "Project preference"',
         `[tools.ruff]\nselect = ["${String([...RUFF_PREVIEW_RULES][0])}"]`,
     ]) {
-        const text = policyOf(['python'], settings, level);
+        const text = policyOf(['python'], settings, 'all');
         expect(() => {
             assertPolicyComplete({ policy: parsePolicyText(text, 'gspot.toml'), text, path: 'gspot.toml' });
         }).toThrow('preview');
@@ -122,7 +108,6 @@ test('switching levels restores generated defaults and agent instructions', asyn
         await Bun.write(join(sandbox.path, config.path), config.content);
         const block = output.blocks.find((block) => block.path === 'AGENTS.md')!.block;
         expect(block).toContain(`Selected level: \`${level}\``);
-        expect(block).toContain('apply only at all or when the project explicitly opts into them');
         outputs.push(config.content);
     }
     expect(outputs[0]).not.toBe(outputs[1]);

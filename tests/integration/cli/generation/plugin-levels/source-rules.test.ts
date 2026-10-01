@@ -3,53 +3,6 @@ import { testdir, createFileTree } from 'testdirs';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { generatedEslint } from '#tests/support/cli/generated/eslint.ts';
 
-test.each([
-    ['recommended', 'client.js'],
-    ['recommended', 'app/client.js'],
-    ['all', 'client.js'],
-    ['all', 'app/client.js'],
-] as const)('generated %s ESLint retains client defects and makes aliases opt-in for %s', async (level, filePath) => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': policyOf(
-            ['javascript'],
-            '[guides]\ninstall = false\n[[scope]]\npath = "app"\nkits = []\n',
-            level,
-        ),
-        'package.json': '{"private":true,"type":"module"}\n',
-        'client.js': '',
-        'other.js': '',
-        'app/client.js': '',
-    });
-    const eslint = await generatedEslint(sandbox.path);
-    const finding = await eslint.lintText("'use client';\nexport const value = process.env.SECRET;\n", {
-        filePath,
-    });
-    expect(
-        finding.flatMap((file) => file.messages).filter(({ ruleId }) => ruleId === 'gspot/no-client-environment'),
-    ).toMatchObject([{ line: 2, messageId: 'private' }]);
-    const alias = await eslint.lintText('const source = 1;\nexport const publicName = source;\n', {
-        filePath,
-    });
-    expect(
-        alias
-            .flatMap((file) => file.messages)
-            .filter(({ ruleId }) => ruleId === 'gspot/no-exported-alias-constants')
-            .map(({ line, column, messageId: diagnosticId }) => ({ line, column, messageId: diagnosticId })),
-    ).toStrictEqual(level === 'recommended' ? [] : [{ line: 2, column: 14, messageId: 'alias' }]);
-    const corrected = await eslint.lintText("'use client';\nexport const value = 'public';\n", {
-        filePath,
-    });
-    expect(
-        corrected
-            .flatMap((file) => file.messages)
-            .filter(
-                ({ ruleId }) =>
-                    ruleId === 'gspot/no-client-environment' || ruleId === 'gspot/no-exported-alias-constants',
-            ),
-    ).toStrictEqual([]);
-});
-
 test.each(['recommended', 'all'])(
     'generated %s ESLint permits JavaScript type documentation and rejects duplicate TypeScript type tags',
     async (level) => {

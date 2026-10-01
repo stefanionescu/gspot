@@ -69,7 +69,7 @@ test.each(CLOUDFLARE_TYPES_SCOPES)(
         try {
             expect(await rejection(envTypesFresh(planted.input))).toContain('Types generation failed');
             expectPreserved(planted);
-            expect(directory.path).toBe(planted.directory.path);
+            expect(readFileSync(join(directory.path, planted.path('bindings.txt')), 'utf8')).toBe('failure');
         } finally {
             planted.locate.mockRestore();
         }

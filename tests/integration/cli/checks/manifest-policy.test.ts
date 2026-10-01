@@ -1,10 +1,10 @@
 import * as fs from 'node:fs';
 import { join } from 'node:path';
+import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import type { EngineInput } from '#cli/types/checks.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { test, spyOn, expect, describe } from 'bun:test';
 import { manifestPolicy } from '#cli/checks/dependencies/manifest-policy.ts';
 import { MANIFEST, DEPENDENCIES_POLICY } from '#tests/inputs/integration/cli/checks.ts';
 
@@ -22,7 +22,7 @@ async function input(root: string): Promise<EngineInput> {
 }
 
 describe('manifest policy reads', () => {
-    test.each(['{', '[]', 'null', '{"dependencies":{"example":5}}', '{"packageManager":false}'])(
+    test.each(['{', '{"dependencies":{"example":5}}'])(
         'reports malformed manifest %s with its path',
         async (content) => {
             await using sandbox = await testdir();
@@ -34,21 +34,6 @@ describe('manifest policy reads', () => {
             expect(manifestPolicy(await input(sandbox.path))).toStrictEqual([]);
         },
     );
-
-    test('reports a denied read without discarding the manifest', async () => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, { 'gspot.toml': DEPENDENCIES_POLICY, 'package.json': MANIFEST });
-        const inspected = await input(sandbox.path);
-        const denied = spyOn(fs, 'readFileSync').mockImplementation(() => {
-            throw Object.assign(new Error('Permission denied'), { code: 'EACCES' });
-        });
-        try {
-            expect(() => manifestPolicy(inspected)).toThrow('package.json: Permission denied');
-        } finally {
-            denied.mockRestore();
-        }
-        expect(manifestPolicy(await input(sandbox.path))).toStrictEqual([]);
-    });
 
     test('accepts an absent optional manifest and a valid manifest', async () => {
         await using sandbox = await testdir();

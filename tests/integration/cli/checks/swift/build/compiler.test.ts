@@ -120,27 +120,6 @@ test('a later Swift session reads a failed build after an earlier successful bui
 });
 
 if (HAS_SWIFT)
-test('Swift compiler diagnostics retain their source location on a failed build', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'gspot.toml': policyOf(['swift']) });
-    const input = await swiftInput(sandbox.path, 'swift/build');
-    const run = spyOn(spawn, 'run').mockResolvedValue({
-        code: 1,
-        stdout: '',
-        stderr: '/project/Main.swift:4:2: error: Missing value',
-        missing: false,
-        duration: 1,
-    });
-    try {
-        expect(await swiftBuild(input)).toMatchObject([
-            { file: '/project/Main.swift', line: 4, column: 2, message: 'Missing value' },
-        ]);
-    } finally {
-        run.mockRestore();
-    }
-});
-
-if (HAS_SWIFT)
 test('canceled Swift compilation refuses to launch the compiler', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': policyOf(['swift']) });

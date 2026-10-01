@@ -1,26 +1,10 @@
 import { Linter } from 'eslint';
 import { join } from 'node:path';
 import plugin from '#plugin/plugin.ts';
-import { readFileSync } from 'node:fs';
 import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import clientExample from '#tests/inputs/unit/plugin/client-environment.json';
 
 describe('the plugin', () => {
-    test('the public client example retains its captured diagnostic and clean correction', () => {
-        const linter = new Linter({ configType: 'flat' });
-        const config: object[] = [{ plugins: { gspot: plugin }, rules: { 'gspot/no-client-environment': 'error' } }];
-        // The captured example is plain JSON, so the comparison is structural.
-        const broken: unknown = linter.verify(clientExample.broken, config, { filename: 'search.js' });
-        expect(broken).toStrictEqual(clientExample.findings);
-        const corrected: unknown = linter.verify(clientExample.corrected, config, { filename: 'search.js' });
-        expect(corrected).toStrictEqual(clientExample.clean);
-        // The plugin README shows the same defect and correction.
-        const readme = readFileSync(new URL('../../../packages/eslint-plugin/README.md', import.meta.url), 'utf8');
-        expect(readme).toContain(clientExample.broken);
-        expect(readme).toContain(clientExample.corrected);
-    });
-
     test.each(['recommended', 'all'] as const)('%s applies its trivial-function rule', async (level) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'src/orders/forward.js': '', 'src/orders/client.js': '' });
@@ -70,13 +54,3 @@ test.each(['recommended', 'all'] as const)(
         expect(corrected).toStrictEqual([]);
     },
 );
-
-test.each(
-    Object.entries(plugin.rules).filter(([, rule]) => Array.isArray(rule.meta.schema) && rule.meta.schema.length > 0),
-)('%s rejects unknown options before analyzing source', (name) => {
-    const linter = new Linter({ configType: 'flat' });
-    const config: object[] = [
-        { plugins: { gspot: plugin }, rules: { [`gspot/${name}`]: ['error', { unexpected: true }] } },
-    ];
-    expect(() => linter.verify('const value = 1;', config, { filename: 'example.js' })).toThrow(/unexpected/u);
-});

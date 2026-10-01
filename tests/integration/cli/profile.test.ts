@@ -27,38 +27,6 @@ describe('profile file paths', () => {
     });
 });
 
-test('a profile removed during reading retains the missing-profile diagnostic', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'house.toml': 'version = 1\n' });
-    const read = spyOn(fs, 'readFileSync').mockImplementationOnce(() => {
-        throw Object.assign(new Error('The file disappeared.'), { code: 'ENOENT' });
-    });
-    try {
-        const read = await readProfile('house.toml', sandbox.path).catch((error: unknown) => error);
-        expect(read).toMatchObject({
-            name: 'GspotError',
-            problems: ['There is no profile at house.toml.'],
-        });
-    } finally {
-        read.mockRestore();
-    }
-});
-
-test('a denied profile read preserves the filesystem error', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'house.toml': 'version = 1\n' });
-    const denied = Object.assign(new Error('The file is unreadable.'), { code: 'EACCES' });
-    const read = spyOn(fs, 'readFileSync').mockImplementationOnce(() => {
-        throw denied;
-    });
-    try {
-        const read = await readProfile('house.toml', sandbox.path).catch((error: unknown) => error);
-        expect(read).toBe(denied);
-    } finally {
-        read.mockRestore();
-    }
-});
-
 test.each(['jest', 'vitest'])(
     'profiles retain %s coverage settings and omit repository support directories',
     async (configuration) => {

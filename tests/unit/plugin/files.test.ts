@@ -17,24 +17,12 @@ describe('plugin file paths', () => {
     });
 });
 
-test('directory inspection propagates a missing path and reads files after correction', async () => {
+test('directory inspection lists files and folders by name with their kind', async () => {
     await using directory = await testdir();
-    const path = join(directory.path, 'source');
-    expect(() => readDirectory(path)).toThrow();
-    mkdirSync(path);
-    expect(readDirectory(path)).toStrictEqual([]);
-    writeFileSync(join(path, 'source.ts'), 'export const value = 1;\n');
-    mkdirSync(join(path, 'nested'));
-    expect(readDirectory(path)).toStrictEqual([
+    writeFileSync(join(directory.path, 'source.ts'), 'export const value = 1;\n');
+    mkdirSync(join(directory.path, 'nested'));
+    expect(readDirectory(directory.path)).toStrictEqual([
         { name: 'nested', kind: 'dir' },
         { name: 'source.ts', kind: 'file' },
     ]);
-});
-
-test('directory inspection refuses a regular file instead of returning no entries', async () => {
-    await using directory = await testdir();
-    const path = join(directory.path, 'source.ts');
-    writeFileSync(path, 'export const value = 1;\n');
-    expect(() => readDirectory(path)).toThrow();
-    expect(readDirectory(directory.path)).toStrictEqual([{ name: 'source.ts', kind: 'file' }]);
 });

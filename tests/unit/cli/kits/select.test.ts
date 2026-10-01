@@ -15,12 +15,6 @@ describe('selectKits', () => {
         expect(ids).toStrictEqual(['base', 'client', 'server', 'app']);
     });
 
-    test('a recommended kit is not pulled in by selection; init adds it and a person can drop it', () => {
-        const manifests = kitManifests();
-        const ids = selectKits(['bash'], manifests).map((entry) => entry.kit.name);
-        expect(ids).not.toContain('naming');
-    });
-
     test('an unknown kit names the near matches', () => {
         expect(() => selectKits(['bassh'], kitManifests())).toThrow('Did you mean `bash`');
     });

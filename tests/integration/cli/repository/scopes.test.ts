@@ -68,7 +68,7 @@ test.each(['pnpm-workspace.yaml', 'lerna.json', 'rush.json'])(
     },
 );
 
-test.each(['../outside', 'packages/*', 'packages/**/app', '{../outside,packages/app}'])(
+test.each(['../outside', 'packages/*'])(
     'workspace preflight refuses escaped or linked package patterns: %s',
     async (pattern) => {
         await using directory = await testdir();

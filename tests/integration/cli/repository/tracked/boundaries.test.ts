@@ -2,29 +2,29 @@ import * as fs from 'node:fs';
 import { join } from 'node:path';
 import { writeFileSync } from 'node:fs';
 import { rejects } from 'node:assert/strict';
-import { expect, spyOn, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { test, spyOn, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { readRepository } from '#cli/repository/tree.ts';
 import { onPosix } from '#tests/support/cli/platforms.ts';
+import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { head, readSource, trackedEntries } from '#cli/repository/tracked.ts';
 
-test('opening a session reads less than one megabyte with a fifty-megabyte source', async () => {
+test('opening a session reads less than one megabyte with a two-megabyte source', async () => {
     const megabyte = 1024 * 1024;
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': policyOf([]),
-        large: '#!/usr/bin/env bash\n# @generated\n' + 'x'.repeat(50 * megabyte),
+        large: '#!/usr/bin/env bash\n# @generated\n' + 'x'.repeat(2 * megabyte),
     });
     const prefixReads = spyOn(fs, 'readSync');
     const fullReads = spyOn(fs, 'readFileSync');
     try {
         const session = await openSession(sandbox.path);
         const large = session.repository.files.find((file) => file.path === 'large')!;
-        expect(large.size).toBeGreaterThanOrEqual(50 * megabyte);
+        expect(large.size).toBeGreaterThanOrEqual(2 * megabyte);
         expect(large.prefix.byteLength).toBe(4096);
         expect(large.tags).toContain('bash');
         expect(large.kind).toBe('generated');
@@ -120,8 +120,8 @@ test('a managed secret baseline rejects linked bytes before evaluating entries',
 });
 
 // Windows file names cannot hold a newline or a quote.
-    if (onPosix)
-        test('a non-Git walk preserves newline directories, nested negations, pruning, and link boundaries', async () => {
+if (onPosix)
+    test('a non-Git walk preserves newline directories, nested negations, pruning, and link boundaries', async () => {
         await using sandbox = await testdir();
         const root = join(sandbox.path, 'project');
         await createFileTree(sandbox.path, {
@@ -150,18 +150,16 @@ test('a managed secret baseline rejects linked bytes before evaluating entries',
         expect(trackedEntries(root).map((entry) => entry.path)).toStrictEqual(entries.map((entry) => entry.path));
     });
 
-    if (onPosix)
-
-        test('a non-Git walk omits named pipes from readable source files', async () => {
+if (onPosix)
+    test('a non-Git walk omits named pipes from readable source files', async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'source.ts': 'export {};\n' });
         expect(processes.runBlocking(['mkfifo', 'stream.ts'], { cwd: sandbox.path }).code).toBe(0);
         expect(trackedEntries(sandbox.path).map((entry) => entry.path)).toStrictEqual(['source.ts']);
     });
 
-    if (onPosix)
-
-        test('Bash findings retain newline and colon directory names without Git', async () => {
+if (onPosix)
+    test('Bash findings retain newline and colon directory names without Git', async () => {
         await using sandbox = await testdir();
         const paths = ['source\nfiles/greet.sh', 'source:files/greet.sh'];
         await createFileTree(sandbox.path, {

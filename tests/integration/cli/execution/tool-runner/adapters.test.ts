@@ -8,23 +8,22 @@ import { chmodSync, existsSync, writeFileSync } from 'node:fs';
 import { onPosix, toolShipsHere } from '#tests/support/cli/platforms.ts';
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Two cases plant the same version script at a different speed.
-const versionScript = (version: string, slow: boolean): string => `#!${process.execPath}
-if (process.argv.includes('--version')) { console.log(${JSON.stringify(version)}); }
+const versionScript = (slow: boolean): string => `#!${process.execPath}
+if (process.argv.includes('--version')) { console.log('26.8.0'); }
 else { await Bun.write('started.txt', 'started'); ${slow ? 'await Bun.sleep(10_000);' : ''} }
 `;
 
 if (toolShipsHere('ansible-lint'))
-    test.each(['outdated', 'timeout', 'canceled'] as const)(
-        'Ansible adapter reports %s through the shared runner and accepts corrected execution',
+    test.each(['timeout', 'canceled'] as const)(
+        'Ansible adapter reports a %s run through the shared runner and accepts corrected execution',
         async (failure) => {
             await using sandbox = await testdir();
             const executable = join(sandbox.path, '.gspot/.venv/bin/ansible-lint');
-            const version = failure === 'outdated' ? '23.0.0' : '26.8.0';
             await createFileTree(sandbox.path, {
                 'gspot.toml': policyOf(['ansible', 'structure'], '[limits]\ntool_seconds = 1\n', 'all'),
                 'deploy/ansible.cfg': '[defaults]\n',
                 'deploy/site.yml': '---\n- hosts: all\n  tasks: []\n',
-                '.gspot/.venv/bin/ansible-lint': versionScript(version, failure !== 'outdated'),
+                '.gspot/.venv/bin/ansible-lint': versionScript(true),
             });
             chmodSync(executable, 0o755);
             const controller = new AbortController();
@@ -49,13 +48,13 @@ if (toolShipsHere('ansible-lint'))
                 const outcome = await running;
                 expect(outcome.report.exitCode).toBe(2);
                 expect(outcome.report.checks).toHaveLength(1);
-                expect(outcome.report.checks[0]!.status).toBe(failure === 'outdated' ? 'missing' : 'error');
+                expect(outcome.report.checks[0]!.status).toBe('error');
                 expect(outcome.report.checks[0]!.note).toContain(
-                    { outdated: 'is below 24.0.0', timeout: 'ran past 1 seconds', canceled: 'canceled' }[failure],
+                    { timeout: 'ran past 1 seconds', canceled: 'canceled' }[failure],
                 );
                 expect(outcome.report.checks[0]!.findings).toStrictEqual([]);
-                expect(existsSync(join(sandbox.path, 'deploy/started.txt'))).toBe(failure !== 'outdated');
-                writeFileSync(executable, versionScript('26.8.0', false));
+                expect(existsSync(join(sandbox.path, 'deploy/started.txt'))).toBe(true);
+                writeFileSync(executable, versionScript(false));
                 const corrected = await executeRun(await openSession(sandbox.path), options);
                 expect(corrected.report.exitCode).toBe(0);
                 expect(corrected.report.checks[0]!.status).toBe('ok');

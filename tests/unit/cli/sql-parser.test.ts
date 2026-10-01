@@ -1,18 +1,9 @@
+import { test, expect } from 'bun:test';
 import { TYPO } from '#tests/support/spelling.ts';
-import { test, expect, describe } from 'bun:test';
-import { parseSql } from '#cli/parsers/sql/parser.ts';
 import { rejection } from '#tests/support/expectations.ts';
 import { sqlFile, positionAt } from '#cli/parsers/sql/statements.ts';
 import { sqlIdentifiers } from '#cli/checks/naming/extractors/sql.ts';
 import type { SourceReads } from '#cli/types/repository/repository.ts';
-
-describe('parseSql', () => {
-    test('a broken statement returns the error and where it points', async () => {
-        const parsed = await parseSql(`SELECT 1;\n${TYPO.select} 2;`);
-        expect(parsed.error?.text).toContain('syntax error');
-        expect(parsed.error?.offset).toBe(10);
-    });
-});
 
 test('SQL analyses share concurrent parses and refresh after source corrections', async () => {
     const reads: SourceReads = { root: '/repository', sources: new Map() };

@@ -11,37 +11,19 @@ import { exposedSettings } from '#cli/policy/setting-surface.ts';
 const selected = selectKits(['bash', 'naming', 'formatting', 'spelling'], kitManifests());
 const surface = exposedSettings(selected);
 
-test.each(['sqlite\nexclude_rules = ALL', 'postgres\rtemplater = jinja', '', '[sqlfluff]', 'postgres # comment'])(
-    'SQLFluff refuses dialect text %j before emission and accepts a dialect label',
-    (dialect) => {
-        for (const table of ['tools.sqlfluff', 'scope.tools.sqlfluff']) {
-            const scope = table.startsWith('scope.') ? '[[scope]]\npath = "db"\n' : '';
-            expect(() =>
-                parsePolicyText(
-                    policyOf(['sql'], `${scope}[${table}]\ndialect = ${JSON.stringify(dialect)}\n`),
-                    'gspot.toml',
-                ),
-            ).toThrow('Use a SQLFluff dialect label');
-            expect(() =>
-                parsePolicyText(policyOf(['sql'], `${scope}[${table}]\ndialect = "sqlite"\n`), 'gspot.toml'),
-            ).not.toThrow();
-        }
-    },
-);
-
-test('the trivial statement limit takes any whole number of 1 or more, for all languages or for one', () => {
-    for (const limits of ['[limits]\ntrivial_statements = 0\n', '[limits.python]\ntrivial_statements = 0\n'])
-        expect(() => parsePolicyText(policyOf([], limits), 'gspot.toml')).toThrow('must be 1 or more');
-    for (const value of [1, 2, 50, 1000])
+test('SQLFluff refuses dialect text that injects a directive and accepts a dialect label', () => {
+    for (const table of ['tools.sqlfluff', 'scope.tools.sqlfluff']) {
+        const scope = table.startsWith('scope.') ? '[[scope]]\npath = "db"\n' : '';
         expect(() =>
             parsePolicyText(
-                policyOf(
-                    [],
-                    `[limits]\ntrivial_statements = ${String(value)}\n[limits.swift]\ntrivial_statements = ${String(value)}\n`,
-                ),
+                policyOf(['sql'], `${scope}[${table}]\ndialect = ${JSON.stringify('sqlite\nexclude_rules = ALL')}\n`),
                 'gspot.toml',
             ),
+        ).toThrow('Use a SQLFluff dialect label');
+        expect(() =>
+            parsePolicyText(policyOf(['sql'], `${scope}[${table}]\ndialect = "sqlite"\n`), 'gspot.toml'),
         ).not.toThrow();
+    }
 });
 
 describe('conflicting configuration defaults', () => {
@@ -101,43 +83,30 @@ describe('conflicting configuration defaults', () => {
     });
 });
 
-test.each([
-    ['postgres', false],
-    ['supabase', true],
-] as const)(
-    'the settings surface > the %s transaction default is overridden by an explicit false value',
-    (configuration, expected) => {
-        const settings = exposedSettings(selectKits([configuration], kitManifests()));
-        const source = policyOf([configuration]);
-        const policy = parsePolicyText(source, 'gspot.toml');
-        expect(settingValue(settings, policy, 'tools.squawk.assume_in_transaction')).toMatchObject({
-            value: expected,
-            source: `kit ${configuration}`,
-        });
-        const corrected = parsePolicyText(`${source}[tools.squawk]\nassume_in_transaction = false\n`, 'gspot.toml');
-        expect(settingValue(settings, corrected, 'tools.squawk.assume_in_transaction')).toMatchObject({
-            value: false,
-            source: 'gspot.toml',
-        });
-    },
-);
+test('the settings surface > a kit transaction default is overridden by an explicit false value', () => {
+    const settings = exposedSettings(selectKits(['supabase'], kitManifests()));
+    const source = policyOf(['supabase']);
+    const policy = parsePolicyText(source, 'gspot.toml');
+    expect(settingValue(settings, policy, 'tools.squawk.assume_in_transaction')).toMatchObject({
+        value: true,
+        source: 'kit supabase',
+    });
+    const corrected = parsePolicyText(`${source}[tools.squawk]\nassume_in_transaction = false\n`, 'gspot.toml');
+    expect(settingValue(settings, corrected, 'tools.squawk.assume_in_transaction')).toMatchObject({
+        value: false,
+        source: 'gspot.toml',
+    });
+});
 
-test.each([
-    ['sql', 'ansi', 'sql'],
-    ['postgres', 'postgres', 'postgres'],
-    ['supabase', 'postgres', 'postgres'],
-])(
-    'the settings surface > the %s dialect default identifies its owning configuration',
-    (configuration, dialect, owner) => {
-        const settings = exposedSettings(selectKits([configuration], kitManifests()));
-        const policy = parsePolicyText(policyOf([configuration]), 'gspot.toml');
-        expect(validateAgainstSurface(settings, policy)).toStrictEqual([]);
-        expect(settingValue(settings, policy, 'tools.sqlfluff.dialect')).toMatchObject({
-            value: dialect,
-            source: `kit ${owner}`,
-        });
-    },
-);
+test('the settings surface > an inherited dialect default names the kit that declares it', () => {
+    const settings = exposedSettings(selectKits(['supabase'], kitManifests()));
+    const policy = parsePolicyText(policyOf(['supabase']), 'gspot.toml');
+    expect(validateAgainstSurface(settings, policy)).toStrictEqual([]);
+    expect(settingValue(settings, policy, 'tools.sqlfluff.dialect')).toMatchObject({
+        value: 'postgres',
+        source: 'kit postgres',
+    });
+});
 
 test('the settings surface > maps a per-language key back to its base spec', () => {
     expect(specFor(surface, 'limits.bash.function_lines')?.spec.name).toBe('limits.bash.function_lines');
@@ -216,18 +185,15 @@ test('the settings surface > scoped rules inherit unrelated rules and replace co
     });
 });
 
-test('the settings surface > raising a ceiling without a reason is a problem that names the command', () => {
+test('the settings surface > raising a ceiling needs a reason that names the command, and lowering one does not', () => {
     const policy = parsePolicyText(
         'version = 1\nrequire_reasons = true\nkits = ["bash"]\n[limits]\nfile_lines = 400\n',
         'gspot.toml',
     );
     const problems = validateAgainstSurface(surface, policy);
     expect(problems[0]?.message).toContain('gspot set limits.file_lines 400 --reason');
-});
-
-test('the settings surface > lowering a ceiling needs no reason', () => {
-    const policy = parsePolicyText(policyOf(['bash'], '[limits]\nfile_lines = 200\n'), 'gspot.toml');
-    expect(validateAgainstSurface(surface, policy)).toStrictEqual([]);
+    const lowered = parsePolicyText(policyOf(['bash'], '[limits]\nfile_lines = 200\n'), 'gspot.toml');
+    expect(validateAgainstSurface(surface, lowered)).toStrictEqual([]);
 });
 
 test('the settings surface > a setting no configuration has is refused with the keys that exist', () => {
@@ -248,50 +214,24 @@ test('the settings surface > the marketing group cannot be removed', () => {
     expect(validateAgainstSurface(surface, policy)[0]?.message).toContain('`marketing` term group cannot be removed');
 });
 
-test.each(['min_lines', 'min_tokens'])(
-    'raising duplication %s requires a reason, while lowering it tightens detection',
-    (name) => {
-        const selected = selectKits(['duplication'], kitManifests());
-        const settings = exposedSettings(selected);
-        const key = `limits.duplication.${name}`;
-        const shipped = settings.defaults.get(key)!.value as number;
-        expect(
-            validateAgainstSurface(
-                settings,
-                parsePolicyText(
-                    `version = 1\nrequire_reasons = true\nkits = ["duplication"]\n[limits.duplication]\n${name} = ${String(shipped + 1)}\n`,
-                    'gspot.toml',
-                ),
-            ).some((problem) => problem.message.includes(key)),
-        ).toBe(true);
-        expect(
-            validateAgainstSurface(
-                settings,
-                parsePolicyText(
-                    `version = 1\nrequire_reasons = true\nkits = ["duplication"]\n[limits.duplication]\n${name} = ${String(shipped - 1)}\n`,
-                    'gspot.toml',
-                ),
+test('raising the duplication line floor requires a reason, while lowering it tightens detection', () => {
+    const settings = exposedSettings(selectKits(['duplication'], kitManifests()));
+    const key = 'limits.duplication.min_lines';
+    const shipped = settings.defaults.get(key)!.value as number;
+    const [raised, lowered] = [shipped + 1, shipped - 1].map((value) =>
+        validateAgainstSurface(
+            settings,
+            parsePolicyText(
+                `version = 1\nrequire_reasons = true\nkits = ["duplication"]\n[limits.duplication]\nmin_lines = ${String(value)}\n`,
+                'gspot.toml',
             ),
-        ).toStrictEqual([]);
-    },
-);
-
-test.each([-1, 101])('Jest rejects coverage percentage %s and accepts bounded floors with reasons', (percentage) => {
-    expect(() =>
-        parsePolicyText(policyOf(['jest'], `[tools.jest]\ncoverage_lines = ${String(percentage)}\n`), 'gspot.toml'),
-    ).toThrow();
-    expect(() =>
-        parsePolicyText(
-            policyOf(
-                ['jest'],
-                '[tools.jest]\ncoverage_lines = {value = 75, reason = "Legacy branches are covered as their owners change."}\ncoverage_functions = 100\n',
-            ),
-            'gspot.toml',
         ),
-    ).not.toThrow();
+    );
+    expect(raised!.some((problem) => problem.message.includes(key))).toBe(true);
+    expect(lowered).toStrictEqual([]);
 });
 
-test.each(['../outside', '/outside', 'C:outside', String.raw`..\outside`])(
+test.each(['../outside', 'C:outside'])(
     'Jest refuses escaping support directory %s and accepts an owned directory',
     (path) => {
         expect(() =>

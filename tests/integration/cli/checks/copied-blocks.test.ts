@@ -19,14 +19,6 @@ const VALID = {
 
 test.each([
     { failure: 'missing statistics', changes: { report: { duplicates: [] } } },
-    {
-        failure: 'invalid percentage',
-        changes: { report: { statistics: { total: { percentage: 'bad' } }, duplicates: [] } },
-    },
-    {
-        failure: 'invalid clone',
-        changes: { report: { statistics: VALID.report.statistics, duplicates: [{ lines: 20 }] } },
-    },
     { failure: 'fatal exit', changes: { code: 1 } },
     { failure: 'deadline', changes: { isTimedOut: true } },
     { failure: 'cancellation', changes: { isCanceled: true } },

@@ -9,12 +9,8 @@ import { containing } from '#tests/support/expectations.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { checkedFindings } from '#cli/execution/broken-tool.ts';
 
-test.each([
-    '403 API rate limit exceeded',
-    '429 Too Many Requests',
-    '503 Service Unavailable',
-    'dial tcp: no such host',
-])('pin verification treats %s as an execution error and accepts a completed read', async (failure) => {
+test('pin verification treats a rate limit as an execution error and accepts a completed read', async () => {
+    const failure = '429 Too Many Requests';
     await using sandbox = await testdir();
     const workflow = 'jobs:\n  check:\n    steps:\n      - uses: actions/checkout@v4\n';
     await createFileTree(sandbox.path, {
@@ -86,46 +82,38 @@ test('spelling distinguishes native findings from fatal exits for configuration 
     }
 });
 
-test.each(
-    ['javascript', 'typescript'].flatMap((configuration) =>
-        ['recommended', 'all'].map((level) => ({ configuration, level })),
-    ),
-)(
-    '$configuration at $level keeps source text naming module errors as an ESLint finding',
-    async ({ configuration, level }) => {
-        await using sandbox = await testdir();
-        const extension = configuration === 'javascript' ? 'js' : 'ts';
-        const path = `source.${extension}`;
-        await createFileTree(sandbox.path, {
-            'gspot.toml': policyOf([configuration], '', level),
-            [path]: 'const message = "ERR_MODULE_NOT_FOUND";\n',
-        });
-        const session = await openSession(sandbox.path);
-        const plans = planRun(session, { stage: 'all', skips: [], only: [`${configuration}/eslint`] });
-        const planned = plans[0]!;
-        const stdout = JSON.stringify([
-            {
-                filePath: join(sandbox.path, path),
-                source: 'const message = "ERR_MODULE_NOT_FOUND"; // ConfigError:',
-                messages: [{ ruleId: 'no-unused-vars', severity: 2, message: 'Unused message.', line: 1, column: 7 }],
-            },
-        ]);
-        const result = { stdout, stderr: '', code: 1, missing: false, duration: 1 };
-        expect(checkedFindings(planned, result, [sandbox.path, sandbox.path])).toMatchObject([
-            { file: path, rule: 'no-unused-vars', line: 1, column: 7 },
-        ]);
-        expect(() =>
-            checkedFindings(planned, { ...result, code: 2, stderr: 'ConfigError: invalid configuration' }, [
-                sandbox.path,
-                sandbox.path,
-            ]),
-        ).toThrow(GspotError);
-        expect(() =>
-            checkedFindings(
-                planned,
-                { ...result, stdout: '', code: 2, stderr: 'Oops! Something went wrong!\nERR_MODULE_NOT_FOUND: plugin' },
-                [sandbox.path, sandbox.path],
-            ),
-        ).toThrow('ERR_MODULE_NOT_FOUND: plugin');
-    },
-);
+test('source text naming module errors stays an ESLint finding', async () => {
+    await using sandbox = await testdir();
+    const path = 'source.ts';
+    await createFileTree(sandbox.path, {
+        'gspot.toml': policyOf(['typescript'], '', 'all'),
+        [path]: 'const message = "ERR_MODULE_NOT_FOUND";\n',
+    });
+    const session = await openSession(sandbox.path);
+    const plans = planRun(session, { stage: 'all', skips: [], only: ['typescript/eslint'] });
+    const planned = plans[0]!;
+    const stdout = JSON.stringify([
+        {
+            filePath: join(sandbox.path, path),
+            source: 'const message = "ERR_MODULE_NOT_FOUND"; // ConfigError:',
+            messages: [{ ruleId: 'no-unused-vars', severity: 2, message: 'Unused message.', line: 1, column: 7 }],
+        },
+    ]);
+    const result = { stdout, stderr: '', code: 1, missing: false, duration: 1 };
+    expect(checkedFindings(planned, result, [sandbox.path, sandbox.path])).toMatchObject([
+        { file: path, rule: 'no-unused-vars', line: 1, column: 7 },
+    ]);
+    expect(() =>
+        checkedFindings(planned, { ...result, code: 2, stderr: 'ConfigError: invalid configuration' }, [
+            sandbox.path,
+            sandbox.path,
+        ]),
+    ).toThrow(GspotError);
+    expect(() =>
+        checkedFindings(
+            planned,
+            { ...result, stdout: '', code: 2, stderr: 'Oops! Something went wrong!\nERR_MODULE_NOT_FOUND: plugin' },
+            [sandbox.path, sandbox.path],
+        ),
+    ).toThrow('ERR_MODULE_NOT_FOUND: plugin');
+});

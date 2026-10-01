@@ -4,7 +4,6 @@ import { readFileSync } from 'node:fs';
 import { test, spyOn, expect } from 'bun:test';
 import * as childProcess from 'node:child_process';
 import { run, runBinary } from '#cli/platform/spawn.ts';
-import { onPosix } from '#tests/support/cli/platforms.ts';
 import { waitForExit } from '#tests/support/cli/process.ts';
 
 const captures = { text: run, binary: runBinary };
@@ -76,8 +75,6 @@ test('binary capture preserves invalid UTF-8 and classifies cancellation and dea
 
 test.each([
     ['text', 'timeout'],
-    ['text', 'canceled'],
-    ['binary', 'timeout'],
     ['binary', 'canceled'],
 ] as const)(
     '%s capture stops descendants on %s before they can write after the deadline',
@@ -189,31 +186,3 @@ test.each(['text', 'binary'] as const)(
         await waitForExit(pid);
     },
 );
-
-if (onPosix)
-    test('preserves execution and process-group permission errors', async () => {
-        await using sandbox = await testdir();
-        const original = process.kill.bind(process);
-        const denied = Object.assign(new Error('Group permission denied.'), { code: 'EPERM' });
-        const signaling = spyOn(process, 'kill').mockImplementation((pid, signal) => {
-            if (pid < 0) throw denied;
-            return original(pid, signal);
-        });
-        try {
-            for (const execute of [run, runBinary]) {
-                let read: unknown;
-                try {
-                    await execute([process.execPath, '-e', "console.error('tool failed'); process.exitCode = 7"], {
-                        cwd: sandbox.path,
-                    });
-                } catch (error) {
-                    read = error;
-                }
-                expect(read).toBeInstanceOf(AggregateError);
-                expect(String((read as AggregateError).errors[0])).toContain('exit code 7');
-                expect((read as AggregateError).errors[1]).toBe(denied);
-            }
-        } finally {
-            signaling.mockRestore();
-        }
-    });

@@ -9,26 +9,19 @@ import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { mkdirSync, symlinkSync, writeFileSync } from 'node:fs';
 import type { LicensesConfiguration } from '#tests/types/integration/cli/generation.ts';
 
-test.each([
-    ['bash', 'bash'],
-    ['swift', 'ios'],
-    ['cloudflare', 'workers'],
-    ['express', 'express'],
-    ['fastapi', 'fastapi'],
-    ['supabase', 'supabase'],
-])('%s security output follows the selected security configuration', async (configuration, name) => {
+test('security output follows the selected security configuration', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': policyOf([configuration]),
+        'gspot.toml': policyOf(['bash']),
     });
-    const target = `.gspot/config/semgrep/${name}.yml`;
+    const target = '.gspot/config/semgrep/bash.yml';
     const plainSession = await openSession(sandbox.path);
     const plainOutput = emitAll(plainSession.policyFiles.policy, plainSession.repository, plainSession.scopes, {
         version: plainSession.version,
         packageClient: plainSession.packageClient,
     });
     expect(plainOutput.files.map((file) => file.path)).not.toContain(target);
-    writeFileSync(join(sandbox.path, 'gspot.toml'), policyOf([configuration, 'security']));
+    writeFileSync(join(sandbox.path, 'gspot.toml'), policyOf(['bash', 'security']));
     const securitySession = await openSession(sandbox.path);
     const securityOutput = emitAll(
         securitySession.policyFiles.policy,

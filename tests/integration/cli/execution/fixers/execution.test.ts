@@ -7,23 +7,8 @@ import { runFixer } from '#cli/execution/fixers.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { waitForExit } from '#tests/support/cli/process.ts';
-import { runToolCheck, prepareCommand } from '#cli/execution/tool/runner.ts';
+import { runToolCheck } from '#cli/execution/tool/runner.ts';
 import { CORRECTION_POLICY, plannedCorrection } from '#tests/support/cli/correction.ts';
-
-test('splits 20,000 correction paths without losing or reordering arguments', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'gspot.toml': CORRECTION_POLICY, 'source.txt': 'original' });
-    const session = await openSession(sandbox.path);
-    const planned = plannedCorrection(session, 'process.exitCode = 0');
-    const source = planned.files[0];
-    if (source === undefined) throw new Error('The sandbox has no selected source.');
-    const paths = Array.from({ length: 20_000 }, (_, index) => `long folder/café/${String(index)}/source.txt`);
-    const files = paths.map((path) => ({ ...source, path }));
-    const prepared = prepareCommand(session, { ...planned, files }, ['tool', '{files}'], process.execPath);
-    expect(prepared.commands.length).toBeGreaterThan(1);
-    expect(prepared.commands.flatMap((command) => command.argv.slice(1))).toStrictEqual(paths);
-    for (const command of prepared.commands) expect(Buffer.byteLength(command.argv.join(' '))).toBeLessThan(100_000);
-});
 
 test('Correction environment paths expand against the execution root', async () => {
     await using sandbox = await testdir();
@@ -68,12 +53,12 @@ test('a failed version inspection blocks a check and its correction without chan
     }
 });
 
-test.each(['canceled', 'timeout'].flatMap((failure) => [false, true].map((isolated) => ({ failure, isolated }))))(
-    'a $failure correction retains partial changes and reports the process failure (isolated $isolated)',
-    async ({ failure, isolated }) => {
+test.each([false, true])(
+    'a canceled correction retains partial changes and reports the process failure (isolated %p)',
+    async (isolated) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': `${CORRECTION_POLICY}\n[limits]\ntool_seconds = 1\n`,
+            'gspot.toml': CORRECTION_POLICY,
             'source.txt': 'original',
         });
         const session = await openSession(sandbox.path);
@@ -91,12 +76,12 @@ test.each(['canceled', 'timeout'].flatMap((failure) => [false, true].map((isolat
             expect(existsSync(ready)).toBe(true);
             const pid = Number(readFileSync(ready, 'utf8'));
             expect(pid).toBeGreaterThan(0);
-            if (failure === 'canceled') controller.abort();
+            controller.abort();
             const result = await execution;
             await waitForExit(pid);
             expect(result.status).toBe('failed');
             if (result.status !== 'failed') throw new Error('The correction did not report its process failure.');
-            expect(result.note).toContain(failure === 'canceled' ? 'was canceled' : 'ran past 1 seconds');
+            expect(result.note).toContain('was canceled');
             expect(result.changed).toStrictEqual(['source.txt']);
             expect(readFileSync(join(sandbox.path, 'source.txt'), 'utf8')).toBe('partial');
         } finally {

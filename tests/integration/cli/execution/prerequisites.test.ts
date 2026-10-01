@@ -8,39 +8,36 @@ import { planRun } from '#cli/execution/planning/plan.ts';
 import { checkExecution } from '#cli/execution/engines.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { textContaining } from '#tests/support/expectations.ts';
-import { WAITING, PREREQUISITES_POLICY } from '#tests/inputs/integration/cli/execution/execution.ts';
 
-test('disabled settings produce skipped results and enabling a setting runs the check', async () => {
+test('a disabled setting skips its check and enabling the setting runs it', async () => {
+    const policy = policyOf(['xcode'], '', 'all');
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': PREREQUISITES_POLICY,
-        'Tests/ExampleTests.swift': 'import XCTest\nfinal class ExampleTests: XCTestCase {}\n',
+        'gspot.toml': policy,
         'App.entitlements':
             '<?xml version="1.0"?><plist><dict><key>aps-environment</key><string>development</string></dict></plist>',
-        'page.html': '<!doctype html><html lang="en"><title>Example</title></html>',
     });
     const options = {
         stage: 'all' as const,
         skips: [],
-        only: Object.keys(WAITING),
+        only: ['xcode/entitlements-policy'],
         fix: false,
         isDryRun: false,
     };
     const session = await openSession(sandbox.path);
     const outcome = await executeRun(session, options);
-    expect(new Set(outcome.report.checks.map((check) => check.check))).toStrictEqual(new Set(Object.keys(WAITING)));
-    for (const check of outcome.report.checks) {
-        expect(check.status).toBe('skipped');
-        expect(check.note).toContain(WAITING[check.check]);
-    }
+    expect(outcome.report.checks).toMatchObject([
+        {
+            check: 'xcode/entitlements-policy',
+            status: 'skipped',
+            note: textContaining('tools.xcode.entitlements_allowed'),
+        },
+    ]);
     writeFileSync(
         join(sandbox.path, 'gspot.toml'),
-        PREREQUISITES_POLICY + '[tools.xcode]\nentitlements_allowed = ["com.apple.security.app-sandbox"]\n',
+        policy + '[tools.xcode]\nentitlements_allowed = ["com.apple.security.app-sandbox"]\n',
     );
-    const enabled = await executeRun(await openSession(sandbox.path), {
-        ...options,
-        only: ['xcode/entitlements-policy'],
-    });
+    const enabled = await executeRun(await openSession(sandbox.path), options);
     expect(enabled.report.exitCode).toBe(1);
     expect(enabled.report.checks[0]?.status).toBe('fail');
     expect(enabled.report.checks[0]?.findings[0]?.message).toContain('aps-environment is not an allowed entitlement');

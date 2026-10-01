@@ -488,7 +488,7 @@ reason = "These configuration evaluators intentionally execute repository-select
 check = "typescript/eslint"
 rule = "gspot/no-trivial-functions"
 paths = ["packages/cli/src/policy/messages.ts"]
-reason = "Every policy message has one builder here, and tests/unit/cli/policy/messages.test.ts reads each builder for the shared vocabulary. A builder is one template, so the trivial-function rule would ask for every message text to be copied to its callers. Remove this entry if the catalog moves out of functions."
+reason = "Every policy message has one builder here, so callers share one wording. A builder is one template, so the trivial-function rule would ask for every message text to be copied to its callers. Remove this entry if the catalog moves out of functions."
 
 [[ignore]]
 check = "typescript/eslint"

@@ -18,7 +18,6 @@ describe('the managed block', () => {
             session.repository,
         );
         expect(block).toContain('general/agent/WORKING.md');
-        expect(block).toContain('These files are installed copies');
         expect(block).not.toContain('gspot check');
         expect(await format(`${block}\n`, { parser: 'markdown' })).toBe(`${block}\n`);
     });

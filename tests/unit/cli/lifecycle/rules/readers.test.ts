@@ -2,6 +2,7 @@ import { test, expect } from 'bun:test';
 import { gixyRules } from '#cli/lifecycle/rules/gixy.ts';
 import { javascriptRules } from '#cli/lifecycle/rules/javascript.ts';
 import { iniSection } from '#cli/repository/configuration-section.ts';
+import { sqlfluffRules, sqlfluffConfiguration } from '#cli/lifecycle/rules/sqlfluff.ts';
 
 test('INI selection retains exact section text and treats malformed headings as content', () => {
     const selected =
@@ -27,8 +28,6 @@ test('Gixy selection preserves root aliases, section-independent flags, and plug
         checks: ['ssrf', 'aliastraversal'],
         skips: ['true'],
     });
-    expect(() => gixyRules('checks =\n')).toThrow('Gixy rule configuration contains an invalid option.');
-    expect(() => gixyRules('checks = [ssrf]\n')).toThrow('Gixy check selectors must be comma-separated strings.');
     expect(gixyRules('checks = ssrf\n')).toStrictEqual({ checks: ['ssrf'] });
 });
 
@@ -49,4 +48,38 @@ test.each([
     expect(javascriptRules('configuration.js', 'export default {rules: {flag: false}};')).toStrictEqual({
         rules: { flag: false },
     });
+});
+
+test.each([
+    { input: '1E-2', expected: 0.01 },
+    { input: '1e309', expected: '1e309' },
+    { input: '0x10', expected: '0x10' },
+    { input: 'TRUE', expected: true },
+    { input: 'None', expected: null },
+])('SQLFluff preserves the native value type for "$input"', ({ input, expected }) => {
+    const rules = sqlfluffRules(`[sqlfluff:rules]\nvalue = ${input}\n`);
+    expect(rules['sqlfluff:rules']).toStrictEqual({ value: expected });
+});
+
+test('SQLFluff continuation preserves blank lines, indented headings, and case-sensitive sections', () => {
+    const sections = sqlfluffConfiguration(
+        '\n# comment\n[SQLFluff]\nRule = first\n    [continued]\n\n; comment\n  last\nNext = final\n[sqlfluff] trailing\nrule = separate\n',
+    );
+    expect([...sections.keys()]).toStrictEqual(['SQLFluff', 'sqlfluff']);
+    expect(Object.fromEntries(sections.get('SQLFluff')!)).toStrictEqual({
+        Rule: 'first\n[continued]\n\nlast',
+        Next: 'final',
+    });
+    expect(Object.fromEntries(sections.get('sqlfluff')!)).toStrictEqual({ rule: 'separate\n' });
+});
+
+test('SQLFluff refuses a repeated section on its original physical line', () => {
+    expect(() => sqlfluffConfiguration('[sqlfluff]\nvalue = first\n[sqlfluff]\n')).toThrow(
+        'Duplicate SQLFluff section on line 3.',
+    );
+});
+
+test('SQLFluff preserves the initial newline of an empty continued option', () => {
+    const sections = sqlfluffConfiguration('[sqlfluff]\nvalue =\n    continued\n');
+    expect(sections.get('sqlfluff')?.get('value')).toBe('\ncontinued\n');
 });

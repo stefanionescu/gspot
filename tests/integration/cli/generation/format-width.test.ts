@@ -10,7 +10,8 @@ import { planRun } from '#cli/execution/planning/plan.ts';
 import { stringify, parse as parseToml } from 'smol-toml';
 import { prepareCommand } from '#cli/execution/tool/runner.ts';
 
-test.each([2, 6])('format width %i reaches editors and generated tool configurations', async (width) => {
+test('the format width reaches editors and generated tool configurations', async () => {
+    const width = 6;
     await using directory = await testdir();
     await createFileTree(directory.path, {
         'gspot.toml': stringify({

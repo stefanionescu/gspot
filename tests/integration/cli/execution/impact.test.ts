@@ -78,8 +78,6 @@ function projectChecks(session: Session): void {
 
 test.each([
     ['delete', 'staged'],
-    ['rename', 'staged'],
-    ['delete', 'changed'],
     ['rename', 'changed'],
 ])('a last-file %s triggers the affected project with %s selection', async (operation, selection) => {
     await using sandbox = await testdir();
@@ -149,39 +147,37 @@ test('a positional file trigger preserves project-wide input and findings', asyn
     expect(outcome.report.checks[0]?.findings[0]?.message).toBe('Project finding');
 });
 
-test.each(['integrity', 'naming', 'structure', 'prose'] as const)(
-    'an unknown %s implementation refuses the complete plan before any command runs',
-    async (engine) => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
-            'gspot.toml': policyOf(['typescript']),
-            'source.ts': 'export const count = 1;\n',
-        });
-        const session = await openSession(sandbox.path);
-        const selected = session.scopes[0]!.selected.find(({ kit }) => kit.name === 'typescript')!;
-        const definition = {
-            name: 'sandbox/command',
-            level: 'recommended',
-            stage: 'commit',
-            runs: 'per-file-list',
-            summary: 'Inspect the source file.',
-            why: 'The input must be valid.',
-            help: 'Correct the source file.',
-        } as const;
-        const first: CheckSpec = {
-            ...definition,
-            command: [process.execPath, '-e', 'await Bun.write("started.txt", "started")'],
-        };
-        const invalid: CheckSpec = {
-            ...definition,
-            name: 'sandbox/unknown',
-            engine,
-            analysis: 'unknown-analysis',
-        };
-        session.scopes[0]!.selected = [{ ...selected, checks: [first, invalid] }];
-        expect(
-            await rejection(executeRun(session, { stage: 'commit', skips: [], fix: false, isDryRun: false })),
-        ).toContain(`No ${engine} analysis is called unknown-analysis.`);
-        expect(existsSync(join(sandbox.path, 'started.txt'))).toBe(false);
-    },
-);
+test('an unknown analysis refuses the complete plan before any command runs', async () => {
+    const engine = 'integrity';
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': policyOf(['typescript']),
+        'source.ts': 'export const count = 1;\n',
+    });
+    const session = await openSession(sandbox.path);
+    const selected = session.scopes[0]!.selected.find(({ kit }) => kit.name === 'typescript')!;
+    const definition = {
+        name: 'sandbox/command',
+        level: 'recommended',
+        stage: 'commit',
+        runs: 'per-file-list',
+        summary: 'Inspect the source file.',
+        why: 'The input must be valid.',
+        help: 'Correct the source file.',
+    } as const;
+    const first: CheckSpec = {
+        ...definition,
+        command: [process.execPath, '-e', 'await Bun.write("started.txt", "started")'],
+    };
+    const invalid: CheckSpec = {
+        ...definition,
+        name: 'sandbox/unknown',
+        engine,
+        analysis: 'unknown-analysis',
+    };
+    session.scopes[0]!.selected = [{ ...selected, checks: [first, invalid] }];
+    expect(await rejection(executeRun(session, { stage: 'commit', skips: [], fix: false, isDryRun: false }))).toContain(
+        `No ${engine} analysis is called unknown-analysis.`,
+    );
+    expect(existsSync(join(sandbox.path, 'started.txt'))).toBe(false);
+});

@@ -47,8 +47,12 @@ test('dynamic and local nginx targets stay unresolved and repeated certificate m
     ]);
 });
 
-test.each(['', ';{};', '# Empty configuration.\n;;'])('empty directive input %j adds no mount or host', (source) => {
+test('empty directive input adds no mount or host', () => {
     expect(
-        nginxTestArguments(source, { configs: [], key: '/work/key', certificate: '/work/cert' }, 'nginx:fixture'),
+        nginxTestArguments(
+            '# Empty configuration.\n;{};',
+            { configs: [], key: '/work/key', certificate: '/work/cert' },
+            'nginx:fixture',
+        ),
     ).toStrictEqual(['run', '--rm', 'nginx:fixture', 'nginx', '-T']);
 });

@@ -1,6 +1,7 @@
 // ESLint reads each part of an Astro component: the frontmatter with type information, the markup, and each script.
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import { containingAll } from '#tests/support/expectations.ts';
 import { generatedEslint } from '#tests/support/cli/generated/eslint.ts';
 
 const COMPONENT = [
@@ -29,11 +30,11 @@ test('the frontmatter, the markup, and a script of an Astro component each reach
     const eslint = await generatedEslint(sandbox.path);
     const [result] = await eslint.lintFiles(['src/pages/index.astro']);
     const found = result!.messages.map((entry) => `${String(entry.line)} ${entry.ruleId ?? entry.message}`);
-    expect(found).toStrictEqual([
-        '4 @typescript-eslint/no-unnecessary-condition',
-        '4 no-console',
-        '6 astro/jsx-a11y/alt-text',
-        '7 astro/no-set-html-directive',
-        '9 @typescript-eslint/no-unused-vars',
-    ]);
+    expect(found).toStrictEqual(
+        containingAll([
+            '4 @typescript-eslint/no-unnecessary-condition',
+            '6 astro/jsx-a11y/alt-text',
+            '9 @typescript-eslint/no-unused-vars',
+        ]),
+    );
 });

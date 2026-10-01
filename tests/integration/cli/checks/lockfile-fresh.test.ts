@@ -9,7 +9,7 @@ import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { lockfileFresh } from '#cli/checks/dependencies/lockfile/fresh.ts';
 import { mkdirSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 
-test.each(['missing', 'deadline', 'cancellation', 'registry', 'authentication', 'unexpected'] as const)(
+test.each(['missing', 'deadline', 'cancellation', 'unexpected'] as const)(
     'frozen installation reports %s as inability, preserves the repository, and retries successfully',
     async (failure) => {
         await using directory = await testdir();

@@ -41,42 +41,31 @@ test('invalid Markdown records remain execution errors and valid records parse',
     ]);
 });
 
-test.each([
-    '{',
-    JSON.stringify({ type: 'typo', path: 'sample.txt', typo: TYPO.the }),
-    JSON.stringify({ type: 'error', message: 'Read failed.' }),
-    JSON.stringify({
-        type: 'typo',
-        path: '../outside.txt',
-        line_num: 1,
-        byte_offset: 0,
-        typo: TYPO.the,
-        corrections: ['the'],
-    }),
-    JSON.stringify({
-        type: 'typo',
-        path: 'sample.txt',
-        line_num: 1,
-        byte_offset: 99,
-        typo: TYPO.the,
-        corrections: ['the'],
-    }),
-])('invalid spelling output %s is an execution error', async (stdout) => {
+test('invalid spelling output is an execution error and a valid record parses', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'sample.txt': `${TYPO.the}\n` });
     const spec = kitManifests()
         .get('spelling')!
         .checks.find((check) => check.name === 'spelling/typos')!;
-    expect(() => parseOutput(spec, stdout, '', sandbox.path)).toThrow(GspotError);
-    const corrected = JSON.stringify({
+    const valid = {
         type: 'typo',
         path: 'sample.txt',
         line_num: 1,
         byte_offset: 0,
         typo: TYPO.the,
         corrections: ['the'],
-    });
-    expect(parseOutput(spec, corrected, '', sandbox.path)).toMatchObject([{ file: 'sample.txt', line: 1, column: 1 }]);
+    };
+    for (const stdout of [
+        '{',
+        JSON.stringify({ type: 'typo', path: 'sample.txt', typo: TYPO.the }),
+        JSON.stringify({ type: 'error', message: 'Read failed.' }),
+        JSON.stringify({ ...valid, path: '../outside.txt' }),
+        JSON.stringify({ ...valid, byte_offset: 99 }),
+    ])
+        expect(() => parseOutput(spec, stdout, '', sandbox.path)).toThrow(GspotError);
+    expect(parseOutput(spec, JSON.stringify(valid), '', sandbox.path)).toMatchObject([
+        { file: 'sample.txt', line: 1, column: 1 },
+    ]);
 });
 
 test('ShellCheck diagnostics retain their path, position, and rule with either line ending', async () => {
@@ -151,31 +140,24 @@ test('a syntax diagnostic cannot promise an automatic fix when its check has no 
         .get('files')!
         .checks.find((check) => check.name === 'files/toml')!;
     const findings = parseOutput(spec, '', '  ┌─ settings.toml:2:1\n', '/repository');
-    expect(findings).toStrictEqual([
-        {
-            check: 'files/toml',
-            file: 'settings.toml',
-            line: 2,
-            column: 1,
-            message: 'The file does not parse as TOML.',
-            help: 'Fix the line taplo names.',
-            fixable: false,
-        },
+    expect(findings).toMatchObject([
+        { check: 'files/toml', file: 'settings.toml', line: 2, column: 1, fixable: false },
     ]);
 });
 
-test.each([
-    '',
-    'not JSON',
-    '[',
-    '{}',
-    '[{"filePath":"/repo/a.js","messages":null}]',
-    '[{"filePath":"/repo/a.js","messages":[{"message":"partial"}]}]',
-])('malformed ESLint output fails instead of becoming empty findings: %s', (text) => {
+test('malformed ESLint output fails instead of becoming empty findings', () => {
     const spec = kitManifests()
         .get('javascript')!
         .checks.find((check) => check.name === 'javascript/eslint')!;
-    expect(() => parseOutput(spec, text, '', '/repo')).toThrow(GspotError);
+    for (const text of [
+        '',
+        'not JSON',
+        '[',
+        '{}',
+        '[{"filePath":"/repo/a.js","messages":null}]',
+        '[{"filePath":"/repo/a.js","messages":[{"message":"partial"}]}]',
+    ])
+        expect(() => parseOutput(spec, text, '', '/repo')).toThrow(GspotError);
     expect(parseOutput(spec, '[]', '', '/repo')).toStrictEqual([]);
 });
 

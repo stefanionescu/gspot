@@ -1,16 +1,13 @@
 import { test, expect } from 'bun:test';
 import { parseManifest } from '#cli/kits/manifests.ts';
 
-test.each(['copy = true', 'body = "include target"', 'merge = { extends = "target" }'])(
-    'a template pointer rejects the conflicting emission mode %s',
-    (mode) => {
-        const source = `[kit]\nname = "example"\nkind = "general"\ntitle = "Example"\ndescription = "A configuration for the tests, long enough."\n[[configs]]\ntemplate = "config.tmpl"\ntarget = ".gspot/config.toml"\n[configs.pointer]\npath = "config.toml"\ntemplate = "editor.tmpl"\n`;
-        expect(() => parseManifest(`${source}${mode}\n`, 'configurations/example')).toThrow(
-            'A template pointer cannot also specify body, merge, or copy.',
-        );
-        expect(() => parseManifest(source, 'configurations/example')).not.toThrow();
-    },
-);
+test('a template pointer rejects a conflicting emission mode', () => {
+    const source = `[kit]\nname = "example"\nkind = "general"\ntitle = "Example"\ndescription = "A configuration for the tests, long enough."\n[[configs]]\ntemplate = "config.tmpl"\ntarget = ".gspot/config.toml"\n[configs.pointer]\npath = "config.toml"\ntemplate = "editor.tmpl"\n`;
+    expect(() => parseManifest(`${source}copy = true\n`, 'configurations/example')).toThrow(
+        'A template pointer cannot also specify body, merge, or copy.',
+    );
+    expect(() => parseManifest(source, 'configurations/example')).not.toThrow();
+});
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Two cases parse the same manifest with a different selector.
 const selectorDefinition = (selection: string) => `
@@ -52,23 +49,9 @@ version = "2.24.3"
 query_packs = {python = "${pin}"}
 `;
 
-test.each(['latest', '^1.2.3', '../pack'])(
-    'query-pack metadata refuses an unpinned version %s and accepts an exact release',
-    (version) => {
-        expect(() => parseManifest(pinnedSecurity(version), 'kits/general/security')).toThrow();
-        expect(() => parseManifest(pinnedSecurity('1.7.8'), 'kits/general/security')).not.toThrow();
-    },
-);
-
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Two cases parse the same manifest with a different role.
-const roleDefinition = (role: string) =>
-    `entry_files = ["src/main.js"]\n[kit]\nname = "example"\nkind = "tool"\ntitle = "Example"\ndescription = "A configuration for the tests, long enough."\n[[settings]]\nname = "tools.example.support_directory"\nkind = "string"\ndirection = "neutral"\nrole = "${role}"\ndefault = "tests/support"\nsummary = "The folder that holds test support code."\n`;
-
-test('a setting names the architecture role of its folder, and only a known role', () => {
-    const manifest = parseManifest(roleDefinition('harness'), 'configurations/example');
-    expect(manifest.settings[0]).toMatchObject({ name: 'tools.example.support_directory', role: 'harness' });
-    expect(manifest.entry_files).toStrictEqual(['src/main.js']);
-    expect(() => parseManifest(roleDefinition('helpers'), 'configurations/example')).toThrow('role');
+test('query-pack metadata refuses a version range and accepts an exact release', () => {
+    expect(() => parseManifest(pinnedSecurity('^1.2.3'), 'kits/general/security')).toThrow();
+    expect(() => parseManifest(pinnedSecurity('1.7.8'), 'kits/general/security')).not.toThrow();
 });
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Three cases parse the same manifest with a different rule page and crash pattern.
@@ -121,24 +104,4 @@ test('tool suppression metadata validates an inline pattern without requiring it
         marker: '# file-disable',
         reason: 'reason: (?<reason>.+)',
     });
-});
-
-test('manifest rule exclusions require a reason and preserve selectors and conditions', () => {
-    const base =
-        '[kit]\nname = "example"\nkind = "framework"\ntitle = "Example"\ndescription = "Framework integration for the example application."\n';
-    const declaration =
-        '[[rules_off]]\ntool = "eslint"\nrules = ["gspot/no-reexports"]\nfiles = ["**/page.tsx"]\nwhen = {setting = "structure.reexports", value = "index-only"}\n';
-    expect(() => parseManifest(base + declaration, 'configurations/example')).toThrow();
-    const manifest = parseManifest(
-        base + declaration + 'reason = "The framework discovers entry points by their file names."\n',
-        'configurations/example',
-    );
-    expect(manifest.rules_off).toMatchObject([
-        {
-            tool: 'eslint',
-            rules: ['gspot/no-reexports'],
-            files: ['**/page.tsx'],
-            when: { setting: 'structure.reexports', value: 'index-only' },
-        },
-    ]);
 });

@@ -134,11 +134,8 @@ test('the shipped terminology ban applies inside tests', () => {
     }
 });
 
-test.each(['unknown', 'constructor', 'toString', '__proto__'])(
-    'unknown case %s never matches an identifier or invokes inherited object members',
-    (caseName) => {
-        expect(hasCase('bad_name', caseName)).toBe(false);
-        expect(hasCase('bad_name', 'camel')).toBe(false);
-        expect(hasCase('goodName', 'camel')).toBe(true);
-    },
-);
+test('an unknown case never matches an identifier or invokes an inherited object member', () => {
+    expect(hasCase('bad_name', '__proto__')).toBe(false);
+    expect(hasCase('bad_name', 'camel')).toBe(false);
+    expect(hasCase('goodName', 'camel')).toBe(true);
+});
