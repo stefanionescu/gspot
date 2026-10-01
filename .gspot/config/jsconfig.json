@@ -16,8 +16,7 @@
         "../../.gspot/**",
         "../../**/eslint.config.mjs",
         "../../**/eslint.config.js",
-        "../../**/eslint.config.cjs",
-        "../../tests/timings/*.json"
+        "../../**/eslint.config.cjs"
     ],
     "include": ["../../**/*.js", "../../**/*.mjs", "../../**/*.cjs", "../../**/*.jsx"]
 }

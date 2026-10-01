@@ -12,6 +12,7 @@
         "tests/support/cli/swiftformat.ts",
         "tests/support/registry/workspace-command.ts",
         "tests/support/package/run.ts",
+        "tests/support/acceptance.ts",
         "src/main.{ts,js}",
         "src/index.{ts,js}",
         "src/server.{ts,js}",
@@ -23,7 +24,7 @@
         "publish.ts"
     ],
     "project": ["**/*.{ts,tsx,mts,cts,js,mjs,cjs}"],
-    "ignore": [".gspot/**", "eslint.config.{js,mjs,cjs}", "tests/timings/*.json"],
+    "ignore": [".gspot/**", "eslint.config.{js,mjs,cjs}"],
     "ignoreDependencies": [
         "@gspothq/cli",
         "@gspothq/eslint-plugin",
@@ -152,6 +153,7 @@
                 "tests/support/cli/swiftformat.ts",
                 "tests/support/registry/workspace-command.ts",
                 "tests/support/package/run.ts",
+                "tests/support/acceptance.ts",
                 "src/main.{ts,js}",
                 "src/index.{ts,js}",
                 "src/server.{ts,js}",
@@ -221,7 +223,8 @@
                 "**/build.ts",
                 "support/cli/swiftformat.ts",
                 "support/registry/workspace-command.ts",
-                "support/package/run.ts"
+                "support/package/run.ts",
+                "support/acceptance.ts"
             ],
             "project": ["**/*.{ts,tsx,mts,cts,js,mjs,cjs}"],
             "ignoreDependencies": ["^.+$"]

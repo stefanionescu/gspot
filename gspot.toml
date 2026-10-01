@@ -405,6 +405,7 @@ entry = [
     "tests/support/cli/swiftformat.ts",
     "tests/support/registry/workspace-command.ts",
     "tests/support/package/run.ts",
+    "tests/support/acceptance.ts",
 ]
 
 [[tools.knip.ignore_dependencies]]
@@ -512,11 +513,6 @@ reason = "A permissive license with no conditions; it arrives through a test too
 
 [tools.jest]
 global_package = "bun:test"
-
-[[generated]]
-paths = ["tests/timings/*.json"]
-produced_by = "bun test --update-timings"
-reason = "Bun writes the duration of each test file that balances the CI shards, and a run replaces the file whole."
 
 [[ignore]]
 check = "jest/coverage"

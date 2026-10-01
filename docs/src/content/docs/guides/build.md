@@ -137,13 +137,8 @@ jobs:
 - `docs`: the documentation tests and the site build.
 - `package`: `mise run test:package`.
 - `unit`, on Linux, macOS, and Windows: `mise run test`.
-- `suite`: the tool and acceptance tests, in six shards on Linux, five on macOS, and six on
-  Windows. The Linux shards run the Supabase database tests, and the macOS shards run the Xcode
-  tests.
-
-Bun balances the shards by the duration of each file in `tests/timings/<system>.json`. Each
-shard uploads the durations it measured as a `timings-*` artifact. When the shards drift apart,
-merge the `files` of those artifacts into the file of their system.
+- `suite`: the tool and acceptance tests, in four shards on each system, split by file count.
+  The macOS shards run the Xcode tests.
 
 ## Publish the documentation
 
