@@ -22,7 +22,8 @@ approved it on October 1, 2026.
   the `architecture` folder, a part of stage 15.
 - Pull request #9 updated `devalue` to 5.9.4 for seven advisories that `dependencies/osv` reported on October 1.
 - Stage 12 is pull request #14, branch `refactor/delete-repeated-checks-dead-code`.
-- The next stage to start is stage 13.
+- Stage 13 is pull request #15, branch `refactor/ship-no-repository-defaults`.
+- The next stage to start is stage 14.
 
 ### Stages
 
@@ -42,7 +43,7 @@ One pull request per stage, in this order. Each merges with a merge commit only 
 | 10    | Cut command acceptance and package tests               | D.4 rows; pins move to a scheduled `pins.yml`                                                           | merged, #12            |
 | 11    | Cut kit acceptance tests                               | D.4 kit rows; find why `documents.test.ts` does not run on Linux                                        | merged, #13            |
 | 12    | Delete repeated checks, dead rules, and dead code      | 5.3, 5.4, 5.7, including `version = 1` and its gate                                                     | pull request #14       |
-| 13    | Ship no defaults written for this repository           | 5.5; `architecture.roles.harness` with no default; this repository sets its own roles                   | not started            |
+| 13    | Ship no defaults written for this repository           | 5.5; `architecture.roles.harness` with no default; this repository sets its own roles                   | pull request #15       |
 | 14    | Remove the self-lint code from the product             | 5.6; one `gspot` task; `testToolsText` to the pin script                                                | not started            |
 | 15    | Delete stale files                                     | 5.8 and B.7, apart from the `architecture` folder                                                       | `architecture` deleted |
 | 16    | Move shared code to platform and split repository      | B.1 platform, repository, survey, takeover, `execution/checkout`                                        | not started            |
@@ -164,8 +165,6 @@ The owner and the work settled these while implementing:
 
 - Stage 8 cut the D.2 rows whose reason holds while the code stays. A test leaves with the code it tests, so these
   D.2 rows wait for the stage that deletes that code:
-    - stage 13: the rewrites of `env-access-owner`, `import-direction`, and `tests-directory-contents`, the harness
-      rows of `execution/structure`, and the shipped banned-word loop in `checks/naming/validate-name`.
     - stage 14: `agents/examples`, `agents/front-matter`, `agents/lint`, and the linter case in `agents/sections`.
     - stage 23: every "move" and "rewrite" verdict, the CLI spawns that become in-process calls, and the process case
       in `sql-parser`.
@@ -209,6 +208,19 @@ The owner and the work settled these while implementing:
     - `appendEntry` is gone, and the policy tests use `appendIgnore`. `setEnvironmentVariable` moved to
       `tests/support/environment.ts`, which `gspot.toml` adds as a second owner of the environment.
     - The ticket numbers left in 14 comments are gone.
+- Stage 13 shipped no default written for this repository:
+    - No import role, environment owner, or harness folder has a default. A role the policy leaves out matches no
+      file, and `gspot.toml` here names its tests, runtime, env, and harness roles.
+    - `architecture.roles.harness` replaces the two `harness_directory` settings, which carries out that row of A.3.
+      It names folders and refuses one outside the scope. A profile leaves `architecture.roles` out.
+    - The words this repository avoids are its own `naming.banned_terms` now, not part of the shipped naming policy.
+      They are catalog, corpus, the verb groups with render, sync, load, fetch, resolve, and probe, fixture, and shell.
+    - No file here uses the two-digit Markdown prefix, so that allowance is deleted rather than kept here.
+    - The Bash checks take `tools.bash.remote_functions` and `tools.bash.entry_functions`, with no default. The
+      four-line header applies once `tools.bash.runtime_header` is set, any upper-case include guard passes, and the
+      GPU sweep rule is gone.
+    - The capital-letter check of error messages reads a first argument as the message only when it stands alone or
+      before an options object, so `GspotError` needs no exemption.
 - `documents.test.ts` does run on Linux: its 11 cases pass in main run 36896154813. The audit's timing came from the
   stale timings file that stage 1 deleted.
 - Stage 9 moved the one real guard of the deleted reference tests, conflicting setting definitions, into manifest
