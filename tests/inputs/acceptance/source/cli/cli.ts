@@ -1,5 +1,4 @@
 // The literal values acceptance/source/cli/cli reads: names, patterns, limits, and tables.
-import type { Retention } from '#tests/types/acceptance/source/cli.ts';
 
 export const SCOPES_SOURCE =
     '// The port the service listens on.\n\n/** The port, read once. */\nexport const port = Number("8080") as number;\n';
@@ -110,11 +109,6 @@ kits = ["sql"]
 [scope.limits]
 function_lines = 30
 `;
-export const CODEQUALITY_REPORT = '.gspot/reports/report.codequality.json';
-export const RETENTION: Record<'gitlab' | 'github', Retention> = {
-    gitlab: { always: true, keepsCodequality: true },
-    github: { always: true, keepsCodequality: true, manualStage: 'manual job only' },
-};
 export const REASON = 'The report names the folders the move deleted, which is what it is for.';
 export const TABLE = `[{patterns = ["REPORT.md"], reason = "${REASON}"}]`;
 

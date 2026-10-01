@@ -2,26 +2,15 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { join, dirname, delimiter } from 'node:path';
-import type { SarifReport } from '#tests/types/cli.ts';
 import { git, gitOutput } from '#tests/support/cli/git.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
-import type { RunReport } from '#cli/types/execution/execution.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
-import { reportSchema, pushReportSchema } from '#cli/execution/report.ts';
+import type { RunReport, PushReport } from '#cli/types/execution/execution.ts';
 import { mkdirSync, existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { waitForExit, waitForFile, waitForJson, captureChild } from '#tests/support/cli/process.ts';
 
 const CLI = join(import.meta.dir, '../../../../packages/cli/src/main.ts');
 const CHILD_OPTIONS = { stdout: 'pipe', stderr: 'pipe', timeout: 12_000, killSignal: 'SIGKILL' } as const;
-const CANCELED_PUSH_SARIF = {
-    runs: [
-        { invocations: [{ executionSuccessful: true }] },
-        {
-            invocations: [{ executionSuccessful: false }],
-            properties: { canceled: { pendingRefs: ['refs/heads/second'] } },
-        },
-    ],
-};
 
 test.each(['SIGINT', 'SIGTERM'] as const)(
     'check propagates %s to an active tool and reports cancellation',
@@ -50,10 +39,6 @@ test.each(['SIGINT', 'SIGTERM'] as const)(
         expect(report.checks[0]!.status).toBe('error');
         expect(report.checks[0]!.note).toContain('canceled');
         expect(report.coverage.checked).toBe(0);
-        expect(
-            (JSON.parse(readFileSync(join(sandbox.path, '.gspot/reports/report.sarif'), 'utf8')) as SarifReport)
-                .runs[0]!.invocations[0]!.executionSuccessful,
-        ).toBe(false);
         await waitForExit(toolPid);
     },
     15_000,
@@ -102,7 +87,7 @@ test.each(['diff', 'clone', 'cat-file'])(
         expect(readFileSync(join(sandbox.path, 'source.sh'), 'utf8')).toBe('echo authored\n');
         const retry = await run(sandbox.path, ['check', '--staged', '--only', 'bash/syntax', '--json']);
         expect(retry.code, retry.stdout + retry.stderr).toBe(0);
-        expect(reportSchema.parse(JSON.parse(retry.stdout)).checks[0]!.status).toBe('ok');
+        expect((JSON.parse(retry.stdout) as RunReport).checks[0]!.status).toBe('ok');
     },
     20_000,
 );
@@ -149,16 +134,12 @@ test('push cancellation retains completed reports and names references not check
     const started = (await waitForJson(marker)) as { pid: number; snapshot: string };
     child.kill('SIGINT');
     expect(await child.exited, await errors).toBe(2);
-    const report = pushReportSchema.parse(JSON.parse(await output));
+    const report = JSON.parse(await output) as PushReport;
     expect(report).toMatchObject({
         revisions: [{ object: first, report: { checks: [{ status: 'ok' }] } }],
         canceled: { pendingRefs: ['refs/heads/second'] },
         exitCode: 2,
     });
-    expect(JSON.parse(readFileSync(join(sandbox.path, '.gspot/reports/report.sarif'), 'utf8'))).toMatchObject(
-        CANCELED_PUSH_SARIF,
-    );
-    expect(JSON.parse(readFileSync(join(sandbox.path, '.gspot/reports/report.json'), 'utf8'))).toStrictEqual(report);
     expect(existsSync(started.snapshot)).toBe(false);
     await waitForExit(started.pid);
     expect(git(sandbox.path, ['rev-parse', 'HEAD']).stdout.trim()).toBe(second);
@@ -195,11 +176,10 @@ await import(${JSON.stringify(CLI)});
             child.kill(signal);
             expect(await child.exited, await errors).toBe(2);
             expect(JSON.parse(await output)).toStrictEqual({ error: 'canceled', exitCode: 2 });
-            expect(existsSync(join(sandbox.path, '.gspot/reports/report.json'))).toBe(false);
             expect(git(sandbox.path, ['ls-files', '--stage', '-z']).stdout).toBe(indexed);
             const retry = await run(sandbox.path, ['check', '--staged', '--only', 'bash/syntax', '--json']);
             expect(retry.code, retry.stdout + retry.stderr).toBe(0);
-            expect(reportSchema.parse(JSON.parse(retry.stdout)).checks[0]!.status).toBe('ok');
+            expect((JSON.parse(retry.stdout) as RunReport).checks[0]!.status).toBe('ok');
         } finally {
             await child.stdin.end();
         }
@@ -252,5 +232,5 @@ await import(${JSON.stringify(CLI)});
     expect(readFileSync(join(dependencies, '3999.js'), 'utf8')).toBe('export const value=3999;\n');
     const retry = await run(sandbox.path, ['check', '--staged', '--only', 'bash/syntax', '--json']);
     expect(retry.code, retry.stdout + retry.stderr).toBe(0);
-    expect(reportSchema.parse(JSON.parse(retry.stdout)).checks[0]!.status).toBe('ok');
+    expect((JSON.parse(retry.stdout) as RunReport).checks[0]!.status).toBe('ok');
 }, 20_000);

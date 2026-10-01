@@ -1,10 +1,10 @@
 // NestJS fixtures cover valid injection and modules. Defects cover circular imports, unmatched route parameters, and disabled decorators.
 import { test, expect } from 'bun:test';
 import { run } from '#tests/support/cli/command.ts';
-import { reportSchema } from '#cli/execution/report.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { plantedCases } from '#tests/support/cli/planted.ts';
+import type { RunReport } from '#cli/types/execution/execution.ts';
 
 import {
     GREETER,
@@ -99,7 +99,7 @@ plantedCases(
                     environment,
                 );
                 expect(swagger.code, swagger.stdout + swagger.stderr).toBe(1);
-                expect(reportSchema.parse(JSON.parse(swagger.stdout)).checks[0]?.findings).toContainEqual(
+                expect((JSON.parse(swagger.stdout) as RunReport).checks[0]?.findings).toContainEqual(
                     containing({
                         rule: '@darraghor/nestjs-typed/controllers-should-supply-api-tags',
                         file: 'src/greeting.controller.ts',

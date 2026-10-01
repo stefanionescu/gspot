@@ -1,8 +1,8 @@
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
-import { reportSchema } from '#cli/execution/report.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
+import type { RunReport } from '#cli/types/execution/execution.ts';
 
 test.each([
     'import { router } from "./private/router.js";',
@@ -26,7 +26,7 @@ test.each([
     const command = ['check', '--only', 'trpc/router-boundaries', '--no-cache', '--json'];
     const failed = await run(sandbox.path, command);
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-    const findings = reportSchema.parse(JSON.parse(failed.stdout)).checks.flatMap((entry) => entry.findings);
+    const findings = (JSON.parse(failed.stdout) as RunReport).checks.flatMap((entry) => entry.findings);
     expect(findings).toMatchObject([{ file: 'client.ts', line: 2, rule: 'server-import' }]);
     expect(findings).toHaveLength(1);
     await Bun.write(
@@ -62,7 +62,7 @@ test('tRPC architecture boundaries retain source locations, scope isolation, and
     const failed = await run(sandbox.path, command);
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
     expect(
-        reportSchema.parse(JSON.parse(failed.stdout)).checks.map((entry) => ({
+        (JSON.parse(failed.stdout) as RunReport).checks.map((entry) => ({
             scope: entry.scope,
             findings: entry.findings.map(({ file, line }) => ({ file, line })),
         })),

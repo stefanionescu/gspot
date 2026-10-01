@@ -4,8 +4,8 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import type { Finding } from '#cli/types/checks.ts';
 import { run } from '#tests/support/cli/command.ts';
-import { reportSchema } from '#cli/execution/report.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
+import type { RunReport } from '#cli/types/execution/execution.ts';
 import { containing, containingAll, textContaining } from '#tests/support/expectations.ts';
 
 test.each([false, true])(
@@ -84,7 +84,7 @@ test.each([false, true])(
         const command = ['check', '--only', 'integrity/suppressions', '--no-cache', '--json'];
         const missing = await run(directory.path, command);
         expect(missing.code, missing.stdout + missing.stderr).toBe(required ? 1 : 0);
-        const report = reportSchema.parse(JSON.parse(missing.stdout));
+        const report = JSON.parse(missing.stdout) as RunReport;
         const unexplained: Finding = containing({
             check: 'integrity/suppressions',
             file: 'entry.sh',
@@ -102,8 +102,8 @@ test.each([false, true])(
         );
         const explained = await run(directory.path, command);
         expect(explained.code, explained.stdout + explained.stderr).toBe(0);
-        expect(reportSchema.parse(JSON.parse(explained.stdout)).checks[0]!.findings).toStrictEqual([]);
-        expect(reportSchema.parse(JSON.parse(explained.stdout)).suppressions['shellcheck']).toBe(1);
+        expect((JSON.parse(explained.stdout) as RunReport).checks[0]!.findings).toStrictEqual([]);
+        expect((JSON.parse(explained.stdout) as RunReport).suppressions['shellcheck']).toBe(1);
     },
 );
 
@@ -141,7 +141,7 @@ test.each([
         const command = ['check', '--only', 'integrity/suppressions', '--no-cache', '--json'];
         const failed = await run(directory.path, command);
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-        const report = reportSchema.parse(JSON.parse(failed.stdout));
+        const report = JSON.parse(failed.stdout) as RunReport;
         expect(report.checks[0]!.findings).toStrictEqual([
             containing({
                 check: 'integrity/suppressions',
@@ -154,8 +154,8 @@ test.each([
         await Bun.write(join(directory.path, path), `${clean}\n`);
         const corrected = await run(directory.path, command);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks[0]!.findings).toStrictEqual([]);
-        expect(reportSchema.parse(JSON.parse(corrected.stdout)).suppressions).toStrictEqual({});
+        expect((JSON.parse(corrected.stdout) as RunReport).checks[0]!.findings).toStrictEqual([]);
+        expect((JSON.parse(corrected.stdout) as RunReport).suppressions).toStrictEqual({});
     },
 );
 
@@ -169,7 +169,7 @@ test('shared noqa text is attributed only to the tool that reads the file', asyn
     });
     const result = await run(directory.path, ['check', '--only', 'integrity/suppressions', '--no-cache', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(1);
-    const report = reportSchema.parse(JSON.parse(result.stdout));
+    const report = JSON.parse(result.stdout) as RunReport;
     expect(report.checks[0]!.findings).toStrictEqual(
         containingAll([
             containing({ file: 'query.sql', rule: 'sqlfluff-no-reason' }),

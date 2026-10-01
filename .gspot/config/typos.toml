@@ -26,7 +26,7 @@ IIFEs = "IIFEs"
 referers = "referers"
 
 [files]
-extend-exclude = [ "*.lock", "bun.lockb", "package-lock.json", "pnpm-lock.yaml", "yarn.lock", "Package.resolved", "*.pbxproj", "*.xcstrings", "*.svg", "*.min.js", "*.min.css", ".gspot/cache/", ".gspot/config/vale/", ".gspot/reports/report.json", ".gspot/reports/report.sarif", "tests/support/spelling.ts", "packages/cli/kits/general/prose/styles/gspot/us-english.yml" ]
+extend-exclude = [ "*.lock", "bun.lockb", "package-lock.json", "pnpm-lock.yaml", "yarn.lock", "Package.resolved", "*.pbxproj", "*.xcstrings", "*.svg", "*.min.js", "*.min.css", ".gspot/cache/", ".gspot/config/vale/", "tests/support/spelling.ts", "packages/cli/kits/general/prose/styles/gspot/us-english.yml" ]
 
 [type.gspot-policy]
 extend-glob = [ "gspot.toml" ]

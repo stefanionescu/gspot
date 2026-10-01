@@ -44,12 +44,7 @@ export function initPlanText(plan: ReplacePlan): string {
         ...section('no longer runs; delete when ready', plan.noLongerRuns),
         ...(plan.ci === undefined
             ? []
-            : [
-                  'CI setup (no workflow generated)',
-                  ...plan.ci.commands.map((command) => `  ${command}`),
-                  `  ${plan.ci.reports}`,
-                  '',
-              ]),
+            : ['CI setup (no workflow generated)', ...plan.ci.commands.map((command) => `  ${command}`), '']),
     ];
     return `${lines.join('\n')}\n`;
 }

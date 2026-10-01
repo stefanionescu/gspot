@@ -3,10 +3,10 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { run } from '#tests/support/cli/command.ts';
-import { reportSchema } from '#cli/execution/report.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { installSandbox } from '#tests/support/cli/sandbox.ts';
+import type { RunReport } from '#cli/types/execution/execution.ts';
 import { COMPONENT_SOURCE, COMPONENT_TSCONFIG, PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 
 const CLEAN = `---\nconst title: string = 'Home';\n---\n\n<h1>{title}</h1>\n<img src="logo.png" alt="The logo" />\n`;
@@ -43,7 +43,7 @@ test.each([
             environment,
         );
         expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
-        const report = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
+        const report = JSON.parse(outcome.stdout) as RunReport;
         expect(report.checks[0]!.findings).toContainEqual(containing({ rule, file: PAGE, line }));
         const rules = new Set(report.checks[0]!.findings.map((finding) => finding.rule));
         expect(
@@ -51,7 +51,7 @@ test.each([
         ).toStrictEqual([]);
         const clean = await run(sandbox.path, ['check', '--only', 'astro/eslint', '--no-cache', '--json'], environment);
         expect(clean.code, clean.stdout + clean.stderr).toBe(0);
-        expect(reportSchema.parse(JSON.parse(clean.stdout)).checks).toMatchObject([
+        expect((JSON.parse(clean.stdout) as RunReport).checks).toMatchObject([
             { check: 'astro/eslint', status: 'ok', findings: [] },
         ]);
     },
@@ -70,13 +70,13 @@ test(
             environment,
         );
         expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
-        const report = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
+        const report = JSON.parse(outcome.stdout) as RunReport;
         expect(report.checks[0]!.findings).toContainEqual(
             containing({ rule: 'ts(2322)', file: PAGE, line: 2, column: 7 }),
         );
         const clean = await run(sandbox.path, ['check', '--only', 'astro/check', '--no-cache', '--json'], environment);
         expect(clean.code, clean.stdout + clean.stderr).toBe(0);
-        expect(reportSchema.parse(JSON.parse(clean.stdout)).checks).toMatchObject([
+        expect((JSON.parse(clean.stdout) as RunReport).checks).toMatchObject([
             { check: 'astro/check', status: 'ok', findings: [] },
         ]);
     },
@@ -95,9 +95,7 @@ test(
             environment,
         );
         expect(loose.code, loose.stdout + loose.stderr).toBe(1);
-        expect(reportSchema.parse(JSON.parse(loose.stdout)).checks[0]!.findings).toContainEqual(
-            containing({ file: PAGE }),
-        );
+        expect((JSON.parse(loose.stdout) as RunReport).checks[0]!.findings).toContainEqual(containing({ file: PAGE }));
         const fixed = await run(
             sandbox.path,
             ['check', '--fix', '--only', 'formatting/prettier', '--no-cache'],

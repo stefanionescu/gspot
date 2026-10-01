@@ -1,5 +1,4 @@
 // Checking every revision a push sends, each in its own snapshot, with one report for the push.
-import { writeReport } from '#cli/output/report.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { CANCELED_EXIT } from '#cli/config/commands/check.ts';
 import { checkContent } from '#cli/commands/check/content.ts';
@@ -104,7 +103,6 @@ export async function checkPushed(
         rendered.push(
             `Push checks canceled. References not checked: ${report.canceled.pendingRefs.join(', ') || 'none; see canceled checks above'}.\n`,
         );
-    if (!options.isDryRun) writeReport(root, report);
     const skipped = selected.notApplicable.map((entry) => `${entry.ref}: ${entry.reason}; no source check applies.\n`);
     return { text: [...rendered, ...skipped].join(''), json: report, exitCode: report.exitCode };
 }

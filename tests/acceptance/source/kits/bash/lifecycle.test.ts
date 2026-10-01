@@ -5,11 +5,11 @@ import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { script } from '#tests/support/cli/planted.ts';
-import { reportSchema } from '#cli/execution/report.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { readGitSetting } from '#cli/repository/git-config.ts';
 import { existsSync, symlinkSync, readFileSync } from 'node:fs';
+import type { RunReport } from '#cli/types/execution/execution.ts';
 
 test(
     'init --yes writes the policy and check passes over a clean script',
@@ -36,7 +36,7 @@ test(
         expect(readFileSync(join(sandbox.path, '.gitignore'), 'utf8')).toContain('>>> gspot managed >>>');
         const check = await run(sandbox.path, ['check', '--only', 'bash/shellcheck', '--json']);
         expect(check.code).toBe(0);
-        expect(reportSchema.parse(JSON.parse(check.stdout)).checks).toStrictEqual([
+        expect((JSON.parse(check.stdout) as RunReport).checks).toStrictEqual([
             containing({ check: 'bash/shellcheck', status: 'ok' }),
         ]);
         const selected = await run(sandbox.path, ['set', 'extra_checks', 'bash/shfmt']);
@@ -89,7 +89,7 @@ test(
         expect(ignored.code).toBe(0);
         const ignoredCheck = await run(sandbox.path, ['check', '--only', 'bash/shellcheck', '--no-cache', '--json']);
         expect(ignoredCheck.code).toBe(0);
-        expect(reportSchema.parse(JSON.parse(ignoredCheck.stdout)).checks).toMatchObject([
+        expect((JSON.parse(ignoredCheck.stdout) as RunReport).checks).toMatchObject([
             { check: 'bash/shellcheck', status: 'ok', findings: [] },
         ]);
     },
@@ -144,7 +144,7 @@ test(
         expect(missing.stdout).toContain('Run: gspot install');
         const available = await run(sandbox.path, ['check', '--only', 'bash/shellcheck', '--no-cache', '--json']);
         expect(available.code, available.stdout + available.stderr).toBe(0);
-        expect(reportSchema.parse(JSON.parse(available.stdout)).checks).toMatchObject([
+        expect((JSON.parse(available.stdout) as RunReport).checks).toMatchObject([
             { check: 'bash/shellcheck', status: 'ok', findings: [] },
         ]);
     },
@@ -180,7 +180,7 @@ test(
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
         const corrected = await run(sandbox.path, ['check', '--only', 'bash/shellcheck', '--no-cache', '--json']);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
+        expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
             { check: 'bash/shellcheck', status: 'ok', findings: [] },
         ]);
     },

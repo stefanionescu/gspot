@@ -4,7 +4,6 @@ import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
-import { reportSchema } from '#cli/execution/report.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { installPrivateTools } from '#tests/support/cli/tools.ts';
 import { readdirSync, symlinkSync, writeFileSync } from 'node:fs';
@@ -37,7 +36,7 @@ const ENTRY_FILES = ['api/src/main.js', 'api/src/task.js', 'src/main.js', 'src/t
 async function trivialFiles(root: string): Promise<string[]> {
     const outcome = await run(root, ESLINT_CHECK);
     expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
-    const report = reportSchema.parse(JSON.parse(outcome.stdout));
+    const report = JSON.parse(outcome.stdout) as RunReport;
     expect(report.checks.map(({ check, scope, status }) => ({ check, scope, status }))).toStrictEqual([
         { check: 'javascript/eslint', scope: '', status: 'fail' },
         { check: 'javascript/eslint', scope: 'api', status: 'fail' },

@@ -2,7 +2,6 @@
 
 export type Step = { run?: string; uses?: string; if?: string; with?: Record<string, string> };
 export type Generated = {
-    gspot: { script: string[]; artifacts: { paths: string[]; when: string; reports: { codequality: string } } };
+    gspot: { script: string[] };
     jobs: Record<string, { steps: Step[] }>;
 };
-export type Retention = { always: boolean; keepsCodequality: boolean; manualStage?: 'manual job only' | 'every job' };

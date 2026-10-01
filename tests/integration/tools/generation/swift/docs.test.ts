@@ -3,12 +3,12 @@ import { test, expect } from 'bun:test';
 import { statSync, chmodSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
-import { reportSchema } from '#cli/execution/report.ts';
 import { allRuleExamples } from '#cli/agents/examples.ts';
 import { run as runProcess } from '#cli/platform/spawn.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { writeSwiftlint } from '#tests/support/cli/swift.ts';
+import type { RunReport } from '#cli/types/execution/execution.ts';
 import { onPosix, keptMode } from '#tests/support/cli/platforms.ts';
 import { generatedFile } from '#tests/support/cli/generated/files.ts';
 import { SWIFT_DOCS_SOURCE, SWIFT_INLINE_DOCS } from '#tests/inputs/integration/tools/generation.ts';
@@ -16,7 +16,7 @@ import { SWIFT_DOCS_SOURCE, SWIFT_INLINE_DOCS } from '#tests/inputs/integration/
 async function documentationFindings(root: string, code: 0 | 1) {
     const result = await run(root, ['check', '--only', 'swift/swiftlint', '--no-cache', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(code);
-    const [checked] = reportSchema.parse(JSON.parse(result.stdout)).checks;
+    const [checked] = (JSON.parse(result.stdout) as RunReport).checks;
     if (checked === undefined) throw new Error('The report holds no check.');
     expect(checked).toMatchObject({ check: 'swift/swiftlint', status: code === 0 ? 'ok' : 'fail' });
     return checked.findings.filter((finding) => finding.rule === 'doc_comment_style');

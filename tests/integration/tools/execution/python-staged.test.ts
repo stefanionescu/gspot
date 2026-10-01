@@ -7,9 +7,9 @@ import { run } from '#tests/support/cli/command.ts';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { gitOutput } from '#tests/support/cli/git.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { reportSchema } from '#cli/execution/report.ts';
 import { onPosix } from '#tests/support/cli/platforms.ts';
 import { containing } from '#tests/support/expectations.ts';
+import type { RunReport } from '#cli/types/execution/execution.ts';
 import { installPythonProject } from '#cli/tools/python-project.ts';
 import { createPythonRegistry } from '#tests/support/registry/python.ts';
 import { preparePythonInstallation } from '#tests/support/cli/python/project.ts';
@@ -44,7 +44,7 @@ if (onPosix)
         const command = ['check', '--only', 'python/ruff', '--no-cache', '--json'];
         const staged = await run(repository.path, [...command, '--staged']);
         expect(staged.code, staged.stdout + staged.stderr).toBe(1);
-        const report = reportSchema.parse(JSON.parse(staged.stdout));
+        const report = JSON.parse(staged.stdout) as RunReport;
         expect(report.checks).toMatchObject([
             {
                 check: 'python/ruff',
@@ -57,7 +57,7 @@ if (onPosix)
         ]);
         const working = await run(repository.path, command);
         expect(working.code, working.stdout + working.stderr).toBe(0);
-        expect(reportSchema.parse(JSON.parse(working.stdout)).checks).toMatchObject([
+        expect((JSON.parse(working.stdout) as RunReport).checks).toMatchObject([
             { check: 'python/ruff', status: 'ok' },
         ]);
     }, 180_000);

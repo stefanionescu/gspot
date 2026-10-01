@@ -4,8 +4,8 @@ import { join, delimiter } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
-import { reportSchema } from '#cli/execution/report.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
+import type { RunReport } from '#cli/types/execution/execution.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { WORKFLOW_HEAD } from '#tests/inputs/acceptance/source/kits/kits.ts';
 import { PINACT_STUB, TOOL_FAILURES_POLICY } from '#tests/inputs/integration/cli/checks.ts';
@@ -48,7 +48,7 @@ process.exit(2);
             environment,
         );
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
+        expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
             { check: 'files/toml-format', status: 'ok', findings: [] },
         ]);
     },
@@ -88,7 +88,7 @@ test(
             environment,
         );
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
+        expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
             { check: 'files/actions-pins', status: 'ok', findings: [] },
         ]);
     },

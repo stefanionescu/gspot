@@ -3,7 +3,6 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { run } from '#tests/support/cli/command.ts';
-import { reportSchema } from '#cli/execution/report.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { installSandbox } from '#tests/support/cli/sandbox.ts';
@@ -70,7 +69,7 @@ for (const shape of SHAPES)
                 environment,
             );
             expect(clean.code, clean.stdout + clean.stderr).toBe(0);
-            expect(reportSchema.parse(JSON.parse(clean.stdout)).checks).toMatchObject([
+            expect((JSON.parse(clean.stdout) as RunReport).checks).toMatchObject([
                 { check: shape.check, status: 'ok', files: 1, findings: [] },
             ]);
             const outcome = await runPlanted(
@@ -79,7 +78,7 @@ for (const shape of SHAPES)
                 environment,
             );
             expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
-            const report = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
+            const report = JSON.parse(outcome.stdout) as RunReport;
             expect(report.checks).toMatchObject([{ check: shape.check, status: 'fail' }]);
             expect(report.checks[0]!.findings).toContainEqual(
                 containing({
@@ -100,7 +99,7 @@ for (const shape of SHAPES)
                 environment,
             );
             expect(correctedCheck.code, correctedCheck.stdout + correctedCheck.stderr).toBe(0);
-            expect(reportSchema.parse(JSON.parse(correctedCheck.stdout)).checks).toMatchObject([
+            expect((JSON.parse(correctedCheck.stdout) as RunReport).checks).toMatchObject([
                 { check: shape.check, status: 'ok', findings: [] },
             ]);
             const code = await run(sandbox.path, ['check', '--only', 'typescript/eslint', '--no-cache'], environment);
@@ -173,7 +172,7 @@ test.each([
         );
         const corrected = await run(sandbox.path, args, environment);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
+        expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
             { check: `${framework}/eslint`, status: 'ok', findings: [] },
         ]);
     },

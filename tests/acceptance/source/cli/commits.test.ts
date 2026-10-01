@@ -9,20 +9,14 @@ import * as processes from '#cli/platform/spawn.ts';
 import { script } from '#tests/support/cli/planted.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { run, gspot } from '#tests/support/cli/command.ts';
-import { pushReportSchema } from '#cli/execution/report.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
 import type { CommandFailureJson } from '#cli/types/commands.ts';
+import type { PushReport } from '#cli/types/execution/execution.ts';
 import { COMMITS_INIT } from '#tests/inputs/acceptance/source/cli/cli.ts';
 import { toolsPath, installPrivateTools } from '#tests/support/cli/tools.ts';
 
-// Message checks preserve prior reports and a later range check rejects a bypassed hook.
+// The message check refuses a bad message, and a later range check rejects a bypassed hook.
 async function expectCommitChecks(root: string, environment: Record<string, string>): Promise<void> {
-    const reportPath = join(root, '.gspot/reports/report.json');
-    const report = readFileSync(reportPath, 'utf8');
-    const previous = JSON.parse(report) as { stage: string };
-    expect(previous.stage).toBe('commit');
-    const sarifPath = join(root, '.gspot/reports/report.sarif');
-    const sarif = readFileSync(sarifPath, 'utf8');
     const draft = join(root, 'draft.txt');
     await Bun.write(draft, 'Fixed stuff.\n');
     const refused = await run(
@@ -32,8 +26,6 @@ async function expectCommitChecks(root: string, environment: Record<string, stri
     );
     expect(refused.code).toBe(1);
     expect(refused.stdout).toContain('commits/commitlint');
-    expect(readFileSync(reportPath, 'utf8')).toBe(report);
-    expect(readFileSync(sarifPath, 'utf8')).toBe(sarif);
     const accepted = await run(root, ['check', '--only', 'commits/range', '--no-cache'], environment);
     expect(accepted.code).toBe(0);
     await Bun.write(join(root, 'more.md'), '# more\n');
@@ -46,7 +38,7 @@ async function expectCommitChecks(root: string, environment: Record<string, stri
 
 // Completed history includes every selected commit and passes its range check.
 function expectCompleteHistory(output: string, commits: string[]): void {
-    const report = pushReportSchema.parse(JSON.parse(output));
+    const report = JSON.parse(output) as PushReport;
     expect(report.revisions[0]?.historyComplete).toBe(true);
     expect(new Set(report.revisions[0]?.commits)).toStrictEqual(new Set(commits));
     expect(report.revisions[0]?.report.checks[0]?.status).toBe('ok');
@@ -145,7 +137,7 @@ test(
             stdin: `refs/heads/good ${good} refs/heads/good ${base}\nrefs/heads/bad ${bad} refs/heads/bad ${base}\n`,
         });
         expect(rejected.code, rejected.stdout + rejected.stderr).toBe(1);
-        const report = pushReportSchema.parse(JSON.parse(rejected.stdout));
+        const report = JSON.parse(rejected.stdout) as PushReport;
         expect(report.revisions).toHaveLength(1);
         expect(new Set(report.revisions[0]?.commits)).toStrictEqual(new Set([good, bad]));
         expect(
@@ -158,7 +150,7 @@ test(
             stdin: `refs/heads/good ${good} refs/heads/good ${base}\n`,
         });
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        expect(pushReportSchema.parse(JSON.parse(corrected.stdout)).revisions[0]?.report.checks[0]?.status).toBe('ok');
+        expect((JSON.parse(corrected.stdout) as PushReport).revisions[0]?.report.checks[0]?.status).toBe('ok');
         expect(git(sandbox.path, ['rev-parse', 'HEAD']).stdout.trim()).toBe(base);
     },
     PLANTED_TIMEOUT_MS,
@@ -193,7 +185,7 @@ test(
         const command = [process.execPath, gspot, 'check', '--push', '--json', '--only'];
         const content = await processes.run([...command, 'bash/syntax'], options);
         expect(content.code, content.stdout + content.stderr).toBe(0);
-        expect(pushReportSchema.parse(JSON.parse(content.stdout)).revisions[0]).toMatchObject({
+        expect((JSON.parse(content.stdout) as PushReport).revisions[0]).toMatchObject({
             historyComplete: false,
             report: { checks: [{ status: 'ok' }] },
         });

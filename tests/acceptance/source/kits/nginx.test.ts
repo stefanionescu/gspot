@@ -4,10 +4,10 @@ import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
-import { reportSchema } from '#cli/execution/report.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
+import type { RunReport } from '#cli/types/execution/execution.ts';
 import { toolsPath, installAtLevel } from '#tests/support/cli/tools.ts';
 import { containing, textContaining } from '#tests/support/expectations.ts';
 import { NGINX_INIT } from '#tests/inputs/acceptance/source/kits/init-arguments.ts';
@@ -39,18 +39,16 @@ if (HAS_DOCKER)
             const command = ['check', '--stage', 'push', '--only', 'nginx/config-test', '--no-cache', '--json'];
             const failed = await run(sandbox.path, command);
             expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-            expect(
-                reportSchema.parse(JSON.parse(failed.stdout)).checks.flatMap((check) => check.findings),
-            ).toMatchObject([
+            expect((JSON.parse(failed.stdout) as RunReport).checks.flatMap((check) => check.findings)).toMatchObject([
                 { file: 'proxy/conf.d/server.conf', line: 2, message: textContaining('invalid_directive') },
             ]);
             await Bun.write(join(sandbox.path, 'proxy/conf.d/server.conf'), server);
             const corrected = await run(sandbox.path, command);
             expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-            expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
+            expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
                 { check: 'nginx/config-test', status: 'ok' },
             ]);
-            const report = reportSchema.parse(JSON.parse(corrected.stdout));
+            const report = JSON.parse(corrected.stdout) as RunReport;
             expect(report.checks).toMatchObject([
                 { check: 'nginx/config-test', scope: 'proxy', status: 'ok', files: 3 },
             ]);
@@ -79,9 +77,7 @@ if (HAS_DOCKER)
             const command = ['check', '--stage', 'push', '--only', 'nginx/config-test', '--no-cache', '--json'];
             const failed = await run(sandbox.path, command);
             expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-            expect(
-                reportSchema.parse(JSON.parse(failed.stdout)).checks.flatMap((check) => check.findings),
-            ).toMatchObject([
+            expect((JSON.parse(failed.stdout) as RunReport).checks.flatMap((check) => check.findings)).toMatchObject([
                 {
                     file: 'proxy/nginx.conf',
                     line: 7,
@@ -92,19 +88,19 @@ if (HAS_DOCKER)
             await Bun.write(join(sandbox.path, 'proxy/nginx.conf'), configuration);
             const corrected = await run(sandbox.path, command);
             expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-            expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
+            expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
                 { check: 'nginx/config-test', status: 'ok' },
             ]);
             await Bun.write(join(sandbox.path, 'gspot.toml'), policy.replace('1.29.3-alpine', '1.29.3-alpine@'));
             const unavailable = await run(sandbox.path, command);
             expect(unavailable.code, unavailable.stdout + unavailable.stderr).toBe(2);
-            expect(reportSchema.parse(JSON.parse(unavailable.stdout)).checks).toMatchObject([
+            expect((JSON.parse(unavailable.stdout) as RunReport).checks).toMatchObject([
                 { check: 'nginx/config-test', status: 'error' },
             ]);
             await Bun.write(join(sandbox.path, 'gspot.toml'), policy);
             const recovered = await run(sandbox.path, command);
             expect(recovered.code, recovered.stdout + recovered.stderr).toBe(0);
-            expect(reportSchema.parse(JSON.parse(recovered.stdout)).checks).toMatchObject([
+            expect((JSON.parse(recovered.stdout) as RunReport).checks).toMatchObject([
                 { check: 'nginx/config-test', status: 'ok' },
             ]);
             expect(await Bun.file(join(sandbox.path, 'proxy/nginx.conf')).text()).toBe(configuration);
@@ -128,7 +124,7 @@ describe('the nginx configuration', () => {
                 { check: 'nginx/gixy', files: { 'proxy/nginx.conf': FORGED } },
                 environment,
             );
-            const failed = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
+            const failed = JSON.parse(outcome.stdout) as RunReport;
             // Gixy has no Windows build, so the check is skipped there and the run passes.
             const isWindows = process.platform === 'win32';
             const forged = containing({ rule: 'ssrf', file: 'proxy/nginx.conf', line: 7 });
@@ -144,7 +140,7 @@ describe('the nginx configuration', () => {
                 environment,
             );
             expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-            expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
+            expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
                 { check: 'nginx/gixy', status: isWindows ? 'skipped' : 'ok', findings: [] },
             ]);
             const checked = await run(sandbox.path, ['check', '--stage', 'commit', '--json'], environment);

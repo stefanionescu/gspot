@@ -1,10 +1,10 @@
 // Planted repository for the static-site configuration: a small site with a build script, broken one way for each check.
 import { test, expect } from 'bun:test';
 import { run } from '#tests/support/cli/command.ts';
-import { reportSchema } from '#cli/execution/report.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { plantedCases } from '#tests/support/cli/planted.ts';
+import type { RunReport } from '#cli/types/execution/execution.ts';
 import { SVG, BUILD, STATIC_SITE_HEADERS } from '#tests/inputs/acceptance/source/kits/kits.ts';
 
 const HOME = `<!doctype html>\n<html lang="en">\n    <head>\n        <meta charset="utf-8" />\n        <title>Planted</title>\n        <link rel="stylesheet" href="/site.css" />\n    </head>\n    <body>\n        <h1 class="title">Planted</h1>\n        <a href="/about.html">About</a>\n        <img src="/assets/logo.svg" alt="The logo" />\n    </body>\n</html>\n`;
@@ -110,7 +110,7 @@ plantedCases(
                     PLANTED_TIMEOUT_MS * 4,
                 );
                 expect(checked.code, checked.stdout + checked.stderr).toBe(0);
-                const report = reportSchema.parse(JSON.parse(checked.stdout));
+                const report = JSON.parse(checked.stdout) as RunReport;
                 expect(report.checks.map(({ check }) => check)).not.toContain('static-site/links-external');
                 expect(report.checks).toContainEqual(containing({ check: 'static-site/build', status: 'ok' }));
             },

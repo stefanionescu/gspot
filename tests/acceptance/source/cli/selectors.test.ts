@@ -3,21 +3,17 @@ import { test, expect } from 'bun:test';
 import { git } from '#tests/support/cli/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
-import { reportSchema } from '#cli/execution/report.ts';
 import { keptMode } from '#tests/support/cli/platforms.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
 import type { CommandFailureJson } from '#cli/types/commands.ts';
+import type { RunReport } from '#cli/types/execution/execution.ts';
 import { statSync, chmodSync, existsSync, unlinkSync, readFileSync, writeFileSync } from 'node:fs';
 
 const { version: GSPOT_VERSION } = packageManifest;
 
 // Both report formats identify index content and preserve literal source paths.
-async function expectIndexReport(
-    root: string,
-    args: string[],
-    report: ReturnType<typeof reportSchema.parse>,
-): Promise<void> {
+async function expectIndexReport(root: string, args: string[], report: RunReport): Promise<void> {
     expect(report.comparison?.content).toBe('index');
     expect(report.checks[0]?.reproduce).toContain('--staged');
     const text = await run(
@@ -51,7 +47,7 @@ test('an ignored folder includes descendants while a negated file remains enforc
     const command = ['check', '--only', 'bash/syntax', '--no-cache', '--json'];
     const checked = await run(directory.path, command);
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
-    const report = reportSchema.parse(JSON.parse(checked.stdout));
+    const report = JSON.parse(checked.stdout) as RunReport;
     expect(report.checks[0]?.findings.map(({ file }) => file)).toStrictEqual([
         'legacy scripts/required.sh',
         'legacy scripts/required.sh',
@@ -71,7 +67,7 @@ test('an ignored folder includes descendants while a negated file remains enforc
     expect(removed.code, removed.stdout + removed.stderr).toBe(0);
     const restored = await run(directory.path, command);
     expect(restored.code, restored.stdout + restored.stderr).toBe(1);
-    expect(reportSchema.parse(JSON.parse(restored.stdout)).checks[0]?.findings.map(({ file }) => file)).toStrictEqual([
+    expect((JSON.parse(restored.stdout) as RunReport).checks[0]?.findings.map(({ file }) => file)).toStrictEqual([
         'legacy scripts/nested/example.sh',
         'legacy scripts/nested/example.sh',
     ]);
@@ -89,7 +85,7 @@ test('staged checks use index bytes and policy on an unborn branch while preserv
     const args = ['check', '--staged', '--only', 'bash/syntax', '--json'];
     const failed = await run(directory.path, args);
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-    const failedReport = reportSchema.parse(JSON.parse(failed.stdout));
+    const failedReport = JSON.parse(failed.stdout) as RunReport;
     await expectIndexReport(directory.path, args, failedReport);
     expect(git(directory.path, ['ls-files', '--stage', '-z']).stdout).toBe(index);
     expect(readFileSync(join(directory.path, 'gspot.toml'), 'utf8')).toBe('invalid working policy');
@@ -101,13 +97,10 @@ test('staged checks use index bytes and policy on an unborn branch while preserv
     writeFileSync(join(directory.path, 'script with spaces.sh'), 'if then\n');
     const passed = await run(directory.path, args);
     expect(passed.code, passed.stdout + passed.stderr).toBe(0);
-    const passedReport = reportSchema.parse(JSON.parse(passed.stdout));
+    const passedReport = JSON.parse(passed.stdout) as RunReport;
     expect(passedReport.checks[0]?.status).toBe('ok');
     expect(passedReport.comparison?.reference).not.toBe(failedReport.comparison?.reference);
     expect(readFileSync(join(directory.path, 'script with spaces.sh'), 'utf8')).toBe('if then\n');
-    expect(JSON.parse(readFileSync(join(directory.path, '.gspot/reports/report.json'), 'utf8'))).toStrictEqual(
-        JSON.parse(passed.stdout),
-    );
     unlinkSync(join(directory.path, 'script with spaces.sh'));
     const ran = await run(directory.path, args);
     expect(ran.code).toBe(0);
@@ -166,7 +159,7 @@ stage = "commit"
     chmodSync(join(directory.path, 'task.sh'), 0o644);
     const result = await run(directory.path, ['check', '--staged', '--only', 'project/index-bytes', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
-    expect(reportSchema.parse(JSON.parse(result.stdout)).checks[0]?.status).toBe('ok');
+    expect((JSON.parse(result.stdout) as RunReport).checks[0]?.status).toBe('ok');
     expect(readFileSync(join(directory.path, 'payload.dat'))).toStrictEqual(Buffer.from([0, 1, 2]));
     expect(statSync(join(directory.path, 'task.sh')).mode & 0o777).toBe(keptMode(0o644));
     expect(existsSync(join(directory.path, 'created.txt'))).toBe(false);

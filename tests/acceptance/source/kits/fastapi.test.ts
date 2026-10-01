@@ -1,12 +1,11 @@
 // Planted repositories for the pytest and fastapi configurations: coverage under the floor, a sleep inside an async route, an OpenAPI document with a hole, and a stale one.
-import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import type { FindingCase } from '#tests/types/cli.ts';
-import { reportSchema } from '#cli/execution/report.ts';
 import { install, toolsPath } from '#tests/support/cli/tools.ts';
+import type { RunReport } from '#cli/types/execution/execution.ts';
 import { QUIET_INIT, PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { runPlanted, plantedCases } from '#tests/support/cli/planted.ts';
 import { containing, textContaining } from '#tests/support/expectations.ts';
@@ -73,14 +72,14 @@ test(
         const outcome = await runPlanted(sandbox.path, untested, environment);
         expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
         expect(outcome.stdout).toContain('Required test coverage of 95%');
-        const failed = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
+        const failed = JSON.parse(outcome.stdout) as RunReport;
         expect(failed.checks).toMatchObject([{ check: 'pytest/coverage', status: 'fail' }]);
         expect(failed.checks[0]!.findings).toContainEqual(containing(untested.expected));
         const corrected = await runPlanted(sandbox.path, { ...untested, files: {} }, environment);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        expect(
-            reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json()).checks,
-        ).toMatchObject([{ check: 'pytest/coverage', status: 'ok', findings: [] }]);
+        expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
+            { check: 'pytest/coverage', status: 'ok', findings: [] },
+        ]);
     },
     PLANTED_TIMEOUT_MS * 5,
 );

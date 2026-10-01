@@ -192,6 +192,5 @@ test.each(['integrity', 'naming', 'structure', 'prose'] as const)(
             ),
         ).toContain(`No ${engine} analysis is called unknown-analysis.`);
         expect(existsSync(join(sandbox.path, 'started.txt'))).toBe(false);
-        expect(existsSync(join(sandbox.path, '.gspot/reports/report.json'))).toBe(false);
     },
 );

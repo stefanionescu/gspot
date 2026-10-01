@@ -1,11 +1,11 @@
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
-import { reportSchema } from '#cli/execution/report.ts';
 import { git, commitAll } from '#tests/support/cli/git.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { unlink, symlink, readlink } from 'node:fs/promises';
 import { readProject } from '#cli/checks/xcode/project/reader.ts';
+import type { RunReport } from '#cli/types/execution/execution.ts';
 import { containing, textContaining } from '#tests/support/expectations.ts';
 import { PBXPROJ_PROJECT } from '#tests/inputs/integration/cli/repository.ts';
 
@@ -23,7 +23,7 @@ test('Xcode sources follow group paths and target membership instead of duplicat
     const command = ['check', '--only', 'xcode/orphan-sources', '--no-cache', '--json'];
     const broken = await run(sandbox.path, command);
     expect(broken.code, broken.stdout + broken.stderr).toBe(1);
-    expect(reportSchema.parse(JSON.parse(broken.stdout)).checks[0]!.findings).toStrictEqual([
+    expect((JSON.parse(broken.stdout) as RunReport).checks[0]!.findings).toStrictEqual([
         containing({ file: 'Second/Shared.swift', rule: 'no-target' }),
         containing({ file: 'Synced/Excluded.swift', rule: 'no-target' }),
     ]);
@@ -36,7 +36,7 @@ test('Xcode sources follow group paths and target membership instead of duplicat
     await Bun.file(`${sandbox.path}/Second/Shared.swift`).delete();
     const missing = await run(sandbox.path, command);
     expect(missing.code, missing.stdout + missing.stderr).toBe(1);
-    expect(reportSchema.parse(JSON.parse(missing.stdout)).checks[0]!.findings).toStrictEqual([
+    expect((JSON.parse(missing.stdout) as RunReport).checks[0]!.findings).toStrictEqual([
         containing({
             rule: 'missing-file',
             message: 'The project names Second/Shared.swift, and the tree holds no such file.',
@@ -109,7 +109,7 @@ test('membership combines projects in a scope and checks nested scopes independe
     const broken = await run(sandbox.path, command);
     expect(broken.code, broken.stdout + broken.stderr).toBe(1);
     expect(
-        reportSchema.parse(JSON.parse(broken.stdout)).checks.map((check) => ({
+        (JSON.parse(broken.stdout) as RunReport).checks.map((check) => ({
             scope: check.scope,
             findings: check.findings,
         })),
@@ -146,9 +146,9 @@ test('Xcode symlinks use the deepest scope and the immutable staged target', asy
     const command = ['check', '--staged', '--only', 'xcode/symlinks', '--no-cache', '--json'];
     const broken = await run(sandbox.path, command);
     expect(broken.code, broken.stdout + broken.stderr).toBe(1);
-    const findings = reportSchema
-        .parse(JSON.parse(broken.stdout))
-        .checks.flatMap((check) => check.findings.map((finding) => ({ scope: check.scope, finding })));
+    const findings = (JSON.parse(broken.stdout) as RunReport).checks.flatMap((check) =>
+        check.findings.map((finding) => ({ scope: check.scope, finding })),
+    );
     expect(findings).toStrictEqual([
         {
             scope: 'app/child',

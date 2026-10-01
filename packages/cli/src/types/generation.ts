@@ -11,7 +11,6 @@ export type Fragment = { manifest: Manifest; config: ConfigurationTarget };
 export type WorkflowShape = {
     version: string;
     run?: NonNullable<Policy['ci']>['run'];
-    sarif?: NonNullable<Policy['ci']>['sarif'];
     platforms: string[];
     /** The Swift scope path, or undefined when no scope selects swift. */
     swiftScope: string | undefined;

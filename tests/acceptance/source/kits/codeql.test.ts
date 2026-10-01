@@ -3,11 +3,11 @@ import { readFileSync } from 'node:fs';
 import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
-import { reportSchema } from '#cli/execution/report.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { toolShipsHere } from '#tests/support/cli/platforms.ts';
+import type { RunReport } from '#cli/types/execution/execution.ts';
 
 const python = {
     language: 'python',
@@ -47,7 +47,7 @@ describe.if(toolShipsHere('codeql'))('the pinned CodeQL', () => {
             const command = ['check', '--stage', 'manual', '--only', 'security/codeql', '--no-cache', '--json'];
             const planted = await run(directory.path, command, environment);
             expect(planted.code, planted.stdout + planted.stderr).toBe(1);
-            const report = reportSchema.parse(JSON.parse(planted.stdout));
+            const report = JSON.parse(planted.stdout) as RunReport;
             expect(report.checks).toMatchObject([{ check: 'security/codeql', status: 'fail' }]);
             expect(report.checks.flatMap((check) => check.findings)).toMatchObject([
                 { check: 'security/codeql', rule, file, line, column },
@@ -56,7 +56,7 @@ describe.if(toolShipsHere('codeql'))('the pinned CodeQL', () => {
             await Bun.write(join(directory.path, file), corrected);
             const fixed = await run(directory.path, command, environment);
             expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
-            const fixedReport = reportSchema.parse(JSON.parse(fixed.stdout));
+            const fixedReport = JSON.parse(fixed.stdout) as RunReport;
             expect(fixedReport.checks).toMatchObject([{ check: 'security/codeql', status: 'ok', findings: [] }]);
             expect(readFileSync(join(directory.path, file), 'utf8')).toBe(corrected);
             expect(readFileSync(join(directory.path, 'authored.txt'), 'utf8')).toBe('Preserve this file.\n');

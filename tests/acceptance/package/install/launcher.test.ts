@@ -3,11 +3,11 @@ import prettier from 'prettier';
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
-import { reportSchema } from '#cli/execution/report.ts';
 import { waitForExit } from '#tests/support/cli/process.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { RELEASE_TIMEOUT_MS } from '#tests/inputs/package.ts';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import type { RunReport } from '#cli/types/execution/execution.ts';
 import { createConsumer } from '#tests/support/package/consumer.ts';
 import { initializeConsumer, getPublishedRelease } from '#tests/support/package/published.ts';
 
@@ -61,7 +61,7 @@ test.each(['SIGINT', 'SIGTERM'] as const)(
             while (child.exitCode === null && performance.now() < exitDeadline) await Bun.sleep(20);
             expect(child.exitCode).not.toBeNull();
             expect(await child.exited, await errors).toBe(2);
-            const canceled = reportSchema.parse(JSON.parse(await output));
+            const canceled = JSON.parse(await output) as RunReport;
             expect(canceled.checks[0]!.status).toBe('error');
             expect(canceled.checks[0]!.note).toContain('canceled');
             await waitForExit(toolPid);
@@ -106,7 +106,6 @@ test(
             useCache: false,
         });
         expect(futureJson?.tabWidth).toBe(4);
-        expect(existsSync(join(consumer, '.gspot', 'reports', 'report.json'))).toBe(false);
     },
     RELEASE_TIMEOUT_MS,
 );

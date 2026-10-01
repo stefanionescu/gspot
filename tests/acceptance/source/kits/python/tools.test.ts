@@ -5,7 +5,6 @@ import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import type { FindingCase } from '#tests/types/cli.ts';
-import { reportSchema } from '#cli/execution/report.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { run as runCommand } from '#cli/platform/spawn.ts';
 import { containing } from '#tests/support/expectations.ts';
@@ -106,13 +105,13 @@ test(
         const args = ['check', '--only', 'python/deptry', '--json'];
         const failed = await run(sandbox.path, args);
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-        const findings = reportSchema.parse(JSON.parse(failed.stdout)).checks[0]!.findings;
+        const findings = (JSON.parse(failed.stdout) as RunReport).checks[0]!.findings;
         expect(findings).toHaveLength(1);
         expect(findings[0]).toMatchObject({ file: 'src/main.py', rule: 'DEP001', line: 1 });
         await Bun.write(join(sandbox.path, 'src/main.py'), 'import json\nprint(json.dumps({"ready": True}))\n');
         const corrected = await run(sandbox.path, args);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks[0]).toMatchObject({
+        expect((JSON.parse(corrected.stdout) as RunReport).checks[0]).toMatchObject({
             status: 'ok',
             findings: [],
         });
@@ -124,11 +123,11 @@ test(
         expect(primed.code, primed.stdout + primed.stderr).toBe(0);
         const cached = await run(sandbox.path, args);
         expect(cached.code, cached.stdout + cached.stderr).toBe(0);
-        expect(reportSchema.parse(JSON.parse(cached.stdout)).checks[0]!.status).toBe('cache');
+        expect((JSON.parse(cached.stdout) as RunReport).checks[0]!.status).toBe('cache');
         await Bun.write(join(sandbox.path, 'pyproject.toml'), project + exclusions.replace('"^vendor/"', '"^other/"'));
         const changed = await run(sandbox.path, args);
         expect(changed.code, changed.stdout + changed.stderr).toBe(1);
-        expect(reportSchema.parse(JSON.parse(changed.stdout)).checks[0]!.findings).toMatchObject([
+        expect((JSON.parse(changed.stdout) as RunReport).checks[0]!.findings).toMatchObject([
             { file: 'vendor/client.py', rule: 'DEP001', line: 1 },
         ]);
     },

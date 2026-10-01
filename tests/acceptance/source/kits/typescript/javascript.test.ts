@@ -5,10 +5,10 @@ import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { initArgs } from '#tests/support/cli/init.ts';
-import { reportSchema } from '#cli/execution/report.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
 import { containing } from '#tests/support/expectations.ts';
+import type { RunReport } from '#cli/types/execution/execution.ts';
 import { TYPESCRIPT_PACKAGE } from '#tests/support/cli/typescript.ts';
 import { linkInstalledModules } from '#tests/support/cli/platforms.ts';
 import { toolsPath, installPrivateTools } from '#tests/support/cli/tools.ts';
@@ -42,7 +42,7 @@ test(
             environment,
         );
         expect(outcome.code, outcome.stdout).toBe(1);
-        const failed = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
+        const failed = JSON.parse(outcome.stdout) as RunReport;
         expect(failed.checks).toMatchObject([{ check: 'javascript/eslint', status: 'fail' }]);
         expect(failed.checks[0]!.findings).toContainEqual(
             containing({ rule: 'no-debugger', file: 'src/paused.js', line: 9 }),
@@ -57,7 +57,7 @@ test(
             environment,
         );
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
+        expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
             { check: 'javascript/eslint', status: 'ok', files: 1, findings: [] },
         ]);
     },

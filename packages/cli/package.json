@@ -43,7 +43,6 @@
         "#package": "./package.json"
     },
     "dependencies": {
-        "@bomb.sh/tab": "0.0.22",
         "@clack/prompts": "1.8.0",
         "@decimalturn/toml-patch": "3.0.5",
         "@formatjs/icu-messageformat-parser": "2.11.4",
@@ -62,7 +61,6 @@
         "linguist-languages": "9.5.0",
         "mdast-util-from-markdown": "2.0.3",
         "mdast-util-to-string": "4.0.0",
-        "node-sarif-builder": "5.0.0",
         "nypm": "0.6.10",
         "p-limit": "7.3.2",
         "picocolors": "1.1.1",

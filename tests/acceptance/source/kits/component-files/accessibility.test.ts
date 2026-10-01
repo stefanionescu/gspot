@@ -3,11 +3,11 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect, describe } from 'bun:test';
 import { run } from '#tests/support/cli/command.ts';
-import { reportSchema } from '#cli/execution/report.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { installSandbox } from '#tests/support/cli/sandbox.ts';
 import vueManifest from 'vue/package.json' with { type: 'json' };
+import type { RunReport } from '#cli/types/execution/execution.ts';
 import { COMPONENT_SOURCE, COMPONENT_TSCONFIG, PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 
 const SHAPES = [
@@ -49,7 +49,7 @@ describe('component accessibility', () => {
             });
             const outcome = await runPlanted(sandbox.path, { check, files: { [path]: planted } }, environment);
             expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
-            const report = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
+            const report = JSON.parse(outcome.stdout) as RunReport;
             expect(report.checks[0]!.findings).toContainEqual(containing({ rule, file: path, line }));
             const corrected = planted.replace(
                 framework === 'vue' ? ':src="source"' : 'src={source}',
@@ -58,7 +58,7 @@ describe('component accessibility', () => {
             await Bun.write(join(sandbox.path, path), corrected);
             const fixed = await run(sandbox.path, ['check', '--only', check, '--no-cache', '--json'], environment);
             expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
-            expect(reportSchema.parse(JSON.parse(fixed.stdout)).checks).toMatchObject([
+            expect((JSON.parse(fixed.stdout) as RunReport).checks).toMatchObject([
                 { check, status: 'ok', findings: [] },
             ]);
         },

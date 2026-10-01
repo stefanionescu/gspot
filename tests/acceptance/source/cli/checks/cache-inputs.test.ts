@@ -3,8 +3,8 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
-import { reportSchema } from '#cli/execution/report.ts';
 import { renameSync, unlinkSync, symlinkSync } from 'node:fs';
+import type { RunReport } from '#cli/types/execution/execution.ts';
 
 test('declared cache inputs include ignored files and invalidate for changed, added, renamed, and deleted inputs', async () => {
     await using sandbox = await testdir();
@@ -34,14 +34,14 @@ stage = "commit"
     const args = ['check', '--only', 'project/state', '--json'];
     const first = await run(sandbox.path, args);
     expect(first.code, first.stdout + first.stderr).toBe(0);
-    expect(reportSchema.parse(JSON.parse(first.stdout)).checks[0]!.status).toBe('ok');
+    expect((JSON.parse(first.stdout) as RunReport).checks[0]!.status).toBe('ok');
     const cached = await run(sandbox.path, args);
     expect(cached.code, cached.stdout + cached.stderr).toBe(0);
-    expect(reportSchema.parse(JSON.parse(cached.stdout)).checks[0]!.status).toBe('cache');
+    expect((JSON.parse(cached.stdout) as RunReport).checks[0]!.status).toBe('cache');
     await Bun.write(join(sandbox.path, 'state/current.txt'), 'invalid');
     const changed = await run(sandbox.path, args);
     expect(changed.code).toBe(1);
-    expect(reportSchema.parse(JSON.parse(changed.stdout)).checks[0]!.check).toBe('project/state');
+    expect((JSON.parse(changed.stdout) as RunReport).checks[0]!.check).toBe('project/state');
     await Bun.write(join(sandbox.path, 'state/current.txt'), 'valid');
     const ran = await run(sandbox.path, args);
     expect(ran.code).toBe(0);
@@ -54,7 +54,7 @@ stage = "commit"
     renameSync(join(sandbox.path, 'state/current.txt'), join(sandbox.path, 'state/renamed.txt'));
     const renamed = await run(sandbox.path, args);
     expect(renamed.code).toBe(0);
-    expect(reportSchema.parse(JSON.parse(renamed.stdout)).checks[0]!.status).toBe('ok');
+    expect((JSON.parse(renamed.stdout) as RunReport).checks[0]!.status).toBe('ok');
     unlinkSync(join(sandbox.path, 'state/renamed.txt'));
     const deleted = await run(sandbox.path, args);
     expect(deleted.code).toBe(1);
@@ -105,7 +105,7 @@ stage = "commit"
     expect(ran.code).toBe(0);
     const cached = await run(sandbox.path, args);
     expect(cached.code).toBe(0);
-    expect(reportSchema.parse(JSON.parse(cached.stdout)).checks[0]!.status).toBe('cache');
+    expect((JSON.parse(cached.stdout) as RunReport).checks[0]!.status).toBe('cache');
     await Bun.write(join(sandbox.path, 'target.txt'), 'invalid');
     const invalid = await run(sandbox.path, args);
     expect(invalid.code).toBe(1);

@@ -1,22 +1,6 @@
 // The types of support/cli in this package.
 import type { Finding } from '#cli/types/checks.ts';
 
-/** The fields the tests read from the SARIF report gspot writes. */
-export type SarifReport = {
-    runs: {
-        results: unknown[];
-        invocations: { executionSuccessful: boolean; toolExecutionNotifications?: { message: { text: string } }[] }[];
-        properties?: { comparison?: { reference: string }; canceled?: { pendingRefs: string[] } };
-    }[];
-};
-/** The code quality report gspot writes: one issue per finding. */
-export type CodeQualityReport = {
-    description: string;
-    check_name: string;
-    fingerprint: string;
-    severity: string;
-    location: { path: string; lines: { begin: number } };
-}[];
 /** A planted case that checks a finding at its source location, and what corrects it for the clean rerun. */
 export type FindingCase = PlantedInput & {
     expected: Partial<Pick<Finding, 'file' | 'rule' | 'line' | 'column' | 'message'>>;

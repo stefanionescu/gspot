@@ -1,9 +1,9 @@
 // Planted repository for the xctest configuration: a skipped test with no reason, a sleep, a recording snapshot test, and references with no test.
 import { test, expect } from 'bun:test';
 import { run } from '#tests/support/cli/command.ts';
-import { reportSchema } from '#cli/execution/report.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { plantedCases } from '#tests/support/cli/planted.ts';
+import type { RunReport } from '#cli/types/execution/execution.ts';
 import { XCTEST_TESTS } from '#tests/inputs/acceptance/source/kits/kits.ts';
 
 const CLEAN = `import XCTest\n\n/// Tests of the home screen.\nfinal class HomeTests: XCTestCase {\n    /// The title is shown.\n    func testTitle() throws {\n        XCTAssertEqual("Home", "Home")\n    }\n}\n`;
@@ -61,7 +61,7 @@ plantedCases(
             async () => {
                 const { root, environment } = planted();
                 const checked = await run(root, ['check', '--stage', 'commit', '--json'], environment);
-                const ids = reportSchema.parse(JSON.parse(checked.stdout)).checks.map((check) => check.check);
+                const ids = (JSON.parse(checked.stdout) as RunReport).checks.map((check) => check.check);
                 expect(ids).not.toContain('xctest/coverage');
             },
             PLANTED_TIMEOUT_MS * 2,

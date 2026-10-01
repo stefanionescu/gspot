@@ -1,13 +1,12 @@
 // One installed repository per table, and each planted defect as an edit that is restored: the check fails with the
 // expected finding, then the corrected repository passes.
-import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
-import { reportSchema } from '#cli/execution/report.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { plant } from '#tests/support/cli/preservation.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { installSandbox } from '#tests/support/cli/sandbox.ts';
+import type { RunReport } from '#cli/types/execution/execution.ts';
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
 import type { Planted, FindingCase, PlantedInput, SpawnOutcome, PlantedRepository } from '#tests/types/cli.ts';
 
@@ -15,7 +14,7 @@ import type { Planted, FindingCase, PlantedInput, SpawnOutcome, PlantedRepositor
 async function expectDefect(planted: Planted, entry: FindingCase): Promise<void> {
     const outcome = await runPlanted(planted.root, entry, planted.environment);
     expect(outcome.code, `${entry.check}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
-    const failed = reportSchema.parse(await Bun.file(join(planted.root, '.gspot/reports/report.json')).json());
+    const failed = JSON.parse(outcome.stdout) as RunReport;
     expect(failed.checks).toMatchObject([{ check: entry.check, status: 'fail' }]);
     expect(failed.checks[0]?.findings).toContainEqual(containing({ check: entry.check, ...entry.expected }));
 }
@@ -34,7 +33,7 @@ function correctionOf(entry: FindingCase, repository: PlantedRepository): Plante
 async function expectCorrection(planted: Planted, entry: FindingCase, repository: PlantedRepository): Promise<void> {
     const outcome = await runPlanted(planted.root, correctionOf(entry, repository), planted.environment);
     expect(outcome.code, `${entry.check} corrected: ${outcome.stdout}${outcome.stderr}`).toBe(0);
-    const accepted = reportSchema.parse(await Bun.file(join(planted.root, '.gspot/reports/report.json')).json());
+    const accepted = JSON.parse(outcome.stdout) as RunReport;
     expect(accepted.checks).toMatchObject([{ check: entry.check, status: 'ok', findings: [] }]);
 }
 
@@ -57,7 +56,12 @@ export async function runPlanted(
     const restore = plant(cwd, planted);
     try {
         // A case may build a site twice, which takes minutes on a slow runner.
-        return await run(cwd, ['check', '--only', planted.check, '--no-cache'], environment, PLANTED_TIMEOUT_MS * 4);
+        return await run(
+            cwd,
+            ['check', '--only', planted.check, '--no-cache', '--json'],
+            environment,
+            PLANTED_TIMEOUT_MS * 4,
+        );
     } finally {
         restore();
     }

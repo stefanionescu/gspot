@@ -3,8 +3,8 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
-import { reportSchema } from '#cli/execution/report.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
+import type { RunReport } from '#cli/types/execution/execution.ts';
 
 test('generated and vendored settings classify directories and removal returns files to source checks', async () => {
     await using directory = await testdir();
@@ -23,14 +23,14 @@ test('generated and vendored settings classify directories and removal returns f
     }
     const before = await run(directory.path, ['check', '--only', 'bash/syntax', '--no-cache', '--json']);
     expect(before.code, before.stdout + before.stderr).toBe(0);
-    expect(reportSchema.parse(JSON.parse(before.stdout)).checks).toMatchObject([
+    expect((JSON.parse(before.stdout) as RunReport).checks).toMatchObject([
         { check: 'bash/syntax', status: 'ok', files: 1, findings: [] },
     ]);
     const removed = await run(directory.path, ['set', 'generated', 'output types', '--remove']);
     expect(removed.code, removed.stdout + removed.stderr).toBe(0);
     const after = await run(directory.path, ['check', '--only', 'bash/syntax', '--no-cache', '--json']);
     expect(after.code, after.stdout + after.stderr).toBe(1);
-    const checked = reportSchema.parse(JSON.parse(after.stdout)).checks[0];
+    const checked = (JSON.parse(after.stdout) as RunReport).checks[0];
     expect(checked).toMatchObject({ check: 'bash/syntax', status: 'fail' });
     expect(checked?.files).toBe(2);
     expect(checked?.findings.map((finding) => finding.file)).toStrictEqual([
@@ -40,7 +40,7 @@ test('generated and vendored settings classify directories and removal returns f
     writeFileSync(join(directory.path, 'output types/broken.sh'), 'echo corrected\n');
     const corrected = await run(directory.path, ['check', '--only', 'bash/syntax', '--no-cache', '--json']);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
+    expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
         { check: 'bash/syntax', status: 'ok', files: 2, findings: [] },
     ]);
 });

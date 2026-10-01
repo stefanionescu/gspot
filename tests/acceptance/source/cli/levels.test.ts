@@ -2,15 +2,15 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
-import { reportSchema } from '#cli/execution/report.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
+import type { RunReport } from '#cli/types/execution/execution.ts';
 
 // Recommended keeps syntax enforcement while leaving naming preferences inactive.
 async function expectRecommendedLevel(root: string, command: string[]): Promise<void> {
     const recommended = await run(root, command);
     expect(recommended.code, recommended.stdout + recommended.stderr).toBe(0);
-    const report = reportSchema.parse(JSON.parse(recommended.stdout));
+    const report = JSON.parse(recommended.stdout) as RunReport;
     expect(report.skips).toStrictEqual([]);
     expect(report.checks.map(({ check, status }) => ({ check, status }))).toStrictEqual([
         { check: 'bash/syntax', status: 'ok' },
@@ -18,7 +18,7 @@ async function expectRecommendedLevel(root: string, command: string[]): Promise<
     await Bun.write(join(root, 'entry.sh'), 'if then\n');
     const invalid = await run(root, command);
     expect(invalid.code, invalid.stdout + invalid.stderr).toBe(1);
-    expect(reportSchema.parse(JSON.parse(invalid.stdout)).checks[0]).toMatchObject({
+    expect((JSON.parse(invalid.stdout) as RunReport).checks[0]).toMatchObject({
         check: 'bash/syntax',
         status: 'fail',
         files: 1,
@@ -38,12 +38,12 @@ async function expectNamingAllowance(root: string, command: string[]): Promise<v
     expect(allowed.code, allowed.stdout + allowed.stderr).toBe(0);
     const accepted = await run(root, command);
     expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
-    expect(reportSchema.parse(JSON.parse(accepted.stdout)).checks[1]?.findings).toStrictEqual([]);
+    expect((JSON.parse(accepted.stdout) as RunReport).checks[1]?.findings).toStrictEqual([]);
     const removed = await run(root, ['set', 'naming.allowed', 'shell_command', '--remove']);
     expect(removed.code, removed.stdout + removed.stderr).toBe(0);
     const restored = await run(root, command);
     expect(restored.code, restored.stdout + restored.stderr).toBe(1);
-    expect(reportSchema.parse(JSON.parse(restored.stdout)).checks[1]?.findings[0]?.rule).toBe('banned-term');
+    expect((JSON.parse(restored.stdout) as RunReport).checks[1]?.findings[0]?.rule).toBe('banned-term');
 }
 
 test(
@@ -60,7 +60,7 @@ test(
         expect(all.code, all.stdout + all.stderr).toBe(0);
         const strict = await run(sandbox.path, command);
         expect(strict.code, strict.stdout + strict.stderr).toBe(1);
-        const strictReport = reportSchema.parse(JSON.parse(strict.stdout));
+        const strictReport = JSON.parse(strict.stdout) as RunReport;
         expect(strictReport.skips).toStrictEqual([]);
         expect(strictReport.checks.map(({ check, status }) => ({ check, status }))).toStrictEqual([
             { check: 'bash/syntax', status: 'ok' },
@@ -80,11 +80,11 @@ test(
         expect(extra.code, extra.stdout + extra.stderr).toBe(0);
         const optedIn = await run(sandbox.path, command);
         expect(optedIn.code, optedIn.stdout + optedIn.stderr).toBe(1);
-        expect(reportSchema.parse(JSON.parse(optedIn.stdout)).checks[1]?.status).toBe('fail');
+        expect((JSON.parse(optedIn.stdout) as RunReport).checks[1]?.status).toBe('fail');
         await Bun.write(join(sandbox.path, 'entry.sh'), 'command=example\n');
         const corrected = await run(sandbox.path, command);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
+        expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
             { check: 'bash/syntax', status: 'ok', findings: [] },
             { check: 'naming/identifiers', status: 'ok', findings: [] },
         ]);

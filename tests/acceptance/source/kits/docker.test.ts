@@ -1,10 +1,10 @@
 // Planted repository for the docker configuration: a careless Dockerfile, a missing ignore file, and a container that runs as root.
 import { test, expect } from 'bun:test';
 import { run } from '#tests/support/cli/command.ts';
-import { reportSchema } from '#cli/execution/report.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { plantedCases } from '#tests/support/cli/planted.ts';
 import { textContaining } from '#tests/support/expectations.ts';
+import type { RunReport } from '#cli/types/execution/execution.ts';
 import { IGNORES, CARELESS, DOCKER_CLEAN } from '#tests/inputs/acceptance/source/kits/kits.ts';
 
 plantedCases(
@@ -57,7 +57,7 @@ plantedCases(
             async () => {
                 const { root, environment } = planted();
                 const checked = await run(root, ['check', '--stage', 'push', '--json'], environment);
-                const ids = reportSchema.parse(JSON.parse(checked.stdout)).checks.map((check) => check.check);
+                const ids = (JSON.parse(checked.stdout) as RunReport).checks.map((check) => check.check);
                 expect(ids).toContain('docker/compose-config');
                 expect(ids).not.toContain('docker/trivy-image');
             },

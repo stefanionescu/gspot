@@ -5,7 +5,6 @@ import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { initArgs } from '#tests/support/cli/init.ts';
-import { reportSchema } from '#cli/execution/report.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { keptMode } from '#tests/support/cli/platforms.ts';
 import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
@@ -117,7 +116,7 @@ test.each(['', 'apps/web'])(
             expect(selected.code, selected.stdout + selected.stderr).toBe(0);
             const checked = await run(sandbox.path, ['check', '--only', 'typescript/tsc', '--no-cache', '--json']);
             expect(checked.code, checked.stdout + checked.stderr).toBe(1);
-            const report = reportSchema.parse(JSON.parse(checked.stdout));
+            const report = JSON.parse(checked.stdout) as RunReport;
             expect(report.checks.flatMap((check) => check.findings)).toMatchObject([
                 { check: 'typescript/tsc', file: `${prefix}src/main.ts`, rule: 'TS2322', line: 2, column: 14 },
             ]);

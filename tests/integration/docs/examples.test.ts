@@ -5,7 +5,7 @@ import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { parsePolicyText } from '#cli/policy/read.ts';
-import { reportSchema } from '#cli/execution/report.ts';
+import type { RunReport } from '#cli/types/execution/execution.ts';
 
 const root = fileURLToPath(new URL('../../..', import.meta.url));
 const guides = join(root, 'docs/src/content/docs/guides');
@@ -50,11 +50,11 @@ test('the documented custom check reports its defect and accepts its correction'
     const args = ['check', '--only', 'project/notes', '--no-cache', '--json'];
     const failed = await run(sandbox.path, args);
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-    expect(reportSchema.parse(JSON.parse(failed.stdout)).checks[0]!.findings).toMatchObject([
+    expect((JSON.parse(failed.stdout) as RunReport).checks[0]!.findings).toMatchObject([
         { check: 'project/notes', file: 'notes/deploy.txt', line: 1, message: defect!.trim() },
     ]);
     await Bun.write(join(sandbox.path, 'notes/deploy.txt'), correction!);
     const corrected = await run(sandbox.path, args);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks[0]).toMatchObject({ status: 'ok', findings: [] });
+    expect((JSON.parse(corrected.stdout) as RunReport).checks[0]).toMatchObject({ status: 'ok', findings: [] });
 });

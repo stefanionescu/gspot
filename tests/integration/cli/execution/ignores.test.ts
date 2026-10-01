@@ -3,7 +3,6 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { reportSchema } from '#cli/execution/report.ts';
 import { rejection } from '#tests/support/expectations.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { mkdirSync, unlinkSync, symlinkSync, writeFileSync } from 'node:fs';
@@ -40,7 +39,7 @@ test('inline ignores apply to Swift findings across repeated runs and changed so
     const failed = await executeRun(await openSession(sandbox.path), options);
     expect(failed.report.exitCode).toBe(1);
     expect(failed.report.checks[0]!.findings[0]!.engine).toBe('integrity');
-    expect(reportSchema.parse(failed.report).checks[0]!.findings).toHaveLength(2);
+    expect(failed.report.checks[0]!.findings).toHaveLength(2);
     const path = join(sandbox.path, 'Sources/Welcome.swift');
     writeFileSync(path, '// gspot-ignore swift/trivial-function -- Required protocol entry point.\n' + source);
     const session = await openSession(sandbox.path);

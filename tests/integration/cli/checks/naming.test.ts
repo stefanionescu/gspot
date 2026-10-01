@@ -3,7 +3,6 @@ import { renameSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
-import { reportSchema } from '#cli/execution/report.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 
@@ -43,7 +42,7 @@ test('external property allowances retain adjacent local signature findings thro
     const command = ['check', '--json', '--no-cache', '--only', 'naming/identifiers'];
     const failed = await run(sandbox.path, command);
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-    const report = reportSchema.parse(JSON.parse(failed.stdout));
+    const report = JSON.parse(failed.stdout) as RunReport;
     expect(
         report.checks.flatMap(({ findings }) =>
             findings.map(({ file, line, column, rule }) => ({ file, line, column, rule })),
@@ -80,7 +79,7 @@ test('SQL migration names retain their timestamp while enforcing snake case', as
     renameSync(join(sandbox.path, invalid), join(sandbox.path, valid));
     const accepted = await run(sandbox.path, command);
     expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
-    expect(reportSchema.parse(JSON.parse(accepted.stdout)).checks).toMatchObject([
+    expect((JSON.parse(accepted.stdout) as RunReport).checks).toMatchObject([
         { check: 'naming/paths', status: 'ok', findings: [] },
     ]);
 });
@@ -135,7 +134,7 @@ test('naming policy validates inherited and scoped declarations against the comp
     renameSync(join(sandbox.path, 'web/renamed.js'), join(sandbox.path, 'web/source.js'));
     const corrected = await run(sandbox.path, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
+    expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
         { check: 'naming/policy-schema', status: 'ok', findings: [] },
     ]);
     expect(await Bun.file(join(sandbox.path, 'worker/source.py')).text()).toBe('remote_record = 1\n');
@@ -156,7 +155,7 @@ test.each(['constructor', 'toString', '__proto__'])(
         const command = ['check', '--no-cache', '--json', '--only', 'naming/identifiers', 'naming/policy-schema'];
         const failed = await run(sandbox.path, command);
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-        const report = reportSchema.parse(JSON.parse(failed.stdout));
+        const report = JSON.parse(failed.stdout) as RunReport;
         expect(report.checks.map(({ status }) => status)).toStrictEqual(['fail', 'fail']);
         expect(report.checks.flatMap(({ findings }) => findings.map(({ file }) => file))).toContain('gspot.toml');
         await Bun.write(
@@ -165,9 +164,9 @@ test.each(['constructor', 'toString', '__proto__'])(
         );
         const neighbor = await run(sandbox.path, command);
         expect(neighbor.code, neighbor.stdout + neighbor.stderr).toBe(1);
-        expect(
-            reportSchema.parse(JSON.parse(neighbor.stdout)).checks.flatMap(({ findings }) => findings),
-        ).toMatchObject([{ file: 'source.ts', line: 1, rule: 'case' }]);
+        expect((JSON.parse(neighbor.stdout) as RunReport).checks.flatMap(({ findings }) => findings)).toMatchObject([
+            { file: 'source.ts', line: 1, rule: 'case' },
+        ]);
         await Bun.write(join(sandbox.path, 'source.ts'), 'export const goodName = 1;\n');
         const corrected = await run(sandbox.path, command);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);

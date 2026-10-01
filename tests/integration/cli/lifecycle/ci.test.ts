@@ -29,9 +29,7 @@ test.each(['bitbucket-pipelines.yml', 'Jenkinsfile', ''])(
             'gspot install',
             'gspot check',
         ]);
-        const text = initPlanText(plan);
-        expect(text).toContain('Upload .gspot/reports/report.* as job artifacts');
-        expect(text).toContain('including when it fails');
+        expect(initPlanText(plan)).toContain('gspot install');
         expect(plan.retained.map((entry) => entry.path)).toStrictEqual(path === '' ? [] : [path]);
     },
 );

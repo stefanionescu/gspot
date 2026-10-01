@@ -1,13 +1,11 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { sarifText } from '#cli/output/report.ts';
-import { existsSync, readFileSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { reportSchema } from '#cli/execution/report.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
+import type { RunReport } from '#cli/types/execution/execution.ts';
 
 const { version: GSPOT_VERSION } = packageManifest;
 
@@ -22,7 +20,7 @@ stage = "commit"
 format = "lines"
 `;
 
-test('serializes check definitions and references without changing external SARIF identifiers', async () => {
+test('a check keeps its name in the report and in its findings', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': policy, 'source.txt': 'original' });
     const session = await openSession(sandbox.path);
@@ -36,12 +34,7 @@ test('serializes check definitions and references without changing external SARI
     expect(session.policyFiles.policy.checks[0]?.name).toBe('sandbox/identity');
     expect(outcome.report.checks[0]?.check).toBe('sandbox/identity');
     expect(outcome.report.checks[0]?.findings[0]?.check).toBe('sandbox/identity');
-    expect(reportSchema.safeParse(outcome.report).success).toBe(true);
-    const saved = readFileSync(join(sandbox.path, '.gspot/reports/report.json'), 'utf8');
-    expect(JSON.parse(saved)).toStrictEqual(outcome.report);
-    expect(existsSync(join(sandbox.path, '.gspot/reports/report.sarif'))).toBe(true);
     expect(outcome.report.coverage).toStrictEqual({ checked: 1, unchecked: 1, findings: [] });
-    expect(JSON.parse(sarifText(outcome.report))).toHaveProperty('runs.0.results.0.ruleId', 'sandbox/identity');
 });
 
 test('counted failures survive final filtering without diagnostic locations', async () => {
@@ -104,6 +97,6 @@ test.each(['{ broken', '{}', ''])(
             { cwd: sandbox.path },
         );
         expect(cli.exitCode, cli.stdout.toString() + cli.stderr.toString()).toBe(2);
-        expect(reportSchema.parse(JSON.parse(cli.stdout.toString())).checks[0]!.status).toBe('error');
+        expect((JSON.parse(cli.stdout.toString()) as RunReport).checks[0]!.status).toBe('error');
     },
 );

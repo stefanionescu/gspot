@@ -3,12 +3,12 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect, describe } from 'bun:test';
 import { run } from '#tests/support/cli/command.ts';
-import { reportSchema } from '#cli/execution/report.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { installSandbox } from '#tests/support/cli/sandbox.ts';
 import vueManifest from 'vue/package.json' with { type: 'json' };
+import type { RunReport } from '#cli/types/execution/execution.ts';
 
 const STYLES = [
     {
@@ -43,9 +43,7 @@ describe('component style blocks', () => {
                 environment,
             );
             expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
-            const findings = reportSchema
-                .parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json())
-                .checks.flatMap((check) => check.findings);
+            const findings = (JSON.parse(outcome.stdout) as RunReport).checks.flatMap((check) => check.findings);
             expect(findings).toContainEqual(
                 containing({ rule: 'declaration-property-value-no-unknown', file: path, line }),
             );

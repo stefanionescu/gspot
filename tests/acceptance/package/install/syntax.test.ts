@@ -1,13 +1,12 @@
-// Installs built packages from an isolated registry: syntax findings reach every report format and naming is opt-in.
+// Installs built packages from an isolated registry: syntax findings reach the JSON report and naming is opt-in.
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { run } from '#cli/platform/spawn.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
-import { reportSchema } from '#cli/execution/report.ts';
 import { RELEASE_TIMEOUT_MS } from '#tests/inputs/package.ts';
 import type { InstalledConsumer } from '#tests/types/package.ts';
+import type { RunReport } from '#cli/types/execution/execution.ts';
 import { createConsumer } from '#tests/support/package/consumer.ts';
-import type { SarifReport, CodeQualityReport } from '#tests/types/cli.ts';
 import { initializeConsumer, getPublishedRelease } from '#tests/support/package/published.ts';
 
 const release = getPublishedRelease();
@@ -23,7 +22,7 @@ async function expectInstalledNaming(installation: InstalledConsumer): Promise<v
         options,
     );
     expect(renamed.code, renamed.stdout + renamed.stderr).toBe(0);
-    const acceptedName = reportSchema.parse(JSON.parse(renamed.stdout));
+    const acceptedName = JSON.parse(renamed.stdout) as RunReport;
     expect(acceptedName.skips).toStrictEqual([]);
     expect(acceptedName.checks).toHaveLength(1);
     expect(acceptedName.checks[0]).toMatchObject({
@@ -44,20 +43,8 @@ test(
         await initializeConsumer(release, installation);
         const checked = await run([...command, 'check', '--only', 'bash/syntax', '--no-cache', '--json'], options);
         expect(checked.code, checked.stdout + checked.stderr).toBe(1);
-        const report = reportSchema.parse(JSON.parse(checked.stdout));
+        const report = JSON.parse(checked.stdout) as RunReport;
         expect(report.exitCode).toBe(1);
-        expect(JSON.parse(readFileSync(join(consumer, '.gspot/reports/report.json'), 'utf8'))).toStrictEqual(report);
-        const sarif = JSON.parse(readFileSync(join(consumer, '.gspot/reports/report.sarif'), 'utf8')) as SarifReport;
-        expect(sarif.runs[0]!.invocations[0]!.executionSuccessful).toBe(true);
-        const quality = JSON.parse(
-            readFileSync(join(consumer, '.gspot/reports/report.codequality.json'), 'utf8'),
-        ) as CodeQualityReport;
-        expect(quality).toHaveLength(report.checks[0]?.findings.length ?? 0);
-        expect(quality[0]).toMatchObject({
-            check_name: 'bash/syntax',
-            severity: 'major',
-            location: { path: 'broken.sh', lines: { begin: 1 } },
-        });
         expect(report.skips).toStrictEqual([]);
         expect(report.checks).toHaveLength(1);
         expect(report.checks[0]).toMatchObject({ check: 'bash/syntax', status: 'fail', files: 1 });
@@ -80,11 +67,8 @@ test(
         writeFileSync(join(consumer, 'broken.sh'), 'echo example\n');
         const corrected = await run([...command, 'check', '--only', 'bash/syntax', '--no-cache', '--json'], options);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        const clean = reportSchema.parse(JSON.parse(corrected.stdout));
+        const clean = JSON.parse(corrected.stdout) as RunReport;
         expect(clean.exitCode).toBe(0);
-        expect(
-            JSON.parse(readFileSync(join(consumer, '.gspot/reports/report.codequality.json'), 'utf8')),
-        ).toStrictEqual([]);
         expect(clean.skips).toStrictEqual([]);
         expect(clean.checks).toHaveLength(1);
         expect(clean.checks[0]).toMatchObject({ check: 'bash/syntax', status: 'ok', files: 1, findings: [] });

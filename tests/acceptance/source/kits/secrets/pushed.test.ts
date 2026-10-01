@@ -1,14 +1,14 @@
 // Gitleaks and pinned TruffleHog scan pushed history for secrets removed by later commits.
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
+import { writeFileSync } from 'node:fs';
 import { join, delimiter } from 'node:path';
 import { git } from '#tests/support/cli/git.ts';
 import * as processes from '#cli/platform/spawn.ts';
 import { gspot } from '#tests/support/cli/command.ts';
-import { readFileSync, writeFileSync } from 'node:fs';
 import { toolsPath } from '#tests/support/cli/tools.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
-import { pushReportSchema } from '#cli/execution/report.ts';
+import type { PushReport } from '#cli/types/execution/execution.ts';
 import { containing, containingAll } from '#tests/support/expectations.ts';
 
 import {
@@ -33,7 +33,7 @@ test(
             stdin: `refs/heads/good ${good} refs/heads/good ${base}\nrefs/heads/removed ${removed} refs/heads/removed ${base}\n`,
         });
         expect(rejected.code, rejected.stdout + rejected.stderr).toBe(1);
-        const report = pushReportSchema.parse(JSON.parse(rejected.stdout));
+        const report = JSON.parse(rejected.stdout) as PushReport;
         expect(report.revisions).toHaveLength(1);
         expect(report.revisions[0]?.commits).toContain(leaked);
         expect(report.revisions[0]?.report.checks).toMatchObject([{ check: 'secrets/gitleaks', status: 'fail' }]);
@@ -47,7 +47,7 @@ test(
             stdin: `refs/heads/good ${good} refs/heads/good ${base}\n`,
         });
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        expect(pushReportSchema.parse(JSON.parse(corrected.stdout)).revisions[0]?.report.checks[0]?.status).toBe('ok');
+        expect((JSON.parse(corrected.stdout) as PushReport).revisions[0]?.report.checks[0]?.status).toBe('ok');
         const alreadyRemote = await processes.run(command, {
             ...options,
             stdin: `refs/heads/removed ${removed} refs/heads/removed ${leaked}\n`,
@@ -77,7 +77,7 @@ test(
         const input = `refs/heads/good ${good} refs/heads/good ${base}\nrefs/heads/removed ${removed} refs/heads/removed ${base}\n`;
         const rejected = await processes.run(command, { ...options, stdin: input });
         expect(rejected.code, rejected.stdout + rejected.stderr).toBe(1);
-        const report = pushReportSchema.parse(JSON.parse(rejected.stdout));
+        const report = JSON.parse(rejected.stdout) as PushReport;
         const findings = report.revisions[0]?.report.checks[0]?.findings ?? [];
         expect(
             findings.map((finding) => finding.file).toSorted((left, right) => left.localeCompare(right)),
@@ -85,12 +85,7 @@ test(
         expect(findings.every((finding) => finding.message.includes(leaked))).toBe(true);
         expect(requests).toContainEqual({ GspotAcceptance: { token: containingAll([firstToken]) } });
         expect(requests).toContainEqual({ GspotAcceptance: { token: containingAll([secondToken]) } });
-        const saved =
-            readFileSync(join(sandbox.path, '.gspot/reports/report.json'), 'utf8') +
-            readFileSync(join(sandbox.path, '.gspot/reports/report.sarif'), 'utf8') +
-            readFileSync(join(sandbox.path, '.gspot/reports/report.codequality.json'), 'utf8');
-        for (const token of [firstToken, secondToken])
-            expect(rejected.stdout + rejected.stderr + saved).not.toContain(token);
+        for (const token of [firstToken, secondToken]) expect(rejected.stdout + rejected.stderr).not.toContain(token);
         writeFileSync(mode, 'native');
         requests.length = 0;
         const corrected = await processes.run(command, {
@@ -98,7 +93,7 @@ test(
             stdin: `refs/heads/good ${good} refs/heads/good ${base}\n`,
         });
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        expect(pushReportSchema.parse(JSON.parse(corrected.stdout)).revisions[0]?.report.checks[0]?.status).toBe('ok');
+        expect((JSON.parse(corrected.stdout) as PushReport).revisions[0]?.report.checks[0]?.status).toBe('ok');
         expect(requests).toStrictEqual([]);
         expect(git(sandbox.path, ['rev-parse', 'HEAD']).stdout.trim()).toBe(removed);
     },
@@ -125,7 +120,7 @@ test.each(['malformed', 'crashed'])(
         writeFileSync(mode, failure);
         const broken = await processes.run(command, { ...options, stdin: input });
         expect(broken.code, broken.stdout + broken.stderr).toBe(2);
-        expect(pushReportSchema.parse(JSON.parse(broken.stdout)).revisions[0]?.report.checks[0]?.status).toBe('error');
+        expect((JSON.parse(broken.stdout) as PushReport).revisions[0]?.report.checks[0]?.status).toBe('error');
         for (const token of [firstToken, secondToken]) expect(broken.stdout + broken.stderr).not.toContain(token);
         writeFileSync(mode, 'native');
         requests.length = 0;
@@ -134,7 +129,7 @@ test.each(['malformed', 'crashed'])(
             stdin: `refs/heads/good ${good} refs/heads/good ${base}\n`,
         });
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        expect(pushReportSchema.parse(JSON.parse(corrected.stdout)).revisions[0]?.report.checks[0]?.status).toBe('ok');
+        expect((JSON.parse(corrected.stdout) as PushReport).revisions[0]?.report.checks[0]?.status).toBe('ok');
         expect(requests).toStrictEqual([]);
         expect(git(sandbox.path, ['rev-parse', 'HEAD']).stdout.trim()).toBe(removed);
     },

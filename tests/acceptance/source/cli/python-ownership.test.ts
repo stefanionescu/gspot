@@ -3,9 +3,9 @@ import { test, expect } from 'bun:test';
 import { rmSync, writeFileSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
-import { reportSchema } from '#cli/execution/report.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
+import type { RunReport } from '#cli/types/execution/execution.ts';
 
 const { version: GSPOT_VERSION } = packageManifest;
 
@@ -28,7 +28,7 @@ test('Python dependency ownership applies only to locked scopes and accepts remo
     const command = ['check', '--only', 'integrity/dependency-ownership', '--json', '--no-cache'];
     const checked = await run(sandbox.path, command);
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
-    const report = reportSchema.parse(JSON.parse(checked.stdout));
+    const report = JSON.parse(checked.stdout) as RunReport;
     expect(report.checks.flatMap((check) => check.findings)).toMatchObject([
         { file: 'locked/requirements.txt', rule: 'requirements-file' },
     ]);
@@ -38,9 +38,7 @@ test('Python dependency ownership applies only to locked scopes and accepts remo
     rmSync(join(sandbox.path, 'locked/requirements.txt'));
     const corrected = await run(sandbox.path, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks.flatMap((check) => check.findings)).toStrictEqual(
-        [],
-    );
+    expect((JSON.parse(corrected.stdout) as RunReport).checks.flatMap((check) => check.findings)).toStrictEqual([]);
 });
 
 test('absent Python import contracts are explicit skips and malformed project files are errors', async () => {
@@ -54,7 +52,7 @@ test('absent Python import contracts are explicit skips and malformed project fi
     const command = ['check', '--only', 'python/import-linter', '--json', '--no-cache'];
     const absent = await run(sandbox.path, command);
     expect(absent.code, absent.stdout + absent.stderr).toBe(0);
-    expect(reportSchema.parse(JSON.parse(absent.stdout)).checks).toMatchObject([
+    expect((JSON.parse(absent.stdout) as RunReport).checks).toMatchObject([
         {
             check: 'python/import-linter',
             status: 'skipped',
@@ -64,7 +62,7 @@ test('absent Python import contracts are explicit skips and malformed project fi
     writeFileSync(join(sandbox.path, 'pyproject.toml'), '[broken');
     const malformed = await run(sandbox.path, command);
     expect(malformed.code, malformed.stdout + malformed.stderr).toBe(2);
-    expect(reportSchema.parse(JSON.parse(malformed.stdout)).checks).toMatchObject([
+    expect((JSON.parse(malformed.stdout) as RunReport).checks).toMatchObject([
         { check: 'python/import-linter', status: 'error' },
     ]);
 });

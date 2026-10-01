@@ -5,19 +5,35 @@ import type { Finding, CheckResult } from '#cli/types/checks.ts';
 import type { ToolPin, Manifest, CheckSpec } from '#cli/types/kits.ts';
 import type { packageToolSchema } from '#cli/tools/packages/identity.ts';
 import type { ToolSearch, ToolInspection } from '#cli/types/tools/tools.ts';
-import type { reportSchema, pushReportSchema } from '#cli/execution/report.ts';
+import type { IgnoreEntry, PolicyFiles, ScopeSelection } from '#cli/types/policy/policy.ts';
 import type { Repository, SourceReads, TrackedFile } from '#cli/types/repository/repository.ts';
-import type { Defined, IgnoreEntry, PolicyFiles, ScopeSelection } from '#cli/types/policy/policy.ts';
 
 /** What one tool run accumulates across its spawns. */
 export type ToolRunState = { root: string; cwd: string; findings: Finding[]; isFailed: boolean };
-export type RunReport = Defined<Omit<z.infer<typeof reportSchema>, 'checks' | 'ignores' | 'coverage'>> & {
+/** The run report as check --json prints it. */
+export type RunReport = {
+    comparison?: { content: 'working-tree' | 'index' | 'commit'; reference: string };
+    version: string;
+    stage: string;
+    started: string;
+    duration: number;
     checks: CheckResult[];
-    coverage: Omit<z.infer<typeof reportSchema.shape.coverage>, 'findings'> & { findings: Finding[] };
-    ignores: Defined<z.infer<typeof reportSchema.shape.ignores.element>>[];
+    ignores: { check: string; rule?: string; paths?: string[]; reason?: string; matched: number }[];
+    skips: { check: string; source: 'flag' | 'platform' | 'rules' | 'ignore' }[];
+    /** Source files analyzed by checks that ran, supported files no enabled check reads, and coverage findings. */
+    coverage: { checked: number; unchecked: number; findings: Finding[] };
+    suppressions: Record<string, number>;
+    unstaged: number;
+    narrowed: boolean;
+    failed: string[];
+    exitCode: number;
 };
-export type PushReport = Omit<z.infer<typeof pushReportSchema>, 'revisions'> & {
-    revisions: (Omit<z.infer<typeof pushReportSchema.shape.revisions.element>, 'report'> & { report: RunReport })[];
+/** The push report: one run report for every distinct tree that Git's pre-push input names. */
+export type PushReport = {
+    canceled?: { pendingRefs: string[] };
+    revisions: { object: string; refs: string[]; commits: string[]; historyComplete: boolean; report: RunReport }[];
+    notApplicable: { ref: string; object: string; reason: 'deleted ref' | 'non-commit object' }[];
+    exitCode: number;
 };
 export type Skip = PlannedCheck['skip'];
 export type RuleSkip = {

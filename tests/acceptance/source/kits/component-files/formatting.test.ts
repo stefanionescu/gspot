@@ -3,9 +3,9 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { run } from '#tests/support/cli/command.ts';
-import { reportSchema } from '#cli/execution/report.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { installSandbox } from '#tests/support/cli/sandbox.ts';
+import type { RunReport } from '#cli/types/execution/execution.ts';
 import { FORMATTED } from '#tests/inputs/acceptance/source/kits/component-files.ts';
 import { COMPONENT_SOURCE, COMPONENT_TSCONFIG, PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 
@@ -30,7 +30,7 @@ test(
             environment,
         );
         expect(loose.code, loose.stdout + loose.stderr).toBe(1);
-        const [check] = reportSchema.parse(JSON.parse(loose.stdout)).checks;
+        const [check] = (JSON.parse(loose.stdout) as RunReport).checks;
         expect(check).toMatchObject({ check: 'formatting/prettier', status: 'fail' });
         expect(check!.findings).toContainEqual(containing({ file: 'src/Greeting.svelte' }));
         const fixed = await run(

@@ -4,8 +4,8 @@ import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
-import { reportSchema } from '#cli/execution/report.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
+import type { RunReport } from '#cli/types/execution/execution.ts';
 import { toolsPath, installAtLevel } from '#tests/support/cli/tools.ts';
 import { containing, textContaining } from '#tests/support/expectations.ts';
 import { DUPLICATION_INIT } from '#tests/inputs/acceptance/source/kits/init-arguments.ts';
@@ -43,7 +43,7 @@ describe('the duplication configuration', () => {
                 environment,
             );
             expect(found.code, found.stdout + found.stderr).toBe(1);
-            const report = reportSchema.parse(JSON.parse(found.stdout));
+            const report = JSON.parse(found.stdout) as RunReport;
             expect(report.checks).toMatchObject([{ check: 'duplication/jscpd', status: 'fail' }]);
             expect(report.checks[0]!.findings, found.stdout).toStrictEqual([
                 containing({
@@ -64,7 +64,7 @@ describe('the duplication configuration', () => {
                 environment,
             );
             expect(correctedCheck.code, correctedCheck.stdout + correctedCheck.stderr).toBe(0);
-            expect(reportSchema.parse(JSON.parse(correctedCheck.stdout)).checks).toMatchObject([
+            expect((JSON.parse(correctedCheck.stdout) as RunReport).checks).toMatchObject([
                 { check: 'duplication/jscpd', status: 'ok', findings: [] },
             ]);
         },

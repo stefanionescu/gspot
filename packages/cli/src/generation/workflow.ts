@@ -2,7 +2,7 @@ import { stringify } from 'yaml';
 import { headerFor } from '#cli/generation/headers.ts';
 import type { GeneratedFile, WorkflowShape } from '#cli/types/generation.ts';
 import { MISE_CONFIG_PATH, MISE_MIN_VERSION } from '#cli/config/tools/tools.ts';
-import { MISE, NODE, CACHE, SARIF, UPLOAD, RUNNERS, CHECKOUT, DOWNLOAD, NODE_VERSION } from '#cli/config/generation.ts';
+import { MISE, NODE, CACHE, RUNNERS, CHECKOUT, NODE_VERSION } from '#cli/config/generation.ts';
 
 function setupSteps(shape: WorkflowShape): string[] {
     if (shape.isMise)
@@ -84,28 +84,16 @@ function checkJob(shape: WorkflowShape, platform: string, stage: 'check' | 'manu
               ]),
         '        run: |',
         ...selected.split('\n').map((line) => `          ${line}`),
-        `      - uses: ${UPLOAD} # v4.6.2`,
-        '        if: always() && !cancelled()',
-        '        with:',
-        `          name: gspot-${stage}-${platform}`,
-        '          retention-days: 14',
-        '          include-hidden-files: true',
-        '          if-no-files-found: warn',
-        '          path: |',
-        '            .gspot/reports/report.json',
-        '            .gspot/reports/report.sarif',
-        '            .gspot/reports/report.codequality.json',
     ];
 }
 
 /**
- * Generate independent check and manual jobs with retained reports and restricted scanning permissions.
+ * Generate independent check and manual jobs with read-only permissions.
  * @param shape what the workflow covers: platforms, the Swift scope, and the runner
  * @returns the GitHub workflow file
  */
 export function workflowFile(shape: WorkflowShape): GeneratedFile {
     const platforms = [...new Set([...shape.platforms, ...(shape.swiftScope === undefined ? [] : ['macos'])])];
-    const jobs = platforms.flatMap((platform) => ['check', 'manual'].map((stage) => `${stage}-${platform}`));
     const content = [
         headerFor('gspot.yml', shape.version).trimEnd(),
         'name: gspot',
@@ -120,43 +108,6 @@ export function workflowFile(shape: WorkflowShape): GeneratedFile {
             ...checkJob(shape, platform, 'check'),
             ...checkJob(shape, platform, 'manual'),
         ]),
-        ...(shape.sarif === false
-            ? []
-            : [
-                  '  code-scanning:',
-                  `    needs: [${jobs.join(', ')}]`,
-                  "    if: always() && !cancelled() && github.event_name == 'push' && !github.event.repository.fork",
-                  '    runs-on: ubuntu-24.04',
-                  '    timeout-minutes: 10',
-                  '    permissions:',
-                  '      contents: read',
-                  '      security-events: write',
-                  '      actions: read',
-                  '    steps:',
-                  `      - uses: ${CHECKOUT} # v4.3.1`,
-                  '        with:',
-                  '          persist-credentials: false',
-                  `      - uses: ${DOWNLOAD} # v4.3.0`,
-                  '        with:',
-                  '          pattern: gspot-*',
-                  '          path: reports',
-                  ...jobs.flatMap((job) => [
-                      `      - name: Upload ${job} SARIF`,
-                      `        if: always() && !cancelled() && hashFiles('reports/gspot-${job}/report.sarif') != ''`,
-                      `        uses: ${SARIF} # v3.25.0`,
-                      '        with:',
-                      `          sarif_file: reports/gspot-${job}/report.sarif`,
-                      `          category: gspot-${job}`,
-                  ]),
-                  '      - name: Report absent SARIF files',
-                  '        if: always() && !cancelled()',
-                  '        shell: bash',
-                  '        run: |',
-                  ...jobs.map(
-                      (job) =>
-                          `          if [[ ! -f "reports/gspot-${job}/report.sarif" ]]; then echo "::notice::No SARIF artifact from ${job}. Check its setup and check result."; fi`,
-                  ),
-              ]),
         '',
     ].join('\n');
     return { path: '.github/workflows/gspot.yml', content, readOnly: true, kind: 'workflow' };
@@ -187,16 +138,6 @@ export function gitlabFile(shape: WorkflowShape): GeneratedFile {
                 { if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH', interruptible: false },
             ],
             script: ['set -euo pipefail', ...setup, `${command} install`, `${command} doctor`, check],
-            artifacts: {
-                when: 'always',
-                expire_in: '14 days',
-                paths: [
-                    '.gspot/reports/report.json',
-                    '.gspot/reports/report.sarif',
-                    '.gspot/reports/report.codequality.json',
-                ],
-                reports: { codequality: '.gspot/reports/report.codequality.json' },
-            },
         },
     });
     return { path, content: `${headerFor(path, shape.version)}${content}`, readOnly: true, kind: 'workflow' };
