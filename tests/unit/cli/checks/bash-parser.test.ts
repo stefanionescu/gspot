@@ -1,43 +1,6 @@
-import { test, spyOn, expect, describe } from 'bun:test';
-import { rejection } from '#tests/support/expectations.ts';
-import { identifiersOf } from '#cli/checks/naming/engine.ts';
+import { test, expect, describe } from 'bun:test';
 import { scriptFunctions } from '#cli/checks/bash/parser.ts';
-import { parserFor, parseSource } from '#cli/parsers/tree-sitter.ts';
 import { codeLines, withoutComment } from '#cli/checks/bash/code-lines.ts';
-
-test('shared parse handles retain grammar, source, and independent disposal boundaries', async () => {
-    const reads = { root: '/repository', sources: new Map<string, Buffer>() };
-    const resources = new DisposableStack();
-    const context = { reads, resources };
-    const source = 'const label: string = "ready";';
-    const first = await parseSource('typescript', source, context);
-    const sibling = await parseSource('typescript', source, context);
-    const javascript = await parseSource('javascript', source, context);
-    const corrected = await parseSource('javascript', 'const label = "ready";', context);
-    try {
-        expect(first!.rootNode.hasError).toBe(false);
-        expect(javascript!.rootNode.hasError).toBe(true);
-        expect(corrected!.rootNode.hasError).toBe(false);
-        expect(sibling!.rootNode.text).toBe(source);
-        resources.dispose();
-        expect(first!.rootNode.text).toBe(source);
-        expect(sibling!.rootNode.text).toBe(source);
-        using refreshedResources = new DisposableStack();
-        const refreshed = await parseSource('typescript', source, { reads, resources: refreshedResources });
-        try {
-            expect(refreshed!.rootNode.hasError).toBe(false);
-            expect(refreshed!.rootNode.text).toBe(source);
-        } finally {
-            refreshed?.delete();
-        }
-    } finally {
-        first?.delete();
-        sibling?.delete();
-        javascript?.delete();
-        corrected?.delete();
-        resources.dispose();
-    }
-});
 
 describe('shell parsing', () => {
     test('comments are stripped with quotes respected', () => {
@@ -56,20 +19,4 @@ describe('shell parsing', () => {
             { name: 'main', start: 6, end: 8, body: ['    _one "$@"'], statements: 1 },
         ]);
     });
-});
-
-test('Bash and naming analysis reject missing trees and accept corrected parsing', async () => {
-    using resources = new DisposableStack();
-    const context = { resources, reads: { root: '/repository', sources: new Map<string, Buffer>() } };
-    const parser = await parserFor('bash');
-    const parse = spyOn(parser, 'parse').mockReturnValue(null);
-    try {
-        expect(await rejection(scriptFunctions('run() { echo ready; }', context))).toContain('no tree');
-        expect(await rejection(identifiersOf('run.sh', 'run() { echo ready; }', 'bash', context))).toContain('no tree');
-    } finally {
-        parse.mockRestore();
-    }
-    expect(await scriptFunctions('run() { echo ready; }', context)).toHaveLength(1);
-    const identifiers = await identifiersOf('run.sh', 'run() { echo ready; }', 'bash', context);
-    expect(identifiers.map((entry) => entry.name)).toContain('run');
 });

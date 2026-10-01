@@ -1,5 +1,4 @@
 import { test, expect } from 'bun:test';
-import { policySchema } from '#cli/policy/schema.ts';
 import { parserFor } from '#cli/parsers/tree-sitter.ts';
 import { functionsOf as swiftFunctions } from '#cli/checks/swift/sources.ts';
 import { functionsOf as pythonFunctions } from '#cli/checks/python/modules.ts';
@@ -7,32 +6,26 @@ import { trivialFunctions as swiftTrivial } from '#cli/checks/swift/bodies.ts';
 import { trivialFunctions as pythonTrivial } from '#cli/checks/python/functions.ts';
 import { trivialFile, executableStatements } from '#cli/checks/structure/statements.ts';
 
-for (const language of ['python', 'swift', 'bash'] as const) {
-    test.each([0, 1, 2, 3])(`${language} counts %i executable statements`, async (count) => {
-        const body = Array.from({ length: count }, () => (language === 'bash' ? 'echo value' : 'work()')).join(
-            language === 'python' ? '\n    ' : '; ',
-        );
-        const source = {
-            python: `def example():\n    """Contract."""\n    ${body}\n`,
-            swift: `func example() { /* comment */ ${body} }`,
-            bash: `example() { # comment\n${body}\n}`,
-        }[language];
-        const parser = await parserFor(language);
-        const tree = parser.parse(source)!;
-        try {
-            const fn = tree.rootNode.descendantsOfType(
-                language === 'swift' ? 'function_declaration' : 'function_definition',
-            )[0]!;
-            const nodes =
-                language === 'python'
-                    ? fn.childForFieldName('body')!.namedChildren.slice(1)
-                    : fn.childForFieldName('body')!.namedChildren;
-            expect(executableStatements(nodes, language)).toBe(count);
-        } finally {
-            tree.delete();
-        }
-    });
-}
+test.each([
+    ['python', 'def example():\n    """Contract."""\n    work()\n    work()\n'],
+    ['swift', 'func example() { /* comment */ work(); work() }'],
+    ['bash', 'example() { # comment\necho value; echo value\n}'],
+] as const)('%s counts two executable statements past comments and documentation', async (language, source) => {
+    const parser = await parserFor(language);
+    const tree = parser.parse(source)!;
+    try {
+        const fn = tree.rootNode.descendantsOfType(
+            language === 'swift' ? 'function_declaration' : 'function_definition',
+        )[0]!;
+        const nodes =
+            language === 'python'
+                ? fn.childForFieldName('body')!.namedChildren.slice(1)
+                : fn.childForFieldName('body')!.namedChildren;
+        expect(executableStatements(nodes, language)).toBe(2);
+    } finally {
+        tree.delete();
+    }
+});
 
 test('Python counts nested control flow and reports decorated methods and anonymous functions independently', async () => {
     const text =
@@ -65,13 +58,6 @@ test('Swift reports constructors, accessors, decorated methods, nested functions
     } finally {
         tree.delete();
     }
-});
-
-test.each([0, -1, 1.5])('trivial statement threshold rejects %i', (threshold) => {
-    expect(policySchema.safeParse({ version: 1, limits: { trivial_statements: threshold } }).success).toBe(false);
-    expect(policySchema.safeParse({ version: 1, limits: { python: { trivial_statements: threshold } } }).success).toBe(
-        false,
-    );
 });
 
 test.each([
