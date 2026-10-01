@@ -59,16 +59,14 @@ const VALUE_HOLDERS: [AST_NODE_TYPES, (parent: TSESTree.Node, value: TSESTree.No
 ];
 
 // Assertions change static types without introducing an observable function-value use.
-export function functionValue(node: TSESTree.Expression): TSESTree.Expression;
-export function functionValue(node: ImplementedFunction): TSESTree.Expression | ImplementedFunction;
+function functionValue(node: TSESTree.Expression): TSESTree.Expression;
+function functionValue(node: ImplementedFunction): TSESTree.Expression | ImplementedFunction;
 /**
  * Unwrap static assertions around a function value without changing its consumer.
  * @param node the expression or declaration
  * @returns the value as observed by its parent expression
  */
-export function functionValue(
-    node: TSESTree.Expression | ImplementedFunction,
-): TSESTree.Expression | ImplementedFunction {
+function functionValue(node: TSESTree.Expression | ImplementedFunction): TSESTree.Expression | ImplementedFunction {
     let value = node;
     for (;;) {
         const parent = value.parent;

@@ -78,7 +78,7 @@ async function isTypesFileStale(input: EngineInput, path: string): Promise<boole
  * @param entries the lines that hold something, with their numbers
  * @returns the problems, each with its line
  */
-export function headerProblems(entries: { text: string; number: number }[]): { number: number; text: string }[] {
+function headerProblems(entries: { text: string; number: number }[]): { number: number; text: string }[] {
     let hasPath = false;
     return entries.flatMap((line) => {
         if (/^\s/u.test(line.text)) return headerProblem(line, hasPath);
@@ -100,7 +100,7 @@ export function headerProblems(entries: { text: string; number: number }[]): { n
  * @param entries the lines that hold something, with their numbers
  * @returns the problems, each with its line
  */
-export function redirectProblems(entries: { text: string; number: number }[]): { number: number; text: string }[] {
+function redirectProblems(entries: { text: string; number: number }[]): { number: number; text: string }[] {
     return entries.flatMap((line) => {
         const parts = line.text.trim().split(/\s+/u);
         const [source = '', , status] = parts;
@@ -115,24 +115,11 @@ export function redirectProblems(entries: { text: string; number: number }[]): {
 }
 
 /**
- * The syntax findings of every headers file.
- * @param input the engine input
- * @returns the findings
- */
-export function headersSyntax(input: EngineInput): Finding[] {
-    return named(input, '_headers').flatMap((path) =>
-        headerProblems(lines(input, path)).map((entry) =>
-            findingAt(input, { file: path, line: entry.number }, 'headers-syntax', entry.text),
-        ),
-    );
-}
-
-/**
  * The syntax findings of every redirects file.
  * @param input the engine input
  * @returns the findings
  */
-export function redirectsSyntax(input: EngineInput): Finding[] {
+function redirectsSyntax(input: EngineInput): Finding[] {
     return named(input, '_redirects').flatMap((path) =>
         redirectProblems(lines(input, path)).map((entry) =>
             findingAt(input, { file: path, line: entry.number }, 'redirects-syntax', entry.text),
@@ -145,7 +132,7 @@ export function redirectsSyntax(input: EngineInput): Finding[] {
  * @param input the engine input
  * @returns the findings
  */
-export function wranglerFile(input: EngineInput): Finding[] {
+function wranglerFile(input: EngineInput): Finding[] {
     const paths = ['wrangler.toml', 'wrangler.json', 'wrangler.jsonc'].flatMap((name) => named(input, name));
     return paths.flatMap((path): Finding[] => {
         const { table, problem } = wranglerTable(input, path);
@@ -168,6 +155,18 @@ export function wranglerFile(input: EngineInput): Finding[] {
                   ];
         return [...unnamed, ...undated];
     });
+}
+/**
+ * The syntax findings of every headers file.
+ * @param input the engine input
+ * @returns the findings
+ */
+export function headersSyntax(input: EngineInput): Finding[] {
+    return named(input, '_headers').flatMap((path) =>
+        headerProblems(lines(input, path)).map((entry) =>
+            findingAt(input, { file: path, line: entry.number }, 'headers-syntax', entry.text),
+        ),
+    );
 }
 
 /**

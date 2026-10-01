@@ -61,22 +61,12 @@ function trimTrailingSlashes(path: string): string {
 }
 
 /**
- * Drops the undefined entries of an object, so exact optional types hold.
- * @param value any object
- * @returns the same object without its undefined entries
- */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Readers drop undefined entries so exact optional types hold, and this is the one way they do it.
-export function compact<T extends object>(value: T): Defined<T> {
-    return Object.fromEntries(Object.entries(value).filter(([, entry]) => entry !== undefined)) as Defined<T>;
-}
-
-/**
  * Compacts every object of a list; a missing list is empty.
  * @param entries the entries as written
  * @returns the compacted objects
  */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Rules, edges, and ignores compact each entry of a list that may be missing.
-export function compactAll<T extends object>(entries: T[] | undefined): Defined<T>[] {
+function compactAll<T extends object>(entries: T[] | undefined): Defined<T>[] {
     return (entries ?? []).map((entry) => compact(entry));
 }
 
@@ -85,7 +75,7 @@ export function compactAll<T extends object>(entries: T[] | undefined): Defined<
  * @param value the value as written
  * @returns the value with its reason when it had one
  */
-export function toReasoned<T>(value: T | { value: T; reason: string }): Reasoned<T> {
+function toReasoned<T>(value: T | { value: T; reason: string }): Reasoned<T> {
     if (isReasonedForm(value)) return { value: value.value, reason: value.reason };
     return { value: value };
 }
@@ -95,7 +85,7 @@ export function toReasoned<T>(value: T | { value: T; reason: string }): Reasoned
  * @param raw the table as written, if any
  * @returns the limits
  */
-export function normalizeLimits(raw: RawLimits | undefined): Limits {
+function normalizeLimits(raw: RawLimits | undefined): Limits {
     const limits: Limits = { root: {}, groups: {} };
     const entries = Object.entries(raw ?? {});
     for (const [key, value] of entries) {
@@ -117,7 +107,7 @@ export function normalizeLimits(raw: RawLimits | undefined): Limits {
  * @param raw the table as written, if any
  * @returns the naming configuration
  */
-export function normalizeNaming(raw: RawNaming | undefined): NamingSettings {
+function normalizeNaming(raw: RawNaming | undefined): NamingSettings {
     const lists = defaulted(raw, {
         banned_terms: [],
         allowed: [],
@@ -148,7 +138,7 @@ export function normalizeNaming(raw: RawNaming | undefined): NamingSettings {
  * @returns the architecture configuration
  */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The full policy and a scope table normalize the architecture table the same way.
-export function normalizeArchitecture(raw: RawPolicy['architecture']): Policy['architecture'] {
+function normalizeArchitecture(raw: RawPolicy['architecture']): Policy['architecture'] {
     const filled = defaulted(raw, { elements: [], edges_allowed: [], roles: {}, contracts: [] });
     return compact({ ...filled, edges_allowed: compactAll(filled.edges_allowed) });
 }
@@ -159,7 +149,7 @@ export function normalizeArchitecture(raw: RawPolicy['architecture']): Policy['a
  * @returns the structure configuration
  */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The full policy and a scope table normalize the structure table the same way.
-export function normalizeStructure(raw: RawPolicy['structure']): Policy['structure'] {
+function normalizeStructure(raw: RawPolicy['structure']): Policy['structure'] {
     return defaulted<Policy['structure']>(raw, {
         reexports: 'none',
         single_file_folder_allowed: [],
@@ -167,6 +157,15 @@ export function normalizeStructure(raw: RawPolicy['structure']): Policy['structu
         folder_name_allowed: [],
         python: {},
     });
+}
+/**
+ * Drops the undefined entries of an object, so exact optional types hold.
+ * @param value any object
+ * @returns the same object without its undefined entries
+ */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Readers drop undefined entries so exact optional types hold, and this is the one way they do it.
+export function compact<T extends object>(value: T): Defined<T> {
+    return Object.fromEntries(Object.entries(value).filter(([, entry]) => entry !== undefined)) as Defined<T>;
 }
 
 /**

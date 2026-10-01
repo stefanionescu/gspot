@@ -16,6 +16,15 @@ import type { Session, PlannedCheck } from '#cli/types/execution/execution.ts';
 import type { Defined, MergedView, PolicyFiles, ScopeSelection } from '#cli/types/policy/policy.ts';
 import type { Repository, ScopeEntry, SourceReads, TrackedFile } from '#cli/types/repository/repository.ts';
 
+/** Where a fact was declared, so a finding points at it. */
+type Declared = { path: string; offset: number; text: string };
+/** One foreign key column of a table. */
+type ForeignKey = Declared & { table: string; column: string };
+/** The modules and functions of one run, parsed once. */
+type ParsedModules = { modules: PythonModule[]; functions: PythonFunction[] };
+/** The files and functions of one run, parsed one time. */
+type ParsedSwift = { sources: SwiftSource[]; functions: SwiftFunction[] };
+type ProjectRoot = ProjectEntry & { mainGroup: string };
 export type SqlSource = { path: string; text: string };
 export type FunctionOption = {
     DefElem: { defname: string; arg: { String?: { sval: string }; List?: { items: { String: { sval: string } }[] } } };
@@ -193,10 +202,6 @@ export type Migration = {
     text: string;
     statements: SqlStatementView[];
 };
-/** Where a fact was declared, so a finding points at it. */
-export type Declared = { path: string; offset: number; text: string };
-/** One foreign key column of a table. */
-export type ForeignKey = Declared & { table: string; column: string };
 /** What the migrations say about the schema, read across every file. */
 export type Schema = {
     /** Qualified table name to where it was created. */
@@ -237,8 +242,6 @@ export type PythonFunction = {
     /** The statements of the body, the docstring left out. */
     body: Node[];
 };
-/** The modules and functions of one run, parsed once. */
-export type ParsedModules = { modules: PythonModule[]; functions: PythonFunction[] };
 /** One structure analysis over the parsed modules. */
 export type StructureReader = (parsed: ParsedModules, input: EngineInput) => StructureProblem[];
 
@@ -326,8 +329,6 @@ export type SwiftFunction = {
     /** The statements of the body. */
     body: Node[];
 };
-/** The files and functions of one run, parsed one time. */
-export type ParsedSwift = { sources: SwiftSource[]; functions: SwiftFunction[] };
 /** One structure analysis over the parsed Swift files. */
 export type SwiftReader = (parsed: ParsedSwift, input: EngineInput) => StructureProblem[];
 export type Pruning = {
@@ -354,7 +355,6 @@ export type XcodeCoverageReport = { targets?: { name: string; lineCoverage: numb
 export type Plist = string | Plist[] | { [key: string]: Plist };
 export type Token = { text: string; quoted: boolean; at: number };
 export type ProjectEntry = z.infer<typeof projectSchema>['objects'][string];
-export type ProjectRoot = ProjectEntry & { mainGroup: string };
 export type XcodeProject = {
     objects: Record<string, ProjectEntry>;
     root: ProjectRoot;

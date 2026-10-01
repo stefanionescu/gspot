@@ -8,6 +8,11 @@ import type { ToolSearch, ToolInspection } from '#cli/types/tools/tools.ts';
 import type { IgnoreEntry, PolicyFiles, ScopeSelection } from '#cli/types/policy/policy.ts';
 import type { Repository, SourceReads, TrackedFile } from '#cli/types/repository/repository.ts';
 
+type RunReportOptions = PlanOptions & {
+    onResult?: (result: CheckResult) => void;
+    isDryRun: boolean;
+    comparison?: NonNullable<RunReport['comparison']>;
+};
 /** What one tool run accumulates across its spawns. */
 export type ToolRunState = { root: string; cwd: string; findings: Finding[]; isFailed: boolean };
 /** The run report as check --json prints it. */
@@ -103,11 +108,6 @@ export type ReportInput = {
     ran: CheckResult[];
     uses: Map<string, IgnoreUse>;
     fixes: FixReport | undefined;
-};
-export type RunReportOptions = PlanOptions & {
-    onResult?: (result: CheckResult) => void;
-    isDryRun: boolean;
-    comparison?: NonNullable<RunReport['comparison']>;
 };
 export type Copy = { source: string; target: string };
 export type Scratch = {

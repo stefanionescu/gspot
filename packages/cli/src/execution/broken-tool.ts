@@ -58,6 +58,18 @@ function outputFailure(planned: PlannedCheck, result: SpawnResult): never {
 }
 
 /**
+ * Whether one command of a check crashed: it exited nonzero, it runs over many files, and nothing it printed names a real file.
+ * @param spec the check
+ * @param result what the command returned
+ * @param parsed the findings read from its output
+ * @param roots the folders a finding path may be relative to
+ * @returns true for a crash
+ */
+function isCrash(spec: CheckSpec, result: SpawnResult, parsed: Finding[], roots: string[]): boolean {
+    if (result.code === 0 || (spec.command?.includes('{file}') ?? false)) return false;
+    return isToolBroken(spec, parsed, roots);
+}
+/**
  * Whether a run that exited nonzero produced nothing that points at a real file.
  * @param spec the check.
  * @param parsed the findings read from the output.
@@ -67,19 +79,6 @@ function outputFailure(planned: PlannedCheck, result: SpawnResult): never {
 export function isToolBroken(spec: CheckSpec, parsed: Finding[], roots: string[]): boolean {
     if (spec.count_regex !== undefined || !isFileNamed(spec.output)) return false;
     return parsed.every((finding) => !isOnDisk(finding.file, roots));
-}
-
-/**
- * Whether one command of a check crashed: it exited nonzero, it runs over many files, and nothing it printed names a real file.
- * @param spec the check
- * @param result what the command returned
- * @param parsed the findings read from its output
- * @param roots the folders a finding path may be relative to
- * @returns true for a crash
- */
-export function isCrash(spec: CheckSpec, result: SpawnResult, parsed: Finding[], roots: string[]): boolean {
-    if (result.code === 0 || (spec.command?.includes('{file}') ?? false)) return false;
-    return isToolBroken(spec, parsed, roots);
 }
 
 /**

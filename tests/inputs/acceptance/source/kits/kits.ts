@@ -1,6 +1,7 @@
 // The literal values acceptance/source/configurations/configurations reads: names, patterns, limits, and tables.
 import type { PlantedInput } from '#tests/types/cli.ts';
 
+const OPENAPI_POLICY = '[tools.openapi]\ndocument = "openapi.yaml"\nproduced_by = "bun write-document.js"\n';
 export const VITEST_SOURCE =
     '// Arithmetic the planted tests call.\n\n/**\n * Adds positive values.\n * @param values the values to total\n * @returns the positive total\n */\nexport function positiveTotal(values: number[]): number {\n    let total = 0;\n    for (const value of values) {\n        if (value > 0) total += value;\n    }\n    return total;\n}\n';
 export const SUPABASE_CONFIG =
@@ -10,7 +11,6 @@ export const EXPRESS_PACKAGE =
     '{\n    "name": "planted",\n    "version": "1.0.0",\n    "private": true,\n    "type": "module",\n    "dependencies": {\n        "express": "5.1.0"\n    }\n}\n';
 export const VITEST_PACKAGE =
     '{\n    "name": "planted",\n    "version": "1.0.0",\n    "private": true,\n    "type": "module",\n    "devDependencies": {\n        "vitest": "4.1.11"\n    }\n}\n';
-export const OPENAPI_POLICY = '[tools.openapi]\ndocument = "openapi.yaml"\nproduced_by = "bun write-document.js"\n';
 export const EXPRESS_POLICY = `${OPENAPI_POLICY}\n[tools.express]\nroute_files = ["src/routes/*.js"]\n`;
 export const VITE_POLICY = `level = "all"
 kits = ["javascript"]

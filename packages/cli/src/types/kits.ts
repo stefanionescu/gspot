@@ -5,8 +5,14 @@ import type { manifestSchema } from '#cli/kits/schema.ts';
 import type { Defined } from '#cli/types/policy/policy.ts';
 import type { outputSchema } from '#cli/kits/output-format.ts';
 
+type ExecutionFields<Check> = Check extends unknown ? Omit<Check, 'example'> : never;
+type NpmInstallerDefinition = Exclude<NonNullable<RawTool['npm']>, string>;
+type KitHeader = Omit<RawManifest['kit'], 'check_references'> & {
+    check_references?: RawManifest['kit']['check_references'];
+};
+/** A platform a tool pin may name: an operating system alone, or one with an architecture. */
+type ToolPlatform = (typeof TOOL_PLATFORMS)[number];
 export type KitEvidence = { kit: string; evidence: string; kind: string; count?: number };
-export type ExecutionFields<Check> = Check extends unknown ? Omit<Check, 'example'> : never;
 export type Stage = RawCheck['stage'];
 export type Owners = RawManifest['owners'];
 export type ConfigurationTarget = RawManifest['configs'][number];
@@ -43,16 +49,10 @@ export type ListingRow = {
     default: boolean;
     proposed: boolean;
 };
-export type NpmInstallerDefinition = Exclude<NonNullable<RawTool['npm']>, string>;
-export type KitHeader = Omit<RawManifest['kit'], 'check_references'> & {
-    check_references?: RawManifest['kit']['check_references'];
-};
 export type InstallerPin = Pick<NpmInstallerDefinition, 'name'> &
     Partial<Omit<NpmInstallerDefinition, 'name'>> & { options?: Record<string, string | boolean> };
 /** One tool pin as mise reads it: the version, the operating systems that have a build, and backend options. */
 export type MisePin = { name: string; version: string; os?: string[]; options?: Record<string, string | boolean> };
-/** A platform a tool pin may name: an operating system alone, or one with an architecture. */
-export type ToolPlatform = (typeof TOOL_PLATFORMS)[number];
 export type ToolPin = {
     name: string;
     kind?: 'binary' | 'library';

@@ -98,7 +98,7 @@ function kitsResult(session: Session): CommandResult {
  * @param scopes the resolved settings for each scope
  * @returns the rows and the extra tables
  */
-export function settingRows(policy: Policy, scopes: ScopeSelection[]): SettingsListing {
+function settingRows(policy: Policy, scopes: ScopeSelection[]): SettingsListing {
     const fromScopes = Object.entries(policy.scopeTables).flatMap(([scope, table]) =>
         table.tools === undefined ? [] : extrasFor(scope, table.tools),
     );

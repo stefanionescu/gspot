@@ -8,11 +8,10 @@ const BRANCHES = Array.from(
 ).join('\n');
 const ASSIGNMENTS = Array.from({ length: 14 }, (_, index) => `    total="\${total}${String(index)}"`).join('\n');
 
-export const LONG_BODY = Array.from({ length: 70 }, (_, index) => `    echo "line ${String(index)}"`).join('\n');
-export const LONG_FILE = Array.from(
-    { length: 320 },
-    (_, index) => `readonly VALUE_${String(index)}=${String(index)}`,
-).join('\n');
+const LONG_BODY = Array.from({ length: 70 }, (_, index) => `    echo "line ${String(index)}"`).join('\n');
+const LONG_FILE = Array.from({ length: 320 }, (_, index) => `readonly VALUE_${String(index)}=${String(index)}`).join(
+    '\n',
+);
 
 export const BASH_CASES: FindingCase[] = [
     {

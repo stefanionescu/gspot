@@ -1,3 +1,4 @@
+const REASON = 'The report names the folders the move deleted, which is what it is for.';
 // The literal values acceptance/source/cli/cli reads: names, patterns, limits, and tables.
 
 export const SCOPES_SOURCE =
@@ -103,7 +104,6 @@ kits = ["sql"]
 [scope.limits]
 function_lines = 30
 `;
-export const REASON = 'The report names the folders the move deleted, which is what it is for.';
 export const TABLE = `[{patterns = ["REPORT.md"], reason = "${REASON}"}]`;
 
 export const ESLINT_OVERRIDE_POLICY = `kits = ["javascript"]

@@ -162,7 +162,7 @@ function planScopes(session: Session, options: PlanOptions): PlannedCheck[][] {
  * @returns whether the check has something to run over
  */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Replacement and the run list decide whether a check has work by the same four conditions.
-export function isActive(check: PlannedCheck): boolean {
+function isActive(check: PlannedCheck): boolean {
     return (
         check.files.length > 0 ||
         check.triggerPaths.length > 0 ||
@@ -171,6 +171,26 @@ export function isActive(check: PlannedCheck): boolean {
     );
 }
 
+/**
+ * Leave out the files .prettierignore names before either the checker or its fixer receives file arguments.
+ * @param session the open session
+ * @param check the active native Prettier check with selected files
+ * @returns the check with the ignored files left out
+ */
+function prettierInputs(session: Session, check: PlannedCheck): PlannedCheck {
+    const tree = openRoot(session.root);
+    try {
+        const read = tree.read('.prettierignore');
+        if (read === undefined) return check;
+        const matcher = ignore().add(read.bytes.toString('utf8'));
+        const files = check.files.filter((file) => !matcher.ignores(file.path));
+        return files.length === 0
+            ? { ...check, skip: { source: 'ignore', note: 'all selected paths are ignored by .prettierignore' } }
+            : { ...check, files };
+    } finally {
+        tree.close();
+    }
+}
 /**
  * Checks enabled by persistent policy, before evaluating executable tool configurations.
  * @param session the open session
@@ -232,25 +252,4 @@ export function planRun(session: Session, options: PlanOptions): PlannedCheck[] 
             ]);
     }
     return checks;
-}
-
-/**
- * Leave out the files .prettierignore names before either the checker or its fixer receives file arguments.
- * @param session the open session
- * @param check the active native Prettier check with selected files
- * @returns the check with the ignored files left out
- */
-export function prettierInputs(session: Session, check: PlannedCheck): PlannedCheck {
-    const tree = openRoot(session.root);
-    try {
-        const read = tree.read('.prettierignore');
-        if (read === undefined) return check;
-        const matcher = ignore().add(read.bytes.toString('utf8'));
-        const files = check.files.filter((file) => !matcher.ignores(file.path));
-        return files.length === 0
-            ? { ...check, skip: { source: 'ignore', note: 'all selected paths are ignored by .prettierignore' } }
-            : { ...check, files };
-    } finally {
-        tree.close();
-    }
 }

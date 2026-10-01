@@ -36,7 +36,7 @@ function analysis(read: StructureReader): (input: EngineInput) => Promise<Findin
 }
 
 /** The analyses by the name a manifest gives them. */
-export const PYTHON_STRUCTURE: Record<string, Engine> = {
+const PYTHON_STRUCTURE: Record<string, Engine> = {
     'python-file-length': analysis(({ modules }, input) => {
         const ceiling = input.view.limit('file_lines', 'python') ?? DEFAULT_FILE_LINES;
         return modules.flatMap((module) => {

@@ -1,10 +1,10 @@
+const LINK_MODE = 0o777;
 // The literal values repository/revisions reads: names, patterns, limits, and tables.
 
 export const MATERIALIZATION_BATCH_SIZE = 64;
 export const NEWLINE = 10;
 export const EXECUTABLE_MODE = 0o755;
 export const FILE_MODE = 0o644;
-export const LINK_MODE = 0o777;
 export const ENTRY_MODES: Record<string, number> = {
     '100644': FILE_MODE,
     '100755': EXECUTABLE_MODE,

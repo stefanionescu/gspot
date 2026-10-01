@@ -1,6 +1,13 @@
 // The types of support/cli in this package.
 import type { Finding } from '#cli/types/checks.ts';
 
+/** What the clean rerun of a planted case plants: corrected files, and the case's policy unless it names another. */
+type Correction = {
+    files: Record<string, string>;
+    policy?: string | undefined;
+    removed?: string[];
+    executable?: string[];
+};
 /** A planted case that checks a finding at its source location, and what corrects it for the clean rerun. */
 export type FindingCase = PlantedInput & {
     expected: Partial<Pick<Finding, 'file' | 'rule' | 'line' | 'column' | 'message'>>;
@@ -10,13 +17,6 @@ export type FindingCase = PlantedInput & {
     platforms?: NodeJS.Platform[];
     /** Whether the case needs a Docker daemon that runs Linux containers. */
     docker?: true;
-};
-/** What the clean rerun of a planted case plants: corrected files, and the case's policy unless it names another. */
-export type Correction = {
-    files: Record<string, string>;
-    policy?: string | undefined;
-    removed?: string[];
-    executable?: string[];
 };
 /** What a planted repository holds and selects. */
 export type Sandbox = {

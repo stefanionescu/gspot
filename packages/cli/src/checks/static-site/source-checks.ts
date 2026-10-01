@@ -23,6 +23,23 @@ async function svgFinding(input: EngineInput, path: string): Promise<Finding[]> 
 }
 
 /**
+ * The headers a block of the headers file sets for every path.
+ * @param text the headers file
+ * @returns header names in lower case with their values, from the blocks whose path covers the whole site
+ */
+function siteWideHeaders(text: string): Map<string, string> {
+    const held = new Map<string, string>();
+    let isSiteWide = false;
+    for (const raw of text.split('\n')) {
+        const line = raw.trimEnd();
+        if (line.trim() === '' || line.trimStart().startsWith('#')) continue;
+        if (!/^\s/u.test(line)) isSiteWide = line.trim() === '/*';
+        else if (isSiteWide && line.includes(':'))
+            held.set(line.slice(0, line.indexOf(':')).trim().toLowerCase(), line.slice(line.indexOf(':') + 1).trim());
+    }
+    return held;
+}
+/**
  * Every tracked file under an assets folder that no text file of the site names.
  * @param input the engine input
  * @returns the findings
@@ -102,24 +119,6 @@ export function webManifest(input: EngineInput): Finding[] {
             .map((src) => findingAt(input, { file: file.path, line: 1 }, 'icon', `The icon ${src} does not exist.`));
         return [...unnamed, ...missing];
     });
-}
-
-/**
- * The headers a block of the headers file sets for every path.
- * @param text the headers file
- * @returns header names in lower case with their values, from the blocks whose path covers the whole site
- */
-export function siteWideHeaders(text: string): Map<string, string> {
-    const held = new Map<string, string>();
-    let isSiteWide = false;
-    for (const raw of text.split('\n')) {
-        const line = raw.trimEnd();
-        if (line.trim() === '' || line.trimStart().startsWith('#')) continue;
-        if (!/^\s/u.test(line)) isSiteWide = line.trim() === '/*';
-        else if (isSiteWide && line.includes(':'))
-            held.set(line.slice(0, line.indexOf(':')).trim().toLowerCase(), line.slice(line.indexOf(':') + 1).trim());
-    }
-    return held;
 }
 
 /**

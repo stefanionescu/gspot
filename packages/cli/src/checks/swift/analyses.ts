@@ -29,7 +29,7 @@ function analysis(read: SwiftReader): (input: EngineInput) => Promise<Finding[]>
 }
 
 /** The analyses by the name a manifest gives them. */
-export const SWIFT_STRUCTURE: Record<string, Engine> = {
+const SWIFT_STRUCTURE: Record<string, Engine> = {
     'swift-trivial-function': analysis(({ functions, sources }, input) => {
         const threshold = input.view.limit('trivial_statements', 'swift') ?? DEFAULT_TRIVIAL_STATEMENTS;
         return [

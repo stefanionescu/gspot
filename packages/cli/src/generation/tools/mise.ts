@@ -11,7 +11,7 @@ import { MISE_CONFIG_PATH, MISE_MIN_VERSION } from '#cli/config/tools/tools.ts';
  * @param pin the pin
  * @returns the TOML line
  */
-export function miseToolLine(pin: MisePin): string {
+function miseToolLine(pin: MisePin): string {
     const key = BARE_KEY.test(pin.name) ? pin.name : JSON.stringify(pin.name);
     const fields = [`version = ${JSON.stringify(pin.version)}`];
     if (pin.os !== undefined) fields.push(`os = [${pin.os.map((name) => JSON.stringify(name)).join(', ')}]`);

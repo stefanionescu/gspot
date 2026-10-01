@@ -141,6 +141,30 @@ function replaceTools(
 }
 
 /**
+ * Discover configuration sections declared by the tools that own them.
+ * @param root the repository root
+ * @param paths the tracked file paths
+ * @param selected the selected kits, when only their tools count
+ * @returns tool configurations with their containing files and sections
+ */
+function declaredKits(root: string, paths: Iterable<string>, selected?: string[]): ExistingTool[] {
+    const inventory = new Set(
+        [...paths].filter((path) => !path.split('/').some((part) => part.toLowerCase() === '.gspot')),
+    );
+    const files = openRoot(root);
+    try {
+        return [...kitManifests().values()].flatMap((manifest) =>
+            manifest.tools
+                .filter((tool) => selected === undefined || selected.includes(tool.name))
+                .flatMap((tool) =>
+                    (tool.replace ?? []).flatMap((replace) => replaceTools(files, inventory, tool.name, replace)),
+                ),
+        );
+    } finally {
+        files.close();
+    }
+}
+/**
  * The hooks a clone already runs: another hooks folder, a hook folder a tool keeps, and hook manager settings.
  * @param root the repository root
  * @returns each set of hooks with where it lives
@@ -169,31 +193,6 @@ export function existingHooks(root: string): ExistingTooling['hooks'] {
             : []),
         ...(hasPackageHooks(root) ? [{ kind: 'simple-git-hooks' as const, path: 'package.json', files: [] }] : []),
     ];
-}
-
-/**
- * Discover configuration sections declared by the tools that own them.
- * @param root the repository root
- * @param paths the tracked file paths
- * @param selected the selected kits, when only their tools count
- * @returns tool configurations with their containing files and sections
- */
-export function declaredKits(root: string, paths: Iterable<string>, selected?: string[]): ExistingTool[] {
-    const inventory = new Set(
-        [...paths].filter((path) => !path.split('/').some((part) => part.toLowerCase() === '.gspot')),
-    );
-    const files = openRoot(root);
-    try {
-        return [...kitManifests().values()].flatMap((manifest) =>
-            manifest.tools
-                .filter((tool) => selected === undefined || selected.includes(tool.name))
-                .flatMap((tool) =>
-                    (tool.replace ?? []).flatMap((replace) => replaceTools(files, inventory, tool.name, replace)),
-                ),
-        );
-    } finally {
-        files.close();
-    }
 }
 
 /**

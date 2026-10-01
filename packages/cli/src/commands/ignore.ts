@@ -75,7 +75,7 @@ async function removeIgnore(root: string, o: IgnoreOptions): Promise<CommandResu
  * @param o the parsed flags
  * @returns the command result
  */
-export async function ignoreCommand(o: IgnoreOptions): Promise<CommandResult> {
+async function ignoreCommand(o: IgnoreOptions): Promise<CommandResult> {
     const root = findRoot(o.cwd);
     assertPinMatches(root);
     const { policy } = readPolicy(root);

@@ -1,3 +1,4 @@
+type RefMapping = { source: string; destination: string };
 // The types of repository/revisions in this package.
 export type RevisionSource = { kind: 'index' } | { kind: 'commit'; hash: string };
 export type PushRevision = {
@@ -26,6 +27,5 @@ export type PushSearch = {
     shallow: boolean;
     boundaries: Set<string>;
 };
-export type RefMapping = { source: string; destination: string };
 export type RefRules = { mappings: RefMapping[]; excluded: string[] };
 export type ParsedMapping = { kind: 'skip' } | { kind: 'unusable' } | ({ kind: 'mapping' } & RefMapping);

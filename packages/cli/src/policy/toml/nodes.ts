@@ -20,7 +20,7 @@ const KINDS = new Set([
  * @param node the syntax node
  * @returns the kind
  */
-export function kindOf(node: Kinded): NodeKind {
+function kindOf(node: Kinded): NodeKind {
     const kind = String(node.type);
     if (!KINDS.has(kind)) throw new Error(`The TOML parser produced a node of an unknown kind: ${kind}.`);
     return kind as NodeKind;

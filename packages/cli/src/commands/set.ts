@@ -187,7 +187,7 @@ function writeValue(
  * @param o the parsed flags
  * @returns the command result
  */
-export async function setCommand(o: SetOptions): Promise<CommandResult> {
+async function setCommand(o: SetOptions): Promise<CommandResult> {
     const root = findRoot(o.cwd);
     assertPinMatches(root);
     const session = await openSession(root);

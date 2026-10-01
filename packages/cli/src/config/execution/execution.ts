@@ -1,3 +1,4 @@
+const TYPOS_FINDINGS = 2;
 // The literal values execution reads: names, patterns, limits, and tables.
 
 export const WINDOWS_COMMAND_LIMIT = 7000;
@@ -55,7 +56,6 @@ export const UNABLE_EXIT = 2;
 export const FILELESS_FORMATS = new Set(['lines', 'none']);
 export const TAIL_LINES = 20;
 export const TRUFFLEHOG_FINDINGS = 183;
-export const TYPOS_FINDINGS = 2;
 /** Native structured reporters reserve these nonzero exit codes for findings. */
 export const FINDING_EXIT_CODES = new Map<string | undefined, number[]>([
     ['typos-json', [TYPOS_FINDINGS]],

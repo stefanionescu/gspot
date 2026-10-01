@@ -138,7 +138,7 @@ async function fileFunctionFindings(analysis: SqlAnalysis): Promise<Finding[]> {
  * @param input the engine input
  * @returns the findings
  */
-export async function sqlSyntax(input: EngineInput): Promise<Finding[]> {
+async function sqlSyntax(input: EngineInput): Promise<Finding[]> {
     const dialect = (input.view.tool('sqlfluff')['dialect'] as string | undefined) ?? 'ansi';
     if (!POSTGRES_DIALECTS.has(dialect)) return [];
     const findings: Finding[] = [];
@@ -156,7 +156,7 @@ export async function sqlSyntax(input: EngineInput): Promise<Finding[]> {
  * @param input the engine input
  * @returns the findings
  */
-export function sqlBlockComments(input: EngineInput): Finding[] {
+function sqlBlockComments(input: EngineInput): Finding[] {
     return sources(input).flatMap((source): Finding[] => {
         const found = source.text.matchAll(SQL_TOKENS).find((match) => match[0] === BLOCK_COMMENT);
         if (found === undefined) return [];
@@ -176,7 +176,7 @@ export function sqlBlockComments(input: EngineInput): Finding[] {
  * @param input the engine input
  * @returns the findings
  */
-export function sqlFileLength(input: EngineInput): Finding[] {
+function sqlFileLength(input: EngineInput): Finding[] {
     const ceiling = input.view.limit('file_lines', 'sql');
     if (ceiling === undefined) return [];
     return sources(input).flatMap((source): Finding[] => {
@@ -193,7 +193,7 @@ export function sqlFileLength(input: EngineInput): Finding[] {
  * @param input the engine input
  * @returns the findings
  */
-export async function sqlFunctions(input: EngineInput): Promise<Finding[]> {
+async function sqlFunctions(input: EngineInput): Promise<Finding[]> {
     const findings: Finding[] = [];
     const threshold = input.view.limit('trivial_statements', 'sql') ?? DEFAULT_TRIVIAL_STATEMENTS;
     const maximum = input.view.limit('function_parameters', 'sql') ?? SHIPPED_PARAMETER_LIMIT;
