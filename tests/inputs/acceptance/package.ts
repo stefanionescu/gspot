@@ -73,4 +73,3 @@ const configs: TSESLint.FlatConfig.Config[] = [plugin.configs.recommended, plugi
 const rule: TSESLint.RuleModule<string, readonly unknown[]> | undefined = plugin.rules['no-trivial-functions'];
 console.log(configs, rule);
 `;
-export const REGISTRY_TIMEOUT_MS = 30_000;
