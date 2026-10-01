@@ -15,7 +15,7 @@ const allowed = wordMap(settings['tools.typos.words']);
         'extend-exclude': scopeIgnorePatterns([
             '*.lock', 'bun.lockb', 'package-lock.json', 'pnpm-lock.yaml', 'yarn.lock', 'Package.resolved',
             '*.pbxproj', '*.xcstrings', '*.svg', '*.min.js', '*.min.css',
-            '.gspot/cache/', '.gspot/config/vale/', '.gspot/reports/report.json', '.gspot/reports/report.sarif',
+            '.gspot/cache/', '.gspot/config/vale/',
             ...(settings['tools.typos.exclude'] ?? []).flatMap((entry) => entry.paths),
             ...policy.declarations.flatMap((entry) => entry.paths),
         ], targetPath.startsWith('.gspot/') ? '' : scope),

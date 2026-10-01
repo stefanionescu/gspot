@@ -4,8 +4,8 @@ import { readFileSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { run } from '#tests/support/cli/command.ts';
 import type { FindingCase } from '#tests/types/cli.ts';
-import { reportSchema } from '#cli/execution/report.ts';
 import { plantedCases } from '#tests/support/cli/planted.ts';
+import type { RunReport } from '#cli/types/execution/execution.ts';
 import { CAST_SWIFT, CLEAN_SWIFT, PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { TINY, BELOW, COPIES, FORWARD, STRUCTURAL } from '#tests/inputs/acceptance/source/kits/swift.ts';
 
@@ -100,7 +100,7 @@ plantedCases(
             async () => {
                 const { root, environment } = planted();
                 const checked = await run(root, ['check', '--stage', 'commit', '--json'], environment);
-                const ids = reportSchema.parse(JSON.parse(checked.stdout)).checks.map((check) => check.check);
+                const ids = (JSON.parse(checked.stdout) as RunReport).checks.map((check) => check.check);
                 expect(ids).not.toContain('swift/build');
                 expect(ids).not.toContain('swift/swiftlint-analyze');
                 expect(ids).not.toContain('swift/periphery');

@@ -5,9 +5,9 @@ import { writeFileSync } from 'node:fs';
 import { run } from '#cli/platform/spawn.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
 import { parseAlerts } from '#cli/checks/prose/vale.ts';
-import { reportSchema } from '#cli/execution/report.ts';
 import { RELEASE_TIMEOUT_MS } from '#tests/inputs/package.ts';
 import type { InstalledConsumer } from '#tests/types/package.ts';
+import type { RunReport } from '#cli/types/execution/execution.ts';
 import { createConsumer } from '#tests/support/package/consumer.ts';
 import { initializeConsumer, getPublishedRelease } from '#tests/support/package/published.ts';
 
@@ -47,7 +47,7 @@ async function expectInstalledSql(installation: InstalledConsumer): Promise<void
     expect(added.code, added.stdout + added.stderr).toBe(0);
     const sql = await run([...command, 'check', 'query.sql', '--only', 'sql/syntax', '--no-cache', '--json'], options);
     expect(sql.code, sql.stdout + sql.stderr).toBe(0);
-    const sqlReport = reportSchema.parse(JSON.parse(sql.stdout));
+    const sqlReport = JSON.parse(sql.stdout) as RunReport;
     expect(sqlReport.skips).toStrictEqual([]);
     expect(sqlReport.checks).toHaveLength(1);
     expect(sqlReport.checks[0]).toMatchObject({
@@ -80,7 +80,7 @@ test(
         const proseCommand = [...command, 'check', 'guide.md', '--only', 'prose/vale', '--no-cache', '--json'];
         const ambiguous = await run(proseCommand, options);
         expect(ambiguous.code, ambiguous.stdout + ambiguous.stderr).toBe(1);
-        const proseReport = reportSchema.parse(JSON.parse(ambiguous.stdout));
+        const proseReport = JSON.parse(ambiguous.stdout) as RunReport;
         expect(proseReport.skips).toStrictEqual([]);
         expect(proseReport.checks).toHaveLength(1);
         expect(proseReport.checks[0]).toMatchObject({
@@ -103,7 +103,7 @@ test(
         );
         const clearDate = await run(proseCommand, options);
         expect(clearDate.code, clearDate.stdout + clearDate.stderr).toBe(0);
-        const clearReport = reportSchema.parse(JSON.parse(clearDate.stdout));
+        const clearReport = JSON.parse(clearDate.stdout) as RunReport;
         expect(clearReport.skips).toStrictEqual([]);
         expect(clearReport.checks).toHaveLength(1);
         expect(clearReport.checks[0]).toMatchObject({
@@ -134,7 +134,7 @@ test(
         const pythonCommand = [...command, 'check', 'entry.py', '--only', 'python/ruff', '--no-cache', '--json'];
         const undefinedName = await run(pythonCommand, options);
         expect(undefinedName.code, undefinedName.stdout + undefinedName.stderr).toBe(1);
-        const pythonReport = reportSchema.parse(JSON.parse(undefinedName.stdout));
+        const pythonReport = JSON.parse(undefinedName.stdout) as RunReport;
         expect(pythonReport.skips).toStrictEqual([]);
         expect(pythonReport.checks).toHaveLength(1);
         expect(pythonReport.checks[0]).toMatchObject({
@@ -155,7 +155,7 @@ test(
         writeFileSync(join(consumer, 'entry.py'), 'answer = "example"\n');
         const definedName = await run(pythonCommand, options);
         expect(definedName.code, definedName.stdout + definedName.stderr).toBe(0);
-        const definedReport = reportSchema.parse(JSON.parse(definedName.stdout));
+        const definedReport = JSON.parse(definedName.stdout) as RunReport;
         expect(definedReport.skips).toStrictEqual([]);
         expect(definedReport.checks).toHaveLength(1);
         expect(definedReport.checks[0]).toMatchObject({
@@ -184,7 +184,7 @@ test(
         writeFileSync(join(consumer, 'broken.sh'), '#!/usr/bin/env bash\nprintf "%s\\n" $1\n');
         const unquoted = await run([...command, 'check', '--only', 'bash/shellcheck', '--no-cache', '--json'], options);
         expect(unquoted.code, unquoted.stdout + unquoted.stderr).toBe(1);
-        const quoting = reportSchema.parse(JSON.parse(unquoted.stdout));
+        const quoting = JSON.parse(unquoted.stdout) as RunReport;
         expect(quoting.skips).toStrictEqual([]);
         expect(quoting.checks).toHaveLength(1);
         expect(quoting.checks[0]).toMatchObject({
@@ -205,7 +205,7 @@ test(
         writeFileSync(join(consumer, 'broken.sh'), '#!/usr/bin/env bash\nprintf "%s\\n" "$1"\n');
         const quoted = await run([...command, 'check', '--only', 'bash/shellcheck', '--no-cache', '--json'], options);
         expect(quoted.code, quoted.stdout + quoted.stderr).toBe(0);
-        const acceptedQuoting = reportSchema.parse(JSON.parse(quoted.stdout));
+        const acceptedQuoting = JSON.parse(quoted.stdout) as RunReport;
         expect(acceptedQuoting.skips).toStrictEqual([]);
         expect(acceptedQuoting.checks).toHaveLength(1);
         expect(acceptedQuoting.checks[0]).toMatchObject({
@@ -239,7 +239,7 @@ test(
         ];
         const invalidSwift = await run(swiftCommand, options);
         expect(invalidSwift.code, invalidSwift.stdout + invalidSwift.stderr).toBe(1);
-        const swiftReport = reportSchema.parse(JSON.parse(invalidSwift.stdout));
+        const swiftReport = JSON.parse(invalidSwift.stdout) as RunReport;
         expect(swiftReport.skips).toStrictEqual([]);
         expect(swiftReport.checks).toHaveLength(1);
         expect(swiftReport.checks[0]).toMatchObject({ check: 'naming/identifiers', status: 'fail', files: 1 });
@@ -263,7 +263,7 @@ test(
         writeFileSync(join(consumer, 'Account.swift'), 'let account = 1\n');
         const correctedSwift = await run(swiftCommand, options);
         expect(correctedSwift.code, correctedSwift.stdout + correctedSwift.stderr).toBe(0);
-        const acceptedSwift = reportSchema.parse(JSON.parse(correctedSwift.stdout));
+        const acceptedSwift = JSON.parse(correctedSwift.stdout) as RunReport;
         expect(acceptedSwift.skips).toStrictEqual([]);
         expect(acceptedSwift.checks).toHaveLength(1);
         expect(acceptedSwift.checks[0]).toMatchObject({

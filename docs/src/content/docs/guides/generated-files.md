@@ -36,12 +36,12 @@ private manifests and locks at the root of `.gspot/`, the root files, and the ma
 After a teammate clones the repository, `gspot install` installs the locked tools and the hooks.
 
 The managed block in `.gitignore` keeps these out of Git: the installed tools, the downloaded
-style packages, `.gspot/state/`, `.gspot/cache/`, and `.gspot/reports/`.
+style packages, `.gspot/state/`, and `.gspot/cache/`.
 
 ## What to keep
 
 `.gspot/state/` holds the record of what gspot wrote. Without it, gspot cannot tell your edits
 from its own files. Do not delete the whole `.gspot/` folder to clean up.
 
-`.gspot/reports/` and `.gspot/cache/` hold nothing gspot needs later. You can delete them, and
-every check deletes the cached results written more than seven days ago.
+`.gspot/cache/` holds nothing gspot needs later. You can delete it, and every check deletes the
+cached results written more than seven days ago.

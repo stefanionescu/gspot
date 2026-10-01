@@ -5,13 +5,13 @@ import { TOKEN_IGNORES } from '#cli/config/kits.ts';
 import { readAsset } from '#cli/platform/assets.ts';
 import { run } from '#tests/support/cli/command.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { reportSchema } from '#cli/execution/report.ts';
 import { valeFindings } from '#cli/checks/prose/vale.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { runEngineCheck } from '#cli/execution/engines.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { PROSE_FORMATS } from '#cli/generation/vale-styles.ts';
+import type { RunReport } from '#cli/types/execution/execution.ts';
 
 for (const extension of ['md', 'sh']) {
     test(`native Vale reports a ${extension} defect and accepts corrected source`, async () => {
@@ -163,7 +163,7 @@ test('a raw-markup fixture exception preserves adjacent images and other prose r
     });
     const result = await run(directory.path, ['check', '--only', 'prose/vale', '--no-cache', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(1);
-    const report = reportSchema.parse(JSON.parse(result.stdout));
+    const report = JSON.parse(result.stdout) as RunReport;
     expect(report.checks.flatMap((check) => check.findings)).toStrictEqual([
         containing({ file: 'fixture.ts', line: 2, rule: 'Example.Concrete' }),
         containing({ file: 'guide.md', line: 1, rule: 'Example.Alt' }),

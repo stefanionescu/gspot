@@ -3,10 +3,10 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
-import { reportSchema } from '#cli/execution/report.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
+import type { RunReport } from '#cli/types/execution/execution.ts';
 
 test('a leftover local file cannot hide ShellCheck while an explicit skip applies only to that run', async () => {
     await using directory = await testdir();
@@ -22,12 +22,12 @@ test('a leftover local file cannot hide ShellCheck while an explicit skip applie
     const command = ['check', '--only', 'bash/shellcheck', '--no-cache', '--json'];
     const checked = await run(directory.path, command, environment);
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
-    expect(reportSchema.parse(JSON.parse(checked.stdout)).checks[0]?.findings).toStrictEqual([
+    expect((JSON.parse(checked.stdout) as RunReport).checks[0]?.findings).toStrictEqual([
         containing({ file: 'entry.sh', line: 2, rule: 'SC2086' }),
     ]);
     const skipped = await run(directory.path, [...command, '--skip', 'bash/shellcheck'], environment);
     expect(skipped.code, skipped.stdout + skipped.stderr).toBe(0);
-    expect(reportSchema.parse(JSON.parse(skipped.stdout)).skips).toStrictEqual([
+    expect((JSON.parse(skipped.stdout) as RunReport).skips).toStrictEqual([
         { check: 'bash/shellcheck', source: 'flag' },
     ]);
     const doctor = await run(directory.path, ['doctor', '--json'], environment);

@@ -3,10 +3,10 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
-import { reportSchema } from '#cli/execution/report.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { installAtLevel } from '#tests/support/cli/tools.ts';
+import type { RunReport } from '#cli/types/execution/execution.ts';
 
 import {
     TOOLS_CLEAN,
@@ -38,13 +38,13 @@ test.each([
         const command = ['check', '--only', 'python/pydoclint', '--no-cache', '--json'];
         const rejected = await run(sandbox.path, command);
         expect(rejected.code, rejected.stdout + rejected.stderr).toBe(1);
-        const report = reportSchema.parse(JSON.parse(rejected.stdout));
+        const report = JSON.parse(rejected.stdout) as RunReport;
         expect(report.checks).toMatchObject([{ check: 'python/pydoclint', status: 'fail' }]);
         expect(report.checks[0]!.findings).toContainEqual(containing({ file: TOOLS_MODULE, rule: 'DOC103', line: 4 }));
         await Bun.write(join(sandbox.path, TOOLS_MODULE), clean);
         const corrected = await run(sandbox.path, command);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
+        expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
             { check: 'python/pydoclint', status: 'ok', findings: [] },
         ]);
     },

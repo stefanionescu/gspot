@@ -4,10 +4,10 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { run } from '#tests/support/cli/command.ts';
-import { reportSchema } from '#cli/execution/report.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { installPrivateTools } from '#tests/support/cli/tools.ts';
+import type { RunReport } from '#cli/types/execution/execution.ts';
 import { runPlanted, plantedCases } from '#tests/support/cli/planted.ts';
 import { CODE, SHEET } from '#tests/inputs/acceptance/source/kits/kits.ts';
 import { containing, containingAll } from '#tests/support/expectations.ts';
@@ -35,7 +35,7 @@ test(
         const command = ['check', '--only', 'css/stylelint', '--no-cache', '--json'];
         const failed = await run(sandbox.path, command);
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-        const failedReport = reportSchema.parse(JSON.parse(failed.stdout));
+        const failedReport = JSON.parse(failed.stdout) as RunReport;
         expect(failedReport.checks).toMatchObject([
             { check: 'css/stylelint', scope: '', status: 'fail' },
             { check: 'css/stylelint', scope: 'app', status: 'fail' },
@@ -51,7 +51,7 @@ test(
         await Bun.write(join(sandbox.path, 'app/site.css'), 'a {\n    color: red;\n}\n');
         const corrected = await run(sandbox.path, command);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toContainEqual(
+        expect((JSON.parse(corrected.stdout) as RunReport).checks).toContainEqual(
             containing({ check: 'css/stylelint', status: 'ok', findings: [] }),
         );
         for (const folder of ['', 'app']) {

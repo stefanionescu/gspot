@@ -5,9 +5,9 @@ import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { reportSchema } from '#cli/execution/report.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
+import type { RunReport } from '#cli/types/execution/execution.ts';
 import { suppressionComments } from '#cli/checks/repository/suppressions.ts';
 
 test('the CLI at all requires reasons only for native directives', async () => {
@@ -21,7 +21,7 @@ test('the CLI at all requires reasons only for native directives', async () => {
     });
     const checked = await run(sandbox.path, ['check', '--json', '--only', 'integrity/suppressions']);
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
-    const report = reportSchema.parse(JSON.parse(checked.stdout));
+    const report = JSON.parse(checked.stdout) as RunReport;
     expect(report.checks.map(({ status }) => status)).toStrictEqual(['fail']);
     expect(
         report.checks.flatMap(({ findings }) => findings.map(({ file, line, rule }) => ({ file, line, rule }))),

@@ -3,7 +3,7 @@ import { test, expect } from 'bun:test';
 import { writeFileSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
-import { reportSchema } from '#cli/execution/report.ts';
+import type { RunReport } from '#cli/types/execution/execution.ts';
 import { NESTED_SCOPES_POLICY } from '#tests/inputs/acceptance/source/cli/cli.ts';
 
 test('nested scopes inherit parent configurations and settings and check each file in its deepest scope', async () => {
@@ -29,7 +29,7 @@ test('nested scopes inherit parent configurations and settings and check each fi
     expect(rows.find((row) => row.scope === 'api/worker' && row.key === 'limits.function_lines')?.value).toBe(30);
     const checked = await run(directory.path, ['check', '--only', 'bash/syntax', '--no-cache', '--json']);
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
-    const checks = reportSchema.parse(JSON.parse(checked.stdout)).checks;
+    const checks = (JSON.parse(checked.stdout) as RunReport).checks;
     expect(checks.map((check) => ({ check: check.check, scope: check.scope, files: check.files }))).toStrictEqual([
         { check: 'bash/syntax', scope: 'api', files: 1 },
         { check: 'bash/syntax', scope: 'api/worker', files: 1 },
@@ -50,7 +50,7 @@ test('nested scopes inherit parent configurations and settings and check each fi
         '--json',
     ]);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
+    expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
         { check: 'bash/syntax', scope: 'api', status: 'ok', findings: [] },
         { check: 'bash/syntax', scope: 'api/worker', status: 'ok', findings: [] },
         { check: 'sql/syntax', scope: 'api/worker', status: 'ok', findings: [] },

@@ -4,7 +4,7 @@ import { pathToFileURL } from 'node:url';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
-import { reportSchema } from '#cli/execution/report.ts';
+import type { RunReport } from '#cli/types/execution/execution.ts';
 
 function git(root: string, ...argv: string[]): string {
     const result = runBlocking(['git', ...argv], { cwd: root });
@@ -46,21 +46,19 @@ test('changed selection uses a merge base, labels its source, and keeps a follow
     await Bun.write(join(sandbox.path, 'web/source.txt'), 'working change');
     const selected = await run(sandbox.path, ['check', '--changed', 'api', '--json']);
     expect(selected.code, selected.stdout + selected.stderr).toBe(1);
-    const report = reportSchema.parse(JSON.parse(selected.stdout));
+    const report = JSON.parse(selected.stdout) as RunReport;
     expect(report.comparison).toStrictEqual({ content: 'working-tree', reference: 'refs/heads/base' });
     expect(report.checks.flatMap((check) => check.findings.map((finding) => finding.message))).toStrictEqual([
         'api/source.txt',
     ]);
     const explicit = await run(sandbox.path, ['check', '--changed=base', '--json']);
     expect(explicit.code, explicit.stdout + explicit.stderr).toBe(1);
-    const all = reportSchema.parse(JSON.parse(explicit.stdout));
+    const all = JSON.parse(explicit.stdout) as RunReport;
     expect(
         all.checks
             .flatMap((check) => check.findings.map((finding) => finding.message))
             .toSorted((a, b) => a.localeCompare(b)),
     ).toStrictEqual(['api/source.txt', 'web/source.txt']);
-    const saved = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
-    expect(saved.comparison).toStrictEqual(all.comparison);
     const invalid = await run(sandbox.path, ['check', '--changed=missing-ref', '--json']);
     expect(invalid.code).toBe(2);
     expect((JSON.parse(invalid.stdout) as { message: string }).message).toContain('Git merge-base failed');

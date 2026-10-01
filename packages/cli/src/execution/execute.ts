@@ -170,7 +170,7 @@ async function planCorrections(
 }
 
 /**
- * Runs the checks and returns the report. Writes `.gspot/reports/report.json`.
+ * Runs the checks and returns the report.
  * @param opened the session
  * @param options stage, skips, fix and cache flags
  * @returns the report, the plan, and the fix report when --fix ran

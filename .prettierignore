@@ -6,8 +6,6 @@ dist/
 build/
 coverage/
 .gspot/cache/
-.gspot/reports/report.json
-.gspot/reports/report.sarif
 *.lock
 bun.lockb
 package-lock.json

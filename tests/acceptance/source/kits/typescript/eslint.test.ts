@@ -4,7 +4,6 @@ import { test, expect } from 'bun:test';
 import { writeFileSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
-import { reportSchema } from '#cli/execution/report.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
@@ -53,7 +52,7 @@ test(
         );
         const corrected = await run(sandbox.path, ['check', '--only', 'typescript/eslint', '--no-cache', '--json']);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        const after = reportSchema.parse(JSON.parse(corrected.stdout));
+        const after = JSON.parse(corrected.stdout) as RunReport;
         expect(after.checks).toMatchObject([{ check: 'typescript/eslint', status: 'ok', findings: [] }]);
     },
     PLANTED_TIMEOUT_MS,

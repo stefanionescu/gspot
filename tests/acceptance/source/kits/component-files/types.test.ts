@@ -3,11 +3,11 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { run } from '#tests/support/cli/command.ts';
-import { reportSchema } from '#cli/execution/report.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { installSandbox } from '#tests/support/cli/sandbox.ts';
 import vueManifest from 'vue/package.json' with { type: 'json' };
+import type { RunReport } from '#cli/types/execution/execution.ts';
 import { COMPONENT_SOURCE, COMPONENT_TSCONFIG, PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 
 const SHAPES = [
@@ -43,7 +43,7 @@ test.each(SHAPES)(
         });
         const outcome = await runPlanted(sandbox.path, { check, files: { [path]: planted } }, environment);
         expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
-        const report = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
+        const report = JSON.parse(outcome.stdout) as RunReport;
         expect(report.checks[0]!.findings).toContainEqual(containing({ rule: 'TS2322', file: path, line: 2 }));
         await Bun.write(join(sandbox.path, path), planted.replace("'one'", '1'));
         const both = await run(
@@ -52,7 +52,7 @@ test.each(SHAPES)(
             environment,
         );
         expect(both.code, both.stdout + both.stderr).toBe(0);
-        const corrected = reportSchema.parse(JSON.parse(both.stdout));
+        const corrected = JSON.parse(both.stdout) as RunReport;
         expect(corrected.checks).toContainEqual(containing({ check, status: 'ok', findings: [] }));
         expect(corrected.checks).toContainEqual(
             containing({ check: 'typescript/tsc', status: 'skipped', note: `${check} runs it here` }),
@@ -81,7 +81,7 @@ test(
             environment,
         );
         expect(result.code, result.stdout + result.stderr).toBe(1);
-        const report = reportSchema.parse(JSON.parse(result.stdout));
+        const report = JSON.parse(result.stdout) as RunReport;
         expect(report.checks).toContainEqual(
             containing({
                 check: 'vue/typecheck',

@@ -3,9 +3,9 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
-import { reportSchema } from '#cli/execution/report.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
+import type { RunReport } from '#cli/types/execution/execution.ts';
 import { containing, textContaining } from '#tests/support/expectations.ts';
 
 test('a path-specific Vale ignore retains findings elsewhere and reports its actual matches', async () => {
@@ -31,9 +31,11 @@ test('a path-specific Vale ignore retains findings elsewhere and reports its act
     const before = await run(directory.path, command, environment);
     expect(before.code, before.stdout + before.stderr).toBe(1);
     expect(
-        reportSchema
-            .parse(JSON.parse(before.stdout))
-            .checks[0]?.findings.map(({ file, rule, line }) => ({ file, rule, line })),
+        (JSON.parse(before.stdout) as RunReport).checks[0]?.findings.map(({ file, rule, line }) => ({
+            file,
+            rule,
+            line,
+        })),
     ).toStrictEqual([
         { file: 'archive.md', rule: 'gspot.dates', line: 3 },
         { file: 'guide.md', rule: 'gspot.dates', line: 3 },
@@ -46,7 +48,7 @@ test('a path-specific Vale ignore retains findings elsewhere and reports its act
     expect(ignored.code, ignored.stdout + ignored.stderr).toBe(0);
     const after = await run(directory.path, command, environment);
     expect(after.code, after.stdout + after.stderr).toBe(1);
-    const report = reportSchema.parse(JSON.parse(after.stdout));
+    const report = JSON.parse(after.stdout) as RunReport;
     expect(report.checks[0]?.findings.map(({ file, rule }) => ({ file, rule }))).toStrictEqual([
         { file: 'guide.md', rule: 'gspot.dates' },
     ]);
@@ -71,7 +73,7 @@ test('an obsolete Vale switch reports a policy error without suppressing the che
     writeFileSync(join(directory.path, 'gspot.toml'), obsoletePolicy);
     const obsolete = await run(directory.path, command, environment);
     expect(obsolete.code, obsolete.stdout + obsolete.stderr).toBe(1);
-    const obsoleteChecks = reportSchema.parse(JSON.parse(obsolete.stdout)).checks;
+    const obsoleteChecks = (JSON.parse(obsolete.stdout) as RunReport).checks;
     expect(obsoleteChecks.map((check) => check.check)).toStrictEqual(['prose/vale', 'integrity/policy']);
     expect(obsoleteChecks[1]?.findings).toMatchObject([
         { file: 'gspot.toml', line: 7, message: textContaining('tools.vale.enabled') },

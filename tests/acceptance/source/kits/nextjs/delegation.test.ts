@@ -3,7 +3,6 @@ import { join } from 'node:path';
 import { chmodSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { run } from '#tests/support/cli/command.ts';
-import { reportSchema } from '#cli/execution/report.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { installedNextProject } from '#tests/support/cli/nextjs.ts';
 import { NEXT_LAYOUT, PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
@@ -33,7 +32,7 @@ test(
             environment,
         );
         expect(seen.code, seen.stdout + seen.stderr).toBe(1);
-        const integrity = reportSchema.parse(JSON.parse(seen.stdout));
+        const integrity = JSON.parse(seen.stdout) as RunReport;
         expect(integrity.checks).toMatchObject([{ check: 'integrity/required-rules', status: 'fail' }]);
         expect(integrity.checks[0]!.findings).toContainEqual(
             containing({
@@ -51,7 +50,7 @@ test(
             environment,
         );
         expect(requiredRules.code, requiredRules.stdout + requiredRules.stderr).toBe(0);
-        expect(reportSchema.parse(JSON.parse(requiredRules.stdout)).checks).toMatchObject([
+        expect((JSON.parse(requiredRules.stdout) as RunReport).checks).toMatchObject([
             { check: 'integrity/required-rules', status: 'ok', findings: [] },
         ]);
     },
@@ -69,7 +68,7 @@ test(
             environment,
         );
         expect(disabled.code, disabled.stdout + disabled.stderr).toBe(0);
-        expect(reportSchema.parse(JSON.parse(disabled.stdout)).checks).toMatchObject([
+        expect((JSON.parse(disabled.stdout) as RunReport).checks).toMatchObject([
             { check: 'nextjs/build', status: 'skipped', note: textContaining('tools.next.build_in_gate') },
         ]);
         const direct = await run(
@@ -111,7 +110,7 @@ test(
             environment,
         );
         expect(lint.code, lint.stdout + lint.stderr).toBe(1);
-        const findings = reportSchema.parse(JSON.parse(lint.stdout)).checks[0]!.findings;
+        const findings = (JSON.parse(lint.stdout) as RunReport).checks[0]!.findings;
         expect(findings).toContainEqual(
             containing({ rule: 'i18next/no-literal-string', file: 'app/layout.tsx', line: 13 }),
         );
@@ -122,7 +121,7 @@ test(
             environment,
         );
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(1);
-        const remaining = reportSchema.parse(JSON.parse(corrected.stdout));
+        const remaining = JSON.parse(corrected.stdout) as RunReport;
         expect(remaining.checks).toMatchObject([{ check: 'typescript/eslint', status: 'fail' }]);
         expect(remaining.checks[0]!.findings).toContainEqual(
             containing({ rule: 'gspot/no-trivial-functions', file: 'app/page.tsx', line: 7 }),

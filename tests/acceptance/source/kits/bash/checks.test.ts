@@ -4,11 +4,11 @@ import { test, expect } from 'bun:test';
 import { chmodSync, writeFileSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
-import { reportSchema } from '#cli/execution/report.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { BASH_CASES } from '#tests/support/cli/bash-cases.ts';
 import { BASH_CASES_MAIN as MAIN } from '#tests/inputs/cli.ts';
+import type { RunReport } from '#cli/types/execution/execution.ts';
 import { script, plantedCases } from '#tests/support/cli/planted.ts';
 
 const CLEAN = script.replace('# gspot-ignore', () => '# main: runs the script.\n# gspot-ignore');
@@ -70,16 +70,16 @@ test.each([
     writeFileSync(path, base + (isInherited ? '' : inherited) + MAIN);
     const broken = await run(sandbox.path, command);
     expect(broken.code, broken.stdout + broken.stderr).toBe(1);
-    expect(reportSchema.parse(JSON.parse(broken.stdout)).checks).toMatchObject([
+    expect((JSON.parse(broken.stdout) as RunReport).checks).toMatchObject([
         { check: 'structure/bash-interpreter', status: 'fail' },
     ]);
-    expect(reportSchema.parse(JSON.parse(broken.stdout)).checks[0]!.findings).toContainEqual(
+    expect((JSON.parse(broken.stdout) as RunReport).checks[0]!.findings).toContainEqual(
         containing({ file: 'greet.sh', rule: isInherited ? 'strict-mode' : 'bash-version' }),
     );
     writeFileSync(path, base + (isInherited ? inherited : '') + MAIN);
     const corrected = await run(sandbox.path, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
+    expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
         { check: 'structure/bash-interpreter', status: 'ok', findings: [] },
     ]);
 });

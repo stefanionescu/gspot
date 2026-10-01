@@ -1,8 +1,8 @@
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
-import { reportSchema } from '#cli/execution/report.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
+import type { RunReport } from '#cli/types/execution/execution.ts';
 
 test('Swift checks report each scope independently and file-list inputs omit sibling sources', async () => {
     await using sandbox = await testdir();
@@ -14,7 +14,7 @@ test('Swift checks report each scope independently and file-list inputs omit sib
     const failed = await run(sandbox.path, ['check', '--only', 'xctest/disabled', '--no-cache', '--json']);
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
     expect(
-        reportSchema.parse(JSON.parse(failed.stdout)).checks.map((check) => ({
+        (JSON.parse(failed.stdout) as RunReport).checks.map((check) => ({
             scope: check.scope,
             files: check.findings.map((finding) => finding.file),
         })),
@@ -138,7 +138,7 @@ test.each(['recommended', 'all'] as const)('orphan assets follow %s and tracked 
     const command = ['check', '--only', 'xcode/asset-catalogs', '--json', '--no-cache'];
     const result = await run(sandbox.path, command);
     expect(result.code, result.stdout + result.stderr).toBe(level === 'all' ? 1 : 0);
-    const findings = reportSchema.parse(JSON.parse(result.stdout)).checks.flatMap((entry) => entry.findings);
+    const findings = (JSON.parse(result.stdout) as RunReport).checks.flatMap((entry) => entry.findings);
     expect(findings).toHaveLength(level === 'all' ? 1 : 0);
     await Bun.write(`${sandbox.path}/app/Source.swift`, 'let image = Image("Logo")\n');
     const corrected = await run(sandbox.path, command);

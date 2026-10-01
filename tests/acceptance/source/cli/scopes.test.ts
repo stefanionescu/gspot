@@ -7,10 +7,10 @@ import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { parsePolicyText } from '#cli/policy/read.ts';
 import type { InitJson } from '#cli/types/commands.ts';
-import { reportSchema } from '#cli/execution/report.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { treeContents } from '#tests/support/cli/preservation.ts';
+import type { RunReport } from '#cli/types/execution/execution.ts';
 import { INSTALLED_BIN_PATH } from '#tests/support/cli/modules.ts';
 import { linkInstalledModules } from '#tests/support/cli/platforms.ts';
 import { toolsPath, installAtLevel } from '#tests/support/cli/tools.ts';
@@ -56,7 +56,7 @@ test(
         const command = ['check', '--only', 'typescript/eslint', '--no-cache', '--json'];
         const lint = await run(sandbox.path, command, environment);
         expect(lint.code, lint.stdout + lint.stderr).toBe(1);
-        const report = reportSchema.parse(JSON.parse(lint.stdout));
+        const report = JSON.parse(lint.stdout) as RunReport;
         expect(report.checks).toMatchObject([{ check: 'typescript/eslint', scope: 'api', status: 'fail' }]);
         expect(report.checks[0]?.findings).toContainEqual(
             containing({
@@ -69,7 +69,7 @@ test(
         await Bun.write(join(sandbox.path, 'api/src/port.ts'), SCOPES_SOURCE.replace(' as number', ''));
         const corrected = await run(sandbox.path, command, environment);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
+        expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
             { check: 'typescript/eslint', scope: 'api', status: 'ok', findings: [] },
         ]);
     },

@@ -62,9 +62,8 @@ The commit hook runs `gspot check --staged`, which reads only what you staged.
 ## CI results
 
 CI runs on every pull request, on Linux, macOS, and Windows. To run it on a branch without a
-pull request, start the `ci` workflow by hand. The check job uploads `.gspot/reports/report.json`
-and the SARIF reports of the commit. A failed job names its task. Run that task locally with
-the same arguments to reproduce the failure.
+pull request, start the `ci` workflow by hand. A failed job names its task. Run that task
+locally with the same arguments to reproduce the failure.
 
 A failed shard of the suite runs the same files again with `mise run test:acceptance -- --shard=<k>/<n>`, with the shard numbers of the job.
 On Windows, a full acceptance run leaves out the files that still fail there; the list and the

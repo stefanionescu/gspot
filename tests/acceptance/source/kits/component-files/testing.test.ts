@@ -3,12 +3,12 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect, describe } from 'bun:test';
 import { run } from '#tests/support/cli/command.ts';
-import { reportSchema } from '#cli/execution/report.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { installSandbox } from '#tests/support/cli/sandbox.ts';
 import vueManifest from 'vue/package.json' with { type: 'json' };
+import type { RunReport } from '#cli/types/execution/execution.ts';
 
 const LIBRARIES = [
     { framework: 'vue', library: '@testing-library/vue', dependencies: { vue: vueManifest.version } },
@@ -33,7 +33,7 @@ describe('the Testing Library rules of component frameworks', () => {
                 environment,
             );
             expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
-            const report = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
+            const report = JSON.parse(outcome.stdout) as RunReport;
             expect(report.checks[0]!.findings).toContainEqual(
                 containing({
                     rule: 'testing-library/no-debugging-utils',
@@ -41,12 +41,12 @@ describe('the Testing Library rules of component frameworks', () => {
                     line: 5,
                 }),
             );
-            await runPlanted(
+            const unrelated = await runPlanted(
                 sandbox.path,
                 { check: 'javascript/eslint', files: { 'src/debugging.js': debugged } },
                 environment,
             );
-            const outside = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
+            const outside = JSON.parse(unrelated.stdout) as RunReport;
             expect(
                 outside.checks
                     .flatMap(({ findings }) => findings)

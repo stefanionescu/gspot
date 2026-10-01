@@ -10,7 +10,6 @@ import packageManifest from '#package' with { type: 'json' };
 import { registerInit } from '#cli/commands/init/command.ts';
 import { registerApply } from '#cli/commands/apply/command.ts';
 import { registerCheck } from '#cli/commands/check/command.ts';
-import { installCompletion } from '#cli/commands/completion.ts';
 import { registerDoctor } from '#cli/commands/doctor/command.ts';
 import { registerExplain } from '#cli/commands/explain/command.ts';
 import { registerAdd, registerRemove } from '#cli/commands/kits.ts';
@@ -19,7 +18,7 @@ import { fail, isColorAllowed, configureOutput } from '#cli/output/messages.ts';
 
 const { version: GSPOT_VERSION } = packageManifest;
 
-// Registration order is shared by help, command lookup, and completion.
+// Registration order is shared by help and command lookup.
 const COMMAND_REGISTRATIONS: ((program: Command) => void)[] = [
     registerInit,
     registerInstall,
@@ -33,7 +32,6 @@ const COMMAND_REGISTRATIONS: ((program: Command) => void)[] = [
     registerDoctor,
     registerList,
     registerExport,
-    installCompletion,
 ];
 
 function verbosityOf(options: Record<string, unknown>): OutputOptions['verbosity'] {
@@ -49,7 +47,7 @@ function exitCodeFor(error: unknown): number {
 }
 
 /**
- * Builds the program. Exported so tests and the completion generator can walk it.
+ * Builds the program. Exported so tests can walk it.
  * @returns the commander program with every command registered
  */
 export function buildProgram(): Command {

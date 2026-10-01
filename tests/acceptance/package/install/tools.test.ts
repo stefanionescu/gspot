@@ -3,12 +3,12 @@ import { test, expect } from 'bun:test';
 import { join, relative } from 'node:path';
 import { run } from '#cli/platform/spawn.ts';
 import { toPosix } from '#cli/platform/paths.ts';
-import { reportSchema } from '#cli/execution/report.ts';
 import type { InstallJson } from '#cli/types/commands.ts';
 import { RELEASE_TIMEOUT_MS } from '#tests/inputs/package.ts';
+import type { RunReport } from '#cli/types/execution/execution.ts';
 import { createConsumer } from '#tests/support/package/consumer.ts';
+import { readFileSync, realpathSync, writeFileSync } from 'node:fs';
 import { getPublishedRelease } from '#tests/support/package/published.ts';
-import { existsSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
 import { prepareNativeConsumer, prepareFormatterConsumer } from '#tests/support/package/tools.ts';
 
 const release = getPublishedRelease();
@@ -20,7 +20,6 @@ test(
         expect(fixture.installed.code, fixture.installed.stdout + fixture.installed.stderr).toBe(0);
         const { command } = fixture;
         const { toolConsumer, toolOptions, authoredPackage } = await prepareFormatterConsumer(fixture, release);
-        expect(existsSync(join(toolConsumer, '.gspot/reports/report.json'))).toBe(false);
         const toolManifest = readFileSync(join(toolConsumer, '.gspot/package.json'));
         const toolLock = readFileSync(join(toolConsumer, '.gspot/bun.lock'));
         expect(toolLock.toString('utf8')).not.toContain(release.registry.url);
@@ -52,7 +51,7 @@ test(
         const formatterArgs = ['check', 'source.js', '--only', 'formatting/prettier', '--no-cache', '--json'];
         const invalidFormat = await run([...command, ...formatterArgs], toolOptions);
         expect(invalidFormat.code, invalidFormat.stdout + invalidFormat.stderr).toBe(1);
-        const formatReport = reportSchema.parse(JSON.parse(invalidFormat.stdout));
+        const formatReport = JSON.parse(invalidFormat.stdout) as RunReport;
         expect(formatReport.skips).toStrictEqual([]);
         expect(formatReport.checks).toHaveLength(1);
         expect(formatReport.checks[0]).toMatchObject({
@@ -73,7 +72,7 @@ test(
         expect(fixedFormat.code, fixedFormat.stdout + fixedFormat.stderr).toBe(0);
         const validFormat = await run([...command, ...formatterArgs], toolOptions);
         expect(validFormat.code, validFormat.stdout + validFormat.stderr).toBe(0);
-        expect(reportSchema.parse(JSON.parse(validFormat.stdout)).checks[0]).toMatchObject({
+        expect((JSON.parse(validFormat.stdout) as RunReport).checks[0]).toMatchObject({
             status: 'ok',
             findings: [],
         });
@@ -100,7 +99,7 @@ test(
         ];
         const unformattedToml = await run(tomlFormat, nativeOptions);
         expect(unformattedToml.code, unformattedToml.stdout + unformattedToml.stderr).toBe(1);
-        const tomlReport = reportSchema.parse(JSON.parse(unformattedToml.stdout));
+        const tomlReport = JSON.parse(unformattedToml.stdout) as RunReport;
         expect(tomlReport.skips).toStrictEqual([]);
         expect(tomlReport.checks).toHaveLength(1);
         expect(tomlReport.checks[0]).toMatchObject({
@@ -131,7 +130,7 @@ test(
         expect(readFileSync(join(nativeConsumer, 'settings.toml'), 'utf8')).toBe('a = 1\n');
         const formattedToml = await run(tomlFormat, nativeOptions);
         expect(formattedToml.code, formattedToml.stdout + formattedToml.stderr).toBe(0);
-        expect(reportSchema.parse(JSON.parse(formattedToml.stdout)).checks).toMatchObject([
+        expect((JSON.parse(formattedToml.stdout) as RunReport).checks).toMatchObject([
             { check: 'files/toml-format', status: 'ok', files: 1, findings: [] },
         ]);
         expect(readFileSync(join(nativeConsumer, 'package.json'), 'utf8')).toBe(authoredPackage);
@@ -150,7 +149,7 @@ test(
         const tomlSyntax = [...command, 'check', 'settings.toml', '--only', 'files/toml', '--no-cache', '--json'];
         const invalidToml = await run(tomlSyntax, nativeOptions);
         expect(invalidToml.code, invalidToml.stdout + invalidToml.stderr).toBe(1);
-        const syntaxReport = reportSchema.parse(JSON.parse(invalidToml.stdout));
+        const syntaxReport = JSON.parse(invalidToml.stdout) as RunReport;
         expect(syntaxReport.skips).toStrictEqual([]);
         expect(syntaxReport.checks).toHaveLength(1);
         expect(syntaxReport.checks[0]).toMatchObject({ check: 'files/toml', status: 'fail', files: 1 });
@@ -176,7 +175,7 @@ test(
         writeFileSync(join(nativeConsumer, 'settings.toml'), 'a = 1\n');
         const validToml = await run(tomlSyntax, nativeOptions);
         expect(validToml.code, validToml.stdout + validToml.stderr).toBe(0);
-        expect(reportSchema.parse(JSON.parse(validToml.stdout)).checks).toMatchObject([
+        expect((JSON.parse(validToml.stdout) as RunReport).checks).toMatchObject([
             { check: 'files/toml', status: 'ok', files: 1, findings: [] },
         ]);
         expect(readFileSync(join(nativeConsumer, 'package.json'), 'utf8')).toBe(authoredPackage);
@@ -202,7 +201,7 @@ test(
         ];
         const trailingWhitespace = await run(whitespaceCommand, nativeOptions);
         expect(trailingWhitespace.code, trailingWhitespace.stdout + trailingWhitespace.stderr).toBe(1);
-        const whitespaceReport = reportSchema.parse(JSON.parse(trailingWhitespace.stdout));
+        const whitespaceReport = JSON.parse(trailingWhitespace.stdout) as RunReport;
         expect(whitespaceReport.skips).toStrictEqual([]);
         expect(whitespaceReport.checks).toHaveLength(1);
         expect(whitespaceReport.checks[0]).toMatchObject({
@@ -233,7 +232,7 @@ test(
         writeFileSync(join(nativeConsumer, 'notes.json'), '"text"\n');
         const cleanWhitespace = await run(whitespaceCommand, nativeOptions);
         expect(cleanWhitespace.code, cleanWhitespace.stdout + cleanWhitespace.stderr).toBe(0);
-        expect(reportSchema.parse(JSON.parse(cleanWhitespace.stdout)).checks).toMatchObject([
+        expect((JSON.parse(cleanWhitespace.stdout) as RunReport).checks).toMatchObject([
             { check: 'formatting/editorconfig-checker', status: 'ok', files: 1, findings: [] },
         ]);
         expect(readFileSync(join(nativeConsumer, 'package.json'), 'utf8')).toBe(authoredPackage);

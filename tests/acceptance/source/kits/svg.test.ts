@@ -5,9 +5,9 @@ import * as processes from '#cli/platform/spawn.ts';
 import { run } from '#tests/support/cli/command.ts';
 import { initArgs } from '#tests/support/cli/init.ts';
 import { install } from '#tests/support/cli/tools.ts';
-import { reportSchema } from '#cli/execution/report.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { containing } from '#tests/support/expectations.ts';
+import type { RunReport } from '#cli/types/execution/execution.ts';
 
 const COMMAND = ['check', '--only', 'static-site/svg-optimized', '--no-cache', '--json'];
 
@@ -19,7 +19,7 @@ async function expectSvgThresholds(root: string, svg: string): Promise<void> {
     await Bun.write(join(root, 'icon.svg'), svg + ' '.repeat(Buffer.byteLength(svg)));
     const large = await run(root, COMMAND);
     expect(large.code, large.stdout + large.stderr).toBe(1);
-    expect(reportSchema.parse(JSON.parse(large.stdout)).checks[0]!.findings).toStrictEqual([
+    expect((JSON.parse(large.stdout) as RunReport).checks[0]!.findings).toStrictEqual([
         containing({ file: 'icon.svg', rule: 'svg' }),
     ]);
     await Bun.write(join(root, 'icon.svg'), `${svg} `);
@@ -30,7 +30,7 @@ async function expectSvgThresholds(root: string, svg: string): Promise<void> {
     await Bun.write(join(root, 'icon.svg'), svg);
     const corrected = await run(root, COMMAND);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
+    expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
         { check: 'static-site/svg-optimized', status: 'ok', files: 1, findings: [] },
     ]);
 }
@@ -45,11 +45,11 @@ async function expectSvgSelection(root: string, svg: string): Promise<void> {
     expect(selected.code, selected.stdout + selected.stderr).toBe(0);
     const malformed = await run(root, COMMAND);
     expect(malformed.code, malformed.stdout + malformed.stderr).toBe(2);
-    expect(reportSchema.parse(JSON.parse(malformed.stdout)).checks[0]!.status).toBe('error');
+    expect((JSON.parse(malformed.stdout) as RunReport).checks[0]!.status).toBe('error');
     await Bun.write(join(root, 'other.svg'), svg);
     const repaired = await run(root, COMMAND);
     expect(repaired.code, repaired.stdout + repaired.stderr).toBe(0);
-    expect(reportSchema.parse(JSON.parse(repaired.stdout)).checks).toMatchObject([
+    expect((JSON.parse(repaired.stdout) as RunReport).checks).toMatchObject([
         { check: 'static-site/svg-optimized', status: 'ok', files: 2, findings: [] },
     ]);
 }

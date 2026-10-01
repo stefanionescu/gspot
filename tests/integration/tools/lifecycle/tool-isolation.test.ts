@@ -5,9 +5,9 @@ import * as processes from '#cli/platform/spawn.ts';
 import { inspectTool } from '#cli/tools/inspect.ts';
 import { run } from '#tests/support/cli/command.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
-import { reportSchema } from '#cli/execution/report.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
+import type { RunReport } from '#cli/types/execution/execution.ts';
 import { cpSync, chmodSync, mkdirSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
 
 const MODULES = join(import.meta.dir, '../../../../node_modules');
@@ -37,15 +37,15 @@ test(
         const args = ['check', '--only', 'formatting/prettier', '--no-cache', '--json'];
         const finding = await run(repository.path, [...args, '--', 'source.js']);
         expect(finding.code, finding.stdout + finding.stderr).toBe(1);
-        expect(reportSchema.parse(JSON.parse(finding.stdout)).checks[0]).toMatchObject({
+        expect((JSON.parse(finding.stdout) as RunReport).checks[0]).toMatchObject({
             check: 'formatting/prettier',
             status: 'fail',
             files: 1,
         });
-        expect(reportSchema.parse(JSON.parse(finding.stdout)).checks[0]!.findings).toHaveLength(1);
+        expect((JSON.parse(finding.stdout) as RunReport).checks[0]!.findings).toHaveLength(1);
         const corrected = await run(repository.path, [...args, '--fix', '--', 'source.js']);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks[0]).toMatchObject({
+        expect((JSON.parse(corrected.stdout) as RunReport).checks[0]).toMatchObject({
             status: 'ok',
             findings: [],
         });

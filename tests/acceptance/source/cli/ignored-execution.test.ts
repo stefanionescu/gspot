@@ -3,11 +3,11 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { run } from '#tests/support/cli/command.ts';
-import { reportSchema } from '#cli/execution/report.ts';
 import { parseProfile } from '#cli/policy/profiles/read.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { exportedProfile } from '#cli/policy/profiles/export.ts';
 import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';
+import type { RunReport } from '#cli/types/execution/execution.ts';
 import { linkInstalledModules } from '#tests/support/cli/platforms.ts';
 import { existsSync, unlinkSync, readFileSync, writeFileSync } from 'node:fs';
 import { ESLINT_OVERRIDE_POLICY } from '#tests/inputs/acceptance/source/cli/cli.ts';
@@ -38,7 +38,7 @@ test('a global ignore stops a repository check and its correction command until 
     expect(ignored.code, ignored.stdout + ignored.stderr).toBe(0);
     const skipped = await run(directory.path, [...args, '--fix']);
     expect(skipped.code, skipped.stdout + skipped.stderr).toBe(0);
-    const report = reportSchema.parse(JSON.parse(skipped.stdout));
+    const report = JSON.parse(skipped.stdout) as RunReport;
     expect(report.checks[0]).toMatchObject({ check: 'project/quality', status: 'skipped', findings: [] });
     expect(report.skips).toStrictEqual([{ check: 'project/quality', source: 'ignore' }]);
     expect(report.coverage.checked).toBe(0);
@@ -180,7 +180,7 @@ test('path-specific ignores prevent checker and fixer execution and report an en
     const args = ['check', '--only', 'project/quality', '--fix', '--no-cache', '--json'];
     const corrected = await run(directory.path, args);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    const report = reportSchema.parse(JSON.parse(corrected.stdout));
+    const report = JSON.parse(corrected.stdout) as RunReport;
     expect(report.checks[0]).toMatchObject({ status: 'ok', files: 2, findings: [] });
     for (const log of ['checked.txt', 'fixed.txt'])
         expect(
@@ -193,7 +193,7 @@ test('path-specific ignores prevent checker and fixer execution and report an en
     const fixed = readFileSync(join(directory.path, 'fixed.txt'), 'utf8');
     const skipped = await run(directory.path, [...args, '--', 'inputs/skip café.txt']);
     expect(skipped.code, skipped.stdout + skipped.stderr).toBe(0);
-    const skippedReport = reportSchema.parse(JSON.parse(skipped.stdout));
+    const skippedReport = JSON.parse(skipped.stdout) as RunReport;
     expect(skippedReport.skips).toStrictEqual([{ check: 'project/quality', source: 'ignore' }]);
     expect(skippedReport.checks[0]).toMatchObject({ status: 'skipped', findings: [] });
     expect(skippedReport.coverage.checked).toBe(0);

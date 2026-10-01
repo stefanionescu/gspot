@@ -3,9 +3,9 @@ import { test, expect } from 'bun:test';
 import { join, delimiter } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
-import { reportSchema } from '#cli/execution/report.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
+import type { RunReport } from '#cli/types/execution/execution.ts';
 import { INSTALLED_BIN_PATH } from '#tests/support/cli/modules.ts';
 import { containing, textContaining } from '#tests/support/expectations.ts';
 import { toolsPath, installPrivateTools } from '#tests/support/cli/tools.ts';
@@ -38,13 +38,13 @@ test(
         const command = ['check', '--only', 'javascript/eslint', '--no-cache', '--json'];
         const failed = await run(sandbox.path, command);
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-        expect(reportSchema.parse(JSON.parse(failed.stdout)).checks.flatMap((check) => check.findings)).toContainEqual(
+        expect((JSON.parse(failed.stdout) as RunReport).checks.flatMap((check) => check.findings)).toContainEqual(
             containing({ rule: 'jest/no-focused-tests', file: 'sample.test.js', line: 3 }),
         );
         await Bun.write(join(sandbox.path, 'sample.test.js'), focused.replace('test.only(', 'test('));
         const passing = await run(sandbox.path, command);
         expect(passing.code, passing.stdout + passing.stderr).toBe(0);
-        expect(reportSchema.parse(JSON.parse(passing.stdout)).checks).toMatchObject([
+        expect((JSON.parse(passing.stdout) as RunReport).checks).toMatchObject([
             { check: 'javascript/eslint', status: 'ok', findings: [] },
         ]);
     },
@@ -72,7 +72,7 @@ test(
         const command = ['check', '--stage', 'push', '--only', 'jest/coverage', '--no-cache', '--json'];
         const uncovered = await run(sandbox.path, command, environment);
         expect(uncovered.code, uncovered.stdout + uncovered.stderr).toBe(1);
-        const report = reportSchema.parse(JSON.parse(uncovered.stdout));
+        const report = JSON.parse(uncovered.stdout) as RunReport;
         expect(report.checks).toMatchObject([{ check: 'jest/coverage', scope: 'app', status: 'fail' }]);
         expect(report.checks.flatMap((check) => check.findings)).toContainEqual(
             containing({ rule: 'coverage-functions', message: textContaining('100% floor') }),
@@ -80,12 +80,10 @@ test(
         await Bun.write(join(sandbox.path, 'app/math.test.cjs'), corrected);
         const passing = await run(sandbox.path, command, environment);
         expect(passing.code, passing.stdout + passing.stderr).toBe(0);
-        expect(reportSchema.parse(JSON.parse(passing.stdout)).checks).toMatchObject([
+        expect((JSON.parse(passing.stdout) as RunReport).checks).toMatchObject([
             { check: 'jest/coverage', scope: 'app', status: 'ok', findings: [] },
         ]);
-        expect(reportSchema.parse(JSON.parse(passing.stdout)).checks.flatMap((check) => check.findings)).toStrictEqual(
-            [],
-        );
+        expect((JSON.parse(passing.stdout) as RunReport).checks.flatMap((check) => check.findings)).toStrictEqual([]);
         expect(readFileSync(join(sandbox.path, 'app/authored.txt'), 'utf8')).toBe('preserved nested source\n');
     },
     PLANTED_TIMEOUT_MS * 2,
@@ -111,9 +109,7 @@ test(
         const command = ['check', '--stage', 'push', '--only', 'jest/coverage', '--no-cache', '--json'];
         const uncovered = await run(sandbox.path, command, environment);
         expect(uncovered.code, uncovered.stdout + uncovered.stderr).toBe(1);
-        expect(
-            reportSchema.parse(JSON.parse(uncovered.stdout)).checks.flatMap((check) => check.findings),
-        ).toStrictEqual([
+        expect((JSON.parse(uncovered.stdout) as RunReport).checks.flatMap((check) => check.findings)).toStrictEqual([
             containing({ rule: 'coverage-lines' }),
             containing({
                 check: 'jest/coverage',
@@ -124,28 +120,26 @@ test(
         await Bun.write(join(sandbox.path, 'math.test.cjs'), corrected);
         const passing = await run(sandbox.path, command, environment);
         expect(passing.code, passing.stdout + passing.stderr).toBe(0);
-        expect(reportSchema.parse(JSON.parse(passing.stdout)).checks).toMatchObject([
+        expect((JSON.parse(passing.stdout) as RunReport).checks).toMatchObject([
             { check: 'jest/coverage', status: 'ok', findings: [] },
         ]);
-        expect(reportSchema.parse(JSON.parse(passing.stdout)).checks.flatMap((check) => check.findings)).toStrictEqual(
-            [],
-        );
+        expect((JSON.parse(passing.stdout) as RunReport).checks.flatMap((check) => check.findings)).toStrictEqual([]);
         await Bun.write(join(sandbox.path, 'math.test.cjs'), corrected.replace('toBe(6)', 'toBe(7)'));
         const failed = await run(sandbox.path, command, environment);
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-        expect(reportSchema.parse(JSON.parse(failed.stdout)).checks.flatMap((check) => check.findings)).toStrictEqual([
+        expect((JSON.parse(failed.stdout) as RunReport).checks.flatMap((check) => check.findings)).toStrictEqual([
             containing({ rule: 'test-failure', file: 'math.test.cjs', line: 4 }),
         ]);
         await Bun.write(join(sandbox.path, 'math.test.cjs'), 'require("./missing-test-dependency.cjs");\n');
         const unavailable = await run(sandbox.path, command, environment);
         expect(unavailable.code, unavailable.stdout + unavailable.stderr).toBe(2);
-        expect(reportSchema.parse(JSON.parse(unavailable.stdout)).checks).toStrictEqual([
+        expect((JSON.parse(unavailable.stdout) as RunReport).checks).toStrictEqual([
             containing({ check: 'jest/coverage', status: 'error' }),
         ]);
         await Bun.write(join(sandbox.path, 'math.test.cjs'), corrected);
         const recovered = await run(sandbox.path, command, environment);
         expect(recovered.code, recovered.stdout + recovered.stderr).toBe(0);
-        expect(reportSchema.parse(JSON.parse(recovered.stdout)).checks).toMatchObject([
+        expect((JSON.parse(recovered.stdout) as RunReport).checks).toMatchObject([
             { check: 'jest/coverage', status: 'ok', findings: [] },
         ]);
         expect(readFileSync(join(sandbox.path, 'authored.txt'), 'utf8')).toBe('preserved source\n');

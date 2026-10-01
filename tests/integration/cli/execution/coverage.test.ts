@@ -1,11 +1,10 @@
 import { join } from 'node:path';
 import { stringify } from 'smol-toml';
 import { test, expect } from 'bun:test';
+import { writeFileSync } from 'node:fs';
 import { runText } from '#cli/output/reporter.ts';
-import { sarifText } from '#cli/output/report.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { settingRows } from '#cli/commands/list.ts';
-import { readFileSync, writeFileSync } from 'node:fs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
@@ -90,10 +89,6 @@ test('strict coverage fails uncovered supported sources and accepts enabled chec
     expect(failed.report.coverage.findings.map((entry) => entry.file)).toStrictEqual(['source.sh']);
     expect(runText(failed.report, { quiet: true, verbose: false })).toContain('1 finding,');
     expect(runText(failed.report, { quiet: true, verbose: false })).toEndWith('(failed)\n');
-    expect(JSON.parse(sarifText(failed.report))).toHaveProperty('runs.0.results.0.ruleId', 'coverage.strict');
-    expect(
-        JSON.parse(readFileSync(join(sandbox.path, '.gspot/reports/report.codequality.json'), 'utf8')),
-    ).toMatchObject([{ check_name: 'coverage.strict', location: { path: 'source.sh' } }]);
     policy.check.push({
         name: 'project/syntax',
         command: ['bash', '-n', '{files}'],

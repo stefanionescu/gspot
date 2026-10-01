@@ -1,18 +1,16 @@
 // Planted repositories for the react and react-native configurations: each ESLint addition fires on a small component.
-import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { run } from '#tests/support/cli/command.ts';
 import type { FindingCase } from '#tests/types/cli.ts';
-import { reportSchema } from '#cli/execution/report.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { installSandbox } from '#tests/support/cli/sandbox.ts';
+import type { RunReport } from '#cli/types/execution/execution.ts';
 import { runPlanted, plantedCases } from '#tests/support/cli/planted.ts';
 import { LIBRARIES_CLEAN } from '#tests/inputs/acceptance/source/kits/kits.ts';
 
 import {
-    REPORT,
     TESTED,
     WEB_TSCONFIG,
     NATIVE_TSCONFIG,
@@ -179,24 +177,32 @@ test(
             files: { 'tsconfig.json': WEB_TSCONFIG, 'src/Greeting.tsx': CLEAN },
             level: 'recommended',
         });
-        await runPlanted(sandbox.path, { check: 'typescript/eslint', files: { 'src/Gap.tsx': GAP } }, environment);
-        const recommended = reportSchema.parse(await Bun.file(join(sandbox.path, REPORT)).json());
+        const atRecommended = await runPlanted(
+            sandbox.path,
+            { check: 'typescript/eslint', files: { 'src/Gap.tsx': GAP } },
+            environment,
+        );
+        const recommended = JSON.parse(atRecommended.stdout) as RunReport;
         expect(recommended.checks.flatMap(({ findings }) => findings).map(({ rule }) => rule)).not.toContain(
             'react/self-closing-comp',
         );
         const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
         expect(selected.code, selected.stdout + selected.stderr).toBe(0);
-        await runPlanted(sandbox.path, { check: 'typescript/eslint', files: { 'src/Gap.tsx': GAP } }, environment);
-        const all = reportSchema.parse(await Bun.file(join(sandbox.path, REPORT)).json());
+        const atAll = await runPlanted(
+            sandbox.path,
+            { check: 'typescript/eslint', files: { 'src/Gap.tsx': GAP } },
+            environment,
+        );
+        const all = JSON.parse(atAll.stdout) as RunReport;
         expect(all.checks.flatMap(({ findings }) => findings)).toContainEqual(
             containing({ rule: 'react/self-closing-comp', file: 'src/Gap.tsx', line: 9 }),
         );
-        await runPlanted(
+        const unrelated = await runPlanted(
             sandbox.path,
             { check: 'javascript/eslint', files: { 'src/debugging.jsx': DEBUGGED } },
             environment,
         );
-        const outside = reportSchema.parse(await Bun.file(join(sandbox.path, REPORT)).json());
+        const outside = JSON.parse(unrelated.stdout) as RunReport;
         expect(
             outside.checks
                 .flatMap(({ findings }) => findings)

@@ -4,9 +4,9 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { git } from '#tests/support/cli/git.ts';
 import { run } from '#tests/support/cli/command.ts';
-import { reportSchema } from '#cli/execution/report.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
+import type { RunReport } from '#cli/types/execution/execution.ts';
 import { containing, textContaining } from '#tests/support/expectations.ts';
 import { PLANTED_KEY_ID, PLANTED_SETTINGS, prepareStagedSecrets } from '#tests/support/cli/secrets.ts';
 
@@ -31,7 +31,7 @@ test(
             environment,
         );
         expect(staged.code, staged.stdout).toBe(1);
-        expect(reportSchema.parse(JSON.parse(staged.stdout)).checks).toMatchObject([
+        expect((JSON.parse(staged.stdout) as RunReport).checks).toMatchObject([
             {
                 check: 'secrets/gitleaks-staged',
                 status: 'fail',
@@ -51,7 +51,7 @@ test(
             environment,
         );
         expect(correctedSecret.code, correctedSecret.stdout + correctedSecret.stderr).toBe(0);
-        expect(reportSchema.parse(JSON.parse(correctedSecret.stdout)).checks).toMatchObject([
+        expect((JSON.parse(correctedSecret.stdout) as RunReport).checks).toMatchObject([
             { check: 'secrets/gitleaks-staged', status: 'ok', findings: [] },
         ]);
     },
@@ -71,7 +71,7 @@ test(
             environment,
         );
         expect(tracked.code).toBe(1);
-        expect(reportSchema.parse(JSON.parse(tracked.stdout)).checks).toMatchObject([
+        expect((JSON.parse(tracked.stdout) as RunReport).checks).toMatchObject([
             {
                 check: 'integrity/env-files',
                 status: 'fail',
@@ -85,7 +85,7 @@ test(
             environment,
         );
         expect(untrackedEnvironment.code, untrackedEnvironment.stdout + untrackedEnvironment.stderr).toBe(0);
-        expect(reportSchema.parse(JSON.parse(untrackedEnvironment.stdout)).checks).toMatchObject([
+        expect((JSON.parse(untrackedEnvironment.stdout) as RunReport).checks).toMatchObject([
             { check: 'integrity/env-files', status: 'ok', findings: [] },
         ]);
         expect(await Bun.file(join(sandbox.path, '.env')).text()).toBe('TOKEN=value\n');
@@ -107,9 +107,7 @@ test(
             environment,
         );
         expect(baseline.code).toBe(1);
-        const baselineReport = reportSchema.parse(
-            await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json(),
-        );
+        const baselineReport = JSON.parse(baseline.stdout) as RunReport;
         expect(baselineReport.checks).toMatchObject([
             {
                 check: 'integrity/gitleaks-baseline',
@@ -149,10 +147,10 @@ test(
             environment,
         );
         expect(explained.code, explained.stdout + explained.stderr).toBe(0);
-        const accepted = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
+        const accepted = JSON.parse(explained.stdout) as RunReport;
         expect(accepted.checks).toMatchObject([{ check: 'integrity/gitleaks-baseline', status: 'ok', findings: [] }]);
         const checked = await run(sandbox.path, ['check', '--stage', 'commit', '--json'], environment);
-        const network = reportSchema.parse(JSON.parse(checked.stdout));
+        const network = JSON.parse(checked.stdout) as RunReport;
         expect(network.checks.map((check) => check.check)).not.toContain('secrets/trufflehog');
     },
     PLANTED_TIMEOUT_MS * 2,

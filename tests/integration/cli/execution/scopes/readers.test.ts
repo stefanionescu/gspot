@@ -2,9 +2,9 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import type { Finding } from '#cli/types/checks.ts';
 import { run } from '#tests/support/cli/command.ts';
-import { reportSchema } from '#cli/execution/report.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
+import type { RunReport } from '#cli/types/execution/execution.ts';
 import { READERS_HEADERS } from '#tests/inputs/integration/cli/execution/scopes.ts';
 
 const EXPECTED_READERS: { check: string; root: Finding[]; nested: Finding[] }[] = [
@@ -62,7 +62,7 @@ test('scoped readers receive their own files and preserve binary asset inputs', 
         const result = await run(sandbox.path, ['check', '--only', entry.check, '--no-cache', '--json']);
         expect(result.code, result.stdout + result.stderr).toBe(1);
         expect(
-            reportSchema.parse(JSON.parse(result.stdout)).checks.map((check) => ({
+            (JSON.parse(result.stdout) as RunReport).checks.map((check) => ({
                 scope: check.scope,
                 findings: check.findings,
             })),
@@ -103,7 +103,7 @@ test('nested Bash safety settings merge root and scoped owners without leaking t
     const command = ['check', '--only', 'structure/bash-safety', '--no-cache', '--json'];
     const broken = await run(sandbox.path, command);
     expect(broken.code, broken.stdout + broken.stderr).toBe(1);
-    expect(reportSchema.parse(JSON.parse(broken.stdout)).checks.flatMap((check) => check.findings)).toStrictEqual([
+    expect((JSON.parse(broken.stdout) as RunReport).checks.flatMap((check) => check.findings)).toStrictEqual([
         containing({ file: 'app/child/cleanup.sh', line: 2, rule: 'recursive-remove' }),
         containing({ file: 'sibling/cleanup.sh', line: 2, rule: 'recursive-remove' }),
     ]);
@@ -146,7 +146,7 @@ test.each([
         const command = ['check', '--only', check, '--no-cache', '--json'];
         const failed = await run(sandbox.path, command);
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-        expect(reportSchema.parse(JSON.parse(failed.stdout)).checks.flatMap((entry) => entry.findings)).toMatchObject([
+        expect((JSON.parse(failed.stdout) as RunReport).checks.flatMap((entry) => entry.findings)).toMatchObject([
             { file: untrusted, line: 1, rule },
         ]);
         await Bun.write(`${sandbox.path}/${untrusted}`, correction);

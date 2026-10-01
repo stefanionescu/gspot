@@ -4,11 +4,11 @@ import { readFileSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
-import { reportSchema } from '#cli/execution/report.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { onPosix } from '#tests/support/cli/platforms.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
+import type { RunReport } from '#cli/types/execution/execution.ts';
 import { containing, textContaining } from '#tests/support/expectations.ts';
 
 test.each([
@@ -51,7 +51,7 @@ test.each([
                 environment,
             );
             expect(broken.code, broken.stdout + broken.stderr).toBe(1);
-            const failed = reportSchema.parse(JSON.parse(broken.stdout));
+            const failed = JSON.parse(broken.stdout) as RunReport;
             expect(failed.checks).toMatchObject([{ check: entry.check, status: 'fail' }]);
             expect(failed.checks[0]!.findings).toContainEqual(
                 containing({
@@ -69,7 +69,7 @@ test.each([
             environment,
         );
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
+        expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
             { check: entry.check, status: 'ok', files: entry.files, findings: [] },
         ]);
     },

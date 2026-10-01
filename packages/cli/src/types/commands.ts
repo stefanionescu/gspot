@@ -266,7 +266,7 @@ export type Written = { lines: string[]; installNote: string; exitCode: number }
 export type Installed = { installNote: string; exitCode: number };
 export type InstallSettings = { min_release_age_days?: number; security_scanner?: string };
 export type ReplacePlan = {
-    ci?: { commands: string[]; reports: string };
+    ci?: { commands: string[] };
     profile?: { name: string; digest: string; selection: string; detected: string[] };
     kits: { kit: string; how: KitReason; checks: number }[];
     write: { path: string; note: string }[];

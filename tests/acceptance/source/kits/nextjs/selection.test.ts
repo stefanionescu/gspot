@@ -4,7 +4,6 @@ import { writeFileSync } from 'node:fs';
 import { join, delimiter } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
-import { reportSchema } from '#cli/execution/report.ts';
 import type { ReplacePlan } from '#cli/types/commands.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
@@ -52,7 +51,7 @@ test.each(['none', 'index-only'])(
             );
         const corrected = await run(sandbox.path, ['check', '--only', 'typescript/eslint', '--no-cache', '--json']);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
+        expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
             { check: 'typescript/eslint', status: 'ok', findings: [] },
         ]);
     },

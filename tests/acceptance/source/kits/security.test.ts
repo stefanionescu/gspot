@@ -5,8 +5,8 @@ import { testdir, createFileTree } from 'testdirs';
 import type { Finding } from '#cli/types/checks.ts';
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
-import { reportSchema } from '#cli/execution/report.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
+import type { RunReport } from '#cli/types/execution/execution.ts';
 import { toolsPath, installAtLevel } from '#tests/support/cli/tools.ts';
 import { containing, containingAll } from '#tests/support/expectations.ts';
 import { SECURITY_INIT } from '#tests/inputs/acceptance/source/kits/init-arguments.ts';
@@ -33,7 +33,7 @@ test(
         const isWindows = process.platform === 'win32';
         const evaluated: Finding = containing({ rule: 'node-no-eval', file: 'src/run.ts', line: 3 });
         expect(found.code, found.stdout + found.stderr).toBe(isWindows ? 0 : 1);
-        expect(reportSchema.parse(JSON.parse(found.stdout)).checks).toMatchObject([
+        expect((JSON.parse(found.stdout) as RunReport).checks).toMatchObject([
             isWindows
                 ? { check: 'security/semgrep', status: 'skipped' }
                 : { check: 'security/semgrep', status: 'fail', findings: [evaluated] },
@@ -48,7 +48,7 @@ test(
         commitAll(sandbox.path);
         const own = await run(sandbox.path, command, environment);
         expect(own.code, own.stdout + own.stderr).toBe(isWindows ? 0 : 1);
-        const report = reportSchema.parse(JSON.parse(own.stdout));
+        const report = JSON.parse(own.stdout) as RunReport;
         expect(report.checks).toMatchObject([{ check: 'security/semgrep', status: isWindows ? 'skipped' : 'fail' }]);
         expect(report.checks[0]!.findings).toStrictEqual(
             isWindows ? [] : containingAll([containing({ rule: 'planted-no-double', file: 'src/use.ts', line: 3 })]),
@@ -57,7 +57,7 @@ test(
         await Bun.write(join(sandbox.path, 'src/use.ts'), 'export const four = 4;\n');
         const corrected = await run(sandbox.path, command, environment);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
+        expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
             { check: 'security/semgrep', status: isWindows ? 'skipped' : 'ok', findings: [] },
         ]);
     },

@@ -6,9 +6,9 @@ import { test, expect } from 'bun:test';
 import { git } from '#tests/support/cli/git.ts';
 import * as processes from '#cli/platform/spawn.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
-import { pushReportSchema } from '#cli/execution/report.ts';
 import type { CommandFailureJson } from '#cli/types/commands.ts';
 import { preparePushRepository } from '#tests/support/cli/push.ts';
+import type { PushReport } from '#cli/types/execution/execution.ts';
 
 test(
     'new references compare against fetched objects using default and mapped destinations',
@@ -22,7 +22,7 @@ test(
             stdin: `refs/heads/reviewed ${reviewed} refs/heads/new ${zero}\n`,
         });
         expect(createdRef.code, createdRef.stdout + createdRef.stderr).toBe(0);
-        expect(pushReportSchema.parse(JSON.parse(createdRef.stdout)).revisions[0]!.report.checks[0]?.files).toBe(1);
+        expect((JSON.parse(createdRef.stdout) as PushReport).revisions[0]!.report.checks[0]?.files).toBe(1);
         expect(git(sandbox.path, ['config', 'remote.origin.fetch', '+refs/heads/*:refs/fetched/origin/*']).code).toBe(
             0,
         );
@@ -33,7 +33,7 @@ test(
             stdin: `refs/heads/reviewed ${reviewed} refs/heads/new ${zero}\n`,
         });
         expect(mapped.code, mapped.stdout + mapped.stderr).toBe(0);
-        expect(pushReportSchema.parse(JSON.parse(mapped.stdout)).revisions[0]?.commits).toStrictEqual([reviewed]);
+        expect((JSON.parse(mapped.stdout) as PushReport).revisions[0]?.commits).toStrictEqual([reviewed]);
         expect({
             head: git(sandbox.path, ['rev-parse', 'HEAD']).stdout.trim(),
             policy: readFileSync(join(sandbox.path, 'gspot.toml'), 'utf8'),
@@ -64,9 +64,9 @@ test(
         });
         expect(excluded.code, excluded.stdout + excluded.stderr).toBe(1);
         expect(
-            pushReportSchema
-                .parse(JSON.parse(excluded.stdout))
-                .revisions[0]?.report.checks[0]?.findings.map((finding) => finding.file),
+            (JSON.parse(excluded.stdout) as PushReport).revisions[0]?.report.checks[0]?.findings.map(
+                (finding) => finding.file,
+            ),
         ).toStrictEqual(['legacy.sh', 'legacy.sh']);
         expect(git(sandbox.path, ['config', '--unset-all', 'remote.origin.fetch']).code).toBe(0);
         expect(
@@ -77,7 +77,7 @@ test(
             stdin: `refs/heads/reviewed ${reviewed} refs/heads/new ${zero}\n`,
         });
         expect(exact.code, exact.stdout + exact.stderr).toBe(0);
-        expect(pushReportSchema.parse(JSON.parse(exact.stdout)).revisions[0]?.commits).toStrictEqual([reviewed]);
+        expect((JSON.parse(exact.stdout) as PushReport).revisions[0]?.commits).toStrictEqual([reviewed]);
         expect({
             head: git(sandbox.path, ['rev-parse', 'HEAD']).stdout.trim(),
             policy: readFileSync(join(sandbox.path, 'gspot.toml'), 'utf8'),
@@ -102,9 +102,9 @@ test(
         });
         expect(noFetched.code, noFetched.stdout + noFetched.stderr).toBe(1);
         expect(
-            pushReportSchema
-                .parse(JSON.parse(noFetched.stdout))
-                .revisions[0]!.report.checks[0]?.findings.map((finding) => finding.file),
+            (JSON.parse(noFetched.stdout) as PushReport).revisions[0]!.report.checks[0]?.findings.map(
+                (finding) => finding.file,
+            ),
         ).toStrictEqual(['legacy.sh', 'legacy.sh']);
         expect({
             head: git(sandbox.path, ['rev-parse', 'HEAD']).stdout.trim(),
@@ -131,13 +131,13 @@ test(
             stdin: `refs/tags/reviewed-tag ${tag} refs/tags/reviewed-tag ${base}\n`,
         });
         expect(tagged.code, tagged.stdout + tagged.stderr).toBe(0);
-        expect(pushReportSchema.parse(JSON.parse(tagged.stdout)).revisions[0]!.object).toBe(reviewed);
+        expect((JSON.parse(tagged.stdout) as PushReport).revisions[0]!.object).toBe(reviewed);
         const deleted = await processes.run(command, {
             cwd: sandbox.path,
             stdin: `(delete) ${zero} refs/heads/main ${broken}\n`,
         });
         expect(deleted.code, deleted.stdout + deleted.stderr).toBe(0);
-        const skipped = pushReportSchema.parse(JSON.parse(deleted.stdout));
+        const skipped = JSON.parse(deleted.stdout) as PushReport;
         expect(skipped.revisions).toStrictEqual([]);
         expect(skipped.notApplicable[0]!.reason).toBe('deleted ref');
         const blob = git(sandbox.path, ['hash-object', '-w', 'changed.sh']).stdout.trim();
@@ -146,7 +146,7 @@ test(
             stdin: `refs/tags/data ${blob} refs/tags/data ${zero}\n`,
         });
         expect(nonCommit.code, nonCommit.stdout + nonCommit.stderr).toBe(0);
-        expect(pushReportSchema.parse(JSON.parse(nonCommit.stdout)).notApplicable[0]!.reason).toBe('non-commit object');
+        expect((JSON.parse(nonCommit.stdout) as PushReport).notApplicable[0]!.reason).toBe('non-commit object');
         expect({
             head: git(sandbox.path, ['rev-parse', 'HEAD']).stdout.trim(),
             policy: readFileSync(join(sandbox.path, 'gspot.toml'), 'utf8'),

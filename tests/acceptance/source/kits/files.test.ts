@@ -4,9 +4,9 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { run } from '#tests/support/cli/command.ts';
-import { reportSchema } from '#cli/execution/report.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { git, commitAll } from '#tests/support/cli/git.ts';
+import type { RunReport } from '#cli/types/execution/execution.ts';
 import { script, plantedCases } from '#tests/support/cli/planted.ts';
 import { containing, textContaining } from '#tests/support/expectations.ts';
 import { WORKFLOW_HEAD } from '#tests/inputs/acceptance/source/kits/kits.ts';
@@ -91,7 +91,7 @@ plantedCases(
                 const jsonCheck = await run(root, ['check', '--only', 'files/json'], environment);
                 expect(jsonCheck.stdout).toContain('its findings come from');
                 const checked = await run(root, ['check', '--stage', 'commit', '--json'], environment);
-                const ids = reportSchema.parse(JSON.parse(checked.stdout)).checks.map((check) => check.check);
+                const ids = (JSON.parse(checked.stdout) as RunReport).checks.map((check) => check.check);
                 expect(ids).not.toContain('files/schema');
                 expect(ids).toContain('files/toml');
             },
@@ -161,13 +161,13 @@ test.each([
         const command = ['check', '--only', scenario.check, '--no-cache', '--json'];
         const failed = await run(sandbox.path, command, environment);
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-        const report = reportSchema.parse(JSON.parse(failed.stdout));
+        const report = JSON.parse(failed.stdout) as RunReport;
         expect(report.checks).toMatchObject([{ check: scenario.check, status: 'fail' }]);
         expect(report.checks[0]!.findings).toContainEqual(containing(scenario.expected));
         await Bun.write(join(sandbox.path, scenario.path), scenario.corrected);
         const corrected = await run(sandbox.path, command, environment);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
+        expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
             { check: scenario.check, status: 'ok', findings: [] },
         ]);
     },
@@ -204,7 +204,7 @@ test(
         const command = ['check', '--only', 'files/schema', '--staged', '--stage', 'push', '--no-cache', '--json'];
         const invalid = await run(sandbox.path, command, environment);
         expect(invalid.code, invalid.stdout + invalid.stderr).toBe(1);
-        expect(reportSchema.parse(JSON.parse(invalid.stdout)).checks).toMatchObject([
+        expect((JSON.parse(invalid.stdout) as RunReport).checks).toMatchObject([
             {
                 check: 'files/schema',
                 status: 'fail',
@@ -220,7 +220,7 @@ test(
         expect(git(sandbox.path, ['add', 'settings/café.json']).code).toBe(0);
         const valid = await run(sandbox.path, command, environment);
         expect(valid.code, valid.stdout + valid.stderr).toBe(0);
-        expect(reportSchema.parse(JSON.parse(valid.stdout)).checks).toMatchObject([
+        expect((JSON.parse(valid.stdout) as RunReport).checks).toMatchObject([
             { check: 'files/schema', status: 'ok', findings: [] },
         ]);
     },

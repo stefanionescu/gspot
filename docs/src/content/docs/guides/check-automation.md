@@ -71,16 +71,13 @@ include:
 ```
 
 The GitHub job checks pull requests, merge queues, and pushes. On pushes to the default branch,
-it also runs the manual checks and uploads the SARIF reports for code scanning. The GitLab job
-checks merge requests and the default branch. Both keep the JSON, SARIF, and Code Quality
-reports, also after a failed check.
+it also runs the manual checks. The GitLab job checks merge requests and the default branch.
 
 The job checks what changed from the comparison point, such as the pull request base. A first
-push has no base, so the job checks the whole tree. Two settings change the job:
+push has no base, so the job checks the whole tree. To check the whole tree on every run:
 
 ```sh
-gspot set ci.sarif false   # the repository does not use code scanning
-gspot set ci.run all       # check the whole tree on every run
+gspot set ci.run all
 ```
 
 With mise, the job installs the pinned tools. Without mise, install the package manager, uv
@@ -98,5 +95,5 @@ gspot check
 gspot check --stage manual
 ```
 
-Keep the nonzero exit codes, and upload `.gspot/reports/report.*` after success and failure.
-Do not upload `.gspot/state/`, installed dependencies, or credentials.
+Keep the nonzero exit codes. For a machine-readable result, run `gspot check --json`. Do not
+upload `.gspot/state/`, installed dependencies, or credentials.

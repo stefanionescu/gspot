@@ -4,8 +4,8 @@ import { rmSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { run } from '#tests/support/cli/command.ts';
 import type { FindingCase } from '#tests/types/cli.ts';
-import { reportSchema } from '#cli/execution/report.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
+import type { RunReport } from '#cli/types/execution/execution.ts';
 import { runPlanted, plantedCases } from '#tests/support/cli/planted.ts';
 import { GUIDE, README, LICENSE, REPORTED_ELSEWHERE } from '#tests/inputs/acceptance/source/kits/kits.ts';
 
@@ -110,11 +110,15 @@ plantedCases(
                 rmSync(join(sandbox, '.gspot', 'config', 'vale', 'styles', 'config', 'dictionaries'), {
                     recursive: true,
                 });
-                const broken = await run(sandbox, ['check', '--only', 'prose/vale', '--no-cache'], environment);
+                const broken = await run(
+                    sandbox,
+                    ['check', '--only', 'prose/vale', '--no-cache', '--json'],
+                    environment,
+                );
                 expect(broken.code, 'a Vale that cannot run is an error, never a pass').toBe(2);
-                expect(
-                    reportSchema.parse(await Bun.file(join(sandbox, '.gspot/reports/report.json')).json()).checks,
-                ).toMatchObject([{ check: 'prose/vale', status: 'error' }]);
+                expect((JSON.parse(broken.stdout) as RunReport).checks).toMatchObject([
+                    { check: 'prose/vale', status: 'error' },
+                ]);
                 // Apply syncs the missing packages again, which the error message tells the reader to run.
                 const synced = await run(sandbox, ['apply'], environment);
                 expect(synced.code, synced.stdout + synced.stderr).toBe(0);
@@ -124,11 +128,11 @@ plantedCases(
                     environment,
                 );
                 expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-                expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
+                expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
                     { check: 'prose/vale', status: 'ok', findings: [] },
                 ]);
                 const checked = await run(sandbox, ['check', '--stage', 'commit', '--json'], environment);
-                const ids = reportSchema.parse(JSON.parse(checked.stdout)).checks.map((check) => check.check);
+                const ids = (JSON.parse(checked.stdout) as RunReport).checks.map((check) => check.check);
                 expect(ids).not.toContain('docs/links-external');
             },
             PLANTED_TIMEOUT_MS * 4,

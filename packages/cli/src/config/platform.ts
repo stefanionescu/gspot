@@ -57,7 +57,6 @@ export const DECLARATION_EXTENSIONS = ['.d.ts', '.d.mts', '.d.cts'];
 export const GSPOT_FOLDER = '.gspot';
 export const CONFIGURATION_DIRECTORY = '.gspot/config';
 export const STATE_DIRECTORY = '.gspot/state';
-export const REPORT_DIRECTORY = '.gspot/reports';
 export const CACHE_DIRECTORY = '.gspot/cache';
 export const NODE_MODULES_DIRECTORY = '.gspot/node_modules';
 export const PYTHON_ENVIRONMENT_DIRECTORY = '.gspot/.venv';
@@ -68,7 +67,6 @@ export const PRIVATE_PATHS = [
     `${PYTHON_ENVIRONMENT_DIRECTORY}/`,
     `${STATE_DIRECTORY}/`,
     `${CACHE_DIRECTORY}/`,
-    `${REPORT_DIRECTORY}/`,
 ];
 
 /** The pinned upstream Swift parser and its license, downloaded into grammars/ and verified by checksum. */

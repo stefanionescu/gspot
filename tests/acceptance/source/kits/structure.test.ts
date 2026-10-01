@@ -4,8 +4,8 @@ import { mkdirSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { git } from '#tests/support/cli/git.ts';
 import { run } from '#tests/support/cli/command.ts';
-import { reportSchema } from '#cli/execution/report.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
+import type { RunReport } from '#cli/types/execution/execution.ts';
 import { script, plantedCases } from '#tests/support/cli/planted.ts';
 import { KILOBYTE, OVER_LIMIT_KB } from '#tests/inputs/acceptance/source/kits/kits.ts';
 
@@ -97,7 +97,7 @@ plantedCases(
                 expect(git(root, ['add', '-f', 'web/node_modules/left-pad/index.js']).code).toBe(0);
                 const tracked = await run(root, command, environment);
                 expect(tracked.code).toBe(1);
-                expect(reportSchema.parse(JSON.parse(tracked.stdout)).checks).toMatchObject([
+                expect((JSON.parse(tracked.stdout) as RunReport).checks).toMatchObject([
                     {
                         check: 'integrity/tracked-dependencies',
                         status: 'fail',
@@ -107,7 +107,7 @@ plantedCases(
                 expect(git(root, ['rm', '-r', '--cached', '--quiet', 'web/node_modules']).code).toBe(0);
                 const corrected = await run(root, command, environment);
                 expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-                expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
+                expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
                     { check: 'integrity/tracked-dependencies', status: 'ok', findings: [] },
                 ]);
             },

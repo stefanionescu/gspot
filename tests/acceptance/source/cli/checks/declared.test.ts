@@ -5,9 +5,9 @@ import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { script } from '#tests/support/cli/planted.ts';
-import { reportSchema } from '#cli/execution/report.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
+import type { RunReport } from '#cli/types/execution/execution.ts';
 import { ENTRY } from '#tests/inputs/acceptance/source/cli/checks.ts';
 
 test('a [[check]] entry > reruns a repository check when an input outside its selected paths changes', async () => {
@@ -29,21 +29,17 @@ stage = "commit"
     });
     const failed = await run(sandbox.path, ['check', '--only', 'notes/state', '--json']);
     expect(failed.code).toBe(1);
-    expect(reportSchema.parse(JSON.parse(failed.stdout)).checks).toMatchObject([
-        { check: 'notes/state', status: 'fail' },
-    ]);
+    expect((JSON.parse(failed.stdout) as RunReport).checks).toMatchObject([{ check: 'notes/state', status: 'fail' }]);
 
     await Bun.write(join(sandbox.path, 'state.txt'), 'valid');
     const passed = await run(sandbox.path, ['check', '--only', 'notes/state', '--json']);
     expect(passed.code).toBe(0);
-    expect(reportSchema.parse(JSON.parse(passed.stdout)).checks).toMatchObject([
-        { check: 'notes/state', status: 'ok' },
-    ]);
+    expect((JSON.parse(passed.stdout) as RunReport).checks).toMatchObject([{ check: 'notes/state', status: 'ok' }]);
 
     await Bun.write(join(sandbox.path, 'state.txt'), 'invalid');
     const failedAgain = await run(sandbox.path, ['check', '--only', 'notes/state', '--json']);
     expect(failedAgain.code).toBe(1);
-    expect(reportSchema.parse(JSON.parse(failedAgain.stdout)).checks).toMatchObject([
+    expect((JSON.parse(failedAgain.stdout) as RunReport).checks).toMatchObject([
         { check: 'notes/state', status: 'fail' },
     ]);
 });
@@ -67,7 +63,7 @@ test(
         await Bun.write(policy, `${await Bun.file(policy).text()}${ENTRY}`);
         const check = await run(sandbox.path, ['check', '--only', 'notes/no-fixme', '--json'], environment);
         expect(check.code).toBe(1);
-        expect(reportSchema.parse(JSON.parse(check.stdout)).checks).toMatchObject([
+        expect((JSON.parse(check.stdout) as RunReport).checks).toMatchObject([
             {
                 check: 'notes/no-fixme',
                 status: 'fail',
@@ -81,7 +77,7 @@ test(
             environment,
         );
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
+        expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
             { check: 'notes/no-fixme', status: 'ok', findings: [] },
         ]);
     },
@@ -124,7 +120,7 @@ message = "text"
     });
     const result = await run(sandbox.path, ['check', '--json']);
     expect(result.code).toBe(1);
-    const report = reportSchema.parse(JSON.parse(result.stdout));
+    const report = JSON.parse(result.stdout) as RunReport;
     expect(report.checks).toMatchObject([{ check: 'sandbox/json', status: 'fail' }]);
     expect(report.checks[0]?.findings).toMatchObject([
         {
@@ -139,7 +135,7 @@ message = "text"
     await Bun.write(join(sandbox.path, 'source.txt'), 'corrected');
     const corrected = await run(sandbox.path, ['check', '--json', '--no-cache']);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
+    expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
         { check: 'sandbox/json', status: 'ok', findings: [] },
     ]);
 });

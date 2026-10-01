@@ -5,10 +5,10 @@ import { run } from '#tests/support/cli/command.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { reportSchema } from '#cli/execution/report.ts';
 import { readRepository } from '#cli/repository/tree.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
+import type { RunReport } from '#cli/types/execution/execution.ts';
 
 test.each([
     { source: 'import XCTest\n', selected: true },
@@ -50,7 +50,7 @@ test('Swift Testing outside test folders reports a sleep and accepts its correct
     const command = ['check', '--only', 'xctest/no-sleep', '--no-cache', '--json'];
     const broken = await run(sandbox.path, command);
     expect(broken.code, broken.stdout + broken.stderr).toBe(1);
-    expect(reportSchema.parse(JSON.parse(broken.stdout)).checks[0]!.findings).toStrictEqual([
+    expect((JSON.parse(broken.stdout) as RunReport).checks[0]!.findings).toStrictEqual([
         containing({ file: 'Examples/Checks.swift', rule: 'sleep', line: 3 }),
     ]);
     await Bun.write(
@@ -59,7 +59,7 @@ test('Swift Testing outside test folders reports a sleep and accepts its correct
     );
     const corrected = await run(sandbox.path, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
+    expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
         { check: 'xctest/no-sleep', status: 'ok', findings: [] },
     ]);
 });
@@ -117,7 +117,7 @@ test('Swift test checks apply sleep allowances in their declared scope', async (
     const result = await run(sandbox.path, ['check', '--only', 'xctest/no-sleep', '--no-cache', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(1);
     expect(
-        reportSchema.parse(JSON.parse(result.stdout)).checks.map((check) => ({
+        (JSON.parse(result.stdout) as RunReport).checks.map((check) => ({
             scope: check.scope,
             findings: check.findings,
         })),
@@ -194,7 +194,7 @@ test('snapshot layouts match semantic owners by path and respect nested scopes',
     const broken = await run(sandbox.path, command);
     expect(broken.code, broken.stdout + broken.stderr).toBe(1);
     expect(
-        reportSchema.parse(JSON.parse(broken.stdout)).checks.map((check) => ({
+        (JSON.parse(broken.stdout) as RunReport).checks.map((check) => ({
             scope: check.scope,
             findings: check.findings,
         })),
@@ -227,7 +227,7 @@ test.each([
     await Bun.write(`${sandbox.path}/__Snapshots__/Checks/example.png`, new Uint8Array([0, 1, 2]));
     const corrected = await run(sandbox.path, ['check', '--only', 'xctest/reference-images', '--no-cache', '--json']);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
+    expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
         { check: 'xctest/reference-images', status: 'ok', findings: [] },
     ]);
 });

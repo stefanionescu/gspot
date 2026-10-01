@@ -4,9 +4,9 @@ import { rmSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
-import { reportSchema } from '#cli/execution/report.ts';
 import example from '#docs/src/components/home/example.json';
 import { installPrivateTools } from '#tests/support/cli/tools.ts';
+import type { RunReport } from '#cli/types/execution/execution.ts';
 import { git, commitAll, gitOutput } from '#tests/support/cli/git.ts';
 import { INSTALL_TIMEOUT_MS } from '#tests/inputs/integration/tools/tools.ts';
 
@@ -56,7 +56,7 @@ test(
         gitOutput(sandbox.path, ['add', '-A']);
         const rejected = await run(sandbox.path, ['check', '--staged', '--json']);
         expect(rejected.code, rejected.stdout + rejected.stderr).toBe(1);
-        const findings = reportSchema.parse(JSON.parse(rejected.stdout)).checks.flatMap((check) => check.findings);
+        const findings = (JSON.parse(rejected.stdout) as RunReport).checks.flatMap((check) => check.findings);
         expect(recorded(findings)).toStrictEqual(recorded(example.findings));
         for (const path of example.fix.deleted) rmSync(join(sandbox.path, path));
         await createFileTree(

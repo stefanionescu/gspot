@@ -5,11 +5,11 @@ import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { reportSchema } from '#cli/execution/report.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { run as runProcess } from '#cli/platform/spawn.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { toolShipsHere } from '#tests/support/cli/platforms.ts';
+import type { RunReport } from '#cli/types/execution/execution.ts';
 import { containing, containingAll } from '#tests/support/expectations.ts';
 import { commandConfigurations } from '#cli/execution/command-expansion.ts';
 import { DEFECT, CORRECT } from '#tests/inputs/integration/tools/generation.ts';
@@ -20,13 +20,13 @@ async function expectConfigurationChanges(root: string, prefix: string, command:
     const ran = await run(root, cachedCommand);
     expect(ran.code).toBe(0);
     const cached = await run(root, cachedCommand);
-    expect(reportSchema.parse(JSON.parse(cached.stdout)).checks[0]!.status).toBe('cache');
+    expect((JSON.parse(cached.stdout) as RunReport).checks[0]!.status).toBe('cache');
     const nestedPath = join(root, `${prefix}AppTests/.swiftlint.yml`);
     const nested = await Bun.file(nestedPath).text();
     await Bun.write(nestedPath, nested.replace('    - force_unwrapping\n', ''));
     const changedConfiguration = await run(root, cachedCommand);
     expect(changedConfiguration.code, changedConfiguration.stdout + changedConfiguration.stderr).toBe(1);
-    expect(reportSchema.parse(JSON.parse(changedConfiguration.stdout)).checks[0]!.findings).toContainEqual(
+    expect((JSON.parse(changedConfiguration.stdout) as RunReport).checks[0]!.findings).toContainEqual(
         containing({ file: `${prefix}AppTests/Value.swift`, rule: 'force_unwrapping' }),
     );
     await Bun.write(nestedPath, nested);
@@ -65,7 +65,7 @@ if (toolShipsHere('swiftlint'))
         const command = ['check', '--only', 'swift/swiftlint', '--no-cache', '--json'];
         const broken = await run(root, command);
         expect(broken.code, broken.stdout + broken.stderr).toBe(1);
-        const findings = reportSchema.parse(JSON.parse(broken.stdout)).checks.flatMap((check) => check.findings);
+        const findings = (JSON.parse(broken.stdout) as RunReport).checks.flatMap((check) => check.findings);
         expect(findings).toStrictEqual(
             containingAll([
                 containing({ file: `${prefix}Sources/Value.swift`, rule: 'force_unwrapping' }),

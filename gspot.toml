@@ -85,8 +85,8 @@ patterns = ["acceptance/source/kits/css.test.ts"]
 reason = "The documented acceptance command resolves this argument from its declared tests working directory; the tracked target is tests/acceptance/source/kits/css.test.ts."
 
 [[tools.docs.paths_allowed]]
-patterns = [".gspot/reports/report.json"]
-reason = "The check runner writes this ignored runtime report and the CI workflow uploads it. Runtime reports are not tracked repository inputs."
+patterns = [".gspot/reports", ".gspot/reports/report.json", ".gspot/reports/report.sarif", ".gspot/reports/report.codequality.json"]
+reason = "The architecture folder still describes the report files gspot no longer writes; stage 15 deletes that folder and this entry."
 
 [[tools.docs.paths_allowed]]
 patterns = ["packages/cli/guides/**"]
@@ -109,9 +109,6 @@ patterns = [
     "packages/cli/dist/configuration.js",
     ".gspot/state",
     ".gspot/cache",
-    ".gspot/reports",
-    ".gspot/reports/report.sarif",
-    ".gspot/reports/report.codequality.json",
     ".gspot/.venv",
     ".gspot/config/semgrep/ios.yml",
 ]
@@ -226,6 +223,11 @@ names = ["object"]
 reason = "The pre-push JSON report names Git object identities with this key."
 
 [[naming.contract_properties]]
+file = "packages/cli/src/types/execution/execution.ts"
+names = ["object"]
+reason = "The pre-push JSON report names Git object identities with this key."
+
+[[naming.contract_properties]]
 file = "packages/cli/src/types/checks.ts"
 names = ["Commit", "DefElem", "File", "Fingerprint", "List", "RuleID", "String", "shouldTranslate"]
 reason = "gitleaks reports, libpg-query AST tags, and Xcode string files spell these keys."
@@ -266,16 +268,6 @@ reason = "Starlight routes the HTTP 404 page by this filename."
 file = "tests/acceptance/source/cli/init/selection.test.ts"
 names = ["types_directory"]
 reason = "The public architecture.types_directory key."
-
-[[naming.contract_properties]]
-file = "tests/acceptance/source/cli/report-storage.test.ts"
-names = ["check_name"]
-reason = "The Code Quality report format."
-
-[[naming.contract_properties]]
-file = "tests/types/cli.ts"
-names = ["check_name"]
-reason = "The Code Quality report format."
 
 [[naming.contract_properties]]
 file = "tests/integration/cli/generation/format-width.test.ts"
@@ -582,7 +574,6 @@ paths = [
     "tests/integration/cli/checks/nextjs-build.test.ts",
     "tests/integration/cli/checks/swift/build/isolation.test.ts",
     "tests/integration/cli/execution/storage/cache.test.ts",
-    "tests/integration/cli/execution/storage/reports.test.ts",
     "tests/integration/cli/execution/storage/resource-reads.test.ts",
     "tests/integration/tools/tools/packages/project.test.ts",
     "tests/support/cli/preservation.ts",

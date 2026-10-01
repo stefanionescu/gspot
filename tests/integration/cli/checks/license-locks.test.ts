@@ -2,13 +2,13 @@ import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { reportSchema } from '#cli/execution/report.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { run as runCli } from '#tests/support/cli/command.ts';
 import { lockedPackages } from '#cli/repository/locked-packages.ts';
 import { allowlistsMatch } from '#cli/checks/repository/allowlists-match.ts';
 import { containing, rejection, textContaining } from '#tests/support/expectations.ts';
+import type { RunReport } from '#cli/types/execution/execution.ts';
 
 const LOCKS: [string, string][] = [
     [
@@ -160,7 +160,7 @@ test.each(['root', 'nested', 'combined'])(
         expect(selectsStructure).toBe(selection === 'combined');
         const result = await runCli(root, ['check', '--only', 'integrity/allowlists-match', '--no-cache', '--json']);
         expect(result.code, result.stdout + result.stderr).toBe(1);
-        expect(reportSchema.parse(JSON.parse(result.stdout)).checks).toMatchObject([
+        expect((JSON.parse(result.stdout) as RunReport).checks).toMatchObject([
             {
                 check: 'integrity/allowlists-match',
                 status: 'fail',
@@ -172,7 +172,7 @@ test.each(['root', 'nested', 'combined'])(
         await Bun.write(path, policyText.replace('example@2.0.0', 'example@1.2.3'));
         const corrected = await runCli(root, ['check', '--only', 'integrity/allowlists-match', '--no-cache', '--json']);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
+        expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
             { check: 'integrity/allowlists-match', status: 'ok', findings: [] },
         ]);
     },

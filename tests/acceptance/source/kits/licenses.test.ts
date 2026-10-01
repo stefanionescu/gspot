@@ -5,10 +5,10 @@ import { rmSync, readFileSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { run } from '#tests/support/cli/command.ts';
-import { reportSchema } from '#cli/execution/report.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { installPrivateTools } from '#tests/support/cli/tools.ts';
+import type { RunReport } from '#cli/types/execution/execution.ts';
 import { prepareLicenseProject } from '#tests/support/cli/licenses.ts';
 import { containingAll, textContaining } from '#tests/support/expectations.ts';
 
@@ -20,7 +20,7 @@ test(
         const environment = await prepareLicenseProject(sandbox.path);
         const baseline = await run(sandbox.path, LICENSE_CHECK, environment);
         expect(baseline.code, baseline.stdout + baseline.stderr).toBe(0);
-        expect(reportSchema.parse(JSON.parse(baseline.stdout)).checks).toMatchObject([
+        expect((JSON.parse(baseline.stdout) as RunReport).checks).toMatchObject([
             { check: 'licenses/packages', status: 'ok', findings: [] },
         ]);
         for (const license of ['GPL-3.0-only', '(MIT OR Apache-2.0) AND GPL-3.0-only']) {
@@ -30,7 +30,7 @@ test(
             );
             const refused = await run(sandbox.path, LICENSE_CHECK, environment);
             expect(refused.code, refused.stdout + refused.stderr).toBe(1);
-            expect(reportSchema.parse(JSON.parse(refused.stdout)).checks).toMatchObject([
+            expect((JSON.parse(refused.stdout) as RunReport).checks).toMatchObject([
                 {
                     check: 'licenses/packages',
                     status: 'fail',
@@ -68,7 +68,7 @@ test(
         expect(appliedGpl.code).toBe(0);
         const gplAllowance = await run(sandbox.path, LICENSE_CHECK, environment);
         expect(gplAllowance.code, gplAllowance.stdout + gplAllowance.stderr).toBe(0);
-        expect(reportSchema.parse(JSON.parse(gplAllowance.stdout)).checks).toMatchObject([
+        expect((JSON.parse(gplAllowance.stdout) as RunReport).checks).toMatchObject([
             { check: 'licenses/packages', status: 'ok', findings: [] },
         ]);
         await Bun.write(
@@ -79,7 +79,7 @@ test(
         expect(appliedLgpl.code).toBe(0);
         const stale = await run(sandbox.path, LICENSE_CHECK, environment);
         expect(stale.code).toBe(1);
-        expect(reportSchema.parse(JSON.parse(stale.stdout)).checks).toMatchObject([
+        expect((JSON.parse(stale.stdout) as RunReport).checks).toMatchObject([
             {
                 check: 'licenses/packages',
                 status: 'fail',
@@ -120,7 +120,7 @@ test(
         );
         const changedToAllowed = await run(sandbox.path, LICENSE_CHECK, environment);
         expect(changedToAllowed.code, changedToAllowed.stdout + changedToAllowed.stderr).toBe(1);
-        expect(reportSchema.parse(JSON.parse(changedToAllowed.stdout)).checks).toMatchObject([
+        expect((JSON.parse(changedToAllowed.stdout) as RunReport).checks).toMatchObject([
             {
                 check: 'licenses/packages',
                 status: 'fail',
@@ -142,7 +142,7 @@ test(
         expect(appliedMIT.code).toBe(0);
         const correctedLicense = await run(sandbox.path, LICENSE_CHECK, environment);
         expect(correctedLicense.code, correctedLicense.stdout + correctedLicense.stderr).toBe(0);
-        expect(reportSchema.parse(JSON.parse(correctedLicense.stdout)).checks).toMatchObject([
+        expect((JSON.parse(correctedLicense.stdout) as RunReport).checks).toMatchObject([
             { check: 'licenses/packages', status: 'ok', findings: [] },
         ]);
     },
@@ -217,7 +217,7 @@ test(
         );
         const rejected = await run(root, command);
         expect(rejected.code, rejected.stdout + rejected.stderr).toBe(1);
-        expect(reportSchema.parse(JSON.parse(rejected.stdout)).checks).toMatchObject([
+        expect((JSON.parse(rejected.stdout) as RunReport).checks).toMatchObject([
             {
                 check: 'licenses/packages',
                 scope: 'app',
@@ -228,7 +228,7 @@ test(
         await Bun.write(metadata, `Metadata-Version: 2.1\nName: licensed-example\nVersion: 1.0.0\nLicense: MIT\n`);
         const corrected = await run(root, command);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
+        expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
             { check: 'licenses/packages', status: 'ok', findings: [] },
         ]);
         rmSync(python);

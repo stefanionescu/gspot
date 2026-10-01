@@ -1,7 +1,6 @@
 // Checking one tree: the working tree, or a snapshot of the index or of a pushed commit.
 import { runText } from '#cli/output/reporter.ts';
 import { compact } from '#cli/policy/normalize.ts';
-import { writeReport } from '#cli/output/report.ts';
 import { hookStatus } from '#cli/lifecycle/hooks.ts';
 import { note, warn } from '#cli/output/messages.ts';
 import { executeRun } from '#cli/execution/execute.ts';
@@ -90,11 +89,8 @@ function resultFor(
     options: CheckOptions,
     outcome: Awaited<ReturnType<typeof executeRun>>,
     unstaged: number,
-    reportRoot?: string,
 ): CheckCommandResult {
     outcome.report.unstaged = unstaged;
-    if (reportRoot !== undefined && !options.isDryRun && options.stage !== 'message')
-        writeReport(reportRoot, outcome.report);
     const rendered = runText(outcome.report, { quiet: options.quiet, verbose: options.verbose });
     const text = outcome.fixes ? fixSummary(outcome.fixes, options.isDryRun, rendered) : rendered;
     return { text, json: outcome.report, report: outcome.report, exitCode: outcome.report.exitCode };
@@ -146,7 +142,7 @@ async function runSelected(
         cancelSignal: signal,
     });
     if (options.push !== undefined) rewriteReproductions(outcome.report.checks, options);
-    return resultFor(options, outcome, set.unstaged, revision?.reportRoot);
+    return resultFor(options, outcome, set.unstaged);
 }
 
 /**

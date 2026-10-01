@@ -19,7 +19,6 @@ jobs:
         timeout-minutes: 60
         permissions:
             contents: read
-            security-events: write
         env:
             GITHUB_TOKEN: ${{ github.token }}
         defaults:
@@ -51,39 +50,9 @@ jobs:
               run: mise run --skip-tools repo:install-checks
             - run: mise run --skip-tools check:types
             # The unit job runs the tests on every system, so this job skips the check that runs them.
-            - id: normal
-              run: mise run --skip-tools check -- --skip tests/unit
-            - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-              if: ${{ !cancelled() && steps.normal.outcome != 'skipped' }}
-              with:
-                  name: reports-normal-${{ github.sha }}
-                  path: .gspot/reports/report.*
-                  include-hidden-files: true
-                  if-no-files-found: warn
-                  retention-days: 14
-            - name: Upload the SARIF of the normal checks
-              if: ${{ !cancelled() && steps.normal.outcome != 'skipped' && github.event_name != 'pull_request' && !github.event.repository.fork && hashFiles('.gspot/reports/report.sarif') != '' }}
-              uses: github/codeql-action/upload-sarif@df5a14dc28094dc936e103b37d749c6628682b60 # v3.25.0
-              with:
-                  sarif_file: .gspot/reports/report.sarif
-                  category: gspot-repository
-            - id: manual
-              if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+            - run: mise run --skip-tools check -- --skip tests/unit
+            - if: ${{ !cancelled() && steps.install.outcome == 'success' }}
               run: mise run --skip-tools check -- --stage manual
-            - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-              if: ${{ !cancelled() && steps.manual.outcome != 'skipped' }}
-              with:
-                  name: reports-manual-${{ github.sha }}
-                  path: .gspot/reports/report.*
-                  include-hidden-files: true
-                  if-no-files-found: warn
-                  retention-days: 14
-            - name: Upload the SARIF of the manual checks
-              if: ${{ !cancelled() && steps.manual.outcome != 'skipped' && github.event_name != 'pull_request' && !github.event.repository.fork && hashFiles('.gspot/reports/report.sarif') != '' }}
-              uses: github/codeql-action/upload-sarif@df5a14dc28094dc936e103b37d749c6628682b60 # v3.25.0
-              with:
-                  sarif_file: .gspot/reports/report.sarif
-                  category: gspot-repository-manual
             - if: ${{ !cancelled() && steps.install.outcome == 'success' }}
               run: mise run --skip-tools doctor
     docs:

@@ -1,5 +1,4 @@
 // The report a run ends with: every result, the ignores that matched, the skips, coverage, and the exit code.
-import { writeReport } from '#cli/output/report.ts';
 import { coverageReport } from '#cli/execution/coverage.ts';
 import { ownedInputs } from '#cli/execution/planning/plan.ts';
 import type { Finding, CheckResult } from '#cli/types/checks.ts';
@@ -85,7 +84,7 @@ function exitCode(unable: boolean, failed: string[], coverage: Finding[]): numbe
 }
 
 /**
- * The report of a finished run, written to `.gspot/reports/report.json` unless the run was a dry run or a message check.
+ * The report of a finished run, which check --json prints.
  * @param input the session, the options, the plan, and what ran
  * @returns the report
  */
@@ -125,6 +124,5 @@ export async function assembleReport(input: ReportInput): Promise<RunReport> {
         failed,
         exitCode: exitCode(isUnable(session, results, fixes), failed, coverage),
     };
-    if (!options.isDryRun && options.stage !== 'message') writeReport(session.root, report);
     return report;
 }

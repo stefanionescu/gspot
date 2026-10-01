@@ -3,7 +3,6 @@ import { renameSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
-import { reportSchema } from '#cli/execution/report.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
@@ -32,7 +31,7 @@ test('the selected naming configuration rejects banned terms in declarations and
     await Bun.write(join(sandbox.path, 'entry.js'), 'export const command = 1;\n');
     const accepted = await run(sandbox.path, command);
     expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
-    expect(reportSchema.parse(JSON.parse(accepted.stdout)).checks).toMatchObject([
+    expect((JSON.parse(accepted.stdout) as RunReport).checks).toMatchObject([
         { check: 'naming/identifiers', status: 'ok', findings: [] },
         { check: 'naming/paths', status: 'ok', findings: [] },
     ]);

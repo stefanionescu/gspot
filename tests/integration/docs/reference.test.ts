@@ -119,7 +119,6 @@ test('command references render definition-owned effects, exits, and examples', 
         expect(pages.get('commands/sample.md')!.body).toContain('Reads the sample.');
         expect(pages.get('commands/check.md')!.body).toContain('a report is invalid');
         expect(pages.get('commands/check.md')!.body).toContain('/packages/cli/src/commands/check/command.ts');
-        expect(pages.get('commands/completion.md')!.body).toContain('/packages/cli/src/commands/completion.ts');
         expect(pages.get('commands/apply.md')!.body).toContain('without writing project files');
         expect(pages.get('commands/doctor.md')!.body).toContain('1: a selected tool or hook');
         const settings = pages.get('settings.md')!.body;

@@ -5,8 +5,8 @@ import { testdir, createFileTree } from 'testdirs';
 import type { Finding } from '#cli/types/checks.ts';
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
-import { reportSchema } from '#cli/execution/report.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
+import type { RunReport } from '#cli/types/execution/execution.ts';
 import { toolsPath, installAtLevel } from '#tests/support/cli/tools.ts';
 import { containing, containingAll } from '#tests/support/expectations.ts';
 import { CAST_SWIFT, CLEAN_SWIFT, PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
@@ -51,7 +51,7 @@ test(
         const isWindows = process.platform === 'win32';
         expect(outcome.code, outcome.stdout + outcome.stderr).toBe(isWindows ? 0 : 1);
         expect(outcome.stdout.includes('swiftlint has no Windows build')).toBe(isWindows);
-        const failed = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
+        const failed = JSON.parse(outcome.stdout) as RunReport;
         expect(failed.checks).toMatchObject([
             { check: 'swift/swiftlint', scope: 'ios', status: isWindows ? 'skipped' : 'fail' },
         ]);
@@ -68,7 +68,7 @@ test(
             environment,
         );
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
+        expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
             { check: 'swift/swiftlint', scope: 'ios', status: isWindows ? 'skipped' : 'ok', findings: [] },
         ]);
     },

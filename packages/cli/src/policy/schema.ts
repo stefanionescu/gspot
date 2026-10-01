@@ -229,7 +229,6 @@ export const ciSchema = z.strictObject({
         .enum(['changed', 'all'])
         .default('changed')
         .describe('Check changed inputs or the full checked-out tree in CI.'),
-    sarif: z.boolean().default(true).describe('Upload SARIF through a separate GitHub code-scanning job.'),
 });
 
 /** Integration settings use the same fields, defaults, and descriptions as policy validation. */

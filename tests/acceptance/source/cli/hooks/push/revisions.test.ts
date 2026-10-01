@@ -5,12 +5,11 @@ import { test, expect } from 'bun:test';
 import { git } from '#tests/support/cli/git.ts';
 import * as processes from '#cli/platform/spawn.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
-import type { SarifReport } from '#tests/types/cli.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { run, gspot } from '#tests/support/cli/command.ts';
-import { pushReportSchema } from '#cli/execution/report.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { preparePushRepository } from '#tests/support/cli/push.ts';
+import type { PushReport } from '#cli/types/execution/execution.ts';
 
 test(
     'pre-push checks exact supplied objects despite conflicting working-tree repairs',
@@ -22,7 +21,7 @@ test(
             stdin: `refs/heads/reviewed ${reviewed} refs/heads/reviewed ${base}\n`,
         });
         expect(passing.code, passing.stdout + passing.stderr).toBe(0);
-        const first = pushReportSchema.parse(JSON.parse(passing.stdout)).revisions;
+        const first = (JSON.parse(passing.stdout) as PushReport).revisions;
         expect(first).toHaveLength(1);
         const firstReport = first[0]!.report;
         expect(firstReport.comparison).toStrictEqual({ content: 'commit', reference: reviewed });
@@ -34,9 +33,9 @@ test(
         });
         expect(failing.code, failing.stdout + failing.stderr).toBe(1);
         expect(
-            pushReportSchema
-                .parse(JSON.parse(failing.stdout))
-                .revisions[0]!.report.checks[0]?.findings.map((finding) => finding.file),
+            (JSON.parse(failing.stdout) as PushReport).revisions[0]!.report.checks[0]?.findings.map(
+                (finding) => finding.file,
+            ),
         ).toStrictEqual(['changed.sh', 'changed.sh']);
         expect({
             head: git(sandbox.path, ['rev-parse', 'HEAD']).stdout.trim(),
@@ -71,7 +70,7 @@ test(
         expect(pushText.code, pushText.stdout + pushText.stderr).toBe(1);
         expect(pushText.stdout).toContain('reproduce: printf');
         expect(pushText.stdout).toContain('Bypass this hook once: git push --no-verify');
-        const failedReport = pushReportSchema.parse(JSON.parse(failing.stdout)).revisions[0]!.report;
+        const failedReport = (JSON.parse(failing.stdout) as PushReport).revisions[0]!.report;
         const reproduction = failedReport.checks[0]?.reproduce;
         expect(reproduction).toBeDefined();
         const repeated = await processes.run(
@@ -87,7 +86,7 @@ test(
             { cwd: sandbox.path },
         );
         expect(repeated.code, repeated.stdout + repeated.stderr).toBe(1);
-        const repeatedReport = pushReportSchema.parse(JSON.parse(repeated.stdout));
+        const repeatedReport = JSON.parse(repeated.stdout) as PushReport;
         expect(repeatedReport.revisions[0]?.object).toBe(broken);
         expect(repeatedReport.revisions[0]?.report.checks[0]?.findings).toStrictEqual(failedReport.checks[0]?.findings);
         expect({
@@ -113,24 +112,21 @@ test(
             stdin: `refs/heads/broken ${broken} refs/heads/one ${base}\nrefs/heads/reviewed ${reviewed} refs/heads/two ${base}\n`,
         });
         expect(multiple.code, multiple.stdout + multiple.stderr).toBe(1);
-        const saved = pushReportSchema.parse(
-            JSON.parse(readFileSync(join(sandbox.path, '.gspot/reports/report.json'), 'utf8')),
-        );
-        expect(saved).toStrictEqual(pushReportSchema.parse(JSON.parse(multiple.stdout)));
-        expect(saved.revisions.map((revision) => revision.report.exitCode)).toStrictEqual([1, 0]);
-        const sarif = JSON.parse(
-            readFileSync(join(sandbox.path, '.gspot/reports/report.sarif'), 'utf8'),
-        ) as SarifReport;
-        expect(sarif.runs).toHaveLength(2);
-        expect(sarif.runs.map((entry) => entry.properties?.comparison?.reference)).toStrictEqual([broken, reviewed]);
-        expect(sarif.runs[0]!.results).toHaveLength(2);
-        expect(sarif.runs[1]!.results).toHaveLength(0);
+        const pushed = JSON.parse(multiple.stdout) as PushReport;
+        expect(pushed.revisions.map((revision) => revision.report.exitCode)).toStrictEqual([1, 0]);
+        expect(pushed.revisions.map((revision) => revision.report.comparison?.reference)).toStrictEqual([
+            broken,
+            reviewed,
+        ]);
+        expect(
+            pushed.revisions.map((revision) => revision.report.checks.flatMap((check) => check.findings).length),
+        ).toStrictEqual([2, 0]);
         const duplicated = await processes.run(command, {
             cwd: sandbox.path,
             stdin: `refs/heads/reviewed ${reviewed} refs/heads/one ${base}\nrefs/heads/also-reviewed ${reviewed} refs/heads/two ${base}\n`,
         });
         expect(duplicated.code, duplicated.stdout + duplicated.stderr).toBe(0);
-        const merged = pushReportSchema.parse(JSON.parse(duplicated.stdout));
+        const merged = JSON.parse(duplicated.stdout) as PushReport;
         expect(merged.revisions).toHaveLength(1);
         expect(merged.revisions[0]!.refs).toHaveLength(2);
         const forced = await processes.run(command, {
@@ -138,7 +134,7 @@ test(
             stdin: `refs/heads/rewound ${base} refs/heads/main ${broken}\n`,
         });
         expect(forced.code, forced.stdout + forced.stderr).toBe(0);
-        expect(pushReportSchema.parse(JSON.parse(forced.stdout)).revisions[0]!.report.checks[0]?.files).toBe(1);
+        expect((JSON.parse(forced.stdout) as PushReport).revisions[0]!.report.checks[0]?.files).toBe(1);
         expect({
             head: git(sandbox.path, ['rev-parse', 'HEAD']).stdout.trim(),
             policy: readFileSync(join(sandbox.path, 'gspot.toml'), 'utf8'),
@@ -169,9 +165,9 @@ test(
         });
         expect(all.code, all.stdout + all.stderr).toBe(1);
         expect(
-            pushReportSchema
-                .parse(JSON.parse(all.stdout))
-                .revisions[0]?.report.checks[0]?.findings.map((finding) => finding.file),
+            (JSON.parse(all.stdout) as PushReport).revisions[0]?.report.checks[0]?.findings.map(
+                (finding) => finding.file,
+            ),
         ).toStrictEqual(['legacy.sh', 'legacy.sh']);
     },
     PLANTED_TIMEOUT_MS,

@@ -3,17 +3,18 @@ import { join } from 'node:path';
 import { throws } from 'node:assert/strict';
 import { test, spyOn, expect } from 'bun:test';
 import * as cache from '#cli/execution/cache.ts';
+import { runText } from '#cli/output/reporter.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import * as inspections from '#cli/tools/inspect.ts';
 import { readCached } from '#cli/execution/cache.ts';
 import { executeRun } from '#cli/execution/execute.ts';
-import { reportSchema } from '#cli/execution/report.ts';
 import { onPosix } from '#tests/support/cli/platforms.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { git, commitAll } from '#tests/support/cli/git.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { storageSession } from '#tests/support/cli/storage.ts';
+import type { RunReport } from '#cli/types/execution/execution.ts';
 import { runHashes, cacheKeyFor } from '#cli/execution/result-cache.ts';
 
 test.each(['{', '{"status":"ok","findings":[]}'])(
@@ -28,7 +29,6 @@ test.each(['{', '{"status":"ok","findings":[]}'])(
         const options = { stage: 'commit' as const, skips: [], fix: false, isDryRun: false };
         const initial = await executeRun(session, options);
         expect(initial.report.exitCode).toBe(1);
-        const reportPath = join(sandbox.path, '.gspot/reports/report.json');
         const cache = join(sandbox.path, '.gspot/cache');
         const [entry] = fs.readdirSync(cache);
         fs.writeFileSync(join(cache, entry!), content);
@@ -40,7 +40,6 @@ test.each(['{', '{"status":"ok","findings":[]}'])(
             status: 'fail',
             findings: [{ message: 'Retained finding' }],
         });
-        expect(JSON.parse(fs.readFileSync(reportPath, 'utf8'))).toStrictEqual(repeated.report);
     },
 );
 
@@ -125,25 +124,25 @@ format = "none"
     const command = ['check', '--staged', '--json'];
     const first = await run(sandbox.path, command);
     expect(first.code, first.stdout + first.stderr).toBe(0);
-    expect(reportSchema.parse(JSON.parse(first.stdout)).checks[0]?.status).toBe('ok');
+    expect((JSON.parse(first.stdout) as RunReport).checks[0]?.status).toBe('ok');
     fs.writeFileSync(join(sandbox.path, 'source.txt'), 'broken unstaged\n');
     const reused = await run(sandbox.path, command);
     expect(reused.code, reused.stdout + reused.stderr).toBe(0);
-    expect(reportSchema.parse(JSON.parse(reused.stdout)).checks[0]?.status).toBe('cache');
+    expect((JSON.parse(reused.stdout) as RunReport).checks[0]?.status).toBe('cache');
     expect(fs.readFileSync(join(sandbox.path, 'source.txt'), 'utf8')).toBe('broken unstaged\n');
     expect(git(sandbox.path, ['add', 'source.txt']).code).toBe(0);
     const broken = await run(sandbox.path, command);
     expect(broken.code, broken.stdout + broken.stderr).toBe(1);
-    expect(reportSchema.parse(JSON.parse(broken.stdout)).checks[0]?.status).toBe('fail');
+    expect((JSON.parse(broken.stdout) as RunReport).checks[0]?.status).toBe('fail');
     fs.writeFileSync(join(sandbox.path, 'source.txt'), 'clean staged\n');
     await createFileTree(sandbox.path, { 'inputs/added.txt': 'Declared input\n' });
     expect(git(sandbox.path, ['add', 'source.txt', 'inputs/added.txt']).code).toBe(0);
     const corrected = await run(sandbox.path, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks[0]?.status).toBe('ok');
+    expect((JSON.parse(corrected.stdout) as RunReport).checks[0]?.status).toBe('ok');
     const unchanged = await run(sandbox.path, command);
     expect(unchanged.code, unchanged.stdout + unchanged.stderr).toBe(0);
-    expect(reportSchema.parse(JSON.parse(unchanged.stdout)).checks[0]?.status).toBe('cache');
+    expect((JSON.parse(unchanged.stdout) as RunReport).checks[0]?.status).toBe('cache');
     expect(fs.readFileSync(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(policy);
 });
 
@@ -204,3 +203,37 @@ if (onPosix)
             inspection.mockRestore();
         }
     });
+
+test.each([0, 1])('a cache write failure preserves check status %s and findings', async (status) => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': policyOf([]),
+        'source.ts': 'export {};\n',
+    });
+    const session = await storageSession(sandbox.path, status);
+    fs.mkdirSync(join(sandbox.path, '.gspot'), { recursive: true });
+    const obstruction = join(sandbox.path, '.gspot', 'cache');
+    fs.writeFileSync(obstruction, 'authored obstruction\n');
+    const stderr = spyOn(process.stderr, 'write').mockImplementation(() => true);
+    try {
+        const outcome = await executeRun(session, {
+            stage: 'commit',
+            skips: [],
+            fix: false,
+            isDryRun: false,
+        });
+        expect(outcome.report.exitCode).toBe(status);
+        expect(outcome.report.checks[0]!.status).toBe(status === 0 ? 'ok' : 'fail');
+        expect(outcome.report.checks[0]!.findings).toHaveLength(status);
+        const output = runText(outcome.report, { quiet: false, verbose: false });
+        expect(output).toContain(status === 0 ? '1 check passed' : 'Retained finding');
+        const diagnostics = stderr.mock.calls.map((call) => String(call[0])).join('');
+        expect(diagnostics).toContain('cache');
+        expect(diagnostics).toContain('Could not write');
+        // The authored obstruction keeps its bytes.
+        expect(fs.readFileSync(obstruction, 'utf8')).toBe('authored obstruction\n');
+        expect(diagnostics.trim().split('\n')).toHaveLength(1);
+    } finally {
+        stderr.mockRestore();
+    }
+});

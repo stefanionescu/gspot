@@ -5,10 +5,10 @@ import { unlinkSync, symlinkSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
-import { reportSchema } from '#cli/execution/report.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { plantedCases } from '#tests/support/cli/planted.ts';
 import { install, toolsPath } from '#tests/support/cli/tools.ts';
+import type { RunReport } from '#cli/types/execution/execution.ts';
 import { HOME, PLAN, IMAGES, XCODE_PROJECT } from '#tests/inputs/acceptance/source/kits/kits.ts';
 
 const PLIST_HEAD = `<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "https://www.apple.com/DTDs/PropertyList-1.0.dtd">\n<plist version="1.0">\n<dict>\n`;
@@ -141,7 +141,7 @@ plantedCases(
                 const args = ['check', '--only', 'xcode/symlinks', '--no-cache', '--json'];
                 const linked = await run(root, args, environment);
                 expect(linked.code, linked.stdout + linked.stderr).toBe(1);
-                expect(reportSchema.parse(JSON.parse(linked.stdout)).checks).toMatchObject([
+                expect((JSON.parse(linked.stdout) as RunReport).checks).toMatchObject([
                     {
                         check: 'xcode/symlinks',
                         status: 'fail',
@@ -153,7 +153,7 @@ plantedCases(
                 commitAll(root);
                 const corrected = await run(root, args, environment);
                 expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-                expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
+                expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
                     { check: 'xcode/symlinks', status: 'ok', findings: [] },
                 ]);
             },

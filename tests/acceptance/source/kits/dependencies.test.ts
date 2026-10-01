@@ -5,8 +5,8 @@ import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
-import { reportSchema } from '#cli/execution/report.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
+import type { RunReport } from '#cli/types/execution/execution.ts';
 import { INVALID } from '#tests/inputs/acceptance/source/kits/kits.ts';
 import { toolsPath, installAtLevel } from '#tests/support/cli/tools.ts';
 import { runPlanted, plantedCases } from '#tests/support/cli/planted.ts';
@@ -92,7 +92,7 @@ plantedCases(
                     environment,
                 );
                 expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-                expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
+                expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
                     { check: invalid.check, status: 'ok', findings: [] },
                 ]);
             },
@@ -124,7 +124,7 @@ test(
         const args = ['check', '--only', 'integrity/lockfile-fresh', '--no-cache', '--json'];
         const stale = await run(sandbox.path, args, environment);
         expect(stale.code, stale.stdout + stale.stderr).toBe(1);
-        expect(reportSchema.parse(JSON.parse(stale.stdout)).checks).toMatchObject([
+        expect((JSON.parse(stale.stdout) as RunReport).checks).toMatchObject([
             {
                 check: 'integrity/lockfile-fresh',
                 status: 'fail',
@@ -146,11 +146,11 @@ test(
         expect(await Bun.file(join(sandbox.path, 'bun.lock')).exists()).toBe(true);
         const corrected = await run(sandbox.path, args, environment);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
+        expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
             { check: 'integrity/lockfile-fresh', status: 'ok', findings: [] },
         ]);
         const checked = await run(sandbox.path, ['check', '--stage', 'commit', '--json'], environment);
-        const ids = reportSchema.parse(JSON.parse(checked.stdout)).checks.map(({ check }) => check);
+        const ids = (JSON.parse(checked.stdout) as RunReport).checks.map(({ check }) => check);
         expect(ids).not.toContain('dependencies/osv');
         expect(ids).not.toContain('dependencies/syncpack');
     },

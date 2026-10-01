@@ -1,13 +1,12 @@
 // Planted repository for the ansible configuration: a task that shells out to systemctl.
-import { join } from 'node:path';
 import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import type { Finding } from '#cli/types/checks.ts';
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
-import { reportSchema } from '#cli/execution/report.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
+import type { RunReport } from '#cli/types/execution/execution.ts';
 import { toolsPath, installAtLevel } from '#tests/support/cli/tools.ts';
 import { containing, containingAll } from '#tests/support/expectations.ts';
 import { ANSIBLE_INIT } from '#tests/inputs/acceptance/source/kits/init-arguments.ts';
@@ -35,7 +34,7 @@ describe('the ansible configuration', () => {
                 },
                 environment,
             );
-            const report = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/reports/report.json')).json());
+            const report = JSON.parse(outcome.stdout) as RunReport;
             // ansible-lint has no Windows build, so the check is skipped there for the platform and the run passes.
             const isWindows = process.platform === 'win32';
             const commandInsteadOfModule: Finding = containing({
@@ -57,7 +56,7 @@ describe('the ansible configuration', () => {
                 environment,
             );
             expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-            expect(reportSchema.parse(JSON.parse(corrected.stdout)).checks).toMatchObject([
+            expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
                 { check: 'ansible/lint', status: isWindows ? 'skipped' : 'ok', findings: [] },
             ]);
         },
