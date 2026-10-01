@@ -84,7 +84,6 @@ export default defineConfig({
                         { label: 'Dependency licenses', slug: 'guides/dependency-licenses' },
                         { label: 'Security', slug: 'guides/security' },
                         { label: 'Troubleshooting', slug: 'guides/troubleshooting' },
-                        { label: 'Uninstall', slug: 'guides/uninstall' },
                     ],
                 },
                 {

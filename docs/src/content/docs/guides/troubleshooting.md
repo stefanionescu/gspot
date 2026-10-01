@@ -55,8 +55,7 @@ afterwards.
 ## A generated file has local edits
 
 `gspot apply` keeps a generated file you edited and names it. Move the change you want into
-`gspot.toml`, then run `gspot apply` again. [Uninstall](/guides/uninstall/) keeps edited files
-too.
+`gspot.toml`, then run `gspot apply` again.
 
 ## A check is slow
 

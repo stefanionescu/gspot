@@ -40,9 +40,8 @@ style packages, `.gspot/state/`, `.gspot/cache/`, and `.gspot/reports/`.
 
 ## What to keep
 
-`.gspot/state/` holds the copies of the files gspot replaced, and the record of what it wrote.
-`gspot uninstall` needs both, so keep the folder as long as you want a way back. Do
-not delete the whole `.gspot/` folder to clean up.
+`.gspot/state/` holds the record of what gspot wrote. Without it, gspot cannot tell your edits
+from its own files. Do not delete the whole `.gspot/` folder to clean up.
 
 `.gspot/reports/` and `.gspot/cache/` hold nothing gspot needs later. You can delete them, and
 every check deletes the cached results written more than seven days ago.

@@ -1,12 +1,12 @@
 ---
 title: Existing repositories
-description: What init replaces in a repository that already has linters, and how to get the originals back.
+description: What init replaces in a repository that already has linters, and where the originals stay.
 sidebar:
     order: 2
 ---
 
 When your repository already has linter configuration, `gspot init` replaces it with the
-configuration it generates. It keeps a copy of every file it replaces.
+configuration it generates. Git keeps every file it replaces.
 
 ## Preview the plan
 
@@ -28,9 +28,7 @@ and writes its own configuration instead. It does not read settings out of them.
 settings you still need into `gspot.toml` with `gspot set` and `gspot ignore`.
 
 Init refuses uncommitted changes unless you pass `--allow-dirty`, so Git history keeps every
-file it replaces. Init also saves the exact bytes and permissions of each file under
-`.gspot/state/`. `gspot uninstall` puts them back from there, so keep that folder for as long
-as you want a way back.
+file it replaces. To get one back, check it out from the commit before init.
 
 If init cannot read one of these files, the plan names it and init stops with exit code `2`
 before it writes anything. Fix the file and run `gspot init` again.
@@ -55,5 +53,3 @@ After you accept the plan, init writes the configuration and installs the tools.
 ```bash
 gspot check
 ```
-
-To put the original files back, follow [uninstall](/guides/uninstall/).

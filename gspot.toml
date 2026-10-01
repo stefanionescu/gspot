@@ -108,7 +108,6 @@ patterns = [
     "packages/cli/dist/gspot.js",
     "packages/cli/dist/configuration.js",
     ".gspot/state",
-    ".gspot/state/recovery",
     ".gspot/cache",
     ".gspot/reports",
     ".gspot/reports/report.sarif",
