@@ -122,8 +122,6 @@ function tailLines(report: RunReport, options: ReporterOptions, colors: Colors):
             return `skipped    ${skip.check}  ${source}`;
         }),
     ];
-    if (report.coverage.unchecked > 0) lines.push(`unchecked  ${fileCount(report.coverage.unchecked)} (gspot doctor)`);
-    for (const finding of report.coverage.findings) lines.push(...findingLines(finding, colors));
     if (report.unstaged > 0) {
         const verb = report.unstaged === 1 ? ' has' : 's have';
         lines.push(
@@ -142,10 +140,7 @@ function summaryLine(report: RunReport, colors: Colors): string {
     const passed = report.checks.filter((check) => check.status === 'ok').length;
     const failed = report.checks.filter((check) => ['fail', 'missing', 'error'].includes(check.status)).length;
     const skipped = report.checks.filter((check) => check.status === 'skipped').length;
-    const findings = report.checks.reduce(
-        (count, check) => count + check.findings.length,
-        report.coverage.findings.length,
-    );
+    const findings = report.checks.reduce((count, check) => count + check.findings.length, 0);
     const summary = `${counted(passed, 'check')} passed, ${counted(failed, 'check')} failed, ${counted(skipped, 'check')} skipped, ${counted(findings, 'finding')}, ${seconds(report.duration)}`;
     if (report.exitCode === ERROR_EXIT) return colors.red(`${summary} (incomplete)`);
     return report.exitCode === 0 ? summary : colors.red(`${summary} (failed)`);

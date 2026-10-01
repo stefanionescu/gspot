@@ -205,7 +205,6 @@ export function normalize(raw: RawPolicy): Policy {
 
         ...compact({ hooks: raw.hooks, ci: raw.ci }),
         guides: defaulted<Policy['guides']>(raw.guides, { install: true, directory: '.gspot/guides', exclude: [] }),
-        coverage: defaulted<Policy['coverage']>(raw.coverage, { strict: false }),
         ...(raw.runner === undefined ? {} : { runner: { tool: raw.runner.tool } }),
         scopeTables,
     };

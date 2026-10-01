@@ -107,7 +107,7 @@ test.each([false, true])(
         `,
         );
         planned.spec.isolated_files = true;
-        planned.spec.fix_findings_exit_codes = [3];
+        planned.spec.findings_exit_codes = [3];
         const result = await applyFixers(session, [planned], preview);
         expect(result.results).toMatchObject([{ status: 'changed', changed: ['source.txt'] }]);
         expect(readFileSync(join(sandbox.path, 'source.txt'), 'utf8')).toBe(preview ? 'original' : 'corrected');

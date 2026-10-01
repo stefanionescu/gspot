@@ -40,7 +40,6 @@ level = "recommended"
 stage = "commit"
 platform = ["macos", "linux"]
 command = ["gixy", "--config", "{config:gixy}", "--format", "json", "{file}"]
-coverage = ["security"]
 output = {format = "json", fields = {file = "path", line = "line", rule = "plugin", message = "summary"}}
 summary = "Reads every nginx file for the mistakes that open a server: request forgery, path traversal through alias, header injection, a disclosed version."
 why = "These mistakes parse, serve traffic, and look like any other location block until somebody uses them."
@@ -58,7 +57,6 @@ engine = "integrity"
 analysis = "nginx-test"
 tool = "docker"
 owners = {filenames = ["nginx.conf"]}
-coverage = ["syntax"]
 summary = "Validates each main configuration inside the nginx image and records the files nginx parsed. It mounts a throwaway certificate and resolves upstream names."
 why = "Only nginx knows whether nginx accepts the file, and the other place to learn it is the restart in production."
 help = "Read the line nginx names. Set tools.nginx.image to the image the deployment runs."

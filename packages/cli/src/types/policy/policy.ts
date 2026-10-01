@@ -9,11 +9,9 @@ export type PolicyFiles = {
     policy: Policy;
     path: string;
     text: string;
-    /** The wrong entries reading dropped, each with its line; empty for a policy every command accepts. */
-    problems: PolicyFinding[];
+    /** The wrong entries reading dropped; empty for a policy every command accepts. */
+    problems: PolicyProblem[];
 };
-/** A wrong entry or key of gspot.toml, where it is, and what is wrong with it. */
-export type PolicyFinding = PolicyProblem & { line: number; column: number };
 export type Defined<T> = { [K in keyof T]: Exclude<T[K], undefined> };
 /** gspot.toml as the schema accepts it, before normalization. */
 export type RawPolicy = z.infer<typeof policySchema>;
@@ -24,7 +22,6 @@ export type EslintSettings = NonNullable<NonNullable<RawPolicy['tools']>['eslint
 export type TomlBlock = ReturnType<typeof parseDocument>['cst'][number];
 export type KeyValue = Extract<TomlBlock, { type: 'KeyValue' }>;
 export type Value = KeyValue['value'];
-export type Position = Value['loc']['start'];
 /** A syntax node with the kind field every parser node carries. */
 export type Kinded = { type: unknown };
 /** The kinds of syntax node the parser produces, as the literals it names them by. */
@@ -178,7 +175,6 @@ export type Policy = {
     hooks?: Defined<NonNullable<RawPolicy['hooks']>>;
     ci?: NonNullable<RawPolicy['ci']>;
     guides: { install: boolean; directory: string; project?: string; exclude: string[]; agents?: string[] };
-    coverage: { strict: boolean };
     runner?: Defined<NonNullable<RawPolicy['runner']>>;
     scopeTables: Record<string, Partial<Policy>>;
 };

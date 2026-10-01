@@ -213,11 +213,8 @@ stage = "commit"
 runs = "per-file-list"
 command = ["eslint", "--max-warnings", "0", "--no-warn-ignored", "--config", "{config:eslint}", "--format", "json", "{files}"]
 fix_command = ["eslint", "--fix", "--config", "{config:eslint}", "{files}"]
-fix_order = "codemod"
 findings_exit_codes = [1]
-fix_findings_exit_codes = [1]
 owners = {extensions = [".js", ".jsx", ".mjs", ".cjs"], filenames = ["package.json"], tags = ["shebang:node"]}
-coverage = ["syntax", "style", "structure", "security"]
 output = {format = "eslint-json"}
 summary = "Runs ESLint with the shipped rule set over every JavaScript file and every package.json."
 why = "ESLint catches mistakes and slop the runtime accepts: unused code, unsafe patterns, functions that only forward."
@@ -234,7 +231,6 @@ cwd = "scope"
 analysis = "javascript"
 tool = "tsc"
 owners = {extensions = [".js", ".mjs", ".cjs", ".jsx"]}
-coverage = ["types"]
 output = {format = "regex", pattern = "^(?<file>[^(]+)\\((?<line>\\d+),(?<column>\\d+)\\): error (?<rule>TS\\d+): (?<message>.*)$"}
 summary = "Type-checks plain JavaScript through its JSDoc comments."
 why = "A JavaScript file with a wrong call crashes at run time; the checker sees it first when the types are written down."
@@ -249,7 +245,6 @@ stage = "push"
 runs = "per-scope"
 command = ["knip", "--config", "{config:knip}", "--no-progress", "--reporter", "compact", "{workspace:--workspace}"]
 cwd = "root"
-coverage = ["dependencies"]
 output = {format = "regex", pattern = "^(?<file>[^:\\s]+)(?::\\s*(?<message>.*))?$"}
 summary = "Finds files, exports, and dependencies nothing uses."
 why = "Dead code is read, maintained, and shipped for nobody."
@@ -339,12 +334,6 @@ direction = "loosening"
 default = []
 summary = "Dependencies knip does not report as unused, each with a reason: packages only a spawned command uses. A name that looks like a regular expression matches as one; an entry with workspace applies to that package.json workspace alone."
 
-[coverage]
-".js" = ["format", "syntax", "style", "types", "structure", "naming", "prose", "spelling"]
-".mjs" = ["format", "syntax", "style", "types", "structure", "naming", "prose", "spelling"]
-".cjs" = ["format", "syntax", "style", "types", "structure", "naming", "prose", "spelling"]
-".jsx" = ["format", "syntax", "style", "types", "structure", "naming", "prose", "spelling"]
-
 [[checks]]
 name = "integrity/required-rules"
 title = "Required rules"
@@ -354,7 +343,6 @@ stage = "push"
 runs = "per-scope"
 engine = "integrity"
 analysis = "required-rules"
-coverage = ["integrity"]
 summary = "Checks that the configuration ESLint resolves for a file still turns on every rule the configurations require."
 why = "The configuration is put together from the blocks of many configurations, and a later block can turn off a rule that an earlier one turned on."
 help = "Run gspot apply to write the configuration again. A rule the repository decided against is recorded with gspot ignore, which carries a reason."

@@ -31,12 +31,11 @@ export function tomlSyntax(path: string, detail: string): string {
  * A key under a table that the schema does not know.
  * @param where the table, empty for the top level
  * @param key the unknown key
- * @param known the keys the table does accept
  * @returns the message
  */
-export function unknownKey(where: string, key: string, known: string[]): string {
+export function unknownKey(where: string, key: string): string {
     const table = where === '' ? 'the top level' : `[${where}]`;
-    return `\`${key}\` is not a setting gspot knows under ${table}. The keys that exist there are ${list(known)}.`;
+    return `\`${key}\` is not a setting gspot knows under ${table}. The configuration reference lists every key.`;
 }
 
 /**

@@ -25,7 +25,6 @@ stage = "commit"
 engine = "integrity"
 analysis = "python-blocking-calls"
 owners = {extensions = [".py"]}
-coverage = ["structure"]
 summary = "Refuses time.sleep, the requests library, and a plain open inside an async function."
 why = "A blocking call inside an async function stops the event loop, so every other request waits for it."
 help = "Use asyncio.sleep, an async HTTP client, or run the call in a worker thread."

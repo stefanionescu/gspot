@@ -46,7 +46,6 @@ const report: RunReport = {
     ],
     ignores: [{ check: 'bash/shellcheck', rule: 'SC2312', reason: 'why', matched: 1 }],
     skips: [],
-    coverage: { checked: 3, unchecked: 2, findings: [] },
     unstaged: 0,
     narrowed: false,
     failed: ['bash/shellcheck', 'formatting/prettier'],
@@ -89,7 +88,6 @@ describe('the reporter', () => {
         expect(text).toContain('  reproduce: gspot check --only bash/shellcheck');
         expect(text).toContain('api   formatting/prettier  missing    prettier is not installed. Run: mise install');
         expect(text).toContain('ignores    1 (printed with --verbose)');
-        expect(text).toContain('unchecked  2 files (gspot doctor)');
         expect(text).toEndWith('1 check passed, 2 checks failed, 0 checks skipped, 1 finding, 0.0s (failed)\n');
     });
 

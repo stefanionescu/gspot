@@ -54,9 +54,6 @@ stage = "commit"
 command = ["sqlfluff", "lint", "--config", "{config:sqlfluff}", "--ignore-local-config", "--disable-progress-bar", "--format", "json", "{files}"]
 findings_exit_codes = [1]
 fix_command = ["sqlfluff", "fix", "--config", "{config:sqlfluff}", "--ignore-local-config", "--disable-progress-bar", "{files}"]
-fix_order = "format"
-fix_findings_exit_codes = [1]
-coverage = ["format", "style"]
 exclude_setting = "tools.sqlfluff.exclude"
 output = {format = "json", children = "violations", fields = {file = "filepath", line = "start_line_no", column = "start_line_pos", rule = "code", message = "description"}}
 summary = "Lints every SQL file for layout, capitalization, aliasing, and ambiguous references, in the dialect the database kit names."
@@ -72,7 +69,6 @@ stage = "commit"
 engine = "integrity"
 analysis = "sql-syntax"
 exclude_setting = "tools.sqlfluff.exclude"
-coverage = ["syntax"]
 summary = "Parses every SQL file with the parser Postgres itself uses, when the dialect is postgres or ansi."
 why = "A migration that does not parse fails at deploy, halfway through a release."
 help = "Correct the statement at the line and column the message names."
@@ -85,7 +81,6 @@ level = "all"
 stage = "commit"
 engine = "integrity"
 analysis = "sql-block-comments"
-coverage = ["structure"]
 summary = "Refuses block comments in SQL, so every comment is a line comment."
 why = "The prose and spelling checks read line comments, and a block comment hides text and dead code from them."
 help = "Rewrite the block as line comments that start with two dashes."
@@ -99,7 +94,6 @@ stage = "commit"
 engine = "integrity"
 analysis = "sql-file-length"
 limit = "limits.sql.file_lines"
-coverage = ["structure"]
 summary = "Checks that no SQL file has more code lines than the ceiling."
 why = "A long SQL file holds more than one change, and one change is what a reviewer can hold."
 help = "Split the file by the object it changes, or raise limits.sql.file_lines with a reason."
@@ -125,11 +119,6 @@ direction = "ceiling"
 default = 400
 summary = "The most code lines a SQL file may have."
 
-[coverage]
-".sql" = ["format", "syntax", "style", "structure", "naming", "prose", "spelling"]
-".pgsql" = ["format", "syntax", "style", "structure", "naming", "prose", "spelling"]
-".psql" = ["format", "syntax", "style", "structure", "naming", "prose", "spelling"]
-
 [guides]
 language = [{path = "language/SQL.md"}, {path = "language/naming/SQL.md"}]
 
@@ -141,7 +130,6 @@ level = "all"
 stage = "commit"
 engine = "integrity"
 analysis = "sql-functions"
-coverage = ["structure"]
 summary = "Reports trivial SQL and PL/pgSQL functions and excessive declared input parameters."
 why = "Unnecessary functions add indirection; excessive parameters obscure responsibilities."
 help = "Inline unnecessary functions; for one a required API needs, run `gspot ignore sql/functions --paths <file> --reason <why>`. Reduce parameters or configure limits.sql.function_parameters."

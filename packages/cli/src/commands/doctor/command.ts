@@ -8,7 +8,7 @@ import { doctorText, doctorReport } from '#cli/commands/doctor/report.ts';
 import type { CommandResult, DoctorOptions } from '#cli/types/commands.ts';
 
 /**
- * Reports configuration, tool, and coverage problems.
+ * Reports configuration and tool problems.
  * @param options the parsed flags
  * @returns the command result
  */

@@ -110,9 +110,6 @@ function checkText(
         ...(check.command
             ? [`Turn one of its rules off: gspot ignore ${quoteArgument(checkName)} --rule <rule> --reason "..."`]
             : []),
-        ...(check.fix_findings_exit_codes === undefined
-            ? []
-            : [`Correction exit codes that mean findings remain: ${check.fix_findings_exit_codes.join(', ')}`]),
         ...(crashPattern === undefined ? [] : [`Fatal tool diagnostic pattern: ${crashPattern}`]),
         ...(check.isolated_files === true
             ? ['Runs with selected files and declared configuration in an isolated directory.']
@@ -146,9 +143,6 @@ function buildCheckExplanation(
             why: check.why,
             help: check.help,
             waits_for: check.waits_for,
-            ...(check.fix_findings_exit_codes === undefined
-                ? {}
-                : { fix_findings_exit_codes: check.fix_findings_exit_codes }),
             ...(fields.crashPattern === undefined ? {} : { tool_errors: fields.crashPattern }),
             ...(check.isolated_files === undefined ? {} : { isolated_files: check.isolated_files }),
             ...(check.file_prefix === undefined ? {} : { file_prefix: check.file_prefix }),

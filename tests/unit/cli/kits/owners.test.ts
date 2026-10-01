@@ -1,10 +1,10 @@
+import { detectKits } from '#cli/kits/detect.ts';
 import { selectKits } from '#cli/kits/select.ts';
 import { test, expect, describe } from 'bun:test';
 import { kitManifests } from '#cli/kits/manifests.ts';
 import { isOwned, ownedBy } from '#cli/kits/owners.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
 import { shebangInterpreter } from '#cli/repository/tags.ts';
-import { detectKits, unknownLanguages } from '#cli/kits/detect.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The cases build a tracked file with the same fields.
@@ -72,31 +72,11 @@ describe('detection', () => {
         expect(plans.some((plan) => plan.kit === 'spelling')).toBe(true);
     });
 
-    test('names a language gspot has no configuration for through Linguist', () => {
-        const unknown = unknownLanguages([file('main.kt'), file('lib.kt'), file('x.sh')], manifests);
-        expect(unknown[0]).toStrictEqual({ language: 'Kotlin', extensions: ['.kt'], count: 2 });
-    });
-
-    test('Sass is a language without a configuration, and a stylesheet proposes css alone', () => {
-        const files = [file('theme.scss'), file('site.css')];
-        const plans = detectKits(files, manifests, []);
+    test('a stylesheet proposes css alone, and a module filename proposes no language', () => {
+        const plans = detectKits([file('theme.scss'), file('site.css')], manifests, []);
         expect(plans.find((plan) => plan.kit === 'css')?.evidence).toBe('1 .css file');
-        expect(unknownLanguages(files, manifests)).toStrictEqual([
-            { language: 'SCSS', extensions: ['.scss'], count: 1 },
-        ]);
-    });
-
-    test('names unsupported source languages and disambiguates a module filename', () => {
-        const module = file('go.mod');
-        const plans = detectKits([module], manifests, []);
-        expect(plans.filter((plan) => plan.kind === 'language')).toStrictEqual([]);
-        const unknown = unknownLanguages([module, file('main.go'), file('lib.rs'), file('app.rb')], manifests);
-        expect(unknown).toStrictEqual([
-            { language: 'Go Module', extensions: ['.mod'], count: 1 },
-            { language: 'Go', extensions: ['.go'], count: 1 },
-            { language: 'Rust', extensions: ['.rs'], count: 1 },
-            { language: 'Ruby', extensions: ['.rb'], count: 1 },
-        ]);
+        const module = detectKits([file('go.mod')], manifests, []);
+        expect(module.filter((plan) => plan.kind === 'language')).toStrictEqual([]);
     });
 
     test('reads the interpreter from a shebang', () => {

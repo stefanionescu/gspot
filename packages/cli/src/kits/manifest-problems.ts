@@ -30,17 +30,8 @@ const CHECK_RULES: CheckRule[] = [
             `check ${check.name} isolates files and requires a per-file-list command with {files} or a per-scope command with {root}.`,
     },
     {
-        applies: (check) =>
-            check.reported_by !== undefined && (check.fix_command !== undefined || check.fix_order !== undefined),
+        applies: (check) => check.reported_by !== undefined && check.fix_command !== undefined,
         problem: (check) => `check ${check.name} is reported by another check and cannot declare a fixer.`,
-    },
-    {
-        applies: (check) => check.fix_command !== undefined && check.fix_order === undefined,
-        problem: (check) => `check ${check.name} has a fix_command and no fix_order.`,
-    },
-    {
-        applies: (check) => check.fix_findings_exit_codes !== undefined && check.fix_command === undefined,
-        problem: (check) => `check ${check.name} has fix_findings_exit_codes and no fix_command.`,
     },
     {
         applies: (check) => check.requires !== undefined && check.stage === 'commit',

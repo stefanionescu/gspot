@@ -56,7 +56,6 @@ function applyIntegrations(document: TomlTable, plan: InitPlan): void {
     if (plan.ci === 'none') delete document['ci'];
     else document['ci'] = { ...asRaw(document['ci']), provider: plan.ci };
     document['guides'] = { directory: '.gspot/guides', ...asRaw(document['guides']), install: plan.rules };
-    document['coverage'] = { strict: false, ...asRaw(document['coverage']) };
     if (plan.runner === 'none') delete document['runner'];
     else document['runner'] = { tool: plan.runner };
 }

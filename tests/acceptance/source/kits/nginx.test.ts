@@ -57,7 +57,6 @@ if (HAS_DOCKER)
                 'proxy/nginx.conf',
                 'proxy/tls#local.conf',
             ]);
-            expect(report.coverage.checked).toBe(3);
             expect(await Bun.file(join(sandbox.path, 'proxy/conf.d/server.conf')).text()).toBe(server);
         },
         PLANTED_TIMEOUT_MS * 3,

@@ -8,7 +8,6 @@ import type { outputSchema } from '#cli/kits/output-format.ts';
 export type KitEvidence = { kit: string; evidence: string; kind: string; count?: number };
 export type ExecutionFields<Check> = Check extends unknown ? Omit<Check, 'example'> : never;
 export type Stage = RawCheck['stage'];
-export type FixOrder = 'codemod' | 'imports' | 'manifest' | 'format';
 export type Owners = RawManifest['owners'];
 export type ConfigurationTarget = RawManifest['configs'][number];
 export type FragmentSelector = RawManifest['configs'][number]['selectors'][number];
@@ -22,13 +21,6 @@ export type RawManifest = z.infer<typeof manifestSchema>;
 export type RawTool = RawManifest['tools'][number];
 /** One [[checks]] entry as written. */
 export type RawCheck = RawManifest['checks'][number];
-export type LinguistEntry = {
-    extensions?: readonly string[];
-    type?: string;
-    filenames?: readonly string[];
-    aliases?: readonly string[];
-};
-export type UnknownLanguage = { language: string; extensions: string[]; count: number };
 export type SelectionWalk = {
     manifests: Map<string, Manifest>;
     problems: string[];

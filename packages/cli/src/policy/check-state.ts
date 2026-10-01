@@ -48,7 +48,6 @@ export function repositoryCheckSpec(entry: RepositoryCheck): CheckSpec {
         ...definition,
         level: 'recommended',
         runs: 'per-file-list',
-        coverage: [],
         summary: entry.summary ?? `Runs the repository's own check ${entry.name}.`,
         why: 'The repository declared this command in gspot.toml as part of its gate.',
         help: entry.help ?? 'Read the command output; the repository owns this check.',

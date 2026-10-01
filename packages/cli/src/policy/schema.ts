@@ -136,45 +136,29 @@ const generatedSchema = z.strictObject({
 
 const vendoredSchema = z.strictObject({ paths: textListNonEmpty, reason: text.optional() });
 
-const checkSchema = z
-    .strictObject({
-        name: text,
-        command: commandSchema,
-        paths: textListNonEmpty,
-        stage: z.enum(['commit', 'push', 'manual']),
-        help: text.optional(),
-        fix_command: commandSchema.optional(),
-        fix_order: z.enum(['codemod', 'imports', 'manifest', 'format']).optional(),
-        findings_exit_codes: findingExitCodesSchema
-            .optional()
-            .describe(
-                'Native nonzero statuses that mean source findings. Other nonzero statuses mean execution failure.',
-            ),
-        fix_findings_exit_codes: findingExitCodesSchema
-            .optional()
-            .describe(
-                'Native nonzero correction exit codes that mean findings remain. Other nonzero codes are execution errors.',
-            ),
-        count_regex: text.optional(),
-        tool_errors: text
-            .optional()
-            .describe(
-                'A multiline Unicode regular expression matching fatal tool diagnostics in stdout or stderr, for both checks and corrections.',
-            ),
-        requires: z.enum(['build', 'docker', 'network']).optional(),
-        platform: z.array(z.enum(['macos', 'linux', 'windows'])).optional(),
-        summary: text.optional(),
-        output: outputSchema.optional(),
-    })
-    .refine((check) => check.fix_command === undefined || check.fix_order !== undefined, {
-        message: 'A fix_command requires fix_order.',
-        path: ['fix_order'],
-    })
-    .refine((check) => check.fix_findings_exit_codes === undefined || check.fix_command !== undefined, {
-        message: 'fix_findings_exit_codes requires fix_command.',
-        path: ['fix_findings_exit_codes'],
-    })
-    .meta({ dependentRequired: { fix_command: ['fix_order'], fix_findings_exit_codes: ['fix_command'] } });
+const checkSchema = z.strictObject({
+    name: text,
+    command: commandSchema,
+    paths: textListNonEmpty,
+    stage: z.enum(['commit', 'push', 'manual']),
+    help: text.optional(),
+    fix_command: commandSchema.optional(),
+    findings_exit_codes: findingExitCodesSchema
+        .optional()
+        .describe(
+            'Native nonzero statuses that mean source findings, for the check and its correction. Other nonzero statuses mean execution failure.',
+        ),
+    count_regex: text.optional(),
+    tool_errors: text
+        .optional()
+        .describe(
+            'A multiline Unicode regular expression matching fatal tool diagnostics in stdout or stderr, for both checks and corrections.',
+        ),
+    requires: z.enum(['build', 'docker', 'network']).optional(),
+    platform: z.array(z.enum(['macos', 'linux', 'windows'])).optional(),
+    summary: text.optional(),
+    output: outputSchema.optional(),
+});
 
 const ciPlatform = z.enum(['ubuntu', 'macos', 'windows']);
 
@@ -192,8 +176,6 @@ const guidesSchema = z.strictObject({
             'Additional repository-relative agent instruction files; AGENTS.md and detected supported files are included automatically.',
         ),
 });
-
-const coverageSchema = z.strictObject({ strict: flag.optional() });
 
 const namingTable = namingLists.catchall(namingLanguage);
 
@@ -273,6 +255,5 @@ export const policySchema = z.strictObject({
     hooks: hooksSchema.optional(),
     ci: ciSchema.optional(),
     guides: guidesSchema.optional(),
-    coverage: coverageSchema.optional(),
     runner: runnerSchema.optional(),
 });

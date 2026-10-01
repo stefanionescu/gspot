@@ -247,7 +247,6 @@ command = [${JSON.stringify(process.execPath)}, "-e", "process.exitCode = 0"]
 paths = ["query.sql"]
 stage = "commit"
 fix_command = [${JSON.stringify(process.execPath)}, "correct.cjs", "{files}"]
-fix_order = "format"
 [check.output]
 format = "none"
 `;

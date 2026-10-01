@@ -1,17 +1,8 @@
-// The report a run ends with: every result, the ignores that matched, the skips, coverage, and the exit code.
-import { coverageReport } from '#cli/execution/coverage.ts';
-import { ownedInputs } from '#cli/execution/planning/plan.ts';
-import type { Finding, CheckResult } from '#cli/types/checks.ts';
-import { UNABLE_EXIT, POLICY_CHECK, RAN_STATUSES, FAILED_STATUSES } from '#cli/config/execution/execution.ts';
-
-import type {
-    Session,
-    FixReport,
-    RunReport,
-    ReportInput,
-    PlannedCheck,
-    RunReportOptions,
-} from '#cli/types/execution/execution.ts';
+// The report a run ends with: every result, the ignores that matched, the skips, and the exit code.
+import { problemText } from '#cli/policy/read.ts';
+import type { CheckResult } from '#cli/types/checks.ts';
+import { UNABLE_EXIT, POLICY_CHECK, FAILED_STATUSES } from '#cli/config/execution/execution.ts';
+import type { Session, FixReport, RunReport, ReportInput } from '#cli/types/execution/execution.ts';
 
 // The wrong lines of gspot.toml that reading dropped, reported as one failed check so the rest of the run stands.
 function policyProblemsResult(session: Session): CheckResult | undefined {
@@ -21,9 +12,7 @@ function policyProblemsResult(session: Session): CheckResult | undefined {
         check: POLICY_CHECK,
         engine: 'integrity',
         file: 'gspot.toml',
-        line: problem.line,
-        column: problem.column,
-        message: problem.message,
+        message: problemText(problem),
         fixable: false,
     }));
     return { check: POLICY_CHECK, scope: '', status: 'fail', files: 1, duration: 0, findings };
@@ -43,34 +32,10 @@ function isUnable(session: Session, results: CheckResult[], fixes: FixReport | u
     return fixes?.results.some((result) => result.status === 'failed') === true;
 }
 
-// The source paths the checks that ran owned: what they reported checking, or what the plan gave them.
-function claimedPaths(session: Session, active: PlannedCheck[], ran: CheckResult[]): Set<string> {
-    const paths = active.flatMap((check, index) => {
-        const outcome = ran[index];
-        if (outcome === undefined || !RAN_STATUSES.has(outcome.status)) return [];
-        if (outcome.checkedFiles !== undefined) return outcome.checkedFiles;
-        return ownedInputs(session, check).map((file) => file.path);
-    });
-    return new Set(paths);
-}
-
-// One finding per supported source no check owners, when the policy demands strict coverage.
-function coverageFindings(session: Session, options: RunReportOptions, unchecked: { path: string }[]): Finding[] {
-    if (!session.policyFiles.policy.coverage.strict || options.stage === 'message') return [];
-    return unchecked.map((entry) => ({
-        check: 'coverage.strict',
-        file: entry.path,
-        message: 'No enabled check owners this supported source file.',
-        help: 'Run gspot doctor to inspect coverage and enable a check for this file.',
-        fixable: false,
-    }));
-}
-
 // Return 2 for an incomplete run, 1 for findings, and 0 for a successful run.
-function exitCode(unable: boolean, failed: string[], coverage: Finding[]): number {
+function exitCode(unable: boolean, failed: string[]): number {
     if (unable) return UNABLE_EXIT;
-    if (failed.length > 0 || coverage.length > 0) return 1;
-    return 0;
+    return failed.length > 0 ? 1 : 0;
 }
 
 /**
@@ -79,15 +44,10 @@ function exitCode(unable: boolean, failed: string[], coverage: Finding[]): numbe
  * @returns the report
  */
 export function assembleReport(input: ReportInput): RunReport {
-    const { session, options, started, planned, active, ran, uses, fixes } = input;
+    const { session, options, started, planned, ran, uses, fixes } = input;
     const policyResult = options.stage === 'message' ? undefined : policyProblemsResult(session);
     if (policyResult !== undefined) options.onResult?.(policyResult);
     const results = policyResult === undefined ? ran : [...ran, policyResult];
-    const owned = claimedPaths(session, active, ran);
-    const sources = session.repository.files.filter((file) => file.kind === 'source');
-    const checkedSources = sources.filter((file) => owned.has(file.path));
-    const configured = coverageReport(session);
-    const coverage = coverageFindings(session, options, configured.unchecked);
     const failed = failedChecks(results, fixes);
     const report: RunReport = {
         ...(options.comparison === undefined ? {} : { comparison: options.comparison }),
@@ -107,11 +67,10 @@ export function assembleReport(input: ReportInput): RunReport {
             }))
             .toArray(),
         skips: planned.flatMap((check) => (check.skip ? [{ check: check.check, source: check.skip.source }] : [])),
-        coverage: { checked: checkedSources.length, unchecked: configured.unchecked.length, findings: coverage },
         unstaged: 0,
         narrowed: [options.staged, options.changed, options.paths].some((selection) => selection !== undefined),
         failed,
-        exitCode: exitCode(isUnable(session, results, fixes), failed, coverage),
+        exitCode: exitCode(isUnable(session, results, fixes), failed),
     };
     return report;
 }

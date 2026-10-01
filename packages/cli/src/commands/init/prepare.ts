@@ -4,7 +4,6 @@ import * as messages from '#cli/policy/messages.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
-import { unknownLanguages } from '#cli/kits/detect.ts';
 import { readRepository } from '#cli/repository/tree.ts';
 import type { Policy } from '#cli/types/policy/policy.ts';
 import { proposedScopes } from '#cli/repository/scopes.ts';
@@ -56,7 +55,6 @@ function printDetection(inputs: Omit<InitInputs, 'options'>, detected: InitSelec
             tooling,
             owned,
             unowned,
-            unknown: unknownLanguages(repo.files, manifests),
             manifests,
             hasGit: repo.hasGit,
         }),

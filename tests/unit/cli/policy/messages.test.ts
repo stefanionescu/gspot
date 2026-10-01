@@ -5,7 +5,7 @@ import { INTERNAL_WORDS } from '#tests/inputs/unit/cli/policy.ts';
 const cases = {
     fileMissing: () => messages.fileMissing('gspot.toml'),
     tomlSyntax: () => messages.tomlSyntax('gspot.toml', 'Expected a value'),
-    unknownKey: () => messages.unknownKey('tools.example', 'unknown', ['rules']),
+    unknownKey: () => messages.unknownKey('tools.example', 'unknown'),
     refusedReason: () => messages.refusedReason('example/check', ''),
     missingReason: () => messages.missingReason('example/check', 'gspot ignore example/check'),
     unknownKit: () => messages.unknownKit('example', ['python']),

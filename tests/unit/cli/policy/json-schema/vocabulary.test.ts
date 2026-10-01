@@ -109,7 +109,7 @@ test.each([{ xcode: { orphan_assets: false } }, { docs: { readme_shape: false } 
             const policy = parsePolicyText(text, path);
             expect(() => {
                 assertPolicyComplete({ text, path, policy });
-            }).toThrow(/gspot.toml:\d+:/);
+            }).toThrow(/^gspot\.toml: /mu);
             expect(validate(input)).toBe(false);
         }
         const corrected = {

@@ -31,7 +31,6 @@ runs = "per-file-list"
 engine = "integrity"
 analysis = "xctest-disabled"
 owners = {tags = ["swift-test"]}
-coverage = ["tests"]
 summary = "Checks that skip calls and disabled traits name a nonempty reason, and unavailable tests carry an explanation."
 why = "A test turned off with no reason stays off, because nobody knows when it is safe to turn on."
 help = "Say why the test is off and what turns it back on, or delete the test."
@@ -46,7 +45,6 @@ runs = "per-file-list"
 engine = "integrity"
 analysis = "xctest-sleep"
 owners = {tags = ["swift-test"]}
-coverage = ["tests"]
 summary = "Refuses sleep calls in test files outside tools.xctest.sleep_allowed."
 why = "A sleep makes a test slow when it passes and flaky when the machine is slower than the number."
 help = "Wait on an expectation or a confirmation, or poll a condition with a timeout."
@@ -61,7 +59,6 @@ runs = "per-file-list"
 engine = "integrity"
 analysis = "xctest-recording"
 owners = {tags = ["swift-test"]}
-coverage = ["tests"]
 summary = "Refuses a snapshot test left in a recording mode."
 why = "A recording test writes a new reference and passes, so it approves whatever the screen shows."
 help = "Take the recording flag out, and commit the references it wrote after looking at them."
@@ -76,7 +73,6 @@ runs = "per-scope"
 engine = "integrity"
 analysis = "xctest-references"
 owners = {paths = ["**/*"], kinds = ["source", "binary"]}
-coverage = ["consistency"]
 summary = "Checks that snapshot references match tools.xctest.reference_layout and name a test file beside the layout."
 why = "References of a deleted test stay in the repository, and every clone pays for them."
 help = "Delete the references of the test that is gone, or rename the folder after the test file."
@@ -94,7 +90,6 @@ platform = ["macos"]
 engine = "integrity"
 analysis = "xctest-coverage"
 owners = {extensions = [".swift"]}
-coverage = ["coverage"]
 summary = "Runs the tests with coverage and holds each target named in tools.xctest.coverage to its floor."
 why = "A floor keeps new code from arriving untested."
 help = "Add tests for the target, or lower its floor with a reason."

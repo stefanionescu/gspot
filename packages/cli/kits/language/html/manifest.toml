@@ -48,7 +48,6 @@ example = "An `<img src=\"logo.png\">` element without alternative text reports 
 level = "recommended"
 stage = "commit"
 command = ["html-validate", "--config", "{config:html-validate-templates}", "--formatter", "json", "{files}"]
-coverage = ["syntax", "style", "accessibility"]
 output = {format = "json", children = "messages", fields = {file = "filePath", line = "line", column = "column", rule = "ruleId", message = "message"}}
 summary = "Validates every HTML file: elements where they may sit, required attributes, text alternatives, and one style for void elements."
 why = "A browser repairs broken markup in its own way, and a screen reader reads what the repair left."
@@ -62,7 +61,6 @@ level = "all"
 stage = "commit"
 engine = "integrity"
 analysis = "html-scripts"
-coverage = ["security"]
 summary = "Refuses executable inline script, event handler attributes, and executable script or data URLs in HTML files."
 why = "A content security policy that allows inline script allows an injected one too, so the policy only holds when the pages hold none."
 help = "Move the script into a file, and attach the handler from that file. Structured data of type application/ld+json stays inline."
@@ -75,7 +73,6 @@ level = "all"
 stage = "commit"
 engine = "integrity"
 analysis = "html-text"
-coverage = ["structure"]
 summary = "In the template files named by tools.html.template_files, checks that text a person reads is a placeholder and never a literal."
 why = "Copy written into a template is copy no translator and no content file ever sees."
 help = "Replace the text with a placeholder and put the words in the content file. Exclude a path under tools.html.copy_allowed with a reason."
@@ -93,10 +90,6 @@ kind = "list"
 direction = "loosening"
 default = []
 summary = "Template paths that may hold literal text, each with a reason."
-
-[coverage]
-".html" = ["format", "syntax", "style", "spelling"]
-".htm" = ["format", "syntax", "style", "spelling"]
 
 [guides]
 language = [{path = "language/HTML.md"}, {path = "language/naming/HTML.md"}]

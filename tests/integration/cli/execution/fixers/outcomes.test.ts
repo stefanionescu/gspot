@@ -16,7 +16,7 @@ test.each([0, 3])('a declared fatal diagnostic overrides correction exit %s', as
         session,
         `console.error('Fatal: cannot write'); process.exitCode = ${String(code)}`,
     );
-    planned.spec.fix_findings_exit_codes = [3];
+    planned.spec.findings_exit_codes = [3];
     planned.spec.tool_errors = '^Fatal:';
     const failed = await runFixer(session, planned, sandbox.path);
     expect(failed).toMatchObject({
@@ -44,7 +44,7 @@ test.each([
         session,
         `await Bun.write('source.txt', ${JSON.stringify(content)}); process.exitCode = ${String(code)}`,
     );
-    planned.spec.fix_findings_exit_codes = [3];
+    planned.spec.findings_exit_codes = [3];
     const result = await runFixer(session, planned, sandbox.path);
     expect(result.status).toBe(status);
     expect(readFileSync(join(sandbox.path, 'source.txt'), 'utf8')).toBe(content);

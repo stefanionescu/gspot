@@ -9,8 +9,8 @@ Start with the diagnosis:
 gspot doctor
 ```
 
-`doctor` lists missing tools, hooks that do not match the policy, files no check reads, and
-generated files that changed. Each problem comes with the command that fixes it. When you
+`doctor` lists missing tools, hooks that do not match the policy, and generated files that
+changed. Each problem comes with the command that fixes it. When you
 report a problem, include the output, the check name, and the command that reproduces it.
 Leave out credentials.
 

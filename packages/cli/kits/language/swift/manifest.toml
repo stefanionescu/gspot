@@ -101,9 +101,7 @@ analysis = "swiftlint"
 fix_command = ["swiftlint", "lint", "--fix", "--quiet", "--no-cache", "{files}"]
 cwd = "scope"
 nested_config = ".swiftlint.yml"
-fix_order = "codemod"
 owners = {extensions = [".swift"]}
-coverage = ["style", "structure"]
 output = {format = "json", fields = {file = "file", line = "line", column = "character", rule = "rule_id", message = "reason"}}
 summary = "Lints Swift files with the scoped and nested SwiftLint configurations, treating warnings as errors."
 why = "A force unwrap, a retain cycle through a delegate, or a function nobody can hold in their head is cheapest to stop at the commit."
@@ -118,9 +116,7 @@ stage = "commit"
 command = ["swiftformat", "--lint", "--config", "{config:swiftformat}", "{files}"]
 findings_exit_codes = [1]
 fix_command = ["swiftformat", "--quiet", "--config", "{config:swiftformat}", "{files}"]
-fix_order = "format"
 owners = {extensions = [".swift"]}
-coverage = ["format"]
 output = {format = "regex", pattern = "^(?<file>.+?):(?<line>\\d+):(?<column>\\d+): (?:error|warning): \\((?<rule>\\w+)\\) (?<message>.*)$"}
 summary = "Checks the layout of every Swift file against the shipped SwiftFormat rules."
 why = "One layout everywhere keeps a diff about the change and not about where a brace went."
@@ -137,7 +133,6 @@ requires = "build"
 platform = ["macos"]
 engine = "integrity"
 analysis = "swift-build"
-coverage = ["build"]
 summary = "Builds the package or Xcode scheme incrementally to report compiler errors."
 why = "Swift has no type check without a build, so the build is the type check."
 help = "Fix the first compiler error; later ones are often the same mistake."
@@ -154,7 +149,6 @@ platform = ["macos"]
 engine = "integrity"
 analysis = "swift-analyze"
 tool = "swiftlint"
-coverage = ["structure"]
 summary = "Runs the SwiftLint analyzer rules over the compiler log of the build: unused imports, unused declarations, captured variables."
 why = "These rules need the compiler's view of the code, which a file-by-file lint does not have."
 help = "Remove what the rule names. Keep an import the analyzer misjudges under tools.swiftlint.keep_imports."
@@ -171,7 +165,6 @@ platform = ["macos"]
 engine = "integrity"
 analysis = "swift-periphery"
 tool = "periphery"
-coverage = ["structure"]
 summary = "Scans the built project for declarations nothing uses."
 why = "Dead code is read, maintained, and migrated by people who cannot tell it is dead."
 help = "Delete the declaration, or mark it with a periphery:ignore comment that says who uses it."
@@ -187,7 +180,6 @@ runs = "per-scope"
 engine = "integrity"
 analysis = "swift-trivial-function"
 owners = {extensions = [".swift"]}
-coverage = ["structure"]
 summary = "Reports functions at or below limits.trivial_statements and files containing only trivial declarations."
 why = "Unnecessary functions add names and indirection without substantial behavior."
 help = "Inline unnecessary functions. For one an external API requires, run `gspot ignore swift/trivial-function --paths <file> --reason <why>`."
@@ -202,7 +194,6 @@ runs = "per-scope"
 engine = "integrity"
 analysis = "swift-duplicate-functions"
 owners = {extensions = [".swift"]}
-coverage = ["structure"]
 summary = "Finds functions whose bodies match line for line."
 why = "Two copies of one body drift apart, and a fix made in one never reaches the other."
 help = "Keep one of the functions and call it from both places."
@@ -217,7 +208,6 @@ runs = "per-scope"
 engine = "integrity"
 analysis = "swift-private-before-public"
 owners = {extensions = [".swift"]}
-coverage = ["structure"]
 summary = "Checks that private and fileprivate top-level declarations sit above the ones other files see."
 why = "A file that opens with its own pieces and ends with what it offers reads in one direction."
 help = "Move the file-local declarations above the first internal, public, or open one."
@@ -232,7 +222,6 @@ runs = "per-scope"
 engine = "integrity"
 analysis = "swift-import-comments"
 owners = {extensions = [".swift"]}
-coverage = ["structure"]
 summary = "Finds a comment written inside an import block, between its first and last import."
 why = "An import block is a list, and a note inside a list is read as part of the wrong entry. SwiftFormat orders the block by length."
 help = "Move the comment above the block or next to the code it explains."
@@ -247,7 +236,6 @@ runs = "per-scope"
 engine = "integrity"
 analysis = "swift-env-access-owner"
 owners = {extensions = [".swift"]}
-coverage = ["structure"]
 summary = "Checks that the process environment is read in one place."
 why = "A variable read in many files has many defaults and many spellings, and nobody can list what the app needs."
 help = "Read the environment in the file that architecture.roles.env names, and pass the values in."
@@ -294,9 +282,6 @@ kind = "string"
 direction = "neutral"
 default = "generic/platform=iOS Simulator"
 summary = "The xcodebuild destination."
-
-[coverage]
-".swift" = ["format", "syntax", "style", "types", "structure", "naming", "prose", "spelling"]
 
 [guides]
 language = [{path = "language/SWIFT.md"}, {path = "language/naming/SWIFT.md"}]

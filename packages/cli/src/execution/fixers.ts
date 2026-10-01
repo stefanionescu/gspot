@@ -1,4 +1,4 @@
-// Corrections run in order; dry runs use a scratch copy and return diffs.
+// Corrections run in passes until they settle; dry runs use a scratch copy and return diffs.
 import { rm } from 'node:fs/promises';
 import { createTwoFilesPatch } from 'diff';
 import type { ToolPin } from '#cli/types/kits.ts';
@@ -11,8 +11,8 @@ import type { Root, SpawnResult } from '#cli/types/platform.ts';
 import { unlinkSync, readFileSync, writeFileSync } from 'node:fs';
 import { commandConfigurations } from '#cli/execution/command-expansion.ts';
 import { hasToolError, executionFailure } from '#cli/execution/broken-tool.ts';
-import { FIX_ORDER, FIX_DIFF_CONTEXT } from '#cli/config/execution/execution.ts';
 import { scratchCopy, createFileWorkspace } from '#cli/execution/files/workspace.ts';
+import { FIX_PASSES, FIX_DIFF_CONTEXT, FINDING_EXIT_CODES } from '#cli/config/execution/execution.ts';
 import type { Session, FixReport, FixResult, PlannedCheck, PreparedCommand } from '#cli/types/execution/execution.ts';
 
 function sourceBytes(files: Root, path: string): Buffer | undefined {
@@ -58,8 +58,10 @@ function correctionFailure(planned: PlannedCheck, result: SpawnResult): string |
         planned.scope.view.limit('tool_seconds') ?? TOOL_DEADLINE.default,
     );
     if (failure !== undefined) return failure.note;
-    const hasRemainingFindings = planned.spec.fix_findings_exit_codes?.includes(result.code) === true;
-    if ((result.code === 0 || hasRemainingFindings) && !hasToolError(planned.spec, planned.tool, result))
+    // A code the check declares for findings means findings remain after the correction.
+    const { spec } = planned;
+    const findingCodes = [spec.findings_exit_codes, FINDING_EXIT_CODES.get(spec.output?.format)].flat();
+    if ((result.code === 0 || findingCodes.includes(result.code)) && !hasToolError(spec, planned.tool, result))
         return undefined;
     const detail = [result.stderr.trim(), result.stdout.trim()].filter((text) => text !== '').join('\n');
     return [`${planned.check} exited ${String(result.code)}`, detail].filter((text) => text !== '').join(': ');
@@ -151,6 +153,39 @@ async function executeCorrection(
     return runCorrection(session, plannedCheck, prepared);
 }
 
+// The outcome of one fixer over every pass: a failure stands, and the changed files add up.
+function mergedResult(first: FixResult | undefined, next: FixResult): FixResult {
+    if (first === undefined) return next;
+    const changed = [...new Set([...first.changed, ...next.changed])];
+    if (first.status === 'failed') return { ...first, changed };
+    if (next.status === 'failed') return { ...next, changed };
+    return { check: next.check, status: changed.length === 0 ? next.status : 'changed', changed };
+}
+
+// Each pass after the first reruns the fixers over the files the pass before changed, so a formatter formats what a
+// codemod wrote after it.
+async function fixerPasses(
+    session: Session,
+    checks: PlannedCheck[],
+    root: string,
+    paths: string[],
+): Promise<FixResult[]> {
+    const results = new Map<number, FixResult>();
+    let pending = checks.map((check, index) => ({ check, index }));
+    for (let pass = 0; pass < FIX_PASSES && pending.length > 0; pass += 1) {
+        const before = contentsOf(root, paths);
+        for (const { check, index } of pending)
+            results.set(index, mergedResult(results.get(index), await runFixer(session, check, root)));
+        const changed = new Set(changedPaths(before, contentsOf(root, paths)));
+        pending = checks.flatMap((check, index) => {
+            const files = check.files.filter((file) => changed.has(file.path));
+            if (files.length === 0 || results.get(index)?.status === 'failed') return [];
+            return [{ check: { ...check, files, triggerPaths: [] }, index }];
+        });
+    }
+    return [...results.values()];
+}
+
 /**
  * Runs one correction and determines its outcome from process status and resulting bytes.
  * @param session the repository session
@@ -179,18 +214,14 @@ export async function runFixer(
 }
 
 /**
- * Runs corrections in order and assembles their outcomes. Dry runs always remove the scratch copy.
+ * Runs corrections in passes and assembles their outcomes. Dry runs always remove the scratch copy.
  * @param session the session
  * @param planned the planned checks
  * @param isDryRun whether to run in a scratch copy and report diffs
  * @returns the correction results, changed paths, and dry-run diffs
  */
 export async function applyFixers(session: Session, planned: PlannedCheck[], isDryRun: boolean): Promise<FixReport> {
-    const checks = planned
-        .filter((check) => check.spec.fix_command !== undefined)
-        .toSorted(
-            (a, b) => FIX_ORDER.indexOf(a.spec.fix_order ?? 'format') - FIX_ORDER.indexOf(b.spec.fix_order ?? 'format'),
-        );
+    const checks = planned.filter((check) => check.spec.fix_command !== undefined);
     const paths = [
         ...new Set(checks.flatMap((check) => [...check.files.map((file) => file.path), ...check.triggerPaths])),
     ].toSorted((a, b) => a.localeCompare(b));
@@ -204,8 +235,7 @@ export async function applyFixers(session: Session, planned: PlannedCheck[], isD
     const root = scratch ?? session.root;
     try {
         const before = contentsOf(root, paths);
-        const results: FixResult[] = [];
-        for (const check of checks) results.push(await runFixer(session, check, root));
+        const results = await fixerPasses(session, checks, root, paths);
         const after = contentsOf(root, paths);
         const changed = changedPaths(before, after);
         const diffs = isDryRun

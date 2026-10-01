@@ -1,10 +1,10 @@
 import { join } from 'node:path';
 import { chmodSync } from 'node:fs';
+import { detectKits } from '#cli/kits/detect.ts';
 import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { kitManifests } from '#cli/kits/manifests.ts';
 import { readRepository } from '#cli/repository/tree.ts';
-import { detectKits, unknownLanguages } from '#cli/kits/detect.ts';
 
 describe('tags', () => {
     test('tags come from extension, filename, shebang and content', async () => {
@@ -28,7 +28,7 @@ describe('tags', () => {
     });
 });
 
-test('Vue and Svelte keep source tags while unsupported JVM languages remain detectable', async () => {
+test('Vue and Svelte keep source tags while unsupported JVM languages select no kit', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'View.vue': '<template><p>Ready</p></template>\n',
@@ -44,10 +44,6 @@ test('Vue and Svelte keep source tags while unsupported JVM languages remain det
         for (const tag of [language, 'source', 'text']) expect(component.tags).toContain(tag);
     }
     const manifests = kitManifests();
-    expect(unknownLanguages(repository.files, manifests)).toStrictEqual([
-        { language: 'Java', extensions: ['.java'], count: 1 },
-        { language: 'Kotlin', extensions: ['.kt'], count: 1 },
-    ]);
     const selected = detectKits(repository.files, manifests, []).map((entry) => entry.kit);
     expect(selected).toContain('vue');
     expect(selected).toContain('svelte');

@@ -8,7 +8,6 @@ const base = {
     level: 'recommended',
     stage: 'commit',
     runs: 'per-file-list',
-    coverage: [],
     summary: '',
     why: '',
     help: '',

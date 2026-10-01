@@ -29,7 +29,6 @@ test('disabled settings produce skipped results and enabling a setting runs the 
     const session = await openSession(sandbox.path);
     const outcome = await executeRun(session, options);
     expect(new Set(outcome.report.checks.map((check) => check.check))).toStrictEqual(new Set(Object.keys(WAITING)));
-    expect(outcome.report.coverage.checked).toBe(0);
     for (const check of outcome.report.checks) {
         expect(check.status).toBe('skipped');
         expect(check.note).toContain(WAITING[check.check]);

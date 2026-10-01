@@ -24,9 +24,7 @@ test('writePolicy > policy edits retain invalid UTF-8 bytes and refuse a mode ch
     const path = join(sandbox.path, 'gspot.toml');
     const invalid = Buffer.concat([Buffer.from(text), Buffer.from([0xff])]);
     writeFileSync(path, invalid);
-    expect(() => writePolicy(sandbox.path, preparePolicy(sandbox.path, setKey('coverage.strict', true)))).toThrow(
-        'valid UTF-8',
-    );
+    expect(() => writePolicy(sandbox.path, preparePolicy(sandbox.path, setKey('level', 'all')))).toThrow('valid UTF-8');
     expect(readFileSync(path)).toStrictEqual(invalid);
     writeFileSync(path, text);
     chmodSync(path, 0o644);
@@ -34,7 +32,7 @@ test('writePolicy > policy edits retain invalid UTF-8 bytes and refuse a mode ch
         writePolicy(
             sandbox.path,
             preparePolicy(sandbox.path, (raw) => {
-                setKey('coverage.strict', true)(raw);
+                setKey('level', 'all')(raw);
                 chmodSync(path, 0o444);
             }),
         ),
@@ -200,7 +198,7 @@ test('writePolicy > a list that runs past 120 characters is written one item per
 test('writePolicy > a dry run writes nothing', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': text });
-    const result = preparePolicy(sandbox.path, setKey('coverage.strict', true));
+    const result = preparePolicy(sandbox.path, setKey('level', 'all'));
     expect(result.changed).toBe(true);
     expect(readFileSync(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(text);
 });
@@ -222,12 +220,12 @@ test('a prepared policy edit refuses stale bytes and accepts a fresh plan', asyn
     await using sandbox = await testdir();
     const path = join(sandbox.path, 'gspot.toml');
     writeFileSync(path, text);
-    const plan = preparePolicy(sandbox.path, setKey('coverage.strict', true));
+    const plan = preparePolicy(sandbox.path, setKey('level', 'all'));
     writeFileSync(path, `${text}\n# Concurrent edit.\n`);
     expect(() => writePolicy(sandbox.path, plan)).toThrow('changed while the edit was prepared');
     expect(readFileSync(path, 'utf8')).toBe(`${text}\n# Concurrent edit.\n`);
-    const corrected = preparePolicy(sandbox.path, setKey('coverage.strict', true));
-    expect(writePolicy(sandbox.path, corrected).policy.coverage.strict).toBe(true);
+    const corrected = preparePolicy(sandbox.path, setKey('level', 'all'));
+    expect(writePolicy(sandbox.path, corrected).policy.level).toBe('all');
     expect(readFileSync(path, 'utf8')).toBe(corrected.text);
 });
 
@@ -240,12 +238,12 @@ test('a policy command evaluates its mutation once before applying the prepared 
         sandbox.path,
         (raw) => {
             evaluations += 1;
-            setKey('coverage.strict', evaluations === 1)(raw);
+            setKey('require_reasons', evaluations === 1)(raw);
         },
         false,
-        'Updated coverage.',
+        'Updated require_reasons.',
     );
     expect(result.exitCode).toBe(0);
     expect(evaluations).toBe(1);
-    expect(readFileSync(path, 'utf8')).toContain('strict = true');
+    expect(readFileSync(path, 'utf8')).toContain('require_reasons = true');
 });

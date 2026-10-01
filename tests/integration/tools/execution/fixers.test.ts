@@ -7,7 +7,6 @@ import { emitAll } from '#cli/generation/outputs.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { explain } from '#cli/commands/explain/subjects.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { textContaining } from '#tests/support/expectations.ts';
 import type { RunOptions } from '#cli/types/execution/execution.ts';
@@ -32,8 +31,7 @@ if (!(process.platform === 'win32' || process.getuid?.() === 0))
                         name: 'project/native',
                         command: [executable, 'lint', ...args, '--format', 'json', '{files}'],
                         fix_command: [executable, 'fix', ...args, '{files}'],
-                        fix_order: spec.fix_order!,
-                        fix_findings_exit_codes: spec.fix_findings_exit_codes!,
+                        findings_exit_codes: spec.findings_exit_codes!,
                         tool_errors: crashPattern,
                         output: spec.output!,
                         paths: ['source/*.sql'],
@@ -113,8 +111,7 @@ test.each([
                     name: 'project/native',
                     command: [executable, ...entry.command.slice(1)],
                     fix_command: [executable, ...entry.fix.slice(1)],
-                    fix_order: spec.fix_order!,
-                    fix_findings_exit_codes: spec.fix_findings_exit_codes!,
+                    findings_exit_codes: spec.findings_exit_codes!,
                     output: spec.output!,
                     paths: [entry.path],
                     stage: 'commit',
@@ -147,7 +144,6 @@ test.each([
         defect: 'missing()\n',
         partial: 'missing();\n',
         corrected: 'export {};\n',
-        findingsCode: 1,
     })),
     {
         configuration: 'css',
@@ -161,7 +157,6 @@ test.each([
         defect: 'a { color: #ffffff; unknown: 1; }\n',
         partial: 'a { color: #fff; unknown: 1; }\n',
         corrected: 'a { color: #fff; }\n',
-        findingsCode: 2,
     },
 ])('$configuration correction status agrees with native residual diagnostics', async (entry) => {
     await using sandbox = await testdir();
@@ -183,8 +178,6 @@ test.each([
                     name: 'project/native',
                     command: [...command, ...entry.formatter, '{files}'],
                     fix_command: [...command, '--fix', '{files}'],
-                    fix_order: spec.fix_order!,
-                    fix_findings_exit_codes: spec.fix_findings_exit_codes!,
                     findings_exit_codes: spec.findings_exit_codes!,
                     output: spec.output!,
                     paths: [entry.path],
@@ -208,8 +201,6 @@ test.each([
     expect(readFileSync(join(sandbox.path, entry.path), 'utf8')).toBe(source);
     writeFileSync(join(sandbox.path, entry.config), entry.nativeConfiguration);
     const session = await openSession(sandbox.path);
-    const explanation = explain(session, 'project/native');
-    expect(explanation).toMatchObject({ data: { fix_findings_exit_codes: [entry.findingsCode] } });
     const options: RunOptions = { stage: 'all', skips: [], fix: true, isDryRun: false };
     const failed = await executeRun(session, options);
     expect(failed.report.exitCode, JSON.stringify(failed)).toBe(1);
