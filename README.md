@@ -4,9 +4,7 @@
 [![Documentation source](docs/public/brand/badges/docs.svg)](docs/README.md)
 [![License: Apache-2.0](docs/public/brand/badges/license.svg)](LICENSE.md)
 
-gspot is a command-line tool that lints AI-generated code and installs rules for AI coding
-agents. Git hooks run the checks on every commit and push, and a finding stops the commit.
-Your choices live in one policy file, `gspot.toml`.
+gspot is a command-line tool that lints AI-generated code and installs rules for AI coding agents.
 
 ## Install
 
@@ -17,8 +15,7 @@ npm install --save-dev --save-exact @gspothq/cli
 npx gspot init
 ```
 
-In any other repository, install it once with `npm install --global @gspothq/cli`, then run
-`gspot init`.
+Install it once with `npm install --global @gspothq/cli`, then run `gspot init` in a target repository.
 
 `init` reads the repository and shows a plan before it writes anything:
 

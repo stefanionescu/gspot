@@ -11,6 +11,188 @@ CLI source holds 409 TypeScript files and 41,421 lines, and the tests hold 506 f
 the CLI source comes to about 320 files and 38,000 lines. About 3,500 lines are deleted; the rest of the work moves code
 to the module that uses it.
 
+## Implementation status
+
+The next agent reads this first, then `AGENTS.md`. The stage plan below replaces section 12, and the owner
+approved it on October 1, 2026.
+
+### Where things stand on October 1, 2026
+
+- `main` is at `257c972b`. Stages 1 to 6 are merged as pull requests #2 to #7.
+- Stage 7 is pull request #8, branch `refactor/agents-md-only`. The branch also deletes the `architecture` folder, a
+  part of stage 15, and adds these notes. Merge it with a merge commit once every CI job passes, then watch the run on
+  `main`.
+- Stage 7 passed `mise run check:types`, `mise run gspot -- check`, which runs the unit and integration suites, and
+  `tests/acceptance/source/cli/agents.test.ts`. Still to run for stage 7: the other acceptance files,
+  `mise run test:tools`, and `mise run test:package`.
+- The next stage to start is stage 8.
+
+### Stages
+
+One pull request per stage, in this order. Each merges with a merge commit only after every CI job passes.
+
+| Stage | Title                                                  | Scope                                                                                                   | Status                 |
+| ----- | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------- | ---------------------- |
+| 1     | Make CI green on main                                  | section 11; a tagged Windows quarantine list in the acceptance runner                                   | merged, #2             |
+| 2     | Delete uninstall and the byte backups                  | 5.1 uninstall, 5.2, one hook header, the ownership tests                                                | merged, #3             |
+| 3     | Delete completion and the report files                 | 5.1; tests parse `--json`                                                                               | merged, #4             |
+| 4     | Delete the result cache and inline ignores             | 5.1; the Ruby grammar; `--no-cache` in the tests                                                        | merged, #5             |
+| 5     | Delete the init extras and the startup manifest check  | adaptations 2 and 4                                                                                     | merged, #6             |
+| 6     | Delete source positions, coverage, and fix settings    | adaptations 3 and 5; `fix_order` and `fix_findings_exit_codes`                                          | merged, #7             |
+| 7     | Write the agent block only into `AGENTS.md`            | the `CLAUDE.md` decision; the `.gitattributes` block and the Cursor rule                                | pull request #8        |
+| 8     | Cut unit and CLI integration tests                     | D.2 rows that delete, trim, and merge within one tier                                                   | not started            |
+| 9     | Cut tool, docs, and repository tests                   | D.3 rows; drop `test:docs` and those folders from `test`                                                | not started            |
+| 10    | Cut command acceptance and package tests               | D.4 rows; pins move to a scheduled `pins.yml`                                                           | not started            |
+| 11    | Cut kit acceptance tests                               | D.4 kit rows; find why `documents.test.ts` does not run on Linux                                        | not started            |
+| 12    | Delete repeated checks, dead rules, and dead code      | 5.3, 5.4, 5.7, including `version = 1` and its gate                                                     | not started            |
+| 13    | Ship no defaults written for this repository           | 5.5; `architecture.roles.harness` with no default; this repository sets its own roles                   | not started            |
+| 14    | Remove the self-lint code from the product             | 5.6; one `gspot` task; `testToolsText` to the pin script                                                | not started            |
+| 15    | Delete stale files                                     | 5.8 and B.7, apart from the `architecture` folder                                                       | `architecture` deleted |
+| 16    | Move shared code to platform and split repository      | B.1 platform, repository, survey, takeover, `execution/checkout`                                        | not started            |
+| 17    | Move lifecycle, generation, tools, and command files   | B.1 markers, edit, add, remove, install steps, preview, the rules folder, `applyAll`                    | not started            |
+| 18    | Rename execution, policy, and kit files                | the rest of B.1                                                                                         | not started            |
+| 19    | Group checks by kit behind one registry                | B.2; no `engine` or `analysis` fields; no engines page                                                  | not started            |
+| 20    | Organize config and types by folder; add layers        | adaptation 1; `[[architecture.elements]]` and `edges_allowed` from section 3                            | not started            |
+| 21    | Move the launcher and runners to a root scripts folder | `scripts/gspot` and the four runners, with `mise.toml` in the same commit                               | not started            |
+| 22    | Arrange tests by tier and mirror the source            | D.1: five tiers, `harness`, `config`, `samples`                                                         | not started            |
+| 23    | Run CLI tests in-process with shared builders          | D.2 moves and rewrites; `contract` from 122 cases to 16                                                 | not started            |
+| 24    | Move acceptance cases to faster tiers                  | D.4 moves; Windows fixes; the quarantine list emptied and deleted                                       | not started            |
+| 25    | Dispose roots and share text, object, and git helpers  | the first half of 6.2                                                                                   | not started            |
+| 26    | Keep one table and one constant per fact               | the second half of 6.2                                                                                  | not started            |
+| 27    | Adopt libraries and fix the audited bugs               | 6.3; section 4 rows without a D.5 test; the bugs listed below; constraints for transitive tool packages | not started            |
+| 28    | Settle each exempted tiny function                     | appendix C; tiny rules off for React components and NestJS modules                                      | not started            |
+| 29    | Rename the `gspot.toml` keys                           | A.3 without `[guides]`                                                                                  | not started            |
+| 30    | Rename the kit manifest fields                         | A.4                                                                                                     | not started            |
+| 31    | Name checks after their kit and tool                   | A.5 and A.6; a `format` kit; an `actions` kit; one `javascript/eslint`                                  | not started            |
+| 32    | Rename guides to rules                                 | B.3; `[rules]`, `.gspot/rules`, `--no-rules`; `TALKING.md` stays a base rule                            | not started            |
+| 33    | Rename flags, output words, and JSON fields            | A.2, A.7, A.8; `--hook`; manual checks run with `--only`                                                | not started            |
+| 34    | Rename identifiers in commands and policy              | the first half of A.10                                                                                  | not started            |
+| 35    | Rename identifiers in repository and lifecycle         | the second half of A.10                                                                                 | not started            |
+| 36    | Rename identifiers in checks and parsers               | A.11                                                                                                    | not started            |
+| 37    | Rename plugin rules and options                        | A.12                                                                                                    | not started            |
+| 38    | Add the missing scenario tests, part one               | D.5 rows 1 to 17, with fixes for the bugs they confirm                                                  | not started            |
+| 39    | Add the missing scenario tests, part two               | D.5 rows 18 to 34                                                                                       | not started            |
+| 40    | Rename the packages, tasks, and CI jobs                | A.9; `grammars.ts`; `docs.yml` without the deploy plumbing                                              | not started            |
+| 41    | Trim the guides, READMEs, and CONTRIBUTING             | E.1 to E.4; `--save-exact`; `GSPOT_JOBS` documented                                                     | not started            |
+| 42    | Trim the reference pages and the homepage              | the E reference rows; `/reference/checks/`; new recorded transcripts                                    | not started            |
+| 43    | Fix the rules the shipped linters reject               | F.3 and F.4; the level paragraph in 65 files; empty files; the no-subagents rule deleted                | not started            |
+| 44    | Shorten the base rules                                 | the general rows of F.1                                                                                 | not started            |
+| 45    | Shorten the kit rules                                  | the other rows of F.1, and F.2                                                                          | not started            |
+| 46    | Finish the audit and check release readiness           | delete this file and the three images, with their ignore; the final verification below                  | not started            |
+
+### Decisions
+
+The owner decided on October 1, 2026:
+
+- Follow every recommendation of the open-questions table in section 1.
+- Keep the custom docs site, and trim only duplication and stale text (appendix E). Delete the deploy plumbing:
+  `source_ref`, the release check, the source record, and the extra artifact.
+- Keep `config` and `types`, organized per source folder that reads them. Groups get blank lines between them, and
+  unused entries go. `types_directory` and `config_directory` stay. Tests get `tests/config` and keep `tests/types`.
+- `TALKING.md` ships in every installation as a base rule. The no-subagents rule goes.
+- No relock flag. The dependency scan skips the private tool locks under `.gspot`, and kit manifests can carry
+  constraints on transitive packages that gspot maintainers raise.
+- The agent may delete the ignored `.gspot/state` folder and rerun `mise run apply` when a stage changes its schema.
+
+The plan adapted the audit in seven ways:
+
+1. Constants read in `src/<a>/<b>` go to `config/<a>/<b>.ts`, and constants read in a folder with subfolders go to
+   `config/<a>/<a>.ts`. A config folder exists only with two files or more, and `types` follows the same rule.
+2. Init loses `--without`, `--allow-dirty`, `--runner`, detected settings, and the Xcode and bunfig import. It keeps
+   `--scope`, `--ci`, `--no-runner`, the runner question, and the refusal of a dirty tree.
+3. The "schema of known keys" is the known-key list in policy errors. The published `gspot.schema.json` stays.
+4. Manifest validation runs in a unit test and in `packages/cli/scripts/build.ts`, not at startup.
+5. The coverage report goes with the `[coverage]` table, the coverage lines in manifests, and `linguist-languages`.
+6. `checks/general/files.ts` is a file, not a folder with one file. `applyAll` moves into `lifecycle`, so no command
+   imports another.
+7. Deleting the two empty scopes also sets `tools.commitlint.scopes` in the same commit.
+
+The owner and the work settled these while implementing:
+
+- `CLAUDE.md` is never kept. `init` and `apply` delete it, a link included. Its own text, without the gspot block,
+  moves to the end of `AGENTS.md` under `## Other instructions`, unless `AGENTS.md` already holds it. gspot writes
+  its block only into `AGENTS.md` and the files `guides.agents` lists.
+- Without the `.gitattributes` block, gspot marks every file under `.gspot/` as generated itself, apart from the Vale
+  packages. The ownership hash reads a carriage return before a line feed as a line feed, so a checkout that converts
+  line endings leaves the outputs of gspot unchanged.
+- Without `fix_order`, `--fix` reruns the fixers over the files a pass changed, up to three passes. A correction may
+  exit with a code its check declares for findings; any other nonzero exit fails it.
+- Policy errors name the key path, such as `gspot.toml: ignore.0.reason: ...`. Policy findings carry no line.
+- Tests that need Docker run where a Docker daemon answers and runs Linux containers (`hasLinuxDocker`).
+- Code, configuration, and tests never cite this file, the stage plan, or a stage number. Write each reason so it
+  stays true after this file is gone.
+
+### Rules for every pull request
+
+- Branch from the current `origin/main`. Keep at most one branch stacked ahead of the open pull request.
+- Every commit passes the commit hook on its own. Never pass `--no-verify`.
+- Never edit tracked files under `.gspot` by hand. Change the policy with `gspot set`, `gspot ignore`, or
+  `gspot.toml`, then run `mise run apply`.
+- Commit headers read `type(scope): Subject` in at most 72 characters, and body lines stay within 72 characters.
+  The scopes are `root`, `cli`, `eslint-plugin`, `docs`, `hooks`, and `deps`.
+- The pull request body names the stage, the rows of this file it carries out, the changed tests, the quarantine
+  list, and the commands that passed locally.
+- Verify in this order. Run `mise run check:types`. Run `mise run apply` when the policy, a manifest, a template, or a
+  rule changes; `git status` then shows only the intended generated changes. Run `mise run gspot -- check`, then the
+  extra suites of the stage, then a `git grep` for every name and path the stage retires.
+- Moves use `git mv`, a codemod for the imports, `--fix` for import order, and a search for the old path in
+  `gspot.toml`, `mise.toml`, the workflows, `tsconfig.json`, `package.json`, `build.ts`, and the docs.
+- New folders hold two files or more, avoid stem and prefix collisions, and use no banned word. `policy.json` lists
+  them, such as fixture, snapshot, shell, sync, support, helpers, utils, and tmp. Names carry no filler words.
+- Mechanical stages (17 to 20, 22, 25, the moves of 32, and 34 to 36) may use one helper agent at a time in its own
+  worktree. The main agent reviews the diff and runs the checks.
+
+### Working in this repository
+
+- Tools come from mise, with Bun 1.4.2. A fresh clone runs `mise trust`, `mise run repo:setup`, `mise run apply`, and
+  `mise run repo:install-checks`.
+- Run one heavy job at a time: the machine slows down under parallel suites.
+- Acceptance tests need `GITHUB_TOKEN="$(gh auth token)"` and Docker Desktop running (`open -a Docker`). Run them in
+  chunks that finish within ten minutes:
+  `GITHUB_TOKEN="$(gh auth token)" mise run test:acceptance -- ./acceptance/source/cli/agents.test.ts`. Paths are
+  relative to `tests`.
+- Other suites: `mise run test` for the unit and integration tests, `mise run test:tools`, `mise run test:package`,
+  and `mise run docs:build`.
+- CI runs four shards on Linux, macOS, and Windows. A shard that fails on a network error reruns with
+  `gh run rerun <run> --failed`.
+- After a stage changes the ownership schema, delete `.gspot/state` and rerun `mise run apply`. Before switching to a
+  branch with another schema, copy the folder aside, delete it, and apply on the other branch.
+- Never print the npm token, and never publish to npm without the owner.
+
+### Open items
+
+- Stage 1 left the two empty scopes, `packages/cli` and `packages/eslint-plugin`, in `gspot.toml`. Delete them with
+  adaptation 7 in the next stage that touches the policy.
+- Bugs for stage 27:
+    - knip takes its workspaces from the gspot scopes instead of the package workspaces.
+    - A prune, such as `gspot set guides.install false`, leaves empty folders behind.
+    - A checkout writes a read-only generated file with mode 0644, and `apply` refuses it as edited although its bytes
+      match the record.
+    - `--only <checks...>` keeps reading after a global `--json`, so `check --only X --json file` takes the file as a
+      check name.
+- The pyjwt advisory ignores expire on October 13 and 15, 2026. Renew them with `gspot ignore` in the open pull
+  request, or replace them with the transitive constraints of stage 27 once semgrep allows a fixed pyjwt.
+- The quarantine list: 53 acceptance files skip on Windows (`WINDOWS_PENDING` in `tests/support/acceptance.ts`) until
+  stage 24. The help-flag tool tests run on POSIX systems only until stage 23. The Supabase database journeys skip in
+  CI until stage 9 moves them to a scheduled job.
+
+### Owner actions
+
+- When stage 40 lands, rename the GitHub repository variable `GSPOT_PAGES_ENABLED` to `PAGES_ENABLED`. Keep the file
+  name `release.yml`, which the npm trusted publisher names.
+- New libraries must be older than 7 days, the `minimumReleaseAge` of Bun.
+
+### Final verification in stage 46
+
+- `git grep` finds no retired name or path, and no quarantine marker remains. Windows acceptance blocks merges.
+- Knip is clean, the boundaries rule reports no violations, and `mise run doctor` is clean.
+- `mise run gspot -- check`, `mise run test`, and the full tool, acceptance, and package suites pass, one at a time.
+  `mise run docs:build` passes.
+- `npm pack --dry-run` for both packages shows `rules`, `kits`, `grammars` without Ruby, and `dist`.
+- A packed-package journey runs `init --yes` in a repository with `AGENTS.md` and `CLAUDE.md`, then `check`.
+  `CLAUDE.md` is gone, and `AGENTS.md` holds the block and the moved text.
+- CI on `main` passes on Linux, macOS, and Windows.
+
 ## 1. Decisions
 
 **Stays**, decided by the owner:
