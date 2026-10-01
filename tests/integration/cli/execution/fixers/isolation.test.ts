@@ -1,6 +1,7 @@
 import * as os from 'node:os';
 import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
+import { toPosix } from '#cli/platform/paths.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
@@ -297,7 +298,8 @@ test('a link that points at nothing is copied as it is', async () => {
     symlinkSync('../missing/bin/gspot', join(repository.path, 'node_modules/.bin/gspot'));
     const scratch = await scratchCopy(repository.path, ['package.json'], ['']);
     try {
-        expect(readlinkSync(join(scratch, 'node_modules/.bin/gspot'))).toBe('../missing/bin/gspot');
+        // Windows stores a link target with backslashes, so the comparison reads it with forward slashes.
+        expect(toPosix(readlinkSync(join(scratch, 'node_modules/.bin/gspot')))).toBe('../missing/bin/gspot');
         expect(readFileSync(join(scratch, 'node_modules/.bin/tool'), 'utf8')).toBe('#!/bin/sh\n');
     } finally {
         rmSync(scratch, { recursive: true, force: true });
