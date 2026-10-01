@@ -17,13 +17,9 @@ otherwise.
 
 ## With npm, Bun, pnpm, or Yarn
 
-Pick the package manager when you set up the repository:
-
-```bash
-gspot init --runner bun
-```
-
-The choices are `npm`, `bun`, `pnpm`, and `yarn`. gspot adds its launcher to your
+`gspot init` asks which one to use. With `--yes`, or without a terminal, it takes the one your
+repository already uses: mise when a mise file exists, otherwise the package manager of the
+lockfile. The choices are `npm`, `bun`, `pnpm`, and `yarn`. gspot adds its launcher to your
 `devDependencies` and changes nothing else: no scripts, and your own scripts stay. Run gspot
 through the package manager, as in `npx gspot check` or `bunx gspot check`. The generated hooks
 and CI job do the same.
