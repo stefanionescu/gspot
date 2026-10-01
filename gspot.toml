@@ -434,7 +434,6 @@ paths = [
     "tests/integration/cli/checks/swift",
     "tests/support/cli/python",
     "tests/unit/cli/checks/python",
-    "tests/integration/tools/bash",
     "tests/integration/tools/generation/swift",
 ]
 reason = "Each directory owns tests of that named language kit, parser, or tool integration; the files are TypeScript, not buckets grouped by implementation language."
