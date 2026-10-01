@@ -9,6 +9,21 @@ test('every shipped manifest passes the checks across manifests', () => {
     }).not.toThrow();
 });
 
+test('two kits that declare one setting must give it one meaning and may differ only in its default', () => {
+    const manifests = new Map(kitManifests());
+    const fastapi = structuredClone(manifests.get('fastapi')!);
+    const setting = manifests.get('openapi')!.settings.find((entry) => entry.name === 'tools.openapi.produced_by')!;
+    fastapi.settings.push({ ...setting, kind: 'boolean' });
+    manifests.set('fastapi', fastapi);
+    expect(() => {
+        validateManifests(manifests);
+    }).toThrow('setting tools.openapi.produced_by differs from its declaration in');
+    fastapi.settings[fastapi.settings.length - 1] = { ...setting, default: 'fastapi' };
+    expect(() => {
+        validateManifests(manifests);
+    }).not.toThrow();
+});
+
 test('loading two configurations refuses duplicate executable check ownership', () => {
     const definition =
         '\n[[checks]]\nexample = "A rejected input is corrected before rerunning the parser."\nname = "project/parse"\nlevel = "recommended"\nstage = "commit"\ncommand = ["tool"]\nsummary = "Parses the project input."\nwhy = "Invalid input cannot run."\nhelp = "Correct the reported input."\n';

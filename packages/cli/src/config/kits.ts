@@ -6,6 +6,8 @@ export const MAX_EXIT_CODE = 255;
 export const SENTENCE_MIN = 12;
 export const SHEBANG_TAG = 'shebang:';
 export const GLOB_CHARS = /[*?{]/u;
+/** The fields two kits may set differently when both declare one setting. */
+export const SETTING_DEFAULT_FIELDS = new Set(['default', 'default_all', 'detect']);
 /** The execution deadline applies independently of selected language kits. */
 export const TOOL_DEADLINE = {
     name: 'limits.tool_seconds',

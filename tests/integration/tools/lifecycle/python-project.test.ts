@@ -84,51 +84,11 @@ if (onPosix)
     );
 
 if (onPosix)
-    test.each(PYTHON_PROJECTS)(
-        'private Python tools relocate console scripts and reject then correct source with %s and %s',
-        async (configuration, runner) => {
-            await using repository = await testdir();
-            await using artifacts = await testdir();
-            await using registry = await createPythonRegistry(artifacts.path);
-            await using prepared = await preparePythonInstallation(
-                repository.path,
-                configuration,
-                runner,
-                registry.url,
-            );
-            await installPythonProject(prepared.root);
-            const installed = venvExecutable(join(repository.path, '.gspot/.venv'), 'ruff');
-            const copiedEnvironment = join(artifacts.path, 'relocated environment');
-            cpSync(join(repository.path, '.gspot/.venv'), copiedEnvironment, {
-                recursive: true,
-                verbatimSymlinks: true,
-            });
-            const relocated = await run([venvExecutable(copiedEnvironment, 'gspot-relocation-marker')], {
-                cwd: artifacts.path,
-            });
-            expect(relocated.code, relocated.stderr).toBe(0);
-            expect(realpathSync(relocated.stdout.trim())).toBe(realpathSync(copiedEnvironment));
-            const invalid = await run([installed, 'check', '--output-format', 'json', 'source.py'], {
-                cwd: repository.path,
-            });
-            expect(invalid.code, invalid.stderr).toBe(1);
-            expect((JSON.parse(invalid.stdout) as { code: string }[]).map((finding) => finding.code)).toStrictEqual([
-                'F401',
-            ]);
-            const corrected = await run([installed, 'check', '--fix', 'source.py'], { cwd: repository.path });
-            expect(corrected.code, corrected.stderr).toBe(0);
-            const ran = await run([installed, 'check', 'source.py'], { cwd: repository.path });
-            expect(ran.code).toBe(0);
-        },
-        120_000,
-    );
-
-if (onPosix)
     test.each([
         ['uv.toml', 'none'],
         ['pyproject.toml', 'none'],
     ] as const)(
-        'fresh Python clones install immutable inputs twice and run relocated tools with %s and %s',
+        'fresh Python clones install immutable inputs twice and run their tools from any location with %s and %s',
         async (configuration, runner) => {
             await using repository = await testdir();
             await using artifacts = await testdir();
@@ -163,28 +123,23 @@ if (onPosix)
                     configuration: readFileSync(join(clone, configuration)),
                 }).toStrictEqual({ manifest, lock, configuration: rootConfiguration });
             }
-            const checker = venvExecutable(join(clone, '.gspot/.venv'), 'ruff');
-            writeFileSync(join(clone, 'source.py'), 'import os\n');
-            const defect = await run([checker, 'check', '--output-format', 'json', 'source.py'], { cwd: clone });
-            expect(defect.code, defect.stderr).toBe(1);
-            expect((JSON.parse(defect.stdout) as { code: string }[]).map((finding) => finding.code)).toStrictEqual([
-                'F401',
-            ]);
-            const fixed = await run([checker, 'check', '--fix', 'source.py'], { cwd: clone });
-            expect(fixed.code, fixed.stderr).toBe(0);
-            const clean = await run([checker, 'check', 'source.py'], { cwd: clone });
-            expect(clean.code, clean.stderr).toBe(0);
             const prefix = await run([venvExecutable(join(clone, '.gspot/.venv'), 'gspot-relocation-marker')], {
                 cwd: clone,
             });
             expect(prefix.code, prefix.stderr).toBe(0);
             expect(realpathSync(prefix.stdout.trim())).toBe(realpathSync(join(clone, '.gspot/.venv')));
+            // A copied environment runs its console scripts from the copy.
+            const copied = join(artifacts.path, 'relocated environment');
+            cpSync(join(clone, '.gspot/.venv'), copied, { recursive: true, verbatimSymlinks: true });
+            const relocated = await run([venvExecutable(copied, 'gspot-relocation-marker')], { cwd: artifacts.path });
+            expect(relocated.code, relocated.stderr).toBe(0);
+            expect(realpathSync(relocated.stdout.trim())).toBe(realpathSync(copied));
         },
         120_000,
     );
 
 if (onPosix)
-    test.each(PYTHON_PROJECTS)(
+    test.each([['uv.toml', 'none']] as const)(
         'conflicted Python locks refuse installation until generated repair with %s and %s',
         async (configuration, runner) => {
             await using repository = await testdir();
@@ -200,8 +155,6 @@ if (onPosix)
             const lockPath = join(repository.path, '.gspot/uv.lock');
             const lock = readFileSync(lockPath);
             await installPythonProject(repository.path);
-            const installed = venvExecutable(join(repository.path, '.gspot/.venv'), 'ruff');
-            writeFileSync(join(repository.path, 'source.py'), '');
             chmodSync(lockPath, 0o644);
             writeFileSync(lockPath, '<<<<<<< interrupted lock\n');
             expect(() => pythonInstallSteps(repository.path)).toThrow('Run: gspot apply, then gspot install');
@@ -224,8 +177,6 @@ if (onPosix)
             await installPythonProject(repository.path);
             expect(readFileSync(lockPath)).toStrictEqual(lock);
             expect(readFileSync(join(repository.path, configuration))).toStrictEqual(rootConfiguration);
-            const checked = await run([installed, 'check', 'source.py'], { cwd: repository.path });
-            expect(checked.code).toBe(0);
         },
         120_000,
     );

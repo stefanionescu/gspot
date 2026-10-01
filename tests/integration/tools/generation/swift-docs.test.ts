@@ -3,14 +3,12 @@ import { test, expect } from 'bun:test';
 import { statSync, chmodSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
-import { allRuleExamples } from '#cli/agents/examples.ts';
 import { run as runProcess } from '#cli/platform/spawn.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { writeSwiftlint } from '#tests/support/cli/swift.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { onPosix, keptMode } from '#tests/support/cli/platforms.ts';
-import { generatedFile } from '#tests/support/cli/generated/files.ts';
 import { SWIFT_DOCS_SOURCE, SWIFT_INLINE_DOCS } from '#tests/inputs/integration/tools/generation.ts';
 
 async function documentationFindings(root: string, code: 0 | 1) {
@@ -24,49 +22,6 @@ async function documentationFindings(root: string, code: 0 | 1) {
 
 // SwiftLint has no Windows build; Linux and macOS own these native diagnostics.
 if (onPosix) {
-    test.each(['recommended', 'all'] as const)(
-        'Swift guide examples pass %s while a forced cast fails',
-        async (level) => {
-            await using sandbox = await testdir();
-            const policy = policyOf(['swift'], '[guides]\ninstall = false\n', level);
-            const examples = allRuleExamples().filter((example) => example.language === 'swift');
-            expect(examples.length).toBeGreaterThan(0);
-            const paths = examples.map((_example, index) => `Example${String(index)}.swift`);
-            await createFileTree(sandbox.path, {
-                'gspot.toml': policy,
-                '.swiftformat': await generatedFile(policy, '.gspot/config/swiftformat'),
-                ...Object.fromEntries(examples.map((example, index) => [paths[index]!, example.body])),
-                'Rejected.swift': 'private let value: Any = "text"\nprivate let text = value as! String\n',
-            });
-            await writeSwiftlint(sandbox.path);
-            const command = [
-                'swiftlint',
-                'lint',
-                '--strict',
-                '--quiet',
-                '--no-cache',
-                '--reporter',
-                'json',
-                ...paths,
-                'Rejected.swift',
-            ];
-            const rejected = await runProcess(command, { cwd: sandbox.path });
-            expect(rejected.code, rejected.stdout + rejected.stderr).toBe(2);
-            expect(JSON.parse(rejected.stdout)).toMatchObject([{ rule_id: 'force_cast' }]);
-            await Bun.write(
-                join(sandbox.path, 'Rejected.swift'),
-                'private let value: Any = "text"\nprivate let text = value as? String\n',
-            );
-            const corrected = await runProcess(command, { cwd: sandbox.path });
-            expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-            expect(JSON.parse(corrected.stdout)).toStrictEqual([]);
-            const formatted = await runProcess(['swiftformat', '--lint', '--config', '.swiftformat', ...paths], {
-                cwd: sandbox.path,
-            });
-            expect(formatted.code, formatted.stdout + formatted.stderr).toBe(0);
-        },
-    );
-
     test.each(['recommended', 'all'])(
         'Swift documentation comment style has native diagnostics at %s',
         async (level) => {

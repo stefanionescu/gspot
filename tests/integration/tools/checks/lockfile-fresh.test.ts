@@ -11,20 +11,17 @@ import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { lockfileFresh } from '#cli/checks/dependencies/lockfile/fresh.ts';
 
 test.each([
-    [process.execPath, 'bun.lock', 'recommended'],
-    ['npm', 'package-lock.json', 'recommended'],
-    ['yarn', 'yarn.lock', 'recommended'],
-    [process.execPath, 'bun.lock', 'all'],
-    ['npm', 'package-lock.json', 'all'],
-    ['yarn', 'yarn.lock', 'all'],
-] as const)('native %s validates %s at %s without changing repository inputs', async (client, lockName, level) => {
+    [process.execPath, 'bun.lock'],
+    ['npm', 'package-lock.json'],
+    ['yarn', 'yarn.lock'],
+] as const)('native %s validates %s without changing repository inputs', async (client, lockName) => {
     await using directory = await testdir();
     const version = await processes.run([client, '--version'], { cwd: directory.path });
     expect(version.code, version.stdout + version.stderr).toBe(0);
     const yarnBerry = client === 'yarn' && Number(version.stdout.trim().split('.', 1)[0]) >= 2;
     const manifest = JSON.stringify({ private: true, dependencies: { library: 'file:./library' } });
     await createFileTree(directory.path, {
-        'gspot.toml': policyOf(['dependencies'], '', level),
+        'gspot.toml': policyOf(['dependencies']),
         'package.json': manifest,
         'library/package.json': '{"name":"library","version":"1.0.0"}\n',
         'other/package.json': '{"name":"other","version":"1.0.0"}\n',

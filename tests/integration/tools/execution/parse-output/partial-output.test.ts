@@ -76,62 +76,57 @@ async function preparedVulture(root: string): Promise<{ planned: PlannedCheck; e
     return { planned: plans[0]!, env: { ...environmentVariables(), PATH: [bin, toolsPath([])].join(delimiter) } };
 }
 
-test.each(['def broken(:\n', 'value = "\u0000"\n'])(
-    'Vulture rejects incomplete analysis of %j even when dead-code findings set exit 3',
-    async (brokenSource) => {
+test(
+    'Vulture rejects incomplete analysis even when dead-code findings set exit 3',
+    async () => {
         await using sandbox = await testdir();
         const source = 'import os\n';
         await createFileTree(sandbox.path, {
             'gspot.toml': policyOf(['python'], '', 'all'),
             'sample.py': source,
-            'broken.py': brokenSource,
+            'broken.py': 'print("Ready")\n',
         });
         const { planned, env } = await preparedVulture(sandbox.path);
         const command = ['vulture', '--min-confidence', '80', 'sample.py', 'broken.py'];
         const roots: [string, string] = [sandbox.path, sandbox.path];
-        const broken = Bun.spawnSync(command, { cwd: sandbox.path, env });
-        expect(broken.exitCode, broken.stderr.toString()).toBe(3);
-        expect(broken.stdout.toString()).toContain("unused import 'os'");
-        const result = {
-            code: broken.exitCode,
-            stdout: broken.stdout.toString(),
-            stderr: broken.stderr.toString(),
-            missing: false,
-            duration: 1,
-        };
-        expect(() => checkedFindings(planned, result, roots)).toThrow(GspotError);
-        expect(await Bun.file(join(sandbox.path, 'broken.py')).text()).toBe(brokenSource);
+        const exit = { missing: false, duration: 1 };
+        for (const brokenSource of ['def broken(:\n', 'value = "\u0000"\n']) {
+            await Bun.write(join(sandbox.path, 'broken.py'), brokenSource);
+            const broken = Bun.spawnSync(command, { cwd: sandbox.path, env });
+            expect(broken.exitCode, broken.stderr.toString()).toBe(3);
+            expect(broken.stdout.toString()).toContain("unused import 'os'");
+            const result = {
+                ...exit,
+                code: broken.exitCode,
+                stdout: broken.stdout.toString(),
+                stderr: broken.stderr.toString(),
+            };
+            expect(() => checkedFindings(planned, result, roots)).toThrow(GspotError);
+            expect(await Bun.file(join(sandbox.path, 'broken.py')).text()).toBe(brokenSource);
+        }
         await Bun.write(join(sandbox.path, 'broken.py'), 'print("Ready")\n');
         const defect = Bun.spawnSync(command, { cwd: sandbox.path, env });
         expect(defect.exitCode).toBe(3);
-        expect(
-            checkedFindings(
-                planned,
-                {
-                    ...result,
-                    code: defect.exitCode,
-                    stdout: defect.stdout.toString(),
-                    stderr: defect.stderr.toString(),
-                },
-                roots,
-            ),
-        ).toContainEqual(containing({ file: 'sample.py', line: 1, message: "unused import 'os' (90% confidence)" }));
+        const found = {
+            ...exit,
+            code: defect.exitCode,
+            stdout: defect.stdout.toString(),
+            stderr: defect.stderr.toString(),
+        };
+        expect(checkedFindings(planned, found, roots)).toContainEqual(
+            containing({ file: 'sample.py', line: 1, message: "unused import 'os' (90% confidence)" }),
+        );
         expect(await Bun.file(join(sandbox.path, 'sample.py')).text()).toBe(source);
         await Bun.write(join(sandbox.path, 'sample.py'), 'print("Ready")\n');
         const corrected = Bun.spawnSync(command, { cwd: sandbox.path, env });
         expect(corrected.exitCode).toBe(0);
-        expect(
-            checkedFindings(
-                planned,
-                {
-                    ...result,
-                    code: corrected.exitCode,
-                    stdout: corrected.stdout.toString(),
-                    stderr: corrected.stderr.toString(),
-                },
-                roots,
-            ),
-        ).toStrictEqual([]);
+        const clean = {
+            ...exit,
+            code: corrected.exitCode,
+            stdout: corrected.stdout.toString(),
+            stderr: corrected.stderr.toString(),
+        };
+        expect(checkedFindings(planned, clean, roots)).toStrictEqual([]);
     },
     INSTALL_TIMEOUT_MS,
 );

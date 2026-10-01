@@ -1,10 +1,12 @@
 import { join } from 'node:path';
+import { stringify } from 'smol-toml';
 import { test, expect } from 'bun:test';
 import { TYPO } from '#tests/support/spelling.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
+import { containingAll } from '#tests/support/expectations.ts';
 
 test('native spelling file-type allowances preserve unrelated findings and neighboring files at all', async () => {
     await using sandbox = await testdir();
@@ -32,36 +34,24 @@ test('native spelling file-type allowances preserve unrelated findings and neigh
         });
         expect(policy.exitCode, policy.stdout.toString() + policy.stderr.toString()).toBe(0);
         const result = Bun.spawnSync(
-            [
-                'typos',
-                '--isolated',
-                '--config',
-                config.path,
-                '--format',
-                'brief',
-                '--color',
-                'never',
-                'fixture.txt',
-                'neighbor.txt',
-            ],
-            {
-                cwd: sandbox.path,
-                stdout: 'pipe',
-                stderr: 'pipe',
-            },
+            ['typos', '--isolated', '--config', config.path, '--format', 'json', 'fixture.txt', 'neighbor.txt'],
+            { cwd: sandbox.path, stdout: 'pipe', stderr: 'pipe' },
         );
         expect(result.exitCode, result.stderr.toString()).toBe(2);
-        expect(
-            result.stdout
-                .toString()
-                .trim()
-                .split('\n')
-                .toSorted((left, right) => left.localeCompare(right)),
-        ).toStrictEqual([
-            `fixture.txt:1:8: error: \`${TYPO.the}\` should be \`the\``,
-            `neighbor.txt:1:1: error: \`${TYPO.color}\` should be \`color\``,
-            `neighbor.txt:1:8: error: \`${TYPO.the}\` should be \`the\``,
-        ]);
+        const found = result.stdout
+            .toString()
+            .trim()
+            .split('\n')
+            .map((line) => JSON.parse(line) as Record<string, unknown>)
+            .map((record) => ({ path: record['path'], line: record['line_num'], typo: record['typo'] }));
+        expect(found).toHaveLength(3);
+        expect(found).toStrictEqual(
+            containingAll([
+                { path: 'fixture.txt', line: 1, typo: TYPO.the },
+                { path: 'neighbor.txt', line: 1, typo: TYPO.color },
+                { path: 'neighbor.txt', line: 1, typo: TYPO.the },
+            ]),
+        );
     }
 });
 
@@ -113,4 +103,56 @@ test('spelling locales and word allowances remain scoped in generated configurat
     await Bun.write(join(sandbox.path, 'sample.txt'), 'color the\n');
     const corrected = run('.gspot/config/typos.toml', 'sample.txt');
     expect(corrected.exitCode, corrected.stdout.toString() + corrected.stderr.toString()).toBe(0);
+});
+
+test.each([
+    ['nested/src/**'],
+    ['**/src/**'],
+    ['*.txt', '!**/keep.txt'],
+    ['{nested/src,other/lib}/**'],
+    ['nested/[st]rc/**'],
+    ['/nested/src/'],
+    ['nested'],
+    ['**/nested/**/src/*'],
+])('spelling exclusions %j report the same files in a scope configuration', async (...patterns) => {
+    await using sandbox = await testdir();
+    const paths = ['src/bad.txt', 'src/keep.txt', 'trc/bad.txt', 'child/src/bad.txt', 'child/bad.txt', 'bad.txt'];
+    await createFileTree(sandbox.path, {
+        'gspot.toml': stringify({
+            version: 1,
+            kits: ['spelling'],
+            tools: { typos: { exclude: [{ paths: patterns, reason: 'Generated input is checked by its owner.' }] } },
+            scope: [{ path: 'nested' }, { path: 'nested/child' }],
+        }),
+        ...Object.fromEntries(paths.map((path) => [`nested/${path}`, `${TYPO.the}\n`])),
+    });
+    const session = await openSession(sandbox.path);
+    const outputs = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
+        version: session.version,
+        packageClient: session.packageClient,
+    }).files.filter(({ path }) => path.endsWith('typos.toml'));
+    for (const output of outputs) await Bun.write(join(sandbox.path, output.path), output.content);
+    const [root, scope] = ['.gspot/config/typos.toml', '.gspot/config/nested/typos.toml'].map((config) => {
+        const result = Bun.spawnSync(
+            [
+                'typos',
+                '--isolated',
+                '--config',
+                config,
+                '--force-exclude',
+                '--format',
+                'json',
+                ...paths.map((path) => `nested/${path}`),
+            ],
+            { cwd: sandbox.path, stdout: 'pipe', stderr: 'pipe' },
+        );
+        expect([0, 2]).toContain(result.exitCode);
+        return result.stdout
+            .toString()
+            .split('\n')
+            .filter((line) => line.trim() !== '')
+            .map((line) => (JSON.parse(line) as { path: string }).path)
+            .toSorted((left, right) => left.localeCompare(right));
+    });
+    expect(scope).toStrictEqual(root);
 });

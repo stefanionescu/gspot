@@ -1,16 +1,17 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { run } from '#cli/platform/spawn.ts';
+import { existsSync, readFileSync } from 'node:fs';
+import { inspectTool } from '#cli/tools/inspect.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { LOCKS } from '#tests/inputs/integration/tools/packages.ts';
 import { installPackageProject } from '#cli/tools/packages/project.ts';
 import { readPackageInputs, createPackageProject } from '#tests/support/cli/package-project.ts';
 
 test.each((['npm', 'bun', 'pnpm', 'yarn'] as const).map((client) => [client, 'package.json', 'mise'] as const))(
-    '%s clone installs immutable inputs twice and runs its installed formatter',
+    '%s clone installs immutable inputs twice and leaves its formatter ready',
     async (client, projectPath, runner) => {
         await using fixture = await createPackageProject(client, projectPath, runner);
         const { root, artifacts } = fixture;
@@ -53,14 +54,8 @@ test.each((['npm', 'bun', 'pnpm', 'yarn'] as const).map((client) => [client, 'pa
             );
             expect(readFileSync(join(clone, '.gspot/package.json'))).toStrictEqual(manifest);
         }
-        const formatter = join(clone, '.gspot/node_modules/.bin/prettier');
-        writeFileSync(join(clone, 'source.js'), 'export const greeting="hello";');
-        const defect = await run([formatter, '--check', 'source.js'], { cwd: clone });
-        expect(defect.code, defect.stdout + defect.stderr).toBe(1);
-        const fixed = await run([formatter, '--write', 'source.js'], { cwd: clone });
-        expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
-        const clean = await run([formatter, '--check', 'source.js'], { cwd: clone });
-        expect(clean.code, clean.stdout + clean.stderr).toBe(0);
+        const prettier = tools.find((tool) => tool.name === 'prettier')!;
+        expect(inspectTool({ root: clone, inspections: new Map() }, prettier).state).toBe('ok');
     },
     120_000,
 );

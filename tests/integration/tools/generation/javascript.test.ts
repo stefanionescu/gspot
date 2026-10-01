@@ -90,31 +90,6 @@ test.each([false, true])(
     60_000,
 );
 
-test('JavaScript checking reports a broken authored configuration without rewriting it', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': policyOf(['javascript'], '[guides]\ninstall = false\n'),
-        'source.js': 'export const value = 1;\n',
-        'jsconfig.json': '{}',
-    });
-    const session = await openSession(sandbox.path);
-    const generated = emitAll(session.policyFiles.policy, session.repository, session.scopes, {
-        version: session.version,
-        packageClient: session.packageClient,
-    }).files.find(({ path }) => path === '.gspot/config/jsconfig.json')!;
-    await Bun.write(join(sandbox.path, generated.path), generated.content);
-    await Bun.write(join(sandbox.path, 'jsconfig.json'), '{');
-    const command = ['check', '--only', 'javascript/checkjs', '--json'];
-    const env = { PATH: toolsPath(['tsc']) };
-    const invalid = await run(sandbox.path, command, env);
-    expect(invalid.code, invalid.stdout + invalid.stderr).toBe(2);
-    expect(invalid.stderr).toContain('jsconfig.json');
-    expect(await Bun.file(join(sandbox.path, 'jsconfig.json')).text()).toBe('{');
-    await Bun.write(join(sandbox.path, 'jsconfig.json'), '{}');
-    const corrected = await run(sandbox.path, command, env);
-    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-});
-
 test('JavaScript projects retain nested compiler options and isolate the deepest scope', async () => {
     await using sandbox = await testdir();
     const policy = policyOf(

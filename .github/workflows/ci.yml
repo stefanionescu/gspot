@@ -49,6 +49,8 @@ jobs:
             - id: install
               run: mise run --skip-tools repo:install-checks
             - run: mise run --skip-tools check:types
+            # The tracked pins of the kit tools must be what the manifests write.
+            - run: mise run --skip-tools repo:tools && git diff --exit-code .mise/conf.d/test-tools.toml
             # The unit job runs the tests on every system, so this job skips the check that runs them.
             - run: mise run --skip-tools check -- --skip tests/unit
             - if: ${{ !cancelled() && steps.install.outcome == 'success' }}
@@ -70,7 +72,6 @@ jobs:
                   install: false
             - run: mise install bun node
             - run: mise run --skip-tools repo:setup
-            - run: mise run --skip-tools test:docs
             - run: mise run --skip-tools docs:build
     package:
         runs-on: ubuntu-24.04
@@ -185,9 +186,6 @@ jobs:
             - name: Install Bash 5 on macOS, which ships Bash 3.2
               if: runner.os == 'macOS'
               run: brew install bash
-            - name: Install the Supabase CLI for the Linux database journeys
-              if: runner.os == 'Linux'
-              run: mise use --global supabase@2.72.7
             # Defender scans every file a sandbox install writes, which makes those installs run for minutes.
             - name: Stop Windows Defender scanning on this disposable runner
               if: runner.os == 'Windows'

@@ -18,12 +18,11 @@ approved it on October 1, 2026.
 
 ### Where things stand on October 1, 2026
 
-- `main` is at `39133e66`. Stages 1 to 7 are merged as pull requests #2 to #8. Stage 7 also deleted the
+- `main` is at `942b3ee7`. Stages 1 to 8 are merged as pull requests #2 to #8 and #10. Stage 7 also deleted the
   `architecture` folder, a part of stage 15.
-- Pull request #9 updates `devalue` to 5.9.4. Seven advisories published on October 1 fail `dependencies/osv`, which
-  runs at the push stage and in the CI `check` job, so `main` fails that job until #9 merges.
-- Stage 8 is pull request #10, branch `refactor/cut-unit-integration-tests`, rebased onto `main` once #9 merges.
-- The next stage to start is stage 9.
+- Pull request #9 updated `devalue` to 5.9.4 for seven advisories that `dependencies/osv` reported on October 1.
+- Stage 9 is pull request #11, branch `refactor/cut-tool-docs-tests`.
+- The next stage to start is stage 10.
 
 ### Stages
 
@@ -38,8 +37,8 @@ One pull request per stage, in this order. Each merges with a merge commit only 
 | 5     | Delete the init extras and the startup manifest check  | adaptations 2 and 4                                                                                     | merged, #6             |
 | 6     | Delete source positions, coverage, and fix settings    | adaptations 3 and 5; `fix_order` and `fix_findings_exit_codes`                                          | merged, #7             |
 | 7     | Write the agent block only into `AGENTS.md`            | the `CLAUDE.md` decision; the Cursor rule                                                               | merged, #8             |
-| 8     | Cut unit and CLI integration tests                     | D.2 rows that delete, trim, and merge within one tier                                                   | pull request #10       |
-| 9     | Cut tool, docs, and repository tests                   | D.3 rows; drop `test:docs` and those folders from `test`                                                | not started            |
+| 8     | Cut unit and CLI integration tests                     | D.2 rows that delete, trim, and merge within one tier                                                   | merged, #10            |
+| 9     | Cut tool, docs, and repository tests                   | D.3 rows; drop `test:docs` and those folders from `test`                                                | pull request #11       |
 | 10    | Cut command acceptance and package tests               | D.4 rows; pins move to a scheduled `pins.yml`                                                           | not started            |
 | 11    | Cut kit acceptance tests                               | D.4 kit rows; find why `documents.test.ts` does not run on Linux                                        | not started            |
 | 12    | Delete repeated checks, dead rules, and dead code      | 5.3, 5.4, 5.7, including `version = 1` and its gate                                                     | not started            |
@@ -170,6 +169,16 @@ The owner and the work settled these while implementing:
     - stage 23: every "move" and "rewrite" verdict, the CLI spawns that become in-process calls, and the process case
       in `sql-parser`.
     - stage 27: the cache-home case in `checks/swift/cache`.
+- Stage 9 deleted the tests that run the rule examples of the guides. Stage 14 deletes only the guide linter, its unit
+  tests, and the `guides:lint` task.
+- Stage 9 cut the D.3 rows that delete, trim, or merge within the tools tier. These D.3 rows wait:
+    - stage 23: the rewrites of `tools/flags` and `parse-output/actionlint`, and one helper for the emit-and-write block
+      the tools tests repeat.
+    - stage 24: the cases that move to the CLI tier: `checks/site-output`, `generation/toml`, the empty-scope case in
+      `generation/javascript`, and the ESLint and Stylelint cases in `execution/fixers`.
+    - stage 25: the shared Swift helpers in `swift-build`.
+- Stage 9 moved the one real guard of the deleted reference tests, conflicting setting definitions, into manifest
+  validation. A CI step replaces the test of the tool pins: it runs `repo:tools` and `git diff --exit-code`.
 - Stages 2 to 7 already removed the D.2 cases about the cache status, the census, inline ignores, reports, uninstall,
   and byte backups. `output/progress`, `output/reporter`, `comment-syntax`, `suppression-comments`, `hooks`, `kinds`,
   `gitlinks`, `bun`, and most ownership files needed no further cut.
@@ -187,8 +196,8 @@ The owner and the work settled these while implementing:
 - The pyjwt advisory ignores expire on October 13 and 15, 2026. Renew them with `gspot ignore` in the open pull
   request, or replace them with the transitive constraints of stage 27 once semgrep allows a fixed pyjwt.
 - The quarantine list: 53 acceptance files skip on Windows (`WINDOWS_PENDING` in `tests/support/acceptance.ts`) until
-  stage 24. The help-flag tool tests run on POSIX systems only until stage 23. The Supabase database journeys skip in
-  CI until stage 9 moves them to a scheduled job.
+  stage 24. The help-flag tool tests run on POSIX systems only until stage 23. The Supabase database journey runs in
+  CI only in the weekly `database` workflow, which sets `DATABASE_JOURNEYS`.
 
 ### Owner actions
 

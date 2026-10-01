@@ -242,11 +242,6 @@ names = ["MD007"]
 reason = "The markdownlint rule name."
 
 [[naming.contract_properties]]
-file = "tests/integration/tools/generation/swift/security.test.ts"
-names = ["check_id"]
-reason = "The Semgrep JSON result key."
-
-[[naming.contract_properties]]
 file = "tests/integration/tools/hooks/pre-commit.test.ts"
 names = ["fail_fast"]
 reason = "The pre-commit YAML key."
@@ -392,7 +387,6 @@ paths = [
     "tests/integration/cli/checks/swift",
     "tests/support/cli/python",
     "tests/unit/cli/checks/python",
-    "tests/integration/tools/generation/swift",
 ]
 reason = "Each directory owns tests of that named language kit, parser, or tool integration; the files are TypeScript, not buckets grouped by implementation language."
 
