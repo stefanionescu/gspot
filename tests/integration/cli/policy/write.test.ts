@@ -5,16 +5,7 @@ import { commitPolicy } from '#cli/commands/policy.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { writePolicy, preparePolicy } from '#cli/lifecycle/policy.ts';
 import { statSync, chmodSync, existsSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
-
-import {
-    setKey,
-    deleteKey,
-    appendList,
-    appendEntry,
-    scopeHolder,
-    appendIgnore,
-    removeEntries,
-} from '#cli/policy/write.ts';
+import { setKey, deleteKey, appendList, scopeHolder, appendIgnore, removeEntries } from '#cli/policy/write.ts';
 
 const text =
     '#:schema x\n\n# Comment on kits.\nkits = ["bash"]\n\n[hooks]\n# gspot checks the changed paths of a push.\npush = "changed"\n';
@@ -75,7 +66,7 @@ test('writePolicy > appends an ignore entry and keeps comments and order', async
         sandbox.path,
         preparePolicy(
             sandbox.path,
-            appendEntry('ignore', {
+            appendIgnore({
                 check: 'bash/shellcheck',
                 rule: 'SC2312',
                 reason: 'set -e interaction on every correct if-function.',
@@ -112,10 +103,7 @@ test('writePolicy > appends to a list without duplicates and removes matching en
     const counter = { removed: 0 };
     writePolicy(
         sandbox.path,
-        preparePolicy(
-            sandbox.path,
-            appendEntry('ignore', { check: 'bash/shellcheck', reason: 'A sentence that says why.' }),
-        ),
+        preparePolicy(sandbox.path, appendIgnore({ check: 'bash/shellcheck', reason: 'A sentence that says why.' })),
     );
     writePolicy(
         sandbox.path,
@@ -199,7 +187,7 @@ test('writePolicy > a refused reason is caught before the file is written', asyn
     expect(() =>
         writePolicy(
             sandbox.path,
-            preparePolicy(sandbox.path, appendEntry('ignore', { check: 'bash/shellcheck', reason: 'TBD' })),
+            preparePolicy(sandbox.path, appendIgnore({ check: 'bash/shellcheck', reason: 'TBD' })),
         ),
     ).toThrow('needs a reason that says something');
     expect(readFileSync(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(required);

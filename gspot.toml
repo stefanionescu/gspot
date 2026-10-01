@@ -268,7 +268,7 @@ reason = "GitHub Actions inputs and GitLab CI artifact retention keys."
 [architecture]
 types_directory = "types"
 config_directory = "config"
-roles = {env = "packages/cli/src/platform/environment.ts"}
+roles = {env = ["packages/cli/src/platform/environment.ts", "tests/support/environment.ts"]}
 
 [tools.eslint]
 import_style = {"**/*" = "ts"}

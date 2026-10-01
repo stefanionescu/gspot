@@ -4,7 +4,8 @@ import { test, expect, describe } from 'bun:test';
 import { stripVTControlCharacters } from 'node:util';
 import { configureOutput } from '#cli/output/messages.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
-import { environmentVariables, setEnvironmentVariable } from '#cli/platform/environment.ts';
+import { environmentVariables } from '#cli/platform/environment.ts';
+import { setEnvironmentVariable } from '#tests/support/environment.ts';
 
 const report: RunReport = {
     version: '0.1.0',

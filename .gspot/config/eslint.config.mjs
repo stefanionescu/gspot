@@ -213,7 +213,8 @@ const gspotRules = { ...gspot.configs.recommended.rules, ...{
                     "config/**"
                 ],
                 "env": [
-                    "packages/cli/src/platform/environment.ts"
+                    "packages/cli/src/platform/environment.ts",
+                    "tests/support/environment.ts"
                 ],
                 "runtime": [
                     "src/**"
@@ -235,7 +236,8 @@ const gspotRules = { ...gspot.configs.recommended.rules, ...{
         "error",
         {
             "owners": [
-                "packages/cli/src/platform/environment.ts"
+                "packages/cli/src/platform/environment.ts",
+                "tests/support/environment.ts"
             ]
         }
     ],
@@ -518,7 +520,8 @@ const scopeRules = [
                             "config/**"
                         ],
                         "env": [
-                            "packages/cli/src/platform/environment.ts"
+                            "packages/cli/src/platform/environment.ts",
+                            "tests/support/environment.ts"
                         ],
                         "runtime": [
                             "src/**"
@@ -575,7 +578,8 @@ const scopeRules = [
                             "config/**"
                         ],
                         "env": [
-                            "packages/cli/src/platform/environment.ts"
+                            "packages/cli/src/platform/environment.ts",
+                            "tests/support/environment.ts"
                         ],
                         "runtime": [
                             "src/**"
@@ -631,7 +635,8 @@ const scopeRules = [
                             "config/**"
                         ],
                         "env": [
-                            "packages/cli/src/platform/environment.ts"
+                            "packages/cli/src/platform/environment.ts",
+                            "tests/support/environment.ts"
                         ],
                         "runtime": [
                             "src/**"
