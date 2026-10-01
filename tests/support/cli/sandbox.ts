@@ -12,7 +12,14 @@ import { linkInstalledModules } from '#tests/support/cli/platforms.ts';
 // The manifest a fixture with dependencies starts from.
 function manifestOf(dependencies: Record<string, string> | undefined): Record<string, string> {
     if (dependencies === undefined) return {};
-    const manifest = { name: 'planted', version: '1.0.0', private: true, type: 'module', dependencies };
+    const manifest = {
+        name: 'planted',
+        version: '1.0.0',
+        private: true,
+        description: 'A planted repository.',
+        type: 'module',
+        dependencies,
+    };
     return { 'package.json': `${JSON.stringify(manifest, null, 4)}\n` };
 }
 

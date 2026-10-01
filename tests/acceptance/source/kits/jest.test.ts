@@ -28,7 +28,8 @@ test(
                 '[runner]\ntool = "mise"\n[guides]\ninstall = false\n[tools.jest]\nglobal_package = "bun:test"\n',
                 'all',
             ),
-            'package.json': '{"name":"jest-private-lint","private":true,"type":"module"}\n',
+            'package.json':
+                '{"name":"jest-private-lint","private":true,"description":"A planted Jest repository.","type":"module"}\n',
             'sample.test.js': focused,
         });
         const applied = await run(sandbox.path, ['apply']);

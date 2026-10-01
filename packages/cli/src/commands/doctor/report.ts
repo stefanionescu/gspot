@@ -10,7 +10,9 @@ import { coverageReport } from '#cli/execution/coverage.ts';
 import { submodulePaths } from '#cli/repository/tracked.ts';
 import { changeReport } from '#cli/commands/doctor/changes.ts';
 import type { ToolInspection } from '#cli/types/tools/tools.ts';
+import { missingBuild } from '#cli/execution/planning/skips.ts';
 import type { Session } from '#cli/types/execution/execution.ts';
+import { PLATFORM_NAMES } from '#cli/config/execution/execution.ts';
 import type { ChangeReport, DoctorReport } from '#cli/types/commands.ts';
 import { VERSION_GAP, COLUMN_WIDTHS, DISPLAY_LIMITS, CHANGE_SECTIONS } from '#cli/config/commands/doctor.ts';
 
@@ -113,7 +115,11 @@ function versionLine(report: DoctorReport): string {
  * @returns the report, with exit code 1 when tools or hook integration need correction
  */
 export function doctorReport(session: Session, pinned: string | undefined): DoctorReport {
-    const tools = collectPins(everyManifest(session.scopes)).map((tool) => inspectTool(session, tool));
+    const platform = PLATFORM_NAMES[process.platform] ?? process.platform;
+    // A tool with no build for this host is left out: the checks that need it skip here.
+    const tools = collectPins(everyManifest(session.scopes))
+        .filter((tool) => missingBuild(tool, platform, process.arch) === undefined)
+        .map((tool) => inspectTool(session, tool));
     const { policy } = session.policyFiles;
     const hooks = hookStatus({ policy: session.policyFiles.policy, repository: session.repository });
     const isBroken = !hooks.ready || tools.some((tool) => tool.state !== 'ok' && tool.state !== 'host');

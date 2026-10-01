@@ -5,6 +5,7 @@ import { locateTool } from '#cli/tools/inspect.ts';
 import { join, dirname, basename } from 'node:path';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { isValePackageFile } from '#cli/repository/kind.ts';
+import type { Session } from '#cli/types/execution/execution.ts';
 import { VALE_CONFIG, STYLES_DIRECTORY } from '#cli/config/kits.ts';
 import { PRIVATE_FILE, READ_ONLY_FILE } from '#cli/config/platform.ts';
 import { rmSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
@@ -153,4 +154,19 @@ export async function installPackages(root: string): Promise<string | undefined>
         files.close();
         rmSync(work, { recursive: true, force: true });
     }
+}
+
+/**
+ * Install the Vale packages when a scope selects the prose kit and none are installed. The packages are not tracked, so a
+ * clone gets them from apply or install.
+ * @param session the open session
+ * @returns undefined when nothing was needed, an empty result after the install, or the problem when it failed
+ */
+export async function installProsePackages(session: Session): Promise<{ problem?: string } | undefined> {
+    const isProse = session.scopes.some((selection) =>
+        selection.selected.some((manifest) => manifest.kit.name === 'prose'),
+    );
+    if (!isProse || hasPackages(session.root)) return undefined;
+    const problem = await installPackages(session.root);
+    return problem === undefined ? {} : { problem };
 }

@@ -87,7 +87,7 @@ github = {name = "dotenv-linter/dotenv-linter", version = "v4.0.0"}
 name = "plutil"
 provider = "host"
 crash_pattern = "couldn['’]t be opened"
-platforms = ["macos", "linux"]
+platforms = ["macos"]
 
 [[tools]]
 name = "xmllint"

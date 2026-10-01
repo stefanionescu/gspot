@@ -14,7 +14,7 @@ export type PushSelection = {
 };
 export type GitEntry = { mode: string; hash: string; path: string };
 export type Directory = { folder: string; dependency: string };
-export type ChangedSet = { reference: string; paths: string[] };
+export type ChangedSet = { reference: string; paths: string[]; commits?: string[] };
 export type StagedSet = { staged: string[]; unstaged: number };
 export type PushLine = { localRef: string; localHash: string; remoteRef: string; remoteHash: string };
 export type Comparison = { changed: string[] | undefined; excluded: string[] };

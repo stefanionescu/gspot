@@ -61,11 +61,11 @@ export async function stagedFiles(root: string, cancelSignal?: AbortSignal): Pro
 }
 
 /**
- * Files changed relative to a ref, for the pull-request form.
+ * Files and commits changed relative to a ref, for the pull-request form.
  * @param root the repository root
  * @param reference the git ref to compare against
  * @param cancelSignal cancellation for the Git commands
- * @returns the selected reference and sorted paths
+ * @returns the selected reference, the sorted paths, and the commits after the merge base, oldest first
  */
 export async function changedFiles(root: string, reference: string, cancelSignal?: AbortSignal): Promise<ChangedSet> {
     const compared = reference === '' ? await defaultReference(root, cancelSignal) : reference;
@@ -75,9 +75,11 @@ export async function changedFiles(root: string, reference: string, cancelSignal
     const merged = await mergeBase(root, compared, cancelSignal);
     const committed = await gitPaths(root, [...CHANGED_PATHS, merged, '--'], cancelSignal);
     const working = await gitPaths(root, CHANGED_PATHS, cancelSignal);
+    const commits = await gitLines(root, ['rev-list', '--reverse', `${merged}..HEAD`, '--'], cancelSignal);
     return {
         reference: compared,
         paths: [...new Set([...committed, ...working])].toSorted((a, b) => a.localeCompare(b)),
+        commits,
     };
 }
 

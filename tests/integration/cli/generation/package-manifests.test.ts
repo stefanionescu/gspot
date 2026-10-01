@@ -1,5 +1,6 @@
 // ESLint reads every package.json through the package-json rules. A manifest under a test folder gets no code rule.
 import { test, expect } from 'bun:test';
+import { toPosix } from '#cli/platform/paths.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { generatedEslint } from '#tests/support/cli/generated/eslint.ts';
 
@@ -17,7 +18,7 @@ test.each(['vitest', 'jest'])(
         const results = await eslint.lintFiles(['package.json', 'tests/package.json']);
         const found = results.flatMap((result) =>
             result.messages.map((entry) => ({
-                file: result.filePath.endsWith('tests/package.json') ? 'tests' : 'root',
+                file: toPosix(result.filePath).endsWith('tests/package.json') ? 'tests' : 'root',
                 rule: entry.ruleId ?? entry.message,
             })),
         );

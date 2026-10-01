@@ -58,3 +58,8 @@ reason = "semgrep 1.178.0, the newest release, pins pyjwt below 2.14.0, which ho
 id = "GHSA-w2cx-738m-mc7w"
 ignoreUntil = 2026-10-13
 reason = "semgrep 1.178.0, the newest release, pins pyjwt below 2.14.0, which holds the fix. The private semgrep scans local files and never decodes a JSON Web Token."
+
+[[IgnoredVulns]]
+id = "GHSA-gvp8-978c-rx2q"
+ignoreUntil = 2026-10-15
+reason = "semgrep 1.178.0, the newest release, pins pyjwt below 2.14.0, which holds the fix. The private semgrep scans local files and never reuses decode options across JSON Web Tokens."

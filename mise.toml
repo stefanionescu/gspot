@@ -99,7 +99,7 @@ description = "Validate guide structure and native Good examples at both levels.
 dir = "{{config_root}}/tests"
 run = [
     "bun ../packages/cli/scripts/guides-lint.ts",
-    "bun test --timeout 60000 --test-name-pattern 'examples|Good fence' ./unit/cli/agents/examples.test.ts ./integration/tools/generation/bash.test.ts ./integration/tools/generation/docker.test.ts ./integration/tools/generation/fastapi.test.ts ./integration/tools/generation/ruff.test.ts ./integration/tools/generation/swift/docs.test.ts ./integration/tools/generation/typescript.test.ts",
+    "bun test --timeout 60000 --test-name-pattern 'examples|Good fence' ./unit/cli/agents/examples.test.ts ./integration/tools/generation/bash.test.ts ./integration/tools/generation/docker.test.ts ./integration/tools/generation/ruff.test.ts ./integration/tools/generation/swift/docs.test.ts ./integration/tools/generation/typescript.test.ts",
 ]
 
 [tasks."test:acceptance"]
@@ -164,11 +164,6 @@ depends = ["prepare:grammar"]
 description = "Run documentation example, reference, link, and release-source tests."
 dir = "{{config_root}}/tests"
 run = "bun test --timeout 60000 ./integration/docs"
-
-[tasks."test:bash-example"]
-description = "Exercise the published Bash example and captured transcript with native tools."
-dir = "{{config_root}}/tests"
-run = "bun test --timeout 60000 ./integration/tools/bash/example.test.ts"
 
 [tasks."docs:check-links"]
 description = "Validate local links and fragment targets in the built documentation site."

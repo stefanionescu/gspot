@@ -124,8 +124,10 @@ test('Git change read > a new branch compares with the remote default without lo
         'Unpublished',
     );
     expect(await pushBase(sandbox.path)).toBe(published);
-    const { reference } = await changedFiles(sandbox.path, '');
+    const { reference, commits } = await changedFiles(sandbox.path, '');
     expect(reference).toBe('refs/remotes/origin/main');
+    // Only the unpublished commit is new after the remote default, so only its message is checked.
+    expect(commits).toStrictEqual([runBlocking(['git', 'rev-parse', 'HEAD'], { cwd: sandbox.path }).stdout.trim()]);
     git(sandbox.path, 'branch', 'upstream', 'HEAD');
     git(sandbox.path, 'branch', '--set-upstream-to=upstream');
     expect(await pushBase(sandbox.path)).not.toBe(published);

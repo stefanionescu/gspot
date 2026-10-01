@@ -56,7 +56,8 @@ export async function runPlanted(
 ): Promise<SpawnOutcome> {
     const restore = plant(cwd, planted);
     try {
-        return await run(cwd, ['check', '--only', planted.check, '--no-cache'], environment);
+        // A case may build a site twice, which takes minutes on a slow runner.
+        return await run(cwd, ['check', '--only', planted.check, '--no-cache'], environment, PLANTED_TIMEOUT_MS * 4);
     } finally {
         restore();
     }
@@ -84,12 +85,13 @@ export function plantedCases(
             if (planted === undefined) throw new Error(`The ${name} repository is not installed.`);
             return planted;
         };
+        // Installing the private tools of a kit takes longer than one case on a cold runner.
         beforeAll(async () => {
             sandbox = await testdir({}, repository.dirname === undefined ? {} : { dirname: repository.dirname });
             const environment = await installSandbox(sandbox.path, repository);
             planted = { root: sandbox.path, environment };
             await repository.prepare?.(sandbox.path, environment);
-        });
+        }, PLANTED_TIMEOUT_MS * 4);
         afterAll(async () => {
             await sandbox?.[Symbol.asyncDispose]();
         });
@@ -101,7 +103,7 @@ export function plantedCases(
                     await expectDefect(installed(), entry);
                     await expectCorrection(installed(), entry, repository);
                 },
-                PLANTED_TIMEOUT_MS * 4,
+                PLANTED_TIMEOUT_MS * 8,
             );
         }
         more?.(installed);

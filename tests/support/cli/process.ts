@@ -1,6 +1,6 @@
 // Child processes of the tests: waiting for one to leave, and the source paths a child imports beside its mocks.
-import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { existsSync, readFileSync } from 'node:fs';
 
 /** Read a child PID disappearing, with bounded cleanup if supervision fails. */
 export async function waitForExit(pid: number): Promise<void> {
@@ -34,6 +34,23 @@ export async function waitForFile(path: string): Promise<boolean> {
     const deadline = performance.now() + 10_000;
     while (!existsSync(path) && performance.now() < deadline) await Bun.sleep(5);
     return existsSync(path);
+}
+
+/**
+ * Polls a JSON marker a child writes until it parses: the child may still be writing it when it appears.
+ * @param path the marker
+ * @returns the parsed marker
+ */
+export async function waitForJson(path: string): Promise<unknown> {
+    const deadline = performance.now() + 10_000;
+    for (;;) {
+        try {
+            return JSON.parse(readFileSync(path, 'utf8')) as unknown;
+        } catch (error) {
+            if (performance.now() >= deadline) throw error;
+        }
+        await Bun.sleep(5);
+    }
 }
 
 /** Drains a child's output and guarantees termination when a scenario leaves its scope. */

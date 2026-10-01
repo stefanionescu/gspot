@@ -19,12 +19,7 @@ mise run docs:build
 mise run test:docs
 ```
 
-The example tests load complete policies through the production reader. With Bash on `PATH`,
-run the published defect and correction separately:
-
-```shell
-mise run test:bash-example
-```
+The example tests load complete policies through the production reader.
 
 The reference tests cover source-derived commands,
 settings, schema fields, and loader updates. The site build checks local links and fragments.

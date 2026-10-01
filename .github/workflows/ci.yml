@@ -1,6 +1,6 @@
 name: ci
 # Every pull request, merge group, and push to main runs the whole suite on Linux, macOS, and Windows. The tool and
-# acceptance tests are split into shards that Bun balances by the recorded duration of each file in tests/timings.
+# acceptance tests are split into four shards per system by file count.
 on:
     push:
         branches: [main]
@@ -40,6 +40,12 @@ jobs:
                       ~/.bun/install/cache
                       ~/.cache/uv
                   key: packages-${{ runner.os }}-${{ hashFiles('bun.lock', '.gspot/bun.lock', '.gspot/uv.lock') }}
+            # A pull request checks out a detached merge commit, so the commit checks compare with the default branch.
+            - run: git remote set-head origin "${DEFAULT_BRANCH}"
+              env:
+                  DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+            - name: Install the XML tools and zsh that doctor expects
+              run: sudo apt-get update && sudo apt-get install --yes libxml2-utils zsh
             - run: mise run --skip-tools repo:setup
             - id: install
               run: mise run --skip-tools repo:install-checks
@@ -168,29 +174,23 @@ jobs:
             fail-fast: false
             matrix:
                 include:
-                    - { os: ubuntu-24.04, system: linux, shard: 1, shards: 6 }
-                    - { os: ubuntu-24.04, system: linux, shard: 2, shards: 6 }
-                    - { os: ubuntu-24.04, system: linux, shard: 3, shards: 6 }
-                    - { os: ubuntu-24.04, system: linux, shard: 4, shards: 6 }
-                    - { os: ubuntu-24.04, system: linux, shard: 5, shards: 6 }
-                    - { os: ubuntu-24.04, system: linux, shard: 6, shards: 6 }
-                    - { os: macos-15, system: macos, shard: 1, shards: 5 }
-                    - { os: macos-15, system: macos, shard: 2, shards: 5 }
-                    - { os: macos-15, system: macos, shard: 3, shards: 5 }
-                    - { os: macos-15, system: macos, shard: 4, shards: 5 }
-                    - { os: macos-15, system: macos, shard: 5, shards: 5 }
-                    - { os: windows-2025, system: windows, shard: 1, shards: 6 }
-                    - { os: windows-2025, system: windows, shard: 2, shards: 6 }
-                    - { os: windows-2025, system: windows, shard: 3, shards: 6 }
-                    - { os: windows-2025, system: windows, shard: 4, shards: 6 }
-                    - { os: windows-2025, system: windows, shard: 5, shards: 6 }
-                    - { os: windows-2025, system: windows, shard: 6, shards: 6 }
+                    - { os: ubuntu-24.04, system: linux, shard: 1, shards: 4 }
+                    - { os: ubuntu-24.04, system: linux, shard: 2, shards: 4 }
+                    - { os: ubuntu-24.04, system: linux, shard: 3, shards: 4 }
+                    - { os: ubuntu-24.04, system: linux, shard: 4, shards: 4 }
+                    - { os: macos-15, system: macos, shard: 1, shards: 4 }
+                    - { os: macos-15, system: macos, shard: 2, shards: 4 }
+                    - { os: macos-15, system: macos, shard: 3, shards: 4 }
+                    - { os: macos-15, system: macos, shard: 4, shards: 4 }
+                    - { os: windows-2025, system: windows, shard: 1, shards: 4 }
+                    - { os: windows-2025, system: windows, shard: 2, shards: 4 }
+                    - { os: windows-2025, system: windows, shard: 3, shards: 4 }
+                    - { os: windows-2025, system: windows, shard: 4, shards: 4 }
         runs-on: ${{ matrix.os }}
         timeout-minutes: 90
         env:
             GITHUB_TOKEN: ${{ github.token }}
             SHARD: ${{ matrix.shard }}/${{ matrix.shards }}
-            TIMINGS: timings/${{ matrix.system }}.json
         defaults:
             run:
                 shell: bash
@@ -219,6 +219,11 @@ jobs:
             - name: Install the Supabase CLI for the Linux database journeys
               if: runner.os == 'Linux'
               run: mise use --global supabase@2.72.7
+            # Defender scans every file a sandbox install writes, which makes those installs run for minutes.
+            - name: Stop Windows Defender scanning on this disposable runner
+              if: runner.os == 'Windows'
+              shell: pwsh
+              run: Set-MpPreference -DisableRealtimeMonitoring $true
             - run: mise run --skip-tools repo:setup
             - name: Extract Windows SwiftFormat executable
               if: runner.os == 'Windows'
@@ -226,15 +231,7 @@ jobs:
             - id: install
               run: mise run --skip-tools repo:install-checks
             - name: Run this shard of the tool tests
-              run: mise run --skip-tools test:tools -- "--shard=${SHARD}" "--timings=${TIMINGS}" --update-timings
+              run: mise run --skip-tools test:tools -- "--shard=${SHARD}"
             - name: Run this shard of the acceptance tests
               if: ${{ !cancelled() && steps.install.outcome == 'success' }}
-              run: mise run --skip-tools test:acceptance -- "--shard=${SHARD}" "--timings=${TIMINGS}" --update-timings
-            # The measured durations of this shard's files, to merge into tests/timings when the balance drifts.
-            - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-              if: ${{ !cancelled() && steps.install.outcome == 'success' }}
-              with:
-                  name: timings-${{ matrix.system }}-${{ matrix.shard }}-${{ github.sha }}
-                  path: tests/timings/${{ matrix.system }}.json
-                  if-no-files-found: warn
-                  retention-days: 14
+              run: mise run --skip-tools test:acceptance -- "--shard=${SHARD}"

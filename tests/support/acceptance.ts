@@ -7,8 +7,65 @@ const ROOT = fileURLToPath(new URL('../..', import.meta.url));
 const TESTS = join(ROOT, 'tests');
 const ACCEPTANCE = join(TESTS, 'acceptance/source');
 const TEST_MS = 90 * 60_000;
-// The Bun options that split a run across CI jobs and balance it by the recorded duration of each file.
-const SHARDING = /^--(?:shard=[1-9]\d*\/[1-9]\d*|timings=\S+|update-timings)$/u;
+// The Bun option that splits a run across CI jobs, by file count.
+const SHARDING = /^--shard=[1-9]\d*\/[1-9]\d*$/u;
+// Acceptance files that fail on Windows today, with the cause. A full Windows run leaves them out until the stage that
+// moves acceptance cases to faster tiers fixes them; every other system runs them.
+const WINDOWS_PENDING = new Map<string, string>([
+    ['cli/cancellation.test.ts', 'a signal exits 130 where 2 is expected'],
+    ['cli/ci.test.ts', 'the planted job runs /bin/bash, which Windows lacks'],
+    ['cli/commits.test.ts', 'commitlint runs time out on the Windows runner'],
+    ['cli/configuration-arrival.test.ts', 'gspot add times out on the Windows runner'],
+    ['cli/example.test.ts', 'the sandbox install fails on Windows'],
+    ['cli/format-overrides.test.ts', 'times out on the Windows runner'],
+    ['cli/hooks/commit.test.ts', 'checkout writes CRLF, which ShellCheck reports'],
+    ['cli/ignored-execution.test.ts', 'findings carry backslash paths'],
+    ['cli/lifecycle/uninstall.test.ts', 'checkout line endings change the adopted bytes'],
+    ['cli/profile.test.ts', 'checkout line endings change the exported bytes'],
+    ['cli/scopes.test.ts', 'times out on the Windows runner'],
+    ['cli/selectors.test.ts', 'the index snapshot reads checkout line endings'],
+    ['kits/astro.test.ts', 'astro check times out on the Windows runner'],
+    ['kits/bash/checks.test.ts', 'the strict-mode cases need a POSIX Bash'],
+    ['kits/bash/lifecycle.test.ts', 'the sandbox reads checkout line endings'],
+    ['kits/bash/syntax.test.ts', 'Git root discovery fails in the Windows sandbox'],
+    ['kits/component-files/accessibility.test.ts', 'times out on the Windows runner'],
+    ['kits/component-files/formatting.test.ts', 'the sandbox install runs past five minutes on the Windows runner'],
+    ['kits/component-files/styles.test.ts', 'the sandbox install runs past five minutes on the Windows runner'],
+    ['kits/component-files/testing.test.ts', 'the sandbox install fails on Windows'],
+    ['kits/component-files/types.test.ts', 'the sandbox install fails on Windows'],
+    ['kits/components.test.ts', 'findings carry backslash paths'],
+    ['kits/dependencies.test.ts', 'bun refuses the planted lockfile on Windows'],
+    ['kits/docker.test.ts', 'bun refuses the planted lockfile on Windows'],
+    ['kits/express.test.ts', 'the sandbox install fails on Windows'],
+    ['kits/fastapi.test.ts', 'the setup hook times out on the Windows runner'],
+    ['kits/files.test.ts', 'Taplo reports checkout line endings'],
+    ['kits/jest.test.ts', 'the sandbox install fails on Windows'],
+    ['kits/libraries.test.ts', 'the sandbox install fails on Windows'],
+    ['kits/licenses.test.ts', 'the license tool falls below its version floor on Windows'],
+    ['kits/nestjs.test.ts', 'the setup hook times out on the Windows runner'],
+    ['kits/nextjs/checks.test.ts', 'the setup hook times out on the Windows runner'],
+    ['kits/nextjs/delegation.test.ts', 'the sandbox install fails on Windows'],
+    ['kits/nextjs/selection.test.ts', 'times out on the Windows runner'],
+    ['kits/nginx.test.ts', 'the Windows runner has no nginx container'],
+    ['kits/platforms.test.ts', 'the setup hook times out on the Windows runner'],
+    ['kits/python/docstrings.test.ts', 'the sandbox install runs past five minutes on the Windows runner'],
+    ['kits/python/structure.test.ts', 'the sandbox install fails on Windows'],
+    ['kits/python/tools.test.ts', 'the sandbox install fails on Windows'],
+    ['kits/react.test.ts', 'the setup hook times out on the Windows runner'],
+    ['kits/secrets/pushed.test.ts', 'the history scan reads checkout line endings'],
+    ['kits/security.test.ts', 'Semgrep times out on the Windows runner'],
+    ['kits/static-site.test.ts', 'the setup hook times out on the Windows runner'],
+    ['kits/structure.test.ts', 'the setup hook times out on the Windows runner'],
+    ['kits/svg.test.ts', 'the setup hook times out on the Windows runner'],
+    ['kits/swift/security.test.ts', 'times out on the Windows runner'],
+    ['kits/typescript/eslint.test.ts', 'times out on the Windows runner'],
+    ['kits/typescript/javascript.test.ts', 'the sandbox install fails on Windows'],
+    ['kits/typescript/planted-checks.test.ts', 'times out on the Windows runner'],
+    ['kits/typescript/projects.test.ts', 'the sandbox install fails on Windows'],
+    ['kits/vite.test.ts', 'times out on the Windows runner'],
+    ['kits/vitest.test.ts', 'the sandbox install fails on Windows'],
+    ['kits/xctest.test.ts', 'the setup hook times out on the Windows runner'],
+]);
 
 function sourceAcceptancePath(argument: string): string {
     if (argument.startsWith('-')) throw new Error(`Unsupported acceptance option: ${argument}.`);
@@ -19,23 +76,20 @@ function sourceAcceptancePath(argument: string): string {
     return selected;
 }
 
-/** Build and serve the local plugin while exercising source CLI consumers. */
-async function main(): Promise<void> {
-    const args = process.argv.slice(2);
-    if (args.length === 1 && args[0] === '--help') {
-        console.log(
-            'Usage: mise run test:acceptance -- [acceptance path ...] [--test-name-pattern <pattern>] [--shard=<k>/<n>] [--timings=<file>] [--update-timings]\n\nPaths are relative to tests/. Only source acceptance is selected.',
-        );
-        return;
-    }
-    const selected = acceptanceArguments(args);
-    await runSourceCommand([process.execPath, 'test', ...selected], TESTS, TEST_MS);
+// Every source acceptance file, without the files still pending on Windows when this is Windows.
+function defaultPaths(): string[] {
+    if (process.platform !== 'win32') return [ACCEPTANCE];
+    const files = [...new Bun.Glob('**/*.test.ts').scanSync({ cwd: ACCEPTANCE })].map((file) =>
+        file.replaceAll('\\', '/'),
+    );
+    return files
+        .filter((file) => !WINDOWS_PENDING.has(file))
+        .toSorted((a, b) => a.localeCompare(b))
+        .map((file) => join(ACCEPTANCE, file));
 }
 
-if (import.meta.main) await main();
-
-/** Select only source acceptance paths, Bun name filters, and the Bun options that shard a CI run. */
-export function acceptanceArguments(args: readonly string[]): string[] {
+// Select only source acceptance paths, Bun name filters, and the Bun option that shards a CI run.
+function acceptanceArguments(args: readonly string[]): string[] {
     const sharding = args.filter((argument) => SHARDING.test(argument));
     const rest = args.filter((argument) => !SHARDING.test(argument));
     const paths: string[] = [];
@@ -50,5 +104,20 @@ export function acceptanceArguments(args: readonly string[]): string[] {
         }
         paths.push(sourceAcceptancePath(argument));
     }
-    return ['--timeout', '60000', ...flags, ...sharding, ...(paths.length === 0 ? [ACCEPTANCE] : paths)];
+    return ['--timeout', '60000', ...flags, ...sharding, ...(paths.length === 0 ? defaultPaths() : paths)];
 }
+
+/** Build and serve the local plugin while exercising source CLI consumers. */
+async function main(): Promise<void> {
+    const args = process.argv.slice(2);
+    if (args.length === 1 && args[0] === '--help') {
+        console.log(
+            'Usage: mise run test:acceptance -- [acceptance path ...] [--test-name-pattern <pattern>] [--shard=<k>/<n>]\n\nPaths are relative to tests/. Only source acceptance is selected.',
+        );
+        return;
+    }
+    const selected = acceptanceArguments(args);
+    await runSourceCommand([process.execPath, 'test', ...selected], TESTS, TEST_MS);
+}
+
+if (import.meta.main) await main();

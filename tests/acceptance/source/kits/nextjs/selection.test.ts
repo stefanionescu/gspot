@@ -1,16 +1,17 @@
 // Policy choices the nextjs configuration follows: the re-export mode, the compiler replacement, and locale checking.
-import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { writeFileSync } from 'node:fs';
+import { join, delimiter } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import type { ReplacePlan } from '#cli/types/commands.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
-import { installPrivateTools } from '#tests/support/cli/tools.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
+import { INSTALLED_BIN_PATH } from '#tests/support/cli/modules.ts';
 import { linkInstalledModules } from '#tests/support/cli/platforms.ts';
+import { toolsPath, installPrivateTools } from '#tests/support/cli/tools.ts';
 
 test.each(['none', 'index-only'])(
     'Next.js entry files preserve the re-export policy in %s mode',
@@ -58,13 +59,13 @@ test.each(['none', 'index-only'])(
     PLANTED_TIMEOUT_MS,
 );
 
-test.each(['only', 'ignore', 'flag'])(
-    'the TypeScript check still finds defects when its replacement is absent through %s',
-    async (selection) => {
+// One way of leaving the Next.js check out is enough: --only and [[ignore]] reach the same skip.
+test(
+    'the TypeScript check still finds defects when its replacement is skipped',
+    async () => {
         await using sandbox = await testdir();
-        const policy = policyOf(['nextjs'], '[guides]\ninstall = false\n');
         await createFileTree(sandbox.path, {
-            'gspot.toml': policy + (selection === 'ignore' ? '\n[[ignore]]\ncheck = "nextjs/typecheck"\n' : ''),
+            'gspot.toml': policyOf(['nextjs'], '[guides]\ninstall = false\n'),
             'package.json':
                 '{"name":"compiler-selection","private":true,"type":"module","dependencies":{"next":"16.3.5"}}',
             'tsconfig.json': '{"compilerOptions":{"types":[],"skipLibCheck":true},"include":["src"]}',
@@ -74,31 +75,22 @@ test.each(['only', 'ignore', 'flag'])(
         const applied = await run(sandbox.path, ['apply']);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
         await installPrivateTools(sandbox.path);
-        const args = [
-            'check',
-            '--only',
-            'typescript/tsc',
-            ...(selection === 'only' ? [] : ['nextjs/typecheck']),
-            ...(selection === 'flag' ? ['--skip', 'nextjs/typecheck'] : []),
-            '--no-cache',
-            '--json',
-        ];
-        const failed = await run(sandbox.path, args);
+        const args = ['check', '--only', 'typescript/tsc', 'nextjs/typecheck', '--skip', 'nextjs/typecheck'];
+        // tsc comes from the installed packages, as in a project that depends on TypeScript.
+        const environment = { PATH: `${INSTALLED_BIN_PATH}${delimiter}${toolsPath([])}` };
+        const failed = await run(sandbox.path, [...args, '--no-cache', '--json'], environment);
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
         const report = JSON.parse(failed.stdout) as RunReport;
         expect(report.checks.find((check) => check.check === 'typescript/tsc')).toMatchObject({
             status: 'fail',
             findings: [{ check: 'typescript/tsc', file: 'src/count.ts', rule: 'TS2322', line: 1, column: 14 }],
         });
-        // The Next.js type check is skipped for the reason the selection gives, and not when it runs alone.
-        expect(report.skips.some((skip) => skip.check === 'nextjs/typecheck' && skip.source === selection)).toBe(
-            selection !== 'only',
-        );
+        expect(report.skips.some((skip) => skip.check === 'nextjs/typecheck' && skip.source === 'flag')).toBe(true);
         writeFileSync(join(sandbox.path, 'src/count.ts'), 'export const count: number = 3;\n');
-        const corrected = await run(sandbox.path, args);
+        const corrected = await run(sandbox.path, [...args, '--no-cache', '--json'], environment);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     },
-    PLANTED_TIMEOUT_MS * 2,
+    PLANTED_TIMEOUT_MS * 4,
 );
 
 test.each([

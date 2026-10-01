@@ -3,6 +3,7 @@ export const TYPESCRIPT_PACKAGE = `{
     "name": "planted",
     "version": "1.0.0",
     "private": true,
+    "description": "A planted TypeScript repository.",
     "type": "module",
     "imports": {
         "#types/*": "./types/*"

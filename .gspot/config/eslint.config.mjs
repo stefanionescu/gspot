@@ -877,8 +877,7 @@ const policyRules = [
 const defaults = [
     { ignores: [
     "**/node_modules/**",
-    ".gspot/**",
-    "tests/timings/*.json"
+    ".gspot/**"
 ] },
     { files: CODE, ...eslint.configs.recommended },
     { files: CODE, ...sonarjs.configs.recommended },
