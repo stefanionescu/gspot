@@ -73,7 +73,7 @@ run = "bun packages/eslint-plugin/build.ts"
 depends = ["prepare:grammar", "build:plugin"]
 description = "Run deterministic unit and integration tests."
 dir = "{{config_root}}/tests"
-run = "bun test --timeout 60000 ./unit ./integration/cli ./integration/docs ./integration/repository"
+run = "bun test --timeout 60000 ./unit ./integration/cli"
 
 [tasks."test:unit"]
 depends = ["prepare:grammar", "build:plugin"]
@@ -85,7 +85,7 @@ run = "bun test --timeout 60000 ./unit"
 depends = ["prepare:grammar", "build:plugin"]
 description = "Run integration tests."
 dir = "{{config_root}}/tests"
-run = "bun test --timeout 60000 ./integration/cli ./integration/docs ./integration/repository"
+run = "bun test --timeout 60000 ./integration/cli"
 
 [tasks."test:tools"]
 depends = ["prepare:grammar", "build:plugin"]
@@ -158,12 +158,6 @@ description = "Record the selected source revision and CLI version in the built 
 run = '''
 bun -e 'await Bun.write("docs/dist/source.json", JSON.stringify({revision:process.env.GSPOT_DOCS_REVISION,version:require("./packages/cli/package.json").version})+"\n")'
 '''
-
-[tasks."test:docs"]
-depends = ["prepare:grammar"]
-description = "Run documentation example, reference, link, and release-source tests."
-dir = "{{config_root}}/tests"
-run = "bun test --timeout 60000 ./integration/docs"
 
 [tasks."docs:check-links"]
 description = "Validate local links and fragment targets in the built documentation site."

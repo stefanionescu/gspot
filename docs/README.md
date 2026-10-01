@@ -16,13 +16,9 @@ Build the site and validate its links before sharing a documentation change:
 
 ```shell
 mise run docs:build
-mise run test:docs
 ```
 
-The example tests load complete policies through the production reader.
-
-The reference tests cover source-derived commands,
-settings, schema fields, and loader updates. The site build checks local links and fragments.
+The site build checks local links and fragments.
 These checks do not prove every prose claim; verify behavior in its implementation and tests.
 
 ## Write for the reader's task
@@ -61,8 +57,7 @@ manual correction is automatic.
 The landing page and the README show one captured example, stored in
 `src/components/home/example.json`: an agent commits a TypeScript wrapper, the commit hook
 rejects it, and the fixed commit passes. The quickstart supplies every input.
-`tests/acceptance/source/cli/example.test.ts` replays it and checks the recorded findings, and
-`tests/integration/docs/example.test.ts` checks that the pages hold it.
+`tests/acceptance/source/cli/example.test.ts` replays it and checks the recorded findings.
 The ESLint plugin keeps its own example in `packages/eslint-plugin/README.md`.
 
 Use short, direct headings and consistent terms: configuration, check, tool rule, finding, stage,

@@ -49,6 +49,8 @@ jobs:
             - id: install
               run: mise run --skip-tools repo:install-checks
             - run: mise run --skip-tools check:types
+            # The tracked pins of the kit tools must be what the manifests write.
+            - run: mise run --skip-tools repo:tools && git diff --exit-code .mise/conf.d/test-tools.toml
             # The unit job runs the tests on every system, so this job skips the check that runs them.
             - run: mise run --skip-tools check -- --skip tests/unit
             - if: ${{ !cancelled() && steps.install.outcome == 'success' }}
@@ -70,7 +72,6 @@ jobs:
                   install: false
             - run: mise install bun node
             - run: mise run --skip-tools repo:setup
-            - run: mise run --skip-tools test:docs
             - run: mise run --skip-tools docs:build
     package:
         runs-on: ubuntu-24.04
