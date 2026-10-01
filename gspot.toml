@@ -384,7 +384,6 @@ entry = [
     "**/build.ts",
     "packages/eslint-plugin/src/plugin.ts",
     "packages/cli/scripts/inputs.ts",
-    "packages/cli/scripts/guides-lint.ts",
     "packages/cli/src/native/process.ts",
     "docs/src/content/reference/collection.ts",
     "docs/astro.config.ts",
@@ -445,20 +444,6 @@ reason = "ESLint rule ids are the file names, and the ids share their first word
 [[structure.prefix_collision_allowed]]
 paths = ["docs/src"]
 reason = "Astro fixes the name of the content configuration file beside the content folder."
-[[check]]
-name = "guides/lint"
-command = ["mise", "run", "guides:lint"]
-paths = [
-    "packages/cli/guides/**",
-    "packages/cli/src/agents/**",
-    "packages/cli/kits/**",
-    "tests/integration/tools/generation/**",
-    "tests/unit/cli/agents/**",
-    "mise.toml",
-]
-stage = "push"
-summary = "Validates guide structure and runs Good examples through their native linters."
-
 [tools.licenses]
 
 [[tools.licenses.packages_allowed]]

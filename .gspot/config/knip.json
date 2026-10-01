@@ -4,7 +4,6 @@
         "**/build.ts",
         "packages/eslint-plugin/src/plugin.ts",
         "packages/cli/scripts/inputs.ts",
-        "packages/cli/scripts/guides-lint.ts",
         "packages/cli/src/native/process.ts",
         "docs/src/content/reference/collection.ts",
         "docs/astro.config.ts",
@@ -143,7 +142,6 @@
                 "**/build.ts",
                 "packages/eslint-plugin/src/plugin.ts",
                 "packages/cli/scripts/inputs.ts",
-                "packages/cli/scripts/guides-lint.ts",
                 "packages/cli/src/native/process.ts",
                 "docs/src/content/reference/collection.ts",
                 "docs/astro.config.ts",
@@ -166,7 +164,6 @@
             "entry": [
                 "**/build.ts",
                 "scripts/inputs.ts",
-                "scripts/guides-lint.ts",
                 "src/native/process.ts",
                 "src/main.{ts,js}",
                 "src/index.{ts,js}",
