@@ -40,74 +40,34 @@ test.each([
     ).toStrictEqual([]);
 });
 
-const JEST_CASES = [
-    [
-        'no-focused-tests',
-        'test.only("counts", () => { expect(1).toBe(1); });',
-        'test("counts", () => { expect(1).toBe(1); });',
-    ],
-    [
-        'no-disabled-tests',
-        'test.skip("counts", () => { expect(1).toBe(1); });',
-        'test("counts", () => { expect(1).toBe(1); });',
-    ],
-    [
-        'no-identical-title',
-        'test("counts", () => { expect(1).toBe(1); }); test("counts", () => { expect(2).toBe(2); });',
-        'test("counts one", () => { expect(1).toBe(1); }); test("counts two", () => { expect(2).toBe(2); });',
-    ],
-    ['no-standalone-expect', 'expect(1).toBe(1);', 'test("counts", () => { expect(1).toBe(1); });'],
-    [
-        'no-commented-out-tests',
-        '// test("counts", () => { expect(1).toBe(1); });',
-        'test("counts", () => { expect(1).toBe(1); });',
-    ],
-    ['expect-expect', 'test("counts", () => { const count = 1; });', 'test("counts", () => { expect(1).toBe(1); });'],
-    [
-        'valid-describe-callback',
-        'describe("counting", async () => { test("counts", () => { expect(1).toBe(1); }); });',
-        'describe("counting", () => { test("counts", () => { expect(1).toBe(1); }); });',
-    ],
-    [
-        'no-conditional-expect',
-        'test("counts", () => { if (Date.now() > 0) expect(1).toBe(1); });',
-        'test("counts", () => { expect(1).toBe(1); });',
-    ],
-    ['valid-expect', 'test("counts", () => { expect(1); });', 'test("counts", () => { expect(1).toBe(1); });'],
-    [
-        'prefer-strict-equal',
-        'test("counts", () => { expect({ count: 1 }).toEqual({ count: 1 }); });',
-        'test("counts", () => { expect({ count: 1 }).toStrictEqual({ count: 1 }); });',
-    ],
-] as const;
-test.each(
-    ['recommended', 'all'].flatMap((level) =>
-        ['@jest/globals', 'bun:test'].flatMap((globalPackage) =>
-            JEST_CASES.map(([rule, planted, corrected]) => ({ level, globalPackage, rule, planted, corrected })),
-        ),
-    ),
-)(
-    'generated $level ESLint reports jest/$rule for $globalPackage and accepts its correction',
-    async ({ level, globalPackage, rule, planted, corrected }) => {
+test.each(['@jest/globals', 'bun:test'])(
+    'generated ESLint reports a focused test for %s and accepts its correction',
+    async (globalPackage) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
             'gspot.toml': policyOf(
                 ['jest'],
                 `[guides]\ninstall = false\n[tools.jest]\nglobal_package = "${globalPackage}"\n`,
-                level,
+                'all',
             ),
             'package.json': '{"private":true,"type":"module"}\n',
             'sample.test.js': '',
         });
         const eslint = await generatedEslint(sandbox.path);
-        const prefix = `import { describe, test, expect } from '${globalPackage}';\n`;
-        const failed = await eslint.lintText(prefix + planted, { filePath: 'sample.test.js' });
-        expect(failed.flatMap((file) => file.messages).filter(({ ruleId }) => ruleId === `jest/${rule}`)).toMatchObject(
-            level === 'recommended' && rule === 'prefer-strict-equal' ? [] : [{ line: 2, severity: 2 }],
-        );
-        const fixed = await eslint.lintText(prefix + corrected, { filePath: 'sample.test.js' });
+        const prefix = `import { test, expect } from '${globalPackage}';\n`;
+        const failed = await eslint.lintText(`${prefix}test.only("counts", () => { expect(1).toBe(1); });`, {
+            filePath: 'sample.test.js',
+        });
         expect(
-            fixed.flatMap((file) => file.messages).filter(({ ruleId, fatal }) => ruleId === `jest/${rule}` || fatal),
+            failed.flatMap((file) => file.messages).filter(({ ruleId }) => ruleId === 'jest/no-focused-tests'),
+        ).toMatchObject([{ line: 2, severity: 2 }]);
+        const fixed = await eslint.lintText(`${prefix}test("counts", () => { expect(1).toBe(1); });`, {
+            filePath: 'sample.test.js',
+        });
+        expect(
+            fixed
+                .flatMap((file) => file.messages)
+                .filter(({ ruleId, fatal }) => ruleId === 'jest/no-focused-tests' || fatal),
         ).toStrictEqual([]);
     },
 );

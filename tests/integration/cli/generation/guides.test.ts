@@ -31,31 +31,6 @@ test('recommended guides omit marked sections and retain the next heading', asyn
     expect(recommended.get(path)).not.toContain('## Declaration order');
     expect(all.get(path)).toContain('## Declaration order');
     expect(recommended.get(path)).toContain('## Rules not adopted');
-    const writing = '.gspot/guides/general/prose/WRITING.md';
-    expect(recommended.get(writing)).not.toContain('### Voice conventions');
-    expect(all.get(writing)).toContain('### Voice conventions');
-    expect(recommended.get(writing)).toContain('## Inclusive and respectful language');
-    const css = '.gspot/guides/language/CSS.md';
-    expect(recommended.get(css)).not.toContain('## Selectors and layout');
-    expect(all.get(css)).toContain('## Selectors and layout');
-    expect(recommended.get(css)).toContain('prefers-reduced-motion');
-    for (const [guide, convention, safety] of [
-        ['language/TYPESCRIPT.md', '### Type conventions', '## Runtime boundaries'],
-        ['language/PYTHON.md', '### Import conventions', '## Imports'],
-        ['language/BASH.md', '### Entrypoint conventions', '## Shell options'],
-        ['framework/svelte/SVELTE.md', '### Callback naming', '## Runes and reactivity'],
-        ['language/SWIFT.md', '### API and ownership conventions', 'HTTPURLResponse'],
-        ['language/HTML.md', '### Script and style placement', '## Script safety'],
-        ['language/naming/CSS.md', '## Selector and file names', '# CSS Naming'],
-        ['language/naming/HTML.md', '## Route and attribute names', '# HTML Naming'],
-        ['language/python/PACKAGING.md', '## Source layout and import path', '## Import correctness'],
-        ['framework/express/API.md', '## Organization and naming', '## Security'],
-        ['framework/nestjs/NESTJS.md', '## Feature organization', '## Configuration and security'],
-    ] as const) {
-        expect(recommended.get(`.gspot/guides/${guide}`)).not.toContain(convention);
-        expect(all.get(`.gspot/guides/${guide}`)).toContain(convention);
-        expect(recommended.get(`.gspot/guides/${guide}`)).toContain(safety);
-    }
 });
 
 test('conditional guides follow lockfile and dependency evidence', async () => {

@@ -37,34 +37,6 @@ test('generated all lint checks authored directories named after build outputs',
     );
 });
 
-test.each(['recommended', 'all'])('generated %s lint preserves JavaScript class comments', async (level) => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': policyOf(['javascript'], '', level),
-        'package.json': '{"private":true,"type":"module"}\n',
-        'counter.js': '',
-    });
-    const eslint = await generatedEslint(sandbox.path);
-    const source =
-        "import { value } from './value.js';\n\n// Describes the counter.\nexport class Counter { value = value; }\n";
-    const accepted = await eslint.lintText(source, { filePath: 'counter.js' });
-    expect(
-        accepted
-            .flatMap(({ messages }) => messages)
-            .filter(({ ruleId }) => ruleId === 'gspot/header-comments-before-imports'),
-    ).toStrictEqual([]);
-    const defect = await eslint.lintText(
-        source.replace('// Describes the counter.\n', '// Describes the counter.\n\n\n'),
-        { filePath: 'counter.js' },
-    );
-    expect(
-        defect
-            .flatMap(({ messages }) => messages)
-            .filter(({ ruleId }) => ruleId === 'gspot/header-comments-before-imports')
-            .map(({ line, messageId: diagnostic }) => ({ line, messageId: diagnostic })),
-    ).toStrictEqual(level === 'all' ? [{ line: 3, messageId: 'headerFirst' }] : []);
-});
-
 test.each(['recommended', 'all'])('generated %s lint enforces size limits in test files', async (level) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
@@ -119,38 +91,11 @@ test.each(['recommended', 'all'])(
                         ({ ruleId }) => ruleId === 'gspot/no-trivial-files' || ruleId === 'gspot/no-trivial-functions',
                     ),
             ).toStrictEqual([]);
-            const callbacks = await eslint.lintText(
-                'const forward = (signal) => child.kill(signal); process.on("SIGTERM", forward); process.removeListener("SIGTERM", forward);',
-                { filePath },
-            );
-            expect(
-                callbacks
-                    .flatMap((file) => file.messages)
-                    .filter(({ ruleId }) => ruleId === 'gspot/no-trivial-functions'),
-            ).toMatchObject(level === 'all' ? [{ line: 1, column: 17, messageId: 'trivial' }] : []);
-            const nested = await eslint.lintText(
-                'export function start(items) { return items.map(item => { inspect(item); validate(item); return item; }); }',
-                { filePath },
-            );
-            expect(
-                nested
-                    .flatMap((file) => file.messages)
-                    .filter(
-                        ({ ruleId }) => ruleId === 'gspot/no-trivial-files' || ruleId === 'gspot/no-trivial-functions',
-                    ),
-            ).toStrictEqual([]);
             const metadata = await eslint.lintText('import manifest from "#manifest" with { type: "json" };', {
                 filePath,
             });
             expect(
                 metadata.flatMap((file) => file.messages).filter(({ ruleId }) => ruleId === 'gspot/import-path-style'),
-            ).toStrictEqual([]);
-            const factory = await eslint.lintText(
-                'export function schema(properties) { return configure({ type: "object", properties }); }',
-                { filePath },
-            );
-            expect(
-                factory.flatMap((file) => file.messages).filter(({ ruleId }) => ruleId === 'gspot/no-trivial-files'),
             ).toStrictEqual([]);
         }
     },

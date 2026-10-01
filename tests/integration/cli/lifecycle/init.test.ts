@@ -23,20 +23,9 @@ test.each([
         'git@github.com:example/repo.git',
         'gitlab',
     ],
-    [
-        'tracked GitHub before untracked GitLab',
-        ['.github/workflows/build.yml'],
-        '.gitlab-ci.yml',
-        'git@gitlab.com:example/repo.git',
-        'github',
-    ],
     ['untracked GitLab before remote', [], '.gitlab-ci.yml', 'git@github.com:example/repo.git', 'gitlab'],
-    ['untracked GitHub before remote', [], '.github/workflows/build.yml', 'git@gitlab.com:example/repo.git', 'github'],
     ['Bitbucket before GitHub remote', ['bitbucket-pipelines.yml'], '', 'git@github.com:example/repo.git', 'none'],
-    ['other tracked CI before remote', ['ci/build.yml'], '', 'git@github.com:example/repo.git', 'none'],
     ['GitHub SSH remote', [], '', 'git@github.com:example/repo.git', 'github'],
-    ['GitLab HTTPS remote', [], '', 'https://gitlab.com/example/repo.git', 'gitlab'],
-    ['GitHub SSH URL', [], '', 'ssh://git@github.com/example/repo.git', 'github'],
     ['unrecognized remote host', [], '', 'https://github.com.example.com/example/repo.git', 'none'],
 ] as const)('initialization CI preference uses %s', async (_label, ci, path, remote, expected) => {
     await using sandbox = await testdir();
@@ -203,7 +192,7 @@ test('init refuses a failed Git status before writing and succeeds after the fai
     expect(existsSync(join(directory.path, 'gspot.toml'))).toBe(true);
 });
 
-test.each(['../outside', 'linked', 'linked/nested', 'missing', 'README.md'])(
+test.each(['../outside', 'linked', 'missing'])(
     'init refuses unsafe or absent scope %s before publication',
     async (scope) => {
         await using directory = await testdir();

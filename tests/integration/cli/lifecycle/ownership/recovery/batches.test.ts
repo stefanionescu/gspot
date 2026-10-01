@@ -8,36 +8,47 @@ import { openOwner } from '#cli/lifecycle/ownership/owner.ts';
 const implementation = cliSource('lifecycle/ownership/owner.ts');
 const boundary = cliSource('platform/filesystem.ts');
 
+// A child process runs one owner call and exits at middle.txt, either just before its file operation or just after.
+async function interrupted(
+    cwd: string,
+    operation: 'write' | 'remove',
+    point: 'before' | 'after',
+    call: string,
+): Promise<void> {
+    const program = `
+import { mock } from 'bun:test';
+const boundary=await import(${JSON.stringify(boundary)});
+const open=boundary.openRoot;
+mock.module(${JSON.stringify(boundary)},()=>({...boundary,openRoot(root){
+const files=open(root);
+return {...files,${operation}(path,...rest){
+if(path==='middle.txt' && ${JSON.stringify(point)}==='before') process.exit(73);
+files.${operation}(path,...rest);
+if(path==='middle.txt' && ${JSON.stringify(point)}==='after') process.exit(73);
+}};
+}}));
+const {openOwner}=await import(${JSON.stringify(implementation)});
+const owner=openOwner(process.cwd());
+${call}
+owner.close();
+`;
+    const child = Bun.spawn([process.execPath, '-e', program], { cwd, stdout: 'pipe', stderr: 'pipe' });
+    const streams = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text()]);
+    expect(await child.exited, streams.join('\n')).toBe(73);
+}
+
 test.each(['before', 'after'] as const)(
     'an interrupted batch keeps each published file, and the next batch finishes it (%s)',
     async (point) => {
         await using directory = await testdir();
         const paths = ['first.txt', 'middle.txt', 'last.txt'];
         await createFileTree(directory.path, Object.fromEntries(paths.map((path) => [path, `authored ${path}\n`])));
-        const program = String.raw`
-import { mock } from 'bun:test';
-const boundary=await import(${JSON.stringify(boundary)});
-const open=boundary.openRoot;
-mock.module(${JSON.stringify(boundary)},()=>({...boundary,openRoot(root){
-const files=open(root);
-return {...files,write(path,value,expected){
-if(path==='middle.txt' && ${JSON.stringify(point)}==='before') process.exit(73);
-files.write(path,value,expected);
-if(path==='middle.txt' && ${JSON.stringify(point)}==='after') process.exit(73);
-}};
-}}));
-const {openOwner}=await import(${JSON.stringify(implementation)});
-const owner=openOwner(process.cwd());
-owner.applyPlans(${JSON.stringify(paths)}.map(path=>owner.proposeReplacement(path,{bytes:Buffer.from('installed '+path+'\n'),mode:0o444},'config',true)));
-owner.close();
-`;
-        const child = Bun.spawn([process.execPath, '-e', program], {
-            cwd: directory.path,
-            stdout: 'pipe',
-            stderr: 'pipe',
-        });
-        const streams = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text()]);
-        expect(await child.exited, streams.join('\n')).toBe(73);
+        await interrupted(
+            directory.path,
+            'write',
+            point,
+            String.raw`owner.applyPlans(${JSON.stringify(paths)}.map(path=>owner.proposeReplacement(path,{bytes:Buffer.from('installed '+path+'\n'),mode:0o444},'config',true)));`,
+        );
         expect(readFileSync(join(directory.path, 'first.txt'), 'utf8')).toBe('installed first.txt\n');
         expect(readFileSync(join(directory.path, 'middle.txt'), 'utf8')).toBe(
             `${point === 'before' ? 'authored' : 'installed'} middle.txt\n`,
@@ -82,30 +93,12 @@ test.each(['before', 'after'] as const)(
         } finally {
             initial.close();
         }
-        const program = `
-import { mock } from 'bun:test';
-const boundary=await import(${JSON.stringify(boundary)});
-const open=boundary.openRoot;
-mock.module(${JSON.stringify(boundary)},()=>({...boundary,openRoot(root){
-const files=open(root);
-return {...files,remove(path,expected){
-if(path==='middle.txt' && ${JSON.stringify(point)}==='before') process.exit(73);
-files.remove(path,expected);
-if(path==='middle.txt' && ${JSON.stringify(point)}==='after') process.exit(73);
-}};
-}}));
-const {openOwner}=await import(${JSON.stringify(implementation)});
-const owner=openOwner(process.cwd());
-owner.applyPlans(${JSON.stringify(paths)}.map(path=>owner.proposeRestoration(path)));
-owner.close();
-`;
-        const child = Bun.spawn([process.execPath, '-e', program], {
-            cwd: directory.path,
-            stdout: 'pipe',
-            stderr: 'pipe',
-        });
-        const streams = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text()]);
-        expect(await child.exited, streams.join('\n')).toBe(73);
+        await interrupted(
+            directory.path,
+            'remove',
+            point,
+            `owner.applyPlans(${JSON.stringify(paths)}.map(path=>owner.proposeRestoration(path)));`,
+        );
         const owner = openOwner(directory.path);
         try {
             expect(owner.read('first.txt')).toBeUndefined();

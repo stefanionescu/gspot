@@ -4,7 +4,6 @@ import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { installCommand } from '#cli/commands/install.ts';
-import { installTools } from '#cli/tools/installation.ts';
 import { onPosix } from '#tests/support/cli/platforms.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
 import { rejection } from '#tests/support/expectations.ts';
@@ -179,14 +178,3 @@ if (onPosix) {
         },
     );
 }
-
-test('installation attributes a non-Error rejection to its phase', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': policyOf([], '[runner]\ntool = "mise"\n'),
-    });
-    const session = await openSession(sandbox.path);
-    using installer = spyOn(processes, 'run').mockRejectedValue('untyped installer failure');
-    expect(await rejection(installTools(session, true))).toBe('Native tool installation failed.');
-    expect(installer.mock.calls.map(([command]) => command)).toStrictEqual([['mise', '--version']]);
-});

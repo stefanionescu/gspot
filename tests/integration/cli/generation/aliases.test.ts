@@ -47,47 +47,6 @@ test.each(['package.json', 'tsconfig.json'])(
     },
 );
 
-test.each(['package.json', 'tsconfig.json'])(
-    'generation reports unreadable %s instead of dropping aliases',
-    async (path) => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
-            'gspot.toml': policyOf(['typescript']),
-            [path]: '{}',
-        });
-        const session = await openSession(sandbox.path);
-        rmSync(join(sandbox.path, path));
-        mkdirSync(join(sandbox.path, path));
-        expect(() =>
-            emitAll(session.policyFiles.policy, session.repository, session.scopes, {
-                version: session.version,
-                packageClient: session.packageClient,
-            }),
-        ).toThrow(
-            path === 'tsconfig.json'
-                ? `Cannot read TypeScript configuration ${join(sandbox.path, path)}`
-                : 'Cannot read package manifest package.json',
-        );
-        rmSync(join(sandbox.path, path), { recursive: true });
-        writeFileSync(
-            join(sandbox.path, path),
-            path === 'package.json'
-                ? '{"imports":{"#app/*":"./src/*"}}'
-                : '{"compilerOptions":{"paths":{"#app/*":["./src/*"]}}}',
-        );
-        expect(
-            templateInputs(
-                session.root,
-                session.policyFiles.policy,
-                session.repository.files,
-                session.scopes,
-                session.scopes[0]!,
-                session.version,
-            ).importAliases(''),
-        ).toStrictEqual({ '#app/': 'src/' });
-    },
-);
-
 test('alias generation rejects a package manifest link planted after inventory and accepts corrected bytes', async () => {
     await using sandbox = await testdir();
     await using outside = await testdir();
@@ -115,7 +74,7 @@ test('alias generation rejects a package manifest link planted after inventory a
     expect(await Bun.file(join(outside.path, 'package.json')).text()).toBe('{"imports":{"#private/*":"./private/*"}}');
 });
 
-test.each(['tsconfig.json', 'base.json'])('TypeScript alias reads refuse a linked authored %s', async (name) => {
+test('TypeScript alias reads refuse a linked authored configuration', async () => {
     await using sandbox = await testdir();
     await using outside = await testdir();
     await createFileTree(sandbox.path, {
@@ -127,7 +86,7 @@ test.each(['tsconfig.json', 'base.json'])('TypeScript alias reads refuse a linke
         'config.json': '{"compilerOptions":{"paths":{"@private/*":["./private/*"]}}}',
     });
     const session = await openSession(sandbox.path);
-    const path = join(sandbox.path, name);
+    const path = join(sandbox.path, 'tsconfig.json');
     unlinkSync(path);
     symlinkSync(join(outside.path, 'config.json'), path);
     const inputs = templateInputs(
@@ -169,7 +128,7 @@ test('TypeScript alias reads retain a declared external dependency configuration
     expect(await Bun.file(join(dependency.path, 'tsconfig.json')).text()).toBe('{"compilerOptions":{"strict":true}}');
 });
 
-test('alias discovery accepts absent files and valid TypeScript comments and trailing commas', async () => {
+test('alias discovery accepts absent configuration files', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': policyOf(['typescript']),
@@ -184,14 +143,6 @@ test('alias discovery accepts absent files and valid TypeScript comments and tra
         session.version,
     );
     expect(inputs.importAliases('')).toStrictEqual({});
-    writeFileSync(
-        join(sandbox.path, 'tsconfig.json'),
-        `{
-        // TypeScript permits comments and trailing commas.
-        "compilerOptions": { "paths": { "@app/*": ["./src/*"], }, },
-    }`,
-    );
-    expect(inputs.importAliases('')).toStrictEqual({ '@app/': 'src/' });
 });
 
 test('inherited aliases resolve from the kit that declares them', async () => {

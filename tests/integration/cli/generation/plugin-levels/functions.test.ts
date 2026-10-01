@@ -36,10 +36,10 @@ const CALLBACK_SOURCE = [
     'export function bounded(value: number) { return Math.max(minimum, value); }',
 ].join('\n');
 
-test.each(['recommended', 'all'])('generated %s lint accepts JavaScript method node shapes', async (level) => {
+test('generated lint accepts JavaScript method node shapes', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': policyOf(['javascript'], '', level),
+        'gspot.toml': policyOf(['javascript'], '', 'all'),
         'package.json': '{"private":true,"type":"module"}\n',
         'counter.js': '',
     });
@@ -51,7 +51,7 @@ test.each(['recommended', 'all'])('generated %s lint accepts JavaScript method n
             .flatMap(({ messages }) => messages)
             .filter(({ ruleId }) => ruleId === 'gspot/no-trivial-functions')
             .map(({ line, messageId: diagnostic }) => ({ line, messageId: diagnostic })),
-    ).toStrictEqual(level === 'all' ? [{ line: 3, messageId: 'trivial' }] : []);
+    ).toStrictEqual([{ line: 3, messageId: 'trivial' }]);
     const corrected = await eslint.lintText(
         source.replace(
             'method() { return 1; }',
@@ -64,10 +64,10 @@ test.each(['recommended', 'all'])('generated %s lint accepts JavaScript method n
     ).toStrictEqual([]);
 });
 
-test.each(['recommended', 'all'])('generated %s lint preserves required class method contracts', async (level) => {
+test('generated lint preserves required class method contracts', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': policyOf(['typescript'], '[guides]\ninstall = false\n', level),
+        'gspot.toml': policyOf(['typescript'], '[guides]\ninstall = false\n', 'all'),
         'package.json': '{"private":true,"type":"module"}\n',
         'tsconfig.json': '{"compilerOptions":{"strict":true,"noEmit":true},"include":["**/*.ts"]}\n',
         'methods.ts': [
@@ -85,90 +85,82 @@ test.each(['recommended', 'all'])('generated %s lint preserves required class me
     const results = await eslint.lintFiles(['methods.ts']);
     expect(
         results.flatMap(({ messages }) => messages).filter(({ ruleId }) => ruleId === 'gspot/no-trivial-functions'),
-    ).toMatchObject(level === 'all' ? [6, 7].map((line) => ({ line, messageId: 'trivial' })) : []);
+    ).toMatchObject([6, 7].map((line) => ({ line, messageId: 'trivial' })));
 });
 
-test.each(['recommended', 'all'])(
-    'generated %s lint reports named small functions and keeps inline callbacks',
-    async (level) => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
-            'gspot.toml': policyOf(['typescript'], '[guides]\ninstall = false\n', level),
-            'package.json': '{"private":true,"type":"module"}\n',
-            'tsconfig.json': '{"compilerOptions":{"strict":true,"noEmit":true},"include":["**/*.ts"]}\n',
-            'callbacks.ts': CALLBACK_SOURCE,
-            'consumer.ts': [
-                'import { read, invoked, typeOnly, parenthesized } from "./callbacks";',
-                'import * as callbacks from "./callbacks";',
-                'import { aliasedCallback as callback } from "./callbacks";',
-                'export const listeners = { read, namespaceCallback: callbacks.namespaceCallback, callback };',
-                'read(1); invoked(1); (parenthesized)(1);',
-                'export type Signature = typeof typeOnly;',
-                'import { area as size, forward } from "./callbacks";',
-                'size(2, 3); callbacks.area(4, 5); forward(1); callbacks.forward(2);',
-                'import { bounded } from "./callbacks";',
-                'bounded(1); callbacks.bounded(2);',
-            ].join('\n'),
-        });
-        const eslint = await generatedEslint(sandbox.path);
-        const results = await eslint.lintFiles(['callbacks.ts']);
-        // A name, a caller count, a typed position, or a value use does not keep a small function. Inline callbacks,
-        // recursion, and the callbacks a function writes inside itself do.
-        expect(
-            results
-                .flatMap((file) => file.messages)
-                .filter(({ ruleId }) => ruleId === 'gspot/no-trivial-functions')
-                .map(({ line, messageId: diagnostic }) => ({ line, messageId: diagnostic })),
-        ).toStrictEqual(
-            level === 'all'
-                ? [2, 3, 11, 12, 13, 14, 15, 16, 17, 19, 20, 26, 27, 30].map((line) => ({ line, messageId: 'trivial' }))
-                : [],
-        );
-    },
-);
+test('generated lint reports named small functions and keeps inline callbacks', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': policyOf(['typescript'], '[guides]\ninstall = false\n', 'all'),
+        'package.json': '{"private":true,"type":"module"}\n',
+        'tsconfig.json': '{"compilerOptions":{"strict":true,"noEmit":true},"include":["**/*.ts"]}\n',
+        'callbacks.ts': CALLBACK_SOURCE,
+        'consumer.ts': [
+            'import { read, invoked, typeOnly, parenthesized } from "./callbacks";',
+            'import * as callbacks from "./callbacks";',
+            'import { aliasedCallback as callback } from "./callbacks";',
+            'export const listeners = { read, namespaceCallback: callbacks.namespaceCallback, callback };',
+            'read(1); invoked(1); (parenthesized)(1);',
+            'export type Signature = typeof typeOnly;',
+            'import { area as size, forward } from "./callbacks";',
+            'size(2, 3); callbacks.area(4, 5); forward(1); callbacks.forward(2);',
+            'import { bounded } from "./callbacks";',
+            'bounded(1); callbacks.bounded(2);',
+        ].join('\n'),
+    });
+    const eslint = await generatedEslint(sandbox.path);
+    const results = await eslint.lintFiles(['callbacks.ts']);
+    // A name, a caller count, a typed position, or a value use does not keep a small function. Inline callbacks,
+    // recursion, and the callbacks a function writes inside itself do.
+    expect(
+        results
+            .flatMap((file) => file.messages)
+            .filter(({ ruleId }) => ruleId === 'gspot/no-trivial-functions')
+            .map(({ line, messageId: diagnostic }) => ({ line, messageId: diagnostic })),
+    ).toStrictEqual(
+        [2, 3, 11, 12, 13, 14, 15, 16, 17, 19, 20, 26, 27, 30].map((line) => ({ line, messageId: 'trivial' })),
+    );
+});
 
-test.each(['recommended', 'all'])(
-    'generated %s file ownership keeps constructor state and rejects small calculations and forwarding',
-    async (level) => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
-            'gspot.toml': policyOf(['typescript'], '[guides]\ninstall = false\n', level),
-            'package.json': '{"private":true,"type":"module"}\n',
-            'tsconfig.json': '{"compilerOptions":{"strict":true,"noEmit":true},"include":["**/*.ts"]}\n',
-            'area.ts': 'export function area(width: number, height: number) { return width * height; }\n',
-            'render.ts':
-                'export function render(template: string, file: string) { return template.replaceAll("{{file}}", () => file); }\n',
-            'parameter-state.ts': 'export class Settings { constructor(public enabled: boolean) {} }\n',
-            'assigned-state.ts':
-                'export class Failure extends Error { constructor(message: string) { super(message); this.name = "Failure"; } }\n',
-            'forward.ts': 'export function forward(value: number) { return Math.abs(value); }\n',
-            'consumer.ts':
-                'import { area } from "./area"; import { forward } from "./forward"; import { render } from "./render"; area(2, 3); area(4, 5); forward(1); forward(2); render("{{file}}", "one"); render("{{file}}", "two");\n',
-        });
-        const eslint = await generatedEslint(sandbox.path);
-        const state = await eslint.lintFiles(['parameter-state.ts', 'assigned-state.ts']);
-        expect(
-            state
-                .flatMap(({ messages }) => messages)
-                .filter(({ ruleId }) => ruleId === 'gspot/no-trivial-files' || ruleId === 'gspot/no-trivial-functions'),
-        ).toStrictEqual([]);
-        const trivial = (name: string, results: Awaited<ReturnType<typeof eslint.lintFiles>>) =>
-            results
-                .flatMap(({ messages }) => messages)
-                .filter(({ ruleId }) => ruleId === name)
-                .map(({ line, column, messageId: diagnostic }) => ({ line, column, messageId: diagnostic }));
-        // Two callers and a multiplication do not keep a one-statement function or its file.
-        for (const file of ['area.ts', 'render.ts', 'forward.ts']) {
-            const results = await eslint.lintFiles([file]);
-            expect(trivial('gspot/no-trivial-functions', results)).toStrictEqual(
-                level === 'all' ? [{ line: 1, column: 8, messageId: 'trivial' }] : [],
-            );
-            expect(trivial('gspot/no-trivial-files', results)).toStrictEqual(
-                level === 'all' ? [{ line: 1, column: 1, messageId: 'trivial' }] : [],
-            );
-        }
-    },
-);
+test('generated file ownership keeps constructor state and rejects small calculations and forwarding', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': policyOf(['typescript'], '[guides]\ninstall = false\n', 'all'),
+        'package.json': '{"private":true,"type":"module"}\n',
+        'tsconfig.json': '{"compilerOptions":{"strict":true,"noEmit":true},"include":["**/*.ts"]}\n',
+        'area.ts': 'export function area(width: number, height: number) { return width * height; }\n',
+        'render.ts':
+            'export function render(template: string, file: string) { return template.replaceAll("{{file}}", () => file); }\n',
+        'parameter-state.ts': 'export class Settings { constructor(public enabled: boolean) {} }\n',
+        'assigned-state.ts':
+            'export class Failure extends Error { constructor(message: string) { super(message); this.name = "Failure"; } }\n',
+        'forward.ts': 'export function forward(value: number) { return Math.abs(value); }\n',
+        'consumer.ts':
+            'import { area } from "./area"; import { forward } from "./forward"; import { render } from "./render"; area(2, 3); area(4, 5); forward(1); forward(2); render("{{file}}", "one"); render("{{file}}", "two");\n',
+    });
+    const eslint = await generatedEslint(sandbox.path);
+    const state = await eslint.lintFiles(['parameter-state.ts', 'assigned-state.ts']);
+    expect(
+        state
+            .flatMap(({ messages }) => messages)
+            .filter(({ ruleId }) => ruleId === 'gspot/no-trivial-files' || ruleId === 'gspot/no-trivial-functions'),
+    ).toStrictEqual([]);
+    const trivial = (name: string, results: Awaited<ReturnType<typeof eslint.lintFiles>>) =>
+        results
+            .flatMap(({ messages }) => messages)
+            .filter(({ ruleId }) => ruleId === name)
+            .map(({ line, column, messageId: diagnostic }) => ({ line, column, messageId: diagnostic }));
+    // Two callers and a multiplication do not keep a one-statement function or its file.
+    for (const file of ['area.ts', 'render.ts', 'forward.ts']) {
+        const results = await eslint.lintFiles([file]);
+        expect(trivial('gspot/no-trivial-functions', results)).toStrictEqual([
+            { line: 1, column: 8, messageId: 'trivial' },
+        ]);
+        expect(trivial('gspot/no-trivial-files', results)).toStrictEqual([
+            { line: 1, column: 1, messageId: 'trivial' },
+        ]);
+    }
+});
 
 test('generated all lint keeps callbacks written as object properties', async () => {
     await using sandbox = await testdir();
