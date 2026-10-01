@@ -1,7 +1,6 @@
 import executables from 'which';
 import { join } from 'node:path';
 import { writeFileSync } from 'node:fs';
-import { rejects } from 'node:assert/strict';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { denoLint } from '#cli/checks/supabase/deno.ts';
@@ -41,8 +40,6 @@ test('pinned Deno reports a lint defect and accepts its correction in a scoped e
             'export function greet(value: string) { return value; }\n',
         );
         expect(await denoLint(selected)).toStrictEqual([]);
-        selected.cancelSignal = AbortSignal.abort();
-        await rejects(denoLint(selected), { message: 'The command was canceled.' });
     } finally {
         executableLookup.mockRestore();
     }

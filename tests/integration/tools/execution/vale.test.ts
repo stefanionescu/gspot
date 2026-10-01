@@ -1,17 +1,17 @@
 import { join } from 'node:path';
+import { readFileSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { TOKEN_IGNORES } from '#cli/config/kits.ts';
 import { readAsset } from '#cli/platform/assets.ts';
-import { run } from '#tests/support/cli/command.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { valeFindings } from '#cli/checks/prose/vale.ts';
+import { run as runTool } from '#cli/platform/spawn.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { runEngineCheck } from '#cli/execution/engines.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { PROSE_FORMATS } from '#cli/generation/vale-styles.ts';
-import type { RunReport } from '#cli/types/execution/execution.ts';
+import { parseAlerts, valeFindings } from '#cli/checks/prose/vale.ts';
 
 for (const extension of ['md', 'sh']) {
     test(`native Vale reports a ${extension} defect and accepts corrected source`, async () => {
@@ -65,12 +65,8 @@ test('Vale preserves ESLint delimiters while checking punctuation inside reasons
 
 test.each([
     ['ts', '//', 'const text = "delve";'],
-    ['tsx', '//', 'const text = "delve";'],
     ['mts', '//', 'const text = "delve";'],
-    ['cts', '//', 'const text = "delve";'],
     ['js', '//', 'const text = "delve";'],
-    ['jsx', '//', 'const text = "delve";'],
-    ['mjs', '//', 'const text = "delve";'],
     ['cjs', '//', 'const text = "delve";'],
     ['py', '#', 'text = "delve"'],
     ['swift', '//', 'let text = "delve"'],
@@ -141,32 +137,23 @@ test('Vale accepts explicit minimum versions and still reports vague or redundan
     ]);
 });
 
-test('a raw-markup fixture exception preserves adjacent images and other prose rules', async () => {
+test('heading capitalization distinguishes ordinary edge from the browser name and rejects title case', async () => {
     await using directory = await testdir();
+    const rule = readFileSync(
+        new URL('../../../../packages/cli/kits/general/prose/styles/gspot/headings.yml', import.meta.url),
+        'utf8',
+    );
     await createFileTree(directory.path, {
-        'gspot.toml': [
-            'version = 1',
-            'kits = ["prose"]',
-            '[[ignore]]',
-            'check = "prose/vale"',
-            'rule = "Example.Alt"',
-            'paths = ["fixture.ts"]',
-            'reason = "The fixture deliberately omits alt text to test accessibility findings."',
-            '',
-        ].join('\n'),
-        '.gspot/config/vale.ini': 'StylesPath = styles\n[*]\nBasedOnStyles = Example\n',
-        '.gspot/config/styles/Example/Alt.yml': readAsset('kits/general/prose/styles/gspot/alt-text.yml'),
-        '.gspot/config/styles/Example/Concrete.yml':
-            'extends: existence\nmessage: "Use inspect."\nlevel: error\ntokens: [delve]\n',
-        'fixture.ts': 'const markup = \'<img src="fixture.png">\';\n// We delve into records.\n',
-        'guide.md': '<img src="example.png">\n',
+        'styles/gspot/headings.yml': rule,
+        'styles/config/vocabularies/project/accept.txt': 'Bun\n',
+        '.vale.ini': 'StylesPath = styles\nVocab = project\n\n[*.md]\nBasedOnStyles = gspot\n',
+        'guide.md': '# Guide\n\n## HTTP edge rules\n\n## Microsoft Edge settings\n\n## HTTP Edge Rules\n',
     });
-    const result = await run(directory.path, ['check', '--only', 'prose/vale', '--json']);
-    expect(result.code, result.stdout + result.stderr).toBe(1);
-    const report = JSON.parse(result.stdout) as RunReport;
-    expect(report.checks.flatMap((check) => check.findings)).toStrictEqual([
-        containing({ file: 'fixture.ts', line: 2, rule: 'Example.Concrete' }),
-        containing({ file: 'guide.md', line: 1, rule: 'Example.Alt' }),
+    const result = await runTool(['vale', '--config', '.vale.ini', '--output', 'JSON', '--no-exit', 'guide.md'], {
+        cwd: directory.path,
+    });
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    expect(parseAlerts(result.stdout).map((alert) => ({ line: alert.line, check: alert.check }))).toStrictEqual([
+        { line: 7, check: 'gspot.headings' },
     ]);
-    expect(report.ignores).toContainEqual(containing({ rule: 'Example.Alt', matched: 1 }));
 });

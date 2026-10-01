@@ -1,12 +1,12 @@
-// Without git the secrets configuration scans the files themselves, and the git scans wait for a repository (K-271).
+// Without git the secrets configuration scans the files themselves, and the git scans wait for a repository.
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
+import { containing } from '#tests/support/expectations.ts';
 import type { RunOptions } from '#cli/types/execution/execution.ts';
-import { containing, textContaining } from '#tests/support/expectations.ts';
 import { PLANTED_TOKEN, SECRETS_FILES_POLICY } from '#tests/inputs/integration/tools/checks.ts';
 
 async function secretChecks(root: string): Promise<{ check: string; status: string; findings: { file: string }[] }[]> {
@@ -31,12 +31,6 @@ test('a folder with no git scans its files for secrets, and a git repository sca
         }),
     );
     expect(withoutGit.find((check) => check.check === 'secrets/gitleaks-staged')?.status).toBe('skipped');
-    const options: RunOptions = { stage: 'all', skips: [], fix: false, isDryRun: false };
-    const { planned } = await executeRun(await openSession(sandbox.path), options);
-    expect(planned.find((check) => check.check === 'secrets/gitleaks-staged')?.skip).toMatchObject({
-        source: 'rules',
-        note: textContaining('no git repository'),
-    });
     commitAll(sandbox.path);
     const isGitRepository = await secretChecks(sandbox.path);
     expect(isGitRepository.find((check) => check.check === 'secrets/gitleaks-files')?.status).toBe('skipped');

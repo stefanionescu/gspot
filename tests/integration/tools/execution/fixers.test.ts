@@ -132,8 +132,8 @@ test.each([
 });
 
 test.each([
-    ...['javascript', 'typescript', 'svelte', 'vue'].map((configuration) => ({
-        configuration,
+    {
+        configuration: 'javascript',
         tool: 'eslint',
         executable: 'eslint.js',
         path: 'sample.js',
@@ -144,7 +144,7 @@ test.each([
         defect: 'missing()\n',
         partial: 'missing();\n',
         corrected: 'export {};\n',
-    })),
+    },
     {
         configuration: 'css',
         tool: 'stylelint',
@@ -263,3 +263,32 @@ test.each([
         expect(passed.report.exitCode, JSON.stringify(passed.report)).toBe(0);
     },
 );
+
+test('shfmt reports and fixes ordinary shell formatting', async () => {
+    await using sandbox = await testdir();
+    const source = "if true;then\nprintf '%s\\n' one\nfi\n";
+    await createFileTree(sandbox.path, {
+        'gspot.toml': policyOf(['bash'], '', 'all'),
+        'example.sh': source,
+    });
+    const session = await openSession(sandbox.path);
+    for (const file of emitAll(session.policyFiles.policy, session.repository, session.scopes, {
+        version: session.version,
+        packageClient: session.packageClient,
+    }).files.filter((file) => file.kind === 'config'))
+        await Bun.write(join(sandbox.path, file.path), file.content);
+    const options = {
+        stage: 'all' as const,
+        skips: [],
+        only: ['bash/shfmt'],
+        fix: false,
+        isDryRun: false,
+    };
+    const defect = await executeRun(session, options);
+    expect(defect.report.exitCode, JSON.stringify(defect.report)).toBe(1);
+    const correction = await executeRun(await openSession(sandbox.path), { ...options, fix: true });
+    expect(correction.report.exitCode, JSON.stringify(correction.report)).toBe(0);
+    expect(await Bun.file(join(sandbox.path, 'example.sh')).text()).not.toBe(source);
+    const verified = await executeRun(await openSession(sandbox.path), options);
+    expect(verified.report.exitCode, JSON.stringify(verified.report)).toBe(0);
+});

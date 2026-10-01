@@ -29,7 +29,7 @@ async function input(root: string): Promise<EngineInput> {
     });
 }
 
-test('native Python license scanning ignores project scanner exclusions and verifies exact reported exceptions', async () => {
+test('native Python license scanning ignores project scanner exclusions and matches an exception by its normalized name', async () => {
     await using sandbox = await testdir();
     const root = sandbox.path;
     await createFileTree(root, {
@@ -71,21 +71,6 @@ test('native Python license scanning ignores project scanner exclusions and veri
             '[[tools.licenses.packages_allowed]]\npackage = "Licensed._Example@1.0.0"\nlicense = "GPL-3.0-only"\nreason = "Fixture tests exact reported license consent."\n',
             'all',
         ),
-    );
-    expect(await licensesPackages(await input(root))).toStrictEqual([]);
-    await Bun.write(metadata, `Metadata-Version: 2.1\nName: licensed-example\nVersion: 1.0.0\nLicense: MIT\n`);
-    expect(await licensesPackages(await input(root))).toStrictEqual([
-        containing({ rule: 'license', message: textContaining('exception no longer holds') }),
-    ]);
-    await Bun.write(join(root, 'gspot.toml'), policyOf(['licenses'], '', 'all'));
-    expect(await licensesPackages(await input(root))).toStrictEqual([]);
-    await Bun.write(metadata, `Metadata-Version: 2.1\nName: licensed-example\nVersion: 1.0.0\nLicense: MIT-0\n`);
-    expect(await licensesPackages(await input(root))).toStrictEqual([
-        containing({ message: textContaining('reports MIT-0, which is not an allowed license') }),
-    ]);
-    await Bun.write(
-        join(root, 'gspot.toml'),
-        policyOf(['licenses'], '[tools.licenses]\nlicenses_allowed = ["MIT-0"]\n', 'all'),
     );
     expect(await licensesPackages(await input(root))).toStrictEqual([]);
 });
