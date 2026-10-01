@@ -26,8 +26,6 @@ export const XCTEST_COVERAGE_PROJECT = `// !$*UTF8*$!
  };
 }
 `;
-// This compatibility fixture uses the installed CLI release and its database image selection.
-export const CLI_VERSION = '2.72.7';
 /** A planted token with the shape gitleaks looks for; it belongs to nothing. */
 // eslint-disable-next-line sonarjs/no-hardcoded-secrets -- reason: The planted token is the defect the secrets check must find.
 export const PLANTED_TOKEN = 'const token = "ghp_Xk92lM3nPq7RsT1vWy4ZaB6cDe8FgH0iJkLmN";\n';

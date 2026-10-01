@@ -1,0 +1,31 @@
+name: database
+# The Supabase database journey starts a local Postgres container. The pull request jobs leave it out, because
+# pulling the image on every run hits the registry rate limit, so it runs here once a week and on demand.
+on:
+    schedule:
+        - cron: '23 5 * * 1'
+    workflow_dispatch:
+permissions:
+    contents: read
+jobs:
+    supabase:
+        runs-on: ubuntu-24.04
+        timeout-minutes: 30
+        env:
+            GITHUB_TOKEN: ${{ github.token }}
+            DATABASE_JOURNEYS: '1'
+        defaults:
+            run:
+                shell: bash
+        steps:
+            - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+              with:
+                  persist-credentials: false
+            - uses: jdx/mise-action@5ac50f778e26fac95da98d50503682459e86d566 # v3.2.0
+              with:
+                  version: '2026.8.8'
+                  cache: true
+            - run: mise use --global supabase@2.72.7
+            - run: mise run --skip-tools repo:setup
+            - run: mise run --skip-tools repo:install-checks
+            - run: mise run --skip-tools test:tools -- ./integration/tools/checks/supabase/types.test.ts
