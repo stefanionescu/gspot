@@ -43,7 +43,7 @@ if (!(process.platform === 'win32' || process.getuid?.() === 0))
             }),
             'source/sample.sql': 'select  * from foo;\n',
         });
-        const options: RunOptions = { stage: 'all', skips: [], fix: true, isDryRun: false, noCache: true };
+        const options: RunOptions = { stage: 'all', skips: [], fix: true, isDryRun: false };
         chmodSync(join(sandbox.path, 'source'), 0o500);
         try {
             const failed = await executeRun(await openSession(sandbox.path), options);
@@ -124,7 +124,7 @@ test.each([
         [entry.config]: entry.toolConfiguration,
         [entry.path]: entry.defect,
     });
-    const options: RunOptions = { stage: 'all', skips: [], fix: true, isDryRun: false, noCache: true };
+    const options: RunOptions = { stage: 'all', skips: [], fix: true, isDryRun: false };
     const failed = await executeRun(await openSession(sandbox.path), options);
     expect(failed.report.exitCode, JSON.stringify({ report: failed.report, fixes: failed.fixes })).toBe(1);
     expect(failed.fixes?.results).toMatchObject([{ status: 'changed', changed: [entry.path] }]);
@@ -202,7 +202,6 @@ test.each([
         skips: [],
         fix: false,
         isDryRun: false,
-        noCache: true,
     });
     expect(invalid.report.exitCode).toBe(2);
     expect(invalid.report.checks).toMatchObject([{ status: 'error', findings: [] }]);
@@ -211,7 +210,7 @@ test.each([
     const session = await openSession(sandbox.path);
     const explanation = explain(session, 'project/native');
     expect(explanation).toMatchObject({ data: { fix_findings_exit_codes: [entry.findingsCode] } });
-    const options: RunOptions = { stage: 'all', skips: [], fix: true, isDryRun: false, noCache: true };
+    const options: RunOptions = { stage: 'all', skips: [], fix: true, isDryRun: false };
     const failed = await executeRun(session, options);
     expect(failed.report.exitCode, JSON.stringify(failed)).toBe(1);
     expect(failed.fixes?.results).toMatchObject([{ status: 'changed', changed: [entry.path] }]);
@@ -260,7 +259,7 @@ test.each([
             packageClient: session.packageClient,
         }).files.filter((file) => file.kind === 'config'))
             await Bun.write(join(sandbox.path, output.path), output.content);
-        const options = { stage: 'all', skips: [], only: [check], fix: true, isDryRun: false, noCache: true } as const;
+        const options = { stage: 'all', skips: [], only: [check], fix: true, isDryRun: false } as const;
         const failed = await executeRun(session, { ...options, skips: [], only: [check] });
         expect(failed.report.exitCode, JSON.stringify({ report: failed.report, fixes: failed.fixes })).toBe(1);
         expect(failed.fixes?.results).toMatchObject([{ check, status: 'changed', changed: [path] }]);

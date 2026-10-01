@@ -29,7 +29,6 @@ test('Docker guide examples pass all while a floating image fails', async () => 
         skips: [],
         fix: false,
         isDryRun: false,
-        noCache: true,
     };
     const rejected = await executeRun(session, options);
     expect(rejected.report.exitCode, JSON.stringify(rejected.report)).toBe(1);

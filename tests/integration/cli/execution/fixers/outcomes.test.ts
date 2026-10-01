@@ -136,7 +136,6 @@ test('fails the run when a correction exits nonzero even though its check passes
         skips: [],
         fix: true,
         isDryRun: false,
-        noCache: true,
     });
     expect(outcome.report.checks[0]?.status).toBe('ok');
     expect(outcome.report.exitCode).toBe(2);

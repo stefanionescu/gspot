@@ -36,7 +36,7 @@ test.each([
         const environment = { PATH: toolsPath(['bats']) };
         const applied = await run(sandbox.path, ['apply'], environment);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-        const clean = await run(sandbox.path, ['check', '--only', entry.check, '--no-cache', '--json'], environment);
+        const clean = await run(sandbox.path, ['check', '--only', entry.check, '--json'], environment);
         expect(clean.code, clean.stdout + clean.stderr).toBe(0);
         const report = JSON.parse(clean.stdout) as { checks: { files: number; status: string }[] };
         expect(report.checks[0]?.status).toBe('ok');
@@ -45,11 +45,7 @@ test.each([
         const original = readFileSync(path);
         try {
             await Bun.write(path, entry.broken);
-            const broken = await run(
-                sandbox.path,
-                ['check', '--only', entry.check, '--no-cache', '--json'],
-                environment,
-            );
+            const broken = await run(sandbox.path, ['check', '--only', entry.check, '--json'], environment);
             expect(broken.code, broken.stdout + broken.stderr).toBe(1);
             const failed = JSON.parse(broken.stdout) as RunReport;
             expect(failed.checks).toMatchObject([{ check: entry.check, status: 'fail' }]);
@@ -63,11 +59,7 @@ test.each([
         } finally {
             await Bun.write(path, original);
         }
-        const corrected = await run(
-            sandbox.path,
-            ['check', '--only', entry.check, '--no-cache', '--json'],
-            environment,
-        );
+        const corrected = await run(sandbox.path, ['check', '--only', entry.check, '--json'], environment);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
             { check: entry.check, status: 'ok', files: entry.files, findings: [] },

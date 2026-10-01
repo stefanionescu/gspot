@@ -53,7 +53,7 @@ test(
             '--no-install',
         ];
         await installAtLevel(sandbox.path, argv, environment);
-        const command = ['check', '--only', 'typescript/eslint', '--no-cache', '--json'];
+        const command = ['check', '--only', 'typescript/eslint', '--json'];
         const lint = await run(sandbox.path, command, environment);
         expect(lint.code, lint.stdout + lint.stderr).toBe(1);
         const report = JSON.parse(lint.stdout) as RunReport;
@@ -107,7 +107,7 @@ test(
         const policy = await Bun.file(join(sandbox.path, 'gspot.toml')).text();
         expect(policy).not.toContain('templates');
         expect(existsSync(join(sandbox.path, 'db/.sqlfluffignore'))).toBe(false);
-        const syntax = await run(sandbox.path, ['check', '--only', 'sql/syntax', '--no-cache'], environment);
+        const syntax = await run(sandbox.path, ['check', '--only', 'sql/syntax'], environment);
         expect(syntax.code).toBe(0);
     },
     PLANTED_TIMEOUT_MS * 3,

@@ -45,7 +45,6 @@ function optionsFrom(paths: string[], flags: Record<string, unknown>, global: Re
         skips: listFlag(flags, 'skip') ?? [],
         quiet: global['quiet'] === true,
         verbose: global['verbose'] === true,
-        noCache: flags['cache'] === false,
         paths,
         ...(only === undefined ? {} : { only }),
         ...(typeof flags['changed'] === 'string' ? { changed: flags['changed'] } : {}),
@@ -151,7 +150,6 @@ export function registerCheck(program: Command): void {
         )
         .option('--skip <checks...>', 'Skip these checks for this run')
         .addOption(new Option('--message-file <path>', 'The commit message file, for the message stage').hideHelp())
-        .option('--no-cache', 'Run every check, even when its inputs did not change')
         .action(async (paths: string[], flags: Record<string, unknown>, command: Command) => {
             await runCheck(paths, flags, command.optsWithGlobals());
         });

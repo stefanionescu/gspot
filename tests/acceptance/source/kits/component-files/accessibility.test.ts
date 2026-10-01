@@ -56,7 +56,7 @@ describe('component accessibility', () => {
                 framework === 'vue' ? ':src="source" alt="The product"' : 'src={source} alt="The product"',
             );
             await Bun.write(join(sandbox.path, path), corrected);
-            const fixed = await run(sandbox.path, ['check', '--only', check, '--no-cache', '--json'], environment);
+            const fixed = await run(sandbox.path, ['check', '--only', check, '--json'], environment);
             expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
             expect((JSON.parse(fixed.stdout) as RunReport).checks).toMatchObject([
                 { check, status: 'ok', findings: [] },

@@ -55,7 +55,7 @@ test(
             environment,
         );
         for (const id of ['pytest/coverage', 'naming/identifiers', 'python/ruff']) {
-            const clean = await run(sandbox.path, ['check', '--only', id, '--no-cache'], environment);
+            const clean = await run(sandbox.path, ['check', '--only', id], environment);
             expect(clean.code, `${id}: ${clean.stdout}${clean.stderr}`).toBe(0);
         }
         const untested: FindingCase = {

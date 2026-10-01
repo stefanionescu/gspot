@@ -174,7 +174,6 @@ test('a managed secret baseline rejects linked bytes before evaluating entries',
             only: ['bash/syntax'],
             fix: false,
             isDryRun: false,
-            noCache: true,
         };
         const broken = await executeRun(await openSession(sandbox.path), options);
         expect(broken.report.exitCode).toBe(1);

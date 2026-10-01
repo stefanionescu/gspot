@@ -17,10 +17,7 @@ async function expectInstalledNaming(installation: InstalledConsumer): Promise<v
     const optIn = await run([...command, 'set', 'extra_checks', 'naming/identifiers'], options);
     expect(optIn.code, optIn.stdout + optIn.stderr).toBe(0);
     writeFileSync(join(consumer, 'broken.sh'), 'command=example\n');
-    const renamed = await run(
-        [...command, 'check', 'broken.sh', '--only', 'naming/identifiers', '--no-cache', '--json'],
-        options,
-    );
+    const renamed = await run([...command, 'check', 'broken.sh', '--only', 'naming/identifiers', '--json'], options);
     expect(renamed.code, renamed.stdout + renamed.stderr).toBe(0);
     const acceptedName = JSON.parse(renamed.stdout) as RunReport;
     expect(acceptedName.skips).toStrictEqual([]);
@@ -41,7 +38,7 @@ test(
         expect(installation.installed.code, installation.installed.stdout + installation.installed.stderr).toBe(0);
         const { consumer, command, options } = installation;
         await initializeConsumer(release, installation);
-        const checked = await run([...command, 'check', '--only', 'bash/syntax', '--no-cache', '--json'], options);
+        const checked = await run([...command, 'check', '--only', 'bash/syntax', '--json'], options);
         expect(checked.code, checked.stdout + checked.stderr).toBe(1);
         const report = JSON.parse(checked.stdout) as RunReport;
         expect(report.exitCode).toBe(1);
@@ -65,7 +62,7 @@ test(
             { check: 'bash/syntax', file: 'broken.sh', line: 1, message: "`if then'" },
         ]);
         writeFileSync(join(consumer, 'broken.sh'), 'echo example\n');
-        const corrected = await run([...command, 'check', '--only', 'bash/syntax', '--no-cache', '--json'], options);
+        const corrected = await run([...command, 'check', '--only', 'bash/syntax', '--json'], options);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         const clean = JSON.parse(corrected.stdout) as RunReport;
         expect(clean.exitCode).toBe(0);

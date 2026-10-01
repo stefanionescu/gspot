@@ -23,7 +23,7 @@ test(
         commitAll(sandbox.path);
         const environment = { PATH: toolsPath(['semgrep', 'typos', 'ec']) };
         await installAtLevel(sandbox.path, SECURITY_INIT, environment);
-        const command = ['check', '--only', 'security/semgrep', '--no-cache', '--json'];
+        const command = ['check', '--only', 'security/semgrep', '--json'];
         const clean = await run(sandbox.path, command, environment);
         expect(clean.code, clean.stdout + clean.stderr).toBe(0);
         await Bun.write(join(sandbox.path, 'src/run.ts'), EVALUATED);

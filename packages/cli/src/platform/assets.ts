@@ -34,13 +34,23 @@ function packageRoot(): string {
 export const GRAMMAR_NAMES = [...GRAMMAR_FILES, ...Object.keys(RUNTIME_WASM)];
 
 /**
+ * The file of one asset in the package, for a tool that reads it by path.
+ * @param path the asset path, such as `kits/language/bash/rules/branches.yml`
+ * @returns the absolute path
+ */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: readAsset and the tools that read a shipped file by path find it under the same package root.
+export function assetPath(path: string): string {
+    return join(packageRoot(), path);
+}
+
+/**
  * Reads one asset by its path in the package, such as `kits/language/bash/manifest.toml`.
  * @param path the asset path
  * @returns the text
  */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: 20 callers name assets by their path in the package; this owner finds the package root once for all of them.
 export function readAsset(path: string): string {
-    return readFileSync(join(packageRoot(), path), 'utf8');
+    return readFileSync(assetPath(path), 'utf8');
 }
 
 /**

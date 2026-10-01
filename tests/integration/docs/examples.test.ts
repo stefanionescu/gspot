@@ -47,7 +47,7 @@ test('the documented custom check reports its defect and accepts its correction'
     });
     const applied = await run(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    const args = ['check', '--only', 'project/notes', '--no-cache', '--json'];
+    const args = ['check', '--only', 'project/notes', '--json'];
     const failed = await run(sandbox.path, args);
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
     expect((JSON.parse(failed.stdout) as RunReport).checks[0]!.findings).toMatchObject([

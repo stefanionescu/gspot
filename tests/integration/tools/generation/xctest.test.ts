@@ -14,17 +14,14 @@ import { containing, containingAll } from '#tests/support/expectations.ts';
 import { commandConfigurations } from '#cli/execution/command-expansion.ts';
 import { DEFECT, CORRECT } from '#tests/inputs/integration/tools/generation.ts';
 
-// Configuration edits invalidate cached findings and missing inputs fail explicitly.
+// Configuration edits change the findings, and missing inputs fail explicitly.
 async function expectConfigurationChanges(root: string, prefix: string, command: string[]): Promise<void> {
-    const cachedCommand = command.filter((part) => part !== '--no-cache');
-    const ran = await run(root, cachedCommand);
+    const ran = await run(root, command);
     expect(ran.code).toBe(0);
-    const cached = await run(root, cachedCommand);
-    expect((JSON.parse(cached.stdout) as RunReport).checks[0]!.status).toBe('cache');
     const nestedPath = join(root, `${prefix}AppTests/.swiftlint.yml`);
     const nested = await Bun.file(nestedPath).text();
     await Bun.write(nestedPath, nested.replace('    - force_unwrapping\n', ''));
-    const changedConfiguration = await run(root, cachedCommand);
+    const changedConfiguration = await run(root, command);
     expect(changedConfiguration.code, changedConfiguration.stdout + changedConfiguration.stderr).toBe(1);
     expect((JSON.parse(changedConfiguration.stdout) as RunReport).checks[0]!.findings).toContainEqual(
         containing({ file: `${prefix}AppTests/Value.swift`, rule: 'force_unwrapping' }),

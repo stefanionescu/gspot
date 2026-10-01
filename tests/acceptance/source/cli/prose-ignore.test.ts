@@ -27,7 +27,7 @@ test('a path-specific Vale ignore retains findings elsewhere and reports its act
         expect(refused.code, refused.stdout + refused.stderr).toBe(2);
         expect(readFileSync(join(directory.path, 'gspot.toml'), 'utf8')).toBe(policy);
     }
-    const command = ['check', '--only', 'prose/vale', '--no-cache', '--json'];
+    const command = ['check', '--only', 'prose/vale', '--json'];
     const before = await run(directory.path, command, environment);
     expect(before.code, before.stdout + before.stderr).toBe(1);
     expect(
@@ -68,7 +68,7 @@ test('an obsolete Vale switch reports a policy error without suppressing the che
     const environment = { PATH: toolsPath(['vale']) };
     const applied = await run(directory.path, ['apply'], environment);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    const command = ['check', '--only', 'prose/vale', '--no-cache', '--json'];
+    const command = ['check', '--only', 'prose/vale', '--json'];
     const obsoletePolicy = `${policy}\n[tools.vale]\nenabled = false\n`;
     writeFileSync(join(directory.path, 'gspot.toml'), obsoletePolicy);
     const obsolete = await run(directory.path, command, environment);

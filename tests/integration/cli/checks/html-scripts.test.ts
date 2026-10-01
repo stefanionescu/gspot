@@ -24,7 +24,6 @@ test.each([
         skips: [],
         fix: false,
         isDryRun: false,
-        noCache: true,
         only: ['html/scripts'],
     };
     const result = await executeRun(await openSession(sandbox.path), options);
@@ -57,7 +56,6 @@ test.each([
         skips: [],
         fix: false,
         isDryRun: false,
-        noCache: true,
         only: ['html/scripts'],
     });
     expect(result.report.exitCode).toBe(0);

@@ -30,7 +30,7 @@ const VITE_FILES = {
     'api/src/task.js': START,
 };
 
-const ESLINT_CHECK = ['check', '--only', 'javascript/eslint', '--json', '--no-cache'];
+const ESLINT_CHECK = ['check', '--only', 'javascript/eslint', '--json'];
 const ENTRY_FILES = ['api/src/main.js', 'api/src/task.js', 'src/main.js', 'src/task.js'];
 
 async function trivialFiles(root: string): Promise<string[]> {

@@ -11,7 +11,6 @@ const options = {
     skips: [],
     fix: false,
     isDryRun: true,
-    noCache: true,
 };
 
 test('CSS module imports and literal access bind to the selected stylesheet, and a Sass module is not read', async () => {

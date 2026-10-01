@@ -43,7 +43,6 @@ bun-debug.log*
 .gspot/node_modules/
 .gspot/.venv/
 .gspot/state/
-.gspot/cache/
 .gspot/config/vale/styles/Google/
 .gspot/config/vale/styles/Microsoft/
 .gspot/config/vale/styles/write-good/

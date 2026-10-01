@@ -86,11 +86,7 @@ plantedCases(
                 const outcome = await runPlanted(root, invalid, environment);
                 expect(outcome.code, outcome.stdout + outcome.stderr).toBe(2);
                 expect(outcome.stdout + outcome.stderr).toContain(invalid.expected);
-                const corrected = await run(
-                    root,
-                    ['check', '--only', invalid.check, '--no-cache', '--json'],
-                    environment,
-                );
+                const corrected = await run(root, ['check', '--only', invalid.check, '--json'], environment);
                 expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
                 expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
                     { check: invalid.check, status: 'ok', findings: [] },
@@ -121,7 +117,7 @@ test(
             join(sandbox.path, 'bun.lock'),
             '{"lockfileVersion":1,"workspaces":{"":{"name":"planted"}},"packages":{}}\n',
         );
-        const args = ['check', '--only', 'integrity/lockfile-fresh', '--no-cache', '--json'];
+        const args = ['check', '--only', 'integrity/lockfile-fresh', '--json'];
         const stale = await run(sandbox.path, args, environment);
         expect(stale.code, stale.stdout + stale.stderr).toBe(1);
         expect((JSON.parse(stale.stdout) as RunReport).checks).toMatchObject([

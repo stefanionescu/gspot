@@ -24,20 +24,12 @@ test(
                 'src/Greeting.svelte': LOOSE,
             },
         });
-        const loose = await run(
-            sandbox.path,
-            ['check', '--only', 'formatting/prettier', '--no-cache', '--json'],
-            environment,
-        );
+        const loose = await run(sandbox.path, ['check', '--only', 'formatting/prettier', '--json'], environment);
         expect(loose.code, loose.stdout + loose.stderr).toBe(1);
         const [check] = (JSON.parse(loose.stdout) as RunReport).checks;
         expect(check).toMatchObject({ check: 'formatting/prettier', status: 'fail' });
         expect(check!.findings).toContainEqual(containing({ file: 'src/Greeting.svelte' }));
-        const fixed = await run(
-            sandbox.path,
-            ['check', '--fix', '--only', 'formatting/prettier', '--no-cache'],
-            environment,
-        );
+        const fixed = await run(sandbox.path, ['check', '--fix', '--only', 'formatting/prettier'], environment);
         expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
         expect(await Bun.file(join(sandbox.path, 'src/Greeting.svelte')).text()).toBe(FORMATTED);
     },

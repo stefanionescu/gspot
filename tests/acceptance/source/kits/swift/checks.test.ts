@@ -116,11 +116,7 @@ plantedCases(
                     '// Greeting.swift\n// Created by Alex Garcia.\n// Copyright 2026 Example Contributors.\n\n';
                 const path = join(root, 'Sources/App/Greeting.swift');
                 await Bun.write(path, header + SPACED);
-                const fixed = await run(
-                    root,
-                    ['check', '--only', 'swift/swiftformat', '--fix', '--no-cache'],
-                    environment,
-                );
+                const fixed = await run(root, ['check', '--only', 'swift/swiftformat', '--fix'], environment);
                 expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
                 expect(readFileSync(path, 'utf8')).toBe(header + CLEAN_SWIFT);
                 await Bun.write(path, CLEAN_SWIFT);

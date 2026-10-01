@@ -137,7 +137,7 @@ language = [{path = "language/SQL.md"}, {path = "language/naming/SQL.md"}]
 [[checks]]
 name = "sql/functions"
 title = "Check SQL function size and parameters"
-example = "A SQL function that only forwards one expression reports a trivial-function finding. Inline unnecessary calls and delete the function. If an external API requires the signature, use a narrow suppression with a reason."
+example = "A SQL function that only forwards one expression reports a trivial-function finding. Inline unnecessary calls and delete the function. If an external API requires the signature, record that with `gspot ignore` and a reason."
 level = "all"
 stage = "commit"
 engine = "integrity"
@@ -145,4 +145,4 @@ analysis = "sql-functions"
 coverage = ["structure"]
 summary = "Reports trivial SQL and PL/pgSQL functions and excessive declared input parameters."
 why = "Unnecessary functions add indirection; excessive parameters obscure responsibilities."
-help = "Inline unnecessary functions or use a narrow suppression for a required API. Reduce parameters or configure limits.sql.function_parameters."
+help = "Inline unnecessary functions; for one a required API needs, run `gspot ignore sql/functions --paths <file> --reason <why>`. Reduce parameters or configure limits.sql.function_parameters."

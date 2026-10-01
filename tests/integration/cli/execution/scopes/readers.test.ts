@@ -59,7 +59,7 @@ test('scoped readers receive their own files and preserve binary asset inputs', 
         'apps/backend/client.ts': 'const credentialName = "SUPABASE_SERVICE_ROLE_KEY";\n',
     });
     for (const entry of EXPECTED_READERS) {
-        const result = await run(sandbox.path, ['check', '--only', entry.check, '--no-cache', '--json']);
+        const result = await run(sandbox.path, ['check', '--only', entry.check, '--json']);
         expect(result.code, result.stdout + result.stderr).toBe(1);
         expect(
             (JSON.parse(result.stdout) as RunReport).checks.map((check) => ({
@@ -81,7 +81,7 @@ test('scoped readers receive their own files and preserve binary asset inputs', 
     await Bun.write(`${sandbox.path}/apps/backend/client.ts`, 'export {};\n');
     await Bun.write(`${sandbox.path}/index.html`, '<img alt="Fixture diagram" src="/assets/unused.png">');
     for (const entry of EXPECTED_READERS) {
-        const corrected = await run(sandbox.path, ['check', '--only', entry.check, '--no-cache', '--json']);
+        const corrected = await run(sandbox.path, ['check', '--only', entry.check, '--json']);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     }
 });
@@ -100,7 +100,7 @@ test('nested Bash safety settings merge root and scoped owners without leaking t
         'app/child/cleanup.sh': source,
         'sibling/cleanup.sh': source,
     });
-    const command = ['check', '--only', 'structure/bash-safety', '--no-cache', '--json'];
+    const command = ['check', '--only', 'structure/bash-safety', '--json'];
     const broken = await run(sandbox.path, command);
     expect(broken.code, broken.stdout + broken.stderr).toBe(1);
     expect((JSON.parse(broken.stdout) as RunReport).checks.flatMap((check) => check.findings)).toStrictEqual([
@@ -143,7 +143,7 @@ test.each([
         const policy = policyOf([configuration], setting, 'all');
         const untrusted = path.replace('trusted/', 'public/');
         await createFileTree(sandbox.path, { 'gspot.toml': policy, [path]: source, [untrusted]: source });
-        const command = ['check', '--only', check, '--no-cache', '--json'];
+        const command = ['check', '--only', check, '--json'];
         const failed = await run(sandbox.path, command);
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
         expect((JSON.parse(failed.stdout) as RunReport).checks.flatMap((entry) => entry.findings)).toMatchObject([

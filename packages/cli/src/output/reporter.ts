@@ -35,13 +35,10 @@ function scopeName(scope: string): string {
 }
 
 function statusWord(result: CheckResult, colors: Colors): string {
-    const { red, green, yellow, dim } = colors;
+    const { red, green, yellow } = colors;
     switch (result.status) {
         case 'ok': {
             return green('ok');
-        }
-        case 'cache': {
-            return dim('unchanged');
         }
         case 'fail': {
             return red('fail');
@@ -78,8 +75,7 @@ function findingLines(finding: Finding, colors: Colors, next?: Finding): string[
 
 function checkTail(check: CheckResult): string {
     if (NOTE_STATUSES.has(check.status)) return check.note ?? '';
-    const time = check.status === 'cache' ? '' : seconds(check.duration);
-    return `${fileCount(check.files).padEnd(FILES_WIDTH)} ${time}`;
+    return `${fileCount(check.files).padEnd(FILES_WIDTH)} ${seconds(check.duration)}`;
 }
 
 function failureLines(check: CheckResult, options: ReporterOptions, colors: Colors): string[] {
@@ -143,7 +139,7 @@ function counted(value: number, noun: string): string {
 }
 
 function summaryLine(report: RunReport, colors: Colors): string {
-    const passed = report.checks.filter((check) => check.status === 'ok' || check.status === 'cache').length;
+    const passed = report.checks.filter((check) => check.status === 'ok').length;
     const failed = report.checks.filter((check) => ['fail', 'missing', 'error'].includes(check.status)).length;
     const skipped = report.checks.filter((check) => check.status === 'skipped').length;
     const findings = report.checks.reduce(
@@ -209,7 +205,6 @@ export function progress(
     return (result) => {
         const failed = ['fail', 'missing', 'error'].includes(result.status);
         if (!failed && (quiet || stream.isTTY !== true)) return;
-        const status = result.status === 'cache' ? 'unchanged' : result.status;
-        stream.write(`${result.scope === '' ? 'root' : result.scope}  ${result.check}  ${status}\n`);
+        stream.write(`${result.scope === '' ? 'root' : result.scope}  ${result.check}  ${result.status}\n`);
     };
 }

@@ -19,7 +19,7 @@ test('a leftover local file cannot hide ShellCheck while an explicit skip applie
     const environment = { PATH: toolsPath(['shellcheck']) };
     const applied = await run(directory.path, ['apply'], environment);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    const command = ['check', '--only', 'bash/shellcheck', '--no-cache', '--json'];
+    const command = ['check', '--only', 'bash/shellcheck', '--json'];
     const checked = await run(directory.path, command, environment);
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
     expect((JSON.parse(checked.stdout) as RunReport).checks[0]?.findings).toStrictEqual([

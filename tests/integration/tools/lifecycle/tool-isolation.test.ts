@@ -34,7 +34,7 @@ test(
         symlinkSync('../prettier/bin/prettier.cjs', join(repository.path, '.gspot/node_modules/.bin/prettier'));
         const applied = await run(repository.path, ['apply']);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-        const args = ['check', '--only', 'formatting/prettier', '--no-cache', '--json'];
+        const args = ['check', '--only', 'formatting/prettier', '--json'];
         const finding = await run(repository.path, [...args, '--', 'source.js']);
         expect(finding.code, finding.stdout + finding.stderr).toBe(1);
         expect((JSON.parse(finding.stdout) as RunReport).checks[0]).toMatchObject({

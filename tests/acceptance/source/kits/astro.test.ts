@@ -49,7 +49,7 @@ test.each([
         expect(
             ['@typescript-eslint/no-unsafe-return', 'gspot/no-trivial-files'].filter((name) => rules.has(name)),
         ).toStrictEqual([]);
-        const clean = await run(sandbox.path, ['check', '--only', 'astro/eslint', '--no-cache', '--json'], environment);
+        const clean = await run(sandbox.path, ['check', '--only', 'astro/eslint', '--json'], environment);
         expect(clean.code, clean.stdout + clean.stderr).toBe(0);
         expect((JSON.parse(clean.stdout) as RunReport).checks).toMatchObject([
             { check: 'astro/eslint', status: 'ok', findings: [] },
@@ -74,7 +74,7 @@ test(
         expect(report.checks[0]!.findings).toContainEqual(
             containing({ rule: 'ts(2322)', file: PAGE, line: 2, column: 7 }),
         );
-        const clean = await run(sandbox.path, ['check', '--only', 'astro/check', '--no-cache', '--json'], environment);
+        const clean = await run(sandbox.path, ['check', '--only', 'astro/check', '--json'], environment);
         expect(clean.code, clean.stdout + clean.stderr).toBe(0);
         expect((JSON.parse(clean.stdout) as RunReport).checks).toMatchObject([
             { check: 'astro/check', status: 'ok', findings: [] },
@@ -89,18 +89,10 @@ test(
         await using sandbox = await testdir();
         const environment = await astroSandbox(sandbox.path, ['formatting']);
         await Bun.write(join(sandbox.path, PAGE), CLEAN.replace('<h1>{title}</h1>', '<h1>{title}</h1   >'));
-        const loose = await run(
-            sandbox.path,
-            ['check', '--only', 'formatting/prettier', '--no-cache', '--json'],
-            environment,
-        );
+        const loose = await run(sandbox.path, ['check', '--only', 'formatting/prettier', '--json'], environment);
         expect(loose.code, loose.stdout + loose.stderr).toBe(1);
         expect((JSON.parse(loose.stdout) as RunReport).checks[0]!.findings).toContainEqual(containing({ file: PAGE }));
-        const fixed = await run(
-            sandbox.path,
-            ['check', '--fix', '--only', 'formatting/prettier', '--no-cache'],
-            environment,
-        );
+        const fixed = await run(sandbox.path, ['check', '--fix', '--only', 'formatting/prettier'], environment);
         expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
         expect(await Bun.file(join(sandbox.path, PAGE)).text()).toBe(CLEAN);
     },

@@ -36,7 +36,6 @@ if (runsDatabase)
             skips: [],
             fix: false,
             isDryRun: true,
-            noCache: true,
         });
         expect(stale.report.exitCode, JSON.stringify(stale.report)).toBe(1);
         expect(stale.report.checks).toMatchObject([
@@ -57,7 +56,6 @@ if (runsDatabase)
             skips: [],
             fix: false,
             isDryRun: true,
-            noCache: true,
         });
         expect(corrected.report.exitCode, JSON.stringify(corrected.report)).toBe(0);
         expect(corrected.report.checks).toMatchObject([{ status: 'ok', findings: [] }]);

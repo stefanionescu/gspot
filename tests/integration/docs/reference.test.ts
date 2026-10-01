@@ -147,7 +147,7 @@ test('reference generation rejects a public command without behavioral documenta
 test('check references invoke the reporting check and expose execution restrictions', () => {
     const pages = referencePages();
     const json = pages.get('rules/files/json.md')!.body;
-    expect(json).toContain('gspot check --stage commit --only formatting/prettier --no-cache');
+    expect(json).toContain('gspot check --stage commit --only formatting/prettier');
     expect(json).not.toContain('--only files/json');
     expect(json).toContain('gspot ignore formatting/prettier --paths');
     expect(json).not.toContain('gspot ignore files/json');

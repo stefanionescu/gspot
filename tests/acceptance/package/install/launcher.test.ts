@@ -42,7 +42,7 @@ test.each(['SIGINT', 'SIGTERM'] as const)(
                 `[[check]]\nname = "project/slow"\nstage = "commit"\npaths = ["source.txt"]\ncommand = ${JSON.stringify(tool)}\n`,
             ),
         );
-        const child = Bun.spawn([...fixture.command, 'check', '--json', '--no-cache'], {
+        const child = Bun.spawn([...fixture.command, 'check', '--json'], {
             cwd: cancellation,
             env: fixture.options.env,
             stdout: 'pipe',

@@ -25,7 +25,7 @@ test('Python dependency ownership applies only to locked scopes and accepts remo
         'other/requirements.txt': 'unlocked-dependency\n',
         'other/main.py': 'value = 2\n',
     });
-    const command = ['check', '--only', 'integrity/dependency-ownership', '--json', '--no-cache'];
+    const command = ['check', '--only', 'integrity/dependency-ownership', '--json'];
     const checked = await run(sandbox.path, command);
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
     const report = JSON.parse(checked.stdout) as RunReport;
@@ -49,7 +49,7 @@ test('absent Python import contracts are explicit skips and malformed project fi
         'main.py': 'value = 1\n',
         'pyproject.toml': '# [tool.importlinter] is only a comment\n',
     });
-    const command = ['check', '--only', 'python/import-linter', '--json', '--no-cache'];
+    const command = ['check', '--only', 'python/import-linter', '--json'];
     const absent = await run(sandbox.path, command);
     expect(absent.code, absent.stdout + absent.stderr).toBe(0);
     expect((JSON.parse(absent.stdout) as RunReport).checks).toMatchObject([

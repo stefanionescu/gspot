@@ -1,6 +1,5 @@
 import * as fs from 'node:fs';
 import { join } from 'node:path';
-import { rejects } from 'node:assert/strict';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
@@ -32,7 +31,6 @@ test.each([
             only: [check],
             fix: false,
             isDryRun: false,
-            noCache: true,
         };
         const target = join(sandbox.path, path);
         fs.rmSync(target);
@@ -73,7 +71,6 @@ test('a denied asset existence read is an execution error and a genuinely missin
         only: ['xcode/asset-catalogs'],
         fix: false,
         isDryRun: false,
-        noCache: true,
     };
     const target = join(sandbox.path, image);
     const original = fs.statSync;
@@ -101,22 +98,7 @@ test('a denied asset existence read is an execution error and a genuinely missin
     expect(fs.readFileSync(target)).toStrictEqual(Buffer.from([0, 1, 2]));
 });
 
-test.each([false, true])('unreadable selected sources reject a run with noCache=%s', async (noCache) => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': policyOf([]),
-        'source.ts': 'export {};\n',
-    });
-    const session = await storageSession(sandbox.path, 0);
-    const options = { stage: 'commit' as const, skips: [], fix: false, isDryRun: false, noCache };
-    const original = await executeRun(session, options);
-    expect(original.report.exitCode).toBe(0);
-    fs.rmSync(join(sandbox.path, 'source.ts'));
-    fs.mkdirSync(join(sandbox.path, 'source.ts'));
-    await rejects(executeRun(session, options), { code: 'EISDIR' });
-});
-
-test('a dry run does not create cache or ownership files', async () => {
+test('a dry run creates no files', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': policyOf([]),

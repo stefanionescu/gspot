@@ -165,7 +165,7 @@ plantedCases(
             'every check passes on the clean repository',
             async () => {
                 const { root, environment } = planted();
-                const whole = await run(root, ['check', '--no-cache'], environment);
+                const whole = await run(root, ['check'], environment);
                 expect(whole.code, whole.stdout).toBe(0);
             },
             PLANTED_TIMEOUT_MS * 4,

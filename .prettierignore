@@ -5,7 +5,6 @@ node_modules/
 dist/
 build/
 coverage/
-.gspot/cache/
 *.lock
 bun.lockb
 package-lock.json

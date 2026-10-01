@@ -44,7 +44,6 @@ test.each(['integrity/env-files', 'integrity/tracked-dependencies'])(
             skips: [],
             fix: false,
             isDryRun: true,
-            noCache: true,
         };
         const found = await executeRun(session, options);
         expect(found.report.exitCode).toBe(1);

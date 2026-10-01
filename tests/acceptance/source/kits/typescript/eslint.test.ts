@@ -25,7 +25,7 @@ test(
         const applied = await run(sandbox.path, ['apply']);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
         await installPrivateTools(sandbox.path);
-        const outcome = await run(sandbox.path, ['check', '--only', 'typescript/eslint', '--no-cache', '--json']);
+        const outcome = await run(sandbox.path, ['check', '--only', 'typescript/eslint', '--json']);
         expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
         const report = JSON.parse(outcome.stdout) as RunReport;
         const findings = report.checks
@@ -50,7 +50,7 @@ test(
             join(sandbox.path, 'src/order.ts'),
             '// The shape of a priced order.\n\n/** A total owned by one order. */\nexport type Order = { total: number };\n',
         );
-        const corrected = await run(sandbox.path, ['check', '--only', 'typescript/eslint', '--no-cache', '--json']);
+        const corrected = await run(sandbox.path, ['check', '--only', 'typescript/eslint', '--json']);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         const after = JSON.parse(corrected.stdout) as RunReport;
         expect(after.checks).toMatchObject([{ check: 'typescript/eslint', status: 'ok', findings: [] }]);
@@ -80,7 +80,7 @@ test.each([
         const applied = await run(sandbox.path, ['apply']);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
         await installPrivateTools(sandbox.path);
-        const outcome = await run(sandbox.path, ['check', '--only', 'typescript/eslint', '--no-cache', '--json']);
+        const outcome = await run(sandbox.path, ['check', '--only', 'typescript/eslint', '--json']);
         expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
         const report = JSON.parse(outcome.stdout) as RunReport;
         const findings = report.checks.flatMap((check) => check.findings);
@@ -96,7 +96,7 @@ test.each([
             'export * from "./first.js";\nexport { shared as second } from "./second.js";\n',
         );
         writeFileSync(join(sandbox.path, 'src/forward.ts'), 'export const shared = 1;\n');
-        const corrected = await run(sandbox.path, ['check', '--only', 'typescript/eslint', '--no-cache', '--json']);
+        const corrected = await run(sandbox.path, ['check', '--only', 'typescript/eslint', '--json']);
         const correctedReport = JSON.parse(corrected.stdout) as RunReport;
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(1);
         expect(correctedReport.checks).toMatchObject([{ check: 'typescript/eslint', status: 'fail' }]);

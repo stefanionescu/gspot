@@ -45,7 +45,7 @@ async function expectInstalledSql(installation: InstalledConsumer): Promise<void
     expect(available.detected.find((configuration) => configuration.name === 'sql')?.command).toBe('gspot add sql');
     const added = await run([...command, 'add', 'sql'], setupOptions);
     expect(added.code, added.stdout + added.stderr).toBe(0);
-    const sql = await run([...command, 'check', 'query.sql', '--only', 'sql/syntax', '--no-cache', '--json'], options);
+    const sql = await run([...command, 'check', 'query.sql', '--only', 'sql/syntax', '--json'], options);
     expect(sql.code, sql.stdout + sql.stderr).toBe(0);
     const sqlReport = JSON.parse(sql.stdout) as RunReport;
     expect(sqlReport.skips).toStrictEqual([]);
@@ -77,7 +77,7 @@ test(
         expect(valeVersion.code, valeVersion.stdout + valeVersion.stderr).toBe(0);
         expect(valeVersion.stdout).toContain(valePin.version!);
         writeFileSync(join(consumer, 'guide.md'), '# Schedule\n\nNebulaKit uses TypeScript. Release on 03/04/2026.\n');
-        const proseCommand = [...command, 'check', 'guide.md', '--only', 'prose/vale', '--no-cache', '--json'];
+        const proseCommand = [...command, 'check', 'guide.md', '--only', 'prose/vale', '--json'];
         const ambiguous = await run(proseCommand, options);
         expect(ambiguous.code, ambiguous.stdout + ambiguous.stderr).toBe(1);
         const proseReport = JSON.parse(ambiguous.stdout) as RunReport;
@@ -182,7 +182,7 @@ test(
         expect(toolVersion.code, toolVersion.stdout + toolVersion.stderr).toBe(0);
         expect(toolVersion.stdout).toContain(`version: ${shellcheck.version!}\n`);
         writeFileSync(join(consumer, 'broken.sh'), '#!/usr/bin/env bash\nprintf "%s\\n" $1\n');
-        const unquoted = await run([...command, 'check', '--only', 'bash/shellcheck', '--no-cache', '--json'], options);
+        const unquoted = await run([...command, 'check', '--only', 'bash/shellcheck', '--json'], options);
         expect(unquoted.code, unquoted.stdout + unquoted.stderr).toBe(1);
         const quoting = JSON.parse(unquoted.stdout) as RunReport;
         expect(quoting.skips).toStrictEqual([]);
@@ -203,7 +203,7 @@ test(
             ],
         });
         writeFileSync(join(consumer, 'broken.sh'), '#!/usr/bin/env bash\nprintf "%s\\n" "$1"\n');
-        const quoted = await run([...command, 'check', '--only', 'bash/shellcheck', '--no-cache', '--json'], options);
+        const quoted = await run([...command, 'check', '--only', 'bash/shellcheck', '--json'], options);
         expect(quoted.code, quoted.stdout + quoted.stderr).toBe(0);
         const acceptedQuoting = JSON.parse(quoted.stdout) as RunReport;
         expect(acceptedQuoting.skips).toStrictEqual([]);
@@ -228,15 +228,7 @@ test(
         const swiftLevel = await run([...command, 'set', 'level', 'all'], options);
         expect(swiftLevel.code, swiftLevel.stdout + swiftLevel.stderr).toBe(0);
         writeFileSync(join(consumer, 'Account.swift'), 'let utils = 1\n');
-        const swiftCommand = [
-            ...command,
-            'check',
-            'Account.swift',
-            '--only',
-            'naming/identifiers',
-            '--no-cache',
-            '--json',
-        ];
+        const swiftCommand = [...command, 'check', 'Account.swift', '--only', 'naming/identifiers', '--json'];
         const invalidSwift = await run(swiftCommand, options);
         expect(invalidSwift.code, invalidSwift.stdout + invalidSwift.stderr).toBe(1);
         const swiftReport = JSON.parse(invalidSwift.stdout) as RunReport;

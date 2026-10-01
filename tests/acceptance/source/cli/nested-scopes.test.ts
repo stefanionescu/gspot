@@ -27,7 +27,7 @@ test('nested scopes inherit parent configurations and settings and check each fi
     });
     expect(rows.find((row) => row.scope === 'api/worker' && row.key === 'format.indent_width')?.value).toBe(2);
     expect(rows.find((row) => row.scope === 'api/worker' && row.key === 'limits.function_lines')?.value).toBe(30);
-    const checked = await run(directory.path, ['check', '--only', 'bash/syntax', '--no-cache', '--json']);
+    const checked = await run(directory.path, ['check', '--only', 'bash/syntax', '--json']);
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
     const checks = (JSON.parse(checked.stdout) as RunReport).checks;
     expect(checks.map((check) => ({ check: check.check, scope: check.scope, files: check.files }))).toStrictEqual([
@@ -41,14 +41,7 @@ test('nested scopes inherit parent configurations and settings and check each fi
     ]);
     writeFileSync(join(directory.path, 'api/entry.sh'), 'echo example\n');
     writeFileSync(join(directory.path, 'api/worker/entry.sh'), 'echo example\n');
-    const corrected = await run(directory.path, [
-        'check',
-        '--only',
-        'bash/syntax',
-        'sql/syntax',
-        '--no-cache',
-        '--json',
-    ]);
+    const corrected = await run(directory.path, ['check', '--only', 'bash/syntax', 'sql/syntax', '--json']);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
         { check: 'bash/syntax', scope: 'api', status: 'ok', findings: [] },

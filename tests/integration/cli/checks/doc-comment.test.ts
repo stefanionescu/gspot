@@ -18,7 +18,6 @@ test.each(['colon', 'dash'])(
             stage: 'all' as const,
             skips: [],
             only: ['structure/doc-comment'],
-            noCache: true,
             fix: false,
             isDryRun: true,
         };

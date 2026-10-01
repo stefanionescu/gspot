@@ -28,7 +28,7 @@ test.each([true, false])(
         await applyAll(await openSession(repository.path));
         const installed = readFileSync(path, 'utf8');
         expect(installed.startsWith(original)).toBe(authored);
-        expect(installed).toContain('.gspot/cache/');
+        expect(installed).toContain('.gspot/state/');
         await applyAll(await openSession(repository.path));
         expect(readFileSync(path, 'utf8')).toBe(installed);
     },
@@ -51,7 +51,7 @@ test('manifest-owned tool directories are ignored while generated rules and auth
     expect(initialized.code, initialized.stderr).toBe(0);
     const ignored = [
         'private.tmp',
-        '.gspot/cache/result.json',
+        '.gspot/state/ownership.json',
         '.gspot/local/downloads/rules.yml',
         '.gspot/config/vale/styles/Google/rule.yml',
     ];

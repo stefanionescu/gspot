@@ -20,7 +20,7 @@ test('Xcode sources follow group paths and target membership instead of duplicat
         'Synced/Included.swift': 'let included = 1\n',
         'Synced/Excluded.swift': 'let excluded = 1\n',
     });
-    const command = ['check', '--only', 'xcode/orphan-sources', '--no-cache', '--json'];
+    const command = ['check', '--only', 'xcode/orphan-sources', '--json'];
     const broken = await run(sandbox.path, command);
     expect(broken.code, broken.stdout + broken.stderr).toBe(1);
     expect((JSON.parse(broken.stdout) as RunReport).checks[0]!.findings).toStrictEqual([
@@ -83,7 +83,7 @@ test.each([
         'App.xcodeproj/project.pbxproj': source,
         'Root.swift': 'let root = 1\n',
     });
-    const result = await run(sandbox.path, ['check', '--only', 'xcode/orphan-sources', '--no-cache', '--json']);
+    const result = await run(sandbox.path, ['check', '--only', 'xcode/orphan-sources', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(2);
 });
 
@@ -105,7 +105,7 @@ test('membership combines projects in a scope and checks nested scopes independe
         'nested/Nested.swift': 'let nested = 1\n',
         'nested/Extra.swift': 'let extra = 1\n',
     });
-    const command = ['check', '--only', 'xcode/orphan-sources', '--no-cache', '--json'];
+    const command = ['check', '--only', 'xcode/orphan-sources', '--json'];
     const broken = await run(sandbox.path, command);
     expect(broken.code, broken.stdout + broken.stderr).toBe(1);
     expect(
@@ -143,7 +143,7 @@ test('Xcode symlinks use the deepest scope and the immutable staged target', asy
     expect(git(sandbox.path, ['add', 'app/child/Linked.swift']).code).toBe(0);
     await unlink(link);
     await symlink('Unstaged.swift', link);
-    const command = ['check', '--staged', '--only', 'xcode/symlinks', '--no-cache', '--json'];
+    const command = ['check', '--staged', '--only', 'xcode/symlinks', '--json'];
     const broken = await run(sandbox.path, command);
     expect(broken.code, broken.stdout + broken.stderr).toBe(1);
     const findings = (JSON.parse(broken.stdout) as RunReport).checks.flatMap((check) =>

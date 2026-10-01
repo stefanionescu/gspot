@@ -192,7 +192,7 @@ help = "Keep one function and call it from both places."
 [[checks]]
 name = "structure/unused-functions"
 title = "Unused functions"
-example = "A private shell function `_orphan` that no script calls reports an unused-function finding. Delete the unused definition. If an external hook requires the function, document that contract in a narrow suppression."
+example = "A private shell function `_orphan` that no script calls reports an unused-function finding. Delete the unused definition. If an external hook requires the function, record that contract with `gspot ignore` and a reason."
 level = "recommended"
 stage = "commit"
 engine = "structure"
@@ -201,7 +201,7 @@ coverage = ["structure"]
 searched = ["shellcheck SC2329", "knip"]
 summary = "Finds shell functions no script in the scope calls."
 why = "Dead code is read and maintained for nobody."
-help = "Delete the function, or put `gspot-ignore structure/unused-functions -- reason` on the preceding comment line for a required hook entry point."
+help = "Delete the function. For a required hook entry point, run `gspot ignore structure/unused-functions --paths <file> --reason <why>`."
 
 [[checks]]
 name = "structure/dead-parameters"
@@ -286,7 +286,7 @@ coverage = ["structure"]
 searched = ["shellcheck"]
 summary = "Reports functions at or below limits.trivial_statements and files containing only trivial declarations."
 why = "Unnecessary functions add names and indirection without substantial behavior."
-help = "Inline unnecessary functions. Required external APIs need a narrow suppression with a reason."
+help = "Inline unnecessary functions. For one an external API requires, run `gspot ignore structure/trivial-function --paths <file> --reason <why>`."
 
 
 [[checks]]

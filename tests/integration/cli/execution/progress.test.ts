@@ -46,7 +46,6 @@ test('completion callbacks publish filtered results before the remaining check f
         skips: [],
         fix: false,
         isDryRun: true,
-        noCache: true,
         onResult: (entry) => {
             completed.push(entry);
             if (entry.check === 'project/fast') writeFileSync(join(sandbox.path, 'completed'), 'ready');

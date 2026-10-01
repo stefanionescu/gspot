@@ -39,7 +39,7 @@ test(
         ];
         await installAtLevel(sandbox.path, argv, environment);
         for (const id of ['swift/swiftlint', 'swift/swiftformat']) {
-            const clean = await run(sandbox.path, ['check', '--only', id, '--no-cache'], environment);
+            const clean = await run(sandbox.path, ['check', '--only', id], environment);
             expect(clean.code, `${id}: ${clean.stdout}${clean.stderr}`).toBe(0);
         }
         const outcome = await runPlanted(

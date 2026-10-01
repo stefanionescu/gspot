@@ -24,7 +24,7 @@ test.each([false, true])(
             ? await run(directory.path, ['ignore', 'bash/syntax', '--reason', 'Reviewed independently.'])
             : ignored;
         expect(explained.code, explained.stdout + explained.stderr).toBe(0);
-        const checked = await run(directory.path, ['check', '--only', 'bash/syntax', '--no-cache', '--json']);
+        const checked = await run(directory.path, ['check', '--only', 'bash/syntax', '--json']);
         expect(checked.code, checked.stdout + checked.stderr).toBe(0);
         const report = JSON.parse(checked.stdout) as { ignores: { check: string; reason?: string; matched: number }[] };
         expect(report.ignores[0]?.check).toBe('bash/syntax');
@@ -55,7 +55,7 @@ test.each([false, true])(
                   ])
                 : allowed;
             expect(explained.code, explained.stdout + explained.stderr).toBe(0);
-            const command = ['check', '--only', 'naming/identifiers', '--no-cache', '--json'];
+            const command = ['check', '--only', 'naming/identifiers', '--json'];
             const checked = await run(directory.path, command);
             expect(checked.code, checked.stdout + checked.stderr).toBe(0);
             const removed = await run(directory.path, ['set', 'naming.allowed', 'shell_command', '--remove']);
@@ -73,39 +73,34 @@ test.each([false, true])(
     PLANTED_TIMEOUT_MS,
 );
 
-test.each([false, true])(
-    'inline suppression reasons follow require_reasons=%s without turning the census into failures',
-    async (required) => {
-        await using directory = await testdir();
-        await createFileTree(directory.path, {
-            'gspot.toml': `version = 1\nlevel = "all"\nrequire_reasons = ${String(required)}\nkits = ["bash"]\n[guides]\ninstall = false\n`,
-            'entry.sh': '# shellcheck disable=SC2086\necho $name\n',
-        });
-        const command = ['check', '--only', 'integrity/suppressions', '--no-cache', '--json'];
-        const missing = await run(directory.path, command);
-        expect(missing.code, missing.stdout + missing.stderr).toBe(required ? 1 : 0);
-        const report = JSON.parse(missing.stdout) as RunReport;
-        const unexplained: Finding = containing({
-            check: 'integrity/suppressions',
-            file: 'entry.sh',
-            line: 1,
-            rule: 'shellcheck-no-reason',
-        });
-        expect(report.checks[0]!.findings).toStrictEqual(required ? [unexplained] : []);
-        expect(report.suppressions['shellcheck']).toBe(1);
-        await Bun.write(join(directory.path, 'entry.sh'), '# shellcheck disable=SC2086 # reason: N/A\necho $name\n');
-        const empty = await run(directory.path, command);
-        expect(empty.code, empty.stdout + empty.stderr).toBe(required ? 1 : 0);
-        await Bun.write(
-            join(directory.path, 'entry.sh'),
-            '# shellcheck disable=SC2086 # reason: Intentional word splitting for this command.\necho $name\n',
-        );
-        const explained = await run(directory.path, command);
-        expect(explained.code, explained.stdout + explained.stderr).toBe(0);
-        expect((JSON.parse(explained.stdout) as RunReport).checks[0]!.findings).toStrictEqual([]);
-        expect((JSON.parse(explained.stdout) as RunReport).suppressions['shellcheck']).toBe(1);
-    },
-);
+test.each([false, true])('inline suppression reasons follow require_reasons=%s', async (required) => {
+    await using directory = await testdir();
+    await createFileTree(directory.path, {
+        'gspot.toml': `version = 1\nlevel = "all"\nrequire_reasons = ${String(required)}\nkits = ["bash"]\n[guides]\ninstall = false\n`,
+        'entry.sh': '# shellcheck disable=SC2086\necho $name\n',
+    });
+    const command = ['check', '--only', 'integrity/suppressions', '--json'];
+    const missing = await run(directory.path, command);
+    expect(missing.code, missing.stdout + missing.stderr).toBe(required ? 1 : 0);
+    const report = JSON.parse(missing.stdout) as RunReport;
+    const unexplained: Finding = containing({
+        check: 'integrity/suppressions',
+        file: 'entry.sh',
+        line: 1,
+        rule: 'shellcheck-no-reason',
+    });
+    expect(report.checks[0]!.findings).toStrictEqual(required ? [unexplained] : []);
+    await Bun.write(join(directory.path, 'entry.sh'), '# shellcheck disable=SC2086 # reason: N/A\necho $name\n');
+    const empty = await run(directory.path, command);
+    expect(empty.code, empty.stdout + empty.stderr).toBe(required ? 1 : 0);
+    await Bun.write(
+        join(directory.path, 'entry.sh'),
+        '# shellcheck disable=SC2086 # reason: Intentional word splitting for this command.\necho $name\n',
+    );
+    const explained = await run(directory.path, command);
+    expect(explained.code, explained.stdout + explained.stderr).toBe(0);
+    expect((JSON.parse(explained.stdout) as RunReport).checks[0]!.findings).toStrictEqual([]);
+});
 
 test.each([
     { configuration: 'sql', path: 'query.sql', form: 'sqlfluff', bare: '-- noqa: LT01', clean: 'SELECT 1;' },
@@ -138,7 +133,7 @@ test.each([
             'gspot.toml': `version = 1\nlevel = "all"\nrequire_reasons = true\nkits = ["structure", "${configuration}"]\n[guides]\ninstall = false\n`,
             [path]: `${bare}\n${clean}\n`,
         });
-        const command = ['check', '--only', 'integrity/suppressions', '--no-cache', '--json'];
+        const command = ['check', '--only', 'integrity/suppressions', '--json'];
         const failed = await run(directory.path, command);
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
         const report = JSON.parse(failed.stdout) as RunReport;
@@ -150,12 +145,10 @@ test.each([
                 rule: `${form}-no-reason`,
             }),
         ]);
-        expect(report.suppressions[form]).toBe(1);
         await Bun.write(join(directory.path, path), `${clean}\n`);
         const corrected = await run(directory.path, command);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect((JSON.parse(corrected.stdout) as RunReport).checks[0]!.findings).toStrictEqual([]);
-        expect((JSON.parse(corrected.stdout) as RunReport).suppressions).toStrictEqual({});
     },
 );
 
@@ -167,7 +160,7 @@ test('shared noqa text is attributed only to the tool that reads the file', asyn
         'query.sql': 'SELECT 1; -- noqa: LT01\n',
         'entry.py': 'answer = 1  # noqa: F841\n',
     });
-    const result = await run(directory.path, ['check', '--only', 'integrity/suppressions', '--no-cache', '--json']);
+    const result = await run(directory.path, ['check', '--only', 'integrity/suppressions', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(1);
     const report = JSON.parse(result.stdout) as RunReport;
     expect(report.checks[0]!.findings).toStrictEqual(
@@ -177,7 +170,6 @@ test('shared noqa text is attributed only to the tool that reads the file', asyn
         ]),
     );
     expect(report.checks[0]!.findings).toHaveLength(2);
-    expect(report.suppressions).toStrictEqual({ sqlfluff: 1, ruff: 1 });
 });
 
 test.each([false, true])(

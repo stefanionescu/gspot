@@ -141,13 +141,6 @@ const checkSchema = z
         name: text,
         command: commandSchema,
         paths: textListNonEmpty,
-        inputs: z
-            .array(relativeDirectory)
-            .min(1)
-            .optional()
-            .describe(
-                'Root-relative file globs read by the command, including ignored files. Omit to disable caching.',
-            ),
         stage: z.enum(['commit', 'push', 'manual']),
         help: text.optional(),
         fix_command: commandSchema.optional(),

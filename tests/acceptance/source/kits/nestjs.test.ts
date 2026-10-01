@@ -80,7 +80,7 @@ plantedCases(
             async () => {
                 const { root, environment } = planted();
                 for (const id of ['typescript/eslint', 'typescript/tsc', 'integrity/tsconfig-options']) {
-                    const clean = await run(root, ['check', '--only', id, '--no-cache'], environment);
+                    const clean = await run(root, ['check', '--only', id], environment);
                     expect(clean.code, `${id}: ${clean.stdout}${clean.stderr}`).toBe(0);
                 }
             },
@@ -93,11 +93,7 @@ plantedCases(
                 const { root, environment } = planted();
                 const documented = await run(root, ['set', 'tools.nestjs.swagger', 'true'], environment);
                 expect(documented.code, documented.stdout + documented.stderr).toBe(0);
-                const swagger = await run(
-                    root,
-                    ['check', '--only', 'typescript/eslint', '--no-cache', '--json'],
-                    environment,
-                );
+                const swagger = await run(root, ['check', '--only', 'typescript/eslint', '--json'], environment);
                 expect(swagger.code, swagger.stdout + swagger.stderr).toBe(1);
                 expect((JSON.parse(swagger.stdout) as RunReport).checks[0]?.findings).toContainEqual(
                     containing({
@@ -107,7 +103,7 @@ plantedCases(
                 );
                 const plain = await run(root, ['set', 'tools.nestjs.swagger', 'false'], environment);
                 expect(plain.code, plain.stdout + plain.stderr).toBe(0);
-                const clean = await run(root, ['check', '--only', 'typescript/eslint', '--no-cache'], environment);
+                const clean = await run(root, ['check', '--only', 'typescript/eslint'], environment);
                 expect(clean.code, clean.stdout + clean.stderr).toBe(0);
             },
             PLANTED_TIMEOUT_MS * 6,

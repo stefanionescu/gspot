@@ -29,7 +29,6 @@ test('a check keeps its name in the report and in its findings', async () => {
         skips: [],
         fix: false,
         isDryRun: false,
-        noCache: true,
     });
     expect(session.policyFiles.policy.checks[0]?.name).toBe('sandbox/identity');
     expect(outcome.report.checks[0]?.check).toBe('sandbox/identity');
@@ -47,7 +46,7 @@ test('counted failures survive final filtering without diagnostic locations', as
         'source.txt': 'original',
     });
     const session = await openSession(sandbox.path);
-    const options = { stage: 'all' as const, skips: [], fix: false, isDryRun: false, noCache: true };
+    const options = { stage: 'all' as const, skips: [], fix: false, isDryRun: false };
     const failed = await executeRun(session, options);
     expect(failed.report.exitCode).toBe(1);
     expect(failed.report.checks[0]).toMatchObject({ status: 'fail', findings: [] });
@@ -59,7 +58,6 @@ test('counted failures survive final filtering without diagnostic locations', as
             'check',
             '--only',
             'sandbox/identity',
-            '--no-cache',
             '--json',
         ],
         { cwd: sandbox.path },
@@ -91,7 +89,6 @@ test.each(['{ broken', '{}', ''])(
                 'check',
                 '--only',
                 'sandbox/json',
-                '--no-cache',
                 '--json',
             ],
             { cwd: sandbox.path },

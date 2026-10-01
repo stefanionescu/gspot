@@ -49,11 +49,7 @@ describe('component style blocks', () => {
             );
             expect(findings.map(({ rule }) => rule)).not.toContain('selector-pseudo-class-no-unknown');
             await Bun.write(join(sandbox.path, path), text.replace('#ggg', '#abc'));
-            const corrected = await run(
-                sandbox.path,
-                ['check', '--only', 'css/stylelint', '--no-cache', '--json'],
-                environment,
-            );
+            const corrected = await run(sandbox.path, ['check', '--only', 'css/stylelint', '--json'], environment);
             expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         },
         PLANTED_TIMEOUT_MS * 6,

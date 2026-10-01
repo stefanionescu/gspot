@@ -20,16 +20,12 @@ test(
     async () => {
         await using sandbox = await testdir();
         const environment = await prepareStagedSecrets(sandbox.path);
-        const clean = await run(sandbox.path, ['check', '--stage', 'commit', '--no-cache'], environment);
+        const clean = await run(sandbox.path, ['check', '--stage', 'commit'], environment);
         expect(clean.code).toBe(0);
 
         await Bun.write(join(sandbox.path, 'settings.py'), PLANTED_SETTINGS);
         git(sandbox.path, ['add', 'settings.py']);
-        const staged = await run(
-            sandbox.path,
-            ['check', '--only', 'secrets/gitleaks-staged', '--no-cache', '--json'],
-            environment,
-        );
+        const staged = await run(sandbox.path, ['check', '--only', 'secrets/gitleaks-staged', '--json'], environment);
         expect(staged.code, staged.stdout).toBe(1);
         expect((JSON.parse(staged.stdout) as RunReport).checks).toMatchObject([
             {
@@ -47,7 +43,7 @@ test(
         expect(git(sandbox.path, ['add', 'settings.py']).code).toBe(0);
         const correctedSecret = await run(
             sandbox.path,
-            ['check', '--only', 'secrets/gitleaks-staged', '--no-cache', '--json'],
+            ['check', '--only', 'secrets/gitleaks-staged', '--json'],
             environment,
         );
         expect(correctedSecret.code, correctedSecret.stdout + correctedSecret.stderr).toBe(0);
@@ -65,11 +61,7 @@ test(
         const environment = await prepareStagedSecrets(sandbox.path);
         await Bun.write(join(sandbox.path, '.env'), 'TOKEN=value\n');
         git(sandbox.path, ['add', '-f', '.env']);
-        const tracked = await run(
-            sandbox.path,
-            ['check', '--only', 'integrity/env-files', '--no-cache', '--json'],
-            environment,
-        );
+        const tracked = await run(sandbox.path, ['check', '--only', 'integrity/env-files', '--json'], environment);
         expect(tracked.code).toBe(1);
         expect((JSON.parse(tracked.stdout) as RunReport).checks).toMatchObject([
             {
@@ -81,7 +73,7 @@ test(
         expect(git(sandbox.path, ['rm', '--cached', '.env']).code).toBe(0);
         const untrackedEnvironment = await run(
             sandbox.path,
-            ['check', '--only', 'integrity/env-files', '--no-cache', '--json'],
+            ['check', '--only', 'integrity/env-files', '--json'],
             environment,
         );
         expect(untrackedEnvironment.code, untrackedEnvironment.stdout + untrackedEnvironment.stderr).toBe(0);

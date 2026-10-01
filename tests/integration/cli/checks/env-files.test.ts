@@ -30,7 +30,6 @@ test('staged refusal and tracked-file checks agree on environment files and temp
         skips: [],
         quiet: true,
         verbose: false,
-        noCache: true,
     };
     const refused = refusalFor(options, 'commit', [...privateFiles, ...templates]);
     expect(refused?.exitCode).toBe(1);

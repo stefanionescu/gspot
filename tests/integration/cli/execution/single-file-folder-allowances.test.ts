@@ -12,7 +12,6 @@ async function loneFiles(root: string): Promise<string[]> {
         skips: [],
         fix: false,
         isDryRun: false,
-        noCache: true,
         only: ['structure/single-file-folder'],
     });
     return result.report.checks.flatMap((check) => check.findings.map((finding) => finding.file));

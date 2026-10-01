@@ -25,7 +25,6 @@ test('disabled settings produce skipped results and enabling a setting runs the 
         only: Object.keys(WAITING),
         fix: false,
         isDryRun: false,
-        noCache: true,
     };
     const session = await openSession(sandbox.path);
     const outcome = await executeRun(session, options);

@@ -9,7 +9,7 @@ import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { containing } from '#tests/support/expectations.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 
-const COMMAND = ['check', '--only', 'static-site/svg-optimized', '--no-cache', '--json'];
+const COMMAND = ['check', '--only', 'static-site/svg-optimized', '--json'];
 
 // Recommended savings thresholds and strict optimization both accept corrected bytes.
 async function expectSvgThresholds(root: string, svg: string): Promise<void> {

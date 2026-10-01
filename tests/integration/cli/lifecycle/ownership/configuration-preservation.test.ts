@@ -147,7 +147,7 @@ test('YAML ownership preserves authored entries and comments through updates and
         expect(
             owner.applyPlan(
                 owner.proposeConfiguration('tool.yml', 'yaml', [
-                    { path: ['checks', 'commands', 'gspot'], value: { run: 'gspot check --staged --no-cache' } },
+                    { path: ['checks', 'commands', 'gspot'], value: { run: 'gspot check --staged --verbose' } },
                 ]),
             ),
         ).toBe('changed');

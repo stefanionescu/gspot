@@ -12,7 +12,7 @@ import type { RunReport } from '#cli/types/execution/execution.ts';
 import { prepareLicenseProject } from '#tests/support/cli/licenses.ts';
 import { containingAll, textContaining } from '#tests/support/expectations.ts';
 
-const LICENSE_CHECK = ['check', '--only', 'licenses/packages', '--no-cache', '--json'];
+const LICENSE_CHECK = ['check', '--only', 'licenses/packages', '--json'];
 test(
     'package license expressions accept allowed alternatives and reject forbidden requirements',
     async () => {
@@ -197,7 +197,7 @@ test(
         const applied = await run(root, ['apply']);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
         await installPrivateTools(root);
-        const command = ['check', '--stage', 'push', '--only', 'licenses/packages', '--no-cache', '--json'];
+        const command = ['check', '--stage', 'push', '--only', 'licenses/packages', '--json'];
         const unavailable = await run(root, command);
         expect(unavailable.code, unavailable.stdout + unavailable.stderr).toBe(2);
         const created = await processes.run(['uv', 'venv', 'app/.venv'], { cwd: root });

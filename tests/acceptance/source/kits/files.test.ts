@@ -158,7 +158,7 @@ test.each([
             [scenario.path]: scenario.broken,
             'src/server.js': 'const host = process.env.HOST;\nconsole.log(host, process.env.PORT);\n',
         });
-        const command = ['check', '--only', scenario.check, '--no-cache', '--json'];
+        const command = ['check', '--only', scenario.check, '--json'];
         const failed = await run(sandbox.path, command, environment);
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
         const report = JSON.parse(failed.stdout) as RunReport;
@@ -201,7 +201,7 @@ test(
         const path = join(sandbox.path, 'settings/café.json');
         await Bun.write(path, JSON.stringify({ count: 'invalid' }));
         expect(git(sandbox.path, ['add', '-A']).code).toBe(0);
-        const command = ['check', '--only', 'files/schema', '--staged', '--stage', 'push', '--no-cache', '--json'];
+        const command = ['check', '--only', 'files/schema', '--staged', '--stage', 'push', '--json'];
         const invalid = await run(sandbox.path, command, environment);
         expect(invalid.code, invalid.stdout + invalid.stderr).toBe(1);
         expect((JSON.parse(invalid.stdout) as RunReport).checks).toMatchObject([
@@ -237,10 +237,10 @@ test(
         await install(sandbox.path, [...CONFIGS_INIT, '--no-hooks'], environment);
         const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
         expect(selected.code, selected.stdout + selected.stderr).toBe(0);
-        const fixed = await run(sandbox.path, ['check', '--only', 'files/dotenv', '--fix', '--no-cache'], environment);
+        const fixed = await run(sandbox.path, ['check', '--only', 'files/dotenv', '--fix'], environment);
         expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
         expect(await Bun.file(join(sandbox.path, '.env.example')).text()).toBe('LOWERCASE=value\n');
-        const checked = await run(sandbox.path, ['check', '--only', 'files/dotenv', '--no-cache'], environment);
+        const checked = await run(sandbox.path, ['check', '--only', 'files/dotenv'], environment);
         expect(checked.code, checked.stdout + checked.stderr).toBe(0);
     },
     PLANTED_TIMEOUT_MS,

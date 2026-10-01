@@ -11,7 +11,7 @@ test('Swift checks report each scope independently and file-list inputs omit sib
         'Tests/RootTests.swift': 'import XCTest\nfunc testRoot() throws { throw XCTSkip() }\n',
         'apps/second/Tests/SecondTests.swift': 'import XCTest\nfunc testSecond() throws { throw XCTSkip() }\n',
     });
-    const failed = await run(sandbox.path, ['check', '--only', 'xctest/disabled', '--no-cache', '--json']);
+    const failed = await run(sandbox.path, ['check', '--only', 'xctest/disabled', '--json']);
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
     expect(
         (JSON.parse(failed.stdout) as RunReport).checks.map((check) => ({
@@ -30,7 +30,7 @@ test('Swift checks report each scope independently and file-list inputs omit sib
         `${sandbox.path}/apps/second/Tests/SecondTests.swift`,
         'import XCTest\nfunc testSecond() throws { throw XCTSkip("Requires a physical device") }\n',
     );
-    const corrected = await run(sandbox.path, ['check', '--only', 'xctest/disabled', '--no-cache', '--json']);
+    const corrected = await run(sandbox.path, ['check', '--only', 'xctest/disabled', '--json']);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
 });
 
@@ -101,7 +101,7 @@ test.each([
                 ]),
             ),
         });
-        const command = ['check', '--only', check, '--no-cache', '--json'];
+        const command = ['check', '--only', check, '--json'];
         const result = await run(sandbox.path, command);
         expect(result.code, result.stdout + result.stderr).toBe(1);
         const report = JSON.parse(result.stdout) as {
@@ -135,7 +135,7 @@ test.each(['recommended', 'all'] as const)('orphan assets follow %s and tracked 
         'app/Assets.xcassets/Logo.imageset/logo.png': new Uint8Array([0, 1, 2]),
         'Sibling.swift': 'let image = Image("Logo")\n',
     });
-    const command = ['check', '--only', 'xcode/asset-catalogs', '--json', '--no-cache'];
+    const command = ['check', '--only', 'xcode/asset-catalogs', '--json'];
     const result = await run(sandbox.path, command);
     expect(result.code, result.stdout + result.stderr).toBe(level === 'all' ? 1 : 0);
     const findings = (JSON.parse(result.stdout) as RunReport).checks.flatMap((entry) => entry.findings);

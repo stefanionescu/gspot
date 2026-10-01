@@ -105,7 +105,7 @@ analysis = "suppressions"
 coverage = ["structure"]
 summary = "Checks suppression reasons when require_reasons is enabled; nosemgrep is refused outright."
 why = "The suppression census makes hidden findings visible for review."
-help = "Write the reason in the comment (after two dashes for eslint-disable and gspot-ignore, after a colon for ts-expect-error), or fix the finding and drop the suppression."
+help = "Write the reason in the comment (after two dashes for eslint-disable, after a colon for ts-expect-error), or fix the finding and drop the suppression."
 
 [[checks]]
 name = "integrity/generated-drift"

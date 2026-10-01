@@ -28,7 +28,7 @@ test(
         expect(
             await Bun.file(join(root, '.gspot/node_modules/@gspothq/eslint-plugin/package.json')).json(),
         ).toMatchObject({ name: '@gspothq/eslint-plugin' });
-        const command = ['check', '--only', 'security/semgrep', '--no-cache', '--json'];
+        const command = ['check', '--only', 'security/semgrep', '--json'];
         const broken = await run(root, command);
         expect(broken.code, broken.stdout + broken.stderr).toBe(1);
         expect((JSON.parse(broken.stdout) as RunReport).checks).toMatchObject([

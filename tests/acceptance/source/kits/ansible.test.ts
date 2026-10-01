@@ -50,11 +50,7 @@ describe('the ansible configuration', () => {
                 isWindows,
             );
             expect(report.checks[0]?.findings).toStrictEqual(isWindows ? [] : expectedFindings);
-            const corrected = await run(
-                sandbox.path,
-                ['check', '--only', 'ansible/lint', '--no-cache', '--json'],
-                environment,
-            );
+            const corrected = await run(sandbox.path, ['check', '--only', 'ansible/lint', '--json'], environment);
             expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
             expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
                 { check: 'ansible/lint', status: isWindows ? 'skipped' : 'ok', findings: [] },

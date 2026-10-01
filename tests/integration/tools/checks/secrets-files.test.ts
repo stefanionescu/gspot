@@ -10,7 +10,7 @@ import { containing, textContaining } from '#tests/support/expectations.ts';
 import { PLANTED_TOKEN, SECRETS_FILES_POLICY } from '#tests/inputs/integration/tools/checks.ts';
 
 async function secretChecks(root: string): Promise<{ check: string; status: string; findings: { file: string }[] }[]> {
-    const options: RunOptions = { stage: 'all', skips: [], fix: false, isDryRun: false, noCache: true };
+    const options: RunOptions = { stage: 'all', skips: [], fix: false, isDryRun: false };
     const outcome = await executeRun(await openSession(root), options);
     return outcome.report.checks
         .filter((check) => check.check.startsWith('secrets/'))
@@ -31,7 +31,7 @@ test('a folder with no git scans its files for secrets, and a git repository sca
         }),
     );
     expect(withoutGit.find((check) => check.check === 'secrets/gitleaks-staged')?.status).toBe('skipped');
-    const options: RunOptions = { stage: 'all', skips: [], fix: false, isDryRun: false, noCache: true };
+    const options: RunOptions = { stage: 'all', skips: [], fix: false, isDryRun: false };
     const { planned } = await executeRun(await openSession(sandbox.path), options);
     expect(planned.find((check) => check.check === 'secrets/gitleaks-staged')?.skip).toMatchObject({
         source: 'rules',

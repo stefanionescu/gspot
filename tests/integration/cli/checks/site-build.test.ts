@@ -82,7 +82,6 @@ test('push builds preserve tracked dist bytes and Git status', async () => {
         '--only',
         'static-site/build',
         'static-site/build-reproducible',
-        '--no-cache',
         '--json',
     ]);
     expect(outcome.code, outcome.stdout + outcome.stderr).toBe(0);
@@ -172,7 +171,6 @@ test.each([0, 7])('a run cleans isolated site output after build exit %i', async
             only: ['static-site/build'],
             fix: false,
             isDryRun: false,
-            noCache: true,
         });
         expect(outcome.report.exitCode).toBe(code === 0 ? 0 : 1);
         expect(cwd).not.toBe(sandbox.path);

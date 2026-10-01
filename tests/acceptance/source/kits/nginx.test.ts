@@ -36,7 +36,7 @@ if (HAS_DOCKER)
                     'ssl_certificate "/etc/nginx/ssl/server  certificate.pem"; ssl_certificate_key "/etc/nginx/ssl/server key.pem";\n# include /outside/ignored.conf;\n',
                 'proxy/unrelated.conf': 'include /outside/not-used.conf;\n',
             });
-            const command = ['check', '--stage', 'push', '--only', 'nginx/config-test', '--no-cache', '--json'];
+            const command = ['check', '--stage', 'push', '--only', 'nginx/config-test', '--json'];
             const failed = await run(sandbox.path, command);
             expect(failed.code, failed.stdout + failed.stderr).toBe(1);
             expect((JSON.parse(failed.stdout) as RunReport).checks.flatMap((check) => check.findings)).toMatchObject([
@@ -74,7 +74,7 @@ if (HAS_DOCKER)
                 'gspot.toml': policy,
                 'proxy/nginx.conf': configuration.replace('listen 443 ssl;', 'invalid_directive on;'),
             });
-            const command = ['check', '--stage', 'push', '--only', 'nginx/config-test', '--no-cache', '--json'];
+            const command = ['check', '--stage', 'push', '--only', 'nginx/config-test', '--json'];
             const failed = await run(sandbox.path, command);
             expect(failed.code, failed.stdout + failed.stderr).toBe(1);
             expect((JSON.parse(failed.stdout) as RunReport).checks.flatMap((check) => check.findings)).toMatchObject([
@@ -117,7 +117,7 @@ describe('the nginx configuration', () => {
             commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['gixy', 'typos', 'ec']) };
             await installAtLevel(sandbox.path, NGINX_INIT, environment);
-            const clean = await run(sandbox.path, ['check', '--only', 'nginx/gixy', '--no-cache'], environment);
+            const clean = await run(sandbox.path, ['check', '--only', 'nginx/gixy'], environment);
             expect(clean.code, clean.stdout + clean.stderr).toBe(0);
             const outcome = await runPlanted(
                 sandbox.path,
@@ -134,11 +134,7 @@ describe('the nginx configuration', () => {
                     ? { check: 'nginx/gixy', status: 'skipped' }
                     : { check: 'nginx/gixy', status: 'fail', findings: [forged] },
             ]);
-            const corrected = await run(
-                sandbox.path,
-                ['check', '--only', 'nginx/gixy', '--no-cache', '--json'],
-                environment,
-            );
+            const corrected = await run(sandbox.path, ['check', '--only', 'nginx/gixy', '--json'], environment);
             expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
             expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
                 { check: 'nginx/gixy', status: isWindows ? 'skipped' : 'ok', findings: [] },

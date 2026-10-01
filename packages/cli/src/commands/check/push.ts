@@ -38,7 +38,7 @@ async function checkRevision(
                     commits: revision.commits,
                     historyComplete: revision.historyComplete,
                     content: 'commit',
-                    cacheRoot: root,
+                    installedRoot: root,
                     reference: revision.object,
                     ...(revision.paths === undefined ? {} : { changed: revision.paths }),
                 }),

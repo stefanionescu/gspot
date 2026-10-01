@@ -139,7 +139,6 @@ never shared implementation mixed with interface definition.
 class Reader(Protocol):
     """A source of one text document."""
 
-    # gspot-ignore python/trivial-function -- Reader.read defines the required protocol signature.
     def read(self) -> str:
         """Return the document text."""
         ...

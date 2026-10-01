@@ -18,7 +18,7 @@ async function expectConfigurationRepaired(
     environment: Record<string, string>,
     configuration: string,
 ): Promise<void> {
-    const args = ['check', '--only', 'spelling/typos', '--no-cache', '--json'];
+    const args = ['check', '--only', 'spelling/typos', '--json'];
     chmodSync(join(root, '.gspot/config/typos.toml'), 0o644);
     await Bun.write(join(root, '.gspot/config/typos.toml'), '[default]\nlocale = "unknown"\n');
     const broken = await run(root, args, environment);
@@ -48,7 +48,7 @@ test(
         const applied = await run(sandbox.path, ['apply'], environment);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
         commitAll(sandbox.path);
-        const args = ['check', '--only', 'spelling/typos', '--no-cache', '--json', '--fix'];
+        const args = ['check', '--only', 'spelling/typos', '--json', '--fix'];
         for (const attempt of [0, 1]) {
             const checked = await run(sandbox.path, args, environment);
             expect(checked.code, `Attempt ${String(attempt)}: ${checked.stdout}${checked.stderr}`).toBe(1);
@@ -83,7 +83,7 @@ test(
         const applied = await run(sandbox.path, ['apply'], environment);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
         commitAll(sandbox.path);
-        const args = ['check', '--only', 'spelling/typos', '--no-cache', '--json'];
+        const args = ['check', '--only', 'spelling/typos', '--json'];
         const checked = await run(sandbox.path, args, environment);
         expect(checked.code, checked.stdout + checked.stderr).toBe(1);
         const findings = (JSON.parse(checked.stdout) as RunReport).checks.flatMap((check) => check.findings);
@@ -139,7 +139,7 @@ test(
             'nested/rogue/sample.txt': `${TYPO.receive}\n`,
         });
         commitAll(sandbox.path);
-        const args = ['check', '--only', 'spelling/typos', '--no-cache', '--json'];
+        const args = ['check', '--only', 'spelling/typos', '--json'];
         const checked = await run(sandbox.path, args, environment);
         expect(checked.code, checked.stdout + checked.stderr).toBe(1);
         const report = JSON.parse(checked.stdout) as RunReport;

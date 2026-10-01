@@ -115,10 +115,10 @@ test(
         expect(existsSync(join(second.path, '.shellcheckrc'))).toBe(false);
         // The profile's ignore covers the unused variable; nothing else in the script reports.
         await Bun.write(join(second.path, 'tools/b.sh'), '#!/usr/bin/env bash\nunused_variable=hello\n');
-        const checked = await run(second.path, ['check', '--only', 'bash/shellcheck', '--no-cache'], TOOLS);
+        const checked = await run(second.path, ['check', '--only', 'bash/shellcheck'], TOOLS);
         expect(checked.code, checked.stdout + checked.stderr).toBe(0);
         await Bun.write(join(second.path, 'tools/b.sh'), '#!/usr/bin/env bash\necho $unquoted\n');
-        const reported = await run(second.path, ['check', '--only', 'bash/shellcheck', '--no-cache'], TOOLS);
+        const reported = await run(second.path, ['check', '--only', 'bash/shellcheck'], TOOLS);
         expect(reported.code, reported.stdout + reported.stderr).toBe(1);
         expect(reported.stdout).toContain('SC2086');
     },

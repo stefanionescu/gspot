@@ -46,11 +46,7 @@ test.each(SHAPES)(
         const report = JSON.parse(outcome.stdout) as RunReport;
         expect(report.checks[0]!.findings).toContainEqual(containing({ rule: 'TS2322', file: path, line: 2 }));
         await Bun.write(join(sandbox.path, path), planted.replace("'one'", '1'));
-        const both = await run(
-            sandbox.path,
-            ['check', '--no-cache', '--json', '--only', 'typescript/tsc', check],
-            environment,
-        );
+        const both = await run(sandbox.path, ['check', '--json', '--only', 'typescript/tsc', check], environment);
         expect(both.code, both.stdout + both.stderr).toBe(0);
         const corrected = JSON.parse(both.stdout) as RunReport;
         expect(corrected.checks).toContainEqual(containing({ check, status: 'ok', findings: [] }));
@@ -77,7 +73,7 @@ test(
         });
         const result = await run(
             sandbox.path,
-            ['check', '--no-cache', '--json', '--only', 'vue/typecheck', 'svelte/check'],
+            ['check', '--json', '--only', 'vue/typecheck', 'svelte/check'],
             environment,
         );
         expect(result.code, result.stdout + result.stderr).toBe(1);

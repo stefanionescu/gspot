@@ -23,7 +23,7 @@ test.each([
         'server-public/unrelated.ts': 'export const publicValue = 1;\n',
         'public.ts': 'import {publicValue} from "./server-public/unrelated.js";\n',
     });
-    const command = ['check', '--only', 'trpc/router-boundaries', '--no-cache', '--json'];
+    const command = ['check', '--only', 'trpc/router-boundaries', '--json'];
     const failed = await run(sandbox.path, command);
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
     const findings = (JSON.parse(failed.stdout) as RunReport).checks.flatMap((entry) => entry.findings);
@@ -58,7 +58,7 @@ test('tRPC architecture boundaries retain source locations, scope isolation, and
         'app/child/private/router.ts': 'export const router = {};\n',
         'app/child/client.ts': source,
     });
-    const command = ['check', '--only', 'trpc/router-boundaries', '--no-cache', '--json'];
+    const command = ['check', '--only', 'trpc/router-boundaries', '--json'];
     const failed = await run(sandbox.path, command);
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
     expect(

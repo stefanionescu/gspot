@@ -167,7 +167,7 @@ export function kitPage(manifest: Manifest): ReferencePage {
 export function rulePage(check: CheckSpec, configuration: Manifest): ReferencePage {
     if (typeof check.example !== 'string' || check.example.trim() === '')
         throw new Error(`Check ${check.name} has no example.`);
-    const command = `gspot check --stage ${check.stage} --only ${check.reported_by ?? check.name} --no-cache`;
+    const command = `gspot check --stage ${check.stage} --only ${check.reported_by ?? check.name}`;
     const lines = [
         `${check.summary}\n\n## Why\n\n${check.why}\n\n## What to do\n\n${check.help}\n\n## Where it runs\n\n`,
         `Check: \`${check.name}\`.\n\n- Configuration: [the ${configuration.kit.name} configuration](/reference/kits/${configuration.kit.name}/)\n- Stage: ${check.stage}\n- Level: ${check.level}\n`,

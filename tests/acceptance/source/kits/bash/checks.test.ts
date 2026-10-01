@@ -11,7 +11,7 @@ import { BASH_CASES_MAIN as MAIN } from '#tests/inputs/cli.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { script, plantedCases } from '#tests/support/cli/planted.ts';
 
-const CLEAN = script.replace('# gspot-ignore', () => '# main: runs the script.\n# gspot-ignore');
+const CLEAN = script.replace('main() {', () => '# main: runs the script.\nmain() {');
 // What a check accepts beside the clean scripts: a guarded settings file, a boundary header, the environment owner.
 const CORRECTIONS: Record<string, (planted: { files: Record<string, string> }) => Record<string, string>> = {
     'structure/guards': () => ({
@@ -64,7 +64,7 @@ test.each([
     });
     const path = join(sandbox.path, 'greet.sh');
     chmodSync(path, 0o755);
-    const command = ['check', '--only', 'structure/bash-interpreter', '--no-cache', '--json'];
+    const command = ['check', '--only', 'structure/bash-interpreter', '--json'];
     const clean = await run(sandbox.path, command);
     expect(clean.code, clean.stdout + clean.stderr).toBe(0);
     writeFileSync(path, base + (isInherited ? '' : inherited) + MAIN);

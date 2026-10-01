@@ -94,7 +94,6 @@ test('a repository command receives a declared empty argument without changing i
         skips: [],
         fix: false,
         isDryRun: true,
-        noCache: true,
     });
     expect(result.report.exitCode).toBe(0);
     expect(result.report.checks).toMatchObject([{ check: 'project/arguments', status: 'ok' }]);

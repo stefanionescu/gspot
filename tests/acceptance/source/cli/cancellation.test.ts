@@ -23,7 +23,7 @@ test.each(['SIGINT', 'SIGTERM'] as const)(
             ),
             'source.txt': 'input\n',
         });
-        const child = Bun.spawn([process.execPath, CLI, 'check', '--json', '--no-cache'], {
+        const child = Bun.spawn([process.execPath, CLI, 'check', '--json'], {
             cwd: sandbox.path,
             ...CHILD_OPTIONS,
         });

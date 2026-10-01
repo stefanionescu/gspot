@@ -2,9 +2,9 @@
 import pLimit from 'p-limit';
 import { cpus } from 'node:os';
 import { inspectTool } from '#cli/tools/inspect.ts';
-import { pruneCache } from '#cli/execution/cache.ts';
 import { applyFixers } from '#cli/execution/fixers.ts';
 import type { CheckResult } from '#cli/types/checks.ts';
+import { applyIgnores } from '#cli/execution/ignores.ts';
 import { readRepository } from '#cli/repository/tree.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { checkExecution } from '#cli/execution/engines.ts';
@@ -12,9 +12,6 @@ import { reproduceLine } from '#cli/execution/reproduce.ts';
 import { assembleReport } from '#cli/execution/run-report.ts';
 import type { IgnoreEntry } from '#cli/types/policy/policy.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
-import type { SourceReads } from '#cli/types/repository/repository.ts';
-import { applyIgnores, applyInlineIgnores } from '#cli/execution/ignores.ts';
-import { runHashes, cacheKeyFor, storeResult, cachedResult } from '#cli/execution/result-cache.ts';
 import { DOCKER, RAN_STATUSES, FAILED_STATUSES, HISTORY_ANALYSES } from '#cli/config/execution/execution.ts';
 
 import type {
@@ -52,9 +49,9 @@ function unrunnable(session: Session, planned: PlannedCheck, base: CheckResult):
     return undefined;
 }
 
-// Runs one check, serving its stored result when the inputs are unchanged and storing a fresh one otherwise.
+// Runs one check.
 async function runOne(pass: Pass, executable: Executable): Promise<CheckResult> {
-    const { session, options, hashes, staged } = pass;
+    const { session, staged } = pass;
     const { check: planned, run } = executable;
     const base: CheckResult = {
         check: planned.check,
@@ -66,12 +63,7 @@ async function runOne(pass: Pass, executable: Executable): Promise<CheckResult> 
     };
     const early = unrunnable(session, planned, base);
     if (early) return early;
-    const key = options.noCache === true ? undefined : cacheKeyFor(session, planned, hashes);
-    const cached = key === undefined ? undefined : cachedResult(session, key, planned);
-    if (cached) return cached;
-    const result = await run(session, planned, staged);
-    if (key !== undefined && !options.isDryRun) storeResult(session, key, result);
-    return result;
+    return await run(session, planned, staged);
 }
 
 // Adds the findings each ignore entry matched to the run's tally.
@@ -92,29 +84,26 @@ function reproduceFor(check: PlannedCheck, result: CheckResult, options: RunOpti
 }
 
 // Drops the findings the ignores cover and settles the status on what remains.
-async function applyIgnoresTo(
-    reads: SourceReads,
+function applyIgnoresTo(
     check: PlannedCheck,
     result: CheckResult,
     ignores: IgnoreEntry[],
     uses: Map<string, IgnoreUse>,
-): Promise<void> {
+): void {
     const countedFailure = check.spec.count_regex !== undefined && result.status === 'fail';
-    const inline = await applyInlineIgnores(reads, result.findings);
     const ignored = applyIgnores(
-        inline,
+        result.findings,
         ignores.filter((entry) => entry.check === check.check),
     );
     mergeUses(uses, ignored.uses);
     result.findings = ignored.kept;
-    if (countedFailure || result.findings.length > 0) result.status = 'fail';
-    else if (result.status !== 'cache') result.status = 'ok';
+    result.status = countedFailure || result.findings.length > 0 ? 'fail' : 'ok';
 }
 
 // Filters a result through the ignores and attaches the line that reproduces a failure.
-async function filterResult(pass: Pass, check: PlannedCheck, result: CheckResult): Promise<void> {
+function filterResult(pass: Pass, check: PlannedCheck, result: CheckResult): void {
     const { ignores } = pass.session.policyFiles.policy;
-    if (RAN_STATUSES.has(result.status)) await applyIgnoresTo(pass.session.reads, check, result, ignores, pass.uses);
+    if (RAN_STATUSES.has(result.status)) applyIgnoresTo(check, result, ignores, pass.uses);
     if (FAILED_STATUSES.has(result.status)) result.reproduce = reproduceFor(check, result, pass.options);
 }
 
@@ -127,7 +116,7 @@ async function runChecks(pass: Pass, executables: Executable[]): Promise<CheckRe
         executables.map((executable) =>
             limiter(async () => {
                 const result = await runOne(pass, executable);
-                await filterResult(pass, executable.check, result);
+                filterResult(pass, executable.check, result);
                 pass.options.onResult?.(result);
                 return result;
             }),
@@ -172,7 +161,7 @@ async function planCorrections(
 /**
  * Runs the checks and returns the report.
  * @param opened the session
- * @param options stage, skips, fix and cache flags
+ * @param options stage, skips, and fix flags
  * @returns the report, the plan, and the fix report when --fix ran
  */
 export async function executeRun(opened: Session, options: RunOptions): Promise<RunOutcome> {
@@ -185,7 +174,6 @@ export async function executeRun(opened: Session, options: RunOptions): Promise<
     const pass: Pass = {
         session,
         options,
-        hashes: runHashes(session),
         staged: options.staged ? new Set(options.staged) : undefined,
         uses: new Map(ignores.map((entry) => [JSON.stringify(entry), { entry, matched: 0 }])),
     };
@@ -197,7 +185,7 @@ export async function executeRun(opened: Session, options: RunOptions): Promise<
             (HISTORY_ANALYSES.has(check.spec.analysis ?? '') && (check.commits?.length ?? 0) > 0),
     );
     const ran = await runChecks(pass, active);
-    const report = await assembleReport({
+    const report = assembleReport({
         session,
         options,
         started,
@@ -207,6 +195,5 @@ export async function executeRun(opened: Session, options: RunOptions): Promise<
         uses: pass.uses,
         fixes,
     });
-    if (!options.isDryRun && options.noCache !== true) pruneCache(session.cacheRoot ?? session.root);
     return fixes ? { report, planned, fixes } : { report, planned };
 }

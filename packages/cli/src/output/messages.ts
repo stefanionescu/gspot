@@ -56,17 +56,6 @@ export function fail(text: string): void {
 }
 
 /**
- * Reports an operational storage failure without changing the established check verdict.
- * @param path the output that was not saved
- * @param error the filesystem error
- */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The cache and the reports say a failed write the same way, without changing the verdict.
-export function reportStorageFailure(path: string, error: unknown): void {
-    const detail = (error instanceof Error ? error.message : String(error)).replaceAll(/[\r\n]+/gu, ' ');
-    fail(`Could not write ${JSON.stringify(path)}: ${detail}`);
-}
-
-/**
  * Output that is the command's record: stdout.
  * @param text the text
  */
