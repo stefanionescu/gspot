@@ -22,7 +22,9 @@ approved it on October 1, 2026.
   `architecture` folder, a part of stage 15.
 - Pull request #9 updated `devalue` to 5.9.4 for seven advisories that `dependencies/osv` reported on October 1.
 - Stage 9 is pull request #11, branch `refactor/cut-tool-docs-tests`.
-- The next stage to start is stage 10.
+- Stage 10 is pull request #12, branch `refactor/cut-command-acceptance-tests`, stacked on #11. Rebase it onto `main`
+  once #11 merges.
+- The next stage to start is stage 11.
 
 ### Stages
 
@@ -39,7 +41,7 @@ One pull request per stage, in this order. Each merges with a merge commit only 
 | 7     | Write the agent block only into `AGENTS.md`            | the `CLAUDE.md` decision; the Cursor rule                                                               | merged, #8             |
 | 8     | Cut unit and CLI integration tests                     | D.2 rows that delete, trim, and merge within one tier                                                   | merged, #10            |
 | 9     | Cut tool, docs, and repository tests                   | D.3 rows; drop `test:docs` and those folders from `test`                                                | pull request #11       |
-| 10    | Cut command acceptance and package tests               | D.4 rows; pins move to a scheduled `pins.yml`                                                           | not started            |
+| 10    | Cut command acceptance and package tests               | D.4 rows; pins move to a scheduled `pins.yml`                                                           | pull request #12       |
 | 11    | Cut kit acceptance tests                               | D.4 kit rows; find why `documents.test.ts` does not run on Linux                                        | not started            |
 | 12    | Delete repeated checks, dead rules, and dead code      | 5.3, 5.4, 5.7, including `version = 1` and its gate                                                     | not started            |
 | 13    | Ship no defaults written for this repository           | 5.5; `architecture.roles.harness` with no default; this repository sets its own roles                   | not started            |
@@ -177,6 +179,17 @@ The owner and the work settled these while implementing:
     - stage 24: the cases that move to the CLI tier: `checks/site-output`, `generation/toml`, the empty-scope case in
       `generation/javascript`, and the ESLint and Stylelint cases in `execution/fixers`.
     - stage 25: the shared Swift helpers in `swift-build`.
+- Stage 10 cut the D.4 command and package rows that delete, trim, or merge within acceptance. Stages 2 to 6 had
+  already deleted the cache, performance, uninstall, and report-storage files.
+- A weekly `pins` workflow runs `repo:pins` (`packages/cli/scripts/pins.ts`) in place of the pins test.
+- These D.4 command rows wait for stage 24:
+    - every "move to the CLI tier" row, `checks/declared` into the declared-check parse test, the split of
+      `ignored-execution`, and `nested-scopes` into the CLI scopes test.
+    - the cases of `format-overrides` and `scopes` that belong to generation, unit, or init tests, and the per-tool
+      rows of `reasons` that become one unit table.
+    - the merge of `hooks/push/revisions` into `hooks/push/refs`, with the helper for its pasted assertion blocks; the
+      merged file is over 300 lines until then.
+- `package/lifecycle` tests the package runner script and moves with it in stage 21.
 - Stage 9 moved the one real guard of the deleted reference tests, conflicting setting definitions, into manifest
   validation. A CI step replaces the test of the tool pins: it runs `repo:tools` and `git diff --exit-code`.
 - Stages 2 to 7 already removed the D.2 cases about the cache status, the census, inline ignores, reports, uninstall,
