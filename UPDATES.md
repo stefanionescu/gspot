@@ -18,11 +18,11 @@ approved it on October 1, 2026.
 
 ### Where things stand on October 1, 2026
 
-- `main` is at `94c41578`. Stages 1 to 10 are merged as pull requests #2 to #8 and #10 to #12. Stage 7 also deleted
+- `main` is at `59f2cf33`. Stages 1 to 11 are merged as pull requests #2 to #8 and #10 to #13. Stage 7 also deleted
   the `architecture` folder, a part of stage 15.
 - Pull request #9 updated `devalue` to 5.9.4 for seven advisories that `dependencies/osv` reported on October 1.
-- Stage 11 is pull request #13, branch `refactor/cut-kit-acceptance-tests`.
-- The next stage to start is stage 12.
+- Stage 12 is pull request #14, branch `refactor/delete-repeated-checks-dead-code`.
+- The next stage to start is stage 13.
 
 ### Stages
 
@@ -40,8 +40,8 @@ One pull request per stage, in this order. Each merges with a merge commit only 
 | 8     | Cut unit and CLI integration tests                     | D.2 rows that delete, trim, and merge within one tier                                                   | merged, #10            |
 | 9     | Cut tool, docs, and repository tests                   | D.3 rows; drop `test:docs` and those folders from `test`                                                | merged, #11            |
 | 10    | Cut command acceptance and package tests               | D.4 rows; pins move to a scheduled `pins.yml`                                                           | merged, #12            |
-| 11    | Cut kit acceptance tests                               | D.4 kit rows; find why `documents.test.ts` does not run on Linux                                        | pull request #13       |
-| 12    | Delete repeated checks, dead rules, and dead code      | 5.3, 5.4, 5.7, including `version = 1` and its gate                                                     | not started            |
+| 11    | Cut kit acceptance tests                               | D.4 kit rows; find why `documents.test.ts` does not run on Linux                                        | merged, #13            |
+| 12    | Delete repeated checks, dead rules, and dead code      | 5.3, 5.4, 5.7, including `version = 1` and its gate                                                     | pull request #14       |
 | 13    | Ship no defaults written for this repository           | 5.5; `architecture.roles.harness` with no default; this repository sets its own roles                   | not started            |
 | 14    | Remove the self-lint code from the product             | 5.6; one `gspot` task; `testToolsText` to the pin script                                                | not started            |
 | 15    | Delete stale files                                     | 5.8 and B.7, apart from the `architecture` folder                                                       | `architecture` deleted |
@@ -160,9 +160,6 @@ The owner and the work settled these while implementing:
 
 - Stage 8 cut the D.2 rows whose reason holds while the code stays. A test leaves with the code it tests, so these
   D.2 rows wait for the stage that deletes that code:
-    - stage 12: the tests of the three dead plugin rules, `checks/async-functions`, the import-cycle case in
-      `checks/python/imports`, the dead rule in `generation/framework-rules`, and the `appendEntry` cases in
-      `policy/write`.
     - stage 13: the rewrites of `env-access-owner`, `import-direction`, and `tests-directory-contents`, the harness
       rows of `execution/structure`, and the shipped banned-word loop in `checks/naming/validate-name`.
     - stage 14: `agents/examples`, `agents/front-matter`, `agents/lint`, and the linter case in `agents/sections`.
@@ -196,6 +193,18 @@ The owner and the work settled these while implementing:
     - the merges of `component-files` into `components`, of the Next.js files, and of `nginx`, which is over the
       function limit until its cases move.
     - the docstring and structure cases of `python`, and the cases of `xctest`.
+- Stage 12 deleted the checks of 5.3 and the plugin rules of 5.4, with their tests, and these other parts of 5.7:
+    - No other entry set `reported_by`, so the field is deleted with the four entries that only named another check.
+    - The fastapi kit has no check of its own now. Manifest validation accepts a config that another kit reads through
+      `needs`, as `security/semgrep` reads every Semgrep pack.
+    - `fastapi.test.ts` kept only its pytest case and became `pytest.test.ts`. `xcode.test.ts` is gone, because
+      `files.test.ts` covers the plist check.
+    - 49 exports and 22 types that only their own file uses are private now. `entrySchema` stays exported because it
+      reads two exported schemas. `GRAMMAR_NAMES` stays because a test script imports it from a packed checkout.
+    - The 41 exports that only tests import are also used in their own file, so they stay as test entry points.
+    - `appendEntry` is gone, and the policy tests use `appendIgnore`. `setEnvironmentVariable` moved to
+      `tests/support/environment.ts`, which `gspot.toml` adds as a second owner of the environment.
+    - The ticket numbers left in 14 comments are gone.
 - `documents.test.ts` does run on Linux: its 11 cases pass in main run 36896154813. The audit's timing came from the
   stale timings file that stage 1 deleted.
 - Stage 9 moved the one real guard of the deleted reference tests, conflicting setting definitions, into manifest
@@ -205,8 +214,9 @@ The owner and the work settled these while implementing:
   `gitlinks`, `bun`, and most ownership files needed no further cut.
 - After a checkout rewrites a read-only generated file with mode 0644, `apply` refuses it as edited although the bytes
   match. Until stage 27 fixes that, `chmod 0444` the files it names and rerun `mise run apply`.
-- Stage 1 left the two empty scopes, `packages/cli` and `packages/eslint-plugin`, in `gspot.toml`. Delete them with
-  adaptation 7 in the next stage that touches the policy.
+- Stage 1 left the two empty scopes, `packages/cli` and `packages/eslint-plugin`, in `gspot.toml`. They stay until
+  stage 27 fixes the knip workspaces: without them, knip loses the entry files of both packages. Then delete them
+  with adaptation 7.
 - Bugs for stage 27:
     - knip takes its workspaces from the gspot scopes instead of the package workspaces.
     - A prune, such as `gspot set guides.install false`, leaves empty folders behind.
@@ -214,6 +224,9 @@ The owner and the work settled these while implementing:
       match the record.
     - `--only <checks...>` keeps reading after a global `--json`, so `check --only X --json file` takes the file as a
       check name.
+    - `LICENSE_FILE` in `config/repository/patterns.ts` matches any name that starts with `license-`, `notice-`, or
+      `copying-`, so every check skips such a source file. `license-locks.test.ts` was never linted, and it has five
+      ESLint findings to fix once the pattern accepts only license texts.
 - The stdin case of `acceptance/source/cli/cancellation` writes its ready marker before the SIGTERM handler is
   attached, so a slow runner can kill the process with 143. Fix the test in stage 24.
 - The pyjwt advisory ignores expire on October 13 and 15, 2026. Renew them with `gspot ignore` in the open pull
