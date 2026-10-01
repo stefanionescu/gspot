@@ -135,21 +135,14 @@ fix_command = ${JSON.stringify([process.execPath, '-e', 'await Bun.write("added.
     expect(session.repository.files.map((file) => file.path)).toContain('added.txt');
 });
 
-// A command over every .txt argument: the check fails while one holds the text, and the correction replaces it.
-function textCommands(text: string, replacement: string): { command: string[]; fix: string[] } {
-    const paths = "process.argv.filter((arg) => arg.endsWith('.txt'))";
-    const found = `(await Promise.all(${paths}.map((path) => Bun.file(path).text()))).some((body) => body.includes(${JSON.stringify(text)}))`;
-    const replaced = `for (const path of ${paths}) await Bun.write(path, (await Bun.file(path).text()).replaceAll(${JSON.stringify(text)}, ${JSON.stringify(replacement)}));`;
-    return {
-        command: [process.execPath, '-e', `process.exitCode = ${found} ? 1 : 0`, '{files}'],
-        fix: [process.execPath, '-e', replaced, '{files}'],
-    };
-}
+// A check that fails while a file holds its first argument, and a correction that replaces that text with its second.
+const TEXT_CHECK =
+    'const [, text, ...paths] = process.argv; const bodies = await Promise.all(paths.map((path) => Bun.file(path).text())); process.exitCode = bodies.some((body) => body.includes(text)) ? 1 : 0;';
+const TEXT_FIX =
+    'const [, text, replacement, ...paths] = process.argv; for (const path of paths) await Bun.write(path, (await Bun.file(path).text()).replaceAll(text, replacement));';
 
 test('a later pass formats what a correction after the formatter wrote', async () => {
     await using sandbox = await testdir();
-    const format = textCommands('  ', ' ');
-    const codemod = textCommands('var', 'let ');
     await createFileTree(sandbox.path, {
         'source.txt': 'var x\n',
         'gspot.toml': `version = 1
@@ -158,14 +151,14 @@ kits = []
 name = "project/format"
 stage = "commit"
 paths = ["*.txt"]
-command = ${JSON.stringify(format.command)}
-fix_command = ${JSON.stringify(format.fix)}
+command = ${JSON.stringify([process.execPath, '-e', TEXT_CHECK, '  ', '{files}'])}
+fix_command = ${JSON.stringify([process.execPath, '-e', TEXT_FIX, '  ', ' ', '{files}'])}
 [[check]]
 name = "project/codemod"
 stage = "commit"
 paths = ["*.txt"]
-command = ${JSON.stringify(codemod.command)}
-fix_command = ${JSON.stringify(codemod.fix)}
+command = ${JSON.stringify([process.execPath, '-e', TEXT_CHECK, 'var', '{files}'])}
+fix_command = ${JSON.stringify([process.execPath, '-e', TEXT_FIX, 'var', 'let ', '{files}'])}
 `,
     });
     const options = { stage: 'commit' as const, skips: [], fix: true, isDryRun: false };
