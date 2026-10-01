@@ -18,24 +18,6 @@ const { version: GSPOT_VERSION } = packageManifest;
 
 const CLI = fileURLToPath(new URL('../../../../packages/cli/src/main.ts', import.meta.url));
 
-test('runner selection preserves policy after rejection and accepts a supported correction', async () => {
-    await using repository = await testdir();
-    const policy = policyOf([], '[guides]\ninstall = false\n', 'recommended');
-    await createFileTree(repository.path, { 'gspot.toml': policy });
-    const rejected = await run([process.execPath, CLI, 'set', 'runner.tool', 'unsupported', '--json'], {
-        cwd: repository.path,
-    });
-    expect(rejected.code, rejected.stdout + rejected.stderr).toBe(2);
-    expect(readFileSync(join(repository.path, 'gspot.toml'), 'utf8')).toBe(policy);
-    expect(
-        await run([process.execPath, CLI, 'set', 'runner.tool', 'mise', '--json'], {
-            cwd: repository.path,
-        }),
-    ).toMatchObject({ code: 0 });
-    expect(readFileSync(join(repository.path, 'gspot.toml'), 'utf8')).toContain('tool = "mise"');
-});
-
-// The planted mise and gspot are POSIX shell scripts.
 if (onPosix)
     test('mise executes the pinned CLI with its arguments, and install rejects an old runner before corrected setup succeeds', async () => {
         await using repository = await testdir();

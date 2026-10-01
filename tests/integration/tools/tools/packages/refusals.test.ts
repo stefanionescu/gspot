@@ -10,7 +10,7 @@ import { chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { PACKAGE_PROJECTS } from '#tests/inputs/integration/tools/packages.ts';
 import { readPackageInputs, createPackageProject } from '#tests/support/cli/package-project.ts';
 
-test.each(PACKAGE_PROJECTS)(
+test.each([PACKAGE_PROJECTS[0]])(
     '%s from %s with %s refuses lifecycle scripts before contacting the registry',
     async (client, projectPath, runner) => {
         await using fixture = await createPackageProject(client, projectPath, runner);

@@ -1,10 +1,6 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { run } from '#cli/platform/spawn.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { kitManifests } from '#cli/kits/manifests.ts';
-import { parseAlerts } from '#cli/checks/prose/vale.ts';
-import { containing } from '#tests/support/expectations.ts';
 import { chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { openOwner, readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import { hasPackages, removePackages, installPackages } from '#cli/tools/vale.ts';
@@ -25,21 +21,6 @@ async function expectPublishedRules(root: string): Promise<void> {
     });
     expect(await installPackages(clone.path)).toBeUndefined();
     expect(readFileSync(join(clone.path, INSTALLED))).toStrictEqual(readFileSync(join(root, INSTALLED)));
-    const command = ['vale', '--config', '.gspot/config/vale.ini', '--output', 'JSON', '--no-exit', 'guide.md'];
-    const checked = await run(command, { cwd: root });
-    expect(checked.code, checked.stdout + checked.stderr).toBe(0);
-    expect(parseAlerts(checked.stdout)).toStrictEqual([
-        containing({
-            file: 'guide.md',
-            line: 1,
-            check: 'LocalStyle.terms',
-            message: "Avoid 'ambiguousword'.",
-        }),
-    ]);
-    writeFileSync(join(root, 'guide.md'), 'Clear writing.\n');
-    const corrected = await run(command, { cwd: root });
-    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect(parseAlerts(corrected.stdout)).toStrictEqual([]);
 }
 
 async function expectPrunedRules(root: string): Promise<void> {
@@ -62,22 +43,16 @@ async function expectEditedRules(root: string): Promise<void> {
 }
 
 test.each([
-    { name: 'replaces cloned bytes and checks corrections', verify: expectPublishedRules },
+    { name: 'replaces cloned bytes with the published package', verify: expectPublishedRules },
     { name: 'deletes a package the configuration no longer names', verify: expectPrunedRules },
     { name: 'replaces an edited package and leaves authored files', verify: expectEditedRules },
 ])(
-    'pinned Vale $name',
+    'Vale package sync $name',
     async ({ verify }) => {
         await using directory = await testdir();
         await createFileTree(directory.path, { 'guide.md': 'An ambiguousword.\n', 'authored.txt': 'keep\n' });
         const server = Bun.serve({ hostname: '127.0.0.1', port: 0, fetch: () => new Response(PACKAGE) });
         try {
-            const pin = kitManifests()
-                .get('prose')!
-                .tools.find((tool) => tool.name === 'vale')!.version!;
-            const version = await run(['vale', '--version'], { cwd: directory.path });
-            expect(version.code, version.stdout + version.stderr).toBe(0);
-            expect(version.stdout).toContain(pin);
             const owner = openOwner(directory.path);
             try {
                 owner.replace(

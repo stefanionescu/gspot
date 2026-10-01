@@ -31,33 +31,17 @@ test('Squawk uses the effective transaction setting for each scope and honors fa
         '.gspot/config/transactional/child/squawk.toml': true,
     });
     for (const config of configs) await Bun.write(join(sandbox.path, config.path), config.content);
+    const squawk = ['squawk', '--reporter', 'json', '--config'];
+    const options = { cwd: sandbox.path, stdout: 'pipe', stderr: 'pipe' } as const;
     const transactional = Bun.spawnSync(
-        ['squawk', '--config', '.gspot/config/transactional/child/squawk.toml', '--reporter', 'json', 'migration.sql'],
-        {
-            cwd: sandbox.path,
-            stdout: 'pipe',
-            stderr: 'pipe',
-        },
+        [...squawk, '.gspot/config/transactional/child/squawk.toml', 'migration.sql'],
+        options,
     );
     expect(transactional.exitCode, transactional.stderr.toString()).toBe(0);
-    const failed = Bun.spawnSync(
-        ['squawk', '--config', '.gspot/config/squawk.toml', '--reporter', 'json', 'migration.sql'],
-        {
-            cwd: sandbox.path,
-            stdout: 'pipe',
-            stderr: 'pipe',
-        },
-    );
+    const failed = Bun.spawnSync([...squawk, '.gspot/config/squawk.toml', 'migration.sql'], options);
     expect(failed.exitCode, failed.stderr.toString()).toBe(1);
     expect(JSON.parse(failed.stdout.toString())).toMatchObject([{ rule_name: 'prefer-robust-stmts' }]);
     await Bun.write(join(sandbox.path, 'migration.sql'), defect.replace('ADD COLUMN ', 'ADD COLUMN IF NOT EXISTS '));
-    const corrected = Bun.spawnSync(
-        ['squawk', '--config', '.gspot/config/squawk.toml', '--reporter', 'json', 'migration.sql'],
-        {
-            cwd: sandbox.path,
-            stdout: 'pipe',
-            stderr: 'pipe',
-        },
-    );
+    const corrected = Bun.spawnSync([...squawk, '.gspot/config/squawk.toml', 'migration.sql'], options);
     expect(corrected.exitCode, corrected.stderr.toString()).toBe(0);
 });

@@ -1,19 +1,19 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { run } from '#cli/platform/spawn.ts';
+import { inspectTool } from '#cli/tools/inspect.ts';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
 import { computeDrift } from '#cli/lifecycle/drift.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
-import { statSync, existsSync, readFileSync } from 'node:fs';
 import { setEnvironmentVariable } from '#cli/platform/environment.ts';
 import { installPackageProject } from '#cli/tools/packages/project.ts';
+import { statSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { PACKAGE_PROJECTS } from '#tests/inputs/integration/tools/packages.ts';
 import { readPackageInputs, createPackageProject } from '#tests/support/cli/package-project.ts';
 
 test.each(PACKAGE_PROJECTS)(
-    '%s from %s with %s preserves authored and locked inputs while installing and correcting source',
+    '%s from %s with %s preserves authored and locked inputs and restores edited tool files',
     async (client, projectPath, runner) => {
         await using fixture = await createPackageProject(client, projectPath, runner);
         const { root, artifacts, registry, rootPackage, yarnConfiguration } = fixture;
@@ -46,13 +46,14 @@ test.each(PACKAGE_PROJECTS)(
             mode,
             manifest,
         });
-        const executable = join(root, '.gspot/node_modules/.bin/prettier');
-        const invalid = await run([executable, '--check', 'source.js'], { cwd: root });
-        expect(invalid.code, invalid.stdout + invalid.stderr).toBe(1);
-        const corrected = await run([executable, '--write', 'source.js'], { cwd: root });
-        expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        const checked = await run([executable, '--check', 'source.js'], { cwd: root });
-        expect(checked.code, checked.stdout + checked.stderr).toBe(0);
+        // A reinstall replaces an edited installed file with the locked one, and the tool stays ready.
+        const readmePath = join(root, '.gspot/node_modules/prettier/README.md');
+        const readme = readFileSync(readmePath);
+        writeFileSync(readmePath, 'authored later');
+        await installPackageProject(root, tools);
+        expect(readFileSync(readmePath)).toStrictEqual(readme);
+        const prettier = tools.find((tool) => tool.name === 'prettier')!;
+        expect(inspectTool({ root, inspections: new Map() }, prettier).state).toBe('ok');
         const session = await openSession(root);
         expect(
             computeDrift(

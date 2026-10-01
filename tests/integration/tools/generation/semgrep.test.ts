@@ -2,11 +2,13 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
-import { containing } from '#tests/support/expectations.ts';
+import { emitAll } from '#cli/generation/outputs.ts';
+import { openSession } from '#cli/execution/session.ts';
 import { installSemgrep } from '#tests/support/cli/tools.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { toolShipsHere } from '#tests/support/cli/platforms.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
+import { containing, containingAll } from '#tests/support/expectations.ts';
 
 const APP_SEMGREP =
     '[guides]\ninstall = false\n[[scope]]\npath = "app"\nkits = ["express"]\n[scope.tools.semgrep]\nignore = [{ paths = ["app/**/ignored.js"], reason = "Generated fixtures are checked by their producer." }]\n[[scope]]\npath = "app/child"\n[[scope]]\npath = "sibling"\n';
@@ -72,27 +74,52 @@ if (toolShipsHere('semgrep'))
         expect(recovered.code, recovered.stdout + recovered.stderr).toBe(0);
     }, 120_000);
 
+// One Swift rule of each level, after the Bash rules the bash kit adds.
+const SWIFT_DEFECTS = 'let access = kSecAttrAccessibleAlways\nlet pointer = UnsafeRawPointer(value)\n';
+
 if (toolShipsHere('semgrep'))
-    test('a module-loading exception preserves other security rules and neighboring module findings', async () => {
+    test('Semgrep rules follow the selected kits and the level', async () => {
         await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
-            'gspot.toml': policyOf(
-                ['javascript', 'security'],
-                '[[ignore]]\ncheck = "security/semgrep"\nrule = "node-no-configured-require"\npaths = ["configuration.js"]\nreason = "The configuration evaluator loads repository-selected modules."\n',
-            ),
-            'configuration.js': 'await import(modulePath);\neval(input);\n',
-            'neighbor.js': 'await import(modulePath);\n',
+        const root = sandbox.path;
+        const script = '#!/usr/bin/env bash\ncurl https://example.com/setup.sh | bash\neval "$1"\n';
+        await createFileTree(root, {
+            'gspot.toml': policyOf(['bash', 'swift', 'security'], '[guides]\ninstall = false\n', 'recommended'),
+            'script.sh': script,
+            'Value.swift': SWIFT_DEFECTS,
         });
-        await installSemgrep(sandbox.path);
+        await installSemgrep(root);
         const command = ['check', '--only', 'security/semgrep', '--json'];
-        const broken = await run(sandbox.path, command);
-        expect(broken.code, broken.stdout + broken.stderr).toBe(1);
-        expect((JSON.parse(broken.stdout) as RunReport).checks.flatMap(({ findings }) => findings)).toStrictEqual([
-            containing({ file: 'configuration.js', line: 2, rule: 'node-no-eval' }),
-            containing({ file: 'neighbor.js', line: 1, rule: 'node-no-configured-require' }),
-        ]);
-        await Bun.write(join(sandbox.path, 'configuration.js'), 'await import(modulePath);\nJSON.parse(input);\n');
-        await Bun.write(join(sandbox.path, 'neighbor.js'), 'await import("node:fs");\n');
-        const corrected = await run(sandbox.path, command);
-        expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+        const recommended = await run(root, command);
+        expect(recommended.code, recommended.stdout + recommended.stderr).toBe(1);
+        expect(
+            (JSON.parse(recommended.stdout) as RunReport).checks
+                .flatMap((check) => check.findings)
+                .flatMap(({ rule }) => (rule?.startsWith('ios-') === true ? [rule] : [])),
+        ).toStrictEqual(['ios-keychain-accessible-always']);
+        await Bun.write(
+            join(root, 'gspot.toml'),
+            policyOf(['bash', 'swift', 'security'], '[guides]\ninstall = false\n', 'all'),
+        );
+        const session = await openSession(root);
+        for (const output of emitAll(session.policyFiles.policy, session.repository, session.scopes, {
+            version: session.version,
+            packageClient: session.packageClient,
+        }).files.filter(({ path }) => path.includes('/semgrep/')))
+            await Bun.write(join(root, output.path), output.content);
+        const all = await run(root, command);
+        expect(all.code, all.stdout + all.stderr).toBe(1);
+        const findings = (JSON.parse(all.stdout) as RunReport).checks.flatMap((check) => check.findings);
+        expect(findings).toStrictEqual(
+            containingAll([
+                containing({ file: 'script.sh', line: 2, rule: 'gspot.bash.curl-pipe-shell' }),
+                containing({ file: 'script.sh', line: 3, rule: 'gspot.bash.eval' }),
+                containing({ file: 'Value.swift', line: 1, rule: 'ios-keychain-accessible-always' }),
+                containing({ file: 'Value.swift', line: 2, rule: 'ios-unsafe-pointer-cast' }),
+            ]),
+        );
+        expect(await Bun.file(join(root, 'script.sh')).text()).toBe(script);
+        await Bun.write(join(root, 'script.sh'), '#!/usr/bin/env bash\nprintf "%s\\n" "$1"\n');
+        await Bun.write(join(root, 'Value.swift'), 'let access = kSecAttrAccessibleWhenUnlockedThisDeviceOnly\n');
+        const clean = await run(root, command);
+        expect(clean.code, clean.stdout + clean.stderr).toBe(0);
     }, 120_000);
