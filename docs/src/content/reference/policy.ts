@@ -80,13 +80,6 @@ function schemaRows(node: JSONSchema.JSONSchema | boolean, path: string, require
     ];
 }
 
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Both sides of the setting comparison drop the same default keys.
-function comparable(setting: SettingSpec): Record<string, unknown> {
-    return Object.fromEntries(
-        Object.entries(setting).filter(([key]) => key !== 'default' && key !== 'default_all' && key !== 'detect'),
-    );
-}
-
 /**
  * Render all policy fields from the schema used by the production reader.
  * @returns Markdown reference tables
@@ -118,16 +111,11 @@ export function settingsPage(manifests: Manifest[]): ReferencePage {
     ];
     for (const { setting, owner } of definitions) {
         const variants = seen.get(setting.name) ?? [];
-        const previous = variants[0];
-        if (previous === undefined) {
+        if (variants.length === 0) {
             seen.set(setting.name, [{ setting, owners: [owner] }]);
             continue;
         }
-        // A later declaration overrides the default; the declaration that owns the setting carries its detection.
-        if (!isDeepStrictEqual(comparable(previous.setting), comparable(setting)))
-            throw new Error(
-                `Conflicting setting definition: ${setting.name} (${previous.owners.join(', ')} and ${owner}).`,
-            );
+        // Manifest validation makes every declaration of a setting agree, so declarations differ only in their default.
         const variant = variants.find((entry) =>
             isDeepStrictEqual(
                 [entry.setting.default, entry.setting.default_all],

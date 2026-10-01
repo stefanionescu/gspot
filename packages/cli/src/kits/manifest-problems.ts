@@ -1,10 +1,11 @@
 // What makes a manifest invalid: a check that contradicts itself, a configuration nothing reads, or references
 // between manifests that do not hold.
 import semver from 'semver';
+import { isDeepStrictEqual } from 'node:util';
 import { kitName } from '#cli/kits/targets.ts';
 import { GspotError } from '#cli/platform/errors.ts';
-import { MANIFEST_CONFIG_PLACEHOLDER } from '#cli/config/kits.ts';
 import { SETTING_PLACEHOLDER } from '#cli/config/execution/execution.ts';
+import { SETTING_DEFAULT_FIELDS, MANIFEST_CONFIG_PLACEHOLDER } from '#cli/config/kits.ts';
 import type { Checks, Manifest, RawCheck, Settings, CheckRule, RawManifest } from '#cli/types/kits.ts';
 // Each way a check declaration contradicts itself, with the sentence that reports it.
 const CHECK_RULES: CheckRule[] = [
@@ -111,6 +112,23 @@ function assertDefaultsDeclared(manifest: Manifest, settings: Settings): void {
         if (own.has(name))
             throw manifestError(manifest.kit.name, [`[defaults] names ${name}, which this kit declares itself.`]);
     }
+}
+
+// Refuses a setting two kits declare with different meanings. Only its defaults and detection may differ.
+function assertSettingsAgree(manifests: Map<string, Manifest>): void {
+    const first = new Map<string, { kit: string; meaning: Record<string, unknown> }>();
+    for (const manifest of manifests.values())
+        for (const spec of manifest.settings) {
+            const meaning = Object.fromEntries(
+                Object.entries(spec).filter(([key]) => !SETTING_DEFAULT_FIELDS.has(key)),
+            );
+            const seen = first.get(spec.name);
+            if (seen === undefined) first.set(spec.name, { kit: manifest.kit.name, meaning });
+            else if (!isDeepStrictEqual(seen.meaning, meaning))
+                throw manifestError(manifest.kit.name, [
+                    `setting ${spec.name} differs from its declaration in ${seen.kit}.`,
+                ]);
+        }
 }
 
 // Refuses a chain of replacements that returns to a check it already passed.
@@ -223,13 +241,14 @@ export function manifestProblems(raw: RawManifest): string[] {
 }
 
 /**
- * Validate required kits, tool pins, setting waits, unique checks, and executable reporting and replacement owners before accepting a manifest collection.
+ * Validate required kits, tool pins, setting waits, shared setting meanings, unique checks, and executable reporting and replacement owners before accepting a manifest collection.
  * @param manifests every manifest by name
  */
 export function validateManifests(manifests: Map<string, Manifest>): void {
     const settings: Settings = new Map(
         [...manifests.values()].flatMap((manifest) => manifest.settings.map((spec) => [spec.name, spec] as const)),
     );
+    assertSettingsAgree(manifests);
     for (const manifest of manifests.values()) {
         assertRequirementsExist(manifest, manifests);
         for (const tool of manifest.tools.filter((entry) => entry.provider !== 'host')) assertToolPin(manifest, tool);
