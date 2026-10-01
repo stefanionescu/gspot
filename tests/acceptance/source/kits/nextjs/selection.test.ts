@@ -1,16 +1,17 @@
 // Policy choices the nextjs configuration follows: the re-export mode, the compiler replacement, and locale checking.
-import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { writeFileSync } from 'node:fs';
+import { join, delimiter } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { reportSchema } from '#cli/execution/report.ts';
 import type { ReplacePlan } from '#cli/types/commands.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
-import { installPrivateTools } from '#tests/support/cli/tools.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
+import { INSTALLED_BIN_PATH } from '#tests/support/cli/modules.ts';
 import { linkInstalledModules } from '#tests/support/cli/platforms.ts';
+import { toolsPath, installPrivateTools } from '#tests/support/cli/tools.ts';
 
 test.each(['none', 'index-only'])(
     'Next.js entry files preserve the re-export policy in %s mode',
@@ -75,7 +76,9 @@ test(
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
         await installPrivateTools(sandbox.path);
         const args = ['check', '--only', 'typescript/tsc', 'nextjs/typecheck', '--skip', 'nextjs/typecheck'];
-        const failed = await run(sandbox.path, [...args, '--no-cache', '--json']);
+        // tsc comes from the installed packages, as in a project that depends on TypeScript.
+        const environment = { PATH: `${INSTALLED_BIN_PATH}${delimiter}${toolsPath([])}` };
+        const failed = await run(sandbox.path, [...args, '--no-cache', '--json'], environment);
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
         const report = JSON.parse(failed.stdout) as RunReport;
         expect(report.checks.find((check) => check.check === 'typescript/tsc')).toMatchObject({
@@ -84,7 +87,7 @@ test(
         });
         expect(report.skips.some((skip) => skip.check === 'nextjs/typecheck' && skip.source === 'flag')).toBe(true);
         writeFileSync(join(sandbox.path, 'src/count.ts'), 'export const count: number = 3;\n');
-        const corrected = await run(sandbox.path, [...args, '--no-cache', '--json']);
+        const corrected = await run(sandbox.path, [...args, '--no-cache', '--json'], environment);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     },
     PLANTED_TIMEOUT_MS * 4,
