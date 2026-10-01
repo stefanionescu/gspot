@@ -7,6 +7,7 @@ import { commitAll } from '#tests/support/cli/git.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { runPlanted } from '#tests/support/cli/planted.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
+import { hasLinuxDocker } from '#tests/support/cli/platforms.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { toolsPath, installAtLevel } from '#tests/support/cli/tools.ts';
 import { containing, textContaining } from '#tests/support/expectations.ts';
@@ -15,10 +16,7 @@ import { NGINX_INIT } from '#tests/inputs/acceptance/source/kits/init-arguments.
 const CLEAN = `events {}\nhttp {\n    server_tokens off;\n    server {\n        listen 8080;\n        location / {\n            return 204;\n        }\n    }\n}\n`;
 const FORGED = `events {}\nhttp {\n    server_tokens off;\n    server {\n        listen 8080;\n        location ~ /proxy/(.*) {\n            proxy_pass http://$1;\n        }\n    }\n}\n`;
 
-// The container test needs a Docker daemon, which the macOS runner lacks.
-const HAS_DOCKER = Bun.which('docker') !== null;
-
-if (HAS_DOCKER)
+if (hasLinuxDocker)
     test(
         'nginx follows repository include globs and reports the included source line',
         async () => {
@@ -62,7 +60,7 @@ if (HAS_DOCKER)
         PLANTED_TIMEOUT_MS * 3,
     );
 
-if (HAS_DOCKER)
+if (hasLinuxDocker)
     test(
         'native nginx at all distinguishes invalid configuration from an unavailable container and accepts corrections',
         async () => {

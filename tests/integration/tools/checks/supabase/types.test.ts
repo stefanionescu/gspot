@@ -6,13 +6,13 @@ import { run } from '#cli/platform/spawn.ts';
 import { isCi } from '#cli/platform/environment.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { onLinux } from '#tests/support/cli/platforms.ts';
+import { hasLinuxDocker } from '#tests/support/cli/platforms.ts';
 import { CLI_VERSION } from '#tests/inputs/integration/tools/checks.ts';
 import { prepareSupabaseDatabase } from '#tests/support/cli/supabase/database.ts';
 
-// The Linux runners own the database journeys; the other runners have no Supabase CLI. CI leaves them out: pulling the
-// Postgres image hits the registry rate limit there, and the stage that trims the tool tests moves them to a scheduled job.
-const runsDatabase = onLinux && !isCi();
+// The database journeys need a Docker daemon with Linux containers. CI leaves them out: pulling the Postgres image hits
+// the registry rate limit there, and the stage that trims the tool tests moves them to a scheduled job.
+const runsDatabase = hasLinuxDocker && !isCi();
 
 if (runsDatabase)
     test('the pinned Supabase CLI generates local database types without changing authored configuration', async () => {
