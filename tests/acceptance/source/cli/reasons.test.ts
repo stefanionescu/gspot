@@ -12,7 +12,7 @@ test.each([false, true])(
     'ignore and loosened settings accept omitted reasons by default and enforce require_reasons=%s',
     async (required) => {
         await using directory = await testdir();
-        const policy = `version = 1\nrequire_reasons = ${String(required)}\nkits = ["bash"]\n[guides]\ninstall = false\n`;
+        const policy = `require_reasons = ${String(required)}\nkits = ["bash"]\n[guides]\ninstall = false\n`;
         await createFileTree(directory.path, { 'gspot.toml': policy, 'entry.sh': 'if then\n' });
         const ignored = await run(directory.path, ['ignore', 'bash/syntax']);
         expect(ignored.code, ignored.stdout + ignored.stderr).toBe(required ? 2 : 0);
@@ -39,7 +39,7 @@ test.each([false, true])(
     async (required) => {
         {
             await using directory = await testdir();
-            const policy = `version = 1\nlevel = "all"\nrequire_reasons = ${String(required)}\nkits = ["bash", "naming"]\n[guides]\ninstall = false\n`;
+            const policy = `level = "all"\nrequire_reasons = ${String(required)}\nkits = ["bash", "naming"]\n[guides]\ninstall = false\n`;
             await createFileTree(directory.path, { 'gspot.toml': policy, 'entry.sh': 'shell_command=example\n' });
             const entry = '{"name":"shell_command"}';
             const allowed = await run(directory.path, ['set', 'naming.allowed', entry]);
@@ -76,7 +76,7 @@ test.each([false, true])(
 test.each([false, true])('inline suppression reasons follow require_reasons=%s', async (required) => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'gspot.toml': `version = 1\nlevel = "all"\nrequire_reasons = ${String(required)}\nkits = ["bash"]\n[guides]\ninstall = false\n`,
+        'gspot.toml': `level = "all"\nrequire_reasons = ${String(required)}\nkits = ["bash"]\n[guides]\ninstall = false\n`,
         'entry.sh': '# shellcheck disable=SC2086\necho $name\n',
     });
     const command = ['check', '--only', 'integrity/suppressions', '--json'];
@@ -130,7 +130,7 @@ test.each([
     async ({ configuration, path, form, bare, clean }) => {
         await using directory = await testdir();
         await createFileTree(directory.path, {
-            'gspot.toml': `version = 1\nlevel = "all"\nrequire_reasons = true\nkits = ["structure", "${configuration}"]\n[guides]\ninstall = false\n`,
+            'gspot.toml': `level = "all"\nrequire_reasons = true\nkits = ["structure", "${configuration}"]\n[guides]\ninstall = false\n`,
             [path]: `${bare}\n${clean}\n`,
         });
         const command = ['check', '--only', 'integrity/suppressions', '--json'];
@@ -156,7 +156,7 @@ test('shared noqa text is attributed only to the tool that reads the file', asyn
     await using directory = await testdir();
     await createFileTree(directory.path, {
         'gspot.toml':
-            'version = 1\nlevel = "all"\nrequire_reasons = true\nkits = ["structure", "sql", "python"]\n[guides]\ninstall = false\n',
+            'level = "all"\nrequire_reasons = true\nkits = ["structure", "sql", "python"]\n[guides]\ninstall = false\n',
         'query.sql': 'SELECT 1; -- noqa: LT01\n',
         'entry.py': 'answer = 1  # noqa: F841\n',
     });
@@ -177,7 +177,7 @@ test.each([false, true])(
     async (required) => {
         await using directory = await testdir();
         await createFileTree(directory.path, {
-            'gspot.toml': `version = 1\nrequire_reasons = ${String(required)}\nkits = ["bash"]\n[guides]\ninstall = false\n`,
+            'gspot.toml': `require_reasons = ${String(required)}\nkits = ["bash"]\n[guides]\ninstall = false\n`,
             'entry.sh': 'echo example\n',
         });
         const ignored = await run(directory.path, ['ignore', 'bash/syntax', '--reason', 'TBD']);
@@ -212,7 +212,6 @@ test.each([
 ])('list edits preserve reason requirements for $key $flag', async ({ key, flag, item, expected, code }) => {
     await using directory = await testdir();
     const policy = [
-        'version = 1',
         'require_reasons = true',
         'kits = ["bash", "naming"]',
         '[guides]',

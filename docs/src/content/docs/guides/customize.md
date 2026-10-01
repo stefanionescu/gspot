@@ -19,10 +19,9 @@ lists every setting with its accepted values and defaults.
 
 ## Kits and the level
 
-A policy starts with a schema version and the kits it selects:
+A policy starts with the kits it selects:
 
 ```toml
-version = 1
 kits = ["bash"]
 level = "recommended"
 require_reasons = true

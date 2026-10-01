@@ -30,8 +30,8 @@ export const FORWARDING_NODES = new Set([
     'TSDeclareFunction',
 ]);
 export const TYPE_ONLY = new Set(['TSInterfaceDeclaration', 'TSTypeAliasDeclaration', 'TSDeclareFunction']);
-// Alternative re-export policies are selected explicitly.
-export const INDEX_ONLY_RULES = new Set(['max-barrel-reexports', 'no-reexports-outside-index']);
+// The rules a caller selects itself: the barrel limit fits an index re-export policy, and the Next.js configuration selects server files.
+export const EXPLICIT_RULES = new Set(['max-barrel-reexports', 'require-server-only']);
 export const ENVIRONMENT_HOSTS = new Set(['process', 'Bun', 'Deno']);
 export const INDEX_BASENAMES = new Set([
     'index.ts',

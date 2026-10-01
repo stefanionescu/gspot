@@ -87,8 +87,7 @@ test('a hook selects configuration below the Git root and checks its exact index
     });
     chmodSync(join(launcher.path, 'gspot'), 0o755);
     await createFileTree(sandbox.path, {
-        'nested config/gspot.toml': `version = 1
-kits = []
+        'nested config/gspot.toml': `kits = []
 [guides]
 install = false
 [hooks]

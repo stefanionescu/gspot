@@ -67,20 +67,6 @@ export function proposePolicy(root: string, text: string, mutate: Mutation): Wri
 }
 
 /**
- * Appends an entry to an array of tables such as [[ignore]].
- * @param table the array's name
- * @param entry the table to append
- * @returns the mutation
- */
-export function appendEntry(table: string, entry: TomlTable): Mutation {
-    return (raw) => {
-        const list = (raw[table] as TomlTable[] | undefined) ?? [];
-        list.push(entry);
-        raw[table] = list;
-    };
-}
-
-/**
  * Adds an ignore: its paths join the entry with the same check, rule, and reason, and only a new reason adds an entry.
  * An ignore with no paths covers the whole scope, so it leaves the merged entry without paths.
  * @param entry the ignore as the command built it

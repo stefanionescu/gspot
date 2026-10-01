@@ -1,4 +1,4 @@
-// A recommended kit joins the selection only when the repository holds what it detects (K-182).
+// A recommended kit joins the selection only when the repository holds what it detects.
 import { join } from 'node:path';
 import { parse } from 'smol-toml';
 import { test, expect } from 'bun:test';

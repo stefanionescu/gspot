@@ -1,6 +1,7 @@
 // The literal values acceptance/source/configurations/configurations reads: names, patterns, limits, and tables.
 import type { PlantedInput } from '#tests/types/cli.ts';
 
+const OPENAPI_POLICY = '[tools.openapi]\ndocument = "openapi.yaml"\nproduced_by = "bun write-document.js"\n';
 export const VITEST_SOURCE =
     '// Arithmetic the planted tests call.\n\n/**\n * Adds positive values.\n * @param values the values to total\n * @returns the positive total\n */\nexport function positiveTotal(values: number[]): number {\n    let total = 0;\n    for (const value of values) {\n        if (value > 0) total += value;\n    }\n    return total;\n}\n';
 export const SUPABASE_CONFIG =
@@ -10,10 +11,8 @@ export const EXPRESS_PACKAGE =
     '{\n    "name": "planted",\n    "version": "1.0.0",\n    "private": true,\n    "type": "module",\n    "dependencies": {\n        "express": "5.1.0"\n    }\n}\n';
 export const VITEST_PACKAGE =
     '{\n    "name": "planted",\n    "version": "1.0.0",\n    "private": true,\n    "type": "module",\n    "devDependencies": {\n        "vitest": "4.1.11"\n    }\n}\n';
-export const OPENAPI_POLICY = '[tools.openapi]\ndocument = "openapi.yaml"\nproduced_by = "bun write-document.js"\n';
 export const EXPRESS_POLICY = `${OPENAPI_POLICY}\n[tools.express]\nroute_files = ["src/routes/*.js"]\n`;
-export const VITE_POLICY = `version = 1
-level = "all"
+export const VITE_POLICY = `level = "all"
 kits = ["javascript"]
 [guides]
 install = false
@@ -60,7 +59,6 @@ Open the guide and read it from the top.
 `;
 export const GUIDE = '# The Guide\n\nThe worker retries the request three times. Each retry waits one second.\n';
 export const LICENSE = 'MIT License\n\nCopyright (c) 2026 Alex Garcia\n';
-export const REPORTED_ELSEWHERE = ['markdown/prettier', 'prose/messages', 'prose/doc-tags'];
 export const DOCUMENT = `openapi: 3.1.0
 info:
     title: Planted
@@ -147,29 +145,6 @@ export const CONTROLLER =
     "// The routes that greet.\nimport { Get, Param, Controller } from '@nestjs/common';\nimport { GreetingService } from './greeting.service.js';\n\n/** Answers greeting requests. */\n@Controller('greetings')\nexport class GreetingController {\n    /**\n     * Takes the service that builds greetings.\n     * @param greetings the service\n     */\n    constructor(private readonly greetings: GreetingService) {}\n\n    /**\n     * Greets the person the route names.\n     * @param name the person\n     * @returns the greeting\n     */\n    @Get(':name')\n    greet(@Param('name') name: string): string {\n        return this.greetings.greet(name);\n    }\n}\n";
 export const NESTJS_MODULE =
     "// The greeting feature.\n// eslint-disable-next-line gspot/no-trivial-files -- reason: Nest requires this module class to register its providers and controllers.\nimport { Module } from '@nestjs/common';\nimport { GreetingService } from './greeting.service.js';\nimport { GreetingController } from './greeting.controller.js';\n\n/** Wires the greeting feature together. */\n@Module({ controllers: [GreetingController], providers: [GreetingService] })\nexport class GreetingModule {}\n";
-export const XCODE_PROJECT = `// !$*UTF8*$!
-{
-    rootObject = P1;
-    objects = {
-        P1 = {isa = PBXProject; mainGroup = G1; targets = (T1,); };
-        G1 = {isa = PBXGroup; children = (G2,); sourceTree = "<group>"; };
-        G2 = {isa = PBXGroup; path = App; children = (A1,); sourceTree = "<group>"; };
-        B1 = {isa = PBXBuildFile; fileRef = A1; };
-        S1 = {isa = PBXSourcesBuildPhase; files = (B1,); };
-        A1 = {isa = PBXFileReference; path = Home.swift; sourceTree = "<group>"; };
-        T1 = {
-            isa = PBXNativeTarget;
-            name = AppTests;
-            buildPhases = (S1,);
-            productType = "com.apple.product-type.bundle.unit-test";
-        };
-    };
-}
-`;
-export const PLAN = '{\n    "testTargets": [{ "target": { "name": "AppTests" } }]\n}\n';
-export const HOME = 'import SwiftUI\n\nlet logo = Image("Logo")\n';
-export const IMAGES =
-    '{\n    "images": [{ "filename": "logo.png", "idiom": "universal" }],\n    "info": { "author": "xcode", "version": 1 }\n}\n';
 export const UNTESTED = `${VITEST_SOURCE}\n/**\n * Triples a number.\n * @param value the number\n * @returns three times the number\n */\nexport function triple(value: number): number {\n    return value * 3;\n}\n`;
 export const TEST =
     "import { test, expect } from 'vitest';\nimport { positiveTotal } from './public.js';\n\ntest('adds only positive values', () => {\n    expect(positiveTotal([2, 3])).toBe(5);\n    expect(positiveTotal([-2, 3])).toBe(3);\n    expect(positiveTotal([])).toBe(0);\n});\n";

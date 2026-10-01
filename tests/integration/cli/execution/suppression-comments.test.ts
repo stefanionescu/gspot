@@ -66,7 +66,7 @@ test.each([
     async (path, source, lines) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\nlevel = "all"\nrequire_reasons = true\nkits = ["typescript", "bash"]\n',
+            'gspot.toml': 'level = "all"\nrequire_reasons = true\nkits = ["typescript", "bash"]\n',
             [path]: source,
         });
         const result = await executeRun(await openSession(sandbox.path), {
@@ -88,7 +88,7 @@ test.each(['-->', '--!>'])(
     async (ending) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': 'version = 1\nlevel = "all"\nrequire_reasons = true\nkits = ["html", "structure"]\n',
+            'gspot.toml': 'level = "all"\nrequire_reasons = true\nkits = ["html", "structure"]\n',
             'page.html': `<!-- html-validate-disable attr -- External validator owns this attribute. ${ending}\n<!-- html-validate-disable attr ${ending}\n`,
         });
         const session = await openSession(sandbox.path);

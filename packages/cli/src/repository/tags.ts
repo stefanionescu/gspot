@@ -38,6 +38,20 @@ function withoutTrailingVersion(word: string): string {
 }
 
 /**
+ * Reads the executable token, including env -S and interpreter arguments.
+ * @param firstLine the first line of the file
+ * @returns the executable basename or undefined without a shebang
+ */
+function shebangExecutable(firstLine: string): string | undefined {
+    if (!firstLine.startsWith('#!')) return undefined;
+    const tokens = firstLine.slice('#!'.length).trim().split(/\s+/u);
+    let index = 0;
+    if (tokens[index]?.endsWith(ENV_SUFFIX) === true) index += 1;
+    if (tokens[index] === '-S') index += 1;
+    const word = tokens[index];
+    return word === undefined || word === '' ? undefined : word.slice(word.lastIndexOf('/') + 1);
+}
+/**
  * Tags for one entry. Binary files retain path tags and do not receive content tags.
  * @param entry the tracked entry
  * @param prefix the captured first bytes
@@ -62,21 +76,6 @@ export function tagEntry(entry: RawEntry, prefix: Buffer): Tagged {
     const sniffed = sniff(prefix);
     if (sniffed.isBinary) return { tags: ['binary', ...tags], binary: true };
     return textTags(tags, sniffed.firstLine);
-}
-
-/**
- * Reads the executable token, including env -S and interpreter arguments.
- * @param firstLine the first line of the file
- * @returns the executable basename or undefined without a shebang
- */
-export function shebangExecutable(firstLine: string): string | undefined {
-    if (!firstLine.startsWith('#!')) return undefined;
-    const tokens = firstLine.slice('#!'.length).trim().split(/\s+/u);
-    let index = 0;
-    if (tokens[index]?.endsWith(ENV_SUFFIX) === true) index += 1;
-    if (tokens[index] === '-S') index += 1;
-    const word = tokens[index];
-    return word === undefined || word === '' ? undefined : word.slice(word.lastIndexOf('/') + 1);
 }
 
 /**

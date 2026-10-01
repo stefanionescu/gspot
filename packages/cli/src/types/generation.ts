@@ -7,6 +7,7 @@ import type { TrackedFile, PathExpressions } from '#cli/types/repository/reposit
 import type { Manifest, FragmentSelector, ConfigurationTarget } from '#cli/types/kits.ts';
 import type { Policy, MergedView, FormatSettings, ScopeSelection } from '#cli/types/policy/policy.ts';
 
+type BlockOutput = { path: string; block: string; style: 'markdown' | 'hash' };
 export type Fragment = { manifest: Manifest; config: ConfigurationTarget };
 export type WorkflowShape = {
     version: string;
@@ -75,7 +76,6 @@ export type GeneratedFile = {
     kind: 'lock' | 'config' | 'pointer' | 'hook' | 'runner' | 'workflow' | 'rules' | 'managed-block';
     kit?: string;
 };
-export type BlockOutput = { path: string; block: string; style: 'markdown' | 'hash' };
 export type ConfigurationOutput = {
     path: string;
     format: ConfigurationFormat;
@@ -136,7 +136,6 @@ export type EslintConfiguration = {
     gspotRules: Record<string, unknown>;
     importLayoutRules: Record<string, unknown>;
     commentLevel: 'error' | 'off';
-    testRules: Record<string, unknown>;
     importStyleBlocks: EslintBlock[];
     runtimes: { files: string[]; runtime: string }[];
     boundaryBlocks: EslintBlock[];

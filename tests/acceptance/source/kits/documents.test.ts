@@ -7,7 +7,7 @@ import type { FindingCase } from '#tests/types/cli.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { runPlanted, plantedCases } from '#tests/support/cli/planted.ts';
-import { GUIDE, README, LICENSE, REPORTED_ELSEWHERE } from '#tests/inputs/acceptance/source/kits/kits.ts';
+import { GUIDE, README, LICENSE } from '#tests/inputs/acceptance/source/kits/kits.ts';
 
 // What each check accepts in place of its planted document; the guide for the rest.
 const CORRECTIONS: Record<string, string> = {
@@ -71,10 +71,6 @@ plantedCases(
                     environment,
                 );
                 expect(named.code, named.stdout).toBe(0);
-                for (const id of REPORTED_ELSEWHERE) {
-                    const skipped = await run(sandbox, ['check', '--only', id], environment);
-                    expect(skipped.stdout, id).toContain('its findings come from');
-                }
                 rmSync(join(sandbox, '.gspot', 'config', 'vale', 'styles', 'config', 'dictionaries'), {
                     recursive: true,
                 });

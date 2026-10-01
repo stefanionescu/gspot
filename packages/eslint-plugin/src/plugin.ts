@@ -1,4 +1,4 @@
-import { INDEX_ONLY_RULES } from '#plugin/config/plugin.ts';
+import { EXPLICIT_RULES } from '#plugin/config/plugin.ts';
 import { noReexports } from '#plugin/rules/no-reexports.ts';
 import { exportLayout } from '#plugin/rules/export-layout.ts';
 import { importLayout } from '#plugin/rules/import-layout.ts';
@@ -11,7 +11,6 @@ import { importDirection } from '#plugin/rules/import-direction.ts';
 import { importPathStyle } from '#plugin/rules/import-path-style.ts';
 import { noImportComments } from '#plugin/rules/no-import-comments.ts';
 import { requireServerOnly } from '#plugin/rules/require-server-only.ts';
-import { noExportOnlyFiles } from '#plugin/rules/no-export-only-files.ts';
 import { maxBarrelReexports } from '#plugin/rules/max-barrel-reexports.ts';
 import { noTrivialFunctions } from '#plugin/rules/no-trivial-functions.ts';
 import { noClientEnvironment } from '#plugin/rules/no-client-environment.ts';
@@ -20,8 +19,6 @@ import { registryInstanceOnly } from '#plugin/rules/registry-instance-only.ts';
 import { noCrossFolderImports } from '#plugin/rules/no-cross-folder-imports.ts';
 import { noCrossProjectImports } from '#plugin/rules/no-cross-project-imports.ts';
 import { testsDirectoryContents } from '#plugin/rules/tests-directory-contents.ts';
-import { noHarnessBarrelImports } from '#plugin/rules/no-harness-barrel-imports.ts';
-import { noReexportsOutsideIndex } from '#plugin/rules/no-reexports-outside-index.ts';
 import { noDuplicateBarrelExports } from '#plugin/rules/no-duplicate-barrel-exports.ts';
 import { noExportedAliasConstants } from '#plugin/rules/no-exported-alias-constants.ts';
 import { headerCommentsBeforeImports } from '#plugin/rules/header-comments-before-imports.ts';
@@ -38,13 +35,10 @@ const rules = {
     'no-cross-folder-imports': noCrossFolderImports,
     'no-cross-project-imports': noCrossProjectImports,
     'no-duplicate-barrel-exports': noDuplicateBarrelExports,
-    'no-export-only-files': noExportOnlyFiles,
     'no-exported-alias-constants': noExportedAliasConstants,
-    'no-harness-barrel-imports': noHarnessBarrelImports,
     'no-import-comments': noImportComments,
     'no-index-imports': noIndexImports,
     'no-reexports': noReexports,
-    'no-reexports-outside-index': noReexportsOutsideIndex,
     'no-trivial-files': noTrivialFiles,
     'no-trivial-functions': noTrivialFunctions,
     'private-before-public': privateBeforePublic,
@@ -58,19 +52,13 @@ const base = { meta: { name: packageManifest.name, version: packageManifest.vers
 
 const allRules = Object.fromEntries(
     Object.keys(rules)
-        // The Next.js configuration selects server files. Standalone callers select them explicitly.
-        .filter((name) => !INDEX_ONLY_RULES.has(name) && name !== 'require-server-only')
+        .filter((name) => !EXPLICIT_RULES.has(name))
         .map((name) => [`gspot/${name}`, 'error' as const]),
 );
 
 const recommendedRules = Object.fromEntries(
     Object.entries(rules)
-        .filter(
-            ([name, rule]) =>
-                rule.meta.docs?.level === 'recommended' &&
-                name !== 'require-server-only' &&
-                !INDEX_ONLY_RULES.has(name),
-        )
+        .filter(([name, rule]) => rule.meta.docs?.level === 'recommended' && !EXPLICIT_RULES.has(name))
         .map(([name]) => [`gspot/${name}`, 'error' as const]),
 );
 

@@ -148,7 +148,6 @@ const gspotRules = { ...gspot.configs.recommended.rules, ...{
             "maxStatements": 2
         }
     ],
-    "gspot/no-export-only-files": "error",
     "gspot/no-exported-alias-constants": "error",
     "gspot/no-index-imports": "error",
     "gspot/header-comments-before-imports": "error",
@@ -214,7 +213,8 @@ const gspotRules = { ...gspot.configs.recommended.rules, ...{
                     "config/**"
                 ],
                 "env": [
-                    "packages/cli/src/platform/environment.ts"
+                    "packages/cli/src/platform/environment.ts",
+                    "tests/support/environment.ts"
                 ],
                 "runtime": [
                     "src/**"
@@ -236,7 +236,8 @@ const gspotRules = { ...gspot.configs.recommended.rules, ...{
         "error",
         {
             "owners": [
-                "packages/cli/src/platform/environment.ts"
+                "packages/cli/src/platform/environment.ts",
+                "tests/support/environment.ts"
             ]
         }
     ],
@@ -326,7 +327,7 @@ const securityRules = {
     'security/detect-eval-with-expression': 'error',
     'security/detect-new-buffer': 'error',
     'security/detect-no-csrf-before-method-override': 'error',
-    // detect-non-literal-regexp is off: it flags the constructor, not the input (D-67).
+    // detect-non-literal-regexp is off: it flags the constructor, not the input.
     'security/detect-non-literal-regexp': 'off',
     'security/detect-non-literal-require': 'error',
     'security/detect-possible-timing-attacks': 'error',
@@ -519,7 +520,8 @@ const scopeRules = [
                             "config/**"
                         ],
                         "env": [
-                            "packages/cli/src/platform/environment.ts"
+                            "packages/cli/src/platform/environment.ts",
+                            "tests/support/environment.ts"
                         ],
                         "runtime": [
                             "src/**"
@@ -576,7 +578,8 @@ const scopeRules = [
                             "config/**"
                         ],
                         "env": [
-                            "packages/cli/src/platform/environment.ts"
+                            "packages/cli/src/platform/environment.ts",
+                            "tests/support/environment.ts"
                         ],
                         "runtime": [
                             "src/**"
@@ -632,7 +635,8 @@ const scopeRules = [
                             "config/**"
                         ],
                         "env": [
-                            "packages/cli/src/platform/environment.ts"
+                            "packages/cli/src/platform/environment.ts",
+                            "tests/support/environment.ts"
                         ],
                         "runtime": [
                             "src/**"
@@ -1710,16 +1714,6 @@ const defaults = [
             'jsdoc/require-returns-description': 'off',
             'n/no-unpublished-import': 'off',
             'n/no-unpublished-require': 'off',
-            ...{
-    "gspot/no-harness-barrel-imports": [
-        "error",
-        {
-            "barrels": [
-                "#tests"
-            ]
-        }
-    ]
-},
         },
     },
     ...(RESTRICTED.length === 0 ? [] : [{ files: CODE, rules: { 'no-restricted-imports': ['error', { paths: RESTRICTED }] } }]),
@@ -1748,13 +1742,10 @@ const ruleLevels = {
     "gspot/no-cross-folder-imports": "all",
     "gspot/no-cross-project-imports": "all",
     "gspot/no-duplicate-barrel-exports": "recommended",
-    "gspot/no-export-only-files": "all",
     "gspot/no-exported-alias-constants": "all",
-    "gspot/no-harness-barrel-imports": "all",
     "gspot/no-import-comments": "all",
     "gspot/no-index-imports": "all",
     "gspot/no-reexports": "all",
-    "gspot/no-reexports-outside-index": "all",
     "gspot/no-trivial-files": "all",
     "gspot/no-trivial-functions": "all",
     "gspot/private-before-public": "all",

@@ -31,10 +31,6 @@ const CHECK_RULES: CheckRule[] = [
             `check ${check.name} isolates files and requires a per-file-list command with {files} or a per-scope command with {root}.`,
     },
     {
-        applies: (check) => check.reported_by !== undefined && check.fix_command !== undefined,
-        problem: (check) => `check ${check.name} is reported by another check and cannot declare a fixer.`,
-    },
-    {
         applies: (check) => check.requires !== undefined && check.stage === 'commit',
         problem: (check) => `check ${check.name} requires ${check.requires ?? ''} and cannot run at the commit stage.`,
     },
@@ -141,17 +137,13 @@ function assertNoReplacementCycle(manifest: Manifest, check: Manifest['checks'][
     }
 }
 
-// Refuses a reporting or replacement target that is not a different executable check, or that forms a cycle.
-function assertReporting(manifest: Manifest, check: Manifest['checks'][number], checks: Checks): void {
-    for (const field of ['reported_by', 'replaces'] as const) {
-        const target = check[field];
-        if (target === undefined) continue;
-        const owner = checks.get(target);
-        if (owner === undefined || target === check.name || owner.reported_by !== undefined)
-            throw manifestError(manifest.kit.name, [
-                `check ${check.name} ${field} must name a different executable check; received ${target}.`,
-            ]);
-    }
+// Refuses a replacement target that is not a different check, or that forms a cycle.
+function assertReplacement(manifest: Manifest, check: Manifest['checks'][number], checks: Checks): void {
+    const target = check.replaces;
+    if (target !== undefined && (!checks.has(target) || target === check.name))
+        throw manifestError(manifest.kit.name, [
+            `check ${check.name} replaces must name a different check; received ${target}.`,
+        ]);
     assertNoReplacementCycle(manifest, check, checks);
 }
 
@@ -224,8 +216,9 @@ export function manifestProblems(raw: RawManifest): string[] {
     const readers = configurationReaders(raw.checks);
     const hasEngineCheck = raw.checks.some((check) => check.engine !== undefined);
     if (hasEngineCheck) return checks;
+    // A config that needs another kit is read by that kit's check, as Semgrep reads every pack in its folder.
     const configurations = raw.configs
-        .filter((config) => !config.fragment && config.pointer === undefined)
+        .filter((config) => !config.fragment && config.pointer === undefined && config.needs === undefined)
         .filter((config) => {
             const name = kitName(config.target);
             const isReadByTemplate = raw.configs.some(
@@ -261,6 +254,6 @@ export function validateManifests(manifests: Map<string, Manifest>): void {
     );
     for (const manifest of manifests.values()) {
         assertReferences(manifest, checks, owners);
-        for (const check of manifest.checks) assertReporting(manifest, check, checks);
+        for (const check of manifest.checks) assertReplacement(manifest, check, checks);
     }
 }

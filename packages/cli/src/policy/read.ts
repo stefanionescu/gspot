@@ -26,10 +26,6 @@ function validatedRaw(text: string, path: string): RawPolicy {
             'policy',
             result.error.issues.flatMap((issue) => issueLines(path, issue)),
         );
-    if (result.data.version !== 1)
-        throw new GspotError('policy', [
-            problemText({ path: ['version'], message: messages.versionUnsupported(result.data.version) }, path),
-        ]);
     return result.data;
 }
 

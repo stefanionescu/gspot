@@ -12,7 +12,6 @@ paths and kits in the plan before you accept.
 This policy has a root with no kits and two scopes:
 
 ```toml
-version = 1
 kits = []
 
 [[scope]]

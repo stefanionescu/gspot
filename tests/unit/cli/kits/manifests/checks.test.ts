@@ -20,9 +20,6 @@ test.each([
     'command = ["x"]\nanalysis = "typescript"',
     'analysis = "typescript"',
     'tool = "tsc"\nanalysis = "unknown-analysis"',
-    'reported_by = "x/owner"\ncommand = ["x"]',
-    'reported_by = "x/owner"\nengine = "integrity"',
-    'reported_by = "x/owner"\nfix_command = ["x"]',
 ])('manifest loading rejects an invalid execution form: %s', (execution) => {
     const text = `[kit]
 name = "x"
@@ -40,4 +37,11 @@ why = "Invalid project input cannot run."
 help = "Correct the reported project input."
 `;
     expect(() => parseManifest(text, 'configurations/x')).toThrow('not valid');
+});
+
+test('a generated configuration needs a reader in its manifest or the kit it needs', () => {
+    const source =
+        '[kit]\nname = "x"\nkind = "tool"\ntitle = "x"\ndescription = "A configuration for the tests, long enough."\n[[configs]]\ntemplate = "x.yml.tmpl"\ntarget = ".gspot/config/semgrep/x.yml"\n';
+    expect(() => parseManifest(source, 'configurations/x')).toThrow('has no check that reads it');
+    expect(() => parseManifest(`${source}needs = "security"\n`, 'configurations/x')).not.toThrow();
 });

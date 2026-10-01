@@ -17,7 +17,6 @@ const PREFACE = [
 
 function headTables(plan: InitPlan): TomlTable {
     const document: TomlTable = {
-        version: 1,
         level: policySchema.shape.level.parse(undefined),
         kits: plan.kits,
     };

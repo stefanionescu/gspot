@@ -22,7 +22,7 @@ async function noteProsePackages(session: Session, report: ApplyReport): Promise
         );
 }
 
-// A generated file a merge left with conflict markers is no edit anyone keeps: apply writes it again (K-274).
+// A generated file a merge left with conflict markers is no edit anyone keeps: apply writes it again.
 function conflictedOutputs(owner: Owner, rendered: Generated): Map<string, Read> {
     const conflicted = new Map<string, Read>();
     for (const file of rendered.files) {

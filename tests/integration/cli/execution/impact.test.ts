@@ -14,8 +14,7 @@ import type { Session } from '#cli/types/execution/execution.ts';
 import { stagedFiles, changedFiles } from '#cli/repository/revisions/selection.ts';
 
 const options = { stage: 'commit' as const, skips: [], only: ['sandbox/project'] };
-const policy = `version = 1
-kits = []
+const policy = `kits = []
 [[scope]]
 path = "api"
 kits = []

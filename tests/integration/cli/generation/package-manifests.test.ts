@@ -7,7 +7,7 @@ import { generatedEslint } from '#tests/support/cli/generated/eslint.ts';
 test('every package.json gets the package-json rules and no code rule beside a test runner', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': `version = 1\nlevel = "all"\nkits = ["typescript", "vitest"]\n[guides]\ninstall = false\n`,
+        'gspot.toml': `level = "all"\nkits = ["typescript", "vitest"]\n[guides]\ninstall = false\n`,
         'package.json': '{"name":"planted","version":"1.0.0","private":true,"type":"module"}\n',
         'tests/package.json':
             '{"name":"planted-tests","version":"1.0.0","private":true,"dependencies":{"b":"1.0.0","a":"1.0.0"}}\n',

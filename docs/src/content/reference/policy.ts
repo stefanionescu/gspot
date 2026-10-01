@@ -21,7 +21,6 @@ Use \`gspot set <key> <value> --scope <path>\` to write an existing scope. Witho
 This complete policy sets a repository limit and tightens it for the app scope:
 
 \`\`\`toml
-version = 1
 kits = ["javascript"]
 [limits]
 file_lines = 200

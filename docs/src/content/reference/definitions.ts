@@ -50,19 +50,14 @@ function checkEnvironment(check: CheckSpec): string[] {
         ],
     ];
     return [
-        check.reported_by === undefined
-            ? `- Scope: ${
-                  {
-                      once: 'one execution for the repository',
-                      'per-scope': 'each selected scope, excluding files owned by child scopes',
-                      'per-file-list': 'selected file lists under the applicable scope policy',
-                  }[check.runs]
-              }. See [scope configuration](/guides/scopes/).\n`
-            : '- Scope: follows the reporting check.\n',
+        `- Scope: ${
+            {
+                once: 'one execution for the repository',
+                'per-scope': 'each selected scope, excluding files owned by child scopes',
+                'per-file-list': 'selected file lists under the applicable scope policy',
+            }[check.runs]
+        }. See [scope configuration](/guides/scopes/).\n`,
         ...attributes.flatMap(([label, value]) => (value === undefined ? [] : [`- ${label}: ${value}\n`])),
-        check.reported_by === undefined
-            ? ''
-            : `- Reported by: [\`${check.reported_by}\`](/reference/rules/${check.reported_by}/). This entry does not execute a separate check.\n`,
     ];
 }
 
@@ -167,7 +162,7 @@ export function kitPage(manifest: Manifest): ReferencePage {
 export function rulePage(check: CheckSpec, configuration: Manifest): ReferencePage {
     if (typeof check.example !== 'string' || check.example.trim() === '')
         throw new Error(`Check ${check.name} has no example.`);
-    const command = `gspot check --stage ${check.stage} --only ${check.reported_by ?? check.name}`;
+    const command = `gspot check --stage ${check.stage} --only ${check.name}`;
     const lines = [
         `${check.summary}\n\n## Why\n\n${check.why}\n\n## What to do\n\n${check.help}\n\n## Where it runs\n\n`,
         `Check: \`${check.name}\`.\n\n- Configuration: [the ${configuration.kit.name} configuration](/reference/kits/${configuration.kit.name}/)\n- Stage: ${check.stage}\n- Level: ${check.level}\n`,
@@ -176,10 +171,7 @@ export function rulePage(check: CheckSpec, configuration: Manifest): ReferencePa
         check.stage === 'message'
             ? '\n## Verify a correction\n\nThe installed commit-msg hook checks the proposed commit message. A reported defect prevents the commit. Correct the message and retry the commit. A missing tool or unreadable report does not establish a clean result.\n'
             : `\n## Verify a correction\n\nIn a configured repository that selects this configuration, run:\n\n\`\`\`shell\n${command}\n\`\`\`\n\nA reported defect exits 1. Apply the correction described above and rerun the same command. Successful execution exits 0. Missing required tools and execution or report failures exit 2. Check the report for skips: a skipped check has not verified its inputs.\n`,
-        `\nRecord a path exception with a reason: \`gspot ignore ${check.reported_by ?? check.name} --paths <glob> --reason "<why>"\`.\n`,
-        check.reported_by === undefined
-            ? ''
-            : '\nThis exception disables the reporting check for those paths, including its other diagnostics.\n',
+        `\nRecord a path exception with a reason: \`gspot ignore ${check.name} --paths <glob> --reason "<why>"\`.\n`,
     ];
     return referencePage(
         check.title ?? check.name,

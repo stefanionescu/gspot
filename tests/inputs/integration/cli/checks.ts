@@ -2,16 +2,14 @@ import { policyOf } from '#tests/support/cli/policy/text.ts';
 // The literal values integration/cli/checks reads: names, patterns, limits, and tables.
 
 export const DEPENDENCIES_POLICY = policyOf(['dependencies']);
-export const XCTEST_EXECUTION_POLICY = `version = 1
-kits = ["xctest", "xcode"]
+export const XCTEST_EXECUTION_POLICY = `kits = ["xctest", "xcode"]
 [tools.xcode]
 project = "Example.xcodeproj"
 scheme = "Example"
 [tools.xctest]
 coverage = [{ target = "Example", percent = 80 }]
 `;
-export const ROUTES_POLICY = `version = 1
-level = "all"
+export const ROUTES_POLICY = `level = "all"
 kits = ["express"]
 [tools.express]
 route_files = ["routes/*.ts"]

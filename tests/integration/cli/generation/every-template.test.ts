@@ -1,4 +1,4 @@
-// Every template of every kit renders at both levels into a file its reader parses (S-1).
+// Every template of every kit renders at both levels into a file its reader parses.
 import ts from 'typescript';
 import { test, expect } from 'bun:test';
 import { join, extname } from 'node:path';
@@ -52,7 +52,7 @@ test.each(kits.flatMap((name) => ['recommended', 'all'].map((level) => [name, le
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
             ...PLANTED,
-            'gspot.toml': `version = 1\nlevel = "${level}"\nkits = [${JSON.stringify(name)}]\n`,
+            'gspot.toml': `level = "${level}"\nkits = [${JSON.stringify(name)}]\n`,
         });
         linkInstalledModules(join(sandbox.path, 'node_modules'));
         const session = await openSession(sandbox.path);

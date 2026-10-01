@@ -244,7 +244,6 @@ export const rootSettingSchemas = {
 
 /** The whole of gspot.toml. */
 export const policySchema = z.strictObject({
-    version: z.number().int(),
     ...rootSettingSchemas,
     kits: textList.optional(),
     scope: z.array(scopeSchema).optional(),

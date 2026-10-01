@@ -59,7 +59,7 @@ test('repository file discovery > reads only the requested prefix and reports ab
 test('repository file discovery > finds the nearest policy in a non-Git directory', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\n',
+        'gspot.toml': 'kits = []\n',
         'nested/source.ts': 'export {};\n',
     });
     expect(findRoot(join(sandbox.path, 'nested'))).toBe(sandbox.path);

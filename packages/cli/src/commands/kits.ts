@@ -32,7 +32,7 @@ async function installChangedSelection(
  * @param o the parsed flags
  * @returns the command result
  */
-export async function addCommand(o: AddOptions): Promise<CommandResult> {
+async function addCommand(o: AddOptions): Promise<CommandResult> {
     const root = findRoot(o.cwd);
     assertPinMatches(root);
     const manifests = kitManifests();
@@ -57,7 +57,7 @@ export async function addCommand(o: AddOptions): Promise<CommandResult> {
  * @param o the parsed flags
  * @returns the command result
  */
-export async function removeCommand(o: RemoveOptions): Promise<CommandResult> {
+async function removeCommand(o: RemoveOptions): Promise<CommandResult> {
     const root = findRoot(o.cwd);
     assertPinMatches(root);
     const manifests = kitManifests();

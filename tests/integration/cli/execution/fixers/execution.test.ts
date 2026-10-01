@@ -102,8 +102,7 @@ test('checks refresh the file inventory after a fixer creates a source', async (
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'source.txt': 'input',
-        'gspot.toml': `version = 1
-kits = []
+        'gspot.toml': `kits = []
 [[check]]
 name = "project/inventory"
 stage = "commit"
@@ -130,8 +129,7 @@ test('a later pass formats what a correction after the formatter wrote', async (
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'source.txt': 'var x\n',
-        'gspot.toml': `version = 1
-kits = []
+        'gspot.toml': `kits = []
 [[check]]
 name = "project/format"
 stage = "commit"

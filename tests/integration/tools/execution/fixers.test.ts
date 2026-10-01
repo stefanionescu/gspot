@@ -24,7 +24,6 @@ if (!(process.platform === 'win32' || process.getuid?.() === 0))
         const args = ['--dialect', 'postgres', '--ignore-local-config', '--disable-progress-bar'];
         await createFileTree(sandbox.path, {
             'gspot.toml': stringify({
-                version: 1,
                 kits: [],
                 check: [
                     {
@@ -104,7 +103,6 @@ test.each([
     if (executable === null) throw new Error(`The native fixer test requires ${entry.command[0]}.`);
     await createFileTree(sandbox.path, {
         'gspot.toml': stringify({
-            version: 1,
             kits: [],
             check: [
                 {
@@ -171,7 +169,6 @@ test.each([
     const command = [process.execPath, executable, '--config', entry.config];
     await createFileTree(sandbox.path, {
         'gspot.toml': stringify({
-            version: 1,
             kits: [],
             check: [
                 {

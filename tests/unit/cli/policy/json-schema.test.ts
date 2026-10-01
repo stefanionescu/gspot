@@ -13,18 +13,17 @@ describe('the JSON schema of gspot.toml', () => {
     test('the zod schema accepts the documented example shapes and rejects unknown keys', () => {
         expect(
             policySchema.safeParse({
-                version: 1,
                 kits: ['bash'],
                 limits: { file_lines: 300, python: { file_lines: { value: 400, reason: 'why' } } },
             }).success,
         ).toBe(true);
-        expect(policySchema.safeParse({ version: 1, unknown: true }).success).toBe(false);
+        expect(policySchema.safeParse({ unknown: true }).success).toBe(false);
     });
 
     test('the published schema accepts a check with and without its correction command', () => {
         const validate = new Ajv2020({ strict: false }).compile(policyJsonSchema());
-        expect(validate({ version: 1, check: [check] })).toBe(true);
-        expect(validate({ version: 1, check: [{ ...check, fix_command: ['lint', '--fix'] }] })).toBe(true);
+        expect(validate({ check: [check] })).toBe(true);
+        expect(validate({ check: [{ ...check, fix_command: ['lint', '--fix'] }] })).toBe(true);
     });
 });
 
@@ -91,7 +90,7 @@ test.each([
         valid: false,
     },
 ])('runtime and published schemas agree on $name', ({ input, valid }) => {
-    const document = { version: 1, ...input };
+    const document = { ...input };
     expect(policySchema.safeParse(document).success).toBe(valid);
     expect(new Ajv2020({ strict: false }).compile(policyJsonSchema())(document)).toBe(valid);
 });
@@ -105,7 +104,7 @@ test('manifest settings validate their kind in root and scope tables', () => {
         [true, { directory: 'messages', base: 'en' }, true],
     ] as const) {
         const tools = { i18n: { translations } };
-        const document = { version: 1, kits: ['i18n'], ...(scoped ? { scope: [{ path: 'app', tools }] } : { tools }) };
+        const document = { kits: ['i18n'], ...(scoped ? { scope: [{ path: 'app', tools }] } : { tools }) };
         const text = stringify(document);
         const policy = parsePolicyText(text, 'gspot.toml');
         const refusal = failure(() => {
@@ -129,8 +128,6 @@ test('nested manifest settings preserve typed leaf values and reject unknown sib
         assertPolicyComplete({ text: invalid, path, policy: invalidPolicy });
     }).toThrow('gspot.toml: tools.bash.safety.unknown:');
     const validate = new Ajv2020({ strict: false }).compile(policyJsonSchema());
-    expect(
-        validate({ version: 1, kits: ['bash'], tools: { bash: { safety: { owners: ['scripts/cleanup.sh'] } } } }),
-    ).toBe(true);
-    expect(validate({ version: 1, kits: ['bash'], tools: { bash: { safety: { unknown: true } } } })).toBe(false);
+    expect(validate({ kits: ['bash'], tools: { bash: { safety: { owners: ['scripts/cleanup.sh'] } } } })).toBe(true);
+    expect(validate({ kits: ['bash'], tools: { bash: { safety: { unknown: true } } } })).toBe(false);
 });

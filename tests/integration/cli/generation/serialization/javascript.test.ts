@@ -18,7 +18,6 @@ test('reason comments cannot add JavaScript statements or ignore entries', async
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
             'gspot.toml': stringify({
-                version: 1,
                 kits: ['javascript', 'docker', 'prose'],
                 tools: {
                     eslint: { extra: { reason, name: 'custom' } },
@@ -65,7 +64,6 @@ test('runtime names remain data in generated JavaScript', async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
             'gspot.toml': stringify({
-                version: 1,
                 kits: ['javascript'],
                 tools: { eslint: { globals: { '**/*.js': runtime } } },
             }),
@@ -100,7 +98,6 @@ test('scope paths remain string literals in fragment file selectors and child ex
         const child = `${scope}/child`;
         await createFileTree(sandbox.path, {
             'gspot.toml': stringify({
-                version: 1,
                 kits: ['javascript', 'react'],
                 scope: [
                     { path: scope, kits: ['javascript', 'react'] },

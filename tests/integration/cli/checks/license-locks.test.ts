@@ -145,7 +145,6 @@ test.each(['root', 'nested', 'combined'])(
                 : `kits = [${configurations}]\n`;
         await createFileTree(root, {
             'gspot.toml':
-                'version = 1\n' +
                 selected +
                 (selection === 'nested' ? exception.replace('[[tools.', '[[scope.tools.') : exception),
             'app/source.py': 'selected = True\n',

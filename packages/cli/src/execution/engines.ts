@@ -195,16 +195,5 @@ export function checkExecution(spec: CheckSpec): Executable['run'] {
     }
     const analysis = spec.analysis === undefined ? undefined : analyses.get(spec.analysis);
     if (analysis !== undefined) return analysis;
-    if (spec.reported_by !== undefined)
-        return (_session, planned) =>
-            Promise.resolve({
-                check: spec.name,
-                scope: planned.scope.scope.path,
-                status: 'skipped',
-                note: `its findings come from ${spec.reported_by}`,
-                files: 0,
-                duration: 0,
-                findings: [],
-            });
     return toolCheck;
 }

@@ -6,11 +6,12 @@ import { gitignoreBlock } from '#cli/kits/manifests.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { miseToolsFile } from '#cli/generation/tools/mise.ts';
+import { environmentVariables } from '#cli/platform/environment.ts';
 import { preparePythonProject } from '#cli/tools/python-project.ts';
 import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
+import { setEnvironmentVariable } from '#tests/support/environment.ts';
 import { toolEnvironment } from '#cli/generation/tools/environment.ts';
 import type { PreparePythonInstallationResult } from '#tests/types/results.ts';
-import { environmentVariables, setEnvironmentVariable } from '#cli/platform/environment.ts';
 
 // The authored files every Python fixture starts from.
 const AUTHORED_FILES = {

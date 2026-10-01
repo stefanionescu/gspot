@@ -10,15 +10,6 @@ export const DEFAULT_FUNCTION_LINES = 60;
 export const DEFAULT_PACKAGE_EXPORTS = 20;
 export const SINGLETONS_ALLOWED = new Set(['app', 'router', 'logger', 'log', 'settings']);
 export const CLASS_CALL = /^[A-Z][A-Za-z\d]*\(/u;
-export const BLOCKING_NAMES = new Set([
-    'time.sleep',
-    'open',
-    'input',
-    'subprocess.run',
-    'subprocess.call',
-    'subprocess.check_output',
-]);
-export const BLOCKING_MODULES = ['requests.', 'urllib.request.'];
 export const DEFINITIONS = new Set(['function_definition', 'class_definition']);
 export const IMPORTS = new Set(['import_statement', 'import_from_statement', 'future_import_statement']);
 /** A comment that directs a tool rather than a reader, which must sit on the line it covers. */

@@ -143,8 +143,7 @@ test('index snapshots preserve binary bytes and executable modes without applyin
         '.gitattributes': 'payload.dat text eol=crlf\n',
         'payload.dat': Buffer.from([255, 10, 0]),
         'task.sh': '#!/bin/sh\nexit 0\n',
-        'gspot.toml': `version = 1
-kits = []
+        'gspot.toml': `kits = []
 [[check]]
 name = "project/index-bytes"
 command = ${JSON.stringify(command)}
@@ -191,8 +190,7 @@ test('index checks copy matching locked dependencies and refuse a different work
         'node_modules/dependency/index.js': 'export const verdict = true;\n',
         'node_modules/dependency/stamp.txt': 'authored dependency data',
         'source.txt': 'authored input',
-        'gspot.toml': `version = 1
-kits = []
+        'gspot.toml': `kits = []
 [[check]]
 name = "project/dependencies"
 command = ${JSON.stringify(command)}

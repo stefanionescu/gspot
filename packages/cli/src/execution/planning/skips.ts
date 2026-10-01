@@ -8,10 +8,6 @@ import type { Host, Skip, RuleSkip, PlanOptions, PlannedCheck } from '#cli/types
 // The rules a check declares about where it runs, each with the sentence that says why it was skipped.
 const RULE_SKIPS: RuleSkip[] = [
     {
-        applies: (spec) => spec.reported_by !== undefined,
-        note: (spec) => `its findings come from ${spec.reported_by ?? ''}`,
-    },
-    {
         applies: (spec, check) => spec.needs !== undefined && !check.scope.view.kits.includes(spec.needs),
         note: (spec) => `needs the ${spec.needs ?? ''} configuration, which this scope does not select`,
     },

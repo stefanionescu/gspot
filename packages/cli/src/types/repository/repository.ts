@@ -4,6 +4,7 @@ import type { Ignore } from 'ignore';
 import type { Policy } from '#cli/types/policy/policy.ts';
 import type { packageManifestSchema } from '#cli/repository/manifests.ts';
 
+type Kind = 'source' | 'generated' | 'vendored' | 'binary';
 export type ScopeEntry = {
     name: string;
     path: string;
@@ -20,7 +21,6 @@ export type SourceReads = {
 // Reading vale.ini without Vale: the styles and rule levels of each file-pattern section.
 export type Reader = { lines: string[]; index: number };
 export type Section = Map<string, string[]>;
-export type Kind = 'source' | 'generated' | 'vendored' | 'binary';
 export type TrackedFile = {
     path: string;
     prefix: Buffer;

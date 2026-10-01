@@ -18,7 +18,7 @@ export const TOOLS_CLEAN =
 export const TOOLS_MODULE = 'planted/math.py';
 export const STRUCTURE_PROJECT =
     '[project]\nname = "planted"\nversion = "1.0.0"\nrequires-python = ">=3.12"\ndependencies = []\n';
-// The docstrings are Google style, and pydoclint reads that from the project, not from gspot (K-152).
+// The docstrings are Google style, and pydoclint reads that from the project, not from gspot.
 export const TOOLS_PROJECT =
     '[project]\nname = "planted"\nversion = "1.0.0"\nrequires-python = ">=3.12"\ndependencies = []\n\n[tool.pydoclint]\nstyle = "google"\n';
 

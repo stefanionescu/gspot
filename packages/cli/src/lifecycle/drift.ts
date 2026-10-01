@@ -35,7 +35,7 @@ function fileDrift(root: string, rendered: Generated): DriftEntry[] {
             continue;
         }
         const disk = current.bytes.toString('utf8');
-        // A merge left its markers in the file: no tool can read it, and regeneration is the one repair (K-274).
+        // A merge left its markers in the file: no tool can read it, and regeneration is the one repair.
         if (CONFLICT_MARKERS.test(disk)) entries.push({ path: file.path, kind: 'conflict' });
         else if (disk !== file.content)
             entries.push({

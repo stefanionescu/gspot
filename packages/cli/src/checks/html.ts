@@ -179,7 +179,7 @@ async function findings(
  * @param input the engine input
  * @returns the findings
  */
-export function htmlScripts(input: EngineInput): Promise<Finding[]> {
+function htmlScripts(input: EngineInput): Promise<Finding[]> {
     const paths = input.files.filter((file) => file.kind === 'source').map((file) => file.path);
     return findings(input, paths, scriptProblems);
 }
@@ -189,7 +189,7 @@ export function htmlScripts(input: EngineInput): Promise<Finding[]> {
  * @param input the engine input
  * @returns the findings
  */
-export function htmlText(input: EngineInput): Finding[] | Promise<Finding[]> {
+function htmlText(input: EngineInput): Finding[] | Promise<Finding[]> {
     const tool = input.view.tool('html');
     const templates = (tool['template_files'] as string[] | undefined) ?? [];
     if (templates.length === 0) return [];

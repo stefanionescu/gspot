@@ -6,8 +6,7 @@ import { run } from '#tests/support/cli/command.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 
-const SCOPE_POLICY = `version = 1
-kits = ["naming", "bash"]
+const SCOPE_POLICY = `kits = ["naming", "bash"]
 [naming]
 allowed = [{name = "remoteRecord", reason = "The external JavaScript interface fixes this name."}]
 [[naming.rules]]

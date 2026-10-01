@@ -9,8 +9,7 @@ import type { RunReport } from '#cli/types/execution/execution.ts';
 
 const { version: GSPOT_VERSION } = packageManifest;
 
-const policy = `version = 1
-kits = []
+const policy = `kits = []
 [[check]]
 name = "sandbox/identity"
 command = ${JSON.stringify([process.execPath, '-e', 'process.stdout.write("A sandbox finding."); process.exitCode = 1'])}

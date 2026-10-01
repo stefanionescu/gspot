@@ -1,9 +1,8 @@
 import { findingAt } from '#cli/checks/result.ts';
 import { trivialFile } from '#cli/checks/structure/statements.ts';
 import { functionsOf, pythonModules } from '#cli/checks/python/modules.ts';
-import { pythonBlockingCalls } from '#cli/checks/python/blocking-calls.ts';
+import { singletons, importComments } from '#cli/checks/python/imports.ts';
 import { DEFAULT_TRIVIAL_STATEMENTS } from '#cli/config/checks/structure.ts';
-import { singletons, importCycles, importComments } from '#cli/checks/python/imports.ts';
 import type { Engine, Finding, EngineInput, StructureReader } from '#cli/types/checks.ts';
 import { trivialFunctions, placeholderDocstrings } from '#cli/checks/python/functions.ts';
 import { importLinter, dependencyOwnership, typecheckMembership } from '#cli/checks/python/project.ts';
@@ -37,7 +36,7 @@ function analysis(read: StructureReader): (input: EngineInput) => Promise<Findin
 }
 
 /** The analyses by the name a manifest gives them. */
-export const PYTHON_STRUCTURE: Record<string, Engine> = {
+const PYTHON_STRUCTURE: Record<string, Engine> = {
     'python-file-length': analysis(({ modules }, input) => {
         const ceiling = input.view.limit('file_lines', 'python') ?? DEFAULT_FILE_LINES;
         return modules.flatMap((module) => {
@@ -114,7 +113,6 @@ export const PYTHON_STRUCTURE: Record<string, Engine> = {
         const ceiling = input.view.settings['structure.python.max_package_exports'];
         return packageExports(modules, typeof ceiling === 'number' ? ceiling : DEFAULT_PACKAGE_EXPORTS);
     }),
-    'python-import-cycles': analysis(({ modules }) => importCycles(modules)),
     'python-import-comments': analysis(({ modules }) => importComments(modules)),
     'python-export-order': analysis(({ modules }) => exportOrder(modules)),
     'python-no-singletons': analysis(({ modules }, input) => {
@@ -128,7 +126,6 @@ export const PYTHON_STRUCTURE: Record<string, Engine> = {
 export const PYTHON_ANALYSES: Record<string, Engine> = {
     ...PYTHON_STRUCTURE,
     'python-import-linter': importLinter,
-    'python-blocking-calls': pythonBlockingCalls,
     'python-dependency-ownership': dependencyOwnership,
     'python-typecheck-membership': typecheckMembership,
 };

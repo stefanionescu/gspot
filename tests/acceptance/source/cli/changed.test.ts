@@ -18,8 +18,7 @@ function commit(root: string): void {
     git(root, '-c', 'user.name=Sandbox', '-c', 'user.email=sandbox@example.com', 'commit', '-qm', 'Update');
 }
 
-const policy = `version = 1
-kits = []
+const policy = `kits = []
 [[check]]
 name = "sandbox/paths"
 command = ${JSON.stringify([process.execPath, '-e', 'process.argv.slice(1).forEach((path) => console.log(path)); process.exitCode = 1;', '{files}'])}

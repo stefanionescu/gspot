@@ -85,11 +85,9 @@ plantedCases(
     ],
     (planted) => {
         test(
-            'the JSON check reports through Prettier, and the commit stage keeps schema validation for push',
+            'the commit stage keeps schema validation for push',
             async () => {
                 const { root, environment } = planted();
-                const jsonCheck = await run(root, ['check', '--only', 'files/json'], environment);
-                expect(jsonCheck.stdout).toContain('its findings come from');
                 const checked = await run(root, ['check', '--stage', 'commit', '--json'], environment);
                 const ids = (JSON.parse(checked.stdout) as RunReport).checks.map((check) => check.check);
                 expect(ids).not.toContain('files/schema');

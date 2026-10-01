@@ -187,7 +187,7 @@ test('the settings surface > scoped rules inherit unrelated rules and replace co
 
 test('the settings surface > raising a ceiling needs a reason that names the command, and lowering one does not', () => {
     const policy = parsePolicyText(
-        'version = 1\nrequire_reasons = true\nkits = ["bash"]\n[limits]\nfile_lines = 400\n',
+        'require_reasons = true\nkits = ["bash"]\n[limits]\nfile_lines = 400\n',
         'gspot.toml',
     );
     const problems = validateAgainstSurface(surface, policy);
@@ -222,7 +222,7 @@ test('raising the duplication line floor requires a reason, while lowering it ti
         validateAgainstSurface(
             settings,
             parsePolicyText(
-                `version = 1\nrequire_reasons = true\nkits = ["duplication"]\n[limits.duplication]\nmin_lines = ${String(value)}\n`,
+                `require_reasons = true\nkits = ["duplication"]\n[limits.duplication]\nmin_lines = ${String(value)}\n`,
                 'gspot.toml',
             ),
         ),

@@ -41,14 +41,12 @@ test('loading two configurations refuses duplicate executable check ownership', 
     }).toThrow('check project/parse is already owned by first');
 });
 
-test.each(['reported_by', 'replaces'] as const)(
-    'manifest collection rejects invalid %s ownership and accepts a runnable owner',
-    (field) => {
-        const project = parseManifest(
-            `[kit]\nname = "project"\nkind = "language"\ntitle = "project"\nrequires = ${JSON.stringify([])}\ndescription = "A configuration for the tests, long enough."\n`,
-            `kits/project`,
-        );
-        const checks = `
+test('manifest collection rejects an invalid replacement and accepts a different check', () => {
+    const project = parseManifest(
+        `[kit]\nname = "project"\nkind = "language"\ntitle = "project"\nrequires = ${JSON.stringify([])}\ndescription = "A configuration for the tests, long enough."\n`,
+        `kits/project`,
+    );
+    const checks = `
 [[checks]]
 example = "A rejected input is corrected before rerunning the parser."
 name = "project/parse"
@@ -59,34 +57,29 @@ summary = "Parses the project input."
 why = "Invalid input cannot run."
 help = "Correct the reported input."
 `;
-        const owner = parseManifest(
-            '[kit]\nname = "owner"\nkind = "tool"\ntitle = "Owner"\ndescription = "Executes project validation."\n' +
-                checks,
-            'configurations/owner',
-        );
-        const executable = owner.checks[0]!;
-        project.checks = [{ ...executable, name: 'project/description', [field]: 'project/missing' }];
-        const manifests = new Map([
-            ['project', project],
-            ['owner', owner],
-        ]);
-        expect(() => {
-            validateManifests(manifests);
-        }).toThrow('project/missing');
-        project.checks[0]![field] = 'project/description';
-        expect(() => {
-            validateManifests(manifests);
-        }).toThrow('different executable check');
-        project.checks[0]![field] = 'project/parse';
-        expect(() => {
-            validateManifests(manifests);
-        }).not.toThrow();
-        owner.checks[0]!.reported_by = 'project/description';
-        expect(() => {
-            validateManifests(manifests);
-        }).toThrow('different executable check');
-    },
-);
+    const owner = parseManifest(
+        '[kit]\nname = "owner"\nkind = "tool"\ntitle = "Owner"\ndescription = "Executes project validation."\n' +
+            checks,
+        'configurations/owner',
+    );
+    const executable = owner.checks[0]!;
+    project.checks = [{ ...executable, name: 'project/description', replaces: 'project/missing' }];
+    const manifests = new Map([
+        ['project', project],
+        ['owner', owner],
+    ]);
+    expect(() => {
+        validateManifests(manifests);
+    }).toThrow('project/missing');
+    project.checks[0]!.replaces = 'project/description';
+    expect(() => {
+        validateManifests(manifests);
+    }).toThrow('different check');
+    project.checks[0]!.replaces = 'project/parse';
+    expect(() => {
+        validateManifests(manifests);
+    }).not.toThrow();
+});
 
 test('manifest collection refuses circular replacement before either check can suppress execution', () => {
     const project = parseManifest(

@@ -9,6 +9,20 @@ import { FILE_SCHEME, STDIN_NAMES, INDEX_BASENAMES } from '#plugin/config/plugin
 const globCache = new Map<string, (path: string) => boolean>();
 
 /**
+ * True when a root-relative posix path matches a glob (`**`, `*`, `?`, `{a,b}`).
+ * @param path the path
+ * @param glob the glob
+ * @returns whether the glob matches the whole path
+ */
+function isGlobMatch(path: string, glob: string): boolean {
+    let isMatch = globCache.get(glob);
+    if (!isMatch) {
+        isMatch = picomatch(glob, { dot: true });
+        globCache.set(glob, isMatch);
+    }
+    return isMatch(path);
+}
+/**
  * Forward slashes, no query or hash, no file:// scheme.
  * @param value a path or file URL
  * @returns the path with forward slashes
@@ -63,21 +77,6 @@ export function readDirectory(dir: string): DirectoryEntry[] {
         .filter((entry) => entry.isFile() || entry.isDirectory())
         .map((entry): DirectoryEntry => ({ name: entry.name, kind: entry.isDirectory() ? 'dir' : 'file' }))
         .toSorted((a, b) => a.name.localeCompare(b.name));
-}
-
-/**
- * True when a root-relative posix path matches a glob (`**`, `*`, `?`, `{a,b}`).
- * @param path the path
- * @param glob the glob
- * @returns whether the glob matches the whole path
- */
-export function isGlobMatch(path: string, glob: string): boolean {
-    let isMatch = globCache.get(glob);
-    if (!isMatch) {
-        isMatch = picomatch(glob, { dot: true });
-        globCache.set(glob, isMatch);
-    }
-    return isMatch(path);
 }
 
 /**

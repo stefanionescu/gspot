@@ -21,9 +21,8 @@ export const OWNER_WRITE_BIT = 0o200;
 export const DEVICE_NAME = /^(?:con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/iu;
 export const UNSAFE_CHARACTERS = /[\\:<>"|?*\p{Cc}]/u;
 export const UNSAFE_PATH_END = /[. ]$/u;
-/** Recovery and ownership metadata never enter repository checks or generated plans. */
-export const LIFECYCLE_PRIVATE_PATH =
-    /(?:^|\/)\.gspot\/(?:state(?:\/|$)|ownership\.json$|writer\.lock$|recovery(?:\/|$))/iu;
+/** The lifecycle state folder never enters repository checks or generated plans. */
+export const LIFECYCLE_PRIVATE_PATH = /(?:^|\/)\.gspot\/state(?:\/|$)/iu;
 export const MISSING_CODE = 127;
 export const FAILED_CODE = 1;
 // taskkill exits 128 when the process tree is already gone.

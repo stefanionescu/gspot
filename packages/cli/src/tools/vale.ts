@@ -77,6 +77,16 @@ function replacePackages(files: Root, work: string): void {
 }
 
 /**
+ * The package folders under the styles folder.
+ * @param files the repository root
+ * @returns the folders, relative to the root
+ */
+function packageFolders(files: Root): string[] {
+    const packageFiles = styleFiles(files).filter((path) => isValePackageFile(path));
+    const folders = new Set(packageFiles.flatMap((path) => packageFolder(path)));
+    return [...folders];
+}
+/**
  * Check whether configured upstream styles are available for a prose check.
  * @param root the repository root
  * @returns whether every required directory exists
@@ -108,17 +118,6 @@ export function styleFiles(files: Root): string[] {
     };
     visit(STYLES_DIRECTORY);
     return found;
-}
-
-/**
- * The package folders under the styles folder.
- * @param files the repository root
- * @returns the folders, relative to the root
- */
-export function packageFolders(files: Root): string[] {
-    const packageFiles = styleFiles(files).filter((path) => isValePackageFile(path));
-    const folders = new Set(packageFiles.flatMap((path) => packageFolder(path)));
-    return [...folders];
 }
 
 /**

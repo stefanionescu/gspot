@@ -8,7 +8,7 @@ const WORDS = Array.from(
     { length: 6 },
     (_, index) => `{word = "term${String(index)}", reason = "A product name, kept as spelled."}`,
 );
-const LONG = `version = 1\n[tools.typos]\nwords = [${WORDS.join(', ')}]\n`;
+const LONG = `[tools.typos]\nwords = [${WORDS.join(', ')}]\n`;
 
 test('an array past the width goes one item per line, each item as written, and reads back the same', () => {
     const wrapped = wrapLongArrays(LONG);
@@ -31,7 +31,7 @@ test('a short array, an array already on several lines, and a nested array keep 
 
 test('an array under a scope entry keeps the indentation of its key', () => {
     const names = Array.from({ length: 12 }, (_, index) => `"configuration-${String(index)}"`).join(', ');
-    const text = `version = 1\n[[scope]]\npath = "api"\n  kits = [${names}]\n`;
+    const text = `[[scope]]\npath = "api"\n  kits = [${names}]\n`;
     const wrapped = wrapLongArrays(text, '\t');
     expect(wrapped).toContain('  kits = [\n  \t"configuration-0",\n');
     expect(wrapped).toContain('\n  ]\n');
@@ -46,8 +46,7 @@ test('the indentation follows the format table of the policy', () => {
 test('oversized table lists retain comments, quoted keys, sibling values, and repeated scope ownership', () => {
     const reason =
         'This name is the exact spelling used by the external protocol and appears in these generated interfaces.';
-    const text = `version = 1
-[[scope]]
+    const text = `[[scope]]
 path = "api"
 [scope.tools.typos]
 # Protocol vocabulary.
@@ -77,7 +76,7 @@ test('root arrays and multiple lists retain following root assignments and table
     const entry = `{name = "${'a'.repeat(130)}", paths = ["first", "second"]}`;
     const text = `first = [${entry}]
 second = [${entry}]
-version = 1
+level = "all"
 [tools]
 flag = true
 `;
@@ -90,8 +89,7 @@ flag = true
 
 test('policy edits preserve expanded lists on a repeated write', () => {
     const reason = 'The generated client uses the exact product spelling in the protocol and every exported operation.';
-    const original = `version = 1
-kits = ["spelling"]
+    const original = `kits = ["spelling"]
 [tools.typos]
 words = [{word = "Example", reason = "${reason}"}]
 `;

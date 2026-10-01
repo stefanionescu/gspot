@@ -8,7 +8,7 @@ title: FastAPI Runtime
 
 Forms and files, JSON encoding, async work, dependencies, security, streaming, background
 tasks, middleware, documentation exposure, and tests. Structure and schema rules are in the
-FastAPI file. The `fastapi/no-blocking-io-in-async` check reports blocking calls inside `async def` path
+FastAPI file. The async rules of Ruff report blocking calls inside `async def` path
 operations. Examples are complete modules; their dependency requirements precede the code.
 
 ## Forms and files

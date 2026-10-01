@@ -1,3 +1,4 @@
+const REASON = 'The report names the folders the move deleted, which is what it is for.';
 // The literal values acceptance/source/cli/cli reads: names, patterns, limits, and tables.
 
 export const SCOPES_SOURCE =
@@ -42,8 +43,7 @@ export const LOOSE =
     "// A planted file.\n\nimport { z } from 'zod';\n\n/** Accepts anything. */\nexport const loose = z.object({ value: z.any() });\n";
 export const INIT_REFUSALS_QUIET = ['--no-runner', '--no-ci', '--no-guides', '--no-install'];
 export const COMPONENT = '<script setup>\nconst name = 1;\n</script>\n<template><p>{{ name }}</p></template>\n';
-export const EXPLAIN_POLICY = `version = 1
-kits = []
+export const EXPLAIN_POLICY = `kits = []
 
 [[scope]]
 path = "api"
@@ -55,8 +55,7 @@ rule = "SC2086"
 paths = ["api/build.sh"]
 reason = "The script deliberately splits a list of arguments."
 `;
-export const FORMAT_OVERRIDES_POLICY = `version = 1
-level = "all"
+export const FORMAT_OVERRIDES_POLICY = `level = "all"
 kits = ["formatting"]
 [guides]
 install = false
@@ -85,8 +84,7 @@ quotes = "double"
 semicolons = true
 line_ending = "crlf"
 `;
-export const NESTED_SCOPES_POLICY = `version = 1
-kits = ["formatting"]
+export const NESTED_SCOPES_POLICY = `kits = ["formatting"]
 [limits]
 file_lines = 250
 [format]
@@ -106,11 +104,9 @@ kits = ["sql"]
 [scope.limits]
 function_lines = 30
 `;
-export const REASON = 'The report names the folders the move deleted, which is what it is for.';
 export const TABLE = `[{patterns = ["REPORT.md"], reason = "${REASON}"}]`;
 
-export const ESLINT_OVERRIDE_POLICY = `version = 1
-kits = ["javascript"]
+export const ESLINT_OVERRIDE_POLICY = `kits = ["javascript"]
 [guides]
 install = false
 [tools.eslint.rules]

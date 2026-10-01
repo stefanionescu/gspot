@@ -18,7 +18,7 @@ function generatedContents(cwd: string): Map<string, Buffer> {
  * @param input the engine input
  * @returns the findings
  */
-export function drizzleRelations(input: EngineInput): Finding[] {
+function drizzleRelations(input: EngineInput): Finding[] {
     const files = input.files
         .filter((file) => file.kind === 'source' && /\.tsx?$/u.test(file.path))
         .map((file) => ({

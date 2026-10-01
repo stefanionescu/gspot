@@ -119,7 +119,6 @@ test.each([
     const paths = ['src/bad.txt', 'src/keep.txt', 'trc/bad.txt', 'child/src/bad.txt', 'child/bad.txt', 'bad.txt'];
     await createFileTree(sandbox.path, {
         'gspot.toml': stringify({
-            version: 1,
             kits: ['spelling'],
             tools: { typos: { exclude: [{ paths: patterns, reason: 'Generated input is checked by its owner.' }] } },
             scope: [{ path: 'nested' }, { path: 'nested/child' }],

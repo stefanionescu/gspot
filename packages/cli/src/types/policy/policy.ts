@@ -5,6 +5,23 @@ import type { Manifest, SettingSpec } from '#cli/types/kits.ts';
 import type { scopeSchema, policySchema } from '#cli/policy/schema.ts';
 import type { TomlTable, ScopeEntry } from '#cli/types/repository/repository.ts';
 
+type SettingRow = {
+    key: string;
+    value: unknown;
+    source: string;
+    direction: string;
+    scope?: string;
+};
+type LimitTable = Record<string, Reasoned<number>>;
+type ArchitectureAllow = { from: string; to: string[]; reason?: string };
+type StructureSettings = {
+    reexports: 'none' | 'index-only';
+    single_file_folder_allowed: { paths: string[]; reason?: string }[];
+    prefix_collision_allowed: { paths: string[]; reason?: string }[];
+    folder_name_allowed: { paths: string[]; reason?: string }[];
+    python: Record<string, unknown>;
+};
+type PolicyScope = { path: string; kits: string[] };
 export type PolicyFiles = {
     policy: Policy;
     path: string;
@@ -78,13 +95,6 @@ export type SchemaNode = {
 export type PolicyProblem = { path: PathSegment[]; message: string };
 /** One step of a zod issue path. */
 export type PathSegment = string | number;
-export type SettingRow = {
-    key: string;
-    value: unknown;
-    source: string;
-    direction: string;
-    scope?: string;
-};
 /** One `[tools.<tool>.extra]` table: the keys it sets and why. */
 export type ExtraRow = { tool: string; keys: string[]; reason?: string; scope: string };
 /** The settings listing. */
@@ -92,7 +102,6 @@ export type SettingsListing = { rows: SettingRow[]; extras: ExtraRow[] };
 /** The `[tools.<tool>]` tables of one policy layer, as the settings listing reads them. */
 export type ToolTables = Record<string, { extra?: Record<string, unknown> & { reason?: string } }>;
 export type Reasoned<T> = { value: T; reason?: string };
-export type LimitTable = Record<string, Reasoned<number>>;
 export type Limits = {
     root: LimitTable;
     groups: Record<string, LimitTable>;
@@ -128,7 +137,6 @@ export type NamingSettings = {
     rules: NamingRule[];
 };
 export type ArchitectureElement = { name: string; paths: string[] };
-export type ArchitectureAllow = { from: string; to: string[]; reason?: string };
 export type ArchitectureSettings = {
     types_directory?: string;
     config_directory?: string;
@@ -136,13 +144,6 @@ export type ArchitectureSettings = {
     edges_allowed: ArchitectureAllow[];
     roles: Record<string, string | string[]>;
     contracts: Record<string, unknown>[];
-};
-export type StructureSettings = {
-    reexports: 'none' | 'index-only';
-    single_file_folder_allowed: { paths: string[]; reason?: string }[];
-    prefix_collision_allowed: { paths: string[]; reason?: string }[];
-    folder_name_allowed: { paths: string[]; reason?: string }[];
-    python: Record<string, unknown>;
 };
 export type FormatSettings = Required<Defined<Omit<NonNullable<RawPolicy['format']>, 'overrides'>>>;
 export type ToolTable = Record<string, unknown> & {
@@ -153,9 +154,7 @@ export type FileDeclaration =
     | (RawPolicy['generated'][number] & { kind: 'generated' })
     | (RawPolicy['vendored'][number] & { kind: 'vendored' });
 export type RepositoryCheck = Defined<NonNullable<RawPolicy['check']>[number]>;
-export type PolicyScope = { path: string; kits: string[] };
 export type Policy = {
-    version: number;
     level: RawPolicy['level'];
     requireReasons: RawPolicy['require_reasons'];
     extraChecks: string[];

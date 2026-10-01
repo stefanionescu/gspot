@@ -74,7 +74,7 @@ function editorconfigSelector(pattern: string, scope: string): string {
  * @returns the options Prettier reads, only for the settings given
  */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The root options and each override map format settings to the option names of Prettier the same way.
-export function prettierOptions(format: Partial<FormatSettings>): Record<string, unknown> {
+function prettierOptions(format: Partial<FormatSettings>): Record<string, unknown> {
     return {
         ...(format.indent_width === undefined ? {} : { tabWidth: format.indent_width }),
         ...(format.indent_style === undefined ? {} : { useTabs: format.indent_style === 'tab' }),

@@ -12,7 +12,6 @@ test('completion callbacks publish filtered results before the remaining check f
     await createFileTree(sandbox.path, {
         'source.sh': 'echo example\n',
         'gspot.toml': stringify({
-            version: 1,
             kits: [],
             ignore: [{ check: 'project/fast', rule: 'demo', reason: 'The fixture verifies filtered progress.' }],
             check: [

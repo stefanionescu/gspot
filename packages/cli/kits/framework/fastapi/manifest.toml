@@ -4,7 +4,7 @@ kind = "framework"
 title = "FastAPI"
 requires = ["python", "openapi"]
 recommends = ["security", "pytest"]
-description = "A FastAPI service: the FastAPI and async rules of Ruff, and no blocking call inside an async function. The OpenAPI document lints and matches the app, and Semgrep reads the request handling."
+description = "A FastAPI service: the FastAPI and async rules of Ruff, which report a blocking call inside an async function. The OpenAPI document lints and matches the app, and Semgrep reads the request handling."
 
 [detect]
 dependencies = ["fastapi"]
@@ -15,16 +15,3 @@ target = ".gspot/config/semgrep/fastapi.yml"
 rules_path = ["rules"]
 per_scope = true
 needs = "security"
-
-[[checks]]
-name = "fastapi/no-blocking-io-in-async"
-title = "Avoid blocking I/O in async functions"
-example = "An `async def` function calling `time.sleep(1)` blocks the event loop and reports a finding. Import `asyncio` and use `await asyncio.sleep(1)` for an asynchronous delay."
-level = "recommended"
-stage = "commit"
-engine = "integrity"
-analysis = "python-blocking-calls"
-owners = {extensions = [".py"]}
-summary = "Refuses time.sleep, the requests library, and a plain open inside an async function."
-why = "A blocking call inside an async function stops the event loop, so every other request waits for it."
-help = "Use asyncio.sleep, an async HTTP client, or run the call in a worker thread."
