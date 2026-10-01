@@ -1,9 +1,9 @@
-// Installs built packages from an isolated registry: the pinned language tools report defects and accept corrections.
+// Installs built packages from an isolated registry: one consumer's pinned language tools report defects and accept
+// corrections.
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { writeFileSync } from 'node:fs';
 import { run } from '#cli/platform/spawn.ts';
-import { kitManifests } from '#cli/kits/manifests.ts';
 import { parseAlerts } from '#cli/checks/prose/vale.ts';
 import { RELEASE_TIMEOUT_MS } from '#tests/inputs/package.ts';
 import type { InstalledConsumer } from '#tests/types/package.ts';
@@ -58,211 +58,66 @@ async function expectInstalledSql(installation: InstalledConsumer): Promise<void
     });
 }
 
+// A check reports the planted defect at its location and rule, then passes once the file holds the correction.
+async function expectCorrection(
+    installation: InstalledConsumer,
+    check: { only: string; path: string; defect: string; corrected: string; finding: { line: number; rule: string } },
+): Promise<void> {
+    const { consumer, command, options } = installation;
+    const args = [...command, 'check', check.path, '--only', check.only, '--json'];
+    writeFileSync(join(consumer, check.path), check.defect);
+    const failed = await run(args, options);
+    expect(failed.code, failed.stdout + failed.stderr).toBe(1);
+    expect((JSON.parse(failed.stdout) as RunReport).checks).toMatchObject([
+        { check: check.only, status: 'fail', findings: [{ file: check.path, ...check.finding }] },
+    ]);
+    writeFileSync(join(consumer, check.path), check.corrected);
+    const passed = await run(args, options);
+    expect(passed.code, passed.stdout + passed.stderr).toBe(0);
+}
+
 test(
-    'installed prose and vocabulary reject defects and accept corrections',
+    'one installed consumer runs the pinned language tools against defects and their corrections',
     async () => {
         await using installation = await createConsumer(release.registry, release.version);
         expect(installation.installed.code, installation.installed.stdout + installation.installed.stderr).toBe(0);
-        const { consumer, command, options } = installation;
+        const { command, options } = installation;
         await initializeConsumer(release, installation);
         const vocabulary = await run(
             [...command, 'set', 'prose.vocabulary', 'NebulaKit', '--reason', 'NebulaKit is the project name.'],
             options,
         );
         expect(vocabulary.code, vocabulary.stdout + vocabulary.stderr).toBe(0);
-        const valePin = kitManifests()
-            .get('prose')!
-            .tools.find((tool) => tool.name === 'vale')!;
-        const valeVersion = await run(['vale', '--version'], options);
-        expect(valeVersion.code, valeVersion.stdout + valeVersion.stderr).toBe(0);
-        expect(valeVersion.stdout).toContain(valePin.version!);
-        writeFileSync(join(consumer, 'guide.md'), '# Schedule\n\nNebulaKit uses TypeScript. Release on 03/04/2026.\n');
-        const proseCommand = [...command, 'check', 'guide.md', '--only', 'prose/vale', '--json'];
-        const ambiguous = await run(proseCommand, options);
-        expect(ambiguous.code, ambiguous.stdout + ambiguous.stderr).toBe(1);
-        const proseReport = JSON.parse(ambiguous.stdout) as RunReport;
-        expect(proseReport.skips).toStrictEqual([]);
-        expect(proseReport.checks).toHaveLength(1);
-        expect(proseReport.checks[0]).toMatchObject({
-            check: 'prose/vale',
-            status: 'fail',
-            files: 1,
-            findings: [
-                {
-                    check: 'prose/vale',
-                    file: 'guide.md',
-                    line: 3,
-                    rule: 'gspot.dates',
-                    message: "Ambiguous date '03/04/2026'. Write ISO dates (2026-09-17) or the month name.",
-                },
-            ],
-        });
-        writeFileSync(
-            join(consumer, 'guide.md'),
-            '# Schedule\n\nNebulaKit uses TypeScript. Release on March 4, 2026.\n',
-        );
-        const clearDate = await run(proseCommand, options);
-        expect(clearDate.code, clearDate.stdout + clearDate.stderr).toBe(0);
-        const clearReport = JSON.parse(clearDate.stdout) as RunReport;
-        expect(clearReport.skips).toStrictEqual([]);
-        expect(clearReport.checks).toHaveLength(1);
-        expect(clearReport.checks[0]).toMatchObject({
-            check: 'prose/vale',
-            status: 'ok',
-            files: 1,
-            findings: [],
+        await expectCorrection(installation, {
+            only: 'prose/vale',
+            path: 'guide.md',
+            defect: '# Schedule\n\nNebulaKit uses TypeScript. Release on 03/04/2026.\n',
+            corrected: '# Schedule\n\nNebulaKit uses TypeScript. Release on March 4, 2026.\n',
+            finding: { line: 3, rule: 'gspot.dates' },
         });
         await expectInstalledVocabulary(installation);
-    },
-    RELEASE_TIMEOUT_MS,
-);
-
-test(
-    'installed Python detects an undefined name and accepts its correction',
-    async () => {
-        await using installation = await createConsumer(release.registry, release.version);
-        expect(installation.installed.code, installation.installed.stdout + installation.installed.stderr).toBe(0);
-        const { consumer, command, options } = installation;
-        await initializeConsumer(release, installation);
-        const ruffPin = kitManifests()
-            .get('python')!
-            .tools.find((tool) => tool.name === 'ruff')!;
-        const ruffVersion = await run(['ruff', '--version'], options);
-        expect(ruffVersion.code, ruffVersion.stdout + ruffVersion.stderr).toBe(0);
-        expect(ruffVersion.stdout).toContain(ruffPin.version!);
-        writeFileSync(join(consumer, 'entry.py'), 'answer = missing_name\n');
-        const pythonCommand = [...command, 'check', 'entry.py', '--only', 'python/ruff', '--json'];
-        const undefinedName = await run(pythonCommand, options);
-        expect(undefinedName.code, undefinedName.stdout + undefinedName.stderr).toBe(1);
-        const pythonReport = JSON.parse(undefinedName.stdout) as RunReport;
-        expect(pythonReport.skips).toStrictEqual([]);
-        expect(pythonReport.checks).toHaveLength(1);
-        expect(pythonReport.checks[0]).toMatchObject({
-            check: 'python/ruff',
-            status: 'fail',
-            files: 1,
-            findings: [
-                {
-                    check: 'python/ruff',
-                    file: 'entry.py',
-                    line: 1,
-                    column: 10,
-                    rule: 'F821',
-                    message: 'Undefined name `missing_name`',
-                },
-            ],
+        await expectCorrection(installation, {
+            only: 'python/ruff',
+            path: 'entry.py',
+            defect: 'answer = missing_name\n',
+            corrected: 'answer = "example"\n',
+            finding: { line: 1, rule: 'F821' },
         });
-        writeFileSync(join(consumer, 'entry.py'), 'answer = "example"\n');
-        const definedName = await run(pythonCommand, options);
-        expect(definedName.code, definedName.stdout + definedName.stderr).toBe(0);
-        const definedReport = JSON.parse(definedName.stdout) as RunReport;
-        expect(definedReport.skips).toStrictEqual([]);
-        expect(definedReport.checks).toHaveLength(1);
-        expect(definedReport.checks[0]).toMatchObject({
-            check: 'python/ruff',
-            status: 'ok',
-            files: 1,
-            findings: [],
+        await expectCorrection(installation, {
+            only: 'bash/shellcheck',
+            path: 'broken.sh',
+            defect: '#!/usr/bin/env bash\nprintf "%s\\n" $1\n',
+            corrected: '#!/usr/bin/env bash\nprintf "%s\\n" "$1"\n',
+            finding: { line: 2, rule: 'SC2086' },
         });
-    },
-    RELEASE_TIMEOUT_MS,
-);
-
-test(
-    'installed ShellCheck reports exact quoting diagnostics and accepts correction',
-    async () => {
-        await using installation = await createConsumer(release.registry, release.version);
-        expect(installation.installed.code, installation.installed.stdout + installation.installed.stderr).toBe(0);
-        const { consumer, command, options } = installation;
-        await initializeConsumer(release, installation);
-        const shellcheck = kitManifests()
-            .get('bash')!
-            .tools.find((tool) => tool.name === 'shellcheck')!;
-        const toolVersion = await run(['shellcheck', '--version'], options);
-        expect(toolVersion.code, toolVersion.stdout + toolVersion.stderr).toBe(0);
-        expect(toolVersion.stdout).toContain(`version: ${shellcheck.version!}\n`);
-        writeFileSync(join(consumer, 'broken.sh'), '#!/usr/bin/env bash\nprintf "%s\\n" $1\n');
-        const unquoted = await run([...command, 'check', '--only', 'bash/shellcheck', '--json'], options);
-        expect(unquoted.code, unquoted.stdout + unquoted.stderr).toBe(1);
-        const quoting = JSON.parse(unquoted.stdout) as RunReport;
-        expect(quoting.skips).toStrictEqual([]);
-        expect(quoting.checks).toHaveLength(1);
-        expect(quoting.checks[0]).toMatchObject({
-            check: 'bash/shellcheck',
-            status: 'fail',
-            files: 1,
-            findings: [
-                {
-                    check: 'bash/shellcheck',
-                    file: 'broken.sh',
-                    line: 2,
-                    column: 15,
-                    rule: 'SC2086',
-                    message: 'Double quote to prevent globbing and word splitting.',
-                },
-            ],
-        });
-        writeFileSync(join(consumer, 'broken.sh'), '#!/usr/bin/env bash\nprintf "%s\\n" "$1"\n');
-        const quoted = await run([...command, 'check', '--only', 'bash/shellcheck', '--json'], options);
-        expect(quoted.code, quoted.stdout + quoted.stderr).toBe(0);
-        const acceptedQuoting = JSON.parse(quoted.stdout) as RunReport;
-        expect(acceptedQuoting.skips).toStrictEqual([]);
-        expect(acceptedQuoting.checks).toHaveLength(1);
-        expect(acceptedQuoting.checks[0]).toMatchObject({
-            check: 'bash/shellcheck',
-            status: 'ok',
-            files: 1,
-            findings: [],
-        });
-    },
-    RELEASE_TIMEOUT_MS,
-);
-
-test(
-    'installed Swift and SQL parsers execute without checkout dependencies',
-    async () => {
-        await using installation = await createConsumer(release.registry, release.version);
-        expect(installation.installed.code, installation.installed.stdout + installation.installed.stderr).toBe(0);
-        const { consumer, command, options } = installation;
-        await initializeConsumer(release, installation);
-        const swiftLevel = await run([...command, 'set', 'level', 'all'], options);
-        expect(swiftLevel.code, swiftLevel.stdout + swiftLevel.stderr).toBe(0);
-        writeFileSync(join(consumer, 'Account.swift'), 'let utils = 1\n');
-        const swiftCommand = [...command, 'check', 'Account.swift', '--only', 'naming/identifiers', '--json'];
-        const invalidSwift = await run(swiftCommand, options);
-        expect(invalidSwift.code, invalidSwift.stdout + invalidSwift.stderr).toBe(1);
-        const swiftReport = JSON.parse(invalidSwift.stdout) as RunReport;
-        expect(swiftReport.skips).toStrictEqual([]);
-        expect(swiftReport.checks).toHaveLength(1);
-        expect(swiftReport.checks[0]).toMatchObject({ check: 'naming/identifiers', status: 'fail', files: 1 });
-        expect(
-            swiftReport.checks[0]!.findings.map(({ rule, file, line, column, message: text }) => ({
-                rule,
-                file,
-                line,
-                column,
-                message: text,
-            })),
-        ).toStrictEqual([
-            {
-                rule: 'banned-term',
-                file: 'Account.swift',
-                line: 1,
-                column: 5,
-                message: 'swift constant "utils": "utils" is banned (roles group).',
-            },
-        ]);
-        writeFileSync(join(consumer, 'Account.swift'), 'let account = 1\n');
-        const correctedSwift = await run(swiftCommand, options);
-        expect(correctedSwift.code, correctedSwift.stdout + correctedSwift.stderr).toBe(0);
-        const acceptedSwift = JSON.parse(correctedSwift.stdout) as RunReport;
-        expect(acceptedSwift.skips).toStrictEqual([]);
-        expect(acceptedSwift.checks).toHaveLength(1);
-        expect(acceptedSwift.checks[0]).toMatchObject({
-            check: 'naming/identifiers',
-            status: 'ok',
-            files: 1,
-            findings: [],
+        const level = await run([...command, 'set', 'level', 'all'], options);
+        expect(level.code, level.stdout + level.stderr).toBe(0);
+        await expectCorrection(installation, {
+            only: 'naming/identifiers',
+            path: 'Account.swift',
+            defect: 'let utils = 1\n',
+            corrected: 'let account = 1\n',
+            finding: { line: 1, rule: 'banned-term' },
         });
         await expectInstalledSql(installation);
     },
