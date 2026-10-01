@@ -88,7 +88,6 @@ const checkFields = z.strictObject({
     findings_exit_codes: findingExitCodesSchema.optional(),
     engine: z.enum(['integrity', 'naming', 'structure', 'prose']).optional(),
     analysis: z.string().optional(),
-    reported_by: z.string().optional(),
     replaces: z.string().optional(),
     needs: z.string().optional(),
     limit: z.string().optional(),
@@ -120,7 +119,7 @@ const checkFields = z.strictObject({
 const absent = z.never().optional();
 const checkSchema = z.union(
     [
-        checkFields.extend({ command: commandSchema, engine: absent, analysis: absent, reported_by: absent }),
+        checkFields.extend({ command: commandSchema, engine: absent, analysis: absent }),
         checkFields.extend({
             tool: z.string().min(1),
             analysis: z.enum([
@@ -136,23 +135,13 @@ const checkSchema = z.union(
             ]),
             command: absent,
             engine: absent,
-            reported_by: absent,
         }),
         checkFields.extend({
             engine: z.enum(['integrity', 'naming', 'structure', 'prose']),
             command: absent,
-            reported_by: absent,
-        }),
-        checkFields.extend({
-            reported_by: z.string().min(1),
-            command: absent,
-            engine: absent,
-            analysis: absent,
-            tool: absent,
-            replaces: absent,
         }),
     ],
-    { error: 'Choose one command, tool analysis, engine, or reported_by owner without combining execution forms.' },
+    { error: 'Choose one command, tool analysis, or engine without combining execution forms.' },
 );
 
 // A path-scoped naming rule a kit ships, in the shape gspot.toml writes under [[naming.rules]] (K-50).

@@ -20,9 +20,6 @@ test.each([
     'command = ["x"]\nanalysis = "typescript"',
     'analysis = "typescript"',
     'tool = "tsc"\nanalysis = "unknown-analysis"',
-    'reported_by = "x/owner"\ncommand = ["x"]',
-    'reported_by = "x/owner"\nengine = "integrity"',
-    'reported_by = "x/owner"\nfix_command = ["x"]',
 ])('manifest loading rejects an invalid execution form: %s', (execution) => {
     const text = `[kit]
 name = "x"

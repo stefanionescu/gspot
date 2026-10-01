@@ -69,28 +69,6 @@ summary = "Finds Vale directives inside Markdown and block comments in SQL, whic
 why = "A directive in the text turns a rule off for everyone silently; a block comment is invisible to Vale."
 help = "Delete the directive and change the text, or disable the rule with a reason; write SQL comments with two dashes."
 
-[[checks]]
-name = "prose/messages"
-title = "Check error and log messages"
-example = "A log message that interpolates a runtime value into its text reports a message finding. Keep the message constant and put the value into a separate structured field."
-level = "all"
-stage = "commit"
-reported_by = "typescript/eslint"
-summary = "Checks the strings Vale cannot see: error messages start with a capital letter, client messages name no identifier, log messages are stable."
-why = "A message is prose a person reads under stress; an interpolated identifier in it leaks internals and breaks searching the logs."
-help = "Capitalize the message, move the value into its own field, and keep the log line constant."
-
-[[checks]]
-name = "prose/doc-tags"
-title = "Keep types out of documentation tags"
-example = "A JSDoc tag `@param {string} name the name` repeats a type owned by the signature and reports a finding. Keep the parameter name and description, removing the brace-delimited type."
-level = "all"
-stage = "commit"
-reported_by = "typescript/eslint"
-summary = "Checks that doc comments carry no types, which the language already states."
-why = "A type in a doc tag drifts from the signature and says nothing the reader cannot see."
-help = "Delete the type from the tag and keep the description."
-
 [[settings]]
 name = "prose.vocabulary"
 kind = "list"

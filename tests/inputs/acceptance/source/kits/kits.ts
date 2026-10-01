@@ -60,7 +60,6 @@ Open the guide and read it from the top.
 `;
 export const GUIDE = '# The Guide\n\nThe worker retries the request three times. Each retry waits one second.\n';
 export const LICENSE = 'MIT License\n\nCopyright (c) 2026 Alex Garcia\n';
-export const REPORTED_ELSEWHERE = ['markdown/prettier', 'prose/messages', 'prose/doc-tags'];
 export const DOCUMENT = `openapi: 3.1.0
 info:
     title: Planted

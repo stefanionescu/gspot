@@ -76,17 +76,6 @@ why = "Markdown that lints the same everywhere renders the same everywhere."
 help = "Run gspot check --fix for the rules that fix themselves; read the rule name for the rest."
 
 [[checks]]
-name = "markdown/prettier"
-title = "Prettier"
-example = "A Markdown list with spacing that differs from the configured Prettier output reports a formatting finding. Run the formatter, inspect the rendered list, and rerun the check."
-level = "recommended"
-stage = "commit"
-reported_by = "formatting/prettier"
-summary = "Checks that every Markdown file is formatted the way Prettier formats it."
-why = "One formatter keeps a diff about the words, not the table padding."
-help = "Run gspot check --fix, or prettier --write on the file."
-
-[[checks]]
 name = "markdown/fences"
 title = "Check code block syntax"
 example = "A code fence labeled `bash` containing `if then` reports invalid syntax. Correct the example to valid Bash. Use a text fence only when the block represents text rather than executable code."
