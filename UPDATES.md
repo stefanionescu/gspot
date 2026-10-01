@@ -39,7 +39,7 @@ One pull request per stage, in this order. Each merges with a merge commit only 
 | 4     | Delete the result cache and inline ignores             | 5.1; the Ruby grammar; `--no-cache` in the tests                                                        | merged, #5             |
 | 5     | Delete the init extras and the startup manifest check  | adaptations 2 and 4                                                                                     | merged, #6             |
 | 6     | Delete source positions, coverage, and fix settings    | adaptations 3 and 5; `fix_order` and `fix_findings_exit_codes`                                          | merged, #7             |
-| 7     | Write the agent block only into `AGENTS.md`            | the `CLAUDE.md` decision; the `.gitattributes` block and the Cursor rule                                | pull request #8        |
+| 7     | Write the agent block only into `AGENTS.md`            | the `CLAUDE.md` decision; the Cursor rule                                                               | pull request #8        |
 | 8     | Cut unit and CLI integration tests                     | D.2 rows that delete, trim, and merge within one tier                                                   | not started            |
 | 9     | Cut tool, docs, and repository tests                   | D.3 rows; drop `test:docs` and those folders from `test`                                                | not started            |
 | 10    | Cut command acceptance and package tests               | D.4 rows; pins move to a scheduled `pins.yml`                                                           | not started            |
@@ -112,9 +112,9 @@ The owner and the work settled these while implementing:
 - `CLAUDE.md` is never kept. `init` and `apply` delete it, a link included. Its own text, without the gspot block,
   moves to the end of `AGENTS.md` under `## Other instructions`, unless `AGENTS.md` already holds it. gspot writes
   its block only into `AGENTS.md` and the files `guides.agents` lists.
-- Without the `.gitattributes` block, gspot marks every file under `.gspot/` as generated itself, apart from the Vale
-  packages. The ownership hash reads a carriage return before a line feed as a line feed, so a checkout that converts
-  line endings leaves the outputs of gspot unchanged.
+- The `.gitattributes` block stays, against the section 1 recommendation: it keeps the files under `.gspot/` on line
+  feeds in a Windows checkout, which the hook scripts and the clone tests need. gspot also marks every file under
+  `.gspot/` as generated itself, apart from the Vale packages.
 - Without `fix_order`, `--fix` reruns the fixers over the files a pass changed, up to three passes. A correction may
   exit with a code its check declares for findings; any other nonzero exit fails it.
 - Policy errors name the key path, such as `gspot.toml: ignore.0.reason: ...`. Policy findings carry no line.

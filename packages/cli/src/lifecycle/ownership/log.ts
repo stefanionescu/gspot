@@ -44,16 +44,14 @@ function recordedEntry(entries: Map<string, OwnershipEntry>, path: string): Owne
 }
 
 /**
- * The identity a snapshot is recorded and compared by. The hash reads CRLF as LF, so a checkout that converts line
- * endings leaves a file gspot wrote unchanged.
+ * The identity a snapshot is recorded and compared by.
  * @param file the snapshot
  * @returns its hash, mode, and whether it is a link
  */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The ownership log records and compares a file by this one identity: hash, mode, and link flag.
 export function identity(file: Read): Identity {
-    const text = file.bytes.toString('latin1').replaceAll('\r\n', '\n');
     return {
-        hash: createHash('sha256').update(text, 'latin1').digest('hex'),
+        hash: createHash('sha256').update(file.bytes).digest('hex'),
         mode: fileMode(file),
         ...(file.isLink ? { isLink: true as const } : {}),
     };

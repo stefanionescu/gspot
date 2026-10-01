@@ -34,7 +34,7 @@ test('agent instructions reach AGENTS.md and configured files, and other agent f
     expect(readFileSync(join(sandbox.path, '.github/copilot-instructions.md'), 'utf8')).toBe(
         '# Copilot instructions\n',
     );
-    for (const path of ['CLAUDE.md', '.cursor/rules/gspot.mdc', '.gitattributes'])
+    for (const path of ['CLAUDE.md', '.cursor/rules/gspot.mdc'])
         expect(existsSync(join(sandbox.path, path)), path).toBe(false);
     const modified = statSync(join(sandbox.path, 'AGENTS.md')).mtimeMs;
     const again = await run(sandbox.path, ['apply']);
@@ -63,7 +63,6 @@ test('init deletes CLAUDE.md and moves its text to the end of AGENTS.md', async 
     expect(plan.write.map((entry) => entry.path)).toContain('AGENTS.md');
     expect(plan.write.map((entry) => entry.path)).not.toContain('GEMINI.md');
     expect(plan.remove).toContainEqual({ path: 'CLAUDE.md', note: 'its own text moves to the end of AGENTS.md' });
-    expect(plan.change.map((entry) => entry.path)).not.toContain('.gitattributes');
     expect(readFileSync(join(sandbox.path, 'CLAUDE.md'), 'utf8')).toBe('# Claude notes\n\nRun the tests.\n');
     const installed = await run(sandbox.path, INIT);
     expect(installed.code, installed.stdout + installed.stderr).toBe(0);

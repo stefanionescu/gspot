@@ -139,7 +139,7 @@ test('failed initialization retains the previous pin until generated publication
     await createFileTree(directory.path, { '.gspot/version': '0.0.1\n' });
     const rename = fs.renameSync;
     const failed = spyOn(fs, 'renameSync').mockImplementation((source, target) => {
-        if (String(target) === join(directory.path, 'AGENTS.md')) throw new Error('Generated write denied');
+        if (String(target) === join(directory.path, '.gitattributes')) throw new Error('Generated write denied');
         rename(source, target);
     });
     try {
@@ -154,7 +154,7 @@ test('failed initialization retains the previous pin until generated publication
                     hooks: 'none',
                     runner: 'none',
                     ci: 'none',
-                    rules: 'yes',
+                    rules: 'no',
                     install: false,
                 }),
             ),

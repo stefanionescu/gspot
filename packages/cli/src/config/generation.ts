@@ -34,6 +34,13 @@ export const GENERATED_JSON_KEY = '_gspot';
 export const TARGET_PLACEHOLDER = /\{target(?:_json)?\}/gu;
 /** What a hook prints when the command that runs gspot is missing. */
 export const HOOK_UNAVAILABLE = 'The command that runs gspot is not installed. Install gspot, then run: gspot install';
+// Every file gspot writes keeps LF, so a CRLF checkout does not mark the generated files and hooks as changed.
+export const GIT_ATTRIBUTES_BLOCK = [
+    '.gspot/** linguist-generated',
+    '.gspot/** text eol=lf',
+    '.gitignore text eol=lf',
+    '.gitattributes text eol=lf',
+].join('\n');
 export const HOOK_ARGS: Record<HookName, string> = {
     'pre-commit': 'check --staged',
     'pre-push': 'check --push -- "$@"',

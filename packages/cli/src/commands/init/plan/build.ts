@@ -161,6 +161,7 @@ export function buildInitPlan(planning: Planning, policy: Policy, policyText: st
         ],
         change: [
             { path: '.gitignore', note: 'one managed block' },
+            { path: '.gitattributes', note: 'managed generated-file classification and LF line endings' },
             ...runnerRows(answers, everySelected),
             ...(answers.hooks === 'gspot' ? [HOOKS_ROW] : []),
         ],

@@ -11,6 +11,7 @@ import { emitConfigurations } from '#cli/generation/kits.ts';
 import { mutationTarget } from '#cli/platform/safe-paths.ts';
 import { miseToolsFile } from '#cli/generation/tools/mise.ts';
 import { templateInputs } from '#cli/generation/templates.ts';
+import { GIT_ATTRIBUTES_BLOCK } from '#cli/config/generation.ts';
 import { toolPackages } from '#cli/generation/tools/packages.ts';
 import type { Repository } from '#cli/types/repository/repository.ts';
 import { gitlabFile, workflowFile } from '#cli/generation/workflow.ts';
@@ -41,6 +42,7 @@ function rootView(scopes: ScopeSelection[]): MergedView {
 
 function blockOutputs(repository: Repository, policy: Policy, manifests: Manifest[], out: Generated): void {
     if (repository.hasGit) out.blocks.push({ path: '.gitignore', block: gitignoreBlock(), style: 'hash' });
+    out.blocks.push({ path: '.gitattributes', block: GIT_ATTRIBUTES_BLOCK, style: 'hash' });
     if (repository.files.some((file) => file.path === 'CLAUDE.md'))
         out.notes.push('CLAUDE.md goes; its own text moves to the end of AGENTS.md');
     if (!policy.guides.install) return;
