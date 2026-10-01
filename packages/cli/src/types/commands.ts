@@ -4,10 +4,10 @@ import type { CheckResult } from '#cli/types/checks.ts';
 import type { Profile } from '#cli/types/policy/profiles.ts';
 import type { ToolInspection } from '#cli/types/tools/tools.ts';
 import type { DriftEntry } from '#cli/types/lifecycle/lifecycle.ts';
+import type { Manifest, CheckSpec, KitEvidence as Plan } from '#cli/types/kits.ts';
 import type { Policy, RawPolicy, ResolvedSetting } from '#cli/types/policy/policy.ts';
 import type { StagedSet, ChangedSet, PushSelection } from '#cli/types/repository/revisions.ts';
-import type { Manifest, CheckSpec, UnknownLanguage, KitEvidence as Plan } from '#cli/types/kits.ts';
-import type { Session, RunReport, PushReport, StageFilter, CoverageReport } from '#cli/types/execution/execution.ts';
+import type { Session, RunReport, PushReport, StageFilter } from '#cli/types/execution/execution.ts';
 
 import type {
     Fields,
@@ -105,7 +105,6 @@ export type ChangeReport = {
 export type DoctorReport = {
     submodules: string[];
     tools: ToolInspection[];
-    coverage: CoverageReport;
     changes: ChangeReport;
     hooks: string;
     ci: string;
@@ -167,7 +166,6 @@ export type DetectionSummary = {
     tooling: ExistingTooling;
     owned: string[];
     unowned: string[];
-    unknown: UnknownLanguage[];
     manifests: Map<string, Manifest>;
     hasGit: boolean;
 };

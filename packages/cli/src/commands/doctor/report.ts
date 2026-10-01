@@ -4,9 +4,7 @@ import { colors } from '#cli/output/messages.ts';
 import { everyManifest } from '#cli/kits/select.ts';
 import { inspectTool } from '#cli/tools/inspect.ts';
 import { hookStatus } from '#cli/lifecycle/hooks.ts';
-import { coverageLines } from '#cli/output/coverage.ts';
 import { selectRuleFiles } from '#cli/agents/assemble.ts';
-import { coverageReport } from '#cli/execution/coverage.ts';
 import { submodulePaths } from '#cli/repository/tracked.ts';
 import { changeReport } from '#cli/commands/doctor/changes.ts';
 import type { ToolInspection } from '#cli/types/tools/tools.ts';
@@ -14,7 +12,7 @@ import { missingBuild } from '#cli/execution/planning/skips.ts';
 import type { Session } from '#cli/types/execution/execution.ts';
 import { PLATFORM_NAMES } from '#cli/config/execution/execution.ts';
 import type { ChangeReport, DoctorReport } from '#cli/types/commands.ts';
-import { VERSION_GAP, COLUMN_WIDTHS, DISPLAY_LIMITS, CHANGE_SECTIONS } from '#cli/config/commands/doctor.ts';
+import { VERSION_GAP, COLUMN_WIDTHS, CHANGE_SECTIONS } from '#cli/config/commands/doctor.ts';
 
 function stateLabel(tool: ToolInspection, colors: Colors): string {
     const { red, green, dim } = colors;
@@ -60,31 +58,6 @@ function toolLines(tools: ToolInspection[], colors: Colors): string[] {
     });
 }
 
-function uncheckedLines(report: DoctorReport): string[] {
-    const { unchecked } = report.coverage;
-    if (unchecked.length === 0) return [];
-    const byReason = new Map<string, string[]>();
-    for (const entry of unchecked) byReason.set(entry.reason, [...(byReason.get(entry.reason) ?? []), entry.path]);
-    const lines = [`unchecked files          ${String(unchecked.length)}`];
-    for (const [reason, paths] of byReason) {
-        const more = paths.length > DISPLAY_LIMITS.paths ? ' ...' : '';
-        const shown = paths.slice(0, DISPLAY_LIMITS.paths).join(' ') + more;
-        const remedy = unchecked.find((entry) => entry.reason === reason)?.remedy;
-        const hint = remedy === undefined ? '' : ` (${remedy})`;
-        lines.push(`  ${shown.padEnd(COLUMN_WIDTHS.path)} ${reason}${hint}`);
-    }
-    return [...lines, ''];
-}
-
-function partialLines(report: DoctorReport): string[] {
-    const { partial } = report.coverage;
-    if (partial.length === 0) return [];
-    const lines = partial
-        .slice(0, DISPLAY_LIMITS.partial)
-        .map((entry) => `  ${entry.path.padEnd(COLUMN_WIDTHS.path)} no check for: ${entry.missing.join(', ')}`);
-    return [`partly checked files     ${String(partial.length)}`, ...lines, ''];
-}
-
 function changeLines(changes: ChangeReport): string[] {
     const sections = CHANGE_SECTIONS.map(({ key, title }) => {
         const rows = changes[key].map((entry) => {
@@ -109,7 +82,7 @@ function versionLine(report: DoctorReport): string {
 }
 
 /**
- * Builds the report: tool inspections, coverage, changes after the install, hooks, CI, rules, and versions.
+ * Builds the report: tool inspections, changes after the install, hooks, CI, rules, and versions.
  * @param session the session
  * @param pinned the version `.gspot/version` pins, if any
  * @returns the report, with exit code 1 when tools or hook integration need correction
@@ -132,7 +105,6 @@ export function doctorReport(session: Session, pinned: string | undefined): Doct
     return {
         submodules: submodulePaths(session.root),
         tools,
-        coverage: coverageReport(session),
         changes: changeReport(session),
         hooks: hooks.text,
         ci,
@@ -160,9 +132,6 @@ export function doctorText(report: DoctorReport): string {
         'tools',
         ...toolLines(report.tools, colors),
         '',
-        ...uncheckedLines(report),
-        ...partialLines(report),
-        ...coverageLines(report.coverage),
         ...changeLines(report.changes),
         `hooks      ${report.hooks}`,
         ...report.submodules.map((path) => `submodule  ${path} (contents are not read)`),

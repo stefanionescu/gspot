@@ -6,83 +6,9 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { installHooks } from '#cli/lifecycle/hooks.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { applyAll } from '#cli/commands/apply/workflow.ts';
-import { coverageReport } from '#cli/execution/coverage.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { doctorCommand } from '#cli/commands/doctor/command.ts';
 import { containing, containingAll } from '#tests/support/expectations.ts';
-
-test('doctor coverage honors path exceptions and does not borrow syntax from another shell dialect', async () => {
-    await using sandbox = await testdir();
-    const policy = policyOf(['bash'], '', 'all');
-    await createFileTree(sandbox.path, {
-        'gspot.toml': `${policy}\n[[ignore]]\ncheck = "bash/syntax"\npaths = ["source.sh"]\nreason = "The fixture exercises a path exception."\n`,
-        'source.sh': 'echo example\n',
-        'sibling.sh': 'echo sibling\n',
-    });
-    const ignored = coverageReport(await openSession(sandbox.path));
-    expect(ignored.partial.find((entry) => entry.path === 'source.sh')?.missing).toContain('syntax');
-    expect(ignored.partial.find((entry) => entry.path === 'sibling.sh')?.missing ?? []).not.toContain('syntax');
-    writeFileSync(join(sandbox.path, 'gspot.toml'), policy);
-    const corrected = coverageReport(await openSession(sandbox.path));
-    expect(corrected.partial.find((entry) => entry.path === 'source.sh')?.missing ?? []).not.toContain('syntax');
-});
-
-test('doctor coverage excludes binary files and counts routine formatting at both levels', async () => {
-    await using sandbox = await testdir();
-    const policy = policyOf(['bash'], '', 'recommended');
-    await createFileTree(sandbox.path, {
-        'gspot.toml': policy,
-        'source.sh': 'echo example\n',
-        'icon.png': Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]),
-    });
-    const recommended = coverageReport(await openSession(sandbox.path));
-    expect(recommended.unchecked.map((entry) => entry.path)).not.toContain('icon.png');
-    expect(recommended.partial.find((entry) => entry.path === 'source.sh')?.missing ?? []).not.toContain('format');
-    writeFileSync(join(sandbox.path, 'gspot.toml'), policy.replace('recommended', 'all'));
-    const all = coverageReport(await openSession(sandbox.path));
-    expect(all.partial.find((entry) => entry.path === 'source.sh')?.missing ?? []).not.toContain('format');
-});
-
-test('doctor coverage applies nested exceptions only to their owning scope', async () => {
-    await using sandbox = await testdir();
-    const policy = policyOf(['bash'], '', 'all');
-    await createFileTree(sandbox.path, {
-        'gspot.toml': `${policy}\n[[scope]]\npath = "app"\nkits = []\n[[ignore]]\ncheck = "bash/syntax"\npaths = ["app"]\nreason = "The nested fixture exercises a check exception."\n`,
-        'source.sh': 'echo root\n',
-        'app/source.sh': 'echo nested\n',
-    });
-    const ignored = coverageReport(await openSession(sandbox.path));
-    expect(ignored.partial.find((entry) => entry.path === 'app/source.sh')?.missing).toContain('syntax');
-    expect(ignored.partial.find((entry) => entry.path === 'source.sh')?.missing ?? []).not.toContain('syntax');
-    writeFileSync(join(sandbox.path, 'gspot.toml'), `${policy}\n[[scope]]\npath = "app"\nkits = []\n`);
-    const corrected = coverageReport(await openSession(sandbox.path));
-    expect(corrected.partial.find((entry) => entry.path === 'app/source.sh')?.missing ?? []).not.toContain('syntax');
-});
-
-test('doctor recognizes enabled repository checks across nested scopes', async () => {
-    await using sandbox = await testdir();
-    const policy = `version = 1
-kits = []
-[[scope]]
-path = "app"
-kits = []
-[[check]]
-name = "project/syntax"
-command = ["bash", "-n", "{files}"]
-paths = ["**/*.sh"]
-stage = "commit"
-`;
-    await createFileTree(sandbox.path, {
-        'gspot.toml': `${policy}\n[[ignore]]\ncheck = "project/syntax"\nreason = "The fixture verifies disabled coverage."\n`,
-        'app/source.sh': 'echo nested\n',
-    });
-    const ignored = coverageReport(await openSession(sandbox.path));
-    expect(ignored.unchecked.map((entry) => entry.path)).toContain('app/source.sh');
-    writeFileSync(join(sandbox.path, 'gspot.toml'), policy);
-    const corrected = coverageReport(await openSession(sandbox.path));
-    expect(corrected.unchecked.map((entry) => entry.path)).not.toContain('app/source.sh');
-    expect(corrected.checked).toBeGreaterThan(ignored.checked);
-});
 
 test('doctor lists a tool only on the systems it has a build for', async () => {
     await using sandbox = await testdir();

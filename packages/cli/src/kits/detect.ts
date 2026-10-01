@@ -1,36 +1,10 @@
 // The detection table: what the tree proposes at init and in doctor. Detection never selects.
 import { pathMatcher } from '#cli/repository/paths.ts';
-import * as linguistLanguages from 'linguist-languages';
 import { projectFolder } from '#cli/repository/scopes.ts';
 import { GLOB_CHARS, SHEBANG_TAG } from '#cli/config/kits.ts';
 import { baseName, extensionOf } from '#cli/platform/paths.ts';
+import type { Manifest, KitEvidence } from '#cli/types/kits.ts';
 import type { Fields, Layout, TrackedFile } from '#cli/types/repository/repository.ts';
-import type { Manifest, KitEvidence, LinguistEntry, UnknownLanguage } from '#cli/types/kits.ts';
-
-const LANGUAGE_BY_FILENAME = new Map(
-    Object.entries(linguistLanguages).flatMap(([language, value]) =>
-        ((value as LinguistEntry).filenames ?? []).map((filename) => [filename, language] as const),
-    ),
-);
-
-function languageByExtension(): Map<string, string> {
-    const map = new Map<string, string>();
-    // Markup covers authored stylesheet and template languages, such as Sass.
-    const authored = Object.entries(linguistLanguages).filter(([, value]) => {
-        const entry = value as LinguistEntry;
-        return entry.type === 'programming' || entry.type === 'markup';
-    });
-    for (const [name, value] of authored) {
-        const entry = value as LinguistEntry;
-        const extensions = entry.extensions ?? [];
-        for (const extension of extensions) {
-            const normalized = extension.toLowerCase();
-            const isAlias = entry.aliases?.includes(normalized.slice(1)) === true;
-            if (isAlias || !map.has(normalized)) map.set(normalized, name);
-        }
-    }
-    return map;
-}
 
 function dependencyMap(fields: Fields[], scope: string): Map<string, string> {
     const dependencies = new Map<string, string>();
@@ -178,39 +152,4 @@ export function detectConditions(
         )
             matched.add(condition);
     return matched;
-}
-
-/**
- * Languages in the tree that no configuration detects, named through GitHub Linguist's data. A policy such as
- * formatting owners files of many languages without supporting any, so only the other kinds make a language known.
- * @param files the tracked files
- * @param manifests every kit manifest
- * @returns the languages with their extensions and file counts, most files first
- */
-export function unknownLanguages(files: TrackedFile[], manifests: Map<string, Manifest>): UnknownLanguage[] {
-    const known = new Set(
-        manifests
-            .values()
-            .filter((manifest) => manifest.kit.kind !== 'general')
-            .flatMap((manifest) => [...manifest.detect.extensions, ...manifest.owners.extensions]),
-    );
-    const byExtension = languageByExtension();
-    const counts = new Map<string, { extensions: Set<string>; count: number }>();
-    for (const file of files) {
-        const extension = extensionOf(file.path);
-        const fromExtension = file.kind === 'source' && !known.has(extension) ? byExtension.get(extension) : undefined;
-        if (fromExtension === undefined) continue;
-        const language = LANGUAGE_BY_FILENAME.get(baseName(file.path)) ?? fromExtension;
-        const entry = counts.get(language) ?? { extensions: new Set<string>(), count: 0 };
-        entry.extensions.add(extension);
-        entry.count += 1;
-        counts.set(language, entry);
-    }
-    return [...counts]
-        .map(([language, entry]) => ({
-            language,
-            extensions: [...entry.extensions].toSorted((a, b) => a.localeCompare(b)),
-            count: entry.count,
-        }))
-        .toSorted((a, b) => b.count - a.count);
 }

@@ -41,9 +41,6 @@ kits = ["typescript", "css", "astro"]
 install = true
 directory = ".gspot/guides"
 
-[coverage]
-strict = true
-
 [runner]
 tool = "mise"
 

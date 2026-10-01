@@ -80,7 +80,6 @@
         "import-meta-resolve": "4.2.0",
         "jsonc-parser": "3.3.1",
         "libpg-query": "18.1.4",
-        "linguist-languages": "9.5.0",
         "mdast-util-from-markdown": "2.0.3",
         "mdast-util-to-string": "4.0.0",
         "nypm": "0.6.10",
@@ -2198,8 +2197,6 @@
     "lilconfig": ["lilconfig@2.1.0", "", {}, "sha512-utWOt/GHzuUxnLKxB6dk81RoOeoNeHgbrXiuGk4yyF5qlRz+iIVWu56E2fqGHFrXz0QNUhLB/8nKqvRH66JKGQ=="],
 
     "lines-and-columns": ["lines-and-columns@1.2.4", "", {}, "sha512-7ylylesZQ/PV29jhEDl3Ufjo6ZX7gCqJr5F7PKrqc93v7fzSymt1BpwEU8nAUXs8qzzvqhbjhK5QZg6Mt/HkBg=="],
-
-    "linguist-languages": ["linguist-languages@9.5.0", "", {}, "sha512-Wtg9O6iHNBYFJQVtPNwWCaWkNEqZqiCGI4gSkeH8TqvgZUyb1IUWmFSa9Z9UhT392/aX6Peoa91bH9sDah1ZVw=="],
 
     "linkinator": ["linkinator@8.1.0", "", { "dependencies": { "chalk": "^6.0.0", "escape-html": "^1.0.3", "glob": "^13.0.0", "htmlparser2": "^12.0.0", "marked": "^18.0.0", "marked-gfm-heading-id": "^4.1.4", "meow": "^14.0.0", "mime": "^4.0.0", "saxes": "6.0.0", "srcset": "^5.0.0", "undici": "^8.0.0" }, "bin": { "linkinator": "build/src/cli.js" } }, "sha512-3AeucoHrnlsbxPinqP1w0bsVvit2ESRSFEhFoHAsJf8CNjvmNGny/f/AgtYQXVmz+x9qn+a74DlPX06yYbSRXg=="],
 

@@ -8,7 +8,6 @@ kits = []
 [[check]]
 name = "sandbox/correction"
 command = ${JSON.stringify([process.execPath, '-e', 'process.exitCode = 0'])}
-fix_order = "codemod"
 fix_command = ${JSON.stringify([process.execPath, '-e', 'process.exitCode = 3'])}
 paths = ["source.txt"]
 stage = "commit"

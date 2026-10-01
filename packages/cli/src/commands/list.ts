@@ -4,11 +4,9 @@ import { everyManifest } from '#cli/kits/select.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
 import { listSettings } from '#cli/policy/settings.ts';
 import { checkState } from '#cli/policy/check-state.ts';
-import { coverageLines } from '#cli/output/coverage.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { directoryOf } from '#cli/platform/arguments.ts';
 import type { CommandResult } from '#cli/types/commands.ts';
-import { coverageReport } from '#cli/execution/coverage.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import { readManifests } from '#cli/repository/manifests.ts';
 import type { Session } from '#cli/types/execution/execution.ts';
@@ -91,9 +89,7 @@ function kitsResult(session: Session): CommandResult {
         lines.push(`  ${configuration.name}  ${configuration.evidence}\n    ${configuration.command}`);
     lines.push('', 'available');
     for (const configuration of available) lines.push(`  ${configuration.name}  ${configuration.description}`);
-    const coverage = coverageReport(session);
-    lines.push('', ...coverageLines(coverage));
-    return { text: `${lines.join('\n')}\n`, json: { installed, detected, available, coverage }, exitCode: 0 };
+    return { text: `${lines.join('\n')}\n`, json: { installed, detected, available }, exitCode: 0 };
 }
 
 /**

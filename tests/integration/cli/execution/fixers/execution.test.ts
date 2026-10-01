@@ -125,7 +125,6 @@ stage = "commit"
 paths = ["*.txt"]
 command = ${JSON.stringify([process.execPath, '-e', 'process.exitCode = process.argv.includes("added.txt") ? 0 : 1', '{files}'])}
 fix_command = ${JSON.stringify([process.execPath, '-e', 'await Bun.write("added.txt", "created")'])}
-fix_order = "codemod"
 `,
     });
     const session = await openSession(sandbox.path);
@@ -134,4 +133,40 @@ fix_order = "codemod"
     expect(outcome.report.exitCode).toBe(0);
     expect(outcome.report.checks[0]!.files).toBe(2);
     expect(session.repository.files.map((file) => file.path)).toContain('added.txt');
+});
+
+// A check that fails while a file holds its first argument, and a correction that replaces that text with its second.
+const TEXT_CHECK =
+    'const [, text, ...paths] = process.argv; const bodies = await Promise.all(paths.map((path) => Bun.file(path).text())); process.exitCode = bodies.some((body) => body.includes(text)) ? 1 : 0;';
+const TEXT_FIX =
+    'const [, text, replacement, ...paths] = process.argv; for (const path of paths) await Bun.write(path, (await Bun.file(path).text()).replaceAll(text, replacement));';
+
+test('a later pass formats what a correction after the formatter wrote', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'source.txt': 'var x\n',
+        'gspot.toml': `version = 1
+kits = []
+[[check]]
+name = "project/format"
+stage = "commit"
+paths = ["*.txt"]
+command = ${JSON.stringify([process.execPath, '-e', TEXT_CHECK, '  ', '{files}'])}
+fix_command = ${JSON.stringify([process.execPath, '-e', TEXT_FIX, '  ', ' ', '{files}'])}
+[[check]]
+name = "project/codemod"
+stage = "commit"
+paths = ["*.txt"]
+command = ${JSON.stringify([process.execPath, '-e', TEXT_CHECK, 'var', '{files}'])}
+fix_command = ${JSON.stringify([process.execPath, '-e', TEXT_FIX, 'var', 'let ', '{files}'])}
+`,
+    });
+    const options = { stage: 'commit' as const, skips: [], fix: true, isDryRun: false };
+    const outcome = await executeRun(await openSession(sandbox.path), options);
+    expect(outcome.report.exitCode, JSON.stringify(outcome.report.checks)).toBe(0);
+    expect(outcome.fixes?.results).toMatchObject([
+        { check: 'project/format', status: 'changed', changed: ['source.txt'] },
+        { check: 'project/codemod', status: 'changed', changed: ['source.txt'] },
+    ]);
+    expect(readFileSync(join(sandbox.path, 'source.txt'), 'utf8')).toBe('let x\n');
 });

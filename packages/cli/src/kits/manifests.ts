@@ -112,7 +112,6 @@ export function parseManifest(text: string, dir: string): Manifest {
         defaults_all: raw.defaults_all,
         entry_files: raw.entry_files,
         naming: raw.naming,
-        coverage: raw.coverage,
         guides: raw.guides,
         required_rules: raw.required_rules,
         rules_off: raw.rules_off,

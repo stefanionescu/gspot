@@ -6,6 +6,7 @@ import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { plant } from '#tests/support/cli/preservation.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { installSandbox } from '#tests/support/cli/sandbox.ts';
+import { hasLinuxDocker } from '#tests/support/cli/platforms.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
 import type { Planted, FindingCase, PlantedInput, SpawnOutcome, PlantedRepository } from '#tests/types/cli.ts';
@@ -96,7 +97,8 @@ export function plantedCases(
         });
         for (const entry of cases) {
             const where = [entry.expected.rule, entry.expected.file].filter(Boolean).join(' in ');
-            test.skipIf(entry.platforms !== undefined && !entry.platforms.includes(process.platform))(
+            const isElsewhere = entry.platforms !== undefined && !entry.platforms.includes(process.platform);
+            test.skipIf(isElsewhere || (entry.docker === true && !hasLinuxDocker))(
                 `${entry.check} reports ${where} and accepts the correction`,
                 async () => {
                     await expectDefect(installed(), entry);

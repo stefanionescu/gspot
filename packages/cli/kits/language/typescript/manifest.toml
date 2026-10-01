@@ -56,7 +56,6 @@ runs = "per-scope"
 cwd = "scope"
 tool = "tsc"
 analysis = "typescript"
-coverage = ["types"]
 output = {format = "regex", pattern = "^(?<file>[^(]+)\\((?<line>\\d+),(?<column>\\d+)\\): error (?<rule>TS\\d+): (?<message>.*)$"}
 summary = "Checks that every TypeScript file type-checks with the strict compiler options."
 why = "A file that does not type-check can crash at run time in a way the editor already knew about."
@@ -71,11 +70,8 @@ stage = "commit"
 runs = "per-file-list"
 command = ["eslint", "--max-warnings", "0", "--no-warn-ignored", "--config", "{config:eslint}", "--format", "json", "{files}"]
 fix_command = ["eslint", "--fix", "--config", "{config:eslint}", "{files}"]
-fix_order = "codemod"
 findings_exit_codes = [1]
-fix_findings_exit_codes = [1]
 owners = {extensions = [".ts", ".tsx", ".mts", ".cts"]}
-coverage = ["syntax", "style", "structure", "security"]
 output = {format = "eslint-json"}
 summary = "Runs ESLint with the shipped rule set over every TypeScript file."
 why = "ESLint catches mistakes and slop the compiler accepts: unused code, unsafe casts, functions that only forward."
@@ -89,16 +85,9 @@ level = "recommended"
 stage = "commit"
 engine = "integrity"
 analysis = "tsconfig-options"
-coverage = ["types"]
 summary = "Checks that every tsconfig still turns on the strict options the configuration requires."
 why = "One tsconfig that drops strict lets untyped code back in for that whole scope."
 help = "Enable the reported compiler option in the authored TypeScript configuration."
-
-[coverage]
-".ts" = ["format", "syntax", "style", "types", "structure", "naming", "prose", "spelling"]
-".tsx" = ["format", "syntax", "style", "types", "structure", "naming", "prose", "spelling"]
-".mts" = ["format", "syntax", "style", "types", "structure", "naming", "prose", "spelling"]
-".cts" = ["format", "syntax", "style", "types", "structure", "naming", "prose", "spelling"]
 
 [guides]
 language = [{path = "language/TYPESCRIPT.md"}, {path = "language/naming/TYPESCRIPT.md"}]

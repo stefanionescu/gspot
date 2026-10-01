@@ -38,7 +38,6 @@ test.each(['SIGINT', 'SIGTERM'] as const)(
         expect(report.checks).toHaveLength(1);
         expect(report.checks[0]!.status).toBe('error');
         expect(report.checks[0]!.note).toContain('canceled');
-        expect(report.coverage.checked).toBe(0);
         await waitForExit(toolPid);
     },
     15_000,

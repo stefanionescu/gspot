@@ -61,7 +61,6 @@ function projectChecks(session: Session): void {
         level: 'recommended',
         stage: 'commit',
         runs: 'per-scope',
-        coverage: [],
         summary: 'Reports the planted project finding.',
         why: 'Changed files trigger the complete project check.',
         help: 'Fix the planted project finding.',
@@ -69,7 +68,6 @@ function projectChecks(session: Session): void {
         command: [process.execPath, '-e', "console.log('Project finding'); process.exitCode = 1"],
         output: { format: 'lines' as const },
         owners: manifest.owners,
-        fix_order: 'codemod' as const,
         fix_command: [process.execPath, '-e', "await Bun.write('{scope}/source.ts', 'restored')"],
     };
     const fileCheck = { ...spec, name: 'sandbox/files', runs: 'per-file-list' as const };
@@ -166,19 +164,16 @@ test.each(['integrity', 'naming', 'structure', 'prose'] as const)(
             level: 'recommended',
             stage: 'commit',
             runs: 'per-file-list',
-            coverage: [],
             summary: 'Inspect the source file.',
             why: 'The input must be valid.',
             help: 'Correct the source file.',
         } as const;
         const first: CheckSpec = {
             ...definition,
-            coverage: [],
             command: [process.execPath, '-e', 'await Bun.write("started.txt", "started")'],
         };
         const invalid: CheckSpec = {
             ...definition,
-            coverage: [],
             name: 'sandbox/unknown',
             engine,
             analysis: 'unknown-analysis',

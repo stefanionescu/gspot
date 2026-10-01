@@ -25,7 +25,7 @@ test.each([
         const policy = parsePolicyText(text, path);
         expect(() => {
             assertPolicyComplete({ text, path, policy });
-        }).toThrow(/gspot.toml:\d+:/);
+        }).toThrow(/^gspot\.toml: /mu);
         expect(validate(input)).toBe(false);
         const correctedTools = { [tool]: { [key]: good } };
         const corrected = {
@@ -53,7 +53,7 @@ test('nested manifest settings preserve typed leaf values and reject unknown sib
     const invalidPolicy = parsePolicyText(invalid, path);
     expect(() => {
         assertPolicyComplete({ text: invalid, path, policy: invalidPolicy });
-    }).toThrow('gspot.toml:5:');
+    }).toThrow('gspot.toml: tools.bash.safety.unknown:');
     const validate = new Ajv2020({ strict: false }).compile(policyJsonSchema());
     expect(
         validate({
@@ -74,7 +74,7 @@ test.each([{ safety: [] }, { safety: 'owners' }, { safety: 1 }, { safety: { owne
         const policy = parsePolicyText(text, path);
         expect(() => {
             assertPolicyComplete({ text, path, policy });
-        }).toThrow(/gspot.toml:\d+:/);
+        }).toThrow(/^gspot\.toml: /mu);
         expect(new Ajv2020({ strict: false }).compile(policyJsonSchema())(input)).toBe(false);
     },
 );

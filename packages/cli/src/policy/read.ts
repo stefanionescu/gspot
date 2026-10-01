@@ -5,66 +5,43 @@ import { GspotError } from '#cli/platform/errors.ts';
 import { normalize } from '#cli/policy/normalize.ts';
 import { policySchema } from '#cli/policy/schema.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
-import { knownKeysAt } from '#cli/policy/json-schema.ts';
 import { reasonProblems } from '#cli/policy/problems.ts';
 import { TomlError, parse as parseToml } from 'smol-toml';
 import { pathProblems } from '#cli/policy/path-problems.ts';
 import { FIELD_PROBLEMS } from '#cli/config/policy/policy.ts';
 import { unknownKitProblems, completenessProblems } from '#cli/policy/validate.ts';
-import { policyLocation, policyPosition, sourceLocations } from '#cli/policy/source-locations.ts';
+import type { Policy, RawPolicy, PathSegment, PolicyFiles, PolicyProblem } from '#cli/types/policy/policy.ts';
 
-import type {
-    Policy,
-    RawPolicy,
-    PathSegment,
-    PolicyFiles,
-    PolicyFinding,
-    PolicyProblem,
-} from '#cli/types/policy/policy.ts';
-
-function issueText(issue: z.core.$ZodIssue): string {
-    const where = issue.path.map(String).join('.');
-    if (issue.code === 'unrecognized_keys') {
-        const path = issue.path.filter((segment): segment is PathSegment => typeof segment !== 'symbol');
-        const known = knownKeysAt(path);
-        return issue.keys.map((key) => messages.unknownKey(where, key, known)).join('\n');
-    }
-    const shown = where === '' ? 'gspot.toml' : where;
-    return `${shown}: ${issue.message}`;
+function issueLines(path: string, issue: z.core.$ZodIssue): string[] {
+    const segments = issue.path.filter((part): part is PathSegment => typeof part !== 'symbol');
+    if (issue.code !== 'unrecognized_keys') return [problemText({ path: segments, message: issue.message }, path)];
+    const where = segments.map(String).join('.');
+    return issue.keys.map((key) => `${path}: ${messages.unknownKey(where, key)}`);
 }
 
 function validatedRaw(text: string, path: string): RawPolicy {
     const result = policySchema.safeParse(parseTomlText(text, path));
-    if (!result.success) {
-        const locations = sourceLocations(text);
-        const problems = result.error.issues.flatMap((issue) => {
-            const segments = issue.path.filter((part): part is PathSegment => typeof part !== 'symbol');
-            return issue.code === 'unrecognized_keys'
-                ? issue.keys.map(
-                      (key) =>
-                          `${path}:${policyLocation(locations, [...segments, key])}: ${issueText({ ...issue, keys: [key] })}`,
-                  )
-                : [`${path}:${policyLocation(locations, segments)}: ${issueText(issue)}`];
-        });
-        throw new GspotError('policy', problems);
-    }
+    if (!result.success)
+        throw new GspotError(
+            'policy',
+            result.error.issues.flatMap((issue) => issueLines(path, issue)),
+        );
     if (result.data.version !== 1)
         throw new GspotError('policy', [
-            `${path}:${policyLocation(sourceLocations(text), ['version'])}: ${messages.versionUnsupported(result.data.version)}`,
+            problemText({ path: ['version'], message: messages.versionUnsupported(result.data.version) }, path),
         ]);
     return result.data;
 }
 
-function completePolicy(text: string, path: string, raw: RawPolicy): Policy {
+function completePolicy(path: string, raw: RawPolicy): Policy {
     const policy = normalize(raw);
     const unknown = unknownKitProblems(policy);
-    if (unknown.length > 0) throw new GspotError('policy', problemLines(text, path, unknown));
+    if (unknown.length > 0)
+        throw new GspotError(
+            'policy',
+            unknown.map((problem) => problemText(problem, path)),
+        );
     return policy;
-}
-
-function problemLines(text: string, path: string, problems: PolicyProblem[]): string[] {
-    const locations = sourceLocations(text);
-    return problems.map((problem) => `${path}:${policyLocation(locations, problem.path)}: ${problem.message}`);
 }
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Three steps of recovery find the entry that owns a field problem; the field set is applied in one place.
@@ -103,6 +80,18 @@ function dropOwner(raw: RawPolicy, owner: PathSegment[]): void {
 }
 
 /**
+ * A policy problem as text that leads with its file, when given, and the key path it names.
+ * @param problem the problem
+ * @param file the policy file, for a line that names it
+ * @returns the text
+ */
+export function problemText(problem: PolicyProblem, file?: string): string {
+    const where = problem.path.map(String).join('.');
+    const place = [file, where].filter((part) => part !== undefined && part !== '');
+    return [...place, problem.message].join(': ');
+}
+
+/**
  * Parse TOML and retain the parser location in policy errors.
  *
  * @param text the policy text
@@ -132,12 +121,16 @@ export function parseTomlText(text: string, path: string): Record<string, unknow
 export function parsePolicyText(text: string, path: string, root?: string): Policy {
     const policy = normalize(validatedRaw(text, path));
     const problems = [...reasonProblems(policy), ...(root === undefined ? [] : pathProblems(root, policy))];
-    if (problems.length > 0) throw new GspotError('policy', problemLines(text, path, problems));
+    if (problems.length > 0)
+        throw new GspotError(
+            'policy',
+            problems.map((problem) => problemText(problem, path)),
+        );
     return policy;
 }
 
 /**
- * Reads policy for check execution. Invalid values become located findings and are excluded from the effective policy.
+ * Reads policy for check execution. Invalid values become findings and are excluded from the effective policy.
  * Syntax errors, unknown keys, and invalid document shapes throw `PolicyError`.
  *
  * @param text the file's text.
@@ -149,10 +142,10 @@ export function readPolicyText(
     text: string,
     path: string,
     root?: string,
-): { policy: Policy; problems: PolicyFinding[] } {
+): { policy: Policy; problems: PolicyProblem[] } {
     const raw = validatedRaw(text, path);
-    const complete = completePolicy(text, path, raw);
-    // One finding per wrong value: a refused reason is also a loosening without one, and the line is the same.
+    const complete = completePolicy(path, raw);
+    // One finding per wrong value: a refused reason is also a loosening without one, and the entry is the same.
     const found = [
         ...new Map(
             [
@@ -166,19 +159,24 @@ export function readPolicyText(
     if (found.length === 0) return { policy: complete, problems: [] };
     // A configurations list is settled by a root value, never by dropping the list.
     if (found.some((problem) => ownerOf(problem.path).at(-1) === 'kits'))
-        throw new GspotError('policy', problemLines(text, path, found));
-    const locations = sourceLocations(text);
-    const problems = found.map((problem) => ({ ...problem, ...policyPosition(locations, problem.path) }));
+        throw new GspotError(
+            'policy',
+            found.map((problem) => problemText(problem, path)),
+        );
     const owners = new Map(found.map((problem) => [JSON.stringify(ownerOf(problem.path)), ownerOf(problem.path)]));
     for (const owner of [...owners.values()].toSorted(byRemovalOrder)) dropOwner(raw, owner);
-    const policy = completePolicy(text, path, raw);
+    const policy = completePolicy(path, raw);
     const remaining = [
         ...reasonProblems(policy),
         ...(root === undefined ? [] : pathProblems(root, policy)),
         ...completenessProblems(policy),
     ];
-    if (remaining.length > 0) throw new GspotError('policy', problemLines(text, path, remaining));
-    return { policy, problems };
+    if (remaining.length > 0)
+        throw new GspotError(
+            'policy',
+            remaining.map((problem) => problemText(problem, path)),
+        );
+    return { policy, problems: found };
 }
 
 /**
@@ -187,10 +185,14 @@ export function readPolicyText(
  */
 export function assertPolicyComplete(source: Pick<PolicyFiles, 'policy' | 'text' | 'path'>): void {
     const unknown = unknownKitProblems(source.policy);
-    if (unknown.length > 0) throw new GspotError('policy', problemLines(source.text, source.path, unknown));
+    if (unknown.length > 0)
+        throw new GspotError(
+            'policy',
+            unknown.map((problem) => problemText(problem, source.path)),
+        );
     const problems = completenessProblems(source.policy);
     if (problems.length > 0)
-        throw new GspotError('policy', [...new Set(problemLines(source.text, source.path, problems))]);
+        throw new GspotError('policy', [...new Set(problems.map((problem) => problemText(problem, source.path)))]);
 }
 
 /**
@@ -201,9 +203,7 @@ export function assertNoProblems(files: PolicyFiles): void {
     if (files.problems.length === 0) return;
     throw new GspotError(
         'policy',
-        files.problems.map(
-            (problem) => `gspot.toml:${String(problem.line)}:${String(problem.column)}: ${problem.message}`,
-        ),
+        files.problems.map((problem) => problemText(problem, 'gspot.toml')),
     );
 }
 

@@ -59,12 +59,9 @@ stage = "commit"
 runs = "per-file-list"
 command = ["eslint", "--max-warnings", "0", "--no-warn-ignored", "--config", "{config:eslint}", "--format", "json", "{files}"]
 fix_command = ["eslint", "--fix", "--config", "{config:eslint}", "{files}"]
-fix_order = "codemod"
 findings_exit_codes = [1]
-fix_findings_exit_codes = [1]
 tool = "eslint"
 owners = {extensions = [".vue"]}
-coverage = ["style", "syntax", "structure"]
 output = {format = "eslint-json"}
 summary = "Runs ESLint with the Vue plugin over every .vue file. It reads the markup and the script together."
 why = "A component file is markup and code in one, and a plain JavaScript parser reads neither half of it."
@@ -83,14 +80,10 @@ analysis = "typescript"
 replaces = "typescript/tsc"
 needs = "typescript"
 owners = {extensions = [".vue"]}
-coverage = ["types"]
 output = {format = "regex", pattern = "^(?<file>[^(]+)\\((?<line>\\d+),(?<column>\\d+)\\): error (?<rule>TS\\d+): (?<message>.*)$"}
 summary = "Type-checks every Vue component and TypeScript file of the scope with the strict compiler options."
 why = "The TypeScript compiler cannot read a component file, so a type error inside one ships unless the Vue checker reads it."
 help = "Read the first error vue-tsc prints and fix that file; later errors are often the same mistake."
-
-[coverage]
-".vue" = ["format", "syntax", "style", "structure", "spelling"]
 
 [guides]
 framework = [{path = "framework/vue/VUE.md"}]

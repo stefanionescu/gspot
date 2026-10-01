@@ -1,42 +1,9 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { existsSync, readFileSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
-import { containingAll } from '#tests/support/expectations.ts';
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
-import type { CoverageReport } from '#cli/types/execution/execution.ts';
-
-test('doctor and list name unsupported endings and retain different coverage within one ending', async () => {
-    await using directory = await testdir();
-    const policy = policyOf(['bash'], '', 'all');
-    await createFileTree(directory.path, {
-        'gspot.toml': `${policy}\n[[ignore]]\ncheck = "bash/syntax"\npaths = ["excluded.sh"]\nreason = "The fixture exercises differing coverage within one ending."\n`,
-        'entry.sh': 'echo example\n',
-        'excluded.sh': 'echo separate\n',
-        'example.kt': 'fun main() { println("example") }\n',
-    });
-    const listed = await run(directory.path, ['list', '--json']);
-    expect(listed.code, listed.stderr).toBe(0);
-    const coverage = (JSON.parse(listed.stdout) as { coverage: CoverageReport }).coverage;
-    const doctor = await run(directory.path, ['doctor', '--json']);
-    expect((JSON.parse(doctor.stdout) as { coverage: CoverageReport }).coverage).toStrictEqual(coverage);
-    const shells = coverage.endings.filter((entry) => entry.ending === '.sh');
-    expect(shells).toHaveLength(2);
-    expect(shells.filter((entry: { kinds: string[] }) => entry.kinds.includes('syntax'))).toHaveLength(1);
-    expect(coverage.endings).toContainEqual({ ending: '.kt', scope: '', files: 1, kinds: [] });
-    const text = await run(directory.path, ['list']);
-    expect(text.stdout).toContain('.kt  [scope root]  1 file  no format, syntax, style, or types check');
-    const doctorText = await run(directory.path, ['doctor']);
-    expect(doctorText.stdout).toContain('.kt  [scope root]  1 file  no format, syntax, style, or types check');
-    writeFileSync(join(directory.path, 'gspot.toml'), policy);
-    const corrected = await run(directory.path, ['list', '--json']);
-    expect(
-        (JSON.parse(corrected.stdout) as { coverage: CoverageReport }).coverage.endings.filter(
-            (entry) => entry.ending === '.sh',
-        ),
-    ).toStrictEqual([{ ending: '.sh', scope: '', files: 2, kinds: containingAll(['syntax']) }]);
-});
 
 test('list shows selected policy states, detected kits, and setting values without writing', async () => {
     await using directory = await testdir();

@@ -85,8 +85,6 @@ const checkFields = z.strictObject({
     file_prefix: z.string().optional(),
     env: z.record(z.string(), z.string()).optional(),
     fix_command: commandSchema.optional(),
-    fix_order: z.enum(['codemod', 'imports', 'manifest', 'format']).optional(),
-    fix_findings_exit_codes: findingExitCodesSchema.optional(),
     findings_exit_codes: findingExitCodesSchema.optional(),
     engine: z.enum(['integrity', 'naming', 'structure', 'prose']).optional(),
     analysis: z.string().optional(),
@@ -112,7 +110,6 @@ const checkFields = z.strictObject({
         .regex(/^[A-Za-z0-9_.-]+$/u)
         .optional(),
     exclude_setting: z.string().optional(),
-    coverage: stringList,
     summary: sentence,
     example: z.string().trim().min(1),
     why: sentence,
@@ -254,7 +251,6 @@ export const manifestSchema = z.strictObject({
     naming: z.strictObject({ rules: z.array(manifestNamingRule).default([]) }).optional(),
     // Files a dead-code scan starts from, relative to the scope, for the code this configuration knows.
     entry_files: stringList,
-    coverage: stringListTable.default({}),
     guides: z
         .record(
             z.string(),

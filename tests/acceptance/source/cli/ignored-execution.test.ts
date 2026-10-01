@@ -26,7 +26,7 @@ test('a global ignore stops a repository check and its correction command until 
     const fix = ['bash', '-c', 'printf corrected > corrected.txt'];
     const policy = policyOf(
         [],
-        `[guides]\ninstall = false\n[[check]]\nname = "project/quality"\ncommand = ${JSON.stringify(command)}\nfix_command = ${JSON.stringify(fix)}\nfix_order = "codemod"\npaths = ["entry.sh"]\nstage = "commit"\n`,
+        `[guides]\ninstall = false\n[[check]]\nname = "project/quality"\ncommand = ${JSON.stringify(command)}\nfix_command = ${JSON.stringify(fix)}\npaths = ["entry.sh"]\nstage = "commit"\n`,
     );
     await createFileTree(directory.path, { 'gspot.toml': policy, 'entry.sh': 'echo example\n' });
     const args = ['check', '--only', 'project/quality', '--json'];
@@ -41,7 +41,6 @@ test('a global ignore stops a repository check and its correction command until 
     const report = JSON.parse(skipped.stdout) as RunReport;
     expect(report.checks[0]).toMatchObject({ check: 'project/quality', status: 'skipped', findings: [] });
     expect(report.skips).toStrictEqual([{ check: 'project/quality', source: 'ignore' }]);
-    expect(report.coverage.checked).toBe(0);
     expect(report.ignores).toStrictEqual([{ check: 'project/quality', matched: 0 }]);
     expect(existsSync(join(directory.path, 'read.txt'))).toBe(false);
     expect(existsSync(join(directory.path, 'corrected.txt'))).toBe(false);
@@ -169,7 +168,7 @@ test('path-specific ignores prevent checker and fixer execution and report an en
     await using directory = await testdir();
     const policy = policyOf(
         [],
-        `[guides]\ninstall = false\n[[check]]\nname = "project/quality"\ncommand = ${JSON.stringify(QUALITY_COMMAND)}\nfix_command = ${JSON.stringify(QUALITY_FIX)}\nfix_order = "codemod"\npaths = ["inputs/**"]\nstage = "commit"\n[[ignore]]\ncheck = "project/quality"\npaths = ["inputs/skip*", "!inputs/skip-keep.txt"]\n`,
+        `[guides]\ninstall = false\n[[check]]\nname = "project/quality"\ncommand = ${JSON.stringify(QUALITY_COMMAND)}\nfix_command = ${JSON.stringify(QUALITY_FIX)}\npaths = ["inputs/**"]\nstage = "commit"\n[[ignore]]\ncheck = "project/quality"\npaths = ["inputs/skip*", "!inputs/skip-keep.txt"]\n`,
     );
     await createFileTree(directory.path, {
         'gspot.toml': policy,
@@ -182,12 +181,13 @@ test('path-specific ignores prevent checker and fixer execution and report an en
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     const report = JSON.parse(corrected.stdout) as RunReport;
     expect(report.checks[0]).toMatchObject({ status: 'ok', files: 2, findings: [] });
+    // A second correction pass reruns the fixer over the files the first pass changed.
     for (const log of ['checked.txt', 'fixed.txt'])
-        expect(
-            (JSON.parse(readFileSync(join(directory.path, log), 'utf8').trim()) as string[]).toSorted((left, right) =>
-                left.localeCompare(right),
-            ),
-        ).toStrictEqual(['inputs/regular.txt', 'inputs/skip-keep.txt']);
+        for (const line of readFileSync(join(directory.path, log), 'utf8').trim().split('\n'))
+            expect((JSON.parse(line) as string[]).toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
+                'inputs/regular.txt',
+                'inputs/skip-keep.txt',
+            ]);
     expect(readFileSync(join(directory.path, 'inputs/skip café.txt'), 'utf8')).toBe('defect\n');
     const checked = readFileSync(join(directory.path, 'checked.txt'), 'utf8');
     const fixed = readFileSync(join(directory.path, 'fixed.txt'), 'utf8');
@@ -196,7 +196,6 @@ test('path-specific ignores prevent checker and fixer execution and report an en
     const skippedReport = JSON.parse(skipped.stdout) as RunReport;
     expect(skippedReport.skips).toStrictEqual([{ check: 'project/quality', source: 'ignore' }]);
     expect(skippedReport.checks[0]).toMatchObject({ status: 'skipped', findings: [] });
-    expect(skippedReport.coverage.checked).toBe(0);
     expect(readFileSync(join(directory.path, 'checked.txt'), 'utf8')).toBe(checked);
     expect(readFileSync(join(directory.path, 'fixed.txt'), 'utf8')).toBe(fixed);
     const restored = await run(directory.path, [

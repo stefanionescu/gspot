@@ -8,7 +8,7 @@ import { applyAll } from '#cli/commands/apply/workflow.ts';
 import { rejection, textContaining } from '#tests/support/expectations.ts';
 import { BROKEN, CORRECTED, POLICY_FINDINGS_OPTIONS } from '#tests/inputs/integration/cli/execution/execution.ts';
 
-test('a wrong line in gspot.toml is a finding of integrity/policy, and the other checks still run', async () => {
+test('a wrong entry in gspot.toml is a finding of integrity/policy, and the other checks still run', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': BROKEN,
@@ -22,7 +22,7 @@ test('a wrong line in gspot.toml is a finding of integrity/policy, and the other
         ['integrity/policy', 'fail'],
     ]);
     expect(broken.report.checks[1]!.findings).toMatchObject([
-        { file: 'gspot.toml', line: 5, column: 1, message: textContaining('needs a reason') },
+        { file: 'gspot.toml', message: textContaining('ignore.0.reason: [[ignore]] entry 1') },
     ]);
     expect(broken.report.failed).toContain('integrity/policy');
     writeFileSync(join(sandbox.path, 'gspot.toml'), CORRECTED);
@@ -30,9 +30,9 @@ test('a wrong line in gspot.toml is a finding of integrity/policy, and the other
     expect(corrected.report.checks.map((check) => check.check)).toStrictEqual(['swift/trivial-function']);
 });
 
-test('apply refuses a policy with a wrong line, because it writes from the policy', async () => {
+test('apply refuses a policy with a wrong entry, because it writes from the policy', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': BROKEN, '.gitignore': '.gspot/\n' });
     const session = await openSession(sandbox.path);
-    expect(await rejection(applyAll(session))).toContain('gspot.toml:5:1');
+    expect(await rejection(applyAll(session))).toContain('gspot.toml: ignore.0.reason:');
 });

@@ -17,45 +17,34 @@ describe('the JSON schema of gspot.toml', () => {
 });
 
 test.each([
-    { codes: [2], command: true, valid: true },
-    { codes: [0], command: true, valid: false },
-    { codes: [256], command: true, valid: false },
-    { codes: ['2'], command: true, valid: false },
-    { codes: [2], command: false, valid: false },
-])(
-    'correction finding codes $codes require valid process codes and a correction command',
-    ({ codes, command, valid }) => {
-        const validate = new Ajv2020({ strict: false }).compile(policyJsonSchema());
-        const input = {
-            version: 1,
-            check: [
-                {
-                    name: 'project/lint',
-                    command: ['checker'],
-                    paths: ['src/**'],
-                    stage: 'commit',
-                    fix_order: 'codemod',
-                    fix_findings_exit_codes: codes,
-                    ...(command ? { fix_command: ['checker', '--fix'] } : {}),
-                },
-            ],
-        };
-        expect(policySchema.safeParse(input).success).toBe(valid);
-        expect(validate(input)).toBe(valid);
-    },
-);
+    { codes: [2], valid: true },
+    { codes: [0], valid: false },
+    { codes: [256], valid: false },
+    { codes: ['2'], valid: false },
+])('finding codes $codes require valid process codes', ({ codes, valid }) => {
+    const validate = new Ajv2020({ strict: false }).compile(policyJsonSchema());
+    const input = {
+        version: 1,
+        check: [
+            {
+                name: 'project/lint',
+                command: ['checker'],
+                paths: ['src/**'],
+                stage: 'commit',
+                findings_exit_codes: codes,
+            },
+        ],
+    };
+    expect(policySchema.safeParse(input).success).toBe(valid);
+    expect(validate(input)).toBe(valid);
+});
 
-test('the published schema accepts a check and requires ordering for its correction command', () => {
+test('the published schema accepts a check with and without its correction command', () => {
     const validate = new Ajv2020({ strict: false }).compile(policyJsonSchema());
     const check = { name: 'project/lint', command: ['lint'], paths: ['src/**'], stage: 'commit' };
     expect(validate({ version: 1, check: [check] })).toBe(true);
-    expect(validate({ version: 1, check: [{ ...check, fix_command: ['lint', '--fix'] }] })).toBe(false);
-    expect(validate({ version: 1, check: [{ ...check, fix_command: ['lint', '--fix'], fix_order: 'format' }] })).toBe(
-        true,
-    );
-    expect(validate({ version: 1, check: [{ ...check, fix_command: ['lint', '--fix'], fix_order: 'unknown' }] })).toBe(
-        false,
-    );
+    expect(validate({ version: 1, check: [{ ...check, fix_command: ['lint', '--fix'] }] })).toBe(true);
+    expect(validate({ version: 1, check: [{ ...check, fix_order: 'format' }] })).toBe(false);
 });
 
 test.each([{ command: [] }, { command: [''] }, { command: ['tool'] }, { command: ['tool', ''] }])(

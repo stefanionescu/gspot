@@ -45,7 +45,7 @@ function ownershipRows(summary: DetectionSummary): string[] {
 }
 
 /**
- * The detection header: tracked files, what each kit kind was found from, scopes, tooling, and what has no configuration.
+ * The detection header: tracked files, what each kit kind was found from, scopes, and tooling.
  * @param summary what init detected
  * @returns the text, ending with a blank line when tooling was found
  */
@@ -73,10 +73,6 @@ export function detectionText(summary: DetectionSummary): string {
             : ['no git repository: the hooks and the configurations that read git stay out until git init runs']),
         '',
         ...rows,
-        ...summary.unknown.map(
-            (entry) =>
-                `${'no configuration'.padEnd(DETECTION_LABEL_WIDTH)} ${entry.language}: ${String(entry.count)} files unchecked`,
-        ),
         '',
         ...ownershipRows(summary),
     ].join('\n');

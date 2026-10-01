@@ -1,5 +1,4 @@
 // The literal values execution reads: names, patterns, limits, and tables.
-import type { FixOrder } from '#cli/types/kits.ts';
 
 export const WINDOWS_COMMAND_LIMIT = 7000;
 export const UNIX_COMMAND_LIMIT = 100_000;
@@ -11,11 +10,10 @@ export const WORKSPACE_PREFIX = '{workspace:';
 export const SETTING_PLACEHOLDER = /\{setting:(?<name>[a-z\d_.-]+)\}/gu;
 export const EXISTING_PLACEHOLDER = /^\{existing:(?<flag>[^:]+):(?<path>[^}]+)\}$/u;
 export const EACH_PLACEHOLDER = /^\{each:(?<flag>[^:]+):(?<setting>[a-z0-9_.-]+)\}$/u;
-export const FIX_ORDER: FixOrder[] = ['codemod', 'imports', 'manifest', 'format'];
+export const FIX_PASSES = 3;
 export const FIX_DIFF_CONTEXT = 3;
 export const RAN_STATUSES = new Set(['ok', 'fail']);
 export const FILES_PLACEHOLDER = '{files}';
-export const SOURCE_COVERAGE_KINDS = new Set(['format', 'syntax', 'style', 'types']);
 export const FAILED_STATUSES = new Set(['fail', 'missing', 'error']);
 export const DOCKER = { name: 'docker', provider: 'host' as const, installers: {} };
 /** The comment syntax of each source extension, which the suppression check reads. */

@@ -41,7 +41,6 @@ engine = "integrity"
 analysis = "jest-coverage"
 owners = {extensions = [".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"]}
 tool = "jest"
-coverage = ["coverage"]
 summary = "Runs Jest in a disposable source copy and checks all four coverage floors."
 why = "Coverage floors expose untested source without changing working-tree build or report files."
 help = "Correct failed tests and cover the reported branches, functions, lines, and statements."

@@ -36,7 +36,6 @@ engine = "integrity"
 analysis = "openapi-lint"
 tool = "spectral"
 owners = {extensions = [".yaml", ".yml", ".json"]}
-coverage = ["style"]
 summary = "Lints the OpenAPI document named in tools.openapi.document with the Spectral OpenAPI rules."
 why = "Clients are written from this document, so an operation with no id or an undefined response becomes somebody's broken client."
 help = "Change the document the way the rule says, or the code that writes it."
@@ -50,7 +49,6 @@ stage = "push"
 runs = "once"
 engine = "integrity"
 analysis = "openapi-fresh"
-coverage = ["consistency"]
 summary = "Runs the command in tools.openapi.produced_by and fails when it changes the document."
 why = "A committed document that lags the routes describes a service that does not exist."
 help = "Run the command and commit the document it writes."

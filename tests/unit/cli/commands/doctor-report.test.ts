@@ -12,7 +12,6 @@ const report: DoctorReport = {
         { name: 'fourth', state: 'host', found: '123.456.789', path: '/tools/fourth' },
     ],
     submodules: [],
-    coverage: { endings: [], unchecked: [], partial: [], checked: 0 },
     changes: {
         detectedNotSelected: [],
         recommendedNotSelected: [],

@@ -11,8 +11,10 @@ import { mkdirSync, existsSync, readdirSync, symlinkSync, realpathSync } from 'n
 export const onPosix = process.platform !== 'win32';
 /** Whether the macOS toolchain is at hand: plutil, xcodebuild, and the Swift compiler. */
 export const onMac = process.platform === 'darwin';
-/** Whether the Linux-only services of the tests, such as Docker journeys, are at hand. */
-export const onLinux = process.platform === 'linux';
+/** Whether a Docker daemon answers and runs Linux containers: the Linux runners, or a machine with Docker running. */
+export const hasLinuxDocker =
+    Bun.which('docker') !== null &&
+    Bun.spawnSync(['docker', 'info', '--format', '{{.OSType}}']).stdout.toString().trim() === 'linux';
 
 /**
  * Whether the pinned tool has a build for this machine.

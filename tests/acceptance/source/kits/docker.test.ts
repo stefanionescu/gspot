@@ -24,8 +24,7 @@ plantedCases(
     [
         {
             check: 'docker/compose-config',
-            // The macOS runners have no Docker, and the Windows runner has no Linux containers.
-            platforms: ['linux'],
+            docker: true,
             files: { 'api/compose.yml': 'services:\n    api:\n        image: example/image\n        bogus: true\n' },
             expected: { file: 'api/compose.yml', message: textContaining('bogus') },
         },

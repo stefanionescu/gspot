@@ -8,6 +8,8 @@ export type FindingCase = PlantedInput & {
     corrected?: Correction;
     /** The platforms the case runs on; every platform unless the tool has no build elsewhere. */
     platforms?: NodeJS.Platform[];
+    /** Whether the case needs a Docker daemon that runs Linux containers. */
+    docker?: true;
 };
 /** What the clean rerun of a planted case plants: corrected files, and the case's policy unless it names another. */
 export type Correction = {

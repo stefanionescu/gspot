@@ -2,7 +2,6 @@
 import type { ChangeKey } from '#cli/types/commands.ts';
 
 export const COLUMN_WIDTHS = { label: 9, path: 40, name: 34, note: 30 } as const;
-export const DISPLAY_LIMITS = { paths: 4, partial: 8 } as const;
 
 export const VERSION_GAP = 4;
 

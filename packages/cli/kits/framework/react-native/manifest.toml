@@ -72,7 +72,6 @@ runs = "per-scope"
 engine = "integrity"
 analysis = "expo-doctor"
 requires = "network"
-coverage = ["dependencies"]
 summary = "Runs Expo Doctor in a scope that depends on expo, and reports each check it fails."
 why = "A native package on the wrong version for the Expo SDK builds and then crashes on the device."
 help = "Read the issues and advice Expo Doctor prints for the failed check, then run npx expo install --check."

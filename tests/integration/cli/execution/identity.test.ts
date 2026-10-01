@@ -33,7 +33,6 @@ test('a check keeps its name in the report and in its findings', async () => {
     expect(session.policyFiles.policy.checks[0]?.name).toBe('sandbox/identity');
     expect(outcome.report.checks[0]?.check).toBe('sandbox/identity');
     expect(outcome.report.checks[0]?.findings[0]?.check).toBe('sandbox/identity');
-    expect(outcome.report.coverage).toStrictEqual({ checked: 1, unchecked: 1, findings: [] });
 });
 
 test('counted failures survive final filtering without diagnostic locations', async () => {

@@ -100,14 +100,13 @@ tool that works this way.
 
 ## Add a correction command
 
-To let `gspot check --fix` correct the findings, set `fix_command` to a list of arguments, and
-`fix_order` to `codemod`, `imports`, `manifest`, or `format`. `--fix` runs the corrections in
-that order, then runs the checks again. The corrections change your working tree, not the
-staging area.
+To let `gspot check --fix` correct the findings, set `fix_command` to a list of arguments.
+`--fix` runs every correction, then runs them again on the files that changed, so a formatter
+sees what a codemod wrote. Then it runs the checks again. The corrections change your working
+tree, not the staging area.
 
-When the correction tool exits with a code for remaining findings, list it in
-`fix_findings_exit_codes`, such as `[1]`. gspot then checks the corrected files again. Other
-nonzero exits count as a failed run.
+A correction that exits with one of the check's `findings_exit_codes` left findings in place.
+Other nonzero exits count as a failed run.
 
 When a tool uses its findings exit code for crashes too, set `tool_errors` to a regular
 expression that matches its crash messages. A match counts as a failed run, whatever the exit

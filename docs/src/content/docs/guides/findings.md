@@ -76,16 +76,3 @@ At the end of a run, gspot prints the failed, missing, errored, and skipped chec
 counts and the time. A skipped check did not run, so it does not count as passed. The report
 labels an interrupted run `incomplete`. Scripts and CI can read the same report as one JSON
 object from `gspot check --json`.
-
-## Files no check reads
-
-`gspot doctor` lists the source files that no enabled check reads, grouped by file ending and
-scope. For each ending it shows which kinds of checks run on it: format, syntax, style, and
-types. Binary, generated, and vendored files do not count.
-
-To fail the run when any source file goes unchecked, set this in `gspot.toml`:
-
-```toml
-[coverage]
-strict = true
-```

@@ -61,12 +61,9 @@ stage = "commit"
 runs = "per-file-list"
 command = ["eslint", "--max-warnings", "0", "--no-warn-ignored", "--config", "{config:eslint}", "--format", "json", "{files}"]
 fix_command = ["eslint", "--fix", "--config", "{config:eslint}", "{files}"]
-fix_order = "codemod"
 findings_exit_codes = [1]
-fix_findings_exit_codes = [1]
 tool = "eslint"
 owners = {extensions = [".svelte"]}
-coverage = ["style", "syntax", "structure"]
 output = {format = "eslint-json"}
 summary = "Runs ESLint with the Svelte plugin over every .svelte file. It reads the markup and the script together."
 why = "A component file is markup and code in one, and a plain JavaScript parser reads neither half of it."
@@ -83,13 +80,9 @@ engine = "integrity"
 analysis = "svelte-check"
 replaces = "typescript/tsc"
 owners = {extensions = [".svelte"]}
-coverage = ["types", "syntax"]
 summary = "Runs svelte-check over the scope: the warnings of the Svelte compiler, its accessibility warnings, and the types of every component and TypeScript file."
 why = "The TypeScript compiler cannot read a component file, and the Svelte compiler warns about markup that no browser reports."
 help = "Read the warning or error svelte-check prints for the file and fix it there; a warning fails the check as an error does."
-
-[coverage]
-".svelte" = ["format", "syntax", "style", "structure", "spelling"]
 
 [guides]
 framework = [{path = "framework/svelte/SVELTE.md"}]

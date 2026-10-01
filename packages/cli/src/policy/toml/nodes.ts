@@ -54,15 +54,6 @@ export function isComment(node: Kinded): node is Extract<TomlBlock, { type: 'Com
 }
 
 /**
- * Identify an array-of-tables header.
- * @param node the syntax node
- * @returns whether the node opens an array of tables
- */
-export function isTableArray(node: Kinded): node is Extract<TomlBlock, { type: 'TableArray' }> {
-    return kindOf(node) === 'TableArray';
-}
-
-/**
  * Identify an inline table.
  * @param node the syntax node
  * @returns whether the node is an inline table

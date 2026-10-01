@@ -20,8 +20,6 @@ export type RunReport = {
     checks: CheckResult[];
     ignores: { check: string; rule?: string; paths?: string[]; reason?: string; matched: number }[];
     skips: { check: string; source: 'flag' | 'platform' | 'rules' | 'ignore' }[];
-    /** Source files analyzed by checks that ran, supported files no enabled check reads, and coverage findings. */
-    coverage: { checked: number; unchecked: number; findings: Finding[] };
     unstaged: number;
     narrowed: boolean;
     failed: string[];
@@ -68,12 +66,6 @@ export type PreparedCommand = {
     argv: string[];
     commands: ToolInvocation[];
     env: Record<string, string>;
-};
-export type CoverageReport = {
-    endings: { ending: string; scope: string; files: number; kinds: string[] }[];
-    unchecked: { path: string; reason: string; remedy?: string }[];
-    partial: { path: string; missing: string[] }[];
-    checked: number;
 };
 export type Session = ToolSearch & {
     reads: SourceReads;

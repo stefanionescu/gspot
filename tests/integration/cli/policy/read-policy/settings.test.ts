@@ -31,11 +31,10 @@ test('parsePolicyText > normalizes per-language naming tables and categories', (
     );
 });
 
-test('parsePolicyText > an unknown key names the keys that exist under that table', () => {
+test('parsePolicyText > an unknown key names its table', () => {
     const found = policyProblems(`${MINIMAL_POLICY}[hooks]\npush = "all"\npsh = "all"\n`);
     expect(found).toHaveLength(1);
     expect(found[0]).toContain('`psh` is not a setting gspot knows under [hooks]');
-    expect(found[0]).toContain('`push`');
 });
 
 test('parsePolicyText > an unknown top-level key is refused', () => {
@@ -81,7 +80,7 @@ test('parsePolicyText > nested scopes are accepted and a missing scope is refuse
     const found = policyProblems(text, sandbox.path);
     expect(found.some((problem) => problem.includes('`missing` names a directory that does not exist'))).toBe(true);
     expect(found).toHaveLength(1);
-    expect(found[0]).toStartWith('gspot.toml:8:');
+    expect(found[0]).toStartWith('gspot.toml: scope.2');
     mkdirSync(join(sandbox.path, 'missing'));
     expect(policyProblems(text, sandbox.path)).toStrictEqual([]);
 });
@@ -116,21 +115,19 @@ paths = ["source.txt"]
 stage = "commit"
 `;
 
-    test('keeps advice separate from the correction command and its ordering', () => {
+    test('keeps advice separate from the correction command', () => {
         const policy = parsePolicyText(
             `${check}help = "Review the tool output."
 fix_command = ["tool", "correct"]
-fix_order = "imports"
 `,
             'gspot.toml',
         );
         expect(policy.checks[0]?.help).toBe('Review the tool output.');
         expect(policy.checks[0]?.fix_command).toStrictEqual(['tool', 'correct']);
-        expect(policy.checks[0]?.fix_order).toBe('imports');
     });
 
-    test('refuses incomplete executable corrections', () => {
-        expect(policyProblems(`${check}fix_command = ["tool"]`)[0]).toContain('fix_order');
-        expect(policyProblems(`${check}fix_command = []\nfix_order = "format"`)).not.toStrictEqual([]);
+    test('refuses an empty correction command', () => {
+        expect(policyProblems(`${check}fix_command = []`)).not.toStrictEqual([]);
+        expect(policyProblems(`${check}fix_command = ["tool"]`)).toStrictEqual([]);
     });
 });
