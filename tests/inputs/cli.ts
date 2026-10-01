@@ -41,5 +41,7 @@ export const NESTED =
 export const HEAD =
     '#!/usr/bin/env bash\n#\n# Builds the thing.\n# Runtime: Bash 4.4+, macOS and Linux.\nset -euo pipefail\nshopt -s inherit_errexit\n\n';
 export const BASH_CASES_MAIN = '# main: runs the script.\nmain() {\n    echo "hello $1"\n}\n\nmain "$@"\n';
+/** How much longer every tool limit is on Windows, where sandbox installs and tool runs take several times as long. */
+export const WINDOWS_SLOWDOWN = process.platform === 'win32' ? 2 : 1;
 /** How long a planted-repository test may take: it spawns real tools. */
-export const PLANTED_TIMEOUT_MS = 60_000;
+export const PLANTED_TIMEOUT_MS = 60_000 * WINDOWS_SLOWDOWN;
