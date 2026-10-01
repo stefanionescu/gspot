@@ -18,14 +18,12 @@ approved it on October 1, 2026.
 
 ### Where things stand on October 1, 2026
 
-- `main` is at `257c972b`. Stages 1 to 6 are merged as pull requests #2 to #7.
-- Stage 7 is pull request #8, branch `refactor/agents-md-only`. The branch also deletes the `architecture` folder, a
-  part of stage 15, and adds these notes. Merge it with a merge commit once every CI job passes, then watch the run on
-  `main`.
-- Stage 7 passed `mise run check:types`, `mise run gspot -- check`, which runs the unit and integration suites, and
-  `tests/acceptance/source/cli/agents.test.ts`. Still to run for stage 7: the other acceptance files,
-  `mise run test:tools`, and `mise run test:package`.
-- The next stage to start is stage 8.
+- `main` is at `39133e66`. Stages 1 to 7 are merged as pull requests #2 to #8. Stage 7 also deleted the
+  `architecture` folder, a part of stage 15.
+- Pull request #9 updates `devalue` to 5.9.4. Seven advisories published on October 1 fail `dependencies/osv`, which
+  runs at the push stage and in the CI `check` job, so `main` fails that job until #9 merges.
+- Stage 8 is pull request #10, branch `refactor/cut-unit-integration-tests`, rebased onto `main` once #9 merges.
+- The next stage to start is stage 9.
 
 ### Stages
 
@@ -39,8 +37,8 @@ One pull request per stage, in this order. Each merges with a merge commit only 
 | 4     | Delete the result cache and inline ignores             | 5.1; the Ruby grammar; `--no-cache` in the tests                                                        | merged, #5             |
 | 5     | Delete the init extras and the startup manifest check  | adaptations 2 and 4                                                                                     | merged, #6             |
 | 6     | Delete source positions, coverage, and fix settings    | adaptations 3 and 5; `fix_order` and `fix_findings_exit_codes`                                          | merged, #7             |
-| 7     | Write the agent block only into `AGENTS.md`            | the `CLAUDE.md` decision; the Cursor rule                                                               | pull request #8        |
-| 8     | Cut unit and CLI integration tests                     | D.2 rows that delete, trim, and merge within one tier                                                   | not started            |
+| 7     | Write the agent block only into `AGENTS.md`            | the `CLAUDE.md` decision; the Cursor rule                                                               | merged, #8             |
+| 8     | Cut unit and CLI integration tests                     | D.2 rows that delete, trim, and merge within one tier                                                   | pull request #10       |
 | 9     | Cut tool, docs, and repository tests                   | D.3 rows; drop `test:docs` and those folders from `test`                                                | not started            |
 | 10    | Cut command acceptance and package tests               | D.4 rows; pins move to a scheduled `pins.yml`                                                           | not started            |
 | 11    | Cut kit acceptance tests                               | D.4 kit rows; find why `documents.test.ts` does not run on Linux                                        | not started            |
@@ -161,6 +159,22 @@ The owner and the work settled these while implementing:
 
 ### Open items
 
+- Stage 8 cut the D.2 rows whose reason holds while the code stays. A test leaves with the code it tests, so these
+  D.2 rows wait for the stage that deletes that code:
+    - stage 12: the tests of the three dead plugin rules, `checks/async-functions`, the import-cycle case in
+      `checks/python/imports`, the dead rule in `generation/framework-rules`, and the `appendEntry` cases in
+      `policy/write`.
+    - stage 13: the rewrites of `env-access-owner`, `import-direction`, and `tests-directory-contents`, the harness
+      rows of `execution/structure`, and the shipped banned-word loop in `checks/naming/validate-name`.
+    - stage 14: `agents/examples`, `agents/front-matter`, `agents/lint`, and the linter case in `agents/sections`.
+    - stage 23: every "move" and "rewrite" verdict, the CLI spawns that become in-process calls, and the process case
+      in `sql-parser`.
+    - stage 27: the cache-home case in `checks/swift/cache`.
+- Stages 2 to 7 already removed the D.2 cases about the cache status, the census, inline ignores, reports, uninstall,
+  and byte backups. `output/progress`, `output/reporter`, `comment-syntax`, `suppression-comments`, `hooks`, `kinds`,
+  `gitlinks`, `bun`, and most ownership files needed no further cut.
+- After a checkout rewrites a read-only generated file with mode 0644, `apply` refuses it as edited although the bytes
+  match. Until stage 27 fixes that, `chmod 0444` the files it names and rerun `mise run apply`.
 - Stage 1 left the two empty scopes, `packages/cli` and `packages/eslint-plugin`, in `gspot.toml`. Delete them with
   adaptation 7 in the next stage that touches the policy.
 - Bugs for stage 27:
