@@ -18,10 +18,9 @@ approved it on October 1, 2026.
 
 ### Where things stand on October 1, 2026
 
-- `main` is at `599ea82e`. Stages 1 to 9 are merged as pull requests #2 to #8, #10, and #11. Stage 7 also deleted the
-  `architecture` folder, a part of stage 15.
+- `main` is at `94c41578`. Stages 1 to 10 are merged as pull requests #2 to #8 and #10 to #12. Stage 7 also deleted
+  the `architecture` folder, a part of stage 15.
 - Pull request #9 updated `devalue` to 5.9.4 for seven advisories that `dependencies/osv` reported on October 1.
-- Stage 10 is pull request #12, branch `refactor/cut-command-acceptance-tests`.
 - Stage 11 is pull request #13, branch `refactor/cut-kit-acceptance-tests`.
 - The next stage to start is stage 12.
 
@@ -40,7 +39,7 @@ One pull request per stage, in this order. Each merges with a merge commit only 
 | 7     | Write the agent block only into `AGENTS.md`            | the `CLAUDE.md` decision; the Cursor rule                                                               | merged, #8             |
 | 8     | Cut unit and CLI integration tests                     | D.2 rows that delete, trim, and merge within one tier                                                   | merged, #10            |
 | 9     | Cut tool, docs, and repository tests                   | D.3 rows; drop `test:docs` and those folders from `test`                                                | merged, #11            |
-| 10    | Cut command acceptance and package tests               | D.4 rows; pins move to a scheduled `pins.yml`                                                           | pull request #12       |
+| 10    | Cut command acceptance and package tests               | D.4 rows; pins move to a scheduled `pins.yml`                                                           | merged, #12            |
 | 11    | Cut kit acceptance tests                               | D.4 kit rows; find why `documents.test.ts` does not run on Linux                                        | pull request #13       |
 | 12    | Delete repeated checks, dead rules, and dead code      | 5.3, 5.4, 5.7, including `version = 1` and its gate                                                     | not started            |
 | 13    | Ship no defaults written for this repository           | 5.5; `architecture.roles.harness` with no default; this repository sets its own roles                   | not started            |
@@ -215,6 +214,8 @@ The owner and the work settled these while implementing:
       match the record.
     - `--only <checks...>` keeps reading after a global `--json`, so `check --only X --json file` takes the file as a
       check name.
+- The stdin case of `acceptance/source/cli/cancellation` writes its ready marker before the SIGTERM handler is
+  attached, so a slow runner can kill the process with 143. Fix the test in stage 24.
 - The pyjwt advisory ignores expire on October 13 and 15, 2026. Renew them with `gspot ignore` in the open pull
   request, or replace them with the transitive constraints of stage 27 once semgrep allows a fixed pyjwt.
 - The quarantine list: 51 acceptance files skip on Windows (`WINDOWS_PENDING` in `tests/support/acceptance.ts`) until
