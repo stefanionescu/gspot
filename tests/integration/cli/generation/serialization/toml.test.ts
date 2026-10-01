@@ -64,7 +64,6 @@ test('profile spelling values use the same TOML emission path', async () => {
         isDryRun: true,
         json: true,
         install: false,
-        allowDirty: true,
         hooks: 'none',
         ci: 'none',
         runner: 'none',

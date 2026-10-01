@@ -12,7 +12,6 @@ import { proposeText } from '#cli/commands/init/propose.ts';
 import { readManifests } from '#cli/repository/manifests.ts';
 import { detectionText } from '#cli/commands/init/detection.ts';
 import { selectForInit } from '#cli/commands/init/selection.ts';
-import { detectedSettings } from '#cli/commands/init/settings.ts';
 import { plan, buildInitPlan } from '#cli/commands/init/plan/build.ts';
 import { replacedConfiguration } from '#cli/commands/init/replaced.ts';
 import { askKits, askInitQuestions } from '#cli/commands/init/questions.ts';
@@ -22,7 +21,7 @@ import type { TomlTable, ExistingTooling } from '#cli/types/repository/repositor
 import type { Planning, InitInputs, InitOptions, InitPrepared, InitSelection } from '#cli/types/commands.ts';
 
 function assertCleanTree(root: string, options: InitOptions): void {
-    if (options.allowDirty || options.isDryRun) return;
+    if (options.isDryRun) return;
     const status = runBlocking(['git', 'status', '--porcelain'], { cwd: root });
     if (status.code !== 0) throw new Error(`Git status failed (exit ${String(status.code)}): ${status.stderr.trim()}`);
     const changed = status.stdout.split('\n').filter((line) => line.trim() !== '');
@@ -99,8 +98,7 @@ export async function prepare(root: string, options: InitOptions): Promise<InitP
         .map((id) => manifests.get(id))
         .filter((manifest) => manifest !== undefined);
     const planning: Planning = { root, options, tooling, selection, everySelected, answers, replaced };
-    const settings = detectedSettings(everySelected, fields, repo.files);
-    const proposed = plan(root, selection, answers, settings);
+    const proposed = plan(selection, answers);
     const { policyText, policy } = policyTextFor(planning, proposed);
     return {
         plan: buildInitPlan(planning, policy, policyText),

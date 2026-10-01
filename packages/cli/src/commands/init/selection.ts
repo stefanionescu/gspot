@@ -1,11 +1,11 @@
 import { detectKits } from '#cli/kits/detect.ts';
+import { selectKits } from '#cli/kits/select.ts';
 import { similar } from '#cli/policy/similar.ts';
 import type { Manifest } from '#cli/types/kits.ts';
 import * as messages from '#cli/policy/messages.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { NO_KITS } from '#cli/config/commands/init.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
-import { selectKits, requireChain } from '#cli/kits/select.ts';
 import type { ScopeEntry } from '#cli/types/repository/repository.ts';
 import type { KitReason, InitInputs, InitDetection, InitSelection } from '#cli/types/commands.ts';
 
@@ -43,21 +43,20 @@ function initScopes(root: string, workspace: ScopeEntry[], scopeFlags: Map<strin
     return scopes;
 }
 
-function getCandidate(context: InitDetection, configuration: string, without: Set<string>): Manifest | undefined {
+function getCandidate(context: InitDetection, configuration: string): Manifest | undefined {
     const manifest = context.manifests.get(configuration);
-    if (!manifest || without.has(configuration)) return undefined;
+    if (!manifest) return undefined;
     if (manifest.kit.needs_git && !context.hasGit) return undefined;
     if (manifest.kit.proposed && !context.options.yes) return undefined;
     return manifest;
 }
 
 function rootSelection(context: InitDetection, rootPlans: { kit: string }[], hasScopes: boolean): string[] {
-    const without = new Set(context.options.without);
-    const named = context.options.kits?.filter((id) => id !== NO_KITS && !without.has(id));
+    const named = context.options.kits?.filter((id) => id !== NO_KITS);
     if (named && context.options.profile?.tables.selection !== 'detect') return named;
     const detected = rootPlans
         .filter((plan) => {
-            const manifest = getCandidate(context, plan.kit, without);
+            const manifest = getCandidate(context, plan.kit);
             if (!manifest) return false;
             const { kind } = manifest.kit;
             return !hasScopes || kind === 'general' || kind === 'language';
@@ -72,12 +71,11 @@ function scopeSelection(
     flagged: string[] | undefined,
     rootIds: string[],
 ): string[] {
-    const without = new Set(context.options.without);
     const ids =
         flagged ??
         detectKits(context.files, context.manifests, context.fields, scope.path)
             .filter((plan) => {
-                const manifest = getCandidate(context, plan.kit, without);
+                const manifest = getCandidate(context, plan.kit);
                 return manifest !== undefined && manifest.kit.kind !== 'general';
             })
             .map((plan) => plan.kit);
@@ -114,23 +112,11 @@ function assertKnown(
     manifests: Map<string, Manifest>,
 ): void {
     const configurations = (options.kits ?? []).filter((id) => id !== NO_KITS);
-    const without = options.without ?? [];
     const known = manifests.keys().toArray();
-    const unknown = [...configurations, ...without, ...scopeFlags.values().toArray().flat()]
+    const unknown = [...configurations, ...scopeFlags.values().toArray().flat()]
         .filter((id) => !manifests.has(id))
         .map((id) => messages.unknownKit(id, similar(id, known)));
     if (unknown.length > 0) throw new GspotError('selection', unknown);
-}
-
-function assertNoneRequired(options: InitInputs['options'], named: string[], manifests: Map<string, Manifest>): void {
-    const left = (options.without ?? []).flatMap((id) => {
-        const chain = named
-            .filter((start) => start !== id)
-            .map((start) => requireChain(id, start, manifests))
-            .find((found) => found !== undefined);
-        return chain ? [messages.withoutRequired(id, chain)] : [];
-    });
-    if (left.length > 0) throw new GspotError('selection', left);
 }
 
 // Exact selections retain their list. Other selections gain one level of detected recommendations.
@@ -141,13 +127,11 @@ function listedKits(
     detected: Set<string>,
 ): string[] {
     if (options.profile?.tables.selection === 'exact' || options.isListExact === true) return ids;
-    const without = new Set(options.without);
     const recommended = ids.flatMap((id) => manifests.get(id)?.kit.recommends ?? []);
     return [
         ...new Set([
             ...ids,
             ...recommended.filter((id) => {
-                if (without.has(id)) return false;
                 const manifest = manifests.get(id);
                 // A recommendation without detection criteria does not require a source match.
                 const hasDetection =
@@ -174,7 +158,7 @@ function closure(ids: Iterable<string>, manifests: Map<string, Manifest>): Set<s
 }
 
 /**
- * Selects the configurations for init from detection, the --configurations, --without and --scopes flags, and the workspace scopes.
+ * Selects the configurations for init from detection, the --kits and --scope flags, and the workspace scopes.
  * @param inputs the root, the tracked files, the manifests read from the repository, the workspace scopes, every kit manifest, and the init flags.
  * @returns the scopes, the root and per-scope kit ids, and the closure of everything selected.
  */
@@ -203,7 +187,6 @@ export function selectForInit(inputs: InitInputs): InitSelection {
         manifests,
         new Set(rootPlans.map((plan) => plan.kit)),
     ).filter((id) => !inScopes.has(id));
-    assertNoneRequired(options, [...rootIds, ...inScopes], manifests);
     const selectedIds = closure([...rootIds, ...inScopes], manifests);
     const sets = {
         named: new Set(options.kits ?? scopeFlags.values().toArray().flat()),

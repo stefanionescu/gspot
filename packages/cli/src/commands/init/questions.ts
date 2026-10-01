@@ -58,7 +58,7 @@ async function askRuleFiles(options: InitOptions): Promise<boolean> {
 
 async function askRunner(options: InitOptions, tooling: ExistingTooling): Promise<InitAnswers['runner']> {
     if (options.runner !== undefined) return options.runner;
-    return askChoice('Task runner?', '--runner', RUNNER_CHOICES, tooling.runner, options.yes);
+    return askChoice('Task runner?', '--no-runner', RUNNER_CHOICES, tooling.runner, options.yes);
 }
 
 /**

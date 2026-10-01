@@ -6,8 +6,8 @@ import { manifestSchema } from '#cli/kits/schema.ts';
 import { PRIVATE_PATHS } from '#cli/config/platform.ts';
 import { OPTIONAL_TOOL_KEYS } from '#cli/config/kits.ts';
 import { readAsset, listAssets } from '#cli/platform/assets.ts';
+import { manifestError, manifestProblems } from '#cli/kits/manifest-problems.ts';
 import type { RawTool, ToolPin, Manifest, RawCheck, CheckSpec } from '#cli/types/kits.ts';
-import { manifestError, manifestProblems, validateManifests } from '#cli/kits/manifest-problems.ts';
 
 const state: { cache: Map<string, Manifest> | undefined } = { cache: undefined };
 
@@ -127,8 +127,8 @@ export function parseManifest(text: string, dir: string): Manifest {
 export function kitManifests(): Map<string, Manifest> {
     if (state.cache) return state.cache;
     const manifests = new Map<string, Manifest>();
+    // The checks across manifests run at build time and in the tests, not on every start.
     for (const path of listAssets('kits/')) if (path.endsWith('/manifest.toml')) registerManifest(manifests, path);
-    validateManifests(manifests);
     appendReferences(manifests);
     state.cache = new Map([...manifests].toSorted(([first], [second]) => first.localeCompare(second)));
     return state.cache;

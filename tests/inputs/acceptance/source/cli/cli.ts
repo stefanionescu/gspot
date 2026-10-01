@@ -7,16 +7,13 @@ export const CONFIGURATION_ARRIVAL_INIT = [
     '--yes',
     '--kits',
     'typescript',
-    '--without',
-    'naming',
-    'spelling',
     '--no-runner',
     '--no-ci',
     '--no-hooks',
     '--no-guides',
     '--no-install',
 ];
-export const SELECTION_INIT = ['init', '--yes', '--dry-run', '--json', '--without', 'naming', 'spelling'];
+export const SELECTION_INIT = ['init', '--yes', '--dry-run', '--json'];
 export const COMMITS_INIT = [
     'init',
     '--yes',

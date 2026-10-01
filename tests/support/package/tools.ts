@@ -13,8 +13,6 @@ const FORMATTER_INIT = [
     '--yes',
     '--kits',
     'formatting',
-    '--runner',
-    'mise',
     '--no-ci',
     '--no-hooks',
     '--no-guides',
@@ -46,6 +44,8 @@ export async function prepareFormatterConsumer(
     writeFileSync(join(toolConsumer, 'package.json'), authoredPackage);
     writeFileSync(join(toolConsumer, '.npmrc'), `registry=${release.registry.url}\n`);
     writeFileSync(join(toolConsumer, 'source.js'), 'export const greeting="hello";');
+    // A mise file makes mise the runner init takes.
+    writeFileSync(join(toolConsumer, 'mise.toml'), '');
     const toolOptions = {
         cwd: toolConsumer,
         timeoutMs: RELEASE_TIMEOUT_MS,

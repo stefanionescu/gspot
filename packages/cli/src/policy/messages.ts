@@ -98,7 +98,7 @@ export function kitNotListed(name: string, scope: string | undefined): string {
  * @returns the message
  */
 export function dirtyTree(count: number): string {
-    return `The working tree has ${String(count)} uncommitted change(s). Commit or stash them before gspot init so you can review its configuration changes separately. Pass --allow-dirty to continue with these changes present.`;
+    return `The working tree has ${String(count)} uncommitted change(s). Commit or stash them before gspot init: Git then keeps every file init replaces, and you review its changes separately.`;
 }
 
 /**

@@ -1,8 +1,10 @@
 // Builds the gspot package: the CLI and its configuration process as Node modules, beside the kits, guides, and grammars.
 import { fileURLToPath } from 'node:url';
 import { join, dirname } from 'node:path';
+import { kitManifests } from '#cli/kits/manifests.ts';
 import { GRAMMAR_FILES } from '#cli/config/platform.ts';
 import packageManifest from '#package' with { type: 'json' };
+import { validateManifests } from '#cli/kits/manifest-problems.ts';
 import { rmSync, chmodSync, existsSync, copyFileSync } from 'node:fs';
 
 // The mode of the command file: read and run by everyone, written by its owner.
@@ -13,6 +15,8 @@ const distribution = join(root, 'dist');
 for (const name of GRAMMAR_FILES)
     if (!existsSync(join(root, 'grammars', name)))
         throw new Error(`The grammar ${name} is missing. Run: mise run prepare:grammar`);
+// A package never ships kits that contradict each other; the CLI does not check them again at start.
+validateManifests(kitManifests());
 rmSync(distribution, { recursive: true, force: true });
 for (const [entry, name, banner] of [
     ['src/main.ts', 'gspot.js', '#!/usr/bin/env node'],

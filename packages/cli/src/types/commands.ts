@@ -6,7 +6,7 @@ import type { ToolInspection } from '#cli/types/tools/tools.ts';
 import type { DriftEntry } from '#cli/types/lifecycle/lifecycle.ts';
 import type { Policy, RawPolicy, ResolvedSetting } from '#cli/types/policy/policy.ts';
 import type { StagedSet, ChangedSet, PushSelection } from '#cli/types/repository/revisions.ts';
-import type { Manifest, CheckSpec, SettingSpec, UnknownLanguage, KitEvidence as Plan } from '#cli/types/kits.ts';
+import type { Manifest, CheckSpec, UnknownLanguage, KitEvidence as Plan } from '#cli/types/kits.ts';
 import type { Session, RunReport, PushReport, StageFilter, CoverageReport } from '#cli/types/execution/execution.ts';
 
 import type {
@@ -172,15 +172,12 @@ export type DetectionSummary = {
     hasGit: boolean;
 };
 export type KitReason = 'named' | 'detected' | 'recommended' | 'required';
-export type Detect = NonNullable<SettingSpec['detect']>;
-export type DetectedSetting = { key: string; value: unknown; kit: string };
 export type InitOptions = {
     cwd: string;
     yes: boolean;
     isDryRun: boolean;
     json: boolean;
     kits?: string[];
-    without?: string[];
     scopes?: string[];
     hooks?: 'gspot' | 'none';
     ci?: NonNullable<Policy['ci']>['provider'] | 'none';
@@ -190,7 +187,6 @@ export type InitOptions = {
     profile?: Profile;
     isListExact?: boolean;
     install: boolean;
-    allowDirty: boolean;
 };
 /** The JSON the init command prints: the plan, the policy it wrote or previewed, and what stopped it. */
 export type InitJson = {
@@ -253,17 +249,10 @@ export type InitPlan = {
     ci: NonNullable<RawPolicy['ci']>['provider'] | 'none';
     rules: boolean;
     runner: NonNullable<RawPolicy['runner']>['tool'] | 'none';
-    /** The Bun install safeguards found in each bunfig.toml, by scope path ('' for the root). */
-    install?: { path: string; settings: InstallSettings }[];
-    /** The Xcode project and scheme init found, for the tools.xcode table. */
-    xcode?: { scope: string; project: string; scheme?: string };
-    /** The settings init filled from the repository through their detect tables. */
-    detected?: DetectedSetting[];
     commitScopes?: string[];
 };
 export type Written = { lines: string[]; installNote: string; exitCode: number };
 export type Installed = { installNote: string; exitCode: number };
-export type InstallSettings = { min_release_age_days?: number; security_scanner?: string };
 export type ReplacePlan = {
     ci?: { commands: string[] };
     profile?: { name: string; digest: string; selection: string; detected: string[] };

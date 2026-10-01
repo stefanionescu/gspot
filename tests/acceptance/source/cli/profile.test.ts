@@ -16,22 +16,7 @@ const TOOLS = { PATH: toolsPath(['ast-grep', 'shellcheck', 'shfmt', 'typos']) };
 async function expectProfileExport(root: string): Promise<void> {
     await createFileTree(root, { 'scripts/a.sh': script });
     commitAll(root);
-    await run(
-        root,
-        [
-            'init',
-            '--yes',
-            '--kits',
-            'bash',
-            '--without',
-            'naming',
-            '--no-runner',
-            '--no-ci',
-            '--no-hooks',
-            '--no-install',
-        ],
-        TOOLS,
-    );
+    await run(root, ['init', '--yes', '--kits', 'bash', '--no-runner', '--no-ci', '--no-hooks', '--no-install'], TOOLS);
     await run(root, ['set', 'format.indent_width', '2'], TOOLS);
     await run(
         root,
@@ -168,18 +153,7 @@ test(
         commitAll(sandbox.path);
         await run(
             sandbox.path,
-            [
-                'init',
-                '--yes',
-                '--kits',
-                'bash',
-                '--without',
-                'naming',
-                '--no-runner',
-                '--no-ci',
-                '--no-hooks',
-                '--no-install',
-            ],
+            ['init', '--yes', '--kits', 'bash', '--no-runner', '--no-ci', '--no-hooks', '--no-install'],
             TOOLS,
         );
         const own = await run(

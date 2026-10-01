@@ -158,15 +158,6 @@ const checkSchema = z.union(
     { error: 'Choose one command, tool analysis, engine, or reported_by owner without combining execution forms.' },
 );
 
-// Detection selects a setting from dependency presence or the first existing folder.
-// Dependencies and folders can each map to explicit values (K-93).
-const settingDetectSchema = z.strictObject({
-    dependency: z.string().min(1).optional(),
-    dependencies: z.record(z.string().min(1), z.unknown()).optional(),
-    folders: z.array(z.string().min(1)).optional(),
-    folder_values: z.record(z.string().min(1), z.unknown()).optional(),
-});
-
 // A path-scoped naming rule a kit ships, in the shape gspot.toml writes under [[naming.rules]] (K-50).
 const manifestNamingRule = z.strictObject({
     paths: z.array(z.string().min(1)).min(1),
@@ -192,7 +183,6 @@ const settingSchema = z.strictObject({
     categories: z.array(z.string()).optional(),
     // The architecture role the folder a setting names plays, so a template finds it without naming the setting.
     role: z.enum(['harness']).optional(),
-    detect: settingDetectSchema.optional(),
 });
 
 // The shape of a kit manifest.toml after validation.

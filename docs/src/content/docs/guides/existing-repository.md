@@ -27,8 +27,8 @@ Each kit knows the configuration files of its tools, such as `.eslintrc.json`, `
 and writes its own configuration instead. It does not read settings out of them. Move the
 settings you still need into `gspot.toml` with `gspot set` and `gspot ignore`.
 
-Init refuses uncommitted changes unless you pass `--allow-dirty`, so Git history keeps every
-file it replaces. To get one back, check it out from the commit before init.
+Init refuses uncommitted changes, so Git history keeps every file it replaces. To get one
+back, check it out from the commit before init.
 
 If init cannot read one of these files, the plan names it and init stops with exit code `2`
 before it writes anything. Fix the file and run `gspot init` again.

@@ -5,9 +5,9 @@ import { join, delimiter } from 'node:path';
 import { git } from '#tests/support/cli/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { script } from '#tests/support/cli/planted.ts';
-import { toolsPath } from '#tests/support/cli/tools.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { run, gspot } from '#tests/support/cli/command.ts';
+import { leaveOut, toolsPath } from '#tests/support/cli/tools.ts';
 
 // A fresh clone installs immutable tools and rejects then accepts a real staged commit.
 async function expectCloneHooks(source: string, environment: Record<string, string>): Promise<void> {
@@ -52,13 +52,12 @@ test(
             '--yes',
             '--kits',
             'bash',
-            '--without',
-            'formatting',
             '--no-runner',
             '--no-ci',
             '--no-guides',
             '--no-install',
         ]);
+        await leaveOut(sandbox.path, ['formatting'], {});
         const installed = await run(sandbox.path, ['install']);
         expect(installed.code, installed.stdout + installed.stderr).toBe(0);
         await Bun.write(join(sandbox.path, 'scripts', 'b.sh'), '#!/usr/bin/env bash\necho $1\n');
