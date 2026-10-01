@@ -143,15 +143,15 @@ help = "Run gspot check --fix to format every script, or shfmt -w on one file."
 [[checks]]
 name = "structure/bash-interpreter"
 title = "Bash interpreter"
-example = "An executable Bash script without a `# Runtime: Bash 4.4+, macOS and Linux.` header reports a runtime-header finding. Add that header after the shebang, bare comment, and purpose comment. For that minimum version, start execution with `set -euo pipefail` and `shopt -s inherit_errexit`, and call the documented `main` function last."
+example = "With tools.bash.runtime_header set to `macOS and Linux`, an executable Bash script without a `# Runtime: Bash 4.4+, macOS and Linux.` header reports a runtime-header finding. Add that header after the shebang, bare comment, and purpose comment. For that minimum version, start execution with `set -euo pipefail` and `shopt -s inherit_errexit`, and call the documented `main` function last."
 level = "all"
 stage = "commit"
 engine = "structure"
 analysis = "bash-interpreter"
 searched = ["shellcheck", "shfmt", "bashate"]
-summary = "Checks the contract every Bash script keeps: the four-line header, strict mode, one main called last, readonly constants, declarative libraries, cleaned-up temporary files."
+summary = "Checks the contract every Bash script keeps: the shebang, strict mode, one main called last, readonly constants, declarative libraries, cleaned-up temporary files, and the four-line header when tools.bash.runtime_header is set."
 why = "A script that skips strict mode or hides its runtime fails on the machine where it matters, silently."
-help = "Open with the shebang, a bare #, one line saying what the script does, and the Runtime line. Run set -euo pipefail first; add shopt -s inherit_errexit when the declared minimum is Bash 4.4+. End an executable with a call to main."
+help = "Open with the shebang and, when tools.bash.runtime_header is set, a bare #, one line saying what the script does, and the Runtime line. Run set -euo pipefail first; add shopt -s inherit_errexit when the declared minimum is Bash 4.4+. End an executable with a call to main."
 
 [[checks]]
 name = "structure/doc-comment"
@@ -321,7 +321,7 @@ stage = "commit"
 engine = "structure"
 analysis = "remote"
 searched = ["shellcheck"]
-summary = "Checks that multi-line ssh blocks are named, documented, and inside a function."
+summary = "Checks that ssh heredocs are documented, and that a multi-line block a function in tools.bash.remote_functions runs sits inside a named function."
 why = "A remote command block with no name is the hardest thing in a script to test or reuse."
 help = "Move the block into a named function and write \"# name - what it does\" above it."
 
@@ -341,7 +341,7 @@ help = "Set the default in a configuration owner named under tools.bash.config_o
 [[checks]]
 name = "structure/guards"
 title = "Guard shell configuration imports"
-example = "A sourced configuration owner without a load guard reports a guard finding. Begin it with `[[ -n ${_CFG_APP_READY:-} ]] && return 0`, followed by `readonly _CFG_APP_READY=1`, before declaring its configuration."
+example = "A sourced configuration owner without a load guard reports a guard finding. Begin it with `[[ -n ${APP_CONFIG_READY:-} ]] && return 0`, followed by `readonly APP_CONFIG_READY=1`, before declaring its configuration."
 level = "all"
 stage = "commit"
 engine = "structure"
@@ -349,7 +349,7 @@ analysis = "guards"
 searched = ["shellcheck"]
 summary = "Checks that every kit owner opens with one include guard nobody else uses."
 why = "A configuration file sourced twice runs its side effects twice."
-help = "Open the owner with [[ -n ${_CFG_NAME_READY:-} ]] && return 0 and then readonly _CFG_NAME_READY=1."
+help = "Open the owner with [[ -n ${NAME_READY:-} ]] && return 0 and then readonly NAME_READY=1, with a guard name no other owner uses."
 
 [[checks]]
 name = "structure/bash-boundaries"
@@ -429,8 +429,21 @@ summary = "Variable defaults of the form name:-value that appear outside the con
 name = "tools.bash.runtime_header"
 kind = "string"
 direction = "neutral"
-default = "macOS and Linux"
-summary = "The platforms the fourth header line of every script names."
+summary = "The platforms the fourth header line of every script names. Unset, a script needs no four-line header and declares no Bash version."
+
+[[settings]]
+name = "tools.bash.remote_functions"
+kind = "list"
+direction = "tightening"
+default = []
+summary = "The functions that run a quoted block on another host, such as a run_ssh wrapper; a multi-line block one runs sits inside a named function."
+
+[[settings]]
+name = "tools.bash.entry_functions"
+kind = "list"
+direction = "loosening"
+default = []
+summary = "The functions besides main that a script may define without calling or documenting them, such as a step runner other scripts call by name."
 
 [guides]
 language = [{path = "language/BASH.md"}, {path = "language/bash/LANGUAGE.md"}, {path = "language/bash/SAFETY.md"}, {path = "language/bash/OPERATIONS.md"}, {path = "language/naming/BASH.md"}]

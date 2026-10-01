@@ -72,10 +72,11 @@ function problem(entry: ScriptFunction, block: string[], style: string): { rule:
  */
 export const docComment: Analysis = async (context, scripts) => {
     const style = context.bashText('doc_style', 'colon');
+    const entries = new Set([...ENTRY_FUNCTIONS, ...context.bashList('entry_functions')]);
     const index = await scripts();
     return index.files.flatMap((file) => {
         return file.functions.flatMap((entry) => {
-            if (ENTRY_FUNCTIONS.includes(entry.name)) return [];
+            if (entries.has(entry.name)) return [];
             const found = problem(entry, blockAbove(file.lines, entry.start), style);
             return found === undefined
                 ? []

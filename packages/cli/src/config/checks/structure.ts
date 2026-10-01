@@ -58,8 +58,8 @@ export const OPERATORS = [' && ', ' || ', ' | ', ';'];
 /** The start of a computed directory constant, and the three signs that mark one. */
 export const DIRECTORY_CONSTANT_START = /^[A-Z_][A-Z0-9_]*=/u;
 export const DIRECTORY_CONSTANT_SIGNS = ['cd', 'BASH_SOURCE[0]', 'pwd'];
-/** Functions every script may leave uncalled. */
-export const ENTRY_FUNCTIONS = ['main', 'run_step'];
+/** Functions every script may leave uncalled; tools.bash.entry_functions adds the ones a project names. */
+export const ENTRY_FUNCTIONS = ['main'];
 /** Words that say nothing in a function summary. */
 export const VAGUE_SUMMARY_WORDS = [
     'a',
@@ -179,7 +179,7 @@ export const BOUNDARY_MIN_WORDS = 4;
 export const CLOSING_QUOTE_LINE = /["']\s*$/u;
 
 /** The include guard a configuration owner opens with, and the line after it. */
-export const CONFIG_GUARD = /^\[\[ -n \$\{(?<name>_CFG_[A-Z][A-Z0-9_]*_READY):-\} \]\] && return 0$/u;
+export const CONFIG_GUARD = /^\[\[ -n \$\{(?<name>[A-Z_][A-Z0-9_]*):-\} \]\] && return 0$/u;
 
 /** A variable read with a non-empty default. */
 export const DEFAULT_EXPANSION = /\$\{[A-Z_][A-Z0-9_]*:-[^}]+\}/u;
@@ -205,6 +205,9 @@ export const FORWARDING_MAX_LINES = 4;
 
 /** How many header lines the contract asks for. */
 export const HEADER_LINES = 4;
+
+/** Lines 2 and 3 of the header, joined: a bare # line, then a comment that says what the script does. */
+export const HEADER_COMMENT = /^#\n# .*\S/u;
 
 /** The inherited errexit option and the Bash version that introduced it. */
 export const INHERITED_ERREXIT = { statement: 'shopt -s inherit_errexit', version: '4.4.0' };
@@ -237,9 +240,6 @@ export const RUNTIME_EMBEDS: [RegExp, string][] = [
 /** The fourth header line: the Bash version and the platforms. */
 export const RUNTIME_HEADER = /^# Runtime: Bash (?<major>\d+)\.(?<minor>\d+)\+, (?<platforms>.+)\.$/u;
 
-/** The start of a run_ssh block, and what closes a multi-line one. */
-export const RUN_SSH_START = /run_ssh\s+(?<quote>["'])/u;
-
 /** Safety-rule patterns and their diagnostic text. */
 export const SAFETY_LINE_RULES: [RegExp, string, string][] = [
     [/\|\|\s*true(?:\s|$)/u, 'blanket-success', 'a command failure is discarded with || true'],
@@ -260,7 +260,6 @@ export const SAFETY_OWNER_RULES: [RegExp, string, string][] = [
     [/\/root\/\.cache[" ]/u, 'unowned-cleanup', 'the root cache is swept'],
     [/\/tmp\/\S*\*/u, 'unowned-cleanup', 'a temporary tree is swept with a glob'],
     [/\/dev\/shm\/\S*\*/u, 'unowned-cleanup', 'shared memory is swept with a glob'],
-    [/nvidia-smi\s+--query-compute-apps=pid/u, 'gpu-sweep', 'GPU processes are swept'],
 ];
 
 /** The annotation a source statement carries on the line above it. */

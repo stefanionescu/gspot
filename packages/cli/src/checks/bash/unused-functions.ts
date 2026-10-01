@@ -9,11 +9,12 @@ import type { StructureAnalysis as Analysis } from '#cli/types/checks.ts';
  * @returns the findings
  */
 export const unusedFunctions: Analysis = async (context, scripts) => {
+    const entries = new Set([...ENTRY_FUNCTIONS, ...context.bashList('entry_functions')]);
     const index = await scripts();
     const referenced = new Set(index.files.flatMap((file) => file.references.keys().toArray()));
     return index.files.flatMap((file) => {
         return file.functions
-            .filter((entry) => !ENTRY_FUNCTIONS.includes(entry.name) && !referenced.has(entry.name))
+            .filter((entry) => !entries.has(entry.name) && !referenced.has(entry.name))
             .map((entry) =>
                 findingAt(
                     context.input,

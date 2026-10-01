@@ -52,7 +52,7 @@ function guardFindings(file: ScriptFile, seen: Map<string, string>, context: Str
                 context.input,
                 { file: file.path, line: first?.number ?? 1 },
                 'guard-first',
-                'A configuration owner opens with [[ -n ${_CFG_<NAME>_READY:-} ]] && return 0.',
+                'A configuration owner opens with [[ -n ${<GUARD>:-} ]] && return 0.',
             ),
         ];
     return markProblems(file, [first, second], name, seen, context);

@@ -34,6 +34,7 @@ export const BASH_CASES: FindingCase[] = [
     {
         check: 'structure/bash-interpreter',
         files: { 'scripts/headless.sh': '#!/usr/bin/env bash\nmain() {\n    echo hi\n}\n\nmain "$@"\n' },
+        policy: '[tools.bash]\nruntime_header = "macOS and Linux"\n',
         expected: { file: 'scripts/headless.sh', rule: 'runtime-header', line: 4 },
         executable: ['scripts/headless.sh'],
     },
