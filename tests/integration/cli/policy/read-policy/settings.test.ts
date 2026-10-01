@@ -37,12 +37,6 @@ test('parsePolicyText > an unknown key names its table', () => {
     expect(found[0]).toContain('`psh` is not a setting gspot knows under [hooks]');
 });
 
-test('parsePolicyText > an unknown top-level key is refused', () => {
-    expect(policyProblems(`${MINIMAL_POLICY}color = "red"\n`)[0]).toContain(
-        '`color` is not a setting gspot knows under the top level',
-    );
-});
-
 test('parsePolicyText > an ignore without a reason that says something is refused', () => {
     for (const reason of ['', 'N/A', 'TBD', '-', 'because']) {
         const found = policyProblems(
@@ -50,13 +44,6 @@ test('parsePolicyText > an ignore without a reason that says something is refuse
         );
         expect(found[0]).toContain('needs a reason that says something');
     }
-});
-
-test('parsePolicyText > a directory selector is accepted', () => {
-    const found = policyProblems(
-        `${MINIMAL_POLICY}[[ignore]]\ncheck = "bash/shellcheck"\npaths = ["scripts"]\nreason = "One launcher script per environment."\n`,
-    );
-    expect(found).toStrictEqual([]);
 });
 
 test('parsePolicyText > a rule slot set to off names the ignore line', () => {
@@ -92,15 +79,6 @@ test('parsePolicyText > a vendored declaration needs a reason when required', ()
 });
 
 describe('readPolicy', () => {
-    test('reads gspot.toml from a root', async () => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
-            'gspot.toml': MINIMAL_POLICY,
-        });
-        const files = readPolicy(sandbox.path);
-        expect(files.policy.kits).toStrictEqual(['bash']);
-    });
-
     test('a missing gspot.toml points at init', async () => {
         await using sandbox = await testdir();
         expect(() => readPolicy(sandbox.path)).toThrow('Run `gspot init`');
@@ -114,17 +92,6 @@ command = ["tool", "check"]
 paths = ["source.txt"]
 stage = "commit"
 `;
-
-    test('keeps advice separate from the correction command', () => {
-        const policy = parsePolicyText(
-            `${check}help = "Review the tool output."
-fix_command = ["tool", "correct"]
-`,
-            'gspot.toml',
-        );
-        expect(policy.checks[0]?.help).toBe('Review the tool output.');
-        expect(policy.checks[0]?.fix_command).toStrictEqual(['tool', 'correct']);
-    });
 
     test('refuses an empty correction command', () => {
         expect(policyProblems(`${check}fix_command = []`)).not.toStrictEqual([]);

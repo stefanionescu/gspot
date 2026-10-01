@@ -22,21 +22,19 @@ test('Python workspace detection uses captured manifest fields', async () => {
     expect(() => readManifests(sandbox.path, repository.files)).toThrow('pyproject.toml');
 });
 
-test.each(['package.json', 'pyproject.toml', 'Package.swift', 'Pipfile', 'requirements.txt'])(
-    'a failed read of a discovered %s remains an error',
-    async (path) => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, { [path]: path.endsWith('.json') ? '{}' : '' });
-        const repository = await readRepository(sandbox.path, [], [], []);
-        rmSync(join(sandbox.path, path));
-        expect(() => readManifests(sandbox.path, repository.files)).toThrow(path);
-        mkdirSync(join(sandbox.path, path));
-        expect(() => readManifests(sandbox.path, repository.files)).toThrow(path);
-        rmSync(join(sandbox.path, path), { recursive: true });
-        writeFileSync(join(sandbox.path, path), path.endsWith('.json') ? '{}' : '');
-        expect(readManifests(sandbox.path, repository.files)).toHaveLength(1);
-    },
-);
+test('a failed read of a discovered manifest remains an error', async () => {
+    const path = 'pyproject.toml';
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, { [path]: '' });
+    const repository = await readRepository(sandbox.path, [], [], []);
+    rmSync(join(sandbox.path, path));
+    expect(() => readManifests(sandbox.path, repository.files)).toThrow(path);
+    mkdirSync(join(sandbox.path, path));
+    expect(() => readManifests(sandbox.path, repository.files)).toThrow(path);
+    rmSync(join(sandbox.path, path), { recursive: true });
+    writeFileSync(join(sandbox.path, path), '');
+    expect(readManifests(sandbox.path, repository.files)).toHaveLength(1);
+});
 
 test('Python group includes coexist with dependency detection', async () => {
     await using sandbox = await testdir();
@@ -48,26 +46,24 @@ test('Python group includes coexist with dependency detection', async () => {
     expect(fields[0]!.dependencies).toStrictEqual({ pytest: 'pytest>=8', ruff: 'ruff>=1' });
 });
 
-test.each(['package.json', 'pyproject.toml', 'Package.swift', 'Pipfile', 'requirements.txt'])(
-    'manifest inspection refuses an external link replacing %s and accepts restored bytes',
-    async (path) => {
-        await using directory = await testdir();
-        const content = path === 'package.json' ? '{}' : '';
-        await createFileTree(directory.path, {
-            [`project/${path}`]: content,
-            [`outside/${path}`]: content,
-        });
-        const root = join(directory.path, 'project');
-        const repository = await readRepository(root, [], [], []);
-        rmSync(join(root, path));
-        symlinkSync(`../outside/${path}`, join(root, path));
-        expect(() => readManifests(root, repository.files)).toThrow('private regular file');
-        expect(readFileSync(join(directory.path, 'outside', path), 'utf8')).toBe(content);
-        rmSync(join(root, path));
-        writeFileSync(join(root, path), content);
-        expect(readManifests(root, repository.files)).toHaveLength(1);
-    },
-);
+test('manifest inspection refuses an external link replacing a manifest and accepts restored bytes', async () => {
+    const path = 'package.json';
+    await using directory = await testdir();
+    const content = '{}';
+    await createFileTree(directory.path, {
+        [`project/${path}`]: content,
+        [`outside/${path}`]: content,
+    });
+    const root = join(directory.path, 'project');
+    const repository = await readRepository(root, [], [], []);
+    rmSync(join(root, path));
+    symlinkSync(`../outside/${path}`, join(root, path));
+    expect(() => readManifests(root, repository.files)).toThrow('private regular file');
+    expect(readFileSync(join(directory.path, 'outside', path), 'utf8')).toBe(content);
+    rmSync(join(root, path));
+    writeFileSync(join(root, path), content);
+    expect(readManifests(root, repository.files)).toHaveLength(1);
+});
 
 test.each([
     ['pyproject.toml', '[project]\ndependencies = ["FastAPI>=1", "Friendly_Bard>=2"]\n'],

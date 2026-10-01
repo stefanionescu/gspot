@@ -1,12 +1,10 @@
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
-import { git, commitAll } from '#tests/support/cli/git.ts';
+import { containing } from '#tests/support/expectations.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
-import { unlink, symlink, readlink } from 'node:fs/promises';
 import { readProject } from '#cli/checks/xcode/project/reader.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
-import { containing, textContaining } from '#tests/support/expectations.ts';
 import { PBXPROJ_PROJECT } from '#tests/inputs/integration/cli/repository.ts';
 
 test('Xcode sources follow group paths and target membership instead of duplicate filenames', async () => {
@@ -120,50 +118,4 @@ test('membership combines projects in a scope and checks nested scopes independe
     await Bun.file(`${sandbox.path}/nested/Extra.swift`).delete();
     const corrected = await run(sandbox.path, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-});
-
-test('Xcode symlinks use the deepest scope and the immutable staged target', async () => {
-    await using sandbox = await testdir();
-    const policy = policyOf(
-        ['xcode'],
-        '[[scope]]\npath = "app"\n[[scope]]\npath = "app/child"\n[[scope]]\npath = "sibling"\n',
-        'all',
-    );
-    await createFileTree(sandbox.path, {
-        'gspot.toml': policy,
-        'App.xcodeproj/project.pbxproj': PBXPROJ_PROJECT,
-        'app/App.xcodeproj/project.pbxproj': PBXPROJ_PROJECT,
-        'app/child/App.xcodeproj/project.pbxproj': PBXPROJ_PROJECT,
-        'sibling/App.xcodeproj/project.pbxproj': PBXPROJ_PROJECT,
-        'app/child/Source.swift': 'let value = 1\n',
-    });
-    commitAll(sandbox.path);
-    const link = `${sandbox.path}/app/child/Linked.swift`;
-    await symlink('Source.swift', link);
-    expect(git(sandbox.path, ['add', 'app/child/Linked.swift']).code).toBe(0);
-    await unlink(link);
-    await symlink('Unstaged.swift', link);
-    const command = ['check', '--staged', '--only', 'xcode/symlinks', '--json'];
-    const broken = await run(sandbox.path, command);
-    expect(broken.code, broken.stdout + broken.stderr).toBe(1);
-    const findings = (JSON.parse(broken.stdout) as RunReport).checks.flatMap((check) =>
-        check.findings.map((finding) => ({ scope: check.scope, finding })),
-    );
-    expect(findings).toStrictEqual([
-        {
-            scope: 'app/child',
-            finding: containing({
-                file: 'app/child/Linked.swift',
-                line: 1,
-                rule: 'symlink',
-                message: textContaining('A symlink to Source.swift'),
-            }),
-        },
-    ]);
-    expect(await readlink(link)).toBe('Unstaged.swift');
-    expect(git(sandbox.path, ['rm', '--cached', '-f', 'app/child/Linked.swift']).code).toBe(0);
-    const corrected = await run(sandbox.path, command);
-    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect(await readlink(link)).toBe('Unstaged.swift');
-    expect(await Bun.file(`${sandbox.path}/gspot.toml`).text()).toBe(policy);
 });

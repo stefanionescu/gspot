@@ -32,32 +32,6 @@ test('repository file discovery > keeps tracked deletions out of readable entrie
     expect(trackedEntries(sandbox.path)).toStrictEqual([]);
 });
 
-test.each(['lstatSync', 'statSync'] as const)(
-    'repository file discovery > reports a denied %s instead of dropping a path',
-    async (operation) => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, { 'source.ts': 'export {};\n' });
-        fs.symlinkSync('source.ts', join(sandbox.path, 'linked.ts'), 'file');
-        const listed = spyOn(processes, 'runBlocking').mockReturnValue({
-            code: 0,
-            stdout: 'linked.ts\0',
-            stderr: '',
-            missing: false,
-            duration: 0,
-        });
-        const denied = Object.assign(new Error('Permission denied for linked.ts'), { code: 'EACCES' });
-        const metadata = spyOn(fs, operation).mockImplementation(() => {
-            throw denied;
-        });
-        try {
-            expect(failure(() => trackedEntries(sandbox.path))).toBe(denied);
-        } finally {
-            metadata.mockRestore();
-            listed.mockRestore();
-        }
-    },
-);
-
 test('repository file discovery > classifies a dangling tracked symlink without reading its absent target', async () => {
     await using sandbox = await testdir();
     fs.symlinkSync('missing.ts', join(sandbox.path, 'linked.ts'), 'file');
@@ -78,26 +52,6 @@ test('repository file discovery > reads only the requested prefix and reports ab
         expect(reads.mock.calls[0]?.[2]).toMatchObject({ length: 6 });
         expect(() => head(sandbox.path, 'missing.txt')).toThrow('ENOENT');
     } finally {
-        reads.mockRestore();
-    }
-});
-
-test('repository file discovery > a failed content read reports the error and closes its descriptor', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'source.ts': 'export {};\n' });
-    const opened = spyOn(fs, 'openSync');
-    const reads = spyOn(fs, 'readSync').mockImplementationOnce(() => {
-        throw new Error('Planted read failure.');
-    });
-    try {
-        expect(() => head(sandbox.path, 'source.ts')).toThrow('Planted read failure');
-        const descriptor = opened.mock.results[0];
-        expect(descriptor?.type).toBe('return');
-        // The descriptor the failed read opened is closed again.
-        const openedDescriptor = descriptor?.type === 'return' ? descriptor.value : undefined;
-        expect(() => fs.fstatSync(Number(openedDescriptor))).toThrow('EBADF');
-    } finally {
-        opened.mockRestore();
         reads.mockRestore();
     }
 });

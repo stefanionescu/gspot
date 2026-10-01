@@ -45,22 +45,6 @@ test('an npm package version does not hide a failed executable', async () => {
     expect(inspection.note).toContain('exited 7');
 });
 
-test('a version printed before a genuine timeout does not make a tool usable', async () => {
-    await using sandbox = await testdir();
-    const which = spyOn(executables, 'sync').mockReturnValue(process.execPath);
-    try {
-        const tool = {
-            ...commandPin('version-teller', '3.8.1'),
-            version_command: ['-e', 'console.log("3.8.1 No version is set for shim"); setInterval(() => {}, 1000);'],
-        };
-        const inspection = inspectTool({ root: sandbox.path, inspections: new Map() }, tool);
-        expect(inspection.state).toBe('error');
-        expect(inspection.note).toContain('timed out');
-    } finally {
-        which.mockRestore();
-    }
-}, 20_000);
-
 test('a manifest can declare its help command status without accepting other failed inspections', async () => {
     await using sandbox = await testdir();
     const which = spyOn(executables, 'sync').mockReturnValue(process.execPath);

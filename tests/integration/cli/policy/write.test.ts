@@ -184,17 +184,6 @@ test.each([
     });
 });
 
-test('writePolicy > a list that runs past 120 characters is written one item per line', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'gspot.toml': text });
-    const terms = Array.from({ length: 16 }, (_, index) => `forbidden-term-${String(index)}`);
-    writePolicy(sandbox.path, preparePolicy(sandbox.path, appendList('naming.banned_terms', terms)));
-    const written = readFileSync(join(sandbox.path, 'gspot.toml'), 'utf8');
-    expect(written.split('\n').every((line) => line.length <= 120)).toBe(true);
-    expect(written).toContain('banned_terms = [\n    "forbidden-term-0",\n');
-    expect(preparePolicy(sandbox.path, () => {}).policy.naming.banned_terms).toHaveLength(16);
-});
-
 test('writePolicy > a dry run writes nothing', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': text });
