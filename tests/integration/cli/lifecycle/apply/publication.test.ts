@@ -107,7 +107,6 @@ test('apply validates obsolete output parents before publishing new configuratio
     fs.rmSync(join(root, '.gspot/obsolete'), { recursive: true });
     fs.symlinkSync('../../outside', join(root, '.gspot/obsolete'));
     expect(await rejection(applyCommand({ cwd: root, isDryRun: false }))).toContain('Unsafe lifecycle parent');
-    expect(fs.existsSync(join(root, '.gitattributes'))).toBe(false);
     expect(fs.existsSync(join(root, '.gspot/version'))).toBe(false);
     expect(readFileSync(join(directory.path, 'outside/old.txt'), 'utf8')).toBe('outside bytes\n');
     fs.unlinkSync(join(root, '.gspot/obsolete'));
@@ -115,7 +114,24 @@ test('apply validates obsolete output parents before publishing new configuratio
     const applied = await applyCommand({ cwd: root, isDryRun: false });
     expect(applied.exitCode).toBe(0);
     expect(fs.existsSync(join(root, '.gspot/obsolete/old.txt'))).toBe(false);
-    expect(fs.existsSync(join(root, '.gitattributes'))).toBe(true);
+    expect(fs.existsSync(join(root, '.gspot/version'))).toBe(true);
     const reapplied = await applyCommand({ cwd: root, isDryRun: false });
     expect(reapplied.exitCode).toBe(0);
+});
+
+test('apply leaves a generated file a checkout converted to CRLF as it is', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, { 'gspot.toml': policyOf(['bash'], '[guides]\ninstall = false\n') });
+    const installed = await applyCommand({ cwd: sandbox.path, isDryRun: false });
+    expect(installed.exitCode, installed.text).toBe(0);
+    const path = join(sandbox.path, '.gspot/config/shellcheckrc');
+    const { mode } = fs.statSync(path);
+    const converted = readFileSync(path, 'utf8').replaceAll('\n', '\r\n');
+    chmodSync(path, 0o644);
+    writeFileSync(path, converted);
+    chmodSync(path, mode);
+    const applied = await applyCommand({ cwd: sandbox.path, isDryRun: false });
+    expect(applied.exitCode, applied.text).toBe(0);
+    expect(applied.text).toContain('everything up to date');
+    expect(readFileSync(path, 'utf8')).toBe(converted);
 });

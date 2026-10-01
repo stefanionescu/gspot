@@ -149,12 +149,6 @@ export const AGENT_FILE_NAMES = ['CLAUDE.md', 'AGENTS.md', 'GEMINI.md', '.cursor
 export const RULES_DIRECTORY_NAMES = ['rules', '.rules', '.cursor/rules', 'docs/rules', '.claude/rules'];
 /** License and notice files are another party's text, kept as written. */
 export const LICENSE_FILE = /^(?:LICENSE|LICENCE|COPYING|NOTICE)(?:$|[.-])/iu;
-/** Files gspot or a tool it drives writes; nobody edits them, so they are generated. */
-export const INSTALLED_PREFIXES = [
-    '.gspot/guides/',
-    '.gspot/config/vale/styles/gspot/',
-    '.gspot/config/vale/styles/config/vocabularies/gspot/',
-];
 /** Where Vale packages land; everything there except the gspot style and vocabulary is vendored. */
 export const VALE_STYLES_PREFIX = '.gspot/config/vale/styles/';
 export const VALE_OWN_PREFIXES = [

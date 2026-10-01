@@ -4,17 +4,15 @@ import { everyManifest } from '#cli/kits/select.ts';
 import { hookFiles } from '#cli/generation/hooks.ts';
 import { assembleRules } from '#cli/agents/assemble.ts';
 import { gitignoreBlock } from '#cli/kits/manifests.ts';
+import { managedBlock } from '#cli/agents/instructions.ts';
 import { styleFiles } from '#cli/generation/vale-styles.ts';
 import { bunConfiguration } from '#cli/generation/bunfig.ts';
 import { emitConfigurations } from '#cli/generation/kits.ts';
 import { mutationTarget } from '#cli/platform/safe-paths.ts';
-import { applyBlock } from '#cli/lifecycle/managed-blocks.ts';
 import { miseToolsFile } from '#cli/generation/tools/mise.ts';
 import { templateInputs } from '#cli/generation/templates.ts';
-import { GIT_ATTRIBUTES_BLOCK } from '#cli/config/generation.ts';
 import { toolPackages } from '#cli/generation/tools/packages.ts';
 import type { Repository } from '#cli/types/repository/repository.ts';
-import { agentFiles, managedBlock } from '#cli/agents/instructions.ts';
 import { gitlabFile, workflowFile } from '#cli/generation/workflow.ts';
 import { toolEnvironment } from '#cli/generation/tools/environment.ts';
 import type { Generated, GenerationOptions } from '#cli/types/generation.ts';
@@ -42,21 +40,13 @@ function rootView(scopes: ScopeSelection[]): MergedView {
 }
 
 function blockOutputs(repository: Repository, policy: Policy, manifests: Manifest[], out: Generated): void {
-    const { root, hasGit } = repository;
-    if (hasGit) out.blocks.push({ path: '.gitignore', block: gitignoreBlock(), style: 'hash' });
-    out.blocks.push({ path: '.gitattributes', block: GIT_ATTRIBUTES_BLOCK, style: 'hash' });
+    if (repository.hasGit) out.blocks.push({ path: '.gitignore', block: gitignoreBlock(), style: 'hash' });
+    if (repository.files.some((file) => file.path === 'CLAUDE.md'))
+        out.notes.push('CLAUDE.md goes; its own text moves to the end of AGENTS.md');
     if (!policy.guides.install) return;
     const block = managedBlock(policy.guides, manifests, policy.level, repository);
-    for (const path of agentFiles(root, policy.guides.agents)) {
-        if (path === '.cursor/rules/gspot.mdc') {
-            out.files.push({
-                path,
-                content: `---\ndescription: Repository engineering rules\nalwaysApply: true\n---\n\n${applyBlock('', block, 'markdown')}`,
-                readOnly: false,
-                kind: 'rules',
-            });
-        } else out.blocks.push({ path, block, style: 'markdown' });
-    }
+    for (const path of new Set(['AGENTS.md', ...(policy.guides.agents ?? [])]))
+        out.blocks.push({ path, block, style: 'markdown' });
 }
 
 function combineConfigurations(plan: Generated): void {

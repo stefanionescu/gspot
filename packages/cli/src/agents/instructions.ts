@@ -1,6 +1,5 @@
 import type { Manifest } from '#cli/types/kits.ts';
 import type { RuleFile } from '#cli/types/agents.ts';
-import { openRoot } from '#cli/platform/filesystem.ts';
 import type { Policy } from '#cli/types/policy/policy.ts';
 import { selectRuleFiles } from '#cli/agents/assemble.ts';
 import type { Repository } from '#cli/types/repository/repository.ts';
@@ -60,19 +59,4 @@ export function managedBlock(
         ...index,
         closing,
     ].join('\n');
-}
-
-/**
- * Select configured agent files and conventional integrations present in the repository.
- * @param root the repository root
- * @param configured additional instruction files selected by policy
- * @returns deduplicated repository-relative destinations
- */
-export function agentFiles(root: string, configured: string[] = []): string[] {
-    const files = openRoot(root);
-    const detected = ['CLAUDE.md', 'GEMINI.md', '.github/copilot-instructions.md'].filter(
-        (path) => files.read(path) !== undefined,
-    );
-    if (files.stat('.cursor')?.isDirectory() === true) detected.push('.cursor/rules/gspot.mdc');
-    return [...new Set(['AGENTS.md', ...detected, ...configured])];
 }

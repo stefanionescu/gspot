@@ -1,12 +1,11 @@
 import type { Manifest } from '#cli/types/kits.ts';
-import { agentFiles } from '#cli/agents/instructions.ts';
 import { npmPins, pythonPins } from '#cli/tools/pins.ts';
 import type { Policy } from '#cli/types/policy/policy.ts';
 import { misePins, pinnedTwice } from '#cli/tools/mise.ts';
 import { submodulePaths } from '#cli/repository/tracked.ts';
 import { MISE_CONFIG_PATH } from '#cli/config/tools/tools.ts';
 import { ciLintJobs } from '#cli/repository/existing-tooling.ts';
-import { CI_SETUP, HOOKS_ROW, CURSOR_RULE } from '#cli/config/commands/init.ts';
+import { CI_SETUP, HOOKS_ROW } from '#cli/config/commands/init.ts';
 import type { ScopeEntry, ExistingTooling } from '#cli/types/repository/repository.ts';
 import type { Planning, InitAnswers, ReplacePlan, InitSelection, InitPlan as Plan } from '#cli/types/commands.ts';
 
@@ -61,10 +60,7 @@ function commitScopeNames(scopes: ScopeEntry[], selection: InitSelection): strin
 // The agent instruction files init writes, when any agent is configured.
 function agentRows(agents: string[]): ReplacePlan['write'] {
     if (agents.length === 0) return [];
-    const files = agents.map((path) => ({
-        path,
-        note: path === CURSOR_RULE ? 'owned Cursor rule; authored files preserved' : 'managed instruction block',
-    }));
+    const files = agents.map((path) => ({ path, note: 'managed instruction block' }));
     return [...files, { path: '.gspot/guides/', note: 'agent guides' }];
 }
 
@@ -129,7 +125,7 @@ export function buildInitPlan(planning: Planning, policy: Policy, policyText: st
                   selection: options.profile.tables.selection,
                   detected: selection.rootPlans.map((plan) => plan.kit).filter((id) => !selection.selectedIds.has(id)),
               };
-    const agents = policy.guides.install ? agentFiles(root, policy.guides.agents) : [];
+    const agents = policy.guides.install ? [...new Set(['AGENTS.md', ...(policy.guides.agents ?? [])])] : [];
     const policyLines = policyText.split('\n').length;
     const lintJobs = ciLintJobs(root, tooling.ci);
     return {
@@ -151,7 +147,12 @@ export function buildInitPlan(planning: Planning, policy: Policy, policyText: st
             ...agentRows(agents),
             ...ciRows(answers.ci),
         ],
-        remove: replaced.removed,
+        remove: [
+            ...replaced.removed,
+            ...(tooling.agentFiles.includes('CLAUDE.md')
+                ? [{ path: 'CLAUDE.md', note: 'its own text moves to the end of AGENTS.md' }]
+                : []),
+        ],
         unread: replaced.unread,
         retained: [
             ...replaced.retained,
@@ -160,7 +161,6 @@ export function buildInitPlan(planning: Planning, policy: Policy, policyText: st
         ],
         change: [
             { path: '.gitignore', note: 'one managed block' },
-            { path: '.gitattributes', note: 'managed generated-file classification and LF line endings' },
             ...runnerRows(answers, everySelected),
             ...(answers.hooks === 'gspot' ? [HOOKS_ROW] : []),
         ],

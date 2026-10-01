@@ -20,9 +20,8 @@ copied between files. gspot has its own checks for these, next to the rules of t
 tools.
 
 **Guides for coding agents.** gspot installs Markdown guides under `.gspot/guides/` and links
-them from `AGENTS.md`. `CLAUDE.md`, `GEMINI.md`, and the GitHub Copilot instructions get the
-same link when they exist. The guides tell the agent how to write code in this repository, and
-they match the checks.
+them from `AGENTS.md`. The guides tell the agent how to write code in this repository, and they
+match the checks.
 
 **Enforcement.** Git hooks run the checks before each commit and push, and a finding stops the
 commit. `gspot init --ci github` or `--ci gitlab` also writes a CI job. Each finding names the

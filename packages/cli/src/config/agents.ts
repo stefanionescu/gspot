@@ -4,6 +4,8 @@ export const RULE_LINK =
     /\]\((?:\.\.\/)*(?:general|language|runtime|framework|library|tool|platform|database|shared|repository)\/[^)]+\.md\)/u;
 export const INLINE_CODE_SPANS = /`[^`]*`/gu;
 export const EM_DASH = '—';
+/** The heading the text of a moved `CLAUDE.md` goes under at the end of `AGENTS.md`. */
+export const MOVED_HEADING = '## Other instructions';
 export const LIST_ITEM = /^\s*(?:[-*]|\d+\.)\s+/u;
 export const ITEM_END = /[.!?]["')\]]*$/u;
 export const AGENT_LAYERS = new Set(['general/agent', 'general/code', 'general/prose']);
