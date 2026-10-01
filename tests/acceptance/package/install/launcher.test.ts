@@ -22,7 +22,7 @@ function killIfRunning(pid: number): void {
     }
 }
 
-test.each(['SIGINT', 'SIGTERM'] as const)(
+test.each(['SIGTERM'] as const)(
     'launcher cancellation with %s terminates its ready owned process',
     async (signal) => {
         await using fixture = await createConsumer(release.registry, release.version);

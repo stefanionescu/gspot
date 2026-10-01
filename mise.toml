@@ -51,6 +51,10 @@ run = "bun packages/cli/src/main.ts doctor"
 description = "Write the mise pins of every kit tool from the manifests."
 run = "bun packages/cli/scripts/test-tools.ts"
 
+[tasks."repo:pins"]
+description = "Check that every tool pin of the kit manifests exists in its registry."
+run = "bun packages/cli/scripts/pins.ts"
+
 [tasks."repo:setup"]
 description = "Install frozen dependencies, prepare the grammars, and synchronize Astro types."
 run = ["bun install --frozen-lockfile", "bun packages/cli/scripts/inputs.ts"]

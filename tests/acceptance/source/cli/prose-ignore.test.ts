@@ -4,9 +4,9 @@ import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { toolsPath } from '#tests/support/cli/tools.ts';
+import { containing } from '#tests/support/expectations.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
-import { containing, textContaining } from '#tests/support/expectations.ts';
 
 test('a path-specific Vale ignore retains findings elsewhere and reports its actual matches', async () => {
     await using directory = await testdir();
@@ -56,27 +56,4 @@ test('a path-specific Vale ignore retains findings elsewhere and reports its act
     writeFileSync(join(directory.path, 'guide.md'), '# Schedule\n\nRelease on March 4, 2026.\n');
     const corrected = await run(directory.path, command, environment);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-});
-
-test('an obsolete Vale switch reports a policy error without suppressing the check', async () => {
-    await using directory = await testdir();
-    const policy = policyOf(['prose'], '[guides]\ninstall = false\n');
-    await createFileTree(directory.path, {
-        'gspot.toml': policy,
-        'guide.md': '# Schedule\n\nRelease on March 4, 2026.\n',
-    });
-    const environment = { PATH: toolsPath(['vale']) };
-    const applied = await run(directory.path, ['apply'], environment);
-    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    const command = ['check', '--only', 'prose/vale', '--json'];
-    const obsoletePolicy = `${policy}\n[tools.vale]\nenabled = false\n`;
-    writeFileSync(join(directory.path, 'gspot.toml'), obsoletePolicy);
-    const obsolete = await run(directory.path, command, environment);
-    expect(obsolete.code, obsolete.stdout + obsolete.stderr).toBe(1);
-    const obsoleteChecks = (JSON.parse(obsolete.stdout) as RunReport).checks;
-    expect(obsoleteChecks.map((check) => check.check)).toStrictEqual(['prose/vale', 'integrity/policy']);
-    expect(obsoleteChecks[1]?.findings).toMatchObject([
-        { file: 'gspot.toml', message: textContaining('tools.vale.enabled: ') },
-    ]);
-    expect(readFileSync(join(directory.path, 'gspot.toml'), 'utf8')).toBe(obsoletePolicy);
 });

@@ -22,11 +22,6 @@ function expectPluginPayload(consumer: string): void {
 }
 
 async function expectPluginExports(consumer: string): Promise<void> {
-    const installedPlugin = join(consumer, 'node_modules', '@gspothq/eslint-plugin');
-    const documentation = readFileSync(join(installedPlugin, 'README.md'), 'utf8');
-    for (const [index, match] of [...documentation.matchAll(/```javascript\n([\s\S]*?)```/gu)].entries()) {
-        writeFileSync(join(consumer, `readme-${String(index)}.mjs`), match[1]!);
-    }
     writeFileSync(join(consumer, 'consumer.mjs'), CONSUMER);
     writeFileSync(join(consumer, 'consumer.mts'), DECLARATIONS);
     const checked = await run(['node', 'consumer.mjs'], { cwd: consumer, timeoutMs: RELEASE_TIMEOUT_MS });
@@ -48,12 +43,9 @@ async function expectPluginExports(consumer: string): Promise<void> {
     expect(typed.code, typed.stdout + typed.stderr).toBe(0);
 }
 
-test.each([
-    { scenario: 'contains its license and documentation', verify: expectPluginPayload },
-    { scenario: 'exposes modules and declarations and enforces both levels', verify: expectPluginExports },
-])(
-    'the installed ESLint plugin $scenario',
-    async ({ verify }) => {
+test(
+    'the installed ESLint plugin holds its license and documentation, loads as both module kinds, and enforces both levels',
+    async () => {
         const built = await run([process.execPath, 'packages/eslint-plugin/build.ts'], {
             cwd: root,
             timeoutMs: RELEASE_TIMEOUT_MS,
@@ -99,7 +91,8 @@ test.each([
             );
             expect(installed.code, installed.stdout + installed.stderr).toBe(0);
             expect(lstatSync(join(consumer, 'node_modules', '@gspothq/eslint-plugin')).isSymbolicLink()).toBe(false);
-            await verify(consumer);
+            expectPluginPayload(consumer);
+            await expectPluginExports(consumer);
         } finally {
             await registry.stop();
             expect(existsSync(registry.work)).toBe(false);

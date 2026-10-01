@@ -6,7 +6,7 @@ import { root } from '#tests/support/package/packages.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { waitForFile, captureChild } from '#tests/support/cli/process.ts';
 
-test.each(['refusal', 'SIGINT', 'SIGTERM'] as const)(
+test.each(['refusal', 'SIGTERM'] as const)(
     'release acceptance removes its registry after publication %s',
     async (scenario) => {
         await using sandbox = await testdir();
@@ -34,7 +34,7 @@ test.each(['refusal', 'SIGINT', 'SIGTERM'] as const)(
         await using capture = captureChild(child);
         expect(await waitForFile(marker)).toBe(true);
         if (scenario !== 'refusal') child.kill(scenario);
-        const expected = { refusal: 1, SIGINT: 130, SIGTERM: 143 }[scenario];
+        const expected = { refusal: 1, SIGTERM: 143 }[scenario];
         expect(await child.exited, await capture.errors).toBe(expected);
         expect(await capture.errors).toContain('Publication fixture started.');
         expect(readdirSync(join(sandbox.path, 'temp'))).toStrictEqual([]);

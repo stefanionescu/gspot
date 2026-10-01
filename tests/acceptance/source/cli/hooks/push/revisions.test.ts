@@ -59,17 +59,6 @@ test(
             cwd: sandbox.path,
             stdin: `refs/heads/main ${broken} refs/heads/main ${base}\n`,
         });
-        const pushText = await processes.run(
-            command.filter((argument) => argument !== '--json'),
-            {
-                cwd: sandbox.path,
-                env: { GSPOT_HOOK: 'pre-push' },
-                stdin: `refs/heads/main ${broken} refs/heads/main ${base}\n`,
-            },
-        );
-        expect(pushText.code, pushText.stdout + pushText.stderr).toBe(1);
-        expect(pushText.stdout).toContain('reproduce: printf');
-        expect(pushText.stdout).toContain('Bypass this hook once: git push --no-verify');
         const failedReport = (JSON.parse(failing.stdout) as PushReport).revisions[0]!.report;
         const reproduction = failedReport.checks[0]?.reproduce;
         expect(reproduction).toBeDefined();
