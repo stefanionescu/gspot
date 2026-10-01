@@ -13,7 +13,7 @@ test('level filtering respects fenced examples, nested sections, and the next pe
     expect(selectedSections(selectedSections(text, 'recommended'), 'recommended')).toBe(before + after);
 });
 
-test('named rules follow the same level inventory as generated lint configuration', () => {
+test('named rules follow the same levels as generated lint configuration', () => {
     const header = '---\nlayer: language\nkit: react\ntitle: React\n---\n\n# React\n\n';
     const required = '## Rendering\n\nPreserve `react/no-danger-with-children`.\n\n';
     const convention = '## HTML sinks\n\nPreserve `react/no-danger`.\n';

@@ -123,7 +123,7 @@ export function doctorReport(session: Session, pinned: string | undefined): Doct
 }
 
 /**
- * The report as text, the way 02-cli.md shows it.
+ * The report as text: one line per tool, then the changes, hooks, CI, rules, and versions.
  * @param report the report
  * @returns the text for stdout
  */

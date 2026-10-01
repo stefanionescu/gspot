@@ -165,7 +165,7 @@ function comparisonLine(comparison: RunReport['comparison'], quiet: boolean): st
 }
 
 /**
- * The run as text, the way 02-cli.md shows it.
+ * The run as text: one line per check, its findings, the ignores and skips, and the summary.
  * @param report the run report
  * @param options quiet and verbose output flags
  * @returns the text for stdout

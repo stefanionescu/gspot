@@ -403,7 +403,7 @@ paths = [
     "packages/cli/src/checks/swift",
     "packages/cli/src/checks/typescript",
 ]
-reason = "Language names identify the implemented check and parser domains in the architecture ownership layout."
+reason = "Each folder holds the checks and parsers of one language, named after it."
 
 [[structure.single_file_folder_allowed]]
 paths = ["docs/src/pages/schema"]
@@ -499,7 +499,7 @@ reason = "The gspot package exposes a command through bin and has no importable 
 [[ignore]]
 check = "integrity/stale-paths"
 paths = ["UPDATES.md"]
-reason = "UPDATES.md records the audit that the stages carry out, and it names the files they delete and move. Remove this entry when the last stage deletes UPDATES.md."
+reason = "UPDATES.md records an audit, and it names files and folders the work deletes and moves."
 
 [[check]]
 name = "tests/unit"
