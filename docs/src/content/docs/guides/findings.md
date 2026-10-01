@@ -1,6 +1,6 @@
 ---
 title: Fix findings
-description: Read a finding, explain it, fix it, and read the reports.
+description: Read a finding, explain it, fix it, and read the report.
 sidebar:
     order: 3
 ---
@@ -70,22 +70,12 @@ To add a fixer for your own command, see [custom checks](/guides/custom-checks/#
 
 Reports list every ignore, so an ignored finding stays visible.
 
-## Reports
+## The report
 
 At the end of a run, gspot prints the failed, missing, errored, and skipped checks, then the
 counts and the time. A skipped check did not run, so it does not count as passed. The report
-labels an interrupted run `incomplete`.
-
-Each run also writes three reports:
-
-| File                                     | Format                                                                  |
-| ---------------------------------------- | ----------------------------------------------------------------------- |
-| `.gspot/reports/report.json`             | The gspot report. `gspot check --json` prints the same object.          |
-| `.gspot/reports/report.sarif`            | SARIF, for code scanning.                                               |
-| `.gspot/reports/report.codequality.json` | [GitLab Code Quality](https://docs.gitlab.com/ci/testing/code_quality/) |
-
-The Code Quality report holds only findings with a file location. Identical findings share
-one fingerprint.
+labels an interrupted run `incomplete`. Scripts and CI can read the same report as one JSON
+object from `gspot check --json`.
 
 ## Files no check reads
 
@@ -100,5 +90,5 @@ To fail the run when any source file goes unchecked, set this in `gspot.toml`:
 strict = true
 ```
 
-If gspot cannot write a report or a cache file, it prints the path and the error. The findings
-and the exit code stay the same.
+If gspot cannot write a cache file, it prints the path and the error. The findings and the exit
+code stay the same.

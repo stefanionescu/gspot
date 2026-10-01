@@ -132,8 +132,7 @@ workflow calls it before it publishes. A newer run of a pull request cancels the
 jobs:
 
 - `check`, on Linux: the type check, every commit and push check except the tests, the manual
-  checks, and `doctor`. It uploads the reports, and outside pull requests it sends the SARIF to
-  code scanning.
+  checks, and `doctor`.
 - `docs`: the documentation tests and the site build.
 - `package`: `mise run test:package`.
 - `unit`, on Linux, macOS, and Windows: `mise run test`.
