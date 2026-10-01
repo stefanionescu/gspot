@@ -38,19 +38,11 @@ describe('gspot add', () => {
                 PATH: `${join(MODULES, '.bin')}${delimiter}${toolsPath(['typos', 'ec', 'ast-grep'])}`,
             };
             await installAtLevel(sandbox.path, CONFIGURATION_ARRIVAL_INIT, environment);
-            const before = await run(
-                sandbox.path,
-                ['check', '--only', 'typescript/eslint', '--no-cache', '--json'],
-                environment,
-            );
+            const before = await run(sandbox.path, ['check', '--only', 'typescript/eslint', '--json'], environment);
             expect(before.code, before.stdout + before.stderr).toBe(0);
             const added = await run(sandbox.path, ['add', 'zod', '--json'], environment);
             expect(added.code, added.stdout + added.stderr).toBe(0);
-            const after = await run(
-                sandbox.path,
-                ['check', '--only', 'typescript/eslint', '--no-cache', '--json'],
-                environment,
-            );
+            const after = await run(sandbox.path, ['check', '--only', 'typescript/eslint', '--json'], environment);
             expect(after.code, after.stdout + after.stderr).toBe(1);
             const report = JSON.parse(after.stdout) as RunReport;
             expect(report.checks).toMatchObject([{ check: 'typescript/eslint', status: 'fail' }]);
@@ -65,7 +57,7 @@ describe('gspot add', () => {
             await Bun.write(join(sandbox.path, 'schema.ts'), LOOSE.replace('z.any()', 'z.string()'));
             const correctedCheck = await run(
                 sandbox.path,
-                ['check', '--only', 'typescript/eslint', '--no-cache', '--json'],
+                ['check', '--only', 'typescript/eslint', '--json'],
                 environment,
             );
             expect(correctedCheck.code, correctedCheck.stdout + correctedCheck.stderr).toBe(0);

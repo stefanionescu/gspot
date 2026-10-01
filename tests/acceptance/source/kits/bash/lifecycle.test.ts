@@ -73,7 +73,7 @@ test(
             '--no-install',
         ]);
         await Bun.write(join(sandbox.path, 'scripts', 'bad.sh'), '#!/usr/bin/env bash\necho $1\n');
-        const check = await run(sandbox.path, ['check', '--only', 'bash/shellcheck', '--no-cache']);
+        const check = await run(sandbox.path, ['check', '--only', 'bash/shellcheck']);
         expect(check.code).toBe(1);
         expect(check.stdout).toContain('scripts/bad.sh:2:6  SC2086');
         expect(check.stdout).toContain('help:');
@@ -87,7 +87,7 @@ test(
             'Word splitting is wanted in this launcher.',
         ]);
         expect(ignored.code).toBe(0);
-        const ignoredCheck = await run(sandbox.path, ['check', '--only', 'bash/shellcheck', '--no-cache', '--json']);
+        const ignoredCheck = await run(sandbox.path, ['check', '--only', 'bash/shellcheck', '--json']);
         expect(ignoredCheck.code).toBe(0);
         expect((JSON.parse(ignoredCheck.stdout) as RunReport).checks).toMatchObject([
             { check: 'bash/shellcheck', status: 'ok', findings: [] },
@@ -124,7 +124,7 @@ test(
         );
         expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
         expect(initialized.stdout + initialized.stderr).toContain('run gspot check');
-        const check = await run(sandbox.path, ['check', '--only', 'bash/shellcheck', '--no-cache'], {
+        const check = await run(sandbox.path, ['check', '--only', 'bash/shellcheck'], {
             PATH: bin,
             HOME: join(sandbox.path, 'home'),
             MISE_DATA_DIR: join(sandbox.path, 'home', 'mise'),
@@ -134,7 +134,7 @@ test(
         expect(check.stdout).toContain('shellcheck 0.11.0 is not installed');
         const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
         expect(selected.code, selected.stdout + selected.stderr).toBe(0);
-        const missing = await run(sandbox.path, ['check', '--only', 'structure/bash-limits', '--no-cache'], {
+        const missing = await run(sandbox.path, ['check', '--only', 'structure/bash-limits'], {
             PATH: bin,
             HOME: join(sandbox.path, 'home'),
             MISE_DATA_DIR: join(sandbox.path, 'home', 'mise'),
@@ -142,7 +142,7 @@ test(
         expect(missing.code).toBe(2);
         expect(missing.stdout).toContain('missing');
         expect(missing.stdout).toContain('Run: gspot install');
-        const available = await run(sandbox.path, ['check', '--only', 'bash/shellcheck', '--no-cache', '--json']);
+        const available = await run(sandbox.path, ['check', '--only', 'bash/shellcheck', '--json']);
         expect(available.code, available.stdout + available.stderr).toBe(0);
         expect((JSON.parse(available.stdout) as RunReport).checks).toMatchObject([
             { check: 'bash/shellcheck', status: 'ok', findings: [] },
@@ -178,7 +178,7 @@ test(
         await Bun.write(join(sandbox.path, '.gspot', 'version'), originalVersion);
         const applied = await run(sandbox.path, ['apply']);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-        const corrected = await run(sandbox.path, ['check', '--only', 'bash/shellcheck', '--no-cache', '--json']);
+        const corrected = await run(sandbox.path, ['check', '--only', 'bash/shellcheck', '--json']);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
             { check: 'bash/shellcheck', status: 'ok', findings: [] },

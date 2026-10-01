@@ -54,10 +54,6 @@ export const DRIFT_HELP: Record<DriftEntry['kind'], string> = {
     stray: STRAY_HELP,
     conflict: CONFLICT_HELP,
 };
-export const GSPOT_SUPPRESSION = {
-    marker: '^(?://|#|--|<!--) ?gspot-ignore +[a-z0-9-]+/[a-z0-9-]+',
-    reason: String.raw` -- (?<reason>\S.*)`,
-};
 
 export const BUNFIG = 'bunfig.toml';
 export const DEFAULT_AGE_DAYS = 7;

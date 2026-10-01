@@ -32,7 +32,7 @@ test('JavaScript checking includes authored build directories at all', async () 
         packageClient: session.packageClient,
     }).files.find(({ path }) => path === '.gspot/config/jsconfig.json')!;
     await Bun.write(join(sandbox.path, generated.path), generated.content);
-    const command = ['check', '--only', 'javascript/checkjs', '--no-cache', '--json'];
+    const command = ['check', '--only', 'javascript/checkjs', '--json'];
     const broken = await run(sandbox.path, command, environment);
     expect(broken.code, broken.stdout + broken.stderr).toBe(1);
     const report = JSON.parse(broken.stdout) as RunReport;
@@ -67,7 +67,7 @@ test.each([false, true])(
         }).files.find(({ path }) => path === '.gspot/config/jsconfig.json')!;
         await Bun.write(join(sandbox.path, generated.path), generated.content);
         chmodSync(join(sandbox.path, generated.path), 0o444);
-        const command = ['check', '--only', 'javascript/checkjs', '--no-cache', '--json'];
+        const command = ['check', '--only', 'javascript/checkjs', '--json'];
         const env = { PATH: toolsPath(['tsc']) };
         const broken = await run(sandbox.path, command, env);
         expect(broken.code, broken.stdout + broken.stderr).toBe(1);
@@ -104,7 +104,7 @@ test('JavaScript checking reports a broken authored configuration without rewrit
     }).files.find(({ path }) => path === '.gspot/config/jsconfig.json')!;
     await Bun.write(join(sandbox.path, generated.path), generated.content);
     await Bun.write(join(sandbox.path, 'jsconfig.json'), '{');
-    const command = ['check', '--only', 'javascript/checkjs', '--no-cache', '--json'];
+    const command = ['check', '--only', 'javascript/checkjs', '--json'];
     const env = { PATH: toolsPath(['tsc']) };
     const invalid = await run(sandbox.path, command, env);
     expect(invalid.code, invalid.stdout + invalid.stderr).toBe(2);
@@ -149,7 +149,7 @@ test('JavaScript projects retain nested compiler options and isolate the deepest
         '.gspot/config/sibling/jsconfig.json',
     ]);
     for (const output of outputs) await Bun.write(join(sandbox.path, output.path), output.content);
-    const command = ['check', '--only', 'javascript/checkjs', '--no-cache', '--json'];
+    const command = ['check', '--only', 'javascript/checkjs', '--json'];
     const env = { PATH: toolsPath(['tsc']) };
     const broken = await run(sandbox.path, command, env);
     expect(broken.code, broken.stdout + broken.stderr).toBe(1);

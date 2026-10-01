@@ -77,7 +77,7 @@ test('strict coverage fails uncovered supported sources and accepts enabled chec
         'unknown.gspot-unsupported': 'Authored text with no registered linter.\n',
         'icon.png': Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]),
     });
-    const options = { stage: 'all', skips: [], fix: false, isDryRun: false, noCache: true } as const;
+    const options = { stage: 'all', skips: [], fix: false, isDryRun: false } as const;
     const session = await openSession(sandbox.path);
     expect(settingRows(session.policyFiles.policy, session.scopes).rows).toContainEqual(
         containing({ key: 'coverage.strict', value: true }),
@@ -125,7 +125,7 @@ test('strict coverage keeps inability as exit two and leaves message-stage check
         'source.sh': 'echo example\n',
     });
     const session = await openSession(sandbox.path);
-    const failed = await executeRun(session, { stage: 'all', skips: [], fix: false, isDryRun: true, noCache: true });
+    const failed = await executeRun(session, { stage: 'all', skips: [], fix: false, isDryRun: true });
     expect(failed.report.exitCode).toBe(2);
     expect(failed.report.coverage.findings.map((entry) => entry.file)).toContain('gspot.toml');
     const commitRun = await executeRun(session, { stage: 'message', skips: [], fix: false, isDryRun: true });
@@ -182,7 +182,6 @@ test('a per-scope check runs only where that scope owns a owned source', async (
         skips: [],
         fix: false,
         isDryRun: true,
-        noCache: true,
     });
     expect(outcome.report.exitCode).toBe(0);
     expect(outcome.report.checks).toMatchObject([{ check: 'bash/syntax', scope: 'app', status: 'ok' }]);
@@ -211,7 +210,6 @@ test('a project-wide check covers its owned sources without owning unrelated pro
         skips: [],
         fix: false,
         isDryRun: true,
-        noCache: true,
     });
     expect(outcome.report.checks).toMatchObject([{ check: 'bash/syntax', status: 'ok' }]);
     expect(outcome.report.coverage).toStrictEqual({ checked: 1, unchecked: 2, findings: [] });
@@ -250,7 +248,6 @@ test.each([
         skips: scenario === 'skip' ? [check] : [],
         fix: false,
         isDryRun: true,
-        noCache: true,
     });
     expect(outcome.report.checks).toMatchObject([{ check, status }]);
     expect(outcome.report.coverage).toStrictEqual({ checked, unchecked: scenario === 'ignore' ? 2 : 1, findings: [] });

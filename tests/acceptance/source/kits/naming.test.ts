@@ -14,7 +14,7 @@ test('the selected naming configuration rejects banned terms in declarations and
         'shell.js': 'export const shellCommand = 1;\n',
         'shell/port.js': 'export const port = 1;\n',
     });
-    const command = ['check', '--only', 'naming/identifiers', 'naming/paths', '--no-cache', '--json'];
+    const command = ['check', '--only', 'naming/identifiers', 'naming/paths', '--json'];
     const refused = await run(sandbox.path, command);
     expect(refused.code, refused.stdout + refused.stderr).toBe(1);
     const report = JSON.parse(refused.stdout) as RunReport;
@@ -43,14 +43,7 @@ test('ordinary service and generation names pass the naming checks in code and p
         'gspot.toml': policyOf(['javascript', 'naming'], '', 'all'),
         'service/generate.js': 'export function generate() { return "message"; }\nexport const service = generate();\n',
     });
-    const result = await run(sandbox.path, [
-        'check',
-        '--only',
-        'naming/identifiers',
-        'naming/paths',
-        '--no-cache',
-        '--json',
-    ]);
+    const result = await run(sandbox.path, ['check', '--only', 'naming/identifiers', 'naming/paths', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const report = JSON.parse(result.stdout) as RunReport;
     expect(report.checks.map((check) => [check.check, check.status])).toStrictEqual([

@@ -121,9 +121,6 @@ test(
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
         const primed = await run(sandbox.path, args);
         expect(primed.code, primed.stdout + primed.stderr).toBe(0);
-        const cached = await run(sandbox.path, args);
-        expect(cached.code, cached.stdout + cached.stderr).toBe(0);
-        expect((JSON.parse(cached.stdout) as RunReport).checks[0]!.status).toBe('cache');
         await Bun.write(join(sandbox.path, 'pyproject.toml'), project + exclusions.replace('"^vendor/"', '"^other/"'));
         const changed = await run(sandbox.path, args);
         expect(changed.code, changed.stdout + changed.stderr).toBe(1);
@@ -173,7 +170,7 @@ test(
         expect(pointer).not.toContain('basic');
         const policy = await Bun.file(`${sandbox.path}/gspot.toml`).text();
         expect(policy).not.toContain('planted/skipped.py');
-        const command = ['check', '--only', 'python/basedpyright', '--no-cache', '--json'];
+        const command = ['check', '--only', 'python/basedpyright', '--json'];
         const refused = await run(sandbox.path, command, environment);
         expect(refused.code, refused.stdout + refused.stderr).toBe(1);
         const report = JSON.parse(refused.stdout) as RunReport;

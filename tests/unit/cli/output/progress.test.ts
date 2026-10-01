@@ -2,7 +2,7 @@ import { test, expect } from 'bun:test';
 import { progress } from '#cli/output/reporter.ts';
 import type { CheckResult } from '#cli/types/checks.ts';
 
-test('terminal progress includes cached and skipped checks while log output keeps failures', () => {
+test('terminal progress includes passed and skipped checks while log output keeps failures', () => {
     const terminal: string[] = [];
     const log: string[] = [];
     const interactive = progress({ isTTY: true, write: (text) => terminal.push(text) }, false);
@@ -10,17 +10,17 @@ test('terminal progress includes cached and skipped checks while log output keep
     const result: CheckResult = {
         check: 'example/check',
         scope: 'app',
-        status: 'cache',
+        status: 'ok',
         files: 1,
         duration: 0,
         findings: [],
     };
-    for (const status of ['cache', 'skipped', 'fail', 'missing', 'error'] as const) {
+    for (const status of ['ok', 'skipped', 'fail', 'missing', 'error'] as const) {
         interactive({ ...result, status });
         redirected({ ...result, status });
     }
     expect(terminal).toStrictEqual([
-        'app  example/check  unchanged\n',
+        'app  example/check  ok\n',
         'app  example/check  skipped\n',
         'app  example/check  fail\n',
         'app  example/check  missing\n',

@@ -126,7 +126,6 @@ async function runSelected(
             skips: options.skips,
             fix: options.fix,
             isDryRun: options.isDryRun,
-            noCache: options.noCache,
             onResult: options.onResult,
             staged: set.staged,
             changed: changed?.paths,
@@ -162,8 +161,7 @@ export async function checkContent(
     assertPinMatches(root);
     const session = await openSession(root);
     if (revision !== undefined) {
-        session.cacheRoot = revision.cacheRoot;
-        session.installedRoot = revision.cacheRoot;
+        session.installedRoot = revision.installedRoot;
     }
     const unknown = unknownSelection(session, options.only);
     if (unknown !== undefined) return unknown;

@@ -65,11 +65,11 @@ plantedCases(
             check: 'integrity/suppressions',
             files: {
                 'scripts/quiet.sh': CLEAN.replace(
-                    '    echo "hello $1"',
-                    () => '    # shellcheck disable=SC2086\n    echo "hello $1"',
+                    '    echo "${greeting}"',
+                    () => '    # shellcheck disable=SC2086\n    echo "${greeting}"',
                 ),
             },
-            expected: { file: 'scripts/quiet.sh', rule: 'shellcheck-no-reason', line: 11 },
+            expected: { file: 'scripts/quiet.sh', rule: 'shellcheck-no-reason', line: 12 },
         },
         {
             check: 'integrity/allowlists-match',
@@ -89,7 +89,7 @@ plantedCases(
             'integrity/tracked-dependencies reports a dependency folder that git tracks',
             async () => {
                 const { root, environment } = planted();
-                const command = ['check', '--only', 'integrity/tracked-dependencies', '--no-cache', '--json'];
+                const command = ['check', '--only', 'integrity/tracked-dependencies', '--json'];
                 const clean = await run(root, command, environment);
                 expect(clean.code, clean.stdout + clean.stderr).toBe(0);
                 mkdirSync(join(root, 'web', 'node_modules', 'left-pad'), { recursive: true });

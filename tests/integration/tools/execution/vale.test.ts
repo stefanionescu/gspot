@@ -161,7 +161,7 @@ test('a raw-markup fixture exception preserves adjacent images and other prose r
         'fixture.ts': 'const markup = \'<img src="fixture.png">\';\n// We delve into records.\n',
         'guide.md': '<img src="example.png">\n',
     });
-    const result = await run(directory.path, ['check', '--only', 'prose/vale', '--no-cache', '--json']);
+    const result = await run(directory.path, ['check', '--only', 'prose/vale', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(1);
     const report = JSON.parse(result.stdout) as RunReport;
     expect(report.checks.flatMap((check) => check.findings)).toStrictEqual([

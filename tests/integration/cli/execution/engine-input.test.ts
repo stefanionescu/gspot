@@ -55,7 +55,6 @@ test.each([
             skips: [],
             fix: false,
             isDryRun: true,
-            noCache: true,
         };
         const failed = await executeRun(session, options);
         expect(failed.report.exitCode, JSON.stringify(failed.report)).toBe(1);
@@ -191,7 +190,6 @@ if (onPosix)
             only: ['sql/syntax', 'sql/block-comments', 'sql/file-length'],
             fix: false,
             isDryRun: true,
-            noCache: true,
         };
         const read = spyOn(fs, 'readFileSync');
         try {
@@ -266,7 +264,6 @@ format = "none"
         only: ['sql/syntax', 'project/correct-sql'],
         fix: false,
         isDryRun: false,
-        noCache: true,
     };
     const defect = await executeRun(session, options);
     expect(defect.report.exitCode).toBe(1);

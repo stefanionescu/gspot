@@ -1,30 +1,12 @@
 import { z } from 'zod';
-import { createHash } from 'node:crypto';
+import { relative, isAbsolute } from 'node:path';
 import { toPosix } from '#cli/platform/paths.ts';
-import { readAsset } from '#cli/platform/assets.ts';
-import { join, relative, isAbsolute } from 'node:path';
-import { openRoot } from '#cli/platform/filesystem.ts';
+import { assetPath } from '#cli/platform/assets.ts';
 import { fileBatches } from '#cli/execution/files/batches.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import type { EngineInput, AstGrepMatch } from '#cli/types/checks.ts';
-import { PRIVATE_FILE, CACHE_DIRECTORY } from '#cli/config/platform.ts';
 
 const positionSchema = z.object({ line: z.number().int().nonnegative() });
-
-// The rule file ast-grep reads, named by the hash of its text. It is written when missing or edited, and the cache
-// prune ages it out.
-function ruleFile(root: string, asset: string): string {
-    const bytes = Buffer.from(readAsset(asset));
-    const path = `${CACHE_DIRECTORY}/${createHash('sha256').update(bytes).digest('hex')}.yml`;
-    const files = openRoot(root);
-    try {
-        const current = files.read(path);
-        if (current?.bytes.equals(bytes) !== true) files.write(path, { bytes, mode: PRIVATE_FILE }, current);
-    } finally {
-        files.close();
-    }
-    return join(root, path);
-}
 
 export const matchSchema = z.object({
     file: z.string().min(1),
@@ -42,7 +24,7 @@ export const matchSchema = z.object({
 export async function astGrepMatches(input: EngineInput, asset: string, files: string[]): Promise<AstGrepMatch[]> {
     if (files.length === 0) return [];
     const root = input.root;
-    const rule = ruleFile(root, asset);
+    const rule = assetPath(asset);
     const command = ['ast-grep', 'scan', '--json=compact', '-r', rule];
     const parsed: AstGrepMatch[] = [];
     for (const batch of fileBatches(files, command, process.platform)) {

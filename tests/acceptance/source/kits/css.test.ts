@@ -32,7 +32,7 @@ test(
         const applied = await run(sandbox.path, ['apply']);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
         await installPrivateTools(sandbox.path);
-        const command = ['check', '--only', 'css/stylelint', '--no-cache', '--json'];
+        const command = ['check', '--only', 'css/stylelint', '--json'];
         const failed = await run(sandbox.path, command);
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
         const failedReport = JSON.parse(failed.stdout) as RunReport;

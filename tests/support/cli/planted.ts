@@ -37,9 +37,9 @@ async function expectCorrection(planted: Planted, entry: FindingCase, repository
     expect(accepted.checks).toMatchObject([{ check: entry.check, status: 'ok', findings: [] }]);
 }
 
-/** A clean bash script every planted repository starts from. */
+/** A clean bash script every planted repository starts from. Its main holds enough statements not to be trivial. */
 export const script =
-    '#!/usr/bin/env bash\n#\n# Builds the thing.\n# Runtime: Bash 4.4+, macOS and Linux.\nset -euo pipefail\nshopt -s inherit_errexit\n\n# gspot-ignore structure/trivial-function -- reason: Bash script policy requires this main entry point.\nmain() {\n    echo "hello $1"\n}\n\nmain "$@"\n';
+    '#!/usr/bin/env bash\n#\n# Builds the thing.\n# Runtime: Bash 4.4+, macOS and Linux.\nset -euo pipefail\nshopt -s inherit_errexit\n\nmain() {\n    local name="$1"\n    local greeting="hello ${name}"\n    echo "${greeting}"\n}\n\nmain "$@"\n';
 
 /**
  * Plants one defect in an installed repository, runs its check alone, and restores the repository.
@@ -56,12 +56,7 @@ export async function runPlanted(
     const restore = plant(cwd, planted);
     try {
         // A case may build a site twice, which takes minutes on a slow runner.
-        return await run(
-            cwd,
-            ['check', '--only', planted.check, '--no-cache', '--json'],
-            environment,
-            PLANTED_TIMEOUT_MS * 4,
-        );
+        return await run(cwd, ['check', '--only', planted.check, '--json'], environment, PLANTED_TIMEOUT_MS * 4);
     } finally {
         restore();
     }

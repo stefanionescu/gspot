@@ -15,6 +15,8 @@ import { PYTHON_STRUCTURE } from '#cli/checks/python/analyses.ts';
 import { generatedFile } from '#tests/support/cli/generated/files.ts';
 
 const examples = allRuleExamples().filter((example) => example.language === 'python');
+// A FastAPI route or a protocol member, whose signature the framework or the protocol fixes.
+const REQUIRED_SIGNATURE = /@app\.|\(Protocol\)/u;
 
 test('Python guide examples satisfy all types and docstrings', async () => {
     await using sandbox = await testdir();
@@ -63,9 +65,15 @@ test('Python guide examples satisfy all types and docstrings', async () => {
 
 test('Python guide examples retain required signatures and reject an unnecessary wrapper', async () => {
     await using sandbox = await testdir();
-    const first = examples[0]!;
+    // Framework callbacks and protocol members keep their signatures; a repository records them with gspot ignore.
+    const required = examples.flatMap((example, index) =>
+        REQUIRED_SIGNATURE.test(example.body) ? [`example_${String(index)}.py`] : [],
+    );
+    const index = examples.findIndex((example) => !REQUIRED_SIGNATURE.test(example.body));
+    const first = examples[index]!;
+    const ignore = `[[ignore]]\ncheck = "python/trivial-function"\npaths = ${JSON.stringify(required)}\nreason = "Framework callbacks and protocol members keep their required signatures."\n`;
     await createFileTree(sandbox.path, {
-        'gspot.toml': policyOf(['python'], '', 'all'),
+        'gspot.toml': policyOf(['python'], required.length === 0 ? '' : ignore, 'all'),
         ...Object.fromEntries(examples.map((example, index) => [`example_${String(index)}.py`, example.body])),
     });
     const session = await openSession(sandbox.path);
@@ -73,13 +81,13 @@ test('Python guide examples retain required signatures and reject an unnecessary
         .get('python')!
         .checks.filter((check) => Object.hasOwn(PYTHON_STRUCTURE, check.analysis ?? ''))
         .map((check) => check.name);
-    const options = { stage: 'all' as const, only, skips: [], fix: false, isDryRun: false, noCache: true };
-    const target = join(sandbox.path, 'example_0.py');
+    const options = { stage: 'all' as const, only, skips: [], fix: false, isDryRun: false };
+    const target = join(sandbox.path, `example_${String(index)}.py`);
     await Bun.write(target, `${first.body}\n\ndef wrapper():\n    return 1\n`);
     const rejected = await executeRun(await openSession(sandbox.path), options);
     expect(rejected.report.exitCode, JSON.stringify(rejected.report)).toBe(1);
     expect(rejected.report.checks.flatMap((check) => check.findings)).toMatchObject([
-        { check: 'python/trivial-function', file: 'example_0.py', rule: 'trivial-function' },
+        { check: 'python/trivial-function', file: `example_${String(index)}.py`, rule: 'trivial-function' },
     ]);
     await Bun.write(target, first.body);
     const corrected = await executeRun(await openSession(sandbox.path), options);

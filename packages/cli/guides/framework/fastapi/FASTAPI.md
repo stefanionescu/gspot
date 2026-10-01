@@ -157,7 +157,6 @@ app = FastAPI(openapi_url=None, docs_url=None, redoc_url=None)
 
 
 @app.get("/filters")
-# gspot-ignore python/trivial-function -- FastAPI registers this required route callback.
 def get_filters(filters: Annotated[FilterParams, Query()]) -> FilterParams:
     """Return the validated query values."""
     return filters

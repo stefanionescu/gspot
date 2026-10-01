@@ -72,17 +72,3 @@ test('an unreadable attributes file cannot become an empty rule set', async () =
         kindSource: '.gitattributes',
     });
 });
-
-test('the results gspot keeps for itself are generated files', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        '.gspot/cache/result.json': '{}\n',
-        'source.yml': 'key: value\n',
-    });
-    const repository = await readRepository(sandbox.path, [], [], []);
-    const kinds = Object.fromEntries(repository.files.map((file) => [file.path, [file.kind, file.kindSource]]));
-    expect(kinds).toMatchObject({
-        '.gspot/cache/result.json': ['generated', 'gspot'],
-        'source.yml': ['source', 'default'],
-    });
-});

@@ -47,7 +47,7 @@ test('Swift Testing outside test folders reports a sleep and accepts its correct
         'Examples/Checks.swift': source,
         'AppTests/Helper.swift': 'func waits() { sleep(1) }\n',
     });
-    const command = ['check', '--only', 'xctest/no-sleep', '--no-cache', '--json'];
+    const command = ['check', '--only', 'xctest/no-sleep', '--json'];
     const broken = await run(sandbox.path, command);
     expect(broken.code, broken.stdout + broken.stderr).toBe(1);
     expect((JSON.parse(broken.stdout) as RunReport).checks[0]!.findings).toStrictEqual([
@@ -114,7 +114,7 @@ test('Swift test checks apply sleep allowances in their declared scope', async (
         'Examples/Checks.swift': source,
         'integration/Checks.swift': source,
     });
-    const result = await run(sandbox.path, ['check', '--only', 'xctest/no-sleep', '--no-cache', '--json']);
+    const result = await run(sandbox.path, ['check', '--only', 'xctest/no-sleep', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(1);
     expect(
         (JSON.parse(result.stdout) as RunReport).checks.map((check) => ({
@@ -190,7 +190,7 @@ test('snapshot layouts match semantic owners by path and respect nested scopes',
         'custom/References/Multi-Part-title-dark.png': 'png',
         'custom/References/Missing-title.png': 'png',
     });
-    const command = ['check', '--only', 'xctest/reference-images', '--no-cache', '--json'];
+    const command = ['check', '--only', 'xctest/reference-images', '--json'];
     const broken = await run(sandbox.path, command);
     expect(broken.code, broken.stdout + broken.stderr).toBe(1);
     expect(
@@ -225,7 +225,7 @@ test.each([
     expect(result.stdout + result.stderr).toContain('reference_layout');
     await Bun.write(`${sandbox.path}/gspot.toml`, policyOf(['xctest'], '', 'all'));
     await Bun.write(`${sandbox.path}/__Snapshots__/Checks/example.png`, new Uint8Array([0, 1, 2]));
-    const corrected = await run(sandbox.path, ['check', '--only', 'xctest/reference-images', '--no-cache', '--json']);
+    const corrected = await run(sandbox.path, ['check', '--only', 'xctest/reference-images', '--json']);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
         { check: 'xctest/reference-images', status: 'ok', findings: [] },

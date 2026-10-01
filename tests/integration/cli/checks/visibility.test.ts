@@ -86,7 +86,6 @@ test('Swift declaration order identifies private types and extensions and accept
         stage: 'all' as const,
         skips: [],
         only: ['swift/private-before-public'],
-        noCache: true,
         fix: false,
         isDryRun: true,
     };

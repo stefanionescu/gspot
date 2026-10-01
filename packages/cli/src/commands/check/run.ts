@@ -25,7 +25,7 @@ async function checkStaged(root: string, options: CheckOptions, signal: AbortSig
             const paths = options.paths.map((path) => relative(root, resolve(options.cwd, path)));
             return checkContent(revisionRoot, { ...options, cwd: revisionRoot, paths }, signal, {
                 content: 'index',
-                cacheRoot: root,
+                installedRoot: root,
                 reference: tree,
                 staged: set,
                 reportRoot: root,

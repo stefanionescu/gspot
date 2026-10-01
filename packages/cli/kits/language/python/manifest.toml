@@ -193,7 +193,6 @@ runs = "per-scope"
 cwd = "scope"
 analysis = "deptry"
 tool = "deptry"
-cached = true
 owners = {extensions = [".py"], filenames = ["pyproject.toml"]}
 coverage = ["consistency"]
 output = {format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<column>\\d+): (?<rule>DEP\\d+) (?<message>.*)$"}
@@ -306,7 +305,7 @@ owners = {extensions = [".py"]}
 coverage = ["structure"]
 summary = "Reports functions at or below limits.trivial_statements and files containing only trivial declarations."
 why = "Unnecessary functions add names and indirection without substantial behavior."
-help = "Inline unnecessary functions. Required external APIs need a narrow suppression with a reason."
+help = "Inline unnecessary functions. For one an external API requires, run `gspot ignore python/trivial-function --paths <file> --reason <why>`."
 
 
 [[checks]]

@@ -22,7 +22,6 @@ export type RunReport = {
     skips: { check: string; source: 'flag' | 'platform' | 'rules' | 'ignore' }[];
     /** Source files analyzed by checks that ran, supported files no enabled check reads, and coverage findings. */
     coverage: { checked: number; unchecked: number; findings: Finding[] };
-    suppressions: Record<string, number>;
     unstaged: number;
     narrowed: boolean;
     failed: string[];
@@ -55,12 +54,6 @@ export type FixResult = { check: string; changed: string[] } & (
     | { status: 'failed'; note: string }
 );
 export type FixReport = { results: FixResult[]; changed: string[]; diffs: string[] };
-/** File reads shared by cached checks within one execution pass. */
-export type RunHashes = {
-    policy: string;
-    files: Map<string, string>;
-    tools: Map<string, string>;
-};
 export type ToolRun = {
     session: Session;
     planned: PlannedCheck;
@@ -84,8 +77,6 @@ export type CoverageReport = {
 };
 export type Session = ToolSearch & {
     reads: SourceReads;
-    /** Persistent result storage for a disposable revision snapshot. */
-    cacheRoot?: string;
     resources?: DisposableStack;
     packageClient?: z.infer<typeof packageToolSchema>;
     cancelSignal?: AbortSignal;
@@ -95,14 +86,6 @@ export type Session = ToolSearch & {
     repository: Repository;
     scopes: ScopeSelection[];
 };
-export type CacheKeyInput = {
-    check: string;
-    scope: string;
-    toolVersion: string;
-    configurationHash: string;
-    files: { path: string; hash: string }[];
-    extra?: string;
-};
 export type Executable = {
     check: PlannedCheck;
     run: (session: Session, planned: PlannedCheck, staged?: Set<string>) => Promise<CheckResult>;
@@ -110,18 +93,15 @@ export type Executable = {
 export type Pass = {
     session: Session;
     options: RunOptions;
-    hashes: RunHashes;
     staged: Set<string> | undefined;
     uses: Map<string, IgnoreUse>;
 };
 export type RunOptions = RunReportOptions & {
     fix: boolean;
-    noCache?: boolean;
     cancelSignal?: AbortSignal;
 };
 export type RunOutcome = { report: RunReport; planned: PlannedCheck[]; fixes?: FixReport };
 export type IgnoreUse = { entry: IgnoreEntry; matched: number };
-export type InlineIgnore = { line: number; check: string; reason?: string };
 export type ReportInput = {
     session: Session;
     options: RunReportOptions;

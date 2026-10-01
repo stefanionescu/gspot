@@ -2,8 +2,6 @@
 import { coverageReport } from '#cli/execution/coverage.ts';
 import { ownedInputs } from '#cli/execution/planning/plan.ts';
 import type { Finding, CheckResult } from '#cli/types/checks.ts';
-import type { TrackedFile } from '#cli/types/repository/repository.ts';
-import { suppressionComments } from '#cli/checks/repository/suppressions.ts';
 import { UNABLE_EXIT, POLICY_CHECK, RAN_STATUSES, FAILED_STATUSES } from '#cli/config/execution/execution.ts';
 
 import type {
@@ -14,14 +12,6 @@ import type {
     PlannedCheck,
     RunReportOptions,
 } from '#cli/types/execution/execution.ts';
-
-// How often each suppression form appears in the checked sources.
-async function census(session: Session, files: TrackedFile[]): Promise<Record<string, number>> {
-    const counts: Record<string, number> = {};
-    for (const entry of await suppressionComments(session.root, session.scopes, session.reads, files))
-        counts[entry.form] = (counts[entry.form] ?? 0) + 1;
-    return counts;
-}
 
 // The wrong lines of gspot.toml that reading dropped, reported as one failed check so the rest of the run stands.
 function policyProblemsResult(session: Session): CheckResult | undefined {
@@ -88,7 +78,7 @@ function exitCode(unable: boolean, failed: string[], coverage: Finding[]): numbe
  * @param input the session, the options, the plan, and what ran
  * @returns the report
  */
-export async function assembleReport(input: ReportInput): Promise<RunReport> {
+export function assembleReport(input: ReportInput): RunReport {
     const { session, options, started, planned, active, ran, uses, fixes } = input;
     const policyResult = options.stage === 'message' ? undefined : policyProblemsResult(session);
     if (policyResult !== undefined) options.onResult?.(policyResult);
@@ -118,7 +108,6 @@ export async function assembleReport(input: ReportInput): Promise<RunReport> {
             .toArray(),
         skips: planned.flatMap((check) => (check.skip ? [{ check: check.check, source: check.skip.source }] : [])),
         coverage: { checked: checkedSources.length, unchecked: configured.unchecked.length, findings: coverage },
-        suppressions: await census(session, checkedSources),
         unstaged: 0,
         narrowed: [options.staged, options.changed, options.paths].some((selection) => selection !== undefined),
         failed,

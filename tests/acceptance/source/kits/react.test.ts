@@ -134,11 +134,7 @@ function requiredRulesStay(planted: () => { root: string; environment: Record<st
         'integrity/required-rules accepts the generated configuration',
         async () => {
             const { root, environment } = planted();
-            const required = await run(
-                root,
-                ['check', '--only', 'integrity/required-rules', '--no-cache'],
-                environment,
-            );
+            const required = await run(root, ['check', '--only', 'integrity/required-rules'], environment);
             expect(required.code, required.stdout + required.stderr).toBe(0);
         },
         PLANTED_TIMEOUT_MS * 2,

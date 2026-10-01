@@ -1,4 +1,4 @@
-// Validate suppression comments against the repository reason policy; reporting owns the census.
+// Validate suppression comments against the repository reason policy.
 import { ownedBy } from '#cli/kits/owners.ts';
 import { findingAt } from '#cli/checks/result.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
@@ -7,7 +7,6 @@ import { readSource } from '#cli/repository/tracked.ts';
 import { isReasonAccepted } from '#cli/policy/weaker.ts';
 import type { ScopeSelection } from '#cli/types/policy/policy.ts';
 import type { SourceComment } from '#cli/types/parsers/parsers.ts';
-import { GSPOT_SUPPRESSION } from '#cli/config/checks/repository.ts';
 import { commentText, sourceComments } from '#cli/parsers/comments.ts';
 import { COMMENT_STYLE_BY_EXTENSION } from '#cli/config/execution/execution.ts';
 import type { SourceReads, TrackedFile } from '#cli/types/repository/repository.ts';
@@ -47,7 +46,6 @@ function suppressionForms(selection: ScopeSelection, file: TrackedFile): Suppres
             ),
         ),
     );
-    definitions.set('gspot-ignore', GSPOT_SUPPRESSION);
     return [...definitions].map(([form, definition]) => ({
         form,
         marker: new RegExp(definition.marker, 'u'),

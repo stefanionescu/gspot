@@ -35,7 +35,7 @@ test(
         const applied = await run(sandbox.path, ['apply']);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
         await installPrivateTools(sandbox.path);
-        const command = ['check', '--only', 'javascript/eslint', '--no-cache', '--json'];
+        const command = ['check', '--only', 'javascript/eslint', '--json'];
         const failed = await run(sandbox.path, command);
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
         expect((JSON.parse(failed.stdout) as RunReport).checks.flatMap((check) => check.findings)).toContainEqual(
@@ -69,7 +69,7 @@ test(
             'app/authored.txt': 'preserved nested source\n',
         });
         const environment = { PATH: `${INSTALLED_BIN_PATH}${delimiter}${toolsPath([])}` };
-        const command = ['check', '--stage', 'push', '--only', 'jest/coverage', '--no-cache', '--json'];
+        const command = ['check', '--stage', 'push', '--only', 'jest/coverage', '--json'];
         const uncovered = await run(sandbox.path, command, environment);
         expect(uncovered.code, uncovered.stdout + uncovered.stderr).toBe(1);
         const report = JSON.parse(uncovered.stdout) as RunReport;
@@ -106,7 +106,7 @@ test(
             'coverage/authored.txt': 'preserved report\n',
         });
         const environment = { PATH: `${INSTALLED_BIN_PATH}${delimiter}${toolsPath([])}` };
-        const command = ['check', '--stage', 'push', '--only', 'jest/coverage', '--no-cache', '--json'];
+        const command = ['check', '--stage', 'push', '--only', 'jest/coverage', '--json'];
         const uncovered = await run(sandbox.path, command, environment);
         expect(uncovered.code, uncovered.stdout + uncovered.stderr).toBe(1);
         expect((JSON.parse(uncovered.stdout) as RunReport).checks.flatMap((check) => check.findings)).toStrictEqual([

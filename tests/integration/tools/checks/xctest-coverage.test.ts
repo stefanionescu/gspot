@@ -37,7 +37,6 @@ if (onMac)
                 skips: [],
                 fix: false,
                 isDryRun: true,
-                noCache: true,
             });
             expect(failed.report.exitCode, JSON.stringify(failed.report)).toBe(1);
             expect(failed.report.checks).toMatchObject([
@@ -60,7 +59,6 @@ if (onMac)
                 skips: [],
                 fix: false,
                 isDryRun: true,
-                noCache: true,
             });
             expect(corrected.report.exitCode, JSON.stringify(corrected.report)).toBe(0);
             expect(corrected.report.checks).toMatchObject([{ check: 'xctest/coverage', status: 'ok', findings: [] }]);

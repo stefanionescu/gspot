@@ -48,7 +48,7 @@ test(
         const installed = await run([...command, 'install', '--json'], toolOptions);
         expect(installed.code, installed.stdout + installed.stderr).toBe(2);
         expect((JSON.parse(installed.stdout) as InstallJson).error).toContain('installed locked npm tools');
-        const formatterArgs = ['check', 'source.js', '--only', 'formatting/prettier', '--no-cache', '--json'];
+        const formatterArgs = ['check', 'source.js', '--only', 'formatting/prettier', '--json'];
         const invalidFormat = await run([...command, ...formatterArgs], toolOptions);
         expect(invalidFormat.code, invalidFormat.stdout + invalidFormat.stderr).toBe(1);
         const formatReport = JSON.parse(invalidFormat.stdout) as RunReport;
@@ -88,15 +88,7 @@ test(
         expect(fixture.installed.code, fixture.installed.stdout + fixture.installed.stderr).toBe(0);
         const { command } = fixture;
         const { nativeConsumer, nativeOptions, authoredPackage } = await prepareNativeConsumer(fixture);
-        const tomlFormat = [
-            ...command,
-            'check',
-            'settings.toml',
-            '--only',
-            'files/toml-format',
-            '--no-cache',
-            '--json',
-        ];
+        const tomlFormat = [...command, 'check', 'settings.toml', '--only', 'files/toml-format', '--json'];
         const unformattedToml = await run(tomlFormat, nativeOptions);
         expect(unformattedToml.code, unformattedToml.stdout + unformattedToml.stderr).toBe(1);
         const tomlReport = JSON.parse(unformattedToml.stdout) as RunReport;
@@ -146,7 +138,7 @@ test(
         const { command } = fixture;
         const { nativeConsumer, nativeOptions, authoredPackage } = await prepareNativeConsumer(fixture);
         writeFileSync(join(nativeConsumer, 'settings.toml'), 'a = [\n');
-        const tomlSyntax = [...command, 'check', 'settings.toml', '--only', 'files/toml', '--no-cache', '--json'];
+        const tomlSyntax = [...command, 'check', 'settings.toml', '--only', 'files/toml', '--json'];
         const invalidToml = await run(tomlSyntax, nativeOptions);
         expect(invalidToml.code, invalidToml.stdout + invalidToml.stderr).toBe(1);
         const syntaxReport = JSON.parse(invalidToml.stdout) as RunReport;
@@ -196,7 +188,6 @@ test(
             'notes.json',
             '--only',
             'formatting/editorconfig-checker',
-            '--no-cache',
             '--json',
         ];
         const trailingWhitespace = await run(whitespaceCommand, nativeOptions);

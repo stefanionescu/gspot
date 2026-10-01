@@ -16,7 +16,6 @@ export const COMMENT_GRAMMARS = new Map<string, GrammarName>([
     ['.htm', 'html'],
     ['.md', 'html'],
     ['.css', 'css'],
-    ['.rb', 'ruby'],
 ]);
 // The pieces of a TOML file: a string, a comment to the end of the line, or a run of anything else.
 export const TOML_TOKENS = new RegExp(String.raw`${TOML_STRINGS.source}|#[^\n]*|[^"'#]+|["']`, 'gu');

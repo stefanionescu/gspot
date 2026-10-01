@@ -45,7 +45,6 @@ test('all reports and fixes ordinary shell formatting', async () => {
         only: ['bash/shfmt'],
         fix: false,
         isDryRun: false,
-        noCache: true,
     };
     const defect = await executeRun(session, options);
     expect(defect.report.exitCode, JSON.stringify(defect.report)).toBe(1);

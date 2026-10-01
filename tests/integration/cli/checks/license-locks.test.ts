@@ -158,7 +158,7 @@ test.each(['root', 'nested', 'combined'])(
             .flatMap((scope) => scope.selected)
             .some((manifest) => manifest.kit.name === 'structure');
         expect(selectsStructure).toBe(selection === 'combined');
-        const result = await runCli(root, ['check', '--only', 'integrity/allowlists-match', '--no-cache', '--json']);
+        const result = await runCli(root, ['check', '--only', 'integrity/allowlists-match', '--json']);
         expect(result.code, result.stdout + result.stderr).toBe(1);
         expect((JSON.parse(result.stdout) as RunReport).checks).toMatchObject([
             {
@@ -170,7 +170,7 @@ test.each(['root', 'nested', 'combined'])(
         const path = `${root}/gspot.toml`;
         const policyText = await Bun.file(path).text();
         await Bun.write(path, policyText.replace('example@2.0.0', 'example@1.2.3'));
-        const corrected = await runCli(root, ['check', '--only', 'integrity/allowlists-match', '--no-cache', '--json']);
+        const corrected = await runCli(root, ['check', '--only', 'integrity/allowlists-match', '--json']);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
             { check: 'integrity/allowlists-match', status: 'ok', findings: [] },

@@ -32,7 +32,6 @@ export const XCTEST_EXECUTION_OPTIONS = {
     only: ['xctest/coverage'],
     fix: false,
     isDryRun: false,
-    noCache: true,
 };
 export const GENERATED_DRIFT_OPTIONS = {
     stage: 'all' as const,
@@ -47,7 +46,6 @@ export const ROUTES_OPTIONS = {
     only: ['express/routes-tested'],
     fix: false,
     isDryRun: false,
-    noCache: true,
 };
 export const MANIFEST = '{"private":true,"packageManager":"bun@1.3.11"}\n';
 export const GENERATED = '.gspot/config/shellcheckrc';

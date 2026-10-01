@@ -66,12 +66,12 @@ export type Selections = {
     set: StagedSet | { staged: undefined; unstaged: number };
     stage: StageFilter;
 };
-/** What a snapshot stands for: the staged index or a pushed commit, and where its report goes. */
+/** What a snapshot stands for: the staged index or a pushed commit, and the repository whose tools it runs. */
 export type Revision = {
     commits?: string[];
     historyComplete?: boolean;
     content: 'index' | 'commit';
-    cacheRoot: string;
+    installedRoot: string;
     reference: string;
     reportRoot?: string;
     staged?: StagedSet;
@@ -92,7 +92,6 @@ export type CheckOptions = {
     messageFile?: string;
     quiet: boolean;
     verbose: boolean;
-    noCache: boolean;
 };
 export type CheckCommandResult = CommandResult & { report?: RunReport };
 

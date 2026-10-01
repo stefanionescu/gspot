@@ -39,7 +39,7 @@ test('external property allowances retain adjacent local signature findings thro
         ),
         'source.ts': source,
     });
-    const command = ['check', '--json', '--no-cache', '--only', 'naming/identifiers'];
+    const command = ['check', '--json', '--only', 'naming/identifiers'];
     const failed = await run(sandbox.path, command);
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
     const report = JSON.parse(failed.stdout) as RunReport;
@@ -69,7 +69,7 @@ test('SQL migration names retain their timestamp while enforcing snake case', as
         [invalid]: 'CREATE TABLE users (id integer);\n',
         'queries/select_users.sql': 'SELECT id FROM users;\n',
     });
-    const command = ['check', '--only', 'naming/paths', '--no-cache', '--json'];
+    const command = ['check', '--only', 'naming/paths', '--json'];
     const refused = await run(sandbox.path, command);
     expect(refused.code, refused.stdout + refused.stderr).toBe(1);
     const report = JSON.parse(refused.stdout) as RunReport;
@@ -92,21 +92,14 @@ test('naming policy validates inherited and scoped declarations against the comp
         'web/source.js': 'export const remoteRecord = 1;\n',
         'worker/source.py': 'remote_record = 1\n',
     });
-    const command = ['check', '--only', 'naming/policy-schema', '--no-cache', '--json'];
+    const command = ['check', '--only', 'naming/policy-schema', '--json'];
     const accepted = await run(sandbox.path, command);
     expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
     const complete = JSON.parse(accepted.stdout) as RunReport;
     expect(complete.checks.map(({ check, scope, status }) => ({ check, scope, status }))).toStrictEqual([
         { check: 'naming/policy-schema', scope: '', status: 'ok' },
     ]);
-    const narrowed = await run(sandbox.path, [
-        'check',
-        'entry.sh',
-        '--only',
-        'naming/policy-schema',
-        '--no-cache',
-        '--json',
-    ]);
+    const narrowed = await run(sandbox.path, ['check', 'entry.sh', '--only', 'naming/policy-schema', '--json']);
     expect(narrowed.code, narrowed.stdout + narrowed.stderr).toBe(0);
     await Bun.write(join(sandbox.path, 'gspot.toml'), MISMATCHED_POLICY);
     const refused = await run(sandbox.path, command);
@@ -152,7 +145,7 @@ test.each(['constructor', 'toString', '__proto__'])(
             ),
             'source.ts': 'export const bad_name = 1;\n',
         });
-        const command = ['check', '--no-cache', '--json', '--only', 'naming/identifiers', 'naming/policy-schema'];
+        const command = ['check', '--json', '--only', 'naming/identifiers', 'naming/policy-schema'];
         const failed = await run(sandbox.path, command);
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
         const report = JSON.parse(failed.stdout) as RunReport;

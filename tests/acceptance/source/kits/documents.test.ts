@@ -110,11 +110,7 @@ plantedCases(
                 rmSync(join(sandbox, '.gspot', 'config', 'vale', 'styles', 'config', 'dictionaries'), {
                     recursive: true,
                 });
-                const broken = await run(
-                    sandbox,
-                    ['check', '--only', 'prose/vale', '--no-cache', '--json'],
-                    environment,
-                );
+                const broken = await run(sandbox, ['check', '--only', 'prose/vale', '--json'], environment);
                 expect(broken.code, 'a Vale that cannot run is an error, never a pass').toBe(2);
                 expect((JSON.parse(broken.stdout) as RunReport).checks).toMatchObject([
                     { check: 'prose/vale', status: 'error' },
@@ -122,11 +118,7 @@ plantedCases(
                 // Apply syncs the missing packages again, which the error message tells the reader to run.
                 const synced = await run(sandbox, ['apply'], environment);
                 expect(synced.code, synced.stdout + synced.stderr).toBe(0);
-                const corrected = await run(
-                    sandbox,
-                    ['check', '--only', 'prose/vale', '--no-cache', '--json'],
-                    environment,
-                );
+                const corrected = await run(sandbox, ['check', '--only', 'prose/vale', '--json'], environment);
                 expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
                 expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
                     { check: 'prose/vale', status: 'ok', findings: [] },

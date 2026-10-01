@@ -26,12 +26,12 @@ async function expectCommitChecks(root: string, environment: Record<string, stri
     );
     expect(refused.code).toBe(1);
     expect(refused.stdout).toContain('commits/commitlint');
-    const accepted = await run(root, ['check', '--only', 'commits/range', '--no-cache'], environment);
+    const accepted = await run(root, ['check', '--only', 'commits/range'], environment);
     expect(accepted.code).toBe(0);
     await Bun.write(join(root, 'more.md'), '# more\n');
     git(root, ['add', '-A']);
     git(root, ['commit', '-qm', 'Pushed past the hook.', '--no-verify']);
-    const range = await run(root, ['check', '--only', 'commits/range', '--no-cache'], environment);
+    const range = await run(root, ['check', '--only', 'commits/range'], environment);
     expect(range.code).toBe(1);
     expect(range.stdout).toContain('type-empty');
 }

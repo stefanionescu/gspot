@@ -71,11 +71,7 @@ test(
             },
         ]);
         await Bun.write(join(sandbox.path, 'notes/plan.txt'), 'one\nCompleted task\n');
-        const corrected = await run(
-            sandbox.path,
-            ['check', '--only', 'notes/no-fixme', '--json', '--no-cache'],
-            environment,
-        );
+        const corrected = await run(sandbox.path, ['check', '--only', 'notes/no-fixme', '--json'], environment);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
             { check: 'notes/no-fixme', status: 'ok', findings: [] },
@@ -133,7 +129,7 @@ message = "text"
         },
     ]);
     await Bun.write(join(sandbox.path, 'source.txt'), 'corrected');
-    const corrected = await run(sandbox.path, ['check', '--json', '--no-cache']);
+    const corrected = await run(sandbox.path, ['check', '--json']);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
         { check: 'sandbox/json', status: 'ok', findings: [] },

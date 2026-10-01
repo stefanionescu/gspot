@@ -35,7 +35,6 @@ test('Docker configuration scans isolate deepest scopes and retain scoped adviso
         skips: [],
         fix: false,
         isDryRun: false,
-        noCache: true,
     };
     const failed = await executeRun(session, options);
     expect(failed.report.exitCode, JSON.stringify(failed.report)).toBe(1);

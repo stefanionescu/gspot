@@ -52,7 +52,6 @@ test('a failed Swift build without source diagnostics returns execution exit 2 a
         stage: 'all' as const,
         only: ['swift/build'],
         skips: [],
-        noCache: true,
         fix: false,
         isDryRun: false,
     };

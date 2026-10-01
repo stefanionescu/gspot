@@ -42,7 +42,7 @@ async function expectFormatterDiscovery(root: string): Promise<void> {
 }
 
 async function expectFormatterCorrection(root: string): Promise<void> {
-    const args = ['check', '--only', 'formatting/prettier', '--json', '--no-cache'];
+    const args = ['check', '--only', 'formatting/prettier', '--json'];
     const files = CASES.map(({ file }) => file);
     const before = await run(root, [...args, '--', ...files]);
     expect(before.code, before.stdout + before.stderr).toBe(1);
@@ -68,11 +68,9 @@ async function expectFormatterCorrection(root: string): Promise<void> {
             ].join(ending),
         );
     }
-    const editor = await run(
-        root,
-        ['check', '--only', 'formatting/editorconfig-checker', '--json', '--no-cache', '--', ...files],
-        { PATH: toolsPath(['ec']) },
-    );
+    const editor = await run(root, ['check', '--only', 'formatting/editorconfig-checker', '--json', '--', ...files], {
+        PATH: toolsPath(['ec']),
+    });
     expect(editor.code, editor.stdout + editor.stderr).toBe(0);
 }
 

@@ -129,7 +129,7 @@ fix_order = "codemod"
 `,
     });
     const session = await openSession(sandbox.path);
-    const options = { stage: 'commit' as const, skips: [], fix: true, isDryRun: false, noCache: true };
+    const options = { stage: 'commit' as const, skips: [], fix: true, isDryRun: false };
     const outcome = await executeRun(session, options);
     expect(outcome.report.exitCode).toBe(0);
     expect(outcome.report.checks[0]!.files).toBe(2);

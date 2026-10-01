@@ -41,7 +41,7 @@ if (onPosix)
         writeFileSync(join(repository.path, 'source.py'), 'import os\nimport sys\n');
         gitOutput(repository.path, ['add', 'source.py']);
         writeFileSync(join(repository.path, 'source.py'), 'VALUE = 1\n');
-        const command = ['check', '--only', 'python/ruff', '--no-cache', '--json'];
+        const command = ['check', '--only', 'python/ruff', '--json'];
         const staged = await run(repository.path, [...command, '--staged']);
         expect(staged.code, staged.stdout + staged.stderr).toBe(1);
         const report = JSON.parse(staged.stdout) as RunReport;

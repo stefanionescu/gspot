@@ -63,11 +63,7 @@ for (const shape of SHAPES)
                 dependencies: shape.dependencies,
                 files: { 'tsconfig.json': COMPONENT_TSCONFIG, 'src/answer.ts': COMPONENT_SOURCE, ...shape.files },
             });
-            const clean = await run(
-                sandbox.path,
-                ['check', '--only', shape.check, '--no-cache', '--json'],
-                environment,
-            );
+            const clean = await run(sandbox.path, ['check', '--only', shape.check, '--json'], environment);
             expect(clean.code, clean.stdout + clean.stderr).toBe(0);
             expect((JSON.parse(clean.stdout) as RunReport).checks).toMatchObject([
                 { check: shape.check, status: 'ok', files: 1, findings: [] },
@@ -93,22 +89,14 @@ for (const shape of SHAPES)
                 }),
             );
             await Bun.write(join(sandbox.path, shape.planted), shape.check === 'vue/eslint' ? VUE_CLEAN : SVELTE_CLEAN);
-            const correctedCheck = await run(
-                sandbox.path,
-                ['check', '--only', shape.check, '--no-cache', '--json'],
-                environment,
-            );
+            const correctedCheck = await run(sandbox.path, ['check', '--only', shape.check, '--json'], environment);
             expect(correctedCheck.code, correctedCheck.stdout + correctedCheck.stderr).toBe(0);
             expect((JSON.parse(correctedCheck.stdout) as RunReport).checks).toMatchObject([
                 { check: shape.check, status: 'ok', findings: [] },
             ]);
-            const code = await run(sandbox.path, ['check', '--only', 'typescript/eslint', '--no-cache'], environment);
+            const code = await run(sandbox.path, ['check', '--only', 'typescript/eslint'], environment);
             expect(code.code, code.stdout + code.stderr).toBe(0);
-            const required = await run(
-                sandbox.path,
-                ['check', '--only', 'integrity/required-rules', '--no-cache'],
-                environment,
-            );
+            const required = await run(sandbox.path, ['check', '--only', 'integrity/required-rules'], environment);
             expect(required.code, required.stdout + required.stderr).toBe(0);
         },
         PLANTED_TIMEOUT_MS * 6,
@@ -142,7 +130,7 @@ test.each([
                 [filename]: before,
             },
         });
-        const args = ['check', '--only', `${framework}/eslint`, '--no-cache', '--json'];
+        const args = ['check', '--only', `${framework}/eslint`, '--json'];
         const broken = await run(sandbox.path, args, environment);
         expect(broken.code, broken.stdout + broken.stderr).toBe(1);
         const report = JSON.parse(broken.stdout) as RunReport;

@@ -38,12 +38,12 @@ test('a nested unknown setting is a finding at its line, and its correction clea
     );
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': policy, 'api/source.sh': 'echo example\n' });
-    const invalid = await run(sandbox.path, ['check', '--only', 'bash/syntax', '--no-cache', '--json']);
+    const invalid = await run(sandbox.path, ['check', '--only', 'bash/syntax', '--json']);
     expect(invalid.code, invalid.stdout + invalid.stderr).toBe(1);
     const report = JSON.parse(invalid.stdout) as { checks: { check: string; findings: { line?: number }[] }[] };
     expect(report.checks.find((check) => check.check === 'integrity/policy')?.findings).toMatchObject([{ line: 8 }]);
     writeFileSync(join(sandbox.path, 'gspot.toml'), policy.replace('file_linse', 'file_lines'));
-    const corrected = await run(sandbox.path, ['check', '--only', 'bash/syntax', '--no-cache', '--json']);
+    const corrected = await run(sandbox.path, ['check', '--only', 'bash/syntax', '--json']);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
 });
 
@@ -54,7 +54,7 @@ test('a loosening without a reason is a finding of integrity/policy, and the res
     );
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': policy, 'source.sh': 'echo example\n' });
-    const checked = await run(sandbox.path, ['check', '--only', 'bash/syntax', '--no-cache', '--json']);
+    const checked = await run(sandbox.path, ['check', '--only', 'bash/syntax', '--json']);
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
     const report = JSON.parse(checked.stdout) as { checks: { check: string; status: string; findings: unknown[] }[] };
     expect(report.checks).toMatchObject([
@@ -71,7 +71,7 @@ test('a loosening without a reason is a finding of integrity/policy, and the res
     expect(applied.code).toBe(2);
     expect(applied.stdout + applied.stderr).toContain('gspot.toml:7:');
     writeFileSync(join(sandbox.path, 'gspot.toml'), policy.replace('1000', '200'));
-    const corrected = await run(sandbox.path, ['check', '--only', 'bash/syntax', '--no-cache', '--json']);
+    const corrected = await run(sandbox.path, ['check', '--only', 'bash/syntax', '--json']);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect((JSON.parse(corrected.stdout) as { checks: { check: string }[] }).checks).toMatchObject([
         { check: 'bash/syntax' },

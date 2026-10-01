@@ -89,6 +89,3 @@ To fail the run when any source file goes unchecked, set this in `gspot.toml`:
 [coverage]
 strict = true
 ```
-
-If gspot cannot write a cache file, it prints the path and the error. The findings and the exit
-code stay the same.

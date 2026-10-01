@@ -25,7 +25,6 @@ test('blocking calls at all belong to each async body, excluding synchronous clo
         stage: 'all' as const,
         skips: [],
         only: ['fastapi/no-blocking-io-in-async'],
-        noCache: true,
         fix: false,
         isDryRun: true,
     };

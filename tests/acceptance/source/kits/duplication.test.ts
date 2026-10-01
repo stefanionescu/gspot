@@ -26,22 +26,14 @@ describe('the duplication configuration', () => {
             commitAll(sandbox.path);
             const environment = { PATH: `${NPM_BIN}${delimiter}${toolsPath(['shellcheck', 'shfmt', 'typos', 'ec'])}` };
             await installAtLevel(sandbox.path, DUPLICATION_INIT, environment);
-            const clean = await run(
-                sandbox.path,
-                ['check', '--only', 'duplication/jscpd', '--no-cache', '--json'],
-                environment,
-            );
+            const clean = await run(sandbox.path, ['check', '--only', 'duplication/jscpd', '--json'], environment);
             expect(clean.code, clean.stdout + clean.stderr).toBe(0);
             await Bun.write(
                 `${sandbox.path}/scripts/second.sh`,
                 `#!/usr/bin/env bash\nset -euo pipefail\n\ncount_second() {\n    local total=0\n${STEPS}\n    printf '%s\\n' "$total"\n}\n\ncount_second\n`,
             );
             commitAll(sandbox.path);
-            const found = await run(
-                sandbox.path,
-                ['check', '--only', 'duplication/jscpd', '--no-cache', '--json'],
-                environment,
-            );
+            const found = await run(sandbox.path, ['check', '--only', 'duplication/jscpd', '--json'], environment);
             expect(found.code, found.stdout + found.stderr).toBe(1);
             const report = JSON.parse(found.stdout) as RunReport;
             expect(report.checks).toMatchObject([{ check: 'duplication/jscpd', status: 'fail' }]);
@@ -60,7 +52,7 @@ describe('the duplication configuration', () => {
             );
             const correctedCheck = await run(
                 sandbox.path,
-                ['check', '--only', 'duplication/jscpd', '--no-cache', '--json'],
+                ['check', '--only', 'duplication/jscpd', '--json'],
                 environment,
             );
             expect(correctedCheck.code, correctedCheck.stdout + correctedCheck.stderr).toBe(0);

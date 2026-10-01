@@ -33,7 +33,7 @@ process.exit(2);
         const environment = {
             PATH: `${join(sandbox.path, 'bin')}${delimiter}${environmentVariables()['PATH'] ?? ''}`,
         };
-        const result = await run(sandbox.path, ['check', '--only', 'files/toml-format', '--no-cache'], environment);
+        const result = await run(sandbox.path, ['check', '--only', 'files/toml-format'], environment);
         expect(result.code, result.stderr + result.stdout).toBe(2);
         expect(result.stdout).toContain('taplo broke: exit 2');
         expect(result.stdout).toContain('INFO taplo: loaded configuration');
@@ -42,11 +42,7 @@ process.exit(2);
             join(sandbox.path, 'bin/taplo'),
             '#!/usr/bin/env bun\nif (process.argv.includes("--version")) console.log("taplo 0.10.0");\n',
         );
-        const corrected = await run(
-            sandbox.path,
-            ['check', '--only', 'files/toml-format', '--no-cache', '--json'],
-            environment,
-        );
+        const corrected = await run(sandbox.path, ['check', '--only', 'files/toml-format', '--json'], environment);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
             { check: 'files/toml-format', status: 'ok', findings: [] },
@@ -75,7 +71,7 @@ test(
         await Bun.write(path, workflow);
         const result = await run(
             sandbox.path,
-            ['check', '--only', 'files/actions-pins', '--stage', 'push', '--no-cache'],
+            ['check', '--only', 'files/actions-pins', '--stage', 'push'],
             environment,
         );
         expect(result.code, result.stderr + result.stdout).toBe(1);
@@ -84,7 +80,7 @@ test(
         await Bun.write(path, workflow.replace('0'.repeat(40), 'a'.repeat(40)));
         const corrected = await run(
             sandbox.path,
-            ['check', '--only', 'files/actions-pins', '--stage', 'push', '--no-cache', '--json'],
+            ['check', '--only', 'files/actions-pins', '--stage', 'push', '--json'],
             environment,
         );
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);

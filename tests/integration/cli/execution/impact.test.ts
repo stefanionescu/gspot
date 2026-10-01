@@ -38,7 +38,6 @@ test('repository checks retain nested inputs and report their defects once at th
         skips: [],
         fix: false,
         isDryRun: true,
-        noCache: true,
     };
     const failed = await executeRun(await openSession(sandbox.path), options);
     expect(failed.report.exitCode).toBe(1);
@@ -112,7 +111,7 @@ test.each([
     expect(fileChecks.flatMap((check) => check.files.map((file) => file.path))).toStrictEqual(
         operation === 'delete' ? [] : ['web/source.ts'],
     );
-    const outcome = await executeRun(session, { ...options, ...revision, fix: false, isDryRun: false, noCache: true });
+    const outcome = await executeRun(session, { ...options, ...revision, fix: false, isDryRun: false });
     expect(outcome.report.exitCode).toBe(1);
     expect(outcome.report.checks.map((check) => check.scope)).toStrictEqual(
         operation === 'delete' ? ['api'] : ['api', 'web'],
@@ -147,7 +146,6 @@ test('a positional file trigger preserves project-wide input and findings', asyn
         paths: ['api/source.ts'],
         fix: false,
         isDryRun: false,
-        noCache: true,
     });
     expect(outcome.report.exitCode).toBe(1);
     expect(outcome.report.checks[0]?.findings[0]?.message).toBe('Project finding');
@@ -187,9 +185,7 @@ test.each(['integrity', 'naming', 'structure', 'prose'] as const)(
         };
         session.scopes[0]!.selected = [{ ...selected, checks: [first, invalid] }];
         expect(
-            await rejection(
-                executeRun(session, { stage: 'commit', skips: [], fix: false, isDryRun: false, noCache: true }),
-            ),
+            await rejection(executeRun(session, { stage: 'commit', skips: [], fix: false, isDryRun: false })),
         ).toContain(`No ${engine} analysis is called unknown-analysis.`);
         expect(existsSync(join(sandbox.path, 'started.txt'))).toBe(false);
     },

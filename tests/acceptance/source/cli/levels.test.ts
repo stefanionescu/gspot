@@ -54,7 +54,7 @@ test(
             'gspot.toml': policyOf(['bash', 'naming'], '[guides]\ninstall = false\n'),
             'entry.sh': 'shell_command=example\n',
         });
-        const command = ['check', '--only', 'bash/syntax', 'naming/identifiers', '--no-cache', '--json'];
+        const command = ['check', '--only', 'bash/syntax', 'naming/identifiers', '--json'];
         await expectRecommendedLevel(sandbox.path, command);
         const all = await run(sandbox.path, ['set', 'level', 'all']);
         expect(all.code, all.stdout + all.stderr).toBe(0);

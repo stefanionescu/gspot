@@ -29,7 +29,7 @@ test('a global ignore stops a repository check and its correction command until 
         `[guides]\ninstall = false\n[[check]]\nname = "project/quality"\ncommand = ${JSON.stringify(command)}\nfix_command = ${JSON.stringify(fix)}\nfix_order = "codemod"\npaths = ["entry.sh"]\nstage = "commit"\n`,
     );
     await createFileTree(directory.path, { 'gspot.toml': policy, 'entry.sh': 'echo example\n' });
-    const args = ['check', '--only', 'project/quality', '--no-cache', '--json'];
+    const args = ['check', '--only', 'project/quality', '--json'];
     const before = await run(directory.path, args);
     expect(before.code, before.stdout + before.stderr).toBe(1);
     expect(readFileSync(join(directory.path, 'read.txt'), 'utf8')).toBe('executed');
@@ -177,7 +177,7 @@ test('path-specific ignores prevent checker and fixer execution and report an en
         'inputs/skip café.txt': 'defect\n',
         'inputs/skip-keep.txt': 'defect\n',
     });
-    const args = ['check', '--only', 'project/quality', '--fix', '--no-cache', '--json'];
+    const args = ['check', '--only', 'project/quality', '--fix', '--json'];
     const corrected = await run(directory.path, args);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     const report = JSON.parse(corrected.stdout) as RunReport;

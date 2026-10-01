@@ -65,7 +65,7 @@ if (toolShipsHere('semgrep'))
                 expect(report.results).toContainEqual(
                     containing({ check_id: rule, path, start: containing({ line }) }),
                 );
-            const cli = await run(root, ['check', '--only', 'security/semgrep', '--no-cache', '--json']);
+            const cli = await run(root, ['check', '--only', 'security/semgrep', '--json']);
             expect(cli.code, cli.stdout + cli.stderr).toBe(1);
             expect(
                 (JSON.parse(cli.stdout) as { checks: { findings: { rule: string }[] }[] }).checks
@@ -86,7 +86,7 @@ if (toolShipsHere('semgrep'))
             );
             expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
             expect((JSON.parse(corrected.stdout) as { results: unknown[] }).results).toStrictEqual([]);
-            const clean = await run(root, ['check', '--only', 'security/semgrep', '--no-cache', '--json']);
+            const clean = await run(root, ['check', '--only', 'security/semgrep', '--json']);
             expect(clean.code, clean.stdout + clean.stderr).toBe(0);
         },
         PLANTED_TIMEOUT_MS * 3,

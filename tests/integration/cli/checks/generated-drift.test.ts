@@ -14,7 +14,7 @@ test('an edited generated file and one holding merge markers are drift findings,
     await createFileTree(sandbox.path, {
         'gspot.toml': policyOf(['bash'], '[guides]\ninstall = false\n'),
         'run.sh': '#!/usr/bin/env bash\necho ok\n',
-        '.gitignore': '.gspot/cache/\n',
+        '.gitignore': '.gspot/state/\n',
     });
     await applyAll(await openSession(sandbox.path));
     const clean = await executeRun(await openSession(sandbox.path), GENERATED_DRIFT_OPTIONS);

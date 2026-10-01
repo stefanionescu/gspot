@@ -13,23 +13,13 @@ export const EXISTING_PLACEHOLDER = /^\{existing:(?<flag>[^:]+):(?<path>[^}]+)\}
 export const EACH_PLACEHOLDER = /^\{each:(?<flag>[^:]+):(?<setting>[a-z0-9_.-]+)\}$/u;
 export const FIX_ORDER: FixOrder[] = ['codemod', 'imports', 'manifest', 'format'];
 export const FIX_DIFF_CONTEXT = 3;
-export const RAN_STATUSES = new Set(['ok', 'cache', 'fail']);
+export const RAN_STATUSES = new Set(['ok', 'fail']);
 export const FILES_PLACEHOLDER = '{files}';
 export const SOURCE_COVERAGE_KINDS = new Set(['format', 'syntax', 'style', 'types']);
-export const CACHE_FORMAT = 5;
-// Seven days in milliseconds: a cache entry written longer ago is deleted.
-export const CACHE_RETENTION_MS = 604_800_000;
 export const FAILED_STATUSES = new Set(['fail', 'missing', 'error']);
 export const DOCKER = { name: 'docker', provider: 'host' as const, installers: {} };
-// Each pattern captures the check identifier. The reason follows `--` after the match.
-export const INLINE_IGNORE: Record<string, RegExp> = {
-    slash: /^\/\/ ?gspot-ignore +([a-z0-9/-]+)/u,
-    hash: /^# ?gspot-ignore +([a-z0-9/-]+)/u,
-    dash: /^-- ?gspot-ignore +([a-z0-9/-]+)/u,
-    html: /^<!-- ?gspot-ignore +([a-z0-9/-]+)/u,
-};
-export const REASON_INTRODUCER = '--';
-export const COMMENT_STYLE_BY_EXTENSION: Record<string, keyof typeof INLINE_IGNORE> = {
+/** The comment syntax of each source extension, which the suppression check reads. */
+export const COMMENT_STYLE_BY_EXTENSION: Record<string, 'slash' | 'hash' | 'dash' | 'html'> = {
     '.ts': 'slash',
     '.mts': 'slash',
     '.cts': 'slash',
@@ -48,7 +38,6 @@ export const COMMENT_STYLE_BY_EXTENSION: Record<string, keyof typeof INLINE_IGNO
     '.toml': 'hash',
     '.yml': 'hash',
     '.yaml': 'hash',
-    '.rb': 'hash',
     '.sql': 'dash',
     '.pgsql': 'dash',
     '.psql': 'dash',

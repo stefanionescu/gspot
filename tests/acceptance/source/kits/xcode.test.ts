@@ -138,7 +138,7 @@ plantedCases(
                 const { root, environment } = planted();
                 symlinkSync('Home.swift', join(root, 'App/Linked.swift'));
                 commitAll(root);
-                const args = ['check', '--only', 'xcode/symlinks', '--no-cache', '--json'];
+                const args = ['check', '--only', 'xcode/symlinks', '--json'];
                 const linked = await run(root, args, environment);
                 expect(linked.code, linked.stdout + linked.stderr).toBe(1);
                 expect((JSON.parse(linked.stdout) as RunReport).checks).toMatchObject([

@@ -39,7 +39,6 @@ export const GRAMMAR_PACKAGES: Record<string, string> = {
     'html.wasm': 'tree-sitter-html/tree-sitter-html.wasm',
     'javascript.wasm': 'tree-sitter-javascript/tree-sitter-javascript.wasm',
     'python.wasm': 'tree-sitter-python/tree-sitter-python.wasm',
-    'ruby.wasm': 'tree-sitter-ruby/tree-sitter-ruby.wasm',
     'tsx.wasm': 'tree-sitter-typescript/tree-sitter-tsx.wasm',
     'typescript.wasm': 'tree-sitter-typescript/tree-sitter-typescript.wasm',
 };
@@ -57,17 +56,11 @@ export const DECLARATION_EXTENSIONS = ['.d.ts', '.d.mts', '.d.cts'];
 export const GSPOT_FOLDER = '.gspot';
 export const CONFIGURATION_DIRECTORY = '.gspot/config';
 export const STATE_DIRECTORY = '.gspot/state';
-export const CACHE_DIRECTORY = '.gspot/cache';
 export const NODE_MODULES_DIRECTORY = '.gspot/node_modules';
 export const PYTHON_ENVIRONMENT_DIRECTORY = '.gspot/.venv';
 /** The folder each private installation kind is written to. */
 export const INSTALLATION_FOLDERS = { npm: NODE_MODULES_DIRECTORY, python: PYTHON_ENVIRONMENT_DIRECTORY } as const;
-export const PRIVATE_PATHS = [
-    `${NODE_MODULES_DIRECTORY}/`,
-    `${PYTHON_ENVIRONMENT_DIRECTORY}/`,
-    `${STATE_DIRECTORY}/`,
-    `${CACHE_DIRECTORY}/`,
-];
+export const PRIVATE_PATHS = [`${NODE_MODULES_DIRECTORY}/`, `${PYTHON_ENVIRONMENT_DIRECTORY}/`, `${STATE_DIRECTORY}/`];
 
 /** The pinned upstream Swift parser and its license, downloaded into grammars/ and verified by checksum. */
 export const SWIFT_GRAMMAR = {

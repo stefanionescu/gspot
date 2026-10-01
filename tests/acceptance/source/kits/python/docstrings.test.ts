@@ -35,7 +35,7 @@ test.each([
         });
         commitAll(sandbox.path);
         await installAtLevel(sandbox.path, STRUCTURE_INIT, {});
-        const command = ['check', '--only', 'python/pydoclint', '--no-cache', '--json'];
+        const command = ['check', '--only', 'python/pydoclint', '--json'];
         const rejected = await run(sandbox.path, command);
         expect(rejected.code, rejected.stdout + rejected.stderr).toBe(1);
         const report = JSON.parse(rejected.stdout) as RunReport;

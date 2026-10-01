@@ -47,7 +47,6 @@ const report: RunReport = {
     ignores: [{ check: 'bash/shellcheck', rule: 'SC2312', reason: 'why', matched: 1 }],
     skips: [],
     coverage: { checked: 3, unchecked: 2, findings: [] },
-    suppressions: {},
     unstaged: 0,
     narrowed: false,
     failed: ['bash/shellcheck', 'formatting/prettier'],
@@ -78,7 +77,7 @@ describe('the reporter', () => {
         expect(runText({ ...skipped, checks: [], exitCode: 2 }, { quiet: true, verbose: false })).toEndWith(
             '(incomplete)\n',
         );
-        const corrected: RunReport = { ...skipped, checks: [{ ...skipped.checks[0]!, status: 'cache' }] };
+        const corrected: RunReport = { ...skipped, checks: [{ ...skipped.checks[0]!, status: 'ok' }] };
         const text = runText(corrected, { quiet: false, verbose: false });
         expect(text).toEndWith('1 check passed, 0 checks failed, 0 checks skipped, 0 findings, 0.0s\n');
     });

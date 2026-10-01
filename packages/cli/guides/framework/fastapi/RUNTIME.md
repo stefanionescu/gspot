@@ -180,7 +180,6 @@ app = FastAPI(openapi_url=None, docs_url=None, redoc_url=None)
 
 
 @app.get("/items")
-# gspot-ignore python/trivial-function -- FastAPI registers this required streaming callback.
 def stream_items() -> Iterable[Item]:
     """Yield each public item as one JSON line.
 
@@ -192,7 +191,6 @@ def stream_items() -> Iterable[Item]:
 
 
 @app.get("/events", response_class=EventSourceResponse)
-# gspot-ignore python/trivial-function -- FastAPI registers this required event callback.
 def stream_events() -> Iterable[ServerSentEvent]:
     """Yield named events with stable identifiers for the fixed inventory.
 

@@ -36,7 +36,6 @@ test('folder checks count code files and preserve allowed and nested directories
         skips: [],
         fix: false,
         isDryRun: false,
-        noCache: true,
         only: ['structure/single-file-folder'],
     });
     expect(result.report.exitCode).toBe(1);
@@ -78,7 +77,6 @@ test('prefix checks group files and directories once and honor allowances and th
         skips: [],
         fix: false,
         isDryRun: false,
-        noCache: true,
         only: ['structure/prefix-collisions'],
     };
     const initial = await executeRun(await openSession(sandbox.path), options);
@@ -134,7 +132,6 @@ test.each([
         skips: [],
         fix: false,
         isDryRun: false,
-        noCache: true,
         only: ['structure/single-file-folder', 'structure/prefix-collisions'],
     };
     const initial = await executeRun(await openSession(sandbox.path), options);
@@ -165,7 +162,6 @@ if (onPosix)
             skips: [],
             fix: false,
             isDryRun: false,
-            noCache: true,
             only: ['structure/prefix-collisions'],
         };
         const initial = await executeRun(await openSession(sandbox.path), options);
@@ -205,7 +201,6 @@ test.each([
         skips: [],
         fix: false,
         isDryRun: false,
-        noCache: true,
         only: ['structure/folder-names', 'naming/paths'],
     });
     expect(result.report.checks.flatMap((check) => check.findings)).toMatchObject([
@@ -239,7 +234,6 @@ test.each(['recommended', 'all'])('structural checks classify output directories
         skips: [],
         fix: false,
         isDryRun: false,
-        noCache: true,
         only: ['structure/single-file-folder', 'structure/prefix-collisions'],
     });
     const findings = result.report.checks.flatMap((check) => check.findings);

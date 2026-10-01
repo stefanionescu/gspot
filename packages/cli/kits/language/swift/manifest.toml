@@ -98,7 +98,6 @@ level = "recommended"
 stage = "commit"
 tool = "swiftlint"
 analysis = "swiftlint"
-cached = true
 fix_command = ["swiftlint", "lint", "--fix", "--quiet", "--no-cache", "{files}"]
 cwd = "scope"
 nested_config = ".swiftlint.yml"
@@ -191,7 +190,7 @@ owners = {extensions = [".swift"]}
 coverage = ["structure"]
 summary = "Reports functions at or below limits.trivial_statements and files containing only trivial declarations."
 why = "Unnecessary functions add names and indirection without substantial behavior."
-help = "Inline unnecessary functions. Required external APIs need a narrow suppression with a reason."
+help = "Inline unnecessary functions. For one an external API requires, run `gspot ignore swift/trivial-function --paths <file> --reason <why>`."
 
 [[checks]]
 name = "swift/duplicate-functions"

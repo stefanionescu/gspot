@@ -15,7 +15,7 @@ async function expectCloneHooks(source: string, environment: Record<string, stri
     const clone = join(cloneRoot.path, 'clone');
     const cloned = git(source, ['clone', '--quiet', '--no-local', source, clone]);
     expect(cloned.code, cloned.stdout + cloned.stderr).toBe(0);
-    const uninstalled = await run(clone, ['check', '--only', 'bash/shellcheck', '--no-cache']);
+    const uninstalled = await run(clone, ['check', '--only', 'bash/shellcheck']);
     expect(uninstalled.code, uninstalled.stdout + uninstalled.stderr).toBe(0);
     expect((uninstalled.stdout + uninstalled.stderr).match(/gspot install/gu)).toHaveLength(1);
     for (let attempt = 0; attempt < 2; attempt++) {
@@ -25,7 +25,7 @@ async function expectCloneHooks(source: string, environment: Record<string, stri
         expect(status.code, status.stderr).toBe(0);
         expect(status.stdout).toBe('');
     }
-    const ready = await run(clone, ['check', '--only', 'bash/shellcheck', '--no-cache']);
+    const ready = await run(clone, ['check', '--only', 'bash/shellcheck']);
     expect(ready.code, ready.stdout + ready.stderr).toBe(0);
     expect(ready.stdout + ready.stderr).not.toContain('Configured hooks are not ready');
     await Bun.write(join(clone, 'scripts/b.sh'), '#!/usr/bin/env bash\necho $1\n');

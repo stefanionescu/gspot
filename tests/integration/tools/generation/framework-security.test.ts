@@ -27,7 +27,7 @@ if (toolShipsHere('semgrep'))
             'sibling/ignored.js': 'eval(input);\n',
         });
         await installSemgrep(sandbox.path);
-        const command = ['check', '--only', 'security/semgrep', '--no-cache', '--json'];
+        const command = ['check', '--only', 'security/semgrep', '--json'];
         const broken = await run(sandbox.path, command);
         expect(broken.code, broken.stdout + broken.stderr).toBe(1);
         const findingsByScope = (JSON.parse(broken.stdout) as RunReport).checks.flatMap(({ scope, findings }) =>
@@ -84,7 +84,7 @@ if (toolShipsHere('semgrep'))
             'neighbor.js': 'await import(modulePath);\n',
         });
         await installSemgrep(sandbox.path);
-        const command = ['check', '--only', 'security/semgrep', '--no-cache', '--json'];
+        const command = ['check', '--only', 'security/semgrep', '--json'];
         const broken = await run(sandbox.path, command);
         expect(broken.code, broken.stdout + broken.stderr).toBe(1);
         expect((JSON.parse(broken.stdout) as RunReport).checks.flatMap(({ findings }) => findings)).toStrictEqual([

@@ -53,7 +53,7 @@ test(
         );
         const corrected = await run(
             sandbox.path,
-            ['check', '--only', 'javascript/eslint', '--no-cache', '--json', '--', 'src/paused.js'],
+            ['check', '--only', 'javascript/eslint', '--json', '--', 'src/paused.js'],
             environment,
         );
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);

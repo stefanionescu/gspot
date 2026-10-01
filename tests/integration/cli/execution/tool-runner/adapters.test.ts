@@ -35,7 +35,6 @@ if (toolShipsHere('ansible-lint'))
                 only: ['ansible/lint'],
                 fix: false,
                 isDryRun: false,
-                noCache: true,
             };
             const running = executeRun(session, { ...options, cancelSignal: controller.signal });
             try {
@@ -101,13 +100,13 @@ const exitScript = (failed: boolean): string => `#!${process.execPath}\nprocess.
 
 // Windows keeps no permission bits to read back.
 if (onPosix)
-    test('cached results read executable replacement and permissions in a reused session', async () => {
+    test('a reused session runs a replaced executable and reads its permissions', async () => {
         await using sandbox = await testdir();
         const executable = join(sandbox.path, 'checker');
         await createFileTree(sandbox.path, {
             'gspot.toml': policyOf(
                 [],
-                `[[check]]\nname = "project/cache"\nstage = "commit"\npaths = ["source.txt"]\ninputs = ["source.txt"]\ncommand = ${JSON.stringify([executable])}\n`,
+                `[[check]]\nname = "project/checker"\nstage = "commit"\npaths = ["source.txt"]\ncommand = ${JSON.stringify([executable])}\n`,
             ),
             'source.txt': 'input\n',
             checker: exitScript(false),
@@ -118,7 +117,7 @@ if (onPosix)
         const executed = await executeRun(session, options);
         expect(executed.report.exitCode).toBe(0);
         const repeated = await executeRun(session, options);
-        expect(repeated.report.checks[0]!.status).toBe('cache');
+        expect(repeated.report.checks[0]!.status).toBe('ok');
         writeFileSync(executable, exitScript(true));
         const changed = await executeRun(session, options);
         expect(changed.report.exitCode).toBe(1);

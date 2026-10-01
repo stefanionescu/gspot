@@ -44,7 +44,7 @@ test('an ignored folder includes descendants while a negated file remains enforc
         '!legacy scripts/required.sh',
     ]);
     expect(ignored.code, ignored.stdout + ignored.stderr).toBe(0);
-    const command = ['check', '--only', 'bash/syntax', '--no-cache', '--json'];
+    const command = ['check', '--only', 'bash/syntax', '--json'];
     const checked = await run(directory.path, command);
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
     const report = JSON.parse(checked.stdout) as RunReport;

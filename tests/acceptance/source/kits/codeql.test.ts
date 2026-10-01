@@ -44,7 +44,7 @@ describe.if(toolShipsHere('codeql'))('the pinned CodeQL', () => {
                 'authored.txt': 'Preserve this file.\n',
             });
             const environment = { PATH: toolsPath(['codeql']) };
-            const command = ['check', '--stage', 'manual', '--only', 'security/codeql', '--no-cache', '--json'];
+            const command = ['check', '--stage', 'manual', '--only', 'security/codeql', '--json'];
             const planted = await run(directory.path, command, environment);
             expect(planted.code, planted.stdout + planted.stderr).toBe(1);
             const report = JSON.parse(planted.stdout) as RunReport;
