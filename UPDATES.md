@@ -18,12 +18,10 @@ approved it on October 1, 2026.
 
 ### Where things stand on October 1, 2026
 
-- `main` is at `942b3ee7`. Stages 1 to 8 are merged as pull requests #2 to #8 and #10. Stage 7 also deleted the
+- `main` is at `599ea82e`. Stages 1 to 9 are merged as pull requests #2 to #8, #10, and #11. Stage 7 also deleted the
   `architecture` folder, a part of stage 15.
 - Pull request #9 updated `devalue` to 5.9.4 for seven advisories that `dependencies/osv` reported on October 1.
-- Stage 9 is pull request #11, branch `refactor/cut-tool-docs-tests`.
-- Stage 10 is pull request #12, branch `refactor/cut-command-acceptance-tests`, stacked on #11. Rebase it onto `main`
-  once #11 merges.
+- Stage 10 is pull request #12, branch `refactor/cut-command-acceptance-tests`.
 - The next stage to start is stage 11.
 
 ### Stages
@@ -40,7 +38,7 @@ One pull request per stage, in this order. Each merges with a merge commit only 
 | 6     | Delete source positions, coverage, and fix settings    | adaptations 3 and 5; `fix_order` and `fix_findings_exit_codes`                                          | merged, #7             |
 | 7     | Write the agent block only into `AGENTS.md`            | the `CLAUDE.md` decision; the Cursor rule                                                               | merged, #8             |
 | 8     | Cut unit and CLI integration tests                     | D.2 rows that delete, trim, and merge within one tier                                                   | merged, #10            |
-| 9     | Cut tool, docs, and repository tests                   | D.3 rows; drop `test:docs` and those folders from `test`                                                | pull request #11       |
+| 9     | Cut tool, docs, and repository tests                   | D.3 rows; drop `test:docs` and those folders from `test`                                                | merged, #11            |
 | 10    | Cut command acceptance and package tests               | D.4 rows; pins move to a scheduled `pins.yml`                                                           | pull request #12       |
 | 11    | Cut kit acceptance tests                               | D.4 kit rows; find why `documents.test.ts` does not run on Linux                                        | not started            |
 | 12    | Delete repeated checks, dead rules, and dead code      | 5.3, 5.4, 5.7, including `version = 1` and its gate                                                     | not started            |
