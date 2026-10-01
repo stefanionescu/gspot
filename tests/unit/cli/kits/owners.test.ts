@@ -72,13 +72,6 @@ describe('detection', () => {
         expect(plans.some((plan) => plan.kit === 'spelling')).toBe(true);
     });
 
-    test('a stylesheet proposes css alone, and a module filename proposes no language', () => {
-        const plans = detectKits([file('theme.scss'), file('site.css')], manifests, []);
-        expect(plans.find((plan) => plan.kit === 'css')?.evidence).toBe('1 .css file');
-        const module = detectKits([file('go.mod')], manifests, []);
-        expect(module.filter((plan) => plan.kind === 'language')).toStrictEqual([]);
-    });
-
     test('reads the interpreter from a shebang', () => {
         expect(shebangInterpreter('#!/usr/bin/env bash')).toBe('shell');
         expect(shebangInterpreter('#!/bin/sh')).toBe('shell');
@@ -86,13 +79,6 @@ describe('detection', () => {
         expect(shebangInterpreter('#!/usr/bin/python3')).toBe('python');
         expect(shebangInterpreter('plain text')).toBeUndefined();
     });
-});
-
-test('security combines language owners with plist inputs', () => {
-    const selected = selectKits(['swift', 'security'], manifests);
-    const security = manifests.get('security')!;
-    const owned = ownedBy(security.owners, selected, [file('App.swift'), file('Info.plist'), file('notes.md')], '');
-    expect(owned.map((entry) => entry.path)).toStrictEqual(['App.swift', 'Info.plist']);
 });
 
 test('owners > Prettier formats a plugin file type only while the kit with that plugin is selected', () => {

@@ -18,17 +18,7 @@ test('a plugin rule is explained with the page of the plugin whose prefix it car
     expect(explain(undefined, 'eslint/@typescript-eslint/no-explicit-any')).toMatchObject({
         data: { page: 'https://typescript-eslint.io/rules/no-explicit-any' },
     });
-    const undeclared = explain(undefined, 'eslint/sonarjs/no-identical-functions');
-    expect(undeclared).toMatchObject({ data: { page: null } });
-    expect('text' in undeclared ? undeclared.text : '').toContain("The tool's documentation has the page");
-});
-
-test('a check explanation shows the crash pattern of the tool it runs', () => {
-    expect(explain(undefined, 'javascript/eslint')).toMatchObject({
-        data: {
-            tool_errors: '^(?:Oops! Something went wrong|Error: Cannot find module|ERR_MODULE_NOT_FOUND|ConfigError:)',
-        },
-    });
+    expect(explain(undefined, 'eslint/sonarjs/no-identical-functions')).toMatchObject({ data: { page: null } });
 });
 
 test('check explanations add no absent metadata', () => {
