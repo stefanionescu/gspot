@@ -82,7 +82,7 @@ test('a loosening without a reason is a finding of integrity/policy, and the res
 
 test.each(['\n', '\r\n'])('configuration errors name the key path in text and JSON with %j lines', async (newline) => {
     await using sandbox = await testdir();
-    const policy = ['version = 1', 'kits = []', 'require_reasons = "wrong"', ''].join(newline);
+    const policy = ['kits = []', 'require_reasons = "wrong"', ''].join(newline);
     await createFileTree(sandbox.path, { 'gspot.toml': policy });
     const text = await run(sandbox.path, ['check']);
     expect(text.code).toBe(2);

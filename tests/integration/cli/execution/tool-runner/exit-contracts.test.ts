@@ -18,7 +18,6 @@ test.each(['{file}', '{files}'])(
         const source = 'input.txt';
         await createFileTree(sandbox.path, {
             'gspot.toml': stringify({
-                version: 1,
                 kits: [],
                 check: [
                     {

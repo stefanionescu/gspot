@@ -28,7 +28,6 @@ Add the check to `gspot.toml`. For a new repository, this is the complete policy
 existing policy, add only the `[[check]]` entry and its `[check.output]` table:
 
 ```toml
-version = 1
 kits = []
 
 [[check]]

@@ -12,7 +12,7 @@ test.each([undefined, 'npm', 'mise'])(
     'the hook scripts under the %s runner parse and run one check each',
     async (runner) => {
         await using sandbox = await testdir();
-        await createFileTree(sandbox.path, { "app's dir/gspot.toml": 'version = 1\n' });
+        await createFileTree(sandbox.path, { "app's dir/gspot.toml": 'kits = []\n' });
         gitOutput(sandbox.path, ['init', '-q']);
         const tables = runner === undefined ? '[hooks]\n' : `[hooks]\n[runner]\ntool = "${runner}"\n`;
         const policy = parsePolicyText(policyOf([], tables), 'gspot.toml');

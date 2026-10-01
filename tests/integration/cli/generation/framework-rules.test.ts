@@ -12,7 +12,7 @@ import { generatedEslint } from '#tests/support/cli/generated/eslint.ts';
 async function configuredRules(policy: string, files: string[]): Promise<Record<string, Record<string, unknown[]>>> {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': `version = 1\nlevel = "all"\n${policy}\n[guides]\ninstall = false\n`,
+        'gspot.toml': `level = "all"\n${policy}\n[guides]\ninstall = false\n`,
         'package.json': '{"name":"planted","private":true,"type":"module","dependencies":{"react":"19.1.1"}}\n',
         'tsconfig.json': '{"compilerOptions":{"strict":true,"jsx":"react-jsx"},"include":["src"]}\n',
         ...Object.fromEntries(files.map((file) => [file, 'export const App = (): string => "app";\n'])),
@@ -63,8 +63,7 @@ test('package rule exceptions retain neighboring violations and corrected succes
     await using sandbox = await testdir();
     const manifest = { name: 'planted', version: '0.0.0', type: 'module' };
     await createFileTree(sandbox.path, {
-        'gspot.toml': `version = 1
-level = "all"
+        'gspot.toml': `level = "all"
 kits = ["typescript"]
 [[ignore]]
 check = "typescript/eslint"

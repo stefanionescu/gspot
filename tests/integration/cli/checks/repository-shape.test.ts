@@ -45,7 +45,7 @@ test('documentation path exceptions must match tracked paths or actual documenta
 test('suppression validation ignores source text and valid reasons but reports missing required reasons', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nrequire_reasons = true\nkits = ["typescript", "bash", "security"]\n',
+        'gspot.toml': 'require_reasons = true\nkits = ["typescript", "bash", "security"]\n',
         'a.ts': 'const marker = /eslint-disable/u; // eslint-disable-next-line no-x -- Required generated protocol binding.\nlet y; // eslint-disable-line\n',
         'b.sh': '# shellcheck disable=SC2086 # reason: the split is wanted\necho x # nosemgrep\n',
     });

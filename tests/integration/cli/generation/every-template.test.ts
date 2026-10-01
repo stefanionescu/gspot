@@ -52,7 +52,7 @@ test.each(kits.flatMap((name) => ['recommended', 'all'].map((level) => [name, le
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
             ...PLANTED,
-            'gspot.toml': `version = 1\nlevel = "${level}"\nkits = [${JSON.stringify(name)}]\n`,
+            'gspot.toml': `level = "${level}"\nkits = [${JSON.stringify(name)}]\n`,
         });
         linkInstalledModules(join(sandbox.path, 'node_modules'));
         const session = await openSession(sandbox.path);

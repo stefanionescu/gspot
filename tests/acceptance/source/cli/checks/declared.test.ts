@@ -15,8 +15,7 @@ test('a [[check]] entry > reruns a repository check when an input outside its se
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         '.gitignore': '.gspot/\n',
-        'gspot.toml': `version = 1
-kits = []
+        'gspot.toml': `kits = []
 
 [[check]]
 name = "notes/state"
@@ -94,8 +93,7 @@ test('a declared check maps nested JSON output into findings', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'source.txt': 'defect',
-        'gspot.toml': `version = 1
-kits = []
+        'gspot.toml': `kits = []
 [[check]]
 name = "sandbox/json"
 command = ${JSON.stringify(command)}

@@ -13,7 +13,7 @@ test('apply refuses a plan whose policy changed after the session was read', asy
     const initial = policyOf([], '[guides]\ninstall = false\n');
     await createFileTree(sandbox.path, { 'gspot.toml': initial });
     const session = await openSession(sandbox.path);
-    const edited = initial.replace('version = 1', 'version = 1\nlevel = "all"');
+    const edited = `level = "all"\n${initial}`;
     await Bun.write(join(sandbox.path, 'gspot.toml'), edited);
     expect(await rejection(applyAll(session))).toContain('changed after generation was planned');
     expect(readFileSync(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(edited);

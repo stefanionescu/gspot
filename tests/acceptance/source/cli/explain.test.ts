@@ -11,8 +11,7 @@ import { EXPLAIN_POLICY } from '#tests/inputs/acceptance/source/cli/cli.ts';
 test('explain > setting explanations include nested-only settings and each inherited value', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': `version = 1
-kits = []
+        'gspot.toml': `kits = []
 [[scope]]
 path = "api"
 kits = ["jest"]
@@ -52,8 +51,7 @@ coverage_lines = 95
 });
 test('explain > path explanations include enabled repository commands and global exceptions', async () => {
     await using sandbox = await testdir();
-    const policy = `version = 1
-kits = []
+    const policy = `kits = []
 [[scope]]
 path = "api"
 kits = []

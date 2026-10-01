@@ -12,8 +12,7 @@ export const VITEST_PACKAGE =
     '{\n    "name": "planted",\n    "version": "1.0.0",\n    "private": true,\n    "type": "module",\n    "devDependencies": {\n        "vitest": "4.1.11"\n    }\n}\n';
 export const OPENAPI_POLICY = '[tools.openapi]\ndocument = "openapi.yaml"\nproduced_by = "bun write-document.js"\n';
 export const EXPRESS_POLICY = `${OPENAPI_POLICY}\n[tools.express]\nroute_files = ["src/routes/*.js"]\n`;
-export const VITE_POLICY = `version = 1
-level = "all"
+export const VITE_POLICY = `level = "all"
 kits = ["javascript"]
 [guides]
 install = false

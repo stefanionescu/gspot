@@ -231,8 +231,7 @@ test('source reads never cache isolated output or turn failed reads into success
 
 test('fix verification replaces read source bytes and preserves unrelated authored files', async () => {
     await using sandbox = await testdir();
-    const policy = `version = 1
-kits = ["sql"]
+    const policy = `kits = ["sql"]
 [[check]]
 name = "project/correct-sql"
 command = [${JSON.stringify(process.execPath)}, "-e", "process.exitCode = 0"]

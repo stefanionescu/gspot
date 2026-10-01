@@ -17,7 +17,7 @@ import {
 } from '#cli/policy/write.ts';
 
 const text =
-    '#:schema x\n\n# Comment on version.\nversion = 1\nkits = ["bash"]\n\n[hooks]\n# gspot checks the changed paths of a push.\npush = "changed"\n';
+    '#:schema x\n\n# Comment on kits.\nkits = ["bash"]\n\n[hooks]\n# gspot checks the changed paths of a push.\npush = "changed"\n';
 
 test('writePolicy > policy edits retain invalid UTF-8 bytes and refuse a mode change after read', async () => {
     await using sandbox = await testdir();
@@ -83,7 +83,7 @@ test('writePolicy > appends an ignore entry and keeps comments and order', async
         ),
     );
     const written = readFileSync(join(sandbox.path, 'gspot.toml'), 'utf8');
-    expect(written).toContain('# Comment on version.');
+    expect(written).toContain('# Comment on kits.');
     expect(written).toContain('# gspot checks the changed paths of a push.');
     expect(written).toContain('[[ignore]]');
     expect(result.policy.ignores[0]?.rule).toBe('SC2312');
@@ -194,7 +194,7 @@ test('writePolicy > a dry run writes nothing', async () => {
 
 test('writePolicy > a refused reason is caught before the file is written', async () => {
     await using sandbox = await testdir();
-    const required = text.replace('version = 1', 'version = 1\nrequire_reasons = true');
+    const required = text.replace('kits = ["bash"]', 'require_reasons = true\nkits = ["bash"]');
     await createFileTree(sandbox.path, { 'gspot.toml': required });
     expect(() =>
         writePolicy(

@@ -18,7 +18,7 @@ describe('configuration directory boundaries', () => {
         '',
     ])('refuses escaping directory %j before filesystem discovery', (path) => {
         for (const settings of [{ scope: [{ path }] }, { guides: { directory: path } }]) {
-            expect(() => parsePolicyText(stringify({ version: 1, ...settings }), 'gspot.toml')).toThrow(GspotError);
+            expect(() => parsePolicyText(stringify({ ...settings }), 'gspot.toml')).toThrow(GspotError);
         }
     });
 
@@ -27,7 +27,7 @@ describe('configuration directory boundaries', () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { [`${path}/source.ts`]: 'export const count = 1;\n' });
         const policy = parsePolicyText(
-            stringify({ version: 1, scope: [{ path }], guides: { directory: 'agent rules/café 100%' } }),
+            stringify({ scope: [{ path }], guides: { directory: 'agent rules/café 100%' } }),
             'gspot.toml',
             sandbox.path,
         );
@@ -62,7 +62,7 @@ test.each([
 test.each(["author's name", '$(printf injected); *'])(
     'suggested naming recovery preserves the argument %j through a shell',
     (name) => {
-        const found = policyProblems(stringify({ version: 1, require_reasons: true, naming: { allowed: [{ name }] } }));
+        const found = policyProblems(stringify({ require_reasons: true, naming: { allowed: [{ name }] } }));
         const text = found.find((problem) => problem.includes('gspot set naming.allowed'))!;
         const command = text.slice(text.indexOf('gspot set naming.allowed')).replace(/`?\.?$/u, '');
         const executed = Bun.spawnSync(['sh', '-c', String.raw`gspot() { printf "%s\0" "$@"; }; ` + command], {

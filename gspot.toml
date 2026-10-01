@@ -2,7 +2,6 @@
 
 # Run gspot apply after changing policy. Use gspot explain <name> to inspect a setting.
 
-version = 1
 level = "all"
 kits = [
     "jest",

@@ -219,15 +219,6 @@ export function unknownCheck(checkName: string, near: string[]): string {
 }
 
 /**
- * A policy file version this binary does not read.
- * @param version the version the file states
- * @returns the message
- */
-export function versionUnsupported(version: number): string {
-    return `gspot.toml says \`version = ${String(version)}\`, and this gspot reads version 1. Use a gspot version that supports this policy, or restore a version 1 policy from version control.`;
-}
-
-/**
  * A [[check]] entry missing one of its fields.
  * @param checkName the check name
  * @param field the missing field

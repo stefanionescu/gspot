@@ -10,8 +10,7 @@ const total = orderTotal([{ price: 2, quantity: 3 }], 'EUR');
 /** The receipt line of the sample order. */
 export const receipt = formatter.format(total.amount);
 `;
-export const PROJECTS_POLICY = `version = 1
-level = "all"
+export const PROJECTS_POLICY = `level = "all"
 kits = ["typescript"]
 [guides]
 install = false

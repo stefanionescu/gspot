@@ -179,7 +179,6 @@ export function normalize(raw: RawPolicy): Policy {
     const scopes = raw.scope ?? [];
     for (const scope of scopes) scopeTables[trimTrailingSlashes(scope.path)] = normalizeScopeTables(scope);
     return {
-        version: raw.version,
         level: raw.level,
         requireReasons: raw.require_reasons,
         extraChecks: raw.extra_checks,

@@ -17,7 +17,7 @@ describe('profile file paths', () => {
         const source = 'policies/café house.profile.toml';
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            [source]: 'version = 1\nprofile = "house"\nselection = "exact"\nkits = ["bash"]\n',
+            [source]: 'profile = "house"\nselection = "exact"\nkits = ["bash"]\n',
             'project/README.md': '# Project\n',
         });
         const relative = await readProfile(source, sandbox.path);
@@ -37,7 +37,6 @@ test.each(['jest', 'vitest'])(
         };
         const exported = exportedProfile(
             stringify({
-                version: 1,
                 kits: [configuration],
                 tools: { [configuration]: { ...sharedSettings, harness_directory: 'tests/fixtures' } },
             }),
@@ -49,7 +48,6 @@ test.each(['jest', 'vitest'])(
         expect(exported.leftOut).toStrictEqual([`tools.${configuration}.harness_directory: names a repository path`]);
         await createFileTree(directory.path, {
             'invalid.profile.toml': stringify({
-                version: 1,
                 profile: 'local',
                 selection: 'exact',
                 kits: [configuration],
@@ -166,10 +164,7 @@ test('profiles round-trip license allowances and exact-version exceptions', asyn
         licenses_allowed: ['MPL-2.0'],
         packages_allowed: [{ package: 'example@1.2.3', license: 'BSD', reason: 'Reviewed package metadata.' }],
     };
-    const exported = exportedProfile(
-        stringify({ version: 1, kits: ['licenses'], tools: { licenses } }),
-        'licenses.profile.toml',
-    );
+    const exported = exportedProfile(stringify({ kits: ['licenses'], tools: { licenses } }), 'licenses.profile.toml');
     await createFileTree(directory.path, { 'licenses.profile.toml': exported.text });
     const restored = await readProfile('licenses.profile.toml', directory.path);
     expect(restored.tables.tools?.licenses).toStrictEqual(licenses);

@@ -22,7 +22,7 @@ test('file and folder arguments intersect check lists and respect -C', async () 
     }));
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': stringify({ version: 1, kits: [], check: entries }),
+        'gspot.toml': stringify({ kits: [], check: entries }),
         'src/selected.ts': 'selected',
         'src/other.ts': 'other',
         'docs/guide.md': '# Guide\n',
@@ -90,8 +90,7 @@ stage = "${name}"
 test('a scope path selects its checks and its reproduction command repeats the same findings', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': `version = 1
-level = "all"
+        'gspot.toml': `level = "all"
 kits = []
 [[scope]]
 path = "api"

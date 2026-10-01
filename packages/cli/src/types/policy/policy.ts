@@ -155,7 +155,6 @@ export type FileDeclaration =
 export type RepositoryCheck = Defined<NonNullable<RawPolicy['check']>[number]>;
 export type PolicyScope = { path: string; kits: string[] };
 export type Policy = {
-    version: number;
     level: RawPolicy['level'];
     requireReasons: RawPolicy['require_reasons'];
     extraChecks: string[];
