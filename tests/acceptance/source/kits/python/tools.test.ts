@@ -18,6 +18,7 @@ import {
     TOOLS_MODULE,
     TOOLS_PROJECT,
     STRUCTURE_INIT,
+    STRUCTURE_LEFT_OUT,
 } from '#tests/inputs/acceptance/source/kits/python.ts';
 
 // What each check accepts beside the clean module.
@@ -163,7 +164,7 @@ test(
         });
         commitAll(sandbox.path);
         const environment = { PATH: toolsPath(['ruff', 'basedpyright', 'typos', 'ec']) };
-        await install(sandbox.path, STRUCTURE_INIT, environment);
+        await install(sandbox.path, STRUCTURE_INIT, environment, STRUCTURE_LEFT_OUT);
         // The authored file is gone; the pointer stands in its place, and the policy carries none of its settings.
         const pointer = await Bun.file(`${sandbox.path}/pyrightconfig.json`).text();
         expect(pointer).toContain('"extends": "./.gspot/config/basedpyrightconfig.json"');

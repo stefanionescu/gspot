@@ -51,7 +51,6 @@ test.each([
                 runner: 'mise',
                 rules: 'no',
                 install: true,
-                allowDirty: true,
             });
             expect(result.exitCode).toBe(2);
             expect(result.text).toContain('tool installation is incomplete');
@@ -103,7 +102,6 @@ test('init does not report success when required Python lock resolution cannot r
                     runner: 'mise',
                     rules: 'no',
                     install: true,
-                    allowDirty: true,
                 }),
             ),
         ).toContain('Install uv');

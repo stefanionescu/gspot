@@ -3,6 +3,12 @@ import { PINNED_HEADER } from '#tests/inputs/unit/cli/kits.ts';
 import { validateManifests } from '#cli/kits/manifest-problems.ts';
 import { kitManifests, parseManifest } from '#cli/kits/manifests.ts';
 
+test('every shipped manifest passes the checks across manifests', () => {
+    expect(() => {
+        validateManifests(kitManifests());
+    }).not.toThrow();
+});
+
 test('loading two configurations refuses duplicate executable check ownership', () => {
     const definition =
         '\n[[checks]]\nexample = "A rejected input is corrected before rerunning the parser."\nname = "project/parse"\nlevel = "recommended"\nstage = "commit"\ncommand = ["tool"]\nsummary = "Parses the project input."\nwhy = "Invalid input cannot run."\nhelp = "Correct the reported input."\n';

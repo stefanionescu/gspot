@@ -14,9 +14,6 @@ export const CI_CHOICES: { value: InitAnswers['ci']; label: string }[] = [
     { value: 'gitlab', label: '.gitlab/ci/gspot.yml (include from .gitlab-ci.yml)' },
     { value: 'none', label: 'no workflow' },
 ];
-export const PROJECT_SUFFIX = '.xcodeproj';
-export const SCHEME_SUFFIX = '.xcscheme';
-export const PERIPHERY_FILE = '.periphery.yml';
 export const INCOMPLETE_INSTALL_EXIT = 2;
 export const COLUMN_GAP = 2;
 export const KIT_WIDTH = 16;
@@ -26,7 +23,6 @@ export const ALREADY_INSTALLED =
     'This repository already has a gspot.toml. Run `gspot doctor` to see what changed since the install and the command that applies each change.\n';
 export const CURSOR_RULE = '.cursor/rules/gspot.mdc';
 /** The setting init fills from a detected Xcode project; only a kit that declares it may carry it. */
-export const XCODE_PROJECT_SETTING = 'tools.xcode.project';
 export const HOOKS_ROW = {
     path: '.gspot/hooks',
     note: 'gspot install points core.hooksPath here; a repository that already runs hooks gets the lines to add instead',

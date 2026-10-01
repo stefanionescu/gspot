@@ -1,5 +1,4 @@
 import { stringify } from 'smol-toml';
-import { patch } from '@decimalturn/toml-patch';
 import { asRaw } from '#cli/policy/normalize.ts';
 import { policySchema } from '#cli/policy/schema.ts';
 import type { InitPlan } from '#cli/types/commands.ts';
@@ -16,35 +15,13 @@ const PREFACE = [
     '',
 ].join('\n');
 
-function xcodeTable(xcode: InitPlan['xcode']): TomlTable | undefined {
-    if (xcode === undefined) return undefined;
-    return xcode.scheme === undefined ? { project: xcode.project } : { project: xcode.project, scheme: xcode.scheme };
-}
-
-function toolTables(plan: InitPlan): Record<string, TomlTable | undefined> {
-    const tables: Record<string, TomlTable | undefined> = {};
-    const install = plan.install?.find((entry) => entry.path === '');
-    if (install !== undefined) tables['install'] = { ...install.settings };
-    if (plan.commitScopes !== undefined && plan.commitScopes.length > 0)
-        tables['commitlint'] = { ...tables['commitlint'], scopes: plan.commitScopes };
-    if (plan.xcode?.scope === '') tables['xcode'] = xcodeTable(plan.xcode);
-    return Object.fromEntries(Object.entries(tables).filter(([, table]) => table !== undefined));
-}
-
 function headTables(plan: InitPlan): TomlTable {
     const document: TomlTable = {
         version: 1,
         level: policySchema.shape.level.parse(undefined),
         kits: plan.kits,
     };
-    const scopes = plan.scopes.map((scope) => {
-        const install = plan.install?.find((entry) => entry.path === scope.path);
-        const tools: TomlTable = {
-            ...(plan.xcode?.scope === scope.path ? { xcode: xcodeTable(plan.xcode) } : {}),
-            ...(install === undefined ? {} : { install: { ...install.settings } }),
-        };
-        return { path: scope.path, kits: scope.kits, ...(Object.keys(tools).length === 0 ? {} : { tools }) };
-    });
+    const scopes = plan.scopes.map((scope) => ({ path: scope.path, kits: scope.kits }));
     if (scopes.length > 0) document['scope'] = scopes;
     return document;
 }
@@ -55,22 +32,6 @@ function mergeToolSettings(base: unknown, overrides: unknown): TomlTable {
     for (const [tool, settings] of Object.entries(asRaw(overrides) ?? {}))
         tools[tool] = { ...asRaw(tools[tool]), ...asRaw(settings) };
     return tools;
-}
-
-function applyDetectedTools(tools: Record<string, TomlTable | undefined>, detected: InitPlan['detected']): void {
-    for (const { key, value } of detected ?? []) {
-        const [table, first, second, ...more] = key.split('.');
-        if (table === 'tools' && first !== undefined && second !== undefined && more.length === 0)
-            tools[first] = { ...tools[first], [second]: value };
-    }
-}
-
-function applyDetectedArchitecture(document: TomlTable, detected: InitPlan['detected']): void {
-    for (const { key, value } of detected ?? []) {
-        const [table, first, second] = key.split('.');
-        if (table === 'architecture' && first !== undefined && second === undefined)
-            document['architecture'] = { ...asRaw(document['architecture']), [first]: value };
-    }
 }
 
 // Repository settings override the same profile setting, without dropping other settings of that tool.
@@ -100,21 +61,11 @@ function applyIntegrations(document: TomlTable, plan: InitPlan): void {
     else document['runner'] = { tool: plan.runner };
 }
 
-// The settings of a scope are written the way gspot set writes them, as one inline table inside the scope.
-// The patcher refuses a document where one scope holds an inline tools table and another a sub-table.
+// The policy body, with arrays in the layout the TOML formatter keeps, so the first format check of the policy passes.
 function bodyText(document: TomlTable): string {
-    const scopes = (document['scope'] as TomlTable[] | undefined) ?? [];
-    const bare = { ...document, scope: scopes.map(({ tools: _tools, ...rest }) => rest) };
-    const plain = stringify(scopes.length === 0 ? document : bare);
-    // Arrays take the layout the TOML formatter keeps, so the first format check of the policy passes.
-    const tight = plain.replaceAll(/= \[ (?<items>[^\n]*) \]$/gmu, '= [$<items>]');
+    const tight = stringify(document).replaceAll(/= \[ (?<items>[^\n]*) \]$/gmu, '= [$<items>]');
     const seed = tight.endsWith('\n') ? tight : `${tight}\n`;
-    const indent = policyIndent(document);
-    if (scopes.every((scope) => scope['tools'] === undefined)) return wrapLongArrays(seed, indent);
-    return wrapLongArrays(
-        patch(seed, document, { inlineTableStart: 2, bracketSpacing: false, trailingComma: false }),
-        indent,
-    );
+    return wrapLongArrays(seed, policyIndent(document));
 }
 
 /**
@@ -124,10 +75,8 @@ function bodyText(document: TomlTable): string {
  */
 export function proposeText(plan: InitPlan): string {
     const document = headTables(plan);
-    const tools = toolTables(plan);
-    applyDetectedTools(tools, plan.detected);
-    applyDetectedArchitecture(document, plan.detected);
-    if (Object.keys(tools).length > 0) document['tools'] = tools;
+    if (plan.commitScopes !== undefined && plan.commitScopes.length > 0)
+        document['tools'] = { commitlint: { scopes: plan.commitScopes } };
     mergeProfile(document, plan.profileTables);
     applyIntegrations(document, plan);
     return `${PREFACE}${bodyText(document)}`;

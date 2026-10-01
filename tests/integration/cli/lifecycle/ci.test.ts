@@ -20,7 +20,6 @@ test.each(['bitbucket-pipelines.yml', 'Jenkinsfile', ''])(
             ci: 'none',
             rules: 'no',
             install: false,
-            allowDirty: false,
         });
         expect(result.exitCode).toBe(0);
         const { plan } = result.json as { plan: ReplacePlan };

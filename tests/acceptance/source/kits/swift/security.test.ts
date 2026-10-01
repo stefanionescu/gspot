@@ -18,7 +18,7 @@ test(
             'scripts/build.js': 'export const buildName = "fixture";\n',
             'Info.plist': '<plist><dict><key>CFBundleName</key><string>Fixture</string></dict></plist>\n',
         });
-        await install(root, initArgs(['swift', 'javascript', 'security'], ['spelling', 'naming']));
+        await install(root, initArgs(['swift', 'javascript', 'security']), {}, ['spelling', 'naming']);
         const files = ['.gspot/package.json', '.gspot/bun.lock', '.gspot/pyproject.toml', '.gspot/uv.lock'];
         const before = await Promise.all(files.map(async (path) => await Bun.file(join(root, path)).text()));
         await installPrivateTools(root);

@@ -52,7 +52,6 @@ test('init refuses an unsafe output ancestor before attempting installation', as
             runner: 'mise',
             rules: 'no',
             install: true,
-            allowDirty: true,
         }),
     );
     expect(readFileSync(join(outside.path, 'authored.toml'), 'utf8')).toBe('untouched = true\n');
@@ -81,7 +80,6 @@ test('init retains old configuration when a conflicting replacement cannot be pu
                 runner: 'none',
                 rules: 'no',
                 install: false,
-                allowDirty: true,
             }),
         ),
     ).toContain('Setup preserved conflicting outputs');

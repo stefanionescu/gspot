@@ -437,14 +437,12 @@ name = "architecture.types_directory"
 kind = "string"
 direction = "neutral"
 summary = "The directory every type alias lives under; turns on the types placement rules."
-detect = {folders = ["types", "src/types"]}
 
 [[settings]]
 name = "architecture.config_directory"
 kind = "string"
 direction = "neutral"
 summary = "The directory every literal constant lives under; its files are the registries the instance rule accepts."
-detect = {folders = ["config", "src/config"]}
 
 [[settings]]
 name = "architecture.roles"

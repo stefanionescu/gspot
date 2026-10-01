@@ -8,7 +8,7 @@ import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { toolsPath, installAtLevel } from '#tests/support/cli/tools.ts';
 import { containing, textContaining } from '#tests/support/expectations.ts';
-import { DUPLICATION_INIT } from '#tests/inputs/acceptance/source/kits/init-arguments.ts';
+import { DUPLICATION_INIT, DUPLICATION_LEFT_OUT } from '#tests/inputs/acceptance/source/kits/init-arguments.ts';
 
 const NPM_BIN = join(import.meta.dir, '../../../../node_modules/.bin');
 const STEPS = Array.from(
@@ -25,7 +25,7 @@ describe('the duplication configuration', () => {
             });
             commitAll(sandbox.path);
             const environment = { PATH: `${NPM_BIN}${delimiter}${toolsPath(['shellcheck', 'shfmt', 'typos', 'ec'])}` };
-            await installAtLevel(sandbox.path, DUPLICATION_INIT, environment);
+            await installAtLevel(sandbox.path, DUPLICATION_INIT, environment, 'all', DUPLICATION_LEFT_OUT);
             const clean = await run(sandbox.path, ['check', '--only', 'duplication/jscpd', '--json'], environment);
             expect(clean.code, clean.stdout + clean.stderr).toBe(0);
             await Bun.write(

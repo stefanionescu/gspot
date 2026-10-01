@@ -48,7 +48,7 @@ test(
 );
 
 test(
-    'init refusals > an unknown kit names the near match, and a required kit cannot be left out',
+    'init refusals > an unknown kit names the near match',
     async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'scripts/a.sh': script });
@@ -56,24 +56,13 @@ test(
         const unknown = await run(sandbox.path, ['init', '--yes', '--kits', 'bassh', ...INIT_REFUSALS_QUIET]);
         expect(unknown.code).toBe(2);
         expect(unknown.stderr).toContain('Did you mean `bash`');
-        const required = await run(sandbox.path, [
-            'init',
-            '--yes',
-            '--kits',
-            'bash',
-            '--without',
-            'structure',
-            ...INIT_REFUSALS_QUIET,
-        ]);
-        expect(required.code).toBe(2);
-        expect(required.stderr).toContain('bash requires structure');
         expect(existsSync(join(sandbox.path, 'gspot.toml'))).toBe(false);
     },
     PLANTED_TIMEOUT_MS,
 );
 
 test(
-    'init refusals > uncommitted changes stop init until --allow-dirty is given',
+    'init refusals > uncommitted changes stop init until they are committed',
     async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'scripts/a.sh': script });
@@ -81,38 +70,28 @@ test(
         await Bun.write(join(sandbox.path, 'notes.txt'), 'draft\n');
         const refused = await run(sandbox.path, ['init', '--yes', '--kits', 'bash', ...INIT_REFUSALS_QUIET]);
         expect(refused.code).toBe(2);
-        expect(refused.stderr).toContain('--allow-dirty');
+        expect(refused.stderr).toContain('Commit or stash them');
         expect(existsSync(join(sandbox.path, 'gspot.toml'))).toBe(false);
-        const allowed = await run(
-            sandbox.path,
-            ['init', '--yes', '--kits', 'bash', '--allow-dirty', ...INIT_REFUSALS_QUIET],
-            {
-                PATH: `${join(import.meta.dir, '../../../../../node_modules/.bin')}${delimiter}${toolsPath(['ast-grep', 'shellcheck', 'shfmt', 'typos', 'ec'])}`,
-            },
-        );
+        commitAll(sandbox.path);
+        const allowed = await run(sandbox.path, ['init', '--yes', '--kits', 'bash', ...INIT_REFUSALS_QUIET], {
+            PATH: `${join(import.meta.dir, '../../../../../node_modules/.bin')}${delimiter}${toolsPath(['ast-grep', 'shellcheck', 'shfmt', 'typos', 'ec'])}`,
+        });
         expect(allowed.code, allowed.stdout + allowed.stderr).toBe(0);
     },
     PLANTED_TIMEOUT_MS,
 );
 
 test(
-    'init refusals > a recommended kit is installed unless --without names it',
+    'init refusals > a named kit brings its recommended kits',
     async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'scripts/a.sh': script });
         commitAll(sandbox.path);
         const environment = { PATH: toolsPath(['ast-grep', 'shellcheck', 'shfmt']) };
-        await run(
-            sandbox.path,
-            ['init', '--yes', '--kits', 'bash', '--without', 'naming', ...INIT_REFUSALS_QUIET],
-            environment,
-        );
+        await run(sandbox.path, ['init', '--yes', '--kits', 'bash', ...INIT_REFUSALS_QUIET], environment);
         const policy = await Bun.file(join(sandbox.path, 'gspot.toml')).text();
         expect(policy).toContain('"formatting"');
-        expect(policy).not.toContain('"naming"');
-        const check = await run(sandbox.path, ['check', '--only', 'naming/identifiers'], environment);
-        expect(check.code).toBe(2);
-        expect(check.stdout).toContain('No selected kit runs a check called `naming/identifiers`');
+        expect(policy).toContain('"naming"');
     },
     PLANTED_TIMEOUT_MS,
 );

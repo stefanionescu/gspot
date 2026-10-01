@@ -55,7 +55,6 @@ kind = "boolean"
 direction = "tightening"
 default = false
 summary = "Whether the service documents its API with @nestjs/swagger, which turns the Swagger rules of the NestJS plugin on."
-detect = {dependency = "@nestjs/swagger"}
 
 [[naming.rules]]
 paths = ["**"]

@@ -66,7 +66,7 @@ test.each([
         await createFileTree(root, {
             'icon.svg': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8 8"><path d="M0 0h8v8H0z"/></svg>\n',
         });
-        await install(root, initArgs(['static-site'], ['spelling', 'naming']));
+        await install(root, initArgs(['static-site']), {}, ['spelling', 'naming']);
         const native = await processes.run(
             [join(root, '.gspot/node_modules/.bin/svgo'), '--input', 'icon.svg', '--output', '-'],
             { cwd: root },

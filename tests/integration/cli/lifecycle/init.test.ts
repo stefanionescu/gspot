@@ -5,7 +5,6 @@ import { test, spyOn, expect } from 'bun:test';
 import { TYPO } from '#tests/support/spelling.ts';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
-import { run } from '#tests/support/cli/command.ts';
 import { initCommand } from '#cli/commands/init/command.ts';
 import { applyCommand } from '#cli/commands/apply/command.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
@@ -52,7 +51,6 @@ test.each([
             isDryRun: true,
             json: true,
             install: false,
-            allowDirty: false,
             hooks: 'none',
             runner: 'none',
             rules: 'no',
@@ -81,7 +79,6 @@ test('init replaces a nested spelling configuration and deletes the original', a
         ci: 'none',
         rules: 'no',
         install: false,
-        allowDirty: false,
     } as const;
     const preview = await initCommand({ ...options, kits: [...options.kits] });
     expect(preview.exitCode).toBe(0);
@@ -128,7 +125,6 @@ test('init reports each submodule once without reading its contents', async () =
         ci: 'none',
         rules: 'no',
         install: false,
-        allowDirty: false,
     });
     expect(result.exitCode).toBe(0);
     expect(result.json).toMatchObject({
@@ -160,7 +156,6 @@ test('failed initialization retains the previous pin until generated publication
                     ci: 'none',
                     rules: 'no',
                     install: false,
-                    allowDirty: false,
                 }),
             ),
         ).toContain('Generated write denied');
@@ -187,7 +182,6 @@ test('init refuses a failed Git status before writing and succeeds after the fai
         ci: 'none',
         rules: 'no',
         install: false,
-        allowDirty: false,
     } as const;
     const execute = processes.runBlocking;
     const failed = spyOn(processes, 'runBlocking').mockImplementation((command, settings) =>
@@ -231,7 +225,6 @@ test.each(['../outside', 'linked', 'linked/nested', 'missing', 'README.md'])(
             ci: 'none',
             rules: 'no',
             install: false,
-            allowDirty: false,
         } as const;
         await rejects(initCommand({ ...options, kits: [...options.kits], scopes: [...options.scopes] }), {
             message: /Unsafe lifecycle|Scope directory does not exist/u,
@@ -250,29 +243,3 @@ test.each(['../outside', 'linked', 'linked/nested', 'missing', 'README.md'])(
         expect(readFileSync(join(root, 'gspot.toml'), 'utf8')).toContain('path = "src"');
     },
 );
-
-test('uv is an installer rather than a task runner, and Python initialization preserves its project', async () => {
-    await using sandbox = await testdir();
-    const project = '[project]\nname = "sample"\nversion = "1.0.0"\ndependencies = []\n';
-    await createFileTree(sandbox.path, { 'pyproject.toml': project, 'source.py': 'print("ready")\n' });
-    const rejected = await run(sandbox.path, ['init', '--yes', '--runner', 'uv']);
-    expect(rejected.code).toBe(2);
-    for (const runner of ['mise', 'npm', 'bun', 'pnpm', 'yarn']) expect(rejected.stderr).toContain(runner);
-    expect(existsSync(join(sandbox.path, 'gspot.toml'))).toBe(false);
-    expect(readFileSync(join(sandbox.path, 'pyproject.toml'), 'utf8')).toBe(project);
-    const accepted = await run(sandbox.path, [
-        'init',
-        '--yes',
-        '--dry-run',
-        '--kits',
-        'python',
-        '--no-runner',
-        '--no-install',
-        '--no-ci',
-        '--no-hooks',
-        '--no-guides',
-    ]);
-    expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
-    expect(existsSync(join(sandbox.path, 'gspot.toml'))).toBe(false);
-    expect(readFileSync(join(sandbox.path, 'pyproject.toml'), 'utf8')).toBe(project);
-});

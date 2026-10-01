@@ -5,7 +5,6 @@ import { hasPolicy } from '#cli/policy/read.ts';
 import { ciSchema } from '#cli/policy/schema.ts';
 import { compact } from '#cli/policy/normalize.ts';
 import { write } from '#cli/commands/init/write.ts';
-import { runnerSchema } from '#cli/policy/runner.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
 import { note, print } from '#cli/output/messages.ts';
 import { prepare } from '#cli/commands/init/prepare.ts';
@@ -41,14 +40,12 @@ function profileAnswers(profile: Profile): Partial<InitOptions> {
 function optionsFrom(flags: Record<string, unknown>, global: Record<string, unknown>): InitOptions {
     const lists = {
         kits: listFlag(flags, 'kits'),
-        without: listFlag(flags, 'without'),
         scopes: listFlag(flags, 'scope'),
     };
     const choices = {
         hooks: flags['hooks'] === false ? ('none' as const) : undefined,
         ci: flags['ci'] === false ? 'none' : ciSchema.shape.provider.optional().parse(textFlag(flags, 'ci')),
-        runner:
-            flags['runner'] === false ? 'none' : runnerSchema.shape.tool.optional().parse(textFlag(flags, 'runner')),
+        runner: flags['runner'] === false ? ('none' as const) : undefined,
         rules: flags['guides'] === false ? ('no' as const) : undefined,
     };
     const given: Partial<InitOptions> = Object.fromEntries(
@@ -60,7 +57,6 @@ function optionsFrom(flags: Record<string, unknown>, global: Record<string, unkn
         isDryRun: flags['dryRun'] === true,
         json: global['json'] === true,
         install: flags['install'] !== false,
-        allowDirty: flags['allowDirty'] === true,
         ...textEntry(flags, 'from', 'from'),
         ...given,
     };
@@ -129,10 +125,8 @@ export function registerInit(program: Command): void {
         .option('--yes', 'Accept the plan without asking')
         .option('--from <profile>', 'Start from a profile: a path, an https URL, or github:owner/repo')
         .option('--kits <kits...>', 'Use these kits at the root instead of the detected ones')
-        .option('--without <kits...>', 'Leave these kits out of the plan')
         .option('--scope <path=kits...>', 'Add scopes, each as a path and its comma-separated kits')
         .option('--no-install', 'Skip installing the tools and print the install command')
-        .option('--allow-dirty', 'Run even when the working tree has uncommitted changes')
         .addOption(
             new Option('--ci <provider>', 'Write a CI workflow for this provider').choices(
                 ciSchema.shape.provider.options,
@@ -141,9 +135,6 @@ export function registerInit(program: Command): void {
         .option('--no-hooks', 'Install no Git hooks')
         .option('--no-ci', 'Write no CI workflow')
         .option('--no-guides', 'Install no guides for coding agents')
-        .addOption(
-            new Option('--runner <tool>', 'Add gspot to this task runner').choices(runnerSchema.shape.tool.options),
-        )
         .option('--no-runner', 'Add gspot to no task runner')
         .option('--dry-run', 'Print the plan and write nothing')
         .action(async (flags: Record<string, unknown>, command: Command) => {

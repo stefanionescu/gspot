@@ -23,13 +23,6 @@ function manifestOf(dependencies: Record<string, string> | undefined): Record<st
     return { 'package.json': `${JSON.stringify(manifest, null, 4)}\n` };
 }
 
-// The init arguments: the kits, the recommendations left out, and the flags after them.
-function initArgumentsOf(sandbox: Sandbox): string[] {
-    const without = sandbox.without ?? ['naming', 'spelling'];
-    const left = without.length === 0 ? [] : ['--without', ...without];
-    return ['init', '--yes', '--kits', ...sandbox.kits, ...left, ...(sandbox.init ?? QUIET_INIT)];
-}
-
 /**
  * Plants a repository, installs its configurations and private tools, and returns the command environment.
  * @param root the empty sandbox
@@ -50,7 +43,8 @@ export async function installSandbox(
     commitAll(root);
     const tools = toolsPath(['typos', 'ec', 'ast-grep', ...(sandbox.tools ?? [])]);
     const environment = { PATH: `${INSTALLED_BIN_PATH}${delimiter}${tools}` };
-    await install(root, initArgumentsOf(sandbox), environment);
+    const argv = ['init', '--yes', '--kits', ...sandbox.kits, ...(sandbox.init ?? QUIET_INIT)];
+    await install(root, argv, environment, sandbox.without ?? ['naming', 'spelling']);
     const level = sandbox.level ?? 'all';
     const selected = await run(root, ['set', 'level', level], environment);
     if (selected.code !== 0)

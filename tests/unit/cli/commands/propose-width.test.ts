@@ -21,7 +21,7 @@ test('a proposed policy holds no line over 120 characters and reads back as writ
     expect(policy.scopes[0]?.kits).toStrictEqual(CONFIGURATIONS.slice(0, 12));
 });
 
-test('detected settings override profile values while unrelated profile settings survive', () => {
+test('profile settings survive beside the commit scopes init adds', () => {
     const text = proposeText({
         kits: ['python'],
         scopes: [],
@@ -29,12 +29,6 @@ test('detected settings override profile values while unrelated profile settings
             tools: { ruff: { select: ['E'], exclude: ['generated'] } },
             architecture: { types_directory: 'types', config_directory: 'constants' },
         },
-        detected: [
-            { key: 'tools.ruff.select', value: ['I'], kit: 'python' },
-            { key: 'architecture.types_directory', value: 'models', kit: 'typescript' },
-            { key: 'tools.ruff.select.extra', value: ['B'], kit: 'python' },
-            { key: 'architecture.types_directory.extra', value: 'ignored', kit: 'typescript' },
-        ],
         commitScopes: ['api'],
         hooks: 'none',
         ci: 'none',
@@ -42,8 +36,8 @@ test('detected settings override profile values while unrelated profile settings
         runner: 'none',
     });
     expect(parse(text)).toMatchObject({
-        tools: { ruff: { select: ['I'], exclude: ['generated'] }, commitlint: { scopes: ['api'] } },
-        architecture: { types_directory: 'models', config_directory: 'constants' },
+        tools: { ruff: { select: ['E'], exclude: ['generated'] }, commitlint: { scopes: ['api'] } },
+        architecture: { types_directory: 'types', config_directory: 'constants' },
     });
 });
 
@@ -70,29 +64,4 @@ test('initialization keeps the profile runner while honoring disabled integratio
     });
     expect(document).not.toHaveProperty('hooks');
     expect(document).not.toHaveProperty('ci');
-});
-
-test('initialization writes scoped install safeguards as scope tables', () => {
-    const text = proposeText({
-        kits: ['dependencies'],
-        scopes: [
-            { path: 'api', kits: ['dependencies'] },
-            { path: 'web', kits: ['dependencies'] },
-        ],
-        install: [
-            { path: '', settings: { min_release_age_days: 14 } },
-            { path: 'api', settings: { min_release_age_days: 21, security_scanner: 'scope-scanner' } },
-        ],
-        hooks: 'none',
-        ci: 'none',
-        rules: true,
-        runner: 'none',
-    });
-    expect(parse(text)).toMatchObject({
-        tools: { install: { min_release_age_days: 14 } },
-        scope: [
-            { path: 'api', tools: { install: { min_release_age_days: 21, security_scanner: 'scope-scanner' } } },
-            { path: 'web' },
-        ],
-    });
 });

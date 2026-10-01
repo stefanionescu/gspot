@@ -9,7 +9,7 @@ import { runPlanted } from '#tests/support/cli/planted.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { toolsPath, installAtLevel } from '#tests/support/cli/tools.ts';
 import { containing, containingAll } from '#tests/support/expectations.ts';
-import { ANSIBLE_INIT } from '#tests/inputs/acceptance/source/kits/init-arguments.ts';
+import { ANSIBLE_INIT, ANSIBLE_LEFT_OUT } from '#tests/inputs/acceptance/source/kits/init-arguments.ts';
 
 const CLEAN = `---\n- name: Deploy the service\n  hosts: all\n  tasks:\n    - name: Restart the service\n      ansible.builtin.systemd:\n        name: planted\n        state: restarted\n`;
 const SHELLED = `---\n- name: Deploy the service\n  hosts: all\n  tasks:\n    - name: Restart the service\n      ansible.builtin.command: systemctl restart planted\n      changed_when: true\n`;
@@ -25,7 +25,7 @@ describe('the ansible configuration', () => {
             });
             commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['ansible-lint', 'typos', 'ec', 'taplo', 'yamllint']) };
-            await installAtLevel(sandbox.path, ANSIBLE_INIT, environment);
+            await installAtLevel(sandbox.path, ANSIBLE_INIT, environment, 'all', ANSIBLE_LEFT_OUT);
             const outcome = await runPlanted(
                 sandbox.path,
                 {

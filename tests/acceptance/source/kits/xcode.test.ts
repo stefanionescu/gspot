@@ -1,13 +1,11 @@
 // Planted repository for the xcode configuration: a project with a source in no target, a catalog with a hole, and a plist that opens the network.
 import { join } from 'node:path';
-import { test, expect, describe } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { unlinkSync, symlinkSync } from 'node:fs';
-import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { plantedCases } from '#tests/support/cli/planted.ts';
-import { install, toolsPath } from '#tests/support/cli/tools.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { HOME, PLAN, IMAGES, XCODE_PROJECT } from '#tests/inputs/acceptance/source/kits/kits.ts';
 
@@ -161,46 +159,3 @@ plantedCases(
         );
     },
 );
-
-describe('init in a repository with an Xcode project', () => {
-    test(
-        'writes the project and the first shared scheme into the scope that holds them',
-        async () => {
-            await using sandbox = await testdir();
-            await createFileTree(sandbox.path, {
-                'ios/App.xcodeproj/project.pbxproj': XCODE_PROJECT,
-                'ios/App.xcodeproj/xcshareddata/xcschemes/App.xcscheme': '<Scheme/>\n',
-                'ios/App/Home.swift': HOME,
-            });
-            commitAll(sandbox.path);
-            const argv = [
-                'init',
-                '--yes',
-                '--scope',
-                'ios=swift,xcode',
-                '--without',
-                'spelling',
-                'naming',
-                '--no-runner',
-                '--no-ci',
-                '--no-hooks',
-                '--no-guides',
-                '--no-install',
-            ];
-            await install(sandbox.path, argv, {
-                PATH: toolsPath(['swiftlint', 'swiftformat', 'typos', 'ec', 'taplo', 'yamllint']),
-            });
-            const policy = await Bun.file(join(sandbox.path, 'gspot.toml')).text();
-            expect(policy).toContain('project = "App.xcodeproj"');
-            expect(policy).toContain('scheme = "App"');
-            // A later write into the same scope must still patch the file init wrote.
-            const later = await run(
-                sandbox.path,
-                ['set', '--scope', 'ios', 'tools.xcode.destination', 'platform=macOS'],
-                {},
-            );
-            expect(later.code, later.stderr).toBe(0);
-        },
-        PLANTED_TIMEOUT_MS * 6,
-    );
-});

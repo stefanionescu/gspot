@@ -93,13 +93,12 @@ test(
 );
 
 test.each([
-    { dependency: false, excluded: false, named: false, selected: false },
-    { dependency: true, excluded: false, named: false, selected: true },
-    { dependency: true, excluded: true, named: false, selected: false },
-    { dependency: false, excluded: false, named: true, selected: true },
+    { dependency: false, named: false, selected: false },
+    { dependency: true, named: false, selected: true },
+    { dependency: false, named: true, selected: true },
 ])(
     'Next.js selects locale checking according to dependencies and explicit choices: %j',
-    async ({ dependency, excluded, named, selected }) => {
+    async ({ dependency, named, selected }) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
             'package.json': JSON.stringify({
@@ -117,10 +116,6 @@ test.each([
             '--kits',
             'nextjs',
             ...(named ? ['i18n'] : []),
-            '--without',
-            'naming',
-            'spelling',
-            ...(excluded ? ['i18n'] : []),
             '--no-runner',
             '--no-ci',
             '--no-hooks',

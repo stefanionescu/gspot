@@ -14,6 +14,7 @@ import {
     STRUCTURE_INIT,
     NUMPY_DOCSTRING,
     STRUCTURE_PROJECT,
+    STRUCTURE_LEFT_OUT,
 } from '#tests/inputs/acceptance/source/kits/python.ts';
 
 test.each([
@@ -34,7 +35,7 @@ test.each([
             [TOOLS_MODULE]: clean.replace(/ {4}value (?=[:(])/u, '    amount '),
         });
         commitAll(sandbox.path);
-        await installAtLevel(sandbox.path, STRUCTURE_INIT, {});
+        await installAtLevel(sandbox.path, STRUCTURE_INIT, {}, 'all', STRUCTURE_LEFT_OUT);
         const command = ['check', '--only', 'python/pydoclint', '--json'];
         const rejected = await run(sandbox.path, command);
         expect(rejected.code, rejected.stdout + rejected.stderr).toBe(1);

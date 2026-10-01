@@ -40,19 +40,9 @@ test(
         const environment = { PATH: toolsPath(['ruff', 'pytest', 'typos', 'ec']) };
         await install(
             sandbox.path,
-            [
-                'init',
-                '--yes',
-                '--kits',
-                'python',
-                'pytest',
-                'naming',
-                '--without',
-                'spelling',
-                'dependencies',
-                ...QUIET_INIT,
-            ],
+            ['init', '--yes', '--kits', 'python', 'pytest', 'naming', ...QUIET_INIT],
             environment,
+            ['spelling', 'dependencies'],
         );
         for (const id of ['pytest/coverage', 'naming/identifiers', 'python/ruff']) {
             const clean = await run(sandbox.path, ['check', '--only', id], environment);

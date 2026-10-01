@@ -17,9 +17,15 @@ plantedCases(
         kits: ['bash', 'javascript'],
         modules: false,
         without: [],
-        init: ['--runner', 'npm', '--no-ci', '--no-guides', '--no-install'],
+        init: ['--no-ci', '--no-guides', '--no-install'],
         tools: ['shellcheck', 'shfmt'],
-        files: { 'scripts/a.sh': CLEAN, 'scripts/b.sh': CLEAN, 'package.json': '{"private":true}\n' },
+        // The npm lock makes npm the runner init takes.
+        files: {
+            'scripts/a.sh': CLEAN,
+            'scripts/b.sh': CLEAN,
+            'package.json': '{"private":true}\n',
+            'package-lock.json': '{"lockfileVersion":3,"requires":true,"packages":{}}\n',
+        },
         prepare: async (root, environment) => {
             const reasons = await run(root, ['set', 'require_reasons', 'true'], environment);
             if (reasons.code !== 0) throw new Error(`Reasons were not required: ${reasons.stdout}${reasons.stderr}`);

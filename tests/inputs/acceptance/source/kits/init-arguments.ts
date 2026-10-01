@@ -39,8 +39,6 @@ export const DUPLICATION_INIT = [
     '--kits',
     'bash',
     'duplication',
-    '--without',
-    'naming',
     '--no-runner',
     '--no-ci',
     '--no-hooks',
@@ -73,11 +71,13 @@ export const ANSIBLE_INIT = [
     '--yes',
     '--kits',
     'ansible',
-    '--without',
-    'spelling',
     '--no-runner',
     '--no-ci',
     '--no-hooks',
     '--no-guides',
     '--no-install',
 ];
+/** The kits the duplication sandbox leaves out after init. */
+export const DUPLICATION_LEFT_OUT = ['naming'];
+/** The kits the ansible sandbox leaves out after init. */
+export const ANSIBLE_LEFT_OUT = ['spelling'];

@@ -20,7 +20,7 @@ import { chmodSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { INSTALLED_MODULES, INSTALLED_BIN_PATH } from '#tests/support/cli/modules.ts';
 
 /** init selecting nextjs without the recommendations the tests leave out. */
-const NEXT_INIT = initArgs(['nextjs'], ['naming', 'spelling', 'css', 'files']); /**
+const NEXT_INIT = initArgs(['nextjs']); /**
  * Plants the project beside this repository's node_modules, initializes it, and sets the all level.
  * @returns the sandbox and the environment its commands run with
  */
@@ -50,7 +50,7 @@ export async function installedNextProject(): Promise<{
         const environment = {
             PATH: `${INSTALLED_BIN_PATH}${delimiter}${toolsPath(['typos', 'ec', 'ast-grep'])}`,
         };
-        await install(sandbox.path, NEXT_INIT, environment);
+        await install(sandbox.path, NEXT_INIT, environment, ['naming', 'spelling', 'css', 'files']);
         const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
         if (selected.code !== 0)
             throw new Error(`Next.js setup failed (${String(selected.code)}): ${selected.stdout}${selected.stderr}`);

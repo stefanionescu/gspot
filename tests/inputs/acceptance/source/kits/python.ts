@@ -5,10 +5,6 @@ export const STRUCTURE_INIT = [
     '--yes',
     '--kits',
     'python',
-    '--without',
-    'naming',
-    'spelling',
-    'dependencies',
     '--no-runner',
     '--no-ci',
     '--no-hooks',
@@ -28,3 +24,5 @@ export const TOOLS_PROJECT =
 
 export const NUMPY_DOCSTRING =
     '"""Arithmetic the planted tests call."""\n\n\ndef double(value: int) -> int:\n    """Double a number.\n\n    Parameters\n    ----------\n    value : int\n        The number.\n\n    Returns\n    -------\n    int\n        Twice the number.\n    """\n    return value * 2\n';
+/** The kits the Python structure sandbox leaves out after init. */
+export const STRUCTURE_LEFT_OUT = ['naming', 'spelling', 'dependencies'];
