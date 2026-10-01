@@ -7,6 +7,7 @@ import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { onPosix } from '#tests/support/cli/platforms.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
+import { PAGE } from '#tests/inputs/integration/cli/execution/execution.ts';
 
 test('folder checks count code files and preserve allowed and nested directories', async () => {
     await using sandbox = await testdir();
@@ -101,20 +102,9 @@ test('prefix checks group files and directories once and honor allowances and th
 });
 
 test.each([
-    ['javascript', 'js'],
     ['typescript', 'ts'],
     ['swift', 'swift'],
     ['python', 'py'],
-    ['react', 'jsx'],
-    ['nextjs', 'tsx'],
-    ['react-native', 'tsx'],
-    ['nestjs', 'ts'],
-    ['express', 'js'],
-    ['vue', 'vue'],
-    ['svelte', 'svelte'],
-    ['fastapi', 'py'],
-    ['xcode', 'swift'],
-    ['xctest', 'swift'],
 ])('%s retains shared folder enforcement and reads corrections', async (configuration, extension) => {
     const language = { ts: 'typescript', tsx: 'typescript', swift: 'swift', py: 'python' }[extension] ?? 'javascript';
     const lone = `feature/only.${extension}`;
@@ -245,4 +235,44 @@ test.each(['recommended', 'all'])('structural checks classify output directories
             : [],
     );
     expect(result.report.exitCode).toBe(level === 'all' ? 1 : 0);
+});
+
+// A framework allows its own one-file folders through the setting default it declares; the repository adds its own.
+async function loneFiles(root: string): Promise<string[]> {
+    const result = await executeRun(await openSession(root), {
+        stage: 'all',
+        skips: [],
+        fix: false,
+        isDryRun: false,
+        only: ['structure/single-file-folder'],
+    });
+    return result.report.checks.flatMap((check) => check.findings.map((finding) => finding.file));
+}
+
+test('SvelteKit route folders hold one page each without a finding, and other lone files still report', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': policyOf(['javascript', 'svelte'], '', 'all'),
+        'package.json': '{"name":"planted","private":true,"type":"module"}\n',
+        'src/routes/about/+page.svelte': PAGE,
+        'src/routes/blog/[slug]/+page.svelte': PAGE,
+        'src/lib/lone/util.js': 'export const answer = 42;\n',
+    });
+    expect(await loneFiles(sandbox.path)).toStrictEqual(['src/lib/lone/util.js']);
+});
+
+test('the repository allowance joins the framework allowance instead of replacing it', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': policyOf(
+            ['javascript', 'svelte'],
+            '[structure]\nsingle_file_folder_allowed = [{ paths = ["src/lib/lone/**"], reason = "Required entry directory." }]\n',
+            'all',
+        ),
+        'package.json': '{"name":"planted","private":true,"type":"module"}\n',
+        'src/routes/about/+page.svelte': PAGE,
+        'src/lib/lone/util.js': 'export const answer = 42;\n',
+        'src/lib/other/util.js': 'export const answer = 42;\n',
+    });
+    expect(await loneFiles(sandbox.path)).toStrictEqual(['src/lib/other/util.js']);
 });

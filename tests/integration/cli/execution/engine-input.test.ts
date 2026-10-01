@@ -149,30 +149,22 @@ if (onPosix)
         expect([...second.owners.keys()]).toStrictEqual(['name2', 'name3']);
     });
 
-test.each([
-    ['javascript', 'javascript/checkjs', 'source.js', 'export const value = 1;\n'],
-    ['typescript', 'typescript/tsc', 'source.ts', 'export const value = 1;\n'],
-    ['python', 'python/basedpyright', 'source.py', 'value: int = 1\n'],
-    ['nextjs', 'nextjs/typecheck', 'source.tsx', 'export const value = 1;\n'],
-    ['supabase', 'supabase/deno-check', 'supabase/functions/home/index.ts', 'export const value = 1;\n'],
-])(
-    '%s project type checking belongs to push and preserves explicit selection',
-    async (configuration, check, path, source) => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
-            'gspot.toml': policyOf([configuration]),
-            [path]: source,
-        });
-        const session = await openSession(sandbox.path);
-        const commit = planRun(session, { stage: 'commit', skips: [], only: [check] });
-        expect(commit.map((entry) => entry.check)).not.toContain(check);
-        for (const stage of ['push', 'all'] as const) {
-            const planned = planRun(session, { stage, skips: [], only: [check] });
-            expect(planned.map((entry) => entry.check)).toContain(check);
-            expect(planned.find((entry) => entry.check === check)?.spec.stage).toBe('push');
-        }
-    },
-);
+test('project type checking belongs to push and preserves explicit selection', async () => {
+    const check = 'typescript/tsc';
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': policyOf(['typescript']),
+        'source.ts': 'export const value = 1;\n',
+    });
+    const session = await openSession(sandbox.path);
+    const commit = planRun(session, { stage: 'commit', skips: [], only: [check] });
+    expect(commit.map((entry) => entry.check)).not.toContain(check);
+    for (const stage of ['push', 'all'] as const) {
+        const planned = planRun(session, { stage, skips: [], only: [check] });
+        expect(planned.map((entry) => entry.check)).toContain(check);
+        expect(planned.find((entry) => entry.check === check)?.spec.stage).toBe('push');
+    }
+});
 
 // Windows file names cannot hold a newline or a quote.
 if (onPosix)

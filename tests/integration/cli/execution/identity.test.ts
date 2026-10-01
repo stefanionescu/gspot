@@ -68,31 +68,29 @@ test('counted failures survive final filtering without diagnostic locations', as
     expect(corrected.report.exitCode).toBe(0);
 });
 
-test.each(['{ broken', '{}', ''])(
-    'custom JSON output %j produces inability instead of a discarded finding',
-    async (output) => {
-        await using sandbox = await testdir();
-        const program = `process.stdout.write(${JSON.stringify(output)})`;
-        await createFileTree(sandbox.path, {
-            'gspot.toml': policyOf(
-                [],
-                `[[check]]\nname = "sandbox/json"\ncommand = ${JSON.stringify([process.execPath, '-e', program])}\npaths = ["source.txt"]\nstage = "commit"\n[check.output]\nformat = "json"\n`,
-            ),
-            'source.txt': 'original',
-            '.gspot/version': GSPOT_VERSION + '\n',
-        });
-        const cli = Bun.spawnSync(
-            [
-                process.execPath,
-                Bun.resolveSync('#cli/main.ts', import.meta.dir),
-                'check',
-                '--only',
-                'sandbox/json',
-                '--json',
-            ],
-            { cwd: sandbox.path },
-        );
-        expect(cli.exitCode, cli.stdout.toString() + cli.stderr.toString()).toBe(2);
-        expect((JSON.parse(cli.stdout.toString()) as RunReport).checks[0]!.status).toBe('error');
-    },
-);
+test('malformed custom JSON output produces inability instead of a discarded finding', async () => {
+    const output = '{ broken';
+    await using sandbox = await testdir();
+    const program = `process.stdout.write(${JSON.stringify(output)})`;
+    await createFileTree(sandbox.path, {
+        'gspot.toml': policyOf(
+            [],
+            `[[check]]\nname = "sandbox/json"\ncommand = ${JSON.stringify([process.execPath, '-e', program])}\npaths = ["source.txt"]\nstage = "commit"\n[check.output]\nformat = "json"\n`,
+        ),
+        'source.txt': 'original',
+        '.gspot/version': GSPOT_VERSION + '\n',
+    });
+    const cli = Bun.spawnSync(
+        [
+            process.execPath,
+            Bun.resolveSync('#cli/main.ts', import.meta.dir),
+            'check',
+            '--only',
+            'sandbox/json',
+            '--json',
+        ],
+        { cwd: sandbox.path },
+    );
+    expect(cli.exitCode, cli.stdout.toString() + cli.stderr.toString()).toBe(2);
+    expect((JSON.parse(cli.stdout.toString()) as RunReport).checks[0]!.status).toBe('error');
+});

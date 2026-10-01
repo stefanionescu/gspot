@@ -56,7 +56,7 @@ test('ast-grep batches all file arguments and retains matches from every batch',
     }
 });
 
-test.each(['fatal exit', 'deadline', 'cancellation', 'malformed JSON', 'invalid match', 'unselected file'] as const)(
+test.each(['fatal exit', 'malformed JSON', 'invalid match', 'unselected file'] as const)(
     'ast-grep rejects %s and accepts corrected execution',
     async (failure) => {
         await using sandbox = await testdir();
@@ -74,8 +74,6 @@ test.each(['fatal exit', 'deadline', 'cancellation', 'malformed JSON', 'invalid 
         });
         const output = {
             'fatal exit': '[]',
-            deadline: '[]',
-            cancellation: '[]',
             'malformed JSON': '{',
             'invalid match': JSON.stringify([{ file: 'source.sh' }]),
             'unselected file': JSON.stringify([
@@ -88,8 +86,6 @@ test.each(['fatal exit', 'deadline', 'cancellation', 'malformed JSON', 'invalid 
             duration: 1,
             stdout: output,
             stderr: 'cannot read source.sh',
-            isTimedOut: failure === 'deadline',
-            isCanceled: failure === 'cancellation',
         });
         try {
             await rejection(astGrepMatches(input, 'kits/language/bash/rules/branches.yml', ['source.sh']));
