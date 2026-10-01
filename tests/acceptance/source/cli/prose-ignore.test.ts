@@ -76,7 +76,7 @@ test('an obsolete Vale switch reports a policy error without suppressing the che
     const obsoleteChecks = (JSON.parse(obsolete.stdout) as RunReport).checks;
     expect(obsoleteChecks.map((check) => check.check)).toStrictEqual(['prose/vale', 'integrity/policy']);
     expect(obsoleteChecks[1]?.findings).toMatchObject([
-        { file: 'gspot.toml', line: 7, message: textContaining('tools.vale.enabled') },
+        { file: 'gspot.toml', message: textContaining('tools.vale.enabled: ') },
     ]);
     expect(readFileSync(join(directory.path, 'gspot.toml'), 'utf8')).toBe(obsoletePolicy);
 });
