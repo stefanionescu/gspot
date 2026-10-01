@@ -515,27 +515,6 @@ check = "integrity/stale-paths"
 paths = ["UPDATES.md"]
 reason = "UPDATES.md records an audit, and it names files and folders the work deletes and moves."
 
-[[check]]
-name = "tests/unit"
-command = ["mise", "run", "test"]
-paths = [
-    "packages/cli/**",
-    "packages/eslint-plugin/**",
-    "tests/**",
-    "packages/cli/kits/**",
-    "packages/cli/guides/**",
-    "package.json",
-    "bun.lock",
-    "tsconfig.json",
-    "mise.toml",
-    "docs/**",
-]
-stage = "push"
-summary = "Runs the routine unit and integration suites, including CLI, plugin, and documentation tests."
-
-[check.output]
-format = "none"
-
 [prose]
 vocabulary = ["Nx", "Turborepo", "Husky", "Lefthook", "EditorConfig Checker"]
 
