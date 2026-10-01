@@ -88,7 +88,7 @@ and npm refused the unscoped name `gspot`.
 | the tool project gspot writes into user repositories | `gspot-tools`                            | unchanged: the Python project shares the name, and PyPI has no scopes             |
 | the lockfile root                                    | `gspot-workspace` in `bun.lock:6`, stale | regenerate                                                                        |
 
-Every workspace package sits under the one scope. `tests` stays a package: it holds the 41 fixture packages that the
+Every workspace package sits under the one scope. `tests` stays a package: it holds the 41 packages that the
 test sandboxes link in. Its `package.json` lists the docs package, which it never uses; drop that line. `docs` stays a
 package as well: its Astro dependencies resolve only from its own folder.
 
@@ -272,35 +272,36 @@ then a mirror of the source path. Appendix B maps every file.
 
 ## 4. Bugs in code that stays
 
-| Where                                                                                                                                                                                 | Problem                                                                                                                                        | Action                                   |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
-| `packages/cli/src/config/agents.ts:30`                                                                                                                                                | tells users to edit `[rules]` in `gspot.toml`; the table is `[guides]` today                                                                   | correct with the rename to rules         |
-| `packages/cli/guides/templates/docs`                                                                                                                                                  | 8 files ship but never install; `packages/cli/guides/general/prose/DOCS-REVIEW.md:178` promises them                                           | delete both                              |
-| `packages/cli/guides/framework/fastapi/FASTAPI.md`, `RUNTIME.md`, and `packages/cli/guides/framework/nextjs/SECURITY.md`                                                              | never installed: no manifest names them                                                                                                        | name them in their kits                  |
-| `packages/cli/guides/language/YAML.md`, `packages/cli/guides/tool/tasks/TASKS.md`, `packages/cli/guides/tool/github-actions/GITHUB-ACTIONS.md`                                        | the front matter names a `configs` kit, which does not exist, and cloudflare                                                                   | name the kit that installs them          |
-| 26 kit manifest entries                                                                                                                                                               | name rules that every repository gets anyway, such as `TESTING.md`                                                                             | delete them                              |
-| `packages/cli/src/platform/assets.ts:58`, `packages/cli/scripts/build.ts:15`                                                                                                          | tell users to run a task that exists only in this repository                                                                                   | name the package to reinstall            |
-| `packages/cli/package.json`                                                                                                                                                           | `prettier` is a runtime dependency that `packages/cli/src` never loads                                                                         | use it for the JSON layout, or remove it |
-| `mise.toml` (`guides:lint`)                                                                                                                                                           | runs test files that moved to `tests/integration/tools/guides`, and one that is gone                                                           | goes with the guide linter               |
-| `gspot.toml`                                                                                                                                                                          | entries for a deleted hook test and a `fail_fast` property; the typos words `virtua` and `referers` appear in no source                        | delete                                   |
-| `tests/support/package/run.ts:43`                                                                                                                                                     | `process.removeListener` receives new arrow functions and removes nothing                                                                      | keep the handlers in variables           |
-| `tests/timings/windows.json`                                                                                                                                                          | a copy of the Linux file; Bun reports Windows paths with backslashes, so no key matches                                                        | regenerate it on Windows                 |
-| `packages/cli/src/commands/ignore.ts:51`, `packages/cli/src/generation/eslint/blocks.ts:133`, `packages/cli/src/policy/write.ts:187`, `packages/cli/src/policy/setting-surface.ts:14` | compare with `JSON.stringify`, which depends on key order                                                                                      | `isDeepStrictEqual`                      |
-| `packages/cli/src/execution/fixers.ts:215`                                                                                                                                            | diff headers use backslashes on Windows                                                                                                        | forward slashes                          |
-| `packages/cli/src/config/kits.ts:65`                                                                                                                                                  | the word "length-guidenames", left by a bulk rename                                                                                            | fix                                      |
-| `packages/cli/src/repository/existing-tooling.ts:181`                                                                                                                                 | `declaredKits` compares kit names with tool names, and its one caller never passes `selected`                                                  | fix the comparison                       |
-| `packages/cli/src/checks/structure/directories.ts:22`, `packages/cli/src/checks/structure/single-file-folder.ts:33`                                                                   | count only `.d.ts` files as declaration files                                                                                                  | check with the shared extension table    |
-| `.github/workflows/ci.yml:229`                                                                                                                                                        | the tool step rewrites `tests/timings` under `--shard` before the acceptance step reads it, so acceptance is never balanced by time            | delete the timings (appendix D.1)        |
-| `tests/acceptance/source/kits/documents.test.ts`                                                                                                                                      | records 5 milliseconds on Linux: its 11 cases do not run there                                                                                 | find out why                             |
-| `packages/cli/src/repository/revisions/contents.ts:41`                                                                                                                                | likely: a tracked link to a folder, to an absolute path, outside the repository, or to a missing file makes every staged and push check exit 2 | confirm with D.5 row 1                   |
-| `packages/cli/src/lifecycle/ownership/installs.ts:36`                                                                                                                                 | likely: an install killed after the folder swap leaves a folder that the next install refuses                                                  | confirm with D.5 row 2                   |
-| `packages/cli/src/platform/root/writes.ts:104`                                                                                                                                        | likely: a stale writer lock with the ID of an unrelated process refuses forever, or throws for process 1                                       | confirm with D.5 row 3                   |
-| `packages/cli/src/commands/print-result.ts:27`                                                                                                                                        | likely: with `--json`, a plain error prints nothing on standard output                                                                         | confirm with D.5 row 6                   |
-| `packages/cli/src/checks/dependencies/lockfile/hosts.ts:35`                                                                                                                           | likely: `npm-shrinkwrap.json` is never read, although its parser exists                                                                        | confirm with D.5 row 30                  |
-| `packages/cli/src/policy/merge.ts:30`                                                                                                                                                 | possible: the root wins over a nested scope for tool settings                                                                                  | confirm with D.5 row 25                  |
-| the agent rules                                                                                                                                                                       | teach code that the shipped ESLint, SwiftLint, and Stylelint configurations reject                                                             | appendix F.3                             |
-| `docs/scripts/links.ts`                                                                                                                                                               | its last step compares the schema with the function that wrote it, so it always passes                                                         | delete that step                         |
-| `docs/src/components/starlight/SiteTitle.astro:13`                                                                                                                                    | repeats the background image of line 12                                                                                                        | delete the line                          |
+| Where                                                                                                                                                                                 | Problem                                                                                                                                                                                                                               | Action                                   |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
+| `packages/cli/src/config/agents.ts:30`                                                                                                                                                | tells users to edit `[rules]` in `gspot.toml`; the table is `[guides]` today                                                                                                                                                          | correct with the rename to rules         |
+| `packages/cli/guides/templates/docs`                                                                                                                                                  | 8 files ship but never install; `packages/cli/guides/general/prose/DOCS-REVIEW.md:178` promises them                                                                                                                                  | delete both                              |
+| `packages/cli/guides/framework/fastapi/FASTAPI.md`, `RUNTIME.md`, and `packages/cli/guides/framework/nextjs/SECURITY.md`                                                              | never installed: no manifest names them                                                                                                                                                                                               | name them in their kits                  |
+| `packages/cli/guides/language/YAML.md`, `packages/cli/guides/tool/tasks/TASKS.md`, `packages/cli/guides/tool/github-actions/GITHUB-ACTIONS.md`                                        | the front matter names a `configs` kit, which does not exist, and cloudflare                                                                                                                                                          | name the kit that installs them          |
+| 26 kit manifest entries                                                                                                                                                               | name rules that every repository gets anyway, such as `TESTING.md`                                                                                                                                                                    | delete them                              |
+| `packages/cli/src/platform/assets.ts:58`, `packages/cli/scripts/build.ts:15`                                                                                                          | tell users to run a task that exists only in this repository                                                                                                                                                                          | name the package to reinstall            |
+| `packages/cli/package.json`                                                                                                                                                           | `prettier` is a runtime dependency that `packages/cli/src` never loads                                                                                                                                                                | use it for the JSON layout, or remove it |
+| `mise.toml` (`guides:lint`)                                                                                                                                                           | runs test files that moved to `tests/integration/tools/guides`, and one that is gone                                                                                                                                                  | goes with the guide linter               |
+| `gspot.toml`                                                                                                                                                                          | entries for a deleted hook test and a `fail_fast` property; the typos words `virtua` and `referers` appear in no source                                                                                                               | delete                                   |
+| `tests/support/package/run.ts:43`                                                                                                                                                     | `process.removeListener` receives new arrow functions and removes nothing                                                                                                                                                             | keep the handlers in variables           |
+| `tests/timings/windows.json`                                                                                                                                                          | a copy of the Linux file; Bun reports Windows paths with backslashes, so no key matches                                                                                                                                               | regenerate it on Windows                 |
+| `packages/cli/src/commands/ignore.ts:51`, `packages/cli/src/generation/eslint/blocks.ts:133`, `packages/cli/src/policy/write.ts:187`, `packages/cli/src/policy/setting-surface.ts:14` | compare with `JSON.stringify`, which depends on key order                                                                                                                                                                             | `isDeepStrictEqual`                      |
+| `packages/cli/src/execution/fixers.ts:215`                                                                                                                                            | diff headers use backslashes on Windows                                                                                                                                                                                               | forward slashes                          |
+| `packages/cli/src/config/kits.ts:65`                                                                                                                                                  | the word "length-guidenames", left by a bulk rename                                                                                                                                                                                   | fix                                      |
+| `packages/cli/src/repository/existing-tooling.ts:181`                                                                                                                                 | `declaredKits` compares kit names with tool names, and its one caller never passes `selected`                                                                                                                                         | fix the comparison                       |
+| `packages/cli/src/checks/structure/directories.ts:22`, `packages/cli/src/checks/structure/single-file-folder.ts:33`                                                                   | count only `.d.ts` files as declaration files                                                                                                                                                                                         | check with the shared extension table    |
+| `.github/workflows/ci.yml:229`                                                                                                                                                        | the tool step rewrites `tests/timings` under `--shard` before the acceptance step reads it, so acceptance is never balanced by time                                                                                                   | delete the timings (appendix D.1)        |
+| `tests/acceptance/source/kits/documents.test.ts`                                                                                                                                      | records 5 milliseconds on Linux: its 11 cases do not run there                                                                                                                                                                        | find out why                             |
+| `packages/cli/src/repository/revisions/contents.ts:41`                                                                                                                                | likely: a tracked link to a folder, to an absolute path, outside the repository, or to a missing file makes every staged and push check exit 2                                                                                        | confirm with D.5 row 1                   |
+| `packages/cli/src/lifecycle/ownership/installs.ts:36`                                                                                                                                 | likely: an install killed after the folder swap leaves a folder that the next install refuses                                                                                                                                         | confirm with D.5 row 2                   |
+| `packages/cli/src/platform/root/writes.ts:104`                                                                                                                                        | likely: a stale writer lock with the ID of an unrelated process refuses forever, or throws for process 1                                                                                                                              | confirm with D.5 row 3                   |
+| `packages/cli/src/commands/print-result.ts:27`                                                                                                                                        | likely: with `--json`, a plain error prints nothing on standard output                                                                                                                                                                | confirm with D.5 row 6                   |
+| `packages/cli/src/checks/dependencies/lockfile/hosts.ts:35`                                                                                                                           | likely: `npm-shrinkwrap.json` is never read, although its parser exists                                                                                                                                                               | confirm with D.5 row 30                  |
+| `packages/cli/src/policy/merge.ts:30`                                                                                                                                                 | possible: the root wins over a nested scope for tool settings                                                                                                                                                                         | confirm with D.5 row 25                  |
+| the agent rules                                                                                                                                                                       | teach code that the shipped ESLint, SwiftLint, and Stylelint configurations reject                                                                                                                                                    | appendix F.3                             |
+| `packages/cli/src/tools/python-project.ts:180`                                                                                                                                        | the tool lock is rebuilt only when it no longer matches the tool project, so no command upgrades a transitive package; on October 1, 2026, an advisory against `pyjwt`, which Semgrep pulls in, blocked every push of this repository | a command that relocks within the pins   |
+| `docs/scripts/links.ts`                                                                                                                                                               | its last step compares the schema with the function that wrote it, so it always passes                                                                                                                                                | delete that step                         |
+| `docs/src/components/starlight/SiteTitle.astro:13`                                                                                                                                    | repeats the background image of line 12                                                                                                                                                                                               | delete the line                          |
 
 ## 5. Delete
 
@@ -499,7 +500,7 @@ standard function or a shared helper, one is deleted, and four go with deleted f
 22 of the written reasons are false. They cite tests as callers, claim one owner for code written elsewhere too, or
 count callers that do not exist. Appendix C gives the verdict for each function.
 
-The rule stays, but its fixtures show a cost to users: a clean React component and a clean Nest module need
+The rule stays, but its own test cases show a cost to users: a clean React component and a clean Nest module need
 suppressions to pass (`tests/acceptance/source/kits/react.test.ts:26` and
 `tests/inputs/acceptance/source/kits/kits.ts:154`). Turn both tiny rules off for components in the React kit and for
 modules in the NestJS kit, as the Astro kit does for `.astro` files.
@@ -514,11 +515,11 @@ Appendix D judges all 514 test files. The summary:
   the wiring stays; one planted defect per third-party rule goes. Each Linux CI run saves about 2,500 seconds.
 - **Five tiers named by what a test needs:** `unit`, `integration`, `tools`, `acceptance`, and `package` (D.1).
 - **`tests/timings` goes.** A CI bug means it never balanced acceptance, and it saves little after the cuts.
-- **`tests/inputs` becomes two folders, `config` and `fixtures`.** The config folder holds the hard-coded parameters,
-  such as timeouts; the fixtures folder holds planted content that several tests share. The rest goes inline.
+- **`tests/inputs` becomes two folders, `config` and `samples`.** The config folder holds the hard-coded parameters,
+  such as timeouts; the samples folder holds planted content that several tests share. The rest goes inline.
 - **`tests/support` becomes a `harness` folder,** and four runners move to a root `scripts` folder.
 - **34 tests for real scenarios are missing** (D.5). Six of them confirm or clear likely bugs (section 4).
-- **The fixture packages lack the `description`** that the linted `package.json` rules require; that caused 10 CI
+- **The planted test packages lack the `description`** that the linted `package.json` rules require; that caused 10 CI
   failures.
 
 ## 10. Documentation and the rules
@@ -539,17 +540,17 @@ rules.
 
 CI run 36765405183 failed in 16 of 21 jobs. The causes, none of them fixed yet:
 
-| Cause                                                                                                               | Jobs                        | Fix                                                                            |
-| ------------------------------------------------------------------------------------------------------------------- | --------------------------- | ------------------------------------------------------------------------------ |
-| test fixture packages lack the `description` that the linted `package.json` rules require                           | 7 shards on Linux and macOS | add descriptions (section 9)                                                   |
-| the 5,000-file staged run takes 5.3 s against a 5 s limit                                                           | 3 shards                    | a manual benchmark (section 9)                                                 |
-| `commits/range` lints every commit back to the first, once per scope: 264 findings, 4 times, 6 to 8 minutes each    | check                       | lint only the commits of the pull request or push, once                        |
-| gitleaks flags three secret-shaped fixtures                                                                         | check                       | an allow list for the fixture paths                                            |
-| Vale has no styles, because CI runs `install` and only `apply` downloads them                                       | check                       | download the styles in `install`                                               |
-| `doctor` finds `plutil`, `xmllint`, and `zsh` missing                                                               | check                       | install them in the check job as the other jobs do                             |
-| Windows: timeouts, backslash paths, line endings on checkout, exit code 130 after a signal where 2 is expected      | 7 jobs                      | forward slashes in output, `eol=lf` for fixtures, map signals, longer timeouts |
-| `tests/timings` is rewritten by the tool step before acceptance reads it, and the Windows file copies the Linux one | 17 shards                   | delete the timings and shard by file count (appendix D.1)                      |
-| macOS runners have no Docker                                                                                        | 1 shard                     | skip the Docker cases on macOS                                                 |
+| Cause                                                                                                               | Jobs                        | Fix                                                                              |
+| ------------------------------------------------------------------------------------------------------------------- | --------------------------- | -------------------------------------------------------------------------------- |
+| planted test packages lack the `description` that the linted `package.json` rules require                           | 7 shards on Linux and macOS | add descriptions (section 9)                                                     |
+| the 5,000-file staged run takes 5.3 s against a 5 s limit                                                           | 3 shards                    | a manual benchmark (section 9)                                                   |
+| `commits/range` lints every commit back to the first, once per scope: 264 findings, 4 times, 6 to 8 minutes each    | check                       | lint only the commits of the pull request or push, once                          |
+| gitleaks flags three secret-shaped test values                                                                      | check                       | an allow list for those test files                                               |
+| Vale has no styles, because CI runs `install` and only `apply` downloads them                                       | check                       | download the styles in `install`                                                 |
+| `doctor` finds `plutil`, `xmllint`, and `zsh` missing                                                               | check                       | install them in the check job as the other jobs do                               |
+| Windows: timeouts, backslash paths, line endings on checkout, exit code 130 after a signal where 2 is expected      | 7 jobs                      | forward slashes in output, `eol=lf` for test files, map signals, longer timeouts |
+| `tests/timings` is rewritten by the tool step before acceptance reads it, and the Windows file copies the Linux one | 17 shards                   | delete the timings and shard by file count (appendix D.1)                        |
+| macOS runners have no Docker                                                                                        | 1 shard                     | skip the Docker cases on macOS                                                   |
 
 The rest of CI and the tasks:
 
@@ -1013,35 +1014,35 @@ Each table lists one folder; the File column gives the file and line inside it. 
 
 **`packages/cli/src/commands/doctor`, `init`, and `check`**
 
-| File                           | Now                                 | Proposed                          | Why                                            |
-| ------------------------------ | ----------------------------------- | --------------------------------- | ---------------------------------------------- |
-| doctor `changes.ts:19`         | `recommendedNotSelected`            | `getRecommended`                  | a function named like a field, with a negative |
-| doctor `changes.ts:32`         | `configurationRow(config)`          | `buildConfigRow(file)`            | two spellings in one line                      |
-| doctor `changes.ts:49`         | `configurationNotOwned`             | `getUnownedConfigs`               | a noun with a negative                         |
-| doctor `changes.ts:63`         | `unownedGeneratedFiles`             | `getUnownedOutputs`               | three words                                    |
-| doctor `changes.ts:79`         | `changeReport`                      | `getChanges`                      | the file is `changes.ts`                       |
-| doctor `changes.ts:83`         | `rendered`                          | `outputs`                         | emit, render, and generate are one act         |
-| doctor `changes.ts:87`         | `generated`                         | `workflows`                       | it holds only workflow paths                   |
-| doctor `report.ts:115`, `:152` | `doctorReport`, `doctorText`        | `buildReport`, `formatReport`     | "doctor" repeats the folder                    |
-| init `questions.ts:20`         | `existingCi`                        | `detectCi`                        | filler                                         |
-| init `questions.ts:33`         | `ciDefault`                         | `proposeCi`                       | a noun for a function                          |
-| init `questions.ts:54`         | `askRuleFiles`                      | `askRules`                        | the flag is `--no-rules`                       |
-| init `questions.ts:80`         | `how`                               | `reason`                          | it holds a kit reason                          |
-| init `questions.ts:85`         | `selection.selectedIds`             | `selection.ids`                   | "selected" repeats "selection"                 |
-| init `questions.ts:98`         | `askInitQuestions`                  | `askQuestions`                    | "Init" repeats the folder                      |
-| init `questions.ts:105`        | `isRules`                           | `hasRules`                        | a boolean named for a noun                     |
-| init `settings.ts:6`           | `folderNames`                       | `getDirectories`                  | it holds paths                                 |
-| init `settings.ts:21`, `:37`   | `detectedValue`, `detectedSettings` | `detectSetting`, `detectSettings` | adjectives for functions                       |
-| init `settings.ts:37`          | `fields`, `fact`                    | `packages`, `package`             | three names for one value                      |
-| init `xcode.ts:12`             | `schemeOf`                          | `getScheme`                       | an `Of` suffix                                 |
-| init `xcode.ts:31`             | `xcodePlan`                         | `detectXcode`                     | plan means something else                      |
-| init `replaced.ts:8`           | `readOwned`                         | `captureOwned`                    | its own comment says captures                  |
-| init `replaced.ts:40`          | `replacedConfiguration`             | `getReplaced`                     |                                                |
-| check `push.ts:14`             | `hasConflictingOptions`             | `hasConflict`                     | "Options" is filler                            |
-| check `push.ts:37`             | `revisionRoot`                      | `snapshot`                        | the domain word exists                         |
-| check `push.ts:55`             | `pushReport`                        | `buildReport`                     | a noun for a function                          |
-| check `push.ts:79`             | `checkPushed`                       | `checkPush`                       | an adjective                                   |
-| check `push.ts:82`             | `input.input`                       | `input.lines`                     | the word twice                                 |
+| File                           | Now                                 | Proposed                          | Why                                                   |
+| ------------------------------ | ----------------------------------- | --------------------------------- | ----------------------------------------------------- |
+| doctor `changes.ts:19`         | `recommendedNotSelected`            | `getRecommended`                  | a function named like a field, with a negative        |
+| doctor `changes.ts:32`         | `configurationRow(config)`          | `buildConfigRow(file)`            | two spellings in one line                             |
+| doctor `changes.ts:49`         | `configurationNotOwned`             | `getUnownedConfigs`               | a noun with a negative                                |
+| doctor `changes.ts:63`         | `unownedGeneratedFiles`             | `getUnownedOutputs`               | three words                                           |
+| doctor `changes.ts:79`         | `changeReport`                      | `getChanges`                      | the file is `changes.ts`                              |
+| doctor `changes.ts:83`         | `rendered`                          | `outputs`                         | emit, render, and generate are one act                |
+| doctor `changes.ts:87`         | `generated`                         | `workflows`                       | it holds only workflow paths                          |
+| doctor `report.ts:115`, `:152` | `doctorReport`, `doctorText`        | `buildReport`, `formatReport`     | "doctor" repeats the folder                           |
+| init `questions.ts:20`         | `existingCi`                        | `detectCi`                        | filler                                                |
+| init `questions.ts:33`         | `ciDefault`                         | `proposeCi`                       | a noun for a function                                 |
+| init `questions.ts:54`         | `askRuleFiles`                      | `askRules`                        | the flag is `--no-rules`                              |
+| init `questions.ts:80`         | `how`                               | `reason`                          | it holds a kit reason                                 |
+| init `questions.ts:85`         | `selection.selectedIds`             | `selection.ids`                   | "selected" repeats "selection"                        |
+| init `questions.ts:98`         | `askInitQuestions`                  | `askQuestions`                    | "Init" repeats the folder                             |
+| init `questions.ts:105`        | `isRules`                           | `hasRules`                        | a boolean named for a noun                            |
+| init `settings.ts:6`           | `folderNames`                       | `getDirectories`                  | it holds paths                                        |
+| init `settings.ts:21`, `:37`   | `detectedValue`, `detectedSettings` | `detectSetting`, `detectSettings` | adjectives for functions                              |
+| init `settings.ts:37`          | `fields`, `fact`                    | `packages`, `package`             | three names for one value                             |
+| init `xcode.ts:12`             | `schemeOf`                          | `getScheme`                       | an `Of` suffix                                        |
+| init `xcode.ts:31`             | `xcodePlan`                         | `detectXcode`                     | plan means something else                             |
+| init `replaced.ts:8`           | `readOwned`                         | `captureOwned`                    | its own comment says captures                         |
+| init `replaced.ts:40`          | `replacedConfiguration`             | `getReplaced`                     |                                                       |
+| check `push.ts:14`             | `hasConflictingOptions`             | `hasConflict`                     | "Options" is filler                                   |
+| check `push.ts:37`             | `revisionRoot`                      | `checkout`                        | git's word for a written-out tree; snapshot is banned |
+| check `push.ts:55`             | `pushReport`                        | `buildReport`                     | a noun for a function                                 |
+| check `push.ts:79`             | `checkPushed`                       | `checkPush`                       | an adjective                                          |
+| check `push.ts:82`             | `input.input`                       | `input.lines`                     | the word twice                                        |
 
 **`packages/cli/src/policy`**
 
@@ -1091,13 +1092,13 @@ Each table lists one folder; the File column gives the file and line inside it. 
 | ------------------------------------------- | ---------------------------------------------------------------- | ------------------------------------------------------ | ------------------------------------------------------------------------ |
 | revisions `contents.ts:26`                  | `gitOutput`                                                      | `gitText`                                              | a duplicate of `gitText`                                                 |
 | revisions `contents.ts:41`, `:148`          | `objects` for bytes and for IDs                                  | `blobs` and `hashes`                                   | one name, two meanings in one file                                       |
-| revisions `contents.ts:54`                  | `revisionRoot`                                                   | `snapshot`                                             | the domain word                                                          |
+| revisions `contents.ts:54`                  | `revisionRoot`                                                   | `checkout`                                             | git's word                                                               |
 | revisions `contents.ts:78`                  | `blobFrame`                                                      | `parseFrame`                                           |                                                                          |
 | revisions `contents.ts:78`                  | `gitHash`                                                        | `hash`                                                 | the field is already `hash`                                              |
 | revisions `contents.ts:114`                 | `readEntries`                                                    | `getEntries`                                           |                                                                          |
 | revisions `contents.ts:143`, `:183`, `:210` | `gitBlobs`, `gitEntries`, `committedEntries`                     | `getBlobs`, `getCachedEntries`, `getHeadEntries`       | nouns for functions                                                      |
 | revisions `contents.ts:187`                 | `reads`                                                          | `cache`                                                |                                                                          |
-| revisions `contents.ts:233`                 | `useRevision`                                                    | `snapshotRevision`                                     | "use" says nothing                                                       |
+| revisions `contents.ts:233`                 | `useRevision`                                                    | `checkOutRevision`                                     | "use" says nothing                                                       |
 | revisions `contents.ts:239`                 | `printedRoot`, `gitRoot`                                         | `toplevel`                                             | git's own term; two names for one value                                  |
 | revisions `contents.ts:241`                 | `directory`                                                      | `prefix`                                               | git's term                                                               |
 | revisions `dependencies.ts:16`              | `MANIFESTS`                                                      | `INPUTS`                                               | it also holds lockfiles                                                  |
@@ -1384,7 +1385,7 @@ in appendix B.2, most names that repeat their folder lose the repetition when th
 | static-site `source-checks.ts:56`, `:112`                                         | `svgCompressed`, `siteWideHeaders`                                      | `svgo`, `sharedHeaders`                                    | a third name; three words                                  |
 | structure `engine.ts:60`                                                          | `contextFor`, which returns an input                                    | `inputFor`                                                 | context beside input                                       |
 | structure `engine.ts:72`                                                          | `bashText`, `bashList`, `bashSetting`, the parameter `slot`             | `text`, `list`, `value`, `key`                             | the prefix; filler                                         |
-| structure `engine.ts:89`                                                          | `scriptFiles`, with the tag `'shell'`                                   | `shellFiles`                                               | script beside shell                                        |
+| structure `engine.ts:89`                                                          | `scriptFiles`, with the tag `'shell'`                                   | keep; the tag becomes `'script'`                           | script beside shell                                        |
 | structure `file-layout.ts:10`, `single-file-folder.ts:18`                         | `fileDirectoryCollision`, `singleFileFolder`                            | `stemCollisions`, `loneFiles`                              | three words                                                |
 | structure `prefix-collisions.ts:20`                                               | `isNestName`                                                            | `isNestjsName`                                             | reads as nesting                                           |
 | structure `statements.ts:149`                                                     | `trivialFunctionText`                                                   | `trivialText`                                              | three words                                                |
@@ -1417,7 +1418,7 @@ in appendix B.2, most names that repeat their folder lose the repetition when th
 | `structure.ts:52`                                | `COUNT_ANALYSES`                                                                      | delete                                                                        | the keys of `RULES` again                          |
 | `structure.ts:48`, and the swift file            | `DEFAULT_MIN_LINES` (3), `DEFAULT_DUPLICATE_LINES` (4)                                | `DUPLICATE_LINES`                                                             | two names and two values for one limit             |
 | `structure.ts:50`, `:273`                        | `SHELLCHECK_COMMENT`, `SHELLCHECK_DIRECTIVE`                                          | `SHELLCHECK_DIRECTIVE`                                                        | one pattern under two names                        |
-| `structure.ts:53`                                | `SCRIPT_TAG = 'shell'`                                                                | `SHELL_TAG`                                                                   | the name contradicts the value                     |
+| `structure.ts:53`                                | `SCRIPT_TAG = 'shell'`                                                                | `SCRIPT_TAG = 'script'`                                                       | the name contradicts the value                     |
 | `structure.ts:55`, `:141`, and two more files    | `SOURCE`, `SCRIPT_ENDING`, `CODE_SUFFIX`, `CODE_EXTENSIONS`                           | `…_EXTENSION` and `…_EXTENSIONS`                                              | three words for one idea                           |
 | `structure.ts:14`                                | `FUNCTIONS`, `CONTAINERS`, `NAMES`                                                    | `FUNCTION_NODES`, `CONTAINER_NODES`, `NAME_NODES`                             | the naming file uses `*_NODES`                     |
 | `structure.ts:59`                                | `DIRECTORY_CONSTANT_START`, `_SIGNS`, `_PIECES`                                       | `DIRECTORY_START`, `_SIGNS`, `_PIECES`                                        | three words                                        |
@@ -1520,7 +1521,7 @@ still receives the constants and types that `config` and `types` held for it (se
 | `platform`   | `git.ts`       | ~110  | one git runner with one timeout: `packages/cli/src/repository/git-config.ts`, `packages/cli/src/repository/hook-location.ts`, `packages/cli/src/repository/revisions/git-queries.ts`, the git calls in `packages/cli/src/repository/tracked.ts`, and `GIT_TIMEOUT_MS` |
 | `platform`   | `text.ts`      | ~50   | `similar` from `packages/cli/src/policy/similar.ts`, one `sha256` (written 8 times today), one UTF-8 decode on `isUtf8` (about 10 times), and the JSON indent                                                                                                         |
 | `platform`   | `objects.ts`   | ~40   | `compact` from `packages/cli/src/policy/normalize.ts`, one plain-object test (5 copies today), the dotted-path getter, and `Defined<T>`                                                                                                                               |
-| `platform`   | `shell.ts`     | ~35   | `quoteArgument` and `commandArguments` from `packages/cli/src/platform/arguments.ts`                                                                                                                                                                                  |
+| `platform`   | `quoting.ts`   | ~35   | `quoteArgument` and `commandArguments` from `packages/cli/src/platform/arguments.ts`                                                                                                                                                                                  |
 | `platform`   | `modes.ts`     | ~20   | the file modes from `packages/cli/src/config/platform.ts`, named `*_MODE`                                                                                                                                                                                             |
 | `platform`   | `locations.ts` | ~30   | every `.gspot` path, written as a literal about 86 times today                                                                                                                                                                                                        |
 | `repository` | `sources.ts`   | ~70   | `readSource` and `readPrefix` from `packages/cli/src/repository/tracked.ts`; 52 of its 70 importers want only these                                                                                                                                                   |
@@ -1652,8 +1653,8 @@ the same column names the folder whose `config` file holds it. The groups that d
 | `packages/cli/src/execution/session.ts`                 | 69    | keep   | same                     |                               | reads pending installs once and passes them to `tools`                              |
 | `packages/cli/src/execution/tool/findings.ts`           | 112   | keep   | same                     |                               | absorbs the broken-tool rules                                                       |
 | `packages/cli/src/execution/tool/runner.ts`             | 308   | keep   | same                     |                               |                                                                                     |
-| `packages/cli/src/repository/revisions/contents.ts`     | 275   | move   | `execution/snapshot`     | `revision.ts`                 | a snapshot is part of a run; cuts `repository` into `lifecycle` and `tools`         |
-| `packages/cli/src/repository/revisions/dependencies.ts` | 240   | move   | `execution/snapshot`     | `installed.ts`                | the same                                                                            |
+| `packages/cli/src/repository/revisions/contents.ts`     | 275   | move   | `execution/checkout`     | `revision.ts`                 | a snapshot is part of a run; cuts `repository` into `lifecycle` and `tools`         |
+| `packages/cli/src/repository/revisions/dependencies.ts` | 240   | move   | `execution/checkout`     | `installed.ts`                | the same                                                                            |
 
 **`generation`**
 
@@ -1731,24 +1732,24 @@ the same column names the folder whose `config` file holds it. The groups that d
 
 **`output` and `platform`**
 
-| Now                                        | Lines | Action | Folder after              | File after                | Why                                                   |
-| ------------------------------------------ | ----- | ------ | ------------------------- | ------------------------- | ----------------------------------------------------- |
-| `packages/cli/src/output/coverage.ts`      | 21    | merge  | `output`                  | `reporter.ts`             | the second `coverage.ts`                              |
-| `packages/cli/src/output/messages.ts`      | 76    | keep   | same                      |                           | drops `reportStorageFailure`                          |
-| `packages/cli/src/output/report.ts`        | 162   | delete |                           |                           | owner decision; `node-sarif-builder` goes             |
-| `packages/cli/src/output/reporter.ts`      | 215   | keep   | same                      |                           |                                                       |
-| `packages/cli/src/platform/arguments.ts`   | 86    | split  | `platform` and `commands` | `shell.ts` and `flags.ts` | flag helpers belong to the commands                   |
-| `packages/cli/src/platform/assets.ts`      | 73    | keep   | same                      |                           | the unused `GRAMMAR_NAMES` goes                       |
-| `packages/cli/src/platform/code-points.ts` | 12    | delete |                           |                           | `Array.from`                                          |
-| `packages/cli/src/platform/environment.ts` | 59    | keep   | same                      |                           | the uncalled `setEnvironmentVariable` goes            |
-| `packages/cli/src/platform/errors.ts`      | 22    | keep   | same                      |                           | gains one constant per exit code                      |
-| `packages/cli/src/platform/filesystem.ts`  | 138   | keep   | same                      |                           | gains dispose, `readText`, and a temporary folder     |
-| `packages/cli/src/platform/modules.d.ts`   | 15    | move   | `parsers/sql`             | `modules.d.ts`            | its only user                                         |
-| `packages/cli/src/platform/paths.ts`       | 182   | keep   | same                      |                           | `buildFolder` moves to its caller in the swift checks |
-| `packages/cli/src/platform/root/reads.ts`  | 127   | keep   | same                      |                           |                                                       |
-| `packages/cli/src/platform/root/writes.ts` | 167   | keep   | same                      |                           | `afterWrite` becomes `writeAtomically`                |
-| `packages/cli/src/platform/safe-paths.ts`  | 89    | keep   | same                      |                           | the old `.gspot` spellings go                         |
-| `packages/cli/src/platform/spawn.ts`       | 248   | keep   | same                      |                           | `run` and `runBinary` become one function             |
+| Now                                        | Lines | Action | Folder after              | File after                  | Why                                                   |
+| ------------------------------------------ | ----- | ------ | ------------------------- | --------------------------- | ----------------------------------------------------- |
+| `packages/cli/src/output/coverage.ts`      | 21    | merge  | `output`                  | `reporter.ts`               | the second `coverage.ts`                              |
+| `packages/cli/src/output/messages.ts`      | 76    | keep   | same                      |                             | drops `reportStorageFailure`                          |
+| `packages/cli/src/output/report.ts`        | 162   | delete |                           |                             | owner decision; `node-sarif-builder` goes             |
+| `packages/cli/src/output/reporter.ts`      | 215   | keep   | same                      |                             |                                                       |
+| `packages/cli/src/platform/arguments.ts`   | 86    | split  | `platform` and `commands` | `quoting.ts` and `flags.ts` | flag helpers belong to the commands                   |
+| `packages/cli/src/platform/assets.ts`      | 73    | keep   | same                      |                             | the unused `GRAMMAR_NAMES` goes                       |
+| `packages/cli/src/platform/code-points.ts` | 12    | delete |                           |                             | `Array.from`                                          |
+| `packages/cli/src/platform/environment.ts` | 59    | keep   | same                      |                             | the uncalled `setEnvironmentVariable` goes            |
+| `packages/cli/src/platform/errors.ts`      | 22    | keep   | same                      |                             | gains one constant per exit code                      |
+| `packages/cli/src/platform/filesystem.ts`  | 138   | keep   | same                      |                             | gains dispose, `readText`, and a temporary folder     |
+| `packages/cli/src/platform/modules.d.ts`   | 15    | move   | `parsers/sql`             | `modules.d.ts`              | its only user                                         |
+| `packages/cli/src/platform/paths.ts`       | 182   | keep   | same                      |                             | `buildFolder` moves to its caller in the swift checks |
+| `packages/cli/src/platform/root/reads.ts`  | 127   | keep   | same                      |                             |                                                       |
+| `packages/cli/src/platform/root/writes.ts` | 167   | keep   | same                      |                             | `afterWrite` becomes `writeAtomically`                |
+| `packages/cli/src/platform/safe-paths.ts`  | 89    | keep   | same                      |                             | the old `.gspot` spellings go                         |
+| `packages/cli/src/platform/spawn.ts`       | 248   | keep   | same                      |                             | `run` and `runBinary` become one function             |
 
 **`policy`**
 
@@ -2069,7 +2070,7 @@ kit in a `<category>/<kit>` folder beside them, so the two never collide. Proble
 
 ### B.5 `tests`
 
-Appendix D.1 maps the tests: five tiers named by what a test needs, `config` and `fixtures` instead of
+Appendix D.1 maps the tests: five tiers named by what a test needs, `config` and `samples` instead of
 `inputs`, `harness` instead of `support`, and no `timings`.
 
 ### B.6 `docs`
@@ -2103,7 +2104,7 @@ Appendix D.1 maps the tests: five tiers named by what a test needs, `config` and
 `gspot/no-trivial-functions` reports a named function of two statements or fewer, counting the statements of callbacks
 written inside it. The repository suppresses it 191 times: 122 in `packages/cli/src`, 10 in the plugin, 6 in the docs
 site, and 53 in the tests. One `[[ignore]]` in `gspot.toml` also turns it off for all of
-`packages/cli/src/policy/messages.ts`. Nothing suppresses `gspot/no-trivial-files`; the matches are fixture strings.
+`packages/cli/src/policy/messages.ts`. Nothing suppresses `gspot/no-trivial-files`; the matches sit inside test strings.
 
 Each function was read with every caller, found by searching the whole repository. The verdicts:
 
@@ -2136,9 +2137,9 @@ Reasons to rewrite, because they are not true:
 - About 15 reasons say that one owner keeps a value, or that something is done this one way. Where the verdict is
   keep, the real reason is the number of callers.
 
-Two fixtures show why users will hit the rule: `tests/acceptance/source/kits/react.test.ts:26` and `:29` suppress both
-tiny rules in a clean React component, and `tests/inputs/acceptance/source/kits/kits.ts:154` suppresses the tiny-file
-rule in a clean Nest module. Real React and Nest code needs the same suppressions.
+Two test cases show why users will hit the rule. `tests/acceptance/source/kits/react.test.ts:26` and `:29` suppress both
+tiny rules in a clean React component. `tests/inputs/acceptance/source/kits/kits.ts:154` suppresses the tiny-file rule
+in a clean Nest module. Real React and Nest code needs the same suppressions.
 
 ### C.1 `packages/cli/src`
 
@@ -2413,7 +2414,7 @@ The network call per pin leaves the tests for a script on a schedule.
 - Fewer shards of equal size cut setup time: four per system, 12 jobs instead of 17. If the minutes matter later, Bun
   documents a cache of per-shard timing files that needs no committed file.
 
-**`tests/inputs` becomes `config` and `fixtures`.** Its 36 TypeScript files hold 217 exports: 187 have one
+**`tests/inputs` becomes `config` and `samples`.** Its 36 TypeScript files hold 217 exports: 187 have one
 user, 26 have two or more, and 4 are used only in their own file. In 29 of the 36 files no export has a second user.
 Three values copy constants of the CLI (`LOCKS` and two file modes), and the Supabase version sits both here and in the
 CI workflow.
@@ -2423,7 +2424,7 @@ CI workflow.
   run environment that three helpers repeat.
 - **The rule for `config`:** a value goes there when it changes with the runner, a pin, or the CLI. A value that tells
   one test its story stays in that test.
-- **The `fixtures` folder** holds planted content that several tests must keep identical, one module per kit: bash,
+- **The `samples` folder** holds planted content that several tests must keep identical, one module per kit: bash,
   components, Next.js, OpenAPI, Python, Swift, TypeScript, and the client environment JSON. Modules, because real files
   need exclusions in the lint, `tsc`, gitleaks, and typos of this repository.
 - The rest goes inline into its one user, and the copied constants import from the CLI.
@@ -2462,7 +2463,7 @@ root; delete it.
 Today: 514 files                          After
 tests/                                     tests/
   unit/            97                        config/         2   hard-coded parameters
-  integration/    206                        fixtures/       8   shared planted content, one per kit
+  integration/    206                        samples/        8   shared planted content, one per kit
     cli           147                        harness/       36   helpers with two or more users
     docs            5                        types/          4   while types_directory holds
     repository      3                        unit/          97   in-process
@@ -2688,7 +2689,7 @@ Three changes touch many files at once:
 | `tests/integration/cli/repository/snapshot/gitlinks.test.ts`  | 4     | trim                   | a wording line                                                           |
 | `tests/integration/cli/repository/swift-tests.test.ts`        | 45    | trim, split            | 14 cases repeat a branch or spawn the CLI ten times                      |
 | `tests/integration/cli/repository/tags.test.ts`               | 2     | trim                   | repeats the owners test                                                  |
-| `tests/integration/cli/repository/tracked/boundaries.test.ts` | 7     | trim                   | a 50 MB fixture where 2 MB does                                          |
+| `tests/integration/cli/repository/tracked/boundaries.test.ts` | 7     | trim                   | a 50 MB test file where 2 MB does                                        |
 | `tests/integration/cli/repository/tracked/discovery.test.ts`  | 15    | trim                   | mocked denials and a repeated case                                       |
 | `tests/integration/cli/repository/xcode-project.test.ts`      | 9     | rewrite, trim          | four rows spawn the CLI; one case repeats the snapshot test              |
 | the other tests in these folders                              |       | keep                   |                                                                          |
@@ -2698,7 +2699,7 @@ engine input 30 times, the run options 113 times, and full init options 15 times
 
 ### D.3 `tests/integration/tools`, `tests/integration/docs`, and `tests/integration/repository`
 
-All 59 files were read with the fixtures they import. About 96 cases go and about 2,100 test lines with them. The tools
+All 59 files were read with the helpers and test data they import. About 96 cases go and about 2,100 test lines with them. The tools
 tier shrinks from about 4,680 lines to about 2,950, and the docs and repository folders disappear.
 
 | File                                                                    | Cases | Verdict                        | Reason                                                                                                                                                             |
@@ -2734,7 +2735,7 @@ tier shrinks from about 4,680 lines to about 2,950, and the docs and repository 
 | `tests/integration/tools/execution/parse-output/plist.test.ts`          | 2     | keep                           | the two checks use different patterns                                                                                                                              |
 | `tests/integration/tools/generation/bash.test.ts`                       | 1     | merge                          | one Semgrep file with one install instead of three                                                                                                                 |
 | `tests/integration/tools/generation/docker.test.ts`                     | 1     | keep                           | scope isolation and inherited ignores                                                                                                                              |
-| `tests/integration/tools/generation/fastapi.test.ts`                    | 2     | delete                         | runs rule examples; about 90 fixture lines go with it                                                                                                              |
+| `tests/integration/tools/generation/fastapi.test.ts`                    | 2     | delete                         | runs rule examples; about 90 lines of test data go with it                                                                                                         |
 | `tests/integration/tools/generation/headings.test.ts`                   | 1     | merge into the Vale test       | it tests one shipped style                                                                                                                                         |
 | `tests/integration/tools/generation/ignores.test.ts`                    | 8     | merge into the spelling test   | real rebasing of excludes per scope; run typos once per case, not 12 times                                                                                         |
 | `tests/integration/tools/generation/level-formatting.test.ts`           | 3     | delete                         | two cases run Prettier with no gspot configuration; the shfmt fix moves to the fixers test                                                                         |
@@ -2782,12 +2783,12 @@ configuration, and its exit code is enough.
 
 Fix these with the deletions:
 
-- The shared Bash fixture in `tests/support/cli/planted.ts:43` holds an inline `gspot-ignore` comment, and 13 files use
+- The shared Bash sample in `tests/support/cli/planted.ts:43` holds an inline `gspot-ignore` comment, and 13 files use
   it. Replace it with a two-statement `main` or an `[[ignore]]` entry.
 - `--no-cache` appears 163 times, and the report types and constants of SARIF and GitLab sit in the shared test types.
 - `tests/acceptance/source/kits/documents.test.ts` records 5 milliseconds on Linux, so its 11 cases do not run there.
 - The macOS-only Swift and Xcode tables install a sandbox on Linux and Windows before skipping every case.
-- The static-site fixture links the whole `node_modules` of the repository, although the site needs no packages.
+- The static-site sandbox links the whole `node_modules` of the repository, although the site needs no packages.
 - Sandboxes are set up four different ways, and init arguments are written out 15 times. The strict `tsconfig` text is
   copied 10 times, and the "run again, expect 0, no findings" block repeats about 80 times. One helper each.
 
