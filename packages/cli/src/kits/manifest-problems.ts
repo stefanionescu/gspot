@@ -224,8 +224,9 @@ export function manifestProblems(raw: RawManifest): string[] {
     const readers = configurationReaders(raw.checks);
     const hasEngineCheck = raw.checks.some((check) => check.engine !== undefined);
     if (hasEngineCheck) return checks;
+    // A config that needs another kit is read by that kit's check, as Semgrep reads every pack in its folder.
     const configurations = raw.configs
-        .filter((config) => !config.fragment && config.pointer === undefined)
+        .filter((config) => !config.fragment && config.pointer === undefined && config.needs === undefined)
         .filter((config) => {
             const name = kitName(config.target);
             const isReadByTemplate = raw.configs.some(

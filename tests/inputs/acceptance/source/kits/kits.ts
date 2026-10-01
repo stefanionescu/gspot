@@ -147,29 +147,6 @@ export const CONTROLLER =
     "// The routes that greet.\nimport { Get, Param, Controller } from '@nestjs/common';\nimport { GreetingService } from './greeting.service.js';\n\n/** Answers greeting requests. */\n@Controller('greetings')\nexport class GreetingController {\n    /**\n     * Takes the service that builds greetings.\n     * @param greetings the service\n     */\n    constructor(private readonly greetings: GreetingService) {}\n\n    /**\n     * Greets the person the route names.\n     * @param name the person\n     * @returns the greeting\n     */\n    @Get(':name')\n    greet(@Param('name') name: string): string {\n        return this.greetings.greet(name);\n    }\n}\n";
 export const NESTJS_MODULE =
     "// The greeting feature.\n// eslint-disable-next-line gspot/no-trivial-files -- reason: Nest requires this module class to register its providers and controllers.\nimport { Module } from '@nestjs/common';\nimport { GreetingService } from './greeting.service.js';\nimport { GreetingController } from './greeting.controller.js';\n\n/** Wires the greeting feature together. */\n@Module({ controllers: [GreetingController], providers: [GreetingService] })\nexport class GreetingModule {}\n";
-export const XCODE_PROJECT = `// !$*UTF8*$!
-{
-    rootObject = P1;
-    objects = {
-        P1 = {isa = PBXProject; mainGroup = G1; targets = (T1,); };
-        G1 = {isa = PBXGroup; children = (G2,); sourceTree = "<group>"; };
-        G2 = {isa = PBXGroup; path = App; children = (A1,); sourceTree = "<group>"; };
-        B1 = {isa = PBXBuildFile; fileRef = A1; };
-        S1 = {isa = PBXSourcesBuildPhase; files = (B1,); };
-        A1 = {isa = PBXFileReference; path = Home.swift; sourceTree = "<group>"; };
-        T1 = {
-            isa = PBXNativeTarget;
-            name = AppTests;
-            buildPhases = (S1,);
-            productType = "com.apple.product-type.bundle.unit-test";
-        };
-    };
-}
-`;
-export const PLAN = '{\n    "testTargets": [{ "target": { "name": "AppTests" } }]\n}\n';
-export const HOME = 'import SwiftUI\n\nlet logo = Image("Logo")\n';
-export const IMAGES =
-    '{\n    "images": [{ "filename": "logo.png", "idiom": "universal" }],\n    "info": { "author": "xcode", "version": 1 }\n}\n';
 export const UNTESTED = `${VITEST_SOURCE}\n/**\n * Triples a number.\n * @param value the number\n * @returns three times the number\n */\nexport function triple(value: number): number {\n    return value * 3;\n}\n`;
 export const TEST =
     "import { test, expect } from 'vitest';\nimport { positiveTotal } from './public.js';\n\ntest('adds only positive values', () => {\n    expect(positiveTotal([2, 3])).toBe(5);\n    expect(positiveTotal([-2, 3])).toBe(3);\n    expect(positiveTotal([])).toBe(0);\n});\n";

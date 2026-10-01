@@ -405,20 +405,6 @@ why = "One order for every export list means a reader never searches it."
 help = "Reorder the names shortest first."
 
 [[checks]]
-name = "python/import-cycles"
-title = "Import cycles"
-example = "If module `a` imports `b` and module `b` imports `a`, the dependency cycle reports a finding. Move the behavior both need into a third owner that imports neither, then update both imports."
-level = "recommended"
-stage = "commit"
-runs = "per-scope"
-engine = "integrity"
-analysis = "python-import-cycles"
-owners = {extensions = [".py"]}
-summary = "Finds first-party modules that import each other in a circle."
-why = "A circle imports in one order and fails in another, and the order changes with an unrelated edit."
-help = "Move what both sides need into a third module."
-
-[[checks]]
 name = "python/no-singletons"
 title = "No singletons"
 example = "A module-level service instance created during import reports a singleton finding when it is not allowed by policy. Construct it in the application entry point and pass the instance to consumers."

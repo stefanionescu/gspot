@@ -20,21 +20,6 @@ provider = "host"
 crash_pattern = "couldn['’]t be opened"
 
 [[checks]]
-name = "xcode/plist"
-title = "Property lists"
-example = "A `.plist` containing an unclosed `<dict>` element fails plutil validation. Close the dictionary and enclosing plist elements, then rerun on macOS with plutil available."
-level = "recommended"
-stage = "commit"
-platform = ["macos"]
-tool = "plutil"
-command = ["plutil", "-lint", "{files}"]
-owners = {extensions = [".plist", ".entitlements"]}
-output = {format = "regex", pattern = "^(?<file>.+?): (?!OK$)(?<message>.+)$"}
-summary = "Asks plutil whether every property list and entitlements file parses."
-why = "A property list that does not parse stops the build at the signing step, far from the edit that broke it."
-help = "Correct the file at the line plutil names."
-
-[[checks]]
 name = "xcode/xcconfig"
 title = "Build settings"
 example = "A non-comment line `PRODUCT_NAME App` in an `.xcconfig` file lacks an assignment operator. Change it to `PRODUCT_NAME = App`."

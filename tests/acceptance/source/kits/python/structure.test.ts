@@ -104,14 +104,6 @@ plantedCases(
             expected: { file: 'planted/__init__.py', rule: 'package-exports', line: 4 },
         },
         {
-            check: 'python/import-cycles',
-            files: {
-                'planted/left.py': `"""A planted module."""\n\n\nfrom planted import right\n\nVALUE = right\n`,
-                'planted/right.py': `"""A planted module."""\n\n\nfrom planted import left\n\nVALUE = left\n`,
-            },
-            expected: { file: 'planted/left.py', rule: 'import-cycle', line: 1 },
-        },
-        {
             check: 'python/no-singletons',
             files: {
                 'planted/shared.py': `"""A planted module."""\n\n\nclass Store:\n    """Holds things."""\n\n\nstore = Store()\n`,

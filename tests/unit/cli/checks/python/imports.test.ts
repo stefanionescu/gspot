@@ -1,24 +1,9 @@
-// The Python import analyses: cycles, module singletons, and comments between imports.
+// The Python import analyses: module singletons and comments between imports.
 import { test, expect } from 'bun:test';
+import { singletons, importComments } from '#cli/checks/python/imports.ts';
 import { freeModules, pythonModulesOf } from '#tests/support/cli/python/modules.ts';
-import { singletons, importCycles, importComments } from '#cli/checks/python/imports.ts';
 
 const HEAD = '"""A planted module."""\n\n\n';
-
-test('two modules that import each other are one cycle, reported at the first file', async () => {
-    const modules = await pythonModulesOf({
-        'planted/left.py': `${HEAD}from planted import right\n\nVALUE = right\n`,
-        'planted/right.py': `${HEAD}from planted import left\n\nVALUE = left\n`,
-        'planted/alone.py': `${HEAD}import os\n\nVALUE = os.sep\n`,
-    });
-    try {
-        expect(importCycles(modules).map(({ file, line, rule }) => ({ file, line, rule }))).toStrictEqual([
-            { file: 'planted/left.py', line: 1, rule: 'import-cycle' },
-        ]);
-    } finally {
-        freeModules(modules);
-    }
-});
 
 test('a module-level instance is a singleton unless its name is allowed', async () => {
     const modules = await pythonModulesOf({
