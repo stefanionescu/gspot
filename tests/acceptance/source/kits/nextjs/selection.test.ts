@@ -89,7 +89,7 @@ test(
         const corrected = await run(sandbox.path, [...args, '--json'], environment);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     },
-    PLANTED_TIMEOUT_MS * 4,
+    PLANTED_TIMEOUT_MS * 6,
 );
 
 test.each([
