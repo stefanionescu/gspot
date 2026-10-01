@@ -148,7 +148,6 @@ const gspotRules = { ...gspot.configs.recommended.rules, ...{
             "maxStatements": 2
         }
     ],
-    "gspot/no-export-only-files": "error",
     "gspot/no-exported-alias-constants": "error",
     "gspot/no-index-imports": "error",
     "gspot/header-comments-before-imports": "error",
@@ -1710,16 +1709,6 @@ const defaults = [
             'jsdoc/require-returns-description': 'off',
             'n/no-unpublished-import': 'off',
             'n/no-unpublished-require': 'off',
-            ...{
-    "gspot/no-harness-barrel-imports": [
-        "error",
-        {
-            "barrels": [
-                "#tests"
-            ]
-        }
-    ]
-},
         },
     },
     ...(RESTRICTED.length === 0 ? [] : [{ files: CODE, rules: { 'no-restricted-imports': ['error', { paths: RESTRICTED }] } }]),
@@ -1748,13 +1737,10 @@ const ruleLevels = {
     "gspot/no-cross-folder-imports": "all",
     "gspot/no-cross-project-imports": "all",
     "gspot/no-duplicate-barrel-exports": "recommended",
-    "gspot/no-export-only-files": "all",
     "gspot/no-exported-alias-constants": "all",
-    "gspot/no-harness-barrel-imports": "all",
     "gspot/no-import-comments": "all",
     "gspot/no-index-imports": "all",
     "gspot/no-reexports": "all",
-    "gspot/no-reexports-outside-index": "all",
     "gspot/no-trivial-files": "all",
     "gspot/no-trivial-functions": "all",
     "gspot/private-before-public": "all",

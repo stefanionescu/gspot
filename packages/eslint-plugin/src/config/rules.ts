@@ -15,7 +15,6 @@ export const TYPE_DECLARATIONS = new Set([
     'TSModuleDeclaration',
     'TSDeclareFunction',
 ]);
-export const SKIPPED = new Set(['ImportDeclaration', 'TSImportEqualsDeclaration', 'EmptyStatement']);
 
 // Comment and whitespace analysis.
 export const DIRECTIVE_PREFIXES = [

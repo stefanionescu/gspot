@@ -94,7 +94,6 @@ function allLevelRules(context: EslintContext, aliases: Record<string, string>, 
             ? { 'gspot/no-reexports': 'error' }
             : { 'gspot/no-reexports': ['error', { allowIndex: true }] };
     return {
-        'gspot/no-export-only-files': 'error',
         'gspot/no-exported-alias-constants': 'error',
         'gspot/no-index-imports': 'error',
         'gspot/header-comments-before-imports': 'error',
@@ -138,15 +137,6 @@ function limitsOf(view: MergedView, language: string, keys: Record<string, strin
     return Object.fromEntries(
         Object.entries(keys).map(([name, key]) => [name, view.limit(key, language) ?? view.limit(key)]),
     );
-}
-
-// The test rules the all level adds: a test imports a harness module directly, not through its barrel.
-function testRules(policy: Policy, aliases: Record<string, string>): Record<string, unknown> {
-    if (policy.level !== 'all') return {};
-    const barrels = Object.entries(aliases)
-        .filter(([prefix, target]) => /tests?\//u.test(target) || prefix.includes('tests'))
-        .map(([prefix]) => prefix.replace(/\/$/u, ''));
-    return { 'gspot/no-harness-barrel-imports': ['error', { barrels }] };
 }
 
 // The file sets and plain settings [tools.eslint] holds, with their defaults.
@@ -198,7 +188,6 @@ export function eslintConfiguration(context: EslintContext): EslintConfiguration
                   }
                 : {},
         commentLevel: policy.requireReasons ? 'error' : 'off',
-        testRules: testRules(policy, aliases),
         importStyleBlocks: Object.entries(importStyle).map(([glob, style]) => ({
             files: [[glob, ESLINT_CODE_FILES]],
             rules: { 'gspot/import-path-style': ['error', { style, internalPrefixes }] },

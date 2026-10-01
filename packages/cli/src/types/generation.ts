@@ -136,7 +136,6 @@ export type EslintConfiguration = {
     gspotRules: Record<string, unknown>;
     importLayoutRules: Record<string, unknown>;
     commentLevel: 'error' | 'off';
-    testRules: Record<string, unknown>;
     importStyleBlocks: EslintBlock[];
     runtimes: { files: string[]; runtime: string }[];
     boundaryBlocks: EslintBlock[];

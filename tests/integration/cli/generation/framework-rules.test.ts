@@ -53,7 +53,6 @@ test.each(['none', 'index-only'])(
             ['app/page.tsx', 'app/component.tsx', 'library/page.tsx'],
         );
         expect(rules['app/page.tsx']!['gspot/no-trivial-files']![0]).toBe(0);
-        expect(rules['app/page.tsx']!['gspot/no-export-only-files']![0]).toBe(0);
         expect(rules['app/page.tsx']!['gspot/no-reexports']![0]).toBe(reexports === 'index-only' ? 0 : 2);
         expect(rules['app/component.tsx']!['gspot/no-trivial-files']![0]).toBe(2);
         expect(rules['library/page.tsx']!['gspot/no-trivial-files']![0]).toBe(2);

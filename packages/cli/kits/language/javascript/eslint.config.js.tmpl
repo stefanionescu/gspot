@@ -350,7 +350,6 @@ const defaults = [
             'jsdoc/require-returns-description': 'off',
             'n/no-unpublished-import': 'off',
             'n/no-unpublished-require': 'off',
-            ...<%= json(config.testRules) %>,
         },
     },
     ...(RESTRICTED.length === 0 ? [] : [{ files: CODE, rules: { 'no-restricted-imports': ['error', { paths: RESTRICTED }] } }]),

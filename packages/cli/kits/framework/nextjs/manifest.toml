@@ -134,7 +134,7 @@ tsx = ["@next/next/no-html-link-for-pages", "@next/next/no-async-client-componen
 
 [[rules_off]]
 tool = "eslint"
-rules = ["gspot/no-trivial-files", "gspot/no-export-only-files"]
+rules = ["gspot/no-trivial-files"]
 files = ["**/{page,layout,template,default,loading,error,not-found,global-error,route,middleware,proxy}.{js,jsx,ts,tsx}"]
 reason = "Next.js discovers route files by name, so each file can hold one export in its own folder."
 

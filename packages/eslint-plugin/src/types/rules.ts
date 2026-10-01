@@ -8,7 +8,6 @@ export type ImplementedFunction =
     | TSESTree.FunctionExpression
     | TSESTree.ArrowFunctionExpression;
 
-export type HarnessBarrelImportsOptions = [{ barrels?: string[]; within?: string[] }];
 export type ImportPathStyleName = 'js' | 'ts' | 'extensionless';
 export type ImportPathStyleOptions = [{ style: ImportPathStyleName; internalPrefixes?: string[] }];
 export type HeaderCommentsOptions = [{ allowRequire?: boolean }];

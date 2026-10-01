@@ -27,9 +27,8 @@ export default [gspot.configs.recommended];
 - `gspot/no-duplicate-barrel-exports`
 
 `gspot.configs.all` adds the rules for imports, layout, declaration order, trivial files, and
-trivial functions. Neither configuration turns on `require-server-only`,
-`max-barrel-reexports`, or `no-reexports-outside-index`. Both configurations hold stable rules
-only.
+trivial functions. Neither configuration turns on `require-server-only` or
+`max-barrel-reexports`. Both configurations hold stable rules only.
 
 ## Example: a private variable in client code
 
