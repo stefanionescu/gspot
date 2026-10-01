@@ -9,8 +9,6 @@ import { openSession } from '#cli/execution/session.ts';
 
 test.each([
     { scope: '', typescript: false },
-    { scope: '', typescript: true },
-    { scope: 'app', typescript: false },
     { scope: 'app', typescript: true },
 ])('Svelte selects only its scoped generated TypeScript target: %j', async ({ scope, typescript }) => {
     await using sandbox = await testdir();

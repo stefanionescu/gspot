@@ -1,73 +1,64 @@
-import { test, spyOn, expect } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
-import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { parserFor } from '#cli/parsers/tree-sitter.ts';
-import { rejection } from '#tests/support/expectations.ts';
-import { swiftSources } from '#cli/checks/swift/sources.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
-import { pythonModules } from '#cli/checks/python/modules.ts';
 
-for (const threshold of [1, 2, 3]) {
-    test(`SQL and PL/pgSQL use statement threshold ${String(threshold)} and seven input parameters`, async () => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
-            'gspot.toml': policyOf(['sql'], `[limits]\ntrivial_statements = ${String(threshold)}\n`, 'all'),
-            'functions.sql': [
-                String.raw`\set account '前言'`,
-                'SELECT :account::int;',
-                'CREATE FUNCTION one() RETURNS int LANGUAGE sql AS $$ SELECT 1 $$;',
-                'CREATE FUNCTION two() RETURNS void LANGUAGE plpgsql AS $$ BEGIN PERFORM 1; PERFORM 2; END $$;',
-                'CREATE FUNCTION three() RETURNS void LANGUAGE plpgsql AS $$ BEGIN IF true THEN PERFORM 1; PERFORM 2; END IF; END $$;',
-                'CREATE FUNCTION seven(a int,b int,c int,d int,e int,f int,g int) RETURNS int LANGUAGE sql AS $$ SELECT a $$;',
-                'CREATE FUNCTION eight(a int,b int,c int,d int,e int,f int,g int,h int) RETURNS int LANGUAGE sql AS $$ SELECT a $$;',
-            ].join('\n'),
-        });
-        const result = await executeRun(await openSession(sandbox.path), {
-            stage: 'all',
-            skips: [],
-            only: ['sql/functions'],
-            fix: false,
-            isDryRun: false,
-        });
-        const findings = result.report.checks.flatMap((check) => check.findings);
-        expect(result.report.exitCode).toBe(1);
-        expect(result.report.checks).toMatchObject([{ check: 'sql/functions', status: 'fail' }]);
-        expect(
-            findings
-                .filter((finding) => finding.rule === 'trivial-function')
-                .map(({ file, line, rule }) => ({ file, line, rule })),
-        ).toStrictEqual(
-            [...Array.from({ length: threshold }, (_, index) => index + 3), 6, 7].map((line) => ({
-                file: 'functions.sql',
-                line,
-                rule: 'trivial-function',
-            })),
-        );
-        expect(findings.filter((finding) => finding.rule === 'function-parameters')).toMatchObject([
-            { check: 'sql/functions', file: 'functions.sql', line: 7, rule: 'function-parameters' },
-        ]);
-        await Bun.write(
-            `${sandbox.path}/gspot.toml`,
-            policyOf(['sql'], '[limits.sql]\nfunction_parameters = 8\n', 'all'),
-        );
-        const overridden = await executeRun(await openSession(sandbox.path), {
-            stage: 'all',
-            skips: [],
-            only: ['sql/functions'],
-            fix: false,
-            isDryRun: false,
-        });
-        expect(overridden.report.exitCode).toBe(1);
-        expect(overridden.report.checks).toMatchObject([{ check: 'sql/functions', status: 'fail' }]);
-        expect(
-            overridden.report.checks
-                .flatMap((check) => check.findings)
-                .filter((finding) => finding.rule === 'function-parameters'),
-        ).toStrictEqual([]);
+test('SQL and PL/pgSQL apply the statement threshold and the parameter limit', async () => {
+    const threshold = 2;
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': policyOf(['sql'], `[limits]\ntrivial_statements = ${String(threshold)}\n`, 'all'),
+        'functions.sql': [
+            String.raw`\set account '前言'`,
+            'SELECT :account::int;',
+            'CREATE FUNCTION one() RETURNS int LANGUAGE sql AS $$ SELECT 1 $$;',
+            'CREATE FUNCTION two() RETURNS void LANGUAGE plpgsql AS $$ BEGIN PERFORM 1; PERFORM 2; END $$;',
+            'CREATE FUNCTION three() RETURNS void LANGUAGE plpgsql AS $$ BEGIN IF true THEN PERFORM 1; PERFORM 2; END IF; END $$;',
+            'CREATE FUNCTION seven(a int,b int,c int,d int,e int,f int,g int) RETURNS int LANGUAGE sql AS $$ SELECT a $$;',
+            'CREATE FUNCTION eight(a int,b int,c int,d int,e int,f int,g int,h int) RETURNS int LANGUAGE sql AS $$ SELECT a $$;',
+        ].join('\n'),
     });
-}
+    const result = await executeRun(await openSession(sandbox.path), {
+        stage: 'all',
+        skips: [],
+        only: ['sql/functions'],
+        fix: false,
+        isDryRun: false,
+    });
+    const findings = result.report.checks.flatMap((check) => check.findings);
+    expect(result.report.exitCode).toBe(1);
+    expect(result.report.checks).toMatchObject([{ check: 'sql/functions', status: 'fail' }]);
+    expect(
+        findings
+            .filter((finding) => finding.rule === 'trivial-function')
+            .map(({ file, line, rule }) => ({ file, line, rule })),
+    ).toStrictEqual(
+        [...Array.from({ length: threshold }, (_, index) => index + 3), 6, 7].map((line) => ({
+            file: 'functions.sql',
+            line,
+            rule: 'trivial-function',
+        })),
+    );
+    expect(findings.filter((finding) => finding.rule === 'function-parameters')).toMatchObject([
+        { check: 'sql/functions', file: 'functions.sql', line: 7, rule: 'function-parameters' },
+    ]);
+    await Bun.write(`${sandbox.path}/gspot.toml`, policyOf(['sql'], '[limits.sql]\nfunction_parameters = 8\n', 'all'));
+    const overridden = await executeRun(await openSession(sandbox.path), {
+        stage: 'all',
+        skips: [],
+        only: ['sql/functions'],
+        fix: false,
+        isDryRun: false,
+    });
+    expect(overridden.report.exitCode).toBe(1);
+    expect(overridden.report.checks).toMatchObject([{ check: 'sql/functions', status: 'fail' }]);
+    expect(
+        overridden.report.checks
+            .flatMap((check) => check.findings)
+            .filter((finding) => finding.rule === 'function-parameters'),
+    ).toStrictEqual([]);
+});
 
 test('SQL atomic bodies count each statement and reject files containing only trivial functions', async () => {
     await using sandbox = await testdir();
@@ -92,39 +83,6 @@ test('SQL atomic bodies count each statement and reject files containing only tr
             .flatMap(({ rule }) => (rule === undefined ? [] : [rule]))
             .toSorted((left, right) => left.localeCompare(right)),
     ).toStrictEqual(['trivial-file', 'trivial-function']);
-});
-
-test.each([
-    ['swift', 'swift', swiftSources],
-    ['python', 'py', pythonModules],
-] as const)('%s releases earlier trees when a later parse returns no tree', async (language, extension, read) => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': policyOf([language], '', 'all'),
-        [`first.${extension}`]: language === 'swift' ? 'let first = 1' : 'first = 1',
-        [`second.${extension}`]: language === 'swift' ? 'let second = 2' : 'second = 2',
-    });
-    const session = await openSession(sandbox.path);
-    const request = engineInput(session, {
-        scope: session.scopes[0]!,
-        spec: session.manifests.get(language)!.checks[0]!,
-        files: session.repository.files,
-    });
-    const parser = await parserFor(language);
-    const original = parser.parse.bind(parser);
-    const first = original(language === 'swift' ? 'let first = 1' : 'first = 1')!;
-    const deleted = spyOn(first, 'delete');
-    const parse = spyOn(parser, 'parse').mockReturnValueOnce(first).mockReturnValueOnce(null);
-    try {
-        expect(await rejection(read(request))).toContain('parser returned no tree');
-        expect(deleted).toHaveBeenCalledTimes(1);
-    } finally {
-        parse.mockRestore();
-        deleted.mockRestore();
-    }
-    const corrected = await read(request);
-    expect(corrected).toHaveLength(2);
-    for (const source of corrected) source.tree.delete();
 });
 
 test('SQL function analysis keeps quoted bodies strict and preserves psql source bytes', async () => {

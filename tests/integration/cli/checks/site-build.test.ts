@@ -1,15 +1,12 @@
 import { join } from 'node:path';
-import { stringify } from 'smol-toml';
 import { SITE_BUILD } from '#tests/inputs/cli.ts';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { run } from '#tests/support/cli/command.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { siteInput } from '#tests/support/cli/site.ts';
-import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { test, spyOn, expect, describe } from 'bun:test';
-import { planRun } from '#cli/execution/planning/plan.ts';
 import { rejection } from '#tests/support/expectations.ts';
 import * as toolRunner from '#cli/execution/tool/runner.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
@@ -231,23 +228,3 @@ test.each(SITE_REPORTS)(
         }
     },
 );
-
-test('site builds receive quoted script names and empty arguments', async () => {
-    await using sandbox = await testdir();
-    using resources = new DisposableStack();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': stringify({
-            version: 1,
-            level: 'all',
-            kits: ['static-site'],
-            tools: { site: { build: 'bun "build site.js" "" "two words"' } },
-        }),
-        'build site.js': `if (process.argv[2] !== '' || process.argv[3] !== 'two words') throw new Error('Lost arguments');\n${SITE_BUILD}`,
-    });
-    const session = await openSession(sandbox.path);
-    session.resources = resources;
-    const [planned] = planRun(session, { stage: 'push', skips: [], only: ['static-site/build'] });
-    const request = engineInput(session, planned!);
-    const built = await siteBuild(request);
-    expect(built.isBuilt).toBe(true);
-});

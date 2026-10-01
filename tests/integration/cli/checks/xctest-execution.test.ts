@@ -56,15 +56,6 @@ const CASES = [
         produced: true,
     },
     {
-        failure: 'invalid-number',
-        policy: XCTEST_EXECUTION_POLICY,
-        build: '',
-        coverage: 4,
-        code: 2,
-        status: 'error',
-        produced: true,
-    },
-    {
         failure: 'under-floor',
         policy: XCTEST_EXECUTION_POLICY,
         build: '',

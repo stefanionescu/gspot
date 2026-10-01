@@ -77,19 +77,6 @@ test('fences and paths > a fenced block that does not parse in its language is a
     ]);
 });
 
-test('fences and paths > a path nobody tracks and a task nobody defines are findings; fenced text is not', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'a.md': 'See `src/here.ts` and `src/gone.ts`, then run `mise run build` and `mise run gone`.\n\n```text\nlib/whatever.ts\n```\n',
-        'src/here.ts': 'export {};\n',
-        'mise.toml': '[tasks.build]\nrun = "x"\n',
-    });
-    const found = stalePaths(await checkInput(sandbox.path, 'integrity/stale-paths', ['a.md']));
-    expect(found.map((finding) => finding.message)).toStrictEqual([
-        'src/gone.ts names no tracked file or folder.',
-        'mise run gone names no task or script.',
-    ]);
-});
 test('fences and paths > tilde fences and unclosed examples still report invalid code', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {

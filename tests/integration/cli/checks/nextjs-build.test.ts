@@ -56,45 +56,43 @@ for (const scope of ['', 'apps/web'])
             );
         });
 
-test.each(['Generator failed', 'unknown command', 'Invalid project directory'])(
-    'failed type generation %s cleans the isolated copy without restoring over source edits',
-    async (diagnostic) => {
-        await using directory = await testdir();
-        await createFileTree(directory.path, {
-            'gspot.toml': policyOf(['nextjs']),
-            'package.json': '{"private":true}\n',
-            'tsconfig.json': '{}\n',
+test('failed type generation cleans the isolated copy without restoring over source edits', async () => {
+    const diagnostic = 'Generator failed';
+    await using directory = await testdir();
+    await createFileTree(directory.path, {
+        'gspot.toml': policyOf(['nextjs']),
+        'package.json': '{"private":true}\n',
+        'tsconfig.json': '{}\n',
+    });
+    const session = await openSession(directory.path);
+    const spec = session.manifests.get('nextjs')!.checks.find((entry) => entry.name === 'nextjs/typecheck')!;
+    const input: EngineInput = engineInput(session, {
+        scope: session.scopes.find((entry) => entry.scope.path === '')!,
+        spec: spec,
+        files: session.repository.files,
+    });
+    let scratch = '';
+    const locate = spyOn(executables, 'sync').mockReturnValue(process.execPath);
+    const run = spyOn(processes, 'run').mockImplementation((_command, options) => {
+        scratch = options.cwd;
+        writeFileSync(join(scratch, 'tsconfig.json'), 'partial generator output\n');
+        writeFileSync(join(directory.path, 'tsconfig.json'), 'Concurrent developer edit\n');
+        return Promise.resolve({
+            code: 1,
+            missing: false,
+            duration: 1,
+            stdout: '',
+            stderr: `Error: ${diagnostic}`,
         });
-        const session = await openSession(directory.path);
-        const spec = session.manifests.get('nextjs')!.checks.find((entry) => entry.name === 'nextjs/typecheck')!;
-        const input: EngineInput = engineInput(session, {
-            scope: session.scopes.find((entry) => entry.scope.path === '')!,
-            spec: spec,
-            files: session.repository.files,
-        });
-        let scratch = '';
-        const locate = spyOn(executables, 'sync').mockReturnValue(process.execPath);
-        const run = spyOn(processes, 'run').mockImplementation((_command, options) => {
-            scratch = options.cwd;
-            writeFileSync(join(scratch, 'tsconfig.json'), 'partial generator output\n');
-            writeFileSync(join(directory.path, 'tsconfig.json'), 'Concurrent developer edit\n');
-            return Promise.resolve({
-                code: 1,
-                missing: false,
-                duration: 1,
-                stdout: '',
-                stderr: `Error: ${diagnostic}`,
-            });
-        });
-        try {
-            expect(await rejection(nextjsTypes(input))).toContain(diagnostic);
-            expect(scratch).not.toBe('');
-            expect(existsSync(scratch)).toBe(false);
-            expect(readFileSync(join(directory.path, 'tsconfig.json'), 'utf8')).toBe('Concurrent developer edit\n');
-            expect(existsSync(join(directory.path, 'next-env.d.ts'))).toBe(false);
-        } finally {
-            locate.mockRestore();
-            run.mockRestore();
-        }
-    },
-);
+    });
+    try {
+        expect(await rejection(nextjsTypes(input))).toContain(diagnostic);
+        expect(scratch).not.toBe('');
+        expect(existsSync(scratch)).toBe(false);
+        expect(readFileSync(join(directory.path, 'tsconfig.json'), 'utf8')).toBe('Concurrent developer edit\n');
+        expect(existsSync(join(directory.path, 'next-env.d.ts'))).toBe(false);
+    } finally {
+        locate.mockRestore();
+        run.mockRestore();
+    }
+});

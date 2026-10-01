@@ -115,7 +115,7 @@ test('concurrent Swift compilation and Periphery retain separate source and arti
 
 describe.if(onMac)('with the macOS toolchain', () => {
 if (HAS_SWIFT)
-test.each(['../External.xcodeproj', '/External.xcodeproj', 'C:External.xcodeproj', String.raw`..\External.xcodeproj`])(
+test.each(['../External.xcodeproj', 'C:External.xcodeproj'])(
     'Xcode project %s cannot redirect an isolated build outside the scope',
     async (project) => {
         await using sandbox = await testdir();

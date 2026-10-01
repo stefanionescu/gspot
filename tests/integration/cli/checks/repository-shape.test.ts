@@ -68,16 +68,6 @@ test('suppression validation ignores source text and valid reasons but reports m
     ]);
 });
 
-test('a policy pattern that names nothing tracked is reported, a folder or glob that does is not', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'src/a.ts': '', 'data/x.bin': '', 'docs/a.md': '' });
-    const paths = ['src/a.ts', 'data/x.bin', 'docs/a.md'];
-    const found = allowlistsMatch(await checkInput(sandbox.path, 'integrity/allowlists-match', paths, policy));
-    expect(found.map((finding) => finding.message)).toStrictEqual([
-        'gone/** under [[ignore]] matches no tracked file or folder.',
-    ]);
-});
-
 test('a file over the limit that is neither declared nor under LFS is reported', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {

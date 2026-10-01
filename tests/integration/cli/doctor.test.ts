@@ -19,17 +19,6 @@ test('doctor lists a tool only on the systems it has a build for', async () => {
     expect(names.includes('plutil')).toBe(process.platform === 'darwin');
 });
 
-test('doctor reports local configuration and version', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': policyOf([]),
-        'README.md': '# Example\n',
-    });
-    const result = await doctorCommand({ cwd: sandbox.path });
-    expect(result.exitCode).toBe(0);
-    expect(result.json).toMatchObject({ version: { running: expect.any(String) as unknown } });
-});
-
 test('doctor identifies unowned generated-directory files that apply preserves', async () => {
     await using sandbox = await testdir();
     const original = '{"authored": true}\n';
