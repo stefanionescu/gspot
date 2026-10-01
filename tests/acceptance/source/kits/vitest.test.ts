@@ -2,7 +2,6 @@
 import { plantedCases } from '#tests/support/cli/planted.ts';
 import { TEST, UNTESTED, VITEST_SOURCE, VITEST_PACKAGE } from '#tests/inputs/acceptance/source/kits/kits.ts';
 
-const FOCUSED = TEST.replace("test('adds", () => "test.only('adds");
 const TRIPLED =
     TEST.replace('{ positiveTotal }', '{ positiveTotal, triple }') +
     '\ntest("triples a number", () => { expect(triple(3)).toBe(9); });\n';
@@ -26,11 +25,6 @@ plantedCases(
             files: { 'src/public.ts': UNTESTED },
             expected: { message: 'Coverage for functions (50%) does not meet global threshold (80%)' },
             corrected: { files: { 'src/public.ts': UNTESTED, 'src/math.test.ts': TRIPLED } },
-        },
-        {
-            check: 'typescript/eslint',
-            files: { 'src/math.test.ts': FOCUSED },
-            expected: { file: 'src/math.test.ts', rule: 'vitest/no-focused-tests', line: 4 },
         },
     ],
 );

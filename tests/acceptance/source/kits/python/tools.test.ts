@@ -68,22 +68,6 @@ const CASES: FindingCase[] = [
         files: { 'pyproject.toml': TOOLS_PROJECT.replace('version = "1.0.0"', () => 'version = 7') },
         expected: { file: 'pyproject.toml' },
     },
-    {
-        check: 'integrity/dependency-ownership',
-        files: { 'requirements.txt': 'requests==2.32.0\n', 'uv.lock': 'version = 1\n' },
-        expected: { file: 'requirements.txt', rule: 'requirements-file', line: 1 },
-    },
-    {
-        check: 'integrity/dependency-ownership',
-        files: { 'scripts/setup.sh': '#!/usr/bin/env bash\npip install requests\n', 'uv.lock': 'version = 1\n' },
-        expected: { file: 'scripts/setup.sh', rule: 'pip-install', line: 2 },
-    },
-    {
-        check: 'integrity/typecheck-membership',
-        files: {},
-        policy: '[[tools.basedpyright.exclude]]\npaths = ["planted/gone.py"]\nreason = "A file that needed another dependency set."\n',
-        expected: { file: 'gspot.toml', rule: 'stale-exclusion', line: 1 },
-    },
 ];
 
 test(

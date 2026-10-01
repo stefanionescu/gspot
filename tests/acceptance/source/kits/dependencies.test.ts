@@ -14,8 +14,6 @@ import { containing, textContaining } from '#tests/support/expectations.ts';
 import { DEPENDENCIES_INIT } from '#tests/inputs/acceptance/source/kits/init-arguments.ts';
 
 const CLEAN = `{\n    "name": "planted",\n    "version": "1.0.0",\n    "private": true,\n    "packageManager": "bun@${Bun.version}"\n}\n`;
-const RANGED = `{\n    "name": "planted",\n    "version": "1.0.0",\n    "private": true,\n    "packageManager": "bun@${Bun.version}",\n    "dependencies": {\n        "left-pad": "^1.3.0"\n    }\n}\n`;
-const PUBLIC_ROOT = `{\n    "name": "planted",\n    "version": "1.0.0",\n    "packageManager": "bun@${Bun.version}",\n    "workspaces": ["packages/*"]\n}\n`;
 const FOREIGN_LOCK =
     '{\n    "packages": { "node_modules/a": { "resolved": "https://registry.example.test/a/-/a-1.0.0.tgz", "funding": { "url": "https://opencollective.com/a" } } }\n}\n';
 
@@ -54,28 +52,6 @@ plantedCases(
             corrected: {
                 files: { 'package-lock.json': FOREIGN_LOCK.replace('registry.example.test', 'registry.npmjs.org') },
             },
-        },
-        {
-            check: 'integrity/manifest-policy',
-            files: { 'package.json': RANGED },
-            expected: { file: 'package.json', rule: 'version-range', line: 1 },
-            corrected: { files: { 'package.json': RANGED.replace('^1.3.0', '1.3.0') } },
-        },
-        {
-            check: 'integrity/manifest-policy',
-            files: { 'package.json': PUBLIC_ROOT },
-            expected: { file: 'package.json', rule: 'private-root', line: 1 },
-            corrected: {
-                files: {
-                    'package.json': PUBLIC_ROOT.replace('    "workspaces"', '    "private": true,\n    "workspaces"'),
-                },
-            },
-        },
-        {
-            check: 'integrity/manifest-policy',
-            files: { 'bun.lock': '{}\n', 'package-lock.json': '{}\n' },
-            expected: { file: 'package-lock.json', rule: 'foreign-lockfile', line: 1 },
-            corrected: { files: { 'bun.lock': '{}\n' } },
         },
     ],
     (planted) => {

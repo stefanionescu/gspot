@@ -11,10 +11,7 @@ import { GUIDE, README, LICENSE, REPORTED_ELSEWHERE } from '#tests/inputs/accept
 
 // What each check accepts in place of its planted document; the guide for the rest.
 const CORRECTIONS: Record<string, string> = {
-    'markdown/fences': '# A page\n\n```json\n{ "open": true }\n```\n',
     'docs/links': '# A page\n\nRead [the guide](guide.md) first.\n',
-    'integrity/stale-paths': '# A page\n\nRead `docs/guide.md`.\n',
-    'docs/readme-shape': README,
 };
 const CASES: FindingCase[] = [
     {
@@ -23,24 +20,9 @@ const CASES: FindingCase[] = [
         expected: { file: 'docs/skipped.md', rule: 'MD001', line: 3 },
     },
     {
-        check: 'markdown/fences',
-        files: { 'docs/fence.md': '# A page\n\n```json\n{ "open": \n```\n' },
-        expected: { file: 'docs/fence.md', rule: 'json', line: 3 },
-    },
-    {
         check: 'docs/links',
         files: { 'docs/linked.md': '# A page\n\nRead [the other page](missing-page.md) first.\n' },
         expected: { file: 'docs/linked.md', rule: 'ERROR', line: 3, column: 6 },
-    },
-    {
-        check: 'integrity/docs-headings',
-        files: { 'docs/layout.md': '# A page\n\n## Project structure\n\nOne folder for each thing.\n' },
-        expected: { file: 'docs/layout.md', rule: 'banned-heading', line: 3 },
-    },
-    {
-        check: 'integrity/stale-paths',
-        files: { 'docs/stale.md': '# A page\n\nThe entry point is `docs/nowhere/start.md`.\n' },
-        expected: { file: 'docs/stale.md', rule: 'missing-path', line: 3 },
     },
     {
         check: 'docs/readme-present',
@@ -49,23 +31,9 @@ const CASES: FindingCase[] = [
         expected: { file: 'LICENSE', message: 'The root has no LICENSE file.' },
     },
     {
-        check: 'docs/readme-shape',
-        files: { 'README.md': '# planted\n\nText with no section at all.\n' },
-        expected: { file: 'README.md', rule: 'start-section', line: 1 },
-    },
-    {
         check: 'prose/vale',
         files: { 'docs/selling.md': '# A page\n\nThis powerful cache easily makes the application much faster.\n' },
         expected: { file: 'docs/selling.md', rule: 'gspot.marketing', line: 3, column: 6 },
-    },
-    {
-        // Vale reads the comments of a stylesheet by path, so marketing prose in CSS is a finding too (K-176).
-        check: 'prose/vale',
-        files: {
-            'src/site.css':
-                '/* This powerful cache easily makes the site much faster. */\n.site {\n    color: #333;\n}\n',
-        },
-        expected: { file: 'src/site.css', rule: 'gspot.marketing', line: 1, column: 9 },
     },
     {
         check: 'prose/banned',

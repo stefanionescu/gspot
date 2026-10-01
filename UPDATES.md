@@ -18,11 +18,11 @@ approved it on October 1, 2026.
 
 ### Where things stand on October 1, 2026
 
-- `main` is at `599ea82e`. Stages 1 to 9 are merged as pull requests #2 to #8, #10, and #11. Stage 7 also deleted the
-  `architecture` folder, a part of stage 15.
+- `main` is at `94c41578`. Stages 1 to 10 are merged as pull requests #2 to #8 and #10 to #12. Stage 7 also deleted
+  the `architecture` folder, a part of stage 15.
 - Pull request #9 updated `devalue` to 5.9.4 for seven advisories that `dependencies/osv` reported on October 1.
-- Stage 10 is pull request #12, branch `refactor/cut-command-acceptance-tests`.
-- The next stage to start is stage 11.
+- Stage 11 is pull request #13, branch `refactor/cut-kit-acceptance-tests`.
+- The next stage to start is stage 12.
 
 ### Stages
 
@@ -39,8 +39,8 @@ One pull request per stage, in this order. Each merges with a merge commit only 
 | 7     | Write the agent block only into `AGENTS.md`            | the `CLAUDE.md` decision; the Cursor rule                                                               | merged, #8             |
 | 8     | Cut unit and CLI integration tests                     | D.2 rows that delete, trim, and merge within one tier                                                   | merged, #10            |
 | 9     | Cut tool, docs, and repository tests                   | D.3 rows; drop `test:docs` and those folders from `test`                                                | merged, #11            |
-| 10    | Cut command acceptance and package tests               | D.4 rows; pins move to a scheduled `pins.yml`                                                           | pull request #12       |
-| 11    | Cut kit acceptance tests                               | D.4 kit rows; find why `documents.test.ts` does not run on Linux                                        | not started            |
+| 10    | Cut command acceptance and package tests               | D.4 rows; pins move to a scheduled `pins.yml`                                                           | merged, #12            |
+| 11    | Cut kit acceptance tests                               | D.4 kit rows; find why `documents.test.ts` does not run on Linux                                        | pull request #13       |
 | 12    | Delete repeated checks, dead rules, and dead code      | 5.3, 5.4, 5.7, including `version = 1` and its gate                                                     | not started            |
 | 13    | Ship no defaults written for this repository           | 5.5; `architecture.roles.harness` with no default; this repository sets its own roles                   | not started            |
 | 14    | Remove the self-lint code from the product             | 5.6; one `gspot` task; `testToolsText` to the pin script                                                | not started            |
@@ -188,6 +188,16 @@ The owner and the work settled these while implementing:
     - the merge of `hooks/push/revisions` into `hooks/push/refs`, with the helper for its pasted assertion blocks; the
       merged file is over 300 lines until then.
 - `package/lifecycle` tests the package runner script and moves with it in stage 21.
+- Stage 11 cut the D.4 kit rows that delete, trim, or merge within acceptance. `svg` merged into `static-site`, and
+  `swift/security` was deleted. `swift/package` and the plist case of `xcode` run on macOS only. These kit rows wait
+  for stage 24:
+    - the files with one install that become CLI-tier tests: `react`, `bash/checks`, `libraries`, `naming`,
+      `platforms`, `structure`, `vite`, and the ESLint and project cases of `typescript`.
+    - the merges of `component-files` into `components`, of the Next.js files, and of `nginx`, which is over the
+      function limit until its cases move.
+    - the docstring and structure cases of `python`, and the cases of `xctest`.
+- `documents.test.ts` does run on Linux: its 11 cases pass in main run 36896154813. The audit's timing came from the
+  stale timings file that stage 1 deleted.
 - Stage 9 moved the one real guard of the deleted reference tests, conflicting setting definitions, into manifest
   validation. A CI step replaces the test of the tool pins: it runs `repo:tools` and `git diff --exit-code`.
 - Stages 2 to 7 already removed the D.2 cases about the cache status, the census, inline ignores, reports, uninstall,
@@ -204,9 +214,11 @@ The owner and the work settled these while implementing:
       match the record.
     - `--only <checks...>` keeps reading after a global `--json`, so `check --only X --json file` takes the file as a
       check name.
+- The stdin case of `acceptance/source/cli/cancellation` writes its ready marker before the SIGTERM handler is
+  attached, so a slow runner can kill the process with 143. Fix the test in stage 24.
 - The pyjwt advisory ignores expire on October 13 and 15, 2026. Renew them with `gspot ignore` in the open pull
   request, or replace them with the transitive constraints of stage 27 once semgrep allows a fixed pyjwt.
-- The quarantine list: 53 acceptance files skip on Windows (`WINDOWS_PENDING` in `tests/support/acceptance.ts`) until
+- The quarantine list: 51 acceptance files skip on Windows (`WINDOWS_PENDING` in `tests/support/acceptance.ts`) until
   stage 24. The help-flag tool tests run on POSIX systems only until stage 23. The Supabase database journey runs in
   CI only in the weekly `database` workflow, which sets `DATABASE_JOURNEYS`.
 

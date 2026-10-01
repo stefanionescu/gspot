@@ -95,13 +95,9 @@ export const WRANGLER =
     '{\n    // The worker of the planted site.\n    "name": "planted",\n    "compatibility_date": "2026-01-15"\n}\n';
 export const KILOBYTE = 1024;
 export const OVER_LIMIT_KB = 1100;
-export const SHEET = '.card {\n    color: #333;\n}\n\n.card-title {\n    font-weight: 700;\n}\n';
-export const CODE =
-    "import styles from './card.module.css';\n\nexport const names = [styles.card, styles.cardTitle];\n";
 // A script for psql: a meta-command and two kinds of variable, which the server never sees.
 export const PSQL =
     "\\set team 'core'\nSELECT id FROM user_accounts WHERE display_name = :'team' AND id = :account_id;\n";
-export const TEMPLATES = '[tools.html]\ntemplate_files = ["pages/**/*.html"]\n';
 export const CARELESS = 'FROM node:latest\nCOPY . .\nCMD ["node", "index.js"]\n';
 export const IGNORES = '.git\nnode_modules\n.env*\n';
 export const VUE_CLEAN =
@@ -122,7 +118,6 @@ ALTER TABLE public.teams ENABLE ROW LEVEL SECURITY;
 CREATE POLICY members_read ON public.teams FOR SELECT USING (true);
 COMMIT;
 `;
-export const FROZEN_POLICY = '[tools.squawk]\nfrozen_through = "20240101000000"\n';
 export const WORKFLOW_HEAD =
     'name: planted\non: [push]\npermissions:\n    contents: read\njobs:\n    build:\n        runs-on: ubuntu-24.04\n        steps:\n';
 export const START = "import { start } from './start.js';\nstart();\n";
@@ -152,8 +147,6 @@ export const CONTROLLER =
     "// The routes that greet.\nimport { Get, Param, Controller } from '@nestjs/common';\nimport { GreetingService } from './greeting.service.js';\n\n/** Answers greeting requests. */\n@Controller('greetings')\nexport class GreetingController {\n    /**\n     * Takes the service that builds greetings.\n     * @param greetings the service\n     */\n    constructor(private readonly greetings: GreetingService) {}\n\n    /**\n     * Greets the person the route names.\n     * @param name the person\n     * @returns the greeting\n     */\n    @Get(':name')\n    greet(@Param('name') name: string): string {\n        return this.greetings.greet(name);\n    }\n}\n";
 export const NESTJS_MODULE =
     "// The greeting feature.\n// eslint-disable-next-line gspot/no-trivial-files -- reason: Nest requires this module class to register its providers and controllers.\nimport { Module } from '@nestjs/common';\nimport { GreetingService } from './greeting.service.js';\nimport { GreetingController } from './greeting.controller.js';\n\n/** Wires the greeting feature together. */\n@Module({ controllers: [GreetingController], providers: [GreetingService] })\nexport class GreetingModule {}\n";
-export const REPOSITORY =
-    "// Where greetings are kept.\nimport { Injectable } from '@nestjs/common';\n\n/** Keeps greetings. */\n@Injectable()\nexport class GreetingRepository {\n    /**\n     * Counts the greetings kept.\n     * @returns the count\n     */\n    count(): number {\n        return 0;\n    }\n}\n";
 export const XCODE_PROJECT = `// !$*UTF8*$!
 {
     rootObject = P1;

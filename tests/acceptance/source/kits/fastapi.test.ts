@@ -9,14 +9,7 @@ import type { RunReport } from '#cli/types/execution/execution.ts';
 import { QUIET_INIT, PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { runPlanted, plantedCases } from '#tests/support/cli/planted.ts';
 import { containing, textContaining } from '#tests/support/expectations.ts';
-
-import {
-    MATH,
-    DOCUMENT,
-    FASTAPI_TESTS,
-    OPENAPI_POLICY,
-    documentWriter,
-} from '#tests/inputs/acceptance/source/kits/kits.ts';
+import { MATH, DOCUMENT, FASTAPI_TESTS, documentWriter } from '#tests/inputs/acceptance/source/kits/kits.ts';
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Two cases plant the same pyproject.toml with a different dependency.
 const PROJECT = (dependency: string): string =>
@@ -94,18 +87,6 @@ plantedCases(
             check: 'fastapi/no-blocking-io-in-async',
             files: { 'planted/health.py': ROUTE('    time.sleep(1)\n') },
             expected: { file: 'planted/health.py', line: 9, rule: 'blocking-call' },
-        },
-        {
-            check: 'openapi/lint',
-            files: { 'openapi.yaml': DOCUMENT.replace('            operationId: readHealth\n', '') },
-            policy: OPENAPI_POLICY,
-            expected: { file: 'openapi.yaml', rule: 'operation-operationId', line: 15 },
-        },
-        {
-            check: 'openapi/fresh',
-            files: { 'write-document.js': documentWriter(`${DOCUMENT}# later\n`) },
-            policy: OPENAPI_POLICY,
-            expected: { file: 'openapi.yaml', rule: 'stale', line: 1 },
         },
     ],
 );

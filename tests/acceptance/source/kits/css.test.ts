@@ -8,12 +8,7 @@ import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { installPrivateTools } from '#tests/support/cli/tools.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
-import { runPlanted, plantedCases } from '#tests/support/cli/planted.ts';
-import { CODE, SHEET } from '#tests/inputs/acceptance/source/kits/kits.ts';
 import { containing, containingAll } from '#tests/support/expectations.ts';
-
-// A property no browser knows, in two halves because the spelling fixer corrects it when it is whole.
-const UNKNOWN_PROPERTY = ['col', 'our'].join('');
 
 test(
     'Stylelint applies nested settings through each generated configuration and editor pointer',
@@ -62,71 +57,4 @@ test(
         }
     },
     PLANTED_TIMEOUT_MS * 5,
-);
-
-plantedCases(
-    'the css configuration',
-    {
-        kits: ['css'],
-        without: ['spelling'],
-        files: {
-            'package.json':
-                '{\n    "name": "planted",\n    "version": "1.0.0",\n    "private": true,\n    "type": "module"\n}\n',
-            'src/site.css': 'a {\n    color: red;\n}\n',
-            'src/card.module.css': SHEET,
-            'src/card.js': CODE,
-        },
-    },
-    [
-        {
-            check: 'css/stylelint',
-            files: { 'src/site.css': `a {\n    ${UNKNOWN_PROPERTY}: red;\n}\n` },
-            expected: { file: 'src/site.css', rule: 'property-no-unknown', line: 2 },
-        },
-        {
-            check: 'integrity/css-usage',
-            files: { 'src/card.module.css': `${SHEET}\n.card-footer {\n    margin: 0;\n}\n` },
-            expected: {
-                file: 'src/card.module.css',
-                rule: 'unused-class',
-                line: 1,
-                message: 'No importer reads the class card-footer.',
-            },
-        },
-        {
-            check: 'integrity/css-usage',
-            files: { 'src/card.js': `${CODE}\nexport const extra = styles.cardBadge;\n` },
-            expected: {
-                file: 'src/card.js',
-                rule: 'undefined-class',
-                line: 1,
-                message: 'card.module.css defines no class cardBadge.',
-            },
-        },
-    ],
-    (planted) => {
-        test(
-            'escaped, commented, and attribute selectors are not classes, and Sass is outside the CSS owners',
-            async () => {
-                const { root, environment } = planted();
-                const selectors = await runPlanted(
-                    root,
-                    {
-                        check: 'integrity/css-usage',
-                        files: {
-                            'src/card.module.css':
-                                '.card\\:active { content: ".unused"; }\n/* .fake {} */\n[data-name=".not-a-class"] .card-title { color: red; }\n',
-                            'src/card.js':
-                                "import styles from './card.module.css';\nexport const names = [styles['card:active'], styles.cardTitle];\n",
-                            // Sass is outside CSS owners, so CSS checks do not parse its mixins (K-233).
-                            'src/theme.scss': '@mixin card { .unused { color: red; } }\n.panel { @include card; }\n',
-                        },
-                    },
-                    environment,
-                );
-                expect(selectors.code, selectors.stdout + selectors.stderr).toBe(0);
-            },
-            PLANTED_TIMEOUT_MS * 2,
-        );
-    },
 );

@@ -16,13 +16,10 @@ import {
 
 // Built from two halves, so the spelling fixer of this repository never corrects the planted typo.
 const MISSPELLED = ['Te', 'h'].join('');
-
-const VALUE = '// A value owned by this module.\n\n/** The number of orders. */\nexport const orderCount = 1;\n';
 const WRONG = "// A wrong type.\n\n/** A count that is not a number. */\nexport const count: number = 'three';\n";
 const TYPO = `// ${MISSPELLED} order of things.\n\n/** A value. */\nexport const orderCount = 1;\n`;
 const PLAIN_JS =
     '// A plain JavaScript file with a wrong call.\n\n/**\n * Doubles a number.\n * @param {number} value the value\n * @returns {number} twice the value\n */\nexport function twice(value) {\n    return value * 2;\n}\n\n/** A call with a string. */\nexport const wrong = twice("x");\n';
-const LIMITS = '// The limits.\n\n/** The most lines. */\nexport const MAX_LINES = 10;\n';
 
 const CASES: FindingCase[] = [
     {
@@ -40,14 +37,6 @@ const CASES: FindingCase[] = [
         expected: { file: 'src/orders/paused.ts', rule: 'no-debugger', line: 9, column: 5 },
     },
     {
-        check: 'typescript/eslint',
-        files: {
-            'src/orders/forward.ts':
-                '// A second name for the receipt function.\nimport { receiptOptions } from "./receipt.js";\nimport type { Total } from "#types/totals.js";\n\n/**\n * Formats a receipt.\n * @param total the total\n * @returns the receipt line\n */\nexport const forward = (total: Total): string => new Intl.NumberFormat("en-US", receiptOptions).format(total.amount);\n',
-        },
-        expected: { file: 'src/orders/forward.ts', rule: 'gspot/no-trivial-functions', line: 10, column: 24 },
-    },
-    {
         check: 'javascript/knip',
         files: {
             'src/orders/unused.ts':
@@ -63,33 +52,6 @@ const CASES: FindingCase[] = [
                     "\nimport { unused } from './orders/unused.js';\nexport const additional = unused;\n",
             },
         },
-    },
-    {
-        check: 'naming/identifiers',
-        files: {
-            'src/orders/names.ts':
-                '// A name with a banned word.\n\n/** A helper value. */\nexport const orderHelper = 1;\n',
-        },
-        expected: { file: 'src/orders/names.ts', rule: 'banned-term', line: 4, column: 14 },
-    },
-    {
-        check: 'naming/paths',
-        files: {
-            'src/orders/order-utils.ts':
-                '// A file name with a banned word.\n\n/** A value. */\nexport const orderCount = 1;\n',
-        },
-        expected: { file: 'src/orders/order-utils.ts', rule: 'banned-term', line: 1, column: 1 },
-        corrected: { files: { 'src/orders/count.ts': VALUE } },
-    },
-    {
-        check: 'naming/policy-schema',
-        files: {},
-        policy: '[naming]\nallowed = [{name = "neverUsedName", reason = "A name nothing in this repository carries."}]\n',
-        expected: {
-            file: 'gspot.toml',
-            message: 'naming.allowed names "neverUsedName", which no identifier in this scope carries.',
-        },
-        corrected: { files: { 'src/orders/allowed.ts': VALUE.replace('orderCount', 'neverUsedName') } },
     },
     {
         check: 'formatting/prettier',
@@ -118,27 +80,10 @@ const CASES: FindingCase[] = [
         corrected: { files: { 'src/orders/typo.ts': TYPO.replace(MISSPELLED, 'The') } },
     },
     {
-        check: 'integrity/files',
-        files: {
-            'config/limits.ts': LIMITS,
-            'config/logic.ts':
-                '// Logic where literals belong.\n\n/**\n * Doubles a value.\n * @param value the value\n * @returns twice the value\n */\nexport function twice(value: number): number {\n    return value * 2;\n}\n',
-        },
-        // init already wrote the architecture table, so the role joins it as a subtable.
-        policy: '[architecture.roles]\nconfig = "config"\n',
-        expected: { file: 'config/logic.ts', rule: 'logic-in-config', line: 8 },
-        corrected: { files: { 'config/limits.ts': LIMITS, 'config/logic.ts': VALUE } },
-    },
-    {
         check: 'javascript/checkjs',
         files: { 'src/orders/legacy.js': PLAIN_JS },
         expected: { file: 'src/orders/legacy.js', rule: 'TS2345', line: 13, column: 28 },
         corrected: { files: { 'src/orders/legacy.js': PLAIN_JS.replace('twice("x")', 'twice(3)') } },
-    },
-    {
-        check: 'integrity/tsconfig-options',
-        files: { 'tsconfig.json': '{\n    "compilerOptions": { "strict": false }\n}\n' },
-        expected: { file: 'tsconfig.json', rule: 'strict' },
     },
 ];
 
