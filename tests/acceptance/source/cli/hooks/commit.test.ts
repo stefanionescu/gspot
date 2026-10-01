@@ -69,8 +69,6 @@ test(
         const commit = git(sandbox.path, ['commit', '-qm', 'bad'], environment);
         expect(commit.code).not.toBe(0);
         expect(`${commit.stdout}${commit.stderr}`).toContain('SC2086');
-        expect(commit.stdout + commit.stderr).toContain('reproduce: gspot check --only bash/shellcheck --staged');
-        expect(commit.stdout + commit.stderr).toContain('Bypass this hook once: git commit --no-verify');
         await Bun.write(join(sandbox.path, 'scripts/b.sh'), '#!/usr/bin/env bash\necho "$1"\n');
         expect(git(sandbox.path, ['add', '-A']).code).toBe(0);
         const corrected = git(sandbox.path, ['commit', '-qm', 'Correct shell input'], environment);

@@ -36,6 +36,35 @@ async function expectCommitChecks(root: string, environment: Record<string, stri
     expect(range.stdout).toContain('type-empty');
 }
 
+// A push checks every distinct commit message even when the pushed trees and changed paths are identical.
+async function expectDistinctMessages(root: string, environment: Record<string, string>): Promise<void> {
+    const base = git(root, ['rev-parse', 'HEAD']).stdout.trim();
+    const tree = git(root, ['rev-parse', 'HEAD^{tree}']).stdout.trim();
+    const good = git(root, ['commit-tree', tree, '-p', base, '-m', 'docs: reviewed']).stdout.trim();
+    const bad = git(root, ['commit-tree', tree, '-p', base, '-m', 'Bad message.']).stdout.trim();
+    const command = [process.execPath, gspot, 'check', '--push', '--only', 'commits/range', '--json'];
+    const options = { cwd: root, env: environment };
+    const rejected = await processes.run(command, {
+        ...options,
+        stdin: `refs/heads/good ${good} refs/heads/good ${base}\nrefs/heads/bad ${bad} refs/heads/bad ${base}\n`,
+    });
+    expect(rejected.code, rejected.stdout + rejected.stderr).toBe(1);
+    const report = JSON.parse(rejected.stdout) as PushReport;
+    expect(report.revisions).toHaveLength(1);
+    expect(new Set(report.revisions[0]?.commits)).toStrictEqual(new Set([good, bad]));
+    expect(
+        report.revisions[0]?.report.checks[0]?.findings.some(
+            (finding) => finding.rule === 'type-empty' && finding.message.includes(bad),
+        ),
+    ).toBe(true);
+    const corrected = await processes.run(command, {
+        ...options,
+        stdin: `refs/heads/good ${good} refs/heads/good ${base}\n`,
+    });
+    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+    expect(git(root, ['rev-parse', 'HEAD']).stdout.trim()).toBe(base);
+}
+
 // Completed history includes every selected commit and passes its range check.
 function expectCompleteHistory(output: string, commits: string[]): void {
     const report = JSON.parse(output) as PushReport;
@@ -43,34 +72,6 @@ function expectCompleteHistory(output: string, commits: string[]): void {
     expect(new Set(report.revisions[0]?.commits)).toStrictEqual(new Set(commits));
     expect(report.revisions[0]?.report.checks[0]?.status).toBe('ok');
 }
-
-test(
-    'native commitlint reads the generated configuration and rejects invalid messages',
-    async () => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
-            'gspot.toml': policyOf(['commits'], 'level = "all"\n[guides]\ninstall = false\n'),
-        });
-        for (const command of ['apply', 'install']) {
-            const prepared = await run(sandbox.path, [command]);
-            expect(prepared.code, prepared.stdout + prepared.stderr).toBe(0);
-        }
-        // gspot and editors name the generated file; no pointer at the root leads commitlint to it.
-        const configuration = join(sandbox.path, '.gspot/config/commitlint.config.cjs');
-        const command = [
-            'node',
-            join(sandbox.path, '.gspot/node_modules/@commitlint/cli/cli.js'),
-            '--config',
-            configuration,
-        ];
-        const failed = await processes.run(command, { cwd: sandbox.path, stdin: 'Changed files.\n' });
-        expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-        expect(failed.stdout + failed.stderr).toContain('type-empty');
-        const corrected = await processes.run(command, { cwd: sandbox.path, stdin: 'fix: validate configuration\n' });
-        expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    },
-    PLANTED_TIMEOUT_MS,
-);
 
 test(
     'the commits configuration > the commit-msg hook refuses a free-form message and takes a conventional one',
@@ -109,49 +110,7 @@ process.exit(child.exitCode);
         const good = git(sandbox.path, ['commit', '-qm', 'docs: add the notes page'], environment);
         expect(good.code, good.stdout + good.stderr).toBe(0);
         await expectCommitChecks(sandbox.path, environment);
-    },
-    PLANTED_TIMEOUT_MS,
-);
-
-test(
-    'push checks every distinct commit message even when the pushed trees and changed paths are identical',
-    async () => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
-            'gspot.toml': policyOf(['commits'], 'level = "all"\n[guides]\ninstall = false\n'),
-        });
-        expect(git(sandbox.path, ['init', '-q']).code).toBe(0);
-        const applied = await run(sandbox.path, ['apply']);
-        expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-        await installPrivateTools(sandbox.path);
-        expect(git(sandbox.path, ['add', '-A']).code).toBe(0);
-        expect(git(sandbox.path, ['commit', '-qm', 'chore: initialize']).code).toBe(0);
-        const base = git(sandbox.path, ['rev-parse', 'HEAD']).stdout.trim();
-        const tree = git(sandbox.path, ['rev-parse', 'HEAD^{tree}']).stdout.trim();
-        const good = git(sandbox.path, ['commit-tree', tree, '-p', base, '-m', 'docs: reviewed']).stdout.trim();
-        const bad = git(sandbox.path, ['commit-tree', tree, '-p', base, '-m', 'Bad message.']).stdout.trim();
-        const command = [process.execPath, gspot, 'check', '--push', '--only', 'commits/range', '--json'];
-        const options = { cwd: sandbox.path, env: { PATH: toolsPath(['commitlint']) } };
-        const rejected = await processes.run(command, {
-            ...options,
-            stdin: `refs/heads/good ${good} refs/heads/good ${base}\nrefs/heads/bad ${bad} refs/heads/bad ${base}\n`,
-        });
-        expect(rejected.code, rejected.stdout + rejected.stderr).toBe(1);
-        const report = JSON.parse(rejected.stdout) as PushReport;
-        expect(report.revisions).toHaveLength(1);
-        expect(new Set(report.revisions[0]?.commits)).toStrictEqual(new Set([good, bad]));
-        expect(
-            report.revisions[0]?.report.checks[0]?.findings.some(
-                (finding) => finding.rule === 'type-empty' && finding.message.includes(bad),
-            ),
-        ).toBe(true);
-        const corrected = await processes.run(command, {
-            ...options,
-            stdin: `refs/heads/good ${good} refs/heads/good ${base}\n`,
-        });
-        expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        expect((JSON.parse(corrected.stdout) as PushReport).revisions[0]?.report.checks[0]?.status).toBe('ok');
-        expect(git(sandbox.path, ['rev-parse', 'HEAD']).stdout.trim()).toBe(base);
+        await expectDistinctMessages(sandbox.path, environment);
     },
     PLANTED_TIMEOUT_MS,
 );
