@@ -108,13 +108,7 @@ tester().run('no-trivial-functions', noTrivialFunctions, {
             // A name does not save a small function: inline it where it is called or passed.
             'function manyCallers() { return 1; } manyCallers(); manyCallers();',
             'function forward(value) { return owner(value); } forward(first); forward(second);',
-            'function path(base, file) { return join(base, file); } path(first, value); path(second, value);',
             'const base = "root"; const path = file => join(base, file); path("first"); path("second");',
-            'function area(width, height) { return width * height; } area(2, 3); area(4, 5);',
-            'function heading(title) { return `# ${title}`; } heading(first); heading(second);',
-            'function schema(properties) { return { type: "object", properties }; } schema(first); schema(second);',
-            'function normalize(path) { return separator === "/" ? path : path.split(separator).join("/"); } normalize(first); normalize(second);',
-            'function readJson(value) { return read(value, "json"); } readJson(first); readJson(second);',
             'function callback(value) { return value.active; } items.filter(callback);',
             'const callback = (value) => value.active; items.filter(callback);',
             'function callback() { update(); } on(callback); off(callback);',

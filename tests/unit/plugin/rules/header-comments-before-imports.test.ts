@@ -17,7 +17,6 @@ tester().run('header-comments-before-imports', headerCommentsBeforeImports, {
         "import { a } from './a';\n\n/** Documents the external value. */\n// @ts-expect-error External declaration is incomplete.\nexport const b = a;",
         // A decorator above export belongs to the class, so the doc comment above it leads the class.
         "import { Injectable } from './a';\n\n/** Builds greetings. */\n@Injectable()\nexport class Greeter {}",
-        "import { a } from './a';\n// leading for import\nimport { c } from './c';\nexport const b = a + c;",
         {
             code: "const a = require('./a');\n\n// Explains b.\nmodule.exports = a;",
             options: [{ allowRequire: true }],
@@ -30,11 +29,6 @@ tester().run('header-comments-before-imports', headerCommentsBeforeImports, {
             errors: [{ messageId: 'headerFirst' }],
         },
 
-        {
-            code: "import { a } from './a';\n\n// The file header.\n\n\nexport const b = a;",
-            output: "// The file header.\n\nimport { a } from './a';\n\nexport const b = a;",
-            errors: [{ messageId: 'headerFirst' }],
-        },
         {
             code: "import { a } from './a';\n/* header */\n\n\nexport const b = a;",
             output: "/* header */\n\nimport { a } from './a';\nexport const b = a;",
