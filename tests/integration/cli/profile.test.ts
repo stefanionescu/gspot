@@ -27,38 +27,28 @@ describe('profile file paths', () => {
     });
 });
 
-test.each(['jest', 'vitest'])(
-    'profiles retain %s coverage settings and omit repository support directories',
-    async (configuration) => {
-        await using directory = await testdir();
-        const sharedSettings = {
-            coverage_lines: 90,
-            ...(configuration === 'jest' ? { global_package: 'bun:test' } : {}),
-        };
-        const exported = exportedProfile(
-            stringify({
-                kits: [configuration],
-                tools: { [configuration]: { ...sharedSettings, harness_directory: 'tests/fixtures' } },
-            }),
-            'shared.profile.toml',
-        );
-        await createFileTree(directory.path, { 'shared.profile.toml': exported.text });
-        const restored = await readProfile('shared.profile.toml', directory.path);
-        expect(restored.tables.tools?.[configuration]).toStrictEqual(sharedSettings);
-        expect(exported.leftOut).toStrictEqual([`tools.${configuration}.harness_directory: names a repository path`]);
-        await createFileTree(directory.path, {
-            'invalid.profile.toml': stringify({
-                profile: 'local',
-                selection: 'exact',
-                kits: [configuration],
-                tools: { [configuration]: { harness_directory: 'tests/fixtures' } },
-            }),
-        });
-        expect(await rejection(readProfile('invalid.profile.toml', directory.path))).toContain(
-            'a profile carries no path',
-        );
-    },
-);
+test('profiles retain runner coverage settings and omit the architecture roles, which name repository paths', async () => {
+    await using directory = await testdir();
+    const tools = { jest: { coverage_lines: 90, global_package: 'bun:test' } };
+    const roles = { harness: 'tests/fixtures' };
+    const exported = exportedProfile(
+        stringify({ kits: ['jest'], tools, architecture: { roles } }),
+        'shared.profile.toml',
+    );
+    await createFileTree(directory.path, { 'shared.profile.toml': exported.text });
+    const restored = await readProfile('shared.profile.toml', directory.path);
+    expect(restored.tables.tools?.['jest']).toStrictEqual(tools.jest);
+    expect(exported.leftOut).toStrictEqual(['architecture.roles: names a repository path']);
+    await createFileTree(directory.path, {
+        'invalid.profile.toml': stringify({
+            profile: 'local',
+            selection: 'exact',
+            kits: ['jest'],
+            architecture: { roles },
+        }),
+    });
+    expect(await rejection(readProfile('invalid.profile.toml', directory.path))).toContain('a profile carries no path');
+});
 
 test('profile publication is idempotent, preserves edits, and survives apply', async () => {
     await using directory = await testdir();

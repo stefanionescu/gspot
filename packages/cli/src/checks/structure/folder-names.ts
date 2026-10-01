@@ -1,6 +1,6 @@
 import { findingAt } from '#cli/checks/result.ts';
-import { roleFolders } from '#cli/policy/settings.ts';
 import { pathMatcher } from '#cli/repository/paths.ts';
+import { harnessFolders } from '#cli/policy/settings.ts';
 import { directoryOf } from '#cli/checks/structure/directories.ts';
 import type { StructureAnalysis as Analysis } from '#cli/types/checks.ts';
 import { IGNORED_FOLDERS, BANNED_FOLDER_NAMES } from '#cli/config/checks/structure.ts';
@@ -16,7 +16,7 @@ export const folderNames: Analysis = (context) => {
     );
     const { input } = context;
     const harnesses = new Set(
-        roleFolders(input.selection.selected, input.view.settings, 'harness').map((folder) =>
+        harnessFolders(input.policyFiles.policy, input.scope).map((folder) =>
             [input.scope, folder].filter(Boolean).join('/'),
         ),
     );

@@ -15,7 +15,7 @@ export const PATH_KEYS = new Set([
     'ignores',
     'ignore_patterns',
     'glob',
-    'harness_directory',
+    'roles',
 ]);
 /** The tables a profile never holds, because each one belongs to one repository. */
 export const REPOSITORY_TABLES = ['scope', 'generated', 'vendored', 'check', 'exclude'] as const;

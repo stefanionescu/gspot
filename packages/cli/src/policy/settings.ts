@@ -1,6 +1,6 @@
 import { compact } from '#cli/policy/normalize.ts';
+import type { SettingSpec } from '#cli/types/kits.ts';
 import { scopeAncestors } from '#cli/repository/scopes.ts';
-import type { Manifest, SettingSpec } from '#cli/types/kits.ts';
 import { LANGUAGE_GROUP_TABLES } from '#cli/config/policy/policy.ts';
 
 import type {
@@ -285,16 +285,12 @@ export function listSettings(surface: ExposedSettings, policy: Policy, scope?: s
 }
 
 /**
- * Resolve the directories assigned to a configuration role within one scope.
- * @param selected the selected kits
- * @param settings the effective settings
- * @param role the declared directory role
- * @returns the directories relative to the scope root
+ * The test harness folders of one scope, which architecture.roles.harness names: the scope's own, else the root's.
+ * @param policy the policy
+ * @param scope the scope path, empty for the root
+ * @returns the folders relative to the scope root, none when the policy names no harness
  */
-export function roleFolders(selected: Manifest[], settings: Record<string, unknown>, role: string): string[] {
-    return selected
-        .flatMap((manifest) => manifest.settings)
-        .filter((spec) => spec.role === role)
-        .map((spec) => settings[spec.name])
-        .filter((value): value is string => typeof value === 'string' && value !== '');
+export function harnessFolders(policy: Policy, scope: string): string[] {
+    const value = policy.scopeTables[scope]?.architecture?.roles['harness'] ?? policy.architecture.roles['harness'];
+    return value === undefined ? [] : [value].flat().map((folder) => folder.replace(/\/(?:\*\*)?$/u, ''));
 }

@@ -168,22 +168,17 @@ if (onPosix)
         expect(corrected.report.checks[0]!.findings).toStrictEqual([]);
     });
 
-test.each([
-    ['jest', 'tests/support', ''],
-    ['vitest', 'tests/helpers', ''],
-    ['jest', 'tests/support', 'nested'],
-    ['vitest', 'tests/helpers', 'nested'],
-])('%s naming checks preserve the declared test harness directory', async (configuration, harness, scope) => {
+test.each(['', 'nested'])('naming checks leave the harness folder of scope %j alone', async (scope) => {
     await using sandbox = await testdir();
     const prefix = scope === '' ? '' : `${scope}/`;
     const scopePolicy = scope === '' ? '' : `\n[[scope]]\npath = "${scope}"\nkits = []\n`;
     await createFileTree(sandbox.path, {
         'gspot.toml': policyOf(
-            [configuration, 'typescript', 'naming'],
-            `[tools.${configuration}]\nharness_directory = "${harness}"\n${scopePolicy}`,
+            ['typescript', 'naming'],
+            `[architecture.roles]\nharness = "tests/helpers"\n${scopePolicy}`,
             'all',
         ),
-        [`${prefix}${harness}/startup.ts`]: '',
+        [`${prefix}tests/helpers/startup.ts`]: '',
         [`${prefix}app/support/startup.ts`]: '',
     });
     const result = await executeRun(await openSession(sandbox.path), {

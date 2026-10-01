@@ -83,14 +83,6 @@ default = 0
 default_all = 80
 summary = "The smallest share of statements the tests cover, out of 100."
 
-[[settings]]
-name = "tools.vitest.harness_directory"
-kind = "string"
-direction = "neutral"
-role = "harness"
-default = "tests/support"
-summary = "The folder that holds test support code, which test files import and source files never do."
-
 [guides]
 tool = [{path = "tool/vitest/VITEST.md"}, {path = "tool/playwright/PLAYWRIGHT.md", when = {dependencies = ["@playwright/test", "playwright"]}}]
 general = [{path = "general/code/TESTING.md"}]

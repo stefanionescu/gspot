@@ -17,8 +17,8 @@
             'jest/prefer-strict-equal': 'error',
         },
     },
-<% if (isAll) { %>    {
+<% if (isAll && selected.harness !== undefined) { %>    {
         files: CODE.map((pattern) => [pattern, <%= json(inScope) %>]),
-        rules: { 'gspot/tests-directory-contents': ['error', { harnessDirectory: <%= json([selected.path, selected.settings['tools.jest.harness_directory']].filter(Boolean).join('/')) %> }] },
+        rules: { 'gspot/tests-directory-contents': ['error', { harnessDirectory: <%= json([selected.path, selected.harness].filter(Boolean).join('/')) %> }] },
     },
 <% } } %>

@@ -80,13 +80,17 @@ const element = z.strictObject({ name: text, paths: textList });
 const allowedEdge = z.strictObject({ from: text, to: textList, reason: text.optional() });
 
 const roleGlobs = z.union([text, textList]);
+// The harness role names folders inside the scope, so it refuses a path that leaves it.
+const roles = z
+    .object({ harness: z.union([relativeDirectory, z.array(relativeDirectory)]).optional() })
+    .catchall(roleGlobs);
 
 const architectureSchema = z.strictObject({
     types_directory: text.optional(),
     config_directory: text.optional(),
     elements: z.array(element).optional(),
     edges_allowed: z.array(allowedEdge).optional(),
-    roles: z.record(text, roleGlobs).optional(),
+    roles: roles.optional(),
     contracts: z.array(anyTable).optional(),
 });
 

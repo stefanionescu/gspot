@@ -6,7 +6,7 @@ import { generatedEslint } from '#tests/support/cli/generated/eslint.ts';
 
 const APP_JEST = policyOf(
     ['javascript'],
-    '[guides]\ninstall = false\n[architecture.roles]\nruntime = ["src/**"]\n[[scope]]\npath = "app"\nkits = ["jest"]\n[scope.tools.jest]\nglobal_package = "bun:test"\nharness_directory = "tests/fixtures"\n',
+    '[guides]\ninstall = false\n[architecture.roles]\nruntime = ["src/**"]\nharness = "tests/fixtures"\n[[scope]]\npath = "app"\nkits = ["jest"]\n[scope.tools.jest]\nglobal_package = "bun:test"\n',
     'all',
 );
 
@@ -73,7 +73,7 @@ test.each(['@jest/globals', 'bun:test'])(
 );
 
 test.each(['js', 'jsx'])(
-    'Jest rules and support-directory settings apply only to their declared scope for %s',
+    'Jest rules and the harness folder apply only to their declared scope for %s',
     async (extension) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {

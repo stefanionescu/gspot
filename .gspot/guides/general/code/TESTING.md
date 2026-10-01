@@ -59,7 +59,7 @@ effects as well as successful results.
 <!-- level: all -->
 
 - Tests live under `tests/` or beside the unit they test. The directory is `tests/`, never `__tests__`, `test/`, or `spec/`.
-- Support code (builders, fakes, servers, database helpers) lives under `tests/support/`. No `mocks/`, `helpers/`, or `utils/` directory exists.
+- Support code (builders, fakes, servers, database helpers) lives in the harness folder that `architecture.roles.harness` names. No `mocks/`, `helpers/`, or `utils/` directory exists.
 - Support code is not test code: it has no assertions and no `describe`, `it`, or `test` blocks.
 - File names follow the language: `<name>.test.ts`, never `.spec`; `test_<module>.py` mirroring the package path; `<Type>Tests.swift`; pgTAP files under `tests/` named for the table or function under test.
 - A test name is a sentence that states the scenario and the expected outcome. Never `test1`, `works`, `edge cases`, `happy path`.
@@ -69,7 +69,7 @@ effects as well as successful results.
 
 Tests own the data they rely on. A test is understandable and repeatable without depending on execution order or a mystery seed state.
 
-- Create subject records inside the test or an explicit builder under `tests/support/`.
+- Create subject records inside the test or an explicit builder in the harness folder.
 - Use descriptive unique values for names, emails, IDs, and external references: a stable prefix plus a per-run suffix.
 - Do not depend on previous tests.
 - Do not depend on a globally empty database.

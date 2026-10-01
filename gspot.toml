@@ -271,6 +271,7 @@ config_directory = "config"
 
 [architecture.roles]
 tests = ["tests/**", "**/*.test.*"]
+harness = "tests/support"
 runtime = ["src/**"]
 env = ["packages/cli/src/platform/environment.ts", "tests/support/environment.ts"]
 
