@@ -1,12 +1,13 @@
 import type { ImportDirectionRole, ImportDirectionRoles } from '#plugin/types/rules.ts';
 
-export const DEFAULT_ROLES: Required<ImportDirectionRoles> = {
-    types: ['**/types/**'],
-    tests: ['tests/**', '**/*.test.*', '**/*.spec.*', '**/__tests__/**'],
-    harness: ['tests/support/**'],
-    config: ['config/**'],
-    env: ['src/env/**'],
-    runtime: ['src/**'],
+// No role has a default: the folders of a project are its own, so a role the options leave out matches no file.
+export const NO_ROLES: Required<ImportDirectionRoles> = {
+    types: [],
+    tests: [],
+    harness: [],
+    config: [],
+    env: [],
+    runtime: [],
 };
 
 export const DEFAULT_CONTRACTS = ['index', 'public', 'contracts'];

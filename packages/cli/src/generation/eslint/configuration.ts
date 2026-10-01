@@ -7,8 +7,8 @@ import type { Policy, MergedView, ScopeSelection, ArchitectureSettings } from '#
 import {
     ESLINT_LIMITS,
     REGISTRY_FILES,
+    DIRECTION_ROLES,
     ESLINT_CODE_FILES,
-    DIRECTION_DEFAULTS,
     DEFAULT_NODE_VERSION,
     ESLINT_JAVASCRIPT_LIMITS,
 } from '#cli/config/generation.ts';
@@ -22,19 +22,17 @@ function roleGlobs(architecture: ArchitectureSettings, name: string, defaults: s
     );
 }
 
-// The roles import-direction orders, with the harness folders of the scope.
+// The roles import-direction orders, with the harness folders of the scope. A role the policy leaves out matches no file.
 function directionRoles(architecture: ArchitectureSettings, harness: string[]): Record<string, string[]> {
-    const types = architecture.types_directory ?? 'types';
+    const types = architecture.types_directory;
     return {
-        types: roleGlobs(architecture, 'types', [`${types}/**`, `**/${types}/**`]),
+        types: roleGlobs(architecture, 'types', types === undefined ? [] : [`${types}/**`, `**/${types}/**`]),
         harness: roleGlobs(
             architecture,
             'harness',
             harness.map((folder) => `${folder}/**`),
         ),
-        ...Object.fromEntries(
-            Object.entries(DIRECTION_DEFAULTS).map(([role, globs]) => [role, roleGlobs(architecture, role, globs)]),
-        ),
+        ...Object.fromEntries(DIRECTION_ROLES.map((role) => [role, roleGlobs(architecture, role, [])])),
     };
 }
 

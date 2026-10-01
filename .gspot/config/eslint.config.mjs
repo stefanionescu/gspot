@@ -205,13 +205,9 @@ const gspotRules = { ...gspot.configs.recommended.rules, ...{
                 ],
                 "tests": [
                     "tests/**",
-                    "**/*.test.*",
-                    "**/*.spec.*",
-                    "**/__tests__/**"
+                    "**/*.test.*"
                 ],
-                "config": [
-                    "config/**"
-                ],
+                "config": [],
                 "env": [
                     "packages/cli/src/platform/environment.ts",
                     "tests/support/environment.ts"
@@ -512,13 +508,9 @@ const scopeRules = [
                         ],
                         "tests": [
                             "tests/**",
-                            "**/*.test.*",
-                            "**/*.spec.*",
-                            "**/__tests__/**"
+                            "**/*.test.*"
                         ],
-                        "config": [
-                            "config/**"
-                        ],
+                        "config": [],
                         "env": [
                             "packages/cli/src/platform/environment.ts",
                             "tests/support/environment.ts"
@@ -570,13 +562,9 @@ const scopeRules = [
                         ],
                         "tests": [
                             "tests/**",
-                            "**/*.test.*",
-                            "**/*.spec.*",
-                            "**/__tests__/**"
+                            "**/*.test.*"
                         ],
-                        "config": [
-                            "config/**"
-                        ],
+                        "config": [],
                         "env": [
                             "packages/cli/src/platform/environment.ts",
                             "tests/support/environment.ts"
@@ -627,13 +615,9 @@ const scopeRules = [
                         ],
                         "tests": [
                             "tests/**",
-                            "**/*.test.*",
-                            "**/*.spec.*",
-                            "**/__tests__/**"
+                            "**/*.test.*"
                         ],
-                        "config": [
-                            "config/**"
-                        ],
+                        "config": [],
                         "env": [
                             "packages/cli/src/platform/environment.ts",
                             "tests/support/environment.ts"

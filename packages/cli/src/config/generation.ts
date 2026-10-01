@@ -76,12 +76,7 @@ export const ESLINT_JAVASCRIPT_LIMITS: Record<string, string> = {
     parameters: 'function_parameters',
     trivialStatements: 'trivial_statements',
 };
-// The role globs import-direction uses when the architecture table names none.
-export const DIRECTION_DEFAULTS: Record<string, string[]> = {
-    tests: ['tests/**', '**/*.test.*', '**/*.spec.*', '**/__tests__/**'],
-    config: ['config/**'],
-    env: ['src/env/**', 'config/**'],
-    runtime: ['src/**'],
-};
+// The roles import-direction reads from architecture.roles; the types and harness roles also have their own settings.
+export const DIRECTION_ROLES = ['tests', 'config', 'env', 'runtime'];
 // The files registry-instance-only accepts a registry in, before the configuration folder joins them.
 export const REGISTRY_FILES = ['**/registry.ts', '**/registry.tsx', '**/registry.js'];

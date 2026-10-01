@@ -20,7 +20,7 @@ test('the Vitest harness folder places test support and closes it to runtime cod
         ...VITEST_FILES,
         'gspot.toml': policyOf(
             ['vitest'],
-            '[guides]\ninstall = false\n[tools.vitest]\nharness_directory = "tests/fixtures"\n',
+            '[guides]\ninstall = false\n[architecture.roles]\nruntime = ["src/**"]\n[tools.vitest]\nharness_directory = "tests/fixtures"\n',
             'all',
         ),
     });

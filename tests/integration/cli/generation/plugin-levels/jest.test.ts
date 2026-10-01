@@ -6,7 +6,7 @@ import { generatedEslint } from '#tests/support/cli/generated/eslint.ts';
 
 const APP_JEST = policyOf(
     ['javascript'],
-    '[guides]\ninstall = false\n[[scope]]\npath = "app"\nkits = ["jest"]\n[scope.tools.jest]\nglobal_package = "bun:test"\nharness_directory = "tests/fixtures"\n',
+    '[guides]\ninstall = false\n[architecture.roles]\nruntime = ["src/**"]\n[[scope]]\npath = "app"\nkits = ["jest"]\n[scope.tools.jest]\nglobal_package = "bun:test"\nharness_directory = "tests/fixtures"\n',
     'all',
 );
 
