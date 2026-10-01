@@ -544,6 +544,11 @@ paths = ["packages/cli/package.json"]
 reason = "The gspot package exposes a command through bin and has no importable module API. Remove this exception if the package gains a module API."
 
 [[ignore]]
+check = "integrity/stale-paths"
+paths = ["UPDATES.md"]
+reason = "UPDATES.md records the audit that the stages carry out, and it names the files they delete and move. Remove this entry when the last stage deletes UPDATES.md."
+
+[[ignore]]
 check = "integrity/large-files"
 paths = ["architecture/levels/inventory.csv"]
 reason = "The level inventory holds one reviewed row per check, tool, and rule. It is plain text that diffs by line, and splitting it would split one review table."
