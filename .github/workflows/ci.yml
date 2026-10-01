@@ -219,6 +219,11 @@ jobs:
             - name: Install the Supabase CLI for the Linux database journeys
               if: runner.os == 'Linux'
               run: mise use --global supabase@2.72.7
+            # Defender scans every file a sandbox install writes, which makes those installs run for minutes.
+            - name: Stop Windows Defender scanning on this disposable runner
+              if: runner.os == 'Windows'
+              shell: pwsh
+              run: Set-MpPreference -DisableRealtimeMonitoring $true
             - run: mise run --skip-tools repo:setup
             - name: Extract Windows SwiftFormat executable
               if: runner.os == 'Windows'
