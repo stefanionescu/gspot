@@ -139,6 +139,8 @@ async function runSelected(
             only: options.only,
             paths: paths.length === 0 ? undefined : paths,
             messageFile: options.messageFile,
+            // A --changed run checks the commit messages and history after the merge base, not the whole history.
+            commits: revision === undefined ? changed?.commits : undefined,
         }),
         ...revisionOptions(revision),
         cancelSignal: signal,
