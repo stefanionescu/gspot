@@ -16,7 +16,7 @@ const CLEAN = script.replace('main() {', () => '# main: runs the script.\nmain()
 const CORRECTIONS: Record<string, (planted: { files: Record<string, string> }) => Record<string, string>> = {
     'structure/guards': () => ({
         'scripts/settings.sh':
-            '#!/usr/bin/env bash\n[[ -n ${_CFG_SETTINGS_READY:-} ]] && return 0\nreadonly _CFG_SETTINGS_READY=1\nreadonly PORT=8080\n',
+            '#!/usr/bin/env bash\n[[ -n ${SETTINGS_READY:-} ]] && return 0\nreadonly SETTINGS_READY=1\nreadonly PORT=8080\n',
     }),
     'structure/bash-boundaries': () => ({
         'deploy/step.sh': CLEAN.replace(
