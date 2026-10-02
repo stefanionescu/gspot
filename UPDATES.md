@@ -16,14 +16,14 @@ to the module that uses it.
 The next agent reads this first, then `AGENTS.md`. The stage plan below replaces section 12, and the owner
 approved it on October 1, 2026.
 
-### Where things stand on October 1, 2026
+### Where things stand on October 2, 2026
 
-- `main` is at `5a8e6f14`. Stages 1 to 13 are merged as pull requests #2 to #8 and #10 to #15. Stage 7 also deleted
+- `main` is at `ced6f055`. Stages 1 to 14 are merged as pull requests #2 to #8 and #10 to #16. Stage 7 also deleted
   the `architecture` folder, a part of stage 15.
 - Pull request #9 updated `devalue` to 5.9.4 for seven advisories that `dependencies/osv` reported on October 1.
-- Stage 14 is pull request #16, branch `refactor/remove-self-lint-code`.
-- Stage 15 is pull request #17, branch `chore/delete-stale-files`.
-- The next stage to start is stage 16.
+- On October 2 the owner asked for five to ten stages per pull request. Each stage is linted and committed on its
+  own. Stages 15 to 20 are pull request #17, branch `refactor/stages-15-to-20`.
+- The next stage to start is stage 21.
 
 ### Stages
 
@@ -44,13 +44,13 @@ One pull request per stage, in this order. Each merges with a merge commit only 
 | 11    | Cut kit acceptance tests                               | D.4 kit rows; find why `documents.test.ts` does not run on Linux                                        | merged, #13      |
 | 12    | Delete repeated checks, dead rules, and dead code      | 5.3, 5.4, 5.7, including `version = 1` and its gate                                                     | merged, #14      |
 | 13    | Ship no defaults written for this repository           | 5.5; `architecture.roles.harness` with no default; this repository sets its own roles                   | merged, #15      |
-| 14    | Remove the self-lint code from the product             | 5.6; one `gspot` task; `testToolsText` to the pin script                                                | pull request #16 |
+| 14    | Remove the self-lint code from the product             | 5.6; one `gspot` task; `testToolsText` to the pin script                                                | merged, #16      |
 | 15    | Delete stale files                                     | 5.8 and B.7, apart from the `architecture` folder                                                       | pull request #17 |
-| 16    | Move shared code to platform and split repository      | B.1 platform, repository, survey, takeover, `execution/checkout`                                        | not started      |
-| 17    | Move lifecycle, generation, tools, and command files   | B.1 markers, edit, add, remove, install steps, preview, the rules folder, `applyAll`                    | not started      |
-| 18    | Rename execution, policy, and kit files                | the rest of B.1                                                                                         | not started      |
-| 19    | Group checks by kit behind one registry                | B.2; no `engine` or `analysis` fields; no engines page                                                  | not started      |
-| 20    | Organize config and types by folder; add layers        | adaptation 1; `[[architecture.elements]]` and `edges_allowed` from section 3                            | not started      |
+| 16    | Move shared code to platform and split repository      | B.1 platform, repository, survey, takeover, `execution/checkout`                                        | pull request #17 |
+| 17    | Move lifecycle, generation, tools, and command files   | B.1 markers, edit, add, remove, install steps, preview, the rules folder, `applyAll`                    | pull request #17 |
+| 18    | Rename execution, policy, and kit files                | the rest of B.1                                                                                         | pull request #17 |
+| 19    | Group checks by kit behind one registry                | B.2; no `engine` or `analysis` fields; no engines page                                                  | pull request #17 |
+| 20    | Organize config and types by folder; add layers        | adaptation 1; `[[architecture.elements]]` and `edges_allowed` from section 3                            | pull request #17 |
 | 21    | Move the launcher and runners to a root scripts folder | `scripts/gspot` and the four runners, with `mise.toml` in the same commit                               | not started      |
 | 22    | Arrange tests by tier and mirror the source            | D.1: five tiers, `harness`, `config`, `samples`                                                         | not started      |
 | 23    | Run CLI tests in-process with shared builders          | D.2 moves and rewrites; `contract` from 122 cases to 16                                                 | not started      |
@@ -235,6 +235,19 @@ The owner and the work settled these while implementing:
     - `test-tools.toml` lists only the eight pins that `gspot-tools.toml` lacks.
     - The root `dist`, `.ansible`, `.ruff_cache`, and the empty test folders were already gone on this machine.
     - The renames and moves of B.7 belong to stages 21 and 40, and the audit files go in stage 46.
+- Stages 16 to 18 carried out B.1. `codePoints` stays in `platform`: the generated rules refuse both `Array.from` on a
+  string and a spread string.
+- Stage 19 grouped the checks by kit under `checks/<kind>/<kit>`. `checks/registry.ts` maps every built-in check ID to
+  its engine or tool runner, and a unit test compares it with the manifests. A check with no command and no registry
+  entry stops the plan before anything runs.
+- Stage 20 placed every config and types name with the code that reads it, in the lowest layer all its readers may
+  import. `gspot.toml` declares the CLI layers as `[[architecture.elements]]` and `edges_allowed`, and the boundaries
+  rule passes. Along the way:
+    - The check command hands the registry to the run, tool projects receive the owner, and the pending installs
+      reach the tool search through the session.
+    - A nested scope without its own elements got the root's elements under its own prefix, which left every file
+      unknown to the boundaries rule. It now gets no block. The TypeScript resolver also serves the boundaries rule.
+    - `tests/config` waits for stage 22. The docs `types` folder already follows the rule.
 - `documents.test.ts` does run on Linux: its 11 cases pass in main run 36896154813. The audit's timing came from the
   stale timings file that stage 1 deleted.
 - Stage 9 moved the one real guard of the deleted reference tests, conflicting setting definitions, into manifest
@@ -254,9 +267,11 @@ The owner and the work settled these while implementing:
       match the record.
     - `--only <checks...>` keeps reading after a global `--json`, so `check --only X --json file` takes the file as a
       check name.
-    - `LICENSE_FILE` in `config/repository/patterns.ts` matches any name that starts with `license-`, `notice-`, or
-      `copying-`, so every check skips such a source file. `license-locks.test.ts` was never linted, and it has five
-      ESLint findings to fix once the pattern accepts only license texts.
+    - `LICENSE_FILE` matches any name that starts with `license-`, `notice-`, or `copying-`, so every check skips such
+      a source file, `license-locks.test.ts` among them.
+    - eslint-plugin-boundaries 7 deprecates the `mode` option, the `element-types` rule, its `rules` option, and string
+      selectors, which the generated configuration uses, so it warns on every run. Its element patterns match folders
+      only, so the move needs a file descriptor for `main.ts`.
 - The stdin case of `acceptance/source/cli/cancellation` writes its ready marker before the SIGTERM handler is
   attached, so a slow runner can kill the process with 143. Fix the test in stage 24.
 - The pyjwt advisory ignores expire on October 13 and 15, 2026. Renew them with `gspot ignore` in the open pull
