@@ -1,6 +1,6 @@
 [kit]
 title = "Swift"
-requires = ["formatting", "structure"]
+requires = ["format", "structure"]
 recommends = ["naming", "spelling"]
 description = "Swift sources: SwiftLint with the opt-in and analyzer rules, SwiftFormat, a build, and Periphery for dead code."
 

@@ -59,7 +59,7 @@ test('a named kit brings its recommended kits, and one --scope flag proposes bot
     expect(named.code, named.stdout + named.stderr).toBe(0);
     const { plan } = JSON.parse(named.stdout) as { plan: { kits: { kit: string }[] } };
     const kits = plan.kits.map(({ kit }) => kit);
-    for (const kit of ['bash', 'formatting', 'naming']) expect(kits).toContain(kit);
+    for (const kit of ['bash', 'format', 'naming']) expect(kits).toContain(kit);
     const twoScopes = await runGspot(sandbox.path, [...PREVIEW, '--scope', 'tools=bash', 'jobs=bash']);
     expect(twoScopes.code, twoScopes.stdout + twoScopes.stderr).toBe(0);
     const parsed = parsePolicyText((JSON.parse(twoScopes.stdout) as { policy: string }).policy, 'gspot.toml');

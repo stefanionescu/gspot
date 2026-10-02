@@ -73,16 +73,16 @@ describe('detection', () => {
 });
 
 test('owners > Prettier formats a plugin file type only while the kit with that plugin is selected', () => {
-    const formatting = manifests.get('formatting')!.files;
+    const formatting = manifests.get('format')!.files;
     const files = [trackedFile('src/Page.astro'), trackedFile('src/App.svelte'), trackedFile('src/index.ts')];
     for (const [kits, expected] of [
-        [['formatting', 'typescript'], ['src/index.ts']],
+        [['format', 'typescript'], ['src/index.ts']],
         [
-            ['formatting', 'typescript', 'astro'],
+            ['format', 'typescript', 'astro'],
             ['src/Page.astro', 'src/index.ts'],
         ],
         [
-            ['formatting', 'typescript', 'svelte'],
+            ['format', 'typescript', 'svelte'],
             ['src/App.svelte', 'src/index.ts'],
         ],
     ] as const)

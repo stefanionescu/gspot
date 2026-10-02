@@ -100,14 +100,14 @@ const CASES: FindingCase[] = [
         },
     },
     {
-        check: 'formatting/prettier',
+        check: 'format/prettier',
         files: {
             'src/orders/ugly.ts': '// Badly formatted.\n\n/** A value. */\nexport const   ugly   =   [1,2,\n3];\n',
         },
         expected: { file: 'src/orders/ugly.ts', message: 'This file is not formatted the way Prettier formats it.' },
     },
     {
-        check: 'formatting/editorconfig-checker',
+        check: 'format/editorconfig-checker',
         files: {
             'src/orders/trailing.ts':
                 '// Trailing spaces after this comment.   \n\n/** A value. */\nexport const orderCount = 1;\n',

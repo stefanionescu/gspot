@@ -1,6 +1,6 @@
 [kit]
 title = "Markdown"
-requires = ["formatting"]
+requires = ["format"]
 recommends = ["docs", "spelling"]
 description = "Markdown files: markdownlint, Prettier, every fenced block parsing in its language, and the docs and prose checks."
 

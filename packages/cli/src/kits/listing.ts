@@ -19,11 +19,11 @@ export function allChecks(): Map<string, { check: CheckSpec; kit: Manifest }> {
 }
 
 /**
- * The shipped formatter settings: the defaults of every `format.*` setting the formatting configuration declares.
+ * The shipped formatter settings: the defaults of every `format.*` setting the format kit declares.
  * @returns the settings by key, without the `format.` prefix
  */
 export function shippedFormat(): Record<string, unknown> {
-    const settings = kitManifests().get('formatting')?.settings ?? [];
+    const settings = kitManifests().get('format')?.settings ?? [];
     return Object.fromEntries(
         settings
             .filter((setting) => setting.name.startsWith(FORMAT_PREFIX) && setting.default !== undefined)

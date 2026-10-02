@@ -16,7 +16,7 @@ const CONFIGURATIONS = [
     'commits',
     'files',
     'naming',
-    'formatting',
+    'format',
     'docs',
     'secrets',
     'dependencies',
@@ -62,7 +62,7 @@ test('profile settings survive beside the commit scopes init adds', () => {
 
 test('initialization keeps the profile runner while honoring disabled integrations', () => {
     const text = proposeText({
-        kits: ['formatting'],
+        kits: ['format'],
         scopes: [],
         profileTables: {
             hooks: { push: 'all' },

@@ -8,7 +8,7 @@ import { toolsPath, installPrivateTools } from '#tests/harness/tools/install.ts'
 import { FORMAT_CASES, FORMAT_OVERRIDES_POLICY } from '#tests/samples/formatting.ts';
 
 async function expectFormatterCorrection(root: string): Promise<void> {
-    const args = ['check', '--only', 'formatting/prettier', '--json'];
+    const args = ['check', '--only', 'format/prettier', '--json'];
     const files = FORMAT_CASES.map(({ file }) => file);
     const before = await spawnGspot(root, [...args, '--', ...files]);
     expect(before.code, before.stdout + before.stderr).toBe(1);
@@ -36,7 +36,7 @@ async function expectFormatterCorrection(root: string): Promise<void> {
     }
     const editor = await spawnGspot(
         root,
-        ['check', '--only', 'formatting/editorconfig-checker', '--json', '--', ...files],
+        ['check', '--only', 'format/editorconfig-checker', '--json', '--', ...files],
         {
             PATH: toolsPath(['ec']),
         },

@@ -17,7 +17,7 @@ const FORMATTER_INIT = [
     '--json',
     '--yes',
     '--kits',
-    'formatting',
+    'format',
     '--no-ci',
     '--no-hooks',
     '--no-guides',
@@ -79,7 +79,7 @@ async function prepareFormatterConsumer(
     };
     const toolInit = await run([...command, ...FORMATTER_INIT], toolOptions);
     if (toolInit.code !== 0) throw new Error(`Formatter fixture init failed: ${toolInit.stdout}${toolInit.stderr}`);
-    const selectedFormatter = await run([...command, 'set', 'enable', 'formatting/prettier'], toolOptions);
+    const selectedFormatter = await run([...command, 'set', 'enable', 'format/prettier'], toolOptions);
     if (selectedFormatter.code !== 0)
         throw new Error(`Formatter fixture selection failed: ${selectedFormatter.stdout}${selectedFormatter.stderr}`);
     return { toolConsumer, toolOptions, authoredPackage };
@@ -181,11 +181,11 @@ test(
         expect(installed.code, installed.stdout + installed.stderr).toBe(2);
         expect(readFileSync(join(toolConsumer, '.gspot/package.json'))).toStrictEqual(toolManifest);
         expect(readFileSync(join(toolConsumer, '.gspot/bun.lock'))).toStrictEqual(toolLock);
-        const formatter = [...command, 'check', 'source.js', '--only', 'formatting/prettier', '--json'];
+        const formatter = [...command, 'check', 'source.js', '--only', 'format/prettier', '--json'];
         const invalid = await run(formatter, toolOptions);
         expect(invalid.code, invalid.stdout + invalid.stderr).toBe(1);
         expect((JSON.parse(invalid.stdout) as RunReport).checks).toMatchObject([
-            { check: 'formatting/prettier', status: 'fail', findings: [{ file: 'source.js' }] },
+            { check: 'format/prettier', status: 'fail', findings: [{ file: 'source.js' }] },
         ]);
         const fixed = await run([...formatter, '--fix'], toolOptions);
         expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
@@ -219,7 +219,7 @@ test(
             finding: { line: 2, column: 1, fixable: false },
         });
         await expectInstalledCheck(command, nativeConsumer, nativeOptions, {
-            only: 'formatting/editorconfig-checker',
+            only: 'format/editorconfig-checker',
             path: 'notes.json',
             isNpm: true,
             corrected: '"text"\n',

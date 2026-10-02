@@ -1,5 +1,5 @@
 [kit]
-title = "Formatting"
+title = "Format"
 description = "One [format] block every formatter reads, so indentation cannot disagree between Prettier, shfmt, Ruff, and markdownlint."
 
 [files]
@@ -108,7 +108,7 @@ template = "prettierignore.tmpl"
 target = ".prettierignore"
 
 [[check]]
-name = "formatting/prettier"
+name = "format/prettier"
 title = "Prettier"
 example = "A selected JavaScript file containing `const value={enabled:true};` differs from the configured Prettier output. Run the formatter and retain its spacing and wrapping changes before rerunning."
 level = "recommended"
@@ -123,7 +123,7 @@ why = "Formatting by hand differs by editor; one formatter keeps diffs about the
 help = "Run gspot check --fix to format every file, or prettier --write on one file."
 
 [[check]]
-name = "formatting/editorconfig-checker"
+name = "format/editorconfig-checker"
 title = "Check EditorConfig formatting"
 example = "A file containing CRLF line endings when `.editorconfig` requires LF reports a line-ending finding. Save it with LF endings and rerun. Use the exact configured indentation and final-newline settings as well."
 level = "recommended"

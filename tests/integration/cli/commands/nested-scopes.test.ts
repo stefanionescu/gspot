@@ -5,7 +5,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { runGspot } from '#tests/harness/cli/command.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 
-const NESTED_SCOPES_POLICY = `kits = ["formatting"]
+const NESTED_SCOPES_POLICY = `kits = ["format"]
 [limits]
 file_lines = 250
 [format]

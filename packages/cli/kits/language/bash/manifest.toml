@@ -1,7 +1,7 @@
 [kit]
 title = "Bash"
 requires = ["structure"]
-recommends = ["naming", "formatting", "spelling"]
+recommends = ["naming", "format", "spelling"]
 description = "Shell scripts, hooks and task files: ShellCheck, shfmt, a syntax pass, and the structure rules for shell."
 
 [detect]

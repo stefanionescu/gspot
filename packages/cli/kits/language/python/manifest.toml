@@ -1,6 +1,6 @@
 [kit]
 title = "Python"
-requires = ["formatting", "structure"]
+requires = ["format", "structure"]
 recommends = ["naming", "spelling", "dependencies"]
 description = "Python sources: Ruff for lint and layout, basedpyright for types, import contracts, docstrings that match signatures, unused dependencies, and dead code."
 

@@ -22,7 +22,7 @@ const CARD = '<p class="card">card</p>\n\n<style>\n    :global(.card) {\n       
 plantedCases(
     'the svelte kit',
     {
-        kits: ['typescript', 'svelte', 'css', 'formatting'],
+        kits: ['typescript', 'svelte', 'css', 'format'],
         dependencies: { svelte: '5.57.0' },
         files: {
             'tsconfig.json': COMPONENT_TSCONFIG,
@@ -86,7 +86,7 @@ plantedCases(
         );
 
         test(
-            'formatting/prettier reports and corrects a component through the Svelte plugin',
+            'format/prettier reports and corrects a component through the Svelte plugin',
             async () => {
                 const { root, environment } = installed();
                 const path = join(root, 'src/Greeting.svelte');
@@ -94,12 +94,12 @@ plantedCases(
                     path,
                     SVELTE_CLEAN.replace('<p>', () => '<p     >'),
                 );
-                const loose = await spawnGspot(root, ['check', '--only', 'formatting/prettier', '--json'], environment);
+                const loose = await spawnGspot(root, ['check', '--only', 'format/prettier', '--json'], environment);
                 expect(loose.code, loose.stdout + loose.stderr).toBe(1);
                 expect((JSON.parse(loose.stdout) as RunReport).checks[0]!.findings).toContainEqual(
                     containing({ file: 'src/Greeting.svelte' }),
                 );
-                const fixed = await spawnGspot(root, ['check', '--fix', '--only', 'formatting/prettier'], environment);
+                const fixed = await spawnGspot(root, ['check', '--fix', '--only', 'format/prettier'], environment);
                 expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
                 expect(await Bun.file(path).text()).toBe(SVELTE_CLEAN);
             },

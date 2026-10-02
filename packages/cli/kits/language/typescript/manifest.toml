@@ -1,7 +1,7 @@
 [kit]
 title = "TypeScript"
 requires = ["javascript", "structure"]
-recommends = ["naming", "formatting", "spelling"]
+recommends = ["naming", "format", "spelling"]
 description = "The strict compiler, ESLint with typescript-eslint and the gspot structural rules over every TypeScript file, and knip for dead code."
 
 [detect]

@@ -1,7 +1,7 @@
 [kit]
 title = "Configuration Files"
 auto = true
-requires = ["formatting"]
+requires = ["format"]
 recommends = ["spelling"]
 description = "Checks JSON, YAML, TOML, workflows, environment files, XML, and related formats. Its templates configure the tools that inspect these files."
 

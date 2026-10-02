@@ -4,7 +4,7 @@ import { policyOf } from '#tests/harness/cli/policy.ts';
 import { prettierConfiguration } from '#cli/generation/formatting/settings.ts';
 
 const policy = parsePolicyText(
-    policyOf(['formatting'], '[[format.overrides]]\npaths = ["docs/**"]\nprint_width = 80\n'),
+    policyOf(['format'], '[[format.overrides]]\npaths = ["docs/**"]\nprint_width = 80\n'),
     'gspot.toml',
 );
 const svelte = {

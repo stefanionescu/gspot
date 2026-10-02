@@ -28,7 +28,7 @@ test('CLI installation records the npm tools as one install with the native wrap
     });
     expect(binaries.some((path) => /(?:^|[/\\])editorconfig-checker(?:\.exe)?$/u.test(path))).toBe(true);
     const checker = kitManifests()
-        .get('formatting')!
+        .get('format')!
         .tools.find((tool) => tool.name === 'ec')!;
     expect(inspectTool({ root, inspections: new Map() }, checker).state).toBe('ok');
 }, 120_000);

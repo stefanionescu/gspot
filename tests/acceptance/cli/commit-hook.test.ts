@@ -57,7 +57,7 @@ test(
             '--no-guides',
             '--no-install',
         ]);
-        await leaveOut(sandbox.path, ['formatting'], {});
+        await leaveOut(sandbox.path, ['format'], {});
         const installed = await spawnGspot(sandbox.path, ['install']);
         expect(installed.code, installed.stdout + installed.stderr).toBe(0);
         await Bun.write(join(sandbox.path, 'scripts', 'b.sh'), '#!/usr/bin/env bash\necho $1\n');

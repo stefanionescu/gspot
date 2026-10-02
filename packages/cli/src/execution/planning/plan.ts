@@ -222,8 +222,8 @@ export function planRun(session: Session, options: PlanOptions): PlannedCheck[] 
     const resolved = planned.map((checks) =>
         yielded(
             checks.map((check) =>
-                check.manifest?.kit.name === 'formatting' &&
-                check.check === 'formatting/prettier' &&
+                check.manifest?.kit.name === 'format' &&
+                check.check === 'format/prettier' &&
                 check.skip === undefined &&
                 check.files.length > 0
                     ? prettierInputs(session, check)

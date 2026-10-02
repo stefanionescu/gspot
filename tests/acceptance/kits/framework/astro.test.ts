@@ -23,7 +23,7 @@ test(
         await using sandbox = await testdir();
         const root = sandbox.path;
         const environment = await installSandbox(root, {
-            kits: ['typescript', 'astro', 'formatting'],
+            kits: ['typescript', 'astro', 'format'],
             dependencies: { astro: '7.3.2' },
             files: { 'tsconfig.json': COMPONENT_TSCONFIG, 'src/answer.ts': COMPONENT_SOURCE, [PAGE]: CLEAN },
         });
@@ -45,9 +45,9 @@ test(
             containing({ rule: 'ts(2322)', file: PAGE, line: 2, column: 7 }),
         );
         await Bun.write(join(root, PAGE), CLEAN.replace('<h1>{title}</h1>', '<h1>{title}</h1   >'));
-        const loose = await spawnGspot(root, ['check', '--only', 'formatting/prettier', '--json'], environment);
+        const loose = await spawnGspot(root, ['check', '--only', 'format/prettier', '--json'], environment);
         expect(loose.code, loose.stdout + loose.stderr).toBe(1);
-        const fixed = await spawnGspot(root, ['check', '--fix', '--only', 'formatting/prettier'], environment);
+        const fixed = await spawnGspot(root, ['check', '--fix', '--only', 'format/prettier'], environment);
         expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
         expect(await Bun.file(join(root, PAGE)).text()).toBe(CLEAN);
         const clean = await spawnGspot(root, ['check', '--json', '--only', 'astro/eslint', 'astro/check'], environment);

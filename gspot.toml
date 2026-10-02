@@ -12,7 +12,7 @@ kits = [
     "commits",
     "files",
     "naming",
-    "formatting",
+    "format",
     "docs",
     "secrets",
     "dependencies",

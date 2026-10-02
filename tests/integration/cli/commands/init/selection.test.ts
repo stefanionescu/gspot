@@ -35,7 +35,7 @@ test(
         const plain = await selected(sandbox.path);
         expect(plain).toContain('vue');
         expect(plain).toContain('javascript');
-        expect(plain).toContain('formatting');
+        expect(plain).toContain('format');
         expect(plain).not.toContain('typescript');
         expect(plain).not.toContain('css');
         await createFileTree(sandbox.path, {

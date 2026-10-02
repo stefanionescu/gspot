@@ -8,7 +8,7 @@ import { validateAgainstSurface } from '#cli/policy/audit.ts';
 import { specFor, settingValue } from '#cli/policy/settings.ts';
 import { exposedSettings } from '#cli/policy/setting-surface.ts';
 
-const selected = selectKits(['bash', 'naming', 'formatting', 'spelling'], kitManifests());
+const selected = selectKits(['bash', 'naming', 'format', 'spelling'], kitManifests());
 const surface = exposedSettings(selected);
 
 test('SQLFluff refuses dialect text that injects a directive and accepts a dialect label', () => {
