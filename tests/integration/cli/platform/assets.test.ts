@@ -2,7 +2,6 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { GRAMMAR_FILES } from '#cli/config/platform/platform.ts';
 import { cpSync, symlinkSync, copyFileSync, readFileSync } from 'node:fs';
 
 const ASSETS_CONFIGURATION = '[kit]\nname = "bash"\n';
@@ -38,10 +37,10 @@ describe('development assets', () => {
             stdout: 'pipe',
             stderr: 'pipe',
         });
+        // From source, the npm grammars come from node_modules; only the Swift parser setup downloads is missing.
         expect(missing.exitCode).toBe(1);
-        expect(missing.stderr.toString()).toContain('Reinstall @gspothq/cli.');
-        for (const name of GRAMMAR_FILES)
-            copyFileSync(join(ROOT, 'packages/cli/grammars', name), join(cwd, 'packages/cli/grammars', name));
+        expect(missing.stderr.toString()).toContain('The grammar swift.wasm is missing');
+        copyFileSync(join(ROOT, 'packages/cli/grammars/swift.wasm'), join(cwd, 'packages/cli/grammars/swift.wasm'));
         const result = Bun.spawnSync([process.execPath, '--no-install', join(cwd, 'assets-reader.ts')], {
             cwd,
             stdout: 'pipe',

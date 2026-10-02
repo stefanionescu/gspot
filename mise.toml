@@ -46,8 +46,8 @@ description = "Check that every tool pin of the kit manifests exists in its regi
 run = "bun packages/cli/scripts/pins.ts"
 
 [tasks."repo:setup"]
-description = "Install frozen dependencies, prepare the grammars, and synchronize Astro types."
-run = ["bun install --frozen-lockfile", "bun packages/cli/scripts/inputs.ts"]
+description = "Install frozen dependencies, download the Swift parser, and synchronize Astro types."
+run = ["bun install --frozen-lockfile", "bun packages/cli/scripts/grammars.ts"]
 depends_post = ["docs:sync", "build:plugin"]
 
 [tasks."repo:install-checks"]
@@ -130,8 +130,8 @@ description = "Verify that documentation describes a published stable release."
 run = "bun docs/scripts/verify-release.ts"
 
 [tasks."prepare:grammar"]
-description = "Copy the grammar files into packages/cli/grammars, and download and verify the Swift parser."
-run = "bun packages/cli/scripts/inputs.ts"
+description = "Download and verify the Swift parser into packages/cli/grammars; the build copies the others."
+run = "bun packages/cli/scripts/grammars.ts"
 
 [tasks."release:verify-version"]
 description = "Require TAG to match the gspot package version before publishing."

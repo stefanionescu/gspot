@@ -5,7 +5,7 @@ import { join, dirname } from 'node:path';
 import { createRequire } from 'node:module';
 import { statSync, readFileSync } from 'node:fs';
 import { toPosix, globPaths } from '#cli/platform/paths.ts';
-import { RUNTIME_WASM, GRAMMAR_FILES, ROOT_SEARCH_DEPTH } from '#cli/config/platform/platform.ts';
+import { RUNTIME_WASM, GRAMMAR_FILES, GRAMMAR_PACKAGES, ROOT_SEARCH_DEPTH } from '#cli/config/platform/platform.ts';
 
 const state: { root: string | undefined } = { root: undefined };
 
@@ -54,19 +54,23 @@ export function readAsset(path: string): string {
 }
 
 /**
- * The path of a grammar file: shipped in grammars/, or read from the runtime package that owns it.
+ * The path of a grammar file: shipped in grammars/, or read from the runtime package that owns it. A source checkout
+ * that was not built reads it from the development package the build copies it from.
  * @param name the file name, such as `bash.wasm`
  * @returns the WASM file path
  */
 export function grammarPath(name: string): string {
     if (!GRAMMAR_NAMES.includes(name)) throw new Error(`No grammar is called ${name}.`);
     const root = packageRoot();
+    const packages = createRequire(join(root, 'package.json'));
     const source = RUNTIME_WASM[name];
-    if (source !== undefined) return createRequire(join(root, 'package.json')).resolve(source);
+    if (source !== undefined) return packages.resolve(source);
     const path = join(root, 'grammars', name);
-    if (statSync(path, { throwIfNoEntry: false }) === undefined)
-        throw new Error(`The grammar ${name} is missing from the installed package. Reinstall @gspothq/cli.`);
-    return path;
+    if (statSync(path, { throwIfNoEntry: false }) !== undefined) return path;
+    const development = GRAMMAR_PACKAGES[name];
+    if (development !== undefined && statSync(join(root, 'src'), { throwIfNoEntry: false }) !== undefined)
+        return packages.resolve(development);
+    throw new Error(`The grammar ${name} is missing from the installed package. Reinstall @gspothq/cli.`);
 }
 
 /**
