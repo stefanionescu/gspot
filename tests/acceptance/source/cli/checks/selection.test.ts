@@ -99,8 +99,8 @@ kits = ["javascript", "naming"]
 path = "web"
 kits = ["javascript", "naming"]
 `,
-        'api/port.js': 'export const shellCommand = 1;\n',
-        'web/port.js': 'export const shellCommand = 2;\n',
+        'api/port.js': 'export const helperCommand = 1;\n',
+        'web/port.js': 'export const helperCommand = 2;\n',
     });
     const selected = await run(sandbox.path, ['check', 'api', '--only', 'naming/identifiers', '--json']);
     expect(selected.code, selected.stdout + selected.stderr).toBe(1);
