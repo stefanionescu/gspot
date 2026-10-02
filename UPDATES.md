@@ -18,12 +18,12 @@ approved it on October 1, 2026.
 
 ### Where things stand on October 2, 2026
 
-- `main` is at `ced6f055`. Stages 1 to 14 are merged as pull requests #2 to #8 and #10 to #16. Stage 7 also deleted
+- `main` is at `57e8edb3`. Stages 1 to 21 are merged as pull requests #2 to #8 and #10 to #17. Stage 7 also deleted
   the `architecture` folder, a part of stage 15.
 - Pull request #9 updated `devalue` to 5.9.4 for seven advisories that `dependencies/osv` reported on October 1.
 - On October 2 the owner asked for five to ten stages per pull request. Each stage is linted and committed on its
-  own. Stages 15 to 21 are pull request #17, branch `refactor/stages-15-to-20`.
-- The next stage to start is stage 22.
+  own. Stages 15 to 21 were pull request #17. Stage 22 onward is the next batch, branch `refactor/test-tiers`.
+- The next stage to start is stage 23.
 
 ### Stages
 
@@ -45,14 +45,14 @@ One pull request per stage, in this order. Each merges with a merge commit only 
 | 12    | Delete repeated checks, dead rules, and dead code      | 5.3, 5.4, 5.7, including `version = 1` and its gate                                                     | merged, #14      |
 | 13    | Ship no defaults written for this repository           | 5.5; `architecture.roles.harness` with no default; this repository sets its own roles                   | merged, #15      |
 | 14    | Remove the self-lint code from the product             | 5.6; one `gspot` task; `testToolsText` to the pin script                                                | merged, #16      |
-| 15    | Delete stale files                                     | 5.8 and B.7, apart from the `architecture` folder                                                       | pull request #17 |
-| 16    | Move shared code to platform and split repository      | B.1 platform, repository, survey, takeover, `execution/checkout`                                        | pull request #17 |
-| 17    | Move lifecycle, generation, tools, and command files   | B.1 markers, edit, add, remove, install steps, preview, the rules folder, `applyAll`                    | pull request #17 |
-| 18    | Rename execution, policy, and kit files                | the rest of B.1                                                                                         | pull request #17 |
-| 19    | Group checks by kit behind one registry                | B.2; no `engine` or `analysis` fields; no engines page                                                  | pull request #17 |
-| 20    | Organize config and types by folder; add layers        | adaptation 1; `[[architecture.elements]]` and `edges_allowed` from section 3                            | pull request #17 |
-| 21    | Move the launcher and runners to a root scripts folder | `scripts/gspot` and the four runners, with `mise.toml` in the same commit                               | pull request #17 |
-| 22    | Arrange tests by tier and mirror the source            | D.1: five tiers, `harness`, `config`, `samples`                                                         | not started      |
+| 15    | Delete stale files                                     | 5.8 and B.7, apart from the `architecture` folder                                                       | merged, #17      |
+| 16    | Move shared code to platform and split repository      | B.1 platform, repository, survey, takeover, `execution/checkout`                                        | merged, #17      |
+| 17    | Move lifecycle, generation, tools, and command files   | B.1 markers, edit, add, remove, install steps, preview, the rules folder, `applyAll`                    | merged, #17      |
+| 18    | Rename execution, policy, and kit files                | the rest of B.1                                                                                         | merged, #17      |
+| 19    | Group checks by kit behind one registry                | B.2; no `engine` or `analysis` fields; no engines page                                                  | merged, #17      |
+| 20    | Organize config and types by folder; add layers        | adaptation 1; `[[architecture.elements]]` and `edges_allowed` from section 3                            | merged, #17      |
+| 21    | Move the launcher and runners to a root scripts folder | `scripts/gspot` and the four runners, with `mise.toml` in the same commit                               | merged, #17      |
+| 22    | Arrange tests by tier and mirror the source            | D.1: five tiers, `harness`, `config`, `samples`                                                         | pull request #18 |
 | 23    | Run CLI tests in-process with shared builders          | D.2 moves and rewrites; `contract` from 122 cases to 16                                                 | not started      |
 | 24    | Move acceptance cases to faster tiers                  | D.4 moves; Windows fixes; the quarantine list emptied and deleted                                       | not started      |
 | 25    | Dispose roots and share text, object, and git helpers  | the first half of 6.2                                                                                   | not started      |
@@ -248,6 +248,15 @@ The owner and the work settled these while implementing:
     - A nested scope without its own elements got the root's elements under its own prefix, which left every file
       unknown to the boundaries rule. It now gets no block. The TypeScript resolver also serves the boundaries rule.
     - `tests/config` waits for stage 22. The docs `types` folder already follows the rule.
+- Stage 22 arranged the tests by D.1, with these differences:
+    - The package tier is `tests/packages`. The stem collision check refuses a `package` folder beside
+      `tests/package.json`.
+    - `tests/types` keeps four files. Three result types stay named, because a type literal takes their helpers past
+      the 60-line limit.
+    - The samples are bash, components, files, Next.js, Python, static-site, Swift, TypeScript, and the client
+      environment JSON. No OpenAPI content has a second user.
+    - `runGspot` waits for stage 23, which turns those spawns into in-process calls. The run environment that three
+      helpers repeat, and `LIBRARIES_CLEAN`, which repeats `COMPONENT_SOURCE`, wait for stage 26.
 - `documents.test.ts` does run on Linux: its 11 cases pass in main run 36896154813. The audit's timing came from the
   stale timings file that stage 1 deleted.
 - Stage 9 moved the one real guard of the deleted reference tests, conflicting setting definitions, into manifest
