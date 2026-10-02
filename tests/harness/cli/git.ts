@@ -4,13 +4,13 @@ import type { SpawnOutcome } from '#tests/types/cli.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 
 /**
- * Runs git with a throwaway identity.
+ * Runs git with a throwaway identity, keeping the line endings the sandbox planted.
  * @param cwd the planted repository
  * @param argv the command line after git
  * @param environment extra variables
  * @returns the exit code and both streams
  */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Every test runs Git with a throwaway identity and no background maintenance through this.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Every test runs Git with a throwaway identity, no background maintenance, and planted line endings through this.
 export function git(cwd: string, argv: string[], environment: Record<string, string> = {}): SpawnOutcome {
     const result = Bun.spawnSync(
         [
@@ -23,6 +23,9 @@ export function git(cwd: string, argv: string[], environment: Record<string, str
             'maintenance.auto=false',
             '-c',
             'gc.auto=0',
+            // Git for Windows converts checkouts to CRLF by default; a sandbox keeps the bytes it planted.
+            '-c',
+            'core.autocrlf=false',
             ...argv,
         ],
         {
