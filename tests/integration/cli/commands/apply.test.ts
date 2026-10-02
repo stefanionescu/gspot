@@ -8,7 +8,7 @@ import { runGspot } from '#tests/harness/cli/command.ts';
 import { initArgs } from '#tests/harness/planted/init.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import type { CommandFailureJson } from '#cli/types/commands/commands.ts';
-import { chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 
 const INIT = initArgs(['bash']);
 
@@ -115,4 +115,19 @@ test('apply --json prints one error object when it refuses an edited generated f
     const failure = JSON.parse(refused.stdout) as CommandFailureJson;
     expect(Object.keys(failure)).toStrictEqual(['error', 'message']);
     expect(failure.message).toContain('shellcheckrc');
+});
+
+test('apply refuses to move a generated file to a spelling that differs only by letter case', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, { 'gspot.toml': policyOf([], '[rules]\npath = "docs/rules"\n') });
+    const first = await runGspot(sandbox.path, ['apply']);
+    expect(first.code, first.stdout + first.stderr).toBe(0);
+    const guide = join(sandbox.path, 'docs/rules/agent/WORKING.md');
+    const written = readFileSync(guide, 'utf8');
+    writeFileSync(join(sandbox.path, 'gspot.toml'), policyOf([], '[rules]\npath = "docs/Rules"\n'));
+    const renamed = await runGspot(sandbox.path, ['apply']);
+    expect(renamed.code, renamed.stdout + renamed.stderr).toBe(2);
+    expect(renamed.stderr).toContain('differs only by letter case');
+    expect(readdirSync(join(sandbox.path, 'docs'))).toStrictEqual(['rules']);
+    expect(readFileSync(guide, 'utf8')).toBe(written);
 });

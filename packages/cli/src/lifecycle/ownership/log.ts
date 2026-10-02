@@ -33,7 +33,9 @@ function parseState(recorded: Read | undefined): Ownership {
 function getEntry(entries: Map<string, OwnershipEntry>, path: string): OwnershipEntry | undefined {
     const entry = entries.get(path.normalize('NFC').toLowerCase());
     if (entry !== undefined && entry.path !== path)
-        throw new Error(`Lifecycle path aliases recorded ${entry.path}: ${path}`);
+        throw new Error(
+            `Generated file ${entry.path} is now written as ${path}, which differs only by letter case and is one file on some systems. Restore the old spelling, or rename it through a different name in two applies.`,
+        );
     return entry;
 }
 
