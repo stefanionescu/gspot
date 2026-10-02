@@ -4,12 +4,12 @@ import { toPosix } from '#cli/platform/paths.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { contentDigest } from '#cli/platform/text.ts';
 import { findingAt } from '#cli/execution/finding.ts';
-import { openRoot } from '#cli/platform/filesystem.ts';
 import { readSource } from '#cli/repository/sources.ts';
 import { commandArguments } from '#cli/platform/quoting.ts';
 import { mutationTarget } from '#cli/platform/safe-paths.ts';
 import { scratchCopy } from '#cli/execution/tool/workspace.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
+import { openRoot, walkRoot } from '#cli/platform/filesystem.ts';
 import type { SiteBuild } from '#cli/types/checks/general/static-site.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
 import { DEFAULT_BUILD, SHOWN_DIFFERENCES, DEFAULT_BUILD_OUTPUT } from '#cli/config/checks/general/static-site.ts';
@@ -49,15 +49,11 @@ export function filesUnder(folder: string): string[] {
     if (statSync(folder, { throwIfNoEntry: false }) === undefined) return [];
     using files = openRoot(folder, 'native');
     const found: string[] = [];
-    const directories = [''];
-    for (let directory = directories.pop(); directory !== undefined; directory = directories.pop()) {
-        const entries = files.list(directory === '' ? undefined : directory).map((entry) => {
-            const path = directory === '' ? entry : `${directory}/${entry}`;
-            return { path, stat: statSync(files.source(path)) };
-        });
-        directories.push(...entries.filter(({ stat }) => stat.isDirectory()).map(({ path }) => path));
-        found.push(...entries.filter(({ stat }) => stat.isFile()).map(({ path }) => path));
-    }
+    walkRoot(files, '', (path) => {
+        const entry = statSync(files.source(path));
+        if (entry.isFile()) found.push(path);
+        return entry.isDirectory();
+    });
     return found.toSorted((left, right) => left.localeCompare(right));
 }
 

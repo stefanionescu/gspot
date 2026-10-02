@@ -96,6 +96,12 @@ function releaseLocks(bounds: Bounds): void {
     bounds.locks.clear();
 }
 
+// The paths of the entries in one folder of a root.
+function childPaths(files: Root, directory: string): string[] {
+    if (directory === '') return files.list();
+    return files.list(directory).map((name) => `${directory}/${name}`);
+}
+
 /**
  * Check paths before each operation. Concurrent hostile directory replacement is outside this contract.
  * @param root the directory every path is files to
@@ -173,4 +179,16 @@ export function readText(root: string, path: string): string | undefined {
     const text = decodedText(read.bytes);
     if (text === undefined) throw new Error(`${path} is not UTF-8 text.`);
     return text;
+}
+
+/**
+ * Visits every entry under a folder of a root, and enters each one the visitor says is a folder to walk.
+ * @param files the root
+ * @param start the folder, with forward slashes, or '' for the root itself
+ * @param visit called with the path of each entry; returns whether to walk into it
+ */
+export function walkRoot(files: Root, start: string, visit: (path: string) => boolean): void {
+    const pending = [start];
+    for (let directory = pending.pop(); directory !== undefined; directory = pending.pop())
+        pending.push(...childPaths(files, directory).filter((path) => visit(path)));
 }

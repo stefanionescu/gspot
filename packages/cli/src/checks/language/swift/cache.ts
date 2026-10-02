@@ -2,30 +2,23 @@
 import { join, relative } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import { toPosix } from '#cli/platform/paths.ts';
-import { openRoot } from '#cli/platform/filesystem.ts';
 import { readSource } from '#cli/repository/sources.ts';
 import { MODE_BITS } from '#cli/config/platform/root.ts';
 import { cacheHome } from '#cli/platform/environment.ts';
+import { statSync, lstatSync, mkdirSync } from 'node:fs';
+import { openRoot, walkRoot } from '#cli/platform/filesystem.ts';
 import type { Read, Root } from '#cli/types/platform/platform.ts';
 import type { Pruning } from '#cli/types/checks/language/swift.ts';
 import { PRIVATE_DIRECTORY } from '#cli/config/execution/checkout.ts';
-import { statSync, lstatSync, mkdirSync, readdirSync } from 'node:fs';
-
-// Checks one folder of the compiler directory: a link is refused, and each folder inside is queued.
-function inspectFolder(folder: string, files: Root, directory: string, pending: string[]): void {
-    const path = directory === '' ? folder : files.source(directory);
-    for (const entry of readdirSync(path, { withFileTypes: true })) {
-        const local = directory === '' ? entry.name : `${directory}/${entry.name}`;
-        if (entry.isSymbolicLink()) files.source(local);
-        else if (entry.isDirectory()) pending.push(local);
-    }
-}
 
 // Refuses a compiler directory that holds a symbolic link anywhere, walking every folder in it.
 function assertNoLinks(folder: string, files: Root): void {
-    const pending = [''];
-    for (let directory = pending.pop(); directory !== undefined; directory = pending.pop())
-        inspectFolder(folder, files, directory, pending);
+    walkRoot(files, '', (path) => {
+        const entry = lstatSync(join(folder, path));
+        // The confined path refuses a link.
+        if (entry.isSymbolicLink()) files.source(path);
+        return entry.isDirectory();
+    });
 }
 
 // The sources to build, each as the snapshot it must have under source/ in the compiler directory.
@@ -46,18 +39,18 @@ function removeStale(files: Root, path: string, isLink: boolean): void {
 }
 
 // Handles one entry under source/: a folder is queued and noted when unwanted, anything else unwanted is removed.
-function pruneEntry(pruning: Pruning, path: string, directories: string[], empty: string[]): void {
+function pruneEntry(pruning: Pruning, path: string, empty: string[]): boolean {
     const { folder, files, desired, wanted } = pruning;
     if (lstatSync(join(folder, path)).isSymbolicLink()) {
         removeStale(files, path, true);
-        return;
+        return false;
     }
     if (files.stat(path)?.isDirectory() === true) {
-        directories.push(path);
         if (!wanted.has(path)) empty.push(path);
-        return;
+        return true;
     }
     if (!desired.has(path)) removeStale(files, path, false);
+    return false;
 }
 
 // Removes every entry under source/ the build does not want, then the folders left empty, deepest first.
@@ -73,10 +66,8 @@ function pruneSources(folder: string, files: Root, desired: Map<string, Read>): 
             }),
         ),
     };
-    const directories = ['source'];
     const empty: string[] = [];
-    for (let directory = directories.pop(); directory !== undefined; directory = directories.pop())
-        for (const name of files.list(directory)) pruneEntry(pruning, `${directory}/${name}`, directories, empty);
+    walkRoot(files, 'source', (path) => pruneEntry(pruning, path, empty));
     for (const directory of empty.toSorted((left, right) => right.length - left.length)) files.rmdir(directory);
 }
 
