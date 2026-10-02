@@ -25,7 +25,7 @@ approved it on October 1, 2026.
   own. Stages 15 to 21 were pull request #17, and stages 22 and 23 were pull request #18.
 - Stages 25 to 28 are pull request #20, branch `refactor/shared-helpers`. Stages 29 to 35 rename keys, fields, checks,
   flags, and identifiers on `refactor/rename-policy-keys`, stacked on it, and make one batch.
-- Stages 29 to 33 are done on that branch. The next stage to start is stage 34.
+- Stages 29 to 35 are done on that branch. The batch suites run next, then the pull request.
 
 ### Stages
 
@@ -66,8 +66,8 @@ One pull request per stage, in this order. Each merges with a merge commit only 
 | 31    | Name checks after their kit and tool                   | A.5 and A.6; a `format` kit; an `actions` kit; one `javascript/eslint`                                  | in the batch     |
 | 32    | Rename guides to rules                                 | B.3; `[rules]`, `.gspot/rules`, `--no-rules`; `TALKING.md` stays a base rule                            | in the batch     |
 | 33    | Rename flags, output words, and JSON fields            | A.2, A.7, A.8; `--hook`; manual checks run with `--only`                                                | in the batch     |
-| 34    | Rename identifiers in commands and policy              | the first half of A.10                                                                                  | not started      |
-| 35    | Rename identifiers in repository and lifecycle         | the second half of A.10                                                                                 | not started      |
+| 34    | Rename identifiers in commands and policy              | the first half of A.10                                                                                  | in the batch     |
+| 35    | Rename identifiers in repository and lifecycle         | the second half of A.10                                                                                 | in the batch     |
 | 36    | Rename identifiers in checks and parsers               | A.11                                                                                                    | not started      |
 | 37    | Rename plugin rules and options                        | A.12                                                                                                    | not started      |
 | 38    | Add the missing scenario tests, part one               | D.5 rows 1 to 17, with fixes for the bugs they confirm                                                  | not started      |
@@ -392,6 +392,16 @@ The owner and the work settled these while implementing:
     - Kept apart from A.8: the report's `failed` list stays, because it also names a check whose fixer failed while
       the check passed. explain names the file's kind `fileKind`, because the explanation's own `kind` is path.
     - Nineteen more generated files that a clone had adopted were deleted by hand, and five old Vale styles.
+- Stages 34 and 35 renamed the A.10 identifiers through the TypeScript language service, so every reference followed
+  its declaration:
+    - About 230 functions, types, and constants in seven folders now carry the names of A.10.
+    - Where a proposed name was banned or reserved, a near one replaced it: `buildFileRow`, `ToolFile`, `asOwner`,
+      and `hash` for a git object ID.
+    - Left for later: about 110 generic local names, such as `entry`, `raw`, and `current`. Their rows point at
+      lines that moved, and a blind rename risks shadowing a name in the same scope.
+    - Also left: about 30 pairs whose new name already exists in the file, and the pattern rows, such as
+      `cancelSignal` to `signal` and folder to directory.
+    - This repository allows `snapshot` in its tests, the name of the revision copies gspot checks.
 - Open bug: when gspot stops writing a file a clone adopted, apply reports it as removed but leaves it, and drops it
   from the ownership log. Every layout change leaves such files in an existing clone.
 - The fix for that bug: apply deletes an adopted file under `.gspot` whose bytes it wrote.
