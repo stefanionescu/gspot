@@ -27,20 +27,25 @@ const NGINX_INIT = [
 const CLEAN = `events {}\nhttp {\n    server_tokens off;\n    server {\n        listen 8080;\n        location / {\n            return 204;\n        }\n    }\n}\n`;
 const FORGED = `events {}\nhttp {\n    server_tokens off;\n    server {\n        listen 8080;\n        location ~ /proxy/(.*) {\n            proxy_pass http://$1;\n        }\n    }\n}\n`;
 
+const SERVER =
+    'server {\n    listen 443 ssl;\n    include /etc/nginx/tls#local.conf;\n    location / { proxy_pass "http://api:3000"; }\n}\n';
+
+// The root names an image that cannot exist, so only the scope's own image lets the container test run.
+const NGINX_POLICY = policyOf(
+    ['nginx'],
+    '[tools.nginx]\nimage = "nginx:1.29.3-alpine@"\n[[scope]]\npath = "proxy"\nkits = []\n[scope.tools.nginx]\nimage = "nginx:1.29.3-alpine"\n',
+    'all',
+);
+
 if (hasLinuxDocker)
     test(
-        'nginx follows repository include globs and reports the included source line',
+        'nginx -t follows include globs to the source line and tells invalid configuration from a missing container',
         async () => {
             await using sandbox = await testdir();
-            const server =
-                'server {\n    listen 443 ssl;\n    include /etc/nginx/tls#local.conf;\n    location / { proxy_pass "http://api:3000"; }\n}\n';
             await createFileTree(sandbox.path, {
-                'gspot.toml': policyOf(
-                    ['nginx'],
-                    '[tools.nginx]\nimage = "nginx:1.29.3-alpine@"\n[[scope]]\npath = "proxy"\nkits = []\n[scope.tools.nginx]\nimage = "nginx:1.29.3-alpine"\n',
-                ),
+                'gspot.toml': NGINX_POLICY,
                 'proxy/nginx.conf': 'events {}\nhttp { include "conf.d/*.conf"; }\n',
-                'proxy/conf.d/server.conf': server.replace('listen 443 ssl;', 'invalid_directive on;'),
+                'proxy/conf.d/server.conf': SERVER.replace('listen 443 ssl;', 'invalid_directive on;'),
                 'proxy/tls#local.conf':
                     'ssl_certificate "/etc/nginx/ssl/server  certificate.pem"; ssl_certificate_key "/etc/nginx/ssl/server key.pem";\n# include /outside/ignored.conf;\n',
                 'proxy/unrelated.conf': 'include /outside/not-used.conf;\n',
@@ -49,14 +54,16 @@ if (hasLinuxDocker)
             const failed = await spawnGspot(sandbox.path, command);
             expect(failed.code, failed.stdout + failed.stderr).toBe(1);
             expect((JSON.parse(failed.stdout) as RunReport).checks.flatMap((check) => check.findings)).toMatchObject([
-                { file: 'proxy/conf.d/server.conf', line: 2, message: textContaining('invalid_directive') },
+                {
+                    file: 'proxy/conf.d/server.conf',
+                    line: 2,
+                    rule: 'nginx-t',
+                    message: textContaining('invalid_directive'),
+                },
             ]);
-            await Bun.write(join(sandbox.path, 'proxy/conf.d/server.conf'), server);
+            await Bun.write(join(sandbox.path, 'proxy/conf.d/server.conf'), SERVER);
             const corrected = await spawnGspot(sandbox.path, command);
             expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-            expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
-                { check: 'nginx/config-test', status: 'ok' },
-            ]);
             const report = JSON.parse(corrected.stdout) as RunReport;
             expect(report.checks).toMatchObject([
                 { check: 'nginx/config-test', scope: 'proxy', status: 'ok', files: 3 },
@@ -66,52 +73,19 @@ if (hasLinuxDocker)
                 'proxy/nginx.conf',
                 'proxy/tls#local.conf',
             ]);
-            expect(await Bun.file(join(sandbox.path, 'proxy/conf.d/server.conf')).text()).toBe(server);
-        },
-        PLANTED_TIMEOUT_MS * 3,
-    );
-
-if (hasLinuxDocker)
-    test(
-        'native nginx at all distinguishes invalid configuration from an unavailable container and accepts corrections',
-        async () => {
-            await using sandbox = await testdir();
-            const policy = policyOf(['nginx'], '[tools.nginx]\nimage = "nginx:1.29.3-alpine"\n', 'all');
-            const configuration = `events {}\nhttp {\n    upstream backend {\n        server api:3000;\n    }\n    server {\n        listen 443 ssl;\n        ssl_certificate "/etc/nginx/ssl/certificate.pem";\n        ssl_certificate_key '/etc/nginx/ssl/key.pem';\n        location / {\n            proxy_pass "http://backend";\n        }\n    }\n}\n`;
-            await createFileTree(sandbox.path, {
-                'gspot.toml': policy,
-                'proxy/nginx.conf': configuration.replace('listen 443 ssl;', 'invalid_directive on;'),
-            });
-            const command = ['check', '--stage', 'push', '--only', 'nginx/config-test', '--json'];
-            const failed = await spawnGspot(sandbox.path, command);
-            expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-            expect((JSON.parse(failed.stdout) as RunReport).checks.flatMap((check) => check.findings)).toMatchObject([
-                {
-                    file: 'proxy/nginx.conf',
-                    line: 7,
-                    rule: 'nginx-t',
-                    message: textContaining('invalid_directive'),
-                },
-            ]);
-            await Bun.write(join(sandbox.path, 'proxy/nginx.conf'), configuration);
-            const corrected = await spawnGspot(sandbox.path, command);
-            expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-            expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
-                { check: 'nginx/config-test', status: 'ok' },
-            ]);
-            await Bun.write(join(sandbox.path, 'gspot.toml'), policy.replace('1.29.3-alpine', '1.29.3-alpine@'));
+            await Bun.write(
+                join(sandbox.path, 'gspot.toml'),
+                NGINX_POLICY.replaceAll('1.29.3-alpine"', '1.29.3-alpine@"'),
+            );
             const unavailable = await spawnGspot(sandbox.path, command);
             expect(unavailable.code, unavailable.stdout + unavailable.stderr).toBe(2);
             expect((JSON.parse(unavailable.stdout) as RunReport).checks).toMatchObject([
                 { check: 'nginx/config-test', status: 'error' },
             ]);
-            await Bun.write(join(sandbox.path, 'gspot.toml'), policy);
+            await Bun.write(join(sandbox.path, 'gspot.toml'), NGINX_POLICY);
             const recovered = await spawnGspot(sandbox.path, command);
             expect(recovered.code, recovered.stdout + recovered.stderr).toBe(0);
-            expect((JSON.parse(recovered.stdout) as RunReport).checks).toMatchObject([
-                { check: 'nginx/config-test', status: 'ok' },
-            ]);
-            expect(await Bun.file(join(sandbox.path, 'proxy/nginx.conf')).text()).toBe(configuration);
+            expect(await Bun.file(join(sandbox.path, 'proxy/conf.d/server.conf')).text()).toBe(SERVER);
         },
         PLANTED_TIMEOUT_MS * 5,
     );
