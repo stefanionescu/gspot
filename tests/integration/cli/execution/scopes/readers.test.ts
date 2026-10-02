@@ -33,7 +33,7 @@ const EXPECTED_READERS: { check: string; root: Finding[]; nested: Finding[] }[] 
         ],
     },
     {
-        check: 'static-site/dead-assets',
+        check: 'site/dead-assets',
         root: [containing({ file: 'assets/unused.png', rule: 'dead-asset' })],
         nested: [],
     },
@@ -43,7 +43,7 @@ test('scoped readers receive their own files and preserve binary asset inputs', 
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': policyOf(
-            ['static-site', 'supabase', 'i18n'],
+            ['site', 'supabase', 'i18n'],
             '[tools.i18n]\nlocales = { directory = "messages", base = "en" }\n[[scope]]\npath = "apps/backend"\n',
         ),
         _headers: READERS_HEADERS,

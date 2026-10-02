@@ -3,21 +3,21 @@ import { writeFileSync } from 'node:fs';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
+import { SITE_BUILD } from '#tests/samples/site.ts';
 import { siteInput } from '#tests/harness/cli/site.ts';
-import { SITE_BUILD } from '#tests/samples/static-site.ts';
 import * as toolRunner from '#cli/execution/tool/runner.ts';
+import { siteBuild } from '#cli/checks/general/site/build.ts';
 import type { EngineInput } from '#cli/types/execution/execution.ts';
-import { siteBuild } from '#cli/checks/general/static-site/build.ts';
-import { brokenLinks, builtMarkup, deadSelectors } from '#cli/checks/general/static-site/output.ts';
+import { brokenLinks, builtMarkup, deadSelectors } from '#cli/checks/general/site/output.ts';
 
 test.each([
     {
         name: 'links',
         analyze: (input: EngineInput) => brokenLinks(input, false),
-        check: 'static-site/links-internal',
+        check: 'site/links-internal',
         body: '<a href="/missing.html">Missing</a>',
         finding: {
-            check: 'static-site/links-internal',
+            check: 'site/links-internal',
             file: './',
             rule: 'broken-link',
             line: 1,
@@ -27,7 +27,7 @@ test.each([
     {
         name: 'markup',
         analyze: builtMarkup,
-        check: 'static-site/html-validate-built',
+        check: 'site/html-validate-built',
         body: '<img src="image.png">',
         finding: { file: 'dist/index.html', rule: 'wcag/h37', line: 1 },
     },

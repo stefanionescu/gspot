@@ -1,4 +1,4 @@
-// Planted repository for the static-site configuration: a small site with a build script, broken one way for each check.
+// Planted repository for the site kit: a small site with a build script, broken one way for each check.
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
@@ -23,9 +23,9 @@ const HOME = `<!doctype html>\n<html lang="en">\n    <head>\n        <meta chars
 const ABOUT = `<!doctype html>\n<html lang="en">\n    <head>\n        <meta charset="utf-8" />\n        <title>Planted</title>\n        <link rel="stylesheet" href="/site.css" />\n    </head>\n    <body>\n        <h1 class="title">About</h1>\n        <a href="/">Home</a>\n    </body>\n</html>\n`;
 
 plantedCases(
-    'the static-site configuration',
+    'the site kit',
     {
-        kits: ['static-site'],
+        kits: ['site'],
         without: ['spelling', 'naming'],
         files: {
             '.gitignore': 'node_modules\ndist\n',
@@ -43,31 +43,31 @@ plantedCases(
     },
     [
         {
-            check: 'static-site/build',
+            check: 'site/build',
             files: { 'build.js': "throw new Error('the build is broken');\n" },
             expected: { file: '', rule: 'build', line: 1 },
         },
         {
-            check: 'static-site/size',
+            check: 'site/size',
             files: {},
             policy: '[tools.site]\nsizes = [{paths = ["**/*.html"], kb = 0}]\n',
             expected: { file: '**/*.html', rule: 'size', line: 1 },
             corrected: { files: {}, policy: '[tools.site]\nsizes = [{paths = ["**/*.html"], kb = 10}]\n' },
         },
         {
-            check: 'static-site/sitemap',
+            check: 'site/sitemap',
             files: {
                 'sitemap.xml': `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n    <url><loc>https://planted.test/</loc></url>\n    <url><loc>https://planted.test/about.html</loc></url>\n    <url><loc>https://planted.test/pricing.html</loc></url>\n</urlset>\n`,
             },
             expected: { file: 'sitemap.xml', rule: 'missing-page', line: 1 },
         },
         {
-            check: 'static-site/dead-assets',
+            check: 'site/dead-assets',
             files: { 'assets/unused.png': 'png' },
             expected: { file: 'assets/unused.png', rule: 'dead-asset', line: 1 },
         },
         {
-            check: 'static-site/webmanifest',
+            check: 'site/webmanifest',
             files: { 'site.webmanifest': '{\n    "icons": [{ "src": "/assets/gone.png" }]\n}\n' },
             expected: { file: 'site.webmanifest', rule: 'icon', line: 1 },
         },
@@ -90,15 +90,15 @@ plantedCases(
                 );
                 expect(checked.code, checked.stdout + checked.stderr).toBe(0);
                 const report = JSON.parse(checked.stdout) as RunReport;
-                expect(report.checks.map(({ check }) => check)).not.toContain('static-site/links-external');
-                expect(report.checks).toContainEqual(containing({ check: 'static-site/build', status: 'ok' }));
+                expect(report.checks.map(({ check }) => check)).not.toContain('site/links-external');
+                expect(report.checks).toContainEqual(containing({ check: 'site/build', status: 'ok' }));
             },
             PLANTED_TIMEOUT_MS * 5,
         );
     },
 );
 
-const COMMAND = ['check', '--only', 'static-site/svg-optimized', '--json'];
+const COMMAND = ['check', '--only', 'site/svg-optimized', '--json'];
 
 // Recommended savings thresholds and strict optimization both accept corrected bytes.
 async function expectSvgThresholds(root: string, svg: string): Promise<void> {
@@ -120,7 +120,7 @@ async function expectSvgThresholds(root: string, svg: string): Promise<void> {
     const corrected = await spawnGspot(root, COMMAND);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
-        { check: 'static-site/svg-optimized', status: 'ok', files: 1, findings: [] },
+        { check: 'site/svg-optimized', status: 'ok', files: 1, findings: [] },
     ]);
 }
 
@@ -140,7 +140,7 @@ async function expectSvgSelection(root: string, svg: string): Promise<void> {
     const repaired = await spawnGspot(root, COMMAND);
     expect(repaired.code, repaired.stdout + repaired.stderr).toBe(0);
     expect((JSON.parse(repaired.stdout) as RunReport).checks).toMatchObject([
-        { check: 'static-site/svg-optimized', status: 'ok', files: 2, findings: [] },
+        { check: 'site/svg-optimized', status: 'ok', files: 2, findings: [] },
     ]);
 }
 
@@ -155,7 +155,7 @@ test.each([
         await createFileTree(root, {
             'icon.svg': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8 8"><path d="M0 0h8v8H0z"/></svg>\n',
         });
-        await install(root, initArgs(['static-site']), {}, ['spelling', 'naming']);
+        await install(root, initArgs(['site']), {}, ['spelling', 'naming']);
         const native = await processes.run(
             [join(root, '.gspot/node_modules/.bin/svgo'), '--input', 'icon.svg', '--output', '-'],
             { cwd: root },

@@ -67,6 +67,7 @@ import { checkVerifiedSecrets } from '#cli/checks/general/secrets/trufflehog.ts'
 import { nextjsBuild, nextjsTypes } from '#cli/checks/framework/nextjs/build.ts';
 import { trivialFunction } from '#cli/checks/language/bash/trivial-functions.ts';
 import { foreignKeyIndexes } from '#cli/checks/database/postgres/foreign-keys.ts';
+import { siteBuilds, buildReproducible } from '#cli/checks/general/site/build.ts';
 import { lockfileFresh } from '#cli/checks/general/dependencies/lockfile/fresh.ts';
 import { lockfileHosts } from '#cli/checks/general/dependencies/lockfile/hosts.ts';
 import { allowlistsMatch } from '#cli/checks/general/structure/stale-allowlists.ts';
@@ -75,7 +76,6 @@ import { checkSecretHistory } from '#cli/checks/general/secrets/gitleaks/history
 import { duplicateFunctions } from '#cli/checks/language/bash/duplicate-functions.ts';
 import { prefixCollisions } from '#cli/checks/general/structure/prefix-collisions.ts';
 import { scriptGuards, scriptConfigDefaults } from '#cli/checks/language/bash/guards.ts';
-import { siteBuilds, buildReproducible } from '#cli/checks/general/static-site/build.ts';
 import { checkJavascript, checkTypescript } from '#cli/checks/language/javascript/tsc.ts';
 import { fileDirectoryCollision } from '#cli/checks/general/structure/stem-collisions.ts';
 import type { Engine, Executable, CheckRegistry } from '#cli/types/execution/execution.ts';
@@ -88,8 +88,8 @@ import { scriptSourceOrder, scriptSourceComments } from '#cli/checks/language/ba
 import { rlsPresent, explicitGrants, definerSearchPath } from '#cli/checks/database/postgres/access.ts';
 import { projectValid, migrationNames, storagePolicies } from '#cli/checks/platform/supabase/project.ts';
 import { xcconfigLines, transportSecurity, entitlementsPolicy } from '#cli/checks/tool/xcode/settings.ts';
+import { deadAssets, webManifest, svgCompressed, securityHeaders } from '#cli/checks/general/site/source.ts';
 import { routeSegments, dependencyAlignment, nextjsConfiguration } from '#cli/checks/framework/nextjs/source.ts';
-import { deadAssets, webManifest, svgCompressed, securityHeaders } from '#cli/checks/general/static-site/source.ts';
 
 import {
     sizeLimits,
@@ -97,7 +97,7 @@ import {
     builtMarkup,
     deadSelectors,
     sitemapMatches,
-} from '#cli/checks/general/static-site/output.ts';
+} from '#cli/checks/general/site/output.ts';
 
 /** The engine of each check gspot analyses itself, by check ID. */
 export const ENGINES: Record<string, Engine> = {
@@ -139,17 +139,17 @@ export const ENGINES: Record<string, Engine> = {
     'nextjs/build': nextjsBuild,
     'integrity/dependency-alignment': dependencyAlignment,
     ...CLOUDFLARE_ANALYSES,
-    'static-site/build': siteBuilds,
-    'static-site/build-reproducible': buildReproducible,
-    'static-site/html-validate-built': builtMarkup,
+    'site/build': siteBuilds,
+    'site/build-reproducible': buildReproducible,
+    'site/html-validate-built': builtMarkup,
     'css/dead-selectors': deadSelectors,
-    'static-site/links-internal': (input) => brokenLinks(input, false),
-    'static-site/links-external': (input) => brokenLinks(input, true),
-    'static-site/size': sizeLimits,
-    'static-site/sitemap': sitemapMatches,
-    'static-site/dead-assets': deadAssets,
-    'static-site/svg-optimized': svgCompressed,
-    'static-site/webmanifest': webManifest,
+    'site/links-internal': (input) => brokenLinks(input, false),
+    'site/links-external': (input) => brokenLinks(input, true),
+    'site/size': sizeLimits,
+    'site/sitemap': sitemapMatches,
+    'site/dead-assets': deadAssets,
+    'site/svg-optimized': svgCompressed,
+    'site/webmanifest': webManifest,
     'integrity/security-headers': securityHeaders,
     ...HTML_ANALYSES,
     ...PYTHON_ANALYSES,

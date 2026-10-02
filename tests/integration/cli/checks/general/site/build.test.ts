@@ -1,19 +1,19 @@
 import { join } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
+import { SITE_BUILD } from '#tests/samples/site.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { siteInput } from '#tests/harness/cli/site.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
 import { test, spyOn, expect, describe } from 'bun:test';
-import { SITE_BUILD } from '#tests/samples/static-site.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import * as toolRunner from '#cli/execution/tool/runner.ts';
 import { commitAll, gitOutput } from '#tests/harness/cli/git.ts';
 import { runGspot, runOptions } from '#tests/harness/cli/command.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
-import { brokenLinks, builtMarkup, deadSelectors } from '#cli/checks/general/static-site/output.ts';
-import { siteBuild, filesUnder, buildReproducible } from '#cli/checks/general/static-site/build.ts';
+import { brokenLinks, builtMarkup, deadSelectors } from '#cli/checks/general/site/output.ts';
+import { siteBuild, filesUnder, buildReproducible } from '#cli/checks/general/site/build.ts';
 
 import {
     statSync,
@@ -74,7 +74,7 @@ const SITE_REPORTS: {
 test('push builds preserve tracked dist bytes and Git status', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': policyOf(['static-site'], '[tools.site]\nbuild = "bun build.js"\n', 'all'),
+        'gspot.toml': policyOf(['site'], '[tools.site]\nbuild = "bun build.js"\n', 'all'),
         '.gitignore': '.gspot/\n',
         'build.js': SITE_BUILD,
         'dist/index.html': 'committed output\n',
@@ -85,8 +85,8 @@ test('push builds preserve tracked dist bytes and Git status', async () => {
         '--stage',
         'push',
         '--only',
-        'static-site/build',
-        'static-site/build-reproducible',
+        'site/build',
+        'site/build-reproducible',
         '--json',
     ]);
     expect(outcome.code, outcome.stdout + outcome.stderr).toBe(0);
@@ -151,7 +151,7 @@ test('a failed reproducibility build retains the first isolated output', async (
 test.each([0, 7])('a run cleans isolated site output after build exit %i', async (code) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': policyOf(['static-site'], '[tools.site]\nbuild = "bun build.js"\n', 'all'),
+        'gspot.toml': policyOf(['site'], '[tools.site]\nbuild = "bun build.js"\n', 'all'),
         'build.js': SITE_BUILD,
         'dist/index.html': 'authored output',
     });
@@ -170,7 +170,7 @@ test.each([0, 7])('a run cleans isolated site output after build exit %i', async
         });
     });
     try {
-        const outcome = await executeRun(session, runOptions({ only: ['static-site/build'] }));
+        const outcome = await executeRun(session, runOptions({ only: ['site/build'] }));
         expect(outcome.report.exitCode).toBe(code === 0 ? 0 : 1);
         expect(cwd).not.toBe(sandbox.path);
         expect(cwd).not.toBe('');

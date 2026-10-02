@@ -1,4 +1,4 @@
-// The types of checks/general/static-site in this package.
+// The types of checks/general/site in this package.
 
 export type SizeLimit = { paths: string[]; kb: number; reason?: string };
 

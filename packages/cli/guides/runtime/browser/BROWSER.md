@@ -1,6 +1,6 @@
 ---
 layer: runtime
-kit: static-site
+kit: site
 title: Browser
 ---
 

@@ -1,4 +1,4 @@
-// The literal values checks/general/static-site reads: names, patterns, limits, and tables.
+// The literal values checks/general/site reads: names, patterns, limits, and tables.
 
 export const DEFAULT_BUILD_OUTPUT = 'dist';
 export const SITEMAP_LOCATION = /<loc>\s*(?<url>[^<\s]+)\s*<\/loc>/gu;

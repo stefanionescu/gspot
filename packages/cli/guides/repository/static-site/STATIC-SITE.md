@@ -1,6 +1,6 @@
 ---
 layer: repository
-kit: static-site
+kit: site
 title: Static Sites
 ---
 

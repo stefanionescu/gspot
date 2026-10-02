@@ -10,7 +10,7 @@ import {
     ASSET_FOLDER,
     REQUIRED_HEADERS,
     REPORTED_SAVINGS_SHARE,
-} from '#cli/config/checks/general/static-site.ts';
+} from '#cli/config/checks/general/site.ts';
 // What svgo says about one file: it cannot read it, it makes it smaller, or nothing.
 async function svgFinding(input: EngineInput, path: string): Promise<Finding[]> {
     const original = readSource(input.root, path, input.reads).toString('utf8');

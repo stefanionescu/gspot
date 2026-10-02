@@ -10,9 +10,9 @@ import { mutationTarget } from '#cli/platform/safe-paths.ts';
 import { scratchCopy } from '#cli/execution/tool/workspace.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import { openRoot, walkRoot } from '#cli/platform/filesystem.ts';
-import type { SiteBuild } from '#cli/types/checks/general/static-site.ts';
+import type { SiteBuild } from '#cli/types/checks/general/site.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
-import { DEFAULT_BUILD, SHOWN_DIFFERENCES, DEFAULT_BUILD_OUTPUT } from '#cli/config/checks/general/static-site.ts';
+import { DEFAULT_BUILD, SHOWN_DIFFERENCES, DEFAULT_BUILD_OUTPUT } from '#cli/config/checks/general/site.ts';
 
 const builds = new WeakMap<object, Map<string, Promise<SiteBuild>>>();
 

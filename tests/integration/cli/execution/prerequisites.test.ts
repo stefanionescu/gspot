@@ -44,7 +44,7 @@ test('a failed site build skips every output consumer and a new session rebuilds
     using resources = new DisposableStack();
     await createFileTree(sandbox.path, {
         'gspot.toml': policyOf(
-            ['static-site'],
+            ['site'],
             '[tools.site]\nbuild = "bun build.js"\nsizes = [{paths = ["**/*"], kb = 100}]\n',
             'all',
         ),
@@ -52,13 +52,13 @@ test('a failed site build skips every output consumer and a new session rebuilds
         'page.html': '<!doctype html><html lang="en"><title>Example</title></html>',
     });
     const consumers = new Set([
-        'static-site/build-reproducible',
-        'static-site/html-validate-built',
+        'site/build-reproducible',
+        'site/html-validate-built',
         'css/dead-selectors',
-        'static-site/links-internal',
-        'static-site/links-external',
-        'static-site/size',
-        'static-site/sitemap',
+        'site/links-internal',
+        'site/links-external',
+        'site/size',
+        'site/sitemap',
     ]);
     const session = await openSession(sandbox.path);
     session.resources = resources;
@@ -66,7 +66,7 @@ test('a failed site build skips every output consumer and a new session rebuilds
         planRun(session, {
             stage: stage as 'push' | 'manual',
             skips: [],
-            only: ['static-site/build', ...consumers],
+            only: ['site/build', ...consumers],
         }),
     );
     const planned = stages.flat();
@@ -86,7 +86,7 @@ test('a failed site build skips every output consumer and a new session rebuilds
         outcomes.toSorted((left: { check: string }, right: { check: string }) => left.check.localeCompare(right.check)),
     ).toMatchObject(
         [
-            { check: 'static-site/build', status: 'fail', message: textContaining('Planted build failure') },
+            { check: 'site/build', status: 'fail', message: textContaining('Planted build failure') },
             ...[...consumers].map((check) => ({ check, status: 'skipped', note: 'The site did not build.' })),
         ].toSorted((left: { check: string }, right: { check: string }) => left.check.localeCompare(right.check)),
     );
@@ -96,7 +96,7 @@ test('a failed site build skips every output consumer and a new session rebuilds
     );
     const next = await openSession(sandbox.path);
     next.resources = resources;
-    const [build] = planRun(next, { stage: 'push', skips: [], only: ['static-site/build'] });
+    const [build] = planRun(next, { stage: 'push', skips: [], only: ['site/build'] });
     const rebuilt = await checkExecution(build!.spec, CHECKS)(next, build!);
     expect(rebuilt.status).toBe('ok');
 });

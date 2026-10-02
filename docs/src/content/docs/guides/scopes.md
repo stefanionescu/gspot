@@ -86,12 +86,12 @@ Checks that read project files look inside the scope only. Supabase reads
 scope. Locale messages and static site files in a child scope do not count for the parent
 scope.
 
-With the `static-site` kit, `static-site/svg-optimized` reports an SVG file when optimizing it
+With the `site` kit, `site/svg-optimized` reports an SVG file when optimizing it
 saves more than 10% of its size at `recommended`, or any bytes at `all`. To optimize the
 files, run:
 
 ```bash
-gspot check --only static-site/svg-optimized --fix
+gspot check --only site/svg-optimized --fix
 ```
 
 ## A policy below the Git root
