@@ -25,7 +25,7 @@ the same concept reads the same way at every boundary.
 | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Acronyms              | Follow the language: TypeScript, JavaScript treat them as words (`parseHttpUrl`, `userId`); Swift keeps uppercase initialisms (`avatarURL`, `userID`, `apiClient` at the start of a name); Python, SQL, Bash lowercase them inside snake_case (`http_url`, `user_id`). A platform name keeps its spelling (`XMLHttpRequest`). |
 | Directories           | kebab-case for TypeScript, JavaScript, Bash, HTML, CSS, and static sites; snake_case for Python packages; PascalCase for Swift directories, which mirror type names.                                                                                                                                                          |
-| Test files            | `<name>.test.ts` (never `.spec`); `test_<module>.py` grouped by behavior; `<Type>Tests.swift`; pgTAP files under `tests/`. The directory is `tests/`, never `__tests__`, `test/`, or `spec/`. Support code lives under `tests/support/`.                                                                                      |
+| Test files            | `<name>.test.ts` (never `.spec`); `test_<module>.py` grouped by behavior; `<Type>Tests.swift`; pgTAP files under `tests/`. The directory is `tests/`, never `__tests__`, `test/`, or `spec/`. Support code lives in the harness folder that `architecture.roles.harness` names.                                               |
 | Booleans              | Stored state uses concise positive names such as `enabled` or `retryable`. Computed predicates use `is`, `has`, or `can` in the language's case convention. External names keep their spelling.                                                                                                                               |
 | Identifiers           | `userID` in Swift, `userId` in TypeScript and JSON, `user_id` in Python and SQL. The boundary that maps a row to a response translates the casing; domain code never sees both.                                                                                                                                               |
 | On the wire           | Preserve existing external contracts. For project-owned contracts, use camelCase JSON fields, kebab-case URL segments, `UPPER_SNAKE_CASE` environment variables, and lower_snake_case log events.                                                                                                                             |
@@ -54,8 +54,8 @@ Rules:
 - No directory is named `common`, `core`, `helper`, `helpers`, `util`, `utils`, `support`,
   `misc`, `shared`, or after a language or runtime (`bash`, `javascript`, `python`, `node`,
   `js`). Name it for what it owns.
-- The configured test support directory, `tests/support/` by default, is the declared exception
-  for test setup and lifecycle support. Group its
+- The harness folder that `architecture.roles.harness` names is the declared exception for test
+  setup and lifecycle support. Group its
   contents by responsibility instead of collecting unrelated helpers in one module.
 - A leaf directory holds more than one code file. One file in a folder is a file, not a folder.
 - Sibling files do not share a leading name part: `asset-card.ts`, `asset-list.ts`, and
@@ -119,8 +119,8 @@ Rules:
 - Test data never become global mystery data.
 - A test name is a sentence stating the scenario and the expected outcome. `edge cases`,
   `happy path`, `works`, `test1`, and `underTest` are banned.
-- Support code lives under `tests/support/`; `mocks/`, `helpers/`, and `utils/`
-  are banned directory names in test trees.
+- Support code lives in the harness folder; `mocks/`, `helpers/`, and `utils/` are banned
+  directory names in test trees.
 - Test file names follow the language table in "Casing Across Languages."
 
 | Avoid       | Prefer                               |

@@ -21,6 +21,7 @@ import {
     BASH_FEATURES,
     BASH_SHEBANGS,
     READONLY_WORD,
+    HEADER_COMMENT,
     RUNTIME_HEADER,
     SOURCE_STATEMENT,
     INHERITED_ERREXIT,
@@ -32,15 +33,12 @@ import {
 // The line that must be a bare comment marker.
 const HEADER_LINE = 2;
 
-function headerProblems(file: ScriptFile, report: ScriptReport): void {
+// The shebang every script opens with, then the four-line header when tools.bash.runtime_header names its platforms.
+function headerProblems(file: ScriptFile, platforms: string | undefined, report: ScriptReport): void {
     if (!BASH_SHEBANGS.includes(file.lines[0] ?? ''))
         report(1, 'shebang', `The first line is not one of ${BASH_SHEBANGS.join(' or ')}.`);
-    const [, second, third = ''] = file.lines;
-    if (
-        second !== '#' ||
-        file.lines.length < HEADER_LINES ||
-        !(third.startsWith('# ') && third.slice('# '.length).trim() !== '')
-    )
+    if (platforms === undefined) return;
+    if (file.lines.length < HEADER_LINES || !HEADER_COMMENT.test(file.lines.slice(1, HEADER_LINES - 1).join('\n')))
         report(HEADER_LINE, 'header', 'Lines 2 and 3 are a bare "#" and then "# <what this script does>".');
 }
 
@@ -164,14 +162,23 @@ function cleanupProblems(code: CodeLine[], report: ScriptReport): void {
         report(temporary.number, 'mktemp-trap', 'A temporary file needs a trap that removes it.');
 }
 
-function fileProblems(context: StructureInput, file: ScriptFile, platforms: string, isConfigOwner: boolean): Finding[] {
+function fileProblems(
+    context: StructureInput,
+    file: ScriptFile,
+    platforms: string | undefined,
+    isConfigOwner: boolean,
+): Finding[] {
     const findings: Finding[] = [];
-    headerProblems(file, (line, rule, text) => {
+    headerProblems(file, platforms, (line, rule, text) => {
         findings.push(findingAt(context.input, { file: file.path, line: line }, rule, text));
     });
-    const version = runtimeVersion(file, platforms, (line, rule, text) => {
-        findings.push(findingAt(context.input, { file: file.path, line: line }, rule, text));
-    });
+    // Without the header, a script declares no Bash version, so no feature is checked against one.
+    const version =
+        platforms === undefined
+            ? undefined
+            : runtimeVersion(file, platforms, (line, rule, text) => {
+                  findings.push(findingAt(context.input, { file: file.path, line: line }, rule, text));
+              });
     versionProblems(file, version, (line, rule, text) => {
         findings.push(findingAt(context.input, { file: file.path, line: line }, rule, text));
     });
@@ -202,7 +209,8 @@ function fileProblems(context: StructureInput, file: ScriptFile, platforms: stri
  * @returns the findings
  */
 export const scriptInterpreter: Analysis = async (context, scripts) => {
-    const platforms = context.bashText('runtime_header', 'macOS and Linux');
+    const runtime = context.bashSetting('runtime_header');
+    const platforms = typeof runtime === 'string' ? runtime : undefined;
     const owners = new Set(context.bashList('config_owners'));
     const index = await scripts();
     return index.files

@@ -1,8 +1,8 @@
 import { z } from 'zod';
+import { reasoned } from '#cli/policy/fields.ts';
 import { quoteArgument } from '#cli/platform/arguments.ts';
 import { ESLINT_WARN, ESLINT_ERROR } from '#cli/config/native.ts';
 import { jestCoverageSettings } from '#cli/checks/jest/schema.ts';
-import { reasoned, relativeDirectory } from '#cli/policy/fields.ts';
 
 const text = z.string();
 const flag = z.boolean();
@@ -89,7 +89,6 @@ export const toolsSchema = z
                 coverage_functions: reasoned(jestCoverageSettings.shape.coverage_functions).optional(),
                 coverage_statements: reasoned(jestCoverageSettings.shape.coverage_statements).optional(),
                 global_package: text.min(1).optional(),
-                harness_directory: relativeDirectory.optional(),
             })
             .optional(),
         prettier: toolTable.extend({ ignore_patterns: z.array(z.string()).optional() }).optional(),

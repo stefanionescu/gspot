@@ -34,7 +34,7 @@ Rules:
 - Library files explicitly source every repository file whose public functions they call. Do not
   rely on an entrypoint's source order or a transitive source.
 - Shell configuration owners start with an owner-specific include guard before constants or
-  dependency sources. The guard returns when its `_CFG_<OWNER>_READY` marker is set, then
+  dependency sources. The guard returns when its `<OWNER>_READY` marker is set, then
   immediately declares that marker readonly.
 - Ordinary function libraries do not use blanket include guards. They remain safe when direct
   dependency diamonds source them more than once.

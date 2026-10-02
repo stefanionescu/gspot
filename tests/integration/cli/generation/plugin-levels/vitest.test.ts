@@ -20,7 +20,7 @@ test('the Vitest harness folder places test support and closes it to runtime cod
         ...VITEST_FILES,
         'gspot.toml': policyOf(
             ['vitest'],
-            '[guides]\ninstall = false\n[tools.vitest]\nharness_directory = "tests/fixtures"\n',
+            '[guides]\ninstall = false\n[architecture.roles]\nruntime = ["src/**"]\nharness = "tests/fixtures"\n',
             'all',
         ),
     });
@@ -34,7 +34,7 @@ test('the Vitest harness folder places test support and closes it to runtime cod
     ]);
 });
 
-test('without a test runner no folder is the harness, so support files are placed nowhere', async () => {
+test('without a harness role no folder is the harness, so support files are placed nowhere', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         ...VITEST_FILES,

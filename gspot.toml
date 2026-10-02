@@ -21,6 +21,36 @@ kits = [
     "duplication",
     "security",
 ]
+naming.banned_terms = [
+    "catalog",
+    "catalogue",
+    "corpus",
+    "render",
+    "sync",
+    "synchronize",
+    "synchronise",
+    "materialize",
+    "materialise",
+    "coerce",
+    "scoped",
+    "bind",
+    "load",
+    "loaded",
+    "loader",
+    "loaders",
+    "loading",
+    "fetch",
+    "resolve",
+    "resolving",
+    "resolution",
+    "probe",
+    "probes",
+    "probed",
+    "probing",
+    "fixture",
+    "fixtures",
+    "shell",
+]
 
 [[scope]]
 path = "packages/cli"
@@ -268,7 +298,12 @@ reason = "GitHub Actions inputs and GitLab CI artifact retention keys."
 [architecture]
 types_directory = "types"
 config_directory = "config"
-roles = {env = ["packages/cli/src/platform/environment.ts", "tests/support/environment.ts"]}
+
+[architecture.roles]
+tests = ["tests/**", "**/*.test.*"]
+harness = "tests/support"
+runtime = ["src/**"]
+env = ["packages/cli/src/platform/environment.ts", "tests/support/environment.ts"]
 
 [tools.eslint]
 import_style = {"**/*" = "ts"}
@@ -347,6 +382,7 @@ review_by = "2026-10-15"
 [tools.knip]
 entry = [
     "**/build.ts",
+    "packages/eslint-plugin/src/plugin.ts",
     "packages/cli/scripts/inputs.ts",
     "packages/cli/scripts/guides-lint.ts",
     "packages/cli/src/native/process.ts",

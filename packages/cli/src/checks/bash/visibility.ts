@@ -9,10 +9,11 @@ import type { StructureAnalysis as Analysis } from '#cli/types/checks.ts';
  * @returns the findings
  */
 export const privatePrefix: Analysis = async (context, scripts) => {
+    const entries = new Set([...ENTRY_FUNCTIONS, ...context.bashList('entry_functions')]);
     const index = await scripts();
     return index.files.flatMap((file) =>
         file.functions.flatMap((entry) => {
-            if (ENTRY_FUNCTIONS.includes(entry.name)) return [];
+            if (entries.has(entry.name)) return [];
             const callers = index.files
                 .filter(
                     (candidate) =>

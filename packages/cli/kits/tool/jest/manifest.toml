@@ -78,14 +78,6 @@ default_all = 80
 summary = "The minimum percentage of source statements covered by tests."
 
 [[settings]]
-name = "tools.jest.harness_directory"
-kind = "string"
-direction = "neutral"
-role = "harness"
-default = "tests/support"
-summary = "The directory containing test support code that application source cannot import."
-
-[[settings]]
 name = "tools.jest.global_package"
 kind = "string"
 direction = "neutral"

@@ -232,16 +232,16 @@ test('raising the duplication line floor requires a reason, while lowering it ti
 });
 
 test.each(['../outside', 'C:outside'])(
-    'Jest refuses escaping support directory %s and accepts an owned directory',
+    'the harness role refuses the escaping folder %s and accepts an owned folder',
     (path) => {
         expect(() =>
             parsePolicyText(
-                policyOf(['jest'], `[tools.jest]\nharness_directory = ${JSON.stringify(path)}\n`),
+                policyOf(['jest'], `[architecture.roles]\nharness = ${JSON.stringify(path)}\n`),
                 'gspot.toml',
             ),
         ).toThrow();
         expect(() =>
-            parsePolicyText(policyOf(['jest'], '[tools.jest]\nharness_directory = "tests/fixtures"\n'), 'gspot.toml'),
+            parsePolicyText(policyOf(['jest'], '[architecture.roles]\nharness = "tests/fixtures"\n'), 'gspot.toml'),
         ).not.toThrow();
     },
 );

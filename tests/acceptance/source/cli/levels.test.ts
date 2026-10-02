@@ -23,7 +23,7 @@ async function expectRecommendedLevel(root: string, command: string[]): Promise<
         status: 'fail',
         files: 1,
     });
-    await Bun.write(join(root, 'entry.sh'), 'shell_command=example\n');
+    await Bun.write(join(root, 'entry.sh'), 'helper_command=example\n');
 }
 
 // A reasoned allowance suppresses one finding; removing it restores enforcement.
@@ -31,7 +31,7 @@ async function expectNamingAllowance(root: string, command: string[]): Promise<v
     const allowed = await run(root, [
         'set',
         'naming.allowed',
-        '{"name":"shell_command"}',
+        '{"name":"helper_command"}',
         '--reason',
         'External protocol fixes this name',
     ]);
@@ -39,7 +39,7 @@ async function expectNamingAllowance(root: string, command: string[]): Promise<v
     const accepted = await run(root, command);
     expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
     expect((JSON.parse(accepted.stdout) as RunReport).checks[1]?.findings).toStrictEqual([]);
-    const removed = await run(root, ['set', 'naming.allowed', 'shell_command', '--remove']);
+    const removed = await run(root, ['set', 'naming.allowed', 'helper_command', '--remove']);
     expect(removed.code, removed.stdout + removed.stderr).toBe(0);
     const restored = await run(root, command);
     expect(restored.code, restored.stdout + restored.stderr).toBe(1);
@@ -52,7 +52,7 @@ test(
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
             'gspot.toml': policyOf(['bash', 'naming'], '[guides]\ninstall = false\n'),
-            'entry.sh': 'shell_command=example\n',
+            'entry.sh': 'helper_command=example\n',
         });
         const command = ['check', '--only', 'bash/syntax', 'naming/identifiers', '--json'];
         await expectRecommendedLevel(sandbox.path, command);

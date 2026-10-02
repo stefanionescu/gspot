@@ -438,7 +438,7 @@ summary = "The directory every literal constant lives under; its files are the r
 name = "architecture.roles"
 kind = "table"
 direction = "tightening"
-summary = "Which elements play the types, config, env, tests, support and runtime roles for the import direction rules."
+summary = "Which elements or paths play the types, tests, harness, config, env, and runtime roles for the import direction rules. No role has a default."
 
 [[settings]]
 name = "architecture.elements"

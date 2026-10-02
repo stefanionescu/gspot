@@ -39,7 +39,7 @@ test('knip starts from the policy entries and the entry files the selected kits 
         '[tools.knip]\nentry = ["cli.js"]\n[[scope]]\npath = "api"\nkits = ["javascript"]\n[scope.tools.knip]\nentry = ["serve.js"]\n',
     );
     const knip = await knipConfiguration(policy);
-    expect(knip.entry).toStrictEqual(containingAll(['cli.js', 'src/main.{ts,js}', 'build.ts']));
+    expect(knip.entry).toStrictEqual(containingAll(['cli.js', 'src/main.{ts,js}']));
     expect(knip.entry).not.toContain('api/serve.js');
     expect(knip.workspaces['api']?.entry).toStrictEqual(containingAll(['serve.js', 'src/main.{ts,js}']));
     expect(knip.workspaces['api']?.entry).not.toContain('cli.js');

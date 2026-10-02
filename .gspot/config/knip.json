@@ -2,6 +2,7 @@
     "$schema": "https://unpkg.com/knip@6/schema.json",
     "entry": [
         "**/build.ts",
+        "packages/eslint-plugin/src/plugin.ts",
         "packages/cli/scripts/inputs.ts",
         "packages/cli/scripts/guides-lint.ts",
         "packages/cli/src/native/process.ts",
@@ -16,12 +17,9 @@
         "src/main.{ts,js}",
         "src/index.{ts,js}",
         "src/server.{ts,js}",
-        "src/plugin.{ts,js}",
         "scripts/**/*.{ts,js,mjs}",
         "**/*.{test,spec}.{ts,tsx,js}",
-        "tests/**/*.{ts,js}",
-        "build.ts",
-        "publish.ts"
+        "tests/**/*.{ts,js}"
     ],
     "project": ["**/*.{ts,tsx,mts,cts,js,mjs,cjs}"],
     "ignore": [".gspot/**", "eslint.config.{js,mjs,cjs}"],
@@ -143,6 +141,7 @@
         ".": {
             "entry": [
                 "**/build.ts",
+                "packages/eslint-plugin/src/plugin.ts",
                 "packages/cli/scripts/inputs.ts",
                 "packages/cli/scripts/guides-lint.ts",
                 "packages/cli/src/native/process.ts",
@@ -157,12 +156,9 @@
                 "src/main.{ts,js}",
                 "src/index.{ts,js}",
                 "src/server.{ts,js}",
-                "src/plugin.{ts,js}",
                 "scripts/**/*.{ts,js,mjs}",
                 "**/*.{test,spec}.{ts,tsx,js}",
-                "tests/**/*.{ts,js}",
-                "build.ts",
-                "publish.ts"
+                "tests/**/*.{ts,js}"
             ],
             "project": ["**/*.{ts,tsx,mts,cts,js,mjs,cjs}"]
         },
@@ -175,27 +171,22 @@
                 "src/main.{ts,js}",
                 "src/index.{ts,js}",
                 "src/server.{ts,js}",
-                "src/plugin.{ts,js}",
                 "scripts/**/*.{ts,js,mjs}",
                 "**/*.{test,spec}.{ts,tsx,js}",
-                "tests/**/*.{ts,js}",
-                "build.ts",
-                "publish.ts"
+                "tests/**/*.{ts,js}"
             ],
             "project": ["**/*.{ts,tsx,mts,cts,js,mjs,cjs}"]
         },
         "packages/eslint-plugin": {
             "entry": [
                 "**/build.ts",
+                "src/plugin.ts",
                 "src/main.{ts,js}",
                 "src/index.{ts,js}",
                 "src/server.{ts,js}",
-                "src/plugin.{ts,js}",
                 "scripts/**/*.{ts,js,mjs}",
                 "**/*.{test,spec}.{ts,tsx,js}",
-                "tests/**/*.{ts,js}",
-                "build.ts",
-                "publish.ts"
+                "tests/**/*.{ts,js}"
             ],
             "project": ["**/*.{ts,tsx,mts,cts,js,mjs,cjs}"]
         },
@@ -209,12 +200,9 @@
                 "src/main.{ts,js}",
                 "src/index.{ts,js}",
                 "src/server.{ts,js}",
-                "src/plugin.{ts,js}",
                 "scripts/**/*.{ts,js,mjs}",
                 "**/*.{test,spec}.{ts,tsx,js}",
-                "tests/**/*.{ts,js}",
-                "build.ts",
-                "publish.ts"
+                "tests/**/*.{ts,js}"
             ],
             "project": ["**/*.{ts,tsx,mts,cts,js,mjs,cjs}"]
         },

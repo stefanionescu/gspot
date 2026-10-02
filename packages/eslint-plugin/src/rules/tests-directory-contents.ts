@@ -12,8 +12,9 @@ export const testsDirectoryContents = createRule<TestsDirectoryContentsOptions, 
             level: 'all',
             title: 'Tests directory contents',
             example:
-                'When `tests/unit/` contains `a.test.ts`, a neighboring non-test file `builders.ts` reports `misplaced`. Move `builders.ts` into `tests/support/` and update its imports. Declaration files such as `b.d.ts` can remain beside tests.',
-            summary: 'Finds a file that is not a test sitting in a folder of test files.',
+                'With `harnessDirectory: "tests/support"`, when `tests/unit/` contains `a.test.ts`, a neighboring non-test file `builders.ts` reports `misplaced`. Move `builders.ts` into `tests/support/` and update its imports. Declaration files such as `b.d.ts` can remain beside tests.',
+            summary:
+                'Finds a file that is not a test sitting in a folder of test files. With no harness directory, it reports nothing.',
             why: 'Harness code beside tests gets imported through relative paths and drifts away from the declared harness directory.',
             fix: 'Move the file into the configured test support directory.',
         },
@@ -31,7 +32,6 @@ export const testsDirectoryContents = createRule<TestsDirectoryContentsOptions, 
         {
             testPattern: DEFAULT_TEST,
             testDirectories: ['**/tests/**', '**/__tests__/**', '**/test/**'],
-            harnessDirectory: 'tests/support',
             excluded: [],
         },
     ],
@@ -41,7 +41,8 @@ export const testsDirectoryContents = createRule<TestsDirectoryContentsOptions, 
         const relative = relativeToRoot(lintedRoot(context), file);
         const test = new RegExp(options.testPattern ?? DEFAULT_TEST, 'u');
         const name = posix.basename(relative);
-        const harness = options.harnessDirectory ?? 'tests/support';
+        const harness = options.harnessDirectory;
+        if (harness === undefined) return {};
         const directories = options.testDirectories ?? [];
         const excluded = options.excluded ?? [];
         return {

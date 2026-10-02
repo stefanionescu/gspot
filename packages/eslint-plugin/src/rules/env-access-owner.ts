@@ -26,15 +26,16 @@ export const envAccessOwner = createRule<EnvAccessOwnerOptions, 'owner'>({
             level: 'all',
             title: 'Environment access owner',
             example:
-                'In `src/turn/build.ts`, `const port = process.env.PORT;` reports an owner finding. Move the environment read to `src/env/index.ts` and pass the value to the build function.',
-            summary: 'Finds an environment variable read outside the configuration owner.',
+                'With `owners: ["src/env/**"]`, `const port = process.env.PORT;` in `src/turn/build.ts` reports an owner finding. Move the environment read to `src/env/index.ts` and pass the value to the build function.',
+            summary:
+                'Finds an environment variable read outside the owners the options name. With no owners, it reports nothing.',
             why: 'When any file reads the environment, nobody can list what the program needs to run; one owner can.',
             fix: 'Read the variable in the configuration owner (architecture.roles.env) and pass the value where it is used.',
         },
         schema: [optionsSchema({ owners: { type: 'array', items: { type: 'string' } } })],
         messages: { owner: 'Environment variables are read in {{owners}} only. Read it there and pass the value in.' },
     },
-    defaultOptions: [{ owners: ['src/env/**', 'config/**'] }],
+    defaultOptions: [{ owners: [] }],
     create(context, [options]) {
         const file = lintedFile(context);
         if (file === undefined) return {};

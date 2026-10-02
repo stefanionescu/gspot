@@ -40,8 +40,8 @@ test.each([false, true])(
         {
             await using directory = await testdir();
             const policy = `level = "all"\nrequire_reasons = ${String(required)}\nkits = ["bash", "naming"]\n[guides]\ninstall = false\n`;
-            await createFileTree(directory.path, { 'gspot.toml': policy, 'entry.sh': 'shell_command=example\n' });
-            const entry = '{"name":"shell_command"}';
+            await createFileTree(directory.path, { 'gspot.toml': policy, 'entry.sh': 'helper_command=example\n' });
+            const entry = '{"name":"helper_command"}';
             const allowed = await run(directory.path, ['set', 'naming.allowed', entry]);
             expect(allowed.code, allowed.stdout + allowed.stderr).toBe(required ? 2 : 0);
             expect(readFileSync(join(directory.path, 'gspot.toml'), 'utf8') === policy).toBe(required);
@@ -58,7 +58,7 @@ test.each([false, true])(
             const command = ['check', '--only', 'naming/identifiers', '--json'];
             const checked = await run(directory.path, command);
             expect(checked.code, checked.stdout + checked.stderr).toBe(0);
-            const removed = await run(directory.path, ['set', 'naming.allowed', 'shell_command', '--remove']);
+            const removed = await run(directory.path, ['set', 'naming.allowed', 'helper_command', '--remove']);
             expect(removed.code, removed.stdout + removed.stderr).toBe(0);
             const restored = await run(directory.path, command);
             expect(restored.code, restored.stdout + restored.stderr).toBe(1);

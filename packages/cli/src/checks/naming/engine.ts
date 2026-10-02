@@ -2,9 +2,9 @@ import { isOwned } from '#cli/kits/owners.ts';
 import { findingAt } from '#cli/checks/result.ts';
 import type { CheckSpec } from '#cli/types/kits.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
-import { roleFolders } from '#cli/policy/settings.ts';
 import { readSource } from '#cli/repository/tracked.ts';
 import { CASE_NAMES } from '#cli/checks/naming/cases.ts';
+import { harnessFolders } from '#cli/policy/settings.ts';
 import { isInScope, pathMatcher } from '#cli/repository/paths.ts';
 import { languageKits, selectForScope } from '#cli/kits/select.ts';
 import { nameProblems } from '#cli/checks/naming/validate-name.ts';
@@ -58,7 +58,7 @@ async function identifierFindings(input: EngineInput, policy: EffectivePolicy): 
 
 function pathIdentifiers(input: EngineInput): Identifier[] {
     const harnesses = new Set(
-        roleFolders(input.selection.selected, input.view.settings, 'harness').map((folder) =>
+        harnessFolders(input.policyFiles.policy, input.scope).map((folder) =>
             [input.scope, folder].filter(Boolean).join('/'),
         ),
     );

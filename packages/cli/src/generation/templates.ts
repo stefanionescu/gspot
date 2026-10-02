@@ -6,7 +6,7 @@ import { jsonText } from '#cli/generation/json-format.ts';
 import type { TemplateInputs } from '#cli/types/generation.ts';
 import { TomlDate, stringify as stringifyToml } from 'smol-toml';
 import { BLOCK_IGNORES, TOKEN_IGNORES } from '#cli/config/kits.ts';
-import { policyValue, roleFolders } from '#cli/policy/settings.ts';
+import { policyValue, harnessFolders } from '#cli/policy/settings.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
 import { scopeIgnorePatterns } from '#cli/generation/ignore-patterns.ts';
 import { styleNames, PROSE_FORMATS } from '#cli/generation/vale-styles.ts';
@@ -83,15 +83,8 @@ function scopeInputs(policy: Policy, scopes: ScopeSelection[], selection: ScopeS
                 path: entry.scope.path,
                 settings: entry.view.settings,
                 extra: entry.view.extra,
+                harness: harnessFolders(policy, entry.scope.path)[0],
             })),
-        roleFolders: (role: string) => roleFolders(selection.selected, view.settings, role),
-        roleScopes: (role: string) =>
-            byDepth(scopes)
-                .map((entry) => ({
-                    path: entry.scope.path,
-                    folders: roleFolders(entry.selected, entry.view.settings, role),
-                }))
-                .filter((entry) => entry.folders.length > 0),
         kits: view.kits,
         policy: policy,
         view,

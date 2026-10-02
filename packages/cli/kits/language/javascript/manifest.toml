@@ -1,5 +1,5 @@
 # Where a dead-code scan starts when no framework names its own entries.
-entry_files = ["src/main.{ts,js}", "src/index.{ts,js}", "src/server.{ts,js}", "src/plugin.{ts,js}", "scripts/**/*.{ts,js,mjs}", "**/*.{test,spec}.{ts,tsx,js}", "tests/**/*.{ts,js}", "build.ts", "publish.ts"]
+entry_files = ["src/main.{ts,js}", "src/index.{ts,js}", "src/server.{ts,js}", "scripts/**/*.{ts,js,mjs}", "**/*.{test,spec}.{ts,tsx,js}", "tests/**/*.{ts,js}"]
 
 [kit]
 name = "javascript"

@@ -5,14 +5,8 @@ import { CODE_EXTENSION } from '#plugin/config/rules.ts';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
 import { ASTUtils, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { lintedFile, lintedRoot, staticString, isAnyGlobMatch, relativeToRoot } from '#plugin/files.ts';
+import { NO_ROLES, ROLE_ORDER, TEST_ROLES, CONFIG_ROLES, DEFAULT_CONTRACTS } from '#plugin/config/import-direction.ts';
 
-import {
-    ROLE_ORDER,
-    TEST_ROLES,
-    CONFIG_ROLES,
-    DEFAULT_ROLES,
-    DEFAULT_CONTRACTS,
-} from '#plugin/config/import-direction.ts';
 import type {
     ImportEdge,
     ImportNode,
@@ -69,9 +63,9 @@ export const importDirection = createRule<ImportDirectionOptions, ImportDirectio
             level: 'all',
             title: 'Import direction',
             example:
-                'With `@/` mapped to `src/`, a value import from `@/turn/build` inside `types/b.ts` reports `typesOnlyTypes`. For a type dependency, use `import type { A } from "@/turn/build";`. Keep runtime dependencies outside the type-only directory.',
+                'With the types role on `types/**`, the runtime role on `src/**`, and `@/` mapped to `src/`, a value import from `@/turn/build` inside `types/b.ts` reports `typesOnlyTypes`. For a type dependency, use `import type { A } from "@/turn/build";`. Keep runtime dependencies outside the type-only directory.',
             summary:
-                'Checks the four import directions: types import only types, runtime never imports tests, tests reach runtime only through contracts, and config never imports runtime.',
+                'Checks the four import directions between the roles the options name: types import only types, runtime never imports tests, tests reach runtime only through contracts, and config never imports runtime.',
             why: 'An import against the direction makes a test part of the product, or a type file part of the runtime, and the build carries it.',
             fix: 'Import from the element contract (its index, public or contracts file) or from the types directory, or move the code to the layer that may import it.',
         },
@@ -100,7 +94,7 @@ export const importDirection = createRule<ImportDirectionOptions, ImportDirectio
                 'Configuration imports runtime code through "{{source}}". Configuration holds values; the runtime reads them.',
         },
     },
-    defaultOptions: [{ roles: DEFAULT_ROLES, aliases: {}, contracts: DEFAULT_CONTRACTS, scope: '' }],
+    defaultOptions: [{ roles: NO_ROLES, aliases: {}, contracts: DEFAULT_CONTRACTS, scope: '' }],
     create(context, [options]) {
         const file = lintedFile(context);
         if (file === undefined) return {};
@@ -112,7 +106,7 @@ export const importDirection = createRule<ImportDirectionOptions, ImportDirectio
             const rel = relativeToRoot(root, absolute);
             return prefix !== '' && rel.startsWith(prefix) ? rel.slice(prefix.length) : rel;
         };
-        const roles: Required<ImportDirectionRoles> = { ...DEFAULT_ROLES, ...options.roles };
+        const roles: Required<ImportDirectionRoles> = { ...NO_ROLES, ...options.roles };
         const role = roleOf(relativeOf(file), roles);
         if (role === 'other') return {};
         const contracts = options.contracts ?? DEFAULT_CONTRACTS;

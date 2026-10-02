@@ -34,11 +34,13 @@ export type TemplateInputs = {
     version: string;
     scope: string;
     scopes: { path: string; kits: string[] }[];
-    kitScopes: (kit: string) => { path: string; settings: Record<string, unknown>; extra: MergedView['extra'] }[];
-    /** The folders the selected settings with this role name, for the scope being rendered. */
-    roleFolders: (role: string) => string[];
-    /** The same per scope, shallowest first, for the scopes where a selected setting carries the role. */
-    roleScopes: (role: string) => { path: string; folders: string[] }[];
+    kitScopes: (kit: string) => {
+        path: string;
+        settings: Record<string, unknown>;
+        extra: MergedView['extra'];
+        /** The first harness folder of the scope, relative to it, when the policy names one. */
+        harness: string | undefined;
+    }[];
     kits: string[];
     policy: Policy;
     view: MergedView;

@@ -167,8 +167,6 @@ const settingSchema = z.strictObject({
     summary: sentence,
     languages: z.array(z.string()).optional(),
     categories: z.array(z.string()).optional(),
-    // The architecture role the folder a setting names plays, so a template finds it without naming the setting.
-    role: z.enum(['harness']).optional(),
 });
 
 // The shape of a kit manifest.toml after validation.

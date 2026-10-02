@@ -31,7 +31,8 @@ Rules:
 - Preserve provider capitalization in external names such as `HF_TOKEN` and
   provider repository IDs.
 - Packages and directories are `snake_case`. Test files are `tests/test_<module>.py`, grouped
-  by the behavior they verify. Support code is under `tests/support/`.
+  by the behavior they verify. Support code is in the harness folder that
+  `architecture.roles.harness` names.
 - `handle` starts a name only for a signal, event, or framework callback (`handle_sigterm`).
   Never `Handler` as a class suffix.
 

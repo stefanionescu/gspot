@@ -96,12 +96,9 @@ const BASE_SELECTORS = IS_ALL ? [
         { selector: 'TSAsExpression > TSNeverKeyword', message: 'Do not assert to never to silence the type system.' },
         { selector: 'TSTypeAssertion > TSNeverKeyword', message: 'Do not assert to never to silence the type system.' },
         { selector: 'LogicalExpression[operator="||"][right.type="ObjectExpression"][right.properties.length=0]', message: 'An empty-object fallback hides a missing value. Handle the missing case.' },
-        { selector: 'NewExpression[callee.name=/Error$/]:not([callee.name="GspotError"]) > Literal.arguments:first-child[value=/^[a-z]/]', message: 'Start an error message with a capital letter.' },
-        { selector: 'NewExpression[callee.name=/Error$/]:not([callee.name="GspotError"]) > TemplateLiteral.arguments:first-child[quasis.0.value.raw=/^[a-z]/]', message: 'Start an error message with a capital letter.' },
-        { selector: 'NewExpression[callee.name="GspotError"] > Literal.arguments:nth-child(2)[value=/^[a-z]/]', message: 'Start an error message with a capital letter.' },
-        { selector: 'NewExpression[callee.name="GspotError"] > TemplateLiteral.arguments:nth-child(2)[quasis.0.value.raw=/^[a-z]/]', message: 'Start an error message with a capital letter.' },
-        { selector: 'NewExpression[callee.name="GspotError"] > ArrayExpression.arguments > Literal:first-child[value=/^[a-z]/]', message: 'Start an error message with a capital letter.' },
-        { selector: 'NewExpression[callee.name="GspotError"] > ArrayExpression.arguments > TemplateLiteral:first-child[quasis.0.value.raw=/^[a-z]/]', message: 'Start an error message with a capital letter.' },
+        // The first argument is the message when it stands alone or before an options object; an error class that takes a code first is left alone.
+        { selector: 'NewExpression[callee.name=/Error$/]:matches([arguments.length=1], [arguments.1.type="ObjectExpression"]) > Literal.arguments:first-child[value=/^[a-z]/]', message: 'Start an error message with a capital letter.' },
+        { selector: 'NewExpression[callee.name=/Error$/]:matches([arguments.length=1], [arguments.1.type="ObjectExpression"]) > TemplateLiteral.arguments:first-child[quasis.0.value.raw=/^[a-z]/]', message: 'Start an error message with a capital letter.' },
         { selector: 'CallExpression[callee.property.name=/^(json|send)$/] ObjectExpression > Property[key.name=/^(message|error)$/] > TemplateLiteral.value[expressions.length>0]', message: 'A message a client reads names no identifier; put the value in its own field.' },
         { selector: 'CallExpression[callee.object.name=/^(logger|log|console)$/][callee.property.name=/^(debug|info|warn|error|fatal|trace)$/] > TemplateLiteral.arguments:first-child[expressions.length>0]', message: 'Log a stable message and pass the values as fields.' },
 ] : [];
@@ -205,13 +202,9 @@ const gspotRules = { ...gspot.configs.recommended.rules, ...{
                 ],
                 "tests": [
                     "tests/**",
-                    "**/*.test.*",
-                    "**/*.spec.*",
-                    "**/__tests__/**"
+                    "**/*.test.*"
                 ],
-                "config": [
-                    "config/**"
-                ],
+                "config": [],
                 "env": [
                     "packages/cli/src/platform/environment.ts",
                     "tests/support/environment.ts"
@@ -512,13 +505,9 @@ const scopeRules = [
                         ],
                         "tests": [
                             "tests/**",
-                            "**/*.test.*",
-                            "**/*.spec.*",
-                            "**/__tests__/**"
+                            "**/*.test.*"
                         ],
-                        "config": [
-                            "config/**"
-                        ],
+                        "config": [],
                         "env": [
                             "packages/cli/src/platform/environment.ts",
                             "tests/support/environment.ts"
@@ -570,13 +559,9 @@ const scopeRules = [
                         ],
                         "tests": [
                             "tests/**",
-                            "**/*.test.*",
-                            "**/*.spec.*",
-                            "**/__tests__/**"
+                            "**/*.test.*"
                         ],
-                        "config": [
-                            "config/**"
-                        ],
+                        "config": [],
                         "env": [
                             "packages/cli/src/platform/environment.ts",
                             "tests/support/environment.ts"
@@ -627,13 +612,9 @@ const scopeRules = [
                         ],
                         "tests": [
                             "tests/**",
-                            "**/*.test.*",
-                            "**/*.spec.*",
-                            "**/__tests__/**"
+                            "**/*.test.*"
                         ],
-                        "config": [
-                            "config/**"
-                        ],
+                        "config": [],
                         "env": [
                             "packages/cli/src/platform/environment.ts",
                             "tests/support/environment.ts"

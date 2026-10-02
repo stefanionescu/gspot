@@ -1,5 +1,5 @@
 // The parts of the ESLint configuration that the policy and the rendered scope decide.
-import { roleFolders } from '#cli/policy/settings.ts';
+import { harnessFolders } from '#cli/policy/settings.ts';
 import { aliasesFor } from '#cli/generation/javascript.ts';
 import type { EslintBlock, EslintContext, EslintConfiguration } from '#cli/types/generation.ts';
 import type { Policy, MergedView, ScopeSelection, ArchitectureSettings } from '#cli/types/policy/policy.ts';
@@ -7,8 +7,8 @@ import type { Policy, MergedView, ScopeSelection, ArchitectureSettings } from '#
 import {
     ESLINT_LIMITS,
     REGISTRY_FILES,
+    DIRECTION_ROLES,
     ESLINT_CODE_FILES,
-    DIRECTION_DEFAULTS,
     DEFAULT_NODE_VERSION,
     ESLINT_JAVASCRIPT_LIMITS,
 } from '#cli/config/generation.ts';
@@ -22,34 +22,26 @@ function roleGlobs(architecture: ArchitectureSettings, name: string, defaults: s
     );
 }
 
-// The roles import-direction orders, with the harness folders of the scope.
+// The roles import-direction orders, with the harness folders of the scope. A role the policy leaves out matches no file.
 function directionRoles(architecture: ArchitectureSettings, harness: string[]): Record<string, string[]> {
-    const types = architecture.types_directory ?? 'types';
+    const types = architecture.types_directory;
     return {
-        types: roleGlobs(architecture, 'types', [`${types}/**`, `**/${types}/**`]),
-        harness: roleGlobs(
-            architecture,
-            'harness',
-            harness.map((folder) => `${folder}/**`),
-        ),
-        ...Object.fromEntries(
-            Object.entries(DIRECTION_DEFAULTS).map(([role, globs]) => [role, roleGlobs(architecture, role, globs)]),
-        ),
+        types: roleGlobs(architecture, 'types', types === undefined ? [] : [`${types}/**`, `**/${types}/**`]),
+        harness: harness.map((folder) => `${folder}/**`),
+        ...Object.fromEntries(DIRECTION_ROLES.map((role) => [role, roleGlobs(architecture, role, [])])),
     };
 }
 
 // Each nested scope resolves imports against its own aliases and harness folders.
 function scopeBlocks(context: EslintContext): EslintBlock[] {
-    const { root, policy, scopes, selection } = context;
+    const { root, policy, scopes } = context;
     if (policy.level !== 'all') return [];
-    const rootHarness = roleFolders(selection.selected, selection.view.settings, 'harness');
     return scopes
         .filter((entry) => entry.scope.path !== '')
         .map((entry) => {
             const path = entry.scope.path;
             const aliases = aliasesFor(root, path);
-            const folders = roleFolders(entry.selected, entry.view.settings, 'harness');
-            const roles = directionRoles(policy.architecture, folders.length > 0 ? folders : rootHarness);
+            const roles = directionRoles(policy.architecture, harnessFolders(policy, path));
             const crossFolder = { 'gspot/no-cross-folder-imports': ['error', { aliases }] };
             return {
                 files: [`${path}/${ESLINT_CODE_FILES}`],
@@ -117,7 +109,7 @@ function allLevelRules(context: EslintContext, aliases: Record<string, string>, 
 function gspotRules(context: EslintContext, aliases: Record<string, string>, limits: EslintConfiguration['limits']) {
     const { policy, selection } = context;
     const { architecture } = policy;
-    const roles = directionRoles(architecture, roleFolders(selection.selected, selection.view.settings, 'harness'));
+    const roles = directionRoles(architecture, harnessFolders(policy, selection.scope.path));
     const trivial = { maxStatements: limits['trivialStatements'] };
     const barrels = { 'gspot/max-barrel-reexports': ['error', { max: limits['barrelReexports'] }] };
     return {

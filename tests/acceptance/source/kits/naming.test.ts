@@ -11,8 +11,8 @@ test('the selected naming configuration rejects banned terms in declarations and
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': policyOf(['javascript', 'naming'], '', 'all'),
-        'shell.js': 'export const shellCommand = 1;\n',
-        'shell/port.js': 'export const port = 1;\n',
+        'helper.js': 'export const helperCommand = 1;\n',
+        'helper/port.js': 'export const port = 1;\n',
     });
     const command = ['check', '--only', 'naming/identifiers', 'naming/paths', '--json'];
     const refused = await run(sandbox.path, command);
@@ -23,11 +23,11 @@ test('the selected naming configuration rejects banned terms in declarations and
         ['naming/paths', 'fail'],
     ]);
     expect(report.checks[0]!.findings).toContainEqual(
-        containing({ rule: 'banned-term', file: 'shell.js', line: 1, column: 14 }),
+        containing({ rule: 'banned-term', file: 'helper.js', line: 1, column: 14 }),
     );
-    expect(report.checks[1]!.findings).toContainEqual(containing({ rule: 'banned-term', file: 'shell.js', line: 1 }));
-    renameSync(join(sandbox.path, 'shell.js'), join(sandbox.path, 'entry.js'));
-    renameSync(join(sandbox.path, 'shell'), join(sandbox.path, 'app'));
+    expect(report.checks[1]!.findings).toContainEqual(containing({ rule: 'banned-term', file: 'helper.js', line: 1 }));
+    renameSync(join(sandbox.path, 'helper.js'), join(sandbox.path, 'entry.js'));
+    renameSync(join(sandbox.path, 'helper'), join(sandbox.path, 'app'));
     await Bun.write(join(sandbox.path, 'entry.js'), 'export const command = 1;\n');
     const accepted = await run(sandbox.path, command);
     expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);

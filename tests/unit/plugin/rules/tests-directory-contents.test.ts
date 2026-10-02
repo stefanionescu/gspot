@@ -15,30 +15,25 @@ const root = await plantedRoot({
     'tests/mocks/factory.ts': '',
 });
 
+const options: [{ harnessDirectory: string }] = [{ harnessDirectory: 'tests/support' }];
+
 tester(root).run('tests-directory-contents', testsDirectoryContents, {
     valid: [
         { code: '', filename: `${root}/tests/custom/factory.ts`, options: [{ harnessDirectory: 'tests/custom' }] },
-        { code: '', filename: `${root}/tests/unit/a.test.ts` },
-        { code: '', filename: `${root}/tests/unit/b.d.ts` },
-        { code: '', filename: `${root}/tests/support/factory.ts` },
-        { code: '', filename: `${root}/tests/only/one.ts` },
-        { code: '', filename: `${root}/src/a.ts` },
+        { code: '', filename: `${root}/tests/unit/a.test.ts`, options },
+        { code: '', filename: `${root}/tests/unit/b.d.ts`, options },
+        { code: '', filename: `${root}/tests/support/factory.ts`, options },
+        { code: '', filename: `${root}/tests/only/one.ts`, options },
+        { code: '', filename: `${root}/src/a.ts`, options },
+        // With no harness named, there is no folder to send a support file to, so the rule reports nothing.
+        { code: '', filename: `${root}/tests/unit/builders.ts` },
     ],
-    invalid: [
-        {
-            code: '',
-            filename: `${root}/tests/mocks/factory.ts`,
-            errors: [{ messageId: 'misplaced', data: { name: 'factory.ts', harness: 'tests/support' } }],
-        },
-        {
-            code: '',
-            filename: `${root}/tests/custom/factory.ts`,
-            errors: [{ messageId: 'misplaced', data: { name: 'factory.ts', harness: 'tests/support' } }],
-        },
-        {
-            code: '',
-            filename: `${root}/tests/unit/builders.ts`,
-            errors: [{ messageId: 'misplaced', data: { name: 'builders.ts', harness: 'tests/support' } }],
-        },
-    ],
+    invalid: ['tests/mocks/factory.ts', 'tests/custom/factory.ts', 'tests/unit/builders.ts'].map((path) => ({
+        code: '',
+        filename: `${root}/${path}`,
+        options,
+        errors: [
+            { messageId: 'misplaced' as const, data: { name: path.split('/').at(-1)!, harness: 'tests/support' } },
+        ],
+    })),
 });
