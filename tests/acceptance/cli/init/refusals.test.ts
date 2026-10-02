@@ -74,7 +74,7 @@ test(
         expect(existsSync(join(sandbox.path, 'gspot.toml'))).toBe(false);
         commitAll(sandbox.path);
         const allowed = await run(sandbox.path, ['init', '--yes', '--kits', 'bash', ...INIT_REFUSALS_QUIET], {
-            PATH: `${join(import.meta.dir, '../../../../../node_modules/.bin')}${delimiter}${toolsPath(['ast-grep', 'shellcheck', 'shfmt', 'typos', 'ec'])}`,
+            PATH: `${join(import.meta.dir, '../../../../node_modules/.bin')}${delimiter}${toolsPath(['ast-grep', 'shellcheck', 'shfmt', 'typos', 'ec'])}`,
         });
         expect(allowed.code, allowed.stdout + allowed.stderr).toBe(0);
     },

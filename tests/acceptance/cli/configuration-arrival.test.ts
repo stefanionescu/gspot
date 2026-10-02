@@ -16,7 +16,7 @@ import {
     CONFIGURATION_ARRIVAL_PACKAGE,
 } from '#tests/inputs/acceptance/source/cli/cli.ts';
 
-const MODULES = join(import.meta.dir, '../../../../node_modules');
+const MODULES = join(import.meta.dir, '../../../node_modules');
 describe('gspot add', () => {
     test(
         'adding an ESLint fragment exposes its defect on the next explicit check',

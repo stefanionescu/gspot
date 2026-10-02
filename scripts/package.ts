@@ -20,7 +20,7 @@ try {
         const release = await publishRelease(registry, controller.signal);
         const args = process.argv.slice(2);
         const executed = await run(
-            [process.execPath, 'test', '--timeout', '60000', ...(args.length === 0 ? ['./acceptance/package'] : args)],
+            [process.execPath, 'test', '--timeout', '60000', ...(args.length === 0 ? ['./packages'] : args)],
             {
                 cwd: join(root, 'tests'),
                 env: { GSPOT_RELEASE_FIXTURE: JSON.stringify(release) },

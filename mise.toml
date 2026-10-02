@@ -67,7 +67,7 @@ run = "bun packages/eslint-plugin/build.ts"
 depends = ["prepare:grammar", "build:plugin"]
 description = "Run deterministic unit and integration tests."
 dir = "{{config_root}}/tests"
-run = "bun test --timeout 60000 ./unit ./integration/cli"
+run = "bun test --timeout 60000 ./unit ./integration"
 
 [tasks."test:unit"]
 depends = ["prepare:grammar", "build:plugin"]
@@ -79,13 +79,13 @@ run = "bun test --timeout 60000 ./unit"
 depends = ["prepare:grammar", "build:plugin"]
 description = "Run integration tests."
 dir = "{{config_root}}/tests"
-run = "bun test --timeout 60000 ./integration/cli"
+run = "bun test --timeout 60000 ./integration"
 
 [tasks."test:tools"]
 depends = ["prepare:grammar", "build:plugin"]
 description = "Run native compatibility tests with the selected tools installed."
 dir = "{{config_root}}/tests"
-run = "bun test --timeout 60000 ./integration/tools"
+run = "bun test --timeout 60000 ./tools"
 
 [tasks."test:acceptance"]
 depends = ["prepare:grammar"]

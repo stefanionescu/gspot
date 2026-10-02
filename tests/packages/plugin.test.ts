@@ -8,7 +8,7 @@ import { startRegistry } from '#tests/support/registry/lifecycle.ts';
 import { CONSUMER, DECLARATIONS } from '#tests/inputs/acceptance/package.ts';
 import { lstatSync, mkdirSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 
-const root = fileURLToPath(new URL('../../..', import.meta.url));
+const root = fileURLToPath(new URL('../..', import.meta.url));
 
 function expectPluginPayload(consumer: string): void {
     const installedPlugin = join(consumer, 'node_modules', '@gspothq/eslint-plugin');

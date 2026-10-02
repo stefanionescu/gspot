@@ -10,7 +10,7 @@ import { environmentVariables } from '#cli/platform/environment.ts';
 import { mkdirSync, existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { waitForExit, waitForFile, waitForJson, captureChild } from '#tests/support/cli/process.ts';
 
-const CLI = join(import.meta.dir, '../../../../packages/cli/src/main.ts');
+const CLI = join(import.meta.dir, '../../../packages/cli/src/main.ts');
 const CHILD_OPTIONS = { stdout: 'pipe', stderr: 'pipe', timeout: 12_000, killSignal: 'SIGKILL' } as const;
 
 test.each(['SIGINT', 'SIGTERM'] as const)(
