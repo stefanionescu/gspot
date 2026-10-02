@@ -19,6 +19,9 @@ const INVALID: (PlantedInput & { expected: string })[] = [
 ];
 
 const CLEAN = `{\n    "name": "planted",\n    "version": "1.0.0",\n    "private": true,\n    "packageManager": "bun@${Bun.version}"\n}\n`;
+const FOREIGN_PNPM =
+    "lockfileVersion: '9.0'\npackages:\n  a@1.0.0:\n    resolution: {tarball: https://registry.example.test/a/-/a-1.0.0.tgz}\n";
+const FOREIGN_YARN = 'a@1.0.0:\n  version "1.0.0"\n  resolved "https://registry.example.test/a/-/a-1.0.0.tgz#0a1b"\n';
 const FOREIGN_LOCK =
     '{\n    "packages": { "node_modules/a": { "resolved": "https://registry.example.test/a/-/a-1.0.0.tgz", "funding": { "url": "https://opencollective.com/a" } } }\n}\n';
 
@@ -50,12 +53,26 @@ plantedCases(
                 },
             },
         },
+        ...['package-lock.json', 'npm-shrinkwrap.json'].map((lockfile) => ({
+            check: 'dependencies/lockfile-hosts',
+            files: { [lockfile]: FOREIGN_LOCK },
+            expected: { file: lockfile, rule: 'host', line: 2 },
+            corrected: { files: { [lockfile]: FOREIGN_LOCK.replace('registry.example.test', 'registry.npmjs.org') } },
+        })),
         {
             check: 'dependencies/lockfile-hosts',
-            files: { 'package-lock.json': FOREIGN_LOCK },
-            expected: { file: 'package-lock.json', rule: 'host', line: 2 },
+            files: { 'pnpm-lock.yaml': FOREIGN_PNPM },
+            expected: { file: 'pnpm-lock.yaml', rule: 'host', line: 4 },
             corrected: {
-                files: { 'package-lock.json': FOREIGN_LOCK.replace('registry.example.test', 'registry.npmjs.org') },
+                files: { 'pnpm-lock.yaml': FOREIGN_PNPM.replace('registry.example.test', 'registry.npmjs.org') },
+            },
+        },
+        {
+            check: 'dependencies/lockfile-hosts',
+            files: { 'yarn.lock': FOREIGN_YARN },
+            expected: { file: 'yarn.lock', rule: 'host', line: 3 },
+            corrected: {
+                files: { 'yarn.lock': FOREIGN_YARN.replace('registry.example.test', 'registry.yarnpkg.com') },
             },
         },
     ],
