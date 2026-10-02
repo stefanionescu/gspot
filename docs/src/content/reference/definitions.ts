@@ -180,35 +180,3 @@ export function rulePage(check: CheckSpec, configuration: Manifest): ReferencePa
         `packages/cli/${configuration.dir}/manifest.toml`,
     );
 }
-
-/**
- * The page that lists every engine with the checks it runs.
- * @param checks every check with the kit that declares it, by name
- * @returns the page
- */
-export function enginesPage(checks: Map<string, { check: CheckSpec; kit: Manifest }>): ReferencePage {
-    const byEngine = new Map<string, CheckSpec[]>();
-    for (const { check } of checks.values()) {
-        if (check.engine === undefined) continue;
-        const list = byEngine.get(check.engine) ?? [];
-        list.push(check);
-        byEngine.set(check.engine, list);
-    }
-    const sections = [...byEngine]
-        .toSorted(([a], [b]) => a.localeCompare(b))
-        .map(
-            ([engine, list]) =>
-                `## ${engine.charAt(0).toUpperCase()}${engine.slice(1)}
-
-${table(
-    ['Check', 'Stage', 'What it finds'],
-    list.map((check) => [`[\`${check.name}\`](/reference/rules/${check.name}/)`, check.stage, cell(check.summary)]),
-)}\n`,
-        );
-    return referencePage(
-        'Engines',
-        'The checks gspot runs itself, by engine: structure, naming, prose and integrity.',
-        `gspot runs external tools for what they do well and its own engines for the rest. Each engine is a set of checks; every check explains itself on its own page.\n\n${sections.join('\n')}`,
-        'packages/cli/src/execution/engines.ts',
-    );
-}

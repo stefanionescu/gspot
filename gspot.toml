@@ -127,9 +127,6 @@ patterns = [
 ]
 reason = "The guides explicitly introduce these downloaded binaries, consumer project resources, and example files. They are not claims that this checkout tracks them."
 
-[[tools.docs.paths_allowed]]
-patterns = ["acceptance/source/kits/vite.test.ts"]
-reason = "The acceptance runner resolves this documented argument from its tests working directory. The tracked file is tests/acceptance/source/kits/vite.test.ts."
 [tools.lychee]
 
 [[tools.lychee.exclude_paths]]
