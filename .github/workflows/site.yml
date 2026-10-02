@@ -60,7 +60,7 @@ jobs:
                   retention-days: 90
     deploy:
         needs: build
-        if: vars.GSPOT_PAGES_ENABLED == 'true'
+        if: vars.PAGES_ENABLED == 'true'
         runs-on: ubuntu-24.04
         timeout-minutes: 10
         concurrency:

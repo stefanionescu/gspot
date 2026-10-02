@@ -166,7 +166,7 @@ npm view @gspothq/cli@0.1.0 name version repository --registry=https://registry.
 
 ## Publish the documentation
 
-The site workflow builds from a published release tag, when `GSPOT_PAGES_ENABLED` is `true`.
+The site workflow builds from a published release tag, when `PAGES_ENABLED` is `true`.
 The gspot version must match the tag. The build records the version and the source revision in
 `source.json`, and keeps the site artifact for 90 days. Only the deployment job may write to
 Pages, and a reviewer on the `github-pages` environment approves it.

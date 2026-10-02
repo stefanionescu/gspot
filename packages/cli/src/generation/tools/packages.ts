@@ -1,5 +1,6 @@
 import semver from 'semver';
 import { npmPins } from '#cli/tools/pins.ts';
+import { TOOLS_PROJECT } from '#cli/config/tools/tools.ts';
 import type { PackageTool } from '#cli/types/tools/packages.ts';
 import { YARN_BERRY_MAJOR } from '#cli/config/tools/packages.ts';
 import type { Manifest, GeneratedFile } from '#cli/types/kits.ts';
@@ -23,7 +24,7 @@ export function toolPackages(
             path: '.gspot/package.json',
             content: `${JSON.stringify(
                 {
-                    name: 'gspot-tools',
+                    name: TOOLS_PROJECT,
                     private: true,
                     type: 'module',
                     packageManager: `${client.name}@${client.version}`,

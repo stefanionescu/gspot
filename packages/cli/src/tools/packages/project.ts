@@ -3,13 +3,13 @@ import { z } from 'zod';
 import semver from 'semver';
 import { join } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
-import { SETUP } from '#cli/config/tools/tools.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import type { ToolOwner } from '#cli/types/tools/tools.ts';
 import { lockMatches } from '#cli/tools/packages/locks.ts';
 import type { Read } from '#cli/types/platform/platform.ts';
 import type { ToolPin, GeneratedFile } from '#cli/types/kits.ts';
 import { installedOutputs } from '#cli/tools/installed-files.ts';
+import { SETUP, TOOLS_PROJECT } from '#cli/config/tools/tools.ts';
 import { parsePackageTool } from '#cli/tools/packages/identity.ts';
 import { openRoot, scratchFolder } from '#cli/platform/filesystem.ts';
 import type { Inputs, ToolProject } from '#cli/types/tools/packages.ts';
@@ -17,7 +17,7 @@ import { LOCKS, YARN_SETTINGS, TOOL_PACKAGE_PROJECT } from '#cli/config/tools/pa
 import { packageCommand, packageInstallCommand, prepareNativeWrappers } from '#cli/tools/packages/commands.ts';
 
 const packageSchema = z.strictObject({
-    name: z.literal('gspot-tools'),
+    name: z.literal(TOOLS_PROJECT),
     private: z.literal(true),
     type: z.literal('module'),
     packageManager: z.string(),

@@ -63,6 +63,13 @@ Checks at the `manual` stage, such as CodeQL, run only when you name them with `
 gspot check --only security/codeql
 ```
 
+gspot runs as many checks at once as the machine has processor cores. Set `GSPOT_JOBS` to a
+smaller number when the tools compete for memory, as on a small CI runner:
+
+```bash
+GSPOT_JOBS=2 gspot check
+```
+
 ## The CI job
 
 `gspot init --ci github` writes `.github/workflows/gspot.yml`. `gspot init --ci gitlab` writes

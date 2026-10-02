@@ -12,12 +12,12 @@ import { GSPOT_FOLDER } from '#cli/config/repository/repository.ts';
 import { normalizedPythonPackage } from '#cli/repository/packages.ts';
 import { openRoot, scratchFolder } from '#cli/platform/filesystem.ts';
 import { MODE_BITS, PRIVATE_FILE } from '#cli/config/platform/root.ts';
-import { LOCK, SETUP, INDEX_SETTINGS, TOOL_PYTHON_PROJECT } from '#cli/config/tools/tools.ts';
+import { LOCK, SETUP, TOOLS_PROJECT, INDEX_SETTINGS, TOOL_PYTHON_PROJECT } from '#cli/config/tools/tools.ts';
 import { chmodSync, lstatSync, unlinkSync, copyFileSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
 
 const projectSchema = z.strictObject({
     project: z.strictObject({
-        name: z.literal('gspot-tools'),
+        name: z.literal(TOOLS_PROJECT),
         version: z.literal('0.0.0'),
         'requires-python': z.literal('>=3.11'),
         dependencies: z.array(z.string().regex(/^[a-z0-9._-]+==[a-z0-9.+!_-]+$/iu)),
