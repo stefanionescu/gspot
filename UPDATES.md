@@ -18,14 +18,13 @@ approved it on October 1, 2026.
 
 ### Where things stand on October 2, 2026
 
-- `main` is at `c7d347e9`. Stages 1 to 23 are merged as pull requests #2 to #8 and #10 to #18. Stage 7 also deleted
+- `main` is at `28ac40ad`. Stages 1 to 24 are merged as pull requests #2 to #8 and #10 to #19. Stage 7 also deleted
   the `architecture` folder, a part of stage 15.
 - Pull request #9 updated `devalue` to 5.9.4 for seven advisories that `dependencies/osv` reported on October 1.
 - On October 2 the owner asked for five to ten stages per pull request. Each stage is linted and committed on its
   own. Stages 15 to 21 were pull request #17, and stages 22 and 23 were pull request #18.
-- Stage 24 is pull request #19, branch `refactor/acceptance-tiers`. Stages 25 and 26 are on `refactor/shared-helpers`,
-  stacked on it, and become pull request #20.
-- The next stage to start is stage 27.
+- Stages 25 to 27 are on `refactor/shared-helpers` and become pull request #20.
+- The next stage to start is stage 28.
 
 ### Stages
 
@@ -59,7 +58,7 @@ One pull request per stage, in this order. Each merges with a merge commit only 
 | 24    | Move acceptance cases to faster tiers                  | D.4 moves; Windows fixes; the quarantine list emptied and deleted                                       | pull request #19 |
 | 25    | Dispose roots and share text, object, and git helpers  | the first half of 6.2                                                                                   | pull request #20 |
 | 26    | Keep one table and one constant per fact               | the second half of 6.2                                                                                  | pull request #20 |
-| 27    | Adopt libraries and fix the audited bugs               | 6.3; section 4 rows without a D.5 test; the bugs listed below; constraints for transitive tool packages | not started      |
+| 27    | Adopt libraries and fix the audited bugs               | 6.3; section 4 rows without a D.5 test; the bugs listed below; constraints for transitive tool packages | pull request #20 |
 | 28    | Settle each exempted tiny function                     | appendix C; tiny rules off for React components and NestJS modules                                      | not started      |
 | 29    | Rename the `gspot.toml` keys                           | A.3 without `[guides]`                                                                                  | not started      |
 | 30    | Rename the kit manifest fields                         | A.4                                                                                                     | not started      |
@@ -159,8 +158,8 @@ The owner and the work settled these while implementing:
   branch with another schema, copy the folder aside, delete it, and apply on the other branch.
 - The tool lock `.gspot/bun.lock` pins the integrity of the workspace ESLint plugin. After a change to the plugin, delete
   the lock and run `mise run apply` in the same pull request, or the frozen install in CI refuses the rebuilt plugin.
-- After a branch switch, `chmod 0444` the generated files `apply` calls edited, and if it still refuses them, copy
-  `.gspot/state` aside, delete it, and apply. Move an unowned `.gspot/node_modules` aside before `gspot install`.
+- After a branch switch, if `apply` still refuses a generated file as edited, copy `.gspot/state` aside, delete it, and
+  apply. Move an unowned `.gspot/node_modules` aside before `gspot install`.
 - Never print the npm token, and never publish to npm without the owner.
 
 ### Open items
@@ -169,7 +168,6 @@ The owner and the work settled these while implementing:
   D.2 rows wait for the stage that deletes that code:
     - stage 23: every "move" and "rewrite" verdict, the CLI spawns that become in-process calls, and the process case
       in `sql-parser`.
-    - stage 27: the cache-home case in `checks/swift/cache`.
 - Stage 14 removed the code that lints this repository from the product:
     - The guide linter, its 14 constants, its task, its check, and its unit tests are gone. Stage 9 had already deleted
       the tests that ran the rule examples.
@@ -299,28 +297,29 @@ The owner and the work settled these while implementing:
 - Stages 2 to 7 already removed the D.2 cases about the cache status, the census, inline ignores, reports, uninstall,
   and byte backups. `output/progress`, `output/reporter`, `comment-syntax`, `suppression-comments`, `hooks`, `kinds`,
   `gitlinks`, `bun`, and most ownership files needed no further cut.
-- After a checkout rewrites a read-only generated file with mode 0644, `apply` refuses it as edited although the bytes
-  match. Until stage 27 fixes that, `chmod 0444` the files it names and rerun `mise run apply`.
-- Stage 1 left the two empty scopes, `packages/cli` and `packages/eslint-plugin`, in `gspot.toml`. They stay until
-  stage 27 fixes the knip workspaces: without them, knip loses the entry files of both packages. Then delete them
-  with adaptation 7.
-- Bugs for stage 27:
-    - knip takes its workspaces from the gspot scopes instead of the package workspaces.
-    - A prune, such as `gspot set guides.install false`, leaves empty folders behind.
-    - A checkout writes a read-only generated file with mode 0644, and `apply` refuses it as edited although its bytes
-      match the record.
-    - `--only <checks...>` keeps reading after a global `--json`, so `check --only X --json file` takes the file as a
-      check name.
-    - On Windows gspot installs the npm build of Taplo. That build checks no file there, so broken TOML passes. The
-      two Taplo rows of `kits/general/files` run on Linux and macOS until gspot installs a Taplo that checks on
-      Windows.
-    - `LICENSE_FILE` matches any name that starts with `license-`, `notice-`, or `copying-`, so every check skips such
-      a source file, `license-locks.test.ts` among them.
-    - eslint-plugin-boundaries 7 deprecates the `mode` option, the `element-types` rule, its `rules` option, and string
-      selectors, which the generated configuration uses, so it warns on every run. Its element patterns match folders
-      only, so the move needs a file descriptor for `main.ts`.
-- The pyjwt advisory ignores expire on October 13 and 15, 2026. Renew them with `gspot ignore` in the open pull
-  request, or replace them with the transitive constraints of stage 27 once semgrep allows a fixed pyjwt.
+- Stage 27 took four libraries and left four rows of 6.3:
+    - The workflow is a `yaml` document, `env-paths` names the cache folder, `std-env` detects CI, and
+      `@commander-js/extra-typings` types every flag. `fastest-levenshtein` came in stage 26.
+    - `codePoints` stays: `unicorn/prefer-spread` rejects `Array.from(text)`, and `no-misused-spread` rejects
+      `[...text]`.
+    - Prettier cannot lay out JSON, because it formats asynchronously and generation is synchronous. The CLI does not
+      depend on Prettier.
+    - tinyglobby lists no link it does not follow, and the workspace check must see those links to refuse them.
+    - `RegExp.escape` waits until `packages/cli/package.json` asks for Node 24.
+- Stage 27 fixed the listed bugs and the section 4 rows without a D.5 test:
+    - knip takes its workspaces from the package workspaces, so the two empty scopes are gone. The plugin is an
+      architecture element of its own, which keeps the guard against imports between it and the CLI.
+    - A prune removes the folders it empties. A checkout's 0644 copy of a read-only file counts as unedited.
+      A program option such as `--json` ends a list option. `explain` prefers a tracked file to a tool rule.
+    - `LICENSE_FILE` leaves code files as source, and `@generated` counts only in a comment line. The banner rule
+      had made the CLI's own banner table read as generated.
+    - The generated architecture uses the boundaries 7 `dependencies` rule with file categories. Taplo installs from
+      its native release everywhere, so its rows run on Windows again.
+    - The Open Source Vulnerabilities (OSV) scan skips the tool locks under `.gspot`, and the thirteen pyjwt ignores are gone. A `pypi` pin can
+      carry `constraints`, which uv applies to the packages the tool pulls in.
+    - Left for later stages: the `[rules]` wording in `packages/cli/src/config/agents.ts` goes with the rename to
+      rules, and the agent rules that teach rejected code go with appendix F.3. The rows that a D.5 test confirms
+      wait for those tests.
 - The Supabase database journey runs in CI only in the weekly `database` workflow, which sets `DATABASE_JOURNEYS`.
 
 ### Owner actions
