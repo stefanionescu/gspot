@@ -3,10 +3,10 @@ import { test, spyOn, expect } from 'bun:test';
 import { existsSync, readFileSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
-import { engineInput } from '#cli/execution/engines.ts';
 import { jestCoverage } from '#cli/checks/tool/jest.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
+import { scopeInput } from '#tests/harness/cli/input.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 
 async function writeJestReports(
@@ -76,11 +76,7 @@ test.each([
     });
     const session = await openSession(sandbox.path);
     const spec = session.manifests.get('jest')!.checks[0]!;
-    const input = engineInput(session, {
-        scope: session.scopes.find((entry) => entry.scope.path === '')!,
-        spec: spec,
-        files: session.repository.files,
-    });
+    const input = scopeInput(session, spec);
     let isBroken = true;
     const artifacts: string[] = [];
     const process = spyOn(processes, 'run').mockImplementation(async (argv, options) => {

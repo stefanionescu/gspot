@@ -3,9 +3,9 @@ import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import * as tools from '#cli/execution/tool/runner.ts';
-import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
+import { scopeInput } from '#tests/harness/cli/input.ts';
 import { emitted } from '#tests/harness/cli/generated.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import { licensesPackages } from '#cli/checks/general/licenses.ts';
@@ -26,11 +26,7 @@ async function input(root: string): Promise<EngineInput> {
     const spec = selected.selected
         .flatMap((manifest) => manifest.checks)
         .find((check) => check.name === 'licenses/packages')!;
-    return engineInput(session, {
-        scope: session.scopes.find((entry) => entry.scope.path === '')!,
-        spec: spec,
-        files: session.repository.files,
-    });
+    return scopeInput(session, spec);
 }
 
 test('license analysis refuses absent dependencies instead of reporting a successful scan', async () => {

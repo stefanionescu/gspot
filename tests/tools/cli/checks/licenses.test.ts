@@ -2,9 +2,9 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { run } from '#cli/platform/spawn.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
+import { scopeInput } from '#tests/harness/cli/input.ts';
 import { emitted } from '#tests/harness/cli/generated.ts';
 import { venvExecutable } from '#tests/harness/cli/platforms.ts';
 import { licensesPackages } from '#cli/checks/general/licenses.ts';
@@ -19,11 +19,7 @@ async function input(root: string): Promise<EngineInput> {
     const spec = selected.selected
         .flatMap((manifest) => manifest.checks)
         .find((check) => check.name === 'licenses/packages')!;
-    return engineInput(session, {
-        scope: session.scopes.find((entry) => entry.scope.path === '')!,
-        spec: spec,
-        files: session.repository.files,
-    });
+    return scopeInput(session, spec);
 }
 
 test('native Python license scanning ignores project scanner exclusions and matches an exception by its normalized name', async () => {

@@ -4,9 +4,9 @@ import type { TestdirResult } from 'testdirs';
 import { testdir, createFileTree } from 'testdirs';
 import type { CheckSpec } from '#cli/types/kits.ts';
 import { commitAll } from '#tests/harness/cli/git.ts';
-import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
+import { scopeInput } from '#tests/harness/cli/input.ts';
 import { openapiFresh } from '#cli/checks/tool/openapi.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import type { EngineInput } from '#cli/types/execution/execution.ts';
@@ -52,11 +52,7 @@ async function plant(schema: string): Promise<{
     writeFileSync(join(directory.path, '0009_manual.sql'), '-- Untracked manual migration\n');
     const session = await openSession(directory.path);
     const spec = session.manifests.get('openapi')!.checks.find((entry) => entry.name === 'openapi/fresh')!;
-    const input = engineInput(session, {
-        scope: session.scopes.find((entry) => entry.scope.path === '')!,
-        spec: spec,
-        files: session.repository.files,
-    });
+    const input = scopeInput(session, spec);
     return { directory, document, edited, mode: statSync(document).mode, spec, input };
 }
 

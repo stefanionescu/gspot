@@ -1,7 +1,7 @@
 import { createFileTree } from 'testdirs';
-import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
+import { scopeInput } from '#tests/harness/cli/input.ts';
 import type { EngineInput } from '#cli/types/execution/execution.ts';
 
 /** Select source files for an isolated site build owned by the test resource stack. */
@@ -16,9 +16,5 @@ export async function siteInput(root: string, paths: string[], resources: Dispos
     const spec = selection.selected
         .flatMap((manifest) => manifest.checks)
         .find((check) => check.name === 'static-site/build-reproducible')!;
-    return engineInput(session, {
-        scope: session.scopes.find((entry) => entry.scope.path === '')!,
-        spec: spec,
-        files: session.repository.files,
-    });
+    return scopeInput(session, spec);
 }

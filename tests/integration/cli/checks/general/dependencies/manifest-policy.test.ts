@@ -2,9 +2,9 @@ import * as fs from 'node:fs';
 import { join } from 'node:path';
 import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
+import { scopeInput } from '#tests/harness/cli/input.ts';
 import type { EngineInput } from '#cli/types/execution/execution.ts';
 import { manifestPolicy } from '#cli/checks/general/dependencies/manifests.ts';
 
@@ -18,11 +18,7 @@ async function input(root: string): Promise<EngineInput> {
     const spec = selected.selected
         .flatMap((manifest) => manifest.checks)
         .find((check) => check.name === 'integrity/manifest-policy')!;
-    return engineInput(session, {
-        scope: session.scopes.find((entry) => entry.scope.path === selected.scope.path)!,
-        spec: spec,
-        files: session.repository.files,
-    });
+    return scopeInput(session, spec, selected.scope.path);
 }
 
 describe('manifest policy reads', () => {

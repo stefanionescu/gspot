@@ -6,9 +6,9 @@ import { join, delimiter } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { commitAll } from '#tests/harness/cli/git.ts';
-import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
+import { scopeInput } from '#tests/harness/cli/input.ts';
 import { initArgs } from '#tests/harness/planted/init.ts';
 import { spawnGspot } from '#tests/harness/cli/command.ts';
 import type { EngineInput } from '#cli/types/execution/execution.ts';
@@ -82,11 +82,7 @@ export async function prepareNextjsBuild(root: string, scope: string, check: str
     writeFileSync(join(root, join(scope, '.next/local-cache.bin')), Buffer.from([0, 255, 1, 2]));
     const session = await openSession(root);
     const spec = session.manifests.get('nextjs')!.checks.find((entry) => entry.name === check)!;
-    const input: EngineInput = engineInput(session, {
-        scope: session.scopes.find((entry) => entry.scope.path === scope)!,
-        spec: spec,
-        files: session.repository.files,
-    });
+    const input: EngineInput = scopeInput(session, spec, scope);
     chmodSync(join(root, join(scope, 'tsconfig.json')), 0o640);
     return input;
 }

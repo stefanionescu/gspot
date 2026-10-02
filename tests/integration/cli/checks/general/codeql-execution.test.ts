@@ -5,6 +5,7 @@ import * as processes from '#cli/platform/spawn.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
+import { scopeInput } from '#tests/harness/cli/input.ts';
 import { test, spyOn, expect, describe } from 'bun:test';
 import { rejection } from '#tests/harness/expectations.ts';
 import { codeql } from '#cli/checks/general/security/codeql.ts';
@@ -43,11 +44,7 @@ async function refusesOutsideLanguage(language: string): Promise<string[]> {
     await createFileTree(directory.path, { 'gspot.toml': policy(language), 'source.py': 'value = 1\n' });
     const session = await openSession(directory.path);
     const spec = session.manifests.get('security')!.checks.find((entry) => entry.name === 'security/codeql')!;
-    const input = engineInput(session, {
-        scope: session.scopes.find((entry) => entry.scope.path === '')!,
-        spec: spec,
-        files: session.repository.files,
-    });
+    const input = scopeInput(session, spec);
     const copies: string[] = [];
     // What the database creation saw in its copy of the repository.
     const sources: string[] = [];
@@ -136,13 +133,7 @@ async function mapsIsolatedLocations(): Promise<Finding[]> {
         return Promise.resolve({ ...base, stdout: '' });
     });
     try {
-        const findings = await codeql(
-            engineInput(session, {
-                scope: session.scopes.find((entry) => entry.scope.path === '')!,
-                spec: spec,
-                files: session.repository.files,
-            }),
-        );
+        const findings = await codeql(scopeInput(session, spec));
         expect(invoked.map(({ cwd }) => cwd)).not.toContain(directory.path);
         expectNativeCodeqlOptions(
             invoked.map(({ argv }) => argv),

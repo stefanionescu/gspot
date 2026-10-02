@@ -2,8 +2,8 @@
 import { join } from 'node:path';
 import { rmSync } from 'node:fs';
 import { buildFolder } from '#cli/platform/paths.ts';
-import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { scopeInput } from '#tests/harness/cli/input.ts';
 import { emitted } from '#tests/harness/cli/generated.ts';
 import type { EngineInput } from '#cli/types/execution/execution.ts';
 
@@ -20,11 +20,7 @@ export async function swiftInput(root: string, check: string): Promise<EngineInp
     const session = await openSession(root);
     const selection = session.scopes[0]!;
     const spec = selection.selected.flatMap((manifest) => manifest.checks).find((entry) => entry.name === check)!;
-    return engineInput(session, {
-        scope: session.scopes.find((entry) => entry.scope.path === '')!,
-        spec: spec,
-        files: session.repository.files,
-    });
+    return scopeInput(session, spec);
 }
 
 /**

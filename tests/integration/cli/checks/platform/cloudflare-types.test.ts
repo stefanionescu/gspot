@@ -7,10 +7,10 @@ import { toPosix } from '#cli/platform/paths.ts';
 import { testdir, createFileTree } from 'testdirs';
 import type { CheckSpec } from '#cli/types/kits.ts';
 import { commitAll } from '#tests/harness/cli/git.ts';
-import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
 import type { inspectTool } from '#cli/tools/inspect.ts';
+import { scopeInput } from '#tests/harness/cli/input.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import type { EngineInput } from '#cli/types/execution/execution.ts';
 import { envTypesFresh, headersSyntax } from '#cli/checks/platform/cloudflare.ts';
@@ -56,11 +56,7 @@ async function plant(
     const spec = session.manifests
         .get('cloudflare')!
         .checks.find((entry) => entry.name === 'cloudflare/env-types-fresh')!;
-    const input = engineInput(session, {
-        scope: session.scopes.find((entry) => entry.scope.path === '')!,
-        spec: spec,
-        files: session.repository.files,
-    });
+    const input = scopeInput(session, spec);
     const locate = spyOn(tools, 'inspectTool').mockReturnValue({
         name: 'wrangler',
         state: 'host',
@@ -151,11 +147,7 @@ test('Cloudflare header checks report only files in their owning scope', async (
     const spec = session.manifests
         .get('cloudflare')!
         .checks.find((entry) => entry.name === 'cloudflare/headers-syntax')!;
-    const input = engineInput(session, {
-        scope: session.scopes.find((entry) => entry.scope.path === '')!,
-        spec: spec,
-        files: session.repository.files,
-    });
+    const input = scopeInput(session, spec);
     const found = headersSyntax(input);
     expect(found).toStrictEqual([
         {
@@ -170,13 +162,5 @@ test('Cloudflare header checks report only files in their owning scope', async (
     expect(headersSyntax({ ...input, scope: 'workers/api' })).toStrictEqual([]);
     writeFileSync(join(directory.path, '_headers'), '/*\n  X-Frame-Options: DENY\n');
     const corrected = await openSession(directory.path);
-    expect(
-        headersSyntax(
-            engineInput(corrected, {
-                scope: corrected.scopes.find((entry) => entry.scope.path === '')!,
-                spec,
-                files: corrected.repository.files,
-            }),
-        ),
-    ).toStrictEqual([]);
+    expect(headersSyntax(scopeInput(corrected, spec))).toStrictEqual([]);
 });

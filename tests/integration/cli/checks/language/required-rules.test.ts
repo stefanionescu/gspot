@@ -2,9 +2,9 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { rejects } from 'node:assert/strict';
 import { testdir, createFileTree } from 'testdirs';
-import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
+import { scopeInput } from '#tests/harness/cli/input.ts';
 import { emitted } from '#tests/harness/cli/generated.ts';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import type { EngineInput } from '#cli/types/execution/execution.ts';
@@ -25,11 +25,7 @@ test('required ESLint rules inspect later file overrides and accept their correc
     const spec = selected.selected
         .flatMap((manifest) => manifest.checks)
         .find((check) => check.name === 'integrity/required-rules')!;
-    const input: EngineInput = engineInput(session, {
-        scope: session.scopes.find((entry) => entry.scope.path === '')!,
-        spec: spec,
-        files: session.repository.files,
-    });
+    const input: EngineInput = scopeInput(session, spec);
     const generated = emitted(session).files.find((file) => file.path === '.gspot/config/eslint.config.mjs')!;
     mkdirSync(join(sandbox.path, '.gspot/config'), { recursive: true });
     const config = join(sandbox.path, generated.path);

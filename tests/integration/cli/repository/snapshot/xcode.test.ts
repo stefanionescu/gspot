@@ -3,9 +3,9 @@ import { test, expect } from 'bun:test';
 import { rejects } from 'node:assert/strict';
 import { testdir, createFileTree } from 'testdirs';
 import { gitOutput } from '#tests/harness/cli/git.ts';
-import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
+import { scopeInput } from '#tests/harness/cli/input.ts';
 import { onPosix } from '#tests/harness/cli/platforms.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { unlinkSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
@@ -31,11 +31,7 @@ if (onPosix)
         const spec = selected.selected
             .flatMap((manifest) => manifest.checks)
             .find((check) => check.name === 'xcode/symlinks')!;
-        const input = engineInput(session, {
-            scope: session.scopes.find((entry) => entry.scope.path === '')!,
-            spec: spec,
-            files: session.repository.files,
-        });
+        const input = scopeInput(session, spec);
         expect(await projectSymlinks(input)).toStrictEqual([
             {
                 check: 'xcode/symlinks',
@@ -102,13 +98,7 @@ test('Xcode source membership does not mix independent nested projects', async (
         const spec = selected.selected
             .flatMap((manifest) => manifest.checks)
             .find((check) => check.name === 'xcode/orphan-sources')!;
-        const findings = orphanSources(
-            engineInput(session, {
-                scope: session.scopes.find((entry) => entry.scope.path === selected.scope.path)!,
-                spec: spec,
-                files: session.repository.files,
-            }),
-        );
+        const findings = orphanSources(scopeInput(session, spec, selected.scope.path));
         expect(findings).toStrictEqual(
             selected.scope.path === ''
                 ? []

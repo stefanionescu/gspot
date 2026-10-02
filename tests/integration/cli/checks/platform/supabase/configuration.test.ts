@@ -3,20 +3,16 @@ import { test, expect } from 'bun:test';
 import { writeFileSync } from 'node:fs';
 import { rejects } from 'node:assert/strict';
 import { testdir, createFileTree } from 'testdirs';
-import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
 import type { Session } from '#cli/types/tools/tools.ts';
+import { scopeInput } from '#tests/harness/cli/input.ts';
 import type { EngineInput } from '#cli/types/execution/execution.ts';
 import { projectValid, functionFolders, storagePolicies } from '#cli/checks/platform/supabase/project.ts';
 
 function input(session: Session, scope: string, name: string): EngineInput {
     const spec = session.manifests.get('supabase')!.checks.find((check) => check.name === name)!;
-    return engineInput(session, {
-        scope: session.scopes.find((entry) => entry.scope.path === scope)!,
-        spec: spec,
-        files: session.repository.files,
-    });
+    return scopeInput(session, spec, scope);
 }
 
 test('Supabase configurations and function discovery stay within nested project scopes', async () => {

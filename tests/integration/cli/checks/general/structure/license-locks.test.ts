@@ -1,9 +1,9 @@
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
-import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
+import { scopeInput } from '#tests/harness/cli/input.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { runOptions } from '#tests/harness/cli/command.ts';
 import { allowlistsMatch } from '#cli/checks/general/structure/stale-allowlists.ts';
@@ -32,13 +32,7 @@ test.each(LOCKS)('license exceptions must match a resolved version in %s', async
         const spec = scope.selected
             .flatMap((configuration) => configuration.checks)
             .find((check) => check.name === 'integrity/allowlists-match')!;
-        return allowlistsMatch(
-            engineInput(session, {
-                scope: session.scopes.find((entry) => entry.scope.path === '')!,
-                spec: spec,
-                files: session.repository.files,
-            }),
-        );
+        return allowlistsMatch(scopeInput(session, spec));
     };
     expect(await check()).toStrictEqual([
         containing({
@@ -72,13 +66,7 @@ test('scoped license exceptions use ancestor workspace locks but not sibling or 
         const spec = scope.selected
             .flatMap((configuration) => configuration.checks)
             .find((check) => check.name === 'integrity/allowlists-match')!;
-        return allowlistsMatch(
-            engineInput(session, {
-                scope: session.scopes.find((entry) => entry.scope.path === '')!,
-                spec: spec,
-                files: session.repository.files,
-            }),
-        );
+        return allowlistsMatch(scopeInput(session, spec));
     };
     expect(await rejection(check())).toContain('require a dependency lockfile');
     await Bun.write(`${root}/uv.lock`, lock);

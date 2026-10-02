@@ -4,9 +4,9 @@ import { test, spyOn, expect } from 'bun:test';
 import { toPosix } from '#cli/platform/paths.ts';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
-import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
+import { scopeInput } from '#tests/harness/cli/input.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import type { EngineInput } from '#cli/types/execution/execution.ts';
 import { statSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
@@ -66,11 +66,7 @@ test('failed type generation cleans the isolated copy without restoring over sou
     });
     const session = await openSession(directory.path);
     const spec = session.manifests.get('nextjs')!.checks.find((entry) => entry.name === 'nextjs/typecheck')!;
-    const input: EngineInput = engineInput(session, {
-        scope: session.scopes.find((entry) => entry.scope.path === '')!,
-        spec: spec,
-        files: session.repository.files,
-    });
+    const input: EngineInput = scopeInput(session, spec);
     let scratch = '';
     const locate = spyOn(executables, 'sync').mockReturnValue(process.execPath);
     const run = spyOn(processes, 'run').mockImplementation((_command, options) => {
