@@ -10,11 +10,10 @@ import type { Session } from '#cli/types/tools/tools.ts';
 import type { Read } from '#cli/types/platform/platform.ts';
 import packageManifest from '#package' with { type: 'json' };
 import { isGitRepository } from '#cli/repository/tracked.ts';
-import { ERROR_EXIT } from '#cli/config/platform/platform.ts';
 import { installTools } from '#cli/commands/install/steps.ts';
 import type { Owner } from '#cli/types/lifecycle/lifecycle.ts';
 import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
-import { OWNER_WRITABLE_FILE } from '#cli/config/lifecycle/lifecycle.ts';
+import { ERROR_EXIT, OWNER_WRITABLE_FILE } from '#cli/config/platform/platform.ts';
 import type { Written, Installed, InitOptions, InitPrepared, ReplaceRemovalResult } from '#cli/types/commands/init.ts';
 
 const { version: GSPOT_VERSION } = packageManifest;

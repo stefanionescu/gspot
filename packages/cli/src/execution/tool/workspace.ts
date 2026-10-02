@@ -2,11 +2,12 @@
 import { cp, readdir } from 'node:fs/promises';
 import { isInScope } from '#cli/repository/selectors.ts';
 import type { Copy, Scratch } from '#cli/types/execution/tool.ts';
+import { PERMISSION_BITS } from '#cli/config/platform/platform.ts';
 import { GSPOT_FOLDER } from '#cli/config/repository/repository.ts';
 import type { ScratchFolder } from '#cli/types/platform/platform.ts';
 import { openRoot, scratchFolder } from '#cli/platform/filesystem.ts';
 import { sep, join, posix, dirname, relative, isAbsolute } from 'node:path';
-import { SCRATCH_EXTRAS, PERMISSION_BITS, PROJECT_MANIFESTS, SCRATCH_DIRECTORIES } from '#cli/config/execution/tool.ts';
+import { SCRATCH_EXTRAS, PROJECT_MANIFESTS, SCRATCH_DIRECTORIES } from '#cli/config/execution/tool.ts';
 
 import {
     statSync,

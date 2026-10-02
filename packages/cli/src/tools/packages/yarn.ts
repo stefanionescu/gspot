@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { parse, stringify } from 'yaml';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { runToolCommand } from '#cli/tools/command.ts';
+import { PRIVATE_FILE } from '#cli/config/platform/root.ts';
 import { YARN_CONNECTION_KEYS, YARN_ENVIRONMENT_SETTINGS } from '#cli/config/tools/packages.ts';
 
 /**
@@ -64,6 +65,6 @@ export async function yarnSettings(root: string, work: string, env: Record<strin
         if (read.code !== 0) throw new Error(`Cannot read Yarn setting ${entry.key}.`);
         settings[entry.key] = reference(z.json().parse(JSON.parse(read.stdout)), entry.key);
     }
-    writeFileSync(join(work, '.yarnrc.yml'), stringify(settings), { mode: 0o600 });
+    writeFileSync(join(work, '.yarnrc.yml'), stringify(settings), { mode: PRIVATE_FILE });
     return secrets.filter((value) => value.length > 0);
 }

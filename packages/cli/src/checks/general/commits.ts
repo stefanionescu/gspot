@@ -2,6 +2,7 @@ import { join } from 'node:path';
 import { writeFileSync } from 'node:fs';
 import { runGit } from '#cli/platform/git.ts';
 import type { Session } from '#cli/types/tools/tools.ts';
+import { PRIVATE_FILE } from '#cli/config/platform/root.ts';
 import { scratchFolder } from '#cli/platform/filesystem.ts';
 import { runToolCheck } from '#cli/execution/tool/runner.ts';
 import { pushBase } from '#cli/repository/revisions/changes.ts';
@@ -55,7 +56,7 @@ export async function checkCommitMessages(session: Session, planned: PlannedChec
                 duration: performance.now() - started,
                 note: `Cannot read commit ${object}: ${read.stderr.trim()}`,
             };
-        writeFileSync(commitFile, read.stdout, { mode: 0o600 });
+        writeFileSync(commitFile, read.stdout, { mode: PRIVATE_FILE });
         const current = await runToolCheck(session, { ...planned, messageFile: commitFile }, [
             'commitlint',
             '--config',

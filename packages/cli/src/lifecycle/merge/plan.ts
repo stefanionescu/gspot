@@ -2,7 +2,7 @@
 import { z } from 'zod';
 import { isDeepStrictEqual } from 'node:util';
 import { decodedText } from '#cli/platform/text.ts';
-import { OWNER_WRITABLE_FILE } from '#cli/config/lifecycle/lifecycle.ts';
+import { OWNER_WRITABLE_FILE } from '#cli/config/platform/platform.ts';
 import { configurationDocument } from '#cli/lifecycle/merge/document.ts';
 import { configurationFieldsSchema } from '#cli/lifecycle/ownership/schema.ts';
 import type { ConfigurationOwnership } from '#cli/types/lifecycle/lifecycle.ts';

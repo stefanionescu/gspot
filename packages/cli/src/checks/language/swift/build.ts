@@ -3,6 +3,7 @@ import { join, relative } from 'node:path';
 import { toPosix } from '#cli/platform/paths.ts';
 import { findingAt } from '#cli/execution/finding.ts';
 import type { Root } from '#cli/types/platform/platform.ts';
+import { PRIVATE_FILE } from '#cli/config/platform/root.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import { GSPOT_FOLDER } from '#cli/config/repository/repository.ts';
 import { swiftBuildPlan } from '#cli/checks/language/swift/plan.ts';
@@ -71,7 +72,7 @@ async function ranBuild(input: EngineInput, plan: SwiftBuildPlan): Promise<Swift
         .map((line) => sourcesWritten(line, plan.folder, files).replaceAll(PRIVATE_PREFIX, '$<before>/$<folder>/'))
         .join('\n');
     const log = toPosix(relative(plan.folder, plan.log));
-    files.write(log, { bytes: Buffer.from(output), mode: 0o600 }, files.read(log));
+    files.write(log, { bytes: Buffer.from(output), mode: PRIVATE_FILE }, files.read(log));
     return { output, code: result.code };
 }
 

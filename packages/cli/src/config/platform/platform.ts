@@ -72,3 +72,12 @@ export const BYTES_PER_KB = 1024;
 
 /** A whole share, for ratios shown as percentages. */
 export const FULL_PERCENTAGE = 100;
+
+/** Read by everyone and written by the owner: the mode of an ordinary file. */
+export const OWNER_WRITABLE_FILE = 0o644;
+
+/** Read and run by everyone, written by the owner: the mode of a program. */
+export const EXECUTABLE_FILE = 0o755;
+
+/** The permission bits of a mode, without the file type: also the mode Git records for a link. */
+export const PERMISSION_BITS = 0o777;

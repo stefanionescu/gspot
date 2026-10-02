@@ -7,7 +7,7 @@ import { planConfiguration } from '#cli/lifecycle/merge/plan.ts';
 import { ADOPTED_KINDS } from '#cli/config/lifecycle/ownership.ts';
 import { blockSpan, applyBlock } from '#cli/generation/markers.ts';
 import { matches, identity } from '#cli/lifecycle/ownership/log.ts';
-import { OWNER_WRITABLE_FILE } from '#cli/config/lifecycle/lifecycle.ts';
+import { OWNER_WRITABLE_FILE } from '#cli/config/platform/platform.ts';
 import type { BlockSpan, BlockStyle, ConfigurationFormat } from '#cli/types/generation/generation.ts';
 
 import type {

@@ -10,7 +10,7 @@ import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { plantedCases } from '#tests/harness/planted/cases.ts';
 import { INSTALLED_MODULES } from '#tests/harness/cli/modules.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
-import { OWNER_WRITABLE_FILE } from '#cli/config/lifecycle/lifecycle.ts';
+import { OWNER_WRITABLE_FILE } from '#cli/config/platform/platform.ts';
 import { containing, textContaining } from '#tests/harness/expectations.ts';
 import { NEXT_PAGE, NEXT_CONFIG, NEXT_LAYOUT } from '#tests/samples/nextjs.ts';
 

@@ -7,15 +7,9 @@ import { runGit, runGitBinary } from '#cli/platform/git.ts';
 import { openRoot, scratchFolder } from '#cli/platform/filesystem.ts';
 import type { Root, SourceReads } from '#cli/types/platform/platform.ts';
 import type { GitEntry, RevisionSource } from '#cli/types/execution/checkout.ts';
+import { EXECUTABLE_FILE, OWNER_WRITABLE_FILE } from '#cli/config/platform/platform.ts';
 import { copyDependencies, copyProsePackages } from '#cli/execution/checkout/installed.ts';
-
-import {
-    NEWLINE,
-    FILE_MODE,
-    ENTRY_MODES,
-    EXECUTABLE_MODE,
-    MATERIALIZATION_BATCH_SIZE,
-} from '#cli/config/execution/checkout.ts';
+import { NEWLINE, ENTRY_MODES, MATERIALIZATION_BATCH_SIZE } from '#cli/config/execution/checkout.ts';
 
 // A frame ends its header line and its blob with a newline each.
 const FRAME_NEWLINES = 2;
@@ -37,12 +31,12 @@ async function gitOutput(root: string, args: string[], cancelSignal?: AbortSigna
 // Writes one tracked entry into the snapshot: a directory for a gitlink, otherwise the blob with its mode.
 function writeEntry(files: Root, entry: GitEntry, objects: Map<string, Buffer>): void {
     if (entry.mode === '160000') {
-        files.mkdir(entry.path, EXECUTABLE_MODE);
+        files.mkdir(entry.path, EXECUTABLE_FILE);
         return;
     }
     const bytes = objects.get(entry.hash);
     if (bytes === undefined) throw new GspotError('selection', ['A requested Git blob was not returned.']);
-    const mode = ENTRY_MODES[entry.mode] ?? FILE_MODE;
+    const mode = ENTRY_MODES[entry.mode] ?? OWNER_WRITABLE_FILE;
     const content = entry.mode === '120000' ? { bytes, mode, isLink: true as const } : { bytes, mode };
     files.write(entry.path, content, undefined);
 }

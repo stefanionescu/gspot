@@ -7,8 +7,8 @@ import { inspectTool } from '#cli/tools/inspect.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
 import { chmodSync, mkdirSync, symlinkSync } from 'node:fs';
+import { EXECUTABLE_FILE } from '#cli/config/platform/platform.ts';
 import { commandPin, libraryPin } from '#tests/harness/cli/pins.ts';
-import { EXECUTABLE_FILE } from '#cli/config/lifecycle/lifecycle.ts';
 
 test.each([
     ['console.log("3.8.1"); process.exitCode = 7;', 'error', 'exited 7'],

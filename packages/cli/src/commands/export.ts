@@ -10,7 +10,7 @@ import { parseProfile } from '#cli/policy/profiles/parse.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import { exportedProfile } from '#cli/policy/profiles/export.ts';
 import type { CommandResult } from '#cli/types/commands/commands.ts';
-import { OWNER_WRITABLE_FILE } from '#cli/config/lifecycle/lifecycle.ts';
+import { OWNER_WRITABLE_FILE } from '#cli/config/platform/platform.ts';
 import { readOwnership, runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 
 /**
