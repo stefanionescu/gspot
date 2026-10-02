@@ -1,8 +1,9 @@
 import { z } from 'zod';
-import { sep, relative, isAbsolute } from 'node:path';
+import { sep, relative } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { readSource } from '#cli/repository/sources.ts';
 import { codePoints } from '#cli/platform/code-points.ts';
+import { toPosix, isInside } from '#cli/platform/paths.ts';
 
 const artifactLocation = z.object({
     uri: z.string().optional(),
@@ -80,9 +81,8 @@ function sourceFile(
     const uri = new URL(artifact.uri, artifact.uriBaseId === undefined ? root : baseOf(artifact.uriBaseId));
     if (uri.protocol !== 'file:') throw new Error('CodeQL reported a source location that is not a file.');
     const file = relative(source, fileURLToPath(uri));
-    if (isAbsolute(file) || file === '..' || file.startsWith(`..${sep}`))
-        throw new Error('CodeQL reported a source location outside its selected source copy.');
-    return file.split(sep).join('/');
+    if (!isInside(file)) throw new Error('CodeQL reported a source location outside its selected source copy.');
+    return toPosix(file);
 }
 
 function sourceText(

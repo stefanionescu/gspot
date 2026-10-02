@@ -57,7 +57,7 @@ function shebangExecutable(firstLine: string): string | undefined {
     if (tokens[index]?.endsWith(ENV_SUFFIX) === true) index += 1;
     if (tokens[index] === '-S') index += 1;
     const word = tokens[index];
-    return word === undefined || word === '' ? undefined : word.slice(word.lastIndexOf('/') + 1);
+    return word === undefined || word === '' ? undefined : baseName(word);
 }
 /**
  * Tags for one entry. Binary files retain path tags and do not receive content tags.

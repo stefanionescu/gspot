@@ -1,11 +1,11 @@
 import { z } from 'zod';
 import { statSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { toPosix } from '#cli/platform/paths.ts';
 import { stripVTControlCharacters } from 'node:util';
 import { findingAt } from '#cli/execution/finding.ts';
+import { join, relative as relativePath } from 'node:path';
+import { toPosix, isInside } from '#cli/platform/paths.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
-import { join, isAbsolute, relative as relativePath } from 'node:path';
 import { CHECK_LOCATION } from '#cli/config/checks/platform/supabase.ts';
 import { functionFolders } from '#cli/checks/platform/supabase/project.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
@@ -30,7 +30,7 @@ function denoFileArguments(root: string, folder: string): string[] {
 function relative(root: string, locator: string): string {
     const path = locator.startsWith('file://') ? fileURLToPath(locator) : locator;
     const local = toPosix(relativePath(root, path));
-    return local === '' || local.startsWith('../') || isAbsolute(local) ? path : local;
+    return local === '' || !isInside(local) ? path : local;
 }
 
 async function linted(input: EngineInput, folder: string): Promise<Finding[]> {

@@ -1,9 +1,10 @@
 // Jest run over a disposable copy of the sources, with failed tests and coverage under its floors as findings.
 import { z } from 'zod';
+import { join, relative } from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
 import { findingAt } from '#cli/execution/finding.ts';
+import { toPosix, isInside } from '#cli/platform/paths.ts';
 import type { Root } from '#cli/types/platform/platform.ts';
-import { sep, join, relative, isAbsolute } from 'node:path';
 import { scratchCopy } from '#cli/execution/tool/workspace.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import { openRoot, scratchFolder } from '#cli/platform/filesystem.ts';
@@ -35,9 +36,8 @@ function readTestReport(reports: Root, stderr: string): TestReport {
 // The source-relative path of a test suite, which must lie inside the copied sources.
 function suitePath(source: string, suite: Suite): string {
     const file = relative(source, suite.name);
-    if (isAbsolute(file) || file === '..' || file.startsWith(`..${sep}`))
-        throw new Error('Jest reported a test outside the selected source copy.');
-    return file.split(sep).join('/');
+    if (!isInside(file)) throw new Error('Jest reported a test outside the selected source copy.');
+    return toPosix(file);
 }
 
 // One finding per coverage dimension under its floor.

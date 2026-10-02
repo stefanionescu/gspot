@@ -1,5 +1,6 @@
 import { join } from 'node:path';
 import { statSync } from 'node:fs';
+import { baseName } from '#cli/platform/paths.ts';
 import { findingAt } from '#cli/execution/finding.ts';
 import { readSource } from '#cli/repository/sources.ts';
 import { trackedEnding } from '#cli/checks/tool/xcode/project.ts';
@@ -34,7 +35,7 @@ function stringFindings(input: EngineInput, path: string): Finding[] {
 
 function setName(path: string): string {
     const folder = path.slice(0, path.lastIndexOf('/'));
-    const name = folder.slice(folder.lastIndexOf('/') + 1);
+    const name = baseName(folder);
     return name.slice(0, name.lastIndexOf('.'));
 }
 

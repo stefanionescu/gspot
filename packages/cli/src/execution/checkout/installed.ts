@@ -2,6 +2,7 @@ import pLimit from 'p-limit';
 import { runGit } from '#cli/platform/git.ts';
 import { statSync, constants } from 'node:fs';
 import { styleFiles } from '#cli/tools/vale.ts';
+import { isInside } from '#cli/platform/paths.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { MODE_BITS } from '#cli/config/platform/root.ts';
@@ -10,7 +11,7 @@ import { isValePackageFile } from '#cli/repository/kind.ts';
 import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import { GSPOT_FOLDER } from '#cli/config/repository/repository.ts';
 import type { GitEntry, Directory } from '#cli/types/execution/checkout.ts';
-import { sep, join, posix, dirname, basename, relative, isAbsolute } from 'node:path';
+import { join, posix, dirname, basename, relative, isAbsolute } from 'node:path';
 import { cp, stat, chmod, lstat, mkdir, unlink, readdir, symlink, readlink, realpath } from 'node:fs/promises';
 import { LOCKS, COPY_CONCURRENCY, PRIVATE_DIRECTORY, VALE_CONFIGURATION } from '#cli/config/execution/checkout.ts';
 
@@ -28,7 +29,7 @@ async function checkCopiedLink(roots: { revision: string; working: string }, pat
             `Installed dependency link ${relative(roots.revision, path)} cannot be resolved. Repair the dependency installation before checking this revision.`,
         ]);
     const inside = relative(resolved === undefined ? roots.working : roots.revision, target);
-    if (isAbsolute(inside) || inside === '..' || inside.startsWith(`..${sep}`))
+    if (!isInside(inside))
         throw new GspotError('selection', [
             'Installed dependencies contain an external link. Prepare isolated dependencies for the selected revision.',
         ]);

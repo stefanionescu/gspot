@@ -1,7 +1,8 @@
 // Saves a reusable policy profile.
 import type { Command } from 'commander';
+import { resolve, relative } from 'node:path';
 import { readPolicy } from '#cli/policy/read.ts';
-import { sep, resolve, relative } from 'node:path';
+import { toPosix } from '#cli/platform/paths.ts';
 import { directoryOf } from '#cli/commands/flags.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
 import { mutationTarget } from '#cli/platform/safe-paths.ts';
@@ -23,7 +24,7 @@ export function exportCommand(cwd: string, file: string): CommandResult {
     const policy = readPolicy(root);
     const saved = exportedProfile(policy.text, file);
     mutationTarget(file);
-    const path = relative(root, resolve(cwd, file)).split(sep).join('/');
+    const path = toPosix(relative(root, resolve(cwd, file)));
     mutationTarget(path);
     parseProfile(saved.text, file);
     runOwnedLifecycle(root, (owner) => {

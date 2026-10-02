@@ -1,3 +1,4 @@
+import { baseName } from '#cli/platform/paths.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
 import type { DirectoryEntry } from '#cli/types/checks/general/structure.ts';
 
@@ -18,7 +19,7 @@ export function directoryOf(path: string): string {
  * @returns the stem
  */
 export function stemOf(path: string): string {
-    const base = path.slice(path.lastIndexOf('/') + 1);
+    const base = baseName(path);
     if (base.endsWith('.d.ts')) return base.slice(0, -'.d.ts'.length);
     const dot = base.lastIndexOf('.');
     return dot <= 0 ? base : base.slice(0, dot);

@@ -1,3 +1,4 @@
+import { baseName } from '#cli/platform/paths.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { readSource } from '#cli/repository/sources.ts';
 import { sqlFile } from '#cli/parsers/sql/statements.ts';
@@ -20,7 +21,7 @@ async function readMigrations(input: EngineInput, paths: string[]): Promise<Migr
     const migrations: Migration[] = [];
     for (const path of paths) {
         const text = readSource(input.root, path, input.reads).toString('utf8');
-        const name = path.slice(path.lastIndexOf('/') + 1);
+        const name = baseName(path);
         const parsed = await sqlFile(text, input.reads);
         if (parsed.error !== undefined)
             throw new Error(

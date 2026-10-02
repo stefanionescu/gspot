@@ -1,7 +1,7 @@
 // Path handling: forward slashes in selectors, the platform form for tools.
 import picomatch from 'picomatch';
 import type { Dirent } from 'node:fs';
-import { sep, join } from 'node:path';
+import { sep, join, isAbsolute } from 'node:path';
 import { contentDigest } from '#cli/platform/text.ts';
 import { cacheHome } from '#cli/platform/environment.ts';
 import { statSync, lstatSync, readdirSync, realpathSync } from 'node:fs';
@@ -115,6 +115,16 @@ export function toolPath(path: string): string {
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Paths handed to tools take the separator of the platform through this one conversion.
 export function toPlatform(path: string): string {
     return sep === '/' ? path : path.split('/').join(sep);
+}
+
+/**
+ * Whether a path relative to a folder stays inside it: not absolute, not the parent, and not under the parent.
+ * @param local the path relative to the folder, with either separator
+ * @returns whether the path stays inside the folder
+ */
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Every boundary check, from links to tool reports, refuses a path that leaves its folder by this one test.
+export function isInside(local: string): boolean {
+    return !(isAbsolute(local) || local === '..' || local.startsWith('../') || local.startsWith(`..${sep}`));
 }
 
 /**

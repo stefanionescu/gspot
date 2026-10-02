@@ -1,3 +1,4 @@
+import { baseName } from '#cli/platform/paths.ts';
 import { findingAt } from '#cli/execution/finding.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import { readPackageManifest } from '#cli/repository/packages.ts';
@@ -59,7 +60,7 @@ function installerFindings(input: EngineInput, manifests: Map<string, PackageMan
 function lockfileFindings(input: EngineInput): Finding[] {
     const kinds = new Map<string, string>();
     for (const file of input.files) {
-        const kind = LOCKFILES[file.path.slice(file.path.lastIndexOf('/') + 1)];
+        const kind = LOCKFILES[baseName(file.path)];
         if (kind !== undefined && !kinds.has(kind)) kinds.set(kind, file.path);
     }
     if (kinds.size <= 1) return [];

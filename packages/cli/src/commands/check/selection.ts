@@ -1,9 +1,10 @@
 // What a check run refuses or narrows before it starts: staged secrets, unreadable messages, unknown checks, paths.
 import { readFileSync } from 'node:fs';
+import { resolve, relative } from 'node:path';
 import { GspotError } from '#cli/platform/errors.ts';
 import type { Session } from '#cli/types/tools/tools.ts';
+import { toPosix, isInside } from '#cli/platform/paths.ts';
 import { isEnvironmentFile } from '#cli/repository/kind.ts';
-import { sep, resolve, relative, isAbsolute } from 'node:path';
 import type { CheckOptions } from '#cli/types/commands/check.ts';
 import { INVALID_INPUT_EXIT } from '#cli/config/commands/check.ts';
 import { changedFiles } from '#cli/repository/revisions/changes.ts';
@@ -22,9 +23,8 @@ function isReadable(path: string): boolean {
 
 // The repository files a selector names: the file itself, or everything under a folder.
 function matchingFiles(session: Session, options: CheckOptions, path: string, candidates: string[]): string[] {
-    const selector = relative(session.root, resolve(options.cwd, path)).split(sep).join('/');
-    if (selector === '..' || selector.startsWith('../') || isAbsolute(selector))
-        throw new GspotError('selection', [`Path ${path} is outside this repository.`]);
+    const selector = toPosix(relative(session.root, resolve(options.cwd, path)));
+    if (!isInside(selector)) throw new GspotError('selection', [`Path ${path} is outside this repository.`]);
     const matches = candidates.filter(
         (file) => selector === '' || file === selector || file.startsWith(`${selector}/`),
     );

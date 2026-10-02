@@ -1,14 +1,15 @@
 import { z } from 'zod';
 import ts from 'typescript';
 import { readFileSync } from 'node:fs';
-import { sep, dirname, relative } from 'node:path';
+import { dirname, relative } from 'node:path';
+import { toPosix } from '#cli/platform/paths.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { mutationPath } from '#cli/platform/safe-paths.ts';
 import { NO_INPUTS, EMPTY_FILES } from '#cli/config/repository/repository.ts';
 
 const configSchema = z.looseObject({ compilerOptions: z.record(z.string(), z.unknown()).optional() });
 function configurationText(root: string, path: string): string | undefined {
-    const local = relative(root, path).split(sep).join('/');
+    const local = toPosix(relative(root, path));
     using files = openRoot(root, 'native');
     try {
         const segments = local.split('/');

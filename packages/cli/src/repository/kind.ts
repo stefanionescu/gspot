@@ -1,4 +1,5 @@
 // Every tracked path has one kind: source, generated, vendored, binary.
+import { baseName } from '#cli/platform/paths.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import type { Verdict, Attribute, FileDeclaration } from '#cli/types/repository/repository.ts';
@@ -54,7 +55,7 @@ function attributeKind(attributes: string[]): Verdict | undefined {
 
 // gspot writes everything under its folder; the Vale packages it fetches there are another party's text.
 function managedKind(path: string): Verdict | undefined {
-    if (LICENSE_FILE.test(path.slice(path.lastIndexOf('/') + 1))) return { kind: 'vendored', source: 'license' };
+    if (LICENSE_FILE.test(baseName(path))) return { kind: 'vendored', source: 'license' };
     if (isValePackageFile(path)) return { kind: 'vendored', source: 'gspot' };
     return path.startsWith(`${GSPOT_FOLDER}/`) ? { kind: 'generated', source: 'gspot' } : undefined;
 }
@@ -125,5 +126,5 @@ export function readAttributes(root: string): Attribute[] {
  */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The env check and the staged selection find machine environment files by this one rule.
 export function isEnvironmentFile(path: string): boolean {
-    return matchesEnvironmentFile(path) && !ENV_TEMPLATE_NAMES.includes(path.slice(path.lastIndexOf('/') + 1));
+    return matchesEnvironmentFile(path) && !ENV_TEMPLATE_NAMES.includes(baseName(path));
 }

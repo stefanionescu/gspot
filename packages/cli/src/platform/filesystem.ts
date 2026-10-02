@@ -1,9 +1,10 @@
 // A reader and writer files to one directory: every path is checked before each operation.
 // Concurrent hostile directory replacement is outside this contract.
 import { tmpdir } from 'node:os';
+import { join, relative } from 'node:path';
+import { isInside } from '#cli/platform/paths.ts';
 import { decodedText } from '#cli/platform/text.ts';
 import { sameEntry } from '#cli/platform/safe-paths.ts';
-import { sep, join, relative, isAbsolute } from 'node:path';
 import { afterWrite, acquireLock } from '#cli/platform/root/writes.ts';
 import { boundsOf, readEntry, parentPath, validateRead } from '#cli/platform/root/reads.ts';
 import type { Read, Root, Bounds, PathFormat, ScratchFolder } from '#cli/types/platform/platform.ts';
@@ -26,8 +27,7 @@ import {
 function sourceOf(bounds: Bounds, path: string): string {
     const target = realpathSync(parentPath(bounds, path));
     const local = relative(bounds.canonical, target);
-    if (isAbsolute(local) || local === '..' || local.startsWith(`..${sep}`))
-        throw new Error(`Source link leaves the repository: ${path}`);
+    if (!isInside(local)) throw new Error(`Source link leaves the repository: ${path}`);
     return target;
 }
 
