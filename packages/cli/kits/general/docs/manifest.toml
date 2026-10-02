@@ -138,6 +138,3 @@ kind = "list"
 direction = "loosening"
 default = []
 summary = "URL patterns lychee skips, each with a reason."
-
-[guides]
-general = [{path = "general/prose/DOCS.md"}, {path = "general/prose/DOCS-FORMAT.md"}, {path = "general/prose/DOCS-CONTENT.md"}, {path = "general/prose/DOCS-MEDIA.md"}, {path = "general/prose/DOCS-SURFACES.md"}, {path = "general/prose/DOCS-REVIEW.md"}, {path = "general/prose/WRITING.md"}, {path = "general/code/COMMENTS.md"}]

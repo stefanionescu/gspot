@@ -90,6 +90,3 @@ name = "tools.markdownlint.rules"
 kind = "table"
 direction = "per-rule"
 summary = "Options per markdownlint rule, by rule id; turning a rule off is gspot ignore --rule."
-
-[guides]
-language = [{path = "general/prose/DOCS-FORMAT.md"}]

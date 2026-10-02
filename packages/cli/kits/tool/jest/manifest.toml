@@ -81,6 +81,3 @@ kind = "string"
 direction = "neutral"
 default = "@jest/globals"
 summary = "The module supplying test functions for ESLint, including bun:test for Bun tests."
-
-[guides]
-general = [{path = "general/code/TESTING.md"}]

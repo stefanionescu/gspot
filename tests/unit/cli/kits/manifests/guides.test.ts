@@ -1,4 +1,5 @@
 // Every guide the package ships reaches a repository: the base layers always, any other through a kit that names it.
+// A kit names no base guide, which every repository gets anyway.
 import { test, expect } from 'bun:test';
 import { listAssets } from '#cli/platform/assets.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
@@ -14,4 +15,13 @@ test('every shipped guide is installed by the base layers or named by a kit', ()
         .filter((path) => path.endsWith('.md') && !named.has(path))
         .filter((path) => ![...AGENT_LAYERS].some((layer) => path.startsWith(`${layer}/`)));
     expect(unreached).toStrictEqual([]);
+});
+
+test('no kit names a guide of the base layers', () => {
+    const named = kitManifests()
+        .values()
+        .flatMap((manifest) => Object.values(manifest.guides).flat())
+        .map(({ path }) => path)
+        .filter((path) => [...AGENT_LAYERS].some((layer) => path.startsWith(`${layer}/`)));
+    expect(named.toArray()).toStrictEqual([]);
 });

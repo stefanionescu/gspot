@@ -85,4 +85,3 @@ summary = "The smallest share of statements the tests cover, out of 100."
 
 [guides]
 tool = [{path = "tool/vitest/VITEST.md"}, {path = "tool/playwright/PLAYWRIGHT.md", when = {dependencies = ["@playwright/test", "playwright"]}}]
-general = [{path = "general/code/TESTING.md"}]
