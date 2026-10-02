@@ -2,6 +2,7 @@
 import { projectFolder } from '#cli/repository/scopes.ts';
 import { GLOB_CHARS, SHEBANG_TAG } from '#cli/config/kits.ts';
 import { baseName, extensionOf } from '#cli/platform/paths.ts';
+import { GSPOT_FOLDER } from '#cli/config/repository/repository.ts';
 import { isInScope, pathMatcher } from '#cli/repository/selectors.ts';
 import type { Layout, Manifest, KitEvidence } from '#cli/types/kits.ts';
 import type { Fields, TrackedFile } from '#cli/types/repository/repository.ts';
@@ -19,7 +20,7 @@ function layout(files: TrackedFile[], fields: Fields[], scope: string): Layout {
     const candidates = files.filter(
         (file) =>
             file.kind === 'source' &&
-            !file.path.split('/').some((part) => part.toLowerCase() === '.gspot') &&
+            !file.path.split('/').some((part) => part.toLowerCase() === GSPOT_FOLDER) &&
             isInScope(file.path, scope),
     );
     const extensionCounts = new Map<string, number>();

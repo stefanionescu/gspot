@@ -10,8 +10,8 @@ import { mutationPath } from '#cli/platform/safe-paths.ts';
 import { packageManifestSchema } from '#cli/repository/packages.ts';
 import { toPosix, baseName, globPaths } from '#cli/platform/paths.ts';
 import { PnpmTool, RushTool, YarnTool, LernaTool } from '@manypkg/tools';
-import { LINT_TOOL_PACKAGE_PREFIXES } from '#cli/config/repository/repository.ts';
 import type { Fields, ScopeEntry, TrackedFile } from '#cli/types/repository/repository.ts';
+import { GSPOT_FOLDER, LINT_TOOL_PACKAGE_PREFIXES } from '#cli/config/repository/repository.ts';
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Three discoverers build a scope entry; one owner trims the path and names it.
 function workspaceEntry(path: string, source: ScopeEntry['source'] = 'workspace'): ScopeEntry {
@@ -32,7 +32,7 @@ function projectScopes(files: TrackedFile[], fields: Fields[], patterns: string[
         (file) =>
             file.kind === 'source' &&
             !lintOnly.has(file.path) &&
-            !file.path.split('/').some((part) => part.toLowerCase() === '.gspot' || part === 'node_modules'),
+            !file.path.split('/').some((part) => part.toLowerCase() === GSPOT_FOLDER || part === 'node_modules'),
     );
     for (const file of sources) {
         for (const pattern of patterns) {

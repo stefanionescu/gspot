@@ -10,6 +10,7 @@ import { openRoot } from '#cli/platform/filesystem.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import type { Root } from '#cli/types/platform/platform.ts';
 import { surveyRepository } from '#cli/repository/survey.ts';
+import { GSPOT_FOLDER } from '#cli/config/repository/repository.ts';
 import type { Fields, TrackedFile, ExistingTool, ExistingTooling } from '#cli/types/repository/repository.ts';
 
 const PARSERS: Record<string, (text: string) => unknown> = {
@@ -109,7 +110,7 @@ function replaceTools(
  */
 function declaredKits(root: string, paths: Iterable<string>, selected?: string[]): ExistingTool[] {
     const inventory = new Set(
-        [...paths].filter((path) => !path.split('/').some((part) => part.toLowerCase() === '.gspot')),
+        [...paths].filter((path) => !path.split('/').some((part) => part.toLowerCase() === GSPOT_FOLDER)),
     );
     using files = openRoot(root);
     return [...kitManifests().values()].flatMap((manifest) =>

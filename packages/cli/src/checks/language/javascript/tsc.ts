@@ -11,6 +11,7 @@ import { PRIVATE_FILE } from '#cli/config/platform/root.ts';
 import { runToolCheck } from '#cli/execution/tool/runner.ts';
 import { scratchCopy } from '#cli/execution/tool/workspace.ts';
 import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
+import { GSPOT_FOLDER } from '#cli/config/repository/repository.ts';
 import { commandConfigurations } from '#cli/execution/tool/placeholders.ts';
 import type { CheckResult, PlannedCheck } from '#cli/types/execution/execution.ts';
 
@@ -34,7 +35,7 @@ function appendBuildMetadata(
     name: string,
 ): void {
     if (config?.options.incremental !== true && config?.options.composite !== true) return;
-    command.push('--tsBuildInfoFile', join(scratch, '.gspot', name));
+    command.push('--tsBuildInfoFile', join(scratch, GSPOT_FOLDER, name));
 }
 
 function validateBuild(root: string, path: string, visited = new Set<string>()): void {

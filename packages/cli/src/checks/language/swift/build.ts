@@ -4,6 +4,7 @@ import { toPosix } from '#cli/platform/paths.ts';
 import { findingAt } from '#cli/execution/finding.ts';
 import type { Root } from '#cli/types/platform/platform.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
+import { GSPOT_FOLDER } from '#cli/config/repository/repository.ts';
 import { swiftBuildPlan } from '#cli/checks/language/swift/plan.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
 import { openBuildCache, prepareBuildSources } from '#cli/checks/language/swift/cache.ts';
@@ -109,7 +110,7 @@ export async function swiftAnalyze(input: EngineInput): Promise<Finding[]> {
     const plan = swiftBuildPlan(input, 'analyze');
     const build = await buildOutput(input, plan);
     if (build.code !== 0) throw new Error(`Cannot analyze Swift because the build exited ${String(build.code)}.`);
-    const config = join(input.root, '.gspot', 'config', input.scope, 'swiftlint.yml');
+    const config = join(input.root, GSPOT_FOLDER, 'config', input.scope, 'swiftlint.yml');
     const argv = ['swiftlint', 'analyze', '--strict', '--quiet', '--config', config, '--compiler-log-path', plan.log];
     const source = join(plan.folder, 'source');
     const result = await runCheckCommand(input, argv, { cwd: join(source, input.scope) });
@@ -127,7 +128,7 @@ export async function swiftAnalyze(input: EngineInput): Promise<Finding[]> {
  */
 export async function swiftPeriphery(input: EngineInput): Promise<Finding[]> {
     const plan = swiftBuildPlan(input, 'periphery');
-    const config = join(input.root, '.gspot', 'config', input.scope, 'periphery.yml');
+    const config = join(input.root, GSPOT_FOLDER, 'config', input.scope, 'periphery.yml');
     const argv = [
         'periphery',
         'scan',

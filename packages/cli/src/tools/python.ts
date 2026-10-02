@@ -8,6 +8,7 @@ import type { GeneratedFile } from '#cli/types/kits.ts';
 import type { ToolOwner } from '#cli/types/tools/tools.ts';
 import type { Read } from '#cli/types/platform/platform.ts';
 import { installedOutputs } from '#cli/tools/installed-files.ts';
+import { GSPOT_FOLDER } from '#cli/config/repository/repository.ts';
 import { normalizedPythonPackage } from '#cli/repository/packages.ts';
 import { openRoot, scratchFolder } from '#cli/platform/filesystem.ts';
 import { MODE_BITS, PRIVATE_FILE } from '#cli/config/platform/root.ts';
@@ -238,7 +239,7 @@ export function pythonInstallSteps(root: string): string[][] {
     const lock = files.read(LOCK);
     if (lock === undefined || !matches(project.bytes.toString('utf8'), lock.bytes.toString('utf8')))
         throw new Error(SETUP);
-    return [['uv', 'sync', '--locked', '--project', '.gspot']];
+    return [['uv', 'sync', '--locked', '--project', GSPOT_FOLDER]];
 }
 
 /**

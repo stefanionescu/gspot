@@ -3,7 +3,7 @@ import { parse as parseToml } from 'smol-toml';
 import { baseName } from '#cli/platform/paths.ts';
 import { decodedText } from '#cli/platform/text.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
-import { SWIFT_PACKAGE_URL, REQUIREMENT_NAME_END } from '#cli/config/repository/repository.ts';
+import { GSPOT_FOLDER, SWIFT_PACKAGE_URL, REQUIREMENT_NAME_END } from '#cli/config/repository/repository.ts';
 import type { Fields, TrackedFile, DependencyMap, PackageManifest } from '#cli/types/repository/repository.ts';
 
 function manifestText(root: string, path: string): string {
@@ -244,7 +244,7 @@ export function readManifests(root: string, files: TrackedFile[]): Fields[] {
         .filter(
             (file) =>
                 file.kind === 'source' &&
-                !file.path.split('/').some((part) => part.toLowerCase() === '.gspot' || part === 'node_modules'),
+                !file.path.split('/').some((part) => part.toLowerCase() === GSPOT_FOLDER || part === 'node_modules'),
         )
         .flatMap((file) => {
             const base = baseName(file.path);

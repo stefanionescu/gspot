@@ -50,7 +50,7 @@ async function validateCopiedLinks(
 }
 
 function assertDependencyReady(revisionRoot: string, folder: string, pending: string[]): void {
-    if (basename(folder) === '.gspot' && pending.includes('npm'))
+    if (basename(folder) === GSPOT_FOLDER && pending.includes('npm'))
         throw new GspotError('selection', [
             'Tool installation is incomplete. Run gspot install before checking staged content.',
         ]);

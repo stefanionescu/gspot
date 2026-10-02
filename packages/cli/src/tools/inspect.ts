@@ -11,6 +11,7 @@ import { hasPolicy, readPolicy } from '#cli/policy/read.ts';
 import { NODE_MODULES_DIRECTORY } from '#cli/config/kits.ts';
 import { privateToolInstallation } from '#cli/tools/pins.ts';
 import type { SpawnResult } from '#cli/types/platform/platform.ts';
+import { GSPOT_FOLDER } from '#cli/config/repository/repository.ts';
 import { miseVersion, packageVersion, locateCandidates } from '#cli/tools/locate.ts';
 import type { Package, Inspected, ToolSearch, VersionRead, ToolInspection } from '#cli/types/tools/tools.ts';
 
@@ -113,7 +114,7 @@ function pinnedInspection(inspected: Inspected, want: string): ToolInspection {
 function inspectUncached(context: ToolSearch, cwd: string, tool: ToolPin, runner?: string): ToolInspection {
     const { root } = context;
     const isExternal = tool.provider === 'host' || (runner === 'mise' && tool.installers['mise'] !== undefined);
-    const roots = isExternal ? [cwd, root] : [join(root, '.gspot'), cwd, root];
+    const roots = isExternal ? [cwd, root] : [join(root, GSPOT_FOLDER), cwd, root];
     const kind = privateToolInstallation(tool, runner)?.kind;
     const [path] = locateCandidates(root, roots, tool.name, kind, context.installedRoot);
     const hint = installHint(tool);
@@ -197,7 +198,7 @@ export function locateTool(root: string, name: string, pending?: string[]): stri
     if (isInstallationPending({ root, installations: () => pending }, tool, runner))
         throw new Error('Tool installation is incomplete. Run: gspot install');
     const isExternal = tool.provider === 'host' || (runner === 'mise' && tool.installers['mise'] !== undefined);
-    const roots = isExternal ? [root] : [join(root, '.gspot'), root];
+    const roots = isExternal ? [root] : [join(root, GSPOT_FOLDER), root];
     return locateCandidates(root, roots, name, privateToolInstallation(tool, runner)?.kind)[0];
 }
 
