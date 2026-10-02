@@ -2,13 +2,13 @@
 // expected finding, then the corrected repository passes.
 import { testdir } from 'testdirs';
 import { containing } from '#tests/harness/expectations.ts';
-import { PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { plant } from '#tests/harness/planted/preservation.ts';
 import { hasLinuxDocker } from '#tests/harness/cli/platforms.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { installSandbox } from '#tests/harness/planted/sandbox.ts';
 import { runGspot, spawnGspot } from '#tests/harness/cli/command.ts';
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
+import { INSTALL_TIMEOUT_MS, PLANTED_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import type { Sandbox, Correction, FindingCase, PlantedInput, SpawnOutcome } from '#tests/types/cli.ts';
 
 // The check fails with the planted defect, and the finding is where the case says.
@@ -131,13 +131,13 @@ export function plantedCases(
             if (planted === undefined) throw new Error(`The ${name} repository is not installed.`);
             return planted;
         };
-        // Installing the private tools of a kit takes longer than one case on a cold runner.
+        // The install runs up to its own limit, and the level selection after it is one more command.
         beforeAll(async () => {
             sandbox = await testdir({}, repository.dirname === undefined ? {} : { dirname: repository.dirname });
             const environment = await installSandbox(sandbox.path, repository);
             planted = { root: sandbox.path, environment, isInProcess: repository.installs === false };
             await repository.prepare?.(sandbox.path, environment);
-        }, PLANTED_TIMEOUT_MS * 4);
+        }, INSTALL_TIMEOUT_MS + PLANTED_TIMEOUT_MS);
         afterAll(async () => {
             await sandbox?.[Symbol.asyncDispose]();
         });
