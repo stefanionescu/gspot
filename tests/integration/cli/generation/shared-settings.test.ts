@@ -27,11 +27,17 @@ async function generatedDocument<Shape>(
     return (path.endsWith('.toml') ? parseToml(content) : JSON.parse(content)) as Shape;
 }
 
-test('knip starts from the policy entries and the entry files the selected kits declare', async () => {
-    const files = { 'package.json': '{"private":true,"type":"module"}\n', 'api/serve.js': '' };
+test('knip takes its workspaces from the package workspaces, with the policy entries and the kit entry files', async () => {
+    const files = {
+        'package.json': '{"private":true,"type":"module","workspaces":["api","web"]}\n',
+        'api/package.json': '{"name":"api","private":true}\n',
+        'api/serve.js': '',
+        'web/package.json': '{"name":"web","private":true}\n',
+        'lib/index.js': '',
+    };
     const policy = policyOf(
         ['javascript'],
-        '[tools.knip]\nentry = ["cli.js"]\n[[scope]]\npath = "api"\nkits = ["javascript"]\n[scope.tools.knip]\nentry = ["serve.js"]\n',
+        '[tools.knip]\nentry = ["cli.js"]\n[[scope]]\npath = "api"\nkits = ["javascript"]\n[scope.tools.knip]\nentry = ["serve.js"]\n[[scope]]\npath = "lib"\nkits = ["javascript"]\n',
     );
     const knip = await generatedDocument<{ entry: string[]; workspaces: Record<string, { entry: string[] }> }>(
         policy,
@@ -42,6 +48,9 @@ test('knip starts from the policy entries and the entry files the selected kits 
     expect(knip.entry).not.toContain('api/serve.js');
     expect(knip.workspaces['api']?.entry).toStrictEqual(containingAll(['serve.js', ENTRY]));
     expect(knip.workspaces['api']?.entry).not.toContain('cli.js');
+    // A package workspace outside every scope takes the root kits; a scope that is no package stays out.
+    expect(knip.workspaces['web']?.entry).toStrictEqual(containingAll([ENTRY]));
+    expect(Object.keys(knip.workspaces)).not.toContain('lib');
     const withoutEntries = await generatedDocument<{ entry: string[] }>(policyOf(['javascript']), KNIP, files);
     expect(withoutEntries.entry).toStrictEqual(containingAll([ENTRY]));
     expect(withoutEntries.entry).not.toContain('cli.js');

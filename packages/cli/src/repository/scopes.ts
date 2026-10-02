@@ -111,11 +111,8 @@ function workspacePackages(root: string): Package[] {
 }
 
 function npmScopes(root: string, byPath: Map<string, Fields>, lintOnly: string[]): ScopeEntry[] {
-    const packages = workspacePackages(root);
     const scopes: ScopeEntry[] = [];
-    for (const found of packages) {
-        const rel = toPosix(found.relativeDir);
-        if (rel === '' || rel === '.') continue;
+    for (const rel of packageWorkspaces(root)) {
         const fact = byPath.get(`${rel}/package.json`);
         if (fact && isLintOnlyManifest(fact)) lintOnly.push(`${rel}/package.json`);
         else scopes.push(workspaceEntry(rel));
@@ -128,6 +125,17 @@ function memberScopes(root: string, members: string[]): ScopeEntry[] {
     return members
         .filter((member) => !member.includes('*') && files.stat(member)?.isDirectory() === true)
         .map((member) => workspaceEntry(member));
+}
+
+/**
+ * The folders of the npm package workspaces the repository declares, the root left out.
+ * @param root the repository root
+ * @returns the root-relative folders
+ */
+export function packageWorkspaces(root: string): string[] {
+    return workspacePackages(root)
+        .map((found) => toPosix(found.relativeDir))
+        .filter((path) => path !== '' && path !== '.');
 }
 
 /**
