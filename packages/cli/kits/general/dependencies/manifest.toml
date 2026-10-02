@@ -69,7 +69,8 @@ level = "recommended"
 stage = "push"
 runs = "once"
 requires = "network"
-command = ["osv-scanner", "scan", "source", "--config", "{config:osv-scanner}", "--format", "json", "--recursive", "{root}"]
+# The private tool locks under .gspot stay out: a repository cannot upgrade a package that a gspot tool pins.
+command = ["osv-scanner", "scan", "source", "--config", "{config:osv-scanner}", "--format", "json", "--recursive", "--experimental-exclude", ".gspot", "{root}"]
 output = {format = "json", items = "results", children = "packages.vulnerabilities", fields = {file = "source.path", rule = "id", message = "package.name package.version summary"}}
 summary = "Looks up every locked dependency in the Open Source Vulnerabilities (OSV) advisory database."
 why = "A dependency with a published advisory is an attack someone already wrote down."
