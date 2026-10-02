@@ -25,7 +25,7 @@ approved it on October 1, 2026.
   own. Stages 15 to 21 were pull request #17, and stages 22 and 23 were pull request #18.
 - Stages 25 to 28 are pull request #20, branch `refactor/shared-helpers`. Stages 29 to 35 rename keys, fields, checks,
   flags, and identifiers on `refactor/rename-policy-keys`, stacked on it, and make one batch.
-- Stage 29 is done on that branch. The next stage to start is stage 30.
+- Stages 29 and 30 are done on that branch. The next stage to start is stage 31.
 
 ### Stages
 
@@ -62,7 +62,7 @@ One pull request per stage, in this order. Each merges with a merge commit only 
 | 27    | Adopt libraries and fix the audited bugs               | 6.3; section 4 rows without a D.5 test; the bugs listed below; constraints for transitive tool packages | pull request #20 |
 | 28    | Settle each exempted tiny function                     | appendix C; tiny rules off for React components and NestJS modules                                      | pull request #20 |
 | 29    | Rename the `gspot.toml` keys                           | A.3 without `[guides]`                                                                                  | in the batch     |
-| 30    | Rename the kit manifest fields                         | A.4                                                                                                     | not started      |
+| 30    | Rename the kit manifest fields                         | A.4                                                                                                     | in the batch     |
 | 31    | Name checks after their kit and tool                   | A.5 and A.6; a `format` kit; an `actions` kit; one `javascript/eslint`                                  | not started      |
 | 32    | Rename guides to rules                                 | B.3; `[rules]`, `.gspot/rules`, `--no-rules`; `TALKING.md` stays a base rule                            | not started      |
 | 33    | Rename flags, output words, and JSON fields            | A.2, A.7, A.8; `--hook`; manual checks run with `--only`                                                | not started      |
@@ -337,8 +337,20 @@ The owner and the work settled these while implementing:
     - New root keys: `[install]` holds the release age and the scanner, and one `timeout` in seconds bounds every tool
       run. `tests` lists the test files that ESLint, Ruff, and Express share.
     - The Xcode project settings belong to the xcode kit. `harness_directory` was already gone.
-    - Left for later stages: check `requires` becomes `needs` with the unified `when` of A.4 in stage 30, and
-      `tools.site` follows the kit name that stage 31 settles.
+    - Left for later stages: `tools.site` follows the kit name that stage 31 settles.
+- Stage 30 renamed the kit manifest fields of A.4:
+    - The folder gives a kit its name and kind. A kit chosen without detection says `auto`, its `.gitignore` lines are
+      `ignored`, and the files a kit or check covers are a `files` table.
+    - Each entry is one `[[tool]]`, `[[config]]`, `[[check]]`, or `[[setting]]` table. A setting has a `type`, and a
+      tool gspot does not install says `host = true`.
+    - One `when` table replaces the check and config `needs`, `waits_for`, `needs_git`, and the separate conditions
+      of the ESLint exclusions and the guides. Checks in kits and in `gspot.toml` list `needs = ["network"]`, and
+      `tool = ["bats", "bash"]` replaces `requires_tools`.
+    - `exclude_setting` is gone: the planner reads `tools.<tool>.exclude`, which now holds paths in every tool table.
+      Lychee's and jscpd's path lists moved there, and linkinator's URL patterns are `exclude_urls`.
+    - A config that is not a fragment reads the template named after its target unless it names another.
+    - Left for stage 31: a check `name` without the kit prefix, because the checks whose prefix is not their kit get
+      renamed there. `guides` becomes `rules` in stage 32.
 - The Supabase database journey runs in CI only in the weekly `database` workflow, which sets `DATABASE_JOURNEYS`.
 
 ### Owner actions
