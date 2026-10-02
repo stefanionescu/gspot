@@ -18,7 +18,7 @@ floor = "3.0.0"
 npm = "wrangler"
 
 [[config]]
-template = "semgrep-workers.yml.tmpl"
+template = "semgrep/workers.yml.tmpl"
 target = ".gspot/config/semgrep/workers.yml"
 rules_path = ["rules"]
 scoped = true

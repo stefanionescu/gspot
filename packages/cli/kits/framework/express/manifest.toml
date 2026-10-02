@@ -8,7 +8,7 @@ description = "An Express service: the Semgrep rules for request handling, an Op
 dependencies = ["express"]
 
 [[config]]
-template = "semgrep-express.yml.tmpl"
+template = "semgrep/express.yml.tmpl"
 target = ".gspot/config/semgrep/express.yml"
 rules_path = ["rules"]
 scoped = true

@@ -562,6 +562,10 @@ reason = "ESLint rule ids are the file names, and the ids share their first word
 [[structure.prefix_collisions_allowed]]
 paths = ["docs/src"]
 reason = "Astro fixes the name of the content configuration file beside the content folder."
+
+[[structure.prefix_collisions_allowed]]
+paths = ["packages/cli/kits/language/html", "packages/cli/kits/language/markdown", "packages/cli/kits/tool/docker"]
+reason = "A kit template takes the name of the file it writes, and a tool names its own configuration files."
 [tools.licenses]
 
 [[tools.licenses.exceptions]]

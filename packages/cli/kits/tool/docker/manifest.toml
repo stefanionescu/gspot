@@ -48,7 +48,6 @@ scoped = true
 rules_path = ["ignored"]
 
 [[config]]
-template = "trivy/configuration.yaml.tmpl"
 target = ".gspot/config/trivy.yaml"
 scoped = true
 
@@ -57,7 +56,6 @@ target = ".gspot/config/trivyignore"
 scoped = true
 
 [[config]]
-template = "trivy/findings.tpl.tmpl"
 target = ".gspot/config/trivy-findings.tpl"
 scoped = true
 header = false

@@ -28,13 +28,11 @@ file = ".htmlvalidate.js"
 file = ".htmlvalidate.cjs"
 
 [[config]]
-template = "templates.json.tmpl"
 target = ".gspot/config/html-validate-templates.json"
 rules_path = ["rules"]
 header = false
 
 [[config]]
-template = "built.json.tmpl"
 target = ".gspot/config/html-validate-built.json"
 rules_path = ["rules"]
 header = false

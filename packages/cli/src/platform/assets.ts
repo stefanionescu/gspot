@@ -35,7 +35,7 @@ export const GRAMMAR_NAMES = [...GRAMMAR_FILES, ...Object.keys(RUNTIME_WASM)];
 
 /**
  * The file of one asset in the package, for a tool that reads it by path.
- * @param path the asset path, such as `kits/language/bash/rules/branches.yml`
+ * @param path the asset path, such as `kits/language/bash/ast-grep/branches.yml`
  * @returns the absolute path
  */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: readAsset and the tools that read a shipped file by path find it under the same package root.

@@ -47,13 +47,11 @@ file = ".markdownlint.yaml"
 file = ".markdownlint.yml"
 
 [[config]]
-template = "configuration.jsonc.tmpl"
 target = ".gspot/config/markdownlint.jsonc"
 scoped = true
 rules_path = [""]
 
 [[config]]
-template = "runner.mjs.tmpl"
 target = ".gspot/config/markdownlint-cli2.mjs"
 scoped = true
 
