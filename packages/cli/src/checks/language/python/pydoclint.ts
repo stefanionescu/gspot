@@ -4,7 +4,7 @@ import { posix } from 'node:path';
 import { readText } from '#cli/platform/filesystem.ts';
 import type { Session } from '#cli/types/tools/tools.ts';
 import { runToolCheck } from '#cli/execution/tool/runner.ts';
-import { DOCSTRING_COMMAND } from '#cli/config/checks/language/python.ts';
+import { PYDOCLINT_COMMAND } from '#cli/config/checks/language/python.ts';
 import type { CheckResult, PlannedCheck } from '#cli/types/execution/execution.ts';
 
 const projectSchema = z.object({
@@ -50,7 +50,7 @@ export async function checkDocstrings(session: Session, planned: PlannedCheck): 
         planned.scope.view.settings['tools.ruff.docstring_convention'],
     );
     return await runToolCheck(session, planned, [
-        ...DOCSTRING_COMMAND,
+        ...PYDOCLINT_COMMAND,
         ...(style === undefined ? [] : ['--style', style]),
     ]);
 }

@@ -36,14 +36,14 @@ function verdict(name: string, license: string, exception: LicenseException | un
 }
 
 // Read through the files filesystem and verify the generated configuration against the selected policy.
-function readConfiguration(input: EngineInput): z.infer<typeof configurationSchema> {
+function readAllowlist(input: EngineInput): z.infer<typeof allowlistSchema> {
     const target = input.manifests.get('licenses')?.configs.find((config) => !config.fragment);
     if (target === undefined) throw new Error('The license configuration has no configuration target.');
     using files = openRoot(input.root);
     const content = files.read(targetInScope(input.scope, target));
     if (content === undefined)
         throw new Error('License configuration is missing. Run gspot apply before checking licenses.');
-    const configuration: z.infer<typeof configurationSchema> = configurationSchema.parse(
+    const configuration: z.infer<typeof allowlistSchema> = allowlistSchema.parse(
         JSON.parse(content.bytes.toString('utf8')),
     );
     const tool = input.view.tool('licenses');
@@ -113,7 +113,7 @@ const SCANNERS = new Map<string, (input: EngineInput, start: string) => Promise<
     ['pyproject.toml', pythonLicenses],
 ]);
 
-export const configurationSchema = z.object({
+export const allowlistSchema = z.object({
     allowed: z.array(z.string().min(1)),
     exceptions: z.array(
         z.strictObject({ package: z.string().min(1), license: z.string().min(1), reason: z.string().min(1) }),
@@ -127,7 +127,7 @@ export const configurationSchema = z.object({
  */
 export async function licensesPackages(input: EngineInput): Promise<Finding[]> {
     if ((input.view.settings['tools.licenses.allowed'] as string[]).length === 0) return [];
-    const configuration = readConfiguration(input);
+    const configuration = readAllowlist(input);
     const start = join(input.root, input.scope);
     const scans: { manifest: string; packages: LicensedPackage[] }[] = [];
     for (const [manifest, scan] of SCANNERS) {

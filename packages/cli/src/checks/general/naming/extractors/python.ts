@@ -6,7 +6,7 @@ import {
     SPLAT_NODES,
     PYTHON_LABELS,
     EXCEPTION_BASE,
-    PYTHON_UPPER_SHAPE,
+    PYTHON_CONSTANT,
     IMPLICIT_PARAMETERS,
     PYTHON_PARAMETER_NODES,
 } from '#cli/config/checks/general/naming.ts';
@@ -72,7 +72,7 @@ function addFunctions(sink: ExtractSink, root: Node): void {
 function bindingCategory(node: Node, name: string): string {
     const holder = holderOf(node.parent ?? node);
     if (holder === 'class_definition') return 'attributes';
-    return holder === 'module' && PYTHON_UPPER_SHAPE.test(name) ? 'constants' : 'variables';
+    return holder === 'module' && PYTHON_CONSTANT.test(name) ? 'constants' : 'variables';
 }
 
 function addAssignments(sink: ExtractSink, root: Node): void {

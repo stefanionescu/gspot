@@ -9,7 +9,7 @@ import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
  * @param input the engine input
  * @returns the findings
  */
-export async function trpcBoundaries(input: EngineInput): Promise<Finding[]> {
+export async function boundaries(input: EngineInput): Promise<Finding[]> {
     const elements = (input.view.settings['architecture.elements'] ?? []) as ArchitectureElement[];
     const server = elements.find((element) => element.name === 'server');
     const isServer = pathMatcher(server?.paths ?? (input.view.tool('trpc')['server_files'] as string[]));

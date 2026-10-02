@@ -16,7 +16,7 @@ function isSkipped(directory: string, isAllowed: (path: string) => boolean): boo
  * @param context the check context
  * @returns the findings
  */
-export const singleFileFolder: Analysis = (context) => {
+export const loneFiles: Analysis = (context) => {
     const { input } = context;
     const selection = input.selection;
     const extensions = sourceKits(selection.selected).flatMap((manifest) => manifest.files.extensions);

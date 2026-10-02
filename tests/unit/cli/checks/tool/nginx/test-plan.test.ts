@@ -1,5 +1,5 @@
 import { test, expect, describe } from 'bun:test';
-import { nginxTestArguments } from '#cli/checks/tool/nginx/arguments.ts';
+import { testArguments } from '#cli/checks/tool/nginx/arguments.ts';
 
 const NGINX_TEST_PLAN_CONFIG = `events {}
 http {
@@ -26,7 +26,7 @@ describe('nginxTestArguments', () => {
             certificate: '/work/certificate.pem',
             key: '/work/key.pem',
         };
-        expect(nginxTestArguments(NGINX_TEST_PLAN_CONFIG, mounts, 'nginx:1.29.3-alpine')).toStrictEqual([
+        expect(testArguments(NGINX_TEST_PLAN_CONFIG, mounts, 'nginx:1.29.3-alpine')).toStrictEqual([
             'run',
             '--rm',
             '--add-host',
@@ -50,7 +50,7 @@ test('dynamic and local nginx targets stay unresolved and repeated certificate m
     const source =
         'events {} http { server { server localhost; server unix:/tmp/socket; server ${upstream}; proxy_pass $url; unrelated api; ssl_certificate $cert; ssl_certificate_key /etc/nginx/key.pem; ssl_trusted_certificate /etc/nginx/cert.pem; ssl_certificate /etc/nginx/cert.pem; } }';
     expect(
-        nginxTestArguments(source, { configs: [], key: '/work/key', certificate: '/work/cert' }, 'nginx:fixture'),
+        testArguments(source, { configs: [], key: '/work/key', certificate: '/work/cert' }, 'nginx:fixture'),
     ).toStrictEqual([
         'run',
         '--rm',
@@ -66,7 +66,7 @@ test('dynamic and local nginx targets stay unresolved and repeated certificate m
 
 test('empty directive input adds no mount or host', () => {
     expect(
-        nginxTestArguments(
+        testArguments(
             '# Empty configuration.\n;{};',
             { configs: [], key: '/work/key', certificate: '/work/cert' },
             'nginx:fixture',

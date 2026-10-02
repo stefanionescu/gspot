@@ -9,11 +9,11 @@ import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
 import {
     PURPOSE,
     SECTION,
+    DOC_LABELS,
     BLOCK_REACH,
+    DOC_SECTIONS,
     DOC_SEPARATOR,
     STATEMENT_WORDS,
-    MIGRATION_DOC_LABELS,
-    MIGRATION_DOC_SECTIONS,
 } from '#cli/config/checks/database.ts';
 
 // From a one-based line to the zero-based index of the line above it.
@@ -63,7 +63,7 @@ function commentsAbove(lines: string[], line: number): string[] {
 
 function statementProblems(migration: Migration, lines: string[], sections: Set<string>): DocProblem[] {
     return migration.statements.flatMap((statement): DocProblem[] => {
-        const wanted = MIGRATION_DOC_SECTIONS[statement.kind];
+        const wanted = DOC_SECTIONS[statement.kind];
         if (wanted === undefined) return [];
         const { line } = positionAt(migration.text, statement.start);
         const words = STATEMENT_WORDS[statement.kind] ?? statement.kind;
@@ -75,7 +75,7 @@ function statementProblems(migration: Migration, lines: string[], sections: Set<
                 rule: 'placement',
                 text: `${words} belongs under "${wanted}", and it is under "${section ?? 'no section'}".`,
             });
-        const label = MIGRATION_DOC_LABELS[statement.kind];
+        const label = DOC_LABELS[statement.kind];
         const comments = commentsAbove(lines, line);
         const isLabeled =
             label === undefined ||
@@ -113,7 +113,7 @@ export function docProblems(migration: Migration, sections: string[]): DocProble
  */
 export async function migrationDocs(input: EngineInput): Promise<Finding[]> {
     const tool = input.view.tool('postgres');
-    const sections = (tool['doc_sections'] as string[] | undefined) ?? Object.values(MIGRATION_DOC_SECTIONS);
+    const sections = (tool['doc_sections'] as string[] | undefined) ?? Object.values(DOC_SECTIONS);
     const migrations = await migrationsOf(input);
     return migrations.flatMap((migration) =>
         docProblems(migration, sections).map((problem) =>

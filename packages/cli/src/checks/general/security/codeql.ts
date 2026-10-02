@@ -7,10 +7,10 @@ import { scratchFolder } from '#cli/platform/filesystem.ts';
 import { mutationTarget } from '#cli/platform/safe-paths.ts';
 import { scratchCopy } from '#cli/execution/tool/workspace.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
-import { placeOf, sarifLog } from '#cli/checks/general/security/sarif.ts';
+import { placeOf, logSchema } from '#cli/checks/general/security/sarif.ts';
 import type { AcceptedResult } from '#cli/types/checks/general/security.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
-import { CODEQL_TOOL, DEFAULT_SUITE } from '#cli/config/checks/general/security.ts';
+import { CODEQL_TOOL, CODEQL_SUITE } from '#cli/config/checks/general/security.ts';
 
 async function spawned(input: EngineInput, argv: string[], cwd: string): Promise<string> {
     const result = await runCheckCommand(input, [CODEQL_TOOL, ...argv], { cwd });
@@ -65,7 +65,7 @@ async function scanned(
  * @returns the findings the policy does not accept.
  */
 export function sarifFindings(log: unknown, check: string, accepted: AcceptedResult[], source: string): Finding[] {
-    const parsed = sarifLog.parse(log);
+    const parsed = logSchema.parse(log);
     return parsed.runs.flatMap((run) => {
         if (
             run.invocations?.some(
@@ -99,7 +99,7 @@ export function sarifFindings(log: unknown, check: string, accepted: AcceptedRes
 export async function codeql(input: EngineInput): Promise<Finding[]> {
     const tool = input.view.tool(CODEQL_TOOL);
     const languages = (tool['languages'] as string[] | undefined) ?? [];
-    const suite = (tool['suite'] as string | undefined) ?? DEFAULT_SUITE;
+    const suite = (tool['suite'] as string | undefined) ?? CODEQL_SUITE;
     const accepted = (tool['ignore'] as AcceptedResult[] | undefined) ?? [];
     for (const language of languages) {
         mutationTarget(language);

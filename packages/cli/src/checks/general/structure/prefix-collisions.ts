@@ -6,23 +6,23 @@ import type { StructureAnalysis as Analysis } from '#cli/types/checks/checks.ts'
 import { stemOf, prefixOf, directoryOf, directoryTree } from '#cli/checks/general/structure/directories.ts';
 
 import {
-    NEST_KINDS,
     HOOK_PREFIX,
     INDEX_STEMS,
+    NESTJS_KINDS,
     SCRIPT_ENDING,
     TOOL_PREFIXES,
     IGNORED_FOLDERS,
-    DEFAULT_THRESHOLD,
+    PREFIX_COLLISIONS,
     STRUCTURE_HOOK_DIRECTORIES as HOOK_DIRECTORIES,
 } from '#cli/config/checks/general/structure.ts';
 
 // The shared first word is the feature, and the folder already carries it, so these files are no set to regroup.
-function isNestName(name: string): boolean {
+function isNestjsName(name: string): boolean {
     if (!SCRIPT_ENDING.test(name)) return false;
     const parts = name.replace(SCRIPT_ENDING, '').split('.');
     const named = parts.at(-1) === 'spec' ? parts.slice(0, -1) : parts;
     const kind = named.at(-1);
-    return named.length > 1 && kind !== undefined && NEST_KINDS.has(kind);
+    return named.length > 1 && kind !== undefined && NESTJS_KINDS.has(kind);
 }
 
 function isSkipped(directory: string, prefix: string, isAllowed: (path: string) => boolean): boolean {
@@ -41,7 +41,7 @@ function isSkipped(directory: string, prefix: string, isAllowed: (path: string) 
  */
 export const prefixCollisions: Analysis = (context) => {
     const { input } = context;
-    const threshold = context.limit('prefix_collisions') ?? DEFAULT_THRESHOLD;
+    const threshold = context.limit('prefix_collisions') ?? PREFIX_COLLISIONS;
     const isAllowed = pathMatcher(
         input.policyFiles.policy.structure.prefix_collisions_allowed.flatMap((entry) => entry.paths),
     );
@@ -68,7 +68,7 @@ export const prefixCollisions: Analysis = (context) => {
                     !IGNORED_FOLDERS.includes(entry.name) &&
                     prefixOf(entry.name) === prefix
                 );
-            if (isNest && isNestName(entry.name)) return false;
+            if (isNest && isNestjsName(entry.name)) return false;
             const peerStem = stemOf(entry.name);
             return !INDEX_STEMS.has(peerStem) && prefixOf(peerStem) === prefix;
         });

@@ -12,14 +12,13 @@ import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import { openRoot, walkRoot } from '#cli/platform/filesystem.ts';
 import type { SiteBuild } from '#cli/types/checks/general/site.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
-import { DEFAULT_BUILD, SHOWN_DIFFERENCES, DEFAULT_BUILD_OUTPUT } from '#cli/config/checks/general/site.ts';
+import { SITE_BUILD, SHOWN_LINES, SITE_OUTPUT } from '#cli/config/checks/general/site.ts';
 
 const builds = new WeakMap<object, Map<string, Promise<SiteBuild>>>();
 
 async function built(input: EngineInput): Promise<SiteBuild> {
     const site = input.view.tool('site');
-    const outputPath =
-        typeof site['output'] === 'string' && site['output'] !== '' ? site['output'] : DEFAULT_BUILD_OUTPUT;
+    const outputPath = typeof site['output'] === 'string' && site['output'] !== '' ? site['output'] : SITE_OUTPUT;
     mutationTarget(outputPath);
     if (input.resources === undefined) throw new Error('Site builds require run-owned temporary resources.');
     const folder = await scratchCopy(
@@ -30,13 +29,13 @@ async function built(input: EngineInput): Promise<SiteBuild> {
     // The run keeps the build for the checks that read it after this one.
     const scratch = input.resources.use(folder).path;
     const cwd = join(scratch, input.scope);
-    const command = typeof site['build'] === 'string' && site['build'] !== '' ? site['build'] : DEFAULT_BUILD;
+    const command = typeof site['build'] === 'string' && site['build'] !== '' ? site['build'] : SITE_BUILD;
     const result = await runCheckCommand(input, commandArguments(command), { cwd });
     const output = join(cwd, outputPath);
     using files = openRoot(scratch);
     const isBuilt: boolean =
         result.code === 0 && files.stat(toPosix(relative(scratch, output)))?.isDirectory() === true;
-    const said = [result.stderr, result.stdout].join('\n').trim().split('\n').slice(-SHOWN_DIFFERENCES).join(' | ');
+    const said = [result.stderr, result.stdout].join('\n').trim().split('\n').slice(-SHOWN_LINES).join(' | ');
     return { cwd, command, output, isBuilt, said };
 }
 
@@ -62,7 +61,7 @@ export function filesUnder(folder: string): string[] {
  * @param input the engine input
  * @returns the build
  */
-export function siteBuild(input: EngineInput): Promise<SiteBuild> {
+export function cachedBuild(input: EngineInput): Promise<SiteBuild> {
     const key = join(input.root, input.scope);
     const scopeBuilds = builds.get(input.reads) ?? new Map<string, Promise<SiteBuild>>();
     builds.set(input.reads, scopeBuilds);
@@ -76,8 +75,8 @@ export function siteBuild(input: EngineInput): Promise<SiteBuild> {
  * @param input the engine input
  * @returns the successful build, or a skipped-check error
  */
-export async function requireSiteBuild(input: EngineInput): Promise<SiteBuild> {
-    const build = await siteBuild(input);
+export async function requireBuild(input: EngineInput): Promise<SiteBuild> {
+    const build = await cachedBuild(input);
     if (!build.isBuilt) throw new GspotError('skip', 'The site did not build.');
     return build;
 }
@@ -88,7 +87,7 @@ export async function requireSiteBuild(input: EngineInput): Promise<SiteBuild> {
  * @returns the findings
  */
 export async function siteBuilds(input: EngineInput): Promise<Finding[]> {
-    const build = await siteBuild(input);
+    const build = await cachedBuild(input);
     if (build.isBuilt) return [];
     return [findingAt(input, { file: '', line: 1 }, 'build', `${build.command} did not build the site: ${build.said}`)];
 }
@@ -99,7 +98,7 @@ export async function siteBuilds(input: EngineInput): Promise<Finding[]> {
  * @returns one finding for each file that differs, appears, or disappears
  */
 export async function buildReproducible(input: EngineInput): Promise<Finding[]> {
-    const first = await requireSiteBuild(input);
+    const first = await requireBuild(input);
     const before = new Map(
         filesUnder(first.output).map((path) => [path, contentDigest(readSource(first.output, path))]),
     );
@@ -112,7 +111,7 @@ export async function buildReproducible(input: EngineInput): Promise<Finding[]> 
         (path) => before.get(path) !== after.get(path),
     );
     return differences
-        .slice(0, SHOWN_DIFFERENCES)
+        .slice(0, SHOWN_LINES)
         .map((path) =>
             findingAt(
                 input,

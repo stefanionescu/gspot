@@ -6,9 +6,9 @@ import * as processes from '#cli/platform/spawn.ts';
 import { SITE_BUILD } from '#tests/samples/site.ts';
 import { siteInput } from '#tests/harness/cli/site.ts';
 import * as toolRunner from '#cli/execution/tool/runner.ts';
-import { siteBuild } from '#cli/checks/general/site/build.ts';
+import { cachedBuild } from '#cli/checks/general/site/build.ts';
 import type { EngineInput } from '#cli/types/execution/execution.ts';
-import { brokenLinks, builtMarkup, deadSelectors } from '#cli/checks/general/site/output.ts';
+import { brokenLinks, htmlValidate, deadSelectors } from '#cli/checks/general/site/output.ts';
 
 test.each([
     {
@@ -26,7 +26,7 @@ test.each([
     },
     {
         name: 'markup',
-        analyze: builtMarkup,
+        analyze: htmlValidate,
         check: 'site/html-validate',
         body: '<img src="image.png">',
         finding: { file: 'dist/index.html', rule: 'wcag/h37', line: 1 },
@@ -51,7 +51,7 @@ test.each([
     request.spec = [...request.manifests.values()]
         .flatMap((manifest) => manifest.checks)
         .find((spec) => spec.name === check)!;
-    const build = await siteBuild(request);
+    const build = await cachedBuild(request);
     await createFileTree(sandbox.path, {
         '.gspot/config/html-validate-built.json': '{"extends":["html-validate:recommended"]}',
     });

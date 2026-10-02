@@ -100,7 +100,7 @@ export function testPlans(input: EngineInput): Finding[] {
  * @param input the engine input
  * @returns the findings
  */
-export async function projectSymlinks(input: EngineInput): Promise<Finding[]> {
+export async function symlinks(input: EngineInput): Promise<Finding[]> {
     const folders = trackedEnding(input, [XCODE_PROJECT_FILE]).map((projectFile) => folderOf(projectFile));
     if (folders.length === 0 || !input.hasGit) return [];
     const entries = await getCachedEntries(input.root, { kind: 'index' }, input.cancelSignal, input.reads);

@@ -2,7 +2,7 @@ import type { Node } from 'web-tree-sitter';
 import { assignmentOf } from '#cli/checks/language/python/modules.ts';
 import type { PythonModule } from '#cli/types/checks/language/python.ts';
 import type { StructureProblem } from '#cli/types/checks/language/language.ts';
-import { IMPORTS, DIRECTIVE, CLASS_CALL, SINGLETONS_ALLOWED } from '#cli/config/checks/language/python.ts';
+import { IMPORTS, DIRECTIVE, CLASS_CALL, SINGLETON_NAMES } from '#cli/config/checks/language/python.ts';
 
 // A module variable that holds an object built from a class at import time, or undefined. A name in capitals is a constant.
 function builtAtImport(statement: Node): string | undefined {
@@ -40,7 +40,7 @@ export function singletons(modules: PythonModule[], allowed: Set<string>): Struc
     return modules.flatMap((module) =>
         module.statements.flatMap((statement): StructureProblem[] => {
             const name = builtAtImport(statement);
-            if (name === undefined || SINGLETONS_ALLOWED.has(name) || allowed.has(name)) return [];
+            if (name === undefined || SINGLETON_NAMES.has(name) || allowed.has(name)) return [];
             return [
                 {
                     file: module.path,

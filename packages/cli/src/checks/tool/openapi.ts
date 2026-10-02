@@ -14,7 +14,7 @@ import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
  * @param input the engine input
  * @returns the findings
  */
-export async function openapiLint(input: EngineInput): Promise<Finding[]> {
+export async function spectral(input: EngineInput): Promise<Finding[]> {
     const named = input.view.tool('openapi')['document'];
     const document = typeof named === 'string' ? named : '';
     if (document === '') return [];
@@ -48,7 +48,7 @@ export async function openapiLint(input: EngineInput): Promise<Finding[]> {
  * @param input the engine input
  * @returns the findings
  */
-export async function openapiFresh(input: EngineInput): Promise<Finding[]> {
+export async function fresh(input: EngineInput): Promise<Finding[]> {
     const { document: named, generate: producer } = input.view.tool('openapi');
     const document = typeof named === 'string' ? named : '';
     const command = typeof producer === 'string' ? producer : '';

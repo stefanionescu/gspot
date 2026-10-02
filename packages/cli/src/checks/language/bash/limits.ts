@@ -65,7 +65,7 @@ async function countFindings(analysis: string, context: StructureInput, index: S
  * @param scripts the shell index
  * @returns the findings
  */
-const fileLength: Analysis = async (context, scripts) => {
+const fileLines: Analysis = async (context, scripts) => {
     const ceiling = context.limit('file_lines', 'bash');
     if (ceiling === undefined) return [];
     const index = await scripts();
@@ -89,7 +89,7 @@ const fileLength: Analysis = async (context, scripts) => {
  * @param scripts the shell index
  * @returns the findings
  */
-const functionLength: Analysis = async (context, scripts) => {
+const functionLines: Analysis = async (context, scripts) => {
     const ceiling = context.limit('function_lines', 'bash');
     if (ceiling === undefined) return [];
     const index = await scripts();
@@ -118,5 +118,5 @@ const functionLength: Analysis = async (context, scripts) => {
 export const bashLimits: Analysis = async (context, scripts) => {
     const index = await scripts();
     const counted = await Promise.all([...COUNT_ANALYSES].map((analysis) => countFindings(analysis, context, index)));
-    return [...(await fileLength(context, scripts)), ...(await functionLength(context, scripts)), ...counted.flat()];
+    return [...(await fileLines(context, scripts)), ...(await functionLines(context, scripts)), ...counted.flat()];
 };

@@ -7,8 +7,8 @@ import {
     CALL,
     OPERATORS,
     FLOW_PREFIX,
+    SPREAD_READ,
     CALL_ENDINGS,
-    ALL_PARAMETERS,
     POSITIONAL_READ,
 } from '#cli/config/checks/language/bash.ts';
 
@@ -48,7 +48,7 @@ function widestCalls(index: ScriptIndex, names: Set<string>): Map<string, number
 
 // The highest position a body reads, or infinity once it reads them all.
 function highestRead(code: string): number {
-    if (ALL_PARAMETERS.test(code)) return Number.POSITIVE_INFINITY;
+    if (SPREAD_READ.test(code)) return Number.POSITIVE_INFINITY;
     return Math.max(0, ...[...code.matchAll(POSITIONAL_READ)].map((match) => Number(match.groups?.['position'])));
 }
 
@@ -58,7 +58,7 @@ function highestRead(code: string): number {
  * @param scripts the shell index
  * @returns the findings
  */
-export const deadParameters: Analysis = async (context, scripts) => {
+export const unreadArguments: Analysis = async (context, scripts) => {
     const index = await scripts();
     const names = new Set(index.files.flatMap((file) => file.functions.map((entry) => entry.name)));
     const widest = widestCalls(index, names);

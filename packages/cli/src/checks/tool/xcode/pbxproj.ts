@@ -1,9 +1,15 @@
 import { z } from 'zod';
 import { posix } from 'node:path';
 import type { Plist, Token, Folder, ProjectEntry, XcodeProject } from '#cli/types/checks/tool/xcode.ts';
-import { BUILD_SETTING, WORD_CHARACTER, PBXPROJ_ESCAPES, PBXPROJ_PUNCTUATION } from '#cli/config/checks/tool/xcode.ts';
 
-const entrySchema = z.object({
+import {
+    WORD_CHARACTER,
+    PBXPROJ_ESCAPES,
+    SETTING_REFERENCE,
+    PBXPROJ_PUNCTUATION,
+} from '#cli/config/checks/tool/xcode.ts';
+
+const itemSchema = z.object({
     isa: z.string(),
     name: z.string().optional(),
     path: z.string().optional(),
@@ -139,7 +145,7 @@ function parse(text: string): Plist {
 }
 
 // The object an id names, which must exist.
-function projectEntry(project: Pick<XcodeProject, 'objects'>, id: string): ProjectEntry {
+function projectItem(project: Pick<XcodeProject, 'objects'>, id: string): ProjectEntry {
     const found = project.objects[id];
     if (found === undefined) throw new Error(`The Xcode project references an unknown object: ${id}.`);
     return found;
@@ -177,24 +183,25 @@ function treeBase(project: XcodeProject, id: string, tree: string): string {
 function projectPath(project: XcodeProject, id: string): string {
     if (project.visiting.has(id)) throw new Error('The Xcode project contains a group cycle.');
     project.visiting.add(id);
-    const entry = projectEntry(project, id);
+    const entry = projectItem(project, id);
     const base = treeBase(project, id, entry.sourceTree ?? '<group>');
     const path = entry.path ?? '';
-    if (BUILD_SETTING.test(path)) throw new Error(`Cannot resolve Xcode source path ${path} without build settings.`);
+    if (SETTING_REFERENCE.test(path))
+        throw new Error(`Cannot resolve Xcode source path ${path} without build settings.`);
     project.visiting.delete(id);
     return posix.normalize(posix.isAbsolute(path) ? path : posix.join(base, path));
 }
 
 // The Swift files a target compiles, from its sources build phases.
 function targetSources(project: XcodeProject, target: ProjectEntry): string[] {
-    const phases = (target.buildPhases ?? []).map((phaseId) => projectEntry(project, phaseId));
+    const phases = (target.buildPhases ?? []).map((phaseId) => projectItem(project, phaseId));
     return phases
         .filter((phase) => phase.isa === 'PBXSourcesBuildPhase')
         .flatMap((phase) => phase.files ?? [])
         .flatMap((buildId) => {
-            const build = projectEntry(project, buildId);
+            const build = projectItem(project, buildId);
             if (build.fileRef === undefined) throw new Error('An Xcode source build entry has no file reference.');
-            const file = projectEntry(project, build.fileRef);
+            const file = projectItem(project, build.fileRef);
             return file.path?.endsWith('.swift') === true ? [projectPath(project, build.fileRef)] : [];
         });
 }
@@ -202,9 +209,9 @@ function targetSources(project: XcodeProject, target: ProjectEntry): string[] {
 // The synchronized folders a target owns, each with the files its exceptions leave out.
 function targetFolders(project: XcodeProject, id: string, target: ProjectEntry): Folder[] {
     return (target.fileSystemSynchronizedGroups ?? []).map((groupId) => {
-        const group = projectEntry(project, groupId);
+        const group = projectItem(project, groupId);
         const path = projectPath(project, groupId);
-        const exceptions = (group.exceptions ?? []).map((exceptionId) => projectEntry(project, exceptionId));
+        const exceptions = (group.exceptions ?? []).map((exceptionId) => projectItem(project, exceptionId));
         const excluded = exceptions
             .filter((exception) => exception.target === id)
             .flatMap((exception) => (exception.membershipExceptions ?? []).map((name) => posix.join(path, name)));
@@ -212,7 +219,7 @@ function targetFolders(project: XcodeProject, id: string, target: ProjectEntry):
     });
 }
 
-export const projectSchema = z.object({ rootObject: z.string(), objects: z.record(z.string(), entrySchema) });
+export const projectSchema = z.object({ rootObject: z.string(), objects: z.record(z.string(), itemSchema) });
 
 /**
  * Resolve the Swift sources and synchronized folders that belong to project targets.
@@ -222,7 +229,7 @@ export const projectSchema = z.object({ rootObject: z.string(), objects: z.recor
  */
 export function readProject(text: string, directory: string): { sources: Set<string>; folders: Folder[] } {
     const parsed = projectSchema.parse(parse(text));
-    const root = projectEntry(parsed, parsed.rootObject);
+    const root = projectItem(parsed, parsed.rootObject);
     if (root.isa !== 'PBXProject' || root.mainGroup === undefined)
         throw new Error('The Xcode project has no main group.');
     const project: XcodeProject = {
@@ -235,7 +242,7 @@ export function readProject(text: string, directory: string): { sources: Set<str
     const sources = new Set<string>();
     const folders: Folder[] = [];
     for (const id of root.targets ?? []) {
-        const target = projectEntry(project, id);
+        const target = projectItem(project, id);
         if (target.isa !== 'PBXNativeTarget') continue;
         for (const source of targetSources(project, target)) sources.add(source);
         folders.push(...targetFolders(project, id, target));

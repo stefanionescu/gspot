@@ -8,7 +8,7 @@ import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
  * @param input the engine input
  * @returns one finding for each exclusion that matches no tracked file
  */
-export function typecheckMembership(input: EngineInput): Finding[] {
+export function staleExclusions(input: EngineInput): Finding[] {
     const excluded = (input.view.tool('basedpyright')['exclude'] as { paths: string[] }[] | undefined) ?? [];
     const paths = input.files.map((file) => file.path);
     const stale = excluded

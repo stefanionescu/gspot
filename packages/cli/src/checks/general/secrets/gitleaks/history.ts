@@ -10,7 +10,7 @@ import type { CheckResult, PlannedCheck } from '#cli/types/execution/execution.t
  * @param planned the planned check
  * @returns the check result
  */
-export async function checkSecretHistory(session: Session, planned: PlannedCheck): Promise<CheckResult> {
+export async function gitleaksHistory(session: Session, planned: PlannedCheck): Promise<CheckResult> {
     const started = performance.now();
     const result: CheckResult = {
         check: planned.check,

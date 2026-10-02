@@ -1,7 +1,7 @@
 // The statements of one SQL file, each with its kind, its fields and where it starts in the text.
 import { parseSql } from '#cli/parsers/sql/pg.ts';
-import { sqlSource } from '#cli/parsers/sql/source.ts';
 import { codePoints } from '#cli/platform/code-points.ts';
+import { withoutVariables } from '#cli/parsers/sql/source.ts';
 import type { ReadCache } from '#cli/types/platform/platform.ts';
 import type { SqlFile, SqlNode, SqlStatement, SqlStatementView } from '#cli/types/parsers/sql.ts';
 
@@ -19,7 +19,7 @@ function located(bytes: Buffer, statement: SqlStatement): SqlStatementView {
  * @returns the statements, or the parse error with its position
  */
 async function parseFile(text: string): Promise<SqlFile> {
-    const prepared = sqlSource(text);
+    const prepared = withoutVariables(text);
     const source = prepared.text;
     const variables = prepared.variables;
     if (source.trim() === '') return { source, variables, statements: [], error: undefined };

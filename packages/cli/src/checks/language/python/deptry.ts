@@ -15,12 +15,12 @@ import type { Finding, CheckResult, EngineInput, PlannedCheck } from '#cli/types
 
 import {
     PIP_INSTALL,
-    INSTALL_HOLDERS,
     PYTHON_MANIFEST,
     REQUIREMENTS_FILE,
+    INSTALL_EXTENSIONS,
 } from '#cli/config/checks/language/python.ts';
 
-const dependencyConfiguration = z.object({
+const deptrySchema = z.object({
     tool: z
         .object({
             deptry: z.object({ extend_exclude: z.array(z.string()).default([]) }).default({ extend_exclude: [] }),
@@ -36,7 +36,7 @@ const dependencyConfiguration = z.object({
  */
 export async function checkDependencies(session: Session, planned: PlannedCheck): Promise<CheckResult> {
     const text = readText(session.root, posix.join(planned.scope.scope.path, PYTHON_MANIFEST)) ?? '';
-    const exclusions: string[] = dependencyConfiguration.parse(parse(text)).tool.deptry.extend_exclude;
+    const exclusions: string[] = deptrySchema.parse(parse(text)).tool.deptry.extend_exclude;
     return await runToolCheck(session, planned, [
         'deptry',
         '.',
@@ -50,7 +50,7 @@ export async function checkDependencies(session: Session, planned: PlannedCheck)
  * @param input the engine input
  * @returns the findings
  */
-export function dependencyOwnership(input: EngineInput): Finding[] {
+export function pipInstalls(input: EngineInput): Finding[] {
     if (
         !['uv.lock', 'poetry.lock', 'pdm.lock'].some(
             (name) => statSync(join(input.root, input.scope, name), { throwIfNoEntry: false }) !== undefined,
@@ -73,7 +73,7 @@ export function dependencyOwnership(input: EngineInput): Finding[] {
             ),
         );
     const installs = files
-        .filter((file) => !isAllowed(file.path) && INSTALL_HOLDERS.some((ending) => file.path.endsWith(ending)))
+        .filter((file) => !isAllowed(file.path) && INSTALL_EXTENSIONS.some((ending) => file.path.endsWith(ending)))
         .flatMap((file) =>
             readSource(input.root, file.path, input.reads)
                 .toString('utf8')

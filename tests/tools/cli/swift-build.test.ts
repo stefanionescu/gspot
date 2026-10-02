@@ -3,8 +3,8 @@ import { test, expect, afterEach } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { onMac } from '#tests/harness/cli/platforms.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
+import { buildPlan } from '#cli/checks/language/swift/plan.ts';
 import { swiftBuild } from '#cli/checks/language/swift/build.ts';
-import { swiftBuildPlan } from '#cli/checks/language/swift/plan.ts';
 import { statSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { swiftInput, removeBuildFolders } from '#tests/harness/cli/swift.ts';
 
@@ -24,7 +24,7 @@ if (onMac) {
         });
         const first = await swiftInput(sandbox.path, 'swift/build');
         expect(await swiftBuild(first)).toStrictEqual([]);
-        const plan = swiftBuildPlan(first);
+        const plan = buildPlan(first);
         const files = [...new Bun.Glob('**/Value.swift.o').scanSync({ cwd: plan.folder })];
         expect(files).toHaveLength(1);
         const compiledFile = join(plan.folder, files[0]!);
@@ -77,7 +77,7 @@ if (onMac) {
         });
         const first = await swiftInput(sandbox.path, 'swift/build');
         expect(await swiftBuild(first)).toStrictEqual([]);
-        const plan = swiftBuildPlan(first);
+        const plan = buildPlan(first);
         const objects = [...new Bun.Glob('derived/**/main.o').scanSync({ cwd: plan.folder })];
         expect(objects.length).toBeGreaterThan(0);
         const times = objects.map((file) => statSync(join(plan.folder, file)).mtimeMs);

@@ -6,11 +6,11 @@ import { onMac } from '#tests/harness/cli/platforms.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
 import { runOptions } from '#tests/harness/cli/command.ts';
-import { swiftBuildPlan } from '#cli/checks/language/swift/plan.ts';
+import { buildPlan } from '#cli/checks/language/swift/plan.ts';
 import { test, spyOn, expect, describe, afterEach } from 'bun:test';
+import { analyze, swiftBuild } from '#cli/checks/language/swift/build.ts';
 import { mkdirSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { swiftInput, removeBuildFolders } from '#tests/harness/cli/swift.ts';
-import { swiftBuild, swiftAnalyze } from '#cli/checks/language/swift/build.ts';
 import { rejection, containing, textContaining } from '#tests/harness/expectations.ts';
 
 // The build checks inspect the Swift toolchain before their mocked runs.
@@ -121,11 +121,11 @@ test('canceled Swift compilation refuses to launch the compiler', async () => {
     const input = await swiftInput(sandbox.path, 'swift/build');
     input.cancelSignal = AbortSignal.abort();
     expect(await rejection(swiftBuild(input))).toBe('The command was canceled.');
-    const analyzer = swiftBuildPlan(input, 'analyze');
+    const analyzer = buildPlan(input, 'analyze');
     mkdirSync(analyzer.scratch!, { recursive: true });
     const state = join(analyzer.scratch!, 'state');
     writeFileSync(state, 'retained compiler state');
-    expect(await rejection(swiftAnalyze(input))).toBe('The command was canceled.');
+    expect(await rejection(analyze(input))).toBe('The command was canceled.');
     expect(readFileSync(state, 'utf8')).toBe('retained compiler state');
 });
 
@@ -137,7 +137,7 @@ test('Swift response files stay inside the compiler cache before log publication
         'external-response': 'external bytes must not enter a compiler log',
     });
     const input = await swiftInput(sandbox.path, 'swift/build');
-    const plan = swiftBuildPlan(input);
+    const plan = buildPlan(input);
     const corrected = await swiftInput(sandbox.path, 'swift/build');
     const run = spyOn(spawn, 'run').mockResolvedValue({
         code: 0,

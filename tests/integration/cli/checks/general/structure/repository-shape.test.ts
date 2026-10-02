@@ -5,9 +5,9 @@ import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { checkInput } from '#tests/harness/cli/input.ts';
 import { largeFiles } from '#cli/checks/general/structure/large-files.ts';
+import { moduleLogic } from '#cli/checks/general/structure/config-logic.ts';
 import { suppressions } from '#cli/checks/general/structure/suppressions.ts';
-import { fileIntegrity } from '#cli/checks/general/structure/config-logic.ts';
-import { allowlistsMatch } from '#cli/checks/general/structure/stale-allowlists.ts';
+import { staleAllowlists } from '#cli/checks/general/structure/stale-allowlists.ts';
 
 const policy = {
     kits: ['typescript', 'docs'],
@@ -37,7 +37,7 @@ test('documentation path exceptions must match tracked paths or actual documenta
         },
         ignore: [{ check: 'docs/lychee', paths: ['.reports/output.json'], reason: 'An obsolete source exclusion.' }],
     });
-    expect(allowlistsMatch(selected).map(({ message: description }) => description)).toStrictEqual([
+    expect(staleAllowlists(selected).map(({ message: description }) => description)).toStrictEqual([
         '.reports/output.json under [[ignore]] matches no tracked file or folder.',
         '.reports/unused.json under tools.docs.exclude matches no tracked file or folder.',
     ]);
@@ -83,7 +83,7 @@ test('a configuration module with a function or a call is reported; literals pas
             "import { readFileSync } from 'node:fs';\n\nexport const text = readFileSync('x', 'utf8');\nexport const pick = (value: string): string => value;\n",
     });
     const paths = ['config/pure.ts', 'config/logic.ts'];
-    const found = await fileIntegrity(await checkInput(sandbox.path, 'structure/config-logic', paths, policy));
+    const found = await moduleLogic(await checkInput(sandbox.path, 'structure/config-logic', paths, policy));
     expect(found.map((finding) => `${finding.file}:${String(finding.line)}`)).toStrictEqual([
         'config/logic.ts:1',
         'config/logic.ts:3',

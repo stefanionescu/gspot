@@ -2,7 +2,7 @@ import { findingAt } from '#cli/execution/finding.ts';
 import { functionAt } from '#cli/checks/language/bash/scripts.ts';
 import type { ScriptFile } from '#cli/types/checks/language/bash.ts';
 import type { StructureAnalysis as Analysis } from '#cli/types/checks/checks.ts';
-import { SSH_HEREDOC, CLOSING_QUOTE_LINE, SSH_BLOCK_MIN_LINES } from '#cli/config/checks/language/bash.ts';
+import { SSH_HEREDOC, SSH_BLOCK_LINES, CLOSING_QUOTE_LINE } from '#cli/config/checks/language/bash.ts';
 
 // Quotes close in pairs.
 const PAIR = 2;
@@ -54,14 +54,12 @@ function quotedBlocks(file: ScriptFile, start: RegExp): { start: number; length:
  * @param scripts the shell index
  * @returns the findings
  */
-export const scriptRemote: Analysis = async (context, scripts) => {
+export const sshBlocks: Analysis = async (context, scripts) => {
     const start = blockStart(context.bashList('remote_functions'));
     const index = await scripts();
     return index.files.flatMap((file) => {
         const quoted = (start === undefined ? [] : quotedBlocks(file, start))
-            .filter(
-                (block) => block.length >= SSH_BLOCK_MIN_LINES && functionAt(file.functions, block.start) === undefined,
-            )
+            .filter((block) => block.length >= SSH_BLOCK_LINES && functionAt(file.functions, block.start) === undefined)
             .map((block) =>
                 findingAt(
                     context.input,

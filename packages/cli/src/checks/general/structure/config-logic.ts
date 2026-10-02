@@ -14,14 +14,14 @@ import {
     CONFIG_IMPORT_PREFIXES,
 } from '#cli/config/checks/general/structure.ts';
 
-function configurationRolePaths(input: EngineInput): string[] {
+function rolePaths(input: EngineInput): string[] {
     const role = input.policyFiles.policy.architecture.roles['config'];
     if (role === undefined) return [];
     const listed = Array.isArray(role) ? role : [role];
     return listed.map((path) => (path.includes('*') ? path : `${path.replace(/\/$/u, '')}/**`));
 }
 
-function isValueImportOutside(node: Node): boolean {
+function isOutsideImport(node: Node): boolean {
     if (node.type !== 'import_statement' || node.text.startsWith('import type')) return false;
     const source = node.childForFieldName('source')?.text.slice(1, -1) ?? '';
     return CONFIG_IMPORT_PREFIXES.every((prefix) => !source.startsWith(prefix));
@@ -54,7 +54,7 @@ function problemsOf(root: Node): { line: number; message: string }[] {
                 line: statement.startPosition.row + 1,
                 message: `a ${statement.type.replaceAll('_', ' ')} is not a literal`,
             });
-        else if (isValueImportOutside(statement))
+        else if (isOutsideImport(statement))
             problems.push({
                 line: statement.startPosition.row + 1,
                 message: 'a value import from outside the config roots',
@@ -91,8 +91,8 @@ async function fileFindings(input: EngineInput, file: TrackedFile, language: str
  * @param input the engine input
  * @returns the findings
  */
-export async function fileIntegrity(input: EngineInput): Promise<Finding[]> {
-    const isConfig = pathMatcher(configurationRolePaths(input));
+export async function moduleLogic(input: EngineInput): Promise<Finding[]> {
+    const isConfig = pathMatcher(rolePaths(input));
     const findings: Finding[] = [];
     for (const file of input.files) {
         const dot = file.path.lastIndexOf('.');

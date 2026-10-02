@@ -13,7 +13,7 @@ const cache = new WeakMap<object, Map<string, Promise<ImportIndex>>>();
 const projects = new WeakMap<object, Map<string, ts.CompilerOptions>>();
 
 // The resolution settings of the tsconfig.json nearest a folder, which carry the path aliases imports use.
-function projectOptions(input: EngineInput, directory: string): ts.CompilerOptions {
+function compilerOptions(input: EngineInput, directory: string): ts.CompilerOptions {
     const configuration = ts.findConfigFile(directory, (path) => ts.sys.fileExists(path)) ?? '';
     let held = projects.get(input.reads);
     if (held === undefined) {
@@ -97,7 +97,7 @@ function nodeEdges(source: EdgeSource, node: Node): Edge[] {
     if (specifier === undefined) return [];
     // The file the import names; none for a package, a missing file, or a file of another kind.
     const file = join(input.root, path);
-    const resolved = ts.resolveModuleName(specifier, file, projectOptions(input, dirname(file)), ts.sys).resolvedModule
+    const resolved = ts.resolveModuleName(specifier, file, compilerOptions(input, dirname(file)), ts.sys).resolvedModule
         ?.resolvedFileName;
     if (resolved === undefined) return [];
     const target = toPosix(relative(input.root, resolved));

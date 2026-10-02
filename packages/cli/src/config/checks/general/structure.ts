@@ -39,7 +39,7 @@ export const CONFIG_LOGIC_NODES = new Set([
 export const CONFIG_CALL_ALLOWED = new Set(['Set', 'Map', 'RegExp']);
 export const CONFIG_IMPORT_PREFIXES = ['#config/'];
 
-export const FUNCTIONS = new Set([
+export const FUNCTION_NODES = new Set([
     'function_definition',
     'function_declaration',
     'init_declaration',
@@ -53,7 +53,7 @@ export const FUNCTIONS = new Set([
     'didset_clause',
 ]);
 export const TYPE_ALIASES = new Set(['type_alias_statement', 'typealias_declaration']);
-export const CONTAINERS = new Set([
+export const CONTAINER_NODES = new Set([
     'decorated_definition',
     'class_definition',
     'class_declaration',
@@ -77,7 +77,7 @@ export const TYPE_REFERENCES = new Set(['type', 'user_type', 'identifier', 'type
 export const GSPOT_DIRECTORY = '.gspot/';
 
 /** Folder names that say nothing about what the folder holds. */
-export const BANNED_FOLDER_NAMES = [
+export const BANNED_FOLDERS = [
     'common',
     'core',
     'helper',
@@ -109,8 +109,8 @@ export const DOCUMENT_EXTENSIONS = ['.md', '.mdx'];
 /** Dependency installations and Git metadata do not contain authored project structure. */
 export const IGNORED_FOLDERS = ['node_modules', '.git'];
 
-export const DEFAULT_THRESHOLD = 2;
-export const NEST_KINDS = new Set([
+export const PREFIX_COLLISIONS = 2;
+export const NESTJS_KINDS = new Set([
     'controller',
     'service',
     'module',

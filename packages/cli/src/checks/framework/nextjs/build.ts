@@ -19,7 +19,7 @@ function lastLines(text: string): string {
 
 // next typegen writes next-env.d.ts and the route types, which a fresh clone lacks and tsc needs.
 // CI=1 stops Next.js installing missing packages; generated files stay in the scratch copy.
-async function writeNextjsTypes(input: EngineInput): Promise<void> {
+async function typegen(input: EngineInput): Promise<void> {
     const cwd = join(input.root, input.scope);
     const result = await runCheckCommand(input, ['next', 'typegen'], {
         cwd,
@@ -57,7 +57,7 @@ function typeFinding(input: EngineInput, line: string): Finding[] {
  * @param input the engine input
  * @returns one finding for each type error
  */
-export async function nextjsTypes(input: EngineInput): Promise<Finding[]> {
+export async function types(input: EngineInput): Promise<Finding[]> {
     using scratchFolder = await scratchCopy(
         input.root,
         input.files.map((file) => file.path),
@@ -65,7 +65,7 @@ export async function nextjsTypes(input: EngineInput): Promise<Finding[]> {
     );
     const scratch = scratchFolder.path;
     const isolated = { ...input, root: scratch, scopeRoot: join(scratch, input.scope) };
-    await writeNextjsTypes(isolated);
+    await typegen(isolated);
     const cwd = join(scratch, input.scope);
     const command = ['tsc', '--noEmit', '-p', 'tsconfig.json', '--pretty', 'false'];
     const result = await runCheckCommand(isolated, command, { cwd });
@@ -80,7 +80,7 @@ export async function nextjsTypes(input: EngineInput): Promise<Finding[]> {
  * @param input the engine input
  * @returns one finding for a build that fails
  */
-export async function nextjsBuild(input: EngineInput): Promise<Finding[]> {
+export async function build(input: EngineInput): Promise<Finding[]> {
     using scratchFolder = await scratchCopy(
         input.root,
         input.files.map((file) => file.path),

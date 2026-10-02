@@ -7,7 +7,7 @@ import { stemOf, directoryOf, directoryTree } from '#cli/checks/general/structur
  * @param context the check context
  * @returns the findings
  */
-export const fileDirectoryCollision: Analysis = (context) => {
+export const stemCollisions: Analysis = (context) => {
     const tree = directoryTree(context.input.files);
     return context.files.flatMap((file) => {
         const stem = stemOf(file.path);

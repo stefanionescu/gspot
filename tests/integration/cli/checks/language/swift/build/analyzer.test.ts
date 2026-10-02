@@ -3,11 +3,11 @@ import * as spawn from '#cli/platform/spawn.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { policyOf } from '#tests/harness/cli/policy.ts';
 import { test, spyOn, expect, afterEach } from 'bun:test';
-import { swiftBuildPlan } from '#cli/checks/language/swift/plan.ts';
+import { buildPlan } from '#cli/checks/language/swift/plan.ts';
+import { analyze, swiftBuild } from '#cli/checks/language/swift/build.ts';
 import { rejection, textContaining } from '#tests/harness/expectations.ts';
 import { mkdirSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { swiftInput, removeBuildFolders } from '#tests/harness/cli/swift.ts';
-import { swiftBuild, swiftAnalyze } from '#cli/checks/language/swift/build.ts';
 
 // The build checks inspect the Swift toolchain before their mocked runs.
 const HAS_SWIFT = Bun.which('swift') !== null;
@@ -25,7 +25,7 @@ test('analysis refuses an incomplete compiler log after a failed build', async (
         .mockResolvedValueOnce({ code: 7, stdout: '', stderr: '', missing: false, duration: 1 })
         .mockResolvedValue({ code: 0, stdout: '', stderr: '', missing: false, duration: 1 });
     try {
-        expect(await rejection(swiftAnalyze(input))).toMatch(/build exited 7/u);
+        expect(await rejection(analyze(input))).toMatch(/build exited 7/u);
     } finally {
         run.mockRestore();
     }
@@ -41,8 +41,8 @@ test.each([0, 7])('a silent SwiftLint analyzer with exit %i retains its verdict'
         .mockResolvedValue({ code, stdout: '', stderr: '', missing: false, duration: 1 });
     try {
         // A clean analysis reports nothing; a failed one is an error that names the exit code.
-        const findings = code === 0 ? await swiftAnalyze(input) : undefined;
-        const refusal = code === 0 ? undefined : await rejection(swiftAnalyze(input));
+        const findings = code === 0 ? await analyze(input) : undefined;
+        const refusal = code === 0 ? undefined : await rejection(analyze(input));
         const exited = textContaining(`analyzer exited ${String(code)}`);
         expect(findings).toStrictEqual(code === 0 ? [] : undefined);
         expect(refusal).toStrictEqual(code === 0 ? undefined : exited);
@@ -61,7 +61,7 @@ test.each(['build', 'analyzer'])('a timed-out Swift %s reports an error', async 
         run.mockResolvedValueOnce({ code: 0, stdout: '', stderr: '', missing: false, duration: 1 });
     run.mockResolvedValue({ code: 1, stdout: '', stderr: '', missing: false, duration: 1, isTimedOut: true });
     try {
-        expect(await rejection(swiftAnalyze(input))).toMatch(/ran past 600 seconds and was stopped/u);
+        expect(await rejection(analyze(input))).toMatch(/ran past 600 seconds and was stopped/u);
     } finally {
         run.mockRestore();
     }
@@ -72,8 +72,8 @@ test('manual analysis clears its own compiler state without consuming the increm
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': policyOf(['swift']) });
     const input = await swiftInput(sandbox.path, 'swift/swiftlint-analyze');
-    const compile = swiftBuildPlan(input);
-    const analyzer = swiftBuildPlan(input, 'analyze');
+    const compile = buildPlan(input);
+    const analyzer = buildPlan(input, 'analyze');
     const compilerState = join(compile.folder, 'package', 'state');
     const analyzerState = join(analyzer.scratch!, 'state');
     mkdirSync(join(compile.folder, 'package'), { recursive: true });
@@ -86,7 +86,7 @@ test('manual analysis clears its own compiler state without consuming the increm
         .mockResolvedValue({ code: 0, stdout: '', stderr: '', missing: false, duration: 1 });
     try {
         expect(await swiftBuild(input)).toStrictEqual([]);
-        expect(await swiftAnalyze(input)).toStrictEqual([]);
+        expect(await analyze(input)).toStrictEqual([]);
         expect(readFileSync(compilerState, 'utf8')).toBe('incremental');
         expect(existsSync(analyzerState)).toBe(false);
         expect(readFileSync(analyzer.log, 'utf8')).toContain('complete compiler log');

@@ -2,14 +2,14 @@ import { z } from 'zod';
 import { join } from 'node:path';
 import { findingAt } from '#cli/execution/finding.ts';
 import type { Root } from '#cli/types/platform/platform.ts';
+import { buildPlan } from '#cli/checks/language/swift/plan.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import { FULL_PERCENTAGE } from '#cli/config/platform/platform.ts';
-import { swiftBuildPlan } from '#cli/checks/language/swift/plan.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
 import { openBuildCache, prepareBuildSources } from '#cli/checks/language/swift/cache.ts';
 import type { CoverageFloor, XcodeCoverageReport as CoverageReport } from '#cli/types/checks/tool/xctest.ts';
 
-const coverageReportSchema = z.object({
+const xccovSchema = z.object({
     targets: z.array(z.object({ name: z.string().min(1), lineCoverage: z.number().min(0).max(1) })),
 });
 // Removes one entry of the previous result bundle, queuing a folder for the walk.
@@ -78,7 +78,7 @@ export function underFloor(report: CoverageReport, floors: CoverageFloor[]): str
  * @param input the engine input
  * @returns the findings
  */
-export async function testCoverage(input: EngineInput): Promise<Finding[]> {
+export async function coverage(input: EngineInput): Promise<Finding[]> {
     if (input.cancelSignal?.aborted === true) throw new Error('The command was canceled.');
     const project = input.view.tool('xcode')['project'];
     if (typeof project !== 'string' || project === '')
@@ -86,7 +86,7 @@ export async function testCoverage(input: EngineInput): Promise<Finding[]> {
             'Select the xcode kit and set tools.xcode.project and tools.xcode.scheme before measuring XCTest coverage.',
         );
     const floors = input.view.tool('xctest')['coverage'] as CoverageFloor[];
-    const plan = swiftBuildPlan(input, 'coverage');
+    const plan = buildPlan(input, 'coverage');
     const bundle = join(plan.folder, 'coverage.xcresult');
     using files = openBuildCache(plan.folder);
     const source = prepareBuildSources(
@@ -98,6 +98,6 @@ export async function testCoverage(input: EngineInput): Promise<Finding[]> {
     const cwd = join(source, input.scope);
     removePreviousBundle(files);
     const viewed = await measureCoverage(input, plan.argv, bundle, cwd);
-    const report = coverageReportSchema.parse(JSON.parse(viewed.stdout));
+    const report = xccovSchema.parse(JSON.parse(viewed.stdout));
     return underFloor(report, floors).map((text) => findingAt(input, { file: '', line: 1 }, 'coverage', text));
 }

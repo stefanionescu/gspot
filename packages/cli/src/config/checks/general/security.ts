@@ -2,4 +2,4 @@
 
 export const CODEQL_TOOL = 'codeql';
 
-export const DEFAULT_SUITE = 'security-extended';
+export const CODEQL_SUITE = 'security-extended';

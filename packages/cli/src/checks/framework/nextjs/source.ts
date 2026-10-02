@@ -2,7 +2,7 @@ import { posix } from 'node:path';
 import { findingAt } from '#cli/execution/finding.ts';
 import { readSource } from '#cli/repository/sources.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
-import { PAIRS, SECRET_KEY, CONFIG_FILE, SEGMENT_NAME, SWITCHED_OFF } from '#cli/config/checks/framework/nextjs.ts';
+import { PAIRS, SECRET_KEY, NEXT_CONFIG, SEGMENT_NAME, SWITCHED_OFF } from '#cli/config/checks/framework/nextjs.ts';
 
 function paths(input: EngineInput): string[] {
     return input.files.filter((file) => file.kind === 'source').map((file) => file.path);
@@ -41,9 +41,9 @@ export function routeSegments(input: EngineInput): Finding[] {
  * @param input the engine input
  * @returns the findings
  */
-export function nextjsConfiguration(input: EngineInput): Finding[] {
+export function nextOptions(input: EngineInput): Finding[] {
     return paths(input)
-        .filter((path) => CONFIG_FILE.test(path))
+        .filter((path) => NEXT_CONFIG.test(path))
         .flatMap((path) => {
             const text = readSource(input.root, path, input.reads).toString('utf8');
             const off = text
@@ -77,7 +77,7 @@ export function nextjsConfiguration(input: EngineInput): Finding[] {
  * @param input the engine input
  * @returns the findings
  */
-export function dependencyAlignment(input: EngineInput): Finding[] {
+export function versionPairs(input: EngineInput): Finding[] {
     const manifests = paths(input).filter((path) => path === 'package.json' || path.endsWith('/package.json'));
     return manifests.flatMap((path) => {
         const parsed = JSON.parse(readSource(input.root, path, input.reads).toString('utf8')) as {

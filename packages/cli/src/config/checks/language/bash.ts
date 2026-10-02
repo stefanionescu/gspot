@@ -17,14 +17,14 @@ export const CALL = /^([A-Za-z_]\w*)\b(.*)$/u;
 export const OPERATORS = [' && ', ' || ', ' | ', ';'];
 
 /** The start of a computed directory constant, and the three signs that mark one. */
-export const DIRECTORY_CONSTANT_START = /^[A-Z_][A-Z0-9_]*=/u;
+export const DIRECTORY_START = /^[A-Z_][A-Z0-9_]*=/u;
 export const DIRECTORY_CONSTANT_SIGNS = ['cd', 'BASH_SOURCE[0]', 'pwd'];
 
 /** Functions every script may leave uncalled; tools.bash.entry_functions adds the ones a project names. */
 export const ENTRY_FUNCTIONS = ['main'];
 
 /** Words that say nothing in a function summary. */
-export const VAGUE_SUMMARY_WORDS = [
+export const VAGUE_WORDS = [
     'a',
     'an',
     'and',
@@ -46,7 +46,7 @@ export const BASH_DOC_SECTIONS = ['# Globals:', '# Arguments:', '# Outputs:', '#
 
 /** A bare or braced positional parameter read. */
 /** A read of every positional parameter at once, after which no position is unread. */
-export const ALL_PARAMETERS = /(?:^|[^$])\$(?:[@*#]|\{[@*#][:}])|\bshift\b/u;
+export const SPREAD_READ = /(?:^|[^$])\$(?:[@*#]|\{[@*#][:}])|\bshift\b/u;
 
 /** A read of one positional parameter, with its position. */
 export const POSITIONAL_READ = /(?:^|[^$])\$\{?(?<position>[1-9]\d?)/gu;
@@ -121,7 +121,7 @@ export const INLINE_NODE = /\bnode\s+(?:-e|-p|<<)/u;
 export const MAIN_CALL = 'main "$@"';
 
 /** A shebang that names another shell; such a file is not held to the Bash contract. */
-export const OTHER_INTERPRETER_SHEBANG = /^#!.*\b(?:zsh|sh|dash|ksh)\b/u;
+export const OTHER_SHEBANG = /^#!.*\b(?:zsh|sh|dash|ksh)\b/u;
 
 export const READONLY_WORD = 'readonly';
 
@@ -173,7 +173,7 @@ export const SOURCE_STATEMENT = /^(?:source|\.)\s+/u;
 /** A comment that directs ShellCheck, which must sit on the line it covers. */
 export const SHELLCHECK_DIRECTIVE = /^#\s*shellcheck\b/u;
 
-export const SSH_BLOCK_MIN_LINES = 3;
+export const SSH_BLOCK_LINES = 3;
 
 /** An ssh heredoc, which needs a name and a description on the line above. */
 export const SSH_HEREDOC = /\bssh\b.*<</u;

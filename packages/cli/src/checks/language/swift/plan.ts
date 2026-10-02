@@ -3,7 +3,7 @@ import { buildFolder } from '#cli/platform/paths.ts';
 import { mutationTarget } from '#cli/platform/safe-paths.ts';
 import type { EngineInput } from '#cli/types/execution/execution.ts';
 import type { SwiftBuildPlan } from '#cli/types/checks/language/swift.ts';
-import { WORKSPACE_SUFFIX, DEFAULT_DESTINATION } from '#cli/config/checks/language/swift.ts';
+import { WORKSPACE_SUFFIX, XCODE_DESTINATION } from '#cli/config/checks/language/swift.ts';
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Three settings are read as text by the plan, whose caller sits at the complexity limit.
 function text(input: EngineInput, key: string): string {
@@ -17,7 +17,7 @@ function text(input: EngineInput, key: string): string {
  * @param purpose the build consumer, whose command owns a separate cache
  * @returns the plan
  */
-export function swiftBuildPlan(
+export function buildPlan(
     input: EngineInput,
     purpose: 'compile' | 'analyze' | 'coverage' | 'periphery' = 'compile',
 ): SwiftBuildPlan {
@@ -49,7 +49,7 @@ export function swiftBuildPlan(
         '-scheme',
         text(input, 'tools.xcode.scheme'),
         '-destination',
-        text(input, 'tools.xcode.destination') || DEFAULT_DESTINATION,
+        text(input, 'tools.xcode.destination') || XCODE_DESTINATION,
         '-derivedDataPath',
         join(folder, 'derived'),
         'CODE_SIGNING_ALLOWED=NO',

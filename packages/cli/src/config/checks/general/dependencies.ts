@@ -5,7 +5,7 @@ import { LOCKFILE_CLIENTS } from '#cli/config/repository/repository.ts';
 const JAVASCRIPT_CLIENTS = new Set(['bun', 'npm', 'pnpm', 'yarn']);
 
 export const BUNFIG = 'bunfig.toml';
-export const DEFAULT_AGE_DAYS = 7;
+export const RELEASE_AGE_DAYS = 7;
 export const NPM_MANIFEST = 'package.json';
 export const DEPENDENCY_TABLES = ['dependencies', 'devDependencies', 'optionalDependencies'] as const;
 export const EXACT_VERSION = /^\d+\.\d+\.\d+$|^\d+\.\d+\.\d+[-+][\w.+-]+$/u;

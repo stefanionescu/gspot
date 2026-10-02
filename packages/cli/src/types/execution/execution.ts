@@ -6,7 +6,7 @@ import type { PlanOptions } from '#cli/types/execution/planning.ts';
 import type { Session, ToolSearch } from '#cli/types/tools/tools.ts';
 import type { ToolPin, Manifest, CheckSpec } from '#cli/types/kits.ts';
 import type { Defined, ReadCache } from '#cli/types/platform/platform.ts';
-import type { findingSchema, checkResultSchema } from '#cli/execution/finding.ts';
+import type { resultSchema, findingSchema } from '#cli/execution/finding.ts';
 import type { Repository, ScopeEntry, TrackedFile } from '#cli/types/repository/repository.ts';
 import type { MergedView, IgnoreEntry, PolicyFiles, ScopeSelection } from '#cli/types/policy/policy.ts';
 
@@ -22,7 +22,7 @@ export type EngineOutcome = { findings: Finding[]; files: string[] };
 export type Engine = (input: EngineInput) => Finding[] | EngineOutcome | Promise<Finding[] | EngineOutcome>;
 
 export type Finding = Defined<z.infer<typeof findingSchema>>;
-export type CheckResult = Defined<Omit<z.infer<typeof checkResultSchema>, 'findings'>> & {
+export type CheckResult = Defined<Omit<z.infer<typeof resultSchema>, 'findings'>> & {
     findings: Finding[];
 };
 

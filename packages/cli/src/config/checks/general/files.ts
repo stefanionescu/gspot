@@ -1,6 +1,6 @@
 // The literal values checks/general/files reads: names, patterns, limits, and tables.
 
-export const KEY_GROUP = 1;
+export const ENV_KEY_GROUP = 1;
 
 /** How code reads an environment variable, by language; the first group is the key. */
 export const ENV_READ_PATTERNS = [

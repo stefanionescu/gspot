@@ -70,7 +70,7 @@ export function actionlintSource(text: string): string {
  * @param planned the planned check
  * @returns the check result
  */
-export async function checkActions(session: Session, planned: PlannedCheck): Promise<CheckResult> {
+export async function actionlint(session: Session, planned: PlannedCheck): Promise<CheckResult> {
     const replacements = new Map<string, string>();
     for (const file of session.repository.files) {
         if (!/\.ya?ml$/u.test(file.path)) continue;

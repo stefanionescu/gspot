@@ -22,7 +22,7 @@ function sourceRuns(file: ScriptFile): number[][] {
  * @param scripts the shell index
  * @returns the findings
  */
-export const scriptSourceComments: Analysis = async (context, scripts) => {
+export const sourceComments: Analysis = async (context, scripts) => {
     const index = await scripts();
     return index.files.flatMap((file) =>
         sourceRuns(file).flatMap((run) => {
@@ -51,7 +51,7 @@ export const scriptSourceComments: Analysis = async (context, scripts) => {
  * @param scripts the shell index
  * @returns the findings
  */
-export const scriptSourceOrder: Analysis = async (context, scripts) => {
+export const sourceOrder: Analysis = async (context, scripts) => {
     const index = await scripts();
     return index.files.flatMap((file) =>
         sourceRuns(file).flatMap((run) => {

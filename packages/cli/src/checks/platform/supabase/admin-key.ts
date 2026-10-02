@@ -2,7 +2,7 @@ import { findingAt } from '#cli/execution/finding.ts';
 import { readSource } from '#cli/repository/sources.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
-import { DEFAULT_PATHS, ADMIN_KEY_NAMES, CODE_EXTENSIONS } from '#cli/config/checks/platform/supabase.ts';
+import { ADMIN_KEY_NAMES, ADMIN_KEY_PATHS, CODE_EXTENSIONS } from '#cli/config/checks/platform/supabase.ts';
 
 /**
  * One finding for each line that names the service role key outside tools.supabase.admin_key_files.
@@ -11,7 +11,7 @@ import { DEFAULT_PATHS, ADMIN_KEY_NAMES, CODE_EXTENSIONS } from '#cli/config/che
  */
 export function adminKey(input: EngineInput): Finding[] {
     const named = input.view.tool('supabase')['admin_key_files'] as string[] | undefined;
-    const isAllowed = pathMatcher(named ?? DEFAULT_PATHS);
+    const isAllowed = pathMatcher(named ?? ADMIN_KEY_PATHS);
     const files = input.files.filter(
         (file) =>
             file.kind === 'source' &&

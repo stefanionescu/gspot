@@ -59,7 +59,7 @@ function wranglerTable(
 }
 
 // Compares a copied types file with the output of wrangler in the same isolated directory.
-async function isTypesFileStale(input: EngineInput, path: string): Promise<boolean> {
+async function isStale(input: EngineInput, path: string): Promise<boolean> {
     const folder = path.includes('/') ? path.slice(0, path.lastIndexOf('/')) : '';
     const before = readSource(input.root, path, input.reads);
     const result = await runCheckCommand(input, ['wrangler', 'types', TYPES_FILE], {
@@ -116,7 +116,7 @@ function redirectProblems(entries: { text: string; number: number }[]): { number
  * @param input the engine input
  * @returns the findings
  */
-function redirectsSyntax(input: EngineInput): Finding[] {
+function redirects(input: EngineInput): Finding[] {
     return named(input, '_redirects').flatMap((path) =>
         redirectProblems(lines(input, path)).map((entry) =>
             findingAt(input, { file: path, line: entry.number }, 'syntax', entry.text),
@@ -129,7 +129,7 @@ function redirectsSyntax(input: EngineInput): Finding[] {
  * @param input the engine input
  * @returns the findings
  */
-function wranglerFile(input: EngineInput): Finding[] {
+function wrangler(input: EngineInput): Finding[] {
     const paths = ['wrangler.toml', 'wrangler.json', 'wrangler.jsonc'].flatMap((name) => named(input, name));
     return paths.flatMap((path): Finding[] => {
         const { table, problem } = wranglerTable(input, path);
@@ -158,7 +158,7 @@ function wranglerFile(input: EngineInput): Finding[] {
  * @param input the engine input
  * @returns the findings
  */
-export function headersSyntax(input: EngineInput): Finding[] {
+export function headers(input: EngineInput): Finding[] {
     return named(input, '_headers').flatMap((path) =>
         headerProblems(lines(input, path)).map((entry) =>
             findingAt(input, { file: path, line: entry.number }, 'syntax', entry.text),
@@ -171,7 +171,7 @@ export function headersSyntax(input: EngineInput): Finding[] {
  * @param input the engine input
  * @returns the findings
  */
-export async function envTypesFresh(input: EngineInput): Promise<Finding[]> {
+export async function typesFresh(input: EngineInput): Promise<Finding[]> {
     const paths = named(input, TYPES_FILE);
     if (paths.length === 0) return [];
     using scratchFolder = await scratchCopy(
@@ -183,7 +183,7 @@ export async function envTypesFresh(input: EngineInput): Promise<Finding[]> {
     const isolated = { ...input, root: scratch, scopeRoot: join(scratch, input.scope) };
     const findings: Finding[] = [];
     for (const path of paths)
-        if (await isTypesFileStale(isolated, path))
+        if (await isStale(isolated, path))
             findings.push(
                 findingAt(
                     input,
@@ -196,9 +196,9 @@ export async function envTypesFresh(input: EngineInput): Promise<Finding[]> {
 }
 
 /** The analyses this file provides, by the name a manifest check gives them. */
-export const CLOUDFLARE_ANALYSES: Record<string, Engine> = {
-    'cloudflare/headers': headersSyntax,
-    'cloudflare/redirects': redirectsSyntax,
-    'cloudflare/wrangler': wranglerFile,
-    'cloudflare/types-fresh': envTypesFresh,
+export const ANALYSES: Record<string, Engine> = {
+    'cloudflare/headers': headers,
+    'cloudflare/redirects': redirects,
+    'cloudflare/wrangler': wrangler,
+    'cloudflare/types-fresh': typesFresh,
 };

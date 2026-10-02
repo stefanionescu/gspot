@@ -4,7 +4,7 @@ import type { HookName } from '#cli/types/generation/generation.ts';
 import ruleLevels from '#cli/config/generation/eslint-levels.json' with { type: 'json' };
 
 /** Compiler flags that add diagnostics without changing module resolution or emitted JavaScript. */
-export const RECOMMENDED_COMPILER_OPTIONS = {
+export const RECOMMENDED_OPTIONS = {
     strict: true,
     noUncheckedIndexedAccess: true,
     exactOptionalPropertyTypes: true,
@@ -13,8 +13,8 @@ export const RECOMMENDED_COMPILER_OPTIONS = {
 };
 
 /** Additional compiler diagnostics required at all. */
-export const ALL_COMPILER_OPTIONS = {
-    ...RECOMMENDED_COMPILER_OPTIONS,
+export const COMPILER_OPTIONS = {
+    ...RECOMMENDED_OPTIONS,
     noFallthroughCasesInSwitch: true,
     noUncheckedIndexedAccess: true,
     noImplicitOverride: true,

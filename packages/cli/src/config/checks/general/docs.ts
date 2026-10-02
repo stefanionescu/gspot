@@ -12,7 +12,7 @@ export const BANNED_HEADINGS = [
     'file map',
     'codebase map',
 ];
-export const START_SECTION_WORDS = ['install', 'setup', 'start', 'requirements'];
-export const CONTENTS_THRESHOLD = 6;
+export const START_WORDS = ['install', 'setup', 'start', 'requirements'];
+export const CONTENTS_HEADINGS = 6;
 export const CONTENTS_HEADING = 'contents';
 export const LICENSE_NAMES = ['LICENSE', 'LICENSE.md', 'LICENSE.txt'];

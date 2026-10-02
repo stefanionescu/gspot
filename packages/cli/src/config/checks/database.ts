@@ -1,6 +1,6 @@
 // The literal values checks/database reads: names, patterns, limits, and tables.
 
-export const MIGRATION_DOC_SECTIONS: Record<string, string> = {
+export const DOC_SECTIONS: Record<string, string> = {
     CreateSchemaStmt: 'Schema',
     CreateStmt: 'Tables',
     IndexStmt: 'Indexes',
@@ -8,7 +8,7 @@ export const MIGRATION_DOC_SECTIONS: Record<string, string> = {
     CreateTrigStmt: 'Triggers',
     CreateExtensionStmt: 'Extensions',
 };
-export const MIGRATION_DOC_LABELS: Record<string, RegExp> = {
+export const DOC_LABELS: Record<string, RegExp> = {
     CreateStmt: /^--\s*Table:/iu,
     CreateFunctionStmt: /^--\s*Function:/iu,
 };
@@ -32,4 +32,4 @@ export const KEY_KINDS = new Set(['CONSTR_PRIMARY', 'CONSTR_UNIQUE']);
 export const CONSTRAINT_SUFFIXES: Record<string, string> = { CONSTR_PRIMARY: 'pkey', CONSTR_UNIQUE: 'key' };
 
 // What the migrations declare, gathered across every file: tables, row security, policies, foreign keys, and indexes.
-export const DEFAULT_SCHEMA = 'public';
+export const PUBLIC_SCHEMA = 'public';

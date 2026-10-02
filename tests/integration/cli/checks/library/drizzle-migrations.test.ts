@@ -11,7 +11,7 @@ import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { rejection } from '#tests/harness/expectations.ts';
-import { drizzleMigrations } from '#cli/checks/library/drizzle.ts';
+import { migrations } from '#cli/checks/library/drizzle.ts';
 import type { EngineInput } from '#cli/types/execution/execution.ts';
 import { statSync, chmodSync, mkdirSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
 
@@ -109,9 +109,9 @@ test.each(DRIZZLE_MIGRATIONS_SCOPES)(
         await using directory = planted.directory;
         const locate = spyOn(executables, 'sync').mockReturnValue(process.execPath);
         try {
-            expect(await rejection(drizzleMigrations(planted.input))).toContain('Migration generation failed');
+            expect(await rejection(migrations(planted.input))).toContain('Migration generation failed');
             writeFileSync(join(directory.path, planted.path('schema.txt')), 'current');
-            expect(await drizzleMigrations(planted.input)).toStrictEqual([]);
+            expect(await migrations(planted.input)).toStrictEqual([]);
             expectPreserved(planted);
         } finally {
             locate.mockRestore();
@@ -126,7 +126,7 @@ test.each(DRIZZLE_MIGRATIONS_SCOPES)(
         await using directory = planted.directory;
         const locate = spyOn(executables, 'sync').mockReturnValue(process.execPath);
         try {
-            const found = await drizzleMigrations(planted.input);
+            const found = await migrations(planted.input);
             expect(found.map(({ check, file, rule }) => ({ check, file, rule }))).toStrictEqual([
                 {
                     check: planted.spec.name,
@@ -147,7 +147,7 @@ test.each(DRIZZLE_MIGRATIONS_SCOPES)(
                 ),
             ).toBe(true);
             writeFileSync(join(directory.path, planted.path('schema.txt')), 'current');
-            expect(await drizzleMigrations(planted.input)).toStrictEqual([]);
+            expect(await migrations(planted.input)).toStrictEqual([]);
             expectPreserved(planted);
         } finally {
             locate.mockRestore();

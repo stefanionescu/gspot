@@ -10,7 +10,7 @@ import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
 import { BROKEN_CONTRACT, PYTHON_MANIFEST } from '#cli/config/checks/language/python.ts';
 
-const importConfiguration = z.object({
+const importLinterSchema = z.object({
     tool: z.object({ importlinter: z.record(z.string(), z.unknown()).optional() }).optional(),
 });
 
@@ -23,7 +23,7 @@ export async function importLinter(input: EngineInput): Promise<Finding[]> {
     const manifest = input.scope === '' ? PYTHON_MANIFEST : `${input.scope}/${PYTHON_MANIFEST}`;
     if (statSync(join(input.root, manifest), { throwIfNoEntry: false }) === undefined)
         throw new GspotError('skip', 'This scope has no pyproject.toml import contracts.');
-    const project = importConfiguration.parse(parse(readSource(input.root, manifest, input.reads).toString('utf8')));
+    const project = importLinterSchema.parse(parse(readSource(input.root, manifest, input.reads).toString('utf8')));
     if (project.tool?.importlinter === undefined)
         throw new GspotError('skip', 'This scope has no tool.importlinter configuration.');
     const result = await runCheckCommand(input, ['lint-imports', '--no-cache'], {

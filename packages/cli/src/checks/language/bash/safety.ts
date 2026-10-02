@@ -10,7 +10,7 @@ import { UNCHECKED_CD, SAFETY_LINE_RULES, SAFETY_OWNER_RULES } from '#cli/config
  * @param scripts the shell index
  * @returns the findings
  */
-export const scriptSafety: Analysis = async (context, scripts) => {
+export const safety: Analysis = async (context, scripts) => {
     const owners = context.bashList('safety_owners');
     const isOwner = pathMatcher(owners);
     const index = await scripts();

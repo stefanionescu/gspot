@@ -1,6 +1,6 @@
 // The literal values checks/tool/xctest reads: names, patterns, limits, and tables.
 
-export const SWIFT_COMMENT_LINE = /^\s*\/\/\s*\S{3,}/u;
+export const COMMENT_LINE = /^\s*\/\/\s*\S{3,}/u;
 export const SLEEP_CALLS = new Set([
     'sleep',
     'usleep',

@@ -1,6 +1,12 @@
 import type { Node } from 'web-tree-sitter';
 import type { Identifier, ExtractSink } from '#cli/types/checks/general/naming.ts';
-import { TYPE_NODES, SWIFT_LABELS, MEMBER_PARENTS, SWIFT_FUNCTION_NODES } from '#cli/config/checks/general/naming.ts';
+
+import {
+    SWIFT_LABELS,
+    MEMBER_PARENTS,
+    SWIFT_TYPE_NODES,
+    SWIFT_FUNCTION_NODES,
+} from '#cli/config/checks/general/naming.ts';
 
 function add(sink: ExtractSink, node: Node, category: string): void {
     const name = node.text.replaceAll('`', '');
@@ -17,7 +23,7 @@ function add(sink: ExtractSink, node: Node, category: string): void {
 }
 
 function addTypes(sink: ExtractSink, root: Node): void {
-    for (const node of root.descendantsOfType(TYPE_NODES)) {
+    for (const node of root.descendantsOfType(SWIFT_TYPE_NODES)) {
         const name = node.childForFieldName('name');
         if (name?.type === 'type_identifier') add(sink, name, 'types');
     }

@@ -13,7 +13,7 @@ import type { inspectTool } from '#cli/tools/inspect.ts';
 import { scopeInput } from '#tests/harness/cli/input.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import type { EngineInput } from '#cli/types/execution/execution.ts';
-import { envTypesFresh, headersSyntax } from '#cli/checks/platform/cloudflare.ts';
+import { headers, typesFresh } from '#cli/checks/platform/cloudflare.ts';
 import { statSync, chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 
 const CLOUDFLARE_TYPES_GENERATOR = `import { readFileSync, writeFileSync } from 'node:fs';
@@ -100,7 +100,7 @@ test.each(CLOUDFLARE_TYPES_SCOPES)(
         const planted = await plant(scope, 'failure');
         await using directory = planted.directory;
         try {
-            expect(await rejection(envTypesFresh(planted.input))).toContain('Types generation failed');
+            expect(await rejection(typesFresh(planted.input))).toContain('Types generation failed');
             expectPreserved(planted);
             expect(readFileSync(join(directory.path, planted.path('bindings.txt')), 'utf8')).toBe('failure');
         } finally {
@@ -115,7 +115,7 @@ test.each(CLOUDFLARE_TYPES_SCOPES)(
         const planted = await plant(scope, '// Generated types\n');
         await using directory = planted.directory;
         try {
-            expect(await envTypesFresh(planted.input)).toStrictEqual([
+            expect(await typesFresh(planted.input)).toStrictEqual([
                 {
                     check: planted.spec.name,
                     file: toPosix(planted.path('cloudflare-env.d.ts')),
@@ -126,7 +126,7 @@ test.each(CLOUDFLARE_TYPES_SCOPES)(
                 },
             ]);
             writeFileSync(join(directory.path, planted.path('bindings.txt')), planted.edited);
-            expect(await envTypesFresh(planted.input)).toStrictEqual([]);
+            expect(await typesFresh(planted.input)).toStrictEqual([]);
             expectPreserved(planted);
         } finally {
             planted.locate.mockRestore();
@@ -144,7 +144,7 @@ test('Cloudflare header checks report only files in their owning scope', async (
     const session = await openSession(directory.path);
     const spec = session.manifests.get('cloudflare')!.checks.find((entry) => entry.name === 'cloudflare/headers')!;
     const input = scopeInput(session, spec);
-    const found = headersSyntax(input);
+    const found = headers(input);
     expect(found).toStrictEqual([
         {
             check: spec.name,
@@ -155,8 +155,8 @@ test('Cloudflare header checks report only files in their owning scope', async (
             fixable: false,
         },
     ]);
-    expect(headersSyntax({ ...input, scope: 'workers/api' })).toStrictEqual([]);
+    expect(headers({ ...input, scope: 'workers/api' })).toStrictEqual([]);
     writeFileSync(join(directory.path, '_headers'), '/*\n  X-Frame-Options: DENY\n');
     const corrected = await openSession(directory.path);
-    expect(headersSyntax(scopeInput(corrected, spec))).toStrictEqual([]);
+    expect(headers(scopeInput(corrected, spec))).toStrictEqual([]);
 });

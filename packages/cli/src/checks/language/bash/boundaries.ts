@@ -13,7 +13,7 @@ import {
     BOUNDARY_HEADER_WINDOW,
 } from '#cli/config/checks/language/bash.ts';
 
-function resolvedSource(owner: string, annotation: string): string {
+function sourcedPath(owner: string, annotation: string): string {
     if (annotation.startsWith('/')) return annotation.slice(1);
     const directory = posix.dirname(owner);
     return posix.normalize(posix.join(directory, annotation));
@@ -33,7 +33,7 @@ function annotatedSources(file: ScriptFile, context: StructureInput): { sources:
                     'A source statement carries "# shellcheck source=<path>" on the line above it.',
                 ),
             ];
-        if (annotation !== '/dev/null') sources.add(resolvedSource(file.path, annotation));
+        if (annotation !== '/dev/null') sources.add(sourcedPath(file.path, annotation));
         return [];
     });
     return { sources, findings };

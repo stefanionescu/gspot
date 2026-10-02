@@ -23,11 +23,11 @@ import {
     BLOCK_IGNORES,
     TOKEN_IGNORES,
     JSON_EXTENSIONS,
+    COMPILER_OPTIONS,
     LEADING_NEWLINES,
     ESLINT_RULE_LEVELS,
     PACKAGE_JSON_INDENT,
-    ALL_COMPILER_OPTIONS,
-    RECOMMENDED_COMPILER_OPTIONS,
+    RECOMMENDED_OPTIONS,
 } from '#cli/config/generation/generation.ts';
 
 function prefixed(path: string, pattern: string): string {
@@ -182,7 +182,7 @@ export function templateInputs(
         eslint: () => eslintConfiguration({ root, policy, scopes, selection }),
         eslintRuleLevels: ESLINT_RULE_LEVELS,
         isAll: policy.level === 'all',
-        typescriptOptions: policy.level === 'all' ? ALL_COMPILER_OPTIONS : RECOMMENDED_COMPILER_OPTIONS,
+        typescriptOptions: policy.level === 'all' ? COMPILER_OPTIONS : RECOMMENDED_OPTIONS,
         prose: {
             styles: styleNames(),
             blockIgnores: BLOCK_IGNORES,

@@ -5,7 +5,7 @@ import type { Engine, EngineInput } from '#cli/types/execution/execution.ts';
 import type { StructureInput, StructureAnalysis } from '#cli/types/checks/checks.ts';
 import { GSPOT_DIRECTORY, DOCUMENT_EXTENSIONS } from '#cli/config/checks/general/structure.ts';
 
-function contextFor(input: EngineInput): StructureInput {
+function inputFor(input: EngineInput): StructureInput {
     const files = input.files.filter(
         (file) =>
             file.kind === 'source' &&
@@ -30,7 +30,7 @@ function contextFor(input: EngineInput): StructureInput {
  */
 export function structureEngine(analysis: StructureAnalysis): Engine {
     return async (input) => {
-        const context = contextFor(input);
+        const context = inputFor(input);
         const scriptFiles = context.files.filter((file) => file.tags.includes(SCRIPT_TAG));
         return analysis(context, () => scriptIndex(input, scriptFiles));
     };

@@ -109,7 +109,7 @@ function blockCommentEnd(text: string, from: number): number {
 }
 
 // The index past the whole lexeme: a block comment closes with nesting, and a dollar quote at its tag's return.
-function lexemeSpanEnd(text: string, at: number, lexeme: Token): number {
+function lexemeEnd(text: string, at: number, lexeme: Token): number {
     if (lexeme.kind === 'block-comment') return blockCommentEnd(text, lexeme.end);
     if (lexeme.kind !== 'dollar') return lexeme.end;
     const tag = text.slice(at, lexeme.end);
@@ -138,7 +138,7 @@ export function* sqlTokens(text: string): Generator<SqlToken> {
             at += 1;
             continue;
         }
-        const end = lexemeSpanEnd(text, at, lexeme);
+        const end = lexemeEnd(text, at, lexeme);
         yield { start: at, end, kind: lexeme.kind };
         at = end;
     }
@@ -149,7 +149,7 @@ export function* sqlTokens(text: string): Generator<SqlToken> {
  * @param text the authored SQL with client commands and substitutions
  * @returns parser text and substitution ranges in original UTF-16 coordinates
  */
-export function sqlSource(text: string): { text: string; variables: { start: number; end: number }[] } {
+export function withoutVariables(text: string): { text: string; variables: { start: number; end: number }[] } {
     const variables: { start: number; end: number }[] = [];
     const pieces: string[] = [];
     let offset = 0;

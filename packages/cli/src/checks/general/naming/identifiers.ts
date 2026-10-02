@@ -111,7 +111,7 @@ async function scopeIdentifiers(input: EngineInput): Promise<{ path: string; nam
 }
 
 // Validate each authored layer once against the complete snapshot, including nested scopes.
-async function schemaFindings(input: EngineInput): Promise<Finding[]> {
+async function policyFindings(input: EngineInput): Promise<Finding[]> {
     const policy = input.policyFiles.policy;
     const read = await scopeIdentifiers(input);
     const removable = new Set(
@@ -171,7 +171,7 @@ export const NAMING_ENGINES: Record<string, Engine> = {
     'naming/paths': namingEngine((input, policy) =>
         pathIdentifiers(input).flatMap((identifier) => findingsFor(input, policy, [identifier], identifier.file)),
     ),
-    'naming/policy': namingEngine(schemaFindings),
+    'naming/policy': namingEngine(policyFindings),
 };
 
 /**

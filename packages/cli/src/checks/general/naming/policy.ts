@@ -24,13 +24,13 @@ function toSet(names: string[] | undefined): Set<string> | undefined {
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Shipped and written naming rules compile to one matcher shape.
 function compileRule(rule: ShippedRule, source: string): PathRule {
     return {
-        isPath: pathMatcher(rule.paths),
+        matches: pathMatcher(rule.paths),
         languages: toSet(rule.languages),
         categories: toSet(rule.categories),
         names: toSet(rule.names),
-        isExcluding: rule.exclude === true,
+        excludes: rule.exclude === true,
         isDigitsAllowed: rule.allow_digits === true,
-        isDuplicatesAllowed: rule.allow_duplicate_words === true,
+        allowsRepeats: rule.allow_duplicate_words === true,
         structuralPrefix: rule.structural_prefix === undefined ? undefined : new RegExp(rule.structural_prefix, 'u'),
         caseNames: rule.case,
         source,
@@ -43,7 +43,7 @@ function reservedTerms(shipped: ShippedPolicy, naming: NamingSettings): Map<stri
     return reserved;
 }
 
-function limitsReader(
+function limits(
     shipped: ShippedPolicy,
     surface: SettingSurface,
     policy: Policy,
@@ -127,7 +127,7 @@ export function effectivePolicy(
         contractProperties: new Map(naming.protocol_keys.map((entry) => [entry.file, new Set(entry.names)])),
         rules,
         languages: shipped.languages,
-        limitsFor: limitsReader(shipped, surface, policy, scope),
+        limitsFor: limits(shipped, surface, policy, scope),
         isDigitsBanned: shipped.ban_digits,
         isDuplicatesBanned: shipped.ban_repeats,
     };
@@ -143,7 +143,7 @@ export function rulesFor(policy: EffectivePolicy, identifier: Identifier): PathR
     const path = identifier.directory ?? identifier.file;
     return policy.rules.filter(
         (rule) =>
-            rule.isPath(path) &&
+            rule.matches(path) &&
             (rule.languages === undefined || rule.languages.has(identifier.language)) &&
             (rule.categories === undefined || rule.categories.has(identifier.category)) &&
             (rule.names === undefined || rule.names.has(identifier.name)),
@@ -157,7 +157,7 @@ export function rulesFor(policy: EffectivePolicy, identifier: Identifier): PathR
  * @param rules the rules that apply
  * @returns the limits
  */
-export function limitsUnderRules(policy: EffectivePolicy, identifier: Identifier, rules: PathRule[]): CategoryLimits {
+export function ruleLimits(policy: EffectivePolicy, identifier: Identifier, rules: PathRule[]): CategoryLimits {
     const base = policy.limitsFor(identifier.language, identifier.category);
     const caseRule = rules.findLast((rule) => rule.caseNames !== undefined);
     return caseRule?.caseNames === undefined ? base : { ...base, caseNames: caseRule.caseNames };

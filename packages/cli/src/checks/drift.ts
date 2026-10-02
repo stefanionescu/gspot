@@ -1,4 +1,4 @@
-import { MESSAGES, DRIFT_HELP } from '#cli/config/checks/checks.ts';
+import { DRIFT_HELP, DRIFT_MESSAGES } from '#cli/config/checks/checks.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
 
 /**
@@ -6,13 +6,13 @@ import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
  * @param input the engine input
  * @returns the findings
  */
-export function generatedDrift(input: EngineInput): Finding[] {
+export function drift(input: EngineInput): Finding[] {
     if (input.generatedDrift === undefined) throw new Error('Generated drift requires once-only execution.');
     return input.generatedDrift().map((entry) => ({
         check: input.spec.name,
         file: entry.path,
         rule: entry.kind,
-        message: MESSAGES[entry.kind],
+        message: DRIFT_MESSAGES[entry.kind],
         help: DRIFT_HELP[entry.kind],
         fixable: true,
     }));

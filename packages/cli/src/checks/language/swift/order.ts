@@ -40,7 +40,7 @@ export function privateBeforePublic(sources: SwiftSource[]): StructureProblem[] 
  * @param owners the paths architecture.roles.env names.
  * @returns the problems.
  */
-export function environmentReads(sources: SwiftSource[], owners: string[]): StructureProblem[] {
+export function envOwner(sources: SwiftSource[], owners: string[]): StructureProblem[] {
     const isOwner = pathMatcher(owners);
     const readers = sources.filter(
         (source) =>

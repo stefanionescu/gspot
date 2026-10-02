@@ -4,9 +4,9 @@ import type { Language, Substance } from '#cli/types/checks/general/structure.ts
 
 import {
     NAMES,
-    FUNCTIONS,
-    CONTAINERS,
     TYPE_ALIASES,
+    FUNCTION_NODES,
+    CONTAINER_NODES,
     CONTAINER_NOISE,
     TYPE_REFERENCES,
 } from '#cli/config/checks/general/structure.ts';
@@ -91,8 +91,8 @@ function isInert(node: Node): boolean {
 // Identify substantive nodes beyond imports, names, forwarding declarations, and trivial functions.
 function isSubstantial(node: Node, language: Language, threshold: number): boolean {
     if (isInert(node)) return false;
-    if (FUNCTIONS.has(node.type)) return isSubstantialFunction(node, language, threshold);
-    if (CONTAINERS.has(node.type)) {
+    if (FUNCTION_NODES.has(node.type)) return isSubstantialFunction(node, language, threshold);
+    if (CONTAINER_NODES.has(node.type)) {
         const body = node.childForFieldName('body');
         return (body?.namedChildren ?? node.namedChildren)
             .filter((child) => !CONTAINER_NOISE.has(child.type))
@@ -112,7 +112,7 @@ export function executableStatements(nodes: Node[], language: Language): number 
     let count = 0;
     for (const node of nodes) {
         if (node.type.includes('comment') || TYPE_ALIASES.has(node.type)) continue;
-        if (FUNCTIONS.has(node.type)) {
+        if (FUNCTION_NODES.has(node.type)) {
             if (!node.type.startsWith('lambda')) count += 1;
             continue;
         }
@@ -146,7 +146,7 @@ export function trivialFile(root: Node, language: Language, threshold: number): 
  * @returns the message
  */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The Bash, Python, SQL, and Swift engines report a trivial function in this one wording.
-export function trivialFunctionText(name: string, count: number, threshold: number): string {
+export function trivialText(name: string, count: number, threshold: number): string {
     const statements = count === 1 ? '1 statement' : `${String(count)} statements`;
     return `${name} has ${statements}. Functions with ${String(threshold)} or fewer are reported. Inline it into its callers, or record the API it serves with gspot ignore.`;
 }

@@ -1,7 +1,7 @@
 import { hasCase } from '#cli/checks/general/naming/cases.ts';
+import { rulesFor, ruleLimits } from '#cli/checks/general/naming/policy.ts';
 import { splitParts, repeatedPart } from '#cli/checks/general/naming/split.ts';
-import { rulesFor, limitsUnderRules } from '#cli/checks/general/naming/policy.ts';
-import { isExempt, bannedTerm, isReservedUseAllowed } from '#cli/checks/general/naming/match.ts';
+import { isExempt, bannedTerm, isUseAllowed } from '#cli/checks/general/naming/match.ts';
 import { DIGIT, TEST_GROUP, CALLBACK_VERB, VERB_CATEGORIES } from '#cli/config/checks/general/naming.ts';
 
 import type {
@@ -53,7 +53,7 @@ function wordsProblem(words: string[], limits: CategoryLimits): NameProblem | un
 }
 
 function repeatProblem(words: string[], rules: PathRule[], policy: EffectivePolicy): NameProblem | undefined {
-    if (!policy.isDuplicatesBanned || rules.some((rule) => rule.isDuplicatesAllowed)) return undefined;
+    if (!policy.isDuplicatesBanned || rules.some((rule) => rule.allowsRepeats)) return undefined;
     const repeated = repeatedPart(words);
     return repeated === undefined ? undefined : { rule: 'duplicate-words', message: `"${repeated}" repeats` };
 }
@@ -66,7 +66,7 @@ function termProblems(identifier: Identifier, parts: string[], context: NamingIn
     if (banned !== undefined)
         problems.push({ rule: 'banned-term', message: `"${banned.term}" is banned`, source: banned.source });
     for (const [term, allowedFor] of policy.reserved) {
-        if (!parts.includes(term) || isReservedUseAllowed(allowedFor, identifier.category)) continue;
+        if (!parts.includes(term) || isUseAllowed(allowedFor, identifier.category)) continue;
         problems.push({
             rule: 'reserved-term',
             message: `"${term}" is reserved for ${allowedFor.join(', ')}; this is a ${identifier.kind}`,
@@ -93,8 +93,8 @@ export function nameProblems(identifier: Identifier, context: NamingInputs): Nam
     const { policy } = context;
     if (isExempt(policy, identifier)) return [];
     const rules = rulesFor(policy, identifier);
-    if (rules.some((rule) => rule.isExcluding)) return [];
-    const limits = limitsUnderRules(policy, identifier, rules);
+    if (rules.some((rule) => rule.excludes)) return [];
+    const limits = ruleLimits(policy, identifier, rules);
     const name = stripped(identifier.name, rules);
     const parts = splitParts(name);
     const words = splitParts(name.split('.', 1)[0] ?? name).filter((part) => !DIGIT.test(part));

@@ -4,7 +4,7 @@ import { readSource } from '#cli/repository/sources.ts';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
-import { SLEEP_CALLS, SWIFT_COMMENT_LINE } from '#cli/config/checks/tool/xctest.ts';
+import { SLEEP_CALLS, COMMENT_LINE } from '#cli/config/checks/tool/xctest.ts';
 
 function hasReason(value: Node | undefined): boolean {
     if (value === undefined || value.text === 'nil') return false;
@@ -42,7 +42,7 @@ async function testFindings(
  * @param input the engine input
  * @returns the findings
  */
-export async function disabledTests(input: EngineInput): Promise<Finding[]> {
+export async function disabled(input: EngineInput): Promise<Finding[]> {
     return await testFindings(
         input,
         'disabled',
@@ -85,9 +85,7 @@ export async function disabledTests(input: EngineInput): Promise<Finding[]> {
                     return false;
                 const reasonArgument =
                     attribute.namedChildren.find((node) => node.text === 'message')?.nextNamedSibling ?? undefined;
-                return (
-                    !hasReason(reasonArgument) && !SWIFT_COMMENT_LINE.test(lines[attribute.startPosition.row - 1] ?? '')
-                );
+                return !hasReason(reasonArgument) && !COMMENT_LINE.test(lines[attribute.startPosition.row - 1] ?? '');
             });
             return [...calls, ...attributes];
         },
@@ -99,7 +97,7 @@ export async function disabledTests(input: EngineInput): Promise<Finding[]> {
  * @param input the engine input
  * @returns the findings
  */
-export async function noSleep(input: EngineInput): Promise<Finding[]> {
+export async function sleeps(input: EngineInput): Promise<Finding[]> {
     const allowed = (input.view.tool('xctest')['sleep_allowed'] as { paths: string[] }[] | undefined) ?? [];
     const isAllowed = pathMatcher(allowed.flatMap((entry) => entry.paths));
     const said = 'A test that sleeps is slow when it passes and flaky when it fails; wait on an expectation.';
@@ -118,7 +116,7 @@ export async function noSleep(input: EngineInput): Promise<Finding[]> {
  * @param input the engine input
  * @returns the findings
  */
-export async function recordingMode(input: EngineInput): Promise<Finding[]> {
+export async function recording(input: EngineInput): Promise<Finding[]> {
     const said = 'Recording mode is on, so this test writes a new reference and passes whatever the screen shows.';
     return await testFindings(input, 'recording', said, (root) =>
         root

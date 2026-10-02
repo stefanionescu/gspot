@@ -4,13 +4,13 @@ import { toPosix } from '#cli/platform/paths.ts';
 import { findingAt } from '#cli/execution/finding.ts';
 import type { Root } from '#cli/types/platform/platform.ts';
 import { PRIVATE_FILE } from '#cli/config/platform/root.ts';
+import { buildPlan } from '#cli/checks/language/swift/plan.ts';
 import { runCheckCommand } from '#cli/execution/tool/runner.ts';
 import { DOT_GSPOT } from '#cli/config/repository/repository.ts';
-import { swiftBuildPlan } from '#cli/checks/language/swift/plan.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
 import { openBuildCache, prepareBuildSources } from '#cli/checks/language/swift/cache.ts';
 import type { SwiftBuildPlan, SwiftBuildOutput } from '#cli/types/checks/language/swift.ts';
-import { DIAGNOSTIC, RULE_SUFFIX, RESPONSE_FILE, PRIVATE_PREFIX } from '#cli/config/checks/language/swift.ts';
+import { DIAGNOSTIC, RULE_SUFFIX, RESPONSE_FILE, MACOS_PRIVATE_PATH } from '#cli/config/checks/language/swift.ts';
 
 const builds = new WeakMap<object, Map<string, Promise<SwiftBuildOutput>>>();
 
@@ -69,7 +69,7 @@ async function ranBuild(input: EngineInput, plan: SwiftBuildPlan): Promise<Swift
     // Match SwiftLint paths and expose response-file sources in the compiler log.
     const output = `${result.stdout}\n${result.stderr}`
         .split('\n')
-        .map((line) => sourcesWritten(line, plan.folder, files).replaceAll(PRIVATE_PREFIX, '$<before>/$<folder>/'))
+        .map((line) => sourcesWritten(line, plan.folder, files).replaceAll(MACOS_PRIVATE_PATH, '$<before>/$<folder>/'))
         .join('\n');
     const log = toPosix(relative(plan.folder, plan.log));
     files.write(log, { bytes: Buffer.from(output), mode: PRIVATE_FILE }, files.read(log));
@@ -92,7 +92,7 @@ function buildOutput(input: EngineInput, plan: SwiftBuildPlan): Promise<SwiftBui
  * @returns the findings
  */
 export async function swiftBuild(input: EngineInput): Promise<Finding[]> {
-    const plan = swiftBuildPlan(input);
+    const plan = buildPlan(input);
     const { output, code } = await buildOutput(input, plan);
     const originalPaths = output.replaceAll(join(plan.folder, 'source'), input.root);
     const found = diagnostics(input, originalPaths, new Set(['error']), 'compiler');
@@ -107,8 +107,8 @@ export async function swiftBuild(input: EngineInput): Promise<Finding[]> {
  * @param input the engine input
  * @returns the findings
  */
-export async function swiftAnalyze(input: EngineInput): Promise<Finding[]> {
-    const plan = swiftBuildPlan(input, 'analyze');
+export async function analyze(input: EngineInput): Promise<Finding[]> {
+    const plan = buildPlan(input, 'analyze');
     const build = await buildOutput(input, plan);
     if (build.code !== 0) throw new Error(`Cannot analyze Swift because the build exited ${String(build.code)}.`);
     const config = join(input.root, DOT_GSPOT, 'config', input.scope, 'swiftlint.yml');
@@ -128,7 +128,7 @@ export async function swiftAnalyze(input: EngineInput): Promise<Finding[]> {
  * @returns the findings
  */
 export async function swiftPeriphery(input: EngineInput): Promise<Finding[]> {
-    const plan = swiftBuildPlan(input, 'periphery');
+    const plan = buildPlan(input, 'periphery');
     const config = join(input.root, DOT_GSPOT, 'config', input.scope, 'periphery.yml');
     const argv = [
         'periphery',

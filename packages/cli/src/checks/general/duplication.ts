@@ -8,7 +8,7 @@ import { openRoot, scratchFolder } from '#cli/platform/filesystem.ts';
 import type { CloneReport } from '#cli/types/checks/general/general.ts';
 import { join, relative, isAbsolute, toNamespacedPath } from 'node:path';
 import type { Finding, EngineInput } from '#cli/types/execution/execution.ts';
-import { JSCPD_TOOL, DEFAULT_CEILING } from '#cli/config/checks/general/duplication.ts';
+import { JSCPD_TOOL, DUPLICATION_PERCENT } from '#cli/config/checks/general/duplication.ts';
 
 const clonePlaceSchema = z.object({
     name: z.string().min(1),
@@ -91,7 +91,7 @@ export async function copiedBlocks(input: EngineInput): Promise<Finding[]> {
     return cloneFindings(cloneReportSchema.parse(JSON.parse(readSource(work, 'jscpd-report.json').toString('utf8'))), {
         check: input.spec.name,
         root: input.root,
-        ceiling: typeof named === 'number' ? named : DEFAULT_CEILING,
+        ceiling: typeof named === 'number' ? named : DUPLICATION_PERCENT,
         owned: new Set(owned),
     });
 }

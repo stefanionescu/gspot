@@ -11,7 +11,7 @@ import {
     TRAILING_PUNCTUATION,
 } from '#cli/config/parsers/parsers.ts';
 
-function withoutTrailingPunctuation(token: string): string {
+function withoutPunctuation(token: string): string {
     let end = token.length;
     while (end > 0 && TRAILING_PUNCTUATION.includes(token.charAt(end - 1))) end -= 1;
     return token.slice(0, end);
@@ -39,7 +39,7 @@ export function proseLines(text: string): ProseLine[] {
 export function pathTokens(line: string): string[] {
     return line
         .split(TOKEN_SEPARATORS)
-        .map((token) => withoutTrailingPunctuation(token))
+        .map((token) => withoutPunctuation(token))
         .map((token) => {
             const marker = token.startsWith('**') ? '**' : '*';
             if (token.startsWith(marker) && token.endsWith(marker)) return token.slice(marker.length, -marker.length);

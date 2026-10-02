@@ -3,9 +3,9 @@ import { readSource } from '#cli/repository/sources.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import { parseSql, parsePlpgsql } from '#cli/parsers/sql/pg.ts';
 import { sqlFile, positionAt } from '#cli/parsers/sql/statements.ts';
+import { trivialText } from '#cli/checks/general/structure/statements.ts';
 import type { SqlFile, SqlStatementView } from '#cli/types/parsers/sql.ts';
-import { trivialFunctionText } from '#cli/checks/general/structure/statements.ts';
-import { DEFAULT_TRIVIAL_STATEMENTS } from '#cli/config/checks/language/language.ts';
+import { TRIVIAL_STATEMENTS } from '#cli/config/checks/language/language.ts';
 import type { Engine, Finding, EngineInput } from '#cli/types/execution/execution.ts';
 import type { SqlSource, SqlAnalysis, FunctionOption } from '#cli/types/checks/language/sql.ts';
 
@@ -15,7 +15,7 @@ import {
     BLOCK_COMMENT,
     OUTPUT_PARAMETERS,
     POSTGRES_DIALECTS,
-    SHIPPED_PARAMETER_LIMIT,
+    FUNCTION_PARAMETERS,
 } from '#cli/config/checks/language/sql.ts';
 
 function sources(input: EngineInput): SqlSource[] {
@@ -106,14 +106,12 @@ async function functionFindings(
     const statements = await bodyStatements(parsed, statement, index);
     const isTrivial = statements !== undefined && statements <= threshold;
     if (isTrivial)
-        findings.push(
-            findingAt(input, at, 'trivial-function', trivialFunctionText('This function', statements, threshold)),
-        );
+        findings.push(findingAt(input, at, 'trivial-function', trivialText('This function', statements, threshold)));
     return { findings, isTrivial };
 }
 
 // The findings of one file: each function's, then the file's when every statement is a trivial function.
-async function fileFunctionFindings(analysis: SqlAnalysis): Promise<Finding[]> {
+async function fileFindings(analysis: SqlAnalysis): Promise<Finding[]> {
     const { input, source, parsed } = analysis;
     const findings: Finding[] = [];
     let trivial = 0;
@@ -140,7 +138,7 @@ async function fileFunctionFindings(analysis: SqlAnalysis): Promise<Finding[]> {
  * @param input the engine input
  * @returns the findings
  */
-async function sqlSyntax(input: EngineInput): Promise<Finding[]> {
+async function syntax(input: EngineInput): Promise<Finding[]> {
     const sqlfluff = input.view.tool('sqlfluff');
     const dialect = (sqlfluff['dialect'] as string | undefined) ?? 'ansi';
     if (!POSTGRES_DIALECTS.has(dialect)) return [];
@@ -162,7 +160,7 @@ async function sqlSyntax(input: EngineInput): Promise<Finding[]> {
  * @param input the engine input
  * @returns the findings
  */
-function sqlBlockComments(input: EngineInput): Finding[] {
+function blockComments(input: EngineInput): Finding[] {
     return sources(input).flatMap((source): Finding[] => {
         const found = source.text.matchAll(SQL_TOKENS).find((match) => match[0] === BLOCK_COMMENT);
         if (found === undefined) return [];
@@ -182,7 +180,7 @@ function sqlBlockComments(input: EngineInput): Finding[] {
  * @param input the engine input
  * @returns the findings
  */
-function sqlFileLength(input: EngineInput): Finding[] {
+function fileLines(input: EngineInput): Finding[] {
     const ceiling = input.view.limit('file_lines', 'sql');
     if (ceiling === undefined) return [];
     return sources(input).flatMap((source): Finding[] => {
@@ -199,23 +197,23 @@ function sqlFileLength(input: EngineInput): Finding[] {
  * @param input the engine input
  * @returns the findings
  */
-async function sqlFunctions(input: EngineInput): Promise<Finding[]> {
+async function functions(input: EngineInput): Promise<Finding[]> {
     const findings: Finding[] = [];
-    const threshold = input.view.limit('trivial_statements', 'sql') ?? DEFAULT_TRIVIAL_STATEMENTS;
-    const maximum = input.view.limit('function_parameters', 'sql') ?? SHIPPED_PARAMETER_LIMIT;
+    const threshold = input.view.limit('trivial_statements', 'sql') ?? TRIVIAL_STATEMENTS;
+    const maximum = input.view.limit('function_parameters', 'sql') ?? FUNCTION_PARAMETERS;
     for (const source of sources(input)) {
         const parsed = await sqlFile(source.text, input.reads);
         if (parsed.error !== undefined)
             throw new Error(`Cannot analyze SQL functions in ${source.path}: ${parsed.error.text}`);
-        findings.push(...(await fileFunctionFindings({ input, source, parsed, threshold, maximum })));
+        findings.push(...(await fileFindings({ input, source, parsed, threshold, maximum })));
     }
     return findings;
 }
 
 /** The analyses this file provides, by the name a manifest check gives them. */
 export const SQL_ANALYSES: Record<string, Engine> = {
-    'sql/functions': sqlFunctions,
-    'sql/syntax': sqlSyntax,
-    'sql/block-comments': sqlBlockComments,
-    'sql/file-lines': sqlFileLength,
+    'sql/functions': functions,
+    'sql/syntax': syntax,
+    'sql/block-comments': blockComments,
+    'sql/file-lines': fileLines,
 };

@@ -17,7 +17,7 @@ function generatedContents(cwd: string): Map<string, Buffer> {
  * @param input the engine input
  * @returns the findings
  */
-function drizzleRelations(input: EngineInput): Finding[] {
+function relations(input: EngineInput): Finding[] {
     const files = input.files
         .filter((file) => file.kind === 'source' && /\.tsx?$/u.test(file.path))
         .map((file) => ({
@@ -54,7 +54,7 @@ function drizzleRelations(input: EngineInput): Finding[] {
  * @param input the engine input
  * @returns the findings
  */
-export async function drizzleMigrations(input: EngineInput): Promise<Finding[]> {
+export async function migrations(input: EngineInput): Promise<Finding[]> {
     if (
         !input.files.some(
             (file) => dirname(file.path) === (input.scope || '.') && basename(file.path).startsWith('drizzle.config.'),
@@ -92,6 +92,6 @@ export async function drizzleMigrations(input: EngineInput): Promise<Finding[]> 
 
 /** The analyses this file provides, by the name a manifest check gives them. */
 export const DRIZZLE_ANALYSES: Record<string, Engine> = {
-    'drizzle/relations': drizzleRelations,
-    'drizzle/migrations-fresh': drizzleMigrations,
+    'drizzle/relations': relations,
+    'drizzle/migrations-fresh': migrations,
 };
