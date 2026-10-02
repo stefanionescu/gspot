@@ -1,6 +1,7 @@
 import { sourceKits } from '#cli/kits/select.ts';
 import { findingAt } from '#cli/execution/finding.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
+import { DECLARATION_EXTENSIONS } from '#cli/config/platform/platform.ts';
 import { IGNORED_FOLDERS } from '#cli/config/checks/general/structure.ts';
 import type { StructureAnalysis as Analysis } from '#cli/types/checks/checks.ts';
 import { directoryOf, directoryTree } from '#cli/checks/general/structure/directories.ts';
@@ -30,7 +31,9 @@ export const singleFileFolder: Analysis = (context) => {
         if (isSkipped(directory, isAllowed)) return [];
         const entries = tree.get(directory) ?? [];
         if (entries.some((entry) => entry.kind === 'dir')) return [];
-        const siblings = entries.filter((entry) => !entry.name.endsWith('.d.ts'));
+        const siblings = entries.filter(
+            (entry) => !DECLARATION_EXTENSIONS.some((extension) => entry.name.endsWith(extension)),
+        );
         const [only] = siblings;
         if (only === undefined || siblings.length !== 1) return [];
         if (!extensions.some((extension) => only.name.endsWith(extension))) return [];

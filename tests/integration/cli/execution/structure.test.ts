@@ -22,6 +22,8 @@ test('folder checks count code files and preserve allowed and nested directories
         'lone/only.ts': '',
         'typed/one.ts': '',
         'typed/one.d.ts': '',
+        'module/one.mts': '',
+        'module/one.d.mts': '',
         'pair/first.ts': '',
         'pair/second.ts': '',
         'component/logic.ts': '',
@@ -42,6 +44,7 @@ test('folder checks count code files and preserve allowed and nested directories
     expect(result.report.checks.flatMap((check) => check.findings.map((finding) => finding.file))).toStrictEqual([
         'dist/pkg/lone.ts',
         'lone/only.ts',
+        'module/one.mts',
         'typed/one.ts',
     ]);
 });
@@ -64,6 +67,8 @@ test('prefix checks group files and directories once and honor allowances and th
         'fine/second.ts': '',
         'paired/api.ts': '',
         'paired/api.d.ts': '',
+        'paired/view.mts': '',
+        'paired/view.d.mts': '',
         'paired/social.png': '',
         'paired/social.svg': '',
         // The package managers fix these names.
