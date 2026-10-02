@@ -167,5 +167,6 @@ test(
         expect(git(checkout, ['rev-parse', 'HEAD']).stdout.trim()).toBe(selected);
         expect(readFileSync(join(checkout, 'source.sh'), 'utf8')).toBe('echo selected\n');
     },
-    PLANTED_TIMEOUT_MS,
+    // The clone installs the private tools before its three checks.
+    INSTALL_TIMEOUT_MS + PLANTED_TIMEOUT_MS,
 );
