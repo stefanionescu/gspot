@@ -4,14 +4,6 @@ title: Working in a Repository
 
 # Working in a Repository
 
-## Working alone
-
-Do not spawn subagents, background agents, parallel sessions, or multi-agent workflows for a
-task unless the user asked for them in this conversation. One agent reads the code and makes the
-edits with the whole context in view. Splitting a task across agents loses that context, repeats
-work, and produces the drift these rules exist to catch. When a task looks too large for one
-agent, say so and ask; do not fan out.
-
 ## Running processes
 
 Check for a running instance before you start a dev server, a build watcher, an emulator, or a
