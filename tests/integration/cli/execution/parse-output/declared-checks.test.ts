@@ -5,9 +5,11 @@ import { testdir, createFileTree } from 'testdirs';
 import { GspotError } from '#cli/platform/errors.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
+import { runGspot } from '#tests/harness/cli/command.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { checkedFindings } from '#cli/execution/tool/findings.ts';
+import type { RunReport } from '#cli/types/execution/execution.ts';
 
 test('pin verification treats a rate limit as an execution error and accepts a completed read', async () => {
     const failure = '429 Too Many Requests';
@@ -116,4 +118,134 @@ test('source text naming module errors stays an ESLint finding', async () => {
             [sandbox.path, sandbox.path],
         ),
     ).toThrow('ERR_MODULE_NOT_FOUND: plugin');
+});
+
+// Prints each line of the listed files that holds PENDING as file:line:text, the way grep -n -H does.
+const PENDING = String.raw`let found = false;
+for (const file of process.argv.slice(1))
+    for (const [index, line] of (await Bun.file(file).text()).split('\n').entries())
+        if (line.includes('PENDING')) { console.log(file + ':' + String(index + 1) + ':' + line); found = true; }
+process.exit(found ? 1 : 0);`;
+
+const ENTRY = String.raw`kits = []
+
+[[check]]
+name = "notes/no-pending"
+command = ${JSON.stringify([process.execPath, '-e', PENDING, '{files}'])}
+paths = ["notes/**"]
+stage = "commit"
+count_regex = "PENDING"
+summary = "Finds pending notes left in the notes folder."
+
+[check.output]
+format = "regex"
+pattern = '^(?<file>[^:]+):(?<line>\d+):(?<message>.*)$'
+`;
+
+test('a [[check]] entry > reruns a repository check when an input outside its selected paths changes', async () => {
+    const command = [process.execPath, '-e', "process.exit((await Bun.file('state.txt').text()) === 'valid' ? 0 : 1)"];
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        '.gitignore': '.gspot/\n',
+        'gspot.toml': `kits = []
+
+[[check]]
+name = "notes/state"
+command = ${JSON.stringify(command)}
+paths = ["selected.txt"]
+stage = "commit"
+`,
+        'selected.txt': 'unchanged trigger',
+        'state.txt': 'invalid',
+    });
+    const failed = await runGspot(sandbox.path, ['check', '--only', 'notes/state', '--json']);
+    expect(failed.code).toBe(1);
+    expect((JSON.parse(failed.stdout) as RunReport).checks).toMatchObject([{ check: 'notes/state', status: 'fail' }]);
+
+    await Bun.write(join(sandbox.path, 'state.txt'), 'valid');
+    const passed = await runGspot(sandbox.path, ['check', '--only', 'notes/state', '--json']);
+    expect(passed.code).toBe(0);
+    expect((JSON.parse(passed.stdout) as RunReport).checks).toMatchObject([{ check: 'notes/state', status: 'ok' }]);
+
+    await Bun.write(join(sandbox.path, 'state.txt'), 'invalid');
+    const failedAgain = await runGspot(sandbox.path, ['check', '--only', 'notes/state', '--json']);
+    expect(failedAgain.code).toBe(1);
+    expect((JSON.parse(failedAgain.stdout) as RunReport).checks).toMatchObject([
+        { check: 'notes/state', status: 'fail' },
+    ]);
+});
+
+test('a [[check]] entry > runs the command of the repository and reports file and line through its output format', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, { 'gspot.toml': ENTRY, 'notes/plan.txt': 'one\nPENDING later\n' });
+    const check = await runGspot(sandbox.path, ['check', '--only', 'notes/no-pending', '--json']);
+    expect(check.code, check.stdout + check.stderr).toBe(1);
+    expect((JSON.parse(check.stdout) as RunReport).checks).toMatchObject([
+        {
+            check: 'notes/no-pending',
+            status: 'fail',
+            findings: [{ file: 'notes/plan.txt', line: 2, message: 'PENDING later' }],
+        },
+    ]);
+    await Bun.write(join(sandbox.path, 'notes/plan.txt'), 'one\nCompleted task\n');
+    const corrected = await runGspot(sandbox.path, ['check', '--only', 'notes/no-pending', '--json']);
+    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+    expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
+        { check: 'notes/no-pending', status: 'ok', findings: [] },
+    ]);
+});
+
+test('a declared check maps nested JSON output into findings', async () => {
+    const diagnostic = {
+        files: [
+            { path: 'source.txt', messages: [{ row: 0, column: 2, code: 'sandbox-rule', text: 'A planted defect.' }] },
+        ],
+    };
+    const command = [
+        process.execPath,
+        '-e',
+        `if ((await Bun.file('source.txt').text()) === 'defect') { console.log(${JSON.stringify(JSON.stringify(diagnostic))}); process.exitCode = 1; } else console.log(JSON.stringify({files:[]}));`,
+    ];
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'source.txt': 'defect',
+        'gspot.toml': `kits = []
+[[check]]
+name = "sandbox/json"
+command = ${JSON.stringify(command)}
+paths = ["source.txt"]
+stage = "commit"
+[check.output]
+format = "json"
+items = "files"
+children = "messages"
+line_base = 0
+[check.output.fields]
+file = "path"
+line = "row"
+column = "column"
+rule = "code"
+message = "text"
+`,
+    });
+    const result = await runGspot(sandbox.path, ['check', '--json']);
+    expect(result.code).toBe(1);
+    const report = JSON.parse(result.stdout) as RunReport;
+    expect(report.checks).toMatchObject([{ check: 'sandbox/json', status: 'fail' }]);
+    expect(report.checks[0]?.findings).toMatchObject([
+        {
+            check: 'sandbox/json',
+            file: 'source.txt',
+            line: 1,
+            column: 3,
+            rule: 'sandbox-rule',
+            message: 'A planted defect.',
+        },
+    ]);
+    await Bun.write(join(sandbox.path, 'source.txt'), 'corrected');
+    const corrected = await runGspot(sandbox.path, ['check', '--json']);
+    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+    expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
+        { check: 'sandbox/json', status: 'ok', findings: [] },
+    ]);
 });
