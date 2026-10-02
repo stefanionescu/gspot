@@ -21,7 +21,7 @@ test('JSON option keys and YAML values keep their literal structure', async () =
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': stringify({
-            kits: ['typescript', 'formatting', 'markdown', 'files', 'docker', 'swift'],
+            kits: ['typescript', 'formatting', 'markdown', 'files', 'docker', 'swift', 'xcode'],
             tools: {
                 prettier: { extra },
                 knip: { extra },

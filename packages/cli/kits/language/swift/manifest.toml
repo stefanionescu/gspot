@@ -245,27 +245,6 @@ direction = "neutral"
 default = "5.9"
 summary = "The Swift version SwiftFormat formats for."
 
-[[settings]]
-name = "tools.xcode.project"
-kind = "string"
-direction = "neutral"
-default = ""
-summary = "The Xcode project or workspace, relative to the scope; empty builds the Swift package."
-
-[[settings]]
-name = "tools.xcode.scheme"
-kind = "string"
-direction = "neutral"
-default = ""
-summary = "The shared scheme the build, the analyzer, and Periphery use."
-
-[[settings]]
-name = "tools.xcode.destination"
-kind = "string"
-direction = "neutral"
-default = "generic/platform=iOS Simulator"
-summary = "The xcodebuild destination."
-
 [guides]
 language = [{path = "language/SWIFT.md"}, {path = "language/naming/SWIFT.md"}]
 framework = [{path = "framework/swiftui/SWIFTUI.md", when = {tags = ["swift-import:SwiftUI"]}}, {path = "framework/uikit/UIKIT.md", when = {tags = ["swift-import:UIKit"]}}]

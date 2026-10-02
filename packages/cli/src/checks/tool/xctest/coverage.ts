@@ -80,8 +80,11 @@ export function underFloor(report: CoverageReport, floors: CoverageFloor[]): str
  */
 export async function testCoverage(input: EngineInput): Promise<Finding[]> {
     if (input.cancelSignal?.aborted === true) throw new Error('The command was canceled.');
-    if (input.view.tool('xcode')['project'] === '')
-        throw new Error('Set tools.xcode.project and tools.xcode.scheme before measuring XCTest coverage.');
+    const project = input.view.tool('xcode')['project'];
+    if (typeof project !== 'string' || project === '')
+        throw new Error(
+            'Select the xcode kit and set tools.xcode.project and tools.xcode.scheme before measuring XCTest coverage.',
+        );
     const floors = input.view.tool('xctest')['coverage'] as CoverageFloor[];
     const plan = swiftBuildPlan(input, 'coverage');
     const bundle = join(plan.folder, 'coverage.xcresult');
