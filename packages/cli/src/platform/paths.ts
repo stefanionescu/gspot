@@ -3,7 +3,7 @@ import picomatch from 'picomatch';
 import type { Dirent } from 'node:fs';
 import { sep, join, isAbsolute } from 'node:path';
 import { contentDigest } from '#cli/platform/text.ts';
-import { cacheHome } from '#cli/platform/environment.ts';
+import { cacheDirectory } from '#cli/platform/environment.ts';
 import { statSync, lstatSync, readdirSync, realpathSync } from 'node:fs';
 import { DECLARATION_EXTENSIONS } from '#cli/config/platform/platform.ts';
 import type { GlobWalk, GlobOptions } from '#cli/types/platform/platform.ts';
@@ -159,7 +159,7 @@ export function extensionOf(path: string): string {
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The Swift build and its tests locate the private build cache by this one hash of the real root path.
 export function buildFolder(root: string): string {
     const identity = contentDigest(realpathSync(root));
-    return join(cacheHome(), 'gspot', identity);
+    return join(cacheDirectory(), identity);
 }
 
 /**

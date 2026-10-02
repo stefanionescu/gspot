@@ -1,22 +1,32 @@
-import { homedir } from 'node:os';
 import { testdir } from 'testdirs';
 import { sep, join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { buildFolder } from '#cli/platform/paths.ts';
-import { cacheHome } from '#cli/platform/environment.ts';
 import { openBuildCache } from '#cli/checks/language/swift/cache.ts';
+import { setEnvironmentVariable } from '#tests/harness/environment.ts';
+import { cacheDirectory, environmentVariables } from '#cli/platform/environment.ts';
 import { rmSync, mkdirSync, existsSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
 
-test('build state is platform-local, stable for one repository, and distinct between repositories', async () => {
+test('build state lives in the gspot cache, stable for one repository and distinct between repositories', async () => {
     await using first = await testdir();
     await using second = await testdir();
     const folder = buildFolder(first.path);
     expect(folder).toBe(buildFolder(first.path));
     expect(folder).not.toBe(buildFolder(second.path));
-    expect(folder.startsWith(join(cacheHome(), 'gspot') + sep)).toBe(true);
-    // macOS keeps caches under the library folder; other platforms follow their own convention.
-    expect(process.platform !== 'darwin' || cacheHome() === join(homedir(), 'Library', 'Caches')).toBe(true);
+    expect(folder.startsWith(cacheDirectory() + sep)).toBe(true);
     expect(existsSync(join(first.path, '.gspot'))).toBe(false);
+});
+
+// macOS has one cache directory under the library folder, which no variable moves.
+test.skipIf(process.platform === 'darwin')('a relative cache directory override is refused', () => {
+    const name = process.platform === 'win32' ? 'LOCALAPPDATA' : 'XDG_CACHE_HOME';
+    const previous = environmentVariables()[name];
+    setEnvironmentVariable(name, 'cache');
+    try {
+        expect(() => cacheDirectory()).toThrow('must be absolute');
+    } finally {
+        setEnvironmentVariable(name, previous);
+    }
 });
 
 test('build cache rejects external output links and concurrent writers', async () => {

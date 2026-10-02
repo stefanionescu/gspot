@@ -4,8 +4,8 @@ import { isDeepStrictEqual } from 'node:util';
 import { toPosix } from '#cli/platform/paths.ts';
 import { readSource } from '#cli/repository/sources.ts';
 import { MODE_BITS } from '#cli/config/platform/root.ts';
-import { cacheHome } from '#cli/platform/environment.ts';
 import { statSync, lstatSync, mkdirSync } from 'node:fs';
+import { cacheDirectory } from '#cli/platform/environment.ts';
 import { openRoot, walkRoot } from '#cli/platform/filesystem.ts';
 import type { Read, Root } from '#cli/types/platform/platform.ts';
 import type { Pruning } from '#cli/types/checks/language/swift.ts';
@@ -77,8 +77,8 @@ function pruneSources(folder: string, files: Root, desired: Map<string, Read>): 
  * @returns the files directory, which the caller closes
  */
 export function openBuildCache(folder: string): Root {
-    const home = cacheHome();
-    mkdirSync(home, { recursive: true });
+    const home = cacheDirectory();
+    mkdirSync(home, { recursive: true, mode: PRIVATE_DIRECTORY });
     using boundary = openRoot(home);
     boundary.mkdir(toPosix(relative(home, folder)), PRIVATE_DIRECTORY);
     const files = openRoot(folder, 'native');

@@ -6,49 +6,33 @@ import { test, spyOn, expect, describe } from 'bun:test';
 import * as environment from '#cli/platform/environment.ts';
 import { askMany, askConfirmation } from '#cli/commands/prompts.ts';
 
-function mockTerminal(isTerminal: boolean): () => void {
-    const streams = [process.stdin, process.stdout].map((stream) => ({
-        stream,
-        descriptor: Object.getOwnPropertyDescriptor(stream, 'isTTY'),
-    }));
-    for (const { stream } of streams) Object.defineProperty(stream, 'isTTY', { configurable: true, value: isTerminal });
-    const ci = spyOn(environment, 'isCi').mockReturnValue(false);
-    return () => {
-        for (const { stream, descriptor } of streams) {
-            if (descriptor === undefined) Reflect.deleteProperty(stream, 'isTTY');
-            else Object.defineProperty(stream, 'isTTY', descriptor);
-        }
-        ci.mockRestore();
-    };
-}
-
 describe('confirmation prompts', () => {
     test('uses the proposed answer without opening a prompt', async () => {
-        const restoreTerminal = mockTerminal(false);
+        const terminal = spyOn(environment, 'isInteractive').mockReturnValue(false);
         const confirmation = spyOn(clack, 'confirm').mockResolvedValue(true);
         try {
             expect(await askConfirmation('Continue?', '--continue', false, true)).toBe(false);
             expect(confirmation).not.toHaveBeenCalled();
         } finally {
             confirmation.mockRestore();
-            restoreTerminal();
+            terminal.mockRestore();
         }
     });
 
     test.each([true, false])('returns the explicit answer %s from the terminal', async (answer) => {
-        const restoreTerminal = mockTerminal(true);
+        const terminal = spyOn(environment, 'isInteractive').mockReturnValue(true);
         const confirmation = spyOn(clack, 'confirm').mockResolvedValue(answer);
         try {
             expect(await askConfirmation('Continue?', '--continue', !answer, false)).toBe(answer);
             expect(confirmation).toHaveBeenCalledWith({ message: 'Continue?', initialValue: !answer });
         } finally {
             confirmation.mockRestore();
-            restoreTerminal();
+            terminal.mockRestore();
         }
     });
 
     test('refuses an unanswered confirmation without a terminal', async () => {
-        const restoreTerminal = mockTerminal(false);
+        const terminal = spyOn(environment, 'isInteractive').mockReturnValue(false);
         const confirmation = spyOn(clack, 'confirm').mockResolvedValue(true);
         try {
             await rejects(askConfirmation('Continue?', '--continue', true, false), {
@@ -58,25 +42,25 @@ describe('confirmation prompts', () => {
             expect(confirmation).not.toHaveBeenCalled();
         } finally {
             confirmation.mockRestore();
-            restoreTerminal();
+            terminal.mockRestore();
         }
     });
 
     test('reports cancellation instead of accepting the default', async () => {
-        const restoreTerminal = mockTerminal(true);
+        const terminal = spyOn(environment, 'isInteractive').mockReturnValue(true);
         const confirmation = spyOn(clack, 'confirm').mockResolvedValue(Symbol('cancel'));
         try {
             await rejects(askConfirmation('Continue?', '--continue', true, false), GspotError);
             expect(confirmation).toHaveBeenCalledTimes(1);
         } finally {
             confirmation.mockRestore();
-            restoreTerminal();
+            terminal.mockRestore();
         }
     });
 });
 
 test('list selection reports its accepted defaults without a terminal', async () => {
-    const restoreTerminal = mockTerminal(false);
+    const terminal = spyOn(environment, 'isInteractive').mockReturnValue(false);
     const selection = spyOn(clack, 'multiselect').mockResolvedValue(['different']);
     const printed = spyOn(messages, 'note').mockImplementation(() => {});
     try {
@@ -89,14 +73,14 @@ test('list selection reports its accepted defaults without a terminal', async ()
     } finally {
         printed.mockRestore();
         selection.mockRestore();
-        restoreTerminal();
+        terminal.mockRestore();
     }
 });
 
 test.each([{ answer: ['markdown'] }, { answer: [] }])(
     'list selection reports the actual terminal answer $answer',
     async ({ answer }) => {
-        const restoreTerminal = mockTerminal(true);
+        const terminal = spyOn(environment, 'isInteractive').mockReturnValue(true);
         const selection = spyOn(clack, 'multiselect').mockResolvedValue([...answer]);
         const printed = spyOn(messages, 'note').mockImplementation(() => {});
         try {
@@ -115,7 +99,7 @@ test.each([{ answer: ['markdown'] }, { answer: [] }])(
         } finally {
             printed.mockRestore();
             selection.mockRestore();
-            restoreTerminal();
+            terminal.mockRestore();
         }
     },
 );

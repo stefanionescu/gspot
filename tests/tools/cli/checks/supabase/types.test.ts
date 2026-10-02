@@ -1,3 +1,4 @@
+import { isCI } from 'std-env';
 import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { createServer } from 'node:net';
@@ -12,7 +13,7 @@ import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/harness/cli/policy.ts';
 import { runOptions } from '#tests/harness/cli/command.ts';
 import { hasLinuxDocker } from '#tests/harness/cli/platforms.ts';
-import { isCi, environmentVariables } from '#cli/platform/environment.ts';
+import { environmentVariables } from '#cli/platform/environment.ts';
 
 const DATABASE_START = [
     'supabase',
@@ -84,7 +85,7 @@ async function prepareSupabaseDatabase(root: string): Promise<{
 
 // The database journey needs a Docker daemon with Linux containers. In CI it runs only in the weekly database workflow,
 // which sets DATABASE_JOURNEYS, because pulling the Postgres image on every run hits the registry rate limit.
-const runsDatabase = hasLinuxDocker && (!isCi() || environmentVariables()['DATABASE_JOURNEYS'] === '1');
+const runsDatabase = hasLinuxDocker && (!isCI || environmentVariables()['DATABASE_JOURNEYS'] === '1');
 
 if (runsDatabase)
     test('native Supabase freshness rejects drift and accepts regenerated database types', async () => {

@@ -1,7 +1,8 @@
 // Messages about the run on stderr, with levels for --quiet and --verbose.
 import pc from 'picocolors';
+import { isCI } from 'std-env';
 import type { OutputOptions } from '#cli/types/output.ts';
-import { isCi, environmentVariables } from '#cli/platform/environment.ts';
+import { environmentVariables } from '#cli/platform/environment.ts';
 
 const state: { options: OutputOptions } = { options: { verbosity: 'normal', json: false, color: false } };
 
@@ -14,7 +15,7 @@ export const colors = pc.createColors(false);
  */
 export function isColorAllowed(isNoColor: boolean): boolean {
     const noColor = environmentVariables()['NO_COLOR'];
-    if (isNoColor || (noColor !== undefined && noColor !== '') || isCi()) return false;
+    if (isNoColor || (noColor !== undefined && noColor !== '') || isCI) return false;
     return process.stderr.isTTY && process.stdout.isTTY;
 }
 
