@@ -1,6 +1,6 @@
 import { test, expect } from 'bun:test';
+import { validateManifests } from '#cli/kits/problems.ts';
 import { PINNED_HEADER } from '#tests/inputs/unit/cli/kits.ts';
-import { validateManifests } from '#cli/kits/manifest-problems.ts';
 import { kitManifests, parseManifest } from '#cli/kits/manifests.ts';
 
 test('every shipped manifest passes the checks across manifests', () => {
@@ -110,7 +110,7 @@ test('check references require one standalone built-in owner and preserve its de
     const spec = kitManifests()
         .get('structure')!
         .checks.find((check) => check.name === 'integrity/allowlists-match')!;
-    if (spec.engine !== 'integrity') throw new Error('Expected an integrity check fixture.');
+    if (spec.command !== undefined) throw new Error('Expected a built-in check fixture.');
     owner.checks = [{ ...spec, name: 'owner/shared' }];
     consumer.kit.check_references = ['owner/shared'];
     const manifests = new Map([

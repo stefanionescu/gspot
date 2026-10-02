@@ -1,10 +1,11 @@
 import type { TSESLint } from '@typescript-eslint/utils';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
+import type { ImplementedFunction } from '#plugin/types/plugin.ts';
 import { DEFAULT_TRIVIAL_STATEMENTS } from '#plugin/config/rules.ts';
+import type { NoTrivialFunctionsOptions } from '#plugin/types/rules.ts';
 import { totalStatements, hasConstructorState } from '#plugin/syntax.ts';
 import { isRecursive, isInlineValue } from '#plugin/function-references.ts';
-import type { ImplementedFunction, NoTrivialFunctionsOptions } from '#plugin/types/rules.ts';
 import { isClassLike, type TypeChecker, isMethodDeclaration, type MethodDeclaration } from 'typescript';
 
 // Accessors, overrides, decorators, and instance initialization carry language contracts.

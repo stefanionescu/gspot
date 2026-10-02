@@ -15,21 +15,9 @@ export const EXECUTABLE_STATEMENTS = new Set([
 ]);
 
 export const FUNCTIONS = new Set(['FunctionDeclaration', 'FunctionExpression', 'ArrowFunctionExpression']);
-/** Object and array literals own the structure they construct. */
-export const STRUCTURED_EXPRESSIONS = new Set<AST_NODE_TYPES>([
-    AST_NODE_TYPES.ObjectExpression,
-    AST_NODE_TYPES.ArrayExpression,
-]);
-/** Nodes that introduce no implementation or owned schema. */
-export const FORWARDING_NODES = new Set([
-    'ImportDeclaration',
-    'ExportAllDeclaration',
-    'EmptyStatement',
-    'Identifier',
-    'MemberExpression',
-    'TSDeclareFunction',
-]);
+
 export const TYPE_ONLY = new Set(['TSInterfaceDeclaration', 'TSTypeAliasDeclaration', 'TSDeclareFunction']);
+
 // The rules a caller selects itself: the barrel limit fits an index re-export policy, and the Next.js configuration selects server files.
 export const EXPLICIT_RULES = new Set(['max-barrel-reexports', 'require-server-only']);
 export const ENVIRONMENT_HOSTS = new Set(['process', 'Bun', 'Deno']);
@@ -45,3 +33,25 @@ export const INDEX_BASENAMES = new Set([
 ]);
 export const STDIN_NAMES = new Set(['', '<input>', '<text>']);
 export const FILE_SCHEME = 'file://';
+
+// Comment and whitespace analysis.
+export const DIRECTIVE_PREFIXES = [
+    'eslint',
+    'global ',
+    'globals ',
+    'exported ',
+    'jshint ',
+    'jslint ',
+    'istanbul ',
+    'c8 ',
+    'v8 ',
+    '@vitest',
+    '@jest',
+    'biome-ignore',
+    'oxlint-',
+];
+export const TS_DIRECTIVE = /^@?ts-(?:ignore|expect-error|nocheck|check)\b/u;
+export const BLANK = /^\s*$/u;
+export const LEADING_STAR = /^\s*\*?/u;
+
+export const SPACES = /\s+/gu;

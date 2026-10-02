@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import { toolSchema } from '#cli/kits/tools.ts';
 import { SENTENCE_MIN } from '#cli/config/kits.ts';
-import { outputSchema } from '#cli/kits/output-format.ts';
-import { commandSchema, findingExitCodesSchema } from '#cli/kits/command-schema.ts';
+import { outputSchema } from '#cli/kits/output.ts';
+import { commandSchema, findingExitCodesSchema } from '#cli/kits/command.ts';
 
 const stringList = z.array(z.string()).default([]);
 
@@ -86,8 +86,6 @@ const checkFields = z.strictObject({
     env: z.record(z.string(), z.string()).optional(),
     fix_command: commandSchema.optional(),
     findings_exit_codes: findingExitCodesSchema.optional(),
-    engine: z.enum(['integrity', 'naming', 'structure', 'prose']).optional(),
-    analysis: z.string().optional(),
     replaces: z.string().optional(),
     needs: z.string().optional(),
     limit: z.string().optional(),
@@ -116,33 +114,8 @@ const checkFields = z.strictObject({
     searched: z.array(z.string()).optional(),
 });
 
-const absent = z.never().optional();
-const checkSchema = z.union(
-    [
-        checkFields.extend({ command: commandSchema, engine: absent, analysis: absent }),
-        checkFields.extend({
-            tool: z.string().min(1),
-            analysis: z.enum([
-                'typescript',
-                'javascript',
-                'commit-messages',
-                'gitleaks-history',
-                'verified-secrets',
-                'swiftlint',
-                'pydoclint',
-                'deptry',
-                'actions',
-            ]),
-            command: absent,
-            engine: absent,
-        }),
-        checkFields.extend({
-            engine: z.enum(['integrity', 'naming', 'structure', 'prose']),
-            command: absent,
-        }),
-    ],
-    { error: 'Choose one command, tool analysis, or engine without combining execution forms.' },
-);
+// A check runs its command, or gspot runs it itself when the check registry names its ID.
+const checkSchema = checkFields.extend({ command: commandSchema.optional() });
 
 // A path-scoped naming rule a kit ships, in the shape gspot.toml writes under [[naming.rules]].
 const manifestNamingRule = z.strictObject({

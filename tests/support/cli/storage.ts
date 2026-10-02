@@ -1,7 +1,7 @@
 // A session with one configurable check for cache and report storage tests.
-import type { Stage } from '#cli/types/kits.ts';
 import { openSession } from '#cli/execution/session.ts';
-import type { Session } from '#cli/types/execution/execution.ts';
+import type { Session } from '#cli/types/tools/tools.ts';
+import type { Stage } from '#cli/types/execution/planning.ts';
 
 /**
  * Opens the sandbox and replaces its selection with one command check that exits with the status.

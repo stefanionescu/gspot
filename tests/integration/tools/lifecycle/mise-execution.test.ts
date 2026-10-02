@@ -3,16 +3,16 @@ import { fileURLToPath } from 'node:url';
 import { run } from '#cli/platform/spawn.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { join, dirname, delimiter } from 'node:path';
+import { writeOutputs } from '#cli/lifecycle/write.ts';
 import { openSession } from '#cli/execution/session.ts';
-import type { InstallJson } from '#cli/types/commands.ts';
 import { onPosix } from '#tests/support/cli/platforms.ts';
-import { applyAll } from '#cli/commands/apply/workflow.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { chmodSync, existsSync, readFileSync } from 'node:fs';
 import packageManifest from '#cli-package' with { type: 'json' };
+import type { InstallJson } from '#cli/types/commands/install.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
-import { MISE_CONFIG_PATH, MISE_MIN_VERSION } from '#cli/config/tools/tools.ts';
+import { MISE_CONFIG_PATH, MISE_MIN_VERSION } from '#cli/config/generation/generation.ts';
 
 const { version: GSPOT_VERSION } = packageManifest;
 
@@ -30,7 +30,7 @@ if (onPosix)
         });
         chmodSync(join(state.path, 'bin/gspot'), 0o755);
         chmodSync(join(state.path, 'old/mise'), 0o755);
-        await applyAll(await openSession(repository.path));
+        await writeOutputs(await openSession(repository.path));
         const generated = readFileSync(join(repository.path, MISE_CONFIG_PATH));
         runOwnedLifecycle(repository.path, (owner) => {
             owner.replace('.gspot/obsolete.json', { bytes: Buffer.from('{}\n'), mode: 0o444 }, 'config');

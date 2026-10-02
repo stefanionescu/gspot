@@ -2,10 +2,9 @@ import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import type { Finding } from '#cli/types/checks.ts';
 import { run } from '#tests/support/cli/command.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
-import type { RunReport } from '#cli/types/execution/execution.ts';
+import type { Finding, RunReport } from '#cli/types/execution/execution.ts';
 import { containing, containingAll, textContaining } from '#tests/support/expectations.ts';
 
 test.each([false, true])(

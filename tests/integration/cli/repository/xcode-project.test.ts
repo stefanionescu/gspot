@@ -3,7 +3,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
-import { readProject } from '#cli/checks/xcode/project/reader.ts';
+import { readProject } from '#cli/checks/tool/xcode/pbxproj.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 import { PBXPROJ_PROJECT } from '#tests/inputs/integration/cli/repository.ts';
 

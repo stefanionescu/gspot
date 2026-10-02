@@ -1,10 +1,8 @@
 import { z } from 'zod';
+import { outputSchema } from '#cli/kits/output.ts';
 import { toolsSchema } from '#cli/policy/tools.ts';
-import { runnerSchema } from '#cli/policy/runner.ts';
-import { hooksSchema } from '#cli/repository/hooks.ts';
-import { outputSchema } from '#cli/kits/output-format.ts';
 import { reasoned, relativeDirectory } from '#cli/policy/fields.ts';
-import { commandSchema, findingExitCodesSchema } from '#cli/kits/command-schema.ts';
+import { commandSchema, findingExitCodesSchema } from '#cli/kits/command.ts';
 import { INDENT_MAX, PRINT_WIDTH_MAX, PRINT_WIDTH_MIN } from '#cli/config/policy/policy.ts';
 
 const text = z.string();
@@ -32,6 +30,7 @@ const statementLimit = reasoned(
 const limitTable = z.object({ trivial_statements: statementLimit.optional() }).catchall(reasonedNumber);
 
 const limitValue = z.union([reasonedNumber, limitTable]);
+
 const limitsTable = z.object({ trivial_statements: statementLimit.optional() }).catchall(limitValue);
 
 const namingCategoryShape = {
@@ -80,6 +79,7 @@ const element = z.strictObject({ name: text, paths: textList });
 const allowedEdge = z.strictObject({ from: text, to: textList, reason: text.optional() });
 
 const roleGlobs = z.union([text, textList]);
+
 // The harness role names folders inside the scope, so it refuses a path that leaves it.
 const roles = z
     .object({ harness: z.union([relativeDirectory, z.array(relativeDirectory)]).optional() })
@@ -121,6 +121,7 @@ const formatOverride = formatFields
         message: 'A format override needs at least one formatting option.',
     })
     .meta({ minProperties: 2 });
+
 const formatSchema = formatFields.extend({ overrides: z.array(formatOverride).optional() });
 
 const proseSchema = z.strictObject({ vocabulary: textList.optional() });
@@ -165,6 +166,17 @@ const checkSchema = z.strictObject({
 });
 
 const ciPlatform = z.enum(['ubuntu', 'macos', 'windows']);
+
+const runnerSchema = z.strictObject({
+    tool: z.enum(['mise', 'npm', 'bun', 'pnpm', 'yarn']).describe('The runner that installs and runs gspot.'),
+});
+
+const hooksSchema = z.strictObject({
+    push: z
+        .enum(['changed', 'all'])
+        .default('changed')
+        .describe('Check affected paths or the full tree of each pushed revision.'),
+});
 
 const guidesSchema = z.strictObject({
     install: flag.default(true).describe('Install guide files and agent instructions.'),

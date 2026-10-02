@@ -1,4 +1,5 @@
 import { test, expect } from 'bun:test';
+import { CHECKS } from '#cli/checks/registry.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
@@ -20,6 +21,7 @@ test('SQL and PL/pgSQL apply the statement threshold and the parameter limit', a
         ].join('\n'),
     });
     const result = await executeRun(await openSession(sandbox.path), {
+        checks: CHECKS,
         stage: 'all',
         skips: [],
         only: ['sql/functions'],
@@ -45,6 +47,7 @@ test('SQL and PL/pgSQL apply the statement threshold and the parameter limit', a
     ]);
     await Bun.write(`${sandbox.path}/gspot.toml`, policyOf(['sql'], '[limits.sql]\nfunction_parameters = 8\n', 'all'));
     const overridden = await executeRun(await openSession(sandbox.path), {
+        checks: CHECKS,
         stage: 'all',
         skips: [],
         only: ['sql/functions'],
@@ -69,6 +72,7 @@ test('SQL atomic bodies count each statement and reject files containing only tr
         'wrapper.sql': 'CREATE FUNCTION wrapper() RETURNS int LANGUAGE SQL RETURN 1;',
     });
     const result = await executeRun(await openSession(sandbox.path), {
+        checks: CHECKS,
         stage: 'all',
         skips: [],
         only: ['sql/functions'],
@@ -93,12 +97,12 @@ test('SQL function analysis keeps quoted bodies strict and preserves psql source
         'functions.sql': source,
     });
     const options = { stage: 'all' as const, skips: [], only: ['sql/functions'], fix: false, isDryRun: false };
-    const broken = await executeRun(await openSession(sandbox.path), options);
+    const broken = await executeRun(await openSession(sandbox.path), { ...options, checks: CHECKS });
     expect(broken.report.checks[0]?.status).toBe('error');
     expect(await Bun.file(`${sandbox.path}/functions.sql`).text()).toBe(source);
     const corrected = source.replace('SELECT :value', 'SELECT 1');
     await Bun.write(`${sandbox.path}/functions.sql`, corrected);
-    const checked = await executeRun(await openSession(sandbox.path), options);
+    const checked = await executeRun(await openSession(sandbox.path), { ...options, checks: CHECKS });
     expect(
         checked.report.checks
             .flatMap(({ findings }) => findings)

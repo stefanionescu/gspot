@@ -30,7 +30,8 @@ const JAVASCRIPT = ['**/*.{js,mjs,cjs,jsx}'];
 const TESTS = [
     "**/*.{test,spec}.{ts,tsx,js,jsx,mjs,cjs}",
     "**/tests/**",
-    "**/__tests__/**"
+    "**/__tests__/**",
+    "scripts/**"
 ];
 const SCRIPTS = [
     "scripts/**",
@@ -467,7 +468,303 @@ const runtimeOverrides = [].map(({ files, runtime }) =>
         : { files, languageOptions: { globals: globals[runtime] } },
 );
 
-const boundaryConfigs = [];
+const boundaryConfigs = [
+    {
+        "files": [
+            "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}"
+        ],
+        "settings": {
+            "boundaries/elements": [
+                {
+                    "type": "main",
+                    "pattern": [
+                        "packages/cli/src/main.ts"
+                    ],
+                    "mode": "full"
+                },
+                {
+                    "type": "commands",
+                    "pattern": [
+                        "packages/cli/src/commands/**",
+                        "packages/cli/src/config/commands/**",
+                        "packages/cli/src/types/commands/**"
+                    ],
+                    "mode": "full"
+                },
+                {
+                    "type": "checks",
+                    "pattern": [
+                        "packages/cli/src/checks/**",
+                        "packages/cli/src/config/checks/**",
+                        "packages/cli/src/types/checks/**"
+                    ],
+                    "mode": "full"
+                },
+                {
+                    "type": "output",
+                    "pattern": [
+                        "packages/cli/src/output/**",
+                        "packages/cli/src/config/output.ts",
+                        "packages/cli/src/types/output.ts"
+                    ],
+                    "mode": "full"
+                },
+                {
+                    "type": "execution",
+                    "pattern": [
+                        "packages/cli/src/execution/**",
+                        "packages/cli/src/config/execution/**",
+                        "packages/cli/src/types/execution/**"
+                    ],
+                    "mode": "full"
+                },
+                {
+                    "type": "lifecycle",
+                    "pattern": [
+                        "packages/cli/src/lifecycle/**",
+                        "packages/cli/src/config/lifecycle/**",
+                        "packages/cli/src/types/lifecycle/**"
+                    ],
+                    "mode": "full"
+                },
+                {
+                    "type": "generation",
+                    "pattern": [
+                        "packages/cli/src/generation/**",
+                        "packages/cli/src/config/generation/**",
+                        "packages/cli/src/types/generation/**"
+                    ],
+                    "mode": "full"
+                },
+                {
+                    "type": "tools",
+                    "pattern": [
+                        "packages/cli/src/tools/**",
+                        "packages/cli/src/config/tools/**",
+                        "packages/cli/src/types/tools/**"
+                    ],
+                    "mode": "full"
+                },
+                {
+                    "type": "policy",
+                    "pattern": [
+                        "packages/cli/src/policy/**",
+                        "packages/cli/src/config/policy/**",
+                        "packages/cli/src/types/policy/**"
+                    ],
+                    "mode": "full"
+                },
+                {
+                    "type": "rules",
+                    "pattern": [
+                        "packages/cli/src/rules/**",
+                        "packages/cli/src/config/rules.ts",
+                        "packages/cli/src/types/rules.ts"
+                    ],
+                    "mode": "full"
+                },
+                {
+                    "type": "kits",
+                    "pattern": [
+                        "packages/cli/src/kits/**",
+                        "packages/cli/src/config/kits.ts",
+                        "packages/cli/src/types/kits.ts"
+                    ],
+                    "mode": "full"
+                },
+                {
+                    "type": "repository",
+                    "pattern": [
+                        "packages/cli/src/repository/**",
+                        "packages/cli/src/config/repository/**",
+                        "packages/cli/src/types/repository/**"
+                    ],
+                    "mode": "full"
+                },
+                {
+                    "type": "parsers",
+                    "pattern": [
+                        "packages/cli/src/parsers/**",
+                        "packages/cli/src/config/parsers/**",
+                        "packages/cli/src/types/parsers/**"
+                    ],
+                    "mode": "full"
+                },
+                {
+                    "type": "platform",
+                    "pattern": [
+                        "packages/cli/src/platform/**",
+                        "packages/cli/src/config/platform/**",
+                        "packages/cli/src/types/platform/**"
+                    ],
+                    "mode": "full"
+                }
+            ],
+            "boundaries/ignore": [
+                "**/*.test.*",
+                "**/*.spec.*"
+            ]
+        },
+        "rules": {
+            "boundaries/element-types": [
+                "error",
+                {
+                    "default": "disallow",
+                    "rules": [
+                        {
+                            "from": "main",
+                            "allow": [
+                                "main",
+                                "commands",
+                                "platform"
+                            ]
+                        },
+                        {
+                            "from": "commands",
+                            "allow": [
+                                "commands",
+                                "checks",
+                                "output",
+                                "execution",
+                                "lifecycle",
+                                "generation",
+                                "tools",
+                                "policy",
+                                "rules",
+                                "kits",
+                                "repository",
+                                "parsers",
+                                "platform"
+                            ]
+                        },
+                        {
+                            "from": "checks",
+                            "allow": [
+                                "checks",
+                                "execution",
+                                "lifecycle",
+                                "generation",
+                                "tools",
+                                "policy",
+                                "rules",
+                                "kits",
+                                "repository",
+                                "parsers",
+                                "platform"
+                            ]
+                        },
+                        {
+                            "from": "output",
+                            "allow": [
+                                "output",
+                                "execution",
+                                "generation",
+                                "platform"
+                            ]
+                        },
+                        {
+                            "from": "execution",
+                            "allow": [
+                                "execution",
+                                "lifecycle",
+                                "generation",
+                                "tools",
+                                "policy",
+                                "rules",
+                                "kits",
+                                "repository",
+                                "parsers",
+                                "platform"
+                            ]
+                        },
+                        {
+                            "from": "lifecycle",
+                            "allow": [
+                                "lifecycle",
+                                "generation",
+                                "tools",
+                                "policy",
+                                "kits",
+                                "repository",
+                                "platform"
+                            ]
+                        },
+                        {
+                            "from": "generation",
+                            "allow": [
+                                "generation",
+                                "tools",
+                                "policy",
+                                "rules",
+                                "kits",
+                                "repository",
+                                "platform"
+                            ]
+                        },
+                        {
+                            "from": "tools",
+                            "allow": [
+                                "tools",
+                                "policy",
+                                "kits",
+                                "repository",
+                                "platform"
+                            ]
+                        },
+                        {
+                            "from": "policy",
+                            "allow": [
+                                "policy",
+                                "rules",
+                                "kits",
+                                "repository",
+                                "platform"
+                            ]
+                        },
+                        {
+                            "from": "rules",
+                            "allow": [
+                                "rules",
+                                "kits",
+                                "repository",
+                                "platform"
+                            ]
+                        },
+                        {
+                            "from": "kits",
+                            "allow": [
+                                "kits",
+                                "repository",
+                                "platform"
+                            ]
+                        },
+                        {
+                            "from": "repository",
+                            "allow": [
+                                "repository",
+                                "parsers",
+                                "platform"
+                            ]
+                        },
+                        {
+                            "from": "parsers",
+                            "allow": [
+                                "parsers",
+                                "platform"
+                            ]
+                        },
+                        {
+                            "from": "platform",
+                            "allow": [
+                                "platform"
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    }
+];
 
 const scopeRules = [
     {
@@ -824,6 +1121,8 @@ const policyRules = [
     {
         "scope": "",
         "includes": [
+            "^(?:packages\\/cli\\/src\\/kits\\/messages\\.ts)$",
+            "^(?:packages\\/cli\\/src\\/kits\\/messages\\.ts(?:\\/(?!\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)|$))$",
             "^(?:packages\\/cli\\/src\\/policy\\/messages\\.ts)$",
             "^(?:packages\\/cli\\/src\\/policy\\/messages\\.ts(?:\\/(?!\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)|$))$"
         ],
@@ -892,6 +1191,13 @@ const defaults = [
     "packages/eslint-plugin/tsconfig.json",
     "docs/tsconfig.json"
 ] })],
+            // The boundaries rule resolves imports through the classic resolver setting.
+            'import/resolver': { typescript: { project: [
+    "tsconfig.json",
+    "packages/cli/tsconfig.json",
+    "packages/eslint-plugin/tsconfig.json",
+    "docs/tsconfig.json"
+] } },
         },
         rules: {
             'jsdoc/no-types': 'error',
@@ -938,6 +1244,13 @@ const defaults = [
     "packages/eslint-plugin/tsconfig.json",
     "docs/tsconfig.json"
 ] })],
+            // The boundaries rule resolves imports through the classic resolver setting.
+            'import/resolver': { typescript: { project: [
+    "tsconfig.json",
+    "packages/cli/tsconfig.json",
+    "packages/eslint-plugin/tsconfig.json",
+    "docs/tsconfig.json"
+] } },
         },
         rules: {
             'jsdoc/no-types': 'error',
@@ -984,6 +1297,13 @@ const defaults = [
     "packages/eslint-plugin/tsconfig.json",
     "docs/tsconfig.json"
 ] })],
+            // The boundaries rule resolves imports through the classic resolver setting.
+            'import/resolver': { typescript: { project: [
+    "tsconfig.json",
+    "packages/cli/tsconfig.json",
+    "packages/eslint-plugin/tsconfig.json",
+    "docs/tsconfig.json"
+] } },
         },
         rules: {
             'jsdoc/no-types': 'error',
@@ -1030,6 +1350,13 @@ const defaults = [
     "packages/eslint-plugin/tsconfig.json",
     "docs/tsconfig.json"
 ] })],
+            // The boundaries rule resolves imports through the classic resolver setting.
+            'import/resolver': { typescript: { project: [
+    "tsconfig.json",
+    "packages/cli/tsconfig.json",
+    "packages/eslint-plugin/tsconfig.json",
+    "docs/tsconfig.json"
+] } },
         },
         rules: {
             'jsdoc/no-types': 'error',

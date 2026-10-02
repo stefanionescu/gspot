@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
-import { setKey, proposePolicy } from '#cli/policy/write.ts';
+import { setKey, proposePolicy } from '#cli/policy/mutations.ts';
 
 test('policy edits preserve trailing array commas without emitting unsupported inline-table commas', async () => {
     await using sandbox = await testdir();

@@ -3,11 +3,11 @@ import { join } from 'node:path';
 import { writeFileSync } from 'node:fs';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { denoLint } from '#cli/checks/supabase/deno.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { toolsPath } from '#tests/support/cli/tools.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
+import { denoLint } from '#cli/checks/platform/supabase/deno.ts';
 
 test('pinned Deno reports a lint defect and accepts its correction in a scoped edge function', async () => {
     await using sandbox = await testdir();

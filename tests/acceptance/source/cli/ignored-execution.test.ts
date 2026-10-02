@@ -3,7 +3,7 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { run } from '#tests/support/cli/command.ts';
-import { parseProfile } from '#cli/policy/profiles/read.ts';
+import { parseProfile } from '#cli/policy/profiles/parse.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { exportedProfile } from '#cli/policy/profiles/export.ts';
 import { INSTALLED_MODULES } from '#tests/support/cli/modules.ts';

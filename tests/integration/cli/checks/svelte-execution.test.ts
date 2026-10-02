@@ -3,9 +3,9 @@ import { chmodSync } from 'node:fs';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
-import { svelteCheck } from '#cli/checks/svelte.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { svelteCheck } from '#cli/checks/framework/svelte.ts';
 
 test.each([
     { scope: '', typescript: false },

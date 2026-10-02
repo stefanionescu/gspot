@@ -1,6 +1,6 @@
 import { test, expect, describe } from 'bun:test';
-import { routeFor, routeGroups } from '#cli/checks/prose/vale.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
+import { routeFor, routeGroups } from '#cli/checks/general/prose/vale.ts';
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The cases build a tracked file with the same fields.
 function tracked(path: string, tags: string[] = ['text']): TrackedFile {

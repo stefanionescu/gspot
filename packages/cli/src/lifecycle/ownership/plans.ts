@@ -1,30 +1,29 @@
 // What the owner proposes for one file: a replacement, a managed block, a merged configuration, or a retirement.
 import { isDeepStrictEqual } from 'node:util';
-import type { Read } from '#cli/types/platform.ts';
-import { ADOPTED_KINDS } from '#cli/config/lifecycle.ts';
-import { OWNER_WRITABLE_FILE } from '#cli/config/platform.ts';
+import type { Read } from '#cli/types/platform/platform.ts';
+import type { Planned } from '#cli/types/lifecycle/lifecycle.ts';
+import { planConfiguration } from '#cli/lifecycle/merge/plan.ts';
+import { ADOPTED_KINDS } from '#cli/config/lifecycle/ownership.ts';
+import { blockSpan, applyBlock } from '#cli/generation/markers.ts';
 import { matches, identity } from '#cli/lifecycle/ownership/log.ts';
-import { blockSpan, applyBlock } from '#cli/lifecycle/managed-blocks.ts';
-import { planConfiguration } from '#cli/lifecycle/configuration/plan.ts';
+import { OWNER_WRITABLE_FILE } from '#cli/config/lifecycle/lifecycle.ts';
+import type { BlockSpan, BlockStyle, ConfigurationFormat } from '#cli/types/generation/generation.ts';
 
 import type {
     Log,
-    Planned,
-    BlockSpan,
-    BlockStyle,
+    OwnedKind,
     OwnedBlock,
     PlannedBlock,
     OwnershipEntry,
     ReplacementRequest,
-    ConfigurationFormat,
-} from '#cli/types/lifecycle/lifecycle.ts';
+} from '#cli/types/lifecycle/ownership.ts';
 
 // Whether the current file must stay: an edited owned file without review, or an unowned file without replace.
 function isPreservedReplacement(
     existing: OwnershipEntry | undefined,
     current: Read | undefined,
     installed: ReturnType<typeof identity>,
-    kind: OwnershipEntry['kind'],
+    kind: OwnedKind,
     replace: boolean,
     expected: Read | undefined,
 ): boolean {
@@ -39,7 +38,7 @@ function changedReplacement(
     current: Read | undefined,
     existing: OwnershipEntry | undefined,
     next: Read,
-    kind: OwnershipEntry['kind'],
+    kind: OwnedKind,
 ): Planned & { entry: OwnershipEntry } {
     const installed = identity(next);
     const status = matches(current, installed) ? 'unchanged' : 'changed';

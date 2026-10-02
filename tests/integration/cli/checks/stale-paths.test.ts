@@ -1,7 +1,7 @@
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { checkInput } from '#tests/support/cli/input.ts';
-import { stalePaths } from '#cli/checks/docs/stale-paths.ts';
+import { stalePaths } from '#cli/checks/general/docs/stale-paths.ts';
 
 test('wildcard examples stay intact while emphasized literal paths remain checked', async () => {
     await using sandbox = await testdir();

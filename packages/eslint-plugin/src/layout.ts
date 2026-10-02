@@ -1,7 +1,7 @@
 // Ordering shared by the import and export layout rules: statements by length, then the names inside braces.
-import { BLANK, SPACES } from '#plugin/config/rules.ts';
+import { BLANK, SPACES } from '#plugin/config/plugin.ts';
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
-import type { LayoutMessages, ImportLayoutEntry } from '#plugin/types/rules.ts';
+import type { LayoutMessages, ImportLayoutEntry } from '#plugin/types/plugin.ts';
 
 function isOwnLineComment(text: string, comment: TSESTree.Comment, before: number): boolean {
     if (!BLANK.test(text.slice(comment.range[1], before))) return false;

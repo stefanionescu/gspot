@@ -3,7 +3,7 @@ import { selectKits } from '#cli/kits/select.ts';
 import { test, expect, describe } from 'bun:test';
 import { kitManifests } from '#cli/kits/manifests.ts';
 import { isOwned, ownedBy } from '#cli/kits/owners.ts';
-import { pathMatcher } from '#cli/repository/paths.ts';
+import { pathMatcher } from '#cli/repository/selectors.ts';
 import { shebangInterpreter } from '#cli/repository/tags.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
 

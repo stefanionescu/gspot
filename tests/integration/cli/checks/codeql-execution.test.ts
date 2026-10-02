@@ -2,14 +2,14 @@ import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
-import type { Finding } from '#cli/types/checks.ts';
-import { codeql } from '#cli/checks/security/codeql.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { test, spyOn, expect, describe } from 'bun:test';
 import { rejection } from '#tests/support/expectations.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
+import { codeql } from '#cli/checks/general/security/codeql.ts';
 import { toolShipsHere } from '#tests/support/cli/platforms.ts';
+import type { Finding } from '#cli/types/execution/execution.ts';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 
 const ALIASED_POLICY = policyOf(
@@ -42,7 +42,7 @@ async function refusesOutsideLanguage(language: string): Promise<string[]> {
     await using directory = await testdir();
     await createFileTree(directory.path, { 'gspot.toml': policy(language), 'source.py': 'value = 1\n' });
     const session = await openSession(directory.path);
-    const spec = session.manifests.get('security')!.checks.find((entry) => entry.analysis === 'codeql')!;
+    const spec = session.manifests.get('security')!.checks.find((entry) => entry.name === 'security/codeql')!;
     const input = engineInput(session, {
         scope: session.scopes.find((entry) => entry.scope.path === '')!,
         spec: spec,
@@ -104,7 +104,7 @@ async function mapsIsolatedLocations(): Promise<Finding[]> {
     });
     const session = await openSession(directory.path);
     const manifest = session.manifests.get('security')!;
-    const spec = manifest.checks.find((entry) => entry.analysis === 'codeql')!;
+    const spec = manifest.checks.find((entry) => entry.name === 'security/codeql')!;
     const packVersion = manifest.tools.find((tool) => tool.name === 'codeql')!.query_packs!['javascript'];
     // Every database creation and analysis the check ran, with the copy it ran in.
     const invoked: { argv: string[]; cwd: string }[] = [];

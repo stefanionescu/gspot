@@ -1,6 +1,6 @@
 import { test, expect } from 'bun:test';
 import { progress } from '#cli/output/reporter.ts';
-import type { CheckResult } from '#cli/types/checks.ts';
+import type { CheckResult } from '#cli/types/execution/execution.ts';
 
 test('terminal progress includes passed and skipped checks while log output keeps failures', () => {
     const terminal: string[] = [];

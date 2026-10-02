@@ -1,10 +1,23 @@
 // The types of repository in this package.
 import type { z } from 'zod';
 import type { Ignore } from 'ignore';
-import type { Policy } from '#cli/types/policy/policy.ts';
-import type { packageManifestSchema } from '#cli/repository/manifests.ts';
+import type { packageManifestSchema } from '#cli/repository/packages.ts';
 
 type Kind = 'source' | 'generated' | 'vendored' | 'binary';
+
+export type ExistingTool = {
+    tool: string;
+    path: string;
+    shared?: boolean;
+    table?: string;
+    key?: string;
+};
+
+/** A generated or vendored file entry of gspot.toml, with its kind. */
+export type FileDeclaration =
+    | { kind: 'generated'; paths: string[]; produced_by?: string | undefined; reason?: string | undefined }
+    | { kind: 'vendored'; paths: string[]; reason?: string | undefined };
+
 export type ScopeEntry = {
     name: string;
     path: string;
@@ -13,14 +26,7 @@ export type ScopeEntry = {
 };
 export type PathIgnore = { base: string; matcher: Ignore };
 export type RawEntry = { path: string; size: number; executable: boolean; symlink: boolean };
-/** Source bytes read during one run, files to its original repository root. */
-export type SourceReads = {
-    root: string;
-    sources: Map<string, Buffer>;
-};
-// Reading vale.ini without Vale: the styles and rule levels of each file-pattern section.
-export type Reader = { lines: string[]; index: number };
-export type Section = Map<string, string[]>;
+
 export type TrackedFile = {
     path: string;
     prefix: Buffer;
@@ -33,16 +39,10 @@ export type TrackedFile = {
 };
 export type Attribute = { matcher: (path: string) => boolean; attributes: string[] };
 export type Verdict = { kind: Kind; source: string; producedBy?: string };
-// Reading a .shellcheckrc without ShellCheck: the rules its directives enable and disable.
-export type Rules = { enable: string[]; disable: string[] };
-export type Directive = { key: string; value: string; remaining: string };
-export type ExistingTool = {
-    tool: string;
-    path: string;
-    shared?: boolean;
-    table?: string;
-    key?: string;
-};
+
+/** The runners that install and run gspot. */
+export type Runner = 'mise' | 'npm' | 'bun' | 'pnpm' | 'yarn';
+
 export type ExistingTooling = {
     configs: ExistingTool[];
     hooks: {
@@ -55,7 +55,7 @@ export type ExistingTooling = {
     rulesDirectories: string[];
     lintFolders: string[];
     lintOnlyManifests: string[];
-    runner: NonNullable<Policy['runner']>['tool'] | 'yarn' | 'none';
+    runner: Runner | 'none';
     runnerFile?: string;
 };
 export type PathExpressions = { includes: string[]; excludes: string[] };
@@ -72,7 +72,7 @@ export type Fields = {
     engines: Record<string, string>;
     type?: string;
 };
-export type TomlTable = Record<string, unknown>;
+
 export type Repository = {
     root: string;
     attributes: Attribute[];
@@ -80,21 +80,5 @@ export type Repository = {
     files: TrackedFile[];
     scopes: ScopeEntry[];
 };
-/** What detection reads from a scope's tree once, for every manifest to look at. */
-export type Layout = {
-    candidates: TrackedFile[];
-    extensionCounts: Map<string, number>;
-    names: Set<string>;
-    shebangs: Set<string>;
-    dependencies: Map<string, string>;
-    scope: string;
-};
+
 export type Tagged = { tags: string[]; binary: boolean; shebang?: string };
-/** One line of a SQLFluff configuration file: the section it opens, or the continuation it carries. */
-export type SqlfluffLine = {
-    number: number;
-    text: string;
-    continuation: string;
-    indentation: number;
-    heading: string | undefined;
-};

@@ -1,16 +1,16 @@
 // apply --dry-run: render in memory, read recorded generated files, compare bytes, print the diff.
 import { createTwoFilesPatch } from 'diff';
 import { openRoot } from '#cli/platform/filesystem.ts';
-import { ruleDiff } from '#cli/lifecycle/rules/diff.ts';
-import type { Generated } from '#cli/types/generation.ts';
+import { pythonLockDrift } from '#cli/tools/python.ts';
 import type { Policy } from '#cli/types/policy/policy.ts';
-import { pythonLockDrift } from '#cli/tools/python-project.ts';
-import { currentBlock } from '#cli/lifecycle/managed-blocks.ts';
+import { currentBlock } from '#cli/generation/markers.ts';
+import { ruleDiff } from '#cli/lifecycle/preview/compare.ts';
 import { packageLockDrift } from '#cli/tools/packages/project.ts';
 import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import type { DriftEntry } from '#cli/types/lifecycle/lifecycle.ts';
-import { hasConfiguration } from '#cli/lifecycle/configuration/document.ts';
-import { NEVER_STRAY, CONFLICT_MARKERS, DRIFT_DIFF_CONTEXT } from '#cli/config/lifecycle.ts';
+import { hasConfiguration } from '#cli/lifecycle/merge/document.ts';
+import type { Generated } from '#cli/types/generation/generation.ts';
+import { NEVER_STRAY, CONFLICT_MARKERS, DRIFT_DIFF_CONTEXT } from '#cli/config/lifecycle/lifecycle.ts';
 
 function isStrayCandidate(path: string, policy: Policy): boolean {
     if (path.startsWith('.gspot/guides/') && !policy.guides.install) return false;

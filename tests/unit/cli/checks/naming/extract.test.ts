@@ -1,5 +1,5 @@
 import { test, expect, describe } from 'bun:test';
-import { identifiersOf } from '#cli/checks/naming/engine.ts';
+import { identifiersOf } from '#cli/checks/general/naming/identifiers.ts';
 import { TS, SWIFT_EXTRACTOR_SOURCE, PYTHON_EXTRACTOR_SOURCE } from '#tests/inputs/unit/cli/checks/naming.ts';
 
 describe('identifiersOf', () => {

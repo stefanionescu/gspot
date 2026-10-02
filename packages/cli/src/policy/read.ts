@@ -5,10 +5,9 @@ import { GspotError } from '#cli/platform/errors.ts';
 import { normalize } from '#cli/policy/normalize.ts';
 import { policySchema } from '#cli/policy/schema.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
-import { reasonProblems } from '#cli/policy/problems.ts';
 import { TomlError, parse as parseToml } from 'smol-toml';
-import { pathProblems } from '#cli/policy/path-problems.ts';
 import { FIELD_PROBLEMS } from '#cli/config/policy/policy.ts';
+import { pathProblems, reasonProblems } from '#cli/policy/problems.ts';
 import { unknownKitProblems, completenessProblems } from '#cli/policy/validate.ts';
 import type { Policy, RawPolicy, PathSegment, PolicyFiles, PolicyProblem } from '#cli/types/policy/policy.ts';
 

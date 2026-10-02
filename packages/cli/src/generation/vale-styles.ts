@@ -1,8 +1,16 @@
-import type { GeneratedFile } from '#cli/types/generation.ts';
+import type { GeneratedFile } from '#cli/types/kits.ts';
+import { STYLES_DIRECTORY } from '#cli/config/tools/tools.ts';
 import { readAsset, listAssets } from '#cli/platform/assets.ts';
 import type { Policy, MergedView } from '#cli/types/policy/policy.ts';
-import { MAX_LINE, LONGER_THAN, STYLE_ASSETS } from '#cli/config/generation.ts';
-import { GSPOT_STYLE, LENGTH_RULES, PROSE_GRAMMARS, STYLES_DIRECTORY } from '#cli/config/kits.ts';
+
+import {
+    MAX_LINE,
+    GSPOT_STYLE,
+    LONGER_THAN,
+    LENGTH_RULES,
+    STYLE_ASSETS,
+    PROSE_GRAMMARS,
+} from '#cli/config/generation/generation.ts';
 
 function renderedRule(stem: string, text: string, view: MergedView): string {
     const key = LENGTH_RULES[stem];

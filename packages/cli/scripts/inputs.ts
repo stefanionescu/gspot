@@ -3,7 +3,8 @@ import { join, dirname } from 'node:path';
 import { createRequire } from 'node:module';
 import { Command, CommanderError } from 'commander';
 import { createHash, randomUUID } from 'node:crypto';
-import { SWIFT_GRAMMAR, GRAMMAR_PACKAGES } from '#cli/config/platform.ts';
+import { SWIFT_GRAMMAR } from '#cli/config/parsers/parsers.ts';
+import { GRAMMAR_PACKAGES } from '#cli/config/platform/platform.ts';
 import { rmSync, mkdirSync, existsSync, renameSync, copyFileSync, readFileSync, writeFileSync } from 'node:fs';
 
 // The exit of a build step that did not finish.

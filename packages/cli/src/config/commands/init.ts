@@ -1,5 +1,5 @@
 // The literal values commands/init reads: names, patterns, limits, and tables.
-import type { InitAnswers } from '#cli/types/commands.ts';
+import type { InitAnswers } from '#cli/types/commands/init.ts';
 
 export const DETECTION_LABEL_WIDTH = 13;
 export const NO_KITS = 'none';
@@ -21,6 +21,7 @@ export const REASON_WIDTH = 12;
 export const UNREADABLE_EXIT = 2;
 export const ALREADY_INSTALLED =
     'This repository already has a gspot.toml. Run `gspot doctor` to see what changed since the install and the command that applies each change.\n';
+
 /** The plan row of the hooks folder. */
 export const HOOKS_ROW = {
     path: '.gspot/hooks',

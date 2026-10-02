@@ -7,9 +7,9 @@ import { commitAll } from '#tests/support/cli/git.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
-import { drizzleMigrations } from '#cli/checks/drizzle.ts';
 import { rejection } from '#tests/support/expectations.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
+import { drizzleMigrations } from '#cli/checks/library/drizzle.ts';
 import type { DrizzlePlanted as Planted } from '#tests/types/integration/cli/checks.ts';
 import { statSync, chmodSync, mkdirSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
 import { DRIZZLE_MIGRATIONS_SCOPES, DRIZZLE_MIGRATIONS_GENERATOR } from '#tests/inputs/integration/cli/checks.ts';
@@ -37,7 +37,7 @@ async function plant(scope: string, schema: 'changed' | 'failure'): Promise<Plan
     mkdirSync(bin, { recursive: true });
     symlinkSync(process.execPath, join(bin, process.platform === 'win32' ? 'drizzle-kit.exe' : 'drizzle-kit'), 'file');
     const session = await openSession(directory.path);
-    const spec = session.manifests.get('drizzle')!.checks.find((entry) => entry.analysis === 'drizzle-migrations')!;
+    const spec = session.manifests.get('drizzle')!.checks.find((entry) => entry.name === 'drizzle/migrations-fresh')!;
     const planned = planRun(session, { stage: 'push', skips: [], only: [spec.name] });
     const input = engineInput(session, planned.find((entry) => entry.scope.scope.path === scope)!);
     return {

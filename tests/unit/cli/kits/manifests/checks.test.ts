@@ -14,14 +14,10 @@ test.each(['runs = "once"\ncommand = ["x", "{files}"]', 'command = ["x"]'])(
     },
 );
 
-test.each([
-    'command = []',
-    'command = ["x"]\nengine = "integrity"',
-    'command = ["x"]\nanalysis = "typescript"',
-    'analysis = "typescript"',
-    'tool = "tsc"\nanalysis = "unknown-analysis"',
-])('manifest loading rejects an invalid execution form: %s', (execution) => {
-    const text = `[kit]
+test.each(['command = []', 'command = ["x"]\nengine = "integrity"'])(
+    'manifest loading rejects an empty command or a field the check registry replaced: %s',
+    (execution) => {
+        const text = `[kit]
 name = "x"
 kind = "tool"
 title = "Project input"
@@ -36,8 +32,9 @@ summary = "Parses project input before execution."
 why = "Invalid project input cannot run."
 help = "Correct the reported project input."
 `;
-    expect(() => parseManifest(text, 'configurations/x')).toThrow('not valid');
-});
+        expect(() => parseManifest(text, 'configurations/x')).toThrow('not valid');
+    },
+);
 
 test('a generated configuration needs a reader in its manifest or the kit it needs', () => {
     const source =

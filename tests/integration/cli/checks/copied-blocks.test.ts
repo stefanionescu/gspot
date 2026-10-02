@@ -8,7 +8,7 @@ import { openSession } from '#cli/execution/session.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { runEngineCheck } from '#cli/execution/engines.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
-import { copiedBlocks } from '#cli/checks/docs/copied-blocks.ts';
+import { copiedBlocks } from '#cli/checks/general/duplication.ts';
 
 const VALID = {
     report: { statistics: { total: { percentage: 0 } }, duplicates: [] },

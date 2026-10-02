@@ -3,32 +3,33 @@ import pLimit from 'p-limit';
 import { cpus } from 'node:os';
 import { inspectTool } from '#cli/tools/inspect.ts';
 import { applyFixers } from '#cli/execution/fixers.ts';
-import type { CheckResult } from '#cli/types/checks.ts';
-import { applyIgnores } from '#cli/execution/ignores.ts';
+import type { Session } from '#cli/types/tools/tools.ts';
 import { readRepository } from '#cli/repository/tree.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { checkExecution } from '#cli/execution/engines.ts';
+import { pathMatcher } from '#cli/repository/selectors.ts';
 import { reproduceLine } from '#cli/execution/reproduce.ts';
 import { assembleReport } from '#cli/execution/run-report.ts';
 import type { IgnoreEntry } from '#cli/types/policy/policy.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
-import { DOCKER, RAN_STATUSES, FAILED_STATUSES, HISTORY_ANALYSES } from '#cli/config/execution/execution.ts';
+import { DOCKER, RAN_STATUSES, HISTORY_CHECKS, FAILED_STATUSES } from '#cli/config/execution/execution.ts';
 
 import type {
     Pass,
-    Session,
+    Finding,
     FixReport,
     IgnoreUse,
     Executable,
     RunOptions,
     RunOutcome,
+    CheckResult,
     PlannedCheck,
 } from '#cli/types/execution/execution.ts';
 
 // The plan and, for each planned check, the function that runs it.
 function planExecutables(session: Session, options: RunOptions): Executable[] {
     const planned = planRun(session, options);
-    return planned.map((check) => ({ check, run: checkExecution(check.spec) }));
+    return planned.map((check) => ({ check, run: checkExecution(check.spec, options.checks) }));
 }
 
 // Rereads the repository after fixers changed it, so the run that follows sees the corrected files.
@@ -158,6 +159,12 @@ async function planCorrections(
     return { executables: planExecutables(session, options), fixes };
 }
 
+function isEntryMatch(entry: IgnoreEntry, finding: Finding): boolean {
+    if (entry.check !== finding.check) return false;
+    if (entry.rule !== undefined && entry.rule !== finding.rule) return false;
+    return entry.paths === undefined || entry.paths.length === 0 || pathMatcher(entry.paths)(finding.file);
+}
+
 /**
  * Runs the checks and returns the report.
  * @param opened the session
@@ -182,7 +189,7 @@ export async function executeRun(opened: Session, options: RunOptions): Promise<
             check.files.length > 0 ||
             check.triggerPaths.length > 0 ||
             check.spec.stage === 'message' ||
-            (HISTORY_ANALYSES.has(check.spec.analysis ?? '') && (check.commits?.length ?? 0) > 0),
+            (HISTORY_CHECKS.has(check.spec.name) && (check.commits?.length ?? 0) > 0),
     );
     const ran = await runChecks(pass, active);
     const report = assembleReport({
@@ -196,4 +203,21 @@ export async function executeRun(opened: Session, options: RunOptions): Promise<
         fixes,
     });
     return fixes ? { report, planned, fixes } : { report, planned };
+}
+
+/**
+ * Splits findings into kept and ignored, counting how many each entry matched.
+ * @param findings the findings of one check
+ * @param entries the [[ignore]] entries for that check
+ * @returns the findings kept and the match count per entry
+ */
+export function applyIgnores(findings: Finding[], entries: IgnoreEntry[]): { kept: Finding[]; uses: IgnoreUse[] } {
+    const uses: IgnoreUse[] = entries.map((entry) => ({ entry, matched: 0 }));
+    const kept: Finding[] = [];
+    for (const finding of findings) {
+        const use = uses.find((candidate) => isEntryMatch(candidate.entry, finding));
+        if (use) use.matched += 1;
+        else kept.push(finding);
+    }
+    return { kept, uses };
 }

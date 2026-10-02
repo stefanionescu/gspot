@@ -4,10 +4,10 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { commitAll } from '#tests/support/cli/git.ts';
+import { readGitSetting } from '#cli/platform/git.ts';
 import { script } from '#tests/support/cli/planted.ts';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { containing } from '#tests/support/expectations.ts';
-import { readGitSetting } from '#cli/repository/git-config.ts';
 import { existsSync, symlinkSync, readFileSync } from 'node:fs';
 import type { RunReport } from '#cli/types/execution/execution.ts';
 

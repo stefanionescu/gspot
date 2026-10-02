@@ -11,8 +11,8 @@ import * as environment from '#cli/platform/environment.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { locateTool, inspectTool } from '#cli/tools/inspect.ts';
 import { commandPin, libraryPin } from '#tests/support/cli/pins.ts';
-import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import { chmodSync, mkdirSync, existsSync, unlinkSync, symlinkSync } from 'node:fs';
+import { readOwnership, runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 
 if (onPosix)
     test('the tool inspection > version inspections and tool execution prefer helpers from the selected installation', async () => {
@@ -191,14 +191,19 @@ test.each(['mise', 'npm'])(
         runOwnedLifecycle(sandbox.path, (owner) => {
             owner.beginInstallation('npm');
         });
-        const context = { root: sandbox.path, inspections: new Map(), policyFiles: readPolicy(sandbox.path) };
+        const context = {
+            root: sandbox.path,
+            inspections: new Map(),
+            policyFiles: readPolicy(sandbox.path),
+            installations: (path: string) => readOwnership(path).installations,
+        };
         const tool = commandPin('teller', '3.8.1', 'teller');
         tool.installers['mise'] = { name: 'teller', version: '3.8.1' };
         expect(inspectTool(context, tool).state).toBe(runner === 'mise' ? 'ok' : 'error');
         expect(inspectTool(context, libraryPin('globals', '17.12.0')).state).toBe('error');
         let discovered: string | undefined;
         const error = failure(() => {
-            discovered = locateTool(sandbox.path, 'ec');
+            discovered = locateTool(sandbox.path, 'ec', readOwnership(sandbox.path).installations);
         });
         expect(error?.message).toBe(
             runner === 'mise' ? undefined : 'Tool installation is incomplete. Run: gspot install',

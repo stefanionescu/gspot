@@ -4,16 +4,14 @@ import semver from 'semver';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { isDeepStrictEqual } from 'node:util';
-import type { ToolPin } from '#cli/types/kits.ts';
-import type { Read } from '#cli/types/platform.ts';
 import { SETUP } from '#cli/config/tools/tools.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
+import type { ToolOwner } from '#cli/types/tools/tools.ts';
 import { lockMatches } from '#cli/tools/packages/locks.ts';
-import type { GeneratedFile } from '#cli/types/generation.ts';
-import type { Owner } from '#cli/types/lifecycle/lifecycle.ts';
+import type { Read } from '#cli/types/platform/platform.ts';
+import type { ToolPin, GeneratedFile } from '#cli/types/kits.ts';
 import { installedOutputs } from '#cli/tools/installed-files.ts';
 import { parsePackageTool } from '#cli/tools/packages/identity.ts';
-import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import type { Inputs, ToolProject } from '#cli/types/tools/packages.ts';
 import { rmSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { LOCKS, YARN_SETTINGS, TOOL_PACKAGE_PROJECT } from '#cli/config/tools/packages.ts';
@@ -76,7 +74,7 @@ async function prepareLock(
 }
 
 // Refuses an installation whose inputs the manager rewrote or another writer changed meanwhile.
-function assertInputsUnchanged(owner: Owner, work: string, project: ToolProject, inputs: Inputs): void {
+function assertInputsUnchanged(owner: ToolOwner, work: string, project: ToolProject, inputs: Inputs): void {
     const manifestKept = readFileSync(join(work, 'package.json')).equals(inputs.project.bytes);
     const lockKept = readFileSync(join(work, project.lock)).equals(inputs.recorded.bytes);
     if (!manifestKept || !lockKept)
@@ -90,7 +88,7 @@ function assertInputsUnchanged(owner: Owner, work: string, project: ToolProject,
 // Installs the recorded lock in a scratch directory and writes the installed files through the owner.
 async function installFromInputs(
     root: string,
-    owner: Owner,
+    owner: ToolOwner,
     project: ToolProject,
     inputs: Inputs,
     tools: Iterable<ToolPin>,
@@ -114,7 +112,7 @@ async function installFromInputs(
  * @param files the generated files, among them the tool project
  * @param owner the lifecycle owner that records the lock
  */
-export async function preparePackageProject(root: string, files: GeneratedFile[], owner: Owner): Promise<void> {
+export async function preparePackageProject(root: string, files: GeneratedFile[], owner: ToolOwner): Promise<void> {
     const generated = files.find((file) => file.path === TOOL_PACKAGE_PROJECT);
     if (generated === undefined) return;
     const project = projectOf(generated.content);
@@ -180,18 +178,17 @@ export function packageInstallSteps(root: string): string[][] {
 /**
  * Install locked packages outside the repository, then write each owned entry through native bounds.
  * @param root the repository root
- * @param tools the pinned tools whose native wrappers the installation prepares
+ * @param owner the owner that records the writes
+ * @param tools the pinned tools to wrap
  * @returns the line that says what was installed, or '' without a tool project
  */
-export async function installPackageProject(root: string, tools: Iterable<ToolPin>): Promise<string> {
-    return runOwnedLifecycle(root, async (owner) => {
-        const manifest = owner.read(TOOL_PACKAGE_PROJECT);
-        if (manifest === undefined) return '';
-        const project = projectOf(manifest.bytes.toString('utf8'));
-        const recorded = owner.read(project.lockPath);
-        if (recorded === undefined || !isCurrentLock(project, recorded)) throw new Error(SETUP);
-        const inputs: Inputs = { project: manifest, recorded, yarn: owner.read(YARN_SETTINGS) };
-        await installFromInputs(root, owner, project, inputs, tools);
-        return `installed locked npm tools under .gspot/node_modules with ${project.client.name}@${project.client.version}`;
-    });
+export async function installPackageProject(root: string, owner: ToolOwner, tools: Iterable<ToolPin>): Promise<string> {
+    const manifest = owner.read(TOOL_PACKAGE_PROJECT);
+    if (manifest === undefined) return '';
+    const project = projectOf(manifest.bytes.toString('utf8'));
+    const recorded = owner.read(project.lockPath);
+    if (recorded === undefined || !isCurrentLock(project, recorded)) throw new Error(SETUP);
+    const inputs: Inputs = { project: manifest, recorded, yarn: owner.read(YARN_SETTINGS) };
+    await installFromInputs(root, owner, project, inputs, tools);
+    return `installed locked npm tools under .gspot/node_modules with ${project.client.name}@${project.client.version}`;
 }

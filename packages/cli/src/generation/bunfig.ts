@@ -1,8 +1,8 @@
 import { parse as parseToml } from 'smol-toml';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import type { ScopeSelection } from '#cli/types/policy/policy.ts';
-import type { ConfigurationOutput } from '#cli/types/generation.ts';
-import { SECONDS_PER_DAY, DEFAULT_RELEASE_AGE_DAYS } from '#cli/config/generation.ts';
+import type { ConfigurationOutput } from '#cli/types/generation/generation.ts';
+import { SECONDS_PER_DAY, DEFAULT_RELEASE_AGE_DAYS } from '#cli/config/generation/generation.ts';
 
 /**
  * Manage Bun installation safeguards while preserving unrelated authored fields.

@@ -4,9 +4,9 @@ import type { Dirent } from 'node:fs';
 import { sep, join } from 'node:path';
 import { createHash } from 'node:crypto';
 import { cacheHome } from '#cli/platform/environment.ts';
-import { DECLARATION_EXTENSIONS } from '#cli/config/platform.ts';
-import type { GlobWalk, GlobOptions } from '#cli/types/platform.ts';
 import { statSync, lstatSync, readdirSync, realpathSync } from 'node:fs';
+import { DECLARATION_EXTENSIONS } from '#cli/config/platform/platform.ts';
+import type { GlobWalk, GlobOptions } from '#cli/types/platform/platform.ts';
 
 // Refuses a pattern that climbs out of the folder it scans, in plain form, or hidden in a brace alternative.
 function assertInsideFolder(pattern: string): void {

@@ -4,7 +4,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { existsSync, writeFileSync } from 'node:fs';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { rejection } from '#tests/support/expectations.ts';
-import { pushBase, stagedFiles, changedFiles } from '#cli/repository/revisions/selection.ts';
+import { pushBase, stagedFiles, changedFiles } from '#cli/repository/revisions/changes.ts';
 
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Every git step of these tests runs and asserts success the same way.
 function git(root: string, ...argv: string[]): void {

@@ -3,24 +3,19 @@ import ignore from 'ignore';
 import { ownedBy } from '#cli/kits/owners.ts';
 import { toolPin } from '#cli/tools/inspect.ts';
 import { GspotError } from '#cli/platform/errors.ts';
-import { isInScope } from '#cli/repository/paths.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
+import type { Session } from '#cli/types/tools/tools.ts';
+import { isInScope } from '#cli/repository/selectors.ts';
 import type { ScopeSelection } from '#cli/types/policy/policy.ts';
+import { PLATFORM_NAMES } from '#cli/config/execution/planning.ts';
+import { HISTORY_CHECKS } from '#cli/config/execution/execution.ts';
+import type { ToolPin, Manifest, CheckSpec } from '#cli/types/kits.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
 import { checkState, repositoryCheckSpec } from '#cli/policy/check-state.ts';
-import type { Stage, ToolPin, Manifest, CheckSpec } from '#cli/types/kits.ts';
 import { skipFor, restrictIgnoredPaths } from '#cli/execution/planning/skips.ts';
-import { PLATFORM_NAMES, HISTORY_ANALYSES } from '#cli/config/execution/execution.ts';
+import type { StageFilter, PlannedCheck } from '#cli/types/execution/execution.ts';
 import { filesFor, childScopes, isRepositoryPolicy } from '#cli/execution/planning/files.ts';
-
-import type {
-    Session,
-    PlanEntry,
-    PlanInputs,
-    PlanOptions,
-    StageFilter,
-    PlannedCheck,
-} from '#cli/types/execution/execution.ts';
+import type { Stage, PlanEntry, PlanInputs, PlanOptions } from '#cli/types/execution/planning.ts';
 
 function isStageWanted(filter: StageFilter, stage: Stage): boolean {
     if (filter === 'all') return stage === 'commit' || stage === 'push';
@@ -28,7 +23,6 @@ function isStageWanted(filter: StageFilter, stage: Stage): boolean {
 }
 
 function toolFor(spec: CheckSpec, manifest: Manifest | undefined, session: Session): ToolPin | undefined {
-    if (spec.engine !== undefined) return undefined;
     const name = spec.tool ?? spec.command?.[0];
     if (name === undefined) return undefined;
     const own = manifest?.tools.find((tool) => tool.name === name);
@@ -167,7 +161,7 @@ function isActive(check: PlannedCheck): boolean {
         check.files.length > 0 ||
         check.triggerPaths.length > 0 ||
         check.spec.stage === 'message' ||
-        (HISTORY_ANALYSES.has(check.spec.analysis ?? '') && (check.commits?.length ?? 0) > 0)
+        (HISTORY_CHECKS.has(check.spec.name) && (check.commits?.length ?? 0) > 0)
     );
 }
 
@@ -243,9 +237,7 @@ export function planRun(session: Session, options: PlanOptions): PlannedCheck[] 
     );
     const checks = resolved.flat();
     if (options.historyComplete === false) {
-        const historyChecks = checks.filter(
-            (check) => check.skip === undefined && HISTORY_ANALYSES.has(check.spec.analysis ?? ''),
-        );
+        const historyChecks = checks.filter((check) => check.skip === undefined && HISTORY_CHECKS.has(check.spec.name));
         if (historyChecks.length > 0)
             throw new GspotError('selection', [
                 `Pushed history is incomplete for ${historyChecks.map((check) => check.check).join(', ')}. Run git fetch --unshallow and retry.`,

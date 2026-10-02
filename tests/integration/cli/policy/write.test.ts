@@ -1,11 +1,10 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { commitPolicy } from '#cli/commands/policy.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
-import { writePolicy, preparePolicy } from '#cli/lifecycle/policy.ts';
+import { writePolicy, commitPolicy, preparePolicy } from '#cli/commands/edit.ts';
 import { statSync, chmodSync, existsSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
-import { setKey, deleteKey, appendList, scopeHolder, appendIgnore, removeEntries } from '#cli/policy/write.ts';
+import { setKey, deleteKey, appendList, scopeHolder, appendIgnore, removeEntries } from '#cli/policy/mutations.ts';
 
 const text =
     '#:schema x\n\n# Comment on kits.\nkits = ["bash"]\n\n[hooks]\n# gspot checks the changed paths of a push.\npush = "changed"\n';

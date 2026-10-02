@@ -7,10 +7,10 @@ import { openSession } from '#cli/execution/session.ts';
 import { onPosix } from '#tests/support/cli/platforms.ts';
 import { submodulePaths } from '#cli/repository/tracked.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
+import { pushedRevisions } from '#cli/repository/revisions/push.ts';
 import { doctorText, doctorReport } from '#cli/commands/doctor/report.ts';
 import { mkdirSync, readdirSync, symlinkSync, writeFileSync } from 'node:fs';
-import { pushedRevisions } from '#cli/repository/revisions/push-selection.ts';
-import { gitBlobs, gitEntries, useRevision, committedEntries } from '#cli/repository/revisions/contents.ts';
+import { gitBlobs, gitEntries, useRevision, committedEntries } from '#cli/execution/checkout/revision.ts';
 
 test.each(['index', 'commit'] as const)(
     'a %s snapshot retains gitlinks without reading submodule contents',

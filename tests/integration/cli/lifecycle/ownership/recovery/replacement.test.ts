@@ -2,10 +2,10 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
-import { ownershipSchema } from '#cli/lifecycle/log.ts';
 import { cliSource } from '#tests/support/cli/process.ts';
 import { keptMode } from '#tests/support/cli/platforms.ts';
 import { statSync, readFileSync, writeFileSync } from 'node:fs';
+import { ownershipSchema } from '#cli/lifecycle/ownership/schema.ts';
 import { openOwner, readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import type { Point, Published } from '#tests/types/integration/cli/lifecycle/ownership.ts';
 

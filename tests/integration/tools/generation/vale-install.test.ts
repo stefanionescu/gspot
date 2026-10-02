@@ -19,13 +19,13 @@ async function expectPublishedRules(root: string): Promise<void> {
         '.gspot/config/vale.ini': readFileSync(join(root, '.gspot/config/vale.ini'), 'utf8'),
         [INSTALLED]: 'cloned bytes\n',
     });
-    expect(await installPackages(clone.path)).toBeUndefined();
+    expect(await installPackages(clone.path, undefined)).toBeUndefined();
     expect(readFileSync(join(clone.path, INSTALLED))).toStrictEqual(readFileSync(join(root, INSTALLED)));
 }
 
 async function expectPrunedRules(root: string): Promise<void> {
     await createFileTree(root, { '.gspot/config/vale/styles/Retired/terms.yml': 'old rule\n' });
-    expect(await installPackages(root)).toBeUndefined();
+    expect(await installPackages(root, undefined)).toBeUndefined();
     expect(existsSync(join(root, '.gspot/config/vale/styles/Retired'))).toBe(false);
     expect(existsSync(join(root, INSTALLED))).toBe(true);
     removePackages(root);
@@ -37,7 +37,7 @@ async function expectEditedRules(root: string): Promise<void> {
     const synced = readFileSync(join(root, INSTALLED));
     chmodSync(join(root, INSTALLED), 0o644);
     writeFileSync(join(root, INSTALLED), 'edited\n');
-    expect(await installPackages(root)).toBeUndefined();
+    expect(await installPackages(root, undefined)).toBeUndefined();
     expect(readFileSync(join(root, INSTALLED))).toStrictEqual(synced);
     expect(readFileSync(join(root, 'authored.txt'), 'utf8')).toBe('keep\n');
 }
@@ -68,7 +68,7 @@ test.each([
             } finally {
                 owner.close();
             }
-            expect(await installPackages(directory.path)).toBeUndefined();
+            expect(await installPackages(directory.path, undefined)).toBeUndefined();
             expect(hasPackages(directory.path)).toBe(true);
             expect(readOwnership(directory.path).files.map((file) => file.path)).toStrictEqual([
                 '.gspot/config/vale.ini',

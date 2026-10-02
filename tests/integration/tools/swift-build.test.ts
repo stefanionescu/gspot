@@ -2,12 +2,12 @@ import { join } from 'node:path';
 import { test, expect, afterEach } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { buildFolder } from '#cli/platform/paths.ts';
-import type { EngineInput } from '#cli/types/checks.ts';
 import { onMac } from '#tests/support/cli/platforms.ts';
-import { swiftBuild } from '#cli/checks/swift/build.ts';
 import { sessionInput } from '#tests/support/cli/input.ts';
-import { swiftBuildPlan } from '#cli/checks/swift/plan.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
+import { swiftBuild } from '#cli/checks/language/swift/build.ts';
+import { swiftBuildPlan } from '#cli/checks/language/swift/plan.ts';
+import type { EngineInput } from '#cli/types/execution/execution.ts';
 import { rmSync, statSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 
 const caches = new Set<string>();

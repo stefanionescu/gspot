@@ -1,21 +1,21 @@
 // The init command: its flags, the profile's answers, and the run from detection to the written setup.
 import { Option } from 'commander';
 import type { Command } from 'commander';
+import { compact } from '#cli/platform/text.ts';
 import { hasPolicy } from '#cli/policy/read.ts';
 import { ciSchema } from '#cli/policy/schema.ts';
-import { compact } from '#cli/policy/normalize.ts';
 import { write } from '#cli/commands/init/write.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
 import { note, print } from '#cli/output/messages.ts';
 import { prepare } from '#cli/commands/init/prepare.ts';
 import { askConfirmation } from '#cli/commands/prompts.ts';
-import { readProfile } from '#cli/policy/profiles/read.ts';
+import { readProfile } from '#cli/policy/profiles/parse.ts';
 import type { Profile } from '#cli/types/policy/profiles.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import { initPlanText } from '#cli/commands/init/plan/text.ts';
 import { UNREADABLE_EXIT, ALREADY_INSTALLED } from '#cli/config/commands/init.ts';
-import type { InitResult, InitOptions, InitPrepared } from '#cli/types/commands.ts';
-import { listFlag, textFlag, textEntry, directoryOf } from '#cli/platform/arguments.ts';
+import { listFlag, textFlag, textEntry, directoryOf } from '#cli/commands/flags.ts';
+import type { InitResult, InitOptions, InitPrepared } from '#cli/types/commands/init.ts';
 
 // The rules answer a profile gives: yes or no when it says, nothing when it leaves the question open.
 function ruleAnswer(install: boolean | undefined): 'yes' | 'no' | undefined {

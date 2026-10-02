@@ -2,15 +2,16 @@ import * as fs from 'node:fs';
 import { join } from 'node:path';
 import { rmSync, existsSync } from 'node:fs';
 import { test, spyOn, expect } from 'bun:test';
+import { CHECKS } from '#cli/checks/registry.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { readSource } from '#cli/repository/tracked.ts';
+import { readSource } from '#cli/repository/sources.ts';
 import { onPosix } from '#tests/support/cli/platforms.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
-import { scratchCopy } from '#cli/execution/files/workspace.ts';
-import { scriptIndex } from '#cli/checks/bash/cross-file-index.ts';
+import { scratchCopy } from '#cli/execution/tool/workspace.ts';
+import { scriptIndex } from '#cli/checks/language/bash/scripts.ts';
 import { planRun, ownedInputs } from '#cli/execution/planning/plan.ts';
 import { engineInput, runEngineCheck } from '#cli/execution/engines.ts';
 
@@ -56,14 +57,14 @@ test.each([
             fix: false,
             isDryRun: true,
         };
-        const failed = await executeRun(session, options);
+        const failed = await executeRun(session, { ...options, checks: CHECKS });
         expect(failed.report.exitCode, JSON.stringify(failed.report)).toBe(1);
         expect(failed.report.checks.map((check) => check.status)).toStrictEqual(['fail', 'fail']);
         for (const check of failed.report.checks)
             expect(check.findings).toContainEqual(containing({ file: path, line: 1 }));
         expect(await Bun.file(join(sandbox.path, path)).text()).toBe(defect);
         await Bun.write(join(sandbox.path, path), corrected);
-        const accepted = await executeRun(session, options);
+        const accepted = await executeRun(session, { ...options, checks: CHECKS });
         expect(accepted.report.exitCode, JSON.stringify(accepted.report)).toBe(0);
         expect(accepted.report.checks).toMatchObject([
             { status: 'ok', findings: [] },
@@ -185,7 +186,7 @@ if (onPosix)
         };
         const read = spyOn(fs, 'readFileSync');
         try {
-            const clean = await executeRun(session, options);
+            const clean = await executeRun(session, { ...options, checks: CHECKS });
             expect(clean.report.exitCode).toBe(0);
             expect(
                 clean.report.checks
@@ -196,7 +197,7 @@ if (onPosix)
             expect(read.mock.calls.filter(([file]) => file === join(sandbox.path, path))).toHaveLength(1);
             read.mockClear();
             await Bun.write(join(sandbox.path, path), 'select from;\n');
-            const defect = await executeRun(session, options);
+            const defect = await executeRun(session, { ...options, checks: CHECKS });
             expect(defect.report.exitCode).toBe(1);
             expect(defect.report.checks.flatMap((check) => check.findings)).toContainEqual(
                 containing({ file: path, line: 1 }),
@@ -204,7 +205,7 @@ if (onPosix)
             expect(read.mock.calls.filter(([file]) => file === join(sandbox.path, path))).toHaveLength(1);
             read.mockClear();
             await Bun.write(join(sandbox.path, path), 'select 2;\n');
-            const corrected = await executeRun(session, options);
+            const corrected = await executeRun(session, { ...options, checks: CHECKS });
             expect(corrected.report.exitCode).toBe(0);
             expect(read.mock.calls.filter(([file]) => file === join(sandbox.path, path))).toHaveLength(1);
         } finally {
@@ -255,12 +256,12 @@ format = "none"
         fix: false,
         isDryRun: false,
     };
-    const defect = await executeRun(session, options);
+    const defect = await executeRun(session, { ...options, checks: CHECKS });
     expect(defect.report.exitCode).toBe(1);
     expect(defect.report.checks.flatMap((check) => check.findings)).toContainEqual(
         containing({ file: 'query.sql', line: 1 }),
     );
-    const corrected = await executeRun(session, { ...options, fix: true });
+    const corrected = await executeRun(session, { checks: CHECKS, ...options, fix: true });
     expect(corrected.report.exitCode).toBe(0);
     expect(corrected.report.checks.map(({ check, status, findings }) => ({ check, status, findings }))).toStrictEqual([
         { check: 'sql/syntax', status: 'ok', findings: [] },

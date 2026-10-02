@@ -6,8 +6,8 @@ import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { siteInput } from '#tests/support/cli/site.ts';
 import * as toolRunner from '#cli/execution/tool/runner.ts';
-import { siteBuild } from '#cli/checks/static-site/build.ts';
-import { builtMarkup, deadSelectors, internalLinks } from '#cli/checks/static-site/output-checks.ts';
+import { siteBuild } from '#cli/checks/general/static-site/build.ts';
+import { builtMarkup, deadSelectors, internalLinks } from '#cli/checks/general/static-site/output.ts';
 
 test.each([
     {

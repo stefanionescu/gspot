@@ -3,30 +3,27 @@ import { join } from 'node:path';
 import { GspotError } from '#cli/platform/errors.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import type { ToolPin, CheckSpec } from '#cli/types/kits.ts';
+import { fileBatches } from '#cli/execution/tool/batches.ts';
 import { toolPin, inspectTool } from '#cli/tools/inspect.ts';
-import { fileBatches } from '#cli/execution/files/batches.ts';
-import type { ToolInspection } from '#cli/types/tools/tools.ts';
-import { FILES_PLACEHOLDER } from '#cli/config/execution/execution.ts';
-import { collect, missingNote } from '#cli/execution/tool/findings.ts';
-import type { SpawnResult, SpawnOptions } from '#cli/types/platform.ts';
-import { createFileWorkspace } from '#cli/execution/files/workspace.ts';
+import { FILES_PLACEHOLDER } from '#cli/config/execution/tool.ts';
+import { createFileWorkspace } from '#cli/execution/tool/workspace.ts';
+import type { Session, ToolInspection } from '#cli/types/tools/tools.ts';
 import { runToolCommand, toolDeadlineSeconds } from '#cli/tools/command.ts';
-import type { Finding, CheckResult, EngineInput } from '#cli/types/checks.ts';
-import { checkedFindings, executionFailure } from '#cli/execution/broken-tool.ts';
+import type { SpawnResult, SpawnOptions } from '#cli/types/platform/platform.ts';
+import type { ToolRun, ToolRunState, Substitutions, ToolInvocation } from '#cli/types/execution/tool.ts';
+import { collect, missingNote, checkedFindings, executionFailure } from '#cli/execution/tool/findings.ts';
 
 import {
     substitute,
     perFileCommands,
     substituteValue,
     commandConfigurations,
-} from '#cli/execution/command-expansion.ts';
+} from '#cli/execution/tool/placeholders.ts';
 import type {
-    Session,
-    ToolRun,
+    Finding,
+    CheckResult,
+    EngineInput,
     PlannedCheck,
-    ToolRunState,
-    Substitutions,
-    ToolInvocation,
     PreparedCommand,
 } from '#cli/types/execution/execution.ts';
 

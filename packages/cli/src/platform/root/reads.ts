@@ -1,7 +1,8 @@
 // Resolving and reading paths under a files root: every parent must be a real directory and every file private.
 import { join, posix } from 'node:path';
-import { MODE_BITS, PORTABLE_LINK_TARGET } from '#cli/config/platform.ts';
-import type { Read, Bounds, Proposed, PathFormat } from '#cli/types/platform.ts';
+import type { Proposed } from '#cli/types/platform/root.ts';
+import { MODE_BITS, PORTABLE_LINK_TARGET } from '#cli/config/platform/root.ts';
+import type { Read, Bounds, PathFormat } from '#cli/types/platform/platform.ts';
 import { lstatSync, mkdirSync, type Stats, readFileSync, readlinkSync } from 'node:fs';
 import { fileMode, nativePath, mutationPath, privateTarget } from '#cli/platform/safe-paths.ts';
 

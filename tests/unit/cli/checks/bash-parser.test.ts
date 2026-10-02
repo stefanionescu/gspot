@@ -1,6 +1,6 @@
 import { test, expect, describe } from 'bun:test';
-import { scriptFunctions } from '#cli/checks/bash/parser.ts';
-import { codeLines, withoutComment } from '#cli/checks/bash/code-lines.ts';
+import { scriptFunctions } from '#cli/checks/language/bash/scripts.ts';
+import { codeLines, withoutComment } from '#cli/checks/language/bash/code-lines.ts';
 
 describe('shell parsing', () => {
     test('comments are stripped with quotes respected', () => {

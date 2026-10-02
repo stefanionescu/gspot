@@ -127,9 +127,6 @@ patterns = [
 ]
 reason = "The guides explicitly introduce these downloaded binaries, consumer project resources, and example files. They are not claims that this checkout tracks them."
 
-[[tools.docs.paths_allowed]]
-patterns = ["acceptance/source/kits/vite.test.ts"]
-reason = "The acceptance runner resolves this documented argument from its tests working directory. The tracked file is tests/acceptance/source/kits/vite.test.ts."
 [tools.lychee]
 
 [[tools.lychee.exclude_paths]]
@@ -213,14 +210,29 @@ names = ["object"]
 reason = "The pre-push JSON report names Git object identities with this key."
 
 [[naming.contract_properties]]
-file = "packages/cli/src/types/execution/execution.ts"
+file = "packages/cli/src/types/commands/check.ts"
 names = ["object"]
 reason = "The pre-push JSON report names Git object identities with this key."
 
 [[naming.contract_properties]]
-file = "packages/cli/src/types/checks.ts"
-names = ["Commit", "DefElem", "File", "Fingerprint", "List", "RuleID", "String", "shouldTranslate"]
-reason = "gitleaks reports, libpg-query AST tags, and Xcode string files spell these keys."
+file = "packages/cli/src/types/checks/general/secrets.ts"
+names = ["Commit", "File", "Fingerprint", "RuleID"]
+reason = "gitleaks reports spell these keys."
+
+[[naming.contract_properties]]
+file = "packages/cli/src/types/checks/language/sql.ts"
+names = ["DefElem", "List", "String"]
+reason = "libpg-query AST tags spell these keys."
+
+[[naming.contract_properties]]
+file = "packages/cli/src/types/checks/tool/xcode.ts"
+names = ["shouldTranslate"]
+reason = "Xcode string files spell this key."
+
+[[naming.contract_properties]]
+file = "packages/cli/src/types/repository/repository.ts"
+names = ["produced_by"]
+reason = "The gspot.toml key of a generated file entry."
 
 [[naming.contract_properties]]
 file = "packages/cli/src/types/parsers/sql.ts"
@@ -240,12 +252,12 @@ names = [
 reason = "Emscripten and libpg-query export these members."
 
 [[naming.contract_properties]]
-file = "packages/cli/src/checks/sql.ts"
+file = "packages/cli/src/checks/language/sql.ts"
 names = ["FunctionParameter"]
 reason = "The libpg-query AST tag for a function parameter."
 
 [[naming.contract_properties]]
-file = "packages/cli/src/lifecycle/rules/vale.ts"
+file = "packages/cli/src/lifecycle/preview/vale.ts"
 names = ["BasedOnStyles"]
 reason = "The Vale setting the rule preview reads."
 
@@ -278,6 +290,197 @@ reason = "The GitHub Actions inputs key."
 types_directory = "types"
 config_directory = "config"
 
+# The layers of the CLI: a folder imports only itself and the rows its edge names. Its config and types files sit in its layer.
+[[architecture.elements]]
+name = "main"
+paths = ["packages/cli/src/main.ts"]
+
+[[architecture.elements]]
+name = "commands"
+paths = [
+    "packages/cli/src/commands/**",
+    "packages/cli/src/config/commands/**",
+    "packages/cli/src/types/commands/**",
+]
+
+[[architecture.elements]]
+name = "checks"
+paths = [
+    "packages/cli/src/checks/**",
+    "packages/cli/src/config/checks/**",
+    "packages/cli/src/types/checks/**",
+]
+
+[[architecture.elements]]
+name = "output"
+paths = [
+    "packages/cli/src/output/**",
+    "packages/cli/src/config/output.ts",
+    "packages/cli/src/types/output.ts",
+]
+
+[[architecture.elements]]
+name = "execution"
+paths = [
+    "packages/cli/src/execution/**",
+    "packages/cli/src/config/execution/**",
+    "packages/cli/src/types/execution/**",
+]
+
+[[architecture.elements]]
+name = "lifecycle"
+paths = [
+    "packages/cli/src/lifecycle/**",
+    "packages/cli/src/config/lifecycle/**",
+    "packages/cli/src/types/lifecycle/**",
+]
+
+[[architecture.elements]]
+name = "generation"
+paths = [
+    "packages/cli/src/generation/**",
+    "packages/cli/src/config/generation/**",
+    "packages/cli/src/types/generation/**",
+]
+
+[[architecture.elements]]
+name = "tools"
+paths = [
+    "packages/cli/src/tools/**",
+    "packages/cli/src/config/tools/**",
+    "packages/cli/src/types/tools/**",
+]
+
+[[architecture.elements]]
+name = "policy"
+paths = [
+    "packages/cli/src/policy/**",
+    "packages/cli/src/config/policy/**",
+    "packages/cli/src/types/policy/**",
+]
+
+[[architecture.elements]]
+name = "rules"
+paths = [
+    "packages/cli/src/rules/**",
+    "packages/cli/src/config/rules.ts",
+    "packages/cli/src/types/rules.ts",
+]
+
+[[architecture.elements]]
+name = "kits"
+paths = [
+    "packages/cli/src/kits/**",
+    "packages/cli/src/config/kits.ts",
+    "packages/cli/src/types/kits.ts",
+]
+
+[[architecture.elements]]
+name = "repository"
+paths = [
+    "packages/cli/src/repository/**",
+    "packages/cli/src/config/repository/**",
+    "packages/cli/src/types/repository/**",
+]
+
+[[architecture.elements]]
+name = "parsers"
+paths = [
+    "packages/cli/src/parsers/**",
+    "packages/cli/src/config/parsers/**",
+    "packages/cli/src/types/parsers/**",
+]
+
+[[architecture.elements]]
+name = "platform"
+paths = [
+    "packages/cli/src/platform/**",
+    "packages/cli/src/config/platform/**",
+    "packages/cli/src/types/platform/**",
+]
+
+[[architecture.edges_allowed]]
+from = "main"
+to = ["main", "commands", "platform"]
+
+[[architecture.edges_allowed]]
+from = "commands"
+to = [
+    "commands",
+    "checks",
+    "output",
+    "execution",
+    "lifecycle",
+    "generation",
+    "tools",
+    "policy",
+    "rules",
+    "kits",
+    "repository",
+    "parsers",
+    "platform",
+]
+
+[[architecture.edges_allowed]]
+from = "checks"
+to = [
+    "checks",
+    "execution",
+    "lifecycle",
+    "generation",
+    "tools",
+    "policy",
+    "rules",
+    "kits",
+    "repository",
+    "parsers",
+    "platform",
+]
+
+[[architecture.edges_allowed]]
+from = "output"
+to = ["output", "execution", "generation", "platform"]
+
+[[architecture.edges_allowed]]
+from = "execution"
+to = ["execution", "lifecycle", "generation", "tools", "policy", "rules", "kits", "repository", "parsers", "platform"]
+
+[[architecture.edges_allowed]]
+from = "lifecycle"
+to = ["lifecycle", "generation", "tools", "policy", "kits", "repository", "platform"]
+
+[[architecture.edges_allowed]]
+from = "generation"
+to = ["generation", "tools", "policy", "rules", "kits", "repository", "platform"]
+
+[[architecture.edges_allowed]]
+from = "tools"
+to = ["tools", "policy", "kits", "repository", "platform"]
+
+[[architecture.edges_allowed]]
+from = "policy"
+to = ["policy", "rules", "kits", "repository", "platform"]
+
+[[architecture.edges_allowed]]
+from = "rules"
+to = ["rules", "kits", "repository", "platform"]
+
+[[architecture.edges_allowed]]
+from = "kits"
+to = ["kits", "repository", "platform"]
+
+[[architecture.edges_allowed]]
+from = "repository"
+to = ["repository", "parsers", "platform"]
+
+[[architecture.edges_allowed]]
+from = "parsers"
+to = ["parsers", "platform"]
+
+[[architecture.edges_allowed]]
+from = "platform"
+to = ["platform"]
+
 [architecture.roles]
 tests = ["tests/**", "**/*.test.*"]
 harness = "tests/support"
@@ -286,7 +489,10 @@ env = ["packages/cli/src/platform/environment.ts", "tests/support/environment.ts
 
 [tools.eslint]
 import_style = {"**/*" = "ts"}
+# The root scripts run the test suites and the local plugin, so they take the test overrides.
+test_files = ["**/*.{test,spec}.{ts,tsx,js,jsx,mjs,cjs}", "**/tests/**", "**/__tests__/**", "scripts/**"]
 script_files = [
+    "scripts/**",
     "packages/cli/scripts/**",
     "packages/eslint-plugin/build.ts",
     "docs/src/content/reference/**",
@@ -363,15 +569,12 @@ entry = [
     "**/build.ts",
     "packages/eslint-plugin/src/plugin.ts",
     "packages/cli/scripts/inputs.ts",
-    "packages/cli/src/native/process.ts",
+    "packages/cli/src/lifecycle/preview/eslint/worker.ts",
     "docs/src/content/reference/collection.ts",
     "docs/astro.config.ts",
     "docs/src/content.config.ts",
     "docs/src/route-metadata.ts",
-    "tests/support/cli/swiftformat.ts",
-    "tests/support/registry/workspace-command.ts",
-    "tests/support/package/run.ts",
-    "tests/support/acceptance.ts",
+    "scripts/*.ts",
 ]
 
 [[tools.knip.ignore_dependencies]]
@@ -405,12 +608,12 @@ reason = "Each directory owns tests of that named language kit, parser, or tool 
 
 [[structure.folder_name_allowed]]
 paths = [
-    "packages/cli/src/checks/bash",
-    "packages/cli/src/checks/python",
-    "packages/cli/src/checks/swift",
-    "packages/cli/src/checks/typescript",
+    "packages/cli/src/checks/language/bash",
+    "packages/cli/src/checks/language/javascript",
+    "packages/cli/src/checks/language/python",
+    "packages/cli/src/checks/language/swift",
 ]
-reason = "Each folder holds the checks and parsers of one language, named after it."
+reason = "Each folder holds the checks of one language kit and is named after the kit, as the kits folder is."
 
 [[structure.single_file_folder_allowed]]
 paths = ["docs/src/pages/schema"]
@@ -465,16 +668,16 @@ reason = "A permissive license with no conditions; it arrives through a test too
 check = "security/semgrep"
 rule = "node-no-configured-require"
 paths = [
-    "packages/cli/src/native/eslint-preview.ts",
-    "packages/cli/src/native/process.ts",
+    "packages/cli/src/lifecycle/preview/eslint/declarations.ts",
+    "packages/cli/src/lifecycle/preview/eslint/worker.ts",
 ]
 reason = "These configuration evaluators intentionally execute repository-selected modules and installed tool APIs in the configuration subprocess. Static imports select the CLI dependencies instead of the repository dependencies and cannot preserve executable configuration. Other security rules remain active for these exact files."
 
 [[ignore]]
 check = "typescript/eslint"
 rule = "gspot/no-trivial-functions"
-paths = ["packages/cli/src/policy/messages.ts"]
-reason = "Every policy message has one builder here, so callers share one wording. A builder is one template, so the trivial-function rule would ask for every message text to be copied to its callers. Remove this entry if the catalog moves out of functions."
+paths = ["packages/cli/src/kits/messages.ts", "packages/cli/src/policy/messages.ts"]
+reason = "Every message has one builder in its catalog, so callers share one wording. A builder is one template, so the trivial-function rule would ask for every message text to be copied to its callers. Remove this entry if the catalogs move out of functions."
 
 [[ignore]]
 check = "typescript/eslint"
@@ -513,7 +716,7 @@ reason = "JSON.stringify emits whole literals into a standalone ESLint module, n
 
 [[tools.codeql.false_positives]]
 rule = "js/incomplete-sanitization"
-paths = ["packages/cli/src/checks/actions.ts"]
+paths = ["packages/cli/src/checks/general/files/actions.ts"]
 reason = "Only the leading self-repository marker is translated; later dollar signs are path characters and must stay."
 
 [[tools.codeql.false_positives]]

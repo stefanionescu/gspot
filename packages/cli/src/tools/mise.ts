@@ -1,9 +1,10 @@
 import { z } from 'zod';
 import { parse as parseToml } from 'smol-toml';
-import { compact } from '#cli/policy/normalize.ts';
+import { compact } from '#cli/platform/text.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
+import type { MisePin } from '#cli/types/tools/tools.ts';
+import type { ToolPin, Manifest, InstallerPin } from '#cli/types/kits.ts';
 import { collectPins, privateToolInstallation } from '#cli/tools/pins.ts';
-import type { MisePin, ToolPin, Manifest, InstallerPin } from '#cli/types/kits.ts';
 import { HOST_ONLY, UV_INSTALLER, MISE_BACKENDS } from '#cli/config/tools/tools.ts';
 
 /** The operating systems mise names; a tool with all three needs no os list. */

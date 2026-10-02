@@ -3,14 +3,14 @@ import { sep, join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
+import { applyCommand } from '#cli/commands/apply.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
-import { applyCommand } from '#cli/commands/apply/command.ts';
-import { eslintPreviewResponse } from '#cli/native/protocol.ts';
-import { runConfiguration } from '#cli/native/configuration.ts';
 import { linkInstalledModules } from '#tests/support/cli/platforms.ts';
 import { containing, containingAll } from '#tests/support/expectations.ts';
+import { runConfiguration } from '#cli/lifecycle/preview/eslint/client.ts';
+import { eslintPreviewResponse } from '#cli/lifecycle/preview/eslint/protocol.ts';
 import type { ResolvedRules } from '#tests/types/integration/cli/lifecycle/lifecycle.ts';
 
 test('apply preview retains its text diff when ESLint dependencies are unavailable', async () => {

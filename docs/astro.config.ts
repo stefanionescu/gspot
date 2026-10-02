@@ -114,14 +114,6 @@ export default defineConfig({
                         { label: 'Policy file', slug: 'reference/configuration' },
                     ],
                 },
-                {
-                    label: 'Development',
-                    collapsed: true,
-                    items: [
-                        { label: 'Build and contribute', slug: 'guides/build' },
-                        { label: 'Check engines', slug: 'development/engines' },
-                    ],
-                },
             ],
         }),
     ],

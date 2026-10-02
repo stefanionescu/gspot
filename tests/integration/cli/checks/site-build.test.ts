@@ -1,4 +1,5 @@
 import { join } from 'node:path';
+import { CHECKS } from '#cli/checks/registry.ts';
 import { SITE_BUILD } from '#tests/inputs/cli.ts';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
@@ -12,8 +13,8 @@ import * as toolRunner from '#cli/execution/tool/runner.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { commitAll, gitOutput } from '#tests/support/cli/git.ts';
 import type { SiteReportCase } from '#tests/types/integration/cli/checks.ts';
-import { siteBuild, filesUnder, buildReproducible } from '#cli/checks/static-site/build.ts';
-import { builtMarkup, deadSelectors, internalLinks } from '#cli/checks/static-site/output-checks.ts';
+import { siteBuild, filesUnder, buildReproducible } from '#cli/checks/general/static-site/build.ts';
+import { builtMarkup, deadSelectors, internalLinks } from '#cli/checks/general/static-site/output.ts';
 
 import {
     statSync,
@@ -163,6 +164,7 @@ test.each([0, 7])('a run cleans isolated site output after build exit %i', async
     });
     try {
         const outcome = await executeRun(session, {
+            checks: CHECKS,
             stage: 'all',
             skips: [],
             only: ['static-site/build'],

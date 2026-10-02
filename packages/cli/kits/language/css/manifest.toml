@@ -89,8 +89,6 @@ example = "A CSS module class referenced by source code but absent from the styl
 level = "recommended"
 stage = "push"
 runs = "per-scope"
-engine = "integrity"
-analysis = "css-module-usage"
 owners = {extensions = [".css", ".ts", ".tsx", ".js", ".jsx"]}
 summary = "For every CSS module, checks that the code uses each class it defines, and that each class the code reads is defined."
 why = "A class the code reads and the stylesheet lacks is undefined at run time, and the element silently loses its style."

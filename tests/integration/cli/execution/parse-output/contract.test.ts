@@ -5,7 +5,7 @@ import { test, expect } from 'bun:test';
 import type { CheckSpec } from '#cli/types/kits.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
-import { parseOutput } from '#cli/execution/output/parse.ts';
+import { parseOutput } from '#cli/execution/tool/formats.ts';
 
 const JSON_FORMATS = new Set(['json', 'eslint-json', 'typos-json', 'trufflehog-json', 'markdownlint-json']);
 const SPECS = [...kitManifests().values()]

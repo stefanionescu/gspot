@@ -1,30 +1,48 @@
-// The types of configurations in this package.
+// The types of kits in this package.
 import type { z } from 'zod';
 import type { TOOL_PLATFORMS } from '#cli/config/kits.ts';
 import type { manifestSchema } from '#cli/kits/schema.ts';
-import type { Defined } from '#cli/types/policy/policy.ts';
-import type { outputSchema } from '#cli/kits/output-format.ts';
+import type { Read, Defined } from '#cli/types/platform/platform.ts';
+import type { TrackedFile } from '#cli/types/repository/repository.ts';
 
 type ExecutionFields<Check> = Check extends unknown ? Omit<Check, 'example'> : never;
-type NpmInstallerDefinition = Exclude<NonNullable<RawTool['npm']>, string>;
+
+/** A platform a tool pin may name: an operating system alone, or one with an architecture. */
+type ToolPlatform = (typeof TOOL_PLATFORMS)[number];
+
 type KitHeader = Omit<RawManifest['kit'], 'check_references'> & {
     check_references?: RawManifest['kit']['check_references'];
 };
-/** A platform a tool pin may name: an operating system alone, or one with an architecture. */
-type ToolPlatform = (typeof TOOL_PLATFORMS)[number];
+
+type NpmInstallerDefinition = Exclude<NonNullable<RawTool['npm']>, string>;
+
+export type GeneratedFile = {
+    rulesPath?: string[];
+    path: string;
+    content: string;
+    readOnly: boolean;
+    executable?: boolean;
+    read?: Read;
+    kind: 'lock' | 'config' | 'pointer' | 'hook' | 'runner' | 'workflow' | 'rules' | 'managed-block';
+    kit?: string;
+};
+
+export type PolicyScope = { path: string; kits: string[] };
+
 export type KitEvidence = { kit: string; evidence: string; kind: string; count?: number };
-export type Stage = RawCheck['stage'];
+
 export type Owners = RawManifest['owners'];
 export type ConfigurationTarget = RawManifest['configs'][number];
-export type FragmentSelector = RawManifest['configs'][number]['selectors'][number];
-export type PointerSpec = NonNullable<ConfigurationTarget['pointer']>;
+
 /** Validated execution variants. Repository-defined commands do not require reference examples. */
 export type CheckSpec = ExecutionFields<Defined<RawCheck>> & { example?: string };
-export type SettingSpec = Defined<RawManifest['settings'][number]>;
+
 /** manifest.toml as the schema accepts it. */
 export type RawManifest = z.infer<typeof manifestSchema>;
+
 /** One [[tools]] entry as written. */
 export type RawTool = RawManifest['tools'][number];
+
 /** One [[checks]] entry as written. */
 export type RawCheck = RawManifest['checks'][number];
 export type SelectionWalk = {
@@ -34,25 +52,7 @@ export type SelectionWalk = {
     seen: Set<string>;
     visiting: string[];
 };
-/** The output fields accepted by both configuration and repository checks. */
-export type OutputFormat = z.infer<typeof outputSchema>;
-export type ListingRow = {
-    name: string;
-    kind: string;
-    title: string;
-    description: string;
-    requires: string[];
-    tools: string[];
-    checks: { check: string; stage: string }[];
-    settings: string[];
-    rules: string[];
-    default: boolean;
-    proposed: boolean;
-};
-export type InstallerPin = Pick<NpmInstallerDefinition, 'name'> &
-    Partial<Omit<NpmInstallerDefinition, 'name'>> & { options?: Record<string, string | boolean> };
-/** One tool pin as mise reads it: the version, the operating systems that have a build, and backend options. */
-export type MisePin = { name: string; version: string; os?: string[]; options?: Record<string, string | boolean> };
+
 export type ToolPin = {
     name: string;
     kind?: 'binary' | 'library';
@@ -73,6 +73,23 @@ export type ToolPin = {
     env?: Record<string, string>;
     installers: Record<string, InstallerPin>;
 };
+
+export type CheckRule = { applies: (check: RawCheck) => boolean; problem: (check: RawCheck) => string };
+export type Checks = Map<string, Manifest['checks'][number]>;
+export type Settings = Map<string, Manifest['settings'][number]>;
+
+/** What detection reads from a scope's tree once, for every manifest to look at. */
+export type Layout = {
+    candidates: TrackedFile[];
+    extensionCounts: Map<string, number>;
+    names: Set<string>;
+    shebangs: Set<string>;
+    dependencies: Map<string, string>;
+    scope: string;
+};
+
+export type SettingSpec = Defined<RawManifest['settings'][number]>;
+
 export type Manifest = Omit<RawManifest, 'kit' | 'tools' | 'checks' | 'settings'> & {
     kit: KitHeader;
     tools: ToolPin[];
@@ -80,6 +97,6 @@ export type Manifest = Omit<RawManifest, 'kit' | 'tools' | 'checks' | 'settings'
     settings: SettingSpec[];
     dir: string;
 };
-export type CheckRule = { applies: (check: RawCheck) => boolean; problem: (check: RawCheck) => string };
-export type Checks = Map<string, Manifest['checks'][number]>;
-export type Settings = Map<string, Manifest['settings'][number]>;
+
+export type InstallerPin = Pick<NpmInstallerDefinition, 'name'> &
+    Partial<Omit<NpmInstallerDefinition, 'name'>> & { options?: Record<string, string | boolean> };

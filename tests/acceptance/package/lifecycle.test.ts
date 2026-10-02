@@ -19,7 +19,7 @@ test.each(['refusal', 'SIGTERM'] as const)(
                 (scenario === 'refusal' ? 'process.exit(9);\n' : 'await Bun.sleep(60_000);\n'),
         });
         chmodSync(join(sandbox.path, 'bin/npm'), 0o755);
-        const child = Bun.spawn([process.execPath, join(root, 'tests/support/package/run.ts')], {
+        const child = Bun.spawn([process.execPath, join(root, 'scripts/package.ts')], {
             cwd: join(root, 'tests'),
             env: {
                 ...environmentVariables(),

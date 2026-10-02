@@ -1,4 +1,5 @@
 import { join } from 'node:path';
+import { CHECKS } from '#cli/checks/registry.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildFolder } from '#cli/platform/paths.ts';
 import { executeRun } from '#cli/execution/execute.ts';
@@ -80,7 +81,10 @@ describe.if(onMac)('with the macOS toolchain', () => {
                 'node_modules/.bin/xcrun': `${SHEBANG}await Bun.write('viewed.txt', 'viewed'); console.log(${JSON.stringify(coverage === undefined ? '{}' : JSON.stringify({ targets: [{ name: 'Example', lineCoverage: coverage }] }))});\n`,
             });
             for (const tool of ['xcodebuild', 'xcrun']) chmodSync(join(sandbox.path, 'node_modules/.bin', tool), 0o755);
-            const outcome = await executeRun(await openSession(sandbox.path), XCTEST_EXECUTION_OPTIONS);
+            const outcome = await executeRun(await openSession(sandbox.path), {
+                ...XCTEST_EXECUTION_OPTIONS,
+                checks: CHECKS,
+            });
             expect(outcome.report.exitCode).toBe(code);
             expect(outcome.report.checks[0]!.status).toBe(status);
             expect(existsSync(join(sandbox.path, 'viewed.txt'))).toBe(false);
@@ -93,7 +97,10 @@ describe.if(onMac)('with the macOS toolchain', () => {
                 join(sandbox.path, 'node_modules/.bin/xcrun'),
                 `${SHEBANG}console.log(${JSON.stringify(JSON.stringify({ targets: [{ name: 'Example', lineCoverage: 1 }] }))});\n`,
             );
-            const corrected = await executeRun(await openSession(sandbox.path), XCTEST_EXECUTION_OPTIONS);
+            const corrected = await executeRun(await openSession(sandbox.path), {
+                ...XCTEST_EXECUTION_OPTIONS,
+                checks: CHECKS,
+            });
             expect(corrected.report.exitCode, JSON.stringify(corrected.report)).toBe(0);
             expect(corrected.report.checks).toMatchObject([{ check: 'xctest/coverage', status: 'ok', findings: [] }]);
         },
@@ -118,14 +125,20 @@ describe.if(onMac)('with the macOS toolchain', () => {
         mkdirSync(cache, { recursive: true });
         const bundle = join(cache, 'coverage.xcresult');
         symlinkSync(outside.path, bundle, process.platform === 'win32' ? 'junction' : 'dir');
-        const refused = await executeRun(await openSession(sandbox.path), XCTEST_EXECUTION_OPTIONS);
+        const refused = await executeRun(await openSession(sandbox.path), {
+            ...XCTEST_EXECUTION_OPTIONS,
+            checks: CHECKS,
+        });
         expect(refused.report.exitCode).toBe(2);
         expect(readFileSync(join(outside.path, 'authored.txt'), 'utf8')).toBe('preserved');
         expect(existsSync(join(cache, 'source/tested.txt'))).toBe(false);
         rmSync(bundle);
         mkdirSync(join(bundle, 'data'), { recursive: true });
         writeFileSync(join(bundle, 'data/previous'), 'old result', { mode: 0o444 });
-        const corrected = await executeRun(await openSession(sandbox.path), XCTEST_EXECUTION_OPTIONS);
+        const corrected = await executeRun(await openSession(sandbox.path), {
+            ...XCTEST_EXECUTION_OPTIONS,
+            checks: CHECKS,
+        });
         expect(corrected.report.exitCode, JSON.stringify(corrected.report)).toBe(0);
         expect(existsSync(bundle)).toBe(false);
         expect(readFileSync(join(cache, 'source/tested.txt'), 'utf8')).toBe('tested');

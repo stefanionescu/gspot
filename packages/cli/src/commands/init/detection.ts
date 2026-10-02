@@ -1,5 +1,5 @@
 // The header init prints: what it found in the repository, one row per kind.
-import type { DetectionSummary } from '#cli/types/commands.ts';
+import type { DetectionSummary } from '#cli/types/commands/init.ts';
 import { GAP_WIDTH, KIND_ROWS, DETECTION_LABEL_WIDTH } from '#cli/config/commands/init.ts';
 
 const GAP = ' '.repeat(GAP_WIDTH);

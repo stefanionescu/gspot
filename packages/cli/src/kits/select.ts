@@ -1,22 +1,21 @@
-import { similar } from '#cli/policy/similar.ts';
-import * as messages from '#cli/policy/messages.ts';
+import { similar } from '#cli/platform/text.ts';
 import { GspotError } from '#cli/platform/errors.ts';
-import type { Policy } from '#cli/types/policy/policy.ts';
 import { scopeAncestors } from '#cli/repository/scopes.ts';
-import type { Manifest, SelectionWalk } from '#cli/types/kits.ts';
+import { unknownKit, circularRequires } from '#cli/kits/messages.ts';
+import type { Manifest, PolicyScope, SelectionWalk } from '#cli/types/kits.ts';
 // Selection: the configurations named plus every kit they require, dependencies first, in order of first mention.
 
 function visit(walk: SelectionWalk, kitName: string): void {
     if (walk.seen.has(kitName)) return;
     if (walk.visiting.includes(kitName)) {
         const chain = [...walk.visiting.slice(walk.visiting.indexOf(kitName)), kitName];
-        walk.problems.push(messages.circularRequires(chain));
+        walk.problems.push(circularRequires(chain));
         return;
     }
     const manifest = walk.manifests.get(kitName);
     if (!manifest) {
         const known = walk.manifests.keys().toArray();
-        walk.problems.push(messages.unknownKit(kitName, similar(kitName, known)));
+        walk.problems.push(unknownKit(kitName, similar(kitName, known)));
         walk.seen.add(kitName);
         return;
     }
@@ -73,13 +72,15 @@ export function selectKits(kitNames: string[], manifests: Map<string, Manifest>)
 /**
  * The root selection and each ancestor scope selection, deduplicated in order.
  * @param policy the declared selections
+ * @param policy.kits the kits the root selects
+ * @param policy.scopes the scopes, each with the kits it selects
  * @param scope the scope path
  * @param manifests every kit manifest
  * @returns the manifests in order
  */
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: The session, validation, and naming inherit the kits of a scope by one rule.
 export function selectForScope(
-    policy: Pick<Policy, 'kits' | 'scopes'>,
+    policy: { kits: string[]; scopes: PolicyScope[] },
     scope: string,
     manifests: Map<string, Manifest>,
 ): Manifest[] {

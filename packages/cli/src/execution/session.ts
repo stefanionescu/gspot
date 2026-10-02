@@ -4,11 +4,12 @@ import type { Manifest } from '#cli/types/kits.ts';
 import { mergeForScope } from '#cli/policy/merge.ts';
 import { selectForScope } from '#cli/kits/select.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
+import type { Session } from '#cli/types/tools/tools.ts';
 import { readRepository } from '#cli/repository/tree.ts';
 import packageManifest from '#package' with { type: 'json' };
 import { packageTool } from '#cli/tools/packages/identity.ts';
-import type { Session } from '#cli/types/execution/execution.ts';
 import { exposedSettings } from '#cli/policy/setting-surface.ts';
+import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
 import type { ScopeEntry } from '#cli/types/repository/repository.ts';
 import { readPolicy, assertPolicyComplete } from '#cli/policy/read.ts';
 import type { Policy, PolicyFiles, ScopeSelection } from '#cli/types/policy/policy.ts';
@@ -64,6 +65,7 @@ export async function openSession(root: string, policyFiles: PolicyFiles = readP
         repository: repo,
         scopes,
         inspections: new Map(),
+        installations: (path) => readOwnership(path).installations,
         reads: { root, sources: new Map() },
     };
 }

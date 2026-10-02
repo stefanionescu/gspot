@@ -8,8 +8,8 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { PLANTED_TIMEOUT_MS } from '#tests/inputs/cli.ts';
 import { run, gspot } from '#tests/support/cli/command.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
+import type { PushReport } from '#cli/types/commands/check.ts';
 import { preparePushRepository } from '#tests/support/cli/push.ts';
-import type { PushReport } from '#cli/types/execution/execution.ts';
 
 test(
     'pre-push checks exact supplied objects despite conflicting working-tree repairs',

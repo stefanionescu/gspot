@@ -2,9 +2,10 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { runBlocking } from '#cli/platform/spawn.ts';
+import { ciLintJobs } from '#cli/repository/survey.ts';
+import { existingTooling } from '#cli/kits/takeover.ts';
 import { readRepository } from '#cli/repository/tree.ts';
 import { unlinkSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
-import { ciLintJobs, existingTooling } from '#cli/repository/existing-tooling.ts';
 
 test('hook discovery preserves path whitespace and refuses malformed Git configuration', async () => {
     const hooksPath = ' .custom hooks';

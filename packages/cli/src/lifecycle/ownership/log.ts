@@ -1,10 +1,10 @@
 // The durable ownership log an owner works from: its records and its recovery of an interrupted mutation.
 import { createHash } from 'node:crypto';
-import { PRIVATE_FILE } from '#cli/config/platform.ts';
-import { ownershipSchema } from '#cli/lifecycle/log.ts';
-import type { Read, Root } from '#cli/types/platform.ts';
-import { OUTPUT_JSON_INDENT } from '#cli/config/output.ts';
+import { PRIVATE_FILE } from '#cli/config/platform/root.ts';
+import type { Read, Root } from '#cli/types/platform/platform.ts';
+import { ownershipSchema } from '#cli/lifecycle/ownership/schema.ts';
 import { fileMode, mutationTarget } from '#cli/platform/safe-paths.ts';
+import { OUTPUT_JSON_INDENT } from '#cli/config/lifecycle/ownership.ts';
 
 import type {
     Log,
@@ -12,7 +12,7 @@ import type {
     OwnershipEntry,
     OwnershipState,
     PendingOwnership,
-} from '#cli/types/lifecycle/lifecycle.ts';
+} from '#cli/types/lifecycle/ownership.ts';
 
 // Settles one interrupted mutation: accepted when it completed, left unwritten when the file is as before or gone,
 // refused when edited. A Windows replacement removes a read-only file before its rename, so a crash can leave none.

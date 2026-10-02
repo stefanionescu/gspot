@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { grammarPath } from '#cli/platform/assets.ts';
 import { Parser, Language, type Tree } from 'web-tree-sitter';
 import { DECLARATION_FILE } from '#cli/config/parsers/parsers.ts';
-import type { SourceReads } from '#cli/types/repository/repository.ts';
+import type { SourceReads } from '#cli/types/platform/platform.ts';
 import type { ParseReads, GrammarName } from '#cli/types/parsers/parsers.ts';
 
 const reads = new WeakMap<SourceReads, Map<string, Tree>>();

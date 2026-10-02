@@ -1,14 +1,15 @@
 // The check command's flags, its pre-push input, and the cancellation the termination signals cause.
 import { addAbortSignal } from 'node:stream';
-import type { Stage } from '#cli/types/kits.ts';
 import { progress } from '#cli/output/reporter.ts';
 import { checkCommand } from '#cli/commands/check/run.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
+import type { Stage } from '#cli/types/execution/planning.ts';
+import type { CheckOptions } from '#cli/types/commands/check.ts';
 import { Option, Command, InvalidArgumentError } from 'commander';
+import type { CommandResult } from '#cli/types/commands/commands.ts';
 import type { StageFilter } from '#cli/types/execution/execution.ts';
-import type { CheckOptions, CommandResult } from '#cli/types/commands.ts';
 import { CANCELED_EXIT, PUBLIC_STAGES } from '#cli/config/commands/check.ts';
-import { listFlag, textFlag, textEntry, directoryOf } from '#cli/platform/arguments.ts';
+import { listFlag, textFlag, textEntry, directoryOf } from '#cli/commands/flags.ts';
 
 // Git gives the pre-push hook the remote name and the remote URL.
 const PUSH_ARGUMENTS = 2;

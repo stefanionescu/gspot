@@ -5,7 +5,7 @@ import { toPosix } from '#cli/platform/paths.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { sessionInput } from '#tests/support/cli/input.ts';
 import { textContaining } from '#tests/support/expectations.ts';
-import { tsconfigOptions } from '#cli/checks/typescript/tsconfig-options.ts';
+import { tsconfigOptions } from '#cli/checks/language/typescript.ts';
 import { TSCONFIG_OPTIONS_POLICY } from '#tests/inputs/integration/cli/checks.ts';
 
 const VALID = JSON.stringify({

@@ -6,6 +6,8 @@
         settings: {
             'import-x/parsers': { '@typescript-eslint/parser': ['.ts', '.tsx', '.mts', '.cts'] },
             'import-x/resolver-next': [createTypeScriptImportResolver({ project: <%= json(['tsconfig.json', ...scopes.filter((scope) => scope.path !== '').map((scope) => `${scope.path}/tsconfig.json`)]) %> })],
+            // The boundaries rule resolves imports through the classic resolver setting.
+            'import/resolver': { typescript: { project: <%= json(['tsconfig.json', ...scopes.filter((scope) => scope.path !== '').map((scope) => `${scope.path}/tsconfig.json`)]) %> } },
         },
         rules: {
             'jsdoc/no-types': 'error',

@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { rmSync, readFileSync } from 'node:fs';
+import { CHECKS } from '#cli/checks/registry.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildFolder } from '#cli/platform/paths.ts';
 import { executeRun } from '#cli/execution/execute.ts';
@@ -32,6 +33,7 @@ if (onMac)
         });
         try {
             const failed = await executeRun(await openSession(sandbox.path), {
+                checks: CHECKS,
                 stage: 'push',
                 only: ['xctest/coverage'],
                 skips: [],
@@ -54,6 +56,7 @@ if (onMac)
                 ),
             );
             const corrected = await executeRun(await openSession(sandbox.path), {
+                checks: CHECKS,
                 stage: 'push',
                 only: ['xctest/coverage'],
                 skips: [],

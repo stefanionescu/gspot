@@ -4,8 +4,8 @@ import { eta } from '#cli/generation/registry.ts';
 import { readAsset } from '#cli/platform/assets.ts';
 import type { ScopeSelection } from '#cli/types/policy/policy.ts';
 import { selectorGroups } from '#cli/generation/eslint/blocks.ts';
-import type { Manifest, FragmentSelector, ConfigurationTarget } from '#cli/types/kits.ts';
-import type { Fragment, TemplateInputs, ResolvedSelector } from '#cli/types/generation.ts';
+import type { Manifest, ConfigurationTarget } from '#cli/types/kits.ts';
+import type { Fragment, TemplateInputs, FragmentSelector, ResolvedSelector } from '#cli/types/generation/generation.ts';
 
 // The configurations whose fragments a target takes: a target written for one scope asks that scope, and a target
 // written once asks every scope.

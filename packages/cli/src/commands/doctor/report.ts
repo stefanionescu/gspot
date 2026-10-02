@@ -3,15 +3,14 @@ import { collectPins } from '#cli/tools/pins.ts';
 import { colors } from '#cli/output/messages.ts';
 import { everyManifest } from '#cli/kits/select.ts';
 import { inspectTool } from '#cli/tools/inspect.ts';
-import { hookStatus } from '#cli/lifecycle/hooks.ts';
-import { selectRuleFiles } from '#cli/agents/assemble.ts';
+import { selectRuleFiles } from '#cli/rules/assemble.ts';
+import { hookStatus } from '#cli/lifecycle/hooks-path.ts';
 import { submodulePaths } from '#cli/repository/tracked.ts';
 import { changeReport } from '#cli/commands/doctor/changes.ts';
-import type { ToolInspection } from '#cli/types/tools/tools.ts';
 import { missingBuild } from '#cli/execution/planning/skips.ts';
-import type { Session } from '#cli/types/execution/execution.ts';
-import { PLATFORM_NAMES } from '#cli/config/execution/execution.ts';
-import type { ChangeReport, DoctorReport } from '#cli/types/commands.ts';
+import { PLATFORM_NAMES } from '#cli/config/execution/planning.ts';
+import type { Session, ToolInspection } from '#cli/types/tools/tools.ts';
+import type { ChangeReport, DoctorReport } from '#cli/types/commands/doctor.ts';
 import { VERSION_GAP, COLUMN_WIDTHS, CHANGE_SECTIONS } from '#cli/config/commands/doctor.ts';
 
 function stateLabel(tool: ToolInspection, colors: Colors): string {

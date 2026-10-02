@@ -3,6 +3,7 @@ import { testdir } from 'testdirs';
 import { readFileSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { run } from '#cli/platform/spawn.ts';
+import { CHECKS } from '#cli/checks/registry.ts';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { hasLinuxDocker } from '#tests/support/cli/platforms.ts';
@@ -19,6 +20,7 @@ if (runsDatabase)
         await using database = await prepareSupabaseDatabase(sandbox.path);
         const { options, configPath, authored } = database;
         const stale = await executeRun(await openSession(sandbox.path), {
+            checks: CHECKS,
             stage: 'push',
             only: ['supabase/types-fresh'],
             skips: [],
@@ -39,6 +41,7 @@ if (runsDatabase)
         expect(generated.stdout).toContain('export type Database');
         await Bun.write(join(sandbox.path, 'database.ts'), generated.stdout);
         const corrected = await executeRun(await openSession(sandbox.path), {
+            checks: CHECKS,
             stage: 'push',
             only: ['supabase/types-fresh'],
             skips: [],

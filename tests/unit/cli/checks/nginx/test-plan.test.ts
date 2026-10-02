@@ -1,5 +1,5 @@
 import { test, expect, describe } from 'bun:test';
-import { nginxTestArguments } from '#cli/checks/nginx/test-plan.ts';
+import { nginxTestArguments } from '#cli/checks/tool/nginx/arguments.ts';
 import { NGINX_TEST_PLAN_CONFIG } from '#tests/inputs/unit/cli/checks/checks.ts';
 
 describe('nginxTestArguments', () => {

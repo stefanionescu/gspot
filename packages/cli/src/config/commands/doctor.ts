@@ -1,5 +1,5 @@
 // The literal values commands/doctor reads: names, patterns, limits, and tables.
-import type { ChangeKey } from '#cli/types/commands.ts';
+import type { ChangeKey } from '#cli/types/commands/commands.ts';
 
 export const COLUMN_WIDTHS = { label: 9, path: 40, name: 34, note: 30 } as const;
 

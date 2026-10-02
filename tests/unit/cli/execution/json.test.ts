@@ -1,5 +1,5 @@
 import { test, expect } from 'bun:test';
-import { parseJson } from '#cli/execution/output/json.ts';
+import { parseJson } from '#cli/execution/tool/json.ts';
 
 test('parseJson > a flat list maps its fields to a finding', () => {
     const stdout = JSON.stringify([{ path: 'nginx.conf', line: 9, plugin: 'ssrf', summary: 'Possible SSRF.' }]);

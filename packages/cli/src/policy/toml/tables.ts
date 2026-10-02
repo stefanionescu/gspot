@@ -1,5 +1,5 @@
 import { parseDocument } from '@decimalturn/toml-patch';
-import type { Edit, Value, KeyValue, TomlBlock } from '#cli/types/policy/policy.ts';
+import type { Edit, Value, KeyValue, TomlBlock } from '#cli/types/policy/toml.ts';
 import { isKeyValue, isTomlValue, isInlineArray, isInlineTable } from '#cli/policy/toml/nodes.ts';
 
 function tableItems(value: Value): Extract<Value, { type: 'InlineTable' }>[] {

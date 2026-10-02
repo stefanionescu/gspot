@@ -1,14 +1,15 @@
 import { tmpdir } from 'node:os';
 import { run } from '#cli/platform/spawn.ts';
-import type { Root } from '#cli/types/platform.ts';
 import { locateTool } from '#cli/tools/inspect.ts';
 import { join, dirname, basename } from 'node:path';
 import { openRoot } from '#cli/platform/filesystem.ts';
+import type { Session } from '#cli/types/tools/tools.ts';
+import type { Root } from '#cli/types/platform/platform.ts';
+import { PRIVATE_FILE } from '#cli/config/platform/root.ts';
 import { isValePackageFile } from '#cli/repository/kind.ts';
-import type { Session } from '#cli/types/execution/execution.ts';
-import { VALE_CONFIG, STYLES_DIRECTORY } from '#cli/config/kits.ts';
-import { PRIVATE_FILE, READ_ONLY_FILE } from '#cli/config/platform.ts';
+import { READ_ONLY_FILE } from '#cli/config/platform/platform.ts';
 import { rmSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { VALE_CONFIG, STYLES_DIRECTORY } from '#cli/config/tools/tools.ts';
 
 // Harper also installs dictionaries beside its styles.
 function packageDirectories(files: Root): string[] | undefined {
@@ -136,10 +137,11 @@ export function removePackages(root: string): void {
 /**
  * Downloads the upstream packages the config names, and replaces the installed ones with them. Needs the network.
  * @param root the repository root
+ * @param pending the installations an interrupted gspot install left pending
  * @returns what went wrong, or undefined when the packages are in place
  */
-export async function installPackages(root: string): Promise<string | undefined> {
-    const binary = locateTool(root, 'vale');
+export async function installPackages(root: string, pending: string[] | undefined): Promise<string | undefined> {
+    const binary = locateTool(root, 'vale', pending);
     if (binary === undefined) return 'vale is not installed';
     const work = mkdtempSync(join(tmpdir(), 'gspot-vale-'));
     const files = openRoot(root);
@@ -166,6 +168,6 @@ export async function installProsePackages(session: Session): Promise<{ problem?
         selection.selected.some((manifest) => manifest.kit.name === 'prose'),
     );
     if (!isProse || hasPackages(session.root)) return undefined;
-    const problem = await installPackages(session.root);
+    const problem = await installPackages(session.root, session.installations?.(session.root));
     return problem === undefined ? {} : { problem };
 }

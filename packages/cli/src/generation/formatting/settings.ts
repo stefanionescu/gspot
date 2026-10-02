@@ -1,12 +1,12 @@
 // The Prettier and EditorConfig settings a policy generates, with authored overrides carried along.
 import { dirname, relative } from 'node:path';
+import { compact } from '#cli/platform/text.ts';
 import { toPosix } from '#cli/platform/paths.ts';
-import { compact } from '#cli/policy/normalize.ts';
 import { shippedFormat } from '#cli/kits/listing.ts';
-import { expandedPaths } from '#cli/repository/paths.ts';
-import { NODE_MODULES_DIRECTORY } from '#cli/config/platform.ts';
-import { UNREPRESENTABLE_SELECTOR } from '#cli/config/generation.ts';
+import { NODE_MODULES_DIRECTORY } from '#cli/config/kits.ts';
+import { expandedPaths } from '#cli/repository/selectors.ts';
 import type { Policy, FormatSettings } from '#cli/types/policy/policy.ts';
+import { UNREPRESENTABLE_SELECTOR } from '#cli/config/generation/formatting.ts';
 import { literalGlob, rebaseOverrides } from '#cli/generation/formatting/selectors.ts';
 
 import type {
@@ -15,7 +15,7 @@ import type {
     NativeOverride,
     PrettierPlugin,
     EditorconfigOverride,
-} from '#cli/types/generation.ts';
+} from '#cli/types/generation/formatting.ts';
 
 function formatEntries(policy: Policy): ScopeFormat[] {
     const tables = [

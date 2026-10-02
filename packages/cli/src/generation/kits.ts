@@ -2,15 +2,15 @@
 import { posix } from 'node:path';
 import { ownedBy } from '#cli/kits/owners.ts';
 import { targetInScope } from '#cli/kits/targets.ts';
-import { pathMatcher } from '#cli/repository/paths.ts';
 import { emitTarget } from '#cli/generation/templates.ts';
-import type { ConfigurationTarget } from '#cli/types/kits.ts';
+import { pathMatcher } from '#cli/repository/selectors.ts';
 import { fragmentInputs } from '#cli/generation/fragments.ts';
 import type { ScopeSelection } from '#cli/types/policy/policy.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
 import { bodyPointer, mergePointer } from '#cli/generation/pointers.ts';
-import { GENERATED_JSON_KEY, PACKAGE_JSON_INDENT } from '#cli/config/generation.ts';
-import type { Pointer, Generated, EmitInputs, GeneratedFile } from '#cli/types/generation.ts';
+import type { GeneratedFile, ConfigurationTarget } from '#cli/types/kits.ts';
+import type { Pointer, Generated, EmitInputs } from '#cli/types/generation/generation.ts';
+import { GENERATED_JSON_KEY, PACKAGE_JSON_INDENT } from '#cli/config/generation/generation.ts';
 
 // A copied JSON pointer without the generated marker the body carries.
 function copyPointerContent(content: string, pointerPath: string): string {

@@ -1,0 +1,112 @@
+import { ownerOf } from '#cli/kits/owners.ts';
+import { scopeOf } from '#cli/repository/scopes.ts';
+import type { Session } from '#cli/types/tools/tools.ts';
+import { pathMatcher } from '#cli/repository/selectors.ts';
+import type { TrackedFile } from '#cli/types/repository/repository.ts';
+import { ownedInputs, configuredChecks } from '#cli/execution/planning/plan.ts';
+import type { Explanation, PathExplanation } from '#cli/types/commands/explain.ts';
+
+function uncheckedNote(file: TrackedFile): string | undefined {
+    if (file.kind === 'binary') return 'binary: eligible for secrets and size checks';
+    if (file.kind === 'generated') {
+        const by = file.producedBy === undefined ? '' : ` by ${file.producedBy}`;
+        return `generated${by}: eligible for secrets and freshness checks`;
+    }
+    if (file.kind === 'vendored') return 'vendored: eligible for secrets, license, and security checks';
+    return undefined;
+}
+
+function ignoreLine(entry: PathExplanation['ignores'][number]): string {
+    const rule = entry.rule === undefined ? '' : ` ${entry.rule}`;
+    const reason = entry.reason === undefined ? '' : `  ${entry.reason}`;
+    return `  ${entry.check}${rule}${reason}`;
+}
+
+function annotated(report: PathExplanation, file: TrackedFile): PathExplanation {
+    const unchecked = uncheckedNote(file);
+    if (unchecked !== undefined) report.unchecked = unchecked;
+    if (report.checks.length === 0 && file.kind === 'source') {
+        report.unchecked = 'no enabled check owners this file';
+        report.remedy = 'gspot set generated "<glob>" or gspot set vendored "<glob>", or gspot add <kit>';
+    }
+    return report;
+}
+
+/**
+ * Explains one file.
+ * @param session the session
+ * @param path the file, relative to the root
+ * @returns the report, or an error when git does not track the path
+ */
+function pathReport(session: Session, path: string): PathExplanation | { error: string } {
+    const file = session.repository.files.find((entry) => entry.path === path);
+    if (!file) return { error: `${path} is not a file git tracks or would track here.` };
+    const scope = scopeOf(path, session.repository.scopes);
+    const selection = session.scopes.find((entry) => entry.scope.path === scope.path) ?? session.scopes[0];
+    const owners = selection ? ownerOf(file, selection.selected) : [];
+    const report: PathExplanation = {
+        path,
+        scope: scope.path === '' ? 'root' : scope.path,
+        file: file.kind,
+        tags: file.tags,
+        kits: owners.map((manifest) => manifest.kit.name),
+        checks: configuredChecks(session)
+            .filter((check) => ownedInputs(session, check).some((entry) => entry.path === file.path))
+            .map((check) => ({
+                check: check.check,
+                stage: check.spec.stage,
+                ...(check.manifest === undefined ? {} : { kit: check.manifest.kit.name }),
+            })),
+        ignores: session.policyFiles.policy.ignores
+            .filter((entry) => entry.paths === undefined || entry.paths.length === 0 || pathMatcher(entry.paths)(path))
+            .map((entry) => ({
+                check: entry.check,
+                ...(entry.rule === undefined ? {} : { rule: entry.rule }),
+                ...(entry.reason === undefined ? {} : { reason: entry.reason }),
+            })),
+    };
+    if (file.kindSource !== undefined) report.fileSource = file.kindSource;
+    return annotated(report, file);
+}
+
+/**
+ * The report as text.
+ * @param report the report
+ * @returns the text for stdout
+ */
+function pathText(report: PathExplanation): string {
+    const by = report.fileSource === undefined ? '' : ` by ${report.fileSource}`;
+    const checks = report.checks.map(
+        (check) => `  ${check.check}  ${check.stage}  (${check.kit ?? 'repository command'})`,
+    );
+    const ignores = report.ignores.map((entry) => ignoreLine(entry));
+    const lines = [
+        `${report.path}  (scope ${report.scope}, ${report.file}${by})`,
+        '',
+        ...(report.unchecked === undefined ? [] : [report.unchecked]),
+        ...(report.kits.length === 0 ? [] : [`owned by: ${report.kits.join(', ')}`]),
+        ...(checks.length === 0 ? [] : ['checks:', ...checks]),
+        ...(ignores.length === 0 ? [] : ['ignores:', ...ignores]),
+        ...(report.remedy === undefined ? [] : ['', `to change this: ${report.remedy}`]),
+    ];
+    return `${lines.join('\n')}\n`;
+}
+
+/**
+ * Explains a repository file or an explicitly requested path.
+ * @param session the repository session, or undefined outside a configured repository
+ * @param subject the file path or another explanation subject
+ * @returns the file explanation, a missing-path error, or undefined for another subject
+ */
+export function explainPath(
+    session: Session | undefined,
+    subject: string,
+): Explanation | { error: string } | undefined {
+    if (session === undefined) return undefined;
+    const path = subject.startsWith('./') ? subject.slice('./'.length) : subject;
+    const isTracked = session.repository.files.some((file) => file.path === path);
+    if (!isTracked && !subject.startsWith('./')) return undefined;
+    const report = pathReport(session, path);
+    if ('error' in report) return report;
+    return { kind: 'path', subject: path, text: pathText(report), data: report };
+}

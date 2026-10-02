@@ -1,11 +1,13 @@
 // Which files a planned check runs over: what it owners, less excluded and child-scope paths, narrowed to a selection.
 import { ownedBy } from '#cli/kits/owners.ts';
 import { kitName } from '#cli/kits/targets.ts';
+import type { Session } from '#cli/types/tools/tools.ts';
 import type { Manifest, CheckSpec } from '#cli/types/kits.ts';
 import type { ScopeSelection } from '#cli/types/policy/policy.ts';
-import { isInScope, pathMatcher } from '#cli/repository/paths.ts';
+import type { PlannedCheck } from '#cli/types/execution/execution.ts';
+import { isInScope, pathMatcher } from '#cli/repository/selectors.ts';
 import type { TrackedFile } from '#cli/types/repository/repository.ts';
-import type { Session, PlanEntry, PlanInputs, PlannedCheck } from '#cli/types/execution/execution.ts';
+import type { PlanEntry, PlanInputs } from '#cli/types/execution/planning.ts';
 
 // Every tracked file under the scope.
 function projectFiles(context: PlanInputs, scopeForFiles: string): TrackedFile[] {

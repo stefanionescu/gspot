@@ -1,7 +1,7 @@
 import { createRule } from '#plugin/definition.ts';
 import type { TSESTree } from '@typescript-eslint/utils';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
-import type { LayoutMessages } from '#plugin/types/rules.ts';
+import type { LayoutMessages } from '#plugin/types/plugin.ts';
 import { runsOf, reportRun, reportNames } from '#plugin/layout.ts';
 
 // An export block is made of export lists and re-exports; an exported declaration is code, not a block member.

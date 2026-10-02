@@ -1,9 +1,9 @@
 import { misePins } from '#cli/tools/mise.ts';
-import { BARE_KEY } from '#cli/config/generation.ts';
 import { headerFor } from '#cli/generation/headers.ts';
-import type { MisePin, Manifest } from '#cli/types/kits.ts';
-import type { GeneratedFile } from '#cli/types/generation.ts';
-import { MISE_CONFIG_PATH, MISE_MIN_VERSION } from '#cli/config/tools/tools.ts';
+import type { MisePin } from '#cli/types/tools/tools.ts';
+import { BARE_KEY } from '#cli/config/generation/tools.ts';
+import type { Manifest, GeneratedFile } from '#cli/types/kits.ts';
+import { MISE_CONFIG_PATH, MISE_MIN_VERSION } from '#cli/config/generation/generation.ts';
 
 /**
  * One mise tool line: a bare version, or a table when the tool has platforms or backend options.

@@ -1,8 +1,8 @@
 import { run } from '#cli/platform/spawn.ts';
-import { TOOL_DEADLINE } from '#cli/config/kits.ts';
+import { TOOL_DEADLINE } from '#cli/config/policy/policy.ts';
 import type { MergedView } from '#cli/types/policy/policy.ts';
 import { TOOL_ENV, MILLISECONDS } from '#cli/config/tools/tools.ts';
-import type { SpawnResult, SpawnOptions } from '#cli/types/platform.ts'; /**
+import type { SpawnResult, SpawnOptions } from '#cli/types/platform/platform.ts'; /**
  * Runs a tool command with the shared output environment and configured deadline.
  * @param view the policy view whose limits apply
  * @param command the expanded argument vector

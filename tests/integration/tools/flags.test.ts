@@ -14,7 +14,7 @@ import type { ToolCommand } from '#tests/types/integration/tools.ts';
 import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import { toolEnvironment } from '#cli/generation/tools/environment.ts';
 import { onPosix, toolShipsHere } from '#tests/support/cli/platforms.ts';
-import { installPythonProject, preparePythonProject } from '#cli/tools/python-project.ts';
+import { installPythonProject, preparePythonProject } from '#cli/tools/python.ts';
 import { installPackageProject, preparePackageProject } from '#cli/tools/packages/project.ts';
 import { HELP_TIMEOUT_MS, INSTALL_TIMEOUT_MS } from '#tests/inputs/integration/tools/tools.ts';
 
@@ -109,10 +109,13 @@ beforeAll(async () => {
         await preparePackageProject(sandbox.path, files, owner);
     });
     for (const file of files) await Bun.write(join(sandbox.path, file.path), file.content);
-    await installPythonProject(sandbox.path);
-    await installPackageProject(
-        sandbox.path,
-        distinct.map(({ tool }) => tool),
+    await runOwnedLifecycle(sandbox.path, (owner) => installPythonProject(sandbox.path, owner));
+    await runOwnedLifecycle(sandbox.path, (owner) =>
+        installPackageProject(
+            sandbox.path,
+            owner,
+            distinct.map(({ tool }) => tool),
+        ),
     );
 }, INSTALL_TIMEOUT_MS);
 
@@ -120,8 +123,7 @@ test('every pinned tool a manifest command names is defined in that manifest', (
     const declared = new Set(manifests.flatMap((manifest) => manifest.tools.map((tool) => tool.name)));
     const undefinedTools = manifests.flatMap((manifest) =>
         manifest.checks
-            .filter((check) => check.command !== undefined)
-            .map((check) => check.tool ?? check.command[0]!)
+            .flatMap((check) => (check.command === undefined ? [] : [check.tool ?? check.command[0]!]))
             .filter((name) => !declared.has(name)),
     );
     expect([...new Set(undefinedTools)]).toStrictEqual([]);

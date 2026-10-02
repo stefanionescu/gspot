@@ -6,10 +6,10 @@ import { kitReference, settingsPage } from './policy.ts';
 import { allChecks } from '@gspothq/cli/src/kits/listing.ts';
 import type { ReferencePage } from '../../types/reference.ts';
 import { kitManifests } from '@gspothq/cli/src/kits/manifests.ts';
-import { kitPage, rulePage, enginesPage, pluginReferencePages } from './definitions.ts';
+import { kitPage, rulePage, pluginReferencePages } from './definitions.ts';
 
 /**
- * Every generated reference page, keyed by its Markdown path: commands, configurations, rules, settings, and engines.
+ * Every generated reference page, keyed by its Markdown path: commands, kits, rules, plugin rules, settings, and the policy file.
  * @returns the pages by identity
  */
 export function referencePages(): Map<string, ReferencePage> {
@@ -64,7 +64,6 @@ export function referencePages(): Map<string, ReferencePage> {
         'configuration.md',
         referencePage('Configuration file', 'All policy fields from the validated schema.', kitReference()),
     );
-    add('engines.md', enginesPage(checks));
     for (const [path, page] of pluginReferencePages()) add(path, page);
     return pages;
 }
@@ -82,7 +81,7 @@ export function referenceCollection(): Loader {
             await docsLoader().load(context);
             const entries = [];
             for (const [path, page] of referencePages()) {
-                const id = path === 'engines.md' ? 'development/engines' : `reference/${path.slice(0, -'.md'.length)}`;
+                const id = `reference/${path.slice(0, -'.md'.length)}`;
                 if (context.store.has(id)) throw new Error(`Duplicate reference identity: ${id}`);
                 const { body } = page;
                 const metadata = await context.parseData({ id, data: page.data });

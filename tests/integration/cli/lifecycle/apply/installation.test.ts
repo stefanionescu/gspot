@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import { writeOutputs } from '#cli/lifecycle/write.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { applyAll } from '#cli/commands/apply/workflow.ts';
 import { rejection } from '#tests/support/expectations.ts';
 import { initCommand } from '#cli/commands/init/command.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
@@ -15,7 +15,7 @@ test('apply refuses a plan whose policy changed after the session was read', asy
     const session = await openSession(sandbox.path);
     const edited = `level = "all"\n${initial}`;
     await Bun.write(join(sandbox.path, 'gspot.toml'), edited);
-    expect(await rejection(applyAll(session))).toContain('changed after generation was planned');
+    expect(await rejection(writeOutputs(session))).toContain('changed after generation was planned');
     expect(readFileSync(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(edited);
     expect(existsSync(join(sandbox.path, '.gspot/state/ownership.json'))).toBe(false);
 });
@@ -26,7 +26,7 @@ test('an npm runner preserves the authored scripts and adds no task of its own',
         'gspot.toml': policyOf([], '[runner]\ntool = "bun"\n[guides]\ninstall = false\n'),
         'package.json': '{"private":true,"scripts":{"prepare":"build-app"}}\n',
     });
-    await applyAll(await openSession(sandbox.path));
+    await writeOutputs(await openSession(sandbox.path));
     const content = JSON.parse(readFileSync(join(sandbox.path, 'package.json'), 'utf8')) as {
         scripts: Record<string, string>;
     };

@@ -2,18 +2,19 @@
 import { rm } from 'node:fs/promises';
 import { createTwoFilesPatch } from 'diff';
 import type { ToolPin } from '#cli/types/kits.ts';
-import { TOOL_DEADLINE } from '#cli/config/kits.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import { runToolCommand } from '#cli/tools/command.ts';
+import type { Session } from '#cli/types/tools/tools.ts';
+import { TOOL_DEADLINE } from '#cli/config/policy/policy.ts';
 import { toolPin, inspectTool } from '#cli/tools/inspect.ts';
 import { prepareCommand } from '#cli/execution/tool/runner.ts';
-import type { Root, SpawnResult } from '#cli/types/platform.ts';
 import { unlinkSync, readFileSync, writeFileSync } from 'node:fs';
-import { commandConfigurations } from '#cli/execution/command-expansion.ts';
-import { hasToolError, executionFailure } from '#cli/execution/broken-tool.ts';
-import { scratchCopy, createFileWorkspace } from '#cli/execution/files/workspace.ts';
+import type { Root, SpawnResult } from '#cli/types/platform/platform.ts';
+import { commandConfigurations } from '#cli/execution/tool/placeholders.ts';
+import { hasToolError, executionFailure } from '#cli/execution/tool/findings.ts';
+import { scratchCopy, createFileWorkspace } from '#cli/execution/tool/workspace.ts';
 import { FIX_PASSES, FIX_DIFF_CONTEXT, FINDING_EXIT_CODES } from '#cli/config/execution/execution.ts';
-import type { Session, FixReport, FixResult, PlannedCheck, PreparedCommand } from '#cli/types/execution/execution.ts';
+import type { FixReport, FixResult, PlannedCheck, PreparedCommand } from '#cli/types/execution/execution.ts';
 
 function sourceBytes(files: Root, path: string): Buffer | undefined {
     try {

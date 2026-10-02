@@ -2,9 +2,10 @@ import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
 import * as spawn from '#cli/platform/spawn.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
+import { writeOutputs } from '#cli/lifecycle/write.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { applyAll } from '#cli/commands/apply/workflow.ts';
 import { rejection } from '#tests/support/expectations.ts';
+import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import { installPackageProject } from '#cli/tools/packages/project.ts';
 import { chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { PACKAGE_PROJECTS } from '#tests/inputs/integration/tools/packages.ts';
@@ -16,7 +17,7 @@ test.each([PACKAGE_PROJECTS[0]])(
         await using fixture = await createPackageProject(client, projectPath, runner);
         const { root, registry } = fixture;
         const tools = [...kitManifests().values()].flatMap((manifest) => manifest.tools);
-        const first = await applyAll(await openSession(root));
+        const first = await writeOutputs(await openSession(root));
         expect(first.notes.filter((note) => note.startsWith('preserved'))).toStrictEqual([]);
         const { manifest } = readPackageInputs(root, client);
         const manifestPath = join(root, '.gspot/package.json');
@@ -27,7 +28,9 @@ test.each([PACKAGE_PROJECTS[0]])(
         });
         writeFileSync(manifestPath, hasScript);
         const requestsBefore = registry.requests;
-        expect(await rejection(installPackageProject(root, tools))).toContain('scripts');
+        expect(
+            await rejection(runOwnedLifecycle(root, (owner) => installPackageProject(root, owner, tools))),
+        ).toContain('scripts');
         expect(registry.requests).toBe(requestsBefore);
         expect(readFileSync(manifestPath, 'utf8')).toBe(hasScript);
         writeFileSync(manifestPath, manifest);
@@ -39,7 +42,7 @@ test('native wrapper download failure preserves the lock and publishes no partia
     await using fixture = await createPackageProject('npm', 'package.json', 'none');
     const { root } = fixture;
     const tools = [...kitManifests().values()].flatMap((manifest) => manifest.tools);
-    await applyAll(await openSession(root));
+    await writeOutputs(await openSession(root));
     const { lockPath, lock } = readPackageInputs(root, 'npm');
     const original = spawn.run;
     const initialize = spyOn(spawn, 'run').mockImplementation(async (argv, options) => {
@@ -54,7 +57,9 @@ test('native wrapper download failure preserves the lock and publishes no partia
         return original(argv, options);
     });
     try {
-        expect(await rejection(installPackageProject(root, tools))).toContain('Native wrapper download failed');
+        expect(
+            await rejection(runOwnedLifecycle(root, (owner) => installPackageProject(root, owner, tools))),
+        ).toContain('Native wrapper download failed');
         expect(existsSync(join(root, '.gspot/node_modules/prettier'))).toBe(false);
         expect(readFileSync(lockPath)).toStrictEqual(lock);
     } finally {

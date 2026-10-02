@@ -3,7 +3,7 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { kitManifests } from '#cli/kits/manifests.ts';
 import { readRepository } from '#cli/repository/tree.ts';
-import { readManifests } from '#cli/repository/manifests.ts';
+import { readManifests } from '#cli/repository/packages.ts';
 import { proposedScopes, workspaceScopes } from '#cli/repository/scopes.ts';
 import { rmSync, mkdirSync, unlinkSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
 
@@ -116,7 +116,12 @@ test('every folder that holds a project file is a scope, the root and lint-only 
     });
     const repository = await readRepository(sandbox.path, [], [], []);
     const fields = readManifests(sandbox.path, repository.files);
-    const found = proposedScopes(sandbox.path, repository.files, fields, kitManifests().values());
+    const found = proposedScopes(
+        sandbox.path,
+        repository.files,
+        fields,
+        [...kitManifests().values()].flatMap((manifest) => manifest.detect.project_files),
+    );
     expect(found.scopes.map((scope) => [scope.path, scope.source])).toStrictEqual([
         ['api', 'project'],
         ['apps/web', 'project'],

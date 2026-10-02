@@ -1,7 +1,7 @@
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import type { ReplacePlan } from '#cli/types/commands.ts';
 import { initCommand } from '#cli/commands/init/command.ts';
+import type { ReplacePlan } from '#cli/types/commands/init.ts';
 import { initPlanText } from '#cli/commands/init/plan/text.ts';
 
 test.each(['bitbucket-pipelines.yml', 'Jenkinsfile', ''])(

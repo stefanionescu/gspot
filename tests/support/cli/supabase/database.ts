@@ -5,7 +5,7 @@ import { randomUUID } from 'node:crypto';
 import { createFileTree } from 'testdirs';
 import { parse, stringify } from 'smol-toml';
 import { run } from '#cli/platform/spawn.ts';
-import { tableAt } from '#cli/policy/write.ts';
+import { tableAt } from '#cli/policy/mutations.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
 import type { PrepareSupabaseDatabaseResult } from '#tests/types/results.ts';
 

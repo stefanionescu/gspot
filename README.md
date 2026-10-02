@@ -103,7 +103,7 @@ folder.
 - [Troubleshooting](docs/src/content/docs/guides/troubleshooting.md).
 - [Kit reference](https://gspot.dev/reference/kits/): supported languages, frameworks, and tools.
 - [ESLint plugin](packages/eslint-plugin/README.md): the gspot ESLint rules on their own.
-- [Build and contribute](docs/src/content/docs/guides/build.md), for contributors.
+- [Contributing](CONTRIBUTING.md), for contributors.
 
 ## License
 

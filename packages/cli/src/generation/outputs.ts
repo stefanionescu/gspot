@@ -2,22 +2,22 @@
 import type { Manifest } from '#cli/types/kits.ts';
 import { everyManifest } from '#cli/kits/select.ts';
 import { hookFiles } from '#cli/generation/hooks.ts';
-import { assembleRules } from '#cli/agents/assemble.ts';
+import { assembleRules } from '#cli/rules/assemble.ts';
 import { gitignoreBlock } from '#cli/kits/manifests.ts';
-import { managedBlock } from '#cli/agents/instructions.ts';
+import { managedBlock } from '#cli/rules/instructions.ts';
 import { styleFiles } from '#cli/generation/vale-styles.ts';
 import { bunConfiguration } from '#cli/generation/bunfig.ts';
 import { emitConfigurations } from '#cli/generation/kits.ts';
 import { mutationTarget } from '#cli/platform/safe-paths.ts';
 import { miseToolsFile } from '#cli/generation/tools/mise.ts';
 import { templateInputs } from '#cli/generation/templates.ts';
-import { GIT_ATTRIBUTES_BLOCK } from '#cli/config/generation.ts';
+import { gitlabFile, workflowFile } from '#cli/generation/ci.ts';
 import { toolPackages } from '#cli/generation/tools/packages.ts';
 import type { Repository } from '#cli/types/repository/repository.ts';
-import { gitlabFile, workflowFile } from '#cli/generation/workflow.ts';
 import { toolEnvironment } from '#cli/generation/tools/environment.ts';
-import type { Generated, GenerationOptions } from '#cli/types/generation.ts';
+import { GIT_ATTRIBUTES_BLOCK } from '#cli/config/generation/generation.ts';
 import type { Policy, MergedView, ScopeSelection } from '#cli/types/policy/policy.ts';
+import type { Generated, GenerationOptions } from '#cli/types/generation/generation.ts';
 
 // Integrations for the selected hook tool. Native gspot hooks need no integration.
 function workflowOutput(policy: Policy, scopes: ScopeSelection[], version: string, out: Generated): void {

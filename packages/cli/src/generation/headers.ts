@@ -1,6 +1,6 @@
 import { extensionOf } from '#cli/platform/paths.ts';
 import { jsonText } from '#cli/generation/json-format.ts';
-import type { JsonFormat } from '#cli/types/generation.ts';
+import type { JsonFormat } from '#cli/types/generation/generation.ts';
 
 import {
     JSON_HEADER,
@@ -11,7 +11,7 @@ import {
     GENERATED_HEADER_LINE,
     GENERATED_HEADER_LINES,
     SLASH_COMMENT_EXTENSIONS,
-} from '#cli/config/generation.ts';
+} from '#cli/config/generation/generation.ts';
 
 function commented(lines: string[], mark: string): string {
     const marked = lines.map((line) => `${mark} ${line}`).join('\n');

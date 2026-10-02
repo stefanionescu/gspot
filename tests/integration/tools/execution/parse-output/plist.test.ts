@@ -9,7 +9,7 @@ import { openSession } from '#cli/execution/session.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
-import { checkedFindings } from '#cli/execution/broken-tool.ts';
+import { checkedFindings } from '#cli/execution/tool/findings.ts';
 
 describe.if(onMac)('native property lists', () => {
     test('files/plist classifies mixed native parse and input failures as execution errors', async () => {

@@ -1,5 +1,6 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { CHECKS } from '#cli/checks/registry.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/execution/session.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
@@ -30,7 +31,7 @@ test.each([
         const session = await openSession(sandbox.path);
         const plans = planRun(session, { stage: 'commit', skips: [], only: ['files/actions'] });
         const planned = plans[0]!;
-        const failed = await checkExecution(planned.spec)(session, planned);
+        const failed = await checkExecution(planned.spec, CHECKS)(session, planned);
         expect(failed.status, JSON.stringify(failed)).toBe('fail');
         expect(failed.findings).toContainEqual(
             containing({
@@ -48,7 +49,7 @@ test.each([
         const corrected = await openSession(sandbox.path);
         const correctedPlans = planRun(corrected, { stage: 'commit', skips: [], only: ['files/actions'] });
         const valid = correctedPlans[0]!;
-        const result = await checkExecution(valid.spec)(corrected, valid);
+        const result = await checkExecution(valid.spec, CHECKS)(corrected, valid);
         expect(result.status).toBe('ok');
         expect(await Bun.file(join(sandbox.path, 'unrelated.yaml')).text()).toBe('42\n');
     },
@@ -77,7 +78,7 @@ test.each([
     const session = await openSession(sandbox.path);
     const plans = planRun(session, { stage: 'commit', skips: [], only: ['files/actions'] });
     const planned = plans[0]!;
-    const failed = await checkExecution(planned.spec)(session, planned);
+    const failed = await checkExecution(planned.spec, CHECKS)(session, planned);
     expect(failed.status, JSON.stringify(failed)).toBe('fail');
     expect(failed.findings).toContainEqual(
         containing({
@@ -96,7 +97,7 @@ test.each([
     const corrected = await openSession(sandbox.path);
     const correctedPlans = planRun(corrected, { stage: 'commit', skips: [], only: ['files/actions'] });
     const valid = correctedPlans[0]!;
-    const result = await checkExecution(valid.spec)(corrected, valid);
+    const result = await checkExecution(valid.spec, CHECKS)(corrected, valid);
     expect(result.status).toBe('ok');
     expect(await Bun.file(join(sandbox.path, '.github/workflows/called.yml')).text()).toBe(called);
 });
@@ -112,7 +113,7 @@ test('Actionlint resolves a self-repository alias and reports a missing workflow
     const session = await openSession(sandbox.path);
     const plans = planRun(session, { stage: 'commit', skips: [], only: ['files/actions'] });
     const planned = plans[0]!;
-    const failed = await checkExecution(planned.spec)(session, planned);
+    const failed = await checkExecution(planned.spec, CHECKS)(session, planned);
     expect(failed.status, JSON.stringify(failed)).toBe('fail');
     expect(failed.findings).toContainEqual(
         containing({
@@ -130,7 +131,7 @@ test('Actionlint resolves a self-repository alias and reports a missing workflow
     const corrected = await openSession(sandbox.path);
     const correctedPlans = planRun(corrected, { stage: 'commit', skips: [], only: ['files/actions'] });
     const valid = correctedPlans[0]!;
-    const result = await checkExecution(valid.spec)(corrected, valid);
+    const result = await checkExecution(valid.spec, CHECKS)(corrected, valid);
     expect(result.status).toBe('ok');
     expect(await Bun.file(join(sandbox.path, '.github/workflows/caller.yml')).text()).toBe(workflow);
 });

@@ -1,0 +1,14 @@
+// The literal values checks/general/prose reads: names, patterns, limits, and tables.
+
+/** The two things a source file must not say to Vale: a directive in Markdown, a block comment in SQL. */
+export const VALE_DIRECTIVE = /<!--\s*vale\b/u;
+export const CODE_SPAN = /`[^`]*`/gu;
+export const SQL_BLOCK_COMMENT = '/*';
+export const MARKDOWN = new Set(['.md', '.mdx']);
+export const SQL = new Set(['.sql', '.pgsql', '.psql']);
+
+/** A script with no extension reads through stdin as Python, whose comments start the same way. */
+export const SCRIPT_GRAMMAR = { mode: 'stdin', extension: '.py' } as const;
+
+/** The name Vale gives stdin, followed by the grammar extension. */
+export const VALE_STDIN = 'stdin';

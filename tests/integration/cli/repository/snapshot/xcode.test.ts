@@ -9,7 +9,7 @@ import { onPosix } from '#tests/support/cli/platforms.ts';
 import { containing } from '#tests/support/expectations.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
 import { unlinkSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
-import { orphanSources, projectSymlinks } from '#cli/checks/xcode/project/checks.ts';
+import { orphanSources, projectSymlinks } from '#cli/checks/tool/xcode/project.ts';
 
 // Windows file names cannot hold a newline or a quote.
 if (onPosix)

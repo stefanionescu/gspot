@@ -1,5 +1,6 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { CHECKS } from '#cli/checks/registry.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { openSession } from '#cli/execution/session.ts';
@@ -35,7 +36,7 @@ if (toolShipsHere('ansible-lint'))
                 fix: false,
                 isDryRun: false,
             };
-            const running = executeRun(session, { ...options, cancelSignal: controller.signal });
+            const running = executeRun(session, { checks: CHECKS, ...options, cancelSignal: controller.signal });
             try {
                 const started = join(sandbox.path, 'deploy/started.txt');
                 if (failure === 'canceled') {
@@ -55,7 +56,7 @@ if (toolShipsHere('ansible-lint'))
                 expect(outcome.report.checks[0]!.findings).toStrictEqual([]);
                 expect(existsSync(join(sandbox.path, 'deploy/started.txt'))).toBe(true);
                 writeFileSync(executable, versionScript(false));
-                const corrected = await executeRun(await openSession(sandbox.path), options);
+                const corrected = await executeRun(await openSession(sandbox.path), { ...options, checks: CHECKS });
                 expect(corrected.report.exitCode).toBe(0);
                 expect(corrected.report.checks[0]!.status).toBe('ok');
             } finally {
@@ -82,15 +83,15 @@ if (toolShipsHere('ansible-lint'))
         const executable = join(sandbox.path, '.gspot/.venv/bin/ansible-lint');
         chmodSync(executable, 0o755);
         const options = { stage: 'commit' as const, skips: [], only: ['ansible/lint'], fix: false, isDryRun: false };
-        const initial = await executeRun(await openSession(sandbox.path), options);
+        const initial = await executeRun(await openSession(sandbox.path), { ...options, checks: CHECKS });
         expect(initial.report.checks[0]!.status).toBe('ok');
         writeFileSync(executable, versionCommand('23.0.0'));
-        const changed = await executeRun(await openSession(sandbox.path), options);
+        const changed = await executeRun(await openSession(sandbox.path), { ...options, checks: CHECKS });
         expect(changed.report.exitCode).toBe(2);
         expect(changed.report.checks[0]!.status).toBe('missing');
         expect(changed.report.checks[0]!.note).toContain('23.0.0 is below 24.0.0');
         writeFileSync(executable, versionCommand('26.8.0'));
-        const executed = await executeRun(await openSession(sandbox.path), options);
+        const executed = await executeRun(await openSession(sandbox.path), { ...options, checks: CHECKS });
         expect(executed.report.exitCode).toBe(0);
     });
 
@@ -113,19 +114,19 @@ if (onPosix)
         chmodSync(executable, 0o755);
         const session = await openSession(sandbox.path);
         const options = { stage: 'commit' as const, skips: [], fix: false, isDryRun: false };
-        const executed = await executeRun(session, options);
+        const executed = await executeRun(session, { ...options, checks: CHECKS });
         expect(executed.report.exitCode).toBe(0);
-        const repeated = await executeRun(session, options);
+        const repeated = await executeRun(session, { ...options, checks: CHECKS });
         expect(repeated.report.checks[0]!.status).toBe('ok');
         writeFileSync(executable, exitScript(true));
-        const changed = await executeRun(session, options);
+        const changed = await executeRun(session, { ...options, checks: CHECKS });
         expect(changed.report.exitCode).toBe(1);
         expect(changed.report.checks[0]!.status).toBe('fail');
         chmodSync(executable, 0o644);
-        const unexecutable = await executeRun(session, options);
+        const unexecutable = await executeRun(session, { ...options, checks: CHECKS });
         expect(unexecutable.report.exitCode).toBe(2);
         chmodSync(executable, 0o755);
         writeFileSync(executable, exitScript(false));
-        const restored = await executeRun(session, options);
+        const restored = await executeRun(session, { ...options, checks: CHECKS });
         expect(restored.report.exitCode).toBe(0);
     });

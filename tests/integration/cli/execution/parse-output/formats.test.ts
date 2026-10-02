@@ -5,8 +5,8 @@ import { testdir, createFileTree } from 'testdirs';
 import type { CheckSpec } from '#cli/types/kits.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { kitManifests } from '#cli/kits/manifests.ts';
-import { isToolBroken } from '#cli/execution/broken-tool.ts';
-import { parseOutput } from '#cli/execution/output/parse.ts';
+import { parseOutput } from '#cli/execution/tool/formats.ts';
+import { isToolBroken } from '#cli/execution/tool/findings.ts';
 
 test('invalid Markdown records remain execution errors and valid records parse', async () => {
     await using sandbox = await testdir();

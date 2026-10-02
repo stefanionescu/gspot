@@ -4,13 +4,13 @@ import { test, spyOn, expect } from 'bun:test';
 import { toPosix } from '#cli/platform/paths.ts';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
-import type { EngineInput } from '#cli/types/checks.ts';
 import { engineInput } from '#cli/execution/engines.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { rejection } from '#tests/support/expectations.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
-import { nextjsBuild, nextjsTypes } from '#cli/checks/nextjs/build.ts';
+import type { EngineInput } from '#cli/types/execution/execution.ts';
 import { statSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { nextjsBuild, nextjsTypes } from '#cli/checks/framework/nextjs/build.ts';
 import { prepareNextjsBuild, readNextjsCommands } from '#tests/support/cli/nextjs.ts';
 
 for (const scope of ['', 'apps/web'])

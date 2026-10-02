@@ -1,10 +1,10 @@
 import { toPosix } from '#cli/platform/paths.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
 import type { Policy } from '#cli/types/policy/policy.ts';
-import { TRAILING_STAR } from '#cli/config/generation.ts';
 import { getTsconfig } from '#cli/repository/tsconfig.ts';
 import { join, dirname, resolve, relative } from 'node:path';
-import { readPackageManifest } from '#cli/repository/manifests.ts';
+import { readPackageManifest } from '#cli/repository/packages.ts';
+import { TRAILING_STAR } from '#cli/config/generation/generation.ts';
 
 function importTarget(target: unknown): string | undefined {
     if (typeof target === 'string') return target;

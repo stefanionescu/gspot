@@ -1,8 +1,8 @@
 // The statements of one SQL file, each with its kind, its fields and where it starts in the text.
-import { parseSql } from '#cli/parsers/sql/parser.ts';
+import { parseSql } from '#cli/parsers/sql/pg.ts';
 import { sqlSource } from '#cli/parsers/sql/source.ts';
 import { codePoints } from '#cli/platform/code-points.ts';
-import type { SourceReads } from '#cli/types/repository/repository.ts';
+import type { SourceReads } from '#cli/types/platform/platform.ts';
 import type { SqlFile, SqlNode, SqlStatement, SqlStatementView } from '#cli/types/parsers/sql.ts';
 
 const reads = new WeakMap<SourceReads, Map<string, Promise<SqlFile>>>();

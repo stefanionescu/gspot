@@ -9,7 +9,7 @@
     },
     "include": [
         ".astro/types.d.ts",
-        "../packages/cli/src/platform/modules.d.ts",
+        "../packages/cli/src/parsers/sql/modules.d.ts",
         "src/**/*",
         "astro.config.ts",
         "scripts/**/*.ts"

@@ -1,5 +1,5 @@
 import type { ConfigurationTarget } from '#cli/types/kits.ts';
-import { CONFIGURATION_DIRECTORY } from '#cli/config/platform.ts';
+import { CONFIGURATION_DIRECTORY } from '#cli/config/kits.ts';
 
 const GSPOT_DIRECTORY = `${CONFIGURATION_DIRECTORY}/`;
 

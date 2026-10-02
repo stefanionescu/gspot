@@ -6,12 +6,11 @@ import { runBlocking } from '#cli/platform/spawn.ts';
 import { stripVTControlCharacters } from 'node:util';
 import { kitManifests } from '#cli/kits/manifests.ts';
 import { openRoot } from '#cli/platform/filesystem.ts';
-import type { SpawnResult } from '#cli/types/platform.ts';
 import type { ToolPin, Manifest } from '#cli/types/kits.ts';
 import { hasPolicy, readPolicy } from '#cli/policy/read.ts';
+import { NODE_MODULES_DIRECTORY } from '#cli/config/kits.ts';
 import { privateToolInstallation } from '#cli/tools/pins.ts';
-import { NODE_MODULES_DIRECTORY } from '#cli/config/platform.ts';
-import { readOwnership } from '#cli/lifecycle/ownership/owner.ts';
+import type { SpawnResult } from '#cli/types/platform/platform.ts';
 import { miseVersion, packageVersion, locateCandidates } from '#cli/tools/locate.ts';
 import type { Package, Inspected, ToolSearch, VersionRead, ToolInspection } from '#cli/types/tools/tools.ts';
 
@@ -129,9 +128,13 @@ function inspectUncached(context: ToolSearch, cwd: string, tool: ToolPin, runner
 }
 
 // Only the selected private installation can make its tool unavailable while installation is pending.
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Two inspections ask whether the private installation of a tool is still pending; one owner keeps the kind lookup.
-function isInstallationPending(pending: string[] | undefined, tool: ToolPin, runner?: string): boolean {
+function isInstallationPending(
+    search: Pick<ToolSearch, 'root' | 'installedRoot' | 'installations'>,
+    tool: ToolPin,
+    runner?: string,
+): boolean {
     const installation = privateToolInstallation(tool, runner);
+    const pending = search.installations?.(search.installedRoot ?? search.root);
     return installation !== undefined && pending?.includes(installation.kind) === true;
 }
 
@@ -189,12 +192,13 @@ export function toolVersionState(found: string, want: string, floor: string): To
  * Where a tool is, searching the repository's bin folders, PATH, and mise shims, or undefined.
  * @param root the repository root
  * @param name the executable name
+ * @param pending the installations an interrupted gspot install left pending
  * @returns the first path found
  */
-export function locateTool(root: string, name: string): string | undefined {
+export function locateTool(root: string, name: string, pending?: string[]): string | undefined {
     const runner = hasPolicy(root) ? readPolicy(root).policy.runner?.tool : undefined;
     const tool = toolPin(kitManifests().values(), name);
-    if (isInstallationPending(readOwnership(root).installations, tool, runner))
+    if (isInstallationPending({ root, installations: () => pending }, tool, runner))
         throw new Error('Tool installation is incomplete. Run: gspot install');
     const isExternal = tool.provider === 'host' || (runner === 'mise' && tool.installers['mise'] !== undefined);
     const roots = isExternal ? [root] : [join(root, '.gspot'), root];
@@ -210,7 +214,7 @@ export function locateTool(root: string, name: string): string | undefined {
 export function inspectTool(context: ToolSearch, tool: ToolPin): ToolInspection {
     const { root, inspections } = context;
     const runner = context.policyFiles?.policy.runner?.tool;
-    if (isInstallationPending(readOwnership(context.installedRoot ?? root).installations, tool, runner))
+    if (isInstallationPending(context, tool, runner))
         return {
             name: tool.name,
             state: 'error',

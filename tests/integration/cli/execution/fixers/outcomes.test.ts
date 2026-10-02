@@ -1,5 +1,6 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { CHECKS } from '#cli/checks/registry.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { runFixer } from '#cli/execution/fixers.ts';
 import { executeRun } from '#cli/execution/execute.ts';
@@ -131,12 +132,7 @@ test('fails the run when a correction exits nonzero even though its check passes
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': CORRECTION_POLICY, 'source.txt': 'original' });
     const session = await openSession(sandbox.path);
-    const outcome = await executeRun(session, {
-        stage: 'all',
-        skips: [],
-        fix: true,
-        isDryRun: false,
-    });
+    const outcome = await executeRun(session, { checks: CHECKS, stage: 'all', skips: [], fix: true, isDryRun: false });
     expect(outcome.report.checks[0]?.status).toBe('ok');
     expect(outcome.report.exitCode).toBe(2);
     expect(outcome.report.failed).toContain('sandbox/correction');

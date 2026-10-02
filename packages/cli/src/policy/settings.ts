@@ -1,4 +1,4 @@
-import { compact } from '#cli/policy/normalize.ts';
+import { compact } from '#cli/platform/text.ts';
 import type { SettingSpec } from '#cli/types/kits.ts';
 import { scopeAncestors } from '#cli/repository/scopes.ts';
 import { LANGUAGE_GROUP_TABLES } from '#cli/config/policy/policy.ts';

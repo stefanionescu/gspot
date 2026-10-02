@@ -8,7 +8,7 @@ import {
     exportsAtBottom,
     privatePrefixes,
     privateBeforePublic,
-} from '#cli/checks/python/exports.ts';
+} from '#cli/checks/language/python/exports.ts';
 
 const HEAD = '"""A planted module."""\n\n\n';
 const SHOWN = 'def shown() -> int:\n    """Give one."""\n    return 1\n';

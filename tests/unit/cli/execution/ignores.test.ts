@@ -1,5 +1,5 @@
 import { test, expect, describe } from 'bun:test';
-import { applyIgnores } from '#cli/execution/ignores.ts';
+import { applyIgnores } from '#cli/execution/execute.ts';
 
 describe('ignores', () => {
     test('match by check, rule and paths and count what they matched', () => {

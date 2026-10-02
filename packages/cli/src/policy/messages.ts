@@ -1,12 +1,5 @@
-import { LIST_LIMIT } from '#cli/config/policy/policy.ts';
-import { quoteArgument } from '#cli/platform/arguments.ts';
-
-function list(items: string[], limit = LIST_LIMIT): string {
-    const shown = items.slice(0, limit);
-    const rest = items.length - shown.length;
-    const more = rest > 0 ? ` and ${String(rest)} more` : '';
-    return shown.map((item) => `\`${item}\``).join(', ') + more;
-}
+import { codeList } from '#cli/platform/text.ts';
+import { quoteArgument } from '#cli/platform/quoting.ts';
 
 /**
  * The policy file is not there.
@@ -60,17 +53,6 @@ export function missingReason(where: string, command: string): string {
 }
 
 /**
- * A kit id nothing ships.
- * @param name the id as written
- * @param near the closest ids that exist
- * @returns the message
- */
-export function unknownKit(name: string, near: string[]): string {
-    const hint = near.length > 0 ? ` Did you mean ${list(near)}?` : '';
-    return `There is no kit called \`${name}\`.${hint} Run \`gspot explain <kit>\` to read one.`;
-}
-
-/**
  * A configuration named in --without that a selected kit requires.
  * @param name the configuration the person left out
  * @param chain the kit ids from the one selected to the one required
@@ -101,15 +83,6 @@ export function dirtyTree(count: number): string {
 }
 
 /**
- * Requires that loop back on themselves.
- * @param chain the kit ids in the order they were followed
- * @returns the message
- */
-export function circularRequires(chain: string[]): string {
-    return `The kits require each other in a circle: ${chain.join(' -> ')}. This is a bug in a kit manifest.`;
-}
-
-/**
  * A scope whose directory is not there.
  * @param path the scope path as written
  * @returns the message
@@ -128,7 +101,7 @@ export function settingNotExposed(key: string, known: string[]): string {
     const table =
         known.length === 0
             ? 'No setting exists under that table.'
-            : `The settings that exist under that table are ${list(known)}.`;
+            : `The settings that exist under that table are ${codeList(known)}.`;
     return `No selected kit has the setting \`${key}\`. ${table} Run \`gspot list settings\` to see every one.`;
 }
 
@@ -214,7 +187,7 @@ export function versionMismatch(pinned: string, running: string): string {
  * @returns the message
  */
 export function unknownCheck(checkName: string, near: string[]): string {
-    const hint = near.length > 0 ? ` Did you mean ${list(near)}?` : '';
+    const hint = near.length > 0 ? ` Did you mean ${codeList(near)}?` : '';
     return `There is no check called \`${checkName}\`.${hint}`;
 }
 
@@ -235,7 +208,7 @@ export function checkEntryIncomplete(checkName: string, field: string): string {
  * @returns the message
  */
 export function limitUnknown(key: string, known: string[]): string {
-    return `\`${key}\` is not a limit any check reads. The limits that exist are ${list(known)}.`;
+    return `\`${key}\` is not a limit any check reads. The limits that exist are ${codeList(known)}.`;
 }
 
 /**

@@ -72,7 +72,6 @@ level = "all"
 stage = "push"
 runs = "once"
 tool = "commitlint"
-analysis = "commit-messages"
 output = {format = "regex", pattern = "^\\s*[✖⚠]\\s+(?<message>.*?)\\s+\\[(?<rule>[a-z-]+)\\]\\s*$"}
 summary = "Checks messages in the supplied pushed commit sets, or the local range from the upstream merge base to HEAD."
 why = "A message written past the hook (--no-verify, a rebase, a merge) still reaches the shared branch unless the push checks it."

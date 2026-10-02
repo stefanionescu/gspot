@@ -1,13 +1,13 @@
 import type { Manifest } from '#cli/types/kits.ts';
+import { ciLintJobs } from '#cli/repository/survey.ts';
 import { npmPins, pythonPins } from '#cli/tools/pins.ts';
 import type { Policy } from '#cli/types/policy/policy.ts';
 import { misePins, pinnedTwice } from '#cli/tools/mise.ts';
 import { submodulePaths } from '#cli/repository/tracked.ts';
-import { MISE_CONFIG_PATH } from '#cli/config/tools/tools.ts';
-import { ciLintJobs } from '#cli/repository/existing-tooling.ts';
 import { CI_SETUP, HOOKS_ROW } from '#cli/config/commands/init.ts';
+import { MISE_CONFIG_PATH } from '#cli/config/generation/generation.ts';
 import type { ScopeEntry, ExistingTooling } from '#cli/types/repository/repository.ts';
-import type { Planning, InitAnswers, ReplacePlan, InitSelection, InitPlan as Plan } from '#cli/types/commands.ts';
+import type { Planning, InitAnswers, ReplacePlan, InitSelection, InitPlan as Plan } from '#cli/types/commands/init.ts';
 
 function runnerRows(answers: InitAnswers, everySelected: Manifest[]): ReplacePlan['change'] {
     const count = Object.keys(npmPins(everySelected, answers.runner)).length;

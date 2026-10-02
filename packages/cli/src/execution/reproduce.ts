@@ -1,4 +1,4 @@
-import { quoteArgument } from '#cli/platform/arguments.ts';
+import { quoteArgument } from '#cli/platform/quoting.ts';
 import type { StageFilter } from '#cli/types/execution/execution.ts';
 
 /**

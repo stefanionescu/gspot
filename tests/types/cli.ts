@@ -1,5 +1,5 @@
 // The types of support/cli in this package.
-import type { Finding } from '#cli/types/checks.ts';
+import type { Finding } from '#cli/types/execution/execution.ts';
 
 /** What the clean rerun of a planted case plants: corrected files, and the case's policy unless it names another. */
 type Correction = {

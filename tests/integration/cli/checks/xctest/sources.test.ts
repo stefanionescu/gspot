@@ -1,4 +1,5 @@
 import { test, expect } from 'bun:test';
+import { CHECKS } from '#cli/checks/registry.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { run } from '#tests/support/cli/command.ts';
 import { executeRun } from '#cli/execution/execute.ts';
@@ -54,6 +55,7 @@ test.each([
         'Examples/Checks.swift': `import Testing\nfunc checks() throws {\n    ${body}\n}\n`,
     });
     const result = await executeRun(await openSession(sandbox.path), {
+        checks: CHECKS,
         stage: 'all',
         only: ['xctest/disabled'],
         skips: [],
@@ -104,6 +106,7 @@ test.each([
         'Examples/Checks.swift': `import Testing\n@Test func checks() {\n    ${body}\n}\n`,
     });
     const result = await executeRun(await openSession(sandbox.path), {
+        checks: CHECKS,
         stage: 'all',
         only: [check],
         skips: [],
@@ -122,6 +125,7 @@ test.each([
     const corrected =
         count > 0
             ? await executeRun(await openSession(sandbox.path), {
+                  checks: CHECKS,
                   stage: 'all',
                   only: [check],
                   skips: [],

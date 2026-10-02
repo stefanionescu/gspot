@@ -2,9 +2,9 @@
 import { tagEntry } from '#cli/repository/tags.ts';
 import { parserFor } from '#cli/parsers/tree-sitter.ts';
 import { kindOf, readAttributes } from '#cli/repository/kind.ts';
-import type { FileDeclaration } from '#cli/types/policy/policy.ts';
+import { readPrefix, readSource } from '#cli/repository/sources.ts';
 import { FILE_PREFIX_BYTES } from '#cli/config/repository/repository.ts';
-import { readPrefix, readSource, trackedEntries, isGitRepository } from '#cli/repository/tracked.ts';
+import { trackedEntries, isGitRepository } from '#cli/repository/tracked.ts';
 
 import type {
     Tagged,
@@ -13,6 +13,7 @@ import type {
     Repository,
     ScopeEntry,
     TrackedFile,
+    FileDeclaration,
 } from '#cli/types/repository/repository.ts';
 
 function trackedFile(entry: RawEntry, prefix: Buffer, tagged: Tagged, verdict: Verdict): TrackedFile {

@@ -1,5 +1,5 @@
 import { test, expect, describe } from 'bun:test';
-import { svelteFindings } from '#cli/checks/svelte.ts';
+import { svelteFindings } from '#cli/checks/framework/svelte.ts';
 
 const LINES = [
     '1758823456789 START "/repo"',

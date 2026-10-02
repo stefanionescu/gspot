@@ -12,7 +12,7 @@ import { toolShipsHere } from '#tests/support/cli/platforms.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import { INSTALL_TIMEOUT_MS } from '#tests/inputs/integration/tools/tools.ts';
-import { installPythonProject, preparePythonProject } from '#cli/tools/python-project.ts';
+import { installPythonProject, preparePythonProject } from '#cli/tools/python.ts';
 
 const root = fileURLToPath(new URL('../../..', import.meta.url));
 
@@ -130,5 +130,5 @@ export async function installSemgrep(root: string): Promise<void> {
         await preparePythonProject(root, outputs, owner);
     });
     for (const output of outputs) await Bun.write(join(root, output.path), output.content);
-    await installPythonProject(root);
+    await runOwnedLifecycle(root, (owner) => installPythonProject(root, owner));
 }

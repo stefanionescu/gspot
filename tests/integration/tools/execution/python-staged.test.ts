@@ -9,8 +9,9 @@ import { gitOutput } from '#tests/support/cli/git.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { onPosix } from '#tests/support/cli/platforms.ts';
 import { containing } from '#tests/support/expectations.ts';
+import { installPythonProject } from '#cli/tools/python.ts';
 import type { RunReport } from '#cli/types/execution/execution.ts';
-import { installPythonProject } from '#cli/tools/python-project.ts';
+import { runOwnedLifecycle } from '#cli/lifecycle/ownership/owner.ts';
 import { createPythonRegistry } from '#tests/support/registry/python.ts';
 import { preparePythonInstallation } from '#tests/support/cli/python/project.ts';
 
@@ -22,7 +23,7 @@ if (onPosix)
         await using artifacts = await testdir();
         await using registry = await createPythonRegistry(artifacts.path);
         await using prepared = await preparePythonInstallation(repository.path, 'pyproject.toml', 'none', registry.url);
-        await installPythonProject(prepared.root);
+        await runOwnedLifecycle(prepared.root, (owner) => installPythonProject(prepared.root, owner));
         // The fixture installs Ruff alone, so only its generated configuration is written and committed.
         const session = await openSession(repository.path);
         const generated = emitAll(session.policyFiles.policy, session.repository, session.scopes, {

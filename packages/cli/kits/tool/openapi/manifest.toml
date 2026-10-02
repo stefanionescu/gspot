@@ -32,8 +32,6 @@ example = "An OpenAPI document whose operation references an undefined schema re
 level = "recommended"
 stage = "commit"
 runs = "once"
-engine = "integrity"
-analysis = "openapi-lint"
 tool = "spectral"
 owners = {extensions = [".yaml", ".yml", ".json"]}
 summary = "Lints the OpenAPI document named in tools.openapi.document with the Spectral OpenAPI rules."
@@ -47,8 +45,6 @@ example = "A committed OpenAPI document that differs from the configured generat
 level = "recommended"
 stage = "push"
 runs = "once"
-engine = "integrity"
-analysis = "openapi-fresh"
 summary = "Runs the command in tools.openapi.produced_by and fails when it changes the document."
 why = "A committed document that lags the routes describes a service that does not exist."
 help = "Run the command and commit the document it writes."

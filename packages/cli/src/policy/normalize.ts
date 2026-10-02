@@ -1,9 +1,10 @@
+import { compact } from '#cli/platform/text.ts';
+import type { Defined } from '#cli/types/platform/platform.ts';
 import { CATEGORY_KEYS, NAMING_LIST_KEYS } from '#cli/config/policy/policy.ts';
 
 import type {
     Limits,
     Policy,
-    Defined,
     RawScope,
     Reasoned,
     RawLimits,
@@ -158,16 +159,6 @@ function normalizeStructure(raw: RawPolicy['structure']): Policy['structure'] {
         python: {},
     });
 }
-/**
- * Drops the undefined entries of an object, so exact optional types hold.
- * @param value any object
- * @returns the same object without its undefined entries
- */
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Readers drop undefined entries so exact optional types hold, and this is the one way they do it.
-export function compact<T extends object>(value: T): Defined<T> {
-    return Object.fromEntries(Object.entries(value).filter(([, entry]) => entry !== undefined)) as Defined<T>;
-}
-
 /**
  * The whole document in Policy shape.
  * @param raw the validated document

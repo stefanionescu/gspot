@@ -1,8 +1,9 @@
 // Applying plans: each batch is logged before a byte moves, so an interruption can be recovered.
 import { isDeepStrictEqual } from 'node:util';
-import type { Read } from '#cli/types/platform.ts';
+import type { Read } from '#cli/types/platform/platform.ts';
+import type { Planned } from '#cli/types/lifecycle/lifecycle.ts';
 import { matches, identity } from '#cli/lifecycle/ownership/log.ts';
-import type { Log, Outcome, Planned } from '#cli/types/lifecycle/lifecycle.ts';
+import type { Log, Outcome } from '#cli/types/lifecycle/ownership.ts';
 
 // The file as it is now, read as a link entry when either side of the plan is a link.
 function foundRead(log: Log, path: string, current: Read | undefined, next: Read | undefined): Read | undefined {

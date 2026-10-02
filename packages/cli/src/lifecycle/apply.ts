@@ -1,9 +1,9 @@
 import { removePackages } from '#cli/tools/vale.ts';
-import type { Generated } from '#cli/types/generation.ts';
-import type { WriteRequest } from '#cli/types/lifecycle/apply.ts';
+import { READ_ONLY_FILE } from '#cli/config/platform/platform.ts';
+import type { Generated } from '#cli/types/generation/generation.ts';
 import { written, readOwnership } from '#cli/lifecycle/ownership/owner.ts';
-import type { Owner, Planned, ApplyReport } from '#cli/types/lifecycle/lifecycle.ts';
-import { READ_ONLY_FILE, EXECUTABLE_FILE, OWNER_WRITABLE_FILE } from '#cli/config/platform.ts';
+import { EXECUTABLE_FILE, OWNER_WRITABLE_FILE } from '#cli/config/lifecycle/lifecycle.ts';
+import type { Owner, Planned, ApplyReport, WriteRequest } from '#cli/types/lifecycle/lifecycle.ts';
 
 function configurationPlans(owner: Owner, generated: Generated, replace: boolean) {
     const plans: { plan: Planned; package: boolean }[] = [];

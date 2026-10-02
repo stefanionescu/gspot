@@ -1,5 +1,5 @@
 import { test, expect } from 'bun:test';
-import { selectedSections } from '#cli/agents/sections.ts';
+import { selectedSections } from '#cli/rules/sections.ts';
 
 test('level filtering respects fenced examples, nested sections, and the next peer heading', () => {
     const before = '# Guide\n\n## Required\n\n```md\n## Example\n<!-- level: all -->\n```\n\n';

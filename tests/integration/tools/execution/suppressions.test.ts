@@ -6,7 +6,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
-import { suppressionComments } from '#cli/checks/repository/suppressions.ts';
+import { suppressionComments } from '#cli/checks/general/structure/suppressions.ts';
 
 test.each([
     ['/* stylelint-disable color-no-invalid-hex */', true],

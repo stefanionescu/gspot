@@ -1,15 +1,16 @@
 import { join } from 'node:path';
 import * as spawn from '#cli/platform/spawn.ts';
+import { CHECKS } from '#cli/checks/registry.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/execute.ts';
 import { onMac } from '#tests/support/cli/platforms.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { swiftBuildPlan } from '#cli/checks/swift/plan.ts';
 import { policyOf } from '#tests/support/cli/policy/text.ts';
+import { swiftBuildPlan } from '#cli/checks/language/swift/plan.ts';
 import { test, spyOn, expect, describe, afterEach } from 'bun:test';
-import { swiftBuild, swiftAnalyze } from '#cli/checks/swift/build.ts';
 import { mkdirSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { swiftInput, removeBuildFolders } from '#tests/support/cli/swift.ts';
+import { swiftBuild, swiftAnalyze } from '#cli/checks/language/swift/build.ts';
 import { rejection, containing, textContaining } from '#tests/support/expectations.ts';
 
 // The build checks inspect the Swift toolchain before their mocked runs.
@@ -65,7 +66,7 @@ test('a failed Swift build without source diagnostics returns execution exit 2 a
         duration: 1,
     });
     try {
-        const failed = await executeRun(initial, options);
+        const failed = await executeRun(initial, { ...options, checks: CHECKS });
         expect(failed.report.exitCode).toBe(2);
         expect(failed.report.checks).toContainEqual(
             containing({
@@ -76,7 +77,7 @@ test('a failed Swift build without source diagnostics returns execution exit 2 a
             }),
         );
         run.mockResolvedValue({ code: 0, stdout: '', stderr: '', missing: false, duration: 1 });
-        const executed = await executeRun(corrected, options);
+        const executed = await executeRun(corrected, { ...options, checks: CHECKS });
         expect(executed.report.exitCode).toBe(0);
         expect(readFileSync(join(sandbox.path, 'Main.swift'), 'utf8')).toBe('let value = 1\n');
     } finally {
