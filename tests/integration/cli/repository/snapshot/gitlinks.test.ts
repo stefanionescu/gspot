@@ -8,7 +8,7 @@ import { policyOf } from '#tests/harness/cli/policy.ts';
 import { onPosix } from '#tests/harness/cli/platforms.ts';
 import { submodulePaths } from '#cli/repository/tracked.ts';
 import { pushedRevisions } from '#cli/repository/revisions/push.ts';
-import { doctorText, doctorReport } from '#cli/commands/doctor/report.ts';
+import { buildReport, formatReport } from '#cli/commands/doctor/report.ts';
 import { mkdirSync, readdirSync, symlinkSync, writeFileSync } from 'node:fs';
 import { gitBlobs, gitEntries, useRevision, committedEntries } from '#cli/execution/checkout/revision.ts';
 
@@ -34,9 +34,9 @@ test.each(['index', 'commit'] as const)(
         expect(submodulePaths(sandbox.path)).toStrictEqual([path]);
         const session = await openSession(sandbox.path);
         expect(session.repository.files.map((file) => file.path)).toStrictEqual(['gspot.toml', 'source.txt']);
-        const report = doctorReport(session, undefined);
+        const report = buildReport(session, undefined);
         expect(report.submodules).toStrictEqual([path]);
-        expect(doctorText(report).split(`submodule  ${path} (contents are not read)`)).toHaveLength(2);
+        expect(formatReport(report).split(`submodule  ${path} (contents are not read)`)).toHaveLength(2);
         const expected = gitOutput(sandbox.path, ['write-tree']);
         const source = kind === 'index' ? { kind } : { kind, hash: gitOutput(sandbox.path, ['rev-parse', 'HEAD']) };
         await useRevision(sandbox.path, source, async (snapshot, tree) => {

@@ -17,13 +17,13 @@ import type {
 
 // Refuses the options that select or change files, which a push of exact objects cannot honor.
 function assertPushOptions(options: CheckOptions): void {
-    const hasConflictingOptions =
+    const hasConflict =
         options.staged ||
         options.changed !== undefined ||
         options.fix ||
         options.stage !== undefined ||
         options.messageFile !== undefined;
-    if (hasConflictingOptions)
+    if (hasConflict)
         throw new GspotError('selection', [
             'Pre-push object checks cannot be combined with --staged, --changed, --fix, --hook, or --message-file.',
         ]);
@@ -40,8 +40,8 @@ async function checkRevision(
         return await useRevision(
             root,
             { kind: 'commit', hash: revision.object },
-            (revisionRoot) =>
-                checkContent(revisionRoot, options, signal, {
+            (checkout) =>
+                checkContent(checkout, options, signal, {
                     commits: revision.commits,
                     historyComplete: revision.historyComplete,
                     content: 'commit',
@@ -58,7 +58,7 @@ async function checkRevision(
 }
 
 // The push report: every checked revision, the updates no check applies to, and what a cancellation left.
-function pushReport(selected: PushSelection, revisions: Checked[], signal: AbortSignal): PushReport {
+function buildReport(selected: PushSelection, revisions: Checked[], signal: AbortSignal): PushReport {
     const pendingRefs = selected.revisions.slice(revisions.length).flatMap((revision) => revision.refs);
     const exitCode = Math.max(
         signal.aborted ? EXIT_ERROR : 0,
@@ -82,7 +82,7 @@ function pushReport(selected: PushSelection, revisions: Checked[], signal: Abort
  * @param signal cancellation for the run.
  * @returns the text to print, the push report, and the exit code.
  */
-export async function checkPushed(
+export async function checkPush(
     root: string,
     options: CheckOptions,
     input: { input: string; remote?: string },
@@ -105,7 +105,7 @@ export async function checkPushed(
         });
         rendered.push(`${revision.refs.join(', ')} at ${revision.object}\n${result.text}`);
     }
-    const report = pushReport(selected, revisions, signal);
+    const report = buildReport(selected, revisions, signal);
     if (report.canceled !== undefined)
         rendered.push(
             `Push checks canceled. References not checked: ${report.canceled.pendingRefs.join(', ') || 'none; see canceled checks above'}.\n`,

@@ -1,7 +1,7 @@
 // check: open the session, honor the pin, run, render, decide the exit code.
 import { resolve, relative } from 'node:path';
 import { GspotError } from '#cli/platform/errors.ts';
-import { checkPushed } from '#cli/commands/check/push.ts';
+import { checkPush } from '#cli/commands/check/push.ts';
 import { checkContent } from '#cli/commands/check/content.ts';
 import { refusalFor } from '#cli/commands/check/selection.ts';
 import type { CheckOptions } from '#cli/types/commands/check.ts';
@@ -46,7 +46,7 @@ export async function checkCommand(options: CheckOptions, signal: AbortSignal): 
     const root = findRoot(options.cwd);
     if ((options.staged || options.push !== undefined) && !isGitRepository(root))
         throw new GspotError('selection', ['Revision selection requires a Git repository.']);
-    if (options.push !== undefined) return checkPushed(root, options, options.push, signal);
+    if (options.push !== undefined) return checkPush(root, options, options.push, signal);
     if (!options.staged) return checkContent(root, options, signal);
     return checkStaged(root, options, signal);
 }

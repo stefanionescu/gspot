@@ -5,7 +5,7 @@ import { openRoot } from '#cli/platform/filesystem.ts';
 import { CI_CHOICES, HOOK_CHOICES } from '#cli/config/commands/init.ts';
 import { MISE_CONFIG_PATH } from '#cli/config/generation/generation.ts';
 import type { ExistingTooling } from '#cli/types/repository/repository.ts';
-import { askMany, askChoice, askConfirmation } from '#cli/commands/prompts.ts';
+import { askChoice, askChoices, askConfirmation } from '#cli/commands/prompts.ts';
 import type { InitAnswers, InitOptions, InitSelection } from '#cli/types/commands/init.ts';
 
 const RUNNER_CHOICES: { value: InitAnswers['runner']; label: string }[] = [
@@ -17,7 +17,7 @@ const RUNNER_CHOICES: { value: InitAnswers['runner']; label: string }[] = [
     { value: 'none', label: 'none' },
 ];
 
-function existingCi(root: string, tooling: ExistingTooling): InitAnswers['ci'] | undefined {
+function detectCi(root: string, tooling: ExistingTooling): InitAnswers['ci'] | undefined {
     if (tooling.ci.includes('.gitlab-ci.yml')) return 'gitlab';
     if (tooling.ci.some((path) => path.startsWith('.github/workflows/'))) return 'github';
     using files = openRoot(root);
@@ -26,8 +26,8 @@ function existingCi(root: string, tooling: ExistingTooling): InitAnswers['ci'] |
     return undefined;
 }
 
-function ciDefault(root: string, tooling: ExistingTooling): InitAnswers['ci'] {
-    const existing = existingCi(root, tooling);
+function proposeCi(root: string, tooling: ExistingTooling): InitAnswers['ci'] {
+    const existing = detectCi(root, tooling);
     if (existing !== undefined) return existing;
     if (tooling.ci.length > 0) return 'none';
     const remote = readGitSetting(root, 'remote.origin.url') ?? '';
@@ -44,10 +44,10 @@ async function askHooks(options: InitOptions): Promise<InitAnswers['hooks']> {
 async function askCi(root: string, options: InitOptions, tooling: ExistingTooling): Promise<InitAnswers['ci']> {
     if (options.ci === 'none' || ciLintJobs(root, tooling.ci).length > 0) return 'none';
     if (options.ci !== undefined) return options.ci;
-    return askChoice('Write a CI workflow?', '--ci', CI_CHOICES, ciDefault(root, tooling), options.yes);
+    return askChoice('Write a CI workflow?', '--ci', CI_CHOICES, proposeCi(root, tooling), options.yes);
 }
 
-async function askRuleFiles(options: InitOptions): Promise<boolean> {
+async function askRules(options: InitOptions): Promise<boolean> {
     if (options.rules !== undefined) return options.rules === 'yes';
     return askConfirmation('Install the agent rules?', '--no-rules', true, options.yes);
 }
@@ -79,7 +79,7 @@ export async function askKits(
         })
         .toArray();
     const initial = [...selection.selectedIds];
-    const kept = await askMany('Which kits?', '--kits <ids>', choices, initial, options.yes);
+    const kept = await askChoices('Which kits?', '--kits <ids>', choices, initial, options.yes);
     const isUnchanged = kept.length === initial.length && kept.every((id) => selection.selectedIds.has(id));
     return isUnchanged ? undefined : kept;
 }
@@ -91,14 +91,10 @@ export async function askKits(
  * @param tooling the configuration files, hooks and runner found
  * @returns the answers
  */
-export async function askInitQuestions(
-    root: string,
-    options: InitOptions,
-    tooling: ExistingTooling,
-): Promise<InitAnswers> {
+export async function askQuestions(root: string, options: InitOptions, tooling: ExistingTooling): Promise<InitAnswers> {
     const hooks = await askHooks(options);
     const ci = await askCi(root, options, tooling);
-    const isRules = await askRuleFiles(options);
+    const hasRules = await askRules(options);
     const runner = await askRunner(options, tooling);
-    return { hooks, ci, isRules, runner };
+    return { hooks, ci, isRules: hasRules, runner };
 }

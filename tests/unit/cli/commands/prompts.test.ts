@@ -4,7 +4,7 @@ import * as messages from '#cli/output/messages.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { test, spyOn, expect, describe } from 'bun:test';
 import * as environment from '#cli/platform/environment.ts';
-import { askMany, askConfirmation } from '#cli/commands/prompts.ts';
+import { askChoices, askConfirmation } from '#cli/commands/prompts.ts';
 
 describe('confirmation prompts', () => {
     test('uses the proposed answer without opening a prompt', async () => {
@@ -64,7 +64,7 @@ test('list selection reports its accepted defaults without a terminal', async ()
     const selection = spyOn(clack, 'multiselect').mockResolvedValue(['different']);
     const printed = spyOn(messages, 'note').mockImplementation(() => {});
     try {
-        expect(await askMany('Which kits?', '--kits <ids>', [], ['bash', 'markdown'], false)).toStrictEqual([
+        expect(await askChoices('Which kits?', '--kits <ids>', [], ['bash', 'markdown'], false)).toStrictEqual([
             'bash',
             'markdown',
         ]);
@@ -85,7 +85,7 @@ test.each([{ answer: ['markdown'] }, { answer: [] }])(
         const printed = spyOn(messages, 'note').mockImplementation(() => {});
         try {
             expect(
-                await askMany(
+                await askChoices(
                     'Which kits?',
                     '--kits <ids>',
                     [{ value: 'markdown', label: 'Markdown' }],

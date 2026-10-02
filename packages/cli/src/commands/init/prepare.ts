@@ -8,14 +8,14 @@ import { readRepository } from '#cli/repository/tree.ts';
 import { proposedScopes } from '#cli/repository/scopes.ts';
 import { proposeText } from '#cli/commands/init/propose.ts';
 import { readManifests } from '#cli/repository/packages.ts';
+import { getReplaced } from '#cli/commands/init/replaced.ts';
 import { detectionText } from '#cli/commands/init/detection.ts';
 import { selectForInit } from '#cli/commands/init/selection.ts';
 import { isOwned, existingTooling } from '#cli/kits/takeover.ts';
 import type { Policy, TomlTable } from '#cli/types/policy/policy.ts';
 import { plan, buildInitPlan } from '#cli/commands/init/plan/build.ts';
-import { replacedConfiguration } from '#cli/commands/init/replaced.ts';
+import { askKits, askQuestions } from '#cli/commands/init/questions.ts';
 import type { ExistingTooling } from '#cli/types/repository/repository.ts';
-import { askKits, askInitQuestions } from '#cli/commands/init/questions.ts';
 import { parsePolicyText, assertPolicyComplete } from '#cli/policy/read.ts';
 import type { Planning, InitInputs, InitOptions, InitPrepared, InitSelection } from '#cli/types/commands/init.ts';
 
@@ -95,8 +95,8 @@ export async function prepare(root: string, options: InitOptions): Promise<InitP
     const tooling = existingTooling(root, repo.files, fields);
     if (!options.json) printDetection(inputs, detected, tooling);
     const selection = await chosenSelection(inputs, options, detected);
-    const replaced = replacedConfiguration(root, tooling, selection.selectedIds);
-    const answers = await askInitQuestions(root, options, tooling);
+    const replaced = getReplaced(root, tooling, selection.selectedIds);
+    const answers = await askQuestions(root, options, tooling);
     const everySelected = [...selection.selectedIds]
         .map((id) => manifests.get(id))
         .filter((manifest) => manifest !== undefined);

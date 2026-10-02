@@ -11,7 +11,7 @@ import { repositoryCheckSpec } from '#cli/policy/check-state.ts';
 import { SWIFTLINT_LINES, TOOL_TIMEOUT_MS } from '#cli/config/commands/explain.ts';
 import type { Found, OwnCheck, Explanation, ExplainFields } from '#cli/types/commands/explain.ts';
 
-const TOOL_RULE_SOURCES: Record<string, (rule: string, path: string) => string | undefined> = {
+const RULE_SUMMARIZERS: Record<string, (rule: string, path: string) => string | undefined> = {
     ruff: (rule, path) => {
         const result = runBlocking([path, 'rule', rule, '--output-format', 'json'], {
             cwd: process.cwd(),
@@ -31,7 +31,7 @@ const TOOL_RULE_SOURCES: Record<string, (rule: string, path: string) => string |
     },
 };
 
-function pinNamed(name: string | undefined): ToolPin | undefined {
+function getPin(name: string | undefined): ToolPin | undefined {
     if (name === undefined) return undefined;
     return kitManifests()
         .values()
@@ -40,33 +40,33 @@ function pinNamed(name: string | undefined): ToolPin | undefined {
 }
 
 // The page a manifest declares for a rule: the tool's own page, or the page of the plugin whose prefix the rule carries.
-function rulePage(check: CheckSpec, tool: string, rule: string): string | undefined {
+function getRulePage(check: CheckSpec, tool: string, rule: string): string | undefined {
     const slash = rule.lastIndexOf('/');
     if (slash === -1) {
-        const pin = pinNamed(tool) ?? pinNamed(toolOf(check));
+        const pin = getPin(tool) ?? getPin(getTool(check));
         return pin?.rule_url?.replace('{rule}', rule);
     }
     const prefix = rule.slice(0, slash).replace(/^@/u, '');
     const plugin = [prefix, `${tool}-plugin-${prefix}`, `@${prefix}/${tool}-plugin`]
-        .map((name) => pinNamed(name))
+        .map((name) => getPin(name))
         .find((pin) => pin !== undefined);
     return plugin?.rule_url?.replace('{rule}', rule.slice(slash + 1));
 }
 
 // The tool a check runs: the declared tool, or the first word of its command.
 // eslint-disable-next-line gspot/no-trivial-functions -- reason: Four lookups name the tool of a check, which falls back to the first word of its command.
-function toolOf(check: CheckSpec): string | undefined {
+function getTool(check: CheckSpec): string | undefined {
     return check.tool ?? check.command?.[0];
 }
 
 // The settings that change the check, and the rules and crash pattern its kit carries.
-function checkFacts(check: CheckSpec, kit: Found['kit']): ExplainFields {
-    const toolPrefix = `tools.${toolOf(check) ?? '~'}.`;
+function getFacts(check: CheckSpec, kit: Found['kit']): ExplainFields {
+    const toolPrefix = `tools.${getTool(check) ?? '~'}.`;
     const settings = (kit?.settings ?? [])
         .filter((setting) => setting.name === check.limit || setting.name.startsWith(toolPrefix))
         .map((setting) => setting.name);
     const rules = kit === undefined ? [] : kitFiles(kit).map((file) => file.path);
-    const crashPattern = check.crash_pattern ?? pinNamed(toolOf(check))?.crash_pattern;
+    const crashPattern = check.crash_pattern ?? getPin(getTool(check))?.crash_pattern;
     return { settings, rules, crashPattern };
 }
 
@@ -87,7 +87,7 @@ function repositoryLines(session: Session | undefined, own: OwnCheck | undefined
     return lines;
 }
 
-function checkText(
+function describeCheck(
     session: Session | undefined,
     checkName: string,
     found: Found,
@@ -128,11 +128,11 @@ function buildCheckExplanation(
     owner: string,
 ): Explanation {
     const { check, kit } = found;
-    const fields = checkFacts(check, kit);
+    const fields = getFacts(check, kit);
     return {
         kind: 'check',
         subject: checkName,
-        text: checkText(session, checkName, found, own, fields, owner),
+        text: describeCheck(session, checkName, found, own, fields, owner),
         data: {
             check: checkName,
             ...(kit === undefined ? { command: own?.command, paths: own?.paths } : { kit: kit.kit.name }),
@@ -151,16 +151,16 @@ function buildCheckExplanation(
     };
 }
 
-function toolSummary(session: Session | undefined, tool: string, rule: string): string | undefined {
-    const source = TOOL_RULE_SOURCES[tool];
+function getRuleSummary(session: Session | undefined, tool: string, rule: string): string | undefined {
+    const source = RULE_SUMMARIZERS[tool];
     if (!source) return undefined;
-    const pin = pinNamed(tool);
+    const pin = getPin(tool);
     const inspection = session && pin ? inspectTool(session, pin) : undefined;
     return source(rule, inspection?.path ?? tool);
 }
 
 // The nested explanation of what a tool rule means: the tool's own words, its page, or where to look.
-function ruleMeaning(rule: string, summary: string | undefined, page: string | undefined): string {
+function describeRule(rule: string, summary: string | undefined, page: string | undefined): string {
     if (summary !== undefined) return `The tool says: ${summary}`;
     return page === undefined ? `The tool's documentation has the page for ${rule}.` : `The tool's page: ${page}`;
 }
@@ -171,7 +171,7 @@ function ruleMeaning(rule: string, summary: string | undefined, page: string | u
  * @param checkName the check
  * @returns the explanation, or undefined when no check has the name
  */
-export function checkExplanation(session: Session | undefined, checkName: string): Explanation | undefined {
+export function explainCheck(session: Session | undefined, checkName: string): Explanation | undefined {
     const own = session?.policyFiles.policy.checks.find((entry) => entry.name === checkName);
     const found: Found | undefined =
         allChecks().get(checkName) ??
@@ -188,22 +188,22 @@ export function checkExplanation(session: Session | undefined, checkName: string
  * @param rule the rule
  * @returns the explanation, or undefined when no check runs the tool
  */
-export function toolRuleExplanation(session: Session | undefined, tool: string, rule: string): Explanation | undefined {
+export function explainToolRule(session: Session | undefined, tool: string, rule: string): Explanation | undefined {
     const check = allChecks()
         .values()
-        .find(({ check: spec }) => (toolOf(spec) ?? '~') === tool || spec.name.endsWith(`/${tool}`))?.check;
+        .find(({ check: spec }) => (getTool(spec) ?? '~') === tool || spec.name.endsWith(`/${tool}`))?.check;
     if (!check) return undefined;
-    const summary = toolSummary(session, tool, rule);
-    const page = rulePage(check, tool, rule);
-    const optionKey = quoteArgument(`tools.${tool}.rules.${rule}`);
+    const summary = getRuleSummary(session, tool, rule);
+    const page = getRulePage(check, tool, rule);
+    const key = quoteArgument(`tools.${tool}.rules.${rule}`);
     const lines = [
         `${tool}/${rule}  (run by ${check.name})`,
         '',
-        ruleMeaning(rule, summary, page),
+        describeRule(rule, summary, page),
         '',
         `Turn it off everywhere: gspot ignore ${quoteArgument(check.name)} --rule ${quoteArgument(rule)} --reason "..."`,
         `Turn it off for some paths: gspot ignore ${quoteArgument(check.name)} --rule ${quoteArgument(rule)} --paths "<glob>" --reason "..."`,
-        `Change its options: gspot set ${optionKey} <options> --reason "..."`,
+        `Change its options: gspot set ${key} <options> --reason "..."`,
     ];
     return {
         kind: 'tool-rule',

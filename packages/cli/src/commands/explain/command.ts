@@ -5,7 +5,7 @@ import { explain } from '#cli/commands/explain/subjects.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import type { Program, CommandResult } from '#cli/types/commands/commands.ts';
 
-async function explainResult(directory: string, subject: string): Promise<CommandResult> {
+async function explainCommand(directory: string, subject: string): Promise<CommandResult> {
     const root = findRoot(directory);
     const session = hasPolicy(root) ? await openSession(root) : undefined;
     const result = explain(session, subject);
@@ -30,6 +30,6 @@ export function registerExplain(program: Program): void {
         )
         .action(async (subject, _flags, command) => {
             const global = command.optsWithGlobals();
-            await printCommand((cwd) => explainResult(cwd, subject), global);
+            await printCommand((cwd) => explainCommand(cwd, subject), global);
         });
 }

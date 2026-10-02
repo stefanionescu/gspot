@@ -51,12 +51,12 @@ import { checkDocstrings } from '#cli/checks/language/python/pydoclint.ts';
 import { scriptBoundaries } from '#cli/checks/language/bash/boundaries.ts';
 import { structureEngine } from '#cli/checks/general/structure/context.ts';
 import { denoLint, denoCheck } from '#cli/checks/platform/supabase/deno.ts';
-import { folderNames } from '#cli/checks/general/structure/folder-names.ts';
 import { installPolicy } from '#cli/checks/general/dependencies/install.ts';
 import { requiredRules } from '#cli/checks/language/javascript/rules-off.ts';
 import { suppressions } from '#cli/checks/general/structure/suppressions.ts';
 import { fileIntegrity } from '#cli/checks/general/structure/config-logic.ts';
 import { deadParameters } from '#cli/checks/language/bash/unread-arguments.ts';
+import { getDirectories } from '#cli/checks/general/structure/folder-names.ts';
 import { manifestPolicy } from '#cli/checks/general/dependencies/manifests.ts';
 import { singleFileFolder } from '#cli/checks/general/structure/lone-files.ts';
 import { migrationDocs } from '#cli/checks/database/postgres/migration-docs.ts';
@@ -190,7 +190,7 @@ export const ENGINES: Record<string, Engine> = {
     'structure/lone-files': structureEngine(singleFileFolder),
     'structure/prefix-collisions': structureEngine(prefixCollisions),
     'structure/stem-collisions': structureEngine(fileDirectoryCollision),
-    'structure/folder-names': structureEngine(folderNames),
+    'structure/folder-names': structureEngine(getDirectories),
     'bash/limits': structureEngine(bashLimits),
     'bash/doc-comments': structureEngine(docComment),
     'bash/duplicate-functions': structureEngine(duplicateFunctions),

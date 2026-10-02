@@ -110,7 +110,7 @@ export function requireReason(reason: string | undefined, where: string, command
  * @param changed what commitPolicy returned
  * @returns the command result, with a note about the installed tools
  */
-export async function installChangedSelection(
+export async function installSelection(
     root: string,
     changed: Awaited<ReturnType<typeof commitPolicy>>,
 ): Promise<CommandResult> {

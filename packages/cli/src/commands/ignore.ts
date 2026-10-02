@@ -13,7 +13,7 @@ import { commitPolicy, requireReason } from '#cli/commands/edit.ts';
 import { appendIgnore, removeEntries } from '#cli/policy/mutations.ts';
 import type { Program, CommandResult, IgnoreOptions } from '#cli/types/commands/commands.ts';
 
-function knownCheck(checkName: string, repositoryChecks: string[]): void {
+function assertKnownCheck(checkName: string, repositoryChecks: string[]): void {
     if (allChecks().has(checkName) || repositoryChecks.includes(checkName)) {
         return;
     }
@@ -22,13 +22,13 @@ function knownCheck(checkName: string, repositoryChecks: string[]): void {
     throw new GspotError('policy', [messages.unknownCheck(checkName, similar(checkName, known))]);
 }
 
-function ignoreCommandLine(o: IgnoreOptions): string {
+function buildReasonHint(o: IgnoreOptions): string {
     const rule = o.rule === undefined ? '' : ` --rule ${quoteArgument(o.rule)}`;
     const paths = o.paths === undefined ? '' : ` --paths ${o.paths.map((path) => quoteArgument(path)).join(' ')}`;
     return `gspot ignore ${quoteArgument(o.check)}${rule}${paths} --reason "..."`;
 }
 
-function ignoreEntry(o: IgnoreOptions): { entry: TomlTable; lines: string[] } {
+function buildIgnore(o: IgnoreOptions): { entry: TomlTable; lines: string[] } {
     const entry: TomlTable = { check: o.check };
     const lines = ['[[ignore]]', `check  = "${o.check}"`];
     if (o.rule !== undefined) {
@@ -46,7 +46,7 @@ function ignoreEntry(o: IgnoreOptions): { entry: TomlTable; lines: string[] } {
     return { entry, lines };
 }
 
-async function removeIgnore(root: string, o: IgnoreOptions): Promise<CommandResult> {
+async function deleteIgnore(root: string, o: IgnoreOptions): Promise<CommandResult> {
     const counter = { removed: 0 };
     const result = await commitPolicy(
         root,
@@ -78,13 +78,13 @@ async function ignoreCommand(o: IgnoreOptions): Promise<CommandResult> {
     const root = findRoot(o.cwd);
     assertPinMatches(root);
     const { policy } = readPolicy(root);
-    knownCheck(
+    assertKnownCheck(
         o.check,
         policy.checks.map((check) => check.name),
     );
-    if (o.remove) return removeIgnore(root, o);
-    if (policy.requireReasons) requireReason(o.reason, `gspot ignore ${o.check}`, ignoreCommandLine(o));
-    const { entry, lines } = ignoreEntry(o);
+    if (o.remove) return deleteIgnore(root, o);
+    if (policy.requireReasons) requireReason(o.reason, `gspot ignore ${o.check}`, buildReasonHint(o));
+    const { entry, lines } = buildIgnore(o);
     return commitPolicy(root, appendIgnore(entry), false, lines.join('\n'));
 }
 

@@ -159,6 +159,10 @@ reason = "The naming policy bans this British spelling by name, so the policy an
 word = "IIFEs"
 reason = "ESLint's max-lines-per-function option and the unicorn rule description spell the plural so."
 
+[[naming.allowed]]
+name = "snapshot"
+reason = "A snapshot is the copy of a revision that gspot checks; the tests name that product concept, not a test fixture."
+
 [[naming.protocol_keys]]
 file = "packages/cli/src/types/kits.ts"
 names = [

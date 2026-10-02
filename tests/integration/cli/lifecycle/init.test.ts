@@ -8,9 +8,9 @@ import * as processes from '#cli/platform/spawn.ts';
 import { applyCommand } from '#cli/commands/apply.ts';
 import { initCommand } from '#cli/commands/init/command.ts';
 import { initOptions } from '#tests/harness/planted/init.ts';
+import { askQuestions } from '#cli/commands/init/questions.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
 import { PRETTIER_TOOLING } from '#tests/harness/cli/tooling.ts';
-import { askInitQuestions } from '#cli/commands/init/questions.ts';
 import { rejection, containingAll } from '#tests/harness/expectations.ts';
 import { existsSync, unlinkSync, symlinkSync, readFileSync } from 'node:fs';
 
@@ -33,7 +33,7 @@ test.each([
     if (path !== '') await createFileTree(sandbox.path, { [path]: '{}\n' });
     expect(processes.runBlocking(['git', 'init'], { cwd: sandbox.path }).code).toBe(0);
     expect(processes.runBlocking(['git', 'config', 'remote.origin.url', remote], { cwd: sandbox.path }).code).toBe(0);
-    const answers = await askInitQuestions(
+    const answers = await askQuestions(
         sandbox.path,
         initOptions(sandbox.path, { isDryRun: true, hooks: 'none', runner: 'none', rules: 'no' }),
         { ...PRETTIER_TOOLING, ci: [...ci] },

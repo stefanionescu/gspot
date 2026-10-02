@@ -8,7 +8,7 @@ import { compact, similar } from '#cli/platform/text.ts';
 import type { Mutation } from '#cli/types/policy/policy.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import { assertPinMatches } from '#cli/lifecycle/version-pin.ts';
-import { commitPolicy, installChangedSelection } from '#cli/commands/edit.ts';
+import { commitPolicy, installSelection } from '#cli/commands/edit.ts';
 import type { Program, AddOptions, CommandResult } from '#cli/types/commands/commands.ts';
 
 /**
@@ -33,7 +33,7 @@ async function addCommand(o: AddOptions): Promise<CommandResult> {
     };
     const where = o.scope === undefined ? '' : ` to scope ${o.scope}`;
     const result = await commitPolicy(root, mutation, o.isDryRun, `added ${o.kits.join(', ')}${where}`);
-    return installChangedSelection(root, result);
+    return installSelection(root, result);
 }
 
 /**

@@ -17,7 +17,7 @@ function scopeTag(scope: string | undefined): string {
     return scope === undefined || scope === '' ? '' : `  [scope ${scope}]`;
 }
 
-function extrasFor(scope: string, tools: ToolTables): ExtraRow[] {
+function getExtras(scope: string, tools: ToolTables): ExtraRow[] {
     return Object.entries(tools).flatMap(([tool, table]) => {
         if (table.extra === undefined) return [];
         return [
@@ -31,8 +31,8 @@ function extrasFor(scope: string, tools: ToolTables): ExtraRow[] {
     });
 }
 
-function settingsText(session: Session): CommandResult {
-    const { rows, extras } = settingRows(session.policyFiles.policy, session.scopes);
+function buildSettingsResult(session: Session): CommandResult {
+    const { rows, extras } = buildSettingRows(session.policyFiles.policy, session.scopes);
     const width = Math.max(...rows.map((row) => row.key.length)) + KEY_GAP;
     const lines = rows.map((row) => {
         const value = (row.value === undefined ? 'unset' : JSON.stringify(row.value)).padEnd(VALUE_WIDTH);
@@ -48,7 +48,7 @@ function settingsText(session: Session): CommandResult {
     return { text: `${lines.join('\n')}\n`, json: { settings: rows, extras }, exitCode: 0 };
 }
 
-function kitsResult(session: Session): CommandResult {
+function buildKitsResult(session: Session): CommandResult {
     const selected = everyManifest(session.scopes);
     const names = new Set(selected.map((manifest) => manifest.kit.name));
     const selectedKits = selected.map((manifest) => ({
@@ -97,9 +97,9 @@ function kitsResult(session: Session): CommandResult {
  * @param scopes the resolved settings for each scope
  * @returns the rows and the extra tables
  */
-function settingRows(policy: Policy, scopes: ScopeSelection[]): SettingsListing {
-    const fromScopes = Object.entries(policy.scopeTables).flatMap(([scope, table]) =>
-        table.tools === undefined ? [] : extrasFor(scope, table.tools),
+function buildSettingRows(policy: Policy, scopes: ScopeSelection[]): SettingsListing {
+    const scopeExtras = Object.entries(policy.scopeTables).flatMap(([scope, table]) =>
+        table.tools === undefined ? [] : getExtras(scope, table.tools),
     );
     const rows = scopes.flatMap((selection) => {
         const scope = selection.scope.path;
@@ -113,7 +113,7 @@ function settingRows(policy: Policy, scopes: ScopeSelection[]): SettingsListing 
                 scope,
             }));
     });
-    return { rows, extras: [...extrasFor('', policy.tools), ...fromScopes] };
+    return { rows, extras: [...getExtras('', policy.tools), ...scopeExtras] };
 }
 
 /**
@@ -136,7 +136,7 @@ export function registerList(program: Program): void {
             const global = command.optsWithGlobals();
             await printCommand(async (cwd) => {
                 const session = await openSession(findRoot(cwd));
-                return kind === 'settings' ? settingsText(session) : kitsResult(session);
+                return kind === 'settings' ? buildSettingsResult(session) : buildKitsResult(session);
             }, global);
         });
 }

@@ -9,7 +9,7 @@ import { scopeHolder } from '#cli/policy/mutations.ts';
 import type { Mutation } from '#cli/types/policy/policy.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import { assertPinMatches } from '#cli/lifecycle/version-pin.ts';
-import { commitPolicy, installChangedSelection } from '#cli/commands/edit.ts';
+import { commitPolicy, installSelection } from '#cli/commands/edit.ts';
 import type { Program, CommandResult, RemoveOptions } from '#cli/types/commands/commands.ts';
 
 /**
@@ -33,7 +33,7 @@ async function removeCommand(o: RemoveOptions): Promise<CommandResult> {
     };
     const where = o.scope === undefined ? '' : ` from scope ${o.scope}`;
     const result = await commitPolicy(root, mutation, o.isDryRun, `removed ${o.kit}${where}`);
-    return installChangedSelection(root, result);
+    return installSelection(root, result);
 }
 
 /**

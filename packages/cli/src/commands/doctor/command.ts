@@ -3,7 +3,7 @@ import { openSession } from '#cli/execution/session.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import { pinnedVersion } from '#cli/lifecycle/version-pin.ts';
 import type { DoctorOptions } from '#cli/types/commands/doctor.ts';
-import { doctorText, doctorReport } from '#cli/commands/doctor/report.ts';
+import { buildReport, formatReport } from '#cli/commands/doctor/report.ts';
 import type { Program, CommandResult } from '#cli/types/commands/commands.ts';
 
 /**
@@ -14,8 +14,8 @@ import type { Program, CommandResult } from '#cli/types/commands/commands.ts';
 export async function doctorCommand(options: DoctorOptions): Promise<CommandResult> {
     const root = findRoot(options.cwd);
     const session = await openSession(root);
-    const report = doctorReport(session, pinnedVersion(root));
-    return { text: doctorText(report), json: report, exitCode: report.exitCode };
+    const report = buildReport(session, pinnedVersion(root));
+    return { text: formatReport(report), json: report, exitCode: report.exitCode };
 }
 
 /**

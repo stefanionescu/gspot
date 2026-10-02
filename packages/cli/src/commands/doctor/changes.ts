@@ -30,7 +30,7 @@ function recommendedKits(session: Session, selected: Set<string>): ChangeReport[
     return rows.values().toArray();
 }
 
-function configurationRow(session: Session, config: ExistingTool, selected: Set<string>): ChangeRow {
+function buildFileRow(session: Session, config: ExistingTool, selected: Set<string>): ChangeRow {
     if (isOwned(config.tool, selected))
         return {
             path: config.path,
@@ -58,10 +58,10 @@ function unownedConfigs(
     return tooling.configs
         .filter((config) => tracked.has(config.path) && !rendered.has(config.path))
         .filter((config) => !hasHeader(readPrefix(session.root, config.path, CHANGE_HEAD_BYTES).toString('utf8')))
-        .map((config) => configurationRow(session, config, selected));
+        .map((config) => buildFileRow(session, config, selected));
 }
 
-function unownedGeneratedFiles(session: Session): ChangeRow[] {
+function getUnownedOutputs(session: Session): ChangeRow[] {
     const recorded = new Set(readOwnership(session.root).files.map((entry) => entry.path));
     return session.repository.files
         .filter((file) => file.path.startsWith('.gspot/') && !recorded.has(file.path))
@@ -77,7 +77,7 @@ function unownedGeneratedFiles(session: Session): ChangeRow[] {
  * @param session the session
  * @returns what changed after init, by kind
  */
-export function changeReport(session: Session): ChangeReport {
+export function getChanges(session: Session): ChangeReport {
     const fields = readManifests(session.root, session.repository.files);
     const selected = new Set(everyManifest(session.scopes).map((manifest) => manifest.kit.name));
     const tooling = existingTooling(session.root, session.repository.files, fields);
@@ -101,7 +101,7 @@ export function changeReport(session: Session): ChangeReport {
         recommended: recommendedKits(session, selected),
         unowned: [
             ...unownedConfigs(session, tooling, selected, rendered.files),
-            ...unownedGeneratedFiles(session),
+            ...getUnownedOutputs(session),
             ...(statSync(join(session.root, 'gspot.local.toml'), { throwIfNoEntry: false }) === undefined
                 ? []
                 : [

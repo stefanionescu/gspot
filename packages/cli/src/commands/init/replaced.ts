@@ -5,7 +5,7 @@ import type { Replaced } from '#cli/types/commands/init.ts';
 import type { ExistingTool, ExistingTooling } from '#cli/types/repository/repository.ts';
 
 // Captures every owned file. The write refuses a file that changed after the plan was shown.
-function readOwned(root: string, owned: ExistingTool[], replaced: Replaced): void {
+function captureOwned(root: string, owned: ExistingTool[], replaced: Replaced): void {
     using files = openRoot(root);
     for (const path of new Set(owned.map((entry) => entry.path))) {
         const original = files.read(path);
@@ -33,10 +33,10 @@ function recordOutcome(entry: ExistingTool, replaced: Replaced): void {
  * @param selected the ids of the selected kits
  * @returns the reads, the deletions, the unreadable files, and the shared files that stay
  */
-export function replacedConfiguration(root: string, tooling: ExistingTooling, selected: Set<string>): Replaced {
+export function getReplaced(root: string, tooling: ExistingTooling, selected: Set<string>): Replaced {
     const replaced: Replaced = { read: new Map(), removed: [], unread: [], retained: [] };
     const owned = tooling.configs.filter(({ tool }) => isOwned(tool, selected));
-    readOwned(root, owned, replaced);
+    captureOwned(root, owned, replaced);
     for (const entry of owned) if (replaced.read.has(entry.path)) recordOutcome(entry, replaced);
     return replaced;
 }
