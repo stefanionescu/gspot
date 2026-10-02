@@ -66,9 +66,9 @@ export function assembleReport(input: ReportInput): RunReport {
                 matched,
             }))
             .toArray(),
-        skips: planned.flatMap((check) => (check.skip ? [{ check: check.check, source: check.skip.source }] : [])),
-        unstaged: 0,
-        narrowed: [options.staged, options.changed, options.paths].some((selection) => selection !== undefined),
+        skips: planned.flatMap((check) => (check.skip ? [{ check: check.check, cause: check.skip.cause }] : [])),
+        unstagedChanges: 0,
+        partial: [options.staged, options.changed, options.paths].some((selection) => selection !== undefined),
         failed,
         exitCode: exitCode(isUnable(session, results, fixes), failed),
     };

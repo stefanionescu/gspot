@@ -38,9 +38,12 @@ export type RunReport = {
     duration: number;
     checks: CheckResult[];
     ignores: { check: string; rule?: string; paths?: string[]; reason?: string; matched: number }[];
-    skips: { check: string; source: 'flag' | 'platform' | 'rules' | 'ignore' }[];
-    unstaged: number;
-    narrowed: boolean;
+    skips: { check: string; cause: 'flag' | 'platform' | 'replaced' | 'setting' | 'condition' | 'ignore' }[];
+    /** How many changed files the run left out: the unstaged ones when it read the index. */
+    unstagedChanges: number;
+    /** Whether the run read only part of the repository: the staged files, a change set, or named paths. */
+    partial: boolean;
+    /** The checks that failed, with the checks whose fixer failed although the check passed. */
     failed: string[];
     exitCode: number;
 };
@@ -100,7 +103,7 @@ export type PlannedCheck = {
     manifest?: Manifest;
     files: TrackedFile[];
     tool?: ToolPin;
-    skip?: { source: RunReport['skips'][number]['source']; note: string };
+    skip?: { cause: RunReport['skips'][number]['cause']; note: string };
     projectWide: boolean;
     /** Changed paths absent from the readable tree that still trigger a project check. */
     triggerPaths: string[];

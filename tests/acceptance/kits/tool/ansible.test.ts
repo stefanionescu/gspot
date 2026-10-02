@@ -59,7 +59,7 @@ describe('the ansible configuration', () => {
             const expectedFindings: Finding[] = containingAll([commandInsteadOfModule]);
             expect(outcome.code, outcome.stdout + outcome.stderr).toBe(isWindows ? 0 : 1);
             expect(report.checks).toMatchObject([{ check: 'ansible/lint', status: isWindows ? 'skipped' : 'failed' }]);
-            expect(report.skips.some((skip) => skip.check === 'ansible/lint' && skip.source === 'platform')).toBe(
+            expect(report.skips.some((skip) => skip.check === 'ansible/lint' && skip.cause === 'platform')).toBe(
                 isWindows,
             );
             expect(report.checks[0]?.findings).toStrictEqual(isWindows ? [] : expectedFindings);

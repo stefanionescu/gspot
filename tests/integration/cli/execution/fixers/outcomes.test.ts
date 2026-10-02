@@ -101,7 +101,7 @@ test('distinguishes a skipped correction from an unavailable tool', async () => 
     const planned = plannedCorrection(session, "await Bun.write('source.txt', 'wrong')");
     const skipped = await runFixer(
         session,
-        { ...planned, skip: { source: 'flag', note: 'Not selected.' } },
+        { ...planned, skip: { cause: 'flag', note: 'Not selected.' } },
         sandbox.path,
     );
     const failed = await runFixer(

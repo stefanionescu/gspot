@@ -92,7 +92,7 @@ function resultFor(
     outcome: Awaited<ReturnType<typeof executeRun>>,
     unstaged: number,
 ): CheckCommandResult {
-    outcome.report.unstaged = unstaged;
+    outcome.report.unstagedChanges = unstaged;
     const rendered = runText(outcome.report, { quiet: options.quiet, verbose: options.verbose });
     const text = outcome.fixes ? fixSummary(outcome.fixes, options.isDryRun, rendered) : rendered;
     return { text, json: outcome.report, report: outcome.report, exitCode: outcome.report.exitCode };

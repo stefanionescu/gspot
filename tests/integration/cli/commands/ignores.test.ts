@@ -26,7 +26,7 @@ test('a global ignore stops a repository check and its correction command until 
     expect(skipped.code, skipped.stdout + skipped.stderr).toBe(0);
     const report = JSON.parse(skipped.stdout) as RunReport;
     expect(report.checks[0]).toMatchObject({ check: 'project/quality', status: 'skipped', findings: [] });
-    expect(report.skips).toStrictEqual([{ check: 'project/quality', source: 'ignore' }]);
+    expect(report.skips).toStrictEqual([{ check: 'project/quality', cause: 'ignore' }]);
     expect(report.ignores).toStrictEqual([{ check: 'project/quality', matched: 0 }]);
     expect(existsSync(join(directory.path, 'read.txt'))).toBe(false);
     expect(existsSync(join(directory.path, 'corrected.txt'))).toBe(false);
@@ -83,7 +83,7 @@ test('path-specific ignores prevent checker and fixer execution and report an en
     const skipped = await runGspot(directory.path, [...args, '--', 'inputs/skip café.txt']);
     expect(skipped.code, skipped.stdout + skipped.stderr).toBe(0);
     const skippedReport = JSON.parse(skipped.stdout) as RunReport;
-    expect(skippedReport.skips).toStrictEqual([{ check: 'project/quality', source: 'ignore' }]);
+    expect(skippedReport.skips).toStrictEqual([{ check: 'project/quality', cause: 'ignore' }]);
     expect(skippedReport.checks[0]).toMatchObject({ status: 'skipped', findings: [] });
     expect(readFileSync(join(directory.path, 'checked.txt'), 'utf8')).toBe(checked);
     expect(readFileSync(join(directory.path, 'fixed.txt'), 'utf8')).toBe(fixed);

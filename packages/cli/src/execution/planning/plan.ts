@@ -113,7 +113,7 @@ function yielded(planned: PlannedCheck[]): PlannedCheck[] {
     return planned.map((check) => {
         const taker = takers.get(check.check);
         if (taker === undefined || check.skip) return check;
-        return { ...check, skip: { source: 'rules', note: `${taker} runs it here` } };
+        return { ...check, skip: { cause: 'replaced', note: `${taker} runs it here` } };
     });
 }
 
@@ -178,7 +178,7 @@ function prettierInputs(session: Session, check: PlannedCheck): PlannedCheck {
     const matcher = ignore().add(read.bytes.toString('utf8'));
     const files = check.files.filter((file) => !matcher.ignores(file.path));
     return files.length === 0
-        ? { ...check, skip: { source: 'ignore', note: 'all selected paths are ignored by .prettierignore' } }
+        ? { ...check, skip: { cause: 'ignore', note: 'all selected paths are ignored by .prettierignore' } }
         : { ...check, files };
 }
 /**

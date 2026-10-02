@@ -110,7 +110,7 @@ async function skippedReplacement(planted: InstalledRepository): Promise<void> {
             status: 'failed',
             findings: [{ check: 'typescript/tsc', file: 'app/count.ts', rule: 'TS2322', line: 4 }],
         });
-        expect(failed.skips.some(({ check, source }) => check === 'nextjs/tsc' && source === 'flag')).toBe(true);
+        expect(failed.skips.some(({ check, cause }) => check === 'nextjs/tsc' && cause === 'flag')).toBe(true);
         writeFileSync(path, COUNT.replace('"three"', '3'));
         await checked(planted, checks, 0);
     } finally {

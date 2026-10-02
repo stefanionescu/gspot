@@ -47,8 +47,8 @@ const report: RunReport = {
     ],
     ignores: [{ check: 'bash/shellcheck', rule: 'SC2312', reason: 'why', matched: 1 }],
     skips: [],
-    unstaged: 0,
-    narrowed: false,
+    unstagedChanges: 0,
+    partial: false,
     failed: ['bash/shellcheck', 'format/prettier'],
     exitCode: 1,
 };
@@ -163,9 +163,9 @@ test.each([
     },
 );
 
-test('the reporter names the source of a skipped check', () => {
-    const skipped: RunReport = { ...report, skips: [{ check: 'bash/shellcheck', source: 'rules' }] };
-    expect(runText(skipped, { quiet: false, verbose: false })).toContain('skipped    bash/shellcheck  (rules)\n');
+test('the reporter names the cause of a skipped check', () => {
+    const skipped: RunReport = { ...report, skips: [{ check: 'bash/shellcheck', cause: 'condition' }] };
+    expect(runText(skipped, { quiet: false, verbose: false })).toContain('skipped    bash/shellcheck  (condition)\n');
 });
 
 test.each([

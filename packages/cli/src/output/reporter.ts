@@ -107,14 +107,14 @@ function tailLines(report: RunReport, options: ReporterOptions, colors: Colors):
     const lines = [
         ...ignoreLines(report, options, colors),
         ...report.skips.map((skip) => {
-            const source = colors.dim(`(${skip.source})`);
-            return `skipped    ${skip.check}  ${source}`;
+            const cause = colors.dim(`(${skip.cause})`);
+            return `skipped    ${skip.check}  ${cause}`;
         }),
     ];
-    if (report.unstaged > 0) {
-        const verb = report.unstaged === 1 ? ' has' : 's have';
+    if (report.unstagedChanges > 0) {
+        const verb = report.unstagedChanges === 1 ? ' has' : 's have';
         lines.push(
-            `checked ${report.comparison?.content === 'index' ? 'index' : 'working tree'}; ${String(report.unstaged)} file${verb} unstaged changes`,
+            `checked ${report.comparison?.content === 'index' ? 'index' : 'working tree'}; ${String(report.unstagedChanges)} file${verb} unstaged changes`,
         );
     }
     return lines;
